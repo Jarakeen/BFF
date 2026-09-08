@@ -24,6 +24,9 @@ from services.extreme_actual_heal_mythic_package_service import (
 from services.extreme_actual_heal_non_ring_mythic_package_service import (
     ExtremeActualHealNonRingMythicPackageService,
 )
+from services.extreme_actual_heal_reviewed_bar_candidate_service import (
+    ExtremeActualHealReviewedBarCandidateService,
+)
 from services.extreme_complete_optimization_service import ExtremeCompleteOptimizationService
 from services.extreme_healing_event_service import (
     ExtremeHealingEventResult,
@@ -102,6 +105,7 @@ class ExtremeActualHealOptimizationService:
         "reviewed legal five-piece + five-piece + ring mythic package with exact active weapon subtype proof",
         "reviewed legal five-piece + five-piece + canonically slotted non-ring mythic package with exact active two-slot or paired main/off-hand weapon proof",
         "structurally proven arena-weapon replacement with exact active weapon subtype proof, including paired main/off-hand packages",
+        "reviewed active-bar Mages Guild/Fighters Guild slot-count passive carriers",
         "canonical healing coefficient scaling",
         "Healing Done and verified healing CP",
         "Critical Healing",
@@ -109,7 +113,7 @@ class ExtremeActualHealOptimizationService:
     OMITTED_SCOPE = (
         "class change / subclass route",
         "healing-skill replacement",
-        "skill-bar passive/proc search",
+        "unreviewed skill-bar passive/proc families beyond reviewed Mages/Fighters Guild slot-count effects",
         "group-only buffs",
         "runtime conditional stacks/procs",
     )
@@ -126,6 +130,7 @@ class ExtremeActualHealOptimizationService:
         mythic_packages: ExtremeActualHealMythicPackageService | None = None,
         non_ring_mythic_packages: ExtremeActualHealNonRingMythicPackageService | None = None,
         arena_weapon_packages: ExtremeActualHealArenaWeaponPackageService | None = None,
+        reviewed_bar_candidates: ExtremeActualHealReviewedBarCandidateService | None = None,
     ) -> None:
         self.optimizer = optimizer or ExtremeCompleteOptimizationService()
         self.healing_events = healing_events or ExtremeHealingEventService(
@@ -162,6 +167,11 @@ class ExtremeActualHealOptimizationService:
         )
         self.arena_weapon_packages = arena_weapon_packages or (
             ExtremeActualHealArenaWeaponPackageService(database_path)
+            if database_path
+            else None
+        )
+        self.reviewed_bar_candidates = reviewed_bar_candidates or (
+            ExtremeActualHealReviewedBarCandidateService(database_path)
             if database_path
             else None
         )
@@ -239,6 +249,17 @@ class ExtremeActualHealOptimizationService:
                     baseline_build_id=candidate_build_id,
                 )
             )
+            if self.reviewed_bar_candidates is not None:
+                candidates.extend(
+                    self.reviewed_bar_candidates.build_candidates(
+                        current,
+                        progression,
+                        character_id=character_id,
+                        baseline_build_id=candidate_build_id,
+                        protected_entity_id=normalized_entity,
+                        active_bar=active_bar,
+                    )
+                )
             if self.gear_set_candidates is not None:
                 candidates.extend(
                     self.gear_set_candidates.build_candidates(
