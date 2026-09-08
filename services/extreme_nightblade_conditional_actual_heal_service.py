@@ -4,8 +4,8 @@ from dataclasses import replace
 
 from minmax.character_progression import AttributeAllocation, CharacterProgression
 from models.build_model import PlayerBuild
-from services.extreme_conditional_actual_heal_optimization_service import (
-    ExtremeConditionalActualHealOptimizationService,
+from services.extreme_canonical_healing_done_conditional_actual_heal_service import (
+    ExtremeCanonicalHealingDoneConditionalActualHealService,
 )
 from services.extreme_healing_event_service import ExtremeHealingEventResult
 from services.extreme_nightblade_class_mastery_healing_service import (
@@ -17,7 +17,7 @@ from services.extreme_nightblade_eye_for_exploitation_context_service import (
 
 
 class ExtremeNightbladeConditionalActualHealService(
-    ExtremeConditionalActualHealOptimizationService
+    ExtremeCanonicalHealingDoneConditionalActualHealService
 ):
     """Evaluate conditional Nightblade heals with target-health Class Mastery.
 
@@ -32,6 +32,10 @@ class ExtremeNightbladeConditionalActualHealService(
     components and enforces the raised Critical Healing cap. A pure Nightblade may
     therefore combine both reviewed mastery choices in one conditional event
     without either contribution being applied after the finished heal.
+
+    Generic conditional Healing Done still follows the shared canonical path, so
+    Curative Curse and Healing Tides join sheet/combat-state, CP, Soul Siphoner,
+    and Restoring Tether-family Healing Done before actual-effect evaluation.
     """
 
     EYE_PENDING_BLOCKER = (
@@ -133,25 +137,31 @@ class ExtremeNightbladeConditionalActualHealService(
             build=build,
             context=context,
         )
+        healing_done_bonus, healing_done_sources, conditional_unresolved = (
+            self._conditional_healing_done_inputs(
+                build=build,
+                progression=candidate_progression,
+                entity_id=entity_id,
+            )
+        )
 
         event = self.healing_events.evaluate(
             build=build,
             context=context,
             entity_id=entity_id,
             target_health_fraction=self.target_health_fraction,
+            additional_healing_done_bonus=healing_done_bonus,
+            additional_healing_done_sources=healing_done_sources,
         )
         event = self._clear_proven_eye_blocker(event, eye_applied=eye_applied)
+        if conditional_unresolved:
+            event = replace(
+                event,
+                unresolved=tuple(
+                    dict.fromkeys((*event.unresolved, *conditional_unresolved))
+                ),
+            )
         event = self._templar_mending_event(
-            build=build,
-            progression=candidate_progression,
-            event=event,
-        )
-        event = self._necromancer_curative_curse_event(
-            build=build,
-            progression=candidate_progression,
-            event=event,
-        )
-        event = self._arcanist_healing_tides_event(
             build=build,
             progression=candidate_progression,
             event=event,
