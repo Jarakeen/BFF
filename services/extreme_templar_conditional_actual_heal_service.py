@@ -5,9 +5,11 @@ from dataclasses import replace
 from minmax.character_progression import CharacterProgression
 from minmax.combat_state import CombatState
 from models.build_model import PlayerBuild
-from services.extreme_conditional_actual_heal_optimization_service import (
-    ExtremeConditionalActualHealOptimizationService,
+from services.extreme_actual_heal_optimization_service import (
     ExtremeActualHealOptimizationResult,
+)
+from services.extreme_canonical_healing_done_conditional_actual_heal_service import (
+    ExtremeCanonicalHealingDoneConditionalActualHealService,
 )
 from services.extreme_templar_illuminate_combat_state_service import (
     ExtremeTemplarIlluminateCombatStateService,
@@ -15,15 +17,15 @@ from services.extreme_templar_illuminate_combat_state_service import (
 
 
 class ExtremeTemplarConditionalActualHealService(
-    ExtremeConditionalActualHealOptimizationService
+    ExtremeCanonicalHealingDoneConditionalActualHealService
 ):
     """Add reviewed Templar Illuminate power state to conditional heal search.
 
     Illuminate is intentionally modeled before coefficient evaluation. It grants
     the named U50 ``Minor Sorcery`` buff after a qualifying Dawn's Wrath cast,
-    which increases Spell Damage rather than Healing Done. The generic conditional
-    service still owns target-health, Mending, Sacred Ground, Restoration Staff,
-    Necromancer, and Arcanist conditional behavior.
+    which increases Spell Damage rather than Healing Done. The canonical
+    conditional service still owns target-health mechanics and the additive
+    Healing Done bucket, including Curative Curse and Healing Tides.
     """
 
     def __init__(
