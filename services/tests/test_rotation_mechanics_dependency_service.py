@@ -2,6 +2,13 @@ from minmax.character_build.character_build import CharacterBuild
 from minmax.character_build.character_class import CharacterClass
 from minmax.character_build.gear_piece import ArmorPiece, GearSlot
 from minmax.role import Role
+from services.canonical_mechanics_coverage_audit import (
+    CanonicalMechanicsCoverageAuditService,
+    CanonicalMechanicsCoverageStatus,
+)
+from services.canonical_mechanics_coverage_inventory import (
+    shared_canonical_mechanics_inventory,
+)
 from services.rotation_mechanics_dependency_service import (
     RotationMechanicsDependencyService,
 )
@@ -52,9 +59,45 @@ def test_set_and_consumable_identity_add_only_relevant_runtime_domains() -> None
         "gear:conditional_topology",
         "armor:weight_passive_semantics",
         "consumables:runtime_resource_and_buff_policy",
+        "consumables:potion_cooldown_effective",
     )
     assert "procs:conditional_topology" not in keys
     assert "passives:runtime_semantics" not in keys
+
+
+def test_effective_potion_cooldown_dependency_is_potion_specific_and_advisory() -> None:
+    potion_dependencies = RotationMechanicsDependencyService().discover(
+        character_build=_build(potion_id="essence_of_spell_power"),
+        recovery_enabled=False,
+    )
+    poison_dependencies = RotationMechanicsDependencyService().discover(
+        character_build=_build(poison_id="test_poison"),
+        recovery_enabled=False,
+    )
+
+    potion_by_key = {item.key: item for item in potion_dependencies}
+    assert potion_by_key["consumables:potion_cooldown_effective"].evidence == (
+        "potion=essence_of_spell_power",
+    )
+    assert "consumables:potion_cooldown_effective" not in {
+        item.key for item in poison_dependencies
+    }
+
+    report = CanonicalMechanicsCoverageAuditService().audit(
+        shared_canonical_mechanics_inventory()
+    )
+    row = {
+        item.key: item for item in report.rows
+    }["consumables:potion_cooldown_effective"]
+    gap = report.dependency_gaps_for(
+        "rotation_maker",
+        ("consumables:potion_cooldown_effective",),
+    )[0]
+
+    assert row.status is CanonicalMechanicsCoverageStatus.PARTIAL
+    assert not gap.blocking
+    assert "effective cooldown" in row.capability.casefold()
+    assert "complete" in row.missing_evidence.casefold()
 
 
 def test_runtime_evidence_adds_passive_uptime_assignment_and_encounter_domains() -> None:
@@ -187,6 +230,9 @@ def test_dependencies_retain_exact_selected_build_evidence_without_inventing_sem
     assert by_key["consumables:runtime_resource_and_buff_policy"].evidence == (
         "potion=essence_of_spell_power",
         "poison=test_poison",
+    )
+    assert by_key["consumables:potion_cooldown_effective"].evidence == (
+        "potion=essence_of_spell_power",
     )
     assert by_key["effect_duration:build_modifiers"].evidence == (
         "uptime_requirement_count=2",
