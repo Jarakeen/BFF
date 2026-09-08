@@ -31,9 +31,9 @@ class RotationSavedBuildActionTimingService:
     Rotation schedules use seconds, so this bridge performs the unit conversion once
     at the data boundary. It does not invent a global cooldown, animation lock, or
     execution cadence. Zero/NULL timing means no requirement is emitted. Multiple
-    exact-name canonical rows are accepted only when their normalized cooldown,
-    cast, and channel evidence agrees; conflicting rows remain unresolved rather
-    than being selected by rank or ability id.
+    exact-name canonical rows are compared only at the highest represented rank;
+    matching top-rank rows may dedupe, while conflicting top-rank evidence remains
+    unresolved rather than being selected by ability id.
     """
 
     def __init__(self, database_path: str | Path = DEFAULT_DATABASE) -> None:
@@ -82,17 +82,21 @@ class RotationSavedBuildActionTimingService:
                     )
                     continue
 
+                highest_rank = max(int(row["rank"] or 0) for row in rows)
+                top_rows = tuple(
+                    row for row in rows if int(row["rank"] or 0) == highest_rank
+                )
                 normalized = {
                     (
                         self._seconds(row["cooldown"]),
                         self._seconds(row["cast_time"]),
                         self._seconds(row["channel_time"]),
                     )
-                    for row in rows
+                    for row in top_rows
                 }
                 if len(normalized) != 1:
                     unresolved.append(
-                        "canonical skill timing is ambiguous for exact saved name: "
+                        "canonical skill timing is ambiguous at highest rank for exact saved name: "
                         f"{action_name}"
                     )
                     continue
@@ -144,6 +148,7 @@ class RotationSavedBuildActionTimingService:
             db.execute(
                 """
                 SELECT
+                    sr.rank,
                     sr.cooldown,
                     sr.cast_time,
                     sr.channel_time
