@@ -10,6 +10,7 @@ def install() -> None:
     if _INSTALLED:
         return
 
+    from services.extreme_complete_blueprint_service import ExtremeCompleteBlueprintService
     from ui import main_window
     from ui.extreme_critical_profile_support import install as install_extreme_critical_profile_support
     from ui.extreme_class_configuration_support import install as install_extreme_class_configuration_support
@@ -25,6 +26,10 @@ def install() -> None:
             return
 
         page = ExtremeOptimizationPage()
+        # The page still owns the same public blueprint-service contract, but
+        # from-scratch searches now use the systemic completion layer rather
+        # than the earlier Spell-Damage-only profile implementation.
+        page.blueprint_service = ExtremeCompleteBlueprintService()
         self.pages["extreme_optimization"] = page
         container = self.wrap_page(page)
         self.page_containers["extreme_optimization"] = container
