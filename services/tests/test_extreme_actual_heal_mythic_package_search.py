@@ -146,4 +146,6 @@ def test_actual_heal_optimizer_can_select_ring_mythic_five_plus_five_plus_one(mo
     assert result.optimized_build.FrontBarWeapon.Set == "Secondary Healer"
     assert result.optimized_build.FrontBarWeapon.WeaponType == "Restoration Staff"
     assert any("ring mythic" in item for item in result.search_scope)
-    assert any("exact two-slot weapon-subtype" in item for item in result.omitted_scope)
+    assert any("exact active weapon subtype proof" in item for item in result.search_scope)
+    assert not any("weapon-subtype" in item for item in result.omitted_scope)
+    assert "non-ring mythics / arena-weapon packages" in result.omitted_scope
