@@ -67,9 +67,11 @@ class RotationDashboardCanonicalCandidateSupport:
 
     Production defaults compose two final-candidate evidence adapters. Automatic
     potion cadence derives an effective shared cooldown only from complete build and
-    scenario evidence. Ultimate affordability replays the seed projection's exact
-    resolved spend rules and generation events against every stabilized candidate.
-    Missing evidence in either subsystem preserves the existing no-guess behavior.
+    scenario evidence. Ultimate affordability replays the seed projection's resolved
+    spend rules and only generation evidence that remains valid across candidate
+    regeneration. Seed-derived scheduled-attack generation is deliberately not reused
+    because final candidate attack timing may differ. Missing evidence in either
+    subsystem preserves the existing no-guess behavior.
     """
 
     def __init__(
@@ -166,7 +168,10 @@ class RotationDashboardCanonicalCandidateSupport:
             if ultimate_projection is not None
             else ()
         )
-        if spend_rules:
+        attack_generation_is_seed_dependent = bool(
+            generation_request.use_scheduled_combat_attacks_for_ultimate
+        )
+        if spend_rules and not attack_generation_is_seed_dependent:
             candidate_kwargs["ultimate_affordability_requirement"] = (
                 RotationUltimateAffordabilityRequirement(
                     starting_amount=float(generation_request.starting_ultimate),
