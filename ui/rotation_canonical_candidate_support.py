@@ -25,6 +25,10 @@ from minmax.rotation_action_range import (
     RotationActionRangeAssessor,
     RotationTargetDistanceWindow,
 )
+from minmax.rotation_action_slot_legality import (
+    RotationActionSlotAssessment,
+    RotationActionSlotAssessor,
+)
 from minmax.rotation_demand_window import RotationDemandWindow
 from minmax.rotation_plan import RotationPlan
 from models.build_model import PlayerBuild
@@ -56,6 +60,10 @@ from services.rotation_recovery_heavy_replay_service import (
 from services.rotation_saved_build_action_range_service import (
     RotationSavedBuildActionRangeEvidence,
     RotationSavedBuildActionRangeService,
+)
+from services.rotation_saved_build_action_slot_service import (
+    RotationSavedBuildActionSlotEvidence,
+    RotationSavedBuildActionSlotService,
 )
 from services.rotation_saved_build_action_timing_service import (
     RotationSavedBuildActionTimingEvidence,
@@ -89,6 +97,9 @@ class RotationCanonicalCandidateApplicationResult:
     action_range_evidence: RotationSavedBuildActionRangeEvidence = field(
         default_factory=RotationSavedBuildActionRangeEvidence
     )
+    action_slot_evidence: RotationSavedBuildActionSlotEvidence = field(
+        default_factory=RotationSavedBuildActionSlotEvidence
+    )
 
 
 class RotationCanonicalCandidateSupport:
@@ -100,12 +111,13 @@ class RotationCanonicalCandidateSupport:
     the Phase 4 sustain timeline. Different front/back values therefore remain
     modeled rather than forcing a false global static resource state.
 
-    Canonical saved-skill timing and range evidence are resolved once from the
-    selected build and applied to each *final stabilized* candidate scorecard.
-    Recovery or candidate regeneration can move actions, so legality is deliberately
-    checked against the final plan rather than only the seed schedule. Range checks
-    additionally require explicit encounter target-distance windows; this bridge
-    never invents positioning from role, encounter name, or action identity.
+    Canonical saved-skill timing, range, and exact slot ownership are resolved once
+    from the selected build and applied to each *final stabilized* candidate
+    scorecard. Recovery or candidate regeneration can move actions, so legality is
+    deliberately checked against the final plan rather than only the seed schedule.
+    Range checks additionally require explicit encounter target-distance windows;
+    this bridge never invents positioning from role, encounter name, or action
+    identity.
     """
 
     def __init__(
@@ -119,9 +131,11 @@ class RotationCanonicalCandidateSupport:
         static_context_service: RotationStaticBuildContextService | None = None,
         action_timing_service: RotationSavedBuildActionTimingService | None = None,
         action_range_service: RotationSavedBuildActionRangeService | None = None,
+        action_slot_service: RotationSavedBuildActionSlotService | None = None,
         cooldown_assessor: RotationActionCooldownAssessor | None = None,
         occupancy_assessor: RotationActionOccupancyAssessor | None = None,
         range_assessor: RotationActionRangeAssessor | None = None,
+        slot_assessor: RotationActionSlotAssessor | None = None,
     ) -> None:
         database = Path(database_path) if database_path is not None else get_data_dir() / "eso.db"
         self.build_adapter = build_adapter or SavedBuildCharacterAdapter(database)
@@ -135,9 +149,11 @@ class RotationCanonicalCandidateSupport:
         self.action_range_service = (
             action_range_service or RotationSavedBuildActionRangeService(database)
         )
+        self.action_slot_service = action_slot_service or RotationSavedBuildActionSlotService()
         self.cooldown_assessor = cooldown_assessor or RotationActionCooldownAssessor()
         self.occupancy_assessor = occupancy_assessor or RotationActionOccupancyAssessor()
         self.range_assessor = range_assessor or RotationActionRangeAssessor()
+        self.slot_assessor = slot_assessor or RotationActionSlotAssessor()
 
     def run_effects(
         self,
@@ -189,10 +205,12 @@ class RotationCanonicalCandidateSupport:
         target_distance_tuple = tuple(target_distance_windows)
         action_timing_evidence = self.action_timing_service.resolve(player_build)
         action_range_evidence = self.action_range_service.resolve(player_build)
+        action_slot_evidence = self.action_slot_service.resolve(player_build)
         legality_scorecard_resolver = self._with_action_legality(
             scorecard_resolver,
             action_timing_evidence=action_timing_evidence,
             action_range_evidence=action_range_evidence,
+            action_slot_evidence=action_slot_evidence,
             target_distance_windows=target_distance_tuple,
         )
         dependencies: tuple[RotationMechanicsDependency, ...] = ()
@@ -226,6 +244,7 @@ class RotationCanonicalCandidateSupport:
                     static_context=static_context,
                     action_timing_evidence=action_timing_evidence,
                     action_range_evidence=action_range_evidence,
+                    action_slot_evidence=action_slot_evidence,
                 )
 
             calculation_context = static_context.context_for("front")
@@ -241,6 +260,7 @@ class RotationCanonicalCandidateSupport:
                     static_context=static_context,
                     action_timing_evidence=action_timing_evidence,
                     action_range_evidence=action_range_evidence,
+                    action_slot_evidence=action_slot_evidence,
                 )
             canonical_maximum_amount = static_context.maximum_amount_for("front", resource)
             effective_maximum_amount = canonical_maximum_amount
@@ -282,6 +302,7 @@ class RotationCanonicalCandidateSupport:
                     canonical_maximum_amount=canonical_maximum_amount,
                     action_timing_evidence=action_timing_evidence,
                     action_range_evidence=action_range_evidence,
+                    action_slot_evidence=action_slot_evidence,
                 )
 
         result = self.pipeline.run_effects(
@@ -317,6 +338,7 @@ class RotationCanonicalCandidateSupport:
             canonical_maximum_amount=canonical_maximum_amount,
             action_timing_evidence=action_timing_evidence,
             action_range_evidence=action_range_evidence,
+            action_slot_evidence=action_slot_evidence,
         )
 
     def _with_action_legality(
@@ -325,6 +347,7 @@ class RotationCanonicalCandidateSupport:
         *,
         action_timing_evidence: RotationSavedBuildActionTimingEvidence,
         action_range_evidence: RotationSavedBuildActionRangeEvidence,
+        action_slot_evidence: RotationSavedBuildActionSlotEvidence,
         target_distance_windows: tuple[RotationTargetDistanceWindow, ...],
     ) -> RecoveryFinalScorecardResolver:
         def resolve(snapshot):
@@ -332,6 +355,7 @@ class RotationCanonicalCandidateSupport:
             cooldown_assessment = scorecard.cooldown_assessment
             occupancy_assessment = scorecard.occupancy_assessment
             range_assessment = scorecard.range_assessment
+            slot_assessment = scorecard.slot_assessment
 
             if action_timing_evidence.cooldown_requirements:
                 automatic = self.cooldown_assessor.assess(
@@ -367,10 +391,22 @@ class RotationCanonicalCandidateSupport:
                     )
                 )
 
+            if action_slot_evidence.slot_requirements:
+                automatic = self.slot_assessor.assess(
+                    snapshot.plan,
+                    action_slot_evidence.slot_requirements,
+                )
+                slot_assessment = RotationActionSlotAssessment(
+                    self._dedupe_objects(
+                        scorecard.slot_violations + automatic.violations
+                    )
+                )
+
             if (
                 cooldown_assessment is scorecard.cooldown_assessment
                 and occupancy_assessment is scorecard.occupancy_assessment
                 and range_assessment is scorecard.range_assessment
+                and slot_assessment is scorecard.slot_assessment
             ):
                 return scorecard
             return replace(
@@ -378,6 +414,7 @@ class RotationCanonicalCandidateSupport:
                 cooldown_assessment=cooldown_assessment,
                 occupancy_assessment=occupancy_assessment,
                 range_assessment=range_assessment,
+                slot_assessment=slot_assessment,
             )
 
         return resolve
