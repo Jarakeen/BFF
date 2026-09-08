@@ -28,6 +28,9 @@ class RotationSavedBuildActionRangeService:
     infer encounter distance, target identity, radius behavior, or units. Callers
     evaluating range legality must supply target-distance evidence in the same unit.
     NULL/zero max-range evidence is not promoted into an invented hard limit.
+    Multiple exact-name rows are accepted only when their normalized min/max range
+    evidence agrees; conflicting canonical rows remain unresolved rather than being
+    selected by rank or ability id.
     """
 
     def __init__(self, database_path: str | Path = DEFAULT_DATABASE) -> None:
@@ -62,28 +65,45 @@ class RotationSavedBuildActionRangeService:
                 )
 
             for action_name, action_kind in slots:
-                row = self._range_row(db, action_name)
-                if row is None:
+                rows = self._range_rows(db, action_name)
+                if not rows:
                     unresolved.append(
                         f"canonical skill range not found by exact saved name: {action_name}"
                     )
                     continue
 
-                minimum = self._nonnegative(row["min_range"])
-                maximum = self._positive_or_none(row["max_range"])
-                if minimum is None:
-                    unresolved.append(
-                        f"canonical skill minimum range is invalid: {action_name}"
-                    )
+                normalized: set[tuple[float, float | None]] = set()
+                invalid = False
+                for row in rows:
+                    minimum = self._nonnegative(row["min_range"])
+                    maximum = self._positive_or_none(row["max_range"])
+                    if minimum is None:
+                        unresolved.append(
+                            f"canonical skill minimum range is invalid: {action_name}"
+                        )
+                        invalid = True
+                        break
+                    if maximum is not None and maximum < minimum:
+                        unresolved.append(
+                            f"canonical skill range is inconsistent for {action_name}: "
+                            f"minimum {minimum:g}, maximum {maximum:g}"
+                        )
+                        invalid = True
+                        break
+                    normalized.add((minimum, maximum))
+
+                if invalid:
                     continue
-                if maximum is not None and maximum < minimum:
+                if len(normalized) != 1:
                     unresolved.append(
-                        f"canonical skill range is inconsistent for {action_name}: "
-                        f"minimum {minimum:g}, maximum {maximum:g}"
+                        "canonical skill range is ambiguous for exact saved name: "
+                        f"{action_name}"
                     )
                     continue
 
-                # No positive max and no positive min means the imported row does
+                minimum, maximum = next(iter(normalized))
+
+                # No positive max and no positive min means the imported rows do
                 # not provide a useful hard range bound for Rotation Maker.
                 if maximum is None and minimum <= 0:
                     continue
@@ -116,22 +136,23 @@ class RotationSavedBuildActionRangeService:
         return tuple(values)
 
     @staticmethod
-    def _range_row(db: sqlite3.Connection, action_name: str) -> sqlite3.Row | None:
-        return db.execute(
-            """
-            SELECT
-                sr.min_range,
-                sr.max_range
-            FROM skill_rank sr
-            JOIN skill s ON s.id = sr.skill_id
-            LEFT JOIN ability a ON a.ability_id = sr.ability_id
-            WHERE LOWER(TRIM(COALESCE(NULLIF(sr.raw_name, ''), NULLIF(a.name, ''), s.name)))
-                = LOWER(TRIM(?))
-            ORDER BY COALESCE(sr.rank, 0) DESC, sr.ability_id DESC
-            LIMIT 1
-            """,
-            (action_name,),
-        ).fetchone()
+    def _range_rows(db: sqlite3.Connection, action_name: str) -> tuple[sqlite3.Row, ...]:
+        return tuple(
+            db.execute(
+                """
+                SELECT
+                    sr.min_range,
+                    sr.max_range
+                FROM skill_rank sr
+                JOIN skill s ON s.id = sr.skill_id
+                LEFT JOIN ability a ON a.ability_id = sr.ability_id
+                WHERE LOWER(TRIM(COALESCE(NULLIF(sr.raw_name, ''), NULLIF(a.name, ''), s.name)))
+                    = LOWER(TRIM(?))
+                ORDER BY COALESCE(sr.rank, 0) DESC, sr.ability_id DESC
+                """,
+                (action_name,),
+            ).fetchall()
+        )
 
     @staticmethod
     def _nonnegative(value: object) -> float | None:
