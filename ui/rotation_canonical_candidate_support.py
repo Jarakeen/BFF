@@ -120,6 +120,9 @@ class RotationCanonicalCandidateSupport:
     against the final plan rather than only the seed schedule. Range checks
     additionally require explicit encounter target-distance windows; this bridge
     never invents positioning from role, encounter name, or action identity.
+
+    Ambiguous saved-build slot identity is structural unresolved evidence and blocks
+    candidate evaluation rather than silently omitting legality for that action.
     """
 
     def __init__(
@@ -211,6 +214,27 @@ class RotationCanonicalCandidateSupport:
         action_timing_evidence = self.action_timing_service.resolve(player_build)
         action_range_evidence = self.action_range_service.resolve(player_build)
         action_slot_evidence = self.action_slot_service.resolve(player_build)
+        if action_slot_evidence.unresolved:
+            reasons = [
+                "canonical candidate evaluation was not run because saved-build action slot identity is unresolved"
+            ]
+            reasons.extend(
+                f"saved-build slot evidence: {item}"
+                for item in action_slot_evidence.unresolved
+                if str(item).strip()
+            )
+            return RotationCanonicalCandidateApplicationResult(
+                build_adaptation=adaptation,
+                pipeline_result=None,
+                validation=RotationRecoveryValidationEvidence(
+                    scope=RotationRecoveryValidationScope.NOT_EVALUATED,
+                    selectable=None,
+                    reasons=tuple(reasons),
+                ),
+                action_timing_evidence=action_timing_evidence,
+                action_range_evidence=action_range_evidence,
+                action_slot_evidence=action_slot_evidence,
+            )
         legality_scorecard_resolver = self._with_action_legality(
             scorecard_resolver,
             action_timing_evidence=action_timing_evidence,
