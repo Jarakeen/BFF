@@ -13,7 +13,6 @@ from services.rotation_candidate_effect_obligation_service import (
 from services.rotation_candidate_ranking_service import (
     RotationCandidateRankingInput,
     RotationCandidateRankingResult,
-    RotationCandidateRankingService,
 )
 from services.rotation_candidate_scorecard_service import RotationCandidateScorecard
 from services.rotation_effect_uptime_service import (
@@ -23,6 +22,9 @@ from services.rotation_effect_uptime_service import (
 from services.rotation_recovery_heavy_candidate_orchestration_service import (
     RecoveryFinalFamilyEvaluator,
     RecoveryHeavyStabilizedCandidateSnapshot,
+)
+from services.rotation_target_capacity_ranking_service import (
+    RotationTargetCapacityRankingService,
 )
 
 
@@ -70,8 +72,14 @@ class RotationRecoveryHeavyFinalFamilyEvaluationService:
     - optional build-specific effect obligations are reassessed from each final plan;
     - passives are forwarded unchanged to the canonical build-aware uptime service.
 
+    The default base ranker also recognizes explicit target-capacity scorecard
+    evidence as a hard obligation. The effect-obligation ranker delegates to that
+    same base ranker so capacity legality cannot disappear merely because effect
+    uptime evaluation is also enabled.
+
     The service never invents encounter requirements, reserve thresholds, uptime
-    floors, effect identities, passives, set behavior, or strategy semantics.
+    floors, effect identities, passives, set behavior, target caps, or strategy
+    semantics.
     """
 
     def __init__(
@@ -81,9 +89,11 @@ class RotationRecoveryHeavyFinalFamilyEvaluationService:
         effect_uptime_service: _EffectUptimeAssessor | None = None,
         effect_ranker: _EffectRanker | None = None,
     ) -> None:
-        self.base_ranker = base_ranker or RotationCandidateRankingService()
+        self.base_ranker = base_ranker or RotationTargetCapacityRankingService()
         self.effect_uptime_service = effect_uptime_service or RotationEffectUptimeService()
-        self.effect_ranker = effect_ranker or RotationCandidateEffectObligationService()
+        self.effect_ranker = effect_ranker or RotationCandidateEffectObligationService(
+            base_ranker=self.base_ranker,
+        )
 
     def evaluate_generic(
         self,
