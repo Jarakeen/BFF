@@ -57,10 +57,11 @@ class RotationCandidateRankingService:
     fractions break soft resource ties before raw absolute deltas. Otherwise-equal
     resource outcomes prefer less recovery/restoration wasted against the active
     ceiling. Explicit bar-swap burden is used only as a final soft tie-break before
-    the stable candidate-id fallback. Heavy-attack and total-action burden are
-    currently diagnostic only because extra actions may be required by sustain,
-    encounter obligations, or support maintenance. Shared baseline or model
-    limitations remain visible but do not count against one candidate specifically.
+    the stable candidate-id fallback. Heavy-attack, total-action, light-attack, and
+    potion burden are currently diagnostic only because extra actions may be
+    required by sustain, encounter obligations, support maintenance, or explicit
+    caller intent. Shared baseline or model limitations remain visible but do not
+    count against one candidate specifically.
     """
 
     def rank(
@@ -288,6 +289,20 @@ class RotationCandidateRankingService:
             reasons.append(
                 "heavy-attack burden: "
                 f"candidate {candidate_heavy_attacks}, delta {heavy_attack_delta:+d}; diagnostic only"
+            )
+        light_attack_delta = int(getattr(consequence, "light_attack_delta", 0))
+        candidate_light_attacks = int(getattr(consequence, "candidate_light_attacks", 0))
+        if light_attack_delta or candidate_light_attacks:
+            reasons.append(
+                "light-attack burden: "
+                f"candidate {candidate_light_attacks}, delta {light_attack_delta:+d}; diagnostic only"
+            )
+        potion_delta = int(getattr(consequence, "potion_delta", 0))
+        candidate_potions = int(getattr(consequence, "candidate_potions", 0))
+        if potion_delta or candidate_potions:
+            reasons.append(
+                "potion burden: "
+                f"candidate {candidate_potions}, delta {potion_delta:+d}; diagnostic only"
             )
         return tuple(reasons)
 
