@@ -30,8 +30,16 @@ class _FakeSustainService:
         restoration_events=(),
         maximum_events=(),
         calculation_context=None,
+        displayed_recovery_at=None,
     ):
-        self.calls.append(tuple(restoration_events))
+        self.calls.append(
+            {
+                "restoration_events": tuple(restoration_events),
+                "maximum_events": tuple(maximum_events),
+                "calculation_context": calculation_context,
+                "displayed_recovery_at": displayed_recovery_at,
+            }
+        )
         current = 2500
         applied = []
         for event in sorted(restoration_events, key=lambda item: item.time_seconds):
@@ -142,7 +150,30 @@ def test_verified_heavy_restore_is_replayed_before_later_recovery_pressure() -> 
     assert replayed_pressure.current_amount == 6500
     assert replay.restoration_events[0].time_seconds == 3.8
     assert len(replay.steps) == 1
-    assert sustain.calls == [(), (replay.restoration_events[0],)]
+    assert [call["restoration_events"] for call in sustain.calls] == [
+        (),
+        (replay.restoration_events[0],),
+    ]
+
+
+def test_replay_forwards_time_aware_recovery_to_every_sustain_pass() -> None:
+    sustain = _FakeSustainService()
+    service = RotationRecoveryHeavyReplayService(sustain_service=sustain)
+    recovery_at = lambda time_seconds: 1800 if time_seconds < 4.0 else 2050
+    context = object()
+
+    service.replay(
+        build=PlayerBuild(Name="Magrat", BuildName="DF Healer"),
+        plan=_plan(),
+        resource=ResourceType.MAGICKA,
+        restoration_resolver=_restore_for_first_heavy,
+        calculation_context=context,
+        displayed_recovery_at=recovery_at,
+    )
+
+    assert len(sustain.calls) == 2
+    assert all(call["calculation_context"] is context for call in sustain.calls)
+    assert all(call["displayed_recovery_at"] is recovery_at for call in sustain.calls)
 
 
 def test_replayed_pressure_resolver_feeds_updated_resource_state_back_to_generation() -> None:
