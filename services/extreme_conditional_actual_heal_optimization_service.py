@@ -6,6 +6,7 @@ from minmax.character_progression import AttributeAllocation, CharacterProgressi
 from minmax.combat_state import CombatState
 from models.build_model import PlayerBuild
 from services.extreme_actual_heal_optimization_service import (
+    ExtremeActualHealOptimizationResult,
     ExtremeActualHealOptimizationService,
 )
 from services.extreme_healing_event_service import ExtremeHealingEventResult
@@ -27,6 +28,10 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
     Drain resolver proves weapon/passive legality and routes Major Mending through
     canonical ``CombatState``. The +16% therefore remains owned by the named-buff
     Healing Done layer rather than becoming an ad-hoc event multiplier.
+
+    Conditional scenario assumptions are added to the returned search scope so a
+    standalone optimization result cannot be mistaken for the ordinary standing
+    maximum or for a different emergency/combat-state window.
     """
 
     def __init__(
@@ -46,6 +51,36 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         )
         self.restoration_heavy_state = restoration_heavy_state
         super().__init__(**kwargs)
+
+    def optimize(
+        self,
+        baseline_build: PlayerBuild,
+        entity_id: str,
+        *,
+        active_bar: str = "front",
+        max_passes: int = 24,
+        progression_override: CharacterProgression | None = None,
+    ) -> ExtremeActualHealOptimizationResult:
+        result = super().optimize(
+            baseline_build,
+            entity_id,
+            active_bar=active_bar,
+            max_passes=max_passes,
+            progression_override=progression_override,
+        )
+        scenarios = [
+            "explicit conditional target health fraction "
+            f"{self.target_health_fraction:.6f}"
+        ]
+        if self.fully_charged_restoration_heavy_attack_completed:
+            scenarios.append(
+                "explicit fully charged Restoration Staff heavy attack completed; "
+                "Essence Drain Major Mending requires canonical legality proof"
+            )
+        return replace(
+            result,
+            search_scope=(*scenarios, *result.search_scope),
+        )
 
     def _restoration_combat_state(
         self,
