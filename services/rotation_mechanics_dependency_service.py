@@ -193,6 +193,18 @@ class RotationMechanicsDependencyService:
                 evidence=consumables,
             )
 
+        if character_build.potion_id:
+            self._add(
+                dependencies,
+                "consumables:potion_cooldown_effective",
+                (
+                    "The build selects a potion, so final-plan potion cadence depends on a "
+                    "verified effective shared cooldown after all applicable item, skill, "
+                    "set, passive, and scenario-specific modifiers are resolved."
+                ),
+                evidence=(f"potion={character_build.potion_id}",),
+            )
+
         if passives or character_build.class_mastery.passive_ability_ids:
             passive_lines = tuple(
                 f"passive_skill_line={value}"
