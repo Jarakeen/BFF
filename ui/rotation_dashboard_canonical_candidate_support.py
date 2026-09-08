@@ -22,6 +22,7 @@ from services.rotation_recovery_heavy_replay_service import (
     RecoveryReserveAssessmentResolver,
     VerifiedRecoveryHeavyRestorationResolver,
 )
+from services.rotation_static_build_context_service import RotationStaticBuildContextService
 from ui.rotation_canonical_candidate_support import (
     RotationCanonicalCandidateApplicationResult,
     RotationCanonicalCandidateSupport,
@@ -50,9 +51,11 @@ class RotationDashboardCanonicalCandidateSupport:
     canonical saved-build candidate adapter/pipeline.
 
     Recovery stabilization is deliberately disabled while creating the seed. The
-    candidate pipeline owns recovery fixed-point evaluation. Mechanics coverage, when
-    supplied, is forwarded to the canonical bridge where the resolved CharacterBuild
-    can discover only the dependencies relevant to this specific rotation.
+    candidate pipeline owns recovery fixed-point evaluation. The production default
+    canonical candidate bridge also resolves static front/back build context, so
+    verified armor/passive progression and canonical resource ceilings participate in
+    readiness before recovery ranking. Mechanics coverage, when supplied, is then
+    scoped to the resolved CharacterBuild and current rotation evidence.
     """
 
     def __init__(
@@ -62,8 +65,8 @@ class RotationDashboardCanonicalCandidateSupport:
         canonical_candidates: RotationCanonicalCandidateSupport | None = None,
     ) -> None:
         self.generation = generation or RotationGenerationSupport()
-        self.canonical_candidates = (
-            canonical_candidates or RotationCanonicalCandidateSupport()
+        self.canonical_candidates = canonical_candidates or RotationCanonicalCandidateSupport(
+            static_context_service=RotationStaticBuildContextService(),
         )
 
     def run_effects(
