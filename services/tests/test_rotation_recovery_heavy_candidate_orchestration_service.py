@@ -53,6 +53,8 @@ class _FakeCandidateStabilizer:
         restoration_resolver,
         reserve_assessment_resolver=None,
         max_iterations=6,
+        calculation_context=None,
+        maximum_event_resolver=None,
     ):
         plan = generate(None)
         replay = SimpleNamespace(final_plan_id=plan.build_name)
