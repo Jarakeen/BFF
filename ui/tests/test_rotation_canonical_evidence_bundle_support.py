@@ -92,6 +92,28 @@ def _coverage_report(*, status: CanonicalMechanicsCoverageStatus):
     return CanonicalMechanicsCoverageAuditService().audit((row,))
 
 
+def _coverage_row(
+    *,
+    key: str,
+    status: CanonicalMechanicsCoverageStatus,
+) -> CanonicalMechanicsCoverageEvidence:
+    missing = None
+    if status in (
+        CanonicalMechanicsCoverageStatus.PARTIAL,
+        CanonicalMechanicsCoverageStatus.MISSING_CRITICAL,
+    ):
+        missing = f"bring back exact runtime mechanics evidence for {key}"
+    return CanonicalMechanicsCoverageEvidence(
+        domain=CanonicalKnowledgeDomain.SKILL_MECHANIC,
+        key=key,
+        status=status,
+        capability=f"rotation capability for {key}",
+        evidence_source="test fixture",
+        consumers=("rotation_maker",),
+        missing_evidence=missing,
+    )
+
+
 def _support() -> RotationCanonicalEvidenceBundleSupport:
     return RotationCanonicalEvidenceBundleSupport(
         guide_service=_GuideService(_guide()),
@@ -110,6 +132,19 @@ def _build_with_coverage(status: CanonicalMechanicsCoverageStatus):
         trigger_fraction=0.35,
         restoration_resolver=object(),
         coverage_report=_coverage_report(status=status),
+    )
+
+
+def _coverage_build_kwargs() -> dict:
+    return dict(
+        encounter_id="test-encounter",
+        demand_policies=(_policy(),),
+        evaluator_resolver=object(),
+        scorecard_resolver=object(),
+        resource=ResourceType.MAGICKA,
+        maximum_amount=32000,
+        trigger_fraction=0.35,
+        restoration_resolver=object(),
     )
 
 
@@ -245,3 +280,55 @@ def test_bundle_ingests_missing_critical_coverage_as_readiness_blocker() -> None
         "rotation-test:missing_critical"
     ]
     assert bundle.advisory_knowledge_gaps == ()
+
+
+def test_bundle_declared_dependencies_ignore_unrelated_critical_coverage() -> None:
+    report = CanonicalMechanicsCoverageAuditService().audit(
+        (
+            _coverage_row(
+                key="selected-ready",
+                status=CanonicalMechanicsCoverageStatus.CALCULATION_READY,
+            ),
+            _coverage_row(
+                key="selected-partial",
+                status=CanonicalMechanicsCoverageStatus.PARTIAL,
+            ),
+            _coverage_row(
+                key="unrelated-critical",
+                status=CanonicalMechanicsCoverageStatus.MISSING_CRITICAL,
+            ),
+        )
+    )
+
+    bundle = _support().build(
+        **_coverage_build_kwargs(),
+        coverage_report=report,
+        coverage_dependency_keys=("selected-ready", "selected-partial"),
+    )
+
+    assert bundle.ready is True
+    assert bundle.blocking_knowledge_gaps == ()
+    assert [gap.key for gap in bundle.advisory_knowledge_gaps] == ["selected-partial"]
+
+
+def test_bundle_declared_missing_dependency_blocks_readiness() -> None:
+    report = CanonicalMechanicsCoverageAuditService().audit(
+        (
+            _coverage_row(
+                key="known-ready",
+                status=CanonicalMechanicsCoverageStatus.CALCULATION_READY,
+            ),
+        )
+    )
+
+    bundle = _support().build(
+        **_coverage_build_kwargs(),
+        coverage_report=report,
+        coverage_dependency_keys=("known-ready", "build-specific:unknown-mechanic"),
+    )
+
+    assert bundle.ready is False
+    assert [gap.key for gap in bundle.blocking_knowledge_gaps] == [
+        "build-specific:unknown-mechanic"
+    ]
+    assert "no canonical coverage evidence" in bundle.blocking_knowledge_gaps[0].summary
