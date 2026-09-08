@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
+
+from minmax.resource_costs import ResourceType
 from services.rotation_candidate_ranking_service import (
     RotationCandidateRankingInput,
     RotationCandidateRankingService,
@@ -44,6 +47,7 @@ def _scorecard(
     shortfall: int = 0,
     inherited_unresolved: tuple[str, ...] = (),
     candidate_specific_unresolved: tuple[str, ...] = (),
+    reserve_assessments: tuple[object, ...] = (),
 ) -> RotationCandidateScorecard:
     class _Requirement:
         pass
@@ -59,6 +63,7 @@ def _scorecard(
         candidate_shortfall=shortfall,
         inherited_unresolved=inherited_unresolved,
         candidate_specific_unresolved=candidate_specific_unresolved,
+        reserve_assessments=reserve_assessments,
     )
 
 
@@ -186,6 +191,34 @@ def test_normalized_resource_floor_breaks_soft_tie_before_raw_amounts() -> None:
         "better-raw-worse-fraction",
     ]
     assert any("normalized resource deltas" in reason for reason in ranked[0].reasons)
+
+
+def test_failed_reserve_reason_includes_normalized_entry_fraction_when_available() -> None:
+    assessment = SimpleNamespace(
+        satisfied=False,
+        shortfall=2000,
+        available_before_start=12_000,
+        available_fraction_before_start=0.4,
+        demand=SimpleNamespace(name="Burst window"),
+        requirement=SimpleNamespace(
+            minimum_amount=14_000,
+            resource=ResourceType.MAGICKA,
+        ),
+    )
+    scorecard = _scorecard(
+        consequence=_consequence(RotationResourceConsequenceKind.NEUTRAL),
+        reserve_assessments=(assessment,),
+    )
+
+    ranked = RotationCandidateRankingService().rank(
+        (RotationCandidateRankingInput("reserve-shortfall", scorecard),)
+    )
+
+    assert ranked[0].tier is RotationCandidateTier.INELIGIBLE
+    assert any(
+        "available 12000 (40.00% of active pool), required 14000 magicka" in reason
+        for reason in ranked[0].reasons
+    )
 
 
 def test_candidate_specific_unresolved_counts_but_shared_baseline_limitations_do_not() -> None:
