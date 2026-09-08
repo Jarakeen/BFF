@@ -57,8 +57,18 @@ def test_exact_cooldown_boundary_is_legal_and_bar_scope_is_optional() -> None:
     )
 
     assert not global_result.legal
-    assert len(global_result.violations) == 1
-    assert global_result.violations[0].time_seconds == 12.0
+    assert len(global_result.violations) == 2
+    assert [
+        (
+            violation.previous_time_seconds,
+            violation.time_seconds,
+            violation.actual_interval_seconds,
+        )
+        for violation in global_result.violations
+    ] == [
+        (10.0, 12.0, 2.0),
+        (12.0, 15.0, 3.0),
+    ]
     assert front_only_result.legal
 
 
