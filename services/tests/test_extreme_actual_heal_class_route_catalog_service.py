@@ -53,12 +53,41 @@ SUBCLASS_WARDEN = ExtremeHealClassRoute(
         )
     ),
 )
+PURE_TEMPLAR = ExtremeHealClassRoute(
+    base_class=CharacterClass.TEMPLAR,
+    configuration=ClassSkillLineConfiguration(
+        equipped_skill_lines=(
+            "aedric_spear",
+            "dawns_wrath",
+            "restoring_light",
+        )
+    ),
+)
 
 
 class _Routes:
     def routes_for_base_class(self, base_class):
         assert base_class is CharacterClass.WARDEN
         return (PURE_WARDEN, SUBCLASS_WARDEN)
+
+    @staticmethod
+    def materialize_build(build, route):
+        result = PlayerBuild.from_dict(build.to_dict())
+        result.EsoClass = route.base_class.value
+        result.ClassSkillLines = list(route.equipped_skill_lines)
+        if route.is_subclassed:
+            result.ClassMasteryAbilityIds = []
+        return result
+
+
+class _AllBaseRoutes:
+    ROUTES = {
+        CharacterClass.WARDEN: (PURE_WARDEN,),
+        CharacterClass.TEMPLAR: (PURE_TEMPLAR,),
+    }
+
+    def routes_for_base_class(self, base_class):
+        return self.ROUTES.get(base_class, ())
 
     @staticmethod
     def materialize_build(build, route):
@@ -77,6 +106,16 @@ class _Candidates:
         if "restoring_light" in lines:
             return (_candidate("Breath of Life", skill_line="Restoring Light", class_type="Templar"),)
         return (_candidate("Budding Seeds", skill_line="Green Balance", class_type="Warden"),)
+
+
+class _AllBaseCandidates:
+    def candidates_for_build(self, build, progression, *, class_configuration=None, include_blocked=False):
+        _ = progression, class_configuration, include_blocked
+        if build.EsoClass == CharacterClass.TEMPLAR.value:
+            return (_candidate("Breath of Life", skill_line="Restoring Light", class_type="Templar"),)
+        if build.EsoClass == CharacterClass.WARDEN.value:
+            return (_candidate("Budding Seeds", skill_line="Green Balance", class_type="Warden"),)
+        return ()
 
 
 class _Optimizer:
@@ -98,6 +137,20 @@ class _Optimizer:
         # ordinary positions rather than replacing one arbitrary slot forever.
         score = base + (100.0 if slot == 3 else float(slot))
         event = SimpleNamespace(critical_heal=score)
+        return SimpleNamespace(
+            optimized_event=event,
+            mechanic_complete=True,
+            unresolved=(),
+        )
+
+
+class _AllBaseOptimizer(_Optimizer):
+    def optimize(self, build, entity_id, *, active_bar="front", max_passes=24):
+        _ = entity_id, max_passes
+        skills = build.BackBarSkills if active_bar == "back" else build.FrontBarSkills
+        slot = next(index for index, name in enumerate(skills[:5]) if name)
+        base = 3000.0 if build.EsoClass == CharacterClass.TEMPLAR.value else 1500.0
+        event = SimpleNamespace(critical_heal=base + float(slot))
         return SimpleNamespace(
             optimized_event=event,
             mechanic_complete=True,
@@ -185,5 +238,34 @@ def test_route_catalog_keeps_global_proof_false_while_class_passive_scope_is_inc
     assert result.best_scored is not None
     assert result.best_complete is not None
     assert result.global_maximum_proven is False
+    assert "base-class change" in result.omitted_scope
     assert "complete class-line passive/proc coverage for every equipped route" in result.omitted_scope
     assert "selected heal replacement across the five ordinary active-bar slots" in result.search_scope
+
+
+def test_route_catalog_can_search_all_base_classes_without_claiming_normalized_progression(monkeypatch):
+    _install_progression(monkeypatch)
+    baseline = PlayerBuild(
+        EsoClass="Warden",
+        FrontBarSkills=["", "", "", "", "", "Ultimate"],
+    )
+    service = ExtremeActualHealClassRouteCatalogService(
+        optimizer=_AllBaseOptimizer(),
+        candidates=_AllBaseCandidates(),
+        routes=_AllBaseRoutes(),
+    )
+
+    result = service.rank(baseline, include_base_class_changes=True)
+
+    assert {entry.route.base_class for entry in result.entries} == {
+        CharacterClass.WARDEN,
+        CharacterClass.TEMPLAR,
+    }
+    assert result.best_scored is not None
+    assert result.best_scored.route.base_class is CharacterClass.TEMPLAR
+    assert result.best_scored.candidate.name == "Breath of Life"
+    assert result.best_scored.candidate_build.EsoClass == CharacterClass.TEMPLAR.value
+    assert "all seven ESO base classes" in result.search_scope
+    assert "base-class change" not in result.omitted_scope
+    assert "hypothetical alternate-base-class passive/progression normalization" in result.omitted_scope
+    assert result.global_maximum_proven is False
