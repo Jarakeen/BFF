@@ -45,6 +45,11 @@ class RotationHealerPeriodicObservationFixtureService:
     duration, and cadence remain owned by the existing healer timing services.
     A fixture can corroborate those facts or conflict with them, but it cannot
     silently replace them.
+
+    Extractor-produced fixtures may explicitly carry ``review_status=candidate``.
+    Those are rejected until a reviewer intentionally changes the status to
+    ``reviewed`` after checking the event pairing. Legacy hand-reviewed schema-v1
+    fixtures that omit the field remain accepted for backward compatibility.
     """
 
     SCHEMA_VERSION = 1
@@ -66,6 +71,13 @@ class RotationHealerPeriodicObservationFixtureService:
         if schema_version != self.SCHEMA_VERSION:
             raise ValueError(
                 f"unsupported healer runtime observation schema_version: {schema_version}"
+            )
+
+        review_status = str(payload.get("review_status") or "").strip().casefold()
+        if review_status and review_status != "reviewed":
+            raise ValueError(
+                "healer runtime observation fixture is not reviewed; "
+                f"review_status={review_status!r}"
             )
 
         default_game_version = str(payload.get("game_version") or "").strip() or None
