@@ -130,7 +130,7 @@ class ExtremeActualHealOptimizationService:
         )
         current_score = self._score(baseline_event)
         current_event = baseline_event
-        unresolved = list(baseline_unresolved)
+        current_unresolved = baseline_unresolved
         accepted: list[ExtremeActualHealStep] = []
 
         proxy_objective = self.optimizer.objective("healing_done")
@@ -157,7 +157,6 @@ class ExtremeActualHealOptimizationService:
                     entity_id=normalized_entity,
                     active_bar=active_bar,
                 )
-                unresolved.extend(candidate_unresolved)
                 score = self._score(event)
                 if score <= current_score + 1e-9:
                     continue
@@ -189,7 +188,7 @@ class ExtremeActualHealOptimizationService:
             current = winner.candidate_build
             current_score = next_score
             current_event = winner_event
-            unresolved.extend(winner_unresolved)
+            current_unresolved = winner_unresolved
 
         return ExtremeActualHealOptimizationResult(
             entity_id=normalized_entity,
@@ -198,7 +197,7 @@ class ExtremeActualHealOptimizationService:
             baseline_event=baseline_event,
             optimized_event=current_event,
             steps=tuple(accepted),
-            unresolved=tuple(dict.fromkeys(message for message in unresolved if message)),
+            unresolved=tuple(current_unresolved),
             search_scope=self.SEARCH_SCOPE,
             omitted_scope=self.OMITTED_SCOPE,
         )
