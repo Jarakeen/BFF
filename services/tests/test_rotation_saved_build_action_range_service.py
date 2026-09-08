@@ -132,7 +132,7 @@ def test_saved_build_range_tolerates_minimal_build_stubs(tmp_path) -> None:
     assert evidence.unresolved == ()
 
 
-def test_saved_build_range_rejects_conflicting_exact_name_rows(tmp_path) -> None:
+def test_saved_build_range_rejects_conflicting_exact_name_rows_at_highest_rank(tmp_path) -> None:
     database = tmp_path / "eso.db"
     _create_range_database(database)
     with sqlite3.connect(database) as db:
@@ -153,11 +153,11 @@ def test_saved_build_range_rejects_conflicting_exact_name_rows(tmp_path) -> None
 
     assert evidence.range_requirements == ()
     assert evidence.unresolved == (
-        "canonical skill range is ambiguous for exact saved name: Ranged Skill",
+        "canonical skill range is ambiguous at highest rank for exact saved name: Ranged Skill",
     )
 
 
-def test_saved_build_range_accepts_duplicate_rows_when_range_agrees(tmp_path) -> None:
+def test_saved_build_range_accepts_duplicate_top_rank_rows_when_range_agrees(tmp_path) -> None:
     database = tmp_path / "eso.db"
     _create_range_database(database)
     with sqlite3.connect(database) as db:
@@ -167,7 +167,7 @@ def test_saved_build_range_accepts_duplicate_rows_when_range_agrees(tmp_path) ->
             """
             INSERT INTO skill_rank(
                 id, skill_id, ability_id, rank, raw_name, min_range, max_range
-            ) VALUES(4, 4, 404, 3, 'Ranged Skill', 5, 28)
+            ) VALUES(4, 4, 404, 4, 'Ranged Skill', 5, 28)
             """
         )
         db.commit()
