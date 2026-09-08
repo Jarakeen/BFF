@@ -10,22 +10,29 @@ from services.extreme_conditional_actual_heal_optimization_service import (
 from services.extreme_nightblade_conditional_actual_heal_service import (
     ExtremeNightbladeConditionalActualHealService,
 )
+from services.extreme_templar_conditional_actual_heal_service import (
+    ExtremeTemplarConditionalActualHealService,
+)
+from services.extreme_templar_illuminate_combat_state_service import (
+    ExtremeTemplarIlluminateCombatStateService,
+)
 
 
 class ExtremeConditionalActualHealServiceFactory:
     """Select the reviewed conditional actual-heal optimizer for one build.
 
-    Nightblade Class Mastery contains target-health-dependent power math that must
-    be applied before heal coefficient evaluation. The dedicated Nightblade
-    adapter owns that context rebuild while inheriting the canonical conditional
-    Healing Done path.
+    Builds with an equipped Dawn's Wrath class line use the Templar adapter so
+    reviewed Illuminate Minor Sorcery can modify Spell Damage before coefficient
+    evaluation. This includes legal foreign-class subclass routes. A Nightblade
+    carrying Dawn's Wrath is necessarily subclassed, so Class Mastery is disabled
+    and the Templar route correctly takes precedence over the pure-Nightblade
+    Class Mastery adapter.
 
-    Other classes use the canonical Healing Done conditional optimizer so generic
-    conditional sources such as Curative Curse and Healing Tides join sheet,
-    combat-state, CP, and reviewed bar Healing Done before actual-effect
-    evaluation. Routing on the base class remains harmless for Nightblades without
-    a selected Class Mastery: the dedicated adapter resolves a zero mastery
-    contribution and otherwise behaves like the canonical conditional service.
+    Pure Nightblade builds use the dedicated Class Mastery adapter for
+    target-health-dependent power math. All routes inherit the canonical
+    conditional Healing Done path so generic sources such as Curative Curse and
+    Healing Tides remain in one additive bucket with sheet, combat-state, CP, and
+    reviewed bar Healing Done.
     """
 
     @staticmethod
@@ -35,11 +42,12 @@ class ExtremeConditionalActualHealServiceFactory:
         target_health_fraction: float,
         **kwargs,
     ) -> ExtremeConditionalActualHealOptimizationService:
-        service_type = (
-            ExtremeNightbladeConditionalActualHealService
-            if str(build.EsoClass or "").strip().casefold() == "nightblade"
-            else ExtremeCanonicalHealingDoneConditionalActualHealService
-        )
+        if ExtremeTemplarIlluminateCombatStateService.dawns_wrath_equipped(build):
+            service_type = ExtremeTemplarConditionalActualHealService
+        elif str(build.EsoClass or "").strip().casefold() == "nightblade":
+            service_type = ExtremeNightbladeConditionalActualHealService
+        else:
+            service_type = ExtremeCanonicalHealingDoneConditionalActualHealService
         return service_type(
             target_health_fraction=target_health_fraction,
             **kwargs,
