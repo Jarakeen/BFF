@@ -216,6 +216,33 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
             ),
         ),
         CanonicalMechanicsCoverageEvidence(
+            domain=CanonicalKnowledgeDomain.COOLDOWN,
+            key="consumables:potion_cooldown_effective",
+            status=CanonicalMechanicsCoverageStatus.PARTIAL,
+            capability=(
+                "Rotation Maker enforces one shared potion-cadence timeline when an effective "
+                "cooldown is supplied. Saved-build jewelry Potion Speed reductions are resolved "
+                "with CP160/Truly Superb and Infused provenance, canonical non-item "
+                "potion_cooldown_reduction EffectVariants can be evaluated conservatively, "
+                "and a dedicated aggregator emits a final effective cooldown only when the "
+                "non-item effect inventory is explicitly complete."
+            ),
+            evidence_source=(
+                "minmax/jewelry_potion_cooldown_repository.py; "
+                "services/rotation_saved_build_potion_cooldown_item_service.py; "
+                "services/rotation_potion_cooldown_effect_variant_service.py; "
+                "services/rotation_effective_potion_cooldown_service.py; "
+                "minmax/rotation_potion_cadence.py"
+            ),
+            consumers=ROTATION_OPTIMIZER,
+            missing_evidence=(
+                "Provide a build/context-wide canonical effect inventory that can prove all "
+                "applicable non-item potion-cooldown channels are present or absent, including "
+                "conditional skill/passive/set and scenario-specific modifiers, before "
+                "automatically promoting the aggregated value into final candidate cadence."
+            ),
+        ),
+        CanonicalMechanicsCoverageEvidence(
             domain=CanonicalKnowledgeDomain.SKILL_MECHANIC,
             key="weapons:bash_interrupt_poison_topology",
             status=CanonicalMechanicsCoverageStatus.PARTIAL,
