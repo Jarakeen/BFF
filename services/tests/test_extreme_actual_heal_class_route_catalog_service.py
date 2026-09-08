@@ -111,8 +111,17 @@ class _ProgressionNormalizer:
 
 
 class _Candidates:
-    def candidates_for_build(self, build, progression, *, class_configuration=None, include_blocked=False):
+    def candidates_for_build(
+        self,
+        build,
+        progression,
+        *,
+        class_configuration=None,
+        include_blocked=False,
+        active_bar=None,
+    ):
         _ = include_blocked
+        assert active_bar in {"front", "back"}
         assert progression.passive_rank("Route Passive") == 7
         lines = set(class_configuration.effective_skill_lines(CharacterClass.WARDEN))
         if "restoring_light" in lines:
@@ -121,8 +130,17 @@ class _Candidates:
 
 
 class _AllBaseCandidates:
-    def candidates_for_build(self, build, progression, *, class_configuration=None, include_blocked=False):
+    def candidates_for_build(
+        self,
+        build,
+        progression,
+        *,
+        class_configuration=None,
+        include_blocked=False,
+        active_bar=None,
+    ):
         _ = class_configuration, include_blocked
+        assert active_bar in {"front", "back"}
         if build.EsoClass == CharacterClass.TEMPLAR.value:
             assert progression.passive_rank("Route Passive") == 9
             return (_candidate("Breath of Life", skill_line="Restoring Light", class_type="Templar"),)
@@ -287,6 +305,7 @@ def test_route_catalog_keeps_global_proof_false_while_class_passive_scope_is_inc
     assert "base-class change" in result.omitted_scope
     assert "complete class-line passive/proc coverage for every equipped route" in result.omitted_scope
     assert "hypothetical selected-class-line max progression normalization" in result.search_scope
+    assert "active-bar weapon-skill legality for HEAL candidates" in result.search_scope
     assert "selected heal replacement across the five ordinary active-bar slots" in result.search_scope
 
 
