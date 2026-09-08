@@ -19,6 +19,7 @@ class HealRecipientScope(str, Enum):
     ALLY = "ally"
     SELF_OR_ALLY = "self_or_ally"
     GROUP = "group"
+    PET = "pet"
 
 
 class HealTemporalScope(str, Enum):
