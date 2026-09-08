@@ -386,3 +386,17 @@ While reviewing Templar **Mending**, a current third-party skill page showed a 1
 **What it means in actual play:** a build calculator can disagree with the live game even when both numbers came from reputable-looking current sources, simply because one source has already moved to the next patch's data.
 
 **For BFF:** every mechanic whose value can change across updates needs version-aware evidence. U50 remains U50 until the live version changes; future/PTS values must not overwrite historical or live definitions just because they are newer.
+
+---
+
+## 2026-09-08 — A damage-stat buff can improve healing without being a healing buff
+
+While validating Templar **Illuminate**, BFF confirmed that the passive's reviewed U50 effect belongs in the ordinary named-buff stat path: after a qualifying Dawn's Wrath cast, Illuminate supplies **Minor Sorcery**, which raises Spell Damage by 10%. It does not grant Healing Done.
+
+The mechanically odd part is that this can still make a heal larger. Heal coefficients consume the resolved offensive power state, so increasing Spell Damage before coefficient evaluation may raise the resulting heal even though no healing-specific modifier changed.
+
+**Layman's version:** a buff can make your heal bigger without ever saying "healing" anywhere on it. It improves one of the numbers the heal formula reads first.
+
+**What it means in actual play:** Minor Sorcery is not equivalent to "10% stronger heals." If Spell Damage is not the power value actually controlling the resolved heal, the benefit can be smaller or absent. Illuminate rank I and II also change the buff duration rather than the Minor Sorcery magnitude, so a learned rank-I window is real math rather than an unknown partial-value case.
+
+**For BFF:** conditional power buffs must enter the canonical stat context before tooltip/heal coefficient evaluation. They must not be bolted on afterward as Healing Done multipliers, and duration/rank legality must remain separate from the named buff's stat magnitude.
