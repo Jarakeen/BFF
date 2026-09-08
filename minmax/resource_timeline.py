@@ -39,14 +39,10 @@ class ResourceMaximumEvent:
             raise ValueError(
                 f"Resource maximum event time cannot be negative: {self.time_seconds}"
             )
-        if self.amount_is_invalid:
+        if int(self.maximum) < 0:
             raise ValueError(f"Resource maximum cannot be negative: {self.maximum}")
         if not str(self.source or "").strip():
             raise ValueError("Resource maximum event requires a source")
-
-    @property
-    def amount_is_invalid(self) -> bool:
-        return int(self.maximum) < 0
 
 
 @dataclass(frozen=True)
@@ -93,6 +89,7 @@ class ResourceTimelineResult:
     starting_amount: int
     ending_amount: int
     events: tuple[AppliedResourceTimelineEvent, ...]
+    starting_maximum: int | None = None
     ending_maximum: int | None = None
 
     @property
@@ -102,6 +99,35 @@ class ResourceTimelineResult:
     @property
     def has_shortfall(self) -> bool:
         return self.total_shortfall > 0
+
+    def maximum_at(
+        self,
+        time_seconds: float,
+        *,
+        fallback: int | None = None,
+    ) -> int:
+        """Return the active verified resource ceiling at one timeline instant.
+
+        Historical manually-constructed timelines may not carry maximum metadata;
+        those callers can provide ``fallback``. A produced timeline always records
+        ``starting_maximum`` and each ceiling transition.
+        """
+
+        current = self.starting_maximum
+        if current is None:
+            current = fallback
+        if current is None:
+            raise ValueError("resource timeline has no maximum evidence")
+
+        point = float(time_seconds)
+        if point < 0:
+            raise ValueError("resource timeline maximum lookup time cannot be negative")
+        for event in self.events:
+            if event.time_seconds > point:
+                break
+            if event.maximum_after is not None:
+                current = int(event.maximum_after)
+        return int(current)
 
 
 def create_action_cost_events(
@@ -149,7 +175,8 @@ def run_resource_timeline(
     """
 
     current = int(starting_amount)
-    current_maximum = int(pool.maximum)
+    starting_maximum = int(pool.maximum)
+    current_maximum = starting_maximum
     if current < 0 or current > current_maximum:
         raise ValueError(
             f"Starting {pool.resource.value} must be between 0 and {current_maximum}: {current}"
@@ -315,5 +342,6 @@ def run_resource_timeline(
         starting_amount=int(starting_amount),
         ending_amount=current,
         events=tuple(applied),
+        starting_maximum=starting_maximum,
         ending_maximum=current_maximum,
     )
