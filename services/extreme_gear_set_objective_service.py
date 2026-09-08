@@ -41,6 +41,8 @@ class ExtremeGearSetObjectiveService:
 
     REVIEWED_OBJECTIVES = (
         "critical_damage",
+        "critical_healing",
+        "healing_done",
         "magicka_recovery",
         "stamina_recovery",
         "physical_resistance",
@@ -55,6 +57,8 @@ class ExtremeGearSetObjectiveService:
 
     _STAT_BY_OBJECTIVE = {
         "critical_damage": StatId.CRITICAL_DAMAGE,
+        "critical_healing": StatId.CRITICAL_HEALING,
+        "healing_done": StatId.HEALING_DONE,
         "magicka_recovery": StatId.MAGICKA_RECOVERY,
         "stamina_recovery": StatId.STAMINA_RECOVERY,
         "physical_resistance": StatId.PHYSICAL_RESISTANCE,
@@ -110,7 +114,12 @@ class ExtremeGearSetObjectiveService:
             return value, None
 
         if effect.operation is EffectOperation.ADD_PERCENT:
-            if objective in {"critical_damage", "sneak_cost_reduction"}:
+            if objective in {
+                "critical_damage",
+                "critical_healing",
+                "healing_done",
+                "sneak_cost_reduction",
+            }:
                 value = float(effect.value)
                 if effect.unit is EffectUnit.PERCENT:
                     value /= 100.0
