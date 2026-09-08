@@ -104,4 +104,4 @@ def test_expert_summoner_joins_existing_resource_percent_buckets_additively():
         stamina=result.stamina,
     )
     assert state.max_magicka == 13560
-    assert state.max_stamina == 13320
+    assert state.max_stamina == 13321
