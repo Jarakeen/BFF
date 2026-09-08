@@ -23,6 +23,10 @@ from services.rotation_recovery_heavy_replay_service import (
     VerifiedRecoveryHeavyRestorationResolver,
 )
 from services.rotation_static_build_context_service import RotationStaticBuildContextService
+from ui.rotation_automatic_potion_cadence_candidate_support import (
+    RotationAutomaticPotionCadenceCandidateSupport,
+    RotationPotionCooldownScenarioEvidence,
+)
 from ui.rotation_canonical_candidate_support import (
     RotationCanonicalCandidateApplicationResult,
     RotationCanonicalCandidateSupport,
@@ -56,18 +60,33 @@ class RotationDashboardCanonicalCandidateSupport:
     verified armor/passive progression and canonical resource ceilings participate in
     readiness before recovery ranking. Mechanics coverage, when supplied, is then
     scoped to the resolved CharacterBuild and current rotation evidence.
+
+    The production default is wrapped by automatic potion-cadence support. A supplied
+    complete scenario evidence inventory lets the wrapper derive the effective shared
+    potion cooldown from canonical build evidence. Missing/partial scenario evidence
+    preserves the existing no-guess behavior.
     """
 
     def __init__(
         self,
         *,
         generation: RotationGenerationSupport | None = None,
-        canonical_candidates: RotationCanonicalCandidateSupport | None = None,
+        canonical_candidates: (
+            RotationCanonicalCandidateSupport
+            | RotationAutomaticPotionCadenceCandidateSupport
+            | None
+        ) = None,
     ) -> None:
         self.generation = generation or RotationGenerationSupport()
-        self.canonical_candidates = canonical_candidates or RotationCanonicalCandidateSupport(
-            static_context_service=RotationStaticBuildContextService(),
-        )
+        if canonical_candidates is not None:
+            self.canonical_candidates = canonical_candidates
+        else:
+            canonical = RotationCanonicalCandidateSupport(
+                static_context_service=RotationStaticBuildContextService(),
+            )
+            self.canonical_candidates = RotationAutomaticPotionCadenceCandidateSupport(
+                canonical_candidates=canonical,
+            )
 
     def run_effects(
         self,
@@ -85,6 +104,7 @@ class RotationDashboardCanonicalCandidateSupport:
         wait_decision_factory: RecoveryPressureWaitDecisionFactory | None = None,
         requirements: Iterable[RotationEffectUptimeRequirement] = (),
         passives: Iterable[PassiveGrant] = (),
+        potion_cooldown_scenario_evidence: RotationPotionCooldownScenarioEvidence | None = None,
         reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None,
         max_iterations: int = 6,
         baseline_id: str = "baseline",
@@ -105,7 +125,7 @@ class RotationDashboardCanonicalCandidateSupport:
             request=seed_request,
         )
 
-        candidate_result = self.canonical_candidates.run_effects(
+        candidate_kwargs = dict(
             player_build=player_build,
             seed_plan=seed_generation.plan,
             priorities=priorities,
@@ -126,6 +146,12 @@ class RotationDashboardCanonicalCandidateSupport:
             character_id=character_id,
             coverage_report=coverage_report,
         )
+        if potion_cooldown_scenario_evidence is not None:
+            candidate_kwargs["potion_cooldown_scenario_evidence"] = (
+                potion_cooldown_scenario_evidence
+            )
+
+        candidate_result = self.canonical_candidates.run_effects(**candidate_kwargs)
         return RotationDashboardCanonicalCandidateResult(
             seed_generation=seed_generation,
             candidate_result=candidate_result,
