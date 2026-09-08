@@ -37,6 +37,11 @@ from minmax.rotation_resource_reserve import (
     RotationResourceReserveRequirement,
     assess_rotation_resource_reserves,
 )
+from minmax.rotation_ultimate_affordability import (
+    RotationUltimateAffordabilityAssessment,
+    RotationUltimateAffordabilityAssessor,
+    RotationUltimateAffordabilityRequirement,
+)
 from minmax.support_coverage import SupportCoverage
 from services.rotation_duration_analysis_service import RotationDurationProjection
 from services.rotation_plan_consequence_service import (
@@ -116,6 +121,7 @@ class RotationCandidateScorecard:
     range_assessment: RotationActionRangeAssessment | None = None
     slot_assessment: RotationActionSlotAssessment | None = None
     active_bar_assessment: RotationActiveBarAssessment | None = None
+    ultimate_affordability_assessment: RotationUltimateAffordabilityAssessment | None = None
     runtime_uptime_assessments: tuple[RotationRuntimeUptimeAssessment, ...] = ()
     runtime_uptime_objective_assessment: (
         RotationRuntimeUptimeObjectiveAssessment | None
@@ -176,6 +182,12 @@ class RotationCandidateScorecard:
         return self.active_bar_assessment.violations
 
     @property
+    def ultimate_affordability_violations(self):
+        if self.ultimate_affordability_assessment is None:
+            return ()
+        return self.ultimate_affordability_assessment.violations
+
+    @property
     def failed_runtime_uptime_assessments(
         self,
     ) -> tuple[RotationRuntimeUptimeAssessment, ...]:
@@ -200,6 +212,7 @@ class RotationCandidateScorecard:
             and not self.range_violations
             and not self.slot_violations
             and not self.active_bar_violations
+            and not self.ultimate_affordability_violations
             and not self.failed_runtime_uptime_assessments
             and not self.candidate_specific_unresolved
             and self.candidate_shortfall == 0
@@ -217,14 +230,16 @@ class RotationCandidateScorecardService:
 
     Optional resource-reserve requirements, encounter bar-availability windows,
     resolved action cooldowns, resolved skill/ultimate occupancy durations,
-    explicit target-distance/range evidence, and exact slotted-bar ownership are
-    caller-supplied hard obligations. This layer never invents resource reserves,
-    bar restrictions, cooldowns, cast times, channel times, target distance, skill
-    range, or slot ownership. Unresolved evidence is split into inherited/shared
-    baseline limitations and candidate-specific additions. Candidate-specific
-    unresolved evidence is hard-failing; inherited/shared unresolved evidence
-    remains diagnostic. Deterministic refresh-slot cascade messages are retained
-    separately as schedule provenance rather than ranked as uncertainty.
+    explicit target-distance/range evidence, exact slotted-bar ownership, and
+    explicit shared-pool Ultimate affordability evidence are caller-supplied hard
+    obligations. This layer never invents resource reserves, bar restrictions,
+    cooldowns, cast times, channel times, target distance, skill range, slot
+    ownership, Ultimate costs, or Ultimate generation. Unresolved evidence is split
+    into inherited/shared baseline limitations and candidate-specific additions.
+    Candidate-specific unresolved evidence is hard-failing; inherited/shared
+    unresolved evidence remains diagnostic. Deterministic refresh-slot cascade
+    messages are retained separately as schedule provenance rather than ranked as
+    uncertainty.
     """
 
     def __init__(
@@ -235,6 +250,7 @@ class RotationCandidateScorecardService:
         occupancy_assessor: RotationActionOccupancyAssessor | None = None,
         range_assessor: RotationActionRangeAssessor | None = None,
         slot_assessor: RotationActionSlotAssessor | None = None,
+        ultimate_affordability_assessor: RotationUltimateAffordabilityAssessor | None = None,
     ) -> None:
         self.consequence_service = consequence_service or RotationPlanConsequenceService()
         self.bar_availability_assessor = (
@@ -244,6 +260,9 @@ class RotationCandidateScorecardService:
         self.occupancy_assessor = occupancy_assessor or RotationActionOccupancyAssessor()
         self.range_assessor = range_assessor or RotationActionRangeAssessor()
         self.slot_assessor = slot_assessor or RotationActionSlotAssessor()
+        self.ultimate_affordability_assessor = (
+            ultimate_affordability_assessor or RotationUltimateAffordabilityAssessor()
+        )
 
     def compare(
         self,
@@ -261,6 +280,7 @@ class RotationCandidateScorecardService:
         range_requirements: tuple[RotationActionRangeRequirement, ...] = (),
         target_distance_windows: tuple[RotationTargetDistanceWindow, ...] = (),
         slot_requirements: tuple[RotationActionSlotRequirement, ...] = (),
+        ultimate_affordability_requirement: RotationUltimateAffordabilityRequirement | None = None,
         encounter_requirements: EncounterRequirementSet | None = None,
         support_coverage: SupportCoverage | None = None,
         candidate_duration: RotationDurationProjection | None = None,
@@ -334,6 +354,14 @@ class RotationCandidateScorecardService:
         slot_assessment = (
             self.slot_assessor.assess(candidate_plan, slot_requirements)
             if slot_requirements
+            else None
+        )
+        ultimate_affordability_assessment = (
+            self.ultimate_affordability_assessor.assess(
+                candidate_plan,
+                ultimate_affordability_requirement,
+            )
+            if ultimate_affordability_requirement is not None
             else None
         )
 
@@ -418,6 +446,7 @@ class RotationCandidateScorecardService:
             occupancy_assessment=occupancy_assessment,
             range_assessment=range_assessment,
             slot_assessment=slot_assessment,
+            ultimate_affordability_assessment=ultimate_affordability_assessment,
             runtime_uptime_assessments=uptime_assessments,
             runtime_uptime_objective_assessment=uptime_objective_assessment,
         )
