@@ -43,6 +43,7 @@ class _PageState:
         self.build = _build() if build is None else build
         self.rotation_canonical_candidates = _CanonicalCandidates()
         self.last_canonical_candidate_result = None
+        self.last_canonical_render_evidence = None
 
     def _selected_build(self):
         return self.build
@@ -64,6 +65,51 @@ class _PageState:
         return CanonicalRotationDashboardPage.canonical_generation_request(self)
 
 
+class _RenderSupport:
+    def __init__(self, evidence) -> None:
+        self.evidence = evidence
+        self.calls = []
+
+    def build(self, result):
+        self.calls.append(result)
+        return self.evidence
+
+
+class _Status:
+    def __init__(self) -> None:
+        self.warnings = []
+
+    def warning(self, message: str) -> None:
+        self.warnings.append(message)
+
+
+class _DurationCard:
+    def __init__(self) -> None:
+        self.evidence = []
+
+    def set_evidence(self, evidence) -> None:
+        self.evidence.append(evidence)
+
+
+class _RenderPageState:
+    def __init__(self, evidence) -> None:
+        self.rotation_canonical_render = _RenderSupport(evidence)
+        self.last_canonical_candidate_result = SimpleNamespace(
+            candidate_result="application-result"
+        )
+        self.last_canonical_render_evidence = None
+        self.status = _Status()
+        self.duration_evidence_card = _DurationCard()
+        self.plans = []
+        self.sustain = []
+
+    def set_rotation_plan(self, plan) -> None:
+        self.plans.append(plan)
+
+    def set_sustain_projection(self, projection) -> None:
+        self.sustain.append(projection)
+
+
 def test_page_builds_candidate_generation_request_from_current_dashboard_state() -> None:
     page = _PageState()
 
@@ -83,6 +129,7 @@ def test_page_builds_candidate_generation_request_from_current_dashboard_state()
 
 def test_page_candidate_evaluation_forwards_explicit_evidence_and_records_result() -> None:
     page = _PageState()
+    page.last_canonical_render_evidence = object()
     evaluator_resolver = object()
     scorecard_resolver = object()
     restoration_resolver = object()
@@ -110,6 +157,7 @@ def test_page_candidate_evaluation_forwards_explicit_evidence_and_records_result
 
     assert result is page.rotation_canonical_candidates.result
     assert page.last_canonical_candidate_result is result
+    assert page.last_canonical_render_evidence is None
     assert len(page.rotation_canonical_candidates.calls) == 1
     call = page.rotation_canonical_candidates.calls[0]
     assert call["player_build"] is page.build
@@ -147,3 +195,48 @@ def test_page_candidate_evaluation_requires_selected_saved_build() -> None:
         )
 
     assert page.rotation_canonical_candidates.calls == []
+
+
+def test_page_renders_plan_duration_and_sustain_from_one_final_evidence_bundle() -> None:
+    evidence = SimpleNamespace(
+        candidate_id="winner",
+        plan=object(),
+        duration_evidence=object(),
+        sustain_projection=object(),
+        effect_uptime_assessments=(object(),),
+    )
+    page = _RenderPageState(evidence)
+
+    rendered = CanonicalRotationDashboardPage.apply_canonical_candidate_result(page)
+
+    assert rendered is evidence
+    assert page.last_canonical_render_evidence is evidence
+    assert page.rotation_canonical_render.calls == ["application-result"]
+    assert page.plans == [evidence.plan]
+    assert page.duration_evidence_card.evidence == [evidence.duration_evidence]
+    assert page.sustain == [evidence.sustain_projection]
+    assert page.status.warnings == []
+
+
+def test_page_does_not_replace_existing_display_when_no_candidate_is_selectable() -> None:
+    page = _RenderPageState(None)
+
+    rendered = CanonicalRotationDashboardPage.apply_canonical_candidate_result(page)
+
+    assert rendered is None
+    assert page.last_canonical_render_evidence is None
+    assert page.plans == []
+    assert page.duration_evidence_card.evidence == []
+    assert page.sustain == []
+    assert len(page.status.warnings) == 1
+    assert "no selectable rotation" in page.status.warnings[0].casefold()
+
+
+def test_page_requires_candidate_evaluation_before_rendering() -> None:
+    page = _RenderPageState(None)
+    page.last_canonical_candidate_result = None
+
+    with pytest.raises(ValueError, match="no canonical candidate evaluation"):
+        CanonicalRotationDashboardPage.apply_canonical_candidate_result(page)
+
+    assert page.rotation_canonical_render.calls == []
