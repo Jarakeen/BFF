@@ -36,6 +36,7 @@ def _write_db(path) -> None:
                 (3, "Mending", "Restoring Light", 1),
                 (4, "Sacred Ground", "Restoring Light", 1),
                 (5, "Evocation", "Light Armor", 1),
+                (6, "Frozen Armor", "Winter's Embrace", 1),
             ),
         )
         db.executemany(
@@ -46,6 +47,7 @@ def _write_db(path) -> None:
                 (31, 3, 1), (32, 3, 2),
                 (41, 4, 1), (42, 4, 2),
                 (51, 5, 1), (52, 5, 3),
+                (61, 6, 1), (62, 6, 2),
             ),
         )
         db.commit()
