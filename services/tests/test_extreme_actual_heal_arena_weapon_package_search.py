@@ -126,6 +126,10 @@ def test_actual_heal_optimizer_can_select_exact_subtype_arena_weapon(monkeypatch
     assert result.steps[-1].path == "Gear.ArenaWeapon"
     assert result.optimized_build.FrontBarWeapon.Set == "Resto Arena"
     assert result.optimized_build.FrontBarWeapon.WeaponType == "Restoration Staff"
-    assert any("arena-weapon" in item and "exact active weapon subtype" in item for item in result.search_scope)
-    assert not any(item == "non-ring mythics / arena-weapon packages" for item in result.omitted_scope)
-    assert any("paired one-hand arena-weapon" in item for item in result.omitted_scope)
+    assert any(
+        "arena-weapon" in item
+        and "exact active weapon subtype" in item
+        and "paired main/off-hand" in item
+        for item in result.search_scope
+    )
+    assert result.omitted_scope[0] == "non-ring mythics"
