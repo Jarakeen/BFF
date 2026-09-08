@@ -6,13 +6,16 @@ from pathlib import Path
 from minmax.build_calculation_context import BuildCalculationContext
 from minmax.rotation_plan import RotationActionKind, RotationPlan
 from minmax.saved_build_skill_tooltip_service import SavedBuildSkillTooltipService
-from minmax.skill_component_classification import SkillEffectKind
+from minmax.skill_component_classification import HealTemporalScope, SkillEffectKind
 from models.build_model import PlayerBuild
+from services.rotation_healer_u50_skill_component_repository import (
+    RotationHealerU50SkillComponentRepository,
+)
 
 
 @dataclass(frozen=True)
 class RotationHealerResolvedHealEvent:
-    """One verified non-periodic healing component at a scheduled cast time.
+    """One verified direct healing component at a scheduled cast time.
 
     ``modeled_heal`` is the canonical modeled actual-effect value for the
     component before target-specific received-heal consequences such as missing
@@ -54,12 +57,10 @@ class RotationHealerActionHealingProjection:
 class RotationHealerActionHealingService:
     """Project scheduled healer skill actions into canonical healing consequences.
 
-    This is the healer-side equivalent of the DD action consequence boundary.
-    It preserves exact rotation timestamps and canonical saved-build heal math,
-    while deliberately refusing to call one-application potency "HPS" or
-    "coverage". Direct healing components can be attached to their cast time.
-    Periodic healing components are preserved as seeds until duration, cadence,
-    refresh behavior, and recipient/target semantics are explicitly resolved.
+    Direct heals may attach to cast time. Periodic heals become seeds for the
+    recurring runtime scheduler. Delayed and channel-tick healing remain explicit
+    blockers until their distinct event timing is modeled; they must never be
+    collapsed into direct-at-cast consequences merely because ``is_dot`` is false.
     """
 
     def __init__(
@@ -70,7 +71,10 @@ class RotationHealerActionHealingService:
     ) -> None:
         self.database_path = Path(database_path)
         self.tooltip_service = tooltip_service or SavedBuildSkillTooltipService(
-            self.database_path
+            self.database_path,
+            component_repository=RotationHealerU50SkillComponentRepository(
+                self.database_path
+            ),
         )
 
     def project(
@@ -148,15 +152,25 @@ class RotationHealerActionHealingService:
                     continue
                 if classification.effect_kind is not SkillEffectKind.HEAL:
                     continue
-                if classification.is_dot is None:
+
+                temporal = classification.heal_temporal_scope
+                if temporal is HealTemporalScope.DELAYED:
                     unresolved.append(
                         f"{action.name} coefficient {number} at {action.time_seconds:g}s: "
-                        "direct-versus-periodic heal identity unavailable"
+                        "delayed heal runtime timing is not yet modeled"
+                    )
+                    continue
+                if temporal is HealTemporalScope.CHANNEL_TICK:
+                    unresolved.append(
+                        f"{action.name} coefficient {number} at {action.time_seconds:g}s: "
+                        "channel-tick heal runtime timing is not yet modeled"
                     )
                     continue
 
                 value = actual_by_number.get(number, float(trace.final_value))
-                if classification.is_dot:
+                if temporal is HealTemporalScope.PERIODIC or (
+                    temporal is None and classification.is_dot is True
+                ):
                     periodic_seeds.append(
                         RotationHealerPeriodicHealSeed(
                             time_seconds=float(action.time_seconds),
@@ -166,7 +180,11 @@ class RotationHealerActionHealingService:
                             modeled_heal=value,
                         )
                     )
-                else:
+                    continue
+
+                if temporal is HealTemporalScope.DIRECT or (
+                    temporal is None and classification.is_dot is False
+                ):
                     direct_events.append(
                         RotationHealerResolvedHealEvent(
                             time_seconds=float(action.time_seconds),
@@ -176,6 +194,12 @@ class RotationHealerActionHealingService:
                             modeled_heal=value,
                         )
                     )
+                    continue
+
+                unresolved.append(
+                    f"{action.name} coefficient {number} at {action.time_seconds:g}s: "
+                    "heal temporal identity unavailable"
+                )
 
         direct = tuple(
             sorted(
