@@ -9,6 +9,8 @@ from minmax.context_factory import BuildCalculationContextFactory
 from minmax.gear_set_repository import GearSetRepository
 from minmax.race_repository import RaceRepository
 from minmax.resource_costs import ResourceType
+from minmax.resource_timeline import ResourceMaximumEvent
+from minmax.rotation_plan import RotationActionKind, RotationPlan
 from models.build_model import PlayerBuild
 from services.build_service import BuildService
 from services.minmax_character_progression_adapter import (
@@ -42,14 +44,8 @@ class RotationStaticBuildContextResolution:
                 return context
         return None
 
-    def maximum_amounts_for(self, resource: ResourceType) -> tuple[tuple[str, int], ...]:
-        """Return the canonical maximum resource visible on each resolved bar.
-
-        Bar-sensitive passives can change maximum resources. Keeping the per-bar
-        values explicit prevents the rotation engine from silently treating one
-        bar's ceiling as globally valid when the current sustain model still accepts
-        only one maximum amount for the whole timeline.
-        """
+    @staticmethod
+    def _resource_attribute(resource: ResourceType) -> str:
         attribute = {
             ResourceType.HEALTH: "max_health",
             ResourceType.MAGICKA: "max_magicka",
@@ -57,17 +53,24 @@ class RotationStaticBuildContextResolution:
         }.get(resource)
         if attribute is None:
             raise ValueError(f"unsupported rotation static resource: {resource!r}")
+        return attribute
+
+    def maximum_amounts_for(self, resource: ResourceType) -> tuple[tuple[str, int], ...]:
+        """Return the canonical maximum resource visible on each resolved bar."""
+        attribute = self._resource_attribute(resource)
         return tuple(
             (context.active_bar, int(getattr(context.character_state, attribute)))
             for context in self.contexts
         )
 
-    def uniform_maximum_amount_for(self, resource: ResourceType) -> int | None:
-        """Return one safe global maximum when every resolved bar agrees.
+    def maximum_amount_for(self, bar: str, resource: ResourceType) -> int:
+        context = self.context_for(bar)
+        if context is None:
+            raise ValueError(f"rotation static context is missing bar: {bar!r}")
+        return int(getattr(context.character_state, self._resource_attribute(resource)))
 
-        ``None`` means the build is bar-sensitive for this resource and the current
-        one-ceiling sustain model must not guess which bar should win.
-        """
+    def uniform_maximum_amount_for(self, resource: ResourceType) -> int | None:
+        """Return one safe global maximum when every resolved bar agrees."""
         values = self.maximum_amounts_for(resource)
         if not values:
             return None
@@ -75,6 +78,50 @@ class RotationStaticBuildContextResolution:
         if len(unique) != 1:
             return None
         return values[0][1]
+
+    def maximum_events_for(
+        self,
+        plan: RotationPlan,
+        resource: ResourceType,
+        *,
+        initial_bar: str = "front",
+    ) -> tuple[ResourceMaximumEvent, ...]:
+        """Project bar swaps into verified resource-ceiling transitions.
+
+        The initial static context supplies the timeline's starting pool. Each
+        explicit BAR_SWAP switches to the destination bar's already-calculated
+        maximum. Events are emitted only when the maximum actually changes; a swap
+        between equal ceilings remains a schedule action but has no resource-state
+        consequence.
+        """
+        current_bar = str(initial_bar or "").strip().casefold()
+        if current_bar not in {"front", "back"}:
+            raise ValueError("rotation static initial bar must be front or back")
+        current_maximum = self.maximum_amount_for(current_bar, resource)
+
+        events: list[ResourceMaximumEvent] = []
+        for action in plan.actions:
+            if action.kind is not RotationActionKind.BAR_SWAP:
+                continue
+            destination = str(action.bar or "").strip().casefold()
+            if destination not in {"front", "back"}:
+                raise ValueError("bar-swap rotation action requires a valid destination bar")
+            destination_maximum = self.maximum_amount_for(destination, resource)
+            current_bar = destination
+            if destination_maximum == current_maximum:
+                continue
+            events.append(
+                ResourceMaximumEvent(
+                    time_seconds=float(action.time_seconds),
+                    resource=resource,
+                    maximum=destination_maximum,
+                    source=(
+                        f"Bar swap to {destination}: canonical {resource.value} maximum"
+                    ),
+                )
+            )
+            current_maximum = destination_maximum
+        return tuple(events)
 
 
 class RotationStaticBuildContextService:
