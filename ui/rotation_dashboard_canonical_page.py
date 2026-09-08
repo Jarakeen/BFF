@@ -160,7 +160,14 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
                 for item in getattr(bundle, "unresolved", ())
                 if str(item).strip()
             ]
-            for gap in getattr(bundle, "knowledge_gaps", ()):
+            blocking_gaps = getattr(bundle, "blocking_knowledge_gaps", None)
+            if blocking_gaps is None:
+                blocking_gaps = tuple(
+                    gap
+                    for gap in getattr(bundle, "knowledge_gaps", ())
+                    if bool(getattr(gap, "blocking", True))
+                )
+            for gap in blocking_gaps:
                 summary = str(getattr(gap, "summary", "") or "").strip()
                 needed = str(getattr(gap, "needed_evidence", "") or "").strip()
                 if summary and needed:
