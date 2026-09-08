@@ -95,7 +95,7 @@ def test_ambiguous_or_paired_active_weapon_fails_closed(tmp_path: Path) -> None:
 
     paired = PlayerBuild(BuildName="Healer")
     paired.FrontBarWeapon.WeaponType = "Sword"
-    paired.FrontBarOffhand.WeaponType = "Shield"
+    paired.FrontBarOffHand.WeaponType = "Shield"
     assert service.build_candidates(
         paired,
         character_id="char-1",
