@@ -93,7 +93,7 @@ class RotationCandidateHardObligationStateService:
                 )
             )
 
-        for violation in scorecard.ultimate_affordability_violations:
+        for violation in getattr(scorecard, "ultimate_affordability_violations", ()):
             state.append(
                 self._token(
                     "ultimate_affordability",
