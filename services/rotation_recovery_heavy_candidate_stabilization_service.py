@@ -20,6 +20,7 @@ from services.rotation_recovery_heavy_replay_service import (
 )
 from services.rotation_recovery_heavy_stabilization_service import (
     RecoveryAwareRotationGenerator,
+    RecoveryDisplayedRecoveryResolverFactory,
     RecoveryMaximumEventResolver,
     RotationRecoveryHeavyStabilizationResult,
     RotationRecoveryHeavyStabilizationService,
@@ -64,6 +65,7 @@ class RotationRecoveryHeavyCandidateStabilizationService:
         max_iterations: int = 6,
         calculation_context: BuildCalculationContext | None = None,
         maximum_event_resolver: RecoveryMaximumEventResolver | None = None,
+        displayed_recovery_resolver_factory: RecoveryDisplayedRecoveryResolverFactory | None = None,
     ) -> RotationRecoveryHeavyStabilizationResult:
         def hard_state(
             plan: RotationPlan,
@@ -91,6 +93,7 @@ class RotationRecoveryHeavyCandidateStabilizationService:
             max_iterations=max_iterations,
             calculation_context=calculation_context,
             maximum_event_resolver=maximum_event_resolver,
+            displayed_recovery_resolver_factory=displayed_recovery_resolver_factory,
         )
 
 
