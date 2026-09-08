@@ -8,6 +8,11 @@ from minmax.rotation_action_cooldown import (
     RotationActionCooldownAssessor,
     RotationActionCooldownRequirement,
 )
+from minmax.rotation_action_occupancy import (
+    RotationActionOccupancyAssessment,
+    RotationActionOccupancyAssessor,
+    RotationActionOccupancyRequirement,
+)
 from minmax.rotation_bar_availability import (
     RotationBarAvailabilityAssessment,
     RotationBarAvailabilityAssessor,
@@ -95,6 +100,7 @@ class RotationCandidateScorecard:
     reserve_assessments: tuple[RotationResourceReserveAssessment, ...] = ()
     bar_availability_assessment: RotationBarAvailabilityAssessment | None = None
     cooldown_assessment: RotationActionCooldownAssessment | None = None
+    occupancy_assessment: RotationActionOccupancyAssessment | None = None
     runtime_uptime_assessments: tuple[RotationRuntimeUptimeAssessment, ...] = ()
     runtime_uptime_objective_assessment: (
         RotationRuntimeUptimeObjectiveAssessment | None
@@ -131,6 +137,12 @@ class RotationCandidateScorecard:
         return self.cooldown_assessment.violations
 
     @property
+    def occupancy_violations(self):
+        if self.occupancy_assessment is None:
+            return ()
+        return self.occupancy_assessment.violations
+
+    @property
     def failed_runtime_uptime_assessments(
         self,
     ) -> tuple[RotationRuntimeUptimeAssessment, ...]:
@@ -150,6 +162,7 @@ class RotationCandidateScorecard:
             and not self.failed_reserve_assessments
             and not self.bar_availability_violations
             and not self.cooldown_violations
+            and not self.occupancy_violations
             and not self.failed_runtime_uptime_assessments
             and self.candidate_shortfall == 0
         )
@@ -164,12 +177,13 @@ class RotationCandidateScorecardService:
     not claim runtime uptime. Explicit runtime uptime requirements are assessed only
     when the caller also supplies canonical duration/recast evidence.
 
-    Optional resource-reserve requirements, encounter bar-availability windows, and
-    resolved action cooldown requirements are caller-supplied hard obligations. This
-    layer never invents resource reserves, bar restrictions, or cooldown durations.
-    Unresolved evidence is split into inherited/shared baseline limitations and
-    candidate-specific additions. Deterministic refresh-slot cascade messages are
-    retained separately as schedule provenance rather than ranked as uncertainty.
+    Optional resource-reserve requirements, encounter bar-availability windows,
+    resolved action cooldowns, and resolved skill/ultimate occupancy durations are
+    caller-supplied hard obligations. This layer never invents resource reserves,
+    bar restrictions, cooldowns, cast times, or channel times. Unresolved evidence
+    is split into inherited/shared baseline limitations and candidate-specific
+    additions. Deterministic refresh-slot cascade messages are retained separately
+    as schedule provenance rather than ranked as uncertainty.
     """
 
     def __init__(
@@ -177,12 +191,14 @@ class RotationCandidateScorecardService:
         consequence_service: RotationPlanConsequenceService | None = None,
         bar_availability_assessor: RotationBarAvailabilityAssessor | None = None,
         cooldown_assessor: RotationActionCooldownAssessor | None = None,
+        occupancy_assessor: RotationActionOccupancyAssessor | None = None,
     ) -> None:
         self.consequence_service = consequence_service or RotationPlanConsequenceService()
         self.bar_availability_assessor = (
             bar_availability_assessor or RotationBarAvailabilityAssessor()
         )
         self.cooldown_assessor = cooldown_assessor or RotationActionCooldownAssessor()
+        self.occupancy_assessor = occupancy_assessor or RotationActionOccupancyAssessor()
 
     def compare(
         self,
@@ -196,6 +212,7 @@ class RotationCandidateScorecardService:
         reserve_requirements: tuple[RotationResourceReserveRequirement, ...] = (),
         bar_availability_windows: tuple[RotationBarAvailabilityWindow, ...] = (),
         cooldown_requirements: tuple[RotationActionCooldownRequirement, ...] = (),
+        occupancy_requirements: tuple[RotationActionOccupancyRequirement, ...] = (),
         encounter_requirements: EncounterRequirementSet | None = None,
         support_coverage: SupportCoverage | None = None,
         candidate_duration: RotationDurationProjection | None = None,
@@ -250,6 +267,11 @@ class RotationCandidateScorecardService:
         cooldown_assessment = (
             self.cooldown_assessor.assess(candidate_plan, cooldown_requirements)
             if cooldown_requirements
+            else None
+        )
+        occupancy_assessment = (
+            self.occupancy_assessor.assess(candidate_plan, occupancy_requirements)
+            if occupancy_requirements
             else None
         )
 
@@ -331,6 +353,7 @@ class RotationCandidateScorecardService:
             reserve_assessments=reserve_assessments,
             bar_availability_assessment=bar_assessment,
             cooldown_assessment=cooldown_assessment,
+            occupancy_assessment=occupancy_assessment,
             runtime_uptime_assessments=uptime_assessments,
             runtime_uptime_objective_assessment=uptime_objective_assessment,
         )
