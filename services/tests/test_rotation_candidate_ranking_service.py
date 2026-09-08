@@ -197,8 +197,10 @@ def test_failed_reserve_reason_includes_normalized_entry_fraction_when_available
     assessment = SimpleNamespace(
         satisfied=False,
         shortfall=2000,
+        shortfall_fraction=2000 / 30_000,
         available_before_start=12_000,
         available_fraction_before_start=0.4,
+        required_fraction_before_start=14_000 / 30_000,
         demand=SimpleNamespace(name="Burst window"),
         requirement=SimpleNamespace(
             minimum_amount=14_000,
@@ -216,7 +218,9 @@ def test_failed_reserve_reason_includes_normalized_entry_fraction_when_available
 
     assert ranked[0].tier is RotationCandidateTier.INELIGIBLE
     assert any(
-        "available 12000 (40.00% of active pool), required 14000 magicka" in reason
+        "shortfall 2000 (6.67% of active pool)" in reason
+        and "available 12000 (40.00% of active pool)" in reason
+        and "required 14000 (46.67% of active pool) magicka" in reason
         for reason in ranked[0].reasons
     )
 
