@@ -13,6 +13,9 @@ from minmax.skill_line_repository import SkillLineRepository
 from minmax.skill_tooltip_calculator import SkillTooltipResult
 from minmax.stat_ids import StatId
 from models.build_model import PlayerBuild
+from services.extreme_warden_green_balance_healing_service import (
+    ExtremeWardenGreenBalanceHealingService,
+)
 
 
 @dataclass(frozen=True)
@@ -22,10 +25,10 @@ class ExtremeHealingEventResult:
     ``normal_heal`` is the sum of HEAL-classified coefficient components after
     the canonical saved-build actual-effect pipeline has applied sheet Healing
     Done and verified component-scoped healing CP. Reviewed ability-family
-    modifiers such as Restoration Master are then applied only to matching heal
-    families rather than being collapsed into generic Healing Done. Explicit
-    situational inputs may add reviewed conditional modifiers such as Restoration
-    Expert without pretending those conditions are always active.
+    modifiers such as Restoration Master and Emerald Moss are then applied only
+    to matching heal families rather than being collapsed into generic Healing
+    Done. Explicit situational inputs may add reviewed conditional modifiers such
+    as Restoration Expert without pretending those conditions are always active.
 
     ``critical_heal`` is the largest reviewed value of the same event when every
     crit-eligible HEAL component crits. Components explicitly marked non-crittable
@@ -82,6 +85,7 @@ class ExtremeHealingEventService:
         database_path: Path | None = None,
         tooltip_service: SavedBuildSkillTooltipService | None = None,
         skill_line_repository: SkillLineRepository | None = None,
+        warden_green_balance_healing: ExtremeWardenGreenBalanceHealingService | None = None,
     ) -> None:
         self.database_path = Path(database_path or get_data_dir() / "eso.db")
         self.tooltip_service = tooltip_service or SavedBuildSkillTooltipService(
@@ -89,6 +93,13 @@ class ExtremeHealingEventService:
         )
         self.skill_line_repository = skill_line_repository or SkillLineRepository(
             self.database_path
+        )
+        self.warden_green_balance_healing = (
+            warden_green_balance_healing
+            or ExtremeWardenGreenBalanceHealingService(
+                self.database_path,
+                skill_line_repository=self.skill_line_repository,
+            )
         )
 
     def evaluate(
@@ -284,17 +295,32 @@ class ExtremeHealingEventService:
         if not skill_name:
             return 1.0, ()
 
+        multiplier = 1.0
+        unresolved: list[str] = []
         skill_line = self.skill_line_repository.skill_line_for_ability_name(skill_name)
-        if str(skill_line or "").strip().casefold() != "restoration staff":
-            return 1.0, ()
-        if self._active_weapon_line(build=build, context=context) is not WeaponSkillLine.RESTORATION_STAFF:
-            return 1.0, ()
 
-        return self._maxed_passive_multiplier(
-            context=context,
-            passive_name="Restoration Master",
-            multiplier=self.RESTORATION_MASTER_HEALING_MULTIPLIER,
-        )
+        if str(skill_line or "").strip().casefold() == "restoration staff":
+            if self._active_weapon_line(build=build, context=context) is WeaponSkillLine.RESTORATION_STAFF:
+                restoration_multiplier, restoration_unresolved = self._maxed_passive_multiplier(
+                    context=context,
+                    passive_name="Restoration Master",
+                    multiplier=self.RESTORATION_MASTER_HEALING_MULTIPLIER,
+                )
+                multiplier *= restoration_multiplier
+                unresolved.extend(restoration_unresolved)
+
+        progression = getattr(context, "progression", None)
+        if progression is not None:
+            emerald = self.warden_green_balance_healing.resolve(
+                build=build,
+                progression=progression,
+                ability_name=skill_name,
+                active_bar=str(getattr(context, "active_bar", "front") or "front"),
+            )
+            multiplier *= emerald.multiplier
+            unresolved.extend(emerald.unresolved)
+
+        return multiplier, tuple(dict.fromkeys(message for message in unresolved if message))
 
     def _situational_healing_multiplier(
         self,
