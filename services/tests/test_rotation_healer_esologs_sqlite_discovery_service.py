@@ -60,8 +60,9 @@ def _database(tmp_path):
             ("ABC", 4, 8, None, "Tank", "@Tank", "Player", "tank", 0, "{}"),
         )
         rows = [
-            ("ABC", 4, 1, 1000.0, "cast", 7, 1, None, None, None, 93807, None, None, None, 0, None, None, None, None, None, None, None, None, None, "{}"),
-            ("ABC", 4, 2, 2000.0, "hot", 7, 1, 3, None, 1, 93807, None, 100.0, None, 1, None, None, None, None, None, None, 0.0, None, None, "{}"),
+            ("ABC", 4, 1, 1000.0, "cast", 7, 1, None, None, None, 93807, None, None, None, 0, None, None, None, None, None, None, None, None, None, '{"abilityName":"Budding Seeds"}'),
+            ("ABC", 4, 2, 2000.0, "hot", 7, 1, 3, None, 1, 93807, None, 100.0, None, 1, None, None, None, None, None, None, 0.0, None, None, '{"abilityName":"Budding Seeds"}'),
+            ("ABC", 4, 3, 2500.0, "heal", 7, 1, 3, None, 1, 99999, None, 50.0, None, 0, None, None, None, None, None, None, 0.0, None, None, '{"ability":{"name":"Other Heal"}}'),
             ("ABC", 5, 1, 3000.0, "damage", 8, 1, 99, None, 0, 1, None, 50.0, None, 0, None, None, None, None, None, None, None, None, None, "{}"),
         ]
         db.executemany(
@@ -71,13 +72,13 @@ def _database(tmp_path):
     return path
 
 
-def test_discovers_fights_healer_and_target_hot(tmp_path):
+def test_discovers_fights_healer_target_hot_and_actual_ability_inventory(tmp_path):
     report = RotationHealerEsoLogsSqliteDiscoveryService().inspect(_database(tmp_path))
 
     assert report.has_log_event
     assert report.has_log_actor
     assert [(item.report_code, item.fight_id, item.event_count) for item in report.fights] == [
-        ("ABC", 4, 2),
+        ("ABC", 4, 3),
         ("ABC", 5, 1),
     ]
     assert len(report.healers) == 1
@@ -85,6 +86,12 @@ def test_discovers_fights_healer_and_target_hot(tmp_path):
     assert healer.actor_id == 7
     assert healer.display_name == "@Jarakeen"
     assert healer.target_ability_names == ("Budding Seeds",)
+    assert [(item.ability_game_id, item.ability_name) for item in healer.observed_abilities] == [
+        (93807, "Budding Seeds"),
+        (99999, "Other Heal"),
+    ]
+    assert healer.observed_abilities[0].periodic_event_count == 1
+    assert healer.observed_abilities[0].event_types == ("cast", "hot")
     assert report.unresolved == ()
 
 
@@ -121,4 +128,4 @@ def test_missing_log_actor_keeps_fight_discovery(tmp_path):
     assert not report.has_log_actor
     assert len(report.fights) == 1
     assert report.healers == ()
-    assert "log_actor table is unavailable" in report.unresolved
+    assert any("log_actor table is unavailable" in item for item in report.unresolved)
