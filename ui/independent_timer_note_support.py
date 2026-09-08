@@ -11,7 +11,13 @@ import json
 from pathlib import Path
 
 from PySide6.QtCore import QTimer, Qt
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QPlainTextEdit, QPushButton
+from PySide6.QtWidgets import (
+    QHBoxLayout,
+    QLabel,
+    QPlainTextEdit,
+    QPushButton,
+    QSizePolicy,
+)
 
 from engine.config import get_data_dir
 
@@ -96,6 +102,14 @@ def _find_card(root, title: str):
         if getattr(card, "title_label", None) is not None and card.title_label.text() == title:
             return card
     return None
+
+
+def _show_overview_page(owner, route: str) -> None:
+    """Use the main window's existing route table instead of duplicating navigation."""
+    window = owner.window()
+    show_page = getattr(window, "show_page", None)
+    if callable(show_page):
+        show_page(route)
 
 
 def _install_mechanics() -> None:
@@ -216,13 +230,47 @@ def _install_overview_raid_notes() -> None:
         _clear_card(card)
         self.raid_notes_editor = _note_editor(
             "overview.raid_notes",
-            minimum_height=120,
+            minimum_height=48,
             placeholder="Raid notes…",
         )
+        self.raid_notes_editor.setMaximumHeight(62)
+        card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        card.setMaximumHeight(112)
         card.addWidget(self.raid_notes_editor)
         return card
 
     operations_console.OperationsConsole._raid_notes_card = raid_notes_card_editable
+
+
+def _install_overview_navigation() -> None:
+    from ui import operations_console
+
+    original_compact_button = operations_console.OperationsConsole._compact_button
+    route_by_label = {
+        "Build": "console:2",
+        "Stats": "console:2",
+        "Buff Uptime": "console:3",
+        "Optimization": "console:6",
+        "Open Coverage Checks": "console:5",
+        "View All Players": "roster_page",
+        "View Full Breakdown": "console:5",
+        "View Gear & Set Details": "console:2",
+        "View All Achievements": "achievements",
+        "Open Performance Focus": "console:3",
+    }
+
+    def compact_button_with_navigation(self, text: str):
+        button = original_compact_button(text)
+        route = route_by_label.get(text)
+        if route is None and text.startswith("View Full Coverage"):
+            route = "console:5"
+        if route is not None:
+            button.clicked.connect(
+                lambda _checked=False, target=route, owner=self: _show_overview_page(owner, target)
+            )
+        return button
+
+    operations_console.OperationsConsole._compact_button = compact_button_with_navigation
 
 
 def install() -> None:
@@ -232,4 +280,5 @@ def install() -> None:
 
     _install_mechanics()
     _install_overview_raid_notes()
+    _install_overview_navigation()
     _INSTALLED = True
