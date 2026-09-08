@@ -146,20 +146,9 @@ def test_missing_active_build_bar_remains_unresolved() -> None:
     assert "bar is unavailable on the build" in projection.unresolved[0]
 
 
-def test_invalid_swap_destination_does_not_silently_change_active_weapon() -> None:
-    projection = RotationWeaponAttackProjectionService().project(
-        build=_build(),
-        plan=_plan(
-            RotationAction(1.0, 0, RotationActionKind.BAR_SWAP, bar="sideways"),
-            RotationAction(2.0, 0, RotationActionKind.LIGHT_ATTACK, bar="front"),
-        ),
-        initial_bar="front",
-    )
-
-    assert projection.is_legal is False
-    assert len(projection.resolutions) == 1
-    assert projection.resolutions[0].active_bar == "front"
-    assert "unresolved destination" in projection.unresolved[0]
+def test_rotation_action_rejects_invalid_swap_destination_before_weapon_projection() -> None:
+    with pytest.raises(ValueError, match="rotation action bar must be 'front' or 'back'"):
+        RotationAction(1.0, 0, RotationActionKind.BAR_SWAP, bar="sideways")
 
 
 def test_initial_bar_is_explicit() -> None:
