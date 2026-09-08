@@ -26,7 +26,7 @@ class _BloodMagic:
     ):
         self.calls.append((build, active_bar, max_passes, progression_override))
         return SimpleNamespace(
-            optimized_event=SimpleNamespace(normal_heal=4321.0),
+            optimized_event=SimpleNamespace(normal_heal=4321.0, can_crit=False),
             mechanic_complete=True,
             unresolved=(),
         )
@@ -124,7 +124,7 @@ def test_route_catalog_requires_dark_magic_and_preserves_route_progression(tmp_p
     assert normalizer.calls == [(baseline_progression, routes.dark)]
 
 
-def test_route_catalog_keeps_blood_magic_out_of_critical_global_claims(tmp_path):
+def test_route_catalog_resolves_blood_magic_noncritical_policy_but_keeps_global_merge_omitted(tmp_path):
     service = _Catalog(
         baseline_progression=object(),
         database_path=tmp_path / "eso.db",
@@ -136,5 +136,6 @@ def test_route_catalog_keeps_blood_magic_out_of_critical_global_claims(tmp_path)
 
     result = service.rank(_build())
 
-    assert "Blood Magic critical-heal eligibility" in result.omitted_scope
-    assert "global comparison against critical ordinary-heal candidates" in result.omitted_scope
+    assert "Blood Magic critical-heal eligibility" not in result.omitted_scope
+    assert "Blood Magic Max-Health passive-proc critical policy: non-critical" in result.search_scope
+    assert "global maximum-event comparison against ordinary-heal candidates" in result.omitted_scope
