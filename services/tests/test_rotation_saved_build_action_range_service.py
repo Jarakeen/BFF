@@ -130,3 +130,54 @@ def test_saved_build_range_tolerates_minimal_build_stubs(tmp_path) -> None:
 
     assert evidence.range_requirements == ()
     assert evidence.unresolved == ()
+
+
+def test_saved_build_range_rejects_conflicting_exact_name_rows(tmp_path) -> None:
+    database = tmp_path / "eso.db"
+    _create_range_database(database)
+    with sqlite3.connect(database) as db:
+        db.execute("INSERT INTO skill(id, name) VALUES(4, 'Ranged Skill')")
+        db.execute("INSERT INTO ability(ability_id, name) VALUES(404, 'Ranged Skill')")
+        db.execute(
+            """
+            INSERT INTO skill_rank(
+                id, skill_id, ability_id, rank, raw_name, min_range, max_range
+            ) VALUES(4, 4, 404, 4, 'Ranged Skill', 0, 22)
+            """
+        )
+        db.commit()
+
+    evidence = RotationSavedBuildActionRangeService(database).resolve(
+        _build(("Ranged Skill",))
+    )
+
+    assert evidence.range_requirements == ()
+    assert evidence.unresolved == (
+        "canonical skill range is ambiguous for exact saved name: Ranged Skill",
+    )
+
+
+def test_saved_build_range_accepts_duplicate_rows_when_range_agrees(tmp_path) -> None:
+    database = tmp_path / "eso.db"
+    _create_range_database(database)
+    with sqlite3.connect(database) as db:
+        db.execute("INSERT INTO skill(id, name) VALUES(4, 'Ranged Skill')")
+        db.execute("INSERT INTO ability(ability_id, name) VALUES(404, 'Ranged Skill')")
+        db.execute(
+            """
+            INSERT INTO skill_rank(
+                id, skill_id, ability_id, rank, raw_name, min_range, max_range
+            ) VALUES(4, 4, 404, 3, 'Ranged Skill', 5, 28)
+            """
+        )
+        db.commit()
+
+    evidence = RotationSavedBuildActionRangeService(database).resolve(
+        _build(("Ranged Skill",))
+    )
+
+    assert evidence.unresolved == ()
+    assert len(evidence.range_requirements) == 1
+    requirement = evidence.range_requirements[0]
+    assert requirement.minimum_range == 5.0
+    assert requirement.maximum_range == 28.0
