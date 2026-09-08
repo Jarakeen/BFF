@@ -57,8 +57,10 @@ class RotationCandidateRankingService:
     fractions break soft resource ties before raw absolute deltas. Otherwise-equal
     resource outcomes prefer less recovery/restoration wasted against the active
     ceiling. Explicit bar-swap burden is used only as a final soft tie-break before
-    the stable candidate-id fallback. Shared baseline or model limitations remain
-    visible but do not count against one candidate specifically.
+    the stable candidate-id fallback. Heavy-attack burden is currently diagnostic
+    only because recovery heavies can be required by the sustain solution itself.
+    Shared baseline or model limitations remain visible but do not count against
+    one candidate specifically.
     """
 
     def rank(
@@ -272,6 +274,13 @@ class RotationCandidateRankingService:
             reasons.append(
                 "bar-swap burden: "
                 f"candidate {candidate_bar_swaps}, delta {bar_swap_delta:+d}"
+            )
+        heavy_attack_delta = int(getattr(consequence, "heavy_attack_delta", 0))
+        candidate_heavy_attacks = int(getattr(consequence, "candidate_heavy_attacks", 0))
+        if heavy_attack_delta or candidate_heavy_attacks:
+            reasons.append(
+                "heavy-attack burden: "
+                f"candidate {candidate_heavy_attacks}, delta {heavy_attack_delta:+d}; diagnostic only"
             )
         return tuple(reasons)
 
