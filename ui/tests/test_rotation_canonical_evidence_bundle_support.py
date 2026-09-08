@@ -4,6 +4,12 @@ import pytest
 
 from minmax.resource_costs import ResourceType
 from minmax.rotation_demand_window import RotationDemandKind, RotationDemandPattern
+from services.canonical_knowledge_gap import CanonicalKnowledgeDomain
+from services.canonical_mechanics_coverage_audit import (
+    CanonicalMechanicsCoverageAuditService,
+    CanonicalMechanicsCoverageEvidence,
+    CanonicalMechanicsCoverageStatus,
+)
 from services.encounter_boss_guide import BossGuideTimelineFact, EncounterBossGuide
 from services.encounter_rotation_demand_service import (
     EncounterRotationDemandPolicy,
@@ -64,6 +70,46 @@ def _policy() -> EncounterRotationDemandPolicy:
         pattern=RotationDemandPattern.BURST,
         lead_seconds=2.0,
         point_window_seconds=3.0,
+    )
+
+
+def _coverage_report(*, status: CanonicalMechanicsCoverageStatus):
+    missing = None
+    if status in (
+        CanonicalMechanicsCoverageStatus.PARTIAL,
+        CanonicalMechanicsCoverageStatus.MISSING_CRITICAL,
+    ):
+        missing = "bring back exact runtime mechanics evidence"
+    row = CanonicalMechanicsCoverageEvidence(
+        domain=CanonicalKnowledgeDomain.SKILL_MECHANIC,
+        key=f"rotation-test:{status.value}",
+        status=status,
+        capability="test rotation runtime capability",
+        evidence_source="test fixture",
+        consumers=("rotation_maker",),
+        missing_evidence=missing,
+    )
+    return CanonicalMechanicsCoverageAuditService().audit((row,))
+
+
+def _support() -> RotationCanonicalEvidenceBundleSupport:
+    return RotationCanonicalEvidenceBundleSupport(
+        guide_service=_GuideService(_guide()),
+        demand_service=EncounterRotationDemandService(),
+    )
+
+
+def _build_with_coverage(status: CanonicalMechanicsCoverageStatus):
+    return _support().build(
+        encounter_id="test-encounter",
+        demand_policies=(_policy(),),
+        evaluator_resolver=object(),
+        scorecard_resolver=object(),
+        resource=ResourceType.MAGICKA,
+        maximum_amount=32000,
+        trigger_fraction=0.35,
+        restoration_resolver=object(),
+        coverage_report=_coverage_report(status=status),
     )
 
 
@@ -172,3 +218,30 @@ def test_bundle_rejects_invalid_recovery_policy_instead_of_inventing_defaults() 
             max_iterations=0,
             **common,
         )
+
+
+def test_bundle_ingests_partial_coverage_as_visible_advisory_research() -> None:
+    bundle = _build_with_coverage(CanonicalMechanicsCoverageStatus.PARTIAL)
+
+    assert bundle.ready is True
+    assert bundle.blocking_knowledge_gaps == ()
+    assert [gap.key for gap in bundle.advisory_knowledge_gaps] == ["rotation-test:partial"]
+    assert bundle.research_for("rotation_maker") == bundle.advisory_knowledge_gaps
+
+
+def test_bundle_ingests_niche_coverage_without_blocking_rotation_readiness() -> None:
+    bundle = _build_with_coverage(CanonicalMechanicsCoverageStatus.NICHE)
+
+    assert bundle.ready is True
+    assert bundle.blocking_knowledge_gaps == ()
+    assert [gap.key for gap in bundle.advisory_knowledge_gaps] == ["rotation-test:niche"]
+
+
+def test_bundle_ingests_missing_critical_coverage_as_readiness_blocker() -> None:
+    bundle = _build_with_coverage(CanonicalMechanicsCoverageStatus.MISSING_CRITICAL)
+
+    assert bundle.ready is False
+    assert [gap.key for gap in bundle.blocking_knowledge_gaps] == [
+        "rotation-test:missing_critical"
+    ]
+    assert bundle.advisory_knowledge_gaps == ()
