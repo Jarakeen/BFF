@@ -2,10 +2,10 @@ from __future__ import annotations
 
 """Compact card layout for character-owned passive progression.
 
-The original QToolBox treatment behaved like a rolodex: only one skill family was
-open at a time.  That was thematically cute and operationally tiresome.  This
-support layer keeps the same persistence and controls while showing every skill
-family as a compact card in a multi-column grid.
+The original one-family-at-a-time treatment behaved like a rolodex: only one
+skill family was open at a time. That was thematically cute and operationally
+tiresome. This support layer keeps the same persistence and controls while
+showing every skill family as a compact card in a multi-column grid.
 """
 
 from PySide6.QtWidgets import (
