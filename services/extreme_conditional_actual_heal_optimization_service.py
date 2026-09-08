@@ -9,6 +9,9 @@ from services.extreme_actual_heal_optimization_service import (
     ExtremeActualHealOptimizationResult,
     ExtremeActualHealOptimizationService,
 )
+from services.extreme_arcanist_cascading_fortune_healing_service import (
+    ExtremeArcanistCascadingFortuneHealingService,
+)
 from services.extreme_arcanist_curative_runeforms_healing_service import (
     ExtremeArcanistCurativeRuneformsHealingService,
 )
@@ -39,6 +42,11 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
     Crux count. At reviewed U50 max rank it contributes generic Healing Done per
     active Crux, so it can increase heals from any ability family. No Crux count
     is invented when the caller omits that scenario.
+
+    Reviewed Arcanist ``Cascading Fortune`` is an ability-specific emergency-heal
+    modifier. Its beam heals for up to 50% more in proportion to the target's
+    missing health. It is applied only when the resolved event is Cascading
+    Fortune and Curative Runeforms is legal for the build.
 
     Reviewed Templar ``Mending`` is also resolved here because its Restoring Light
     healing bonus scales continuously with the explicit target-health fraction.
@@ -80,6 +88,7 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         templar_restoring_light_healing: ExtremeTemplarRestoringLightHealingService | None = None,
         necromancer_living_death_healing: ExtremeNecromancerLivingDeathHealingService | None = None,
         arcanist_curative_runeforms_healing: ExtremeArcanistCurativeRuneformsHealingService | None = None,
+        arcanist_cascading_fortune_healing: ExtremeArcanistCascadingFortuneHealingService | None = None,
         **kwargs,
     ) -> None:
         value = float(target_health_fraction)
@@ -105,6 +114,7 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         self.templar_restoring_light_healing = templar_restoring_light_healing
         self.necromancer_living_death_healing = necromancer_living_death_healing
         self.arcanist_curative_runeforms_healing = arcanist_curative_runeforms_healing
+        self.arcanist_cascading_fortune_healing = arcanist_cascading_fortune_healing
         super().__init__(**kwargs)
 
     def optimize(
@@ -323,6 +333,45 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
             unresolved=unresolved,
         )
 
+    def _arcanist_cascading_fortune_event(
+        self,
+        *,
+        build: PlayerBuild,
+        event: ExtremeHealingEventResult,
+    ) -> ExtremeHealingEventResult:
+        tooltip_result = getattr(event, "tooltip_result", None)
+        skill = getattr(tooltip_result, "skill", None)
+        skill_name = str(getattr(skill, "name", "") or "").strip()
+        if not skill_name:
+            return event
+
+        service = self.arcanist_cascading_fortune_healing
+        if service is None:
+            service = ExtremeArcanistCascadingFortuneHealingService()
+            self.arcanist_cascading_fortune_healing = service
+
+        fortune = service.resolve(
+            build=build,
+            ability_name=skill_name,
+            target_health_fraction=self.target_health_fraction,
+        )
+        multiplier = float(fortune.multiplier)
+        normal_heal = (
+            None if event.normal_heal is None else float(event.normal_heal) * multiplier
+        )
+        critical_heal = (
+            None
+            if event.critical_heal is None
+            else float(event.critical_heal) * multiplier
+        )
+        unresolved = tuple(dict.fromkeys((*event.unresolved, *fortune.unresolved)))
+        return replace(
+            event,
+            normal_heal=normal_heal,
+            critical_heal=critical_heal,
+            unresolved=unresolved,
+        )
+
     def _evaluate(
         self,
         build: PlayerBuild,
@@ -373,6 +422,10 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         event = self._arcanist_healing_tides_event(
             build=build,
             progression=candidate_progression,
+            event=event,
+        )
+        event = self._arcanist_cascading_fortune_event(
+            build=build,
             event=event,
         )
         unresolved = (
