@@ -10,8 +10,19 @@ from minmax.character_build.weapon_type import WeaponType, resolve_weapon_skill_
 from minmax.character_progression import CharacterProgression
 from minmax.eso_weapon_type_id import weapon_type_from_saved_name
 from minmax.skill_coefficient_repository import ability_entity_id
+from minmax.skill_component_classification import SkillEffectKind
+from minmax.skill_component_repository import SkillComponentRepository
 from models.build_model import PlayerBuild
+from services.extreme_dragon_blood_skill_component_repository import (
+    ExtremeDragonBloodSkillComponentRepository,
+)
 from services.extreme_heal_class_route_service import canonical_class_skill_line_id
+from services.extreme_sorcerer_skill_component_repository import (
+    ExtremeSorcererSkillComponentRepository,
+)
+from services.rotation_healer_u50_skill_component_repository import (
+    RotationHealerU50SkillComponentRepository,
+)
 
 
 @dataclass(frozen=True)
@@ -33,26 +44,17 @@ class ExtremeHealSkillCandidate:
 class ExtremeHealSkillCandidateService:
     """Discover reviewed active-skill healing candidates from canonical data.
 
-    Discovery is evidence-driven: a skill enters the catalog only when at least
-    one coefficient is explicitly classified as ``heal``. For ordinary saved-
-    build discovery, class abilities remain limited to the build's native class.
-    When an explicit ``ClassSkillLineConfiguration`` is supplied, class-skill
-    legality instead follows the three equipped class lines. That is the correct
-    boundary for subclass routes: base class and available class skill lines are
-    related, but they are not the same thing.
+    Skill/rank/ownership metadata comes from canonical ``ability``/``skill`` /
+    ``skill_rank`` tables. HEAL evidence comes from the same layered component
+    repository used by Extreme canonical healing: persisted classifications when
+    present, plus reviewed Dragon Blood, Sorcerer, and U50 healer overlays.
 
-    Non-class abilities still require a skill line the progression says the
-    character owns. When ``active_bar`` is supplied, weapon-skill heals must also
-    match the concrete weapon configuration on that bar. Unknown or aggregate
-    weapon labels fail closed rather than making an impossible heal look legal.
+    This keeps candidate discovery aligned with evaluation and does not require a
+    binary ``eso.db`` schema migration merely to consume reviewed in-memory
+    component identity. Missing core skill metadata still fails closed.
     """
 
-    REQUIRED_TABLES = (
-        "ability",
-        "skill",
-        "skill_rank",
-        "skill_component_classification",
-    )
+    REQUIRED_TABLES = ("ability", "skill", "skill_rank")
     WEAPON_SKILL_LINE_IDS = frozenset(
         {
             "one_hand_and_shield",
@@ -64,8 +66,28 @@ class ExtremeHealSkillCandidateService:
         }
     )
 
-    def __init__(self, database_path: str | Path) -> None:
+    def __init__(
+        self,
+        database_path: str | Path,
+        *,
+        component_repository=None,
+    ) -> None:
         self.database_path = Path(database_path)
+        if component_repository is None:
+            base = SkillComponentRepository(self.database_path)
+            dragon = ExtremeDragonBloodSkillComponentRepository(
+                self.database_path,
+                base_repository=base,
+            )
+            sorcerer = ExtremeSorcererSkillComponentRepository(
+                self.database_path,
+                base_repository=dragon,
+            )
+            component_repository = RotationHealerU50SkillComponentRepository(
+                self.database_path,
+                base_repository=sorcerer,
+            )
+        self.components = component_repository
 
     def candidates_for_build(
         self,
@@ -79,22 +101,22 @@ class ExtremeHealSkillCandidateService:
         if not self.database_path.exists():
             raise FileNotFoundError(self.database_path)
 
-        rows = self._heal_rows()
+        rows = self._skill_rows()
         grouped: dict[tuple[int, int], list[sqlite3.Row]] = {}
         for row in rows:
             grouped.setdefault((int(row["skill_id"]), int(row["morph"])), []).append(row)
 
         result: list[ExtremeHealSkillCandidate] = []
-        for _identity, identity_rows in grouped.items():
-            # Query order is descending rank/ability ID. Keep every HEAL row for
-            # that one selected concrete max-rank record, and do not let older
-            # rank metadata leak into the candidate.
+        for identity_rows in grouped.values():
             row = identity_rows[0]
             selected_rank_id = int(row["skill_rank_id"])
-            selected_rows = tuple(
-                item for item in identity_rows
-                if int(item["skill_rank_id"]) == selected_rank_id
+            heal_components = tuple(
+                component
+                for component in self.components.get_for_skill_rank(selected_rank_id)
+                if component.effect_kind is SkillEffectKind.HEAL
             )
+            if not heal_components:
+                continue
 
             name = str(row["name"] or "").strip()
             entity_id = ability_entity_id(name)
@@ -111,19 +133,12 @@ class ExtremeHealSkillCandidateService:
                 class_configuration=class_configuration,
                 active_bar=active_bar,
             )
-            can_crit_values = {
-                None if item["can_crit"] is None else bool(int(item["can_crit"]))
-                for item in selected_rows
-            }
-            can_crit: bool | None
-            if can_crit_values == {True}:
-                can_crit = True
-            elif can_crit_values == {False}:
+            crit_values = {component.can_crit for component in heal_components}
+            if crit_values == {True}:
+                can_crit: bool | None = True
+            elif crit_values == {False}:
                 can_crit = False
             else:
-                # Mixed or unknown per-component eligibility must remain
-                # component-scoped. The aggregate candidate cannot collapse it
-                # to a misleading yes/no answer.
                 can_crit = None
 
             candidate = ExtremeHealSkillCandidate(
@@ -135,7 +150,9 @@ class ExtremeHealSkillCandidateService:
                 morph=int(row["morph"] or 0),
                 skill_line=skill_line,
                 class_type=class_type,
-                heal_component_count=len({int(item["coefficient_number"]) for item in selected_rows}),
+                heal_component_count=len(
+                    {int(component.coefficient_number) for component in heal_components}
+                ),
                 can_crit=can_crit,
                 legal=not blockers,
                 blockers=blockers,
@@ -156,7 +173,7 @@ class ExtremeHealSkillCandidateService:
             )
         )
 
-    def _heal_rows(self) -> tuple[sqlite3.Row, ...]:
+    def _skill_rows(self) -> tuple[sqlite3.Row, ...]:
         with sqlite3.connect(self.database_path) as db:
             db.row_factory = sqlite3.Row
             missing = [name for name in self.REQUIRED_TABLES if not self._table_exists(db, name)]
@@ -177,16 +194,12 @@ class ExtremeHealSkillCandidateService:
                     COALESCE(a.skill_line, '') AS skill_line,
                     COALESCE(a.class_type, '') AS class_type,
                     COALESCE(a.is_player, 0) AS is_player,
-                    COALESCE(a.is_passive, s.is_passive, 0) AS is_passive,
-                    c.coefficient_number,
-                    c.can_crit
-                FROM skill_component_classification c
-                JOIN skill_rank sr ON sr.id = c.skill_rank_id
+                    COALESCE(a.is_passive, s.is_passive, 0) AS is_passive
+                FROM skill_rank sr
                 JOIN skill s ON s.id = sr.skill_id
                 LEFT JOIN ability a ON a.ability_id = sr.ability_id
-                WHERE LOWER(TRIM(c.effect_kind)) = 'heal'
                 ORDER BY sr.skill_id, COALESCE(sr.morph, 0), COALESCE(sr.rank, 0) DESC,
-                         sr.ability_id DESC, c.coefficient_number
+                         sr.ability_id DESC
                 """
             ).fetchall()
         return tuple(rows)
