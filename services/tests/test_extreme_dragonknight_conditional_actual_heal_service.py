@@ -2,12 +2,15 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from minmax.character_progression import CharacterProgression
 from minmax.combat_state import CombatState
 from models.build_model import PlayerBuild
 from services.extreme_dragonknight_conditional_actual_heal_service import (
     ExtremeDragonknightConditionalActualHealService,
 )
+from services.extreme_healing_event_service import ExtremeHealingEventResult
 
 
 class _Optimizer:
@@ -43,6 +46,20 @@ class _DragonknightMending:
         )
 
 
+class _DragonBloodHealing:
+    def __init__(self, *, multiplier=1.0, unresolved=()):
+        self.multiplier = float(multiplier)
+        self.unresolved = tuple(unresolved)
+        self.calls = []
+
+    def resolve(self, *, build, ability_name, caster_health_fraction):
+        self.calls.append((build.BuildName, ability_name, caster_health_fraction))
+        return SimpleNamespace(
+            multiplier=self.multiplier,
+            unresolved=self.unresolved,
+        )
+
+
 class _HeavyState:
     def resolve(
         self,
@@ -64,6 +81,21 @@ class _HeavyState:
 
 def _progression():
     return CharacterProgression(passive_ranks={"Essence Drain": 2})
+
+
+def _event(skill_name="Dragon Blood", unresolved=()):
+    return ExtremeHealingEventResult(
+        entity_id="dragon_blood",
+        normal_heal=1000.0,
+        critical_heal=1700.0,
+        critical_healing_bonus=0.20,
+        critical_multiplier=1.70,
+        heal_coefficient_numbers=(1,),
+        crit_eligible_coefficient_numbers=(1,),
+        noncrit_coefficient_numbers=(),
+        tooltip_result=SimpleNamespace(skill=SimpleNamespace(name=skill_name)),
+        unresolved=tuple(unresolved),
+    )
 
 
 def test_dragonknight_window_adds_major_mending():
@@ -133,3 +165,72 @@ def test_blocked_dragonknight_source_preserves_other_combat_state():
 
     assert state.active_buffs == ("Major Mending",)
     assert unresolved == ("Dragonknight Major Mending source unresolved",)
+
+
+def test_dragon_blood_missing_health_multiplier_scales_normal_and_critical_event():
+    healing = _DragonBloodHealing(multiplier=1.375)
+    service = ExtremeDragonknightConditionalActualHealService(
+        target_health_fraction=0.25,
+        caster_health_fraction=0.25,
+        dragonknight_dragon_blood_healing=healing,
+        optimizer=_Optimizer(),
+        healing_events=_HealingEvents(),
+    )
+    build = PlayerBuild(BuildName="Blood DK", EsoClass="Dragonknight")
+
+    result = service._dragon_blood_self_heal_event(build=build, event=_event())
+
+    assert result.normal_heal == pytest.approx(1375.0)
+    assert result.critical_heal == pytest.approx(2337.5)
+    assert result.unresolved == ()
+    assert healing.calls == [("Blood DK", "Dragon Blood", 0.25)]
+
+
+def test_dragon_blood_unknown_caster_health_preserves_lower_bound_and_blocker():
+    healing = _DragonBloodHealing(
+        multiplier=1.0,
+        unresolved=(
+            "Dragon Blood missing-health scaling requires explicit caster Health fraction",
+        ),
+    )
+    service = ExtremeDragonknightConditionalActualHealService(
+        target_health_fraction=0.25,
+        caster_health_fraction=None,
+        dragonknight_dragon_blood_healing=healing,
+        optimizer=_Optimizer(),
+        healing_events=_HealingEvents(),
+    )
+    build = PlayerBuild(BuildName="Unknown Health DK", EsoClass="Dragonknight")
+
+    result = service._dragon_blood_self_heal_event(build=build, event=_event())
+
+    assert result.normal_heal == pytest.approx(1000.0)
+    assert result.critical_heal == pytest.approx(1700.0)
+    assert result.unresolved == (
+        "Dragon Blood missing-health scaling requires explicit caster Health fraction",
+    )
+
+
+def test_green_dragon_temporal_family_is_not_multiplied_by_dragon_blood_adapter():
+    healing = _DragonBloodHealing(multiplier=1.375)
+    service = ExtremeDragonknightConditionalActualHealService(
+        target_health_fraction=0.25,
+        caster_health_fraction=0.25,
+        dragonknight_dragon_blood_healing=healing,
+        optimizer=_Optimizer(),
+        healing_events=_HealingEvents(),
+    )
+    event = _event(
+        skill_name="Blood of the Green Dragon",
+        unresolved=("temporal scope unresolved",),
+    )
+
+    result = service._dragon_blood_self_heal_event(
+        build=PlayerBuild(BuildName="Green DK", EsoClass="Dragonknight"),
+        event=event,
+    )
+
+    assert result is event
+    assert result.normal_heal == pytest.approx(1000.0)
+    assert result.critical_heal == pytest.approx(1700.0)
+    assert healing.calls == []
