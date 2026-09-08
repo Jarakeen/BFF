@@ -3,6 +3,11 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from minmax.resource_costs import ResourceType
+from minmax.resource_timeline import (
+    AppliedResourceTimelineEvent,
+    ResourceTimelineEventKind,
+    ResourceTimelineResult,
+)
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from services.rotation_plan_consequence_service import (
     RotationPlanConsequenceService,
@@ -38,6 +43,50 @@ def _sustain(*, ending: int, minimum: int, costs: tuple[tuple[str, int], ...], s
     )
 
 
+def _timeline_sustain(
+    *,
+    starting: int,
+    maximum: int,
+    minimum: int,
+    ending: int,
+) -> SimpleNamespace:
+    timeline = ResourceTimelineResult(
+        resource=ResourceType.MAGICKA,
+        starting_amount=starting,
+        ending_amount=ending,
+        starting_maximum=maximum,
+        ending_maximum=maximum,
+        events=(
+            AppliedResourceTimelineEvent(
+                time_seconds=2.0,
+                kind=ResourceTimelineEventKind.ACTION_COST,
+                source="test cost",
+                before=starting,
+                attempted_change=minimum - starting,
+                applied_change=minimum - starting,
+                after=minimum,
+                maximum_before=maximum,
+                maximum_after=maximum,
+            ),
+            AppliedResourceTimelineEvent(
+                time_seconds=4.0,
+                kind=ResourceTimelineEventKind.RESTORATION,
+                source="test restore",
+                before=minimum,
+                attempted_change=ending - minimum,
+                applied_change=ending - minimum,
+                after=ending,
+                maximum_before=maximum,
+                maximum_after=maximum,
+            ),
+        ),
+    )
+    return SimpleNamespace(
+        resource=ResourceType.MAGICKA,
+        run=SimpleNamespace(timeline=timeline, action_cost_events=()),
+    )
+
+
 def test_extra_expensive_cast_is_resource_worsened() -> None:
     baseline = _plan(
         RotationAction(39.0, 0, RotationActionKind.SKILL, "Illustrious Healing", "front"),
@@ -68,6 +117,8 @@ def test_extra_expensive_cast_is_resource_worsened() -> None:
     assert result.minimum_resource_delta == -523
     assert result.ending_resource_delta == -2_878
     assert result.wait_delta == -1
+    assert result.minimum_resource_fraction_delta is None
+    assert result.ending_resource_fraction_delta is None
     assert [(item.name, item.delta) for item in result.cast_deltas] == [
         ("Illustrious Healing", 1),
     ]
@@ -127,3 +178,37 @@ def test_shortfall_regression_is_resource_worsened_even_if_ending_resource_rises
 
     assert result.resource_kind is RotationResourceConsequenceKind.WORSENED
     assert result.shortfall_delta == 500
+
+
+def test_consequence_exposes_normalized_resource_floor_without_changing_role_neutral_classification() -> None:
+    plan = _plan(
+        RotationAction(10.0, 0, RotationActionKind.SKILL, "Role Neutral Skill", "front"),
+    )
+
+    result = RotationPlanConsequenceService().compare(
+        baseline_plan=plan,
+        candidate_plan=plan,
+        baseline_sustain=_timeline_sustain(
+            starting=24_000,
+            maximum=30_000,
+            minimum=12_000,
+            ending=15_000,
+        ),
+        candidate_sustain=_timeline_sustain(
+            starting=28_800,
+            maximum=36_000,
+            minimum=13_000,
+            ending=18_000,
+        ),
+    )
+
+    assert result.minimum_resource_delta == 1_000
+    assert result.ending_resource_delta == 3_000
+    assert result.resource_kind is RotationResourceConsequenceKind.IMPROVED
+    assert result.baseline_minimum_resource_fraction == 0.4
+    assert result.candidate_minimum_resource_fraction == 13_000 / 36_000
+    assert result.minimum_resource_fraction_delta == (13_000 / 36_000) - 0.4
+    assert result.baseline_ending_resource_fraction == 0.5
+    assert result.candidate_ending_resource_fraction == 0.5
+    assert result.ending_resource_fraction_delta == 0.0
+    assert result.minimum_resource_fraction_delta < 0
