@@ -2,11 +2,10 @@ from __future__ import annotations
 
 """Builds-page intake for ESO Armory + Character screenshots.
 
-This is intentionally a review-first intake surface.  The image recognition
-layer will be tuned against real ESO screenshots rather than guessing at screen
-geometry before we have examples.  Captures are copied into data/build_imports
-with a manifest so they are ready for later analysis without making the user
-re-capture every character.
+Real Xbox Armory captures show that one loadout is spread across multiple
+subviews: equipment/attributes, skills, and Champion Points.  The import dialog
+therefore accepts a set of Armory screenshots plus one matching Character sheet
+and stages them together for review-first recognition.
 """
 
 from pathlib import Path
@@ -79,14 +78,109 @@ class _ScreenshotPicker(QWidget):
             "",
             "Images (*.png *.jpg *.jpeg *.webp)",
         )
-        if not filename:
-            return
-        self.set_path(Path(filename))
+        if filename:
+            self.set_path(Path(filename))
 
     def set_path(self, path: Path) -> None:
         self._path = Path(path)
         self.path_edit.setText(str(self._path))
-        pixmap = QPixmap(str(self._path))
+        self._show_preview(self._path)
+
+    def _show_preview(self, path: Path) -> None:
+        pixmap = QPixmap(str(path))
+        if pixmap.isNull():
+            self.preview.setText("Preview unavailable")
+            self.preview.setPixmap(QPixmap())
+            return
+        self.preview.setText("")
+        self.preview.setPixmap(
+            pixmap.scaled(
+                520,
+                260,
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+        )
+
+
+class _ArmoryScreenshotPicker(QWidget):
+    """Select several Armory subviews belonging to one saved build."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._paths: list[Path] = []
+
+        root = QVBoxLayout(self)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(6)
+
+        heading = QLabel("ARMORY SCREENSHOTS")
+        heading.setProperty("sidebarHeading", True)
+        root.addWidget(heading)
+
+        subtitle = QLabel(
+            "Select every useful Armory view for this build. Equipment/attributes, Skills, "
+            "and Champion are separate screens on Xbox, so BFF keeps them as one evidence set."
+        )
+        subtitle.setWordWrap(True)
+        subtitle.setProperty("muted", True)
+        root.addWidget(subtitle)
+
+        row = QHBoxLayout()
+        self.path_edit = QLineEdit()
+        self.path_edit.setReadOnly(True)
+        self.path_edit.setPlaceholderText("No Armory screenshots selected")
+        browse = QPushButton("Choose Screens…")
+        browse.clicked.connect(self._choose)
+        row.addWidget(self.path_edit, 1)
+        row.addWidget(browse)
+        root.addLayout(row)
+
+        self.preview = QLabel("Armory screenshot preview")
+        self.preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.preview.setMinimumHeight(180)
+        self.preview.setProperty("foundryCard", True)
+        root.addWidget(self.preview)
+
+        self.selection_note = QLabel(
+            "Recommended: equipment/attributes + skills + Champion. Add more if another Armory view contains useful build data."
+        )
+        self.selection_note.setWordWrap(True)
+        self.selection_note.setProperty("muted", True)
+        root.addWidget(self.selection_note)
+
+    @property
+    def paths(self) -> list[Path]:
+        return list(self._paths)
+
+    def _choose(self) -> None:
+        filenames, _ = QFileDialog.getOpenFileNames(
+            self,
+            "Choose ESO Armory Screenshots",
+            "",
+            "Images (*.png *.jpg *.jpeg *.webp)",
+        )
+        if filenames:
+            self.set_paths([Path(filename) for filename in filenames])
+
+    def set_paths(self, paths: list[Path]) -> None:
+        self._paths = [Path(path) for path in paths]
+        if not self._paths:
+            self.path_edit.clear()
+            self.preview.setPixmap(QPixmap())
+            self.preview.setText("Armory screenshot preview")
+            self.selection_note.setText("No Armory screenshots selected.")
+            return
+
+        names = ", ".join(path.name for path in self._paths[:3])
+        if len(self._paths) > 3:
+            names += f" + {len(self._paths) - 3} more"
+        self.path_edit.setText(names)
+        self.selection_note.setText(
+            f"{len(self._paths)} Armory screenshot(s) selected • first image shown above"
+        )
+
+        pixmap = QPixmap(str(self._paths[0]))
         if pixmap.isNull():
             self.preview.setText("Preview unavailable")
             self.preview.setPixmap(QPixmap())
@@ -106,7 +200,7 @@ class BuildScreenshotImportDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Import Build from ESO Screenshots")
-        self.resize(1040, 690)
+        self.resize(1080, 720)
         self.service = BuildScreenshotImportService(get_data_dir() / "build_imports")
 
         root = QVBoxLayout(self)
@@ -118,31 +212,30 @@ class BuildScreenshotImportDialog(QDialog):
         root.addWidget(title)
 
         intro = QLabel(
-            "Capture the same character in the Armory and on the main Character page. "
-            "BFF keeps the pair together so the build analyzer can combine loadout evidence "
-            "with character identity/stats instead of making you type every toon by hand."
+            "Capture one character's Armory views plus the main Character sheet. BFF keeps the "
+            "screens together so recognition can combine loadout, skills, CP, attributes, and "
+            "character identity without making you type every toon by hand."
         )
         intro.setWordWrap(True)
         intro.setProperty("pageSubtitle", True)
         root.addWidget(intro)
 
-        capture_card = FoundryCard("Recommended Capture Pair")
+        capture_card = FoundryCard("Recommended Capture Set")
         capture_card.addWidget(QLabel(
-            "1. Armory page: capture the loadout/build view as completely as possible.\n"
-            "2. Character page: capture character name, class/race/stats and equipped information that is visible.\n"
-            "You can crop out unrelated desktop clutter, but keep the ESO UI itself intact."
+            "1. Armory equipment/attributes view: build name, gear, weapons, jewelry, Mundus, attributes.\n"
+            "2. Armory Skills view: both skill bars and ultimates.\n"
+            "3. Armory Champion view: the slotted CP stars for all three disciplines.\n"
+            "4. Character Sheet → Description: character name, race, class, alliance and stable identity details.\n"
+            "Extra Armory screenshots are welcome when one screen cannot show the whole list."
         ))
         root.addWidget(capture_card)
 
         grid = QGridLayout()
         grid.setHorizontalSpacing(10)
-        self.armory = _ScreenshotPicker(
-            "ARMORY SCREENSHOT",
-            "Primary evidence for the saved loadout, skills, equipment, and build identity.",
-        )
+        self.armory = _ArmoryScreenshotPicker()
         self.character = _ScreenshotPicker(
             "CHARACTER SCREENSHOT",
-            "Companion evidence for character identity and whatever stats/equipment the screen exposes.",
+            "Use Character Sheet → Description when possible. It exposes the stable character identity that the Armory build itself does not.",
         )
         grid.addWidget(self.armory, 0, 0)
         grid.addWidget(self.character, 0, 1)
@@ -151,7 +244,7 @@ class BuildScreenshotImportDialog(QDialog):
         root.addLayout(grid, 1)
 
         status = QLabel(
-            "Current stage: capture intake. Recognition will create a reviewable draft before anything is allowed into builds.json."
+            "Recognition will create a reviewable draft before anything is allowed into builds.json. Missing or ambiguous fields stay unresolved instead of being guessed."
         )
         status.setWordWrap(True)
         status.setProperty("muted", True)
@@ -161,23 +254,23 @@ class BuildScreenshotImportDialog(QDialog):
         actions.addStretch(1)
         cancel = QPushButton("Cancel")
         cancel.clicked.connect(self.reject)
-        self.stage_button = FoundryButton("📷 Add Screenshot Pair", role=ButtonRole.SUCCESS)
+        self.stage_button = FoundryButton("📷 Add Screenshot Set", role=ButtonRole.SUCCESS)
         self.stage_button.clicked.connect(self._stage)
         actions.addWidget(cancel)
         actions.addWidget(self.stage_button)
         root.addLayout(actions)
 
     def _stage(self) -> None:
-        if not self.armory.path or not self.character.path:
+        if not self.armory.paths or not self.character.path:
             QMessageBox.warning(
                 self,
-                "Two screenshots needed",
-                "Choose both the Armory screenshot and the main Character screenshot first.",
+                "Screenshots needed",
+                "Choose at least one Armory screenshot and the matching Character screenshot first.",
             )
             return
         try:
             intake = self.service.stage(
-                armory_image=self.armory.path,
+                armory_images=self.armory.paths,
                 character_image=self.character.path,
             )
         except Exception as exc:
@@ -187,8 +280,9 @@ class BuildScreenshotImportDialog(QDialog):
         QMessageBox.information(
             self,
             "Screenshots added",
-            "The screenshot pair is safely staged for build analysis.\n\n"
-            f"Import ID: {intake.intake_id}\n\n"
+            "The screenshot set is safely staged for build analysis.\n\n"
+            f"Import ID: {intake.intake_id}\n"
+            f"Armory screens: {len(intake.armory_images)}\n\n"
             "Nothing was written into your saved builds yet. The analyzer will create a review draft first.",
         )
         self.accept()
@@ -199,7 +293,7 @@ def _open_screenshot_import(page) -> None:
     if dialog.exec() == QDialog.DialogCode.Accepted:
         pending = dialog.service.pending()
         page.status.success(
-            f"Screenshot pair staged • {len(pending)} build import(s) waiting for analysis."
+            f"Screenshot set staged • {len(pending)} build import(s) waiting for analysis."
         )
 
 
@@ -216,7 +310,7 @@ def install() -> None:
         original_build_ui(self)
         button = FoundryButton("📷 Import Screenshots", role=ButtonRole.SECONDARY)
         button.setToolTip(
-            "Stage an ESO Armory screenshot plus the matching Character screenshot for build import."
+            "Stage several ESO Armory views plus the matching Character sheet for build import."
         )
         button.clicked.connect(lambda _checked=False, page=self: _open_screenshot_import(page))
         self.import_screenshots_button = button
@@ -224,8 +318,6 @@ def install() -> None:
         actions = getattr(self, "actions", None)
         layout = actions.layout() if actions is not None else None
         if layout is not None:
-            # Existing actions end with Edit / Save / Export.  Put screenshot import
-            # first so it reads as an intake action rather than another save/export.
             insert_at = 1 if layout.count() > 1 else 0
             layout.insertWidget(insert_at, button)
         else:
