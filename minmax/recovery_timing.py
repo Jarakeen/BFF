@@ -69,6 +69,7 @@ class AppliedRecoveryTick:
 
 
 RecoveryActivityResolver = Callable[[float], RecoveryActivityState]
+DisplayedRecoveryResolver = Callable[[float], int]
 
 
 def resolve_in_combat_recovery_tick(
@@ -116,6 +117,7 @@ def schedule_in_combat_recovery_ticks(
     first_tick_seconds: float = IN_COMBAT_RECOVERY_INTERVAL_SECONDS,
     activity_at: RecoveryActivityResolver | None = None,
     recovery_modifiers: tuple[TimedRecoveryModifier, ...] = (),
+    displayed_recovery_at: DisplayedRecoveryResolver | None = None,
 ) -> tuple[ScheduledRecoveryTick, ...]:
     """Schedule ordinary recovery ticks within one deterministic time window.
 
@@ -124,10 +126,12 @@ def schedule_in_combat_recovery_ticks(
     inventing a tick at time zero. A later combat timeline may pass a different
     first-tick offset when it already knows the resource recovery phase.
 
-    Activity and timed recovery modifiers are resolved independently at every
-    tick instant. This matters because temporary effects may begin or expire
-    between ticks, and Stamina suppression for one tick must not suppress every
-    other tick in the window.
+    Activity, timed recovery modifiers, and optional caller-verified displayed
+    recovery are resolved independently at every tick instant. The latter allows
+    bar-sensitive canonical character-sheet recovery to change exactly when the
+    active bar changes, without changing the global two-second recovery cadence.
+    Callers that omit ``displayed_recovery_at`` retain the historical static-pool
+    behavior.
     """
 
     duration = float(duration_seconds)
@@ -150,6 +154,21 @@ def schedule_in_combat_recovery_ticks(
                 "Recovery activity resolver must return RecoveryActivityState; "
                 f"received {type(activity).__name__} at {time_seconds:g}s"
             )
+        displayed = (
+            int(displayed_recovery_at(time_seconds))
+            if displayed_recovery_at is not None
+            else int(pool.displayed_recovery)
+        )
+        if displayed < 0:
+            raise ValueError(
+                "Displayed recovery resolver cannot return a negative amount: "
+                f"{displayed} at {time_seconds:g}s"
+            )
+        tick_pool = StaticResourcePool(
+            resource=pool.resource,
+            maximum=pool.maximum,
+            displayed_recovery=displayed,
+        )
         bonus = additive_recovery_bonus_at(
             recovery_modifiers,
             resource=pool.resource,
@@ -159,7 +178,7 @@ def schedule_in_combat_recovery_ticks(
             ScheduledRecoveryTick(
                 time_seconds=time_seconds,
                 tick=resolve_in_combat_recovery_tick(
-                    pool,
+                    tick_pool,
                     activity,
                     additive_recovery_bonus=bonus,
                 ),
