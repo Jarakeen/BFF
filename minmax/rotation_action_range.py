@@ -9,24 +9,63 @@ from .rotation_plan import RotationActionKind, RotationPlan
 _SUPPORTED_KINDS = frozenset({
     RotationActionKind.SKILL,
     RotationActionKind.ULTIMATE,
+    RotationActionKind.LIGHT_ATTACK,
+    RotationActionKind.HEAVY_ATTACK,
+})
+_NAMED_KINDS = frozenset({
+    RotationActionKind.SKILL,
+    RotationActionKind.ULTIMATE,
+})
+_WEAPON_ATTACK_KINDS = frozenset({
+    RotationActionKind.LIGHT_ATTACK,
+    RotationActionKind.HEAVY_ATTACK,
 })
 
 
 @dataclass(frozen=True)
 class RotationActionRangeRequirement:
-    """Caller-supplied canonical range limits for one named skill or ultimate."""
+    """Caller-supplied canonical range limits for one scheduled action identity.
 
-    action_name: str
+    Skills and Ultimates are matched by exact name plus kind. Light/heavy attacks
+    are matched by kind because basic weapon attacks do not carry a skill name in
+    RotationPlan. Range magnitudes remain explicit evidence supplied by the caller;
+    this contract does not infer weapon-family ranges.
+    """
+
+    action_name: str | None
     minimum_range: float = 0.0
     maximum_range: float | None = None
     action_kind: RotationActionKind = RotationActionKind.SKILL
     bar: str | None = None
 
     def __post_init__(self) -> None:
+        try:
+            kind = (
+                self.action_kind
+                if isinstance(self.action_kind, RotationActionKind)
+                else RotationActionKind(str(self.action_kind))
+            )
+        except ValueError as exc:
+            raise ValueError(
+                f"unsupported rotation range action kind: {self.action_kind!r}"
+            ) from exc
+        if kind not in _SUPPORTED_KINDS:
+            raise ValueError(
+                "rotation range requirements support skill, ultimate, light attack, or heavy attack actions"
+            )
+        object.__setattr__(self, "action_kind", kind)
+
         name = str(self.action_name or "").strip()
-        if not name:
-            raise ValueError("rotation range requirement needs action_name")
-        object.__setattr__(self, "action_name", name)
+        if kind in _NAMED_KINDS:
+            if not name:
+                raise ValueError("rotation range requirement needs action_name for skill or ultimate")
+            object.__setattr__(self, "action_name", name)
+        else:
+            if name:
+                raise ValueError(
+                    "rotation weapon-attack range requirements are kind-identified and must not set action_name"
+                )
+            object.__setattr__(self, "action_name", None)
 
         minimum = float(self.minimum_range)
         if not math.isfinite(minimum) or minimum < 0:
@@ -40,20 +79,6 @@ class RotationActionRangeRequirement:
                     "rotation maximum range must be finite and at least minimum range"
                 )
             object.__setattr__(self, "maximum_range", maximum)
-
-        try:
-            kind = (
-                self.action_kind
-                if isinstance(self.action_kind, RotationActionKind)
-                else RotationActionKind(str(self.action_kind))
-            )
-        except ValueError as exc:
-            raise ValueError(
-                f"unsupported rotation range action kind: {self.action_kind!r}"
-            ) from exc
-        if kind not in _SUPPORTED_KINDS:
-            raise ValueError("rotation range requirements support skill or ultimate actions")
-        object.__setattr__(self, "action_kind", kind)
 
         if self.bar is not None:
             bar = str(self.bar).strip().casefold()
@@ -123,10 +148,10 @@ class RotationActionRangeAssessment:
 class RotationActionRangeAssessor:
     """Audit action range against explicit encounter target-distance evidence.
 
-    Skill limits and encounter distance stay separate. The caller supplies both;
-    this layer does not infer positioning, target identity, or movement from role,
-    encounter name, or action name. Distance values must use the same canonical
-    unit as the supplied skill range evidence.
+    Action limits and encounter distance stay separate. The caller supplies both;
+    this layer does not infer positioning, target identity, movement, or weapon
+    attack range from role, encounter name, action identity, or weapon family.
+    Distance values must use the same canonical unit as the supplied range evidence.
     """
 
     def assess(
@@ -143,12 +168,17 @@ class RotationActionRangeAssessor:
         violations: list[RotationActionRangeViolation] = []
 
         for requirement in requirements:
-            target = requirement.action_name.casefold()
+            target = (
+                requirement.action_name.casefold()
+                if requirement.action_name is not None
+                else None
+            )
             for action in plan.actions:
                 if action.kind is not requirement.action_kind:
                     continue
-                if not action.name or str(action.name).casefold() != target:
-                    continue
+                if target is not None:
+                    if not action.name or str(action.name).casefold() != target:
+                        continue
                 if requirement.bar is not None and action.bar != requirement.bar:
                     continue
                 window = next(
@@ -182,17 +212,22 @@ class RotationActionRangeAssessor:
     def _validate_unique(
         requirements: tuple[RotationActionRangeRequirement, ...],
     ) -> None:
-        seen: set[tuple[RotationActionKind, str, str | None]] = set()
+        seen: set[tuple[RotationActionKind, str | None, str | None]] = set()
         for requirement in requirements:
             key = (
                 requirement.action_kind,
-                requirement.action_name.casefold(),
+                (
+                    requirement.action_name.casefold()
+                    if requirement.action_name is not None
+                    else None
+                ),
                 requirement.bar,
             )
             if key in seen:
+                label = requirement.action_name or requirement.action_kind.value
                 raise ValueError(
                     "duplicate rotation range requirement for "
-                    f"{requirement.action_name!r}"
+                    f"{label!r}"
                 )
             seen.add(key)
 
