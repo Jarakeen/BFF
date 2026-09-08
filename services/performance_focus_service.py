@@ -147,19 +147,28 @@ def fetch_player_build_evidence(
 def likely_responsibilities(evidence: PerformanceBuildEvidence) -> list[tuple[str, str]]:
     """Return high-confidence *suggestions*, never assignments.
 
-    We only infer from explicit class/gear/ability evidence that strongly points to
-    an effect source. The UI labels these as suggestions and requires a user pin.
+    Suggestions require explicit class, gear, or ability evidence that strongly
+    points to the effect source. Role context changes which clues are useful, but
+    the UI still requires the user to pin a goal before it reaches Operations.
     """
     class_name = evidence.ClassName.casefold()
+    role = evidence.Role.casefold()
     gear = {name.casefold() for name in evidence.GearSets}
     abilities = {name.casefold() for name in evidence.Abilities}
     suggestions: list[tuple[str, str]] = []
+
+    def has_ability(*needles: str) -> bool:
+        return any(
+            any(needle.casefold() in ability for needle in needles)
+            for ability in abilities
+        )
 
     def add(name: str, note: str) -> None:
         if name.casefold() not in {current.casefold() for current, _ in suggestions}:
             suggestions.append((name, note))
 
-    if "warden" in class_name and "heal" in evidence.Role.casefold():
+    # Healer / support clues.
+    if "warden" in class_name and "heal" in role:
         add("Major Mending", "Warden healer class context")
     if "spell power cure" in gear:
         add("Major Courage", "Spell Power Cure detected in ESO Logs gear")
@@ -167,9 +176,44 @@ def likely_responsibilities(evidence: PerformanceBuildEvidence) -> list[tuple[st
         add("Major Slayer", "Roaring Opportunist detected in ESO Logs gear")
     if "turning tide" in gear or "archdruid devyric" in gear:
         add("Major Vulnerability", "Major Vulnerability set detected in ESO Logs gear")
-    if any("aggressive horn" in name or name == "war horn" for name in abilities):
+    if has_ability("aggressive horn") or "war horn" in abilities:
         add("Major Force", "War Horn detected in ESO Logs abilities")
-    if any("combat prayer" in name for name in abilities):
+    if has_ability("combat prayer"):
         add("Minor Berserk", "Combat Prayer detected in ESO Logs abilities")
+
+    # DPS clues. Received raid buffs are useful context, but they are not added as
+    # personal goals unless the build itself shows a likely source.
+    if "dps" in role:
+        if has_ability("barbed trap", "channeled acceleration", "accelerate"):
+            add("Minor Force", "Minor Force source detected in ESO Logs abilities")
+        if any("kinras" in item for item in gear):
+            add("Major Berserk", "Kinras gear detected in ESO Logs build evidence")
+
+    # Tank clues. These are intentionally source-specific so a tank is not graded
+    # on every possible raid debuff merely because tanks often carry them.
+    if "tank" in role:
+        if has_ability("pierce armor"):
+            add("Major Breach", "Pierce Armor detected in ESO Logs abilities")
+            add("Minor Breach", "Pierce Armor detected in ESO Logs abilities")
+        elif has_ability("elemental susceptibility", "weakness to elements"):
+            add("Major Breach", "Major Breach source detected in ESO Logs abilities")
+
+        if has_ability(
+            "hardened armor",
+            "volatile armor",
+            "ice fortress",
+            "expansive frost cloak",
+            "frost cloak",
+            "boundless storm",
+            "hurricane",
+            "restoring focus",
+            "channeled focus",
+            "summoner's armor",
+            "beckoning armor",
+            "cruxweaver armor",
+        ):
+            add("Major Resolve", "Defensive armor buff detected in ESO Logs abilities")
+        if has_ability("revealing flare"):
+            add("Major Protection", "Revealing Flare detected in ESO Logs abilities")
 
     return suggestions
