@@ -37,7 +37,7 @@ class _FakeSkillLines:
         return self.line_by_name.get(name)
 
     def passive_max_rank(self, name):
-        return self.max_rank if name == "Restoration Master" else None
+        return self.max_rank if name in {"Restoration Master", "Restoration Expert"} else None
 
 
 def _context(*, critical_healing: float, progression=None, active_bar="front"):
@@ -302,3 +302,119 @@ def test_restoration_master_does_not_modify_non_restoration_heal():
     assert result.normal_heal == pytest.approx(1000.0)
     assert result.critical_heal == pytest.approx(1500.0)
     assert result.unresolved == ()
+
+
+def test_restoration_expert_applies_to_any_heal_under_thirty_percent_with_resto_equipped():
+    tooltip = _FakeTooltipService(
+        _result(component_values=((1, 1000.0),), skill_name="Budding Seeds"),
+        (_component(1, SkillEffectKind.HEAL),),
+    )
+    service = ExtremeHealingEventService(
+        tooltip_service=tooltip,
+        skill_line_repository=_FakeSkillLines(
+            line_by_name={"Budding Seeds": "Green Balance"},
+            max_rank=2,
+        ),
+    )
+    progression = CharacterProgression(
+        owned_skill_lines=("Restoration Staff",),
+        passive_ranks={"Restoration Expert": 2},
+    )
+    build = PlayerBuild(
+        BuildName="Emergency Healer",
+        FrontBarWeapon=GearSlot(WeaponType="Restoration Staff"),
+    )
+
+    result = service.evaluate(
+        build=build,
+        context=_context(critical_healing=0.20, progression=progression),
+        entity_id="budding_seeds",
+        target_health_fraction=0.29,
+    )
+
+    assert result.normal_heal == pytest.approx(1150.0)
+    assert result.critical_heal == pytest.approx(1955.0)
+    assert result.mechanic_complete
+
+
+def test_restoration_expert_does_not_apply_above_health_threshold():
+    tooltip = _FakeTooltipService(
+        _result(component_values=((1, 1000.0),), skill_name="Budding Seeds"),
+        (_component(1, SkillEffectKind.HEAL),),
+    )
+    service = ExtremeHealingEventService(
+        tooltip_service=tooltip,
+        skill_line_repository=_FakeSkillLines(
+            line_by_name={"Budding Seeds": "Green Balance"},
+            max_rank=2,
+        ),
+    )
+    progression = CharacterProgression(
+        owned_skill_lines=("Restoration Staff",),
+        passive_ranks={"Restoration Expert": 2},
+    )
+    build = PlayerBuild(
+        BuildName="Healthy Target",
+        FrontBarWeapon=GearSlot(WeaponType="Restoration Staff"),
+    )
+
+    result = service.evaluate(
+        build=build,
+        context=_context(critical_healing=0.0, progression=progression),
+        entity_id="budding_seeds",
+        target_health_fraction=0.31,
+    )
+
+    assert result.normal_heal == pytest.approx(1000.0)
+    assert result.critical_heal == pytest.approx(1500.0)
+    assert result.unresolved == ()
+
+
+def test_restoration_expert_missing_rank_is_blocker_only_when_condition_is_active():
+    tooltip = _FakeTooltipService(
+        _result(component_values=((1, 1000.0),), skill_name="Budding Seeds"),
+        (_component(1, SkillEffectKind.HEAL),),
+    )
+    service = ExtremeHealingEventService(
+        tooltip_service=tooltip,
+        skill_line_repository=_FakeSkillLines(
+            line_by_name={"Budding Seeds": "Green Balance"},
+            max_rank=2,
+        ),
+    )
+    progression = CharacterProgression(
+        owned_skill_lines=("Restoration Staff",),
+        passive_ranks={},
+    )
+    build = PlayerBuild(
+        BuildName="Unknown Expert Rank",
+        FrontBarWeapon=GearSlot(WeaponType="Restoration Staff"),
+    )
+
+    result = service.evaluate(
+        build=build,
+        context=_context(critical_healing=0.0, progression=progression),
+        entity_id="budding_seeds",
+        target_health_fraction=0.30,
+    )
+
+    assert result.normal_heal == pytest.approx(1000.0)
+    assert result.critical_heal == pytest.approx(1500.0)
+    assert "Passive rank is not recorded for character: Restoration Expert" in result.unresolved
+    assert not result.mechanic_complete
+
+
+def test_target_health_fraction_must_be_normalized():
+    tooltip = _FakeTooltipService(
+        _result(component_values=((1, 1000.0),)),
+        (_component(1, SkillEffectKind.HEAL),),
+    )
+    service = ExtremeHealingEventService(tooltip_service=tooltip)
+
+    with pytest.raises(ValueError, match="target_health_fraction"):
+        service.evaluate(
+            build=PlayerBuild(BuildName="Invalid Target"),
+            context=_context(critical_healing=0.0),
+            entity_id="test_heal",
+            target_health_fraction=1.01,
+        )
