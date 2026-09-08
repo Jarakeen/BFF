@@ -60,9 +60,11 @@ class ExtremeMaximumHealingEventClassRouteCatalogResult:
 class ExtremeMaximumHealingEventClassRouteCatalogService:
     """Compare modeled route candidates by their largest legal single heal event.
 
-    Ordinary coefficient-backed heals contribute their critical event when the
-    canonical event evaluator proves one. If an ordinary event is explicitly
-    non-critical, its normal event remains comparable instead of disappearing.
+    Ordinary coefficient-backed heals contribute the canonical ``critical_heal``
+    maximum. That field already preserves explicitly non-crittable components at
+    normal value, while unresolved critical eligibility leaves the maximum
+    unresolved. This aggregator therefore must not fall back to ``normal_heal``
+    for an ordinary entry whose critical maximum is unknown.
 
     Blood Magic contributes its normal event because the reviewed Max-Health proc
     policy proves it cannot critically heal. The comparison therefore uses one
@@ -149,13 +151,10 @@ class ExtremeMaximumHealingEventClassRouteCatalogService:
         event_value: float | None = None
         event_kind = "unresolved"
         if entry.optimization is not None:
-            event = entry.optimization.optimized_event
-            if event.critical_heal is not None:
-                event_value = float(event.critical_heal)
-                event_kind = "critical"
-            elif event.normal_heal is not None:
-                event_value = float(event.normal_heal)
-                event_kind = "normal_noncritical_or_critical_unavailable"
+            value = entry.optimization.optimized_event.critical_heal
+            if value is not None:
+                event_value = float(value)
+                event_kind = "canonical_maximum"
         return ExtremeMaximumHealingEventRouteEntry(
             source_kind="ordinary_skill",
             source_name=entry.candidate.name,
