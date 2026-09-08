@@ -47,9 +47,9 @@ class RotationCandidateRankingService:
     This is intentionally lexicographic rather than weighted. A candidate that
     misses an explicit demand action, required static support effect, runtime
     uptime floor, demand-entry resource reserve, encounter bar-availability rule,
-    resolved action cooldown or occupancy rule, or incurs resource shortfall cannot
-    outrank one that satisfies those supplied hard obligations merely because its
-    softer resource numbers look prettier.
+    resolved action cooldown, occupancy, or range rule, or incurs resource
+    shortfall cannot outrank one that satisfies those supplied hard obligations
+    merely because its softer resource numbers look prettier.
 
     Within the same eligibility tier, deterministic evidence ordering is used:
     fewer missing obligations, smaller reserve/runtime shortfalls, fewer
@@ -103,6 +103,7 @@ class RotationCandidateRankingService:
         bar_violations = len(scorecard.bar_availability_violations)
         cooldown_violations = len(getattr(scorecard, "cooldown_violations", ()))
         occupancy_violations = len(getattr(scorecard, "occupancy_violations", ()))
+        range_violations = len(getattr(scorecard, "range_violations", ()))
         failed_uptimes = scorecard.failed_runtime_uptime_assessments
         uptime_failure_count = len(failed_uptimes)
         uptime_evidence_missing = sum(
@@ -129,6 +130,7 @@ class RotationCandidateRankingService:
             + bar_violations
             + cooldown_violations
             + occupancy_violations
+            + range_violations
             + uptime_failure_count
             + reserve_failure_count
             + (1 if scorecard.candidate_shortfall > 0 else 0)
@@ -144,6 +146,7 @@ class RotationCandidateRankingService:
             bar_violations,
             cooldown_violations,
             occupancy_violations,
+            range_violations,
             uptime_failure_count,
             uptime_evidence_missing,
             uptime_shortfall,
@@ -213,6 +216,23 @@ class RotationCandidateRankingService:
                     f"{violation.occupying_time_seconds:g}s to "
                     f"{violation.occupying_until_seconds:g}s: "
                     f"{blocked!r} scheduled at {violation.blocked_time_seconds:g}s"
+                )
+        range_violations = tuple(getattr(scorecard, "range_violations", ()))
+        if range_violations:
+            reasons.append(f"{len(range_violations)} action range violation(s)")
+            for violation in range_violations:
+                requirement = violation.requirement
+                scope = f" on {requirement.bar} bar" if requirement.bar else ""
+                upper = (
+                    f"{violation.maximum_range:g}"
+                    if violation.maximum_range is not None
+                    else "unbounded"
+                )
+                reasons.append(
+                    f"range legality for {requirement.action_name!r}{scope} at "
+                    f"{violation.time_seconds:g}s in {violation.window_name!r}: "
+                    f"distance {violation.distance:g}, legal range "
+                    f"{violation.minimum_range:g}..{upper}; {violation.reason}"
                 )
         for assessment in scorecard.failed_runtime_uptime_assessments:
             requirement = assessment.requirement
