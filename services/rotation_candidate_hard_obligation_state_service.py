@@ -93,6 +93,22 @@ class RotationCandidateHardObligationStateService:
                 )
             )
 
+        for violation in getattr(scorecard, "target_violations", ()):
+            requirement = violation.requirement
+            label = requirement.action_name or requirement.action_kind.value
+            state.append(
+                self._token(
+                    "target_legality",
+                    label,
+                    requirement.action_kind.value,
+                    requirement.bar or "any",
+                    self._number(violation.time_seconds),
+                    violation.window_name,
+                    violation.observed_target.value,
+                    *(target.value for target in requirement.allowed_targets),
+                )
+            )
+
         for violation in getattr(scorecard, "ultimate_affordability_violations", ()):
             state.append(
                 self._token(
