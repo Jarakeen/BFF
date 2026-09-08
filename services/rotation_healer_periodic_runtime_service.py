@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from enum import Enum
 import math
 
+from minmax.runtime_event import PeriodicRuntimeSchedule, schedule_periodic_runtime_events
 from services.rotation_healer_action_healing_service import (
     RotationHealerPeriodicHealSeed,
     RotationHealerResolvedHealEvent,
@@ -66,10 +67,10 @@ class RotationHealerPeriodicRuntimeProjection:
 class RotationHealerPeriodicRuntimeService:
     """Expand periodic-heal seeds only from explicit timing evidence.
 
-    A single application does not require refresh semantics. Repeated applications
-    of the same component do, because otherwise BFF cannot know whether an older
-    instance continues, restarts, stacks, or is replaced. Unknown refresh behavior
-    therefore blocks only that repeated component group rather than all healing.
+    Healer-specific logic owns duration evidence and refresh legality. Actual
+    cadence expansion is delegated to the shared Phase 7 periodic runtime
+    scheduler so DD, healing, proc, and other recurring consequences do not grow
+    separate clock arithmetic.
     """
 
     def project(
@@ -125,34 +126,42 @@ class RotationHealerPeriodicRuntimeService:
                 if runtime.refresh_policy is RotationHealerPeriodicRefreshPolicy.RESTART:
                     active_end = min(active_end, next_cast)
 
-                tick_time = seed.time_seconds + runtime.first_tick_offset_seconds
-                tick_index = 0
-                while tick_time <= active_end:
-                    if (
-                        not runtime.tick_on_expiry_boundary
-                        and math.isclose(tick_time, natural_end, abs_tol=1e-9)
-                    ):
-                        break
-                    if (
-                        runtime.refresh_policy is RotationHealerPeriodicRefreshPolicy.RESTART
-                        and tick_time >= next_cast
-                    ):
-                        break
-                    events.append(
-                        RotationHealerResolvedHealEvent(
-                            time_seconds=tick_time,
-                            sequence=seed.sequence * 1000 + tick_index,
-                            source_name=seed.source_name,
-                            coefficient_number=seed.coefficient_number,
-                            modeled_heal=seed.modeled_heal,
-                        )
+                first_tick = seed.time_seconds + runtime.first_tick_offset_seconds
+                if first_tick > active_end:
+                    continue
+
+                schedule_end = active_end
+                if not runtime.tick_on_expiry_boundary and math.isclose(
+                    schedule_end, natural_end, abs_tol=1e-9
+                ):
+                    schedule_end = math.nextafter(schedule_end, -math.inf)
+                if (
+                    runtime.refresh_policy is RotationHealerPeriodicRefreshPolicy.RESTART
+                    and math.isfinite(next_cast)
+                    and math.isclose(schedule_end, next_cast, abs_tol=1e-9)
+                ):
+                    schedule_end = math.nextafter(schedule_end, -math.inf)
+
+                scheduled = schedule_periodic_runtime_events(
+                    PeriodicRuntimeSchedule(
+                        trigger="periodic_heal_tick",
+                        source=seed.source_name,
+                        interval_seconds=runtime.tick_interval_seconds,
+                        start_time_seconds=first_tick,
+                        end_time_seconds=schedule_end,
+                    ),
+                    starting_sequence=seed.sequence * 1000,
+                )
+                events.extend(
+                    RotationHealerResolvedHealEvent(
+                        time_seconds=event.time_seconds,
+                        sequence=event.sequence,
+                        source_name=seed.source_name,
+                        coefficient_number=seed.coefficient_number,
+                        modeled_heal=seed.modeled_heal,
                     )
-                    tick_index += 1
-                    tick_time = (
-                        seed.time_seconds
-                        + runtime.first_tick_offset_seconds
-                        + tick_index * runtime.tick_interval_seconds
-                    )
+                    for event in scheduled
+                )
 
         return RotationHealerPeriodicRuntimeProjection(
             events=tuple(
