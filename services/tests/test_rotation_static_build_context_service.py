@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 from minmax.character_progression import AttributeAllocation, CharacterProgression
+from minmax.resource_costs import ResourceType
 from models.build_model import PlayerBuild
 from services.minmax_character_progression_adapter import SavedBuildProgressionResolution
 from services.rotation_static_build_context_service import RotationStaticBuildContextService
@@ -86,6 +87,27 @@ def test_resolves_front_and_back_with_one_canonical_progression_snapshot() -> No
     assert result.context_for("BACK").character_state.max_magicka == 31800
 
 
+def test_static_resource_ceiling_preserves_bar_specific_values_and_only_unifies_when_safe() -> None:
+    service = RotationStaticBuildContextService(
+        progression_adapter=_ProgressionAdapter(_progression()),
+        context_factory=_ContextFactory(),
+    )
+
+    result = service.resolve(_build())
+
+    assert result.maximum_amounts_for(ResourceType.MAGICKA) == (
+        ("front", 32000),
+        ("back", 31800),
+    )
+    assert result.uniform_maximum_amount_for(ResourceType.MAGICKA) is None
+    assert result.maximum_amounts_for(ResourceType.STAMINA) == (
+        ("front", 13000),
+        ("back", 13000),
+    )
+    assert result.uniform_maximum_amount_for(ResourceType.STAMINA) == 13000
+    assert result.uniform_maximum_amount_for(ResourceType.HEALTH) == 21000
+
+
 def test_unresolved_progression_fails_closed_before_static_calculation() -> None:
     build = _build()
     adapter = _ProgressionAdapter(
@@ -140,6 +162,7 @@ def test_requested_bar_subset_is_normalized_and_deduplicated() -> None:
     assert result.resolved is True
     assert [context.active_bar for context in result.contexts] == ["back"]
     assert result.context_for("front") is None
+    assert result.uniform_maximum_amount_for(ResourceType.MAGICKA) == 31800
 
 
 def test_invalid_or_empty_bar_scope_fails_closed() -> None:
