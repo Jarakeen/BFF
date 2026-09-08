@@ -22,6 +22,7 @@ from services.rotation_recovery_heavy_replay_service import (
     VerifiedRecoveryHeavyRestorationResolver,
 )
 from services.rotation_recovery_heavy_stabilization_service import (
+    RecoveryDisplayedRecoveryResolverFactory,
     RecoveryMaximumEventResolver,
 )
 
@@ -29,10 +30,10 @@ from services.rotation_recovery_heavy_stabilization_service import (
 class RotationRecoveryHeavyCandidateWorkflowService:
     """Compose recovery stabilization with canonical final-family evaluation.
 
-    Static calculation context and optional per-plan resource-ceiling evidence stay
-    explicit through this boundary. The workflow does not infer them from role or
-    build labels; callers that have canonical evidence may provide it, while legacy
-    callers retain the historical static-resource behavior.
+    Static calculation context and optional per-plan resource ceiling/recovery
+    evidence stay explicit through this boundary. The workflow does not infer them
+    from role or build labels; callers that have canonical evidence may provide it,
+    while legacy callers retain the historical static-resource behavior.
     """
 
     def __init__(
@@ -62,6 +63,7 @@ class RotationRecoveryHeavyCandidateWorkflowService:
         max_iterations: int = 6,
         calculation_context: BuildCalculationContext | None = None,
         maximum_event_resolver: RecoveryMaximumEventResolver | None = None,
+        displayed_recovery_resolver_factory: RecoveryDisplayedRecoveryResolverFactory | None = None,
     ) -> RotationRecoveryHeavyCandidateOrchestrationResult:
         final_evaluator = self.final_family_service.generic_evaluator(
             scorecard_resolver=scorecard_resolver,
@@ -78,6 +80,7 @@ class RotationRecoveryHeavyCandidateWorkflowService:
             max_iterations=max_iterations,
             calculation_context=calculation_context,
             maximum_event_resolver=maximum_event_resolver,
+            displayed_recovery_resolver_factory=displayed_recovery_resolver_factory,
         )
 
     def run_effects(
@@ -97,6 +100,7 @@ class RotationRecoveryHeavyCandidateWorkflowService:
         max_iterations: int = 6,
         calculation_context: BuildCalculationContext | None = None,
         maximum_event_resolver: RecoveryMaximumEventResolver | None = None,
+        displayed_recovery_resolver_factory: RecoveryDisplayedRecoveryResolverFactory | None = None,
     ) -> RotationRecoveryHeavyCandidateOrchestrationResult:
         final_evaluator = self.final_family_service.effect_evaluator(
             build=character_build,
@@ -116,6 +120,7 @@ class RotationRecoveryHeavyCandidateWorkflowService:
             max_iterations=max_iterations,
             calculation_context=calculation_context,
             maximum_event_resolver=maximum_event_resolver,
+            displayed_recovery_resolver_factory=displayed_recovery_resolver_factory,
         )
 
 
