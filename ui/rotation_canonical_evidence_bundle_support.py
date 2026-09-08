@@ -8,6 +8,7 @@ from minmax.character_build.passive_grant import PassiveGrant
 from minmax.resource_costs import ResourceType
 from minmax.rotation_demand_window import RotationDemandWindow
 from services.canonical_knowledge_gap import CanonicalKnowledgeGap
+from services.canonical_mechanics_coverage_audit import CanonicalMechanicsCoverageReport
 from services.encounter_boss_guide import EncounterBossGuideService
 from services.encounter_rotation_demand_service import (
     EncounterRotationDemandPolicy,
@@ -81,12 +82,11 @@ class RotationCanonicalEvidenceBundle:
 class RotationCanonicalEvidenceBundleSupport:
     """Assemble canonical encounter evidence without inventing execution facts.
 
-    This support layer intentionally automates only evidence the application already
-    owns canonically: loading the selected encounter and projecting reviewed timeline
-    facts through explicit encounter-demand policies. Heavy-attack completion/base
-    restore evidence, recovery thresholds, reserve rules, required effects, passives,
-    candidate options, and scoring policy remain explicit inputs because they are not
-    derivable from a boss name or saved-build label.
+    A caller may attach a build/encounter-specific mechanics coverage report. Only
+    gaps relevant to Rotation Maker are merged into this bundle; advisory coverage
+    remains visible while blocking coverage prevents a false canonical claim.
+    The global inventory is never injected automatically because unrelated incomplete
+    mechanics must not make every rotation permanently unready.
     """
 
     def __init__(
@@ -119,6 +119,7 @@ class RotationCanonicalEvidenceBundleSupport:
         max_iterations: int = 6,
         baseline_id: str = "baseline",
         knowledge_gaps: tuple[CanonicalKnowledgeGap, ...] = (),
+        coverage_report: CanonicalMechanicsCoverageReport | None = None,
     ) -> RotationCanonicalEvidenceBundle:
         encounter_key = str(encounter_id or "").strip()
         if not encounter_key:
@@ -146,6 +147,10 @@ class RotationCanonicalEvidenceBundleSupport:
             for item in projection.unresolved
             if str(item).strip()
         )
+        merged_gaps = list(knowledge_gaps)
+        if coverage_report is not None:
+            merged_gaps.extend(coverage_report.gaps_for("rotation_maker"))
+
         return RotationCanonicalEvidenceBundle(
             encounter_id=guide.encounter_id,
             encounter_name=guide.name,
@@ -164,8 +169,22 @@ class RotationCanonicalEvidenceBundleSupport:
             max_iterations=iterations,
             baseline_id=baseline,
             unresolved=unresolved,
-            knowledge_gaps=tuple(knowledge_gaps),
+            knowledge_gaps=self._dedupe_gaps(tuple(merged_gaps)),
         )
+
+    @staticmethod
+    def _dedupe_gaps(
+        gaps: tuple[CanonicalKnowledgeGap, ...],
+    ) -> tuple[CanonicalKnowledgeGap, ...]:
+        result: list[CanonicalKnowledgeGap] = []
+        seen: set[tuple[str, str, bool]] = set()
+        for gap in gaps:
+            key = (gap.domain.value, gap.key.casefold(), bool(gap.blocking))
+            if key in seen:
+                continue
+            seen.add(key)
+            result.append(gap)
+        return tuple(result)
 
 
 __all__ = [
