@@ -47,8 +47,9 @@ class RotationCandidateRankingService:
     This is intentionally lexicographic rather than weighted. A candidate that
     misses an explicit demand action, required static support effect, runtime
     uptime floor, demand-entry resource reserve, encounter bar-availability rule,
-    or incurs resource shortfall cannot outrank one that satisfies those supplied
-    hard obligations merely because its softer resource numbers look prettier.
+    resolved action cooldown, or incurs resource shortfall cannot outrank one that
+    satisfies those supplied hard obligations merely because its softer resource
+    numbers look prettier.
 
     Within the same eligibility tier, deterministic evidence ordering is used:
     fewer missing obligations, smaller reserve/runtime shortfalls, fewer
@@ -100,6 +101,7 @@ class RotationCandidateRankingService:
         missing_demand = len(scorecard.missing_demand_requirements)
         missing_effects = len(scorecard.missing_required_effects)
         bar_violations = len(scorecard.bar_availability_violations)
+        cooldown_violations = len(getattr(scorecard, "cooldown_violations", ()))
         failed_uptimes = scorecard.failed_runtime_uptime_assessments
         uptime_failure_count = len(failed_uptimes)
         uptime_evidence_missing = sum(
@@ -124,6 +126,7 @@ class RotationCandidateRankingService:
             missing_demand
             + missing_effects
             + bar_violations
+            + cooldown_violations
             + uptime_failure_count
             + reserve_failure_count
             + (1 if scorecard.candidate_shortfall > 0 else 0)
@@ -137,6 +140,7 @@ class RotationCandidateRankingService:
             missing_demand,
             missing_effects,
             bar_violations,
+            cooldown_violations,
             uptime_failure_count,
             uptime_evidence_missing,
             uptime_shortfall,
@@ -181,6 +185,18 @@ class RotationCandidateRankingService:
                 reasons.append(
                     f"bar legality at {violation.time_seconds:g}s in {violation.window_name!r}: "
                     f"{action} -> {violation.reason}"
+                )
+        cooldown_violations = tuple(getattr(scorecard, "cooldown_violations", ()))
+        if cooldown_violations:
+            reasons.append(f"{len(cooldown_violations)} action cooldown violation(s)")
+            for violation in cooldown_violations:
+                requirement = violation.requirement
+                scope = f" on {requirement.bar} bar" if requirement.bar else ""
+                reasons.append(
+                    f"cooldown legality for {requirement.action_name!r}{scope} at "
+                    f"{violation.time_seconds:g}s: interval "
+                    f"{violation.actual_interval_seconds:g}s, required "
+                    f"{violation.required_interval_seconds:g}s"
                 )
         for assessment in scorecard.failed_runtime_uptime_assessments:
             requirement = assessment.requirement
