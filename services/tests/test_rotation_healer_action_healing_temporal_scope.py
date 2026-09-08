@@ -73,14 +73,17 @@ def _project(scope):
     return service.project(plan=plan, build=PlayerBuild(), context=object())
 
 
-def test_delayed_heal_is_not_attached_to_cast_time():
+def test_delayed_heal_becomes_runtime_seed_not_cast_time_heal():
     projection = _project(HealTemporalScope.DELAYED)
 
     assert projection.direct_events == ()
     assert projection.periodic_seeds == ()
-    assert projection.unresolved == (
-        "Heal coefficient 1 at 2s: delayed heal runtime timing is not yet modeled",
-    )
+    assert len(projection.delayed_seeds) == 1
+    seed = projection.delayed_seeds[0]
+    assert seed.time_seconds == 2.0
+    assert seed.coefficient_number == 1
+    assert seed.modeled_heal == 1000.0
+    assert projection.unresolved == ()
 
 
 def test_direct_scope_attaches_heal_to_cast_time():
@@ -89,6 +92,7 @@ def test_direct_scope_attaches_heal_to_cast_time():
     assert len(projection.direct_events) == 1
     assert projection.direct_events[0].time_seconds == 2.0
     assert projection.periodic_seeds == ()
+    assert projection.delayed_seeds == ()
     assert projection.unresolved == ()
 
 
@@ -98,4 +102,5 @@ def test_periodic_scope_wins_over_legacy_is_dot_false():
     assert projection.direct_events == ()
     assert len(projection.periodic_seeds) == 1
     assert projection.periodic_seeds[0].time_seconds == 2.0
+    assert projection.delayed_seeds == ()
     assert projection.unresolved == ()
