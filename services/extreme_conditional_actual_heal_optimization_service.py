@@ -123,9 +123,14 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         progression: CharacterProgression,
         event: ExtremeHealingEventResult,
     ) -> ExtremeHealingEventResult:
-        skill = getattr(event.tooltip_result, "skill", None)
+        tooltip_result = getattr(event, "tooltip_result", None)
+        skill = getattr(tooltip_result, "skill", None)
         skill_name = str(getattr(skill, "name", "") or "").strip()
         if not skill_name:
+            # Mending is ability-family-specific. If an alternate event producer
+            # does not expose canonical tooltip/skill identity, preserve that
+            # event unchanged rather than guessing a Restoring Light family or
+            # crashing unrelated conditional optimization paths.
             return event
 
         service = self.templar_restoring_light_healing
