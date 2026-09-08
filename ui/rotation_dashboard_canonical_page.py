@@ -5,6 +5,7 @@ from collections.abc import Iterable
 from minmax.character_build.passive_grant import PassiveGrant
 from minmax.resource_costs import ResourceType
 from minmax.rotation_demand_window import RotationDemandWindow
+from services.canonical_mechanics_coverage_audit import CanonicalMechanicsCoverageReport
 from services.rotation_candidate_generation_service import RotationRefreshLeadCandidateOption
 from services.rotation_effect_uptime_service import RotationEffectUptimeRequirement
 from services.rotation_recovery_heavy_candidate_generation_bridge_service import (
@@ -32,16 +33,7 @@ from ui.rotation_generation_support import RotationGenerationRequest
 
 
 class CanonicalRotationDashboardPage(RotationDashboardPage):
-    """Rotation dashboard with an explicit canonical-candidate execution seam.
-
-    The inherited Generate Rotation button remains the current single-plan dashboard
-    behavior. Canonical candidate evaluation is a separate guarded method until the
-    page can supply all encounter, effect, recovery, and scorecard evidence needed to
-    make a defensible selection.
-
-    This class deliberately does not invent those inputs and does not silently fall
-    back to resource-only recovery validation.
-    """
+    """Rotation dashboard with an explicit canonical-candidate execution seam."""
 
     def __init__(
         self,
@@ -112,13 +104,9 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
         max_iterations: int = 6,
         baseline_id: str = "baseline",
         character_id: str | None = None,
+        coverage_report: CanonicalMechanicsCoverageReport | None = None,
     ) -> RotationDashboardCanonicalCandidateResult:
-        """Run the page's current saved build through the canonical candidate path.
-
-        Candidate evaluation and rendering remain separate operations. The evaluation
-        result is retained so a caller can inspect diagnostics before choosing to
-        display the selected candidate.
-        """
+        """Run the page's current saved build through the canonical candidate path."""
         build = self._selected_build()
         if build is None:
             raise ValueError("select a saved build before canonical candidate evaluation")
@@ -142,6 +130,7 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
             max_iterations=max_iterations,
             baseline_id=baseline_id,
             character_id=character_id,
+            coverage_report=coverage_report,
         )
         self.last_canonical_candidate_result = result
         self.last_canonical_render_evidence = None
@@ -196,6 +185,7 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
             max_iterations=bundle.max_iterations,
             baseline_id=bundle.baseline_id,
             character_id=character_id,
+            coverage_report=bundle.coverage_report,
         )
 
     def apply_canonical_candidate_result(
