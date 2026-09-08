@@ -212,7 +212,7 @@ With ordinary scheduling, **Combat Prayer** was cast at 40s and **Budding Seeds*
 The surprising part was the resource result:
 
 | Metric | Base rotation | Xalvakka-aware rotation | Change |
-| --- | ---: | ---: | ---: |
+| --- | ---: | ---: | |
 | Minimum Magicka | 14,361 | 16,132 | +1,771 |
 | Ending Magicka | 21,853 | 23,624 | +1,771 |
 | Total shortfall | 0 | 0 | 0 |
@@ -360,3 +360,17 @@ At reviewed max rank, Soul Siphoner increases **generic Healing Done by 3% for e
 **What it means in actual play:** two bars with identical gear and the same heal can produce different heal numbers because one bar has more Siphoning abilities slotted. A healer can therefore trade utility slots for raw heal size without changing weapons or armor.
 
 **For BFF:** slot-count passives need their exact scope preserved. Soul Siphoner belongs in a generic active-bar Healing Done layer, while Emerald Moss remains an ability-family modifier. Treating both as the same kind of bonus would either undercount Soul Siphoner or incorrectly let Emerald Moss buff unrelated heals.
+
+---
+
+## 2026-09-08 — Two low-health healing passives can care about completely different things
+
+MOST Emergency Heal now models Templar **Mending** separately from Restoration Staff **Restoration Expert**. Both become relevant when an ally is badly hurt, but their permission rules are different.
+
+At reviewed max rank, Mending scales Restoring Light healing continuously with the target's missing health, up to a 12% bonus at the theoretical zero-health endpoint. Restoration Expert instead gives a fixed 15% bonus only when the target is at or below 30% health, and only to Restoration Staff heals while the correct weapon/passive conditions are satisfied.
+
+**Layman's version:** "the target is almost dead" is not one universal healer bonus. Breath of Life and Combat Prayer can react differently to the exact same injured target because different passives own their bonuses.
+
+**What it means in actual play:** changing the heal you press can change which emergency passive helps you even if your gear, target, and target health are identical. A subclass route carrying Restoring Light and Restoration Staff may have access to both mechanics, but each heal still has to qualify for its own one.
+
+**For BFF:** target health is an input, not a shortcut. Emergency-heal scoring must resolve the ability family, weapon/passive legality, and the exact health rule separately rather than collapsing everything into one generic low-health multiplier.
