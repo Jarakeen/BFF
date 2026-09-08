@@ -37,6 +37,9 @@ class _ContextFactory:
                 max_health=21000,
                 max_magicka=32000 if bar == "front" else 31800,
                 max_stamina=13000,
+                health_recovery=500,
+                magicka_recovery=1800 if bar == "front" else 2050,
+                stamina_recovery=1100,
             ),
             core_state=SimpleNamespace(),
         )
@@ -109,6 +112,25 @@ def test_static_resource_ceiling_preserves_bar_specific_values_and_only_unifies_
     assert result.uniform_maximum_amount_for(ResourceType.HEALTH) == 21000
 
 
+def test_static_recovery_preserves_bar_specific_character_sheet_values() -> None:
+    service = RotationStaticBuildContextService(
+        progression_adapter=_ProgressionAdapter(_progression()),
+        context_factory=_ContextFactory(),
+    )
+    result = service.resolve(_build())
+
+    assert result.displayed_recovery_amounts_for(ResourceType.MAGICKA) == (
+        ("front", 1800),
+        ("back", 2050),
+    )
+    assert result.displayed_recovery_for("front", ResourceType.MAGICKA) == 1800
+    assert result.displayed_recovery_for("BACK", ResourceType.MAGICKA) == 2050
+    assert result.displayed_recovery_amounts_for(ResourceType.STAMINA) == (
+        ("front", 1100),
+        ("back", 1100),
+    )
+
+
 def test_bar_swaps_project_only_real_static_resource_ceiling_changes() -> None:
     service = RotationStaticBuildContextService(
         progression_adapter=_ProgressionAdapter(_progression()),
@@ -136,6 +158,32 @@ def test_bar_swaps_project_only_real_static_resource_ceiling_changes() -> None:
     assert "canonical magicka maximum" in magicka_events[0].source
 
     assert result.maximum_events_for(plan, ResourceType.STAMINA) == ()
+
+
+def test_bar_swaps_select_displayed_recovery_at_exact_tick_time() -> None:
+    service = RotationStaticBuildContextService(
+        progression_adapter=_ProgressionAdapter(_progression()),
+        context_factory=_ContextFactory(),
+    )
+    result = service.resolve(_build())
+    plan = RotationPlan(
+        character_name="Magrat",
+        build_name="DF Healer",
+        duration_seconds=10.0,
+        actions=(
+            RotationAction(4.0, 0, RotationActionKind.BAR_SWAP, bar="back"),
+            RotationAction(7.0, 0, RotationActionKind.BAR_SWAP, bar="front"),
+        ),
+    )
+
+    recovery_at = result.displayed_recovery_resolver_for(plan, ResourceType.MAGICKA)
+
+    assert recovery_at(2.0) == 1800
+    assert recovery_at(3.999) == 1800
+    assert recovery_at(4.0) == 2050
+    assert recovery_at(6.0) == 2050
+    assert recovery_at(7.0) == 1800
+    assert recovery_at(8.0) == 1800
 
 
 def test_unresolved_progression_fails_closed_before_static_calculation() -> None:
@@ -193,6 +241,7 @@ def test_requested_bar_subset_is_normalized_and_deduplicated() -> None:
     assert [context.active_bar for context in result.contexts] == ["back"]
     assert result.context_for("front") is None
     assert result.uniform_maximum_amount_for(ResourceType.MAGICKA) == 31800
+    assert result.displayed_recovery_for("back", ResourceType.MAGICKA) == 2050
 
 
 def test_invalid_or_empty_bar_scope_fails_closed() -> None:
