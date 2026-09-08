@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from models.build_model import PlayerBuild
-from services.extreme_conditional_actual_heal_optimization_service import (
-    ExtremeConditionalActualHealOptimizationService,
+from services.extreme_canonical_healing_done_conditional_actual_heal_service import (
+    ExtremeCanonicalHealingDoneConditionalActualHealService,
 )
 from services.extreme_conditional_actual_heal_service_factory import (
     ExtremeConditionalActualHealServiceFactory,
@@ -19,6 +19,7 @@ def test_nightblade_routes_to_mastery_aware_conditional_service():
     )
 
     assert isinstance(service, ExtremeNightbladeConditionalActualHealService)
+    assert isinstance(service, ExtremeCanonicalHealingDoneConditionalActualHealService)
     assert service.target_health_fraction == 0.25
 
 
@@ -31,19 +32,19 @@ def test_nightblade_routing_is_case_and_whitespace_tolerant():
     assert isinstance(service, ExtremeNightbladeConditionalActualHealService)
 
 
-def test_other_classes_keep_generic_conditional_service():
+def test_other_classes_use_canonical_healing_done_conditional_service():
     service = ExtremeConditionalActualHealServiceFactory.create(
         PlayerBuild(BuildName="Warden", EsoClass="Warden"),
         target_health_fraction=0.25,
     )
 
-    assert type(service) is ExtremeConditionalActualHealOptimizationService
+    assert type(service) is ExtremeCanonicalHealingDoneConditionalActualHealService
 
 
-def test_missing_class_keeps_generic_conditional_service():
+def test_missing_class_uses_canonical_healing_done_conditional_service():
     service = ExtremeConditionalActualHealServiceFactory.create(
         PlayerBuild(BuildName="Unknown"),
         target_health_fraction=0.25,
     )
 
-    assert type(service) is ExtremeConditionalActualHealOptimizationService
+    assert type(service) is ExtremeCanonicalHealingDoneConditionalActualHealService
