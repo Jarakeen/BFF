@@ -35,6 +35,12 @@ class EffectMapper:
 
         "healing_done": StatId.HEALING_DONE,
         "healing_taken": StatId.HEALING_TAKEN,
+
+        # Extreme / MOST Bashy channel. This is intentionally mapped as its own
+        # stat identity rather than being folded into generic damage. Jewelry
+        # glyphs that say "Bash attacks" are flat extra Bash damage and are
+        # consumed by the dedicated Bash formula adapter.
+        "bash_damage": StatId.BASH_DAMAGE,
     }
 
     STAT_FANOUT_MAP: dict[str, tuple[StatId, ...]] = {
