@@ -86,13 +86,13 @@ class ExtremeActualHealOptimizationService:
         "reviewed ordinary five-piece body-set replacement",
         "reviewed legal five-piece + two-piece monster body package",
         "reviewed legal five-piece + five-piece body/jewelry package",
-        "reviewed legal five-piece + five-piece + ring mythic package on an existing two-slot active weapon",
+        "reviewed legal five-piece + five-piece + ring mythic package with exact active weapon subtype proof",
         "canonical healing coefficient scaling",
         "Healing Done and verified healing CP",
         "Critical Healing",
     )
     OMITTED_SCOPE = (
-        "non-ring mythics / exact two-slot weapon-subtype package proof / arena-weapon packages",
+        "non-ring mythics / arena-weapon packages",
         "class change / subclass route",
         "healing-skill replacement",
         "skill-bar passive/proc search",
