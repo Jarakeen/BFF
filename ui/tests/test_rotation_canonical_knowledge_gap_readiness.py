@@ -87,6 +87,24 @@ def test_dashboard_refuses_blocking_knowledge_gap_and_explains_what_to_bring_bac
     assert "source skill" in message
 
 
+def test_dashboard_does_not_misreport_advisory_research_as_readiness_blocker() -> None:
+    page = SimpleNamespace()
+    advisory = _gap(blocking=False)
+    bundle = SimpleNamespace(
+        ready=False,
+        unresolved=("requested encounter timing is not reviewed",),
+        knowledge_gaps=(advisory,),
+    )
+
+    with pytest.raises(ValueError) as exc_info:
+        CanonicalRotationDashboardPage.evaluate_canonical_evidence_bundle(page, bundle)
+
+    message = str(exc_info.value)
+    assert "requested encounter timing is not reviewed" in message
+    assert "major_brittle" not in message
+    assert "source skill" not in message
+
+
 def test_knowledge_gap_normalizes_duplicate_consumer_labels() -> None:
     gap = CanonicalKnowledgeGap(
         domain=CanonicalKnowledgeDomain.RESOURCE_RECOVERY,
