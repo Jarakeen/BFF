@@ -185,7 +185,7 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
             max_iterations=bundle.max_iterations,
             baseline_id=bundle.baseline_id,
             character_id=character_id,
-            coverage_report=bundle.coverage_report,
+            coverage_report=getattr(bundle, "coverage_report", None),
         )
 
     def apply_canonical_candidate_result(
