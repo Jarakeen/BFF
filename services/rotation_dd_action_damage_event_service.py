@@ -22,20 +22,30 @@ class RotationDDResolvedDamageEvent:
 
 
 @dataclass(frozen=True)
+class RotationDDDotComponentSeed:
+    """Verified DoT component awaiting explicit runtime timing evidence."""
+
+    cast_time_seconds: float
+    sequence: int
+    source_name: str
+    coefficient_number: int
+    event: DDDamageEvent
+
+
+@dataclass(frozen=True)
 class RotationDDActionDamageProjection:
     events: tuple[RotationDDResolvedDamageEvent, ...]
     unresolved: tuple[str, ...]
+    dot_components: tuple[RotationDDDotComponentSeed, ...] = ()
 
 
 class RotationDDActionDamageEventService:
-    """Project verified direct skill/Ultimate components into DD damage events.
+    """Project verified skill/Ultimate damage components from scheduled actions.
 
-    This layer deliberately stops at the first timing boundary that canonical
-    evidence cannot yet prove. A direct damage component is attached to the
-    scheduled cast timestamp. A DoT component is *not* expanded into ticks merely
-    because its coefficient and damage identity are known; tick cadence, duration,
-    refresh/overwrite behavior, and target lifetime require separate runtime
-    evidence before those events can be scheduled honestly.
+    Direct damage attaches to the scheduled cast timestamp. Verified DoT
+    components are preserved as seeds but are not expanded into ticks here.
+    Tick cadence, duration, refresh/overwrite behavior, and horizon clipping need
+    explicit runtime evidence before a DoT becomes time-resolved damage.
 
     The coefficient calculator already resolves resource/power scaling, so its
     per-component value becomes ``DDDamageEvent.base_value`` with zero additional
@@ -67,6 +77,7 @@ class RotationDDActionDamageEventService:
         context: BuildCalculationContext,
     ) -> RotationDDActionDamageProjection:
         events: list[RotationDDResolvedDamageEvent] = []
+        dot_components: list[RotationDDDotComponentSeed] = []
         unresolved: list[str] = []
 
         for action in plan.actions:
@@ -121,10 +132,24 @@ class RotationDDActionDamageEventService:
                         "damage identity is incomplete"
                     )
                     continue
+
+                event = DDDamageEvent(
+                    base_value=float(trace.final_value),
+                    scaling_coefficient=0.0,
+                    damage_type=classification.damage_type,
+                    can_crit=bool(classification.can_crit),
+                    is_dot=bool(classification.is_dot),
+                    is_aoe=bool(classification.is_aoe),
+                )
                 if classification.is_dot:
-                    unresolved.append(
-                        f"{action.name} coefficient {number} at {action.time_seconds:g}s: "
-                        "DoT tick schedule is not canonically resolved"
+                    dot_components.append(
+                        RotationDDDotComponentSeed(
+                            cast_time_seconds=float(action.time_seconds),
+                            sequence=int(action.sequence),
+                            source_name=action.name,
+                            coefficient_number=number,
+                            event=event,
+                        )
                     )
                     continue
 
@@ -134,14 +159,7 @@ class RotationDDActionDamageEventService:
                         sequence=int(action.sequence),
                         source_name=action.name,
                         coefficient_number=number,
-                        event=DDDamageEvent(
-                            base_value=float(trace.final_value),
-                            scaling_coefficient=0.0,
-                            damage_type=classification.damage_type,
-                            can_crit=bool(classification.can_crit),
-                            is_dot=False,
-                            is_aoe=bool(classification.is_aoe),
-                        ),
+                        event=event,
                     )
                 )
 
@@ -156,9 +174,21 @@ class RotationDDActionDamageEventService:
                 ),
             )
         )
+        ordered_dots = tuple(
+            sorted(
+                dot_components,
+                key=lambda item: (
+                    item.cast_time_seconds,
+                    item.sequence,
+                    item.source_name.casefold(),
+                    item.coefficient_number,
+                ),
+            )
+        )
         return RotationDDActionDamageProjection(
             events=ordered,
             unresolved=self._dedupe(tuple(unresolved)),
+            dot_components=ordered_dots,
         )
 
     @staticmethod
