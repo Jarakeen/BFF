@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+from typing import TYPE_CHECKING
 
-from services.extreme_healing_event_service import ExtremeHealingEventResult
+if TYPE_CHECKING:
+    from services.extreme_healing_event_service import ExtremeHealingEventResult
 
 
 @dataclass(frozen=True)
 class ExtremeCriticalHealingCapResult:
-    event: ExtremeHealingEventResult
+    event: "ExtremeHealingEventResult"
     effective_critical_bonus: float | None
     effective_critical_multiplier: float | None
     cap: float
@@ -33,7 +35,7 @@ class ExtremeCriticalHealingCapService:
 
     def apply(
         self,
-        event: ExtremeHealingEventResult,
+        event: "ExtremeHealingEventResult",
         *,
         additional_critical_healing: float = 0.0,
         critical_healing_cap: float = DEFAULT_CAP,
