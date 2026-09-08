@@ -106,10 +106,22 @@ def main() -> int:
             "This implies detailed unresolved output without changing summary totals."
         ),
     )
+    parser.add_argument(
+        "--show-unresolved-text",
+        type=str,
+        default=None,
+        metavar="TEXT",
+        help=(
+            "Print only unresolved/empty bonuses whose set name or normalized "
+            "description contains TEXT, case-insensitively. Summary totals remain unchanged."
+        ),
+    )
     args = parser.parse_args()
 
     if args.show_unresolved_piece_count is not None and args.show_unresolved_piece_count < 0:
         parser.error("--show-unresolved-piece-count must be non-negative")
+
+    text_filter = str(args.show_unresolved_text or "").strip().casefold()
 
     database = Path(args.database)
     if not database.is_file():
@@ -195,16 +207,20 @@ def main() -> int:
             f"unresolved={counts[UNRESOLVED]} empty={counts[EMPTY]}"
         )
 
-    show_detailed = args.show_unresolved or args.show_unresolved_piece_count is not None
+    show_detailed = (
+        args.show_unresolved
+        or args.show_unresolved_piece_count is not None
+        or bool(text_filter)
+    )
     if show_detailed:
         print()
-        if args.show_unresolved_piece_count is None:
-            print("UNRESOLVED / EMPTY BONUS ROWS")
-        else:
-            print(
-                "UNRESOLVED / EMPTY BONUS ROWS "
-                f"AT {args.show_unresolved_piece_count} PIECE(S)"
-            )
+        filters: list[str] = []
+        if args.show_unresolved_piece_count is not None:
+            filters.append(f"AT {args.show_unresolved_piece_count} PIECE(S)")
+        if text_filter:
+            filters.append(f"MATCHING {args.show_unresolved_text!r}")
+        print("UNRESOLVED / EMPTY BONUS ROWS" + (" " + " ".join(filters) if filters else ""))
+
         for set_name, category, piece_count, classification, description in sorted(
             unresolved_rows,
             key=lambda row: (row[0].casefold(), row[2], row[3]),
@@ -213,6 +229,8 @@ def main() -> int:
                 args.show_unresolved_piece_count is not None
                 and piece_count != args.show_unresolved_piece_count
             ):
+                continue
+            if text_filter and text_filter not in f"{set_name}\n{description}".casefold():
                 continue
             print(
                 f"- {set_name} | {category} | {piece_count} piece(s) | {classification}"
