@@ -43,6 +43,9 @@ class ExtremeActualHealMythicPackageService:
         "critical_healing",
         "spell_damage",
         "weapon_damage",
+        "max_health",
+        "max_magicka",
+        "max_stamina",
     )
 
     def __init__(self, database_path: str | Path) -> None:
