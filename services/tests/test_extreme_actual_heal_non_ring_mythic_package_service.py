@@ -64,9 +64,13 @@ def _write_db(path: Path) -> None:
                     "INSERT INTO gear_set_piece(set_id, equip_type, armor_type, weapon_type) VALUES (?, ?, ?, 0)",
                     (set_id, equip_type, armor_type),
                 )
-            db.execute(
-                "INSERT INTO gear_set_piece(set_id, equip_type, armor_type, weapon_type) VALUES (?, 11, 0, 9)",
-                (set_id,),
+            db.executemany(
+                "INSERT INTO gear_set_piece(set_id, equip_type, armor_type, weapon_type) VALUES (?, ?, 0, ?)",
+                (
+                    (set_id, 11, 9),
+                    (set_id, 10, 3),
+                    (set_id, 10, 7),
+                ),
             )
         db.executemany(
             "INSERT INTO gear_set_piece(set_id, equip_type, armor_type, weapon_type) VALUES (?, ?, ?, ?)",
@@ -153,6 +157,7 @@ def test_builds_packages_for_multiple_non_ring_mythic_slots(tmp_path: Path) -> N
         assert change.path == "Gear.FivePiecePlusFivePiecePlusSlotMythic"
         assert mythic_slot not in change.after["primary_positions"]
         assert mythic_slot not in change.after["secondary_positions"]
+        assert change.after["weapon_positions"] == ("ActiveWeapon",)
         if mythic_slot in result.Armor:
             assert result.Armor[mythic_slot]["Set"] == change.after["mythic"]
         elif mythic_slot == "Necklace":
@@ -162,3 +167,71 @@ def test_builds_packages_for_multiple_non_ring_mythic_slots(tmp_path: Path) -> N
     assert build.Armor["Shoulders"]["Set"] == ""
     assert build.Armor["Legs"]["Set"] == ""
     assert build.Necklace.Set == ""
+
+
+def test_paired_one_hand_package_uses_exact_main_and_offhand_as_two_real_pieces(
+    tmp_path: Path,
+) -> None:
+    database = tmp_path / "eso.db"
+    _write_db(database)
+    service = ExtremeActualHealNonRingMythicPackageService(database)
+    build = PlayerBuild(BuildName="Healer")
+    build.FrontBarWeapon.WeaponType = "Sword"
+    build.FrontBarOffHand.WeaponType = "Shield"
+
+    weapon_positions = service._active_weapon_positions(build, active_bar="front")
+    assert tuple(position for position, *_rest in weapon_positions) == (
+        "ActiveMainHand",
+        "ActiveOffHand",
+    )
+
+    candidates = service.build_candidates(
+        build,
+        character_id="char-1",
+        baseline_build_id="build-1",
+        active_bar="front",
+        ordinary_per_objective=8,
+        mythic_per_objective=8,
+    )
+
+    assert len(candidates) == 3
+    candidate = next(
+        item for item in candidates if item.changes[0].after["mythic_slot"] == "Legs"
+    )
+    change = candidate.changes[0]
+    result = candidate.candidate_build
+    assert change.after["weapon_positions"] == (
+        "ActiveMainHand",
+        "ActiveOffHand",
+    )
+    used = set(change.after["primary_positions"]) | set(
+        change.after["secondary_positions"]
+    )
+    assert {"ActiveMainHand", "ActiveOffHand"}.issubset(used)
+    assert result.FrontBarWeapon.Set in {"Alpha Healer", "Beta Healer"}
+    assert result.FrontBarOffHand.Set in {"Alpha Healer", "Beta Healer"}
+    assert result.FrontBarWeapon.Set == result.FrontBarOffHand.Set
+    assert result.FrontBarWeapon.WeaponType == "Sword"
+    assert result.FrontBarOffHand.WeaponType == "Shield"
+
+
+def test_paired_package_fails_closed_when_offhand_subtype_is_not_proven(
+    tmp_path: Path,
+) -> None:
+    database = tmp_path / "eso.db"
+    _write_db(database)
+    service = ExtremeActualHealNonRingMythicPackageService(database)
+    build = PlayerBuild(BuildName="Healer")
+    build.FrontBarWeapon.WeaponType = "Sword"
+    build.FrontBarOffHand.WeaponType = "Dagger"
+
+    candidates = service.build_candidates(
+        build,
+        character_id="char-1",
+        baseline_build_id="build-1",
+        active_bar="front",
+        ordinary_per_objective=8,
+        mythic_per_objective=8,
+    )
+
+    assert candidates == ()
