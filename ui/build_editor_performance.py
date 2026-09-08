@@ -29,6 +29,8 @@ def install() -> None:
     install_performance_dashboard_polish()
     from ui.performance_dashboard_overlay_support import install as install_performance_dashboard_overlay
     install_performance_dashboard_overlay()
+    from ui.performance_dashboard_immunity_compat import install as install_performance_dashboard_immunity_compat
+    install_performance_dashboard_immunity_compat()
 
     from ui.builds_page import BuildsPage
     from ui.build_editor_inline_compat import _force_dark_surface, _set_combo_index
