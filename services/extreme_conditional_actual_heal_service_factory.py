@@ -28,6 +28,11 @@ class ExtremeConditionalActualHealServiceFactory:
     and the Templar route correctly takes precedence over the pure-Nightblade
     Class Mastery adapter.
 
+    An explicitly requested Illuminate window also routes through the Templar
+    adapter even when Dawn's Wrath is absent so the legality failure is preserved
+    as evidence instead of becoming an unexpected constructor error. Inactive
+    Illuminate-only kwargs are discarded for unrelated builds.
+
     Pure Nightblade builds use the dedicated Class Mastery adapter for
     target-health-dependent power math. All routes inherit the canonical
     conditional Healing Done path so generic sources such as Curative Curse and
@@ -42,11 +47,19 @@ class ExtremeConditionalActualHealServiceFactory:
         target_health_fraction: float,
         **kwargs,
     ) -> ExtremeConditionalActualHealOptimizationService:
-        if ExtremeTemplarIlluminateCombatStateService.dawns_wrath_equipped(build):
+        illuminate_requested = bool(kwargs.get("illuminate_window_active", False))
+        dawns_wrath_equipped = (
+            ExtremeTemplarIlluminateCombatStateService.dawns_wrath_equipped(build)
+        )
+        if dawns_wrath_equipped or illuminate_requested:
             service_type = ExtremeTemplarConditionalActualHealService
         elif str(build.EsoClass or "").strip().casefold() == "nightblade":
+            kwargs.pop("illuminate_window_active", None)
+            kwargs.pop("templar_illuminate_state", None)
             service_type = ExtremeNightbladeConditionalActualHealService
         else:
+            kwargs.pop("illuminate_window_active", None)
+            kwargs.pop("templar_illuminate_state", None)
             service_type = ExtremeCanonicalHealingDoneConditionalActualHealService
         return service_type(
             target_health_fraction=target_health_fraction,
