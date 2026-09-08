@@ -21,6 +21,15 @@ https://github.com/esoui/esoui
 
 **Notes:** Default branch is `live`. Prefer this when the question is "how does the ESO client/UI expose or represent this?"
 
+### Official ESO patch notes archive
+https://forums.elderscrollsonline.com/en/categories/patch-notes
+
+**Use for:** Versioned skill/passive changes, named-buff changes, rank-dependent durations, developer-stated mechanic changes, and establishing when a rule entered or left the live game.
+
+**Confidence:** Primary / reference-grade for the documented change history. Pair with current live data or in-game validation when proving that an old rule still survives unchanged in the active update.
+
+**Notes:** Especially useful when a current third-party tooltip has already moved to PTS/future-patch data. Record the exact patch/update being cited instead of treating the newest visible wording as timeless truth.
+
 ### UESP ESO Log Collector
 https://esoitem.uesp.net/viewlog.php
 
