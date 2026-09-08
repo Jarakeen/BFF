@@ -4,6 +4,7 @@ from types import SimpleNamespace
 
 from minmax.character_build.saved_build_adapter import SavedBuildAdaptation
 from minmax.resource_costs import ResourceType
+from services.canonical_knowledge_gap import CanonicalKnowledgeDomain, CanonicalKnowledgeGap
 from ui.rotation_canonical_candidate_support import RotationCanonicalCandidateSupport
 from ui.rotation_recovery_validation_support import RotationRecoveryValidationScope
 
@@ -26,6 +27,52 @@ class _Pipeline:
     def run_effects(self, **kwargs):
         self.calls.append(kwargs)
         return self.result
+
+
+class _DependencyService:
+    def __init__(self, dependencies=("dependency-a",)) -> None:
+        self.dependencies = tuple(dependencies)
+        self.calls = []
+
+    def discover(self, **kwargs):
+        self.calls.append(kwargs)
+        return self.dependencies
+
+    @staticmethod
+    def keys(dependencies):
+        return tuple(str(item) for item in dependencies)
+
+
+class _CoverageReport:
+    def __init__(self, gaps=()) -> None:
+        self.gaps = tuple(gaps)
+        self.calls = []
+
+    def dependency_gaps_for(self, consumer, dependency_keys):
+        self.calls.append((consumer, tuple(dependency_keys)))
+        return self.gaps
+
+
+def _gap(*, blocking: bool) -> CanonicalKnowledgeGap:
+    return CanonicalKnowledgeGap(
+        domain=CanonicalKnowledgeDomain.RESOURCE_RECOVERY,
+        key="heavy_attack:restoration",
+        summary="Heavy-attack restoration evidence is incomplete.",
+        needed_evidence="Provide verified completed-heavy restoration evidence.",
+        consumers=("rotation_maker",),
+        source_context="candidate dependency test",
+        blocking=blocking,
+    )
+
+
+def _selectable_pipeline_result():
+    return SimpleNamespace(
+        selected_candidate=SimpleNamespace(
+            candidate_id="safe-policy",
+            reasons=("all tracked hard obligations satisfied",),
+        ),
+        ranked_candidates=(),
+    )
 
 
 def _run(support: RotationCanonicalCandidateSupport, **overrides):
@@ -72,13 +119,7 @@ def test_unresolved_saved_build_fails_closed_before_candidate_pipeline() -> None
 def test_resolved_saved_build_flows_into_effect_pipeline_with_materialized_evidence() -> None:
     canonical_build = object()
     adapter = _Adapter(SavedBuildAdaptation(build=canonical_build, unresolved=()))
-    pipeline_result = SimpleNamespace(
-        selected_candidate=SimpleNamespace(
-            candidate_id="safe-policy",
-            reasons=("all tracked hard obligations satisfied",),
-        ),
-        ranked_candidates=(),
-    )
+    pipeline_result = _selectable_pipeline_result()
     pipeline = _Pipeline(result=pipeline_result)
     support = RotationCanonicalCandidateSupport(
         build_adapter=adapter,
@@ -115,6 +156,60 @@ def test_resolved_saved_build_flows_into_effect_pipeline_with_materialized_evide
     assert result.validation.scope is RotationRecoveryValidationScope.CANONICAL_CANDIDATE
     assert result.validation.selectable is True
     assert result.validation.selected_candidate_id == "safe-policy"
+
+
+def test_blocking_discovered_mechanics_gap_stops_candidate_pipeline() -> None:
+    canonical_build = object()
+    dependency_service = _DependencyService(("heavy_attack:restoration",))
+    report = _CoverageReport((_gap(blocking=True),))
+    pipeline = _Pipeline(result=_selectable_pipeline_result())
+    support = RotationCanonicalCandidateSupport(
+        build_adapter=_Adapter(SavedBuildAdaptation(build=canonical_build, unresolved=())),
+        pipeline=pipeline,
+        dependency_service=dependency_service,
+    )
+
+    result, _ = _run(
+        support,
+        coverage_report=report,
+        demands=(item for item in ("demand-a",)),
+        requirements=(item for item in ("major-brittle",)),
+        passives=(item for item in ("class-passive",)),
+    )
+
+    assert pipeline.calls == []
+    assert report.calls == [("rotation_maker", ("heavy_attack:restoration",))]
+    assert dependency_service.calls[0]["character_build"] is canonical_build
+    assert dependency_service.calls[0]["demands"] == ("demand-a",)
+    assert dependency_service.calls[0]["requirements"] == ("major-brittle",)
+    assert dependency_service.calls[0]["passives"] == ("class-passive",)
+    assert result.pipeline_result is None
+    assert result.mechanics_dependencies == ("heavy_attack:restoration",)
+    assert result.knowledge_gaps == report.gaps
+    assert result.validation.scope is RotationRecoveryValidationScope.NOT_EVALUATED
+    assert result.validation.selectable is None
+    assert any("Bring back:" in reason for reason in result.validation.reasons)
+
+
+def test_advisory_discovered_mechanics_gap_is_retained_without_blocking_pipeline() -> None:
+    canonical_build = object()
+    dependency_service = _DependencyService(("effect_duration:build_modifiers",))
+    report = _CoverageReport((_gap(blocking=False),))
+    pipeline_result = _selectable_pipeline_result()
+    pipeline = _Pipeline(result=pipeline_result)
+    support = RotationCanonicalCandidateSupport(
+        build_adapter=_Adapter(SavedBuildAdaptation(build=canonical_build, unresolved=())),
+        pipeline=pipeline,
+        dependency_service=dependency_service,
+    )
+
+    result, _ = _run(support, coverage_report=report)
+
+    assert len(pipeline.calls) == 1
+    assert result.pipeline_result is pipeline_result
+    assert result.mechanics_dependencies == ("effect_duration:build_modifiers",)
+    assert result.knowledge_gaps == report.gaps
+    assert result.validation.selectable is True
 
 
 def test_resolved_pipeline_with_no_valid_candidate_is_definitively_nonselectable() -> None:
