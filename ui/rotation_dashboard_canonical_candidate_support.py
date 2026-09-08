@@ -6,6 +6,7 @@ from dataclasses import dataclass, replace
 from minmax.character_build.passive_grant import PassiveGrant
 from minmax.resource_costs import ResourceType
 from minmax.rotation_ability_priority import AbilityPriorityList
+from minmax.rotation_action_target_legality import RotationTargetStateWindow
 from minmax.rotation_demand_window import RotationDemandWindow
 from minmax.rotation_ultimate_affordability import RotationUltimateAffordabilityRequirement
 from minmax.ultimate_generation_sources import CombatAttackUltimateGenerationSource
@@ -38,6 +39,9 @@ from ui.rotation_generation_support import (
     RotationGenerationResult,
     RotationGenerationSupport,
 )
+from ui.rotation_saved_build_target_candidate_support import (
+    RotationSavedBuildTargetCandidateSupport,
+)
 from ui.rotation_ultimate_affordability_candidate_support import (
     RotationUltimateAffordabilityCandidateSupport,
 )
@@ -69,16 +73,20 @@ class RotationDashboardCanonicalCandidateSupport:
     readiness before recovery ranking. Mechanics coverage, when supplied, is then
     scoped to the resolved CharacterBuild and current rotation evidence.
 
-    Production defaults compose three final-candidate evidence adapters. Weapon
+    Production defaults compose four final-candidate evidence adapters. Weapon
     attack evidence projects final light/heavy attacks through the same canonical
     saved-build weapon adapter and promotes unresolved weapon identity to
     candidate-specific evidence; wrong-bar attacks remain the existing active-bar
-    hard obligation. Automatic potion cadence derives an effective shared cooldown
-    only from complete build and scenario evidence. Ultimate affordability replays
-    resolved spend rules against every stabilized candidate. Candidate-independent
-    generation evidence may be reused directly; scheduled-attack generation is
-    recomputed from each stabilized candidate plan before affordability is assessed.
-    Missing evidence preserves the existing no-guess behavior.
+    hard obligation. Saved-build target evidence enforces unambiguous Enemy, Self,
+    and Ground identities only when explicit target-state windows are supplied;
+    Area, Cone, blank, or ambiguous target evidence remains candidate-relevant
+    unresolved rather than being guessed. Automatic potion cadence derives an
+    effective shared cooldown only from complete build and scenario evidence.
+    Ultimate affordability replays resolved spend rules against every stabilized
+    candidate. Candidate-independent generation evidence may be reused directly;
+    scheduled-attack generation is recomputed from each stabilized candidate plan
+    before affordability is assessed. Missing evidence preserves the existing
+    no-guess behavior.
     """
 
     def __init__(
@@ -88,6 +96,7 @@ class RotationDashboardCanonicalCandidateSupport:
         canonical_candidates: (
             RotationCanonicalCandidateSupport
             | RotationWeaponAttackCandidateSupport
+            | RotationSavedBuildTargetCandidateSupport
             | RotationAutomaticPotionCadenceCandidateSupport
             | RotationUltimateAffordabilityCandidateSupport
             | None
@@ -104,8 +113,11 @@ class RotationDashboardCanonicalCandidateSupport:
                 canonical_candidates=canonical,
                 build_adapter=canonical.build_adapter,
             )
-            potion_aware = RotationAutomaticPotionCadenceCandidateSupport(
+            target_aware = RotationSavedBuildTargetCandidateSupport(
                 canonical_candidates=weapon_aware,
+            )
+            potion_aware = RotationAutomaticPotionCadenceCandidateSupport(
+                canonical_candidates=target_aware,
             )
             self.canonical_candidates = RotationUltimateAffordabilityCandidateSupport(
                 canonical_candidates=potion_aware,
@@ -127,6 +139,7 @@ class RotationDashboardCanonicalCandidateSupport:
         wait_decision_factory: RecoveryPressureWaitDecisionFactory | None = None,
         requirements: Iterable[RotationEffectUptimeRequirement] = (),
         passives: Iterable[PassiveGrant] = (),
+        target_state_windows: Iterable[RotationTargetStateWindow] = (),
         potion_cooldown_scenario_evidence: RotationPotionCooldownScenarioEvidence | None = None,
         reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None,
         max_iterations: int = 6,
@@ -169,6 +182,9 @@ class RotationDashboardCanonicalCandidateSupport:
             character_id=character_id,
             coverage_report=coverage_report,
         )
+        target_state_tuple = tuple(target_state_windows)
+        if target_state_tuple:
+            candidate_kwargs["target_state_windows"] = target_state_tuple
         if potion_cooldown_scenario_evidence is not None:
             candidate_kwargs["potion_cooldown_scenario_evidence"] = (
                 potion_cooldown_scenario_evidence
