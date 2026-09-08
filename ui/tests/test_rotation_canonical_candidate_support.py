@@ -66,6 +66,10 @@ class _StaticContextService:
 
 def _static_context(*, resolved: bool, unresolved=(), maximum_by_bar=None):
     maxima = dict(maximum_by_bar or {"front": 30000, "back": 30000})
+    contexts = {
+        "front": SimpleNamespace(active_bar="front"),
+        "back": SimpleNamespace(active_bar="back"),
+    }
 
     def maximum_amounts_for(resource):
         return tuple((bar, amount) for bar, amount in maxima.items())
@@ -74,14 +78,24 @@ def _static_context(*, resolved: bool, unresolved=(), maximum_by_bar=None):
         values = tuple(maxima.values())
         return values[0] if values and len(set(values)) == 1 else None
 
+    def maximum_amount_for(bar, resource):
+        return maxima[str(bar).casefold()]
+
+    def context_for(bar):
+        return contexts.get(str(bar).casefold()) if resolved else None
+
+    def maximum_events_for(plan, resource):
+        return ("bar-aware-maximum-events", plan, resource)
+
     return SimpleNamespace(
         resolved=resolved,
         unresolved=tuple(unresolved),
-        contexts=(SimpleNamespace(active_bar="front"), SimpleNamespace(active_bar="back"))
-        if resolved
-        else (),
+        contexts=tuple(contexts.values()) if resolved else (),
         maximum_amounts_for=maximum_amounts_for,
         uniform_maximum_amount_for=uniform_maximum_amount_for,
+        maximum_amount_for=maximum_amount_for,
+        context_for=context_for,
+        maximum_events_for=maximum_events_for,
     )
 
 
@@ -132,10 +146,7 @@ def test_unresolved_saved_build_fails_closed_before_candidate_pipeline() -> None
         )
     )
     pipeline = _Pipeline(result=object())
-    support = RotationCanonicalCandidateSupport(
-        build_adapter=adapter,
-        pipeline=pipeline,
-    )
+    support = RotationCanonicalCandidateSupport(build_adapter=adapter, pipeline=pipeline)
 
     result, values = _run(support, character_id="character-1")
 
@@ -153,10 +164,7 @@ def test_resolved_saved_build_flows_into_effect_pipeline_with_materialized_evide
     adapter = _Adapter(SavedBuildAdaptation(build=canonical_build, unresolved=()))
     pipeline_result = _selectable_pipeline_result()
     pipeline = _Pipeline(result=pipeline_result)
-    support = RotationCanonicalCandidateSupport(
-        build_adapter=adapter,
-        pipeline=pipeline,
-    )
+    support = RotationCanonicalCandidateSupport(build_adapter=adapter, pipeline=pipeline)
 
     result, values = _run(
         support,
@@ -184,6 +192,8 @@ def test_resolved_saved_build_flows_into_effect_pipeline_with_materialized_evide
     assert call["reserve_assessment_resolver"] == "reserve-resolver"
     assert call["max_iterations"] == 8
     assert call["baseline_id"] == "saved-build-baseline"
+    assert call["calculation_context"] is None
+    assert call["maximum_event_resolver"] is None
     assert result.pipeline_result is pipeline_result
     assert result.validation.scope is RotationRecoveryValidationScope.CANONICAL_CANDIDATE
     assert result.validation.selectable is True
@@ -235,6 +245,8 @@ def test_resolved_static_build_context_is_retained_while_candidate_pipeline_runs
 
     assert static_service.calls == [values["player_build"]]
     assert len(pipeline.calls) == 1
+    assert pipeline.calls[0]["calculation_context"] is static.context_for("front")
+    assert pipeline.calls[0]["maximum_event_resolver"] is static.maximum_events_for
     assert result.pipeline_result is pipeline_result
     assert result.static_context is static
     assert result.canonical_maximum_amount == 30000
@@ -243,10 +255,7 @@ def test_resolved_static_build_context_is_retained_while_candidate_pipeline_runs
 
 def test_uniform_static_resource_ceiling_replaces_provisional_caller_maximum() -> None:
     canonical_build = object()
-    static = _static_context(
-        resolved=True,
-        maximum_by_bar={"front": 31500, "back": 31500},
-    )
+    static = _static_context(resolved=True, maximum_by_bar={"front": 31500, "back": 31500})
     pipeline = _Pipeline(result=_selectable_pipeline_result())
     support = RotationCanonicalCandidateSupport(
         build_adapter=_Adapter(SavedBuildAdaptation(build=canonical_build, unresolved=())),
@@ -261,7 +270,7 @@ def test_uniform_static_resource_ceiling_replaces_provisional_caller_maximum() -
     assert result.canonical_maximum_amount == 31500
 
 
-def test_bar_sensitive_static_resource_ceiling_stops_one_ceiling_recovery_model() -> None:
+def test_bar_sensitive_static_resource_ceiling_runs_with_per_plan_maximum_events() -> None:
     canonical_build = object()
     static = _static_context(
         resolved=True,
@@ -277,19 +286,19 @@ def test_bar_sensitive_static_resource_ceiling_stops_one_ceiling_recovery_model(
         static_context_service=_StaticContextService(static),
     )
 
-    result, _ = _run(support, coverage_report=report)
+    result, _ = _run(support, coverage_report=report, maximum_amount=99999)
 
-    assert pipeline.calls == []
-    assert dependency_service.calls == []
-    assert report.calls == []
-    assert result.pipeline_result is None
-    assert result.canonical_maximum_amount is None
-    assert result.validation.scope is RotationRecoveryValidationScope.NOT_EVALUATED
-    detail = " ".join(result.validation.reasons)
-    assert "bar-sensitive" in detail
-    assert "magicka" in detail
-    assert "front=32000" in detail
-    assert "back=31800" in detail
+    assert len(pipeline.calls) == 1
+    call = pipeline.calls[0]
+    assert call["maximum_amount"] == 32000
+    assert call["calculation_context"] is static.context_for("front")
+    assert call["maximum_event_resolver"] is static.maximum_events_for
+    assert dependency_service.calls
+    assert report.calls
+    assert result.pipeline_result is pipeline.result
+    assert result.canonical_maximum_amount == 32000
+    assert result.validation.scope is RotationRecoveryValidationScope.CANONICAL_CANDIDATE
+    assert result.validation.selectable is True
 
 
 def test_blocking_discovered_mechanics_gap_stops_candidate_pipeline() -> None:
