@@ -75,6 +75,17 @@ def _records():
             "base_mechanic": 0,
             "morph": 1,
         },
+        {
+            "ability_id": 601,
+            "base_ability_id": 600,
+            "name": "Fungal Growth",
+            "skill_line": "Green Balance",
+            "class_type": "Warden",
+            "is_player": 1,
+            "is_passive": 0,
+            "base_mechanic": 0,
+            "morph": 0,
+        },
     ]
 
 
@@ -99,6 +110,17 @@ def test_reviewed_skill_records_are_owned_nonultimate_guild_carriers_only():
     assert all(row["name"] != "Dawnbreaker" for row in result)
     assert all(row["name"] != "Revealing Flare" for row in result)
     assert all(row["name"] != "Degeneration" for row in result)
+
+
+def test_reviewed_skill_records_accept_canonical_green_balance_route_id():
+    progression = CharacterProgression(owned_skill_lines=("green_balance",))
+
+    result = _service().reviewed_skill_records(progression)
+
+    assert [(row["name"], row["skill_line"]) for row in result] == [
+        ("Budding Seeds", "Green Balance"),
+        ("Fungal Growth", "Green Balance"),
+    ]
 
 
 def test_bar_candidates_preserve_scored_heal_and_ultimate_without_duplicate_base_skill():
@@ -152,6 +174,45 @@ def test_bar_candidates_preserve_scored_heal_and_ultimate_without_duplicate_base
     assert all(
         candidate.changes[0].after["reviewed_passive"] == "Slayer"
         for candidate in circle_candidates
+    )
+
+
+def test_green_balance_carrier_candidates_preserve_scored_heal_and_label_emerald_moss():
+    progression = CharacterProgression(
+        owned_skill_lines=("green_balance",),
+        passive_ranks={"Emerald Moss": 2},
+    )
+    baseline = PlayerBuild(
+        FrontBarSkills=[
+            "Old One",
+            "Old Two",
+            "Budding Seeds",
+            "Old Four",
+            "Old Five",
+            "Aggressive Horn",
+        ]
+    )
+
+    candidates = _service().build_candidates(
+        baseline,
+        progression,
+        character_id="char-1",
+        baseline_build_id="build-1",
+        protected_entity_id="budding_seeds",
+        active_bar="front",
+    )
+
+    fungal_candidates = [
+        candidate
+        for candidate in candidates
+        if "Fungal Growth" in candidate.candidate_build.FrontBarSkills
+    ]
+    assert fungal_candidates
+    assert all(candidate.candidate_build.FrontBarSkills[2] == "Budding Seeds" for candidate in fungal_candidates)
+    assert all(candidate.candidate_build.FrontBarSkills[5] == "Aggressive Horn" for candidate in fungal_candidates)
+    assert all(
+        candidate.changes[0].after["reviewed_passive"] == "Emerald Moss"
+        for candidate in fungal_candidates
     )
 
 
