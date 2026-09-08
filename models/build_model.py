@@ -164,6 +164,13 @@ class PlayerBuild:
     AttributeHealth: int = 0
     AttributeMagicka: int = 0
     AttributeStamina: int = 0
+    # Empty means the base class's three native lines. Extreme/subclass
+    # candidates persist explicit canonical snake_case line identities here so
+    # build snapshots carry the exact class route being evaluated.
+    ClassSkillLines: list[str] = field(default_factory=list)
+    # Class Mastery selections are additive build state. Subclass materializers
+    # clear this list because ESO does not allow Class Mastery while subclassed.
+    ClassMasteryAbilityIds: list[int] = field(default_factory=list)
 
     Armor: dict[str, dict[str, str]] = field(default_factory=_empty_armor)
     # FrontBarWeapon / BackBarWeapon remain the primary/main-hand fields so
@@ -218,6 +225,8 @@ class PlayerBuild:
             "Vampire": self.Vampire, "Werewolf": self.Werewolf,
             "AttributeHealth": self.AttributeHealth, "AttributeMagicka": self.AttributeMagicka,
             "AttributeStamina": self.AttributeStamina,
+            "ClassSkillLines": list(self.ClassSkillLines),
+            "ClassMasteryAbilityIds": [int(value) for value in self.ClassMasteryAbilityIds],
             "Armor": {slot: dict(values) for slot, values in self.Armor.items()},
             "FrontBarWeapon": self.FrontBarWeapon.to_dict(), "FrontBarOffHand": self.FrontBarOffHand.to_dict(),
             "BackBarWeapon": self.BackBarWeapon.to_dict(), "BackBarOffHand": self.BackBarOffHand.to_dict(),
@@ -257,6 +266,16 @@ class PlayerBuild:
             AttributeHealth=_int_value(data.get("AttributeHealth", 0)),
             AttributeMagicka=_int_value(data.get("AttributeMagicka", 0)),
             AttributeStamina=_int_value(data.get("AttributeStamina", 0)),
+            ClassSkillLines=[
+                str(value).strip()
+                for value in (data.get("ClassSkillLines") or [])
+                if str(value).strip()
+            ],
+            ClassMasteryAbilityIds=[
+                _int_value(value)
+                for value in (data.get("ClassMasteryAbilityIds") or [])
+                if _int_value(value) > 0
+            ],
             Armor=armor,
             FrontBarWeapon=GearSlot.from_dict(data.get("FrontBarWeapon")),
             FrontBarOffHand=GearSlot.from_dict(data.get("FrontBarOffHand")),
