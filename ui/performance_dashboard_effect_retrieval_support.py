@@ -10,8 +10,9 @@ top eight and then look falsely absent in the dashboard.
 
 This compatibility layer keeps the original top-N ordering and additionally
 preserves any known support effect that exists anywhere in the fetched aura
-rows. It does not invent data and it does not create timeline intervals; those
-require ESO Logs event/interval queries rather than aggregate aura totals.
+rows. It also installs the reviewed Major/Minor effect-ID fallback used by the
+timeline service, so raw aura events can still be recognized when ESO Logs'
+aggregate aura summary omits a tracked effect.
 """
 
 _INSTALLED = False
@@ -44,7 +45,11 @@ def install() -> None:
         return
 
     from services import performance_dashboard_service as service_module
+    from ui.performance_dashboard_effect_id_fallback_support import (
+        install as install_effect_id_fallback,
+    )
 
+    install_effect_id_fallback()
     original_top_uptimes = service_module._top_uptimes
 
     def top_uptimes_with_tracked_support(auras, duration_seconds: float, limit: int):
