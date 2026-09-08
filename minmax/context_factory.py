@@ -27,6 +27,7 @@ from .one_hand_shield_passive_input_resolver import OneHandShieldPassiveInputRes
 from .provisioning_static_repository import ProvisioningStaticRepository
 from .race_repository import RaceRepository
 from .skill_line_repository import SkillLineRepository
+from .sorcerer_passive_input_resolver import SorcererPassiveInputResolver
 from .static_build_inputs import StaticBuildInputResolver
 from .undaunted_passive_input_resolver import UndauntedPassiveInputResolver
 from .warden_passive_input_resolver import WardenPassiveInputResolver
@@ -66,6 +67,7 @@ class BuildCalculationContextFactory:
         guild_passive_resolver: GuildPassiveInputResolver | None = None,
         alliance_support_passive_resolver: AllianceSupportPassiveInputResolver | None = None,
         nightblade_passive_resolver: NightbladePassiveInputResolver | None = None,
+        sorcerer_passive_resolver: SorcererPassiveInputResolver | None = None,
         one_hand_shield_passive_resolver: OneHandShieldPassiveInputResolver | None = None,
         block_item_resolver: BlockItemInputResolver | None = None,
         combat_state_resolver: CombatStateInputResolver | None = None,
@@ -121,6 +123,11 @@ class BuildCalculationContextFactory:
         )
         self.nightblade_passive_resolver = nightblade_passive_resolver or (
             NightbladePassiveInputResolver(skill_line_repository)
+            if skill_line_repository is not None
+            else None
+        )
+        self.sorcerer_passive_resolver = sorcerer_passive_resolver or (
+            SorcererPassiveInputResolver()
             if skill_line_repository is not None
             else None
         )
@@ -366,6 +373,24 @@ class BuildCalculationContextFactory:
                 build,
                 active_bar=active_bar,
                 magicka_flood_owned=magicka_flood,
+            )
+
+        sorcerer_lines = SorcererPassiveInputResolver.equipped_sorcerer_line_ids(build)
+        daedric_summoning = (
+            SorcererPassiveInputResolver.DAEDRIC_SUMMONING_ID in sorcerer_lines
+        )
+        expert_summoner, message = self._maxed_passive(
+            progression,
+            "Expert Summoner",
+            relevant=daedric_summoning,
+        )
+        if message:
+            unresolved.append(message)
+        if self.sorcerer_passive_resolver is not None:
+            gear = self.sorcerer_passive_resolver.apply(
+                gear,
+                build,
+                expert_summoner_owned=expert_summoner,
             )
 
         light_line = progression.owns_skill_line("Light Armor")
