@@ -54,6 +54,39 @@ def test_active_bar_legality_rejects_wrong_bar_and_missing_bar() -> None:
     assert result.violations[2].scheduled_bar == "front"
 
 
+def test_active_bar_legality_audits_light_and_heavy_attacks() -> None:
+    plan = _plan(
+        RotationAction(2.0, 0, RotationActionKind.LIGHT_ATTACK, bar="front"),
+        RotationAction(4.0, 0, RotationActionKind.HEAVY_ATTACK, bar="back"),
+        RotationAction(6.0, 0, RotationActionKind.BAR_SWAP, bar="back"),
+        RotationAction(6.0, 1, RotationActionKind.LIGHT_ATTACK, bar="back"),
+        RotationAction(8.0, 0, RotationActionKind.HEAVY_ATTACK),
+    )
+
+    result = RotationActiveBarAssessor().assess(plan)
+
+    assert not result.legal
+    assert [(item.action_kind, item.scheduled_bar, item.active_bar) for item in result.violations] == [
+        (RotationActionKind.HEAVY_ATTACK, "back", "front"),
+        (RotationActionKind.HEAVY_ATTACK, None, "back"),
+    ]
+    assert result.violations[0].action_name == "heavy_attack"
+    assert result.violations[1].reason == "bar-bound action does not declare its scheduled bar"
+
+
+def test_same_timestamp_swap_order_applies_to_weapon_attacks() -> None:
+    plan = _plan(
+        RotationAction(10.0, 0, RotationActionKind.LIGHT_ATTACK, bar="front"),
+        RotationAction(10.0, 1, RotationActionKind.BAR_SWAP, bar="back"),
+        RotationAction(10.0, 2, RotationActionKind.HEAVY_ATTACK, bar="back"),
+    )
+
+    result = RotationActiveBarAssessor().assess(plan)
+
+    assert result.legal
+    assert result.final_bar == "back"
+
+
 def test_active_bar_legality_supports_explicit_back_bar_start_and_rejects_invalid_start() -> None:
     plan = _plan(
         RotationAction(2.0, 0, RotationActionKind.SKILL, "Back Opener", "back"),
