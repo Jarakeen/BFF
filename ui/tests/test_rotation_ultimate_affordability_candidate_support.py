@@ -2,7 +2,7 @@ from types import SimpleNamespace
 
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from minmax.rotation_ultimate_affordability import RotationUltimateAffordabilityRequirement
-from minmax.ultimate_resource_timeline import UltimateSpendRule
+from minmax.ultimate_resource_timeline import UltimateGenerationEvent, UltimateSpendRule
 from services.rotation_candidate_scorecard_service import RotationCandidateScorecard
 from services.rotation_plan_consequence_service import (
     RotationPlanConsequence,
@@ -85,6 +85,33 @@ def test_wrapper_attaches_final_plan_ultimate_affordability_hard_failure() -> No
     assert len(delegate.scorecard.ultimate_affordability_violations) == 1
     assert delegate.scorecard.supplied_obligations_satisfied is False
     assert delegate.scorecard.candidate_specific_unresolved == ()
+
+
+def test_wrapper_merges_final_plan_generation_before_affordability_replay() -> None:
+    delegate = _Delegate(_plan())
+    support = RotationUltimateAffordabilityCandidateSupport(
+        canonical_candidates=delegate,
+    )
+    observed_plans = []
+
+    def generation_events(plan):
+        observed_plans.append(plan)
+        return (UltimateGenerationEvent(10.0, 200.0, "candidate-derived gain"),)
+
+    support.run_effects(
+        scorecard_resolver=_scorecard,
+        ultimate_affordability_requirement=RotationUltimateAffordabilityRequirement(
+            starting_amount=50.0,
+            spend_rules=(UltimateSpendRule("Aggressive Horn", 250.0),),
+        ),
+        ultimate_generation_event_resolver=generation_events,
+    )
+
+    assert observed_plans == [delegate.plan]
+    assert delegate.scorecard is not None
+    assert delegate.scorecard.ultimate_affordability_violations == ()
+    assert delegate.scorecard.ultimate_affordability_assessment.ending_amount == 0.0
+    assert delegate.scorecard.supplied_obligations_satisfied is True
 
 
 def test_wrapper_preserves_existing_path_when_no_ultimate_evidence_is_supplied() -> None:
