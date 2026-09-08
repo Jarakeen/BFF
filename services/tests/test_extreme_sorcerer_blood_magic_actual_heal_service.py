@@ -57,7 +57,7 @@ def test_blood_magic_lane_optimizes_canonical_max_health():
     assert result.normal_heal_gain == 3_000.0
 
 
-def test_blood_magic_lane_keeps_critical_eligibility_unresolved_without_blocking_normal_value():
+def test_blood_magic_lane_uses_noncritical_max_health_proc_policy():
     service = ExtremeSorcererBloodMagicActualHealService(
         optimizer=_FakeOptimizer(baseline_value=30_000.0, optimized_value=40_000.0)
     )
@@ -65,9 +65,10 @@ def test_blood_magic_lane_keeps_critical_eligibility_unresolved_without_blocking
     result = service.optimize(_build())
 
     assert result.optimized_event.normal_heal == 4_000.0
-    assert result.optimized_event.can_crit is None
+    assert result.optimized_event.can_crit is False
     assert result.mechanic_complete is True
-    assert "Blood Magic critical-heal eligibility" in result.omitted_scope
+    assert "Blood Magic critical-heal eligibility" not in result.omitted_scope
+    assert "Blood Magic Max-Health passive-proc critical policy: non-critical" in result.search_scope
 
 
 def test_blood_magic_lane_preserves_optimizer_unresolved_evidence():
@@ -81,7 +82,7 @@ def test_blood_magic_lane_preserves_optimizer_unresolved_evidence():
     assert result.mechanic_complete is False
 
 
-def test_blood_magic_lane_reports_optimizer_search_boundary_without_stale_package_omissions():
+def test_blood_magic_lane_reports_optimizer_search_boundary_without_stale_package_or_crit_omissions():
     service = ExtremeSorcererBloodMagicActualHealService(optimizer=_FakeOptimizer())
 
     result = service.optimize(_build())
@@ -89,6 +90,6 @@ def test_blood_magic_lane_reports_optimizer_search_boundary_without_stale_packag
     assert "Blood Magic U50 rank-2 heal amount: 10% of canonical Max Health" in result.search_scope
     assert "canonical max-health test search" in result.search_scope
     assert "test optimizer omitted surface" in result.omitted_scope
-    assert "Blood Magic critical-heal eligibility" in result.omitted_scope
+    assert "Blood Magic critical-heal eligibility" not in result.omitted_scope
     assert not any("race replacement beyond" in item for item in result.omitted_scope)
     assert not any("gear-set/package replacement beyond" in item for item in result.omitted_scope)
