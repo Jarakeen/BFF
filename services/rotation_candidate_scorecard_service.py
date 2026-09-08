@@ -19,6 +19,11 @@ from minmax.rotation_action_range import (
     RotationActionRangeRequirement,
     RotationTargetDistanceWindow,
 )
+from minmax.rotation_action_slot_legality import (
+    RotationActionSlotAssessment,
+    RotationActionSlotAssessor,
+    RotationActionSlotRequirement,
+)
 from minmax.rotation_bar_availability import (
     RotationBarAvailabilityAssessment,
     RotationBarAvailabilityAssessor,
@@ -108,6 +113,7 @@ class RotationCandidateScorecard:
     cooldown_assessment: RotationActionCooldownAssessment | None = None
     occupancy_assessment: RotationActionOccupancyAssessment | None = None
     range_assessment: RotationActionRangeAssessment | None = None
+    slot_assessment: RotationActionSlotAssessment | None = None
     runtime_uptime_assessments: tuple[RotationRuntimeUptimeAssessment, ...] = ()
     runtime_uptime_objective_assessment: (
         RotationRuntimeUptimeObjectiveAssessment | None
@@ -156,6 +162,12 @@ class RotationCandidateScorecard:
         return self.range_assessment.violations
 
     @property
+    def slot_violations(self):
+        if self.slot_assessment is None:
+            return ()
+        return self.slot_assessment.violations
+
+    @property
     def failed_runtime_uptime_assessments(
         self,
     ) -> tuple[RotationRuntimeUptimeAssessment, ...]:
@@ -177,6 +189,7 @@ class RotationCandidateScorecard:
             and not self.cooldown_violations
             and not self.occupancy_violations
             and not self.range_violations
+            and not self.slot_violations
             and not self.failed_runtime_uptime_assessments
             and self.candidate_shortfall == 0
         )
@@ -192,13 +205,14 @@ class RotationCandidateScorecardService:
     when the caller also supplies canonical duration/recast evidence.
 
     Optional resource-reserve requirements, encounter bar-availability windows,
-    resolved action cooldowns, resolved skill/ultimate occupancy durations, and
-    explicit target-distance/range evidence are caller-supplied hard obligations.
-    This layer never invents resource reserves, bar restrictions, cooldowns, cast
-    times, channel times, target distance, or skill range. Unresolved evidence is
-    split into inherited/shared baseline limitations and candidate-specific
-    additions. Deterministic refresh-slot cascade messages are retained separately
-    as schedule provenance rather than ranked as uncertainty.
+    resolved action cooldowns, resolved skill/ultimate occupancy durations,
+    explicit target-distance/range evidence, and exact slotted-bar ownership are
+    caller-supplied hard obligations. This layer never invents resource reserves,
+    bar restrictions, cooldowns, cast times, channel times, target distance, skill
+    range, or slot ownership. Unresolved evidence is split into inherited/shared
+    baseline limitations and candidate-specific additions. Deterministic refresh-
+    slot cascade messages are retained separately as schedule provenance rather
+    than ranked as uncertainty.
     """
 
     def __init__(
@@ -208,6 +222,7 @@ class RotationCandidateScorecardService:
         cooldown_assessor: RotationActionCooldownAssessor | None = None,
         occupancy_assessor: RotationActionOccupancyAssessor | None = None,
         range_assessor: RotationActionRangeAssessor | None = None,
+        slot_assessor: RotationActionSlotAssessor | None = None,
     ) -> None:
         self.consequence_service = consequence_service or RotationPlanConsequenceService()
         self.bar_availability_assessor = (
@@ -216,6 +231,7 @@ class RotationCandidateScorecardService:
         self.cooldown_assessor = cooldown_assessor or RotationActionCooldownAssessor()
         self.occupancy_assessor = occupancy_assessor or RotationActionOccupancyAssessor()
         self.range_assessor = range_assessor or RotationActionRangeAssessor()
+        self.slot_assessor = slot_assessor or RotationActionSlotAssessor()
 
     def compare(
         self,
@@ -232,6 +248,7 @@ class RotationCandidateScorecardService:
         occupancy_requirements: tuple[RotationActionOccupancyRequirement, ...] = (),
         range_requirements: tuple[RotationActionRangeRequirement, ...] = (),
         target_distance_windows: tuple[RotationTargetDistanceWindow, ...] = (),
+        slot_requirements: tuple[RotationActionSlotRequirement, ...] = (),
         encounter_requirements: EncounterRequirementSet | None = None,
         support_coverage: SupportCoverage | None = None,
         candidate_duration: RotationDurationProjection | None = None,
@@ -300,6 +317,11 @@ class RotationCandidateScorecardService:
                 target_distance_windows,
             )
             if range_requirements and target_distance_windows
+            else None
+        )
+        slot_assessment = (
+            self.slot_assessor.assess(candidate_plan, slot_requirements)
+            if slot_requirements
             else None
         )
 
@@ -383,6 +405,7 @@ class RotationCandidateScorecardService:
             cooldown_assessment=cooldown_assessment,
             occupancy_assessment=occupancy_assessment,
             range_assessment=range_assessment,
+            slot_assessment=slot_assessment,
             runtime_uptime_assessments=uptime_assessments,
             runtime_uptime_objective_assessment=uptime_objective_assessment,
         )
