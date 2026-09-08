@@ -21,6 +21,11 @@ class RotationSavedBuildActionSlotService:
     This is structural saved-build evidence, not ESO mechanics inference. Slot 6 on
     each bar is treated as the ultimate slot to match the canonical saved-build bar
     contract already used by timing/range resolvers. Empty slots are ignored.
+
+    If the same normalized action name appears as both a normal skill and an
+    ultimate, the saved build does not provide one unambiguous executable identity.
+    That name is therefore omitted from slot requirements and returned as unresolved
+    evidence rather than allowing dictionary/order behavior to choose one meaning.
     """
 
     def resolve(self, player_build: PlayerBuild) -> RotationSavedBuildActionSlotEvidence:
@@ -31,6 +36,8 @@ class RotationSavedBuildActionSlotService:
 
         bars_by_action: dict[tuple[RotationActionKind, str], list[str]] = {}
         display_name: dict[tuple[RotationActionKind, str], str] = {}
+        kinds_by_name: dict[str, set[RotationActionKind]] = {}
+        display_name_by_name: dict[str, str] = {}
 
         for bar, names in (("front", front), ("back", back)):
             for index, raw_name in enumerate(names):
@@ -42,11 +49,26 @@ class RotationSavedBuildActionSlotService:
                     if index == 5
                     else RotationActionKind.SKILL
                 )
-                key = (kind, name.casefold())
+                normalized_name = name.casefold()
+                display_name_by_name.setdefault(normalized_name, name)
+                kinds_by_name.setdefault(normalized_name, set()).add(kind)
+
+                key = (kind, normalized_name)
                 display_name.setdefault(key, name)
                 bars = bars_by_action.setdefault(key, [])
                 if bar not in bars:
                     bars.append(bar)
+
+        ambiguous_names = {
+            name_key
+            for name_key, kinds in kinds_by_name.items()
+            if len(kinds) > 1
+        }
+        unresolved = tuple(
+            "saved-build action slot identity is ambiguous because "
+            f"{display_name_by_name[name_key]!r} appears as both skill and ultimate"
+            for name_key in sorted(ambiguous_names)
+        )
 
         requirements = tuple(
             RotationActionSlotRequirement(
@@ -55,8 +77,12 @@ class RotationSavedBuildActionSlotService:
                 action_kind=key[0],
             )
             for key, bars in bars_by_action.items()
+            if key[1] not in ambiguous_names
         )
-        return RotationSavedBuildActionSlotEvidence(slot_requirements=requirements)
+        return RotationSavedBuildActionSlotEvidence(
+            slot_requirements=requirements,
+            unresolved=unresolved,
+        )
 
 
 __all__ = [
