@@ -7,6 +7,7 @@ from typing import Callable
 from engine.config import DEFAULT_DATABASE
 from minmax.ability_cost_repository import AbilityCostRepository
 from minmax.build_action_cost_modifiers import BuildActionCostModifierResolver
+from minmax.build_calculation_context import BuildCalculationContext
 from minmax.build_sustain import BuildSustainRun, NamedBuildAction, evaluate_named_build_sustain
 from minmax.character_progression import AttributeAllocation, CharacterProgression
 from minmax.context_factory import BuildCalculationContextFactory
@@ -15,6 +16,7 @@ from minmax.jewelry_cost_modifier_repository import JewelryCostModifierRepositor
 from minmax.jewelry_trait_repository import JewelryTraitRepository
 from minmax.race_repository import RaceRepository
 from minmax.resource_costs import ResourceType
+from minmax.resource_timeline import ResourceMaximumEvent
 from minmax.restoration_events import ResourceRestorationEvent
 from minmax.rotation_plan import RotationActionKind, RotationPlan
 from models.build_model import PlayerBuild
@@ -37,8 +39,8 @@ class RotationSustainService:
 
     The service owns only the bridge from ``RotationPlan`` scheduled skill actions
     into Phase 4 ``NamedBuildAction`` inputs. Cost resolution, build modifiers,
-    recovery timing, restoration events, and resource-state math remain
-    authoritative in Phase 4.
+    recovery timing, restoration events, resource-ceiling events, and resource-state
+    math remain authoritative in Phase 4.
     """
 
     def __init__(
@@ -67,32 +69,45 @@ class RotationSustainService:
         plan: RotationPlan,
         resource: ResourceType = ResourceType.MAGICKA,
         restoration_events: tuple[ResourceRestorationEvent, ...] = (),
+        maximum_events: tuple[ResourceMaximumEvent, ...] = (),
+        calculation_context: BuildCalculationContext | None = None,
     ) -> RotationSustainProjection:
-        """Evaluate one rotation/resource with only caller-verified restores.
+        """Evaluate one rotation/resource with only caller-verified temporal evidence.
 
         Heavy attacks, potions, synergies, and other restore sources are not
-        inferred from action names here. A caller that has already proven an
-        exact restoration event may pass it through ``restoration_events``; the
-        Phase 4 timeline then owns ordering, capping, waste, and shortfall math.
+        inferred from action names here. A caller that has already proven an exact
+        restoration or maximum-resource transition may pass it explicitly; the
+        Phase 4 timeline then owns ordering, capping, waste, clipping, and shortfall.
+
+        Canonical callers may also pass the already-resolved static front-bar
+        ``BuildCalculationContext`` so sustain reuses the exact progression/passive
+        snapshot instead of rebuilding a parallel static context.
         """
 
         self._validate_identity(build, plan)
 
         named_actions = self.named_actions(plan)
-        progression, progression_unresolved = self._progression(build)
-
-        factory = BuildCalculationContextFactory(
-            race_repository=RaceRepository(self.database_path),
-            gear_set_repository=GearSetRepository(self.database_path),
-        )
-        context = factory.build(
-            character_id=self._character_name(build) or "saved-character",
-            build_id=self._build_name(build),
-            build=build,
-            progression=progression,
-            active_bar="front",
-            fight_duration=plan.duration_seconds,
-        )
+        progression_unresolved: tuple[str, ...] = ()
+        if calculation_context is None:
+            progression, progression_unresolved = self._progression(build)
+            factory = BuildCalculationContextFactory(
+                race_repository=RaceRepository(self.database_path),
+                gear_set_repository=GearSetRepository(self.database_path),
+            )
+            context = factory.build(
+                character_id=self._character_name(build) or "saved-character",
+                build_id=self._build_name(build),
+                build=build,
+                progression=progression,
+                active_bar="front",
+                fight_duration=plan.duration_seconds,
+            )
+        else:
+            context = calculation_context
+            if context.active_bar != "front":
+                raise ValueError(
+                    "rotation sustain canonical calculation context must represent the front bar"
+                )
 
         run = self.sustain_evaluator(
             build=build,
@@ -106,6 +121,7 @@ class RotationSustainService:
                 JewelryTraitRepository(self.database_path),
             ),
             restoration_events=tuple(restoration_events),
+            maximum_events=tuple(maximum_events),
         )
 
         unresolved = self._dedupe(
@@ -127,9 +143,9 @@ class RotationSustainService:
         """Project only resource-cost-bearing named ability actions.
 
         Light attacks, heavy attacks, waits, bar swaps, and potions are
-        intentionally excluded. A verified heavy/potion restore enters the
-        Phase 4 timeline through explicit ``restoration_events`` rather than an
-        invented amount derived from the action name.
+        intentionally excluded. Verified temporal resource consequences enter the
+        Phase 4 timeline through explicit event inputs rather than action-name
+        inference.
         """
 
         return tuple(
