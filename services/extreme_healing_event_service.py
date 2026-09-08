@@ -18,9 +18,13 @@ class ExtremeHealingEventResult:
 
     ``normal_heal`` is the sum of HEAL-classified coefficient components after
     the canonical saved-build actual-effect pipeline has applied sheet Healing
-    Done and verified component-scoped healing CP. ``critical_heal`` is the same
-    event assuming that heal crits. It is deliberately not an expected-value
-    model and therefore does not multiply by critical chance.
+    Done and verified component-scoped healing CP. ``critical_heal`` is the
+    largest reviewed value of the same event when every crit-eligible HEAL
+    component crits. Components explicitly marked non-crittable stay at their
+    normal value. Unknown critical eligibility blocks the critical result.
+
+    This is deliberately not an expected-value model and therefore does not
+    multiply by critical chance.
     """
 
     entity_id: str
@@ -29,6 +33,8 @@ class ExtremeHealingEventResult:
     critical_healing_bonus: float | None
     critical_multiplier: float | None
     heal_coefficient_numbers: tuple[int, ...]
+    crit_eligible_coefficient_numbers: tuple[int, ...]
+    noncrit_coefficient_numbers: tuple[int, ...]
     tooltip_result: SkillTooltipResult
     unresolved: tuple[str, ...]
 
@@ -82,19 +88,41 @@ class ExtremeHealingEventService:
         )
         unresolved = list(result.unresolved)
 
-        heal_numbers: tuple[int, ...] = ()
+        heal_components = ()
         if result.skill is None:
             unresolved.append(f"{entity_id}: skill rank is unresolved")
         else:
-            heal_numbers = tuple(
-                int(component.coefficient_number)
+            heal_components = tuple(
+                component
                 for component in self.tooltip_service.components.get_for_skill_rank(
                     result.skill.skill_rank_id
                 )
                 if component.effect_kind is SkillEffectKind.HEAL
             )
-            if not heal_numbers:
+            if not heal_components:
                 unresolved.append(f"{entity_id}: no HEAL-classified coefficient components")
+
+        heal_numbers = tuple(int(component.coefficient_number) for component in heal_components)
+        crit_eligible = tuple(
+            int(component.coefficient_number)
+            for component in heal_components
+            if component.can_crit is True
+        )
+        noncrit = tuple(
+            int(component.coefficient_number)
+            for component in heal_components
+            if component.can_crit is False
+        )
+        unknown_crit = tuple(
+            int(component.coefficient_number)
+            for component in heal_components
+            if component.can_crit is None
+        )
+        if unknown_crit:
+            unresolved.append(
+                f"{entity_id}: HEAL critical eligibility unresolved for coefficient(s): "
+                + ", ".join(str(number) for number in unknown_crit)
+            )
 
         actual_by_number = {
             int(trace.coefficient_number): float(trace.output_value)
@@ -105,6 +133,7 @@ class ExtremeHealingEventService:
             for trace in result.components
         }
 
+        value_by_number: dict[int, float] = {}
         normal_heal: float | None = None
         if heal_numbers:
             missing = [
@@ -118,10 +147,11 @@ class ExtremeHealingEventService:
                     + ", ".join(str(number) for number in missing)
                 )
             else:
-                normal_heal = sum(
-                    actual_by_number.get(number, base_by_number[number])
+                value_by_number = {
+                    number: actual_by_number.get(number, base_by_number[number])
                     for number in heal_numbers
-                )
+                }
+                normal_heal = sum(value_by_number.values())
 
         critical_bonus: float | None = None
         core_state = getattr(context, "core_state", None)
@@ -138,8 +168,13 @@ class ExtremeHealingEventService:
         critical_heal: float | None = None
         if critical_bonus is not None:
             critical_multiplier = 1.0 + self.BASE_CRITICAL_HEALING + critical_bonus
-            if normal_heal is not None:
-                critical_heal = normal_heal * critical_multiplier
+            if normal_heal is not None and not unknown_crit:
+                critical_heal = sum(
+                    value_by_number[number] * critical_multiplier
+                    if number in crit_eligible
+                    else value_by_number[number]
+                    for number in heal_numbers
+                )
 
         return ExtremeHealingEventResult(
             entity_id=str(entity_id),
@@ -148,6 +183,8 @@ class ExtremeHealingEventService:
             critical_healing_bonus=critical_bonus,
             critical_multiplier=critical_multiplier,
             heal_coefficient_numbers=heal_numbers,
+            crit_eligible_coefficient_numbers=crit_eligible,
+            noncrit_coefficient_numbers=noncrit,
             tooltip_result=result,
             unresolved=tuple(dict.fromkeys(message for message in unresolved if message)),
         )
