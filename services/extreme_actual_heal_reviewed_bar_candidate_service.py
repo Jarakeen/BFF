@@ -182,6 +182,12 @@ class ExtremeActualHealReviewedBarCandidateService:
                 before_name = str(original[slot_index] or "").strip()
                 if before_name.casefold() == candidate_name.casefold():
                     continue
+                before_base_id = base_by_name.get(before_name.casefold(), 0)
+                if before_base_id == candidate_base_id:
+                    # Swapping a morph/base record of the same skill does not
+                    # change the reviewed line-count passive and would smuggle
+                    # unreviewed morph mechanics into this search layer.
+                    continue
 
                 other_base_ids = {
                     base_by_name.get(str(name or "").strip().casefold(), 0)
