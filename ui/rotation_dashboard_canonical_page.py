@@ -18,6 +18,10 @@ from services.rotation_recovery_heavy_replay_service import (
     RecoveryReserveAssessmentResolver,
     VerifiedRecoveryHeavyRestorationResolver,
 )
+from ui.rotation_canonical_candidate_render_support import (
+    RotationCanonicalCandidateRenderEvidence,
+    RotationCanonicalCandidateRenderSupport,
+)
 from ui.rotation_dashboard_canonical_candidate_support import (
     RotationDashboardCanonicalCandidateResult,
     RotationDashboardCanonicalCandidateSupport,
@@ -43,6 +47,7 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
         parent=None,
         *,
         canonical_candidates: RotationDashboardCanonicalCandidateSupport | None = None,
+        canonical_render: RotationCanonicalCandidateRenderSupport | None = None,
     ) -> None:
         super().__init__(parent)
         self.rotation_canonical_candidates = (
@@ -51,8 +56,14 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
                 generation=self.rotation_generation,
             )
         )
+        self.rotation_canonical_render = (
+            canonical_render or RotationCanonicalCandidateRenderSupport()
+        )
         self.last_canonical_candidate_result: (
             RotationDashboardCanonicalCandidateResult | None
+        ) = None
+        self.last_canonical_render_evidence: (
+            RotationCanonicalCandidateRenderEvidence | None
         ) = None
 
     def canonical_generation_request(self) -> RotationGenerationRequest:
@@ -103,10 +114,9 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
     ) -> RotationDashboardCanonicalCandidateResult:
         """Run the page's current saved build through the canonical candidate path.
 
-        The method intentionally returns evidence without replacing the timeline UI.
-        Applying a selected candidate is a separate concern because final rendering
-        must use post-recovery duration/sustain evidence rather than stale seed-plan
-        evidence.
+        Candidate evaluation and rendering remain separate operations. The evaluation
+        result is retained so a caller can inspect diagnostics before choosing to
+        display the selected candidate.
         """
         build = self._selected_build()
         if build is None:
@@ -133,7 +143,31 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
             character_id=character_id,
         )
         self.last_canonical_candidate_result = result
+        self.last_canonical_render_evidence = None
         return result
+
+    def apply_canonical_candidate_result(
+        self,
+        result: RotationDashboardCanonicalCandidateResult | None = None,
+    ) -> RotationCanonicalCandidateRenderEvidence | None:
+        """Render only evidence belonging to the selected final stabilized plan."""
+        resolved = result or self.last_canonical_candidate_result
+        if resolved is None:
+            raise ValueError("no canonical candidate evaluation is available to render")
+
+        evidence = self.rotation_canonical_render.build(resolved.candidate_result)
+        self.last_canonical_render_evidence = evidence
+        if evidence is None:
+            self.status.warning(
+                "Canonical candidate evaluation produced no selectable rotation; "
+                "the existing dashboard plan was not replaced."
+            )
+            return None
+
+        self.set_rotation_plan(evidence.plan)
+        self.duration_evidence_card.set_evidence(evidence.duration_evidence)
+        self.set_sustain_projection(evidence.sustain_projection)
+        return evidence
 
 
 __all__ = ["CanonicalRotationDashboardPage"]
