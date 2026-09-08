@@ -44,7 +44,7 @@ def test_archers_mind_resolves_unconditional_and_conditional_effects():
             None,
         ),
         (
-            StatId.HEALING_DONE,
+            StatId.CRITICAL_HEALING,
             EffectOperation.ADD_PERCENT,
             8.0,
             None,
@@ -56,7 +56,7 @@ def test_archers_mind_resolves_unconditional_and_conditional_effects():
             "sneaking_or_invisible",
         ),
         (
-            StatId.HEALING_DONE,
+            StatId.CRITICAL_HEALING,
             EffectOperation.ADD_PERCENT,
             16.0,
             "sneaking_or_invisible",
@@ -72,7 +72,7 @@ def test_archers_mind_base_bonus_applies_when_condition_false():
     build = Build(
         base_stats={
             StatId.CRITICAL_DAMAGE.value: 100,
-            StatId.HEALING_DONE.value: 100,
+            StatId.CRITICAL_HEALING.value: 100,
         },
         effects=effects,
     )
@@ -87,7 +87,7 @@ def test_archers_mind_base_bonus_applies_when_condition_false():
     )
 
     assert result.value(StatId.CRITICAL_DAMAGE) == 108
-    assert result.value(StatId.HEALING_DONE) == 108
+    assert result.value(StatId.CRITICAL_HEALING) == 108
 
 
 def test_archers_mind_conditional_bonus_applies_when_condition_true():
@@ -98,7 +98,7 @@ def test_archers_mind_conditional_bonus_applies_when_condition_true():
     build = Build(
         base_stats={
             StatId.CRITICAL_DAMAGE.value: 100,
-            StatId.HEALING_DONE.value: 100,
+            StatId.CRITICAL_HEALING.value: 100,
         },
         effects=effects,
     )
@@ -113,4 +113,4 @@ def test_archers_mind_conditional_bonus_applies_when_condition_true():
     )
 
     assert result.value(StatId.CRITICAL_DAMAGE) == 124
-    assert result.value(StatId.HEALING_DONE) == 124
+    assert result.value(StatId.CRITICAL_HEALING) == 124
