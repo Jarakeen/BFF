@@ -87,6 +87,9 @@ def _static_context(*, resolved: bool, unresolved=(), maximum_by_bar=None):
     def maximum_events_for(plan, resource):
         return ("bar-aware-maximum-events", plan, resource)
 
+    def displayed_recovery_resolver_for(plan, resource):
+        return ("bar-aware-displayed-recovery", plan, resource)
+
     return SimpleNamespace(
         resolved=resolved,
         unresolved=tuple(unresolved),
@@ -96,6 +99,7 @@ def _static_context(*, resolved: bool, unresolved=(), maximum_by_bar=None):
         maximum_amount_for=maximum_amount_for,
         context_for=context_for,
         maximum_events_for=maximum_events_for,
+        displayed_recovery_resolver_for=displayed_recovery_resolver_for,
     )
 
 
@@ -194,6 +198,7 @@ def test_resolved_saved_build_flows_into_effect_pipeline_with_materialized_evide
     assert call["baseline_id"] == "saved-build-baseline"
     assert call["calculation_context"] is None
     assert call["maximum_event_resolver"] is None
+    assert call["displayed_recovery_resolver_factory"] is None
     assert result.pipeline_result is pipeline_result
     assert result.validation.scope is RotationRecoveryValidationScope.CANONICAL_CANDIDATE
     assert result.validation.selectable is True
@@ -247,6 +252,7 @@ def test_resolved_static_build_context_is_retained_while_candidate_pipeline_runs
     assert len(pipeline.calls) == 1
     assert pipeline.calls[0]["calculation_context"] is static.context_for("front")
     assert pipeline.calls[0]["maximum_event_resolver"] is static.maximum_events_for
+    assert pipeline.calls[0]["displayed_recovery_resolver_factory"] is static.displayed_recovery_resolver_for
     assert result.pipeline_result is pipeline_result
     assert result.static_context is static
     assert result.canonical_maximum_amount == 30000
@@ -293,6 +299,7 @@ def test_bar_sensitive_static_resource_ceiling_runs_with_per_plan_maximum_events
     assert call["maximum_amount"] == 32000
     assert call["calculation_context"] is static.context_for("front")
     assert call["maximum_event_resolver"] is static.maximum_events_for
+    assert call["displayed_recovery_resolver_factory"] is static.displayed_recovery_resolver_for
     assert dependency_service.calls
     assert report.calls
     assert result.pipeline_result is pipeline.result
