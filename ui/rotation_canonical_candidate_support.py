@@ -32,6 +32,7 @@ from minmax.rotation_action_slot_legality import (
 from minmax.rotation_active_bar_legality import RotationActiveBarAssessor
 from minmax.rotation_demand_window import RotationDemandWindow
 from minmax.rotation_plan import RotationActionKind, RotationPlan
+from minmax.rotation_potion_cadence import RotationPotionCadenceRequirement
 from models.build_model import PlayerBuild
 from services.canonical_knowledge_gap import CanonicalKnowledgeGap
 from services.canonical_mechanics_coverage_audit import CanonicalMechanicsCoverageReport
@@ -40,6 +41,9 @@ from services.rotation_effect_uptime_service import RotationEffectUptimeRequirem
 from services.rotation_mechanics_dependency_service import (
     RotationMechanicsDependency,
     RotationMechanicsDependencyService,
+)
+from services.rotation_potion_cadence_cooldown_bridge_service import (
+    RotationPotionCadenceCooldownBridgeService,
 )
 from services.rotation_recovery_heavy_candidate_generation_bridge_service import (
     RecoveryCandidateEvaluatorResolver,
@@ -121,6 +125,12 @@ class RotationCanonicalCandidateSupport:
     additionally require explicit encounter target-distance windows; this bridge
     never invents positioning from role, encounter name, or action identity.
 
+    A caller may also supply an already-resolved effective shared potion cooldown.
+    Potion cadence is then audited across all final-plan potion actions regardless
+    of potion name and merged into the existing hard cooldown obligation evidence.
+    This bridge does not assume the base 45-second potion cooldown is correct for a
+    build with unmodeled cooldown-reduction mechanics.
+
     Ambiguous saved-build slot identity is structural unresolved evidence and blocks
     candidate evaluation rather than silently omitting legality for that action.
     Timing/range evidence is narrower: unresolved evidence becomes candidate-specific
@@ -145,6 +155,7 @@ class RotationCanonicalCandidateSupport:
         range_assessor: RotationActionRangeAssessor | None = None,
         slot_assessor: RotationActionSlotAssessor | None = None,
         active_bar_assessor: RotationActiveBarAssessor | None = None,
+        potion_cadence_bridge: RotationPotionCadenceCooldownBridgeService | None = None,
     ) -> None:
         database = Path(database_path) if database_path is not None else get_data_dir() / "eso.db"
         self.build_adapter = build_adapter or SavedBuildCharacterAdapter(database)
@@ -164,6 +175,9 @@ class RotationCanonicalCandidateSupport:
         self.range_assessor = range_assessor or RotationActionRangeAssessor()
         self.slot_assessor = slot_assessor or RotationActionSlotAssessor()
         self.active_bar_assessor = active_bar_assessor or RotationActiveBarAssessor()
+        self.potion_cadence_bridge = (
+            potion_cadence_bridge or RotationPotionCadenceCooldownBridgeService()
+        )
 
     def run_effects(
         self,
@@ -183,6 +197,7 @@ class RotationCanonicalCandidateSupport:
         requirements: Iterable[RotationEffectUptimeRequirement] = (),
         passives: Iterable[PassiveGrant] = (),
         target_distance_windows: Iterable[RotationTargetDistanceWindow] = (),
+        potion_cadence_requirement: RotationPotionCadenceRequirement | None = None,
         reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None,
         initial_bar: str = "front",
         max_iterations: int = 6,
@@ -244,6 +259,7 @@ class RotationCanonicalCandidateSupport:
             action_range_evidence=action_range_evidence,
             action_slot_evidence=action_slot_evidence,
             target_distance_windows=target_distance_tuple,
+            potion_cadence_requirement=potion_cadence_requirement,
             initial_bar=initial_bar,
         )
         dependencies: tuple[RotationMechanicsDependency, ...] = ()
@@ -382,6 +398,7 @@ class RotationCanonicalCandidateSupport:
         action_range_evidence: RotationSavedBuildActionRangeEvidence,
         action_slot_evidence: RotationSavedBuildActionSlotEvidence,
         target_distance_windows: tuple[RotationTargetDistanceWindow, ...],
+        potion_cadence_requirement: RotationPotionCadenceRequirement | None,
         initial_bar: str,
     ) -> RecoveryFinalScorecardResolver:
         def resolve(snapshot):
@@ -403,6 +420,22 @@ class RotationCanonicalCandidateSupport:
                 cooldown_assessment = RotationActionCooldownAssessment(
                     self._dedupe_objects(
                         scorecard.cooldown_violations + automatic.violations
+                    )
+                )
+
+            if potion_cadence_requirement is not None:
+                automatic = self.potion_cadence_bridge.assess(
+                    snapshot.plan,
+                    potion_cadence_requirement,
+                )
+                cooldown_assessment = RotationActionCooldownAssessment(
+                    self._dedupe_objects(
+                        tuple(
+                            getattr(cooldown_assessment, "violations", ())
+                            if cooldown_assessment is not None
+                            else ()
+                        )
+                        + automatic.violations
                     )
                 )
 
