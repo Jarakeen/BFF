@@ -26,11 +26,15 @@ class _Tooltip:
     def __init__(self):
         self.components = _Components()
 
-    def evaluate_entity_id(self, **_kwargs):
+    def evaluate_entity_id(self, **kwargs):
+        reviewed_percent = float(kwargs.get("additional_healing_done_percent", 0.0))
+        output = 1000.0 * (1.0 + reviewed_percent / 100.0)
         return SimpleNamespace(
             skill=SimpleNamespace(skill_rank_id=42, name="Test Heal"),
             components=(SimpleNamespace(coefficient_number=1, final_value=1000.0),),
-            component_actual_effect_trace=(),
+            component_actual_effect_trace=(
+                SimpleNamespace(coefficient_number=1, output_value=output),
+            ),
             unresolved=(),
         )
 
