@@ -90,6 +90,7 @@ def test_saved_build_timing_converts_imported_milliseconds_and_preserves_action_
     evidence = RotationSavedBuildActionTimingService(database).resolve(build)
 
     assert evidence.unresolved == ()
+    assert evidence.unresolved_action_names == ()
     assert [
         (item.action_name, item.action_kind, item.cooldown_seconds)
         for item in evidence.cooldown_requirements
@@ -134,6 +135,7 @@ def test_saved_build_timing_surfaces_missing_exact_skill_timing_without_guessing
     assert evidence.unresolved == (
         "canonical skill timing not found by exact saved name: Unknown Skill",
     )
+    assert evidence.unresolved_action_names == ("Unknown Skill",)
 
 
 def test_saved_build_timing_rejects_conflicting_exact_name_rows_at_highest_rank(tmp_path) -> None:
@@ -161,6 +163,7 @@ def test_saved_build_timing_rejects_conflicting_exact_name_rows_at_highest_rank(
     assert evidence.unresolved == (
         "canonical skill timing is ambiguous at highest rank for exact saved name: Channeled Skill",
     )
+    assert evidence.unresolved_action_names == ("Channeled Skill",)
 
 
 def test_saved_build_timing_accepts_duplicate_top_rank_rows_when_timing_agrees(tmp_path) -> None:
@@ -184,6 +187,7 @@ def test_saved_build_timing_accepts_duplicate_top_rank_rows_when_timing_agrees(t
     )
 
     assert evidence.unresolved == ()
+    assert evidence.unresolved_action_names == ()
     assert len(evidence.cooldown_requirements) == 1
     assert evidence.cooldown_requirements[0].cooldown_seconds == 5.0
     assert len(evidence.occupancy_requirements) == 1
