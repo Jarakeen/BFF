@@ -6,7 +6,9 @@ import sqlite3
 
 from minmax.character_build.character_class import CharacterClass
 from minmax.character_build.class_configuration import ClassSkillLineConfiguration
+from minmax.character_build.weapon_type import WeaponType, resolve_weapon_skill_line
 from minmax.character_progression import CharacterProgression
+from minmax.eso_weapon_type_id import weapon_type_from_saved_name
 from minmax.skill_coefficient_repository import ability_entity_id
 from models.build_model import PlayerBuild
 from services.extreme_heal_class_route_service import canonical_class_skill_line_id
@@ -40,8 +42,9 @@ class ExtremeHealSkillCandidateService:
     related, but they are not the same thing.
 
     Non-class abilities still require a skill line the progression says the
-    character owns. Unknown ownership remains a blocker rather than becoming an
-    assumed legal skill.
+    character owns. When ``active_bar`` is supplied, weapon-skill heals must also
+    match the concrete weapon configuration on that bar. Unknown or aggregate
+    weapon labels fail closed rather than making an impossible heal look legal.
     """
 
     REQUIRED_TABLES = (
@@ -49,6 +52,16 @@ class ExtremeHealSkillCandidateService:
         "skill",
         "skill_rank",
         "skill_component_classification",
+    )
+    WEAPON_SKILL_LINE_IDS = frozenset(
+        {
+            "one_hand_and_shield",
+            "dual_wield",
+            "two_handed",
+            "bow",
+            "destruction_staff",
+            "restoration_staff",
+        }
     )
 
     def __init__(self, database_path: str | Path) -> None:
@@ -61,6 +74,7 @@ class ExtremeHealSkillCandidateService:
         *,
         include_blocked: bool = False,
         class_configuration: ClassSkillLineConfiguration | None = None,
+        active_bar: str | None = None,
     ) -> tuple[ExtremeHealSkillCandidate, ...]:
         if not self.database_path.exists():
             raise FileNotFoundError(self.database_path)
@@ -95,6 +109,7 @@ class ExtremeHealSkillCandidateService:
                 is_player=bool(int(row["is_player"] or 0)),
                 is_passive=bool(int(row["is_passive"] or 0)),
                 class_configuration=class_configuration,
+                active_bar=active_bar,
             )
             can_crit_values = {
                 None if item["can_crit"] is None else bool(int(item["can_crit"]))
@@ -191,6 +206,32 @@ class ExtremeHealSkillCandidateService:
             None,
         )
 
+    @staticmethod
+    def _line_id(value: object) -> str:
+        return canonical_class_skill_line_id(value)
+
+    @classmethod
+    def _active_weapon_skill_line_id(
+        cls,
+        build: PlayerBuild,
+        active_bar: str,
+    ) -> tuple[str | None, str | None]:
+        main, offhand = build.active_weapon_slots(active_bar)
+        main_raw = str(main.WeaponType or "").strip()
+        offhand_raw = str(offhand.WeaponType or "").strip()
+        main_type = weapon_type_from_saved_name(main_raw)
+        offhand_type = weapon_type_from_saved_name(offhand_raw)
+
+        if main_type is None:
+            return None, f"active {active_bar} weapon type is unresolved: {main_raw or '(empty)'}"
+        if offhand_raw and offhand_type is None:
+            return None, f"active {active_bar} off-hand weapon type is unresolved: {offhand_raw}"
+        offhand_type = offhand_type or WeaponType.NONE
+        try:
+            return resolve_weapon_skill_line(main_type, offhand_type).value, None
+        except ValueError as exc:
+            return None, str(exc)
+
     @classmethod
     def _legality_blockers(
         cls,
@@ -203,6 +244,7 @@ class ExtremeHealSkillCandidateService:
         is_player: bool,
         is_passive: bool,
         class_configuration: ClassSkillLineConfiguration | None = None,
+        active_bar: str | None = None,
     ) -> tuple[str, ...]:
         blockers: list[str] = []
         if not name:
@@ -247,5 +289,16 @@ class ExtremeHealSkillCandidateService:
                 blockers.append(f"{name}: non-class skill line is unavailable")
             elif not progression.owns_skill_line(skill_line):
                 blockers.append(f"{name}: skill line not owned: {skill_line}")
+
+            line_id = cls._line_id(skill_line)
+            if active_bar is not None and line_id in cls.WEAPON_SKILL_LINE_IDS:
+                equipped_line_id, error = cls._active_weapon_skill_line_id(build, active_bar)
+                if error:
+                    blockers.append(f"{name}: weapon-skill legality unresolved: {error}")
+                elif equipped_line_id != line_id:
+                    blockers.append(
+                        f"{name}: requires {skill_line} on {active_bar} bar; "
+                        f"equipped weapon grants {equipped_line_id or '(none)'}"
+                    )
 
         return tuple(blockers)
