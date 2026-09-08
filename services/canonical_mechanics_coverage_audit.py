@@ -88,6 +88,89 @@ class CanonicalMechanicsCoverageReport:
         key = str(consumer or "").strip().casefold()
         return tuple(gap for gap in self.knowledge_gaps if key in gap.consumers)
 
+    def dependency_gaps_for(
+        self,
+        consumer: str,
+        dependency_keys: tuple[str, ...],
+    ) -> tuple[CanonicalKnowledgeGap, ...]:
+        """Return only gaps for mechanics explicitly required by one decision.
+
+        Declaring dependencies keeps a critical gap elsewhere in the global mechanics
+        inventory from blocking an unrelated build or encounter. A declared dependency
+        that has no coverage row, or whose row does not support this consumer, fails
+        closed because absence of coverage evidence cannot prove readiness.
+        """
+
+        consumer_key = str(consumer or "").strip().casefold()
+        if not consumer_key:
+            raise ValueError("coverage dependency consumer must be non-empty")
+
+        normalized_dependencies: list[tuple[str, str]] = []
+        seen: set[str] = set()
+        for dependency in dependency_keys:
+            display = str(dependency or "").strip()
+            if not display:
+                raise ValueError("coverage dependency key must be non-empty")
+            key = display.casefold()
+            if key in seen:
+                continue
+            seen.add(key)
+            normalized_dependencies.append((key, display))
+
+        rows_by_key = {row.key.casefold(): row for row in self.rows}
+        gaps_by_key = {gap.key.casefold(): gap for gap in self.knowledge_gaps}
+        result: list[CanonicalKnowledgeGap] = []
+
+        for key, display in normalized_dependencies:
+            row = rows_by_key.get(key)
+            if row is None:
+                result.append(
+                    CanonicalKnowledgeGap(
+                        domain=CanonicalKnowledgeDomain.OTHER,
+                        key=display,
+                        summary=(
+                            "Declared mechanics dependency has no canonical coverage evidence: "
+                            f"{display}"
+                        ),
+                        needed_evidence=(
+                            "Add a provenance-backed canonical mechanics coverage row for this "
+                            "dependency before using it in the decision."
+                        ),
+                        consumers=(consumer_key,),
+                        source_context=(
+                            f"declared dependency for consumer={consumer_key}; coverage row missing"
+                        ),
+                        blocking=True,
+                    )
+                )
+                continue
+
+            if consumer_key not in row.consumers:
+                result.append(
+                    CanonicalKnowledgeGap(
+                        domain=row.domain,
+                        key=row.key,
+                        summary=(
+                            "Declared mechanics dependency is not covered for this consumer: "
+                            f"{row.key}"
+                        ),
+                        needed_evidence=(
+                            f"Verify that this mechanics evidence supports {consumer_key} "
+                            "decision-making and add that consumer only when proven."
+                        ),
+                        consumers=(consumer_key,),
+                        source_context=f"coverage evidence source: {row.evidence_source}",
+                        blocking=True,
+                    )
+                )
+                continue
+
+            gap = gaps_by_key.get(key)
+            if gap is not None:
+                result.append(gap)
+
+        return tuple(result)
+
     def by_status(
         self,
         status: CanonicalMechanicsCoverageStatus,
