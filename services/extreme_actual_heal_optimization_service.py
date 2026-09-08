@@ -79,6 +79,11 @@ class ExtremeActualHealOptimizationService:
     Slot-aware non-ring mythics support both exact two-slot weapons and explicit
     paired main/off-hand weapon routing. Tooltip deltas only bound candidate
     discovery; they are never the final score.
+
+    ``progression_override`` lets higher-level hypothetical-build search provide
+    the exact progression snapshot that must survive every candidate context
+    rebuild. The saved-build adapter still resolves the character identity; the
+    override changes progression math only.
     """
 
     SEARCH_SCOPE = (
@@ -168,6 +173,7 @@ class ExtremeActualHealOptimizationService:
         *,
         active_bar: str = "front",
         max_passes: int = 24,
+        progression_override: CharacterProgression | None = None,
     ) -> ExtremeActualHealOptimizationResult:
         normalized_entity = str(entity_id or "").strip()
         if not normalized_entity:
@@ -179,7 +185,7 @@ class ExtremeActualHealOptimizationService:
         if not progression_resolution.resolved:
             raise ValueError("; ".join(progression_resolution.unresolved))
 
-        progression = progression_resolution.progression
+        progression = progression_override or progression_resolution.progression
         character_id = progression_resolution.character_id
         baseline_build_id = (
             str(getattr(baseline_build, "BuildId", "") or "").strip()
