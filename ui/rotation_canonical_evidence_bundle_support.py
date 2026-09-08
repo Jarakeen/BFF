@@ -1,0 +1,155 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+from pathlib import Path
+
+from engine.config import get_data_dir
+from minmax.character_build.passive_grant import PassiveGrant
+from minmax.resource_costs import ResourceType
+from minmax.rotation_demand_window import RotationDemandWindow
+from services.encounter_boss_guide import EncounterBossGuideService
+from services.encounter_rotation_demand_service import (
+    EncounterRotationDemandPolicy,
+    EncounterRotationDemandProjection,
+    EncounterRotationDemandService,
+)
+from services.rotation_candidate_generation_service import RotationRefreshLeadCandidateOption
+from services.rotation_effect_uptime_service import RotationEffectUptimeRequirement
+from services.rotation_recovery_heavy_candidate_generation_bridge_service import (
+    RecoveryCandidateEvaluatorResolver,
+    RecoveryPressureWaitDecisionFactory,
+)
+from services.rotation_recovery_heavy_final_family_evaluation_service import (
+    RecoveryFinalScorecardResolver,
+)
+from services.rotation_recovery_heavy_replay_service import (
+    RecoveryReserveAssessmentResolver,
+    VerifiedRecoveryHeavyRestorationResolver,
+)
+
+
+@dataclass(frozen=True)
+class RotationCanonicalEvidenceBundle:
+    """Application-ready evidence for one canonical rotation candidate run.
+
+    Encounter demands are derived from reviewed persisted timeline facts plus explicit
+    demand policies. Strategy/evaluation policy, recovery evidence, effect floors,
+    passives, reserve rules, and refresh candidates remain caller-owned and are never
+    inferred from encounter prose or role convention.
+    """
+
+    encounter_id: str
+    encounter_name: str
+    demands: tuple[RotationDemandWindow, ...]
+    options: tuple[RotationRefreshLeadCandidateOption, ...]
+    requirements: tuple[RotationEffectUptimeRequirement, ...]
+    passives: tuple[PassiveGrant, ...]
+    evaluator_resolver: RecoveryCandidateEvaluatorResolver
+    scorecard_resolver: RecoveryFinalScorecardResolver
+    resource: ResourceType
+    maximum_amount: int
+    trigger_fraction: float
+    restoration_resolver: VerifiedRecoveryHeavyRestorationResolver
+    wait_decision_factory: RecoveryPressureWaitDecisionFactory | None = None
+    reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None
+    max_iterations: int = 6
+    baseline_id: str = "baseline"
+    unresolved: tuple[str, ...] = ()
+
+    @property
+    def ready(self) -> bool:
+        return not self.unresolved
+
+
+class RotationCanonicalEvidenceBundleSupport:
+    """Assemble canonical encounter evidence without inventing execution facts.
+
+    This support layer intentionally automates only evidence the application already
+    owns canonically: loading the selected encounter and projecting reviewed timeline
+    facts through explicit encounter-demand policies. Heavy-attack completion/base
+    restore evidence, recovery thresholds, reserve rules, required effects, passives,
+    candidate options, and scoring policy remain explicit inputs because they are not
+    derivable from a boss name or saved-build label.
+    """
+
+    def __init__(
+        self,
+        *,
+        database_path: str | Path | None = None,
+        guide_service: EncounterBossGuideService | None = None,
+        demand_service: EncounterRotationDemandService | None = None,
+    ) -> None:
+        database = Path(database_path) if database_path is not None else get_data_dir() / "eso.db"
+        self.guide_service = guide_service or EncounterBossGuideService(database)
+        self.demand_service = demand_service or EncounterRotationDemandService()
+
+    def build(
+        self,
+        *,
+        encounter_id: str,
+        demand_policies: tuple[EncounterRotationDemandPolicy, ...],
+        evaluator_resolver: RecoveryCandidateEvaluatorResolver,
+        scorecard_resolver: RecoveryFinalScorecardResolver,
+        resource: ResourceType,
+        maximum_amount: int,
+        trigger_fraction: float,
+        restoration_resolver: VerifiedRecoveryHeavyRestorationResolver,
+        options: tuple[RotationRefreshLeadCandidateOption, ...] = (),
+        requirements: tuple[RotationEffectUptimeRequirement, ...] = (),
+        passives: tuple[PassiveGrant, ...] = (),
+        wait_decision_factory: RecoveryPressureWaitDecisionFactory | None = None,
+        reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None,
+        max_iterations: int = 6,
+        baseline_id: str = "baseline",
+    ) -> RotationCanonicalEvidenceBundle:
+        encounter_key = str(encounter_id or "").strip()
+        if not encounter_key:
+            raise ValueError("canonical rotation evidence requires an encounter_id")
+        if int(maximum_amount) <= 0:
+            raise ValueError("canonical rotation evidence requires a positive maximum_amount")
+        trigger = float(trigger_fraction)
+        if not 0.0 <= trigger <= 1.0:
+            raise ValueError("canonical rotation evidence trigger_fraction must be between 0 and 1")
+        iterations = int(max_iterations)
+        if iterations <= 0:
+            raise ValueError("canonical rotation evidence max_iterations must be positive")
+        baseline = str(baseline_id or "").strip()
+        if not baseline:
+            raise ValueError("canonical rotation evidence requires a non-empty baseline_id")
+
+        guide = self.guide_service.get(encounter_key)
+        projection: EncounterRotationDemandProjection = self.demand_service.project(
+            guide=guide,
+            policies=tuple(demand_policies),
+        )
+
+        unresolved = tuple(
+            str(item).strip()
+            for item in projection.unresolved
+            if str(item).strip()
+        )
+        return RotationCanonicalEvidenceBundle(
+            encounter_id=guide.encounter_id,
+            encounter_name=guide.name,
+            demands=tuple(projection.demands),
+            options=tuple(options),
+            requirements=tuple(requirements),
+            passives=tuple(passives),
+            evaluator_resolver=evaluator_resolver,
+            scorecard_resolver=scorecard_resolver,
+            resource=resource,
+            maximum_amount=int(maximum_amount),
+            trigger_fraction=trigger,
+            restoration_resolver=restoration_resolver,
+            wait_decision_factory=wait_decision_factory,
+            reserve_assessment_resolver=reserve_assessment_resolver,
+            max_iterations=iterations,
+            baseline_id=baseline,
+            unresolved=unresolved,
+        )
+
+
+__all__ = [
+    "RotationCanonicalEvidenceBundle",
+    "RotationCanonicalEvidenceBundleSupport",
+]
