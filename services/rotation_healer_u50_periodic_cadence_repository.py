@@ -29,18 +29,34 @@ class RotationHealerU50PeriodicCadenceRepository:
     """
 
     _REVIEWED: dict[tuple[str, int], RotationHealerReviewedCadenceEvidence] = {
-        ("illustrious healing", 1): RotationHealerReviewedCadenceEvidence(
-            source_name="Illustrious Healing",
+        ("radiating regeneration", 1): RotationHealerReviewedCadenceEvidence(
+            source_name="Radiating Regeneration",
             coefficient_number=1,
             timing=SkillComponentRuntimeTiming(
                 interval_seconds=2.0,
                 bound_kind=RuntimeCadenceBoundKind.CALLER_ACTIVE_WINDOW,
-                evidence="Grand Healing and its morphs heal once every 2 seconds",
-                source="reviewed_zos_patch_history_u50",
+                evidence="target-based Healing over Time effects retain a 2 second frequency",
+                source="reviewed_zos_update35_final",
             ),
             provenance=(
-                "ZOS PTS Patch Notes v8.1.0: Grand Healing and its morphs heal once every 2 seconds over 10 seconds",
-                "same patch: Illustrious Healing remains the duration-extending Grand Healing morph",
+                "ZOS PC/Mac Patch Notes v8.1.5: target-based Healing over Time abilities remain at a frequency of 2 seconds",
+                "same final Update 35 notes list Regeneration under Restoration Staff Healing over Time adjustments",
+                "Radiating Regeneration is the multi-target Regeneration morph and has reviewed PERIODIC component identity",
+            ),
+        ),
+        ("illustrious healing", 1): RotationHealerReviewedCadenceEvidence(
+            source_name="Illustrious Healing",
+            coefficient_number=1,
+            timing=SkillComponentRuntimeTiming(
+                interval_seconds=1.0,
+                bound_kind=RuntimeCadenceBoundKind.CALLER_ACTIVE_WINDOW,
+                evidence="static-based Healing over Time effects retain a 1 second frequency",
+                source="reviewed_zos_update35_final",
+            ),
+            provenance=(
+                "ZOS PC/Mac Patch Notes v8.1.5: static-based Healing over Time abilities remain at a frequency of 1 second",
+                "same final Update 35 notes list Grand Healing and its morphs as static-area Healing over Time abilities",
+                "Illustrious Healing remains the duration-extending Grand Healing morph",
                 "current U50 ability duration is resolved separately from canonical ability.duration evidence",
             ),
         ),
@@ -50,12 +66,12 @@ class RotationHealerU50PeriodicCadenceRepository:
             timing=SkillComponentRuntimeTiming(
                 interval_seconds=2.0,
                 bound_kind=RuntimeCadenceBoundKind.CALLER_ACTIVE_WINDOW,
-                evidence="Vigor tick frequency changed to once every 2 seconds",
-                source="reviewed_zos_patch_history_u50",
+                evidence="target-based Healing over Time effects retain a 2 second frequency",
+                source="reviewed_zos_update35_final",
             ),
             provenance=(
-                "ZOS PTS Patch Notes v5.1.0: Vigor tick frequency decreased to 2 seconds from 1 second",
-                "same patch: Echoing Vigor reintroduces the area-of-effect healing capability without a separate cadence override",
+                "ZOS PC/Mac Patch Notes v8.1.5: target-based Healing over Time abilities remain at a frequency of 2 seconds",
+                "same final Update 35 notes list Vigor and Echoing Vigor under Healing over Time adjustments",
                 "current U50 Echoing Vigor duration is resolved separately from canonical ability.duration evidence",
             ),
         ),
