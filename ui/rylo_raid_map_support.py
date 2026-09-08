@@ -46,11 +46,13 @@ def install() -> None:
     if _INSTALLED:
         return
 
-    # Position Timeline is behavior, not a Rylo-only feature. This installer is
-    # always invoked for every visual theme, making it a safe pre-construction
-    # hook without adding another app.py startup dependency.
+    # Position Timeline and custom labels are behavior, not Rylo-only features.
+    # This installer is invoked for every visual theme, making it a safe
+    # pre-construction hook without adding more app.py startup dependencies.
     from ui.encounter_position_timeline_support import install as install_position_timeline
+    from ui.encounter_board_custom_labels_support import install as install_custom_labels
     install_position_timeline()
+    install_custom_labels()
 
     from ui.components import encounter_board as board
     from ui.theme.theme_manager import ThemeManager
