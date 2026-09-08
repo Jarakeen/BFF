@@ -9,6 +9,9 @@ from services.extreme_dragon_blood_skill_component_repository import (
 from services.extreme_sorcerer_skill_component_repository import (
     ExtremeSorcererSkillComponentRepository,
 )
+from services.rotation_healer_u50_skill_component_repository import (
+    RotationHealerU50SkillComponentRepository,
+)
 
 
 class _CustomTooltipService:
@@ -20,7 +23,10 @@ def test_default_canonical_heal_service_layers_reviewed_identity_overlays(tmp_pa
         database_path=tmp_path / "eso.db",
     )
 
-    sorcerer = service.tooltip_service.components
+    healer = service.tooltip_service.components
+    assert isinstance(healer, RotationHealerU50SkillComponentRepository)
+
+    sorcerer = healer.base_repository
     assert isinstance(sorcerer, ExtremeSorcererSkillComponentRepository)
     assert isinstance(
         sorcerer.base_repository,
