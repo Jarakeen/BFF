@@ -11,6 +11,7 @@ from .build_calculation_context import BuildCalculationContext
 from .conditional_recovery import TimedRecoveryModifier
 from .final_action_cost import calculate_final_action_cost
 from .recovery_timing import (
+    DisplayedRecoveryResolver,
     RecoveryActivityResolver,
     ScheduledRecoveryTick,
     schedule_in_combat_recovery_ticks,
@@ -91,12 +92,7 @@ def resolve_named_build_actions(
     *,
     ability_cost_repository: AbilityCostRepository,
 ) -> NamedBuildActionResolution:
-    """Resolve a stable saved-bar action plan once for repeated sustain runs.
-
-    Resolution is cached for the lifetime of the supplied ability-cost repository.
-    That gives repeated candidate evaluations one immutable action plan while a
-    fresh repository still observes later canonical database changes.
-    """
+    """Resolve a stable saved-bar action plan once for repeated sustain runs."""
 
     action_key = tuple(actions)
     repository_cache = _NAMED_ACTION_PLAN_CACHE.setdefault(ability_cost_repository, {})
@@ -118,9 +114,6 @@ def resolve_named_build_actions(
                 unresolved.append(f"{action.skill_name}: action cost could not be resolved")
             continue
 
-        # Coefficient absence is relevant to damage/healing evaluation but not
-        # to resource cost. Keep only cost-resolution failures here rather than
-        # turning a valid resource action into a false sustain warning.
         cost_unresolved = tuple(
             message
             for message in resolution.unresolved
@@ -155,6 +148,7 @@ def evaluate_build_sustain(
     restoration_events: tuple[ResourceRestorationEvent, ...] = (),
     recovery_modifiers: tuple[TimedRecoveryModifier, ...] = (),
     activity_at: RecoveryActivityResolver | None = None,
+    displayed_recovery_at: DisplayedRecoveryResolver | None = None,
     starting_amount: int | None = None,
     first_recovery_tick_seconds: float = 2.0,
     additional_unresolved: tuple[str, ...] = (),
@@ -162,17 +156,10 @@ def evaluate_build_sustain(
 ) -> BuildSustainRun:
     """Run a saved build through the verified Phase 4 sustain pipeline.
 
-    The saved build supplies build-specific cost modifiers while the immutable
-    calculation context supplies the already-audited character sheet state and
-    progression. This lower-level entry point accepts already-canonical
-    ``BaseActionCost`` actions; ``evaluate_named_build_sustain`` owns the
-    name-to-ability lookup bridge.
-
-    Only events for the requested resource enter the single-resource timeline.
     Optional ``maximum_events`` carry caller-verified primary-resource ceiling
-    changes, such as a bar swap whose destination bar has a different canonical
-    maximum. Unsupported cost or action resolution remains explicit in
-    ``unresolved``.
+    changes. ``displayed_recovery_at`` may likewise carry caller-verified
+    time-aware character-sheet recovery, allowing bar-sensitive static recovery
+    to be resolved independently at each ordinary recovery tick.
     """
 
     duration = float(duration_seconds)
@@ -215,6 +202,7 @@ def evaluate_build_sustain(
         first_tick_seconds=first_recovery_tick_seconds,
         activity_at=activity_at,
         recovery_modifiers=recovery_modifiers,
+        displayed_recovery_at=displayed_recovery_at,
     )
 
     resource_restores = tuple(
@@ -261,6 +249,7 @@ def evaluate_named_build_sustain(
     restoration_events: tuple[ResourceRestorationEvent, ...] = (),
     recovery_modifiers: tuple[TimedRecoveryModifier, ...] = (),
     activity_at: RecoveryActivityResolver | None = None,
+    displayed_recovery_at: DisplayedRecoveryResolver | None = None,
     starting_amount: int | None = None,
     first_recovery_tick_seconds: float = 2.0,
     maximum_events: tuple[ResourceMaximumEvent, ...] = (),
@@ -281,6 +270,7 @@ def evaluate_named_build_sustain(
         restoration_events=restoration_events,
         recovery_modifiers=recovery_modifiers,
         activity_at=activity_at,
+        displayed_recovery_at=displayed_recovery_at,
         starting_amount=starting_amount,
         first_recovery_tick_seconds=first_recovery_tick_seconds,
         additional_unresolved=resolution.unresolved,
