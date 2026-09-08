@@ -106,10 +106,11 @@ class CanonicalMechanicsCoverageReport:
 class CanonicalMechanicsCoverageAuditService:
     """Turn explicit mechanics-coverage observations into a shared research queue.
 
-    PARTIAL coverage remains visible as advisory research. MISSING_CRITICAL coverage
-    becomes a blocking knowledge gap because a concrete decision cannot be defended
-    without it. This lets the research queue be exhaustive without globally disabling
-    Comp Maker, Rotation Maker, or Optimizer for unrelated incomplete mechanics.
+    PARTIAL and NICHE coverage remain visible as advisory research.
+    MISSING_CRITICAL coverage becomes a blocking knowledge gap because a concrete
+    decision cannot be defended without it. This lets the research queue be broad
+    without globally disabling Comp Maker, Rotation Maker, or Optimizer for unrelated
+    incomplete mechanics.
     """
 
     def audit(
@@ -122,6 +123,7 @@ class CanonicalMechanicsCoverageAuditService:
             if row.status not in (
                 CanonicalMechanicsCoverageStatus.PARTIAL,
                 CanonicalMechanicsCoverageStatus.MISSING_CRITICAL,
+                CanonicalMechanicsCoverageStatus.NICHE,
             ):
                 continue
             gaps.append(
@@ -132,7 +134,11 @@ class CanonicalMechanicsCoverageAuditService:
                         f"Canonical mechanics coverage is {row.status.value.replace('_', ' ')}: "
                         f"{row.capability}"
                     ),
-                    needed_evidence=row.missing_evidence or "Additional verified mechanics evidence is required.",
+                    needed_evidence=(
+                        row.missing_evidence
+                        or "Retain verified mechanics evidence and expand it when a selected "
+                        "build, encounter, or objective depends on this niche capability."
+                    ),
                     consumers=row.consumers,
                     source_context=(
                         row.research_context
