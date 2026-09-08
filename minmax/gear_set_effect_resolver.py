@@ -110,6 +110,14 @@ class GearSetEffectResolver:
         if conditional:
             return conditional
 
+        stealth = self._resolve_stealth_stats(
+            text,
+            source_text,
+            use_max_value,
+        )
+        if stealth:
+            return stealth
+
         conditional = self._resolve_ability_scoped_damage(
             text,
             source_text,
@@ -268,6 +276,39 @@ class GearSetEffectResolver:
             ]
 
         return []
+
+    def _resolve_stealth_stats(
+        self,
+        text: str,
+        source: str,
+        use_max_value: bool,
+    ) -> list[Effect]:
+        match = re.fullmatch(
+            r"Reduces the radius you can be detected while Sneaking by "
+            r"(?P<radius>\d+(?:\.\d+)?) meters?\.\s*"
+            r"Reduces the cost of Sneak by "
+            r"(?P<cost_min>\d+(?:\.\d+)?)\s*-\s*(?P<cost_max>\d+(?:\.\d+)?)%\. ?",
+            text,
+            re.IGNORECASE,
+        )
+        if not match:
+            return []
+
+        cost_key = "cost_max" if use_max_value else "cost_min"
+        return [
+            self._effect(
+                StatId.DETECTION_RADIUS_REDUCTION,
+                float(match.group("radius")),
+                source,
+            ),
+            self._effect(
+                StatId.SNEAK_COST_REDUCTION,
+                float(match.group(cost_key)),
+                source,
+                operation=EffectOperation.ADD_PERCENT,
+                unit=EffectUnit.PERCENT,
+            ),
+        ]
 
     def _resolve_ability_scoped_damage(
         self,
