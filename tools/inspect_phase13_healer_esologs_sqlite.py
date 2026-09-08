@@ -17,14 +17,20 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
             "Inspect an imported ESO Logs SQLite database for reports, fights, "
-            "healer actors, and reviewed DF-healer HoT evidence. Read-only."
+            "healer actors, target HoTs, and the healer's actual cast/heal ability ids. Read-only."
         )
     )
     parser.add_argument("--db", required=True, help="SQLite database to inspect")
+    parser.add_argument(
+        "--ability-limit",
+        type=int,
+        default=12,
+        help="maximum observed cast/heal abilities to print per healer/fight (default: 12)",
+    )
     return parser
 
 
-def render_report(report) -> str:
+def render_report(report, *, ability_limit: int = 12) -> str:
     lines = [
         "================================================================",
         " PHASE 13 HEALER ESO LOGS SQLITE DISCOVERY",
@@ -50,13 +56,30 @@ def render_report(report) -> str:
 
     lines.extend(["", "HEALERS", "-------"])
     if report.healers:
+        limit = max(0, int(ability_limit))
         for healer in report.healers:
             identity = healer.display_name or healer.name or "<unnamed>"
-            abilities = ", ".join(healer.target_ability_names) or "none of the five target HoTs"
+            targets = ", ".join(healer.target_ability_names) or "none of the five target HoTs"
             lines.append(
                 f"- report={healer.report_code} fight={healer.fight_id} "
-                f"actor={healer.actor_id} name={identity}: {abilities}"
+                f"actor={healer.actor_id} name={identity}: {targets}"
             )
+            if not healer.observed_abilities:
+                lines.append("    observed cast/heal abilities: none")
+                continue
+            lines.append("    observed cast/heal abilities:")
+            for ability in healer.observed_abilities[:limit]:
+                name = ability.ability_name or "<name unavailable>"
+                event_types = ",".join(ability.event_types)
+                lines.append(
+                    f"      - id={ability.ability_game_id} name={name} "
+                    f"events={ability.event_count} periodic={ability.periodic_event_count} "
+                    f"types={event_types}"
+                )
+            if len(healer.observed_abilities) > limit:
+                lines.append(
+                    f"      ... {len(healer.observed_abilities) - limit} more; rerun with --ability-limit"
+                )
     else:
         lines.append("none")
 
@@ -68,7 +91,7 @@ def render_report(report) -> str:
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     report = RotationHealerEsoLogsSqliteDiscoveryService().inspect(Path(args.db))
-    print(render_report(report))
+    print(render_report(report, ability_limit=args.ability_limit))
     return 0 if report.has_log_event else 1
 
 
