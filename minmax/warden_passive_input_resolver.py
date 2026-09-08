@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import replace
+import re
 
 from models.build_model import PlayerBuild
 
@@ -22,6 +23,12 @@ class WardenPassiveInputResolver:
     The math in passive_math.py is max-rank math. Explicit ownership flags let
     production character progression activate only passives known to be maxed.
     ``None`` preserves the historical direct-call behavior for compatibility.
+
+    Explicit ``PlayerBuild.ClassSkillLines`` are authoritative for subclass
+    snapshots. A Warden can therefore lose a native line's passives when that
+    line is replaced, while another base class can gain reviewed Warden-line
+    passive math when that exact line is equipped and passive-rank evidence is
+    supplied by progression.
     """
 
     ANIMAL_COMPANIONS = "animal companions"
@@ -29,8 +36,33 @@ class WardenPassiveInputResolver:
     WINTERS_EMBRACE = "winter's embrace"
     WARDEN_LINES = frozenset({ANIMAL_COMPANIONS, GREEN_BALANCE, WINTERS_EMBRACE})
 
+    ANIMAL_COMPANIONS_ID = "animal_companions"
+    GREEN_BALANCE_ID = "green_balance"
+    WINTERS_EMBRACE_ID = "winters_embrace"
+    WARDEN_LINE_IDS = frozenset(
+        {ANIMAL_COMPANIONS_ID, GREEN_BALANCE_ID, WINTERS_EMBRACE_ID}
+    )
+
     def __init__(self, skill_line_repository: SkillLineRepository) -> None:
         self.skill_line_repository = skill_line_repository
+
+    @staticmethod
+    def _line_id(value: object) -> str:
+        text = str(value or "").strip().casefold().replace("'", "")
+        return re.sub(r"[^a-z0-9]+", "_", text).strip("_")
+
+    @classmethod
+    def equipped_warden_line_ids(cls, build: PlayerBuild) -> frozenset[str]:
+        explicit = tuple(
+            cls._line_id(value)
+            for value in tuple(getattr(build, "ClassSkillLines", ()) or ())
+            if cls._line_id(value)
+        )
+        if explicit:
+            return frozenset(explicit) & cls.WARDEN_LINE_IDS
+        if str(build.EsoClass or "").strip().casefold() == "warden":
+            return cls.WARDEN_LINE_IDS
+        return frozenset()
 
     def _active_skill_line_counts(
         self,
@@ -52,9 +84,13 @@ class WardenPassiveInputResolver:
                     f"Warden passive math: could not resolve canonical skill line for slotted ability {name!r} on {active_bar} bar"
                 )
                 continue
-            key = skill_line.casefold()
-            if key in self.WARDEN_LINES:
-                counts[key] += 1
+            line_id = self._line_id(skill_line)
+            if line_id == self.ANIMAL_COMPANIONS_ID:
+                counts[self.ANIMAL_COMPANIONS] += 1
+            elif line_id == self.GREEN_BALANCE_ID:
+                counts[self.GREEN_BALANCE] += 1
+            elif line_id == self.WINTERS_EMBRACE_ID:
+                counts[self.WINTERS_EMBRACE] += 1
 
         return counts, tuple(unresolved)
 
@@ -68,7 +104,8 @@ class WardenPassiveInputResolver:
         advanced_species_owned: bool | None = None,
         frozen_armor_owned: bool | None = None,
     ) -> GearCalculationInputs:
-        if str(build.EsoClass or "").strip().casefold() != "warden":
+        equipped_lines = self.equipped_warden_line_ids(build)
+        if not equipped_lines:
             return result
 
         # Historical callers did not provide per-passive ownership. Keep that
@@ -81,6 +118,13 @@ class WardenPassiveInputResolver:
         flourish_owned = legacy_assumption if flourish_owned is None else flourish_owned
         advanced_species_owned = legacy_assumption if advanced_species_owned is None else advanced_species_owned
         frozen_armor_owned = legacy_assumption if frozen_armor_owned is None else frozen_armor_owned
+
+        # A passive cannot survive removal of its owning class line. Conversely,
+        # an explicitly equipped foreign Warden line can use the passive only
+        # when the caller separately proves passive ownership/rank.
+        flourish_owned = bool(flourish_owned) and self.ANIMAL_COMPANIONS_ID in equipped_lines
+        advanced_species_owned = bool(advanced_species_owned) and self.ANIMAL_COMPANIONS_ID in equipped_lines
+        frozen_armor_owned = bool(frozen_armor_owned) and self.WINTERS_EMBRACE_ID in equipped_lines
 
         counts, passive_unresolved = self._active_skill_line_counts(build, active_bar=active_bar)
         unresolved = result.unresolved + passive_unresolved
