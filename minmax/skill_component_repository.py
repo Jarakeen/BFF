@@ -3,7 +3,12 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
-from .skill_component_classification import SkillComponentClassification, SkillEffectKind
+from .skill_component_classification import (
+    HealRecipientScope,
+    HealTemporalScope,
+    SkillComponentClassification,
+    SkillEffectKind,
+)
 
 
 class SkillComponentRepository:
@@ -17,6 +22,10 @@ class SkillComponentRepository:
     An explicit classification ``can_crit`` value always wins; otherwise any
     stored positive runtime proof resolves ``can_crit`` to True. Absence of
     runtime evidence remains None and never becomes False.
+
+    Healer event-identity columns were added after the original classification
+    schema. They are loaded when present and remain ``None`` for older databases,
+    preserving backward compatibility without discarding newer reviewed evidence.
     """
 
     TABLE = "skill_component_classification"
@@ -35,6 +44,10 @@ class SkillComponentRepository:
         return row is not None
 
     @staticmethod
+    def _table_columns(db: sqlite3.Connection, name: str) -> set[str]:
+        return {str(row[1]) for row in db.execute(f"PRAGMA table_info({name})").fetchall()}
+
+    @staticmethod
     def _bool_or_none(value) -> bool | None:
         if value is None:
             return None
@@ -47,6 +60,31 @@ class SkillComponentRepository:
             return SkillEffectKind(text)
         except ValueError:
             return SkillEffectKind.UNKNOWN
+
+    @staticmethod
+    def _recipient_scope(value: str | None) -> HealRecipientScope | None:
+        text = str(value or "").strip().casefold()
+        if not text:
+            return None
+        try:
+            return HealRecipientScope(text)
+        except ValueError:
+            return None
+
+    @staticmethod
+    def _temporal_scope(value: str | None) -> HealTemporalScope | None:
+        text = str(value or "").strip().casefold()
+        if not text:
+            return None
+        try:
+            return HealTemporalScope(text)
+        except ValueError:
+            return None
+
+    @staticmethod
+    def _optional_text(value) -> str | None:
+        text = str(value or "").strip()
+        return text or None
 
     def get_for_skill_rank(self, skill_rank_id: int) -> tuple[SkillComponentClassification, ...]:
         rank_id = int(skill_rank_id)
@@ -63,6 +101,7 @@ class SkillComponentRepository:
                 self._skill_rank_cache[rank_id] = ()
                 return ()
 
+            columns = self._table_columns(db, self.TABLE)
             has_runtime_crit = self._table_exists(db, self.CRITICAL_EVIDENCE_TABLE)
             if has_runtime_crit:
                 can_crit_expression = f"""
@@ -82,6 +121,9 @@ class SkillComponentRepository:
             else:
                 can_crit_expression = "c.can_crit"
 
+            def optional_column(name: str) -> str:
+                return f"c.{name}" if name in columns else "NULL"
+
             rows = db.execute(
                 f"""
                 SELECT
@@ -93,7 +135,11 @@ class SkillComponentRepository:
                     c.is_aoe,
                     {can_crit_expression} AS can_crit,
                     c.source,
-                    c.confidence
+                    c.confidence,
+                    {optional_column('heal_recipient_scope')} AS heal_recipient_scope,
+                    {optional_column('heal_temporal_scope')} AS heal_temporal_scope,
+                    {optional_column('heal_recipient_key')} AS heal_recipient_key,
+                    {optional_column('heal_event_key')} AS heal_event_key
                 FROM {self.TABLE} c
                 WHERE c.skill_rank_id = ?
                 ORDER BY c.coefficient_number
@@ -120,6 +166,10 @@ class SkillComponentRepository:
                     if row["confidence"] is not None
                     else None
                 ),
+                heal_recipient_scope=self._recipient_scope(row["heal_recipient_scope"]),
+                heal_temporal_scope=self._temporal_scope(row["heal_temporal_scope"]),
+                heal_recipient_key=self._optional_text(row["heal_recipient_key"]),
+                heal_event_key=self._optional_text(row["heal_event_key"]),
             )
             for row in rows
         )
