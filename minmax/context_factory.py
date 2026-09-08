@@ -310,14 +310,28 @@ class BuildCalculationContextFactory:
         gear = self.combat_state_resolver.apply(gear, build, combat_state=combat_state)
 
         unresolved: list[str] = []
-        is_warden = str(build.EsoClass or "").strip().casefold() == "warden"
-        flourish, message = self._maxed_passive(progression, "Flourish", relevant=is_warden)
+        warden_lines = WardenPassiveInputResolver.equipped_warden_line_ids(build)
+        animal_companions = WardenPassiveInputResolver.ANIMAL_COMPANIONS_ID in warden_lines
+        winters_embrace = WardenPassiveInputResolver.WINTERS_EMBRACE_ID in warden_lines
+        flourish, message = self._maxed_passive(
+            progression,
+            "Flourish",
+            relevant=animal_companions,
+        )
         if message:
             unresolved.append(message)
-        advanced_species, message = self._maxed_passive(progression, "Advanced Species", relevant=is_warden)
+        advanced_species, message = self._maxed_passive(
+            progression,
+            "Advanced Species",
+            relevant=animal_companions,
+        )
         if message:
             unresolved.append(message)
-        frozen_armor, message = self._maxed_passive(progression, "Frozen Armor", relevant=is_warden)
+        frozen_armor, message = self._maxed_passive(
+            progression,
+            "Frozen Armor",
+            relevant=winters_embrace,
+        )
         if message:
             unresolved.append(message)
         if self.warden_passive_resolver is not None:
