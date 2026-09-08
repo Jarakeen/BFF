@@ -92,6 +92,64 @@ def test_report_filters_rows_and_gaps_by_consumer_and_status() -> None:
     ]
 
 
+def test_declared_dependencies_ignore_unrelated_critical_coverage() -> None:
+    report = CanonicalMechanicsCoverageAuditService().audit(
+        (
+            _row(key="ready", status=CanonicalMechanicsCoverageStatus.CALCULATION_READY),
+            _row(
+                key="selected-partial",
+                status=CanonicalMechanicsCoverageStatus.PARTIAL,
+                missing="verify selected runtime behavior",
+            ),
+            _row(
+                key="unrelated-critical",
+                status=CanonicalMechanicsCoverageStatus.MISSING_CRITICAL,
+                missing="critical evidence for a different mechanic",
+            ),
+        )
+    )
+
+    gaps = report.dependency_gaps_for(
+        "rotation_maker",
+        ("ready", "selected-partial", "selected-partial"),
+    )
+
+    assert [gap.key for gap in gaps] == ["selected-partial"]
+    assert gaps[0].blocking is False
+
+
+def test_declared_dependency_without_usable_coverage_fails_closed() -> None:
+    report = CanonicalMechanicsCoverageAuditService().audit(
+        (
+            _row(
+                key="optimizer-only",
+                status=CanonicalMechanicsCoverageStatus.CALCULATION_READY,
+                consumers=("optimizer",),
+            ),
+        )
+    )
+
+    gaps = report.dependency_gaps_for(
+        "rotation_maker",
+        ("missing-row", "optimizer-only"),
+    )
+
+    assert [gap.key for gap in gaps] == ["missing-row", "optimizer-only"]
+    assert all(gap.blocking for gap in gaps)
+    assert "no canonical coverage evidence" in gaps[0].summary
+    assert "not covered for this consumer" in gaps[1].summary
+
+
+def test_declared_dependency_rejects_blank_keys() -> None:
+    report = CanonicalMechanicsCoverageAuditService().audit(())
+
+    with pytest.raises(ValueError, match="dependency key must be non-empty"):
+        report.dependency_gaps_for("rotation_maker", (" ",))
+
+    with pytest.raises(ValueError, match="consumer must be non-empty"):
+        report.dependency_gaps_for(" ", ())
+
+
 def test_partial_or_critical_coverage_requires_explicit_missing_evidence() -> None:
     with pytest.raises(ValueError, match="requires missing_evidence"):
         _row(key="bad-partial", status=CanonicalMechanicsCoverageStatus.PARTIAL)
