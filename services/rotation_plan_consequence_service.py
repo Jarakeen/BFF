@@ -50,6 +50,12 @@ class RotationPlanConsequence:
     ending_resource_delta: int
     shortfall_delta: int
     wait_delta: int
+    baseline_minimum_resource_fraction: float | None = None
+    candidate_minimum_resource_fraction: float | None = None
+    minimum_resource_fraction_delta: float | None = None
+    baseline_ending_resource_fraction: float | None = None
+    candidate_ending_resource_fraction: float | None = None
+    ending_resource_fraction_delta: float | None = None
 
 
 class RotationPlanConsequenceService:
@@ -59,6 +65,11 @@ class RotationPlanConsequenceService:
     deliberately classifies only the resource outcome. A plan that spends more
     resource may still be the correct healer plan if it satisfies an encounter
     obligation; role/encounter quality remains caller-owned evidence.
+
+    When the sustain timelines carry canonical maximum-resource evidence, the
+    consequence also reports normalized minimum/ending resource fractions. Those
+    fractions are evidence only; this role-neutral layer does not invent a universal
+    reserve threshold or fold them into the resource classification.
     """
 
     def compare(
@@ -73,18 +84,19 @@ class RotationPlanConsequenceService:
         if baseline_sustain.resource is not candidate_sustain.resource:
             raise ValueError("rotation consequence sustain projections must use the same resource")
 
-        baseline_minimum = self._minimum_amount(baseline_sustain.run.timeline)
-        candidate_minimum = self._minimum_amount(candidate_sustain.run.timeline)
-        ending_delta = (
-            candidate_sustain.run.timeline.ending_amount
-            - baseline_sustain.run.timeline.ending_amount
-        )
+        baseline_timeline = baseline_sustain.run.timeline
+        candidate_timeline = candidate_sustain.run.timeline
+        baseline_minimum = self._minimum_amount(baseline_timeline)
+        candidate_minimum = self._minimum_amount(candidate_timeline)
+        ending_delta = candidate_timeline.ending_amount - baseline_timeline.ending_amount
         minimum_delta = candidate_minimum - baseline_minimum
-        shortfall_delta = (
-            candidate_sustain.run.timeline.total_shortfall
-            - baseline_sustain.run.timeline.total_shortfall
-        )
+        shortfall_delta = candidate_timeline.total_shortfall - baseline_timeline.total_shortfall
         wait_delta = self._wait_count(candidate_plan) - self._wait_count(baseline_plan)
+
+        baseline_minimum_fraction = self._minimum_fraction(baseline_timeline)
+        candidate_minimum_fraction = self._minimum_fraction(candidate_timeline)
+        baseline_ending_fraction = self._ending_fraction(baseline_timeline)
+        candidate_ending_fraction = self._ending_fraction(candidate_timeline)
 
         cast_deltas = self._cast_deltas(baseline_plan, candidate_plan)
         cost_deltas = self._cost_deltas(baseline_sustain, candidate_sustain)
@@ -103,6 +115,18 @@ class RotationPlanConsequenceService:
             ending_resource_delta=ending_delta,
             shortfall_delta=shortfall_delta,
             wait_delta=wait_delta,
+            baseline_minimum_resource_fraction=baseline_minimum_fraction,
+            candidate_minimum_resource_fraction=candidate_minimum_fraction,
+            minimum_resource_fraction_delta=self._optional_delta(
+                baseline_minimum_fraction,
+                candidate_minimum_fraction,
+            ),
+            baseline_ending_resource_fraction=baseline_ending_fraction,
+            candidate_ending_resource_fraction=candidate_ending_fraction,
+            ending_resource_fraction_delta=self._optional_delta(
+                baseline_ending_fraction,
+                candidate_ending_fraction,
+            ),
         )
 
     @staticmethod
@@ -119,6 +143,35 @@ class RotationPlanConsequenceService:
         values = [timeline.starting_amount]
         values.extend(event.after for event in timeline.events)
         return min(values) if values else timeline.starting_amount
+
+    @staticmethod
+    def _minimum_fraction(timeline: ResourceTimelineResult) -> float | None:
+        current_maximum = getattr(timeline, "starting_maximum", None)
+        if current_maximum is None or int(current_maximum) <= 0:
+            return None
+
+        fractions = [float(timeline.starting_amount) / float(current_maximum)]
+        for event in timeline.events:
+            maximum_after = getattr(event, "maximum_after", None)
+            if maximum_after is not None:
+                current_maximum = int(maximum_after)
+            if int(current_maximum) <= 0:
+                return None
+            fractions.append(float(event.after) / float(current_maximum))
+        return min(fractions)
+
+    @staticmethod
+    def _ending_fraction(timeline: ResourceTimelineResult) -> float | None:
+        ending_maximum = getattr(timeline, "ending_maximum", None)
+        if ending_maximum is None or int(ending_maximum) <= 0:
+            return None
+        return float(timeline.ending_amount) / float(ending_maximum)
+
+    @staticmethod
+    def _optional_delta(baseline: float | None, candidate: float | None) -> float | None:
+        if baseline is None or candidate is None:
+            return None
+        return candidate - baseline
 
     @staticmethod
     def _wait_count(plan: RotationPlan) -> int:
