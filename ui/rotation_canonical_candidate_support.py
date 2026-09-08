@@ -68,10 +68,10 @@ class RotationCanonicalCandidateSupport:
     """Bridge a saved UI build into the effect-aware recovery candidate pipeline.
 
     When canonical static context is enabled, the front-bar maximum is the starting
-    resource ceiling. Bar-sensitive maximum changes are projected from each actual
-    candidate plan's BAR_SWAP actions and replayed on the Phase 4 resource timeline.
-    Different front/back maxima therefore remain fully modeled rather than forcing a
-    false global ceiling or blocking an otherwise valid rotation.
+    resource ceiling. Bar-sensitive maximum and displayed-recovery changes are
+    derived from each actual candidate plan's BAR_SWAP actions and replayed through
+    the Phase 4 sustain timeline. Different front/back values therefore remain
+    modeled rather than forcing a false global static resource state.
     """
 
     def __init__(
@@ -144,6 +144,7 @@ class RotationCanonicalCandidateSupport:
         canonical_maximum_amount: int | None = None
         calculation_context = None
         maximum_event_resolver = None
+        displayed_recovery_resolver_factory = None
 
         if self.static_context_service is not None:
             static_context = self.static_context_service.resolve(player_build)
@@ -182,6 +183,7 @@ class RotationCanonicalCandidateSupport:
             canonical_maximum_amount = static_context.maximum_amount_for("front", resource)
             effective_maximum_amount = canonical_maximum_amount
             maximum_event_resolver = static_context.maximum_events_for
+            displayed_recovery_resolver_factory = static_context.displayed_recovery_resolver_for
 
         if coverage_report is not None:
             dependencies = self.dependency_service.discover(
@@ -239,6 +241,7 @@ class RotationCanonicalCandidateSupport:
             baseline_id=baseline_id,
             calculation_context=calculation_context,
             maximum_event_resolver=maximum_event_resolver,
+            displayed_recovery_resolver_factory=displayed_recovery_resolver_factory,
         )
         return RotationCanonicalCandidateApplicationResult(
             build_adaptation=adaptation,
