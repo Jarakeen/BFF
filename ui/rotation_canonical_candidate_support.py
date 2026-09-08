@@ -67,6 +67,7 @@ class RotationCanonicalCandidateApplicationResult:
     mechanics_dependencies: tuple[RotationMechanicsDependency, ...] = ()
     knowledge_gaps: tuple[CanonicalKnowledgeGap, ...] = ()
     static_context: RotationStaticBuildContextResolution | None = None
+    canonical_maximum_amount: int | None = None
 
 
 class RotationCanonicalCandidateSupport:
@@ -76,6 +77,12 @@ class RotationCanonicalCandidateSupport:
     SavedBuildCharacterAdapter. A caller may also supply ``static_context_service``
     to require the existing MinMax static calculation pipeline, including verified
     armor/passive ownership and ranks, to resolve cleanly before candidate ranking.
+
+    When static context is enabled, a single global recovery-resource ceiling is
+    accepted only when every resolved bar has the same canonical maximum. The
+    canonical value then replaces the caller's provisional maximum. If front/back
+    maxima differ, the current one-ceiling sustain model fails closed rather than
+    pretending either bar is globally authoritative.
 
     When a mechanics coverage report is supplied, the resolved CharacterBuild and
     current rotation evidence are used to discover which coverage domains actually
@@ -152,6 +159,8 @@ class RotationCanonicalCandidateSupport:
         dependencies: tuple[RotationMechanicsDependency, ...] = ()
         knowledge_gaps: tuple[CanonicalKnowledgeGap, ...] = ()
         static_context: RotationStaticBuildContextResolution | None = None
+        effective_maximum_amount = int(maximum_amount)
+        canonical_maximum_amount: int | None = None
 
         if self.static_context_service is not None:
             static_context = self.static_context_service.resolve(player_build)
@@ -175,6 +184,26 @@ class RotationCanonicalCandidateSupport:
                     ),
                     static_context=static_context,
                 )
+
+            canonical_maximum_amount = static_context.uniform_maximum_amount_for(resource)
+            if canonical_maximum_amount is None:
+                by_bar = static_context.maximum_amounts_for(resource)
+                detail = ", ".join(f"{bar}={amount}" for bar, amount in by_bar)
+                return RotationCanonicalCandidateApplicationResult(
+                    build_adaptation=adaptation,
+                    pipeline_result=None,
+                    validation=RotationRecoveryValidationEvidence(
+                        scope=RotationRecoveryValidationScope.NOT_EVALUATED,
+                        selectable=None,
+                        reasons=(
+                            "canonical candidate evaluation was not run because the current "
+                            "recovery model accepts one maximum resource amount but canonical "
+                            f"static state is bar-sensitive for {resource.value}: {detail}",
+                        ),
+                    ),
+                    static_context=static_context,
+                )
+            effective_maximum_amount = canonical_maximum_amount
 
         if coverage_report is not None:
             dependencies = self.dependency_service.discover(
@@ -214,6 +243,7 @@ class RotationCanonicalCandidateSupport:
                     mechanics_dependencies=dependencies,
                     knowledge_gaps=knowledge_gaps,
                     static_context=static_context,
+                    canonical_maximum_amount=canonical_maximum_amount,
                 )
 
         result = self.pipeline.run_effects(
@@ -224,7 +254,7 @@ class RotationCanonicalCandidateSupport:
             evaluator_resolver=evaluator_resolver,
             scorecard_resolver=scorecard_resolver,
             resource=resource,
-            maximum_amount=maximum_amount,
+            maximum_amount=effective_maximum_amount,
             trigger_fraction=trigger_fraction,
             restoration_resolver=restoration_resolver,
             demands=demand_tuple,
@@ -243,6 +273,7 @@ class RotationCanonicalCandidateSupport:
             mechanics_dependencies=dependencies,
             knowledge_gaps=knowledge_gaps,
             static_context=static_context,
+            canonical_maximum_amount=canonical_maximum_amount,
         )
 
     @staticmethod
