@@ -8,6 +8,7 @@ from minmax.resource_costs import ResourceType
 from minmax.rotation_ability_priority import AbilityPriorityList
 from minmax.rotation_demand_window import RotationDemandWindow
 from minmax.rotation_ultimate_affordability import RotationUltimateAffordabilityRequirement
+from minmax.ultimate_generation_sources import CombatAttackUltimateGenerationSource
 from models.build_model import PlayerBuild
 from services.canonical_mechanics_coverage_audit import CanonicalMechanicsCoverageReport
 from services.rotation_candidate_generation_service import RotationRefreshLeadCandidateOption
@@ -67,10 +68,10 @@ class RotationDashboardCanonicalCandidateSupport:
 
     Production defaults compose two final-candidate evidence adapters. Automatic
     potion cadence derives an effective shared cooldown only from complete build and
-    scenario evidence. Ultimate affordability replays the seed projection's resolved
-    spend rules and only generation evidence that remains valid across candidate
-    regeneration. Seed-derived scheduled-attack generation is deliberately not reused
-    because final candidate attack timing may differ. Missing evidence in either
+    scenario evidence. Ultimate affordability replays resolved spend rules against
+    every stabilized candidate. Candidate-independent generation evidence may be
+    reused directly; scheduled-attack generation is recomputed from each stabilized
+    candidate plan before affordability is assessed. Missing evidence in either
     subsystem preserves the existing no-guess behavior.
     """
 
@@ -168,19 +169,30 @@ class RotationDashboardCanonicalCandidateSupport:
             if ultimate_projection is not None
             else ()
         )
-        attack_generation_is_seed_dependent = bool(
+        attack_generation_is_candidate_dependent = bool(
             generation_request.use_scheduled_combat_attacks_for_ultimate
         )
-        if spend_rules and not attack_generation_is_seed_dependent:
+        if spend_rules:
+            static_generation_events = (
+                ()
+                if attack_generation_is_candidate_dependent
+                else tuple(getattr(ultimate_projection, "generation_events", ()))
+            )
             candidate_kwargs["ultimate_affordability_requirement"] = (
                 RotationUltimateAffordabilityRequirement(
                     starting_amount=float(generation_request.starting_ultimate),
                     spend_rules=spend_rules,
-                    generation_events=tuple(
-                        getattr(ultimate_projection, "generation_events", ())
-                    ),
+                    generation_events=static_generation_events,
                 )
             )
+            if attack_generation_is_candidate_dependent:
+                attack_source = CombatAttackUltimateGenerationSource()
+                candidate_kwargs["ultimate_generation_event_resolver"] = (
+                    lambda plan: attack_source.events_from_plan(
+                        plan=plan,
+                        assume_scheduled_attacks_damage=True,
+                    )
+                )
 
         candidate_result = self.canonical_candidates.run_effects(**candidate_kwargs)
         return RotationDashboardCanonicalCandidateResult(
