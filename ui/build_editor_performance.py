@@ -37,6 +37,8 @@ def install() -> None:
     install_performance_dashboard_effect_retrieval()
     from ui.performance_dashboard_timeline_service_support import install as install_performance_dashboard_timeline_service
     install_performance_dashboard_timeline_service()
+    from ui.performance_dashboard_boss_activity_support import install as install_performance_dashboard_boss_activity
+    install_performance_dashboard_boss_activity()
 
     from ui.builds_page import BuildsPage
     from ui.build_editor_inline_compat import _force_dark_surface, _set_combo_index
