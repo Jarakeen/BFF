@@ -71,7 +71,7 @@ class ExtremeActualHealOptimizationService:
     Candidate changes are materialized onto a real ``PlayerBuild`` and the full
     canonical context is rebuilt before the healing event is scored. Reviewed
     single five-piece, legal five-plus-monster, legal double-five, the narrow
-    ring-mythic 5+5+1 shape, and exact-subtype two-slot arena weapons are
+    ring-mythic 5+5+1 shape, and exact-subtype arena weapon packages are
     physically equipped before canonical resource/power/healing math is
     recalculated. Tooltip deltas only bound candidate discovery; they are never
     the final score.
@@ -91,13 +91,13 @@ class ExtremeActualHealOptimizationService:
         "reviewed legal five-piece + two-piece monster body package",
         "reviewed legal five-piece + five-piece body/jewelry package",
         "reviewed legal five-piece + five-piece + ring mythic package with exact active weapon subtype proof",
-        "structurally proven two-slot arena-weapon replacement with exact active weapon subtype proof",
+        "structurally proven arena-weapon replacement with exact active weapon subtype proof, including paired main/off-hand packages",
         "canonical healing coefficient scaling",
         "Healing Done and verified healing CP",
         "Critical Healing",
     )
     OMITTED_SCOPE = (
-        "non-ring mythics / paired one-hand arena-weapon packages",
+        "non-ring mythics",
         "class change / subclass route",
         "healing-skill replacement",
         "skill-bar passive/proc search",
