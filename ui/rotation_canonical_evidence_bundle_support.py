@@ -7,6 +7,7 @@ from engine.config import get_data_dir
 from minmax.character_build.passive_grant import PassiveGrant
 from minmax.resource_costs import ResourceType
 from minmax.rotation_demand_window import RotationDemandWindow
+from services.canonical_knowledge_gap import CanonicalKnowledgeGap
 from services.encounter_boss_guide import EncounterBossGuideService
 from services.encounter_rotation_demand_service import (
     EncounterRotationDemandPolicy,
@@ -36,6 +37,10 @@ class RotationCanonicalEvidenceBundle:
     demand policies. Strategy/evaluation policy, recovery evidence, effect floors,
     passives, reserve rules, and refresh candidates remain caller-owned and are never
     inferred from encounter prose or role convention.
+
+    ``knowledge_gaps`` carries structured missing canonical facts that can benefit
+    Rotation Maker, Comp Maker, Optimizer, or any combination of the three. A bundle
+    with either ordinary unresolved evidence or a canonical knowledge gap is not ready.
     """
 
     encounter_id: str
@@ -55,10 +60,19 @@ class RotationCanonicalEvidenceBundle:
     max_iterations: int = 6
     baseline_id: str = "baseline"
     unresolved: tuple[str, ...] = ()
+    knowledge_gaps: tuple[CanonicalKnowledgeGap, ...] = ()
 
     @property
     def ready(self) -> bool:
-        return not self.unresolved
+        return not self.unresolved and not self.knowledge_gaps
+
+    def research_for(self, consumer: str) -> tuple[CanonicalKnowledgeGap, ...]:
+        """Return gaps that would improve one named consumer surface."""
+
+        key = str(consumer or "").strip().casefold()
+        if not key:
+            raise ValueError("research consumer must be non-empty")
+        return tuple(gap for gap in self.knowledge_gaps if key in gap.consumers)
 
 
 class RotationCanonicalEvidenceBundleSupport:
@@ -101,6 +115,7 @@ class RotationCanonicalEvidenceBundleSupport:
         reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None,
         max_iterations: int = 6,
         baseline_id: str = "baseline",
+        knowledge_gaps: tuple[CanonicalKnowledgeGap, ...] = (),
     ) -> RotationCanonicalEvidenceBundle:
         encounter_key = str(encounter_id or "").strip()
         if not encounter_key:
@@ -146,6 +161,7 @@ class RotationCanonicalEvidenceBundleSupport:
             max_iterations=iterations,
             baseline_id=baseline,
             unresolved=unresolved,
+            knowledge_gaps=tuple(knowledge_gaps),
         )
 
 
