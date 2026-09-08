@@ -54,9 +54,10 @@ class RotationCandidateRankingService:
     fewer missing obligations, smaller reserve/runtime shortfalls, fewer
     candidate-specific unresolved items, then resource consequence. When canonical
     bar-sensitive maximum evidence exists, normalized minimum/ending resource
-    fractions break soft resource ties before raw absolute deltas. Shared baseline
-    or model limitations remain visible but do not count against one candidate
-    specifically.
+    fractions break soft resource ties before raw absolute deltas. Otherwise-equal
+    resource outcomes prefer less recovery/restoration wasted against the active
+    ceiling. Shared baseline or model limitations remain visible but do not count
+    against one candidate specifically.
     """
 
     def rank(
@@ -146,6 +147,7 @@ class RotationCandidateRankingService:
             -(ending_fraction_delta if ending_fraction_delta is not None else 0.0),
             -int(consequence.minimum_resource_delta),
             -int(consequence.ending_resource_delta),
+            int(getattr(consequence, "candidate_wasted_restore", 0)),
             int(consequence.total_cost_delta),
             int(consequence.wait_delta),
             item.candidate_id.casefold(),
@@ -254,6 +256,13 @@ class RotationCandidateRankingService:
                 "normalized resource deltas: "
                 f"minimum {consequence.minimum_resource_fraction_delta:+.2%}, "
                 f"ending {(consequence.ending_resource_fraction_delta or 0.0):+.2%}"
+            )
+        wasted_delta = int(getattr(consequence, "wasted_restore_delta", 0))
+        candidate_waste = int(getattr(consequence, "candidate_wasted_restore", 0))
+        if wasted_delta or candidate_waste:
+            reasons.append(
+                "wasted recovery/restoration: "
+                f"candidate {candidate_waste}, delta {wasted_delta:+d}"
             )
         return tuple(reasons)
 
