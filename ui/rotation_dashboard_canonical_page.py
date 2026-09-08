@@ -22,6 +22,7 @@ from ui.rotation_canonical_candidate_render_support import (
     RotationCanonicalCandidateRenderEvidence,
     RotationCanonicalCandidateRenderSupport,
 )
+from ui.rotation_canonical_evidence_bundle_support import RotationCanonicalEvidenceBundle
 from ui.rotation_dashboard_canonical_candidate_support import (
     RotationDashboardCanonicalCandidateResult,
     RotationDashboardCanonicalCandidateSupport,
@@ -145,6 +146,38 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
         self.last_canonical_candidate_result = result
         self.last_canonical_render_evidence = None
         return result
+
+    def evaluate_canonical_evidence_bundle(
+        self,
+        bundle: RotationCanonicalEvidenceBundle,
+        *,
+        character_id: str | None = None,
+    ) -> RotationDashboardCanonicalCandidateResult:
+        """Evaluate one already-assembled canonical encounter/build evidence bundle."""
+        if not bundle.ready:
+            detail = "; ".join(bundle.unresolved) or "unspecified unresolved evidence"
+            raise ValueError(
+                "canonical rotation evidence bundle is not ready for candidate evaluation: "
+                + detail
+            )
+
+        return self.evaluate_canonical_candidates(
+            evaluator_resolver=bundle.evaluator_resolver,
+            scorecard_resolver=bundle.scorecard_resolver,
+            resource=bundle.resource,
+            maximum_amount=bundle.maximum_amount,
+            trigger_fraction=bundle.trigger_fraction,
+            restoration_resolver=bundle.restoration_resolver,
+            demands=bundle.demands,
+            options=bundle.options,
+            wait_decision_factory=bundle.wait_decision_factory,
+            requirements=bundle.requirements,
+            passives=bundle.passives,
+            reserve_assessment_resolver=bundle.reserve_assessment_resolver,
+            max_iterations=bundle.max_iterations,
+            baseline_id=bundle.baseline_id,
+            character_id=character_id,
+        )
 
     def apply_canonical_candidate_result(
         self,
