@@ -39,6 +39,10 @@ def install() -> None:
     install_performance_dashboard_timeline_service()
     from ui.performance_dashboard_boss_activity_support import install as install_performance_dashboard_boss_activity
     install_performance_dashboard_boss_activity()
+    from ui.performance_dashboard_focus_support import install as install_performance_dashboard_focus
+    install_performance_dashboard_focus()
+    from ui.operations_console_focus_support import install as install_operations_console_focus
+    install_operations_console_focus()
 
     from ui.builds_page import BuildsPage
     from ui.build_editor_inline_compat import _force_dark_surface, _set_combo_index
