@@ -86,6 +86,7 @@ def test_saved_build_range_preserves_imported_limits_and_action_kind(tmp_path) -
     evidence = RotationSavedBuildActionRangeService(database).resolve(build)
 
     assert evidence.unresolved == ()
+    assert evidence.unresolved_action_names == ()
     assert [
         (item.action_name, item.action_kind, item.minimum_range, item.maximum_range)
         for item in evidence.range_requirements
@@ -120,6 +121,7 @@ def test_saved_build_range_surfaces_missing_exact_skill_without_guessing(tmp_pat
     assert evidence.unresolved == (
         "canonical skill range not found by exact saved name: Unknown Skill",
     )
+    assert evidence.unresolved_action_names == ("Unknown Skill",)
 
 
 def test_saved_build_range_tolerates_minimal_build_stubs(tmp_path) -> None:
@@ -130,6 +132,7 @@ def test_saved_build_range_tolerates_minimal_build_stubs(tmp_path) -> None:
 
     assert evidence.range_requirements == ()
     assert evidence.unresolved == ()
+    assert evidence.unresolved_action_names == ()
 
 
 def test_saved_build_range_rejects_conflicting_exact_name_rows_at_highest_rank(tmp_path) -> None:
@@ -155,6 +158,7 @@ def test_saved_build_range_rejects_conflicting_exact_name_rows_at_highest_rank(t
     assert evidence.unresolved == (
         "canonical skill range is ambiguous at highest rank for exact saved name: Ranged Skill",
     )
+    assert evidence.unresolved_action_names == ("Ranged Skill",)
 
 
 def test_saved_build_range_accepts_duplicate_top_rank_rows_when_range_agrees(tmp_path) -> None:
@@ -177,6 +181,7 @@ def test_saved_build_range_accepts_duplicate_top_rank_rows_when_range_agrees(tmp
     )
 
     assert evidence.unresolved == ()
+    assert evidence.unresolved_action_names == ()
     assert len(evidence.range_requirements) == 1
     requirement = evidence.range_requirements[0]
     assert requirement.minimum_range == 5.0
