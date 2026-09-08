@@ -48,6 +48,7 @@ def test_percent_unit_maps_correctly():
         ("critical_damage", StatId.CRITICAL_DAMAGE),
         ("critical_resistance", StatId.CRITICAL_RESISTANCE),
         ("healing_taken", StatId.HEALING_TAKEN),
+        ("bash_damage", StatId.BASH_DAMAGE),
     ],
 )
 def test_deterministic_engine_stats_share_effect_mapping(effect_type, expected):
