@@ -122,6 +122,8 @@ def _support() -> RotationCanonicalEvidenceBundleSupport:
 
 
 def _build_with_coverage(status: CanonicalMechanicsCoverageStatus):
+    key = f"rotation-test:{status.value}"
+    report = _coverage_report(status=status)
     return _support().build(
         encounter_id="test-encounter",
         demand_policies=(_policy(),),
@@ -131,7 +133,8 @@ def _build_with_coverage(status: CanonicalMechanicsCoverageStatus):
         maximum_amount=32000,
         trigger_fraction=0.35,
         restoration_resolver=object(),
-        coverage_report=_coverage_report(status=status),
+        coverage_report=report,
+        coverage_dependency_keys=(key,),
     )
 
 
@@ -203,6 +206,7 @@ def test_bundle_projects_reviewed_encounter_demands_and_preserves_explicit_polic
     assert bundle.reserve_assessment_resolver is reserve
     assert bundle.max_iterations == 8
     assert bundle.baseline_id == "dashboard-baseline"
+    assert bundle.coverage_report is None
 
 
 def test_bundle_fails_readiness_when_requested_encounter_fact_is_not_reviewed() -> None:
@@ -282,6 +286,19 @@ def test_bundle_ingests_missing_critical_coverage_as_readiness_blocker() -> None
     assert bundle.advisory_knowledge_gaps == ()
 
 
+def test_bundle_retains_broad_coverage_for_later_build_dependency_discovery() -> None:
+    report = _coverage_report(status=CanonicalMechanicsCoverageStatus.MISSING_CRITICAL)
+
+    bundle = _support().build(
+        **_coverage_build_kwargs(),
+        coverage_report=report,
+    )
+
+    assert bundle.coverage_report is report
+    assert bundle.knowledge_gaps == ()
+    assert bundle.ready is True
+
+
 def test_bundle_declared_dependencies_ignore_unrelated_critical_coverage() -> None:
     report = CanonicalMechanicsCoverageAuditService().audit(
         (
@@ -307,6 +324,7 @@ def test_bundle_declared_dependencies_ignore_unrelated_critical_coverage() -> No
     )
 
     assert bundle.ready is True
+    assert bundle.coverage_report is report
     assert bundle.blocking_knowledge_gaps == ()
     assert [gap.key for gap in bundle.advisory_knowledge_gaps] == ["selected-partial"]
 
