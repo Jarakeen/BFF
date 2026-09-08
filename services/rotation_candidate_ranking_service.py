@@ -47,15 +47,16 @@ class RotationCandidateRankingService:
     This is intentionally lexicographic rather than weighted. A candidate that
     misses an explicit demand action, required static support effect, runtime
     uptime floor, demand-entry resource reserve, encounter bar-availability rule,
-    or incurs resource shortfall
-    cannot outrank one that satisfies those supplied hard obligations merely because
-    its softer resource numbers look prettier.
+    or incurs resource shortfall cannot outrank one that satisfies those supplied
+    hard obligations merely because its softer resource numbers look prettier.
 
     Within the same eligibility tier, deterministic evidence ordering is used:
     fewer missing obligations, smaller reserve/runtime shortfalls, fewer
-    candidate-specific unresolved items, then resource consequence and resource
-    deltas. Shared baseline/model limitations remain visible but do not count
-    against one candidate specifically.
+    candidate-specific unresolved items, then resource consequence. When canonical
+    bar-sensitive maximum evidence exists, normalized minimum/ending resource
+    fractions break soft resource ties before raw absolute deltas. Shared baseline
+    or model limitations remain visible but do not count against one candidate
+    specifically.
     """
 
     def rank(
@@ -122,6 +123,8 @@ class RotationCandidateRankingService:
             + reserve_failure_count
             + (1 if scorecard.candidate_shortfall > 0 else 0)
         )
+        minimum_fraction_delta = consequence.minimum_resource_fraction_delta
+        ending_fraction_delta = consequence.ending_resource_fraction_delta
 
         return (
             0 if scorecard.supplied_obligations_satisfied else 1,
@@ -139,6 +142,8 @@ class RotationCandidateRankingService:
             objective_evidence_missing,
             -objective_uptime,
             _RESOURCE_ORDER[consequence.resource_kind],
+            -(minimum_fraction_delta if minimum_fraction_delta is not None else 0.0),
+            -(ending_fraction_delta if ending_fraction_delta is not None else 0.0),
             -int(consequence.minimum_resource_delta),
             -int(consequence.ending_resource_delta),
             int(consequence.total_cost_delta),
@@ -226,6 +231,12 @@ class RotationCandidateRankingService:
             f"cost {consequence.total_cost_delta:+d}, "
             f"waits {consequence.wait_delta:+d}"
         )
+        if consequence.minimum_resource_fraction_delta is not None:
+            reasons.append(
+                "normalized resource deltas: "
+                f"minimum {consequence.minimum_resource_fraction_delta:+.2%}, "
+                f"ending {(consequence.ending_resource_fraction_delta or 0.0):+.2%}"
+            )
         return tuple(reasons)
 
     @staticmethod
