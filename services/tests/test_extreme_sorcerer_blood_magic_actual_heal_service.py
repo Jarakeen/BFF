@@ -6,6 +6,9 @@ from models.build_model import PlayerBuild
 from services.extreme_sorcerer_blood_magic_actual_heal_service import (
     ExtremeSorcererBloodMagicActualHealService,
 )
+from services.extreme_whole_build_max_health_optimization_service import (
+    ExtremeWholeBuildMaxHealthOptimizationService,
+)
 
 
 class _FakeOptimizer:
@@ -24,13 +27,19 @@ class _FakeOptimizer:
             baseline_value=self.baseline_value,
             optimized_value=self.optimized_value,
             unresolved=self.unresolved,
-            search_scope=("canonical max-health sheet search",),
-            omitted_scope=("sheet-search omitted surface",),
+            search_scope=("canonical max-health test search",),
+            omitted_scope=("test optimizer omitted surface",),
         )
 
 
 def _build() -> PlayerBuild:
     return PlayerBuild(Name="Test Sorcerer", BuildName="Blood Magic")
+
+
+def test_blood_magic_lane_defaults_to_whole_build_max_health_optimizer():
+    service = ExtremeSorcererBloodMagicActualHealService()
+
+    assert isinstance(service.optimizer, ExtremeWholeBuildMaxHealthOptimizationService)
 
 
 def test_blood_magic_lane_optimizes_canonical_max_health():
@@ -39,6 +48,7 @@ def test_blood_magic_lane_optimizes_canonical_max_health():
 
     result = service.optimize(_build(), active_bar="back", max_passes=7)
 
+    assert service.optimizer is optimizer
     assert optimizer.calls == [("max_health", "back", 7)]
     assert result.baseline_max_health == 20_000.0
     assert result.optimized_max_health == 50_000.0
@@ -60,7 +70,7 @@ def test_blood_magic_lane_keeps_critical_eligibility_unresolved_without_blocking
     assert "Blood Magic critical-heal eligibility" in result.omitted_scope
 
 
-def test_blood_magic_lane_preserves_sheet_optimizer_unresolved_evidence():
+def test_blood_magic_lane_preserves_optimizer_unresolved_evidence():
     service = ExtremeSorcererBloodMagicActualHealService(
         optimizer=_FakeOptimizer(unresolved=("unresolved gear effect",))
     )
@@ -71,13 +81,14 @@ def test_blood_magic_lane_preserves_sheet_optimizer_unresolved_evidence():
     assert result.mechanic_complete is False
 
 
-def test_blood_magic_lane_reports_lower_bound_search_boundary():
+def test_blood_magic_lane_reports_optimizer_search_boundary_without_stale_package_omissions():
     service = ExtremeSorcererBloodMagicActualHealService(optimizer=_FakeOptimizer())
 
     result = service.optimize(_build())
 
     assert "Blood Magic U50 rank-2 heal amount: 10% of canonical Max Health" in result.search_scope
-    assert "canonical max-health sheet search" in result.search_scope
-    assert "race replacement beyond the canonical max-health sheet optimizer" in result.omitted_scope
-    assert "reviewed gear-set/package replacement beyond the canonical max-health sheet optimizer" in result.omitted_scope
-    assert "sheet-search omitted surface" in result.omitted_scope
+    assert "canonical max-health test search" in result.search_scope
+    assert "test optimizer omitted surface" in result.omitted_scope
+    assert "Blood Magic critical-heal eligibility" in result.omitted_scope
+    assert not any("race replacement beyond" in item for item in result.omitted_scope)
+    assert not any("gear-set/package replacement beyond" in item for item in result.omitted_scope)
