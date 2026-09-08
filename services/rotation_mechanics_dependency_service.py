@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass
 
 from minmax.character_build.character_build import CharacterBuild
@@ -45,12 +46,12 @@ class RotationMechanicsDependency:
 
 
 class RotationMechanicsDependencyService:
-    """Discover broad mechanics coverage needed by one canonical rotation decision.
+    """Discover mechanics coverage needed by one canonical rotation decision.
 
     This service does not claim that every referenced mechanics area is incomplete or
-    blocking. It only identifies which shared coverage rows are relevant to the build
-    and evidence currently being evaluated. The coverage report remains responsible
-    for saying whether each dependency is calculation-ready, advisory, or blocking.
+    blocking. It identifies which shared coverage rows are relevant to the build and
+    evidence currently being evaluated. The coverage report remains responsible for
+    saying whether each dependency is calculation-ready, advisory, or blocking.
 
     Exact selected identities are retained on each dependency so future research and
     UI surfaces can explain *why* a broad mechanics domain mattered for this build.
@@ -79,6 +80,7 @@ class RotationMechanicsDependencyService:
         )
 
         bars = character_build.bars()
+        represented_skill_lines: tuple[str, ...] = ()
         if bars:
             slotted_skills = tuple(
                 f"{bar.bar_id.value}:{slot.skill_id}"
@@ -91,6 +93,15 @@ class RotationMechanicsDependencyService:
                 for bar in bars
                 for slot in bar.slots
                 if str(getattr(slot, "skill_line_id", "") or "").strip()
+            )
+            represented_skill_lines = tuple(
+                f"represented_skill_line={value}"
+                for value in dict.fromkeys(
+                    str(getattr(slot, "skill_line_id", "") or "").strip()
+                    for bar in bars
+                    for slot in bar.slots
+                    if str(getattr(slot, "skill_line_id", "") or "").strip()
+                )
             )
             weapon_types = tuple(
                 f"{bar.bar_id.value}:weapon={bar.main_hand.weapon_type.value}"
@@ -119,6 +130,16 @@ class RotationMechanicsDependencyService:
             f"armor_weight={piece.weight}"
             for piece in equipped
             if str(piece.weight or "").strip()
+        )
+        normalized_weights = [
+            str(piece.weight or "").strip().casefold()
+            for piece in equipped
+            if str(piece.weight or "").strip()
+        ]
+        weight_counts = Counter(normalized_weights)
+        armor_weight_evidence = tuple(
+            f"armor_weight_count:{weight}={weight_counts[weight]}"
+            for weight in sorted(weight_counts)
         )
         effect_slots = tuple(
             f"effect_bearing_slot={piece.slot.value}"
@@ -156,7 +177,7 @@ class RotationMechanicsDependencyService:
                 evidence=consumables,
             )
 
-        if passives or character_build.class_mastery.passive_ability_ids:
+        if passives or character_build.class_mastery.passive_ability_ids or armor_weight_evidence:
             passive_lines = tuple(
                 f"passive_skill_line={value}"
                 for value in (
@@ -169,11 +190,25 @@ class RotationMechanicsDependencyService:
                 f"class_mastery_passive={passive_id}"
                 for passive_id in character_build.class_mastery.passive_ability_ids
             )
+            reasons: list[str] = []
+            if passives or mastery:
+                reasons.append(
+                    "Explicit passive or Class Mastery evidence can modify skill, resource, duration, or combat behavior."
+                )
+            if armor_weight_evidence:
+                reasons.append(
+                    "Equipped armor-weight distribution can make verified armor passive bonuses relevant to timing, sustain, mitigation, or output."
+                )
             self._add(
                 dependencies,
                 "passives:runtime_semantics",
-                "Explicit passive or Class Mastery evidence is present and can modify skill, resource, duration, or combat behavior.",
-                evidence=passive_lines + mastery,
+                " ".join(reasons),
+                evidence=(
+                    passive_lines
+                    + mastery
+                    + armor_weight_evidence
+                    + represented_skill_lines
+                ),
             )
 
         if requirements:
