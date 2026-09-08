@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from minmax.character_build.saved_build_adapter import SavedBuildAdaptation
 from minmax.resource_costs import ResourceType
 from services.canonical_knowledge_gap import CanonicalKnowledgeDomain, CanonicalKnowledgeGap
+from services.rotation_mechanics_dependency_service import RotationMechanicsDependency
 from ui.rotation_canonical_candidate_support import RotationCanonicalCandidateSupport
 from ui.rotation_recovery_validation_support import RotationRecoveryValidationScope
 
@@ -40,7 +41,7 @@ class _DependencyService:
 
     @staticmethod
     def keys(dependencies):
-        return tuple(str(item) for item in dependencies)
+        return tuple(str(getattr(item, "key", item)) for item in dependencies)
 
 
 class _CoverageReport:
@@ -189,6 +190,30 @@ def test_blocking_discovered_mechanics_gap_stops_candidate_pipeline() -> None:
     assert result.validation.scope is RotationRecoveryValidationScope.NOT_EVALUATED
     assert result.validation.selectable is None
     assert any("Bring back:" in reason for reason in result.validation.reasons)
+
+
+def test_blocking_gap_reason_includes_matching_exact_build_dependency_evidence() -> None:
+    canonical_build = object()
+    dependency = RotationMechanicsDependency(
+        key="heavy_attack:restoration",
+        reason="Recovery-heavy path is enabled.",
+        evidence=("front:weapon=restoration_staff", "recovery_heavy_candidate_path=enabled"),
+    )
+    report = _CoverageReport((_gap(blocking=True),))
+    pipeline = _Pipeline(result=_selectable_pipeline_result())
+    support = RotationCanonicalCandidateSupport(
+        build_adapter=_Adapter(SavedBuildAdaptation(build=canonical_build, unresolved=())),
+        pipeline=pipeline,
+        dependency_service=_DependencyService((dependency,)),
+    )
+
+    result, _ = _run(support, coverage_report=report)
+
+    assert pipeline.calls == []
+    detail = " ".join(result.validation.reasons)
+    assert "Relevant build evidence:" in detail
+    assert "front:weapon=restoration_staff" in detail
+    assert "recovery_heavy_candidate_path=enabled" in detail
 
 
 def test_advisory_discovered_mechanics_gap_is_retained_without_blocking_pipeline() -> None:
