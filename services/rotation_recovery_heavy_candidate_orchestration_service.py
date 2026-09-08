@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable
 
+from minmax.build_calculation_context import BuildCalculationContext
 from minmax.resource_costs import ResourceType
 from minmax.rotation_plan import RotationPlan
 from models.build_model import PlayerBuild
@@ -24,6 +25,7 @@ from services.rotation_recovery_heavy_replay_service import (
 )
 from services.rotation_recovery_heavy_stabilization_service import (
     RecoveryAwareRotationGenerator,
+    RecoveryMaximumEventResolver,
     RotationRecoveryHeavyStabilizationResult,
 )
 
@@ -67,25 +69,7 @@ class RotationRecoveryHeavyCandidateOrchestrationResult:
 
 
 class RotationRecoveryHeavyCandidateOrchestrationService:
-    """Run candidate recovery stabilization, final family ranking, and selection.
-
-    Candidate generation, canonical obligation evaluation, recovery stabilization,
-    and final selection remain separate concerns. This service owns only their
-    deterministic composition:
-
-      candidate policy -> fixed-point recovery stabilization
-          -> family-level re-evaluation of the final stabilized plans
-          -> recovery-aware final selection
-
-    Per-iteration evaluation is intentionally candidate-local because it feeds only
-    hard-obligation identity into that candidate's fixed-point loop. Final ranking is
-    intentionally family-level so relative soft ordering is computed across the
-    actual final stabilized plans rather than by ranking candidates one at a time.
-
-    The caller remains responsible for supplying verified restore evidence, recovery
-    thresholds, reserve policy, encounter obligations, assignment semantics, effect
-    duration inputs, passives, and any other canonical evaluation evidence.
-    """
+    """Run candidate recovery stabilization, final family ranking, and selection."""
 
     def __init__(
         self,
@@ -112,6 +96,8 @@ class RotationRecoveryHeavyCandidateOrchestrationService:
         restoration_resolver: VerifiedRecoveryHeavyRestorationResolver,
         reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None,
         max_iterations: int = 6,
+        calculation_context: BuildCalculationContext | None = None,
+        maximum_event_resolver: RecoveryMaximumEventResolver | None = None,
     ) -> RotationRecoveryHeavyCandidateOrchestrationResult:
         if not candidates:
             return RotationRecoveryHeavyCandidateOrchestrationResult(
@@ -159,6 +145,8 @@ class RotationRecoveryHeavyCandidateOrchestrationService:
                 restoration_resolver=restoration_resolver,
                 reserve_assessment_resolver=reserve_assessment_resolver,
                 max_iterations=max_iterations,
+                calculation_context=calculation_context,
+                maximum_event_resolver=maximum_event_resolver,
             )
             stabilized.append(
                 RecoveryHeavyStabilizedCandidateSnapshot(
