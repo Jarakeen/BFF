@@ -397,9 +397,10 @@ def install() -> None:
         original_build_ui(self)
         root = self.layout()
         if root is not None:
-            # Existing layout ends with hint + graphics view. Put the teaching
-            # timeline immediately above those so board-edit tools stay grouped.
-            insert_at = max(0, root.count() - 2)
+            # Keep the original hint at index 2 so the accessibility layer can
+            # hide that helper text without accidentally hiding this toolbar.
+            # The timeline sits directly above the graphics view.
+            insert_at = max(0, root.count() - 1)
             root.insertWidget(insert_at, _timeline_panel(self))
 
     def init_with_timeline(self, *args, **kwargs):
