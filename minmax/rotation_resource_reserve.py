@@ -58,6 +58,20 @@ class RotationResourceReserveAssessment:
             return None
         return float(self.available_before_start) / float(maximum)
 
+    @property
+    def required_fraction_before_start(self) -> float | None:
+        maximum = self.maximum_before_start
+        if maximum is None or int(maximum) <= 0:
+            return None
+        return float(self.requirement.minimum_amount) / float(maximum)
+
+    @property
+    def shortfall_fraction(self) -> float | None:
+        maximum = self.maximum_before_start
+        if maximum is None or int(maximum) <= 0:
+            return None
+        return float(self.shortfall) / float(maximum)
+
 
 def _validated_time(time_seconds: float) -> float:
     time_value = float(time_seconds)
