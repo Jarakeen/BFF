@@ -23,9 +23,11 @@ class ExtremeActualHealNonRingMythicPackageService(ExtremeActualHealMythicPackag
     Ring mythics remain covered by ``ExtremeActualHealMythicPackageService``.
 
     Both ordinary five-piece sets are assigned around the occupied mythic slot
-    using only positions each set can canonically occupy. The active two-slot
-    weapon may contribute two pieces only when the ordinary set contains the
-    exact saved weapon subtype. No slot or set count is inferred from a tooltip.
+    using only positions each set can canonically occupy. An active two-slot
+    weapon may contribute two pieces only when the ordinary set contains that
+    exact saved weapon subtype. Explicit paired main/off-hand configurations may
+    contribute one piece per hand only when the set contains both exact subtypes.
+    No slot or set count is inferred from a tooltip or aggregate weapon label.
     """
 
     # ESO/UESP mined-item equipType identities used by gear_set_piece.
@@ -54,7 +56,9 @@ class ExtremeActualHealNonRingMythicPackageService(ExtremeActualHealMythicPackag
         ("Ring1", 9, 1),
         ("Ring2", 9, 1),
     )
-    WEAPON_POSITION = ("ActiveWeapon", TWO_HAND_EQUIP_TYPE, 2)
+    TWO_SLOT_WEAPON_POSITION = ("ActiveWeapon", TWO_HAND_EQUIP_TYPE, 2)
+    PAIRED_MAIN_POSITION = ("ActiveMainHand", 0, 1)
+    PAIRED_OFFHAND_POSITION = ("ActiveOffHand", 0, 1)
 
     def __init__(self, database_path: str | Path) -> None:
         super().__init__(database_path)
@@ -123,12 +127,55 @@ class ExtremeActualHealNonRingMythicPackageService(ExtremeActualHealMythicPackag
                     break
         return tuple(result)
 
+    @staticmethod
+    def _active_weapon_positions(
+        baseline_build: PlayerBuild,
+        *,
+        active_bar: str,
+    ) -> tuple[tuple[str, int, int, int, bool], ...]:
+        """Return exact active-weapon positions as package-search evidence.
+
+        Tuple shape is ``(position, equip_type, piece_count, weapon_type_id,
+        exact_equip_type_required)``. Two-slot weapons count as two set pieces and
+        require the canonical two-hand equip family. Explicit paired weapons count
+        one piece per hand and require only the exact weapon subtype to exist in
+        the set's canonical piece universe, matching the shared arena-set proof.
+        """
+
+        main, offhand = baseline_build.active_weapon_slots(active_bar)
+        main_id = eso_weapon_type_id_from_saved_name(main.WeaponType)
+        if main_id is None:
+            return ()
+
+        if not offhand.is_empty:
+            offhand_id = eso_weapon_type_id_from_saved_name(offhand.WeaponType)
+            if offhand_id is None:
+                return ()
+            return (
+                ("ActiveMainHand", 0, 1, int(main_id), False),
+                ("ActiveOffHand", 0, 1, int(offhand_id), False),
+            )
+
+        weapon_name = str(main.WeaponType or "").strip().casefold()
+        if weapon_name not in TWO_SLOT_SET_WEAPON_TYPES:
+            return ()
+        return (
+            (
+                "ActiveWeapon",
+                ExtremeActualHealNonRingMythicPackageService.TWO_HAND_EQUIP_TYPE,
+                2,
+                int(main_id),
+                True,
+            ),
+        )
+
     def _available_positions(
         self,
         set_name: str,
         *,
         mythic_slot: str,
-        weapon_type_id: int,
+        weapon_type_id: int | None = None,
+        weapon_positions: tuple[tuple[str, int, int, int, bool], ...] | None = None,
     ) -> tuple[tuple[str, int, int], ...]:
         gear_set = self.repository.get_set(set_name)
         if gear_set is None or not self._ordinary(gear_set.id, gear_set.category):
@@ -143,12 +190,20 @@ class ExtremeActualHealNonRingMythicPackageService(ExtremeActualHealMythicPackag
                 for row_equip, _row_armor, row_weapon in rows
             ):
                 available.append((position, equip_type, count))
-        if any(
-            row_equip == self.TWO_HAND_EQUIP_TYPE
-            and int(row_weapon or 0) == int(weapon_type_id)
-            for row_equip, _row_armor, row_weapon in rows
+
+        if weapon_positions is None and weapon_type_id is not None:
+            weapon_positions = (
+                ("ActiveWeapon", self.TWO_HAND_EQUIP_TYPE, 2, int(weapon_type_id), True),
+            )
+        for position, equip_type, count, exact_weapon_type, require_equip_type in (
+            weapon_positions or ()
         ):
-            available.append(self.WEAPON_POSITION)
+            if any(
+                int(row_weapon or 0) == int(exact_weapon_type)
+                and (not require_equip_type or row_equip == equip_type)
+                for row_equip, _row_armor, row_weapon in rows
+            ):
+                available.append((position, equip_type, count))
         return tuple(available)
 
     @staticmethod
@@ -169,13 +224,15 @@ class ExtremeActualHealNonRingMythicPackageService(ExtremeActualHealMythicPackag
         secondary_name: str,
         *,
         mythic_slot: str,
-        weapon_type_id: int,
+        weapon_type_id: int | None = None,
+        weapon_positions: tuple[tuple[str, int, int, int, bool], ...] | None = None,
     ) -> tuple[tuple[str, ...], tuple[str, ...]] | None:
         primary = self._five_piece_combinations(
             self._available_positions(
                 primary_name,
                 mythic_slot=mythic_slot,
                 weapon_type_id=weapon_type_id,
+                weapon_positions=weapon_positions,
             )
         )
         secondary = self._five_piece_combinations(
@@ -183,6 +240,7 @@ class ExtremeActualHealNonRingMythicPackageService(ExtremeActualHealMythicPackag
                 secondary_name,
                 mythic_slot=mythic_slot,
                 weapon_type_id=weapon_type_id,
+                weapon_positions=weapon_positions,
             )
         )
         for first in primary:
@@ -216,11 +274,19 @@ class ExtremeActualHealNonRingMythicPackageService(ExtremeActualHealMythicPackag
             build.Ring2.Set = set_name
             build.Ring2.Set2 = ""
             return
+        main, offhand = build.active_weapon_slots(active_bar)
         if position == "ActiveWeapon":
-            main, offhand = build.active_weapon_slots(active_bar)
             main.Set = set_name
             main.Set2 = ""
             offhand.Set = ""
+            offhand.Set2 = ""
+            return
+        if position == "ActiveMainHand":
+            main.Set = set_name
+            main.Set2 = ""
+            return
+        if position == "ActiveOffHand":
+            offhand.Set = set_name
             offhand.Set2 = ""
             return
         raise ValueError(f"Unknown actual-heal package position: {position!r}")
@@ -229,7 +295,11 @@ class ExtremeActualHealNonRingMythicPackageService(ExtremeActualHealMythicPackag
     def _clear_package_positions(cls, build: PlayerBuild, *, active_bar: str) -> None:
         for position, _equip_type, _count in cls.NON_WEAPON_POSITIONS:
             cls._set_position(build, position, "", active_bar=active_bar)
-        cls._set_position(build, "ActiveWeapon", "", active_bar=active_bar)
+        main, offhand = build.active_weapon_slots(active_bar)
+        main.Set = ""
+        main.Set2 = ""
+        offhand.Set = ""
+        offhand.Set2 = ""
 
     def build_candidates(
         self,
@@ -241,14 +311,11 @@ class ExtremeActualHealNonRingMythicPackageService(ExtremeActualHealMythicPackag
         ordinary_per_objective: int = 8,
         mythic_per_objective: int = 8,
     ) -> tuple[BuildCandidate, ...]:
-        main, offhand = baseline_build.active_weapon_slots(active_bar)
-        weapon_name = str(main.WeaponType or "").strip().casefold()
-        weapon_type_id = eso_weapon_type_id_from_saved_name(main.WeaponType)
-        if (
-            weapon_name not in TWO_SLOT_SET_WEAPON_TYPES
-            or weapon_type_id is None
-            or not offhand.is_empty
-        ):
+        weapon_positions = self._active_weapon_positions(
+            baseline_build,
+            active_bar=active_bar,
+        )
+        if not weapon_positions:
             return ()
 
         ordinary_names = self._reviewed_ordinary_names(
@@ -272,7 +339,7 @@ class ExtremeActualHealNonRingMythicPackageService(ExtremeActualHealMythicPackag
                         primary_name,
                         secondary_name,
                         mythic_slot=mythic_slot,
-                        weapon_type_id=weapon_type_id,
+                        weapon_positions=weapon_positions,
                     )
                     if assignment is None:
                         continue
@@ -318,6 +385,9 @@ class ExtremeActualHealNonRingMythicPackageService(ExtremeActualHealMythicPackag
                                 "mythic": mythic_name,
                                 "mythic_slot": mythic_slot,
                                 "mythic_equip_type": equip_type,
+                                "weapon_positions": tuple(
+                                    position for position, _equip, _count, _type, _strict in weapon_positions
+                                ),
                             },
                             source="extreme:actual-heal:gear-package:5+5+1:slot-mythic",
                         )
