@@ -32,6 +32,7 @@ def test_slot_legality_accepts_only_bars_where_action_is_slotted() -> None:
     violation = result.violations[0]
     assert violation.requirement.action_name == "Front Heal"
     assert violation.scheduled_bar == "back"
+    assert violation.scheduled_kind is RotationActionKind.SKILL
     assert violation.reason == "action is not slotted on the scheduled bar"
 
 
@@ -49,7 +50,31 @@ def test_slot_legality_treats_missing_action_bar_as_violation_when_slot_evidence
 
     assert not result.legal
     assert result.violations[0].scheduled_bar is None
+    assert result.violations[0].scheduled_kind is RotationActionKind.ULTIMATE
     assert result.violations[0].reason == "scheduled action has no explicit bar"
+
+
+def test_slot_legality_rejects_known_ultimate_scheduled_as_normal_skill() -> None:
+    plan = _plan(
+        RotationAction(10.0, 0, RotationActionKind.SKILL, "Front Ultimate", "front"),
+    )
+    requirement = RotationActionSlotRequirement(
+        "Front Ultimate",
+        ("front",),
+        action_kind=RotationActionKind.ULTIMATE,
+    )
+
+    result = RotationActionSlotAssessor().assess(plan, (requirement,))
+
+    assert not result.legal
+    violation = result.violations[0]
+    assert violation.requirement.action_kind is RotationActionKind.ULTIMATE
+    assert violation.scheduled_kind is RotationActionKind.SKILL
+    assert violation.scheduled_bar == "front"
+    assert (
+        violation.reason
+        == "scheduled action kind does not match the saved-build slot kind"
+    )
 
 
 def test_slot_legality_ignores_actions_without_supplied_slot_evidence() -> None:
