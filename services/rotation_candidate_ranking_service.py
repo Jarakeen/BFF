@@ -47,9 +47,9 @@ class RotationCandidateRankingService:
     This is intentionally lexicographic rather than weighted. A candidate that
     misses an explicit demand action, required static support effect, runtime
     uptime floor, demand-entry resource reserve, encounter bar-availability rule,
-    resolved action cooldown, or incurs resource shortfall cannot outrank one that
-    satisfies those supplied hard obligations merely because its softer resource
-    numbers look prettier.
+    resolved action cooldown or occupancy rule, or incurs resource shortfall cannot
+    outrank one that satisfies those supplied hard obligations merely because its
+    softer resource numbers look prettier.
 
     Within the same eligibility tier, deterministic evidence ordering is used:
     fewer missing obligations, smaller reserve/runtime shortfalls, fewer
@@ -102,6 +102,7 @@ class RotationCandidateRankingService:
         missing_effects = len(scorecard.missing_required_effects)
         bar_violations = len(scorecard.bar_availability_violations)
         cooldown_violations = len(getattr(scorecard, "cooldown_violations", ()))
+        occupancy_violations = len(getattr(scorecard, "occupancy_violations", ()))
         failed_uptimes = scorecard.failed_runtime_uptime_assessments
         uptime_failure_count = len(failed_uptimes)
         uptime_evidence_missing = sum(
@@ -127,6 +128,7 @@ class RotationCandidateRankingService:
             + missing_effects
             + bar_violations
             + cooldown_violations
+            + occupancy_violations
             + uptime_failure_count
             + reserve_failure_count
             + (1 if scorecard.candidate_shortfall > 0 else 0)
@@ -141,6 +143,7 @@ class RotationCandidateRankingService:
             missing_effects,
             bar_violations,
             cooldown_violations,
+            occupancy_violations,
             uptime_failure_count,
             uptime_evidence_missing,
             uptime_shortfall,
@@ -197,6 +200,19 @@ class RotationCandidateRankingService:
                     f"{violation.time_seconds:g}s: interval "
                     f"{violation.actual_interval_seconds:g}s, required "
                     f"{violation.required_interval_seconds:g}s"
+                )
+        occupancy_violations = tuple(getattr(scorecard, "occupancy_violations", ()))
+        if occupancy_violations:
+            reasons.append(f"{len(occupancy_violations)} action occupancy violation(s)")
+            for violation in occupancy_violations:
+                requirement = violation.requirement
+                scope = f" on {requirement.bar} bar" if requirement.bar else ""
+                blocked = violation.blocked_action_name or violation.blocked_action_kind.value
+                reasons.append(
+                    f"occupancy legality for {requirement.action_name!r}{scope} from "
+                    f"{violation.occupying_time_seconds:g}s to "
+                    f"{violation.occupying_until_seconds:g}s: "
+                    f"{blocked!r} scheduled at {violation.blocked_time_seconds:g}s"
                 )
         for assessment in scorecard.failed_runtime_uptime_assessments:
             requirement = assessment.requirement
