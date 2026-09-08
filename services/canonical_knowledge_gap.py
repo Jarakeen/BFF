@@ -25,11 +25,12 @@ class CanonicalKnowledgeDomain(str, Enum):
 
 @dataclass(frozen=True)
 class CanonicalKnowledgeGap:
-    """One explicit research gap that can improve multiple optimization surfaces.
+    """One explicit research gap shared by decision-making systems.
 
-    A gap is intentionally descriptive rather than speculative. `needed_evidence`
-    tells a researcher what fact must be brought back; `consumers` states which
-    systems become smarter when that fact is resolved.
+    ``blocking`` separates evidence that invalidates a concrete canonical decision
+    from advisory incompleteness that should remain visible in the research queue.
+    Existing direct evidence gaps default to blocking; broad coverage audits can mark
+    partial-but-noncritical knowledge as advisory without making every tool unusable.
     """
 
     domain: CanonicalKnowledgeDomain
@@ -38,6 +39,7 @@ class CanonicalKnowledgeGap:
     needed_evidence: str
     consumers: tuple[str, ...]
     source_context: str
+    blocking: bool = True
 
     def __post_init__(self) -> None:
         for field_name in ("key", "summary", "needed_evidence", "source_context"):
@@ -57,6 +59,7 @@ class CanonicalKnowledgeGap:
         if not normalized_consumers:
             raise ValueError("canonical knowledge gap requires at least one consumer")
         object.__setattr__(self, "consumers", tuple(normalized_consumers))
+        object.__setattr__(self, "blocking", bool(self.blocking))
 
 
 __all__ = [
