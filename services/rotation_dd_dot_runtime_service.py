@@ -24,6 +24,8 @@ class RotationDDDotRuntimeEvidence:
     first_tick_offset_seconds: float
     refresh_policy: RotationDDDotRefreshPolicy = RotationDDDotRefreshPolicy.RESTART
     tick_on_expiry_boundary: bool = True
+    refresh_behavior_verified: bool = True
+    provenance: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         for field_name in (
@@ -39,6 +41,11 @@ class RotationDDDotRuntimeEvidence:
             raise ValueError("DoT duration and tick interval must be positive")
         if self.first_tick_offset_seconds > self.duration_seconds:
             raise ValueError("first DoT tick cannot occur after duration")
+        object.__setattr__(
+            self,
+            "provenance",
+            tuple(str(value).strip() for value in self.provenance if str(value).strip()),
+        )
 
 
 @dataclass(frozen=True)
@@ -48,7 +55,13 @@ class RotationDDDotRuntimeProjection:
 
 
 class RotationDDDotRuntimeService:
-    """Expand verified DoT seeds only from explicit runtime timing evidence."""
+    """Expand verified DoT seeds only from explicit runtime timing evidence.
+
+    A single application needs duration/cadence/first-tick evidence. Multiple
+    applications additionally need reviewed refresh behavior; otherwise the
+    service refuses to guess whether the old application restarts, stacks,
+    persists independently, or follows some other ESO-specific rule.
+    """
 
     def project(
         self,
@@ -85,6 +98,14 @@ class RotationDDDotRuntimeService:
                 continue
 
             ordered = sorted(group, key=lambda item: (item.cast_time_seconds, item.sequence))
+            if len(ordered) > 1 and not runtime.refresh_behavior_verified:
+                label = ordered[0]
+                unresolved.append(
+                    f"{label.source_name} coefficient {label.coefficient_number}: "
+                    "DoT refresh behavior is not canonically verified"
+                )
+                continue
+
             for index, seed in enumerate(ordered):
                 natural_end = seed.cast_time_seconds + runtime.duration_seconds
                 next_cast = (
