@@ -60,6 +60,9 @@ class RotationPlanConsequence:
     baseline_wasted_restore: int = 0
     candidate_wasted_restore: int = 0
     wasted_restore_delta: int = 0
+    baseline_total_actions: int = 0
+    candidate_total_actions: int = 0
+    total_actions_delta: int = 0
     baseline_bar_swaps: int = 0
     candidate_bar_swaps: int = 0
     bar_swap_delta: int = 0
@@ -79,9 +82,9 @@ class RotationPlanConsequenceService:
     When the sustain timelines carry canonical maximum-resource evidence, the
     consequence also reports normalized minimum/ending resource fractions. It also
     exposes restoration/recovery wasted against the active ceiling plus explicit
-    bar-swap and heavy-attack execution burden. These are evidence only; this
-    role-neutral layer does not invent universal reserve or execution-difficulty
-    thresholds or fold them into the resource classification.
+    total-action, bar-swap, and heavy-attack execution burden. These are evidence
+    only; this role-neutral layer does not invent universal reserve or
+    execution-difficulty thresholds or fold them into the resource classification.
     """
 
     def __init__(
@@ -156,6 +159,9 @@ class RotationPlanConsequenceService:
             baseline_wasted_restore=baseline_wasted_restore,
             candidate_wasted_restore=candidate_wasted_restore,
             wasted_restore_delta=candidate_wasted_restore - baseline_wasted_restore,
+            baseline_total_actions=execution_burden.baseline.total_actions,
+            candidate_total_actions=execution_burden.candidate.total_actions,
+            total_actions_delta=execution_burden.total_actions_delta,
             baseline_bar_swaps=execution_burden.baseline.bar_swaps,
             candidate_bar_swaps=execution_burden.candidate.bar_swaps,
             bar_swap_delta=execution_burden.bar_swaps_delta,
