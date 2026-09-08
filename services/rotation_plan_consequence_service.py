@@ -56,6 +56,9 @@ class RotationPlanConsequence:
     baseline_ending_resource_fraction: float | None = None
     candidate_ending_resource_fraction: float | None = None
     ending_resource_fraction_delta: float | None = None
+    baseline_wasted_restore: int = 0
+    candidate_wasted_restore: int = 0
+    wasted_restore_delta: int = 0
 
 
 class RotationPlanConsequenceService:
@@ -67,9 +70,10 @@ class RotationPlanConsequenceService:
     obligation; role/encounter quality remains caller-owned evidence.
 
     When the sustain timelines carry canonical maximum-resource evidence, the
-    consequence also reports normalized minimum/ending resource fractions. Those
-    fractions are evidence only; this role-neutral layer does not invent a universal
-    reserve threshold or fold them into the resource classification.
+    consequence also reports normalized minimum/ending resource fractions. It also
+    exposes restoration/recovery that was wasted against the active ceiling. These
+    are evidence only; this role-neutral layer does not invent a universal reserve
+    threshold or fold them into the resource classification.
     """
 
     def compare(
@@ -97,6 +101,8 @@ class RotationPlanConsequenceService:
         candidate_minimum_fraction = self._minimum_fraction(candidate_timeline)
         baseline_ending_fraction = self._ending_fraction(baseline_timeline)
         candidate_ending_fraction = self._ending_fraction(candidate_timeline)
+        baseline_wasted_restore = self._wasted_restore(baseline_timeline)
+        candidate_wasted_restore = self._wasted_restore(candidate_timeline)
 
         cast_deltas = self._cast_deltas(baseline_plan, candidate_plan)
         cost_deltas = self._cost_deltas(baseline_sustain, candidate_sustain)
@@ -127,6 +133,9 @@ class RotationPlanConsequenceService:
                 baseline_ending_fraction,
                 candidate_ending_fraction,
             ),
+            baseline_wasted_restore=baseline_wasted_restore,
+            candidate_wasted_restore=candidate_wasted_restore,
+            wasted_restore_delta=candidate_wasted_restore - baseline_wasted_restore,
         )
 
     @staticmethod
@@ -166,6 +175,10 @@ class RotationPlanConsequenceService:
         if ending_maximum is None or int(ending_maximum) <= 0:
             return None
         return float(timeline.ending_amount) / float(ending_maximum)
+
+    @staticmethod
+    def _wasted_restore(timeline: ResourceTimelineResult) -> int:
+        return sum(int(getattr(event, "wasted_restore", 0) or 0) for event in timeline.events)
 
     @staticmethod
     def _optional_delta(baseline: float | None, candidate: float | None) -> float | None:
