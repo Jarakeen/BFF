@@ -10,6 +10,9 @@ from services.extreme_actual_heal_optimization_service import (
     ExtremeActualHealOptimizationService,
 )
 from services.extreme_healing_event_service import ExtremeHealingEventResult
+from services.extreme_necromancer_living_death_healing_service import (
+    ExtremeNecromancerLivingDeathHealingService,
+)
 from services.extreme_restoration_heavy_combat_state_service import (
     ExtremeRestorationHeavyCombatStateService,
 )
@@ -31,6 +34,12 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
     Keeping it in this conditional layer prevents the standing optimizer from
     inventing a target-health assumption merely to obtain a larger number.
 
+    Reviewed Necromancer ``Curative Curse`` may be activated by an explicit
+    healer-negative-effect scenario. Its max-rank bonus is generic Healing Done,
+    so once legally active it can increase heals from any ability family. The
+    default ``None`` state means the caller did not request that scenario and no
+    negative-effect assumption is invented.
+
     A caller may also state that a fully charged Restoration Staff heavy attack
     has just completed. When that trigger is requested, the reviewed Essence
     Drain resolver proves weapon/passive legality and routes Major Mending through
@@ -47,8 +56,10 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         *,
         target_health_fraction: float,
         fully_charged_restoration_heavy_attack_completed: bool = False,
+        healer_has_negative_effect: bool | None = None,
         restoration_heavy_state: ExtremeRestorationHeavyCombatStateService | None = None,
         templar_restoring_light_healing: ExtremeTemplarRestoringLightHealingService | None = None,
+        necromancer_living_death_healing: ExtremeNecromancerLivingDeathHealingService | None = None,
         **kwargs,
     ) -> None:
         value = float(target_health_fraction)
@@ -58,8 +69,10 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         self.fully_charged_restoration_heavy_attack_completed = bool(
             fully_charged_restoration_heavy_attack_completed
         )
+        self.healer_has_negative_effect = healer_has_negative_effect
         self.restoration_heavy_state = restoration_heavy_state
         self.templar_restoring_light_healing = templar_restoring_light_healing
+        self.necromancer_living_death_healing = necromancer_living_death_healing
         super().__init__(**kwargs)
 
     def optimize(
@@ -82,6 +95,12 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
             "explicit conditional target health fraction "
             f"{self.target_health_fraction:.6f}"
         ]
+        if self.healer_has_negative_effect is not None:
+            scenarios.append(
+                "explicit healer negative-effect state "
+                f"{str(bool(self.healer_has_negative_effect)).casefold()}; "
+                "Curative Curse requires canonical legality proof"
+            )
         if self.fully_charged_restoration_heavy_attack_completed:
             scenarios.append(
                 "explicit fully charged Restoration Staff heavy attack completed; "
@@ -165,6 +184,47 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
             unresolved=unresolved,
         )
 
+    def _necromancer_curative_curse_event(
+        self,
+        *,
+        build: PlayerBuild,
+        progression: CharacterProgression,
+        event: ExtremeHealingEventResult,
+    ) -> ExtremeHealingEventResult:
+        if self.healer_has_negative_effect is None:
+            return event
+
+        service = self.necromancer_living_death_healing
+        if service is None:
+            service = ExtremeNecromancerLivingDeathHealingService(
+                getattr(self.optimizer, "database_path", None)
+            )
+            self.necromancer_living_death_healing = service
+
+        curse = service.resolve(
+            build=build,
+            progression=progression,
+            has_negative_effect=self.healer_has_negative_effect,
+        )
+        multiplier = float(curse.multiplier)
+        normal_heal = (
+            None if event.normal_heal is None else float(event.normal_heal) * multiplier
+        )
+        critical_heal = (
+            None
+            if event.critical_heal is None
+            else float(event.critical_heal) * multiplier
+        )
+        unresolved = tuple(
+            dict.fromkeys((*event.unresolved, *curse.unresolved))
+        )
+        return replace(
+            event,
+            normal_heal=normal_heal,
+            critical_heal=critical_heal,
+            unresolved=unresolved,
+        )
+
     def _evaluate(
         self,
         build: PlayerBuild,
@@ -203,6 +263,11 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
             target_health_fraction=self.target_health_fraction,
         )
         event = self._templar_mending_event(
+            build=build,
+            progression=candidate_progression,
+            event=event,
+        )
+        event = self._necromancer_curative_curse_event(
             build=build,
             progression=candidate_progression,
             event=event,
