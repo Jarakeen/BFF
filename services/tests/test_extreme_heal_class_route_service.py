@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from minmax.character_build.character_class import CLASS_SKILL_LINES, CharacterClass
+from models.build_model import PlayerBuild
 from services.extreme_heal_class_route_service import (
     ExtremeHealClassRouteService,
     canonical_class_skill_line_id,
@@ -62,3 +63,50 @@ def test_skill_line_filter_finds_native_and_subclass_routes_deterministically() 
             ),
         )
     )
+
+
+def test_materialized_subclass_route_survives_player_build_round_trip() -> None:
+    service = ExtremeHealClassRouteService()
+    route = next(
+        route
+        for route in service.routes_for_base_class(CharacterClass.WARDEN)
+        if set(route.equipped_skill_lines)
+        == {"green_balance", "restoring_light", "storm_calling"}
+    )
+    baseline = PlayerBuild(
+        BuildName="Heal Baseline",
+        EsoClass="Warden",
+        ClassMasteryAbilityIds=[101, 202],
+    )
+
+    materialized = service.materialize_build(baseline, route)
+    restored = PlayerBuild.from_dict(materialized.to_dict())
+
+    assert materialized is not baseline
+    assert baseline.ClassSkillLines == []
+    assert baseline.ClassMasteryAbilityIds == [101, 202]
+    assert restored.EsoClass == "warden"
+    assert set(restored.ClassSkillLines) == {
+        "green_balance",
+        "restoring_light",
+        "storm_calling",
+    }
+    assert restored.ClassMasteryAbilityIds == []
+
+
+def test_materialized_pure_route_preserves_class_mastery_selections() -> None:
+    service = ExtremeHealClassRouteService()
+    route = next(
+        route
+        for route in service.routes_for_base_class(CharacterClass.WARDEN)
+        if not route.is_subclassed
+    )
+    baseline = PlayerBuild(
+        EsoClass="Warden",
+        ClassMasteryAbilityIds=[101, 202],
+    )
+
+    materialized = service.materialize_build(baseline, route)
+
+    assert set(materialized.ClassSkillLines) == set(CLASS_SKILL_LINES[CharacterClass.WARDEN])
+    assert materialized.ClassMasteryAbilityIds == [101, 202]
