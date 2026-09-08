@@ -54,6 +54,26 @@ class _CoverageReport:
         return self.gaps
 
 
+class _StaticContextService:
+    def __init__(self, resolution) -> None:
+        self.resolution = resolution
+        self.calls = []
+
+    def resolve(self, build):
+        self.calls.append(build)
+        return self.resolution
+
+
+def _static_context(*, resolved: bool, unresolved=()):
+    return SimpleNamespace(
+        resolved=resolved,
+        unresolved=tuple(unresolved),
+        contexts=(SimpleNamespace(active_bar="front"), SimpleNamespace(active_bar="back"))
+        if resolved
+        else (),
+    )
+
+
 def _gap(*, blocking: bool) -> CanonicalKnowledgeGap:
     return CanonicalKnowledgeGap(
         domain=CanonicalKnowledgeDomain.RESOURCE_RECOVERY,
@@ -157,6 +177,56 @@ def test_resolved_saved_build_flows_into_effect_pipeline_with_materialized_evide
     assert result.validation.scope is RotationRecoveryValidationScope.CANONICAL_CANDIDATE
     assert result.validation.selectable is True
     assert result.validation.selected_candidate_id == "safe-policy"
+
+
+def test_unresolved_static_build_context_stops_candidate_pipeline_before_coverage() -> None:
+    canonical_build = object()
+    static = _static_context(
+        resolved=False,
+        unresolved=("front static context: Partial passive rank is not yet modeled: Prodigy 1/2",),
+    )
+    static_service = _StaticContextService(static)
+    dependency_service = _DependencyService(("heavy_attack:restoration",))
+    report = _CoverageReport((_gap(blocking=False),))
+    pipeline = _Pipeline(result=_selectable_pipeline_result())
+    support = RotationCanonicalCandidateSupport(
+        build_adapter=_Adapter(SavedBuildAdaptation(build=canonical_build, unresolved=())),
+        pipeline=pipeline,
+        dependency_service=dependency_service,
+        static_context_service=static_service,
+    )
+
+    result, values = _run(support, coverage_report=report)
+
+    assert static_service.calls == [values["player_build"]]
+    assert pipeline.calls == []
+    assert dependency_service.calls == []
+    assert report.calls == []
+    assert result.static_context is static
+    assert result.validation.scope is RotationRecoveryValidationScope.NOT_EVALUATED
+    assert result.validation.selectable is None
+    assert any("Prodigy 1/2" in reason for reason in result.validation.reasons)
+
+
+def test_resolved_static_build_context_is_retained_while_candidate_pipeline_runs() -> None:
+    canonical_build = object()
+    static = _static_context(resolved=True)
+    static_service = _StaticContextService(static)
+    pipeline_result = _selectable_pipeline_result()
+    pipeline = _Pipeline(result=pipeline_result)
+    support = RotationCanonicalCandidateSupport(
+        build_adapter=_Adapter(SavedBuildAdaptation(build=canonical_build, unresolved=())),
+        pipeline=pipeline,
+        static_context_service=static_service,
+    )
+
+    result, values = _run(support)
+
+    assert static_service.calls == [values["player_build"]]
+    assert len(pipeline.calls) == 1
+    assert result.pipeline_result is pipeline_result
+    assert result.static_context is static
+    assert result.validation.selectable is True
 
 
 def test_blocking_discovered_mechanics_gap_stops_candidate_pipeline() -> None:
