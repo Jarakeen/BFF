@@ -7,6 +7,7 @@ import sqlite3
 
 from minmax.rotation_duration_evidence import resolve_rotation_duration_evidence
 from minmax.skill_coefficient_repository import SkillCoefficientRepository
+from minmax.skill_component_classification import HealTemporalScope, SkillEffectKind
 from minmax.skill_component_runtime_timing import (
     RuntimeCadenceBoundKind,
     SkillComponentRuntimeTiming,
@@ -16,6 +17,9 @@ from minmax.skill_component_text_evidence import extract_component_text_evidence
 from services.rotation_healer_u50_periodic_cadence_repository import (
     RotationHealerU50PeriodicCadenceRepository,
 )
+from services.rotation_healer_u50_skill_component_repository import (
+    RotationHealerU50SkillComponentRepository,
+)
 
 
 @dataclass(frozen=True)
@@ -24,9 +28,11 @@ class RotationHealerCanonicalPeriodicTimingResolution:
 
     This resolution deliberately stops before inventing concrete tick timestamps.
     Coefficient text or narrowly reviewed U50 cadence evidence can prove cadence,
-    and rotation-duration evidence can prove an active window. First-tick offset,
-    exact expiry-boundary behavior, and recast/refresh semantics remain separate
-    runtime facts unless independently verified.
+    and rotation-duration evidence can prove an active window. Reviewed component
+    identity may prove that a coefficient is PERIODIC without forcing tooltip text
+    to prove that same fact a second time. First-tick offset, exact expiry-boundary
+    behavior, and recast/refresh semantics remain separate runtime facts unless
+    independently verified.
     """
 
     source_name: str
@@ -56,19 +62,24 @@ class RotationHealerCanonicalPeriodicTimingResolution:
 
 
 class RotationHealerCanonicalPeriodicTimingService:
-    """Resolve canonical/reviewed cadence plus Phase 13 duration evidence."""
+    """Resolve reviewed/canonical periodic identity, cadence, and duration."""
 
     def __init__(
         self,
         database_path: str | Path,
         *,
         reviewed_cadence_repository: RotationHealerU50PeriodicCadenceRepository | None = None,
+        reviewed_component_repository: RotationHealerU50SkillComponentRepository | None = None,
     ) -> None:
         self.database_path = Path(database_path)
         self.coefficients = SkillCoefficientRepository(self.database_path)
         self.reviewed_cadence = (
             reviewed_cadence_repository
             or RotationHealerU50PeriodicCadenceRepository()
+        )
+        self.reviewed_components = (
+            reviewed_component_repository
+            or RotationHealerU50SkillComponentRepository(self.database_path)
         )
 
     def resolve(
@@ -110,12 +121,13 @@ class RotationHealerCanonicalPeriodicTimingService:
 
         rank = skill.rank
         description = self._coef_description(rank.ability_id)
+        component_fragment = ""
+        timing: SkillComponentRuntimeTiming | None = None
+
         if not description:
             unresolved.append(
                 f"{rank.name}: canonical coef_description is unavailable for periodic timing"
             )
-            component_fragment = ""
-            timing = None
         else:
             component = extract_component_text_evidence(description, number)
             component_fragment = component.fragment
@@ -123,34 +135,55 @@ class RotationHealerCanonicalPeriodicTimingService:
                 unresolved.append(
                     f"{rank.name} coefficient {number}: coefficient-owned text fragment is unavailable"
                 )
-                timing = None
-            elif component.effect_kind != "heal" or component.is_dot is not True:
-                unresolved.append(
-                    f"{rank.name} coefficient {number}: canonical text does not prove periodic healing identity"
-                )
-                timing = None
             else:
-                timing = extract_skill_component_runtime_timing(component_fragment)
-                evidence.extend(component.evidence)
-                if timing is None:
-                    reviewed = self.reviewed_cadence.get(
-                        source_name=rank.name,
-                        coefficient_number=number,
+                reviewed_component = self.reviewed_components.get_component(
+                    rank.skill_rank_id,
+                    number,
+                )
+                reviewed_periodic = (
+                    reviewed_component is not None
+                    and reviewed_component.effect_kind is SkillEffectKind.HEAL
+                    and reviewed_component.heal_temporal_scope is HealTemporalScope.PERIODIC
+                )
+                text_periodic = (
+                    component.effect_kind == "heal" and component.is_dot is True
+                )
+
+                if not text_periodic and not reviewed_periodic:
+                    unresolved.append(
+                        f"{rank.name} coefficient {number}: canonical/reviewed identity does not prove periodic healing"
                     )
-                    if reviewed is None:
-                        unresolved.append(
-                            f"{rank.name} coefficient {number}: canonical periodic cadence is unresolved"
-                        )
-                    else:
-                        timing = reviewed.timing
-                        evidence.append(
-                            f"reviewed U50 cadence: {timing.evidence} ({timing.bound_kind.value})"
-                        )
-                        evidence.extend(reviewed.provenance)
                 else:
-                    evidence.append(
-                        f"runtime cadence: {timing.evidence} ({timing.bound_kind.value})"
-                    )
+                    evidence.extend(component.evidence)
+                    if reviewed_periodic and not text_periodic:
+                        evidence.append(
+                            "reviewed U50 component identity: HEAL / PERIODIC"
+                        )
+                        if reviewed_component is not None and reviewed_component.source:
+                            evidence.append(
+                                f"reviewed component source: {reviewed_component.source}"
+                            )
+
+                    timing = extract_skill_component_runtime_timing(component_fragment)
+                    if timing is None:
+                        reviewed = self.reviewed_cadence.get(
+                            source_name=rank.name,
+                            coefficient_number=number,
+                        )
+                        if reviewed is None:
+                            unresolved.append(
+                                f"{rank.name} coefficient {number}: canonical periodic cadence is unresolved"
+                            )
+                        else:
+                            timing = reviewed.timing
+                            evidence.append(
+                                f"reviewed U50 cadence: {timing.evidence} ({timing.bound_kind.value})"
+                            )
+                            evidence.extend(reviewed.provenance)
+                    else:
+                        evidence.append(
+                            f"runtime cadence: {timing.evidence} ({timing.bound_kind.value})"
+                        )
 
         duration_seconds = self._resolve_duration_seconds(
             rank.name,
