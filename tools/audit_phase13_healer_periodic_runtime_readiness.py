@@ -17,6 +17,10 @@ from services.rotation_healer_saved_build_periodic_timing_service import (
     RotationHealerSavedBuildPeriodicTimingEntry,
     RotationHealerSavedBuildPeriodicTimingService,
 )
+from services.rotation_healer_u50_periodic_reapplication_repository import (
+    RotationHealerPeriodicReapplicationKind,
+    RotationHealerU50PeriodicReapplicationRepository,
+)
 
 DEFAULT_DATABASE = ROOT / "data" / "eso.db"
 DEFAULT_BUILDS = ROOT / "data" / "builds.json"
@@ -47,12 +51,20 @@ def _load_build(path: Path, build_name: str, character_name: str | None) -> Play
     return matches[0]
 
 
+def _reapplication_evidence(entry: RotationHealerSavedBuildPeriodicTimingEntry):
+    return RotationHealerU50PeriodicReapplicationRepository().get(
+        source_name=entry.skill_name,
+        coefficient_number=entry.coefficient_number,
+    )
+
+
 def runtime_facts_still_required(entry: RotationHealerSavedBuildPeriodicTimingEntry) -> tuple[str, ...]:
     """Facts still needed before a repeated rotation can emit authoritative HoT ticks.
 
     The audit delegates the actual readiness decision to the same runtime-evidence
-    bridge the rotation engine uses. This renderer only turns those precise
-    diagnostics into compact human labels.
+    bridge the rotation engine uses. Reviewed reapplication topology can make the
+    remaining repeated-cast gap more precise, but it never invents the exact
+    termination/replacement boundary required by the scheduler.
     """
 
     resolution = RotationHealerPeriodicRuntimeEvidenceService().resolve(
@@ -72,7 +84,15 @@ def runtime_facts_still_required(entry: RotationHealerSavedBuildPeriodicTimingEn
     if any("tick-at-expiry" in item for item in messages):
         gaps.append("tick-at-expiry boundary behavior")
     if any("refresh/recast" in item for item in messages):
-        gaps.append("refresh/recast behavior for repeated applications")
+        topology = _reapplication_evidence(entry)
+        if topology is None:
+            gaps.append("refresh/recast behavior for repeated applications")
+        elif topology.kind is RotationHealerPeriodicReapplicationKind.SECOND_ACTIVATION_SPECIAL:
+            gaps.append("second-activation bloom scheduling / periodic termination boundary")
+        elif topology.kind is RotationHealerPeriodicReapplicationKind.ONE_ACTIVE_INSTANCE:
+            gaps.append("one-active-instance replacement/termination boundary")
+        else:
+            gaps.append("refresh/recast behavior for repeated applications")
 
     return tuple(dict.fromkeys(gaps))
 
@@ -96,6 +116,13 @@ def _render_entry(entry: RotationHealerSavedBuildPeriodicTimingEntry) -> list[st
     if timing.unresolved:
         lines.append("  canonical unresolved:")
         lines.extend(f"    - {item}" for item in timing.unresolved)
+
+    topology = _reapplication_evidence(entry)
+    if topology is not None:
+        lines.append(f"  reapplication topology: {topology.kind.value}")
+        lines.append(f"    - {topology.note}")
+        lines.extend(f"    - evidence: {item}" for item in topology.provenance)
+
     lines.append("  runtime facts still required:")
     gaps = runtime_facts_still_required(entry)
     if gaps:
@@ -109,7 +136,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
             "Audit a real saved healer build for periodic-heal runtime readiness. "
-            "Reports canonical cadence/duration separately from first-tick and refresh semantics."
+            "Reports canonical cadence/duration separately from first-tick and reapplication semantics."
         )
     )
     parser.add_argument("--build", required=True)
@@ -148,7 +175,8 @@ def main() -> int:
     print()
     print(
         "Interpretation: cadence and duration can be canonical while full rotation tick "
-        "scheduling remains blocked by first-occurrence, expiry-boundary, or refresh evidence."
+        "scheduling remains blocked by first-occurrence, expiry-boundary, or exact "
+        "reapplication-boundary evidence."
     )
     return 0
 
