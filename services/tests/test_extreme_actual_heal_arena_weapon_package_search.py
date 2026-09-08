@@ -132,5 +132,10 @@ def test_actual_heal_optimizer_can_select_exact_subtype_arena_weapon(monkeypatch
         and "paired main/off-hand" in item
         for item in result.search_scope
     )
-    assert any("canonically slotted non-ring mythic" in item for item in result.search_scope)
-    assert result.omitted_scope[0] == "non-ring mythic packages that require paired one-hand active-weapon routing"
+    assert any(
+        "canonically slotted non-ring mythic" in item
+        and "paired main/off-hand" in item
+        for item in result.search_scope
+    )
+    assert not any("mythic" in item for item in result.omitted_scope)
+    assert result.omitted_scope[0] == "class change / subclass route"
