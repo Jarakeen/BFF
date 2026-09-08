@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from minmax.skill_component_classification import SkillEffectKind
 from minmax.stat_ids import StatId
 from models.build_model import PlayerBuild
@@ -75,8 +77,8 @@ def test_blood_of_the_green_dragon_does_not_aggregate_direct_and_later_healing()
     assert result.heal_coefficient_numbers == (1, 2)
     assert result.normal_heal is None
     assert result.critical_heal is None
-    assert result.critical_healing_bonus == 0.20
-    assert result.critical_multiplier == 1.70
+    assert result.critical_healing_bonus == pytest.approx(0.20)
+    assert result.critical_multiplier == pytest.approx(1.70)
     assert any("one-event Extreme heal is unresolved" in message for message in result.unresolved)
     assert not result.mechanic_complete
 
