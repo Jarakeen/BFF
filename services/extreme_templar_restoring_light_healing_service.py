@@ -19,11 +19,12 @@ class ExtremeTemplarRestoringLightHealingResult:
 class ExtremeTemplarRestoringLightHealingService:
     """Resolve reviewed Templar Mending healing for Extreme builds.
 
-    At reviewed max rank, Mending increases the healing effects of Restoring
-    Light abilities by up to 13% in proportion to the severity of the target's
-    wounds. This service models that wording linearly against missing-health
-    fraction: a full-health target receives no Mending bonus, a half-health
-    target receives 6.5%, and a theoretical zero-health fraction reaches 13%.
+    Under BFF's current live U50 boundary, reviewed max-rank Mending increases
+    the healing effects of Restoring Light abilities by up to 12% in proportion
+    to the severity of the target's wounds. This service models that wording
+    linearly against missing-health fraction: a full-health target receives no
+    Mending bonus, a half-health target receives 6%, and a theoretical
+    zero-health fraction reaches 12%.
 
     The passive is an ability-family modifier, not generic Healing Done. It must
     therefore never increase Restoration Staff, guild, or other class-line heals.
@@ -37,7 +38,7 @@ class ExtremeTemplarRestoringLightHealingService:
 
     PASSIVE_NAME = "Mending"
     RESTORING_LIGHT_ID = "restoring_light"
-    MAX_HEALING_BONUS = 0.13
+    MAX_HEALING_BONUS = 0.12
 
     def __init__(
         self,
