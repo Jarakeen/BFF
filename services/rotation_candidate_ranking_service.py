@@ -47,10 +47,11 @@ class RotationCandidateRankingService:
     This is intentionally lexicographic rather than weighted. A candidate that
     misses an explicit demand action, required static support effect, runtime
     uptime floor, demand-entry resource reserve, encounter bar-availability rule,
-    resolved action cooldown, occupancy, range, slotted-bar, active-bar, or Ultimate
-    affordability rule, introduces candidate-specific unresolved mechanics evidence,
-    or incurs resource shortfall cannot outrank one that satisfies those supplied
-    hard obligations merely because its softer resource numbers look prettier.
+    resolved action cooldown, occupancy, range, target identity, slotted-bar,
+    active-bar, or Ultimate affordability rule, introduces candidate-specific
+    unresolved mechanics evidence, or incurs resource shortfall cannot outrank one
+    that satisfies those supplied hard obligations merely because its softer
+    resource numbers look prettier.
 
     Within the same eligibility tier, deterministic evidence ordering is used:
     fewer hard failures first, including candidate-specific unresolved mechanics,
@@ -105,6 +106,7 @@ class RotationCandidateRankingService:
         cooldown_violations = len(getattr(scorecard, "cooldown_violations", ()))
         occupancy_violations = len(getattr(scorecard, "occupancy_violations", ()))
         range_violations = len(getattr(scorecard, "range_violations", ()))
+        target_violations = len(getattr(scorecard, "target_violations", ()))
         slot_violations = len(getattr(scorecard, "slot_violations", ()))
         active_bar_violations = len(getattr(scorecard, "active_bar_violations", ()))
         ultimate_violations = len(
@@ -138,6 +140,7 @@ class RotationCandidateRankingService:
             + cooldown_violations
             + occupancy_violations
             + range_violations
+            + target_violations
             + slot_violations
             + active_bar_violations
             + ultimate_violations
@@ -158,6 +161,7 @@ class RotationCandidateRankingService:
             cooldown_violations,
             occupancy_violations,
             range_violations,
+            target_violations,
             slot_violations,
             active_bar_violations,
             ultimate_violations,
@@ -237,16 +241,31 @@ class RotationCandidateRankingService:
             for violation in range_violations:
                 requirement = violation.requirement
                 scope = f" on {requirement.bar} bar" if requirement.bar else ""
+                label = requirement.action_name or requirement.action_kind.value
                 upper = (
                     f"{violation.maximum_range:g}"
                     if violation.maximum_range is not None
                     else "unbounded"
                 )
                 reasons.append(
-                    f"range legality for {requirement.action_name!r}{scope} at "
+                    f"range legality for {label!r}{scope} at "
                     f"{violation.time_seconds:g}s in {violation.window_name!r}: "
                     f"distance {violation.distance:g}, legal range "
                     f"{violation.minimum_range:g}..{upper}; {violation.reason}"
+                )
+        target_violations = tuple(getattr(scorecard, "target_violations", ()))
+        if target_violations:
+            reasons.append(f"{len(target_violations)} action target violation(s)")
+            for violation in target_violations:
+                requirement = violation.requirement
+                scope = f" on {requirement.bar} bar" if requirement.bar else ""
+                label = requirement.action_name or requirement.action_kind.value
+                allowed = ", ".join(target.value for target in requirement.allowed_targets)
+                reasons.append(
+                    f"target legality for {label!r}{scope} at "
+                    f"{violation.time_seconds:g}s in {violation.window_name!r}: "
+                    f"observed {violation.observed_target.value}, allowed {allowed}; "
+                    f"{violation.reason}"
                 )
         slot_violations = tuple(getattr(scorecard, "slot_violations", ()))
         if slot_violations:
