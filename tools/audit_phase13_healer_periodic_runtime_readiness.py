@@ -10,6 +10,9 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from models.build_model import PlayerBuild
+from services.rotation_healer_periodic_runtime_evidence_service import (
+    RotationHealerPeriodicRuntimeEvidenceService,
+)
 from services.rotation_healer_saved_build_periodic_timing_service import (
     RotationHealerSavedBuildPeriodicTimingEntry,
     RotationHealerSavedBuildPeriodicTimingService,
@@ -45,26 +48,32 @@ def _load_build(path: Path, build_name: str, character_name: str | None) -> Play
 
 
 def runtime_facts_still_required(entry: RotationHealerSavedBuildPeriodicTimingEntry) -> tuple[str, ...]:
-    """Facts still needed before a repeated rotation can emit authoritative HoT ticks."""
+    """Facts still needed before a repeated rotation can emit authoritative HoT ticks.
 
-    gaps: list[str] = []
-    timing = entry.timing
+    The audit delegates the actual readiness decision to the same runtime-evidence
+    bridge the rotation engine uses. This renderer only turns those precise
+    diagnostics into compact human labels.
+    """
 
-    if timing.timing is None or timing.cadence_seconds is None:
-        gaps.append("periodic cadence")
-    if timing.duration_seconds is None:
-        gaps.append("active duration")
-
-    # These facts are intentionally separate from cadence/duration. Existing Phase 7
-    # timing requires the caller to supply the first actual occurrence rather than
-    # guessing whether a recurring effect ticks immediately or after one interval.
-    gaps.extend(
-        (
-            "first-tick offset from cast/application",
-            "tick-at-expiry boundary behavior",
-            "refresh/recast behavior for repeated applications",
-        )
+    resolution = RotationHealerPeriodicRuntimeEvidenceService().resolve(
+        canonical=entry.timing,
+        observation=None,
+        repeated_applications=True,
     )
+    messages = tuple(item.casefold() for item in resolution.unresolved)
+    gaps: list[str] = []
+
+    if any("canonical periodic cadence" in item for item in messages):
+        gaps.append("periodic cadence")
+    if any("canonical active duration" in item for item in messages):
+        gaps.append("active duration")
+    if any("first-tick offset" in item for item in messages):
+        gaps.append("first-tick offset from cast/application")
+    if any("tick-at-expiry" in item for item in messages):
+        gaps.append("tick-at-expiry boundary behavior")
+    if any("refresh/recast" in item for item in messages):
+        gaps.append("refresh/recast behavior for repeated applications")
+
     return tuple(dict.fromkeys(gaps))
 
 
@@ -88,7 +97,11 @@ def _render_entry(entry: RotationHealerSavedBuildPeriodicTimingEntry) -> list[st
         lines.append("  canonical unresolved:")
         lines.extend(f"    - {item}" for item in timing.unresolved)
     lines.append("  runtime facts still required:")
-    lines.extend(f"    - {item}" for item in runtime_facts_still_required(entry))
+    gaps = runtime_facts_still_required(entry)
+    if gaps:
+        lines.extend(f"    - {item}" for item in gaps)
+    else:
+        lines.append("    - none")
     return lines
 
 
