@@ -11,7 +11,7 @@ from services.canonical_knowledge_gap import (
 from ui.rotation_dashboard_canonical_page import CanonicalRotationDashboardPage
 
 
-def _gap() -> CanonicalKnowledgeGap:
+def _gap(*, blocking: bool = True) -> CanonicalKnowledgeGap:
     return CanonicalKnowledgeGap(
         domain=CanonicalKnowledgeDomain.ASSIGNMENT_POLICY,
         key="xalvakka_hm:major_brittle",
@@ -22,14 +22,14 @@ def _gap() -> CanonicalKnowledgeGap:
         ),
         consumers=("comp_maker", "rotation_maker", "optimizer"),
         source_context="encounter=xalvakka_hm; provider_member=char-a",
+        blocking=blocking,
     )
 
 
-def test_evidence_bundle_research_filter_exposes_cross_system_consumers() -> None:
+def _bundle(gaps):
     from ui.rotation_canonical_evidence_bundle_support import RotationCanonicalEvidenceBundle
 
-    gap = _gap()
-    bundle = RotationCanonicalEvidenceBundle(
+    return RotationCanonicalEvidenceBundle(
         encounter_id="xalvakka_hm",
         encounter_name="Xalvakka",
         demands=(),
@@ -42,17 +42,34 @@ def test_evidence_bundle_research_filter_exposes_cross_system_consumers() -> Non
         maximum_amount=32000,
         trigger_fraction=0.35,
         restoration_resolver=object(),
-        knowledge_gaps=(gap,),
+        knowledge_gaps=tuple(gaps),
     )
 
+
+def test_evidence_bundle_research_filter_exposes_cross_system_consumers() -> None:
+    gap = _gap()
+    bundle = _bundle((gap,))
+
     assert bundle.ready is False
+    assert bundle.blocking_knowledge_gaps == (gap,)
+    assert bundle.advisory_knowledge_gaps == ()
     assert bundle.research_for("comp_maker") == (gap,)
     assert bundle.research_for("rotation_maker") == (gap,)
     assert bundle.research_for("optimizer") == (gap,)
     assert bundle.research_for("unrelated") == ()
 
 
-def test_dashboard_refuses_knowledge_gap_and_explains_what_to_bring_back() -> None:
+def test_advisory_research_remains_visible_without_blocking_rotation_readiness() -> None:
+    gap = _gap(blocking=False)
+    bundle = _bundle((gap,))
+
+    assert bundle.ready is True
+    assert bundle.blocking_knowledge_gaps == ()
+    assert bundle.advisory_knowledge_gaps == (gap,)
+    assert bundle.research_for("rotation_maker") == (gap,)
+
+
+def test_dashboard_refuses_blocking_knowledge_gap_and_explains_what_to_bring_back() -> None:
     page = SimpleNamespace()
     bundle = SimpleNamespace(
         ready=False,
@@ -81,3 +98,4 @@ def test_knowledge_gap_normalizes_duplicate_consumer_labels() -> None:
     )
 
     assert gap.consumers == ("rotation_maker", "optimizer")
+    assert gap.blocking is True
