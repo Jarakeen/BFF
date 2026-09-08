@@ -1,8 +1,9 @@
-from types import SimpleNamespace
-
 import pytest
 
 from models.build_model import PlayerBuild
+from services.extreme_actual_heal_class_route_catalog_service import (
+    ExtremeActualHealClassRouteCatalogResult,
+)
 from services.extreme_conditional_actual_heal_class_route_catalog_service import (
     ExtremeConditionalActualHealClassRouteCatalogService,
 )
@@ -28,7 +29,7 @@ class _Catalog:
                 include_base_class_changes,
             )
         )
-        return SimpleNamespace(
+        return ExtremeActualHealClassRouteCatalogResult(
             entries=(),
             best_scored=None,
             best_complete=None,
