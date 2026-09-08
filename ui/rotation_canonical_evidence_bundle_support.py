@@ -33,14 +33,9 @@ from services.rotation_recovery_heavy_replay_service import (
 class RotationCanonicalEvidenceBundle:
     """Application-ready evidence for one canonical rotation candidate run.
 
-    Encounter demands are derived from reviewed persisted timeline facts plus explicit
-    demand policies. Strategy/evaluation policy, recovery evidence, effect floors,
-    passives, reserve rules, and refresh candidates remain caller-owned and are never
-    inferred from encounter prose or role convention.
-
-    ``knowledge_gaps`` carries structured missing canonical facts that can benefit
-    Rotation Maker, Comp Maker, Optimizer, or any combination of the three. A bundle
-    with either ordinary unresolved evidence or a canonical knowledge gap is not ready.
+    ``knowledge_gaps`` may contain both blocking evidence gaps and advisory research.
+    Advisory gaps remain visible to Comp Maker/Rotation Maker/Optimizer without
+    globally disabling an otherwise defensible candidate evaluation.
     """
 
     encounter_id: str
@@ -63,11 +58,19 @@ class RotationCanonicalEvidenceBundle:
     knowledge_gaps: tuple[CanonicalKnowledgeGap, ...] = ()
 
     @property
+    def blocking_knowledge_gaps(self) -> tuple[CanonicalKnowledgeGap, ...]:
+        return tuple(gap for gap in self.knowledge_gaps if gap.blocking)
+
+    @property
+    def advisory_knowledge_gaps(self) -> tuple[CanonicalKnowledgeGap, ...]:
+        return tuple(gap for gap in self.knowledge_gaps if not gap.blocking)
+
+    @property
     def ready(self) -> bool:
-        return not self.unresolved and not self.knowledge_gaps
+        return not self.unresolved and not self.blocking_knowledge_gaps
 
     def research_for(self, consumer: str) -> tuple[CanonicalKnowledgeGap, ...]:
-        """Return gaps that would improve one named consumer surface."""
+        """Return blocking and advisory research that benefits one consumer surface."""
 
         key = str(consumer or "").strip().casefold()
         if not key:
