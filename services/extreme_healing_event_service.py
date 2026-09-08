@@ -13,6 +13,9 @@ from minmax.skill_line_repository import SkillLineRepository
 from minmax.skill_tooltip_calculator import SkillTooltipResult
 from minmax.stat_ids import StatId
 from models.build_model import PlayerBuild
+from services.extreme_nightblade_siphoning_healing_service import (
+    ExtremeNightbladeSiphoningHealingService,
+)
 from services.extreme_warden_green_balance_healing_service import (
     ExtremeWardenGreenBalanceHealingService,
 )
@@ -24,11 +27,11 @@ class ExtremeHealingEventResult:
 
     ``normal_heal`` is the sum of HEAL-classified coefficient components after
     the canonical saved-build actual-effect pipeline has applied sheet Healing
-    Done and verified component-scoped healing CP. Reviewed ability-family
-    modifiers such as Restoration Master and Emerald Moss are then applied only
-    to matching heal families rather than being collapsed into generic Healing
-    Done. Explicit situational inputs may add reviewed conditional modifiers such
-    as Restoration Expert without pretending those conditions are always active.
+    Done and verified component-scoped healing CP. Reviewed active-bar Healing
+    Done such as Soul Siphoner and ability-family modifiers such as Restoration
+    Master and Emerald Moss are then applied in their own reviewed layers.
+    Explicit situational inputs may add conditional modifiers such as Restoration
+    Expert without pretending those conditions are always active.
 
     ``critical_heal`` is the largest reviewed value of the same event when every
     crit-eligible HEAL component crits. Components explicitly marked non-crittable
@@ -65,9 +68,11 @@ class ExtremeHealingEventService:
 
     BFF already owns coefficient scaling, component classification, saved-build
     Healing Done, and healing CP semantics. This service composes those reviewed
-    layers for the Extreme lab, applies reviewed ability-family and explicit
-    situational healing modifiers, and adds the canonical 50% base critical
-    healing multiplier from the UESP SpellCritHealing/WeaponCritHealing formula.
+    layers for the Extreme lab, adds reviewed active-bar Healing Done that is not
+    yet represented in the canonical sheet context, applies reviewed
+    ability-family and explicit situational healing modifiers, and adds the
+    canonical 50% base critical healing multiplier from the UESP
+    SpellCritHealing/WeaponCritHealing formula.
 
     Critical chance is intentionally absent. "Largest actual heal" asks how big
     the event can be when it crits; an expected-heal objective is a separate
@@ -85,6 +90,7 @@ class ExtremeHealingEventService:
         database_path: Path | None = None,
         tooltip_service: SavedBuildSkillTooltipService | None = None,
         skill_line_repository: SkillLineRepository | None = None,
+        nightblade_siphoning_healing: ExtremeNightbladeSiphoningHealingService | None = None,
         warden_green_balance_healing: ExtremeWardenGreenBalanceHealingService | None = None,
     ) -> None:
         self.database_path = Path(database_path or get_data_dir() / "eso.db")
@@ -93,6 +99,13 @@ class ExtremeHealingEventService:
         )
         self.skill_line_repository = skill_line_repository or SkillLineRepository(
             self.database_path
+        )
+        self.nightblade_siphoning_healing = (
+            nightblade_siphoning_healing
+            or ExtremeNightbladeSiphoningHealingService(
+                self.database_path,
+                skill_line_repository=self.skill_line_repository,
+            )
         )
         self.warden_green_balance_healing = (
             warden_green_balance_healing
@@ -167,6 +180,11 @@ class ExtremeHealingEventService:
             for trace in result.components
         }
 
+        bar_multiplier, bar_unresolved = self._reviewed_bar_healing_multiplier(
+            build=build,
+            context=context,
+        )
+        unresolved.extend(bar_unresolved)
         ability_multiplier, family_unresolved = self._ability_family_healing_multiplier(
             build=build,
             context=context,
@@ -179,7 +197,7 @@ class ExtremeHealingEventService:
             target_health_fraction=target_health_fraction,
         )
         unresolved.extend(situational_unresolved)
-        healing_multiplier = ability_multiplier * situational_multiplier
+        healing_multiplier = bar_multiplier * ability_multiplier * situational_multiplier
 
         value_by_number: dict[int, float] = {}
         normal_heal: float | None = None
@@ -282,6 +300,23 @@ class ExtremeHealingEventService:
         if rank != maximum:
             return 1.0, (f"Partial passive rank is not yet modeled: {passive_name} {rank}/{maximum}",)
         return multiplier, ()
+
+    def _reviewed_bar_healing_multiplier(
+        self,
+        *,
+        build: PlayerBuild,
+        context: BuildCalculationContext,
+    ) -> tuple[float, tuple[str, ...]]:
+        progression = getattr(context, "progression", None)
+        if progression is None:
+            return 1.0, ()
+
+        siphoner = self.nightblade_siphoning_healing.resolve(
+            build=build,
+            progression=progression,
+            active_bar=str(getattr(context, "active_bar", "front") or "front"),
+        )
+        return siphoner.multiplier, siphoner.unresolved
 
     def _ability_family_healing_multiplier(
         self,
