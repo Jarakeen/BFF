@@ -346,3 +346,17 @@ In the 60-second Xalvakka healer bar-access audit, the diagnostic rescue kept al
 **What it means in actual play:** protecting the cast count is not enough when a mechanic forces a bar swap or rearranges support skills. The same five casts can provide less useful coverage if their spacing gets worse.
 
 **For BFF:** schedule repair must measure the actual active timeline. Required support uptime must be checked as an explicit hard obligation before a rotation can win on better Magicka or another softer benefit.
+
+---
+
+## 2026-09-08 — A class-line slot passive can boost heals from a completely different skill line
+
+While extending MOST Actual Heal, BFF reviewed Nightblade **Soul Siphoner** separately from Warden **Emerald Moss**. Both care about what is slotted on the active bar, but they do not boost the same thing.
+
+At reviewed max rank, Soul Siphoner increases **generic Healing Done by 3% for each Siphoning ability slotted**. That means adding Siphoning carrier skills can increase the size of a Restoration Staff heal such as Combat Prayer even though Combat Prayer itself is not a Siphoning ability. Emerald Moss is narrower: Green Balance slots only increase healing from Green Balance abilities.
+
+**Layman's version:** sometimes a skill on your bar is helping another heal simply by being there. It does not have to be the heal you are casting, and it does not even have to come from the same skill line as that heal.
+
+**What it means in actual play:** two bars with identical gear and the same heal can produce different heal numbers because one bar has more Siphoning abilities slotted. A healer can therefore trade utility slots for raw heal size without changing weapons or armor.
+
+**For BFF:** slot-count passives need their exact scope preserved. Soul Siphoner belongs in a generic active-bar Healing Done layer, while Emerald Moss remains an ability-family modifier. Treating both as the same kind of bonus would either undercount Soul Siphoner or incorrectly let Emerald Moss buff unrelated heals.
