@@ -15,24 +15,24 @@ from services.skill_choice_service import load_skill_choices
 class ExtremeActualHealReviewedBarCandidateService:
     """Generate bounded active-bar changes for reviewed actual-heal passives.
 
-    This first bar-search tranche is intentionally narrow. The shared context
-    already has verified slot-count math for Mages Guild ``Magicka Controller``
-    and Fighters Guild ``Slayer``. Both can change an actual healing event via
-    Max Magicka or Weapon/Spell Damage, so Extreme may search legal carrier
-    skills from those lines and let the canonical context rescore the whole
-    character.
+    This bar-search layer is intentionally narrow. The shared context already has
+    verified slot-count math for Mages Guild ``Magicka Controller`` and Fighters
+    Guild ``Slayer``. Extreme also owns reviewed Green Balance ``Emerald Moss``
+    family math, where each slotted Green Balance ability increases Green Balance
+    healing. Those three families can therefore justify legal carrier-skill search
+    while the canonical context/event layer remains responsible for final scoring.
 
-    Ability-specific cast/proc/slotted effects are *not* inferred here. A guild
-    ability is used only as a legal carrier for the already-reviewed line-count
-    passive. One deterministic representative per base skill is enough for this
-    objective family and avoids pretending that unreviewed morph mechanics have
-    been scored.
+    Ability-specific cast/proc/slotted effects are *not* inferred here. A skill is
+    used only as a legal carrier for the explicitly reviewed line-count passive.
+    One deterministic representative per base skill is enough for this objective
+    family and avoids pretending that unreviewed morph mechanics have been scored.
     """
 
-    REVIEWED_LINE_IDS = frozenset({"mages_guild", "fighters_guild"})
+    REVIEWED_LINE_IDS = frozenset({"mages_guild", "fighters_guild", "green_balance"})
     PASSIVE_BY_LINE_ID = {
         "mages_guild": "Magicka Controller",
         "fighters_guild": "Slayer",
+        "green_balance": "Emerald Moss",
     }
 
     def __init__(
@@ -64,6 +64,14 @@ class ExtremeActualHealReviewedBarCandidateService:
             or record.get("id")
         )
 
+    @classmethod
+    def _owned_line_ids(cls, progression: CharacterProgression) -> frozenset[str]:
+        return frozenset(
+            cls._line_id(line)
+            for line in progression.owned_skill_lines
+            if cls._line_id(line)
+        )
+
     def reviewed_skill_records(
         self,
         progression: CharacterProgression,
@@ -71,6 +79,7 @@ class ExtremeActualHealReviewedBarCandidateService:
         """Return one deterministic active-skill carrier per reviewed base skill."""
 
         records = list(self.skill_loader(self.database_path))
+        owned_line_ids = self._owned_line_ids(progression)
         grouped: dict[int, list[dict]] = {}
         for record in records:
             if not isinstance(record, dict):
@@ -79,7 +88,7 @@ class ExtremeActualHealReviewedBarCandidateService:
             line_id = self._line_id(line)
             if line_id not in self.REVIEWED_LINE_IDS:
                 continue
-            if not progression.owns_skill_line(line):
+            if line_id not in owned_line_ids:
                 continue
             if self._integer(record.get("is_player")) != 1:
                 continue
