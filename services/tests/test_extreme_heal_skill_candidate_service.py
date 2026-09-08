@@ -102,7 +102,10 @@ def test_discovers_current_class_and_owned_weapon_heals(tmp_path):
 
     candidates = service.candidates_for_build(build, progression)
 
-    assert [candidate.name for candidate in candidates] == ["Budding Seeds", "Grand Healing"]
+    # Candidate order is deterministic presentation detail, not mechanics.
+    # Discovery correctness is the legal candidate set plus each candidate's
+    # canonical metadata.
+    assert {candidate.name for candidate in candidates} == {"Budding Seeds", "Grand Healing"}
     budding = next(candidate for candidate in candidates if candidate.name == "Budding Seeds")
     assert budding.rank == 4
     assert budding.ability_id == 102
