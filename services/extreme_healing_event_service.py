@@ -5,7 +5,7 @@ from pathlib import Path
 
 from engine.config import get_data_dir
 from minmax.build_calculation_context import BuildCalculationContext
-from minmax.character_build.weapon_type import WeaponSkillLine, resolve_weapon_skill_line
+from minmax.character_build.weapon_type import WeaponSkillLine, WeaponType, resolve_weapon_skill_line
 from minmax.eso_weapon_type_id import weapon_type_from_saved_name
 from minmax.saved_build_skill_tooltip_service import SavedBuildSkillTooltipService
 from minmax.skill_component_classification import SkillEffectKind
@@ -23,7 +23,9 @@ class ExtremeHealingEventResult:
     the canonical saved-build actual-effect pipeline has applied sheet Healing
     Done and verified component-scoped healing CP. Reviewed ability-family
     modifiers such as Restoration Master are then applied only to matching heal
-    families rather than being collapsed into generic Healing Done.
+    families rather than being collapsed into generic Healing Done. Explicit
+    situational inputs may add reviewed conditional modifiers such as Restoration
+    Expert without pretending those conditions are always active.
 
     ``critical_heal`` is the largest reviewed value of the same event when every
     crit-eligible HEAL component crits. Components explicitly marked non-crittable
@@ -60,9 +62,9 @@ class ExtremeHealingEventService:
 
     BFF already owns coefficient scaling, component classification, saved-build
     Healing Done, and healing CP semantics. This service composes those reviewed
-    layers for the Extreme lab, applies reviewed ability-family healing modifiers,
-    and adds the canonical 50% base critical healing multiplier from the UESP
-    SpellCritHealing/WeaponCritHealing formula.
+    layers for the Extreme lab, applies reviewed ability-family and explicit
+    situational healing modifiers, and adds the canonical 50% base critical
+    healing multiplier from the UESP SpellCritHealing/WeaponCritHealing formula.
 
     Critical chance is intentionally absent. "Largest actual heal" asks how big
     the event can be when it crits; an expected-heal objective is a separate
@@ -71,6 +73,8 @@ class ExtremeHealingEventService:
 
     BASE_CRITICAL_HEALING = 0.50
     RESTORATION_MASTER_HEALING_MULTIPLIER = 1.05
+    RESTORATION_EXPERT_HEALING_MULTIPLIER = 1.15
+    RESTORATION_EXPERT_HEALTH_THRESHOLD = 0.30
 
     def __init__(
         self,
@@ -93,7 +97,13 @@ class ExtremeHealingEventService:
         build: PlayerBuild,
         context: BuildCalculationContext,
         entity_id: str,
+        target_health_fraction: float | None = None,
     ) -> ExtremeHealingEventResult:
+        if target_health_fraction is not None:
+            target_health_fraction = float(target_health_fraction)
+            if not 0.0 <= target_health_fraction <= 1.0:
+                raise ValueError("target_health_fraction must be between 0 and 1")
+
         result = self.tooltip_service.evaluate_entity_id(
             build=build,
             context=context,
@@ -152,6 +162,13 @@ class ExtremeHealingEventService:
             result=result,
         )
         unresolved.extend(family_unresolved)
+        situational_multiplier, situational_unresolved = self._situational_healing_multiplier(
+            build=build,
+            context=context,
+            target_health_fraction=target_health_fraction,
+        )
+        unresolved.extend(situational_unresolved)
+        healing_multiplier = ability_multiplier * situational_multiplier
 
         value_by_number: dict[int, float] = {}
         normal_heal: float | None = None
@@ -168,7 +185,7 @@ class ExtremeHealingEventService:
                 )
             else:
                 value_by_number = {
-                    number: actual_by_number.get(number, base_by_number[number]) * ability_multiplier
+                    number: actual_by_number.get(number, base_by_number[number]) * healing_multiplier
                     for number in heal_numbers
                 }
                 normal_heal = sum(value_by_number.values())
@@ -209,6 +226,52 @@ class ExtremeHealingEventService:
             unresolved=tuple(dict.fromkeys(message for message in unresolved if message)),
         )
 
+    def _active_weapon_line(
+        self,
+        *,
+        build: PlayerBuild,
+        context: BuildCalculationContext,
+    ) -> WeaponSkillLine | None:
+        active_bar = str(getattr(context, "active_bar", "front") or "front").casefold()
+        main, offhand = build.active_weapon_slots(active_bar)
+        main_type = weapon_type_from_saved_name(main.WeaponType)
+        offhand_type = weapon_type_from_saved_name(offhand.WeaponType)
+        if main_type is None:
+            return None
+        if offhand_type is None:
+            offhand_type = WeaponType.NONE
+        try:
+            return resolve_weapon_skill_line(main_type, offhand_type)
+        except ValueError:
+            return None
+
+    def _maxed_passive_multiplier(
+        self,
+        *,
+        context: BuildCalculationContext,
+        passive_name: str,
+        multiplier: float,
+    ) -> tuple[float, tuple[str, ...]]:
+        progression = getattr(context, "progression", None)
+        if progression is None or not progression.owns_skill_line("Restoration Staff"):
+            return 1.0, ()
+
+        passive_ranks = getattr(progression, "passive_ranks", None)
+        if passive_ranks is None:
+            return 1.0, (f"{passive_name} passive rank is not recorded",)
+        rank = progression.passive_rank(passive_name)
+        if rank is None:
+            return 1.0, (f"Passive rank is not recorded for character: {passive_name}",)
+        if rank == 0:
+            return 1.0, ()
+
+        maximum = self.skill_line_repository.passive_max_rank(passive_name)
+        if maximum is None:
+            return 1.0, (f"Passive max rank is not available in canonical data: {passive_name}",)
+        if rank != maximum:
+            return 1.0, (f"Partial passive rank is not yet modeled: {passive_name} {rank}/{maximum}",)
+        return multiplier, ()
+
     def _ability_family_healing_multiplier(
         self,
         *,
@@ -224,40 +287,31 @@ class ExtremeHealingEventService:
         skill_line = self.skill_line_repository.skill_line_for_ability_name(skill_name)
         if str(skill_line or "").strip().casefold() != "restoration staff":
             return 1.0, ()
-
-        active_bar = str(getattr(context, "active_bar", "front") or "front").casefold()
-        main, offhand = build.active_weapon_slots(active_bar)
-        main_type = weapon_type_from_saved_name(main.WeaponType)
-        offhand_type = weapon_type_from_saved_name(offhand.WeaponType)
-        if main_type is None:
-            return 1.0, ()
-        if offhand_type is None:
-            from minmax.character_build.weapon_type import WeaponType
-
-            offhand_type = WeaponType.NONE
-        try:
-            weapon_line = resolve_weapon_skill_line(main_type, offhand_type)
-        except ValueError:
-            return 1.0, ()
-        if weapon_line is not WeaponSkillLine.RESTORATION_STAFF:
+        if self._active_weapon_line(build=build, context=context) is not WeaponSkillLine.RESTORATION_STAFF:
             return 1.0, ()
 
-        progression = getattr(context, "progression", None)
-        if progression is None or not progression.owns_skill_line("Restoration Staff"):
+        return self._maxed_passive_multiplier(
+            context=context,
+            passive_name="Restoration Master",
+            multiplier=self.RESTORATION_MASTER_HEALING_MULTIPLIER,
+        )
+
+    def _situational_healing_multiplier(
+        self,
+        *,
+        build: PlayerBuild,
+        context: BuildCalculationContext,
+        target_health_fraction: float | None,
+    ) -> tuple[float, tuple[str, ...]]:
+        if target_health_fraction is None:
+            return 1.0, ()
+        if target_health_fraction > self.RESTORATION_EXPERT_HEALTH_THRESHOLD:
+            return 1.0, ()
+        if self._active_weapon_line(build=build, context=context) is not WeaponSkillLine.RESTORATION_STAFF:
             return 1.0, ()
 
-        passive_ranks = getattr(progression, "passive_ranks", None)
-        if passive_ranks is None:
-            return 1.0, ("Restoration Master passive rank is not recorded",)
-        rank = progression.passive_rank("Restoration Master")
-        if rank is None:
-            return 1.0, ("Passive rank is not recorded for character: Restoration Master",)
-        if rank == 0:
-            return 1.0, ()
-
-        maximum = self.skill_line_repository.passive_max_rank("Restoration Master")
-        if maximum is None:
-            return 1.0, ("Passive max rank is not available in canonical data: Restoration Master",)
-        if rank != maximum:
-            return 1.0, (f"Partial passive rank is not yet modeled: Restoration Master {rank}/{maximum}",)
-        return self.RESTORATION_MASTER_HEALING_MULTIPLIER, ()
+        return self._maxed_passive_multiplier(
+            context=context,
+            passive_name="Restoration Expert",
+            multiplier=self.RESTORATION_EXPERT_HEALING_MULTIPLIER,
+        )
