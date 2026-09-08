@@ -129,9 +129,9 @@ def test_archers_mind_five_piece_includes_all_active_bonuses():
         (StatId.CRITICAL_CHANCE, 657.0, None),
         (StatId.CRITICAL_CHANCE, 657.0, None),
         (StatId.CRITICAL_DAMAGE, 8.0, None),
-        (StatId.HEALING_DONE, 8.0, None),
+        (StatId.CRITICAL_HEALING, 8.0, None),
         (StatId.CRITICAL_DAMAGE, 16.0, "sneaking_or_invisible"),
-        (StatId.HEALING_DONE, 16.0, "sneaking_or_invisible"),
+        (StatId.CRITICAL_HEALING, 16.0, "sneaking_or_invisible"),
     ]
 
 
