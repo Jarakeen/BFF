@@ -18,6 +18,9 @@ from services.extreme_heal_skill_candidate_service import (
     ExtremeHealSkillCandidate,
     ExtremeHealSkillCandidateService,
 )
+from services.extreme_hypothetical_class_progression_service import (
+    ExtremeHypotheticalClassProgressionService,
+)
 from services.minmax_character_progression_adapter import MinmaxCharacterProgressionAdapter
 
 
@@ -57,8 +60,8 @@ class ExtremeActualHealClassRouteCatalogResult:
 
     @property
     def global_maximum_proven(self) -> bool:
-        # Route scoring is intentionally a lower-bound comparison until every
-        # class-line passive/proc family is represented in the shared context.
+        # Route scoring remains a lower-bound comparison until every class-line
+        # passive/proc family and the remaining runtime/group surfaces are modeled.
         return bool(
             self.entries
             and not self.omitted_scope
@@ -77,11 +80,15 @@ class ExtremeActualHealClassRouteCatalogService:
     base classes, materializing each route onto a real ``PlayerBuild`` before
     heal discovery and whole-build scoring.
 
-    Cross-base-class results deliberately remain lower bounds. The progression
-    snapshot originates from the supplied character/build, so unproven passive
-    ownership for a hypothetical alternate base class is not silently upgraded
-    to max rank. Full passive/proc coverage and hypothetical progression
-    normalization remain explicit omitted scope.
+    Every route receives a hypothetical fully-leveled class progression snapshot:
+    non-class progression is preserved, unequipped class-line passives are removed,
+    and passives belonging to the three selected class lines are populated at the
+    canonical recorded maximum rank. That exact progression snapshot is then
+    passed through every whole-build candidate context rebuild.
+
+    This progression normalization proves ownership/rank availability only. It
+    does not pretend every passive effect/proc is modeled, so incomplete mechanic
+    families remain explicit omitted scope and prevent a false global-proof claim.
 
     The five ordinary skill positions are searched because the selected heal
     must be present for slot-counted passive math. The ultimate slot is preserved.
@@ -90,6 +97,7 @@ class ExtremeActualHealClassRouteCatalogService:
 
     SEARCH_SCOPE = (
         "structurally legal class-line routes",
+        "hypothetical selected-class-line max progression normalization",
         "class-line-aware canonical HEAL candidate discovery per route",
         "selected heal replacement across the five ordinary active-bar slots",
         *ExtremeActualHealOptimizationService.SEARCH_SCOPE,
@@ -108,11 +116,15 @@ class ExtremeActualHealClassRouteCatalogService:
         optimizer: ExtremeActualHealOptimizationService | None = None,
         candidates: ExtremeHealSkillCandidateService | None = None,
         routes: ExtremeHealClassRouteService | None = None,
+        progression_normalizer: ExtremeHypotheticalClassProgressionService | None = None,
     ) -> None:
         self.optimizer = optimizer or ExtremeActualHealOptimizationService()
         resolved_path = Path(database_path or self.optimizer.optimizer.database_path)
         self.candidates = candidates or ExtremeHealSkillCandidateService(resolved_path)
         self.routes = routes or ExtremeHealClassRouteService()
+        self.progression_normalizer = progression_normalizer or (
+            ExtremeHypotheticalClassProgressionService(resolved_path)
+        )
 
     def rank(
         self,
@@ -134,15 +146,20 @@ class ExtremeActualHealClassRouteCatalogService:
         for base_class in base_classes:
             for route in self.routes.routes_for_base_class(base_class):
                 route_build = self.routes.materialize_build(baseline_build, route)
+                route_progression = self.progression_normalizer.normalize(
+                    progression,
+                    route,
+                )
                 route_candidates = self.candidates.candidates_for_build(
                     route_build,
-                    progression,
+                    route_progression,
                     class_configuration=route.configuration,
                 )
                 for candidate in route_candidates:
                     entry = self._best_slot_entry(
                         route_build,
                         route=route,
+                        route_progression=route_progression,
                         candidate=candidate,
                         active_bar=active_bar,
                         max_passes=max_passes,
@@ -157,10 +174,6 @@ class ExtremeActualHealClassRouteCatalogService:
         omitted_scope = list(self.OMITTED_SCOPE)
         if include_base_class_changes:
             search_scope.insert(0, "all seven ESO base classes")
-            omitted_scope.insert(
-                0,
-                "hypothetical alternate-base-class passive/progression normalization",
-            )
         else:
             search_scope.insert(0, "current saved-build base class")
             omitted_scope.insert(0, "base-class change")
@@ -178,6 +191,7 @@ class ExtremeActualHealClassRouteCatalogService:
         route_build: PlayerBuild,
         *,
         route: ExtremeHealClassRoute,
+        route_progression: CharacterProgression,
         candidate: ExtremeHealSkillCandidate,
         active_bar: str,
         max_passes: int,
@@ -194,6 +208,7 @@ class ExtremeActualHealClassRouteCatalogService:
                     candidate.entity_id,
                     active_bar=active_bar,
                     max_passes=max_passes,
+                    progression_override=route_progression,
                 )
                 entry = ExtremeActualHealClassRouteEntry(
                     route=route,
