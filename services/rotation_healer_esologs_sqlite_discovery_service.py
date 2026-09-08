@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 from pathlib import Path
 import sqlite3
 
@@ -19,6 +20,15 @@ class RotationHealerEsoLogsSqliteFightSummary:
 
 
 @dataclass(frozen=True)
+class RotationHealerEsoLogsSqliteObservedAbility:
+    ability_game_id: int
+    ability_name: str | None
+    event_types: tuple[str, ...]
+    event_count: int
+    periodic_event_count: int
+
+
+@dataclass(frozen=True)
 class RotationHealerEsoLogsSqliteHealerSummary:
     report_code: str
     fight_id: int
@@ -26,6 +36,7 @@ class RotationHealerEsoLogsSqliteHealerSummary:
     name: str | None
     display_name: str | None
     target_ability_names: tuple[str, ...]
+    observed_abilities: tuple[RotationHealerEsoLogsSqliteObservedAbility, ...]
 
 
 @dataclass(frozen=True)
@@ -39,11 +50,12 @@ class RotationHealerEsoLogsSqliteDiscoveryReport:
 
 
 class RotationHealerEsoLogsSqliteDiscoveryService:
-    """Inspect an imported ESO Logs SQLite database before timing extraction.
+    """Inspect imported ESO Logs SQLite evidence before timing extraction.
 
     This service is read-only. It discovers report/fight ids and healer actors,
-    and records which of the reviewed DF-healer HoT ability ids actually appear
-    in each healer's source events. It does not infer timing semantics.
+    records which reviewed DF-healer HoT ability ids appear, and inventories the
+    healer's actual cast/heal ability ids. The inventory is diagnostic evidence,
+    not a claim that every listed ability is a periodic heal or rotation skill.
     """
 
     REQUIRED_LOG_EVENT_COLUMNS = {
@@ -132,14 +144,24 @@ class RotationHealerEsoLogsSqliteDiscoveryService:
                     str(row[1])
                     for row in connection.execute("PRAGMA table_info(log_actor)").fetchall()
                 }
-                required_actor = {"report_code", "fight_id", "actor_id", "name", "display_name", "role"}
+                required_actor = {
+                    "report_code",
+                    "fight_id",
+                    "actor_id",
+                    "name",
+                    "display_name",
+                    "role",
+                }
                 missing_actor = sorted(required_actor - actor_columns)
                 if missing_actor:
                     unresolved.append(
                         "log_actor is missing required columns: " + ", ".join(missing_actor)
                     )
                 else:
-                    target_ids = tuple(target.ability_game_id for target in DF_HEALER_U50_OBSERVATION_TARGETS)
+                    target_ids = tuple(
+                        target.ability_game_id
+                        for target in DF_HEALER_U50_OBSERVATION_TARGETS
+                    )
                     target_names = {
                         target.ability_game_id: target.source_name
                         for target in DF_HEALER_U50_OBSERVATION_TARGETS
@@ -154,6 +176,9 @@ class RotationHealerEsoLogsSqliteDiscoveryService:
                         """
                     ).fetchall()
                     for actor in actor_rows:
+                        report_code = str(actor["report_code"])
+                        fight_id = int(actor["fight_id"])
+                        actor_id = int(actor["actor_id"])
                         present_rows = connection.execute(
                             f"""
                             SELECT DISTINCT ability_game_id
@@ -164,30 +189,36 @@ class RotationHealerEsoLogsSqliteDiscoveryService:
                               AND ability_game_id IN ({placeholders})
                             ORDER BY ability_game_id
                             """,
-                            (
-                                actor["report_code"],
-                                int(actor["fight_id"]),
-                                int(actor["actor_id"]),
-                                *target_ids,
-                            ),
+                            (report_code, fight_id, actor_id, *target_ids),
                         ).fetchall()
                         present_names = tuple(
                             target_names[int(row["ability_game_id"])]
                             for row in present_rows
                             if int(row["ability_game_id"]) in target_names
                         )
+                        observed_abilities = self._observed_abilities(
+                            connection,
+                            report_code=report_code,
+                            fight_id=fight_id,
+                            actor_id=actor_id,
+                        )
                         healers.append(
                             RotationHealerEsoLogsSqliteHealerSummary(
-                                report_code=str(actor["report_code"]),
-                                fight_id=int(actor["fight_id"]),
-                                actor_id=int(actor["actor_id"]),
-                                name=(str(actor["name"]) if actor["name"] is not None else None),
+                                report_code=report_code,
+                                fight_id=fight_id,
+                                actor_id=actor_id,
+                                name=(
+                                    str(actor["name"])
+                                    if actor["name"] is not None
+                                    else None
+                                ),
                                 display_name=(
                                     str(actor["display_name"])
                                     if actor["display_name"] is not None
                                     else None
                                 ),
                                 target_ability_names=present_names,
+                                observed_abilities=observed_abilities,
                             )
                         )
 
@@ -199,3 +230,85 @@ class RotationHealerEsoLogsSqliteDiscoveryService:
             healers=tuple(healers),
             unresolved=tuple(dict.fromkeys(unresolved)),
         )
+
+    @classmethod
+    def _observed_abilities(
+        cls,
+        connection: sqlite3.Connection,
+        *,
+        report_code: str,
+        fight_id: int,
+        actor_id: int,
+    ) -> tuple[RotationHealerEsoLogsSqliteObservedAbility, ...]:
+        rows = connection.execute(
+            """
+            SELECT ability_game_id, event_type, tick, raw_json
+            FROM log_event
+            WHERE report_code = ?
+              AND fight_id = ?
+              AND source_id = ?
+              AND ability_game_id IS NOT NULL
+              AND lower(event_type) IN ('cast', 'begincast', 'completecast', 'heal', 'hot')
+            ORDER BY event_index
+            """,
+            (report_code, int(fight_id), int(actor_id)),
+        ).fetchall()
+
+        grouped: dict[int, dict] = {}
+        for row in rows:
+            ability_id = int(row["ability_game_id"])
+            item = grouped.setdefault(
+                ability_id,
+                {
+                    "name": None,
+                    "event_types": set(),
+                    "event_count": 0,
+                    "periodic_event_count": 0,
+                },
+            )
+            event_type = str(row["event_type"] or "").strip().lower()
+            item["event_types"].add(event_type)
+            item["event_count"] += 1
+            if event_type == "hot" or bool(row["tick"]):
+                item["periodic_event_count"] += 1
+            if item["name"] is None:
+                item["name"] = cls._ability_name_from_raw(row["raw_json"])
+
+        abilities = [
+            RotationHealerEsoLogsSqliteObservedAbility(
+                ability_game_id=ability_id,
+                ability_name=data["name"],
+                event_types=tuple(sorted(data["event_types"])),
+                event_count=int(data["event_count"]),
+                periodic_event_count=int(data["periodic_event_count"]),
+            )
+            for ability_id, data in grouped.items()
+        ]
+        abilities.sort(
+            key=lambda item: (
+                -item.periodic_event_count,
+                -item.event_count,
+                item.ability_game_id,
+            )
+        )
+        return tuple(abilities)
+
+    @staticmethod
+    def _ability_name_from_raw(raw_json: object) -> str | None:
+        if raw_json is None:
+            return None
+        try:
+            raw = json.loads(str(raw_json))
+        except (TypeError, ValueError, json.JSONDecodeError):
+            return None
+        if not isinstance(raw, dict):
+            return None
+        ability = raw.get("ability")
+        if isinstance(ability, dict):
+            value = ability.get("name")
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+        value = raw.get("abilityName")
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+        return None
