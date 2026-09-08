@@ -30,8 +30,11 @@ class _HealingEvents:
 
 
 class _ContextFactory:
+    def __init__(self):
+        self.progressions = []
+
     def build(self, **kwargs):
-        _ = kwargs
+        self.progressions.append(kwargs["progression"])
         return SimpleNamespace(unresolved_gear_effects=())
 
 
@@ -141,6 +144,47 @@ def test_rejected_candidate_blocker_does_not_contaminate_selected_build(monkeypa
     assert result.optimized_build.AttributeMagicka == 64
     assert result.unresolved == ()
     assert result.mechanic_complete is True
+
+
+def test_progression_override_survives_every_candidate_context_rebuild(monkeypatch):
+    _install_progression_adapter(monkeypatch)
+    optimizer = _Optimizer()
+    service = ExtremeActualHealOptimizationService(
+        optimizer=optimizer,
+        healing_events=_HealingEvents(),
+    )
+    override = CharacterProgression(
+        owned_skill_lines=("animal_companions", "restoring_light"),
+        passive_ranks={"Flourish": 2, "Mending": 2},
+        passive_cp_points={"Blessed": 20},
+    )
+
+    service.optimize(
+        PlayerBuild(BuildName="Hypothetical Healer"),
+        "blessing_of_protection",
+        max_passes=2,
+        progression_override=override,
+    )
+
+    assert optimizer.context_factory.progressions
+    assert all(
+        progression.owned_skill_lines == override.owned_skill_lines
+        for progression in optimizer.context_factory.progressions
+    )
+    assert all(
+        progression.passive_rank("Flourish") == 2
+        and progression.passive_rank("Mending") == 2
+        and progression.passive_cp_allocation("Blessed") == 20
+        for progression in optimizer.context_factory.progressions
+    )
+    assert {
+        (
+            progression.attributes.health,
+            progression.attributes.magicka,
+            progression.attributes.stamina,
+        )
+        for progression in optimizer.context_factory.progressions
+    } >= {(0, 0, 0), (64, 0, 0), (0, 64, 0), (0, 0, 64)}
 
 
 def test_actual_heal_score_refuses_missing_critical_event():
