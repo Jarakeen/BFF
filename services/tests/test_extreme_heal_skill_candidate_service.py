@@ -78,7 +78,9 @@ def _write_fixture(path) -> None:
         db.executemany(
             "INSERT INTO skill_component_classification(skill_rank_id, coefficient_number, effect_kind, can_crit) VALUES (?, ?, ?, ?)",
             (
-                (11, 1, "heal", 1),
+                # Deliberately use an obsolete component number on rank 3. The
+                # max-rank candidate must not inherit this archaeological debris.
+                (11, 9, "heal", 0),
                 (12, 1, "heal", 1),
                 (12, 2, "heal", 1),
                 (21, 1, "heal", 1),
