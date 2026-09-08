@@ -129,8 +129,8 @@ def test_factory_applies_expert_mage_to_weapon_and_spell_damage_from_active_slot
     )
 
     assert context.core_state is not None
-    assert context.core_state.derived[StatId.WEAPON_DAMAGE].final_value == pytest.approx(216.0)
-    assert context.core_state.derived[StatId.SPELL_DAMAGE].final_value == pytest.approx(216.0)
+    assert context.core_state.derived[StatId.WEAPON_DAMAGE].final_value == pytest.approx(1216.0)
+    assert context.core_state.derived[StatId.SPELL_DAMAGE].final_value == pytest.approx(1216.0)
     assert context.unresolved_gear_effects == ()
 
 
@@ -148,7 +148,7 @@ def test_factory_route_can_keep_expert_summoner_while_removing_expert_mage():
 
     assert context.character_state.max_magicka == 12600
     assert context.core_state is not None
-    assert context.core_state.derived[StatId.SPELL_DAMAGE].final_value == pytest.approx(0.0)
+    assert context.core_state.derived[StatId.SPELL_DAMAGE].final_value == pytest.approx(1000.0)
 
 
 def test_factory_does_not_apply_partial_expert_mage_rank():
@@ -163,7 +163,7 @@ def test_factory_does_not_apply_partial_expert_mage_rank():
     )
 
     assert context.core_state is not None
-    assert context.core_state.derived[StatId.SPELL_DAMAGE].final_value == pytest.approx(0.0)
+    assert context.core_state.derived[StatId.SPELL_DAMAGE].final_value == pytest.approx(1000.0)
     assert any(
         "Partial passive rank is not yet modeled: Expert Mage 1/2" in message
         for message in context.unresolved_gear_effects
