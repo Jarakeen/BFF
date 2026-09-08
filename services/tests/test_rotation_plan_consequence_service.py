@@ -49,7 +49,9 @@ def _timeline_sustain(
     maximum: int,
     minimum: int,
     ending: int,
+    wasted_restore: int = 0,
 ) -> SimpleNamespace:
+    attempted_restore = max(0, ending - minimum) + int(wasted_restore)
     timeline = ResourceTimelineResult(
         resource=ResourceType.MAGICKA,
         starting_amount=starting,
@@ -73,9 +75,10 @@ def _timeline_sustain(
                 kind=ResourceTimelineEventKind.RESTORATION,
                 source="test restore",
                 before=minimum,
-                attempted_change=ending - minimum,
+                attempted_change=attempted_restore,
                 applied_change=ending - minimum,
                 after=ending,
+                wasted_restore=int(wasted_restore),
                 maximum_before=maximum,
                 maximum_after=maximum,
             ),
@@ -119,6 +122,7 @@ def test_extra_expensive_cast_is_resource_worsened() -> None:
     assert result.wait_delta == -1
     assert result.minimum_resource_fraction_delta is None
     assert result.ending_resource_fraction_delta is None
+    assert result.wasted_restore_delta == 0
     assert [(item.name, item.delta) for item in result.cast_deltas] == [
         ("Illustrious Healing", 1),
     ]
@@ -212,3 +216,35 @@ def test_consequence_exposes_normalized_resource_floor_without_changing_role_neu
     assert result.candidate_ending_resource_fraction == 0.5
     assert result.ending_resource_fraction_delta == 0.0
     assert result.minimum_resource_fraction_delta < 0
+
+
+def test_consequence_exposes_wasted_restore_without_changing_resource_classification() -> None:
+    plan = _plan(
+        RotationAction(10.0, 0, RotationActionKind.SKILL, "Role Neutral Skill", "front"),
+    )
+
+    result = RotationPlanConsequenceService().compare(
+        baseline_plan=plan,
+        candidate_plan=plan,
+        baseline_sustain=_timeline_sustain(
+            starting=24_000,
+            maximum=30_000,
+            minimum=12_000,
+            ending=18_000,
+            wasted_restore=2_000,
+        ),
+        candidate_sustain=_timeline_sustain(
+            starting=24_000,
+            maximum=30_000,
+            minimum=12_000,
+            ending=18_000,
+            wasted_restore=500,
+        ),
+    )
+
+    assert result.resource_kind is RotationResourceConsequenceKind.NEUTRAL
+    assert result.minimum_resource_delta == 0
+    assert result.ending_resource_delta == 0
+    assert result.baseline_wasted_restore == 2_000
+    assert result.candidate_wasted_restore == 500
+    assert result.wasted_restore_delta == -1_500
