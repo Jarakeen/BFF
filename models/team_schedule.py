@@ -4,20 +4,64 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
+class TeamScheduleSlot:
+    """One recurring weekly raid block for a team."""
+
+    Day: str
+    StartTime: str
+    EndTime: str = ""
+
+    @property
+    def display_text(self) -> str:
+        day = str(self.Day or "").strip()
+        start = str(self.StartTime or "").strip()
+        end = str(self.EndTime or "").strip()
+        if start and end:
+            return f"{day} {start}–{end}".strip()
+        if start:
+            return f"{day} {start}".strip()
+        return day
+
+
+@dataclass(frozen=True)
 class TeamSchedule:
-    """Human-entered recurring raid schedule for one named team."""
+    """Human-entered recurring raid schedule for one named team.
+
+    ``Slots`` is the canonical representation when different raid days use
+    different start/end times. ``RaidDays`` and ``RaidTime`` remain for backward
+    compatibility with existing saved teams and older exports.
+    """
 
     TeamName: str
     RaidDays: str = ""
     RaidTime: str = ""
     TimeZone: str = ""
+    Slots: tuple[TeamScheduleSlot, ...] = ()
+
+    @property
+    def effective_slots(self) -> tuple[TeamScheduleSlot, ...]:
+        if self.Slots:
+            return tuple(self.Slots)
+        days = [piece.strip() for piece in str(self.RaidDays or "").split(",") if piece.strip()]
+        if not days or not str(self.RaidTime or "").strip():
+            return ()
+        return tuple(
+            TeamScheduleSlot(Day=day, StartTime=str(self.RaidTime).strip())
+            for day in days
+        )
 
     @property
     def is_configured(self) -> bool:
-        return bool(self.RaidDays.strip() or self.RaidTime.strip() or self.TimeZone.strip())
+        return bool(self.effective_slots or self.TimeZone.strip())
 
     @property
     def display_text(self) -> str:
+        slots = self.effective_slots
+        if slots:
+            schedule_text = "  ·  ".join(slot.display_text for slot in slots if slot.display_text)
+            if self.TimeZone and self.TimeZone.strip():
+                return f"{schedule_text}  ·  {self.TimeZone.strip()}"
+            return schedule_text
         parts = [
             value.strip()
             for value in (self.RaidDays, self.RaidTime, self.TimeZone)
