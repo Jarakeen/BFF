@@ -11,8 +11,10 @@
 
 from __future__ import annotations
 
+import json
+
 from models.roster_model import RosterMember
-from models.team_schedule import TeamSchedule
+from models.team_schedule import TeamSchedule, TeamScheduleSlot
 from services.eso_database import EsoDatabase
 
 
@@ -41,13 +43,14 @@ class RosterService:
                 name TEXT NOT NULL UNIQUE,
                 raid_days TEXT NOT NULL DEFAULT '',
                 raid_time TEXT NOT NULL DEFAULT '',
-                timezone TEXT NOT NULL DEFAULT ''
+                timezone TEXT NOT NULL DEFAULT '',
+                raid_schedule_json TEXT NOT NULL DEFAULT ''
             )
         """)
         existing_team_columns = {
             row["name"] for row in self.db.execute("PRAGMA table_info(team)").fetchall()
         }
-        for column in ("raid_days", "raid_time", "timezone"):
+        for column in ("raid_days", "raid_time", "timezone", "raid_schedule_json"):
             if column not in existing_team_columns:
                 self.db.execute(
                     f"ALTER TABLE team ADD COLUMN {column} TEXT NOT NULL DEFAULT ''"
@@ -151,56 +154,86 @@ class RosterService:
         """).fetchall()
         return [row["name"] for row in rows]
 
+    @staticmethod
+    def _schedule_from_row(row) -> TeamSchedule:
+        slots: tuple[TeamScheduleSlot, ...] = ()
+        raw_json = row["raid_schedule_json"] if "raid_schedule_json" in row.keys() else ""
+        if raw_json:
+            try:
+                payload = json.loads(raw_json)
+                slots = tuple(
+                    TeamScheduleSlot(
+                        Day=str(item.get("Day") or "").strip(),
+                        StartTime=str(item.get("StartTime") or "").strip(),
+                        EndTime=str(item.get("EndTime") or "").strip(),
+                    )
+                    for item in payload
+                    if isinstance(item, dict)
+                    and str(item.get("Day") or "").strip()
+                    and str(item.get("StartTime") or "").strip()
+                )
+            except (TypeError, ValueError, json.JSONDecodeError):
+                slots = ()
+        return TeamSchedule(
+            TeamName=row["name"] or "",
+            RaidDays=row["raid_days"] or "",
+            RaidTime=row["raid_time"] or "",
+            TimeZone=row["timezone"] or "",
+            Slots=slots,
+        )
+
     def list_team_schedules(self) -> list[TeamSchedule]:
         rows = self.db.execute("""
-            SELECT name, raid_days, raid_time, timezone
+            SELECT name, raid_days, raid_time, timezone, raid_schedule_json
             FROM team
             ORDER BY name COLLATE NOCASE
         """).fetchall()
-        return [
-            TeamSchedule(
-                TeamName=row["name"] or "",
-                RaidDays=row["raid_days"] or "",
-                RaidTime=row["raid_time"] or "",
-                TimeZone=row["timezone"] or "",
-            )
-            for row in rows
-        ]
+        return [self._schedule_from_row(row) for row in rows]
 
     def get_team_schedule(self, team_name: str) -> TeamSchedule | None:
         name = str(team_name or "").strip()
         if not name:
             return None
         row = self.db.execute("""
-            SELECT name, raid_days, raid_time, timezone
+            SELECT name, raid_days, raid_time, timezone, raid_schedule_json
             FROM team
             WHERE name = ? COLLATE NOCASE
         """, (name,)).fetchone()
         if row is None:
             return None
-        return TeamSchedule(
-            TeamName=row["name"] or "",
-            RaidDays=row["raid_days"] or "",
-            RaidTime=row["raid_time"] or "",
-            TimeZone=row["timezone"] or "",
-        )
+        return self._schedule_from_row(row)
 
     def set_team_schedule(self, schedule: TeamSchedule) -> None:
         name = str(schedule.TeamName or "").strip()
         if not name:
             raise ValueError("Team name is required before a raid schedule can be saved.")
+        slots = tuple(schedule.effective_slots)
+        raid_days = str(schedule.RaidDays or "").strip()
+        raid_time = str(schedule.RaidTime or "").strip()
+        if slots:
+            raid_days = ", ".join(slot.Day for slot in slots)
+            raid_time = slots[0].StartTime
+        slots_json = json.dumps([
+            {
+                "Day": slot.Day,
+                "StartTime": slot.StartTime,
+                "EndTime": slot.EndTime,
+            }
+            for slot in slots
+        ])
         self.db.execute(
             "INSERT OR IGNORE INTO team (name) VALUES (?)",
             (name,),
         )
         self.db.execute("""
             UPDATE team
-            SET raid_days = ?, raid_time = ?, timezone = ?
+            SET raid_days = ?, raid_time = ?, timezone = ?, raid_schedule_json = ?
             WHERE name = ? COLLATE NOCASE
         """, (
-            str(schedule.RaidDays or "").strip(),
-            str(schedule.RaidTime or "").strip(),
+            raid_days,
+            raid_time,
             str(schedule.TimeZone or "").strip(),
+            slots_json,
             name,
         ))
         self.db.commit()
