@@ -53,13 +53,7 @@ from ui.rotation_recovery_validation_support import (
 
 @dataclass(frozen=True)
 class RotationCanonicalCandidateApplicationResult:
-    """Application-facing result for one canonical recovery candidate family.
-
-    ``pipeline_result`` is absent when the selected saved build could not be fully
-    adapted, when optional canonical static build context is unresolved, or when
-    decision-critical mechanics coverage is unresolved. Discovered mechanics
-    dependencies and research gaps are retained for explanation.
-    """
+    """Application-facing result for one canonical recovery candidate family."""
 
     build_adaptation: SavedBuildAdaptation
     pipeline_result: RotationRecoveryHeavyCandidateOrchestrationResult | None
@@ -73,20 +67,11 @@ class RotationCanonicalCandidateApplicationResult:
 class RotationCanonicalCandidateSupport:
     """Bridge a saved UI build into the effect-aware recovery candidate pipeline.
 
-    Saved ``PlayerBuild`` state is first adapted through the canonical
-    SavedBuildCharacterAdapter. A caller may also supply ``static_context_service``
-    to require the existing MinMax static calculation pipeline, including verified
-    armor/passive ownership and ranks, to resolve cleanly before candidate ranking.
-
-    When static context is enabled, a single global recovery-resource ceiling is
-    accepted only when every resolved bar has the same canonical maximum. The
-    canonical value then replaces the caller's provisional maximum. If front/back
-    maxima differ, the current one-ceiling sustain model fails closed rather than
-    pretending either bar is globally authoritative.
-
-    When a mechanics coverage report is supplied, the resolved CharacterBuild and
-    current rotation evidence are used to discover which coverage domains actually
-    matter to this decision. Unrelated global gaps do not block the candidate.
+    When canonical static context is enabled, the front-bar maximum is the starting
+    resource ceiling. Bar-sensitive maximum changes are projected from each actual
+    candidate plan's BAR_SWAP actions and replayed on the Phase 4 resource timeline.
+    Different front/back maxima therefore remain fully modeled rather than forcing a
+    false global ceiling or blocking an otherwise valid rotation.
     """
 
     def __init__(
@@ -129,15 +114,11 @@ class RotationCanonicalCandidateSupport:
         character_id: str | None = None,
         coverage_report: CanonicalMechanicsCoverageReport | None = None,
     ) -> RotationCanonicalCandidateApplicationResult:
-        adaptation = self.build_adapter.adapt(
-            player_build,
-            character_id=character_id,
-        )
+        adaptation = self.build_adapter.adapt(player_build, character_id=character_id)
         unresolved = tuple(str(item).strip() for item in adaptation.unresolved if str(item).strip())
         if adaptation.build is None or unresolved:
             reasons = [
-                "canonical candidate evaluation was not run because the saved build "
-                "could not be fully resolved into canonical mechanics"
+                "canonical candidate evaluation was not run because the saved build could not be fully resolved into canonical mechanics"
             ]
             reasons.extend(f"saved-build adaptation: {item}" for item in unresolved)
             if adaptation.build is None and not unresolved:
@@ -161,13 +142,14 @@ class RotationCanonicalCandidateSupport:
         static_context: RotationStaticBuildContextResolution | None = None
         effective_maximum_amount = int(maximum_amount)
         canonical_maximum_amount: int | None = None
+        calculation_context = None
+        maximum_event_resolver = None
 
         if self.static_context_service is not None:
             static_context = self.static_context_service.resolve(player_build)
             if not static_context.resolved:
                 reasons = [
-                    "canonical candidate evaluation was not run because static build "
-                    "calculation evidence is unresolved"
+                    "canonical candidate evaluation was not run because static build calculation evidence is unresolved"
                 ]
                 reasons.extend(
                     f"static build context: {item}"
@@ -185,25 +167,21 @@ class RotationCanonicalCandidateSupport:
                     static_context=static_context,
                 )
 
-            canonical_maximum_amount = static_context.uniform_maximum_amount_for(resource)
-            if canonical_maximum_amount is None:
-                by_bar = static_context.maximum_amounts_for(resource)
-                detail = ", ".join(f"{bar}={amount}" for bar, amount in by_bar)
+            calculation_context = static_context.context_for("front")
+            if calculation_context is None:
                 return RotationCanonicalCandidateApplicationResult(
                     build_adaptation=adaptation,
                     pipeline_result=None,
                     validation=RotationRecoveryValidationEvidence(
                         scope=RotationRecoveryValidationScope.NOT_EVALUATED,
                         selectable=None,
-                        reasons=(
-                            "canonical candidate evaluation was not run because the current "
-                            "recovery model accepts one maximum resource amount but canonical "
-                            f"static state is bar-sensitive for {resource.value}: {detail}",
-                        ),
+                        reasons=("canonical static rotation context is missing the front-bar starting state",),
                     ),
                     static_context=static_context,
                 )
+            canonical_maximum_amount = static_context.maximum_amount_for("front", resource)
             effective_maximum_amount = canonical_maximum_amount
+            maximum_event_resolver = static_context.maximum_events_for
 
         if coverage_report is not None:
             dependencies = self.dependency_service.discover(
@@ -213,22 +191,16 @@ class RotationCanonicalCandidateSupport:
                 passives=passive_tuple,
                 recovery_enabled=True,
             )
-            dependency_keys = self.dependency_service.keys(dependencies)
             knowledge_gaps = coverage_report.dependency_gaps_for(
                 "rotation_maker",
-                dependency_keys,
+                self.dependency_service.keys(dependencies),
             )
             blocking = tuple(gap for gap in knowledge_gaps if gap.blocking)
             if blocking:
-                reasons = [
-                    "canonical candidate evaluation was not run because required "
-                    "mechanics coverage is unresolved"
-                ]
+                reasons = ["canonical candidate evaluation was not run because required mechanics coverage is unresolved"]
                 for gap in blocking:
                     evidence = self._dependency_evidence_for(gap.key, dependencies)
-                    detail = (
-                        f"mechanics coverage: {gap.summary} Bring back: {gap.needed_evidence}"
-                    )
+                    detail = f"mechanics coverage: {gap.summary} Bring back: {gap.needed_evidence}"
                     if evidence:
                         detail += " Relevant build evidence: " + ", ".join(evidence)
                     reasons.append(detail)
@@ -265,6 +237,8 @@ class RotationCanonicalCandidateSupport:
             reserve_assessment_resolver=reserve_assessment_resolver,
             max_iterations=max_iterations,
             baseline_id=baseline_id,
+            calculation_context=calculation_context,
+            maximum_event_resolver=maximum_event_resolver,
         )
         return RotationCanonicalCandidateApplicationResult(
             build_adaptation=adaptation,
@@ -286,13 +260,12 @@ class RotationCanonicalCandidateSupport:
             return ()
         for dependency in dependencies:
             key = str(getattr(dependency, "key", dependency) or "").strip().casefold()
-            if key != wanted:
-                continue
-            return tuple(
-                str(item).strip()
-                for item in getattr(dependency, "evidence", ())
-                if str(item).strip()
-            )
+            if key == wanted:
+                return tuple(
+                    str(item).strip()
+                    for item in getattr(dependency, "evidence", ())
+                    if str(item).strip()
+                )
         return ()
 
 
