@@ -6,19 +6,24 @@ from services.extreme_canonical_healing_event_service import (
 from services.extreme_dragon_blood_skill_component_repository import (
     ExtremeDragonBloodSkillComponentRepository,
 )
+from services.extreme_sorcerer_skill_component_repository import (
+    ExtremeSorcererSkillComponentRepository,
+)
 
 
 class _CustomTooltipService:
     pass
 
 
-def test_default_canonical_heal_service_uses_reviewed_dragon_blood_overlay(tmp_path):
+def test_default_canonical_heal_service_layers_reviewed_identity_overlays(tmp_path):
     service = ExtremeCanonicalHealingEventService(
         database_path=tmp_path / "eso.db",
     )
 
+    sorcerer = service.tooltip_service.components
+    assert isinstance(sorcerer, ExtremeSorcererSkillComponentRepository)
     assert isinstance(
-        service.tooltip_service.components,
+        sorcerer.base_repository,
         ExtremeDragonBloodSkillComponentRepository,
     )
 
