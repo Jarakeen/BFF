@@ -6,6 +6,9 @@ from minmax.build_candidate import BuildCandidate
 from minmax.character_progression import AttributeAllocation, CharacterProgression
 from minmax.race_repository import RaceRepository
 from models.build_model import PlayerBuild
+from services.extreme_actual_heal_gear_set_candidate_service import (
+    ExtremeActualHealGearSetCandidateService,
+)
 from services.extreme_complete_optimization_service import ExtremeCompleteOptimizationService
 from services.extreme_healing_event_service import (
     ExtremeHealingEventResult,
@@ -53,15 +56,11 @@ class ExtremeActualHealOptimizationResult:
 class ExtremeActualHealOptimizationService:
     """Maximize one identified healing event through canonical whole-build math.
 
-    This is the scoring engine for ``MOST Actual Heal``. It deliberately starts
-    with mutation families already owned by the shared Extreme optimizer, then
-    adds resource-allocation and canonical-race candidates. Every accepted race
-    is re-evaluated through the same BuildCalculationContextFactory used by the
-    rest of MinMax, so racial resource/power/healing effects participate through
-    canonical math rather than an Extreme-only lookup score.
-
-    Class/subclass, gear-set, and skill replacement remain explicit omitted
-    scope until their candidate generators are widened.
+    Candidate changes are materialized onto a real ``PlayerBuild`` and the full
+    canonical context is rebuilt before the healing event is scored. Reviewed
+    ordinary five-piece sets now participate the same way: the set is equipped on
+    actual body slots and its resource/power/healing effects are resolved by the
+    shared gear pipeline rather than added as an Extreme-only tooltip delta.
     """
 
     SEARCH_SCOPE = (
@@ -74,12 +73,13 @@ class ExtremeActualHealOptimizationService:
         "jewelry enchants",
         "weapon traits",
         "food/drink",
+        "reviewed ordinary five-piece body-set replacement",
         "canonical healing coefficient scaling",
         "Healing Done and verified healing CP",
         "Critical Healing",
     )
     OMITTED_SCOPE = (
-        "gear-set replacement",
+        "monster-set / mythic / arena-weapon / mixed 5+2+1 package search",
         "class change / subclass route",
         "healing-skill replacement",
         "skill-bar passive/proc search",
@@ -93,6 +93,7 @@ class ExtremeActualHealOptimizationService:
         optimizer: ExtremeCompleteOptimizationService | None = None,
         healing_events: ExtremeHealingEventService | None = None,
         race_repository: RaceRepository | None = None,
+        gear_set_candidates: ExtremeActualHealGearSetCandidateService | None = None,
     ) -> None:
         self.optimizer = optimizer or ExtremeCompleteOptimizationService()
         self.healing_events = healing_events or ExtremeHealingEventService(
@@ -101,6 +102,11 @@ class ExtremeActualHealOptimizationService:
         database_path = getattr(self.optimizer, "database_path", None)
         self.race_repository = race_repository or (
             RaceRepository(database_path) if database_path else None
+        )
+        self.gear_set_candidates = gear_set_candidates or (
+            ExtremeActualHealGearSetCandidateService(database_path)
+            if database_path
+            else None
         )
 
     def optimize(
@@ -163,6 +169,12 @@ class ExtremeActualHealOptimizationService:
                 character_id=character_id,
                 baseline_build_id=candidate_build_id,
             ))
+            if self.gear_set_candidates is not None:
+                candidates.extend(self.gear_set_candidates.build_candidates(
+                    current,
+                    character_id=character_id,
+                    baseline_build_id=candidate_build_id,
+                ))
 
             for candidate in candidates:
                 event, candidate_unresolved = self._evaluate(
