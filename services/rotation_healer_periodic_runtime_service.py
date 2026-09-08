@@ -71,6 +71,12 @@ class RotationHealerPeriodicRuntimeService:
     cadence expansion is delegated to the shared Phase 7 periodic runtime
     scheduler so DD, healing, proc, and other recurring consequences do not grow
     separate clock arithmetic.
+
+    The shared scheduler deliberately tolerates tiny floating-point differences
+    around its end bound. Healer evidence can define stricter semantic boundaries,
+    such as excluding a tick exactly at expiry or exactly when a restart refresh
+    occurs. Those rules are therefore enforced explicitly after shared scheduling
+    rather than encoded as epsilon-adjusted timestamps.
     """
 
     def project(
@@ -130,38 +136,52 @@ class RotationHealerPeriodicRuntimeService:
                 if first_tick > active_end:
                     continue
 
-                schedule_end = active_end
-                if not runtime.tick_on_expiry_boundary and math.isclose(
-                    schedule_end, natural_end, abs_tol=1e-9
-                ):
-                    schedule_end = math.nextafter(schedule_end, -math.inf)
-                if (
-                    runtime.refresh_policy is RotationHealerPeriodicRefreshPolicy.RESTART
-                    and math.isfinite(next_cast)
-                    and math.isclose(schedule_end, next_cast, abs_tol=1e-9)
-                ):
-                    schedule_end = math.nextafter(schedule_end, -math.inf)
-
                 scheduled = schedule_periodic_runtime_events(
                     PeriodicRuntimeSchedule(
                         trigger="periodic_heal_tick",
                         source=seed.source_name,
                         interval_seconds=runtime.tick_interval_seconds,
                         start_time_seconds=first_tick,
-                        end_time_seconds=schedule_end,
+                        end_time_seconds=active_end,
                     ),
                     starting_sequence=seed.sequence * 1000,
                 )
-                events.extend(
-                    RotationHealerResolvedHealEvent(
-                        time_seconds=event.time_seconds,
-                        sequence=event.sequence,
-                        source_name=seed.source_name,
-                        coefficient_number=seed.coefficient_number,
-                        modeled_heal=seed.modeled_heal,
+
+                for event in scheduled:
+                    at_natural_expiry = math.isclose(
+                        event.time_seconds,
+                        natural_end,
+                        rel_tol=0.0,
+                        abs_tol=1e-9,
                     )
-                    for event in scheduled
-                )
+                    if not runtime.tick_on_expiry_boundary and at_natural_expiry:
+                        continue
+
+                    at_or_after_restart = (
+                        runtime.refresh_policy is RotationHealerPeriodicRefreshPolicy.RESTART
+                        and math.isfinite(next_cast)
+                        and (
+                            event.time_seconds > next_cast
+                            or math.isclose(
+                                event.time_seconds,
+                                next_cast,
+                                rel_tol=0.0,
+                                abs_tol=1e-9,
+                            )
+                        )
+                    )
+                    if at_or_after_restart:
+                        continue
+
+                    events.append(
+                        RotationHealerResolvedHealEvent(
+                            time_seconds=event.time_seconds,
+                            sequence=event.sequence,
+                            source_name=seed.source_name,
+                            coefficient_number=seed.coefficient_number,
+                            modeled_heal=seed.modeled_heal,
+                        )
+                    )
 
         return RotationHealerPeriodicRuntimeProjection(
             events=tuple(
