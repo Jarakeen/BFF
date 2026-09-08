@@ -41,6 +41,9 @@ from ui.rotation_generation_support import (
 from ui.rotation_ultimate_affordability_candidate_support import (
     RotationUltimateAffordabilityCandidateSupport,
 )
+from ui.rotation_weapon_attack_candidate_support import (
+    RotationWeaponAttackCandidateSupport,
+)
 
 
 @dataclass(frozen=True)
@@ -66,13 +69,16 @@ class RotationDashboardCanonicalCandidateSupport:
     readiness before recovery ranking. Mechanics coverage, when supplied, is then
     scoped to the resolved CharacterBuild and current rotation evidence.
 
-    Production defaults compose two final-candidate evidence adapters. Automatic
-    potion cadence derives an effective shared cooldown only from complete build and
-    scenario evidence. Ultimate affordability replays resolved spend rules against
-    every stabilized candidate. Candidate-independent generation evidence may be
-    reused directly; scheduled-attack generation is recomputed from each stabilized
-    candidate plan before affordability is assessed. Missing evidence in either
-    subsystem preserves the existing no-guess behavior.
+    Production defaults compose three final-candidate evidence adapters. Weapon
+    attack evidence projects final light/heavy attacks through the same canonical
+    saved-build weapon adapter and promotes unresolved weapon identity to
+    candidate-specific evidence; wrong-bar attacks remain the existing active-bar
+    hard obligation. Automatic potion cadence derives an effective shared cooldown
+    only from complete build and scenario evidence. Ultimate affordability replays
+    resolved spend rules against every stabilized candidate. Candidate-independent
+    generation evidence may be reused directly; scheduled-attack generation is
+    recomputed from each stabilized candidate plan before affordability is assessed.
+    Missing evidence preserves the existing no-guess behavior.
     """
 
     def __init__(
@@ -81,6 +87,7 @@ class RotationDashboardCanonicalCandidateSupport:
         generation: RotationGenerationSupport | None = None,
         canonical_candidates: (
             RotationCanonicalCandidateSupport
+            | RotationWeaponAttackCandidateSupport
             | RotationAutomaticPotionCadenceCandidateSupport
             | RotationUltimateAffordabilityCandidateSupport
             | None
@@ -93,8 +100,12 @@ class RotationDashboardCanonicalCandidateSupport:
             canonical = RotationCanonicalCandidateSupport(
                 static_context_service=RotationStaticBuildContextService(),
             )
-            potion_aware = RotationAutomaticPotionCadenceCandidateSupport(
+            weapon_aware = RotationWeaponAttackCandidateSupport(
                 canonical_candidates=canonical,
+                build_adapter=canonical.build_adapter,
+            )
+            potion_aware = RotationAutomaticPotionCadenceCandidateSupport(
+                canonical_candidates=weapon_aware,
             )
             self.canonical_candidates = RotationUltimateAffordabilityCandidateSupport(
                 canonical_candidates=potion_aware,
