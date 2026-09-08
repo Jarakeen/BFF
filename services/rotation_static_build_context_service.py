@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Callable
 
 from engine.config import get_data_dir
 from minmax.build_calculation_context import BuildCalculationContext
@@ -55,6 +56,17 @@ class RotationStaticBuildContextResolution:
             raise ValueError(f"unsupported rotation static resource: {resource!r}")
         return attribute
 
+    @staticmethod
+    def _recovery_attribute(resource: ResourceType) -> str:
+        attribute = {
+            ResourceType.HEALTH: "health_recovery",
+            ResourceType.MAGICKA: "magicka_recovery",
+            ResourceType.STAMINA: "stamina_recovery",
+        }.get(resource)
+        if attribute is None:
+            raise ValueError(f"unsupported rotation static resource recovery: {resource!r}")
+        return attribute
+
     def maximum_amounts_for(self, resource: ResourceType) -> tuple[tuple[str, int], ...]:
         """Return the canonical maximum resource visible on each resolved bar."""
         attribute = self._resource_attribute(resource)
@@ -68,6 +80,23 @@ class RotationStaticBuildContextResolution:
         if context is None:
             raise ValueError(f"rotation static context is missing bar: {bar!r}")
         return int(getattr(context.character_state, self._resource_attribute(resource)))
+
+    def displayed_recovery_amounts_for(
+        self,
+        resource: ResourceType,
+    ) -> tuple[tuple[str, int], ...]:
+        """Return canonical character-sheet recovery visible on each resolved bar."""
+        attribute = self._recovery_attribute(resource)
+        return tuple(
+            (context.active_bar, int(getattr(context.character_state, attribute)))
+            for context in self.contexts
+        )
+
+    def displayed_recovery_for(self, bar: str, resource: ResourceType) -> int:
+        context = self.context_for(bar)
+        if context is None:
+            raise ValueError(f"rotation static context is missing bar: {bar!r}")
+        return int(getattr(context.character_state, self._recovery_attribute(resource)))
 
     def uniform_maximum_amount_for(self, resource: ResourceType) -> int | None:
         """Return one safe global maximum when every resolved bar agrees."""
@@ -86,14 +115,7 @@ class RotationStaticBuildContextResolution:
         *,
         initial_bar: str = "front",
     ) -> tuple[ResourceMaximumEvent, ...]:
-        """Project bar swaps into verified resource-ceiling transitions.
-
-        The initial static context supplies the timeline's starting pool. Each
-        explicit BAR_SWAP switches to the destination bar's already-calculated
-        maximum. Events are emitted only when the maximum actually changes; a swap
-        between equal ceilings remains a schedule action but has no resource-state
-        consequence.
-        """
+        """Project bar swaps into verified resource-ceiling transitions."""
         current_bar = str(initial_bar or "").strip().casefold()
         if current_bar not in {"front", "back"}:
             raise ValueError("rotation static initial bar must be front or back")
@@ -122,6 +144,47 @@ class RotationStaticBuildContextResolution:
             )
             current_maximum = destination_maximum
         return tuple(events)
+
+    def displayed_recovery_resolver_for(
+        self,
+        plan: RotationPlan,
+        resource: ResourceType,
+        *,
+        initial_bar: str = "front",
+    ) -> Callable[[float], int]:
+        """Resolve canonical displayed recovery from the bar active at each instant.
+
+        A bar swap at the exact time of a recovery tick activates the destination
+        bar first, matching the resource timeline's destination-bar-first ordering.
+        """
+        starting_bar = str(initial_bar or "").strip().casefold()
+        if starting_bar not in {"front", "back"}:
+            raise ValueError("rotation static initial bar must be front or back")
+        self.displayed_recovery_for(starting_bar, resource)
+
+        swaps: list[tuple[float, int, str]] = []
+        for action in plan.actions:
+            if action.kind is not RotationActionKind.BAR_SWAP:
+                continue
+            destination = str(action.bar or "").strip().casefold()
+            if destination not in {"front", "back"}:
+                raise ValueError("bar-swap rotation action requires a valid destination bar")
+            self.displayed_recovery_for(destination, resource)
+            swaps.append((float(action.time_seconds), int(action.sequence), destination))
+        swaps.sort(key=lambda item: (item[0], item[1]))
+
+        def resolve(time_seconds: float) -> int:
+            instant = float(time_seconds)
+            if instant < 0:
+                raise ValueError("displayed recovery lookup time cannot be negative")
+            active_bar = starting_bar
+            for swap_time, _sequence, destination in swaps:
+                if swap_time > instant:
+                    break
+                active_bar = destination
+            return self.displayed_recovery_for(active_bar, resource)
+
+        return resolve
 
 
 class RotationStaticBuildContextService:
