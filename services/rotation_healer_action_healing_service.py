@@ -62,8 +62,8 @@ class RotationHealerDelayedHealSeed:
 class RotationHealerActionHealingProjection:
     direct_events: tuple[RotationHealerResolvedHealEvent, ...]
     periodic_seeds: tuple[RotationHealerPeriodicHealSeed, ...]
+    unresolved: tuple[str, ...]
     delayed_seeds: tuple[RotationHealerDelayedHealSeed, ...] = ()
-    unresolved: tuple[str, ...] = ()
 
 
 class RotationHealerActionHealingService:
@@ -228,8 +228,8 @@ class RotationHealerActionHealingService:
         return RotationHealerActionHealingProjection(
             direct_events=tuple(sorted(direct_events, key=sort_key)),
             periodic_seeds=tuple(sorted(periodic_seeds, key=sort_key)),
-            delayed_seeds=tuple(sorted(delayed_seeds, key=sort_key)),
             unresolved=self._dedupe(tuple(unresolved)),
+            delayed_seeds=tuple(sorted(delayed_seeds, key=sort_key)),
         )
 
     @staticmethod
