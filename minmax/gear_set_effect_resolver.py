@@ -133,7 +133,7 @@ class GearSetEffectResolver:
         }
         for label, stat in percent_stats.items():
             match = re.fullmatch(
-                rf"Increases your\s+{re.escape(label)}\s+by\s+(?P<value>\d+(?:\.\d+)?)%",
+                rf"Increases your\s+{re.escape(label)}\s+by\s+(?P<value>\d+(?:\.\d+)?)%\.?",
                 text,
                 re.IGNORECASE,
             )
@@ -178,7 +178,7 @@ class GearSetEffectResolver:
                 unit=EffectUnit.PERCENT,
             ),
             self._effect(
-                StatId.HEALING_DONE,
+                StatId.CRITICAL_HEALING,
                 base,
                 source,
                 operation=EffectOperation.ADD_PERCENT,
@@ -193,7 +193,7 @@ class GearSetEffectResolver:
                 condition="sneaking_or_invisible",
             ),
             self._effect(
-                StatId.HEALING_DONE,
+                StatId.CRITICAL_HEALING,
                 conditional,
                 source,
                 operation=EffectOperation.ADD_PERCENT,
