@@ -50,12 +50,15 @@ class ExtremeActualHealCatalogResult:
 
     @property
     def global_maximum_proven(self) -> bool:
+        # This claim is scoped to candidates proven legal for the current build.
+        # Wrong-class, passive, non-player, and explicitly unowned-line rows stay
+        # visible in blocked_candidates for evidence, but they cannot invalidate
+        # a maximum among the legal candidate set.
         return bool(
             self.entries
             and self.best_scored is not None
             and self.best_scored.mechanic_complete
             and all(entry.mechanic_complete for entry in self.entries)
-            and not self.blocked_candidates
         )
 
 
