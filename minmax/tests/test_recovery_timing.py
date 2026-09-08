@@ -77,6 +77,31 @@ def test_recovery_schedule_starts_at_two_seconds_and_includes_window_boundary() 
     assert [event.tick.restored_amount for event in scheduled] == [1200, 1200, 1200]
 
 
+def test_recovery_schedule_resolves_displayed_recovery_at_each_tick() -> None:
+    scheduled = schedule_in_combat_recovery_ticks(
+        _pool(ResourceType.MAGICKA, 1200),
+        duration_seconds=8.0,
+        displayed_recovery_at=lambda time: 1200 if time < 5.0 else 1650,
+    )
+
+    assert [event.time_seconds for event in scheduled] == [2.0, 4.0, 6.0, 8.0]
+    assert [event.tick.displayed_recovery for event in scheduled] == [1200, 1200, 1650, 1650]
+    assert [event.tick.restored_amount for event in scheduled] == [1200, 1200, 1650, 1650]
+
+
+def test_recovery_schedule_rejects_negative_dynamic_displayed_recovery() -> None:
+    try:
+        schedule_in_combat_recovery_ticks(
+            _pool(ResourceType.MAGICKA, 1200),
+            duration_seconds=4.0,
+            displayed_recovery_at=lambda _time: -1,
+        )
+    except ValueError as exc:
+        assert "Displayed recovery resolver cannot return a negative amount" in str(exc)
+    else:
+        raise AssertionError("Expected negative dynamic displayed recovery to fail")
+
+
 def test_recovery_schedule_evaluates_stamina_suppression_at_each_tick() -> None:
     def activity_at(time_seconds: float) -> RecoveryActivityState:
         if time_seconds == 4.0:
