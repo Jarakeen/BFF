@@ -34,9 +34,9 @@ from services.rotation_recovery_heavy_replay_service import (
 class RotationCanonicalEvidenceBundle:
     """Application-ready evidence for one canonical rotation candidate run.
 
-    ``knowledge_gaps`` may contain both blocking evidence gaps and advisory research.
-    Advisory gaps remain visible to Comp Maker/Rotation Maker/Optimizer without
-    globally disabling an otherwise defensible candidate evaluation.
+    Broad mechanics coverage may be retained for later CharacterBuild-specific
+    dependency discovery. Explicitly scoped coverage gaps can still participate in
+    immediate readiness when the caller already knows the required dependency keys.
     """
 
     encounter_id: str
@@ -57,6 +57,7 @@ class RotationCanonicalEvidenceBundle:
     baseline_id: str = "baseline"
     unresolved: tuple[str, ...] = ()
     knowledge_gaps: tuple[CanonicalKnowledgeGap, ...] = ()
+    coverage_report: CanonicalMechanicsCoverageReport | None = None
 
     @property
     def blocking_knowledge_gaps(self) -> tuple[CanonicalKnowledgeGap, ...]:
@@ -71,7 +72,7 @@ class RotationCanonicalEvidenceBundle:
         return not self.unresolved and not self.blocking_knowledge_gaps
 
     def research_for(self, consumer: str) -> tuple[CanonicalKnowledgeGap, ...]:
-        """Return blocking and advisory research that benefits one consumer surface."""
+        """Return currently materialized blocking and advisory research for a consumer."""
 
         key = str(consumer or "").strip().casefold()
         if not key:
@@ -82,11 +83,10 @@ class RotationCanonicalEvidenceBundle:
 class RotationCanonicalEvidenceBundleSupport:
     """Assemble canonical encounter evidence without inventing execution facts.
 
-    A caller may attach a build/encounter-specific mechanics coverage report. When
-    ``coverage_dependency_keys`` is supplied, only those declared mechanics influence
-    Rotation Maker readiness. This prevents an unrelated critical gap elsewhere in the
-    global mechanics inventory from vetoing a defensible candidate. Declared mechanics
-    with no usable coverage evidence fail closed instead of disappearing.
+    If explicit ``coverage_dependency_keys`` are supplied, those mechanics are scoped
+    immediately and can affect bundle readiness. If a broad coverage report is supplied
+    without explicit dependencies, the report is retained but its global gaps are not
+    merged yet; the resolved CharacterBuild later discovers which rows actually matter.
     """
 
     def __init__(
@@ -149,16 +149,13 @@ class RotationCanonicalEvidenceBundleSupport:
             if str(item).strip()
         )
         merged_gaps = list(knowledge_gaps)
-        if coverage_report is not None:
-            if coverage_dependency_keys is None:
-                merged_gaps.extend(coverage_report.gaps_for("rotation_maker"))
-            else:
-                merged_gaps.extend(
-                    coverage_report.dependency_gaps_for(
-                        "rotation_maker",
-                        tuple(coverage_dependency_keys),
-                    )
+        if coverage_report is not None and coverage_dependency_keys is not None:
+            merged_gaps.extend(
+                coverage_report.dependency_gaps_for(
+                    "rotation_maker",
+                    tuple(coverage_dependency_keys),
                 )
+            )
 
         return RotationCanonicalEvidenceBundle(
             encounter_id=guide.encounter_id,
@@ -179,6 +176,7 @@ class RotationCanonicalEvidenceBundleSupport:
             baseline_id=baseline,
             unresolved=unresolved,
             knowledge_gaps=self._dedupe_gaps(tuple(merged_gaps)),
+            coverage_report=coverage_report,
         )
 
     @staticmethod
