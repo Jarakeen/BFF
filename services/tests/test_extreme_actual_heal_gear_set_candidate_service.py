@@ -39,6 +39,16 @@ class _Repo:
         return list(self.bonuses.get(int(set_id), ()))
 
 
+class _HealthRepo(_Repo):
+    def __init__(self):
+        super().__init__()
+        self.sets = (*self.sets, GearSet(4, "Healthy Power", "Test", 5))
+        self.bonuses[4] = (
+            GearSetBonus(6, 4, 2, "Adds 1206 Maximum Health"),
+            GearSetBonus(7, 4, 5, "Adds 1206 Maximum Health"),
+        )
+
+
 def _service() -> ExtremeActualHealGearSetCandidateService:
     service = ExtremeActualHealGearSetCandidateService.__new__(
         ExtremeActualHealGearSetCandidateService
@@ -55,6 +65,17 @@ def test_candidate_pool_requires_reviewed_complete_five_piece_sets():
     assert names == ("Healing Power",)
     assert "Mystery Power" not in names
     assert "Monster Pair" not in names
+
+
+def test_candidate_pool_includes_max_health_only_set_for_health_scaling_heals():
+    service = ExtremeActualHealGearSetCandidateService.__new__(
+        ExtremeActualHealGearSetCandidateService
+    )
+    service.repository = _HealthRepo()
+
+    names = service.candidate_set_names(per_objective=5)
+
+    assert "Healthy Power" in names
 
 
 def test_candidate_materializes_set_on_real_body_slots_without_mutating_baseline():
