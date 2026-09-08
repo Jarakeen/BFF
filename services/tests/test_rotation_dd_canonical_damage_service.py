@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 from minmax.build_candidate_damage import ModeledDamagePotency
 from minmax.dd_damage import DDDamageEvent
 from minmax.evaluation_context import EvaluationContext
 from minmax.rotation_plan import RotationPlan
+from minmax.stat_ids import StatId
 from services.rotation_dd_action_damage_event_service import (
     RotationDDActionDamageProjection,
     RotationDDResolvedDamageEvent,
@@ -45,6 +48,25 @@ def _evaluation_context() -> EvaluationContext:
     return EvaluationContext(fight_duration=10.0, target_resistance=18200.0)
 
 
+def _canonical_context():
+    values = {
+        StatId.WEAPON_DAMAGE: 2000.0,
+        StatId.SPELL_DAMAGE: 2000.0,
+        StatId.PHYSICAL_PENETRATION: 0.0,
+        StatId.SPELL_PENETRATION: 0.0,
+        StatId.CRITICAL_CHANCE: 0.5,
+        StatId.CRITICAL_DAMAGE: 0.5,
+    }
+    return SimpleNamespace(
+        core_state=SimpleNamespace(
+            derived={
+                stat: SimpleNamespace(final_value=value)
+                for stat, value in values.items()
+            }
+        )
+    )
+
+
 def test_projects_canonical_event_values_into_rotation_total_and_dps() -> None:
     seen: list[float] = []
 
@@ -82,6 +104,23 @@ def test_projects_canonical_event_values_into_rotation_total_and_dps() -> None:
     assert projection.total_damage == 5000.0
     assert projection.projected_dps == 500.0
     assert len(projection.damage_projection.instances) == 2
+
+
+def test_default_bridge_uses_real_canonical_dd_stats_crit_and_mitigation() -> None:
+    projection = RotationDDCanonicalDamageService().project(
+        plan=_plan(),
+        context=_canonical_context(),
+        evaluation_context=_evaluation_context(),
+        action_projection=RotationDDActionDamageProjection(
+            events=(_event(time_seconds=1.0, sequence=1, base_value=1000.0),),
+            unresolved=(),
+        ),
+    )
+
+    assert projection.complete
+    assert projection.total_damage is not None
+    assert 0.0 < projection.total_damage < 1250.0
+    assert projection.projected_dps == projection.total_damage / 10.0
 
 
 def test_preserves_source_breakdown_from_resolved_instances() -> None:
