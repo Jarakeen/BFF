@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from pathlib import Path
 
+from minmax.gear_set_effect_service import GearSetEffectService
 from minmax.stat_ids import StatId
 from models.build_model import PlayerBuild
 from services.extreme_blueprint_service import (
     ExtremeBlueprintResult,
     ExtremeBlueprintService,
 )
+from services.extreme_complete_optimization_service import ExtremeCompleteOptimizationService
 from services.extreme_optimization_service import ExtremeObjective
 
 
@@ -21,6 +24,19 @@ class ExtremeCompleteBlueprintService(ExtremeBlueprintService):
     """
 
     _WEAPON_SPELL_DAMAGE_OBJECTIVES = frozenset({"weapon_damage", "spell_damage"})
+
+    def __init__(
+        self,
+        *,
+        database_path: Path | None = None,
+        builds_path: Path | None = None,
+    ) -> None:
+        super().__init__(database_path=database_path, builds_path=builds_path)
+        self.extreme = ExtremeCompleteOptimizationService(
+            database_path=self.database_path,
+            builds_path=builds_path,
+        )
+        self.set_effects = GearSetEffectService(self.extreme.gear_set_repository)
 
     def _resting_progression(self, objective: ExtremeObjective):
         if objective.key == "weapon_damage":
@@ -66,6 +82,20 @@ class ExtremeCompleteBlueprintService(ExtremeBlueprintService):
             for field_name in ("Necklace", "Ring1", "Ring2"):
                 getattr(build, field_name).Enchant = "Weapon Damage"
         return build
+
+    def _set_static_score(self, name: str, objective: ExtremeObjective) -> float:
+        if objective.key != "critical_healing":
+            return super()._set_static_score(name, objective)
+
+        gear_set = self.extreme.gear_set_repository.get_set(name)
+        if gear_set is None:
+            return 0.0
+        effects = self.set_effects.resolve_effects(gear_set.id, 5)
+        return sum(
+            float(effect.value)
+            for effect in effects
+            if effect.stat == StatId.CRITICAL_HEALING
+        )
 
     def _evaluate_snapshot(
         self,
