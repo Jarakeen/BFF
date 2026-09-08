@@ -48,12 +48,13 @@ class RotationCandidateRankingService:
     misses an explicit demand action, required static support effect, runtime
     uptime floor, demand-entry resource reserve, encounter bar-availability rule,
     resolved action cooldown, occupancy, range, slotted-bar, or active-bar rule,
-    or incurs resource shortfall cannot outrank one that satisfies those supplied
-    hard obligations merely because its softer resource numbers look prettier.
+    introduces candidate-specific unresolved mechanics evidence, or incurs resource
+    shortfall cannot outrank one that satisfies those supplied hard obligations
+    merely because its softer resource numbers look prettier.
 
     Within the same eligibility tier, deterministic evidence ordering is used:
-    fewer missing obligations, smaller reserve/runtime shortfalls, fewer
-    candidate-specific unresolved items, then resource consequence. When canonical
+    fewer hard failures first, including candidate-specific unresolved mechanics,
+    then smaller reserve/runtime shortfalls and resource consequence. When canonical
     bar-sensitive maximum evidence exists, normalized minimum/ending resource
     fractions break soft resource ties before raw absolute deltas. Otherwise-equal
     resource outcomes prefer less recovery/restoration wasted against the active
@@ -106,6 +107,7 @@ class RotationCandidateRankingService:
         range_violations = len(getattr(scorecard, "range_violations", ()))
         slot_violations = len(getattr(scorecard, "slot_violations", ()))
         active_bar_violations = len(getattr(scorecard, "active_bar_violations", ()))
+        candidate_unresolved = len(scorecard.candidate_specific_unresolved)
         failed_uptimes = scorecard.failed_runtime_uptime_assessments
         uptime_failure_count = len(failed_uptimes)
         uptime_evidence_missing = sum(
@@ -135,6 +137,7 @@ class RotationCandidateRankingService:
             + range_violations
             + slot_violations
             + active_bar_violations
+            + candidate_unresolved
             + uptime_failure_count
             + reserve_failure_count
             + (1 if scorecard.candidate_shortfall > 0 else 0)
@@ -153,13 +156,13 @@ class RotationCandidateRankingService:
             range_violations,
             slot_violations,
             active_bar_violations,
+            candidate_unresolved,
             uptime_failure_count,
             uptime_evidence_missing,
             uptime_shortfall,
             reserve_failure_count,
             reserve_shortfall,
             int(scorecard.candidate_shortfall),
-            len(scorecard.candidate_specific_unresolved),
             objective_evidence_missing,
             -objective_uptime,
             _RESOURCE_ORDER[consequence.resource_kind],
@@ -306,6 +309,10 @@ class RotationCandidateRankingService:
         if scorecard.candidate_specific_unresolved:
             reasons.append(
                 f"{len(scorecard.candidate_specific_unresolved)} candidate-specific unresolved evidence item(s)"
+            )
+            reasons.extend(
+                f"candidate-specific unresolved: {item}"
+                for item in scorecard.candidate_specific_unresolved
             )
         if scorecard.inherited_unresolved:
             reasons.append(
