@@ -15,8 +15,14 @@ from minmax.rotation_ability_priority import AbilityPriorityList
 from minmax.rotation_demand_window import RotationDemandWindow
 from minmax.rotation_plan import RotationPlan
 from models.build_model import PlayerBuild
+from services.canonical_knowledge_gap import CanonicalKnowledgeGap
+from services.canonical_mechanics_coverage_audit import CanonicalMechanicsCoverageReport
 from services.rotation_candidate_generation_service import RotationRefreshLeadCandidateOption
 from services.rotation_effect_uptime_service import RotationEffectUptimeRequirement
+from services.rotation_mechanics_dependency_service import (
+    RotationMechanicsDependency,
+    RotationMechanicsDependencyService,
+)
 from services.rotation_recovery_heavy_candidate_generation_bridge_service import (
     RecoveryCandidateEvaluatorResolver,
     RecoveryPressureWaitDecisionFactory,
@@ -46,30 +52,26 @@ class RotationCanonicalCandidateApplicationResult:
     """Application-facing result for one canonical recovery candidate family.
 
     ``pipeline_result`` is absent when the selected saved build could not be fully
-    adapted into canonical mechanics. In that case validation remains explicitly
-    NOT_EVALUATED instead of treating partial build evidence as a valid rotation.
+    adapted or when decision-critical mechanics coverage is unresolved. Discovered
+    mechanics dependencies and their research gaps are retained for explanation.
     """
 
     build_adaptation: SavedBuildAdaptation
     pipeline_result: RotationRecoveryHeavyCandidateOrchestrationResult | None
     validation: RotationRecoveryValidationEvidence
+    mechanics_dependencies: tuple[RotationMechanicsDependency, ...] = ()
+    knowledge_gaps: tuple[CanonicalKnowledgeGap, ...] = ()
 
 
 class RotationCanonicalCandidateSupport:
     """Bridge a saved UI build into the effect-aware recovery candidate pipeline.
 
-    This layer owns application plumbing only. Saved ``PlayerBuild`` state is adapted
-    through the existing canonical SavedBuildCharacterAdapter, then the resolved
-    ``CharacterBuild`` is supplied to the existing effect-aware candidate pipeline.
-
-    Canonical candidate evaluation fails closed when the saved build adaptation has
-    unresolved evidence. That prevents missing set, skill, passive, weapon, race,
-    enchantment, or other canonical identity from silently disappearing before
-    effective-duration and uptime evaluation.
-
-    Encounter demands, refresh policies, recovery thresholds, restoration amounts,
-    reserve policy, required effects, passives, candidate scorecards, and strategy
-    semantics remain explicit caller-owned evidence.
+    Saved ``PlayerBuild`` state is first adapted through the canonical
+    SavedBuildCharacterAdapter. When a mechanics coverage report is supplied, the
+    resolved CharacterBuild and current rotation evidence are then used to discover
+    which coverage domains actually matter to this decision. Unrelated global gaps do
+    not block the candidate; a blocking gap in a discovered dependency fails closed
+    before the expensive candidate pipeline runs.
     """
 
     def __init__(
@@ -79,11 +81,13 @@ class RotationCanonicalCandidateSupport:
         build_adapter: SavedBuildCharacterAdapter | None = None,
         pipeline: RotationRecoveryHeavyCandidatePipelineService | None = None,
         validation_support: RotationRecoveryValidationSupport | None = None,
+        dependency_service: RotationMechanicsDependencyService | None = None,
     ) -> None:
         database = Path(database_path) if database_path is not None else get_data_dir() / "eso.db"
         self.build_adapter = build_adapter or SavedBuildCharacterAdapter(database)
         self.pipeline = pipeline or RotationRecoveryHeavyCandidatePipelineService()
         self.validation_support = validation_support or RotationRecoveryValidationSupport()
+        self.dependency_service = dependency_service or RotationMechanicsDependencyService()
 
     def run_effects(
         self,
@@ -106,6 +110,7 @@ class RotationCanonicalCandidateSupport:
         max_iterations: int = 6,
         baseline_id: str = "baseline",
         character_id: str | None = None,
+        coverage_report: CanonicalMechanicsCoverageReport | None = None,
     ) -> RotationCanonicalCandidateApplicationResult:
         adaptation = self.build_adapter.adapt(
             player_build,
@@ -134,6 +139,44 @@ class RotationCanonicalCandidateSupport:
         option_tuple = tuple(options)
         requirement_tuple = tuple(requirements)
         passive_tuple = tuple(passives)
+        dependencies: tuple[RotationMechanicsDependency, ...] = ()
+        knowledge_gaps: tuple[CanonicalKnowledgeGap, ...] = ()
+
+        if coverage_report is not None:
+            dependencies = self.dependency_service.discover(
+                character_build=adaptation.build,
+                demands=demand_tuple,
+                requirements=requirement_tuple,
+                passives=passive_tuple,
+                recovery_enabled=True,
+            )
+            dependency_keys = self.dependency_service.keys(dependencies)
+            knowledge_gaps = coverage_report.dependency_gaps_for(
+                "rotation_maker",
+                dependency_keys,
+            )
+            blocking = tuple(gap for gap in knowledge_gaps if gap.blocking)
+            if blocking:
+                reasons = [
+                    "canonical candidate evaluation was not run because required "
+                    "mechanics coverage is unresolved"
+                ]
+                for gap in blocking:
+                    reasons.append(
+                        f"mechanics coverage: {gap.summary} Bring back: {gap.needed_evidence}"
+                    )
+                return RotationCanonicalCandidateApplicationResult(
+                    build_adaptation=adaptation,
+                    pipeline_result=None,
+                    validation=RotationRecoveryValidationEvidence(
+                        scope=RotationRecoveryValidationScope.NOT_EVALUATED,
+                        selectable=None,
+                        reasons=tuple(reasons),
+                    ),
+                    mechanics_dependencies=dependencies,
+                    knowledge_gaps=knowledge_gaps,
+                )
+
         result = self.pipeline.run_effects(
             player_build=player_build,
             character_build=adaptation.build,
@@ -158,6 +201,8 @@ class RotationCanonicalCandidateSupport:
             build_adaptation=adaptation,
             pipeline_result=result,
             validation=self.validation_support.from_candidate_pipeline_result(result),
+            mechanics_dependencies=dependencies,
+            knowledge_gaps=knowledge_gaps,
         )
 
 
