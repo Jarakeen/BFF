@@ -10,6 +10,7 @@ from services import extreme_actual_heal_optimization_service as module
 from services.extreme_actual_heal_optimization_service import (
     ExtremeActualHealOptimizationService,
 )
+from services.extreme_complete_optimization_service import ExtremeCompleteOptimizationService
 
 
 class _Event:
@@ -27,6 +28,13 @@ class _HealingEvents:
         critical = 100.0 + float(build.AttributeMagicka or 0)
         unresolved = ("rejected health candidate blocker",) if int(build.AttributeHealth or 0) == 64 else ()
         return _Event(entity_id, critical, unresolved)
+
+
+class _BarHealingEvents:
+    def evaluate(self, *, build, context, entity_id):
+        _ = context
+        bonus = 50.0 if "Entropy" in build.FrontBarSkills else 0.0
+        return _Event(entity_id, 100.0 + float(build.AttributeMagicka or 0) + bonus)
 
 
 class _ContextFactory:
@@ -55,6 +63,48 @@ class _Optimizer:
     def _candidates(*args, **kwargs):
         _ = args, kwargs
         return ()
+
+
+class _ReviewedBarCandidates:
+    def __init__(self):
+        self.calls = []
+
+    def build_candidates(
+        self,
+        build,
+        progression,
+        *,
+        character_id,
+        baseline_build_id,
+        protected_entity_id,
+        active_bar="front",
+    ):
+        self.calls.append((progression, protected_entity_id, active_bar))
+        skills = build.BackBarSkills if active_bar == "back" else build.FrontBarSkills
+        if "Entropy" in skills:
+            return ()
+        candidate_build = PlayerBuild.from_dict(build.to_dict())
+        candidate_skills = list(candidate_build.FrontBarSkills)
+        while len(candidate_skills) < 6:
+            candidate_skills.append("")
+        candidate_skills[0] = "Entropy"
+        candidate_build.FrontBarSkills = candidate_skills[:6]
+        return (
+            ExtremeCompleteOptimizationService._direct_candidate(
+                candidate_build,
+                character_id=character_id,
+                baseline_build_id=baseline_build_id,
+                token="reviewed-bar-entropy",
+                path="FrontBarSkills[0]",
+                before=str(skills[0] or ""),
+                after={
+                    "skill": "Entropy",
+                    "skill_line": "Mages Guild",
+                    "reviewed_passive": "Magicka Controller",
+                },
+                source="test:reviewed-bar",
+            ),
+        )
 
 
 def _install_progression_adapter(monkeypatch):
@@ -185,6 +235,36 @@ def test_progression_override_survives_every_candidate_context_rebuild(monkeypat
         )
         for progression in optimizer.context_factory.progressions
     } >= {(0, 0, 0), (64, 0, 0), (0, 64, 0), (0, 0, 64)}
+
+
+def test_actual_heal_optimizer_can_accept_reviewed_bar_passive_carrier(monkeypatch):
+    _install_progression_adapter(monkeypatch)
+    bar_candidates = _ReviewedBarCandidates()
+    service = ExtremeActualHealOptimizationService(
+        optimizer=_Optimizer(),
+        healing_events=_BarHealingEvents(),
+        reviewed_bar_candidates=bar_candidates,
+    )
+    baseline = PlayerBuild(
+        BuildName="Bar Search",
+        FrontBarSkills=["Old Skill", "Blessing of Protection", "", "", "", "Ultimate"],
+    )
+
+    result = service.optimize(
+        baseline,
+        "blessing_of_protection",
+        max_passes=4,
+    )
+
+    assert bar_candidates.calls
+    assert result.optimized_build.AttributeMagicka == 64
+    assert result.optimized_build.FrontBarSkills[0] == "Entropy"
+    assert result.optimized_build.FrontBarSkills[1] == "Blessing of Protection"
+    assert result.optimized_event.critical_heal == pytest.approx(214.0)
+    assert {step.path for step in result.steps} == {"Attributes", "FrontBarSkills[0]"}
+    assert "reviewed active-bar Mages Guild/Fighters Guild slot-count passive carriers" in result.search_scope
+    assert "skill-bar passive/proc search" not in result.omitted_scope
+    assert any("unreviewed skill-bar passive/proc families" in item for item in result.omitted_scope)
 
 
 def test_actual_heal_score_refuses_missing_critical_event():
