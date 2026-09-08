@@ -13,6 +13,9 @@ from services.extreme_healing_event_service import ExtremeHealingEventResult
 from services.extreme_restoration_heavy_combat_state_service import (
     ExtremeRestorationHeavyCombatStateService,
 )
+from services.extreme_templar_restoring_light_healing_service import (
+    ExtremeTemplarRestoringLightHealingService,
+)
 
 
 class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizationService):
@@ -22,6 +25,11 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
     result and does not activate target-health or trigger-dependent conditionals.
     This service forwards one explicit target-health fraction through every
     whole-build candidate rebuild.
+
+    Reviewed Templar ``Mending`` is also resolved here because its Restoring Light
+    healing bonus scales continuously with the explicit target-health fraction.
+    Keeping it in this conditional layer prevents the standing optimizer from
+    inventing a target-health assumption merely to obtain a larger number.
 
     A caller may also state that a fully charged Restoration Staff heavy attack
     has just completed. When that trigger is requested, the reviewed Essence
@@ -40,6 +48,7 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         target_health_fraction: float,
         fully_charged_restoration_heavy_attack_completed: bool = False,
         restoration_heavy_state: ExtremeRestorationHeavyCombatStateService | None = None,
+        templar_restoring_light_healing: ExtremeTemplarRestoringLightHealingService | None = None,
         **kwargs,
     ) -> None:
         value = float(target_health_fraction)
@@ -50,6 +59,7 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
             fully_charged_restoration_heavy_attack_completed
         )
         self.restoration_heavy_state = restoration_heavy_state
+        self.templar_restoring_light_healing = templar_restoring_light_healing
         super().__init__(**kwargs)
 
     def optimize(
@@ -106,6 +116,50 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         )
         return result.combat_state, tuple(result.unresolved)
 
+    def _templar_mending_event(
+        self,
+        *,
+        build: PlayerBuild,
+        progression: CharacterProgression,
+        event: ExtremeHealingEventResult,
+    ) -> ExtremeHealingEventResult:
+        skill = getattr(event.tooltip_result, "skill", None)
+        skill_name = str(getattr(skill, "name", "") or "").strip()
+        if not skill_name:
+            return event
+
+        service = self.templar_restoring_light_healing
+        if service is None:
+            service = ExtremeTemplarRestoringLightHealingService(
+                getattr(self.optimizer, "database_path", None)
+            )
+            self.templar_restoring_light_healing = service
+
+        mending = service.resolve(
+            build=build,
+            progression=progression,
+            ability_name=skill_name,
+            target_health_fraction=self.target_health_fraction,
+        )
+        multiplier = float(mending.multiplier)
+        normal_heal = (
+            None if event.normal_heal is None else float(event.normal_heal) * multiplier
+        )
+        critical_heal = (
+            None
+            if event.critical_heal is None
+            else float(event.critical_heal) * multiplier
+        )
+        unresolved = tuple(
+            dict.fromkeys((*event.unresolved, *mending.unresolved))
+        )
+        return replace(
+            event,
+            normal_heal=normal_heal,
+            critical_heal=critical_heal,
+            unresolved=unresolved,
+        )
+
     def _evaluate(
         self,
         build: PlayerBuild,
@@ -142,6 +196,11 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
             context=context,
             entity_id=entity_id,
             target_health_fraction=self.target_health_fraction,
+        )
+        event = self._templar_mending_event(
+            build=build,
+            progression=candidate_progression,
+            event=event,
         )
         unresolved = (
             tuple(context.unresolved_gear_effects)
