@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 from engine.config import get_data_dir
@@ -12,6 +12,14 @@ from minmax.character_build.saved_build_adapter import (
 )
 from minmax.resource_costs import ResourceType
 from minmax.rotation_ability_priority import AbilityPriorityList
+from minmax.rotation_action_cooldown import (
+    RotationActionCooldownAssessment,
+    RotationActionCooldownAssessor,
+)
+from minmax.rotation_action_occupancy import (
+    RotationActionOccupancyAssessment,
+    RotationActionOccupancyAssessor,
+)
 from minmax.rotation_demand_window import RotationDemandWindow
 from minmax.rotation_plan import RotationPlan
 from models.build_model import PlayerBuild
@@ -40,6 +48,10 @@ from services.rotation_recovery_heavy_replay_service import (
     RecoveryReserveAssessmentResolver,
     VerifiedRecoveryHeavyRestorationResolver,
 )
+from services.rotation_saved_build_action_timing_service import (
+    RotationSavedBuildActionTimingEvidence,
+    RotationSavedBuildActionTimingService,
+)
 from services.rotation_static_build_context_service import (
     RotationStaticBuildContextResolution,
     RotationStaticBuildContextService,
@@ -62,6 +74,9 @@ class RotationCanonicalCandidateApplicationResult:
     knowledge_gaps: tuple[CanonicalKnowledgeGap, ...] = ()
     static_context: RotationStaticBuildContextResolution | None = None
     canonical_maximum_amount: int | None = None
+    action_timing_evidence: RotationSavedBuildActionTimingEvidence = field(
+        default_factory=RotationSavedBuildActionTimingEvidence
+    )
 
 
 class RotationCanonicalCandidateSupport:
@@ -72,6 +87,11 @@ class RotationCanonicalCandidateSupport:
     derived from each actual candidate plan's BAR_SWAP actions and replayed through
     the Phase 4 sustain timeline. Different front/back values therefore remain
     modeled rather than forcing a false global static resource state.
+
+    Canonical saved-skill timing evidence is also resolved once from the selected
+    build and applied to each *final stabilized* candidate scorecard. Recovery or
+    candidate regeneration can move actions, so legality is deliberately checked
+    against the final plan rather than only the seed schedule.
     """
 
     def __init__(
@@ -83,6 +103,9 @@ class RotationCanonicalCandidateSupport:
         validation_support: RotationRecoveryValidationSupport | None = None,
         dependency_service: RotationMechanicsDependencyService | None = None,
         static_context_service: RotationStaticBuildContextService | None = None,
+        action_timing_service: RotationSavedBuildActionTimingService | None = None,
+        cooldown_assessor: RotationActionCooldownAssessor | None = None,
+        occupancy_assessor: RotationActionOccupancyAssessor | None = None,
     ) -> None:
         database = Path(database_path) if database_path is not None else get_data_dir() / "eso.db"
         self.build_adapter = build_adapter or SavedBuildCharacterAdapter(database)
@@ -90,6 +113,11 @@ class RotationCanonicalCandidateSupport:
         self.validation_support = validation_support or RotationRecoveryValidationSupport()
         self.dependency_service = dependency_service or RotationMechanicsDependencyService()
         self.static_context_service = static_context_service
+        self.action_timing_service = (
+            action_timing_service or RotationSavedBuildActionTimingService(database)
+        )
+        self.cooldown_assessor = cooldown_assessor or RotationActionCooldownAssessor()
+        self.occupancy_assessor = occupancy_assessor or RotationActionOccupancyAssessor()
 
     def run_effects(
         self,
@@ -137,6 +165,11 @@ class RotationCanonicalCandidateSupport:
         option_tuple = tuple(options)
         requirement_tuple = tuple(requirements)
         passive_tuple = tuple(passives)
+        action_timing_evidence = self.action_timing_service.resolve(player_build)
+        timed_scorecard_resolver = self._with_action_timing(
+            scorecard_resolver,
+            action_timing_evidence,
+        )
         dependencies: tuple[RotationMechanicsDependency, ...] = ()
         knowledge_gaps: tuple[CanonicalKnowledgeGap, ...] = ()
         static_context: RotationStaticBuildContextResolution | None = None
@@ -166,6 +199,7 @@ class RotationCanonicalCandidateSupport:
                         reasons=tuple(reasons),
                     ),
                     static_context=static_context,
+                    action_timing_evidence=action_timing_evidence,
                 )
 
             calculation_context = static_context.context_for("front")
@@ -179,6 +213,7 @@ class RotationCanonicalCandidateSupport:
                         reasons=("canonical static rotation context is missing the front-bar starting state",),
                     ),
                     static_context=static_context,
+                    action_timing_evidence=action_timing_evidence,
                 )
             canonical_maximum_amount = static_context.maximum_amount_for("front", resource)
             effective_maximum_amount = canonical_maximum_amount
@@ -218,6 +253,7 @@ class RotationCanonicalCandidateSupport:
                     knowledge_gaps=knowledge_gaps,
                     static_context=static_context,
                     canonical_maximum_amount=canonical_maximum_amount,
+                    action_timing_evidence=action_timing_evidence,
                 )
 
         result = self.pipeline.run_effects(
@@ -226,7 +262,7 @@ class RotationCanonicalCandidateSupport:
             seed_plan=seed_plan,
             priorities=priorities,
             evaluator_resolver=evaluator_resolver,
-            scorecard_resolver=scorecard_resolver,
+            scorecard_resolver=timed_scorecard_resolver,
             resource=resource,
             maximum_amount=effective_maximum_amount,
             trigger_fraction=trigger_fraction,
@@ -251,7 +287,61 @@ class RotationCanonicalCandidateSupport:
             knowledge_gaps=knowledge_gaps,
             static_context=static_context,
             canonical_maximum_amount=canonical_maximum_amount,
+            action_timing_evidence=action_timing_evidence,
         )
+
+    def _with_action_timing(
+        self,
+        resolver: RecoveryFinalScorecardResolver,
+        evidence: RotationSavedBuildActionTimingEvidence,
+    ) -> RecoveryFinalScorecardResolver:
+        def resolve(snapshot):
+            scorecard = resolver(snapshot)
+            cooldown_assessment = scorecard.cooldown_assessment
+            occupancy_assessment = scorecard.occupancy_assessment
+
+            if evidence.cooldown_requirements:
+                automatic = self.cooldown_assessor.assess(
+                    snapshot.plan,
+                    evidence.cooldown_requirements,
+                )
+                cooldown_assessment = RotationActionCooldownAssessment(
+                    self._dedupe_objects(
+                        scorecard.cooldown_violations + automatic.violations
+                    )
+                )
+
+            if evidence.occupancy_requirements:
+                automatic = self.occupancy_assessor.assess(
+                    snapshot.plan,
+                    evidence.occupancy_requirements,
+                )
+                occupancy_assessment = RotationActionOccupancyAssessment(
+                    self._dedupe_objects(
+                        scorecard.occupancy_violations + automatic.violations
+                    )
+                )
+
+            if (
+                cooldown_assessment is scorecard.cooldown_assessment
+                and occupancy_assessment is scorecard.occupancy_assessment
+            ):
+                return scorecard
+            return replace(
+                scorecard,
+                cooldown_assessment=cooldown_assessment,
+                occupancy_assessment=occupancy_assessment,
+            )
+
+        return resolve
+
+    @staticmethod
+    def _dedupe_objects(values: tuple[object, ...]) -> tuple:
+        ordered: list[object] = []
+        for value in values:
+            if value not in ordered:
+                ordered.append(value)
+        return tuple(ordered)
 
     @staticmethod
     def _dependency_evidence_for(
