@@ -21,7 +21,16 @@ class _FakeSustainService:
     def __init__(self) -> None:
         self.calls = []
 
-    def evaluate(self, *, build, plan, resource, restoration_events=()):
+    def evaluate(
+        self,
+        *,
+        build,
+        plan,
+        resource,
+        restoration_events=(),
+        maximum_events=(),
+        calculation_context=None,
+    ):
         self.calls.append(tuple(restoration_events))
         current = 2500
         applied = []
