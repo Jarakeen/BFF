@@ -46,6 +46,12 @@ def install() -> None:
     if _INSTALLED:
         return
 
+    # Position Timeline is behavior, not a Rylo-only feature. This installer is
+    # always invoked for every visual theme, making it a safe pre-construction
+    # hook without adding another app.py startup dependency.
+    from ui.encounter_position_timeline_support import install as install_position_timeline
+    install_position_timeline()
+
     from ui.components import encounter_board as board
     from ui.theme.theme_manager import ThemeManager
 
