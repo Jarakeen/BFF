@@ -6,6 +6,7 @@ import re
 
 from minmax.character_build.character_class import CLASS_SKILL_LINES, CharacterClass
 from minmax.character_build.class_configuration import ClassSkillLineConfiguration
+from models.build_model import PlayerBuild
 
 
 def canonical_class_skill_line_id(value: object) -> str:
@@ -40,12 +41,13 @@ class ExtremeHealClassRoute:
 
 
 class ExtremeHealClassRouteService:
-    """Enumerate legal ESO class-line routes for Extreme heal discovery.
+    """Enumerate and materialize legal ESO class-line routes for Extreme heals.
 
     The legality authority remains ``ClassSkillLineConfiguration``. This service
     does not invent a second subclass rule set; it only enumerates the finite
-    configuration space and exposes deterministic route records for the Extreme
-    heal catalog/optimizer.
+    configuration space and writes one chosen route onto a normal ``PlayerBuild``
+    snapshot so downstream canonical math can see the same route that discovery
+    used.
     """
 
     ALL_CLASS_LINES = tuple(
@@ -119,3 +121,31 @@ class ExtremeHealClassRouteService:
             for route in routes
             if line_id in set(route.equipped_skill_lines)
         )
+
+    @staticmethod
+    def materialize_build(
+        baseline_build: PlayerBuild,
+        route: ExtremeHealClassRoute,
+    ) -> PlayerBuild:
+        """Return a build snapshot carrying the exact selected class route.
+
+        ``EsoClass`` remains the character's base class. ``ClassSkillLines``
+        records the three effective lines explicitly, including the pure-class
+        route, so an Extreme candidate never relies on an implicit interpretation
+        that can be lost during JSON candidate serialization.
+
+        Class Mastery selections are preserved only for pure-class routes. A
+        subclass candidate clears them because the canonical subclass rules do
+        not permit Class Mastery while subclassed.
+        """
+
+        problems = route.configuration.validate(route.base_class)
+        if problems:
+            raise ValueError("; ".join(problems))
+
+        build = PlayerBuild.from_dict(baseline_build.to_dict())
+        build.EsoClass = route.base_class.value
+        build.ClassSkillLines = list(route.equipped_skill_lines)
+        if route.is_subclassed:
+            build.ClassMasteryAbilityIds = []
+        return build
