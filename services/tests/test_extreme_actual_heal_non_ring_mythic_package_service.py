@@ -157,7 +157,7 @@ def test_builds_packages_for_multiple_non_ring_mythic_slots(tmp_path: Path) -> N
         assert change.path == "Gear.FivePiecePlusFivePiecePlusSlotMythic"
         assert mythic_slot not in change.after["primary_positions"]
         assert mythic_slot not in change.after["secondary_positions"]
-        assert change.after["weapon_positions"] == ("ActiveWeapon",)
+        assert change.after["weapon_positions"] == ["ActiveWeapon"]
         if mythic_slot in result.Armor:
             assert result.Armor[mythic_slot]["Set"] == change.after["mythic"]
         elif mythic_slot == "Necklace":
@@ -200,10 +200,10 @@ def test_paired_one_hand_package_models_main_and_offhand_as_independent_real_slo
     )
     change = candidate.changes[0]
     result = candidate.candidate_build
-    assert change.after["weapon_positions"] == (
+    assert change.after["weapon_positions"] == [
         "ActiveMainHand",
         "ActiveOffHand",
-    )
+    ]
     used = set(change.after["primary_positions"]) | set(
         change.after["secondary_positions"]
     )
