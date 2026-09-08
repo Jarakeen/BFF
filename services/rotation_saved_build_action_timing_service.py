@@ -37,14 +37,14 @@ class RotationSavedBuildActionTimingService:
         self.database_path = Path(database_path)
 
     def resolve(self, player_build: PlayerBuild) -> RotationSavedBuildActionTimingEvidence:
+        slots = self._saved_slots(player_build)
+        if not slots:
+            return RotationSavedBuildActionTimingEvidence()
+
         if not self.database_path.exists():
             return RotationSavedBuildActionTimingEvidence(
                 unresolved=(f"canonical skill timing database not found: {self.database_path}",)
             )
-
-        slots = self._saved_slots(player_build)
-        if not slots:
-            return RotationSavedBuildActionTimingEvidence()
 
         cooldowns: dict[tuple[RotationActionKind, str], RotationActionCooldownRequirement] = {}
         occupancies: dict[tuple[RotationActionKind, str], RotationActionOccupancyRequirement] = {}
@@ -56,7 +56,15 @@ class RotationSavedBuildActionTimingService:
                 str(row[1])
                 for row in db.execute("PRAGMA table_info(skill_rank)").fetchall()
             }
-            required = {"skill_id", "ability_id", "rank", "cooldown", "cast_time", "channel_time"}
+            required = {
+                "skill_id",
+                "ability_id",
+                "rank",
+                "raw_name",
+                "cooldown",
+                "cast_time",
+                "channel_time",
+            }
             if not required.issubset(columns):
                 missing = ", ".join(sorted(required - columns))
                 return RotationSavedBuildActionTimingEvidence(
@@ -100,7 +108,9 @@ class RotationSavedBuildActionTimingService:
     @staticmethod
     def _saved_slots(player_build: PlayerBuild) -> tuple[tuple[str, RotationActionKind], ...]:
         values: list[tuple[str, RotationActionKind]] = []
-        for names in (tuple(player_build.FrontBarSkills), tuple(player_build.BackBarSkills)):
+        front = tuple(getattr(player_build, "FrontBarSkills", ()) or ())
+        back = tuple(getattr(player_build, "BackBarSkills", ()) or ())
+        for names in (front, back):
             for index, raw_name in enumerate(names):
                 name = str(raw_name or "").strip()
                 if not name:
