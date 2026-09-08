@@ -103,9 +103,33 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
             consumers=ALL_THREE,
             missing_evidence=(
                 "Build a comprehensive verified passive catalog covering class, weapon, "
-                "armor, guild/world, race, vampire/werewolf and other relevant passives, "
-                "including rank, slot/bar/equipment prerequisites, trigger conditions, "
-                "duration/resource/status/target effects, and stacking semantics."
+                "guild/world, race, vampire/werewolf and other relevant passives, including "
+                "rank, slot/bar/equipment prerequisites, trigger conditions, duration/resource/"
+                "status/target effects, and stacking semantics."
+            ),
+        ),
+        CanonicalMechanicsCoverageEvidence(
+            domain=CanonicalKnowledgeDomain.PASSIVE,
+            key="armor:weight_passive_semantics",
+            status=CanonicalMechanicsCoverageStatus.PARTIAL,
+            capability=(
+                "Verified static armor math already distinguishes exact Light/Medium/Heavy "
+                "piece counts for armor-line effects and distinct equipped armor weights for "
+                "Undaunted Mettle. Rotation dependency discovery now preserves those exact "
+                "composition inputs from canonical CharacterBuild armor."
+            ),
+            evidence_source=(
+                "minmax/armor_passive_input_resolver.py; "
+                "minmax/undaunted_passive_input_resolver.py; "
+                "services/rotation_mechanics_dependency_service.py"
+            ),
+            consumers=ALL_THREE,
+            missing_evidence=(
+                "Bridge verified armor-passive ownership/progression into canonical "
+                "CharacterBuild rotation evaluation, preserve rank/prerequisite gates, and "
+                "verify every Light/Medium/Heavy and composition-sensitive passive that can "
+                "change resource costs/recovery, block behavior, damage/healing, penetration, "
+                "critical stats, mitigation, movement, or other rotation-relevant state."
             ),
         ),
         CanonicalMechanicsCoverageEvidence(
