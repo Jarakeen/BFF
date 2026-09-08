@@ -69,6 +69,10 @@ class RotationCandidateGenerationService:
     candidate into another. Callers with a stateful provider therefore supply
     ``wait_decision_factory`` so every candidate receives a fresh instance. The
     legacy ``wait_decision`` argument remains supported for stateless providers.
+
+    ``generate_policy`` exposes the same canonical refinement path for one explicit
+    candidate policy. Recovery fixed-point adapters use it to regenerate one policy
+    repeatedly without generating unrelated siblings on every iteration.
     """
 
     DEFAULT_MAX_CANDIDATES = 32
@@ -95,11 +99,10 @@ class RotationCandidateGenerationService:
         wait_decision_factory: RotationCandidateWaitDecisionFactory | None = None,
         baseline_id: str = "baseline",
     ) -> tuple[GeneratedRotationCandidate, ...]:
-        if wait_decision is not None and wait_decision_factory is not None:
-            raise ValueError(
-                "rotation candidate generation accepts either wait_decision or "
-                "wait_decision_factory, not both"
-            )
+        self._validate_wait_decision_inputs(
+            wait_decision=wait_decision,
+            wait_decision_factory=wait_decision_factory,
+        )
 
         baseline = str(baseline_id or "").strip()
         if not baseline:
@@ -121,33 +124,62 @@ class RotationCandidateGenerationService:
             candidate_ids.add(key)
 
         candidates = [
-            self._generate_one(
+            self.generate_policy(
                 candidate_id=baseline,
                 seed_plan=seed_plan,
                 priorities=priorities,
                 demands=tuple(demands),
                 refresh_leads=(),
-                wait_decision=self._candidate_wait_decision(
-                    wait_decision=wait_decision,
-                    wait_decision_factory=wait_decision_factory,
-                ),
+                wait_decision=wait_decision,
+                wait_decision_factory=wait_decision_factory,
             )
         ]
         for option in normalized_options:
             candidates.append(
-                self._generate_one(
+                self.generate_policy(
                     candidate_id=option.option_id,
                     seed_plan=seed_plan,
                     priorities=priorities,
                     demands=tuple(demands),
-                    refresh_leads=self._canonical_leads(option.refresh_leads),
-                    wait_decision=self._candidate_wait_decision(
-                        wait_decision=wait_decision,
-                        wait_decision_factory=wait_decision_factory,
-                    ),
+                    refresh_leads=option.refresh_leads,
+                    wait_decision=wait_decision,
+                    wait_decision_factory=wait_decision_factory,
                 )
             )
         return tuple(candidates)
+
+    def generate_policy(
+        self,
+        *,
+        candidate_id: str,
+        seed_plan: RotationPlan,
+        priorities: AbilityPriorityList,
+        demands: tuple[RotationDemandWindow, ...] = (),
+        refresh_leads: tuple[DemandRefreshLead, ...] = (),
+        wait_decision: PrematureRecastDecisionProvider | None = None,
+        wait_decision_factory: RotationCandidateWaitDecisionFactory | None = None,
+    ) -> GeneratedRotationCandidate:
+        """Generate one explicit candidate policy through the canonical refiner."""
+
+        self._validate_wait_decision_inputs(
+            wait_decision=wait_decision,
+            wait_decision_factory=wait_decision_factory,
+        )
+        resolved_id = str(candidate_id or "").strip()
+        if not resolved_id:
+            raise ValueError("rotation candidate candidate_id is required")
+        canonical_leads = self._canonical_leads(tuple(refresh_leads))
+        return self._generate_one(
+            candidate_id=resolved_id,
+            seed_plan=seed_plan,
+            priorities=priorities,
+            demands=tuple(demands),
+            refresh_leads=canonical_leads,
+            wait_decision=self._candidate_wait_decision(
+                wait_decision=wait_decision,
+                wait_decision_factory=wait_decision_factory,
+            ),
+        )
 
     def _generate_one(
         self,
@@ -171,6 +203,18 @@ class RotationCandidateGenerationService:
             plan=refinement.plan,
             refresh_leads=refresh_leads,
         )
+
+    @staticmethod
+    def _validate_wait_decision_inputs(
+        *,
+        wait_decision: PrematureRecastDecisionProvider | None,
+        wait_decision_factory: RotationCandidateWaitDecisionFactory | None,
+    ) -> None:
+        if wait_decision is not None and wait_decision_factory is not None:
+            raise ValueError(
+                "rotation candidate generation accepts either wait_decision or "
+                "wait_decision_factory, not both"
+            )
 
     @staticmethod
     def _candidate_wait_decision(
