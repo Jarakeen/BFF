@@ -76,7 +76,9 @@ class ExtremeActualHealOptimizationService:
     single five-piece, legal five-plus-monster, legal double-five, slot-aware
     mythic 5+5+1 shapes, and exact-subtype arena weapon packages are physically
     equipped before canonical resource/power/healing math is recalculated.
-    Tooltip deltas only bound candidate discovery; they are never the final score.
+    Slot-aware non-ring mythics support both exact two-slot weapons and explicit
+    paired main/off-hand weapon routing. Tooltip deltas only bound candidate
+    discovery; they are never the final score.
     """
 
     SEARCH_SCOPE = (
@@ -93,14 +95,13 @@ class ExtremeActualHealOptimizationService:
         "reviewed legal five-piece + two-piece monster body package",
         "reviewed legal five-piece + five-piece body/jewelry package",
         "reviewed legal five-piece + five-piece + ring mythic package with exact active weapon subtype proof",
-        "reviewed legal five-piece + five-piece + canonically slotted non-ring mythic package with exact active two-slot weapon proof",
+        "reviewed legal five-piece + five-piece + canonically slotted non-ring mythic package with exact active two-slot or paired main/off-hand weapon proof",
         "structurally proven arena-weapon replacement with exact active weapon subtype proof, including paired main/off-hand packages",
         "canonical healing coefficient scaling",
         "Healing Done and verified healing CP",
         "Critical Healing",
     )
     OMITTED_SCOPE = (
-        "non-ring mythic packages that require paired one-hand active-weapon routing",
         "class change / subclass route",
         "healing-skill replacement",
         "skill-bar passive/proc search",
