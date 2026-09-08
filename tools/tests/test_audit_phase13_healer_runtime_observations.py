@@ -1,4 +1,6 @@
 from pathlib import Path
+import subprocess
+import sys
 
 from services.rotation_healer_periodic_observation_fixture_service import (
     RotationHealerPeriodicObservationFixtureReport,
@@ -125,3 +127,20 @@ def test_render_report_handles_empty_valid_entry_set():
 
     assert "No valid observation entries were loaded." in rendered
     assert "sample 1:" in rendered
+
+
+def test_cli_can_be_executed_directly_from_tools_path():
+    repo_root = Path(__file__).resolve().parents[2]
+    script = repo_root / "tools" / "audit_phase13_healer_runtime_observations.py"
+
+    result = subprocess.run(
+        [sys.executable, str(script), "--help"],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0
+    assert "--observations" in result.stdout
+    assert "ModuleNotFoundError" not in result.stderr
