@@ -5,6 +5,7 @@ import sqlite3
 
 from minmax.build_candidate import BuildCandidate
 from minmax.character_build.gear_piece import GearPieceCategory
+from minmax.eso_weapon_type_id import eso_weapon_type_id_from_saved_name
 from minmax.gear_set_category_resolver import GearSetCategoryResolver
 from minmax.gear_set_repository import GearSetRepository
 from minmax.gear_stat_inputs import TWO_SLOT_SET_WEAPON_TYPES
@@ -16,11 +17,10 @@ from services.extreme_gear_set_objective_service import ExtremeGearSetObjectiveS
 class ExtremeActualHealMythicPackageService:
     """Materialize a narrow, provable 5+5+1 ring-mythic package shape.
 
-    This tranche keeps the active weapon type unchanged because the healing skill
-    may depend on that weapon line. The package therefore only admits a baseline
-    whose active weapon is already a two-slot weapon (staff, bow, or two-handed),
-    and only ordinary secondary sets whose canonical piece structure includes a
-    two-handed weapon family plus Head, Shoulders, and Necklace.
+    The healing skill may depend on the active weapon line, so this service never
+    changes the saved weapon subtype. The baseline must already use a concrete
+    two-slot weapon, and the secondary ordinary set must contain that exact ESO
+    weapon subtype in canonical ``gear_set_piece.weapon_type`` data.
 
     A ring mythic occupies Ring1. The package is then:
 
@@ -28,8 +28,7 @@ class ExtremeActualHealMythicPackageService:
     * secondary set: Head, Shoulders, Necklace, active two-slot weapon (5)
     * mythic: Ring1 (1)
 
-    Exact weapon-subtype legality remains a separate refinement; this service
-    proves the two-slot equipment family and never changes the saved weapon type.
+    Non-ring mythics and arena-weapon replacement remain separate package shapes.
     """
 
     HEAD_EQUIP_TYPE = GearSetCategoryResolver.HEAD_EQUIP_TYPE
@@ -91,7 +90,13 @@ class ExtremeActualHealMythicPackageService:
             armor_types - {self.HEAD_EQUIP_TYPE, self.SHOULDERS_EQUIP_TYPE}
         ) >= len(self.PRIMARY_SLOTS)
 
-    def _secondary_legal(self, set_id: int, raw_category: str | None) -> bool:
+    def _secondary_legal(
+        self,
+        set_id: int,
+        raw_category: str | None,
+        *,
+        weapon_type_id: int,
+    ) -> bool:
         if not self._ordinary(set_id, raw_category):
             return False
         rows = self._piece_rows(set_id)
@@ -106,14 +111,15 @@ class ExtremeActualHealMythicPackageService:
             and weapon_type == 0
             for equip_type, armor_type, weapon_type in rows
         )
-        has_two_slot_weapon = any(
-            equip_type == self.TWO_HAND_EQUIP_TYPE and weapon_type > 0
+        has_exact_weapon = any(
+            equip_type == self.TWO_HAND_EQUIP_TYPE
+            and weapon_type == int(weapon_type_id)
             for equip_type, _armor_type, weapon_type in rows
         )
         return (
             {self.HEAD_EQUIP_TYPE, self.SHOULDERS_EQUIP_TYPE}.issubset(armor_types)
             and has_neck
-            and has_two_slot_weapon
+            and has_exact_weapon
         )
 
     def _ring_mythic_legal(self, set_id: int, raw_category: str | None) -> bool:
@@ -130,6 +136,7 @@ class ExtremeActualHealMythicPackageService:
         *,
         shape: str,
         per_objective: int,
+        weapon_type_id: int | None = None,
     ) -> tuple[str, ...]:
         names: list[str] = []
         seen: set[str] = set()
@@ -148,7 +155,14 @@ class ExtremeActualHealMythicPackageService:
                 if shape == "primary":
                     legal = self._primary_legal(gear_set.id, gear_set.category)
                 elif shape == "secondary":
-                    legal = self._secondary_legal(gear_set.id, gear_set.category)
+                    legal = (
+                        weapon_type_id is not None
+                        and self._secondary_legal(
+                            gear_set.id,
+                            gear_set.category,
+                            weapon_type_id=weapon_type_id,
+                        )
+                    )
                 elif shape == "mythic":
                     legal = self._ring_mythic_legal(gear_set.id, gear_set.category)
                 else:
@@ -176,8 +190,13 @@ class ExtremeActualHealMythicPackageService:
         mythic_per_objective: int = 6,
     ) -> tuple[BuildCandidate, ...]:
         main, offhand = baseline_build.active_weapon_slots(active_bar)
-        weapon_type = str(main.WeaponType or "").strip().casefold()
-        if weapon_type not in TWO_SLOT_SET_WEAPON_TYPES or not offhand.is_empty:
+        weapon_name = str(main.WeaponType or "").strip().casefold()
+        weapon_type_id = eso_weapon_type_id_from_saved_name(main.WeaponType)
+        if (
+            weapon_name not in TWO_SLOT_SET_WEAPON_TYPES
+            or weapon_type_id is None
+            or not offhand.is_empty
+        ):
             return ()
 
         primary_names = self._reviewed_names(
@@ -187,6 +206,7 @@ class ExtremeActualHealMythicPackageService:
         secondary_names = self._reviewed_names(
             shape="secondary",
             per_objective=secondary_per_objective,
+            weapon_type_id=weapon_type_id,
         )
         mythic_names = self._reviewed_names(
             shape="mythic",
