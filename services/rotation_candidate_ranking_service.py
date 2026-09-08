@@ -56,8 +56,9 @@ class RotationCandidateRankingService:
     bar-sensitive maximum evidence exists, normalized minimum/ending resource
     fractions break soft resource ties before raw absolute deltas. Otherwise-equal
     resource outcomes prefer less recovery/restoration wasted against the active
-    ceiling. Shared baseline or model limitations remain visible but do not count
-    against one candidate specifically.
+    ceiling. Explicit bar-swap burden is used only as a final soft tie-break before
+    the stable candidate-id fallback. Shared baseline or model limitations remain
+    visible but do not count against one candidate specifically.
     """
 
     def rank(
@@ -150,6 +151,7 @@ class RotationCandidateRankingService:
             int(getattr(consequence, "candidate_wasted_restore", 0)),
             int(consequence.total_cost_delta),
             int(consequence.wait_delta),
+            int(getattr(consequence, "candidate_bar_swaps", 0)),
             item.candidate_id.casefold(),
         )
 
@@ -263,6 +265,13 @@ class RotationCandidateRankingService:
             reasons.append(
                 "wasted recovery/restoration: "
                 f"candidate {candidate_waste}, delta {wasted_delta:+d}"
+            )
+        bar_swap_delta = int(getattr(consequence, "bar_swap_delta", 0))
+        candidate_bar_swaps = int(getattr(consequence, "candidate_bar_swaps", 0))
+        if bar_swap_delta or candidate_bar_swaps:
+            reasons.append(
+                "bar-swap burden: "
+                f"candidate {candidate_bar_swaps}, delta {bar_swap_delta:+d}"
             )
         return tuple(reasons)
 
