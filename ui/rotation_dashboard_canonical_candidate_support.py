@@ -8,6 +8,7 @@ from minmax.resource_costs import ResourceType
 from minmax.rotation_ability_priority import AbilityPriorityList
 from minmax.rotation_demand_window import RotationDemandWindow
 from models.build_model import PlayerBuild
+from services.canonical_mechanics_coverage_audit import CanonicalMechanicsCoverageReport
 from services.rotation_candidate_generation_service import RotationRefreshLeadCandidateOption
 from services.rotation_effect_uptime_service import RotationEffectUptimeRequirement
 from services.rotation_recovery_heavy_candidate_generation_bridge_service import (
@@ -49,13 +50,9 @@ class RotationDashboardCanonicalCandidateSupport:
     canonical saved-build candidate adapter/pipeline.
 
     Recovery stabilization is deliberately disabled while creating the seed. The
-    candidate pipeline owns recovery fixed-point evaluation. This prevents the same
-    schedule from being independently stabilized once in the legacy UI path and then
-    again inside the canonical family workflow.
-
-    Candidate evaluators, scorecards, encounter demands, required effects, passives,
-    recovery thresholds, restoration evidence, reserve policy, and strategy semantics
-    remain explicit caller-owned evidence. Nothing here invents ESO mechanics.
+    candidate pipeline owns recovery fixed-point evaluation. Mechanics coverage, when
+    supplied, is forwarded to the canonical bridge where the resolved CharacterBuild
+    can discover only the dependencies relevant to this specific rotation.
     """
 
     def __init__(
@@ -89,6 +86,7 @@ class RotationDashboardCanonicalCandidateSupport:
         max_iterations: int = 6,
         baseline_id: str = "baseline",
         character_id: str | None = None,
+        coverage_report: CanonicalMechanicsCoverageReport | None = None,
     ) -> RotationDashboardCanonicalCandidateResult:
         priorities = self._priority_list(
             player_build=player_build,
@@ -123,6 +121,7 @@ class RotationDashboardCanonicalCandidateSupport:
             max_iterations=max_iterations,
             baseline_id=baseline_id,
             character_id=character_id,
+            coverage_report=coverage_report,
         )
         return RotationDashboardCanonicalCandidateResult(
             seed_generation=seed_generation,
