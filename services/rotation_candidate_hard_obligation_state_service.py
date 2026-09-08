@@ -93,6 +93,18 @@ class RotationCandidateHardObligationStateService:
                 )
             )
 
+        for violation in scorecard.ultimate_affordability_violations:
+            state.append(
+                self._token(
+                    "ultimate_affordability",
+                    violation.action_name,
+                    self._number(violation.time_seconds),
+                    self._number(violation.balance_before),
+                    self._number(violation.required_cost),
+                    self._number(violation.shortfall),
+                )
+            )
+
         for assessment in scorecard.failed_runtime_uptime_assessments:
             requirement = assessment.requirement
             state.append(
