@@ -24,6 +24,8 @@ def _consequence(
     waits: int = 0,
     minimum_fraction_delta: float | None = None,
     ending_fraction_delta: float | None = None,
+    candidate_wasted_restore: int = 0,
+    wasted_restore_delta: int = 0,
 ) -> RotationPlanConsequence:
     return RotationPlanConsequence(
         resource_kind=kind,
@@ -36,6 +38,8 @@ def _consequence(
         wait_delta=waits,
         minimum_resource_fraction_delta=minimum_fraction_delta,
         ending_resource_fraction_delta=ending_fraction_delta,
+        candidate_wasted_restore=candidate_wasted_restore,
+        wasted_restore_delta=wasted_restore_delta,
     )
 
 
@@ -191,6 +195,36 @@ def test_normalized_resource_floor_breaks_soft_tie_before_raw_amounts() -> None:
         "better-raw-worse-fraction",
     ]
     assert any("normalized resource deltas" in reason for reason in ranked[0].reasons)
+
+
+def test_lower_wasted_restore_breaks_otherwise_equal_soft_tie() -> None:
+    less_waste = _scorecard(
+        consequence=_consequence(
+            RotationResourceConsequenceKind.NEUTRAL,
+            candidate_wasted_restore=500,
+            wasted_restore_delta=-1500,
+        )
+    )
+    more_waste = _scorecard(
+        consequence=_consequence(
+            RotationResourceConsequenceKind.NEUTRAL,
+            candidate_wasted_restore=2000,
+            wasted_restore_delta=0,
+        )
+    )
+
+    ranked = RotationCandidateRankingService().rank(
+        (
+            RotationCandidateRankingInput("more-waste", more_waste),
+            RotationCandidateRankingInput("less-waste", less_waste),
+        )
+    )
+
+    assert [item.candidate_id for item in ranked] == ["less-waste", "more-waste"]
+    assert any(
+        "wasted recovery/restoration: candidate 500, delta -1500" in reason
+        for reason in ranked[0].reasons
+    )
 
 
 def test_failed_reserve_reason_includes_normalized_entry_fraction_when_available() -> None:
