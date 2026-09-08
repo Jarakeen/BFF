@@ -56,6 +56,7 @@ def _plan_with_skill(*, skill_name: str, skill_time: float = 5.0) -> RotationPla
 class _ReplayService:
     def __init__(self) -> None:
         self.replays = []
+        self.displayed_recovery_values = []
 
     def replay(
         self,
@@ -66,6 +67,7 @@ class _ReplayService:
         restoration_resolver,
         maximum_events=(),
         calculation_context=None,
+        displayed_recovery_at=None,
     ):
         signature = tuple(
             action.time_seconds
@@ -73,6 +75,9 @@ class _ReplayService:
             if action.kind is RotationActionKind.HEAVY_ATTACK
         )
         self.replays.append(signature)
+        self.displayed_recovery_values.append(
+            displayed_recovery_at(10.0) if displayed_recovery_at is not None else None
+        )
         restored = 4000 if 2.0 in signature else 0
         timeline = ResourceTimelineResult(
             resource=resource,
@@ -125,6 +130,7 @@ class _ShortfallReplayService(_ReplayService):
         restoration_resolver,
         maximum_events=(),
         calculation_context=None,
+        displayed_recovery_at=None,
     ):
         signature = tuple(
             action.time_seconds
@@ -132,6 +138,9 @@ class _ShortfallReplayService(_ReplayService):
             if action.kind is RotationActionKind.HEAVY_ATTACK
         )
         self.replays.append(signature)
+        self.displayed_recovery_values.append(
+            displayed_recovery_at(10.0) if displayed_recovery_at is not None else None
+        )
         timeline = SimpleNamespace(
             resource=resource,
             starting_amount=2500,
@@ -162,6 +171,13 @@ def test_stabilizer_regenerates_until_full_schedule_state_is_unchanged() -> None
         pressure = pressure_resolver(context)
         return _plan(2.0) if not pressure.recommended else _plan(2.0, 10.0)
 
+    def displayed_recovery_factory(plan, resource):
+        assert resource is ResourceType.MAGICKA
+        heavy_count = sum(
+            1 for action in plan.actions if action.kind is RotationActionKind.HEAVY_ATTACK
+        )
+        return lambda _time, value=heavy_count * 1000: value
+
     result = service.stabilize(
         build=build,
         generate=generate,
@@ -174,6 +190,7 @@ def test_stabilizer_regenerates_until_full_schedule_state_is_unchanged() -> None
             amount=4000,
             source="verified test heavy restore",
         ),
+        displayed_recovery_resolver_factory=displayed_recovery_factory,
         max_iterations=5,
     )
 
@@ -187,6 +204,7 @@ def test_stabilizer_regenerates_until_full_schedule_state_is_unchanged() -> None
     ]
     assert len(calls) == 3
     assert replay.replays == [(2.0, 10.0), (2.0,), (2.0,)]
+    assert replay.displayed_recovery_values == [2000, 1000, 1000]
 
 
 def test_stabilizer_does_not_false_converge_when_non_heavy_schedule_changes() -> None:
