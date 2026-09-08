@@ -20,31 +20,33 @@ def install() -> None:
 
     original_build_snapshot = service_module.PerformanceDashboardService.build_snapshot
 
-    def build_snapshot_with_effect_windows(
-        self,
-        report_code: str,
-        fight_id: int,
-        actor_id: int,
-        actor_label: str,
-        role: str,
-        immunity_buff_name: str = "",
-        immunity_buff_kind: str = "Buff",
-    ):
-        snapshot = original_build_snapshot(
-            self,
-            report_code,
-            fight_id,
-            actor_id,
-            actor_label,
-            role,
-            immunity_buff_name,
-            immunity_buff_kind,
-        )
+    def build_snapshot_with_effect_windows(self, *args, **kwargs):
+        """Preserve the wrapped service's call contract exactly.
+
+        Performance Dashboard has several compatibility layers on the shared
+        branch. Some callers/wrappers add keyword-only options over time. This
+        timeline layer must therefore be transparent: accept and forward the
+        complete call rather than freezing an older build_snapshot signature.
+        """
+        snapshot = original_build_snapshot(self, *args, **kwargs)
+
+        # Resolve the three values this layer itself needs without constraining
+        # the wrapped method's remaining positional/keyword arguments.
+        report_code = kwargs.get("report_code", args[0] if len(args) > 0 else "")
+        fight_id = kwargs.get("fight_id", args[1] if len(args) > 1 else None)
+        actor_id = kwargs.get("actor_id", args[2] if len(args) > 2 else None)
 
         # Timeline failure should not throw away the already-valid aggregate
         # dashboard. Keep the error inspectable for the UI instead.
         snapshot.EffectWindows = []
         snapshot.EffectTimelineError = ""
+
+        if not report_code or fight_id is None or actor_id is None:
+            snapshot.EffectTimelineError = (
+                "Timeline context was unavailable after building the aggregate dashboard."
+            )
+            return snapshot
+
         try:
             summary = self.capability_service.fetch_fight_summary(report_code, fight_id)
             start_ms = float(summary["start_time"])
