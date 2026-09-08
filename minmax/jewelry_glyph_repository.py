@@ -94,6 +94,45 @@ class JewelryGlyphEffectRepository:
 
         return self._map_rows(strongest, use_max_value=use_max_value)
 
+    def get_strongest_jewelry_glyph_effect_by_type(
+        self,
+        effect_type: str,
+        *,
+        use_max_value: bool = True,
+    ) -> list[Effect]:
+        """Return the strongest canonical jewelry-glyph row for one effect type.
+
+        This supports objective-specific mechanics whose saved-build label is
+        simpler than the mined glyph name. Extreme/MOST Bash uses it for the
+        canonical ``bash_damage`` item channel without adding a second source of
+        glyph truth or guessing a display-name mapping.
+        """
+        normalized = str(effect_type or "").strip().casefold()
+        if not normalized:
+            return []
+
+        with sqlite3.connect(self.database_path) as connection:
+            rows = connection.execute(
+                """
+                SELECT
+                    g.name,
+                    e.effect_type,
+                    e.value_min,
+                    e.value_max,
+                    e.unit,
+                    e.description
+                FROM jewelry_glyph g
+                JOIN jewelry_glyph_effect e
+                    ON e.glyph_item_id = g.item_id
+                WHERE LOWER(TRIM(e.effect_type)) = ?
+                ORDER BY COALESCE(e.value_max, e.value_min) DESC, e.id
+                LIMIT 1
+                """,
+                (normalized,),
+            ).fetchall()
+
+        return self._map_rows(rows, use_max_value=use_max_value)
+
     @staticmethod
     def _map_rows(rows, *, use_max_value: bool) -> list[Effect]:
         effects: list[Effect] = []
