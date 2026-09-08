@@ -22,6 +22,7 @@ class RotationSavedBuildActionTimingEvidence:
     cooldown_requirements: tuple[RotationActionCooldownRequirement, ...] = ()
     occupancy_requirements: tuple[RotationActionOccupancyRequirement, ...] = ()
     unresolved: tuple[str, ...] = ()
+    unresolved_action_names: tuple[str, ...] = ()
 
 
 class RotationSavedBuildActionTimingService:
@@ -34,6 +35,9 @@ class RotationSavedBuildActionTimingService:
     exact-name canonical rows are compared only at the highest represented rank;
     matching top-rank rows may dedupe, while conflicting top-rank evidence remains
     unresolved rather than being selected by ability id.
+
+    Action-scoped unresolved names are retained separately so downstream candidate
+    evaluation can block only final plans that actually use affected actions.
     """
 
     def __init__(self, database_path: str | Path = DEFAULT_DATABASE) -> None:
@@ -44,14 +48,17 @@ class RotationSavedBuildActionTimingService:
         if not slots:
             return RotationSavedBuildActionTimingEvidence()
 
+        slot_names = self._unique_names(slots)
         if not self.database_path.exists():
             return RotationSavedBuildActionTimingEvidence(
-                unresolved=(f"canonical skill timing database not found: {self.database_path}",)
+                unresolved=(f"canonical skill timing database not found: {self.database_path}",),
+                unresolved_action_names=slot_names,
             )
 
         cooldowns: dict[tuple[RotationActionKind, str], RotationActionCooldownRequirement] = {}
         occupancies: dict[tuple[RotationActionKind, str], RotationActionOccupancyRequirement] = {}
         unresolved: list[str] = []
+        unresolved_action_names: list[str] = []
 
         with sqlite3.connect(self.database_path) as db:
             db.row_factory = sqlite3.Row
@@ -71,7 +78,8 @@ class RotationSavedBuildActionTimingService:
             if not required.issubset(columns):
                 missing = ", ".join(sorted(required - columns))
                 return RotationSavedBuildActionTimingEvidence(
-                    unresolved=(f"canonical skill timing schema is missing: {missing}",)
+                    unresolved=(f"canonical skill timing schema is missing: {missing}",),
+                    unresolved_action_names=slot_names,
                 )
 
             for action_name, action_kind in slots:
@@ -80,6 +88,7 @@ class RotationSavedBuildActionTimingService:
                     unresolved.append(
                         f"canonical skill timing not found by exact saved name: {action_name}"
                     )
+                    unresolved_action_names.append(action_name)
                     continue
 
                 highest_rank = max(int(row["rank"] or 0) for row in rows)
@@ -99,6 +108,7 @@ class RotationSavedBuildActionTimingService:
                         "canonical skill timing is ambiguous at highest rank for exact saved name: "
                         f"{action_name}"
                     )
+                    unresolved_action_names.append(action_name)
                     continue
 
                 cooldown_seconds, cast_seconds, channel_seconds = next(iter(normalized))
@@ -122,6 +132,7 @@ class RotationSavedBuildActionTimingService:
             cooldown_requirements=tuple(cooldowns.values()),
             occupancy_requirements=tuple(occupancies.values()),
             unresolved=tuple(dict.fromkeys(unresolved)),
+            unresolved_action_names=self._unique_strings(unresolved_action_names),
         )
 
     @staticmethod
@@ -141,6 +152,26 @@ class RotationSavedBuildActionTimingService:
                 )
                 values.append((name, kind))
         return tuple(values)
+
+    @classmethod
+    def _unique_names(
+        cls,
+        slots: tuple[tuple[str, RotationActionKind], ...],
+    ) -> tuple[str, ...]:
+        return cls._unique_strings(name for name, _kind in slots)
+
+    @staticmethod
+    def _unique_strings(values) -> tuple[str, ...]:
+        ordered: list[str] = []
+        seen: set[str] = set()
+        for raw in values:
+            value = str(raw or "").strip()
+            key = value.casefold()
+            if not value or key in seen:
+                continue
+            seen.add(key)
+            ordered.append(value)
+        return tuple(ordered)
 
     @staticmethod
     def _timing_rows(db: sqlite3.Connection, action_name: str) -> tuple[sqlite3.Row, ...]:
