@@ -38,6 +38,13 @@ def install() -> None:
     if _INSTALLED:
         return
 
+    # Replace the one-open-at-a-time QToolBox skill-line rolodex before any
+    # CharacterProgressionDialog is constructed. The same progression model,
+    # controls, and save path remain in use; only the spatial presentation changes.
+    from ui.character_progression_compact_cards_support import install as install_compact_progression_cards
+
+    install_compact_progression_cards()
+
     from ui.builds_page import BuildsPage
 
     original_load_progression = BuildsPage._load_progression_tab
