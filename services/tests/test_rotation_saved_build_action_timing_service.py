@@ -134,3 +134,57 @@ def test_saved_build_timing_surfaces_missing_exact_skill_timing_without_guessing
     assert evidence.unresolved == (
         "canonical skill timing not found by exact saved name: Unknown Skill",
     )
+
+
+def test_saved_build_timing_rejects_conflicting_exact_name_rows(tmp_path) -> None:
+    database = tmp_path / "eso.db"
+    _create_timing_database(database)
+    with sqlite3.connect(database) as db:
+        db.execute("INSERT INTO skill(id, name) VALUES(4, 'Channeled Skill')")
+        db.execute("INSERT INTO ability(ability_id, name) VALUES(404, 'Channeled Skill')")
+        db.execute(
+            """
+            INSERT INTO skill_rank(
+                id, skill_id, ability_id, rank, raw_name,
+                cooldown, cast_time, channel_time
+            ) VALUES(4, 4, 404, 4, 'Channeled Skill', 7000, 2000, 0)
+            """
+        )
+        db.commit()
+
+    evidence = RotationSavedBuildActionTimingService(database).resolve(
+        _build(("Channeled Skill",))
+    )
+
+    assert evidence.cooldown_requirements == ()
+    assert evidence.occupancy_requirements == ()
+    assert evidence.unresolved == (
+        "canonical skill timing is ambiguous for exact saved name: Channeled Skill",
+    )
+
+
+def test_saved_build_timing_accepts_duplicate_rows_when_timing_agrees(tmp_path) -> None:
+    database = tmp_path / "eso.db"
+    _create_timing_database(database)
+    with sqlite3.connect(database) as db:
+        db.execute("INSERT INTO skill(id, name) VALUES(4, 'Channeled Skill')")
+        db.execute("INSERT INTO ability(ability_id, name) VALUES(404, 'Channeled Skill')")
+        db.execute(
+            """
+            INSERT INTO skill_rank(
+                id, skill_id, ability_id, rank, raw_name,
+                cooldown, cast_time, channel_time
+            ) VALUES(4, 4, 404, 3, 'Channeled Skill', 5000, 1500, 0)
+            """
+        )
+        db.commit()
+
+    evidence = RotationSavedBuildActionTimingService(database).resolve(
+        _build(("Channeled Skill",))
+    )
+
+    assert evidence.unresolved == ()
+    assert len(evidence.cooldown_requirements) == 1
+    assert evidence.cooldown_requirements[0].cooldown_seconds == 5.0
+    assert len(evidence.occupancy_requirements) == 1
+    assert evidence.occupancy_requirements[0].occupancy_seconds == 1.5
