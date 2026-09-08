@@ -23,13 +23,16 @@ from models.performance_model import (
 from services.capability_service import CapabilityService
 from services.esologs_client import EsoLogsClient
 
-# ESO Logs' own dataType/hostilityType names for each role's output
-# metric -- a healer's relevant output is healing done to allies,
-# a DPS or tank's is damage done to enemies.
+# ESO Logs hostilityType selects which side of the report is being viewed.
+# For player output, the source actor is a friendly even when that player's
+# damage lands on enemies.  Using hostilityType="Enemies" with sourceID=<player>
+# therefore asks ESO Logs for enemy-source damage by that friendly report actor
+# and can legitimately return an empty/zero table.  Debuff queries below still
+# use Enemies because those tables are viewing auras held by enemy targets.
 ROLE_OUTPUT = {
     "Healer": ("Healing", "Friendlies", "Healing", "HPS"),
-    "DPS": ("DamageDone", "Enemies", "Damage", "DPS"),
-    "Tank": ("DamageDone", "Enemies", "Damage", "DPS"),
+    "DPS": ("DamageDone", "Friendlies", "Damage", "DPS"),
+    "Tank": ("DamageDone", "Friendlies", "Damage", "DPS"),
 }
 
 TOP_UPTIME_COUNT = 8
