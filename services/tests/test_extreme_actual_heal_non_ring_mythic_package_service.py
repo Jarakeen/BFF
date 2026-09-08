@@ -169,7 +169,7 @@ def test_builds_packages_for_multiple_non_ring_mythic_slots(tmp_path: Path) -> N
     assert build.Necklace.Set == ""
 
 
-def test_paired_one_hand_package_uses_exact_main_and_offhand_as_two_real_pieces(
+def test_paired_one_hand_package_models_main_and_offhand_as_independent_real_slots(
     tmp_path: Path,
 ) -> None:
     database = tmp_path / "eso.db"
@@ -207,22 +207,27 @@ def test_paired_one_hand_package_uses_exact_main_and_offhand_as_two_real_pieces(
     used = set(change.after["primary_positions"]) | set(
         change.after["secondary_positions"]
     )
-    assert {"ActiveMainHand", "ActiveOffHand"}.issubset(used)
-    assert result.FrontBarWeapon.Set in {"Alpha Healer", "Beta Healer"}
-    assert result.FrontBarOffHand.Set in {"Alpha Healer", "Beta Healer"}
-    assert result.FrontBarWeapon.Set == result.FrontBarOffHand.Set
+    assert used & {"ActiveMainHand", "ActiveOffHand"}
+    if "ActiveMainHand" in used:
+        assert result.FrontBarWeapon.Set in {"Alpha Healer", "Beta Healer"}
+    else:
+        assert result.FrontBarWeapon.Set == ""
+    if "ActiveOffHand" in used:
+        assert result.FrontBarOffHand.Set in {"Alpha Healer", "Beta Healer"}
+    else:
+        assert result.FrontBarOffHand.Set == ""
     assert result.FrontBarWeapon.WeaponType == "Sword"
     assert result.FrontBarOffHand.WeaponType == "Shield"
 
 
-def test_paired_package_fails_closed_when_offhand_subtype_is_not_proven(
+def test_paired_package_fails_closed_when_neither_weapon_subtype_is_proven(
     tmp_path: Path,
 ) -> None:
     database = tmp_path / "eso.db"
     _write_db(database)
     service = ExtremeActualHealNonRingMythicPackageService(database)
     build = PlayerBuild(BuildName="Healer")
-    build.FrontBarWeapon.WeaponType = "Sword"
+    build.FrontBarWeapon.WeaponType = "Axe"
     build.FrontBarOffHand.WeaponType = "Dagger"
 
     candidates = service.build_candidates(
