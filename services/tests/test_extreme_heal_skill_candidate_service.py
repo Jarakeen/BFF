@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sqlite3
 
+from minmax.character_build.class_configuration import ClassSkillLineConfiguration
 from minmax.character_progression import CharacterProgression
 from models.build_model import PlayerBuild
 from services.extreme_heal_skill_candidate_service import ExtremeHealSkillCandidateService
@@ -132,6 +133,65 @@ def test_blocked_catalog_preserves_class_and_skill_line_reasons(tmp_path):
     assert by_name["Blood Altar"].legal is False
     assert by_name["Blood Altar"].blockers == (
         "Blood Altar: skill line not owned: Undaunted",
+    )
+
+
+def test_subclass_configuration_makes_foreign_class_heal_legal_by_equipped_line(tmp_path):
+    path = tmp_path / "eso.db"
+    _write_fixture(path)
+    service = ExtremeHealSkillCandidateService(path)
+    build = PlayerBuild(EsoClass="Warden")
+    progression = CharacterProgression(owned_skill_lines=("Restoration Staff",))
+    configuration = ClassSkillLineConfiguration(
+        equipped_skill_lines=(
+            "green_balance",
+            "restoring_light",
+            "storm_calling",
+        )
+    )
+
+    candidates = service.candidates_for_build(
+        build,
+        progression,
+        class_configuration=configuration,
+    )
+
+    assert {candidate.name for candidate in candidates} == {
+        "Budding Seeds",
+        "Breath of Life",
+        "Grand Healing",
+    }
+    breath = next(candidate for candidate in candidates if candidate.name == "Breath of Life")
+    assert breath.legal is True
+    assert breath.blockers == ()
+
+
+def test_subclass_configuration_blocks_native_line_that_was_replaced(tmp_path):
+    path = tmp_path / "eso.db"
+    _write_fixture(path)
+    service = ExtremeHealSkillCandidateService(path)
+    build = PlayerBuild(EsoClass="Warden")
+    progression = CharacterProgression(owned_skill_lines=("Restoration Staff",))
+    configuration = ClassSkillLineConfiguration(
+        equipped_skill_lines=(
+            "animal_companions",
+            "restoring_light",
+            "storm_calling",
+        )
+    )
+
+    candidates = service.candidates_for_build(
+        build,
+        progression,
+        include_blocked=True,
+        class_configuration=configuration,
+    )
+    by_name = {candidate.name: candidate for candidate in candidates}
+
+    assert by_name["Breath of Life"].legal is True
+    assert by_name["Budding Seeds"].legal is False
+    assert by_name["Budding Seeds"].blockers == (
+        "Budding Seeds: class skill line not equipped: Green Balance",
     )
 
 
