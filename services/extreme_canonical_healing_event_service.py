@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import replace
 
 from services.extreme_healing_event_group_scoring_service import (
     ExtremeHealingEventGroupScoringService,
@@ -95,11 +95,13 @@ class ExtremeCanonicalHealingEventService(ExtremeHealingEventService):
             int(trace.coefficient_number): float(trace.final_value)
             for trace in tuple(getattr(result, "components", ()) or ())
         }
-        values = {
-            number: actual_by_number.get(number, base_by_number[number])
-            for number in event.heal_coefficient_numbers
-            if number in actual_by_number or number in base_by_number
-        }
+        values: dict[int, float] = {}
+        for number in event.heal_coefficient_numbers:
+            if number in actual_by_number:
+                values[number] = actual_by_number[number]
+            elif number in base_by_number:
+                values[number] = base_by_number[number]
+
         if not values or event.normal_heal is None:
             return values
 
