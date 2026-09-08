@@ -17,6 +17,11 @@ class ExtremeActualHealGearSetCandidateService:
     writes the set onto real body slots so the whole build can be reevaluated by
     the canonical context factory.
 
+    Candidate discovery includes generic healing/critical/power stats plus all
+    three maximum-resource families because legal heals may scale from Health,
+    Magicka, or Stamina. Final usefulness is still decided only after the real
+    candidate build is reevaluated through canonical heal math.
+
     Monster sets, mythics, arena weapons, and mixed 5+2+1 packages are intentionally
     outside this first body-set tranche because they require slot-family legality,
     not merely a set name and piece count.
@@ -27,6 +32,9 @@ class ExtremeActualHealGearSetCandidateService:
         "critical_healing",
         "spell_damage",
         "weapon_damage",
+        "max_health",
+        "max_magicka",
+        "max_stamina",
     )
     BODY_SLOTS = ("Chest", "Legs", "Head", "Shoulders", "Hands", "Waist", "Feet")
 
