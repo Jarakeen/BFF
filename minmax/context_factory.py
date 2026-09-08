@@ -127,7 +127,7 @@ class BuildCalculationContextFactory:
             else None
         )
         self.sorcerer_passive_resolver = sorcerer_passive_resolver or (
-            SorcererPassiveInputResolver()
+            SorcererPassiveInputResolver(skill_line_repository)
             if skill_line_repository is not None
             else None
         )
@@ -379,6 +379,7 @@ class BuildCalculationContextFactory:
         daedric_summoning = (
             SorcererPassiveInputResolver.DAEDRIC_SUMMONING_ID in sorcerer_lines
         )
+        storm_calling = SorcererPassiveInputResolver.STORM_CALLING_ID in sorcerer_lines
         expert_summoner, message = self._maxed_passive(
             progression,
             "Expert Summoner",
@@ -386,11 +387,20 @@ class BuildCalculationContextFactory:
         )
         if message:
             unresolved.append(message)
+        expert_mage, message = self._maxed_passive(
+            progression,
+            "Expert Mage",
+            relevant=storm_calling,
+        )
+        if message:
+            unresolved.append(message)
         if self.sorcerer_passive_resolver is not None:
             gear = self.sorcerer_passive_resolver.apply(
                 gear,
                 build,
+                active_bar=active_bar,
                 expert_summoner_owned=expert_summoner,
+                expert_mage_owned=expert_mage,
             )
 
         light_line = progression.owns_skill_line("Light Armor")
