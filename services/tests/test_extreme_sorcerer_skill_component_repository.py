@@ -36,8 +36,8 @@ def test_winged_twilight_separates_friendly_target_and_pet_self_heals():
     assert by_number[4].heal_recipient_scope is HealRecipientScope.PET
     assert by_number[4].heal_recipient_key == "summoned_pet"
     assert by_number[3].heal_event_key == by_number[4].heal_event_key == "pet_special_activation"
-    assert by_number[3].can_crit is None
-    assert by_number[4].can_crit is None
+    assert by_number[3].can_crit is True
+    assert by_number[4].can_crit is True
 
 
 def test_twilight_matriarch_marks_two_friendly_targets_as_group_event():
@@ -48,7 +48,9 @@ def test_twilight_matriarch_marks_two_friendly_targets_as_group_event():
     assert by_number[3].heal_recipient_scope is HealRecipientScope.GROUP
     assert by_number[3].heal_temporal_scope is HealTemporalScope.DIRECT
     assert by_number[3].heal_recipient_key == "friendly_targets"
+    assert by_number[3].can_crit is True
     assert by_number[4].heal_recipient_scope is HealRecipientScope.PET
+    assert by_number[4].can_crit is True
 
 
 def test_unstable_clannfear_separates_player_and_pet_self_heals():
@@ -57,8 +59,10 @@ def test_unstable_clannfear_separates_player_and_pet_self_heals():
 
     assert by_number[3].heal_recipient_scope is HealRecipientScope.SELF
     assert by_number[3].heal_recipient_key == "caster"
+    assert by_number[3].can_crit is True
     assert by_number[4].heal_recipient_scope is HealRecipientScope.PET
     assert by_number[4].heal_recipient_key == "summoned_pet"
+    assert by_number[4].can_crit is True
 
 
 def test_regenerative_ward_classifies_only_reviewed_self_heal_row():
@@ -75,6 +79,7 @@ def test_regenerative_ward_classifies_only_reviewed_self_heal_row():
     assert by_number[2].heal_recipient_scope is HealRecipientScope.SELF
     assert by_number[2].heal_recipient_key == "caster"
     assert by_number[2].heal_event_key == "cast_direct"
+    assert by_number[2].can_crit is True
 
 
 def test_unrelated_skill_rank_delegates_without_overlay():
