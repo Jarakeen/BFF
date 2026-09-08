@@ -6,6 +6,9 @@ from minmax.build_candidate import BuildCandidate
 from minmax.character_progression import AttributeAllocation, CharacterProgression
 from minmax.race_repository import RaceRepository
 from models.build_model import PlayerBuild
+from services.extreme_actual_heal_arena_weapon_package_service import (
+    ExtremeActualHealArenaWeaponPackageService,
+)
 from services.extreme_actual_heal_double_five_package_service import (
     ExtremeActualHealDoubleFivePackageService,
 )
@@ -67,10 +70,11 @@ class ExtremeActualHealOptimizationService:
 
     Candidate changes are materialized onto a real ``PlayerBuild`` and the full
     canonical context is rebuilt before the healing event is scored. Reviewed
-    single five-piece, legal five-plus-monster, legal double-five, and the first
-    narrow ring-mythic 5+5+1 package shape are physically equipped before
-    canonical resource/power/healing math is recalculated. Tooltip deltas only
-    bound candidate discovery; they are never the final score.
+    single five-piece, legal five-plus-monster, legal double-five, the narrow
+    ring-mythic 5+5+1 shape, and exact-subtype two-slot arena weapons are
+    physically equipped before canonical resource/power/healing math is
+    recalculated. Tooltip deltas only bound candidate discovery; they are never
+    the final score.
     """
 
     SEARCH_SCOPE = (
@@ -87,12 +91,13 @@ class ExtremeActualHealOptimizationService:
         "reviewed legal five-piece + two-piece monster body package",
         "reviewed legal five-piece + five-piece body/jewelry package",
         "reviewed legal five-piece + five-piece + ring mythic package with exact active weapon subtype proof",
+        "structurally proven two-slot arena-weapon replacement with exact active weapon subtype proof",
         "canonical healing coefficient scaling",
         "Healing Done and verified healing CP",
         "Critical Healing",
     )
     OMITTED_SCOPE = (
-        "non-ring mythics / arena-weapon packages",
+        "non-ring mythics / paired one-hand arena-weapon packages",
         "class change / subclass route",
         "healing-skill replacement",
         "skill-bar passive/proc search",
@@ -110,6 +115,7 @@ class ExtremeActualHealOptimizationService:
         monster_packages: ExtremeActualHealMonsterPackageService | None = None,
         double_five_packages: ExtremeActualHealDoubleFivePackageService | None = None,
         mythic_packages: ExtremeActualHealMythicPackageService | None = None,
+        arena_weapon_packages: ExtremeActualHealArenaWeaponPackageService | None = None,
     ) -> None:
         self.optimizer = optimizer or ExtremeCompleteOptimizationService()
         self.healing_events = healing_events or ExtremeHealingEventService(
@@ -136,6 +142,11 @@ class ExtremeActualHealOptimizationService:
         )
         self.mythic_packages = mythic_packages or (
             ExtremeActualHealMythicPackageService(database_path)
+            if database_path
+            else None
+        )
+        self.arena_weapon_packages = arena_weapon_packages or (
+            ExtremeActualHealArenaWeaponPackageService(database_path)
             if database_path
             else None
         )
@@ -239,6 +250,15 @@ class ExtremeActualHealOptimizationService:
             if self.mythic_packages is not None:
                 candidates.extend(
                     self.mythic_packages.build_candidates(
+                        current,
+                        character_id=character_id,
+                        baseline_build_id=candidate_build_id,
+                        active_bar=active_bar,
+                    )
+                )
+            if self.arena_weapon_packages is not None:
+                candidates.extend(
+                    self.arena_weapon_packages.build_candidates(
                         current,
                         character_id=character_id,
                         baseline_build_id=candidate_build_id,
