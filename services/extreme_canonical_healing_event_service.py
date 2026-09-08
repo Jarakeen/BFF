@@ -23,6 +23,9 @@ from services.extreme_healing_event_temporal_scope_service import (
     ExtremeHealingEventTemporalScopeResult,
     ExtremeHealingEventTemporalScopeService,
 )
+from services.extreme_sorcerer_skill_component_repository import (
+    ExtremeSorcererSkillComponentRepository,
+)
 
 
 class _CanonicalIdentityRecipientScope:
@@ -61,11 +64,11 @@ class ExtremeCanonicalHealingEventService(ExtremeHealingEventService):
     event. Coefficients delivered to another recipient or at another time are not
     added together.
 
-    The default tooltip path overlays reviewed U50 Dragon Blood-family component
-    identity in memory. The persistent ``eso.db`` remains untouched. The existing
-    reviewed ability-name recipient/time guards remain a compatibility fallback
-    for skills whose canonical component identity has not yet been enriched or
-    whose periodic tick identity is still unresolved.
+    The default tooltip path layers reviewed U50 Dragon Blood-family and Sorcerer
+    component identity in memory. The persistent ``eso.db`` remains untouched.
+    The existing reviewed ability-name recipient/time guards remain a compatibility
+    fallback for skills whose canonical component identity has not yet been
+    enriched or whose periodic tick identity is still unresolved.
     """
 
     def __init__(
@@ -90,8 +93,12 @@ class ExtremeCanonicalHealingEventService(ExtremeHealingEventService):
             database_path = Path(
                 kwargs.get("database_path") or get_data_dir() / "eso.db"
             )
-            component_repository = ExtremeDragonBloodSkillComponentRepository(
+            dragon_blood_repository = ExtremeDragonBloodSkillComponentRepository(
                 database_path
+            )
+            component_repository = ExtremeSorcererSkillComponentRepository(
+                database_path,
+                base_repository=dragon_blood_repository,
             )
             kwargs["tooltip_service"] = SavedBuildSkillTooltipService(
                 database_path,
