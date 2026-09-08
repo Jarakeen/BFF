@@ -24,6 +24,12 @@ from minmax.rotation_action_slot_legality import (
     RotationActionSlotAssessor,
     RotationActionSlotRequirement,
 )
+from minmax.rotation_action_target_legality import (
+    RotationActionTargetAssessment,
+    RotationActionTargetAssessor,
+    RotationActionTargetRequirement,
+    RotationTargetStateWindow,
+)
 from minmax.rotation_active_bar_legality import RotationActiveBarAssessment
 from minmax.rotation_bar_availability import (
     RotationBarAvailabilityAssessment,
@@ -119,6 +125,7 @@ class RotationCandidateScorecard:
     cooldown_assessment: RotationActionCooldownAssessment | None = None
     occupancy_assessment: RotationActionOccupancyAssessment | None = None
     range_assessment: RotationActionRangeAssessment | None = None
+    target_assessment: RotationActionTargetAssessment | None = None
     slot_assessment: RotationActionSlotAssessment | None = None
     active_bar_assessment: RotationActiveBarAssessment | None = None
     ultimate_affordability_assessment: RotationUltimateAffordabilityAssessment | None = None
@@ -170,6 +177,12 @@ class RotationCandidateScorecard:
         return self.range_assessment.violations
 
     @property
+    def target_violations(self):
+        if self.target_assessment is None:
+            return ()
+        return self.target_assessment.violations
+
+    @property
     def slot_violations(self):
         if self.slot_assessment is None:
             return ()
@@ -210,6 +223,7 @@ class RotationCandidateScorecard:
             and not self.cooldown_violations
             and not self.occupancy_violations
             and not self.range_violations
+            and not self.target_violations
             and not self.slot_violations
             and not self.active_bar_violations
             and not self.ultimate_affordability_violations
@@ -230,16 +244,16 @@ class RotationCandidateScorecardService:
 
     Optional resource-reserve requirements, encounter bar-availability windows,
     resolved action cooldowns, resolved skill/ultimate occupancy durations,
-    explicit target-distance/range evidence, exact slotted-bar ownership, and
-    explicit shared-pool Ultimate affordability evidence are caller-supplied hard
-    obligations. This layer never invents resource reserves, bar restrictions,
-    cooldowns, cast times, channel times, target distance, skill range, slot
-    ownership, Ultimate costs, or Ultimate generation. Unresolved evidence is split
-    into inherited/shared baseline limitations and candidate-specific additions.
-    Candidate-specific unresolved evidence is hard-failing; inherited/shared
-    unresolved evidence remains diagnostic. Deterministic refresh-slot cascade
-    messages are retained separately as schedule provenance rather than ranked as
-    uncertainty.
+    explicit target-distance/range evidence, explicit target-state legality,
+    exact slotted-bar ownership, and explicit shared-pool Ultimate affordability
+    evidence are caller-supplied hard obligations. This layer never invents resource
+    reserves, bar restrictions, cooldowns, cast times, channel times, target
+    distance, skill range, target identity, slot ownership, Ultimate costs, or
+    Ultimate generation. Unresolved evidence is split into inherited/shared baseline
+    limitations and candidate-specific additions. Candidate-specific unresolved
+    evidence is hard-failing; inherited/shared unresolved evidence remains
+    diagnostic. Deterministic refresh-slot cascade messages are retained separately
+    as schedule provenance rather than ranked as uncertainty.
     """
 
     def __init__(
@@ -249,6 +263,7 @@ class RotationCandidateScorecardService:
         cooldown_assessor: RotationActionCooldownAssessor | None = None,
         occupancy_assessor: RotationActionOccupancyAssessor | None = None,
         range_assessor: RotationActionRangeAssessor | None = None,
+        target_assessor: RotationActionTargetAssessor | None = None,
         slot_assessor: RotationActionSlotAssessor | None = None,
         ultimate_affordability_assessor: RotationUltimateAffordabilityAssessor | None = None,
     ) -> None:
@@ -259,6 +274,7 @@ class RotationCandidateScorecardService:
         self.cooldown_assessor = cooldown_assessor or RotationActionCooldownAssessor()
         self.occupancy_assessor = occupancy_assessor or RotationActionOccupancyAssessor()
         self.range_assessor = range_assessor or RotationActionRangeAssessor()
+        self.target_assessor = target_assessor or RotationActionTargetAssessor()
         self.slot_assessor = slot_assessor or RotationActionSlotAssessor()
         self.ultimate_affordability_assessor = (
             ultimate_affordability_assessor or RotationUltimateAffordabilityAssessor()
@@ -279,6 +295,8 @@ class RotationCandidateScorecardService:
         occupancy_requirements: tuple[RotationActionOccupancyRequirement, ...] = (),
         range_requirements: tuple[RotationActionRangeRequirement, ...] = (),
         target_distance_windows: tuple[RotationTargetDistanceWindow, ...] = (),
+        target_requirements: tuple[RotationActionTargetRequirement, ...] = (),
+        target_state_windows: tuple[RotationTargetStateWindow, ...] = (),
         slot_requirements: tuple[RotationActionSlotRequirement, ...] = (),
         ultimate_affordability_requirement: RotationUltimateAffordabilityRequirement | None = None,
         encounter_requirements: EncounterRequirementSet | None = None,
@@ -349,6 +367,15 @@ class RotationCandidateScorecardService:
                 target_distance_windows,
             )
             if range_requirements and target_distance_windows
+            else None
+        )
+        target_assessment = (
+            self.target_assessor.assess(
+                candidate_plan,
+                target_requirements,
+                target_state_windows,
+            )
+            if target_requirements and target_state_windows
             else None
         )
         slot_assessment = (
@@ -445,6 +472,7 @@ class RotationCandidateScorecardService:
             cooldown_assessment=cooldown_assessment,
             occupancy_assessment=occupancy_assessment,
             range_assessment=range_assessment,
+            target_assessment=target_assessment,
             slot_assessment=slot_assessment,
             ultimate_affordability_assessment=ultimate_affordability_assessment,
             runtime_uptime_assessments=uptime_assessments,
