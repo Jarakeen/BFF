@@ -64,6 +64,9 @@ class _PageState:
     def canonical_generation_request(self):
         return CanonicalRotationDashboardPage.canonical_generation_request(self)
 
+    def evaluate_canonical_candidates(self, **kwargs):
+        return CanonicalRotationDashboardPage.evaluate_canonical_candidates(self, **kwargs)
+
 
 class _RenderSupport:
     def __init__(self, evidence) -> None:
@@ -193,6 +196,70 @@ def test_page_candidate_evaluation_requires_selected_saved_build() -> None:
             trigger_fraction=0.35,
             restoration_resolver=object(),
         )
+
+    assert page.rotation_canonical_candidates.calls == []
+
+
+def test_page_consumes_ready_canonical_evidence_bundle_as_one_evaluation_input() -> None:
+    page = _PageState()
+    evaluator = object()
+    scorecard = object()
+    restoration = object()
+    wait_factory = object()
+    reserve = object()
+    bundle = SimpleNamespace(
+        ready=True,
+        unresolved=(),
+        evaluator_resolver=evaluator,
+        scorecard_resolver=scorecard,
+        resource=ResourceType.MAGICKA,
+        maximum_amount=31500,
+        trigger_fraction=0.4,
+        restoration_resolver=restoration,
+        demands=("encounter-demand",),
+        options=("refresh-option",),
+        wait_decision_factory=wait_factory,
+        requirements=("effect-requirement",),
+        passives=("class-passive", "armor-passive"),
+        reserve_assessment_resolver=reserve,
+        max_iterations=7,
+        baseline_id="encounter-baseline",
+    )
+
+    result = CanonicalRotationDashboardPage.evaluate_canonical_evidence_bundle(
+        page,
+        bundle,
+        character_id="magrat-id",
+    )
+
+    assert result is page.rotation_canonical_candidates.result
+    call = page.rotation_canonical_candidates.calls[0]
+    assert call["evaluator_resolver"] is evaluator
+    assert call["scorecard_resolver"] is scorecard
+    assert call["resource"] is ResourceType.MAGICKA
+    assert call["maximum_amount"] == 31500
+    assert call["trigger_fraction"] == 0.4
+    assert call["restoration_resolver"] is restoration
+    assert call["demands"] == ("encounter-demand",)
+    assert call["options"] == ("refresh-option",)
+    assert call["wait_decision_factory"] is wait_factory
+    assert call["requirements"] == ("effect-requirement",)
+    assert call["passives"] == ("class-passive", "armor-passive")
+    assert call["reserve_assessment_resolver"] is reserve
+    assert call["max_iterations"] == 7
+    assert call["baseline_id"] == "encounter-baseline"
+    assert call["character_id"] == "magrat-id"
+
+
+def test_page_refuses_unresolved_canonical_evidence_bundle_before_generation() -> None:
+    page = _PageState()
+    bundle = SimpleNamespace(
+        ready=False,
+        unresolved=("required support window is not reviewed",),
+    )
+
+    with pytest.raises(ValueError, match="not ready.*not reviewed"):
+        CanonicalRotationDashboardPage.evaluate_canonical_evidence_bundle(page, bundle)
 
     assert page.rotation_canonical_candidates.calls == []
 
