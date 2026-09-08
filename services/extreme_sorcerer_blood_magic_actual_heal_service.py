@@ -42,7 +42,7 @@ class ExtremeSorcererBloodMagicActualHealResult:
 
 
 class ExtremeSorcererBloodMagicActualHealService:
-    """Optimize the reviewed U50 Blood Magic normal-heal event through Max Health.
+    """Optimize the reviewed U50 Blood Magic heal event through Max Health.
 
     Blood Magic is a separate self-heal event equal to 10% of Max Health when a
     costed Dark Magic ability is cast while the caster is below full Health. The
@@ -54,17 +54,18 @@ class ExtremeSorcererBloodMagicActualHealService:
     candidate reevaluation so class-line passives are evaluated for the route
     being scored rather than for the original saved build.
 
-    Critical eligibility is not inferred. This service proves a normal Blood
-    Magic heal candidate but does not yet claim a MOST Critical Heal value.
+    Blood Magic is a Max-Health-scaled passive proc. The project's reviewed proc
+    critical policy therefore marks the event non-critical; its maximum event is
+    the proved normal-heal value, not a fabricated critical variant.
     """
 
     EXTRA_SEARCH_SCOPE = (
         "Blood Magic U50 rank-2 trigger: costed Dark Magic cast while caster is below full Health",
         "Blood Magic U50 rank-2 heal amount: 10% of canonical Max Health",
+        "Blood Magic Max-Health passive-proc critical policy: non-critical",
         "separate self-heal event; not attached to the triggering ability's own heal/damage event",
     )
     EXTRA_OMITTED_SCOPE = (
-        "Blood Magic critical-heal eligibility",
         "full legal Dark Magic trigger-cast enumeration within each subclass route",
     )
 
