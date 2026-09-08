@@ -62,6 +62,8 @@ def _write_db(path: Path) -> None:
                 (2, 4, 1, 0),
                 (2, 8, 0, 0),
                 (2, 11, 0, 9),
+                (2, 10, 0, 3),
+                (2, 10, 0, 7),
                 (3, 9, 0, 0),
                 (4, 8, 0, 0),
                 (5, 1, 1, 0),
@@ -93,10 +95,24 @@ def test_secondary_set_requires_exact_active_weapon_subtype(tmp_path: Path) -> N
     _write_db(database)
     service = ExtremeActualHealMythicPackageService(database)
 
-    assert service._secondary_legal(2, "standard", weapon_type_id=9) is True
-    assert service._secondary_legal(2, "standard", weapon_type_id=12) is False
-    assert service._secondary_legal(5, "standard", weapon_type_id=12) is True
-    assert service._secondary_legal(5, "standard", weapon_type_id=9) is False
+    assert service._secondary_legal(
+        2, "standard", weapon_type_ids=(9,), paired=False
+    ) is True
+    assert service._secondary_legal(
+        2, "standard", weapon_type_ids=(12,), paired=False
+    ) is False
+    assert service._secondary_legal(
+        5, "standard", weapon_type_ids=(12,), paired=False
+    ) is True
+    assert service._secondary_legal(
+        5, "standard", weapon_type_ids=(9,), paired=False
+    ) is False
+    assert service._secondary_legal(
+        2, "standard", weapon_type_ids=(3, 7), paired=True
+    ) is True
+    assert service._secondary_legal(
+        2, "standard", weapon_type_ids=(3, 11), paired=True
+    ) is False
 
 
 def test_builds_real_five_plus_five_plus_one_ring_mythic_package(tmp_path: Path) -> None:
@@ -128,10 +144,40 @@ def test_builds_real_five_plus_five_plus_one_ring_mythic_package(tmp_path: Path)
     assert result.Armor["Shoulders"]["Set"] == "Secondary Healer"
     assert result.Necklace.Set == "Secondary Healer"
     assert result.FrontBarWeapon.Set == "Secondary Healer"
+    assert result.FrontBarOffHand.Set == ""
     assert result.FrontBarWeapon.WeaponType == "Restoration Staff"
     assert result.Ring1.Set == "Ring Mythic"
     assert build.Ring1.Set == ""
     assert build.FrontBarWeapon.Set == ""
+
+
+def test_builds_ring_mythic_package_with_exact_paired_main_and_offhand(tmp_path: Path) -> None:
+    database = tmp_path / "eso.db"
+    _write_db(database)
+    service = ExtremeActualHealMythicPackageService(database)
+    build = PlayerBuild(BuildName="Healer")
+    build.FrontBarWeapon.WeaponType = "Sword"
+    build.FrontBarOffHand.WeaponType = "Shield"
+
+    candidates = service.build_candidates(
+        build,
+        character_id="char-1",
+        baseline_build_id="build-1",
+        active_bar="front",
+        primary_per_objective=4,
+        secondary_per_objective=4,
+        mythic_per_objective=4,
+    )
+
+    assert len(candidates) == 1
+    result = candidates[0].candidate_build
+    assert result.FrontBarWeapon.Set == "Secondary Healer"
+    assert result.FrontBarOffHand.Set == "Secondary Healer"
+    assert result.FrontBarWeapon.WeaponType == "Sword"
+    assert result.FrontBarOffHand.WeaponType == "Shield"
+    assert result.Ring1.Set == "Ring Mythic"
+    assert build.FrontBarWeapon.Set == ""
+    assert build.FrontBarOffHand.Set == ""
 
 
 def test_non_two_slot_or_aggregate_active_weapon_does_not_emit_package(tmp_path: Path) -> None:
