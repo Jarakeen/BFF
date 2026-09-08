@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
+from minmax.build_calculation_context import BuildCalculationContext
 from minmax.character_build.character_build import CharacterBuild
 from minmax.character_build.passive_grant import PassiveGrant
 from minmax.resource_costs import ResourceType
@@ -29,25 +30,18 @@ from services.rotation_recovery_heavy_replay_service import (
     RecoveryReserveAssessmentResolver,
     VerifiedRecoveryHeavyRestorationResolver,
 )
+from services.rotation_recovery_heavy_stabilization_service import (
+    RecoveryMaximumEventResolver,
+)
 
 
 class RotationRecoveryHeavyCandidatePipelineService:
     """Compose candidate-policy generation with the recovery-aware family workflow.
 
-    This is the caller-facing service boundary for the currently implemented Phase 13
-    candidate path:
-
-    seed plan -> refresh-lead policies -> pressure-aware regeneration -> recovery
-    stabilization -> final-family evaluation -> recovery-valid selection.
-
-    The bridge still owns candidate generation policy and the workflow still owns
-    recovery/final-family evaluation. This service only wires their explicit
-    contracts together so application callers do not have to reproduce that glue.
-
-    No restore amount, recovery threshold, reserve policy, encounter demand, effect
-    requirement, passive, set behavior, scorecard, or role convention is inferred.
-    ``PlayerBuild`` and ``CharacterBuild`` remain separate inputs for their separate
-    canonical responsibilities.
+    Canonical callers may carry an already-resolved static calculation context plus
+    a per-plan resource-maximum resolver through the complete candidate pipeline.
+    Those inputs remain explicit and optional so legacy callers do not acquire
+    invented static mechanics.
     """
 
     def __init__(
@@ -79,6 +73,8 @@ class RotationRecoveryHeavyCandidatePipelineService:
         reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None,
         max_iterations: int = 6,
         baseline_id: str = "baseline",
+        calculation_context: BuildCalculationContext | None = None,
+        maximum_event_resolver: RecoveryMaximumEventResolver | None = None,
     ) -> RotationRecoveryHeavyCandidateOrchestrationResult:
         demand_tuple = tuple(demands)
         option_tuple = tuple(options)
@@ -101,6 +97,8 @@ class RotationRecoveryHeavyCandidatePipelineService:
             restoration_resolver=restoration_resolver,
             reserve_assessment_resolver=reserve_assessment_resolver,
             max_iterations=max_iterations,
+            calculation_context=calculation_context,
+            maximum_event_resolver=maximum_event_resolver,
         )
 
     def run_effects(
@@ -124,6 +122,8 @@ class RotationRecoveryHeavyCandidatePipelineService:
         reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None,
         max_iterations: int = 6,
         baseline_id: str = "baseline",
+        calculation_context: BuildCalculationContext | None = None,
+        maximum_event_resolver: RecoveryMaximumEventResolver | None = None,
     ) -> RotationRecoveryHeavyCandidateOrchestrationResult:
         demand_tuple = tuple(demands)
         option_tuple = tuple(options)
@@ -151,6 +151,8 @@ class RotationRecoveryHeavyCandidatePipelineService:
             restoration_resolver=restoration_resolver,
             reserve_assessment_resolver=reserve_assessment_resolver,
             max_iterations=max_iterations,
+            calculation_context=calculation_context,
+            maximum_event_resolver=maximum_event_resolver,
         )
 
 
