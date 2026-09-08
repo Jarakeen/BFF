@@ -154,7 +154,8 @@ def test_actual_heal_optimizer_can_select_double_five_package(monkeypatch):
         "reviewed legal five-piece + five-piece + ring mythic package with exact active weapon subtype proof"
         in result.search_scope
     )
-    assert "non-ring mythics / arena-weapon packages" in result.omitted_scope
+    assert any("arena-weapon" in item for item in result.search_scope)
+    assert "non-ring mythics / paired one-hand arena-weapon packages" in result.omitted_scope
     assert not any(
         item == "five-piece + five-piece package search"
         for item in result.omitted_scope
