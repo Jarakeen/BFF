@@ -67,9 +67,16 @@ class ExtremeHealSkillCandidateService:
 
         result: list[ExtremeHealSkillCandidate] = []
         for _identity, identity_rows in grouped.items():
-            # skill_rank query is descending rank/ability ID, so the first row is
-            # the concrete max-rank representative for this logical skill/morph.
+            # Query order is descending rank/ability ID. Keep every HEAL row for
+            # that one selected concrete max-rank record, and do not let older
+            # rank metadata leak into the candidate.
             row = identity_rows[0]
+            selected_rank_id = int(row["skill_rank_id"])
+            selected_rows = tuple(
+                item for item in identity_rows
+                if int(item["skill_rank_id"]) == selected_rank_id
+            )
+
             name = str(row["name"] or "").strip()
             entity_id = ability_entity_id(name)
             skill_line = str(row["skill_line"] or "").strip()
@@ -85,26 +92,29 @@ class ExtremeHealSkillCandidateService:
             )
             can_crit_values = {
                 None if item["can_crit"] is None else bool(int(item["can_crit"]))
-                for item in identity_rows
+                for item in selected_rows
             }
             can_crit: bool | None
-            if True in can_crit_values:
+            if can_crit_values == {True}:
                 can_crit = True
             elif can_crit_values == {False}:
                 can_crit = False
             else:
+                # Mixed or unknown per-component eligibility must remain
+                # component-scoped. The aggregate candidate cannot collapse it
+                # to a misleading yes/no answer.
                 can_crit = None
 
             candidate = ExtremeHealSkillCandidate(
                 entity_id=entity_id,
                 name=name,
-                skill_rank_id=int(row["skill_rank_id"]),
+                skill_rank_id=selected_rank_id,
                 ability_id=int(row["ability_id"]),
                 rank=int(row["rank"] or 0),
                 morph=int(row["morph"] or 0),
                 skill_line=skill_line,
                 class_type=class_type,
-                heal_component_count=len({int(item["coefficient_number"]) for item in identity_rows}),
+                heal_component_count=len({int(item["coefficient_number"]) for item in selected_rows}),
                 can_crit=can_crit,
                 legal=not blockers,
                 blockers=blockers,
