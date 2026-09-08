@@ -4,9 +4,10 @@ from types import SimpleNamespace
 
 import pytest
 
+from minmax.character_progression import CharacterProgression
 from minmax.skill_component_classification import SkillEffectKind
 from minmax.stat_ids import StatId
-from models.build_model import PlayerBuild
+from models.build_model import GearSlot, PlayerBuild
 from services.extreme_healing_event_service import ExtremeHealingEventService
 
 
@@ -27,19 +28,33 @@ class _FakeTooltipService:
         return self.result
 
 
-def _context(*, critical_healing: float):
+class _FakeSkillLines:
+    def __init__(self, *, line_by_name=None, max_rank=2):
+        self.line_by_name = dict(line_by_name or {})
+        self.max_rank = max_rank
+
+    def skill_line_for_ability_name(self, name):
+        return self.line_by_name.get(name)
+
+    def passive_max_rank(self, name):
+        return self.max_rank if name == "Restoration Master" else None
+
+
+def _context(*, critical_healing: float, progression=None, active_bar="front"):
     return SimpleNamespace(
         core_state=SimpleNamespace(
             derived={
                 StatId.CRITICAL_HEALING: SimpleNamespace(final_value=critical_healing),
             }
-        )
+        ),
+        progression=progression,
+        active_bar=active_bar,
     )
 
 
-def _result(*, component_values, actual_values=(), unresolved=()):
+def _result(*, component_values, actual_values=(), unresolved=(), skill_name=""):
     return SimpleNamespace(
-        skill=SimpleNamespace(skill_rank_id=42),
+        skill=SimpleNamespace(skill_rank_id=42, name=skill_name),
         components=tuple(
             SimpleNamespace(coefficient_number=number, final_value=value)
             for number, value in component_values
@@ -190,3 +205,100 @@ def test_healing_event_requires_heal_classification():
     assert result.critical_heal is None
     assert any("no HEAL-classified" in message for message in result.unresolved)
     assert not result.mechanic_complete
+
+
+def test_restoration_master_applies_only_to_restoration_staff_heal_family():
+    tooltip = _FakeTooltipService(
+        _result(component_values=((1, 1000.0),), skill_name="Grand Healing"),
+        (_component(1, SkillEffectKind.HEAL),),
+    )
+    service = ExtremeHealingEventService(
+        tooltip_service=tooltip,
+        skill_line_repository=_FakeSkillLines(
+            line_by_name={"Grand Healing": "Restoration Staff"},
+            max_rank=2,
+        ),
+    )
+    progression = CharacterProgression(
+        owned_skill_lines=("Restoration Staff",),
+        passive_ranks={"Restoration Master": 2},
+    )
+    build = PlayerBuild(
+        BuildName="Resto Healer",
+        FrontBarWeapon=GearSlot(WeaponType="Restoration Staff"),
+    )
+
+    result = service.evaluate(
+        build=build,
+        context=_context(critical_healing=0.20, progression=progression),
+        entity_id="grand_healing",
+    )
+
+    assert result.normal_heal == pytest.approx(1050.0)
+    assert result.critical_heal == pytest.approx(1785.0)
+    assert result.mechanic_complete
+
+
+def test_restoration_master_missing_rank_preserves_lower_bound_and_blocker():
+    tooltip = _FakeTooltipService(
+        _result(component_values=((1, 1000.0),), skill_name="Grand Healing"),
+        (_component(1, SkillEffectKind.HEAL),),
+    )
+    service = ExtremeHealingEventService(
+        tooltip_service=tooltip,
+        skill_line_repository=_FakeSkillLines(
+            line_by_name={"Grand Healing": "Restoration Staff"},
+            max_rank=2,
+        ),
+    )
+    progression = CharacterProgression(
+        owned_skill_lines=("Restoration Staff",),
+        passive_ranks={},
+    )
+    build = PlayerBuild(
+        BuildName="Resto Healer",
+        FrontBarWeapon=GearSlot(WeaponType="Restoration Staff"),
+    )
+
+    result = service.evaluate(
+        build=build,
+        context=_context(critical_healing=0.0, progression=progression),
+        entity_id="grand_healing",
+    )
+
+    assert result.normal_heal == pytest.approx(1000.0)
+    assert result.critical_heal == pytest.approx(1500.0)
+    assert "Passive rank is not recorded for character: Restoration Master" in result.unresolved
+    assert not result.mechanic_complete
+
+
+def test_restoration_master_does_not_modify_non_restoration_heal():
+    tooltip = _FakeTooltipService(
+        _result(component_values=((1, 1000.0),), skill_name="Budding Seeds"),
+        (_component(1, SkillEffectKind.HEAL),),
+    )
+    service = ExtremeHealingEventService(
+        tooltip_service=tooltip,
+        skill_line_repository=_FakeSkillLines(
+            line_by_name={"Budding Seeds": "Green Balance"},
+            max_rank=2,
+        ),
+    )
+    progression = CharacterProgression(
+        owned_skill_lines=("Restoration Staff",),
+        passive_ranks={"Restoration Master": 2},
+    )
+    build = PlayerBuild(
+        BuildName="Class Healer",
+        FrontBarWeapon=GearSlot(WeaponType="Restoration Staff"),
+    )
+
+    result = service.evaluate(
+        build=build,
+        context=_context(critical_healing=0.0, progression=progression),
+        entity_id="budding_seeds",
+    )
+
+    assert result.normal_heal == pytest.approx(1000.0)
+    assert result.critical_heal == pytest.approx(1500.0)
+    assert result.unresolved == ()
