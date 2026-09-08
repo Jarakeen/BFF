@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from minmax.proc_critical_eligibility import (
+    ProcScalingKind,
+    resolve_proc_critical_eligibility,
+)
 from minmax.skill_component_classification import HealRecipientScope, HealTemporalScope
 
 
@@ -33,9 +37,10 @@ class ExtremeSorcererTriggeredHealService:
     Blood Magic is the deliberate exception. U50 rank 2 heals the caster for 10%
     of Max Health when a Dark Magic ability with a cost is cast while the caster
     is not at full Health. At full Health, Blood Magic takes its separate resource
-    branch instead and emits no healing event.
+    branch instead and emits no healing event. Because it is a Max-Health-scaled
+    passive proc, the project's reviewed proc critical policy marks it non-critical.
 
-    Critical eligibility remains unresolved here unless separately proven. A heal
+    Dark Exchange and Surge critical eligibility remains unresolved here. A heal
     being *triggered by* a critical event is not evidence that the resulting heal
     itself can critically heal.
     """
@@ -44,6 +49,9 @@ class ExtremeSorcererTriggeredHealService:
     _SURGE_SELF = {"surge", "critical surge"}
     _POWER_SURGE = "power surge"
     _BLOOD_MAGIC = "blood magic"
+    _BLOOD_MAGIC_CAN_CRIT = resolve_proc_critical_eligibility(
+        scaling_kind=ProcScalingKind.MAX_HEALTH,
+    ).can_crit
 
     @staticmethod
     def _name(value: str | None) -> str:
@@ -151,7 +159,7 @@ class ExtremeSorcererTriggeredHealService:
                     temporal_scope=HealTemporalScope.DIRECT,
                     cooldown_seconds=None,
                     normal_heal=None,
-                    can_crit=None,
+                    can_crit=self._BLOOD_MAGIC_CAN_CRIT,
                     unresolved=(),
                 )
             if max_health is None:
@@ -163,7 +171,7 @@ class ExtremeSorcererTriggeredHealService:
                     temporal_scope=HealTemporalScope.DIRECT,
                     cooldown_seconds=None,
                     normal_heal=None,
-                    can_crit=None,
+                    can_crit=self._BLOOD_MAGIC_CAN_CRIT,
                     unresolved=("Blood Magic U50 rank-2 healing requires Max Health",),
                 )
             health = float(max_health)
@@ -177,7 +185,7 @@ class ExtremeSorcererTriggeredHealService:
                 temporal_scope=HealTemporalScope.DIRECT,
                 cooldown_seconds=None,
                 normal_heal=health * 0.10,
-                can_crit=None,
+                can_crit=self._BLOOD_MAGIC_CAN_CRIT,
                 unresolved=(),
             )
 
