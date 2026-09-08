@@ -93,11 +93,11 @@ def test_legacy_coagulating_blood_name_uses_same_recipient_guard():
     assert any("distinct self and nearby-ally healing" in message for message in result.unresolved)
 
 
-def test_blood_of_the_green_dragon_remains_single_recipient_aggregatable():
-    result = _service("Blood of the Green Dragon").evaluate(
-        build=PlayerBuild(BuildName="Green DK"),
+def test_unmorphed_dragon_blood_remains_recipient_and_time_safe():
+    result = _service("Dragon Blood").evaluate(
+        build=PlayerBuild(BuildName="Base DK"),
         context=_context(),
-        entity_id="blood_of_the_green_dragon",
+        entity_id="dragon_blood",
     )
 
     assert result.normal_heal == 1700.0
