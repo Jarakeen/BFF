@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 from minmax.character_progression import AttributeAllocation, CharacterProgression
+from minmax.combat_state import CombatState
 from models.build_model import PlayerBuild
 from services import extreme_actual_heal_optimization_service as base_module
 from services.extreme_conditional_actual_heal_optimization_service import (
@@ -36,8 +37,11 @@ class _ConditionalHealingEvents:
 
 
 class _ContextFactory:
+    def __init__(self):
+        self.combat_states = []
+
     def build(self, **kwargs):
-        _ = kwargs
+        self.combat_states.append(kwargs.get("combat_state", CombatState()))
         return SimpleNamespace(unresolved_gear_effects=())
 
 
@@ -58,6 +62,33 @@ class _Optimizer:
     def _candidates(*args, **kwargs):
         _ = args, kwargs
         return ()
+
+
+class _RestorationHeavyState:
+    def __init__(self, *, unresolved=()):
+        self.calls = []
+        self.unresolved = tuple(unresolved)
+
+    def resolve(
+        self,
+        *,
+        build,
+        progression,
+        active_bar,
+        fully_charged_heavy_attack_completed,
+    ):
+        self.calls.append(
+            (
+                build.BuildName,
+                progression,
+                active_bar,
+                fully_charged_heavy_attack_completed,
+            )
+        )
+        return SimpleNamespace(
+            combat_state=CombatState(in_combat=True, active_buffs=("Major Mending",)),
+            unresolved=self.unresolved,
+        )
 
 
 def _install_progression_adapter(monkeypatch):
@@ -122,3 +153,53 @@ def test_conditional_optimizer_keeps_target_health_as_explicit_scenario_state():
     )
 
     assert service.target_health_fraction == pytest.approx(0.30)
+    assert service.fully_charged_restoration_heavy_attack_completed is False
+
+
+def test_conditional_optimizer_routes_explicit_restoration_heavy_state_to_every_context(monkeypatch):
+    _install_progression_adapter(monkeypatch)
+    optimizer = _Optimizer()
+    heavy_state = _RestorationHeavyState()
+    service = ExtremeConditionalActualHealOptimizationService(
+        target_health_fraction=0.29,
+        fully_charged_restoration_heavy_attack_completed=True,
+        restoration_heavy_state=heavy_state,
+        optimizer=optimizer,
+        healing_events=_ConditionalHealingEvents(),
+    )
+
+    service.optimize(
+        PlayerBuild(BuildName="Post Heavy Emergency"),
+        "blessing_of_protection",
+        max_passes=2,
+    )
+
+    assert heavy_state.calls
+    assert all(call[2:] == ("front", True) for call in heavy_state.calls)
+    assert optimizer.context_factory.combat_states
+    assert all(
+        state.has_buff("Major Mending")
+        for state in optimizer.context_factory.combat_states
+    )
+
+
+def test_conditional_optimizer_preserves_restoration_heavy_blocker_on_selected_state(monkeypatch):
+    _install_progression_adapter(monkeypatch)
+    service = ExtremeConditionalActualHealOptimizationService(
+        target_health_fraction=0.29,
+        fully_charged_restoration_heavy_attack_completed=True,
+        restoration_heavy_state=_RestorationHeavyState(
+            unresolved=("Essence Drain passive rank unresolved",)
+        ),
+        optimizer=_Optimizer(),
+        healing_events=_ConditionalHealingEvents(),
+    )
+
+    result = service.optimize(
+        PlayerBuild(BuildName="Blocked Heavy"),
+        "blessing_of_protection",
+        max_passes=1,
+    )
+
+    assert "Essence Drain passive rank unresolved" in result.unresolved
+    assert not result.mechanic_complete
