@@ -57,7 +57,16 @@ class _ReplayService:
     def __init__(self) -> None:
         self.replays = []
 
-    def replay(self, *, build, plan, resource, restoration_resolver):
+    def replay(
+        self,
+        *,
+        build,
+        plan,
+        resource,
+        restoration_resolver,
+        maximum_events=(),
+        calculation_context=None,
+    ):
         signature = tuple(
             action.time_seconds
             for action in plan.actions
@@ -107,7 +116,16 @@ class _ReplayService:
 
 
 class _ShortfallReplayService(_ReplayService):
-    def replay(self, *, build, plan, resource, restoration_resolver):
+    def replay(
+        self,
+        *,
+        build,
+        plan,
+        resource,
+        restoration_resolver,
+        maximum_events=(),
+        calculation_context=None,
+    ):
         signature = tuple(
             action.time_seconds
             for action in plan.actions
