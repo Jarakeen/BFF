@@ -136,7 +136,7 @@ def test_saved_build_timing_surfaces_missing_exact_skill_timing_without_guessing
     )
 
 
-def test_saved_build_timing_rejects_conflicting_exact_name_rows(tmp_path) -> None:
+def test_saved_build_timing_rejects_conflicting_exact_name_rows_at_highest_rank(tmp_path) -> None:
     database = tmp_path / "eso.db"
     _create_timing_database(database)
     with sqlite3.connect(database) as db:
@@ -159,11 +159,11 @@ def test_saved_build_timing_rejects_conflicting_exact_name_rows(tmp_path) -> Non
     assert evidence.cooldown_requirements == ()
     assert evidence.occupancy_requirements == ()
     assert evidence.unresolved == (
-        "canonical skill timing is ambiguous for exact saved name: Channeled Skill",
+        "canonical skill timing is ambiguous at highest rank for exact saved name: Channeled Skill",
     )
 
 
-def test_saved_build_timing_accepts_duplicate_rows_when_timing_agrees(tmp_path) -> None:
+def test_saved_build_timing_accepts_duplicate_top_rank_rows_when_timing_agrees(tmp_path) -> None:
     database = tmp_path / "eso.db"
     _create_timing_database(database)
     with sqlite3.connect(database) as db:
@@ -174,7 +174,7 @@ def test_saved_build_timing_accepts_duplicate_rows_when_timing_agrees(tmp_path) 
             INSERT INTO skill_rank(
                 id, skill_id, ability_id, rank, raw_name,
                 cooldown, cast_time, channel_time
-            ) VALUES(4, 4, 404, 3, 'Channeled Skill', 5000, 1500, 0)
+            ) VALUES(4, 4, 404, 4, 'Channeled Skill', 5000, 1500, 0)
             """
         )
         db.commit()
