@@ -183,11 +183,12 @@ class RotationCandidateScorecard:
 
     @property
     def supplied_obligations_satisfied(self) -> bool:
-        """Whether all caller-supplied hard obligations are currently satisfied.
+        """Whether all explicit candidate-specific hard obligations are satisfied.
 
-        This does not claim the rotation is globally optimal or that static effect
-        coverage proves runtime uptime. It only answers the explicit obligations
-        supplied to this scorecard.
+        Inherited/shared unresolved evidence remains diagnostic because every
+        candidate carries the same limitation. Candidate-specific unresolved
+        evidence is hard-failing because it means this candidate itself depends on
+        mechanics that are not sufficiently resolved to recommend it safely.
         """
         return (
             not self.missing_demand_requirements
@@ -200,6 +201,7 @@ class RotationCandidateScorecard:
             and not self.slot_violations
             and not self.active_bar_violations
             and not self.failed_runtime_uptime_assessments
+            and not self.candidate_specific_unresolved
             and self.candidate_shortfall == 0
         )
 
@@ -219,9 +221,10 @@ class RotationCandidateScorecardService:
     caller-supplied hard obligations. This layer never invents resource reserves,
     bar restrictions, cooldowns, cast times, channel times, target distance, skill
     range, or slot ownership. Unresolved evidence is split into inherited/shared
-    baseline limitations and candidate-specific additions. Deterministic refresh-
-    slot cascade messages are retained separately as schedule provenance rather
-    than ranked as uncertainty.
+    baseline limitations and candidate-specific additions. Candidate-specific
+    unresolved evidence is hard-failing; inherited/shared unresolved evidence
+    remains diagnostic. Deterministic refresh-slot cascade messages are retained
+    separately as schedule provenance rather than ranked as uncertainty.
     """
 
     def __init__(
