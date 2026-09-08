@@ -29,6 +29,10 @@ RecoveryMaximumEventResolver = Callable[
     [RotationPlan, ResourceType],
     tuple[ResourceMaximumEvent, ...],
 ]
+RecoveryDisplayedRecoveryResolverFactory = Callable[
+    [RotationPlan, ResourceType],
+    Callable[[float], int],
+]
 
 
 @dataclass(frozen=True)
@@ -70,10 +74,10 @@ class RotationRecoveryHeavyStabilizationService:
     """Regenerate recovery-heavy rotations until complete schedule state stabilizes.
 
     Each iteration generates a plan from the latest pressure resolver, derives any
-    caller-verified bar-sensitive resource-ceiling events for that *actual* plan,
-    then replays sustain with the canonical static calculation context. The next
-    pressure resolver therefore observes the same bar-aware resource history that
-    produced the candidate's hard-obligation state.
+    caller-verified bar-sensitive resource-ceiling events and displayed recovery for
+    that *actual* plan, then replays sustain with the canonical static calculation
+    context. The next pressure resolver therefore observes the same bar-aware
+    resource history that produced the candidate's hard-obligation state.
     """
 
     def __init__(
@@ -96,6 +100,7 @@ class RotationRecoveryHeavyStabilizationService:
         max_iterations: int = 6,
         calculation_context: BuildCalculationContext | None = None,
         maximum_event_resolver: RecoveryMaximumEventResolver | None = None,
+        displayed_recovery_resolver_factory: RecoveryDisplayedRecoveryResolverFactory | None = None,
     ) -> RotationRecoveryHeavyStabilizationResult:
         limit = int(max_iterations)
         if limit <= 0:
@@ -115,6 +120,11 @@ class RotationRecoveryHeavyStabilizationService:
                 if maximum_event_resolver is not None
                 else ()
             )
+            displayed_recovery_at = (
+                displayed_recovery_resolver_factory(plan, resource)
+                if displayed_recovery_resolver_factory is not None
+                else None
+            )
             replay = self.replay_service.replay(
                 build=build,
                 plan=plan,
@@ -122,6 +132,7 @@ class RotationRecoveryHeavyStabilizationService:
                 restoration_resolver=restoration_resolver,
                 maximum_events=maximum_events,
                 calculation_context=calculation_context,
+                displayed_recovery_at=displayed_recovery_at,
             )
             heavy_signature = self._heavy_signature(plan)
             plan_signature = self._plan_signature(plan)
@@ -247,6 +258,7 @@ class RotationRecoveryHeavyStabilizationService:
 
 __all__ = [
     "RecoveryAwareRotationGenerator",
+    "RecoveryDisplayedRecoveryResolverFactory",
     "RecoveryHardObligationStateResolver",
     "RecoveryMaximumEventResolver",
     "RotationRecoveryHeavyStabilizationIteration",
