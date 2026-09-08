@@ -123,10 +123,8 @@ def test_actual_heal_optimizer_can_select_non_ring_mythic_package(monkeypatch):
     assert result.optimized_build.Armor["Legs"]["Set"] == "Legs Mythic"
     assert any(
         "canonically slotted non-ring mythic" in item
+        and "paired main/off-hand" in item
         for item in result.search_scope
     )
-    assert not any(item == "non-ring mythics" for item in result.omitted_scope)
-    assert any(
-        "paired one-hand active-weapon routing" in item
-        for item in result.omitted_scope
-    )
+    assert not any("mythic" in item for item in result.omitted_scope)
+    assert result.omitted_scope[0] == "class change / subclass route"
