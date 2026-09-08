@@ -47,10 +47,10 @@ class RotationCandidateRankingService:
     This is intentionally lexicographic rather than weighted. A candidate that
     misses an explicit demand action, required static support effect, runtime
     uptime floor, demand-entry resource reserve, encounter bar-availability rule,
-    resolved action cooldown, occupancy, range, slotted-bar, or active-bar rule,
-    introduces candidate-specific unresolved mechanics evidence, or incurs resource
-    shortfall cannot outrank one that satisfies those supplied hard obligations
-    merely because its softer resource numbers look prettier.
+    resolved action cooldown, occupancy, range, slotted-bar, active-bar, or Ultimate
+    affordability rule, introduces candidate-specific unresolved mechanics evidence,
+    or incurs resource shortfall cannot outrank one that satisfies those supplied
+    hard obligations merely because its softer resource numbers look prettier.
 
     Within the same eligibility tier, deterministic evidence ordering is used:
     fewer hard failures first, including candidate-specific unresolved mechanics,
@@ -107,6 +107,9 @@ class RotationCandidateRankingService:
         range_violations = len(getattr(scorecard, "range_violations", ()))
         slot_violations = len(getattr(scorecard, "slot_violations", ()))
         active_bar_violations = len(getattr(scorecard, "active_bar_violations", ()))
+        ultimate_violations = len(
+            getattr(scorecard, "ultimate_affordability_violations", ())
+        )
         candidate_unresolved = len(scorecard.candidate_specific_unresolved)
         failed_uptimes = scorecard.failed_runtime_uptime_assessments
         uptime_failure_count = len(failed_uptimes)
@@ -137,6 +140,7 @@ class RotationCandidateRankingService:
             + range_violations
             + slot_violations
             + active_bar_violations
+            + ultimate_violations
             + candidate_unresolved
             + uptime_failure_count
             + reserve_failure_count
@@ -156,6 +160,7 @@ class RotationCandidateRankingService:
             range_violations,
             slot_violations,
             active_bar_violations,
+            ultimate_violations,
             candidate_unresolved,
             uptime_failure_count,
             uptime_evidence_missing,
@@ -264,6 +269,19 @@ class RotationCandidateRankingService:
                     f"active-bar legality for {violation.action_name!r} at "
                     f"{violation.time_seconds:g}s: scheduled {scheduled} bar, "
                     f"active {violation.active_bar} bar; {violation.reason}"
+                )
+        ultimate_violations = tuple(
+            getattr(scorecard, "ultimate_affordability_violations", ())
+        )
+        if ultimate_violations:
+            reasons.append(
+                f"{len(ultimate_violations)} Ultimate affordability violation(s)"
+            )
+            for violation in ultimate_violations:
+                reasons.append(
+                    f"Ultimate affordability for {violation.action_name!r} at "
+                    f"{violation.time_seconds:g}s: balance {violation.balance_before:g}, "
+                    f"cost {violation.required_cost:g}, shortfall {violation.shortfall:g}"
                 )
         for assessment in scorecard.failed_runtime_uptime_assessments:
             requirement = assessment.requirement
