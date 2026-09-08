@@ -10,6 +10,14 @@ from minmax.sorcerer_passive_input_resolver import SorcererPassiveInputResolver
 from models.build_model import PlayerBuild
 
 
+class _SkillLines:
+    def __init__(self, mapping):
+        self.mapping = dict(mapping)
+
+    def skill_line_for_ability_name(self, name):
+        return self.mapping.get(str(name))
+
+
 def test_native_sorcerer_expert_summoner_adds_five_percent_magicka_and_stamina():
     resolver = SorcererPassiveInputResolver()
     result = resolver.apply(
@@ -105,3 +113,97 @@ def test_expert_summoner_joins_existing_resource_percent_buckets_additively():
     )
     assert state.max_magicka == 13560
     assert state.max_stamina == 13321
+
+
+def test_expert_mage_adds_108_weapon_and_spell_damage_per_active_sorcerer_slot():
+    resolver = SorcererPassiveInputResolver(
+        _SkillLines(
+            {
+                "Dark Exchange": "Dark Magic",
+                "Twilight Matriarch": "Daedric Summoning",
+                "Power Surge": "Storm Calling",
+                "Combat Prayer": "Restoration Staff",
+            }
+        )
+    )
+    result = resolver.apply(
+        GearCalculationInputs(),
+        PlayerBuild(
+            EsoClass="Sorcerer",
+            FrontBarSkills=[
+                "Dark Exchange",
+                "Twilight Matriarch",
+                "Power Surge",
+                "Combat Prayer",
+            ],
+        ),
+        active_bar="front",
+        expert_mage_owned=True,
+    )
+
+    assert result.core.weapon_damage.flat[-1].label == "Sorcerer: Expert Mage"
+    assert result.core.weapon_damage.flat[-1].value == pytest.approx(324.0)
+    assert result.core.spell_damage.flat[-1].value == pytest.approx(324.0)
+    assert result.applied_effect_count == 2
+
+
+def test_expert_mage_is_active_bar_only():
+    resolver = SorcererPassiveInputResolver(
+        _SkillLines({"Power Surge": "Storm Calling"})
+    )
+    build = PlayerBuild(
+        EsoClass="Sorcerer",
+        FrontBarSkills=["Combat Prayer"],
+        BackBarSkills=["Power Surge"],
+    )
+
+    front = resolver.apply(
+        GearCalculationInputs(),
+        build,
+        active_bar="front",
+        expert_mage_owned=True,
+    )
+    back = resolver.apply(
+        GearCalculationInputs(),
+        build,
+        active_bar="back",
+        expert_mage_owned=True,
+    )
+
+    assert front.core.spell_damage.flat == ()
+    assert back.core.spell_damage.flat[-1].value == pytest.approx(108.0)
+
+
+def test_expert_mage_counts_only_sorcerer_lines_still_present_in_explicit_route():
+    resolver = SorcererPassiveInputResolver(
+        _SkillLines(
+            {
+                "Dark Exchange": "Dark Magic",
+                "Power Surge": "Storm Calling",
+                "Twilight Matriarch": "Daedric Summoning",
+            }
+        )
+    )
+    result = resolver.apply(
+        GearCalculationInputs(),
+        PlayerBuild(
+            EsoClass="Sorcerer",
+            ClassSkillLines=["Dark Magic", "Storm Calling", "Green Balance"],
+            FrontBarSkills=["Dark Exchange", "Power Surge", "Twilight Matriarch"],
+        ),
+        expert_mage_owned=True,
+    )
+
+    assert result.core.spell_damage.flat[-1].value == pytest.approx(216.0)
+
+
+def test_expert_mage_preserves_unknown_slot_as_blocker_without_inventing_power():
+    resolver = SorcererPassiveInputResolver(_SkillLines({}))
+    result = resolver.apply(
+        GearCalculationInputs(),
+        PlayerBuild(EsoClass="Sorcerer", FrontBarSkills=["Mystery Skill"]),
+        expert_mage_owned=True,
+    )
+
+    assert result.core.spell_damage.flat == ()
+    assert any("Expert Mage slot count is unresolved" in message for message in result.unresolved)
