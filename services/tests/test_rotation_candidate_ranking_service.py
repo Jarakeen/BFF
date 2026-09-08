@@ -19,6 +19,8 @@ def _consequence(
     ending: int = 0,
     cost: int = 0,
     waits: int = 0,
+    minimum_fraction_delta: float | None = None,
+    ending_fraction_delta: float | None = None,
 ) -> RotationPlanConsequence:
     return RotationPlanConsequence(
         resource_kind=kind,
@@ -29,6 +31,8 @@ def _consequence(
         ending_resource_delta=ending,
         shortfall_delta=0,
         wait_delta=waits,
+        minimum_resource_fraction_delta=minimum_fraction_delta,
+        ending_resource_fraction_delta=ending_fraction_delta,
     )
 
 
@@ -141,6 +145,47 @@ def test_resource_consequence_orders_candidates_only_after_hard_obligations_matc
     )
 
     assert [item.candidate_id for item in ranked] == ["improved", "neutral"]
+
+
+def test_normalized_resource_floor_breaks_soft_tie_before_raw_amounts() -> None:
+    service = RotationCandidateRankingService()
+    better_raw_worse_fraction = _scorecard(
+        consequence=_consequence(
+            RotationResourceConsequenceKind.IMPROVED,
+            minimum=1000,
+            ending=1000,
+            minimum_fraction_delta=0.02,
+            ending_fraction_delta=0.02,
+        )
+    )
+    smaller_raw_better_fraction = _scorecard(
+        consequence=_consequence(
+            RotationResourceConsequenceKind.IMPROVED,
+            minimum=500,
+            ending=500,
+            minimum_fraction_delta=0.05,
+            ending_fraction_delta=0.04,
+        )
+    )
+
+    ranked = service.rank(
+        (
+            RotationCandidateRankingInput(
+                "better-raw-worse-fraction",
+                better_raw_worse_fraction,
+            ),
+            RotationCandidateRankingInput(
+                "smaller-raw-better-fraction",
+                smaller_raw_better_fraction,
+            ),
+        )
+    )
+
+    assert [item.candidate_id for item in ranked] == [
+        "smaller-raw-better-fraction",
+        "better-raw-worse-fraction",
+    ]
+    assert any("normalized resource deltas" in reason for reason in ranked[0].reasons)
 
 
 def test_candidate_specific_unresolved_counts_but_shared_baseline_limitations_do_not() -> None:
