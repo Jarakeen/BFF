@@ -106,6 +106,66 @@ def _rename_selected(board) -> None:
     board.view.viewport().update()
 
 
+def _reconcile_timeline_ids_after_reload(board) -> None:
+    """Reconnect renamed saved markers to existing timeline ids after restart.
+
+    Timeline v1 originally derived ids from kind+label. Once a user can rename
+    "Boss 1" to "Ice Boss", a fresh board load would derive a new id unless we
+    recover the old stable id from timeline states carrying the same current
+    family/kind/label. This keeps all previously-authored movement intact.
+    """
+
+    timeline = getattr(board, "_position_timeline", None)
+    if timeline is None or not timeline.steps:
+        return
+
+    from ui.components.encounter_board import EncounterToken, EncounterZone
+
+    candidates: dict[tuple[str, str, str], list[str]] = {}
+    for step in timeline.steps:
+        for state in step.items:
+            key = (
+                str(state.family).casefold(),
+                str(state.kind).casefold(),
+                str(state.label).casefold(),
+            )
+            ids = candidates.setdefault(key, [])
+            if state.item_id not in ids:
+                ids.append(state.item_id)
+
+    used: set[str] = set()
+    current_items = []
+    for item in board.scene.items():
+        if isinstance(item, EncounterToken):
+            current_items.append(("token", str(item.kind), str(item.label), item))
+        elif isinstance(item, EncounterZone):
+            current_items.append(("zone", str(item.zone_type), str(item.label), item))
+
+    current_items.sort(
+        key=lambda row: (
+            row[0], row[1].casefold(), row[2].casefold(),
+            round(row[3].pos().x(), 3), round(row[3].pos().y(), 3),
+        )
+    )
+    for family, kind, label, item in current_items:
+        key = (family.casefold(), kind.casefold(), label.casefold())
+        stable_id = next(
+            (value for value in candidates.get(key, ()) if value not in used),
+            "",
+        )
+        if stable_id:
+            item._position_timeline_id = stable_id
+            used.add(stable_id)
+
+    # Timeline init has already run by the time this support layer's init wrapper
+    # returns. Re-apply the selected step once identities are reconciled.
+    if hasattr(board, "position_timeline_step_combo"):
+        index = board.position_timeline_step_combo.currentIndex()
+        if index >= 0:
+            from ui import encounter_position_timeline_support as timeline_ui
+            timeline_ui._select_step(board, index)
+
+
 def _label_and_key_panel(board) -> QWidget:
     panel = QWidget(board)
     row = QHBoxLayout(panel)
@@ -162,6 +222,7 @@ def install() -> None:
 
     def init_with_labels(self, *args, **kwargs):
         original_init(self, *args, **kwargs)
+        _reconcile_timeline_ids_after_reload(self)
         self.scene.selectionChanged.connect(lambda: _sync_label_editor(self))
         _sync_label_editor(self)
 
