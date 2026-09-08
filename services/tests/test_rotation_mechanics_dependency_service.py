@@ -50,10 +50,11 @@ def test_set_and_consumable_identity_add_only_relevant_runtime_domains() -> None
     assert keys == (
         "saved_build:canonical_structure",
         "gear:conditional_topology",
+        "armor:weight_passive_semantics",
         "consumables:runtime_resource_and_buff_policy",
-        "passives:runtime_semantics",
     )
     assert "procs:conditional_topology" not in keys
+    assert "passives:runtime_semantics" not in keys
 
 
 def test_runtime_evidence_adds_passive_uptime_assignment_and_encounter_domains() -> None:
@@ -74,7 +75,7 @@ def test_runtime_evidence_adds_passive_uptime_assignment_and_encounter_domains()
     )
 
 
-def test_armor_weight_distribution_is_first_class_passive_relevance_evidence() -> None:
+def test_armor_weight_distribution_has_dedicated_piece_and_type_count_dependency() -> None:
     service = RotationMechanicsDependencyService()
     build = _build(
         armor=(
@@ -95,12 +96,40 @@ def test_armor_weight_distribution_is_first_class_passive_relevance_evidence() -
     by_key = {item.key: item for item in dependencies}
 
     assert "gear:conditional_topology" not in by_key
-    assert "passives:runtime_semantics" in by_key
-    assert by_key["passives:runtime_semantics"].evidence == (
+    assert "passives:runtime_semantics" not in by_key
+    assert "armor:weight_passive_semantics" in by_key
+    assert by_key["armor:weight_passive_semantics"].evidence == (
         "armor_weight_count:light=5",
         "armor_weight_count:medium=2",
+        "armor_weight_type_count=2",
     )
-    assert "armor passive bonuses" in by_key["passives:runtime_semantics"].reason
+    reason = by_key["armor:weight_passive_semantics"].reason.casefold()
+    assert "piece counts" in reason
+    assert "undaunted mettle" in reason
+
+
+def test_three_armor_weights_preserve_distinct_composition_for_undaunted_relevance() -> None:
+    service = RotationMechanicsDependencyService()
+    dependencies = service.discover(
+        character_build=_build(
+            armor=(
+                ArmorPiece(slot=GearSlot.HEAD, weight="light"),
+                ArmorPiece(slot=GearSlot.CHEST, weight="medium"),
+                ArmorPiece(slot=GearSlot.LEGS, weight="heavy"),
+            ),
+        ),
+        recovery_enabled=False,
+    )
+    dependency = {
+        item.key: item for item in dependencies
+    }["armor:weight_passive_semantics"]
+
+    assert dependency.evidence == (
+        "armor_weight_count:heavy=1",
+        "armor_weight_count:light=1",
+        "armor_weight_count:medium=1",
+        "armor_weight_type_count=3",
+    )
 
 
 def test_dependency_reasons_are_explanatory_and_keys_are_unique() -> None:
@@ -151,12 +180,13 @@ def test_dependencies_retain_exact_selected_build_evidence_without_inventing_sem
         "set=serpents_disdain",
         "armor_weight=light",
     )
+    assert by_key["armor:weight_passive_semantics"].evidence == (
+        "armor_weight_count:light=1",
+        "armor_weight_type_count=1",
+    )
     assert by_key["consumables:runtime_resource_and_buff_policy"].evidence == (
         "potion=essence_of_spell_power",
         "poison=test_poison",
-    )
-    assert by_key["passives:runtime_semantics"].evidence == (
-        "armor_weight_count:light=1",
     )
     assert by_key["effect_duration:build_modifiers"].evidence == (
         "uptime_requirement_count=2",
