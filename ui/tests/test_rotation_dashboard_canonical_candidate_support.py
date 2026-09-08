@@ -8,6 +8,7 @@ from minmax.resource_costs import ResourceType
 from minmax.rotation_ability_priority import AbilityPriorityEntry
 from minmax.rotation_plan import RotationPlan
 from models.build_model import PlayerBuild
+from services.rotation_static_build_context_service import RotationStaticBuildContextService
 from ui.rotation_dashboard_canonical_candidate_support import (
     RotationDashboardCanonicalCandidateSupport,
 )
@@ -68,6 +69,15 @@ class _CanonicalCandidates:
     def run_effects(self, **kwargs):
         self.calls.append(kwargs)
         return self.result
+
+
+def test_dashboard_default_candidate_bridge_enables_static_build_context() -> None:
+    support = RotationDashboardCanonicalCandidateSupport(generation=_Generation())
+
+    assert isinstance(
+        support.canonical_candidates.static_context_service,
+        RotationStaticBuildContextService,
+    )
 
 
 def test_dashboard_path_generates_unstabilized_seed_then_runs_canonical_candidates() -> None:
