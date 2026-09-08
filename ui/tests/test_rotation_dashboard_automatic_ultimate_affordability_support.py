@@ -1,0 +1,118 @@
+from types import SimpleNamespace
+
+from minmax.resource_costs import ResourceType
+from minmax.rotation_ability_priority import AbilityPriorityEntry
+from minmax.rotation_plan import RotationPlan
+from minmax.ultimate_resource_timeline import UltimateGenerationEvent, UltimateSpendRule
+from models.build_model import PlayerBuild
+from ui.rotation_dashboard_canonical_candidate_support import (
+    RotationDashboardCanonicalCandidateSupport,
+)
+from ui.rotation_generation_support import RotationGenerationRequest, RotationGenerationResult
+from ui.rotation_ultimate_affordability_candidate_support import (
+    RotationUltimateAffordabilityCandidateSupport,
+)
+
+
+def _build() -> PlayerBuild:
+    build = PlayerBuild(Name="Magrat", BuildName="DF Healer", Role="Healer")
+    build.FrontBarSkills = ["Combat Prayer", "", "", "", "", "Aggressive Horn"]
+    return build
+
+
+def _request() -> RotationGenerationRequest:
+    return RotationGenerationRequest(
+        duration_seconds=60.0,
+        ultimate_bar="front",
+        starting_ultimate=50.0,
+        ability_priorities=(
+            AbilityPriorityEntry(
+                bar="front",
+                slot=1,
+                skill_name="Combat Prayer",
+                priority=10,
+            ),
+        ),
+    )
+
+
+class _Generation:
+    def __init__(self, projection) -> None:
+        self.calls = []
+        self.result = RotationGenerationResult(
+            plan=RotationPlan(
+                character_name="Magrat",
+                build_name="DF Healer",
+                duration_seconds=60.0,
+                actions=(),
+            ),
+            duration_evidence=SimpleNamespace(summary="seed"),
+            ultimate_projection=projection,
+        )
+
+    def generate_with_evidence(self, **kwargs):
+        self.calls.append(kwargs)
+        return self.result
+
+
+class _Canonical:
+    def __init__(self) -> None:
+        self.calls = []
+        self.result = SimpleNamespace(validation="ok")
+
+    def run_effects(self, **kwargs):
+        self.calls.append(kwargs)
+        return self.result
+
+
+def _run(generation, canonical):
+    support = RotationDashboardCanonicalCandidateSupport(
+        generation=generation,
+        canonical_candidates=canonical,
+    )
+    return support.run_effects(
+        player_build=_build(),
+        generation_request=_request(),
+        evaluator_resolver=object(),
+        scorecard_resolver=object(),
+        resource=ResourceType.MAGICKA,
+        maximum_amount=32000,
+        trigger_fraction=0.35,
+        restoration_resolver=object(),
+    )
+
+
+def test_dashboard_default_composes_final_ultimate_affordability_support() -> None:
+    support = RotationDashboardCanonicalCandidateSupport(generation=_Generation(None))
+
+    assert isinstance(
+        support.canonical_candidates,
+        RotationUltimateAffordabilityCandidateSupport,
+    )
+
+
+def test_dashboard_builds_final_affordability_requirement_from_seed_projection_evidence() -> None:
+    event = UltimateGenerationEvent(10.0, 200.0, "verified generation")
+    projection = SimpleNamespace(
+        spend_rules=(UltimateSpendRule("Aggressive Horn", 250.0),),
+        generation_events=(event,),
+    )
+    generation = _Generation(projection)
+    canonical = _Canonical()
+
+    _run(generation, canonical)
+
+    requirement = canonical.calls[0]["ultimate_affordability_requirement"]
+    assert requirement.starting_amount == 50.0
+    assert requirement.spend_rules == projection.spend_rules
+    assert requirement.generation_events == (event,)
+
+
+def test_dashboard_does_not_invent_affordability_requirement_without_resolved_spend() -> None:
+    projection = SimpleNamespace(spend_rules=(), generation_events=())
+    generation = _Generation(projection)
+    canonical = _Canonical()
+
+    _run(generation, canonical)
+
+    assert "ultimate_affordability_requirement" not in canonical.calls[0]
