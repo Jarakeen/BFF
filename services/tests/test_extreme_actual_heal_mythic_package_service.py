@@ -42,13 +42,15 @@ def _write_db(path: Path) -> None:
                 (1, 'Primary Healer', 'standard', 5),
                 (2, 'Secondary Healer', 'standard', 5),
                 (3, 'Ring Mythic', 'standard', 1),
-                (4, 'Neck Mythic', 'standard', 1);
+                (4, 'Neck Mythic', 'standard', 1),
+                (5, 'Wrong Staff Healer', 'standard', 5);
 
             INSERT INTO gear_set_bonus VALUES
                 (1, 1, 5, 'Adds 171 Weapon and Spell Damage'),
                 (2, 2, 5, 'Adds 171 Weapon and Spell Damage'),
                 (3, 3, 1, 'Adds 171 Weapon and Spell Damage'),
-                (4, 4, 1, 'Adds 171 Weapon and Spell Damage');
+                (4, 4, 1, 'Adds 171 Weapon and Spell Damage'),
+                (5, 5, 5, 'Adds 171 Weapon and Spell Damage');
 
             INSERT INTO gear_set_piece(set_id, equip_type, armor_type, weapon_type) VALUES
                 (1, 2, 1, 0),
@@ -59,15 +61,20 @@ def _write_db(path: Path) -> None:
                 (2, 1, 1, 0),
                 (2, 4, 1, 0),
                 (2, 8, 0, 0),
-                (2, 11, 0, 12),
+                (2, 11, 0, 9),
                 (3, 9, 0, 0),
-                (4, 8, 0, 0);
+                (4, 8, 0, 0),
+                (5, 1, 1, 0),
+                (5, 4, 1, 0),
+                (5, 8, 0, 0),
+                (5, 11, 0, 12);
 
             INSERT INTO gear_set_item VALUES
                 (1, 1001),
                 (2, 2001),
                 (3, 3001),
-                (4, 4001);
+                (4, 4001),
+                (5, 5001);
             """
         )
 
@@ -79,6 +86,17 @@ def test_ring_mythic_shape_is_required(tmp_path: Path) -> None:
 
     assert service._ring_mythic_legal(3, "standard") is True
     assert service._ring_mythic_legal(4, "standard") is False
+
+
+def test_secondary_set_requires_exact_active_weapon_subtype(tmp_path: Path) -> None:
+    database = tmp_path / "eso.db"
+    _write_db(database)
+    service = ExtremeActualHealMythicPackageService(database)
+
+    assert service._secondary_legal(2, "standard", weapon_type_id=9) is True
+    assert service._secondary_legal(2, "standard", weapon_type_id=12) is False
+    assert service._secondary_legal(5, "standard", weapon_type_id=12) is True
+    assert service._secondary_legal(5, "standard", weapon_type_id=9) is False
 
 
 def test_builds_real_five_plus_five_plus_one_ring_mythic_package(tmp_path: Path) -> None:
@@ -116,15 +134,24 @@ def test_builds_real_five_plus_five_plus_one_ring_mythic_package(tmp_path: Path)
     assert build.FrontBarWeapon.Set == ""
 
 
-def test_non_two_slot_active_weapon_does_not_emit_package(tmp_path: Path) -> None:
+def test_non_two_slot_or_aggregate_active_weapon_does_not_emit_package(tmp_path: Path) -> None:
     database = tmp_path / "eso.db"
     _write_db(database)
     service = ExtremeActualHealMythicPackageService(database)
-    build = PlayerBuild(BuildName="Healer")
-    build.FrontBarWeapon.WeaponType = "Sword"
 
+    sword = PlayerBuild(BuildName="Healer")
+    sword.FrontBarWeapon.WeaponType = "Sword"
     assert service.build_candidates(
-        build,
+        sword,
+        character_id="char-1",
+        baseline_build_id="build-1",
+        active_bar="front",
+    ) == ()
+
+    aggregate = PlayerBuild(BuildName="Healer")
+    aggregate.FrontBarWeapon.WeaponType = "Two-Handed"
+    assert service.build_candidates(
+        aggregate,
         character_id="char-1",
         baseline_build_id="build-1",
         active_bar="front",
