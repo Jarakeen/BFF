@@ -24,6 +24,7 @@ from minmax.rotation_action_slot_legality import (
     RotationActionSlotAssessor,
     RotationActionSlotRequirement,
 )
+from minmax.rotation_active_bar_legality import RotationActiveBarAssessment
 from minmax.rotation_bar_availability import (
     RotationBarAvailabilityAssessment,
     RotationBarAvailabilityAssessor,
@@ -114,6 +115,7 @@ class RotationCandidateScorecard:
     occupancy_assessment: RotationActionOccupancyAssessment | None = None
     range_assessment: RotationActionRangeAssessment | None = None
     slot_assessment: RotationActionSlotAssessment | None = None
+    active_bar_assessment: RotationActiveBarAssessment | None = None
     runtime_uptime_assessments: tuple[RotationRuntimeUptimeAssessment, ...] = ()
     runtime_uptime_objective_assessment: (
         RotationRuntimeUptimeObjectiveAssessment | None
@@ -168,6 +170,12 @@ class RotationCandidateScorecard:
         return self.slot_assessment.violations
 
     @property
+    def active_bar_violations(self):
+        if self.active_bar_assessment is None:
+            return ()
+        return self.active_bar_assessment.violations
+
+    @property
     def failed_runtime_uptime_assessments(
         self,
     ) -> tuple[RotationRuntimeUptimeAssessment, ...]:
@@ -190,6 +198,7 @@ class RotationCandidateScorecard:
             and not self.occupancy_violations
             and not self.range_violations
             and not self.slot_violations
+            and not self.active_bar_violations
             and not self.failed_runtime_uptime_assessments
             and self.candidate_shortfall == 0
         )
