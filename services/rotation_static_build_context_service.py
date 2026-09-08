@@ -8,6 +8,7 @@ from minmax.build_calculation_context import BuildCalculationContext
 from minmax.context_factory import BuildCalculationContextFactory
 from minmax.gear_set_repository import GearSetRepository
 from minmax.race_repository import RaceRepository
+from minmax.resource_costs import ResourceType
 from models.build_model import PlayerBuild
 from services.build_service import BuildService
 from services.minmax_character_progression_adapter import (
@@ -40,6 +41,40 @@ class RotationStaticBuildContextResolution:
             if context.active_bar == key:
                 return context
         return None
+
+    def maximum_amounts_for(self, resource: ResourceType) -> tuple[tuple[str, int], ...]:
+        """Return the canonical maximum resource visible on each resolved bar.
+
+        Bar-sensitive passives can change maximum resources. Keeping the per-bar
+        values explicit prevents the rotation engine from silently treating one
+        bar's ceiling as globally valid when the current sustain model still accepts
+        only one maximum amount for the whole timeline.
+        """
+        attribute = {
+            ResourceType.HEALTH: "max_health",
+            ResourceType.MAGICKA: "max_magicka",
+            ResourceType.STAMINA: "max_stamina",
+        }.get(resource)
+        if attribute is None:
+            raise ValueError(f"unsupported rotation static resource: {resource!r}")
+        return tuple(
+            (context.active_bar, int(getattr(context.character_state, attribute)))
+            for context in self.contexts
+        )
+
+    def uniform_maximum_amount_for(self, resource: ResourceType) -> int | None:
+        """Return one safe global maximum when every resolved bar agrees.
+
+        ``None`` means the build is bar-sensitive for this resource and the current
+        one-ceiling sustain model must not guess which bar should win.
+        """
+        values = self.maximum_amounts_for(resource)
+        if not values:
+            return None
+        unique = {amount for _, amount in values}
+        if len(unique) != 1:
+            return None
+        return values[0][1]
 
 
 class RotationStaticBuildContextService:
