@@ -22,6 +22,7 @@ from .item_base_stats import BaseItemStatResolver
 from .jewelry_glyph_repository import JewelryGlyphEffectRepository
 from .jewelry_trait_repository import JewelryTraitRepository
 from .mundus_repository import MundusRepository
+from .nightblade_passive_input_resolver import NightbladePassiveInputResolver
 from .one_hand_shield_passive_input_resolver import OneHandShieldPassiveInputResolver
 from .provisioning_static_repository import ProvisioningStaticRepository
 from .race_repository import RaceRepository
@@ -64,6 +65,7 @@ class BuildCalculationContextFactory:
         undaunted_passive_resolver: UndauntedPassiveInputResolver | None = None,
         guild_passive_resolver: GuildPassiveInputResolver | None = None,
         alliance_support_passive_resolver: AllianceSupportPassiveInputResolver | None = None,
+        nightblade_passive_resolver: NightbladePassiveInputResolver | None = None,
         one_hand_shield_passive_resolver: OneHandShieldPassiveInputResolver | None = None,
         block_item_resolver: BlockItemInputResolver | None = None,
         combat_state_resolver: CombatStateInputResolver | None = None,
@@ -114,6 +116,11 @@ class BuildCalculationContextFactory:
         self.combat_state_resolver = combat_state_resolver or CombatStateInputResolver(champion_point_repository)
         self.warden_passive_resolver = (
             WardenPassiveInputResolver(skill_line_repository)
+            if skill_line_repository is not None
+            else None
+        )
+        self.nightblade_passive_resolver = nightblade_passive_resolver or (
+            NightbladePassiveInputResolver(skill_line_repository)
             if skill_line_repository is not None
             else None
         )
@@ -342,6 +349,23 @@ class BuildCalculationContextFactory:
                 flourish_owned=flourish,
                 advanced_species_owned=advanced_species,
                 frozen_armor_owned=frozen_armor,
+            )
+
+        nightblade_lines = NightbladePassiveInputResolver.equipped_nightblade_line_ids(build)
+        siphoning = NightbladePassiveInputResolver.SIPHONING_ID in nightblade_lines
+        magicka_flood, message = self._maxed_passive(
+            progression,
+            "Magicka Flood",
+            relevant=siphoning,
+        )
+        if message:
+            unresolved.append(message)
+        if self.nightblade_passive_resolver is not None:
+            gear = self.nightblade_passive_resolver.apply(
+                gear,
+                build,
+                active_bar=active_bar,
+                magicka_flood_owned=magicka_flood,
             )
 
         light_line = progression.owns_skill_line("Light Armor")
