@@ -150,4 +150,8 @@ def test_actual_heal_optimizer_can_select_double_five_package(monkeypatch):
     assert result.optimized_build.Ring1.Set == "Secondary Healer"
     assert result.optimized_build.Ring2.Set == "Secondary Healer"
     assert "reviewed legal five-piece + five-piece body/jewelry package" in result.search_scope
-    assert not any("5+5" in item for item in result.omitted_scope)
+    assert "mythic / arena-weapon / mixed 5+5+1 package search" in result.omitted_scope
+    assert not any(
+        item == "five-piece + five-piece package search"
+        for item in result.omitted_scope
+    )
