@@ -13,6 +13,9 @@ from minmax.skill_component_runtime_timing import (
     extract_skill_component_runtime_timing,
 )
 from minmax.skill_component_text_evidence import extract_component_text_evidence
+from services.rotation_healer_u50_periodic_cadence_repository import (
+    RotationHealerU50PeriodicCadenceRepository,
+)
 
 
 @dataclass(frozen=True)
@@ -20,10 +23,10 @@ class RotationHealerCanonicalPeriodicTimingResolution:
     """Canonical timing evidence for one periodic healing coefficient.
 
     This resolution deliberately stops before inventing concrete tick timestamps.
-    Coefficient text can prove cadence and rotation-duration evidence can prove an
-    active window, while first-tick offset, exact expiry-boundary behavior, and
-    recast/refresh semantics remain separate runtime facts unless independently
-    verified.
+    Coefficient text or narrowly reviewed U50 cadence evidence can prove cadence,
+    and rotation-duration evidence can prove an active window. First-tick offset,
+    exact expiry-boundary behavior, and recast/refresh semantics remain separate
+    runtime facts unless independently verified.
     """
 
     source_name: str
@@ -53,11 +56,20 @@ class RotationHealerCanonicalPeriodicTimingResolution:
 
 
 class RotationHealerCanonicalPeriodicTimingService:
-    """Resolve existing canonical Phase 7 cadence plus Phase 13 duration evidence."""
+    """Resolve canonical/reviewed cadence plus Phase 13 duration evidence."""
 
-    def __init__(self, database_path: str | Path) -> None:
+    def __init__(
+        self,
+        database_path: str | Path,
+        *,
+        reviewed_cadence_repository: RotationHealerU50PeriodicCadenceRepository | None = None,
+    ) -> None:
         self.database_path = Path(database_path)
         self.coefficients = SkillCoefficientRepository(self.database_path)
+        self.reviewed_cadence = (
+            reviewed_cadence_repository
+            or RotationHealerU50PeriodicCadenceRepository()
+        )
 
     def resolve(
         self,
@@ -121,9 +133,20 @@ class RotationHealerCanonicalPeriodicTimingService:
                 timing = extract_skill_component_runtime_timing(component_fragment)
                 evidence.extend(component.evidence)
                 if timing is None:
-                    unresolved.append(
-                        f"{rank.name} coefficient {number}: canonical periodic cadence is unresolved"
+                    reviewed = self.reviewed_cadence.get(
+                        source_name=rank.name,
+                        coefficient_number=number,
                     )
+                    if reviewed is None:
+                        unresolved.append(
+                            f"{rank.name} coefficient {number}: canonical periodic cadence is unresolved"
+                        )
+                    else:
+                        timing = reviewed.timing
+                        evidence.append(
+                            f"reviewed U50 cadence: {timing.evidence} ({timing.bound_kind.value})"
+                        )
+                        evidence.extend(reviewed.provenance)
                 else:
                     evidence.append(
                         f"runtime cadence: {timing.evidence} ({timing.bound_kind.value})"
