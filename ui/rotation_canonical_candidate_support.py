@@ -162,9 +162,13 @@ class RotationCanonicalCandidateSupport:
                     "mechanics coverage is unresolved"
                 ]
                 for gap in blocking:
-                    reasons.append(
+                    evidence = self._dependency_evidence_for(gap.key, dependencies)
+                    detail = (
                         f"mechanics coverage: {gap.summary} Bring back: {gap.needed_evidence}"
                     )
+                    if evidence:
+                        detail += " Relevant build evidence: " + ", ".join(evidence)
+                    reasons.append(detail)
                 return RotationCanonicalCandidateApplicationResult(
                     build_adaptation=adaptation,
                     pipeline_result=None,
@@ -204,6 +208,25 @@ class RotationCanonicalCandidateSupport:
             mechanics_dependencies=dependencies,
             knowledge_gaps=knowledge_gaps,
         )
+
+    @staticmethod
+    def _dependency_evidence_for(
+        gap_key: str,
+        dependencies: tuple[RotationMechanicsDependency, ...],
+    ) -> tuple[str, ...]:
+        wanted = str(gap_key or "").strip().casefold()
+        if not wanted:
+            return ()
+        for dependency in dependencies:
+            key = str(getattr(dependency, "key", dependency) or "").strip().casefold()
+            if key != wanted:
+                continue
+            return tuple(
+                str(item).strip()
+                for item in getattr(dependency, "evidence", ())
+                if str(item).strip()
+            )
+        return ()
 
 
 __all__ = [
