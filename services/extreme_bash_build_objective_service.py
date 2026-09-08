@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 
 from .extreme_bash_champion_point_service import ExtremeBashChampionPointResult
+from .extreme_bash_deadly_bash_service import ExtremeDeadlyBashResult
 from .extreme_bash_jewelry_service import ExtremeBashJewelryResult
 from .extreme_bash_objective_service import (
     ExtremeBashDamageInputs,
@@ -29,7 +30,7 @@ class ExtremeBashBuildObjectiveResult:
 
 
 class ExtremeBashBuildObjectiveService:
-    """Feed canonical CP and jewelry evidence into the existing Bash formula."""
+    """Feed canonical build-owned Bash evidence into the existing Bash formula."""
 
     @classmethod
     def evaluate_damage(
@@ -39,6 +40,7 @@ class ExtremeBashBuildObjectiveService:
         legality: ExtremeBashLegalityContext | None = None,
         champion_point: ExtremeBashChampionPointResult | None = None,
         jewelry: ExtremeBashJewelryResult | None = None,
+        deadly_bash: ExtremeDeadlyBashResult | None = None,
     ) -> ExtremeBashBuildObjectiveResult:
         source_blockers: list[str] = []
         resolved_inputs = inputs
@@ -71,6 +73,20 @@ class ExtremeBashBuildObjectiveService:
             )
             source_blockers.extend(
                 f"Jewelry: {problem}" for problem in jewelry.unresolved
+            )
+
+        if deadly_bash is not None:
+            if inputs.skill2_bash_damage is not None:
+                raise ValueError(
+                    "skill2_bash_damage was supplied directly and through Deadly Bash evidence"
+                )
+            if deadly_bash.skill2_bash_damage is not None:
+                resolved_inputs = replace(
+                    resolved_inputs,
+                    skill2_bash_damage=float(deadly_bash.skill2_bash_damage),
+                )
+            source_blockers.extend(
+                f"Deadly Bash: {problem}" for problem in deadly_bash.unresolved
             )
 
         objective = ExtremeBashObjectiveService.evaluate_damage(
