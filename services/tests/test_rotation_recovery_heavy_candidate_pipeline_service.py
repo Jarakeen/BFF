@@ -47,6 +47,8 @@ def test_generic_pipeline_bridges_generation_into_recovery_workflow() -> None:
     restoration_resolver = object()
     reserve_resolver = object()
     wait_factory = object()
+    calculation_context = object()
+    maximum_event_resolver = object()
     demands = (item for item in ("demand-a", "demand-b"))
     options = (item for item in ("option-a", "option-b"))
 
@@ -66,6 +68,8 @@ def test_generic_pipeline_bridges_generation_into_recovery_workflow() -> None:
         reserve_assessment_resolver=reserve_resolver,
         max_iterations=8,
         baseline_id="saved-build-baseline",
+        calculation_context=calculation_context,
+        maximum_event_resolver=maximum_event_resolver,
     )
 
     assert result == "generic-result"
@@ -91,6 +95,8 @@ def test_generic_pipeline_bridges_generation_into_recovery_workflow() -> None:
             "restoration_resolver": restoration_resolver,
             "reserve_assessment_resolver": reserve_resolver,
             "max_iterations": 8,
+            "calculation_context": calculation_context,
+            "maximum_event_resolver": maximum_event_resolver,
         }
     ]
 
@@ -110,6 +116,8 @@ def test_effect_pipeline_preserves_build_boundary_and_materializes_effect_eviden
     evaluator_resolver = object()
     scorecard_resolver = object()
     restoration_resolver = object()
+    calculation_context = object()
+    maximum_event_resolver = object()
     requirements = (item for item in ("major-brittle", "minor-vulnerability"))
     passives = (item for item in ("class-passive", "armor-passive"))
 
@@ -128,6 +136,8 @@ def test_effect_pipeline_preserves_build_boundary_and_materializes_effect_eviden
         options=("refresh-option",),
         requirements=requirements,
         passives=passives,
+        calculation_context=calculation_context,
+        maximum_event_resolver=maximum_event_resolver,
     )
 
     assert result == "effect-result"
@@ -147,6 +157,8 @@ def test_effect_pipeline_preserves_build_boundary_and_materializes_effect_eviden
             "restoration_resolver": restoration_resolver,
             "reserve_assessment_resolver": None,
             "max_iterations": 6,
+            "calculation_context": calculation_context,
+            "maximum_event_resolver": maximum_event_resolver,
         }
     ]
     assert workflow.effect_calls[0]["player_build"] is player_build
