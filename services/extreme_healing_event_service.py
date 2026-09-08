@@ -13,6 +13,9 @@ from minmax.skill_line_repository import SkillLineRepository
 from minmax.skill_tooltip_calculator import SkillTooltipResult
 from minmax.stat_ids import StatId
 from models.build_model import PlayerBuild
+from services.extreme_necromancer_living_death_slotted_healing_service import (
+    ExtremeNecromancerLivingDeathSlottedHealingService,
+)
 from services.extreme_nightblade_siphoning_healing_service import (
     ExtremeNightbladeSiphoningHealingService,
 )
@@ -28,10 +31,11 @@ class ExtremeHealingEventResult:
     ``normal_heal`` is the sum of HEAL-classified coefficient components after
     the canonical saved-build actual-effect pipeline has applied sheet Healing
     Done and verified component-scoped healing CP. Reviewed active-bar Healing
-    Done such as Soul Siphoner and ability-family modifiers such as Restoration
-    Master and Emerald Moss are then applied in their own reviewed layers.
-    Explicit situational inputs may add conditional modifiers such as Restoration
-    Expert without pretending those conditions are always active.
+    Done such as Soul Siphoner and Restoring Tether-family while-slotted effects,
+    plus ability-family modifiers such as Restoration Master and Emerald Moss,
+    are then applied in their own reviewed layers. Explicit situational inputs may
+    add conditional modifiers such as Restoration Expert without pretending those
+    conditions are always active.
 
     ``critical_heal`` is the largest reviewed value of the same event when every
     crit-eligible HEAL component crits. Components explicitly marked non-crittable
@@ -91,6 +95,7 @@ class ExtremeHealingEventService:
         tooltip_service: SavedBuildSkillTooltipService | None = None,
         skill_line_repository: SkillLineRepository | None = None,
         nightblade_siphoning_healing: ExtremeNightbladeSiphoningHealingService | None = None,
+        necromancer_living_death_slotted_healing: ExtremeNecromancerLivingDeathSlottedHealingService | None = None,
         warden_green_balance_healing: ExtremeWardenGreenBalanceHealingService | None = None,
     ) -> None:
         self.database_path = Path(database_path or get_data_dir() / "eso.db")
@@ -103,6 +108,13 @@ class ExtremeHealingEventService:
         self.nightblade_siphoning_healing = (
             nightblade_siphoning_healing
             or ExtremeNightbladeSiphoningHealingService(
+                self.database_path,
+                skill_line_repository=self.skill_line_repository,
+            )
+        )
+        self.necromancer_living_death_slotted_healing = (
+            necromancer_living_death_slotted_healing
+            or ExtremeNecromancerLivingDeathSlottedHealingService(
                 self.database_path,
                 skill_line_repository=self.skill_line_repository,
             )
@@ -307,16 +319,28 @@ class ExtremeHealingEventService:
         build: PlayerBuild,
         context: BuildCalculationContext,
     ) -> tuple[float, tuple[str, ...]]:
-        progression = getattr(context, "progression", None)
-        if progression is None:
-            return 1.0, ()
+        active_bar = str(getattr(context, "active_bar", "front") or "front")
+        multiplier = 1.0
+        unresolved: list[str] = []
 
-        siphoner = self.nightblade_siphoning_healing.resolve(
+        progression = getattr(context, "progression", None)
+        if progression is not None:
+            siphoner = self.nightblade_siphoning_healing.resolve(
+                build=build,
+                progression=progression,
+                active_bar=active_bar,
+            )
+            multiplier *= siphoner.multiplier
+            unresolved.extend(siphoner.unresolved)
+
+        living_death = self.necromancer_living_death_slotted_healing.resolve(
             build=build,
-            progression=progression,
-            active_bar=str(getattr(context, "active_bar", "front") or "front"),
+            active_bar=active_bar,
         )
-        return siphoner.multiplier, siphoner.unresolved
+        multiplier *= living_death.multiplier
+        unresolved.extend(living_death.unresolved)
+
+        return multiplier, tuple(dict.fromkeys(message for message in unresolved if message))
 
     def _ability_family_healing_multiplier(
         self,
