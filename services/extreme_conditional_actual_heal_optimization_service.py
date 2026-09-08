@@ -19,6 +19,9 @@ from services.extreme_restoration_heavy_combat_state_service import (
 from services.extreme_templar_restoring_light_healing_service import (
     ExtremeTemplarRestoringLightHealingService,
 )
+from services.extreme_templar_sacred_ground_combat_state_service import (
+    ExtremeTemplarSacredGroundCombatStateService,
+)
 
 
 class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizationService):
@@ -33,6 +36,11 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
     healing bonus scales continuously with the explicit target-health fraction.
     Keeping it in this conditional layer prevents the standing optimizer from
     inventing a target-health assumption merely to obtain a larger number.
+
+    Reviewed Templar ``Sacred Ground`` may be activated by an explicit window
+    state. When legal, it contributes Minor Mending through canonical
+    ``CombatState`` rather than an ad-hoc heal multiplier. This permits legitimate
+    Minor + Major Mending coexistence when both independent conditions are proven.
 
     Reviewed Necromancer ``Curative Curse`` may be activated by an explicit
     healer-negative-effect scenario. Its max-rank bonus is generic Healing Done,
@@ -56,8 +64,10 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         *,
         target_health_fraction: float,
         fully_charged_restoration_heavy_attack_completed: bool = False,
+        sacred_ground_window_active: bool = False,
         healer_has_negative_effect: bool | None = None,
         restoration_heavy_state: ExtremeRestorationHeavyCombatStateService | None = None,
+        templar_sacred_ground_state: ExtremeTemplarSacredGroundCombatStateService | None = None,
         templar_restoring_light_healing: ExtremeTemplarRestoringLightHealingService | None = None,
         necromancer_living_death_healing: ExtremeNecromancerLivingDeathHealingService | None = None,
         **kwargs,
@@ -69,8 +79,10 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         self.fully_charged_restoration_heavy_attack_completed = bool(
             fully_charged_restoration_heavy_attack_completed
         )
+        self.sacred_ground_window_active = bool(sacred_ground_window_active)
         self.healer_has_negative_effect = healer_has_negative_effect
         self.restoration_heavy_state = restoration_heavy_state
+        self.templar_sacred_ground_state = templar_sacred_ground_state
         self.templar_restoring_light_healing = templar_restoring_light_healing
         self.necromancer_living_death_healing = necromancer_living_death_healing
         super().__init__(**kwargs)
@@ -95,6 +107,11 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
             "explicit conditional target health fraction "
             f"{self.target_health_fraction:.6f}"
         ]
+        if self.sacred_ground_window_active:
+            scenarios.append(
+                "explicit Sacred Ground active/grace window; "
+                "Sacred Ground Minor Mending requires canonical legality proof"
+            )
         if self.healer_has_negative_effect is not None:
             scenarios.append(
                 "explicit healer negative-effect state "
@@ -118,22 +135,47 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         progression: CharacterProgression,
         active_bar: str,
     ) -> tuple[CombatState, tuple[str, ...]]:
-        if not self.fully_charged_restoration_heavy_attack_completed:
-            return CombatState(), ()
+        active_buffs: list[str] = []
+        unresolved: list[str] = []
+        in_combat = False
 
-        service = self.restoration_heavy_state
-        if service is None:
-            service = ExtremeRestorationHeavyCombatStateService(
-                getattr(self.optimizer, "database_path", None)
+        if self.fully_charged_restoration_heavy_attack_completed:
+            service = self.restoration_heavy_state
+            if service is None:
+                service = ExtremeRestorationHeavyCombatStateService(
+                    getattr(self.optimizer, "database_path", None)
+                )
+                self.restoration_heavy_state = service
+            result = service.resolve(
+                build=build,
+                progression=progression,
+                active_bar=active_bar,
+                fully_charged_heavy_attack_completed=True,
             )
-            self.restoration_heavy_state = service
-        result = service.resolve(
-            build=build,
-            progression=progression,
-            active_bar=active_bar,
-            fully_charged_heavy_attack_completed=True,
+            active_buffs.extend(result.combat_state.active_buffs)
+            unresolved.extend(result.unresolved)
+            in_combat = in_combat or bool(result.combat_state.in_combat)
+
+        if self.sacred_ground_window_active:
+            service = self.templar_sacred_ground_state
+            if service is None:
+                service = ExtremeTemplarSacredGroundCombatStateService(
+                    getattr(self.optimizer, "database_path", None)
+                )
+                self.templar_sacred_ground_state = service
+            result = service.resolve(
+                build=build,
+                progression=progression,
+                sacred_ground_window_active=True,
+            )
+            active_buffs.extend(result.combat_state.active_buffs)
+            unresolved.extend(result.unresolved)
+            in_combat = in_combat or bool(result.combat_state.in_combat)
+
+        return (
+            CombatState(in_combat=in_combat, active_buffs=tuple(active_buffs)),
+            tuple(dict.fromkeys(message for message in unresolved if message)),
         )
-        return result.combat_state, tuple(result.unresolved)
 
     def _templar_mending_event(
         self,
