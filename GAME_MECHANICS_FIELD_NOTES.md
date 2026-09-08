@@ -374,3 +374,15 @@ At reviewed max rank, Mending scales Restoring Light healing continuously with t
 **What it means in actual play:** changing the heal you press can change which emergency passive helps you even if your gear, target, and target health are identical. A subclass route carrying Restoring Light and Restoration Staff may have access to both mechanics, but each heal still has to qualify for its own one.
 
 **For BFF:** target health is an input, not a shortcut. Emergency-heal scoring must resolve the ability family, weapon/passive legality, and the exact health rule separately rather than collapsing everything into one generic low-health multiplier.
+
+---
+
+## 2026-09-08 — "Current tooltip" can accidentally mean next patch
+
+While reviewing Templar **Mending**, a current third-party skill page showed a 13% max-rank value even though BFF's live U50 evidence and current canonical implementation use 12%. Update 51 is still a separate version boundary, so copying the newest visible number without proving which game update it belongs to would silently mix PTS/future mechanics into live math.
+
+**Layman's version:** a website can be up to date and still be too up to date for the version of ESO you are actually playing.
+
+**What it means in actual play:** a build calculator can disagree with the live game even when both numbers came from reputable-looking current sources, simply because one source has already moved to the next patch's data.
+
+**For BFF:** every mechanic whose value can change across updates needs version-aware evidence. U50 remains U50 until the live version changes; future/PTS values must not overwrite historical or live definitions just because they are newer.
