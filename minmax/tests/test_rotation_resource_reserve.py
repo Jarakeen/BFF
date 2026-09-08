@@ -158,6 +158,8 @@ def test_staggered_healer_demands_can_require_independent_reserves() -> None:
     assert assessments[0].satisfied is True
     assert assessments[0].shortfall == 0
     assert assessments[0].available_fraction_before_start is None
+    assert assessments[0].required_fraction_before_start is None
+    assert assessments[0].shortfall_fraction is None
     assert assessments[1].satisfied is False
     assert assessments[1].shortfall == 1_000
 
@@ -176,14 +178,17 @@ def test_bar_sensitive_reserve_assessment_exposes_normalized_entry_state() -> No
         requirement=RotationResourceReserveRequirement(
             demand_name="Burst window",
             resource=ResourceType.MAGICKA,
-            minimum_amount=17_000,
+            minimum_amount=20_000,
         ),
     )
 
     assert assessment.available_before_start == 18_000
     assert assessment.maximum_before_start == 36_000
     assert assessment.available_fraction_before_start == 0.5
-    assert assessment.satisfied is True
+    assert assessment.required_fraction_before_start == 20_000 / 36_000
+    assert assessment.shortfall == 2_000
+    assert assessment.shortfall_fraction == 2_000 / 36_000
+    assert assessment.satisfied is False
 
 
 def test_sustained_pressure_uses_same_role_neutral_reserve_contract() -> None:
