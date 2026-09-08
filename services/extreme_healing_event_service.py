@@ -39,13 +39,11 @@ class ExtremeHealingEventResult:
     """One reviewed healing event from an actual saved-build context.
 
     ``normal_heal`` is the sum of HEAL-classified coefficient components after
-    the canonical saved-build actual-effect pipeline has applied sheet Healing
-    Done and verified component-scoped healing CP. Reviewed active-bar Healing
-    Done such as Soul Siphoner and Restoring Tether-family while-slotted effects,
-    plus ability-family modifiers such as Restoration Master and Emerald Moss,
-    are then applied in their own reviewed layers. Explicit situational inputs may
-    add conditional modifiers such as Restoration Expert without pretending those
-    conditions are always active.
+    the canonical saved-build actual-effect pipeline has applied the additive
+    Healing Done bucket and verified component-scoped healing CP. Reviewed
+    active-bar Healing Done such as Soul Siphoner and Restoring Tether-family
+    while-slotted effects are fed into that same bucket. Ability-family modifiers
+    such as Restoration Master and Emerald Moss remain separate reviewed layers.
 
     ``critical_heal`` is the largest reviewed value of the same event when every
     crit-eligible HEAL component crits. Components explicitly marked non-crittable
@@ -88,11 +86,10 @@ class ExtremeHealingEventService:
     """Evaluate one real heal without collapsing healing stats into one number.
 
     BFF already owns coefficient scaling, component classification, saved-build
-    Healing Done, and healing CP semantics. This service composes those reviewed
-    layers for the Extreme lab, adds reviewed active-bar Healing Done that is not
-    yet represented in the canonical sheet context, applies reviewed
-    ability-family and explicit situational healing modifiers, and adds the
-    canonical 50% base critical healing multiplier from the UESP
+    Healing Done, and healing CP semantics. This service feeds reviewed generic
+    Healing Done into that canonical additive bucket, applies reviewed
+    ability-family and explicit situational healing modifiers separately, and adds
+    the canonical 50% base critical healing multiplier from the UESP
     SpellCritHealing/WeaponCritHealing formula.
 
     The resulting critical bonus is constrained by ESO's reviewed Critical
@@ -166,18 +163,34 @@ class ExtremeHealingEventService:
         context: BuildCalculationContext,
         entity_id: str,
         target_health_fraction: float | None = None,
+        additional_healing_done_bonus: float = 0.0,
+        additional_healing_done_sources: tuple[str, ...] = (),
     ) -> ExtremeHealingEventResult:
         if target_health_fraction is not None:
             target_health_fraction = float(target_health_fraction)
             if not 0.0 <= target_health_fraction <= 1.0:
                 raise ValueError("target_health_fraction must be between 0 and 1")
 
+        bar_multiplier, bar_unresolved = self._reviewed_bar_healing_multiplier(
+            build=build,
+            context=context,
+        )
+        reviewed_healing_done_bonus = (
+            float(bar_multiplier) - 1.0 + float(additional_healing_done_bonus)
+        )
+        reviewed_sources = list(additional_healing_done_sources)
+        if abs(float(bar_multiplier) - 1.0) > 1e-12:
+            reviewed_sources.append("Extreme reviewed active-bar Healing Done")
+
         result = self.tooltip_service.evaluate_entity_id(
             build=build,
             context=context,
             entity_id=entity_id,
+            additional_healing_done_percent=reviewed_healing_done_bonus * 100.0,
+            additional_healing_done_sources=tuple(reviewed_sources),
         )
-        unresolved = list(result.unresolved)
+        unresolved = list(bar_unresolved)
+        unresolved.extend(result.unresolved)
 
         skill_name = str(getattr(getattr(result, "skill", None), "name", "") or "").strip()
         recipient_scope = self.recipient_scope.resolve(ability_name=skill_name)
@@ -232,11 +245,6 @@ class ExtremeHealingEventService:
             for trace in result.components
         }
 
-        bar_multiplier, bar_unresolved = self._reviewed_bar_healing_multiplier(
-            build=build,
-            context=context,
-        )
-        unresolved.extend(bar_unresolved)
         ability_multiplier, family_unresolved = self._ability_family_healing_multiplier(
             build=build,
             context=context,
@@ -249,7 +257,7 @@ class ExtremeHealingEventService:
             target_health_fraction=target_health_fraction,
         )
         unresolved.extend(situational_unresolved)
-        healing_multiplier = bar_multiplier * ability_multiplier * situational_multiplier
+        healing_multiplier = ability_multiplier * situational_multiplier
 
         value_by_number: dict[int, float] = {}
         normal_heal: float | None = None
