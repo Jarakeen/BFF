@@ -198,7 +198,7 @@ class RotationHealerActionHealingService:
 
                 unresolved.append(
                     f"{action.name} coefficient {number} at {action.time_seconds:g}s: "
-                    "heal temporal identity unavailable"
+                    "direct-versus-periodic heal identity unavailable"
                 )
 
         direct = tuple(
