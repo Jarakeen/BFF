@@ -3,11 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable
 
+from minmax.build_calculation_context import BuildCalculationContext
 from minmax.healer_recovery_heavy_pressure import (
     HealerRecoveryHeavyPressure,
     evaluate_healer_recovery_heavy_pressure,
 )
 from minmax.resource_costs import ResourceType
+from minmax.resource_timeline import ResourceMaximumEvent
 from minmax.restoration_events import ResourceRestorationEvent
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from minmax.rotation_resource_reserve import RotationResourceReserveAssessment
@@ -52,12 +54,10 @@ class RotationRecoveryHeavyReplay:
 class RotationRecoveryHeavyReplayService:
     """Replay sustain after each scheduled heavy with verified restoration evidence.
 
-    This service deliberately does not infer restore amounts or decide whether a
-    heavy attack should be scheduled. The rotation scheduler owns placement and a
-    caller-provided resolver owns the exact verified restoration event. After each
-    accepted restore, the authoritative Phase 4 sustain bridge is rerun so later
-    pressure decisions can observe the updated resource timeline rather than a
-    stale pre-heavy projection.
+    This service deliberately does not infer restore amounts, resource ceilings, or
+    decide whether a heavy attack should be scheduled. The rotation scheduler owns
+    placement, callers own verified restoration/ceiling evidence, and the Phase 4
+    timeline owns ordering, capping, clipping, waste, and shortfall.
     """
 
     def __init__(self, sustain_service: RotationSustainService | None = None) -> None:
@@ -70,12 +70,17 @@ class RotationRecoveryHeavyReplayService:
         plan: RotationPlan,
         resource: ResourceType,
         restoration_resolver: VerifiedRecoveryHeavyRestorationResolver,
+        maximum_events: tuple[ResourceMaximumEvent, ...] = (),
+        calculation_context: BuildCalculationContext | None = None,
     ) -> RotationRecoveryHeavyReplay:
-        initial = self.sustain_service.evaluate(
+        evaluate_kwargs = dict(
             build=build,
             plan=plan,
             resource=resource,
+            maximum_events=tuple(maximum_events),
+            calculation_context=calculation_context,
         )
+        initial = self.sustain_service.evaluate(**evaluate_kwargs)
         current = initial
         restoration_events: list[ResourceRestorationEvent] = []
         steps: list[RotationRecoveryHeavyReplayStep] = []
@@ -101,9 +106,7 @@ class RotationRecoveryHeavyReplayService:
             )
             restoration_events.append(event)
             current = self.sustain_service.evaluate(
-                build=build,
-                plan=plan,
-                resource=resource,
+                **evaluate_kwargs,
                 restoration_events=tuple(restoration_events),
             )
             steps.append(
@@ -131,10 +134,9 @@ class RotationRecoveryHeavyReplayService:
     ) -> RecoveryPressureResolver:
         """Build generation-ready pressure evidence from the replayed timeline.
 
-        The returned resolver reads only ``replay.final_projection``. A later
-        generation pass therefore sees every verified restore already applied by
-        the replay instead of recomputing pressure from the original pre-heavy
-        resource timeline.
+        The fallback ``maximum_amount`` preserves compatibility for historical
+        timelines. Produced bar-aware timelines carry maximum evidence directly, so
+        each pressure decision uses the ceiling active at that exact decision time.
         """
 
         timeline = replay.final_projection.run.timeline
@@ -147,10 +149,14 @@ class RotationRecoveryHeavyReplayService:
                 if reserve_assessment_resolver is not None
                 else None
             )
+            active_maximum = timeline.maximum_at(
+                context.time_seconds,
+                fallback=int(maximum_amount),
+            )
             return evaluate_healer_recovery_heavy_pressure(
                 timeline=timeline,
                 time_seconds=context.time_seconds,
-                maximum_amount=maximum_amount,
+                maximum_amount=active_maximum,
                 trigger_fraction=trigger_fraction,
                 reserve_assessment=reserve,
             )
