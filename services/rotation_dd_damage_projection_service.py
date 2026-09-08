@@ -118,9 +118,10 @@ class RotationDDDamageProjectionService:
             source_counts[source_key] = source_counts.get(source_key, 0) + 1
 
             if item.expected_damage is None:
-                unresolved.append(
-                    f"{item.source_name} at {item.time_seconds:g}s has unresolved damage"
-                )
+                if not item.unresolved:
+                    unresolved.append(
+                        f"{item.source_name} at {item.time_seconds:g}s has unresolved damage"
+                    )
             else:
                 known_damage += item.expected_damage
                 source_damage[source_key] = (
