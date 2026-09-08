@@ -13,6 +13,9 @@ from minmax.skill_line_repository import SkillLineRepository
 from minmax.skill_tooltip_calculator import SkillTooltipResult
 from minmax.stat_ids import StatId
 from models.build_model import PlayerBuild
+from services.extreme_healing_event_recipient_scope_service import (
+    ExtremeHealingEventRecipientScopeService,
+)
 from services.extreme_necromancer_living_death_slotted_healing_service import (
     ExtremeNecromancerLivingDeathSlottedHealingService,
 )
@@ -41,6 +44,10 @@ class ExtremeHealingEventResult:
     crit-eligible HEAL component crits. Components explicitly marked non-crittable
     stay at their normal value. Unknown critical eligibility blocks the critical
     result.
+
+    Multi-recipient abilities are not aggregated into one recipient's heal unless
+    component-recipient identity is proven. Their component traces remain
+    available, but ``normal_heal`` and ``critical_heal`` stay unresolved.
 
     This is deliberately not an expected-value model and therefore does not
     multiply by critical chance.
@@ -94,6 +101,7 @@ class ExtremeHealingEventService:
         database_path: Path | None = None,
         tooltip_service: SavedBuildSkillTooltipService | None = None,
         skill_line_repository: SkillLineRepository | None = None,
+        recipient_scope: ExtremeHealingEventRecipientScopeService | None = None,
         nightblade_siphoning_healing: ExtremeNightbladeSiphoningHealingService | None = None,
         necromancer_living_death_slotted_healing: ExtremeNecromancerLivingDeathSlottedHealingService | None = None,
         warden_green_balance_healing: ExtremeWardenGreenBalanceHealingService | None = None,
@@ -105,6 +113,7 @@ class ExtremeHealingEventService:
         self.skill_line_repository = skill_line_repository or SkillLineRepository(
             self.database_path
         )
+        self.recipient_scope = recipient_scope or ExtremeHealingEventRecipientScopeService()
         self.nightblade_siphoning_healing = (
             nightblade_siphoning_healing
             or ExtremeNightbladeSiphoningHealingService(
@@ -146,6 +155,11 @@ class ExtremeHealingEventService:
             entity_id=entity_id,
         )
         unresolved = list(result.unresolved)
+
+        skill_name = str(getattr(getattr(result, "skill", None), "name", "") or "").strip()
+        recipient_scope = self.recipient_scope.resolve(ability_name=skill_name)
+        unresolved.extend(recipient_scope.unresolved)
+        single_recipient_safe = bool(recipient_scope.single_recipient_safe)
 
         heal_components = ()
         if result.skill is None:
@@ -224,7 +238,7 @@ class ExtremeHealingEventService:
                     f"{entity_id}: HEAL coefficient values unavailable: "
                     + ", ".join(str(number) for number in missing)
                 )
-            else:
+            elif single_recipient_safe:
                 value_by_number = {
                     number: actual_by_number.get(number, base_by_number[number]) * healing_multiplier
                     for number in heal_numbers
