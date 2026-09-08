@@ -19,6 +19,7 @@ class RotationSavedBuildActionRangeEvidence:
 
     range_requirements: tuple[RotationActionRangeRequirement, ...] = ()
     unresolved: tuple[str, ...] = ()
+    unresolved_action_names: tuple[str, ...] = ()
 
 
 class RotationSavedBuildActionRangeService:
@@ -31,25 +32,31 @@ class RotationSavedBuildActionRangeService:
     Multiple exact-name rows are compared only at the highest represented rank;
     matching top-rank rows may dedupe, while conflicting top-rank evidence remains
     unresolved rather than being selected by ability id.
+
+    Action-scoped unresolved names are retained separately so downstream candidate
+    evaluation can block only final plans that actually use affected actions.
     """
 
     def __init__(self, database_path: str | Path = DEFAULT_DATABASE) -> None:
         self.database_path = Path(database_path)
 
     def resolve(self, player_build: PlayerBuild) -> RotationSavedBuildActionRangeEvidence:
-        if not self.database_path.exists():
-            return RotationSavedBuildActionRangeEvidence(
-                unresolved=(f"canonical skill range database not found: {self.database_path}",)
-            )
-
         slots = self._saved_slots(player_build)
         if not slots:
             return RotationSavedBuildActionRangeEvidence()
+
+        slot_names = self._unique_names(slots)
+        if not self.database_path.exists():
+            return RotationSavedBuildActionRangeEvidence(
+                unresolved=(f"canonical skill range database not found: {self.database_path}",),
+                unresolved_action_names=slot_names,
+            )
 
         requirements: dict[
             tuple[RotationActionKind, str], RotationActionRangeRequirement
         ] = {}
         unresolved: list[str] = []
+        unresolved_action_names: list[str] = []
 
         with sqlite3.connect(self.database_path) as db:
             db.row_factory = sqlite3.Row
@@ -61,7 +68,8 @@ class RotationSavedBuildActionRangeService:
             if not required.issubset(columns):
                 missing = ", ".join(sorted(required - columns))
                 return RotationSavedBuildActionRangeEvidence(
-                    unresolved=(f"canonical skill range schema is missing: {missing}",)
+                    unresolved=(f"canonical skill range schema is missing: {missing}",),
+                    unresolved_action_names=slot_names,
                 )
 
             for action_name, action_kind in slots:
@@ -70,6 +78,7 @@ class RotationSavedBuildActionRangeService:
                     unresolved.append(
                         f"canonical skill range not found by exact saved name: {action_name}"
                     )
+                    unresolved_action_names.append(action_name)
                     continue
 
                 highest_rank = max(int(row["rank"] or 0) for row in rows)
@@ -85,6 +94,7 @@ class RotationSavedBuildActionRangeService:
                         unresolved.append(
                             f"canonical skill minimum range is invalid: {action_name}"
                         )
+                        unresolved_action_names.append(action_name)
                         invalid = True
                         break
                     if maximum is not None and maximum < minimum:
@@ -92,6 +102,7 @@ class RotationSavedBuildActionRangeService:
                             f"canonical skill range is inconsistent for {action_name}: "
                             f"minimum {minimum:g}, maximum {maximum:g}"
                         )
+                        unresolved_action_names.append(action_name)
                         invalid = True
                         break
                     normalized.add((minimum, maximum))
@@ -103,6 +114,7 @@ class RotationSavedBuildActionRangeService:
                         "canonical skill range is ambiguous at highest rank for exact saved name: "
                         f"{action_name}"
                     )
+                    unresolved_action_names.append(action_name)
                     continue
 
                 minimum, maximum = next(iter(normalized))
@@ -123,6 +135,7 @@ class RotationSavedBuildActionRangeService:
         return RotationSavedBuildActionRangeEvidence(
             range_requirements=tuple(requirements.values()),
             unresolved=tuple(dict.fromkeys(unresolved)),
+            unresolved_action_names=self._unique_strings(unresolved_action_names),
         )
 
     @staticmethod
@@ -138,6 +151,26 @@ class RotationSavedBuildActionRangeService:
                 kind = RotationActionKind.ULTIMATE if index == 5 else RotationActionKind.SKILL
                 values.append((name, kind))
         return tuple(values)
+
+    @classmethod
+    def _unique_names(
+        cls,
+        slots: tuple[tuple[str, RotationActionKind], ...],
+    ) -> tuple[str, ...]:
+        return cls._unique_strings(name for name, _kind in slots)
+
+    @staticmethod
+    def _unique_strings(values) -> tuple[str, ...]:
+        ordered: list[str] = []
+        seen: set[str] = set()
+        for raw in values:
+            value = str(raw or "").strip()
+            key = value.casefold()
+            if not value or key in seen:
+                continue
+            seen.add(key)
+            ordered.append(value)
+        return tuple(ordered)
 
     @staticmethod
     def _range_rows(db: sqlite3.Connection, action_name: str) -> tuple[sqlite3.Row, ...]:
