@@ -60,7 +60,7 @@ class ExtremeSorcererBloodMagicClassRouteCatalogResult:
 
 
 class ExtremeSorcererBloodMagicClassRouteCatalogService:
-    """Rank the U50 Blood Magic normal-heal event across legal class routes.
+    """Rank the U50 Blood Magic non-critical heal across legal class routes.
 
     A route enters only when it equips Dark Magic and canonical data supplies at
     least one concrete active Dark Magic ability with a positive base cost. Each
@@ -68,9 +68,10 @@ class ExtremeSorcererBloodMagicClassRouteCatalogService:
     then the route's normalized hypothetical progression is preserved through the
     whole-build Max Health search.
 
-    This catalog is intentionally normal-heal only. Blood Magic critical
-    eligibility remains unresolved, so its results must not be merged into the
-    ordinary critical-heal ranking until that mechanic is proven.
+    Blood Magic's critical policy is resolved: as a Max-Health-scaled passive proc
+    it cannot critically heal. This catalog therefore ranks its proved maximum
+    event directly at the normal-heal value. The remaining omitted boundary is the
+    merged comparison against ordinary heals whose own maximum event may be a crit.
     """
 
     SEARCH_SCOPE = (
@@ -79,11 +80,11 @@ class ExtremeSorcererBloodMagicClassRouteCatalogService:
         "trigger-cast replacement across the five ordinary active-bar slots",
         "hypothetical selected-class-line max progression normalization",
         "whole-build canonical Max Health optimization",
-        "Blood Magic U50 rank-2 normal heal at 10% of Max Health",
+        "Blood Magic U50 rank-2 heal at 10% of Max Health",
+        "Blood Magic Max-Health passive-proc critical policy: non-critical",
     )
     OMITTED_SCOPE = (
-        "Blood Magic critical-heal eligibility",
-        "global comparison against critical ordinary-heal candidates",
+        "global maximum-event comparison against ordinary-heal candidates",
         "full multi-skill active/back-bar combinatorial search",
         "runtime proof that caster is below full Health at trigger time",
     )
