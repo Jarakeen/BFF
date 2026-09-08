@@ -160,7 +160,7 @@ def test_resolves_archers_mind_conditional_bonus():
             None,
         ),
         (
-            StatId.HEALING_DONE,
+            StatId.CRITICAL_HEALING,
             EffectOperation.ADD_PERCENT,
             8.0,
             None,
@@ -172,12 +172,21 @@ def test_resolves_archers_mind_conditional_bonus():
             "sneaking_or_invisible",
         ),
         (
-            StatId.HEALING_DONE,
+            StatId.CRITICAL_HEALING,
             EffectOperation.ADD_PERCENT,
             16.0,
             "sneaking_or_invisible",
         ),
     ]
+
+
+def test_healing_done_phrase_accepts_terminal_period():
+    effects = GearSetEffectResolver().resolve(
+        bonus("(3 items) Increases your healing done by 5%.")
+    )
+    assert stats(effects) == [(StatId.HEALING_DONE, 5.0)]
+    assert effects[0].operation == EffectOperation.ADD_PERCENT
+    assert effects[0].unit == EffectUnit.PERCENT
 
 
 def test_damage_shield_condition_preserves_health_recovery_requirement():
