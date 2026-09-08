@@ -91,14 +91,17 @@ class ExtremeActualHealClassRouteCatalogService:
     families remain explicit omitted scope and prevent a false global-proof claim.
 
     The five ordinary skill positions are searched because the selected heal
-    must be present for slot-counted passive math. The ultimate slot is preserved.
-    This is not yet a full multi-skill bar optimizer.
+    must be present for slot-counted passive math. Weapon-skill heals are filtered
+    against the concrete weapon configuration on the selected active bar before
+    scoring. The ultimate slot is preserved. This is not yet a full multi-skill
+    bar optimizer.
     """
 
     SEARCH_SCOPE = (
         "structurally legal class-line routes",
         "hypothetical selected-class-line max progression normalization",
         "class-line-aware canonical HEAL candidate discovery per route",
+        "active-bar weapon-skill legality for HEAL candidates",
         "selected heal replacement across the five ordinary active-bar slots",
         *ExtremeActualHealOptimizationService.SEARCH_SCOPE,
     )
@@ -154,6 +157,7 @@ class ExtremeActualHealClassRouteCatalogService:
                     route_build,
                     route_progression,
                     class_configuration=route.configuration,
+                    active_bar=active_bar,
                 )
                 for candidate in route_candidates:
                     entry = self._best_slot_entry(
