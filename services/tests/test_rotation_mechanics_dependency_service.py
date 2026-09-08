@@ -90,3 +90,47 @@ def test_dependency_reasons_are_explanatory_and_keys_are_unique() -> None:
     assert all(item.reason.strip() for item in dependencies)
     assert any("duration" in item.reason.casefold() for item in dependencies)
     assert any("heavy" in item.reason.casefold() for item in dependencies)
+
+
+def test_dependencies_retain_exact_selected_build_evidence_without_inventing_semantics() -> None:
+    service = RotationMechanicsDependencyService()
+    dependencies = service.discover(
+        character_build=_build(
+            armor=(
+                ArmorPiece(
+                    slot=GearSlot.CHEST,
+                    set_id="serpents_disdain",
+                    weight="light",
+                ),
+            ),
+            potion_id="essence_of_spell_power",
+            poison_id="test_poison",
+        ),
+        requirements=(object(), object()),
+        demands=(object(),),
+        recovery_enabled=True,
+    )
+    by_key = {item.key: item for item in dependencies}
+
+    assert by_key["saved_build:canonical_structure"].evidence == (
+        "class=warden",
+        "role=healer",
+        "build=dependency test",
+    )
+    assert by_key["gear:conditional_topology"].evidence == (
+        "set=serpents_disdain",
+        "armor_weight=light",
+    )
+    assert by_key["consumables:runtime_resource_and_buff_policy"].evidence == (
+        "potion=essence_of_spell_power",
+        "poison=test_poison",
+    )
+    assert by_key["effect_duration:build_modifiers"].evidence == (
+        "uptime_requirement_count=2",
+    )
+    assert by_key["encounter:target_range_movement_topology"].evidence == (
+        "encounter_demand_count=1",
+    )
+    assert by_key["heavy_attack:restoration"].evidence == (
+        "recovery_heavy_candidate_path=enabled",
+    )
