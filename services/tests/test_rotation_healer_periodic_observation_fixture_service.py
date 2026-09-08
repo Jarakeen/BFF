@@ -51,17 +51,16 @@ def _database(tmp_path):
             VALUES (6910, 1, 93807, 'Budding Seeds', 4, 1)
             """
         )
+        description = (
+            "Summon a field which blooms after 6 seconds, healing for $1 Health. "
+            "While the field grows, you and allies are healed for $2 Health every 1 second."
+        )
         db.execute(
             """
             INSERT INTO ability(ability_id, name, coef_description, duration)
-            VALUES (
-                93807,
-                'Budding Seeds',
-                'Summon a field which blooms after 6 seconds, healing for $1 Health. '
-                'While the field grows, you and allies are healed for $2 Health every 1 second.',
-                6000
-            )
-            """
+            VALUES (?, ?, ?, ?)
+            """,
+            (93807, "Budding Seeds", description, 6000),
         )
         db.execute(
             """
