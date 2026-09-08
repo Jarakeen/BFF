@@ -26,6 +26,9 @@ from services.extreme_healing_event_temporal_scope_service import (
 from services.extreme_sorcerer_skill_component_repository import (
     ExtremeSorcererSkillComponentRepository,
 )
+from services.rotation_healer_u50_skill_component_repository import (
+    RotationHealerU50SkillComponentRepository,
+)
 
 
 class _CanonicalIdentityRecipientScope:
@@ -64,11 +67,11 @@ class ExtremeCanonicalHealingEventService(ExtremeHealingEventService):
     event. Coefficients delivered to another recipient or at another time are not
     added together.
 
-    The default tooltip path layers reviewed U50 Dragon Blood-family and Sorcerer
-    component identity in memory. The persistent ``eso.db`` remains untouched.
-    The existing reviewed ability-name recipient/time guards remain a compatibility
-    fallback for skills whose canonical component identity has not yet been
-    enriched or whose periodic tick identity is still unresolved.
+    The default tooltip path layers reviewed U50 Dragon Blood-family, Sorcerer,
+    and common healer component identity in memory. The persistent ``eso.db``
+    remains untouched. The existing reviewed ability-name recipient/time guards
+    remain a compatibility fallback for skills whose canonical component identity
+    has not yet been enriched or whose periodic tick identity is still unresolved.
     """
 
     def __init__(
@@ -96,9 +99,13 @@ class ExtremeCanonicalHealingEventService(ExtremeHealingEventService):
             dragon_blood_repository = ExtremeDragonBloodSkillComponentRepository(
                 database_path
             )
-            component_repository = ExtremeSorcererSkillComponentRepository(
+            sorcerer_repository = ExtremeSorcererSkillComponentRepository(
                 database_path,
                 base_repository=dragon_blood_repository,
+            )
+            component_repository = RotationHealerU50SkillComponentRepository(
+                database_path,
+                base_repository=sorcerer_repository,
             )
             kwargs["tooltip_service"] = SavedBuildSkillTooltipService(
                 database_path,
