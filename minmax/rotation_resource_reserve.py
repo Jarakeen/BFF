@@ -41,6 +41,7 @@ class RotationResourceReserveAssessment:
     demand: RotationDemandWindow
     requirement: RotationResourceReserveRequirement
     available_before_start: int
+    maximum_before_start: int | None = None
 
     @property
     def shortfall(self) -> int:
@@ -49,6 +50,20 @@ class RotationResourceReserveAssessment:
     @property
     def satisfied(self) -> bool:
         return self.shortfall == 0
+
+    @property
+    def available_fraction_before_start(self) -> float | None:
+        maximum = self.maximum_before_start
+        if maximum is None or int(maximum) <= 0:
+            return None
+        return float(self.available_before_start) / float(maximum)
+
+
+def _validated_time(time_seconds: float) -> float:
+    time_value = float(time_seconds)
+    if not math.isfinite(time_value) or time_value < 0:
+        raise ValueError("resource reserve time must be finite and non-negative")
+    return time_value
 
 
 def resource_amount_before(
@@ -62,16 +77,39 @@ def resource_amount_before(
     must not reduce the reserve that was available on entry.
     """
 
-    time_value = float(time_seconds)
-    if not math.isfinite(time_value) or time_value < 0:
-        raise ValueError("resource reserve time must be finite and non-negative")
-
+    time_value = _validated_time(time_seconds)
     amount = timeline.starting_amount
     for event in timeline.events:
         if event.time_seconds >= time_value:
             break
         amount = event.after
     return amount
+
+
+def resource_maximum_before(
+    timeline: ResourceTimelineResult,
+    time_seconds: float,
+) -> int | None:
+    """Return verified active resource maximum immediately before one instant.
+
+    Historical or synthetic timelines may not carry maximum metadata. Those
+    callers receive ``None`` rather than an invented ceiling. A maximum change
+    exactly at the demand start belongs to the demand instant, so the entry
+    reserve uses the maximum that was active strictly before that timestamp.
+    """
+
+    time_value = _validated_time(time_seconds)
+    maximum = getattr(timeline, "starting_maximum", None)
+    if maximum is None:
+        return None
+    current = int(maximum)
+    for event in timeline.events:
+        if event.time_seconds >= time_value:
+            break
+        maximum_after = getattr(event, "maximum_after", None)
+        if maximum_after is not None:
+            current = int(maximum_after)
+    return current
 
 
 def assess_rotation_resource_reserve(
@@ -97,6 +135,10 @@ def assess_rotation_resource_reserve(
         demand=demand,
         requirement=requirement,
         available_before_start=resource_amount_before(
+            timeline,
+            demand.start_seconds,
+        ),
+        maximum_before_start=resource_maximum_before(
             timeline,
             demand.start_seconds,
         ),
