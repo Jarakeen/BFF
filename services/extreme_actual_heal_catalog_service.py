@@ -70,9 +70,10 @@ class ExtremeActualHealCatalogService:
     resolved event. ``global_maximum_proven`` is intentionally stricter and is
     true only when every discovered legal candidate evaluated completely.
 
-    Current-build legality is the boundary here. Subclass-route expansion,
-    weapon/bar replacement, skill-bar passive/proc search, gear-set replacement,
-    and race replacement remain explicit omitted scope rather than disappearing.
+    Current-build skill legality remains the boundary here. The per-skill whole-
+    build optimizer now searches canonical races in addition to its other source
+    families. Subclass-route expansion, weapon/bar replacement, skill-bar
+    passive/proc search, and gear-set replacement remain explicit omitted scope.
     """
 
     OMITTED_SCOPE = (
@@ -80,7 +81,6 @@ class ExtremeActualHealCatalogService:
         "weapon/bar replacement required to unlock another skill line",
         "skill-bar passive/proc search",
         "gear-set replacement",
-        "race replacement",
         "group-only buffs",
         "runtime conditional stacks/procs",
     )
