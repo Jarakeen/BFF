@@ -31,7 +31,7 @@ from minmax.rotation_action_slot_legality import (
 )
 from minmax.rotation_active_bar_legality import RotationActiveBarAssessor
 from minmax.rotation_demand_window import RotationDemandWindow
-from minmax.rotation_plan import RotationPlan
+from minmax.rotation_plan import RotationActionKind, RotationPlan
 from models.build_model import PlayerBuild
 from services.canonical_knowledge_gap import CanonicalKnowledgeGap
 from services.canonical_mechanics_coverage_audit import CanonicalMechanicsCoverageReport
@@ -123,6 +123,9 @@ class RotationCanonicalCandidateSupport:
 
     Ambiguous saved-build slot identity is structural unresolved evidence and blocks
     candidate evaluation rather than silently omitting legality for that action.
+    Timing/range evidence is narrower: unresolved evidence becomes candidate-specific
+    only when the *final plan* actually uses the affected action. Range evidence is
+    relevant only when explicit target-distance windows were supplied.
     """
 
     def __init__(
@@ -437,6 +440,16 @@ class RotationCanonicalCandidateSupport:
                     )
                 )
 
+            relevant_unresolved = self._relevant_action_evidence_gaps(
+                snapshot.plan,
+                action_timing_evidence=action_timing_evidence,
+                action_range_evidence=action_range_evidence,
+                range_relevant=bool(target_distance_windows),
+            )
+            candidate_specific_unresolved = self._dedupe_strings(
+                scorecard.candidate_specific_unresolved + relevant_unresolved
+            )
+
             return replace(
                 scorecard,
                 cooldown_assessment=cooldown_assessment,
@@ -444,9 +457,35 @@ class RotationCanonicalCandidateSupport:
                 range_assessment=range_assessment,
                 slot_assessment=slot_assessment,
                 active_bar_assessment=active_bar_assessment,
+                candidate_specific_unresolved=candidate_specific_unresolved,
             )
 
         return resolve
+
+    @staticmethod
+    def _relevant_action_evidence_gaps(
+        plan: RotationPlan,
+        *,
+        action_timing_evidence: RotationSavedBuildActionTimingEvidence,
+        action_range_evidence: RotationSavedBuildActionRangeEvidence,
+        range_relevant: bool,
+    ) -> tuple[str, ...]:
+        used_names = {
+            str(action.name).strip().casefold()
+            for action in plan.actions
+            if action.kind in {RotationActionKind.SKILL, RotationActionKind.ULTIMATE}
+            and action.name
+            and str(action.name).strip()
+        }
+        gaps: list[str] = []
+        for name in action_timing_evidence.unresolved_action_names:
+            if name.casefold() in used_names:
+                gaps.append(f"canonical action timing unresolved for used action: {name}")
+        if range_relevant:
+            for name in action_range_evidence.unresolved_action_names:
+                if name.casefold() in used_names:
+                    gaps.append(f"canonical action range unresolved for used action: {name}")
+        return tuple(gaps)
 
     @staticmethod
     def _dedupe_objects(values: tuple[object, ...]) -> tuple:
@@ -454,6 +493,19 @@ class RotationCanonicalCandidateSupport:
         for value in values:
             if value not in ordered:
                 ordered.append(value)
+        return tuple(ordered)
+
+    @staticmethod
+    def _dedupe_strings(values: tuple[str, ...]) -> tuple[str, ...]:
+        ordered: list[str] = []
+        seen: set[str] = set()
+        for raw in values:
+            value = str(raw or "").strip()
+            key = value.casefold()
+            if not value or key in seen:
+                continue
+            seen.add(key)
+            ordered.append(value)
         return tuple(ordered)
 
     @staticmethod
