@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Callable, Protocol
 
 from minmax.demand_anticipatory_duration_scheduler import DemandRefreshLead
 from minmax.rotation_ability_priority import AbilityPriorityList
@@ -9,6 +9,12 @@ from minmax.rotation_demand_window import RotationDemandWindow
 from minmax.rotation_plan import RotationPlan
 from minmax.rotation_wait_decision import PrematureRecastDecisionProvider
 from services.rotation_duration_refinement_service import RotationDurationRefinementService
+
+
+RotationCandidateWaitDecisionFactory = Callable[
+    [],
+    PrematureRecastDecisionProvider | None,
+]
 
 
 @dataclass(frozen=True)
@@ -58,6 +64,11 @@ class RotationCandidateGenerationService:
     produces a baseline and caller-supplied schedule variants through the existing
     duration-refinement path so downstream scorecard/ranking services can compare
     the resulting whole plans under hard obligations.
+
+    Stateful wait-decision providers must not leak runtime trigger state from one
+    candidate into another. Callers with a stateful provider therefore supply
+    ``wait_decision_factory`` so every candidate receives a fresh instance. The
+    legacy ``wait_decision`` argument remains supported for stateless providers.
     """
 
     DEFAULT_MAX_CANDIDATES = 32
@@ -81,8 +92,15 @@ class RotationCandidateGenerationService:
         demands: tuple[RotationDemandWindow, ...] = (),
         options: tuple[RotationRefreshLeadCandidateOption, ...] = (),
         wait_decision: PrematureRecastDecisionProvider | None = None,
+        wait_decision_factory: RotationCandidateWaitDecisionFactory | None = None,
         baseline_id: str = "baseline",
     ) -> tuple[GeneratedRotationCandidate, ...]:
+        if wait_decision is not None and wait_decision_factory is not None:
+            raise ValueError(
+                "rotation candidate generation accepts either wait_decision or "
+                "wait_decision_factory, not both"
+            )
+
         baseline = str(baseline_id or "").strip()
         if not baseline:
             raise ValueError("rotation candidate baseline_id is required")
@@ -109,7 +127,10 @@ class RotationCandidateGenerationService:
                 priorities=priorities,
                 demands=tuple(demands),
                 refresh_leads=(),
-                wait_decision=wait_decision,
+                wait_decision=self._candidate_wait_decision(
+                    wait_decision=wait_decision,
+                    wait_decision_factory=wait_decision_factory,
+                ),
             )
         ]
         for option in normalized_options:
@@ -120,7 +141,10 @@ class RotationCandidateGenerationService:
                     priorities=priorities,
                     demands=tuple(demands),
                     refresh_leads=self._canonical_leads(option.refresh_leads),
-                    wait_decision=wait_decision,
+                    wait_decision=self._candidate_wait_decision(
+                        wait_decision=wait_decision,
+                        wait_decision_factory=wait_decision_factory,
+                    ),
                 )
             )
         return tuple(candidates)
@@ -147,6 +171,16 @@ class RotationCandidateGenerationService:
             plan=refinement.plan,
             refresh_leads=refresh_leads,
         )
+
+    @staticmethod
+    def _candidate_wait_decision(
+        *,
+        wait_decision: PrematureRecastDecisionProvider | None,
+        wait_decision_factory: RotationCandidateWaitDecisionFactory | None,
+    ) -> PrematureRecastDecisionProvider | None:
+        if wait_decision_factory is not None:
+            return wait_decision_factory()
+        return wait_decision
 
     @classmethod
     def _dedupe_options(
@@ -214,3 +248,11 @@ class RotationCandidateGenerationService:
             )
             for item in leads
         )
+
+
+__all__ = [
+    "GeneratedRotationCandidate",
+    "RotationCandidateGenerationService",
+    "RotationCandidateWaitDecisionFactory",
+    "RotationRefreshLeadCandidateOption",
+]
