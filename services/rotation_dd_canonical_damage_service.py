@@ -12,12 +12,14 @@ from minmax.evaluation_context import EvaluationContext
 from minmax.rotation_plan import RotationPlan
 from services.rotation_dd_action_damage_event_service import (
     RotationDDActionDamageProjection,
+    RotationDDResolvedDamageEvent,
 )
 from services.rotation_dd_damage_projection_service import (
     RotationDDDamageInstance,
     RotationDDDamageProjection,
     RotationDDDamageProjectionService,
 )
+from services.rotation_dd_dot_runtime_service import RotationDDDotRuntimeProjection
 
 
 DamageEvaluator = Callable[..., ModeledDamagePotency]
@@ -25,11 +27,11 @@ DamageEvaluator = Callable[..., ModeledDamagePotency]
 
 @dataclass(frozen=True)
 class RotationDDCanonicalDamageProjection:
-    """Canonical direct-action DD projection for one exact rotation horizon.
+    """Canonical DD projection for one exact rotation horizon.
 
     ``known_damage`` remains useful for diagnostics, but ``total_damage`` and DPS
     are withheld whenever any required action/event evidence is unresolved. That
-    keeps partial direct-damage coverage from masquerading as a complete parse.
+    keeps partial direct/DoT coverage from masquerading as a complete parse.
     """
 
     action_projection: RotationDDActionDamageProjection
@@ -45,16 +47,17 @@ class RotationDDCanonicalDamageProjection:
 
 
 class RotationDDCanonicalDamageService:
-    """Resolve projected direct DD actions through the canonical static DD engine.
+    """Resolve time-resolved DD actions through the canonical static DD engine.
 
-    The action projector owns component identity and direct-vs-DoT timing
-    boundaries. The canonical DD evaluator owns offensive stats, critical chance,
-    penetration, target resistance, and expected single-event damage. The damage
-    projection service owns timeline aggregation.
+    The action projector owns component identity. Direct events can be evaluated
+    immediately; DoT seeds require an explicit runtime projection first. The
+    canonical DD evaluator owns offensive stats, critical chance, penetration,
+    target resistance, and expected single-event damage. The damage projection
+    service owns timeline aggregation.
 
-    This service deliberately does not infer DoT ticks, proc events, execute
-    scaling, target-health transitions, light/heavy attack damage, or runtime buff
-    windows. Missing evidence in any of those required areas remains unresolved.
+    This service still does not infer proc events, execute scaling, target-health
+    transitions, light/heavy attack damage, or runtime buff windows. Missing
+    evidence in any required area remains unresolved.
     """
 
     def __init__(
@@ -73,11 +76,24 @@ class RotationDDCanonicalDamageService:
         context: BuildCalculationContext,
         evaluation_context: EvaluationContext,
         action_projection: RotationDDActionDamageProjection,
+        dot_projection: RotationDDDotRuntimeProjection | None = None,
     ) -> RotationDDCanonicalDamageProjection:
         instances: list[RotationDDDamageInstance] = []
         evaluation_unresolved: list[str] = []
 
-        for projected in action_projection.events:
+        projected_events: tuple[RotationDDResolvedDamageEvent, ...] = tuple(
+            action_projection.events
+        )
+        if dot_projection is not None:
+            projected_events += tuple(dot_projection.events)
+        elif action_projection.dot_components:
+            evaluation_unresolved.extend(
+                f"{seed.source_name} coefficient {seed.coefficient_number} at "
+                f"{seed.cast_time_seconds:g}s: DoT runtime projection unavailable"
+                for seed in action_projection.dot_components
+            )
+
+        for projected in projected_events:
             measurement = self.damage_evaluator(
                 context=context,
                 event=projected.event,
@@ -118,6 +134,7 @@ class RotationDDCanonicalDamageService:
         )
         unresolved = self._dedupe(
             tuple(action_projection.unresolved)
+            + tuple(dot_projection.unresolved if dot_projection is not None else ())
             + tuple(evaluation_unresolved)
             + tuple(damage_projection.unresolved)
         )
