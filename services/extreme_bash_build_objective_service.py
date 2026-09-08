@@ -8,6 +8,7 @@ from .extreme_bash_champion_point_service import ExtremeBashChampionPointResult
 from .extreme_bash_deadly_bash_service import ExtremeDeadlyBashResult
 from .extreme_bash_jewelry_service import ExtremeBashJewelryResult
 from .extreme_bash_objective_service import (
+    ExtremeBashCostInputs,
     ExtremeBashDamageInputs,
     ExtremeBashLegalityContext,
     ExtremeBashObjectiveResult,
@@ -90,6 +91,63 @@ class ExtremeBashBuildObjectiveService:
             )
 
         objective = ExtremeBashObjectiveService.evaluate_damage(
+            resolved_inputs,
+            legality=legality,
+        )
+        return ExtremeBashBuildObjectiveResult(
+            objective=objective,
+            source_blockers=tuple(source_blockers),
+        )
+
+    @classmethod
+    def evaluate_cost(
+        cls,
+        inputs: ExtremeBashCostInputs,
+        *,
+        legality: ExtremeBashLegalityContext | None = None,
+        champion_point: ExtremeBashChampionPointResult | None = None,
+        deadly_bash: ExtremeDeadlyBashResult | None = None,
+    ) -> ExtremeBashBuildObjectiveResult:
+        """Compose reviewed Bash-cost sources without guessing CP flat stacking.
+
+        Deadly Bash maps directly to ``Skill.BashCost``. Savage Defense currently
+        carries a verified flat Stamina reduction but the inherited canonical
+        formula exposes ``CP.BashCost`` as a multiplier, so that CP channel
+        remains unresolved and its detailed blocker is preserved here.
+        """
+        source_blockers: list[str] = []
+        resolved_inputs = inputs
+
+        if champion_point is not None:
+            if inputs.cp_bash_cost is not None:
+                raise ValueError(
+                    "cp_bash_cost was supplied directly and through Champion Point evidence"
+                )
+            if champion_point.reviewed_formula_value is not None:
+                resolved_inputs = replace(
+                    resolved_inputs,
+                    cp_bash_cost=float(champion_point.reviewed_formula_value),
+                )
+            source_blockers.extend(
+                f"Champion Point {champion_point.name}: {problem}"
+                for problem in champion_point.unresolved
+            )
+
+        if deadly_bash is not None:
+            if inputs.skill_bash_cost is not None:
+                raise ValueError(
+                    "skill_bash_cost was supplied directly and through Deadly Bash evidence"
+                )
+            if deadly_bash.skill_bash_cost is not None:
+                resolved_inputs = replace(
+                    resolved_inputs,
+                    skill_bash_cost=float(deadly_bash.skill_bash_cost),
+                )
+            source_blockers.extend(
+                f"Deadly Bash: {problem}" for problem in deadly_bash.unresolved
+            )
+
+        objective = ExtremeBashObjectiveService.evaluate_cost(
             resolved_inputs,
             legality=legality,
         )
