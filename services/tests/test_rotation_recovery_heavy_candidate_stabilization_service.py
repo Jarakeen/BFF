@@ -43,6 +43,7 @@ def test_candidate_evaluation_is_replayed_into_fixed_point_hard_state() -> None:
         hard_state_service=hard_state,
     )
     evaluations = []
+    recovery_factory = object()
 
     def evaluate_candidate(plan, replay):
         evaluations.append((plan, replay))
@@ -62,6 +63,7 @@ def test_candidate_evaluation_is_replayed_into_fixed_point_hard_state() -> None:
         maximum_amount=30_000,
         trigger_fraction=0.25,
         restoration_resolver=lambda action: None,
+        displayed_recovery_resolver_factory=recovery_factory,
         max_iterations=4,
     )
 
@@ -73,3 +75,4 @@ def test_candidate_evaluation_is_replayed_into_fixed_point_hard_state() -> None:
     assert stabilization.kwargs["maximum_amount"] == 30_000
     assert stabilization.kwargs["trigger_fraction"] == 0.25
     assert stabilization.kwargs["max_iterations"] == 4
+    assert stabilization.kwargs["displayed_recovery_resolver_factory"] is recovery_factory
