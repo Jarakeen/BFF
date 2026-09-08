@@ -133,13 +133,9 @@ class RosterService:
         name = str(team_name or "").strip()
         if not name:
             raise ValueError("team name is required")
-        self.db.execute(
-            "INSERT OR IGNORE INTO team (name) VALUES (?)",
-            (name,),
-        )
+        self.db.execute("INSERT OR IGNORE INTO team (name) VALUES (?)", (name,))
         row = self.db.execute(
-            "SELECT name FROM team WHERE name = ? COLLATE NOCASE",
-            (name,),
+            "SELECT name FROM team WHERE name = ? COLLATE NOCASE", (name,)
         ).fetchone()
         self.db.commit()
         if row is None:
@@ -147,11 +143,7 @@ class RosterService:
         return str(row["name"])
 
     def list_team_names(self) -> list[str]:
-        rows = self.db.execute("""
-            SELECT name
-            FROM team
-            ORDER BY name COLLATE NOCASE
-        """).fetchall()
+        rows = self.db.execute("SELECT name FROM team ORDER BY name COLLATE NOCASE").fetchall()
         return [row["name"] for row in rows]
 
     @staticmethod
@@ -185,8 +177,7 @@ class RosterService:
     def list_team_schedules(self) -> list[TeamSchedule]:
         rows = self.db.execute("""
             SELECT name, raid_days, raid_time, timezone, raid_schedule_json
-            FROM team
-            ORDER BY name COLLATE NOCASE
+            FROM team ORDER BY name COLLATE NOCASE
         """).fetchall()
         return [self._schedule_from_row(row) for row in rows]
 
@@ -196,8 +187,7 @@ class RosterService:
             return None
         row = self.db.execute("""
             SELECT name, raid_days, raid_time, timezone, raid_schedule_json
-            FROM team
-            WHERE name = ? COLLATE NOCASE
+            FROM team WHERE name = ? COLLATE NOCASE
         """, (name,)).fetchone()
         if row is None:
             return None
@@ -207,24 +197,19 @@ class RosterService:
         name = str(schedule.TeamName or "").strip()
         if not name:
             raise ValueError("Team name is required before a raid schedule can be saved.")
-        slots = tuple(schedule.effective_slots)
+        # Preserve the old one-time-for-many-days representation. JSON slots are
+        # persisted only when the caller actually supplied per-day schedule slots.
+        slots = tuple(schedule.Slots)
         raid_days = str(schedule.RaidDays or "").strip()
         raid_time = str(schedule.RaidTime or "").strip()
         if slots:
             raid_days = ", ".join(slot.Day for slot in slots)
             raid_time = slots[0].StartTime
         slots_json = json.dumps([
-            {
-                "Day": slot.Day,
-                "StartTime": slot.StartTime,
-                "EndTime": slot.EndTime,
-            }
+            {"Day": slot.Day, "StartTime": slot.StartTime, "EndTime": slot.EndTime}
             for slot in slots
         ])
-        self.db.execute(
-            "INSERT OR IGNORE INTO team (name) VALUES (?)",
-            (name,),
-        )
+        self.db.execute("INSERT OR IGNORE INTO team (name) VALUES (?)", (name,))
         self.db.execute("""
             UPDATE team
             SET raid_days = ?, raid_time = ?, timezone = ?, raid_schedule_json = ?
@@ -239,17 +224,11 @@ class RosterService:
         self.db.commit()
 
     def delete_team(self, team_name: str) -> bool:
-        """Delete one team identity without deleting roster people.
-
-        Team memberships and the saved raid schedule belong to the team record, so
-        they are removed with it. Roster members, characters, and builds remain.
-        """
         name = str(team_name or "").strip()
         if not name:
             return False
         row = self.db.execute(
-            "SELECT id FROM team WHERE name = ? COLLATE NOCASE",
-            (name,),
+            "SELECT id FROM team WHERE name = ? COLLATE NOCASE", (name,)
         ).fetchone()
         if row is None:
             return False
@@ -264,15 +243,10 @@ class RosterService:
             INSERT INTO roster_member (
                 player_name, character_name, eso_class,
                 primary_role, secondary_role, status
-            )
-            VALUES (?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?)
         """, (
-            member.PlayerName,
-            member.CharacterName,
-            member.EsoClass,
-            member.PrimaryRole,
-            member.SecondaryRole,
-            member.Status or "Active",
+            member.PlayerName, member.CharacterName, member.EsoClass,
+            member.PrimaryRole, member.SecondaryRole, member.Status or "Active",
         ))
         member_id = cursor.lastrowid
         self._set_member_teams(member_id, member.Team)
@@ -283,36 +257,20 @@ class RosterService:
         if member.Id is None:
             raise ValueError("Cannot update a roster member with no Id.")
         self.db.execute("""
-            UPDATE roster_member
-            SET
-                player_name = ?,
-                character_name = ?,
-                eso_class = ?,
-                primary_role = ?,
-                secondary_role = ?,
-                status = ?
+            UPDATE roster_member SET
+                player_name = ?, character_name = ?, eso_class = ?,
+                primary_role = ?, secondary_role = ?, status = ?
             WHERE id = ?
         """, (
-            member.PlayerName,
-            member.CharacterName,
-            member.EsoClass,
-            member.PrimaryRole,
-            member.SecondaryRole,
-            member.Status or "Active",
-            member.Id,
+            member.PlayerName, member.CharacterName, member.EsoClass,
+            member.PrimaryRole, member.SecondaryRole, member.Status or "Active", member.Id,
         ))
         self._set_member_teams(member.Id, member.Team)
         self.db.commit()
 
     def delete_member(self, member_id: int):
-        self.db.execute(
-            "DELETE FROM team_member WHERE roster_member_id = ?",
-            (member_id,),
-        )
-        self.db.execute(
-            "DELETE FROM roster_member WHERE id = ?",
-            (member_id,),
-        )
+        self.db.execute("DELETE FROM team_member WHERE roster_member_id = ?", (member_id,))
+        self.db.execute("DELETE FROM roster_member WHERE id = ?", (member_id,))
         self.db.commit()
 
     @staticmethod
@@ -329,39 +287,24 @@ class RosterService:
         return result
 
     def _set_member_teams(self, member_id: int, team_names: str):
-        """Replace this member's memberships with the supplied comma-separated teams."""
-        self.db.execute(
-            "DELETE FROM team_member WHERE roster_member_id = ?",
-            (member_id,),
-        )
-
+        self.db.execute("DELETE FROM team_member WHERE roster_member_id = ?", (member_id,))
         for team_name in self._parse_team_names(team_names):
-            self.db.execute(
-                "INSERT OR IGNORE INTO team (name) VALUES (?)",
-                (team_name,),
-            )
+            self.db.execute("INSERT OR IGNORE INTO team (name) VALUES (?)", (team_name,))
             team_row = self.db.execute(
-                "SELECT id FROM team WHERE name = ? COLLATE NOCASE",
-                (team_name,),
+                "SELECT id FROM team WHERE name = ? COLLATE NOCASE", (team_name,)
             ).fetchone()
             if team_row is None:
                 continue
             self.db.execute("""
-                INSERT OR IGNORE INTO team_member (
-                    roster_member_id, team_id
-                )
+                INSERT OR IGNORE INTO team_member (roster_member_id, team_id)
                 VALUES (?, ?)
             """, (member_id, team_row["id"]))
 
     @staticmethod
     def _row_to_member(row) -> RosterMember:
         return RosterMember(
-            Id=row["id"],
-            PlayerName=row["player_name"] or "",
-            CharacterName=row["character_name"] or "",
-            EsoClass=row["eso_class"] or "",
-            PrimaryRole=row["primary_role"] or "",
-            SecondaryRole=row["secondary_role"] or "",
-            Status=row["status"] or "Active",
-            Team=row["team_name"] or "",
+            Id=row["id"], PlayerName=row["player_name"] or "",
+            CharacterName=row["character_name"] or "", EsoClass=row["eso_class"] or "",
+            PrimaryRole=row["primary_role"] or "", SecondaryRole=row["secondary_role"] or "",
+            Status=row["status"] or "Active", Team=row["team_name"] or "",
         )
