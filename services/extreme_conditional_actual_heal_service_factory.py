@@ -4,6 +4,9 @@ from models.build_model import PlayerBuild
 from services.extreme_canonical_healing_done_conditional_actual_heal_service import (
     ExtremeCanonicalHealingDoneConditionalActualHealService,
 )
+from services.extreme_canonical_healing_event_service import (
+    ExtremeCanonicalHealingEventService,
+)
 from services.extreme_conditional_actual_heal_optimization_service import (
     ExtremeConditionalActualHealOptimizationService,
 )
@@ -38,6 +41,11 @@ class ExtremeConditionalActualHealServiceFactory:
     conditional Healing Done path so generic sources such as Curative Curse and
     Healing Tides remain in one additive bucket with sheet, combat-state, CP, and
     reviewed bar Healing Done.
+
+    Conditional Extreme builds use canonical per-component heal event identity by
+    default. Proven recipient/time groups are scored independently, while skills
+    without complete identity retain the reviewed legacy recipient/time guards.
+    A caller-supplied healing-event service is preserved unchanged.
     """
 
     @staticmethod
@@ -61,6 +69,14 @@ class ExtremeConditionalActualHealServiceFactory:
             kwargs.pop("illuminate_window_active", None)
             kwargs.pop("templar_illuminate_state", None)
             service_type = ExtremeCanonicalHealingDoneConditionalActualHealService
+
+        if "healing_events" not in kwargs:
+            optimizer = kwargs.get("optimizer")
+            database_path = getattr(optimizer, "database_path", None)
+            kwargs["healing_events"] = ExtremeCanonicalHealingEventService(
+                database_path=database_path
+            )
+
         return service_type(
             target_health_fraction=target_health_fraction,
             **kwargs,
