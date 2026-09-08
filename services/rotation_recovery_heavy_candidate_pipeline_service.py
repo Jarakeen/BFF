@@ -31,6 +31,7 @@ from services.rotation_recovery_heavy_replay_service import (
     VerifiedRecoveryHeavyRestorationResolver,
 )
 from services.rotation_recovery_heavy_stabilization_service import (
+    RecoveryDisplayedRecoveryResolverFactory,
     RecoveryMaximumEventResolver,
 )
 
@@ -39,9 +40,9 @@ class RotationRecoveryHeavyCandidatePipelineService:
     """Compose candidate-policy generation with the recovery-aware family workflow.
 
     Canonical callers may carry an already-resolved static calculation context plus
-    a per-plan resource-maximum resolver through the complete candidate pipeline.
-    Those inputs remain explicit and optional so legacy callers do not acquire
-    invented static mechanics.
+    per-plan resource-maximum and displayed-recovery resolvers through the complete
+    candidate pipeline. Those inputs remain explicit and optional so legacy callers
+    do not acquire invented static mechanics.
     """
 
     def __init__(
@@ -75,6 +76,7 @@ class RotationRecoveryHeavyCandidatePipelineService:
         baseline_id: str = "baseline",
         calculation_context: BuildCalculationContext | None = None,
         maximum_event_resolver: RecoveryMaximumEventResolver | None = None,
+        displayed_recovery_resolver_factory: RecoveryDisplayedRecoveryResolverFactory | None = None,
     ) -> RotationRecoveryHeavyCandidateOrchestrationResult:
         demand_tuple = tuple(demands)
         option_tuple = tuple(options)
@@ -99,6 +101,7 @@ class RotationRecoveryHeavyCandidatePipelineService:
             max_iterations=max_iterations,
             calculation_context=calculation_context,
             maximum_event_resolver=maximum_event_resolver,
+            displayed_recovery_resolver_factory=displayed_recovery_resolver_factory,
         )
 
     def run_effects(
@@ -124,6 +127,7 @@ class RotationRecoveryHeavyCandidatePipelineService:
         baseline_id: str = "baseline",
         calculation_context: BuildCalculationContext | None = None,
         maximum_event_resolver: RecoveryMaximumEventResolver | None = None,
+        displayed_recovery_resolver_factory: RecoveryDisplayedRecoveryResolverFactory | None = None,
     ) -> RotationRecoveryHeavyCandidateOrchestrationResult:
         demand_tuple = tuple(demands)
         option_tuple = tuple(options)
@@ -153,6 +157,7 @@ class RotationRecoveryHeavyCandidatePipelineService:
             max_iterations=max_iterations,
             calculation_context=calculation_context,
             maximum_event_resolver=maximum_event_resolver,
+            displayed_recovery_resolver_factory=displayed_recovery_resolver_factory,
         )
 
 
