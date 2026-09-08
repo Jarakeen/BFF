@@ -8,6 +8,7 @@ from minmax.healer_recovery_heavy_pressure import (
     HealerRecoveryHeavyPressure,
     evaluate_healer_recovery_heavy_pressure,
 )
+from minmax.recovery_timing import DisplayedRecoveryResolver
 from minmax.resource_costs import ResourceType
 from minmax.resource_timeline import ResourceMaximumEvent
 from minmax.restoration_events import ResourceRestorationEvent
@@ -55,9 +56,9 @@ class RotationRecoveryHeavyReplayService:
     """Replay sustain after each scheduled heavy with verified restoration evidence.
 
     This service deliberately does not infer restore amounts, resource ceilings, or
-    decide whether a heavy attack should be scheduled. The rotation scheduler owns
-    placement, callers own verified restoration/ceiling evidence, and the Phase 4
-    timeline owns ordering, capping, clipping, waste, and shortfall.
+    displayed recovery values. The rotation scheduler owns placement, callers own
+    verified restoration/ceiling/recovery evidence, and the Phase 4 timeline owns
+    ordering, capping, clipping, waste, and shortfall.
     """
 
     def __init__(self, sustain_service: RotationSustainService | None = None) -> None:
@@ -72,6 +73,7 @@ class RotationRecoveryHeavyReplayService:
         restoration_resolver: VerifiedRecoveryHeavyRestorationResolver,
         maximum_events: tuple[ResourceMaximumEvent, ...] = (),
         calculation_context: BuildCalculationContext | None = None,
+        displayed_recovery_at: DisplayedRecoveryResolver | None = None,
     ) -> RotationRecoveryHeavyReplay:
         evaluate_kwargs = dict(
             build=build,
@@ -79,6 +81,7 @@ class RotationRecoveryHeavyReplayService:
             resource=resource,
             maximum_events=tuple(maximum_events),
             calculation_context=calculation_context,
+            displayed_recovery_at=displayed_recovery_at,
         )
         initial = self.sustain_service.evaluate(**evaluate_kwargs)
         current = initial
