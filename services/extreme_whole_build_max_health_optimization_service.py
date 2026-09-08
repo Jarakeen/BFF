@@ -67,6 +67,7 @@ class ExtremeWholeBuildMaxHealthOptimizationService(ExtremeCompleteOptimizationS
     ) -> None:
         super().__init__(database_path=database_path, builds_path=builds_path)
         resolved_path = self.database_path
+        self._active_bar_for_package_search = "front"
         self.gear_set_candidates = (
             gear_set_candidates
             if gear_set_candidates is not None
@@ -112,6 +113,7 @@ class ExtremeWholeBuildMaxHealthOptimizationService(ExtremeCompleteOptimizationS
         if objective.key != "max_health":
             return tuple(candidates)
 
+        active_bar = self._active_bar_for_package_search
         candidates.extend(
             self._race_candidates(
                 baseline_build,
@@ -145,7 +147,7 @@ class ExtremeWholeBuildMaxHealthOptimizationService(ExtremeCompleteOptimizationS
                 baseline_build,
                 character_id=character_id,
                 baseline_build_id=baseline_build_id,
-                active_bar="front",
+                active_bar=active_bar,
             )
         )
         candidates.extend(
@@ -153,7 +155,7 @@ class ExtremeWholeBuildMaxHealthOptimizationService(ExtremeCompleteOptimizationS
                 baseline_build,
                 character_id=character_id,
                 baseline_build_id=baseline_build_id,
-                active_bar="front",
+                active_bar=active_bar,
             )
         )
         return tuple(candidates)
