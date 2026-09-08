@@ -91,6 +91,11 @@ def install() -> None:
         return
 
     from ui import operations_console
+    from ui.team_schedule_calendar_support import install as install_team_schedule_calendar_support
 
+    # Team Schedule owns the actual .ics action. Installing it here keeps all
+    # schedule presentation wiring together and guarantees it runs before
+    # MainWindow constructs the Roster page.
+    install_team_schedule_calendar_support()
     operations_console.OperationsConsole._raid_schedule_card = _raid_schedule_card
     _INSTALLED = True
