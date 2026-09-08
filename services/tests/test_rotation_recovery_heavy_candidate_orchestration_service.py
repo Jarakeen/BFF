@@ -41,6 +41,9 @@ def _family_result(
 
 
 class _FakeCandidateStabilizer:
+    def __init__(self) -> None:
+        self.calls = []
+
     def stabilize(
         self,
         *,
@@ -55,7 +58,15 @@ class _FakeCandidateStabilizer:
         max_iterations=6,
         calculation_context=None,
         maximum_event_resolver=None,
+        displayed_recovery_resolver_factory=None,
     ):
+        self.calls.append(
+            {
+                "calculation_context": calculation_context,
+                "maximum_event_resolver": maximum_event_resolver,
+                "displayed_recovery_resolver_factory": displayed_recovery_resolver_factory,
+            }
+        )
         plan = generate(None)
         replay = SimpleNamespace(final_plan_id=plan.build_name)
         evaluate_candidate(plan, replay)
@@ -82,11 +93,13 @@ def _candidate(candidate_id: str, *, evaluation_id: str | None = None):
 
 
 def test_orchestration_selects_recovery_valid_candidate_over_better_soft_rank() -> None:
+    stabilizer = _FakeCandidateStabilizer()
     service = RotationRecoveryHeavyCandidateOrchestrationService(
-        stabilization_service=_FakeCandidateStabilizer()
+        stabilization_service=stabilizer
     )
     build = PlayerBuild(Name="Rotation Test", BuildName="Role Neutral")
     observed_family = []
+    recovery_factory = object()
 
     def evaluate_final_family(snapshots):
         observed_family.extend(snapshots)
@@ -110,6 +123,7 @@ def test_orchestration_selects_recovery_valid_candidate_over_better_soft_rank() 
         maximum_amount=30000,
         trigger_fraction=0.30,
         restoration_resolver=lambda _heavy: None,
+        displayed_recovery_resolver_factory=recovery_factory,
     )
 
     assert [item.candidate_id for item in observed_family] == [
@@ -125,6 +139,11 @@ def test_orchestration_selects_recovery_valid_candidate_over_better_soft_rank() 
         "better-soft-rank-but-invalid-recovery"
     )
     assert result.ranked_candidates[1].selectable is False
+    assert len(stabilizer.calls) == 2
+    assert all(
+        call["displayed_recovery_resolver_factory"] is recovery_factory
+        for call in stabilizer.calls
+    )
 
 
 def test_orchestration_rejects_iteration_evaluation_candidate_identity_drift() -> None:
