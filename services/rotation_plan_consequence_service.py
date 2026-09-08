@@ -6,6 +6,7 @@ from enum import Enum
 
 from minmax.resource_timeline import ResourceTimelineResult
 from minmax.rotation_plan import RotationActionKind, RotationPlan
+from services.rotation_execution_burden_service import RotationExecutionBurdenService
 from services.rotation_sustain_service import RotationSustainProjection
 
 
@@ -59,6 +60,9 @@ class RotationPlanConsequence:
     baseline_wasted_restore: int = 0
     candidate_wasted_restore: int = 0
     wasted_restore_delta: int = 0
+    baseline_bar_swaps: int = 0
+    candidate_bar_swaps: int = 0
+    bar_swap_delta: int = 0
 
 
 class RotationPlanConsequenceService:
@@ -71,10 +75,19 @@ class RotationPlanConsequenceService:
 
     When the sustain timelines carry canonical maximum-resource evidence, the
     consequence also reports normalized minimum/ending resource fractions. It also
-    exposes restoration/recovery that was wasted against the active ceiling. These
-    are evidence only; this role-neutral layer does not invent a universal reserve
-    threshold or fold them into the resource classification.
+    exposes restoration/recovery that was wasted against the active ceiling and
+    explicit bar-swap execution burden. These are evidence only; this role-neutral
+    layer does not invent universal reserve or execution-difficulty thresholds or
+    fold them into the resource classification.
     """
+
+    def __init__(
+        self,
+        execution_burden_service: RotationExecutionBurdenService | None = None,
+    ) -> None:
+        self.execution_burden_service = (
+            execution_burden_service or RotationExecutionBurdenService()
+        )
 
     def compare(
         self,
@@ -103,6 +116,10 @@ class RotationPlanConsequenceService:
         candidate_ending_fraction = self._ending_fraction(candidate_timeline)
         baseline_wasted_restore = self._wasted_restore(baseline_timeline)
         candidate_wasted_restore = self._wasted_restore(candidate_timeline)
+        execution_burden = self.execution_burden_service.compare(
+            baseline_plan=baseline_plan,
+            candidate_plan=candidate_plan,
+        )
 
         cast_deltas = self._cast_deltas(baseline_plan, candidate_plan)
         cost_deltas = self._cost_deltas(baseline_sustain, candidate_sustain)
@@ -136,6 +153,9 @@ class RotationPlanConsequenceService:
             baseline_wasted_restore=baseline_wasted_restore,
             candidate_wasted_restore=candidate_wasted_restore,
             wasted_restore_delta=candidate_wasted_restore - baseline_wasted_restore,
+            baseline_bar_swaps=execution_burden.baseline.bar_swaps,
+            candidate_bar_swaps=execution_burden.candidate.bar_swaps,
+            bar_swap_delta=execution_burden.bar_swaps_delta,
         )
 
     @staticmethod
