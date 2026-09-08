@@ -3,7 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable
 
+from minmax.build_calculation_context import BuildCalculationContext
 from minmax.resource_costs import ResourceType
+from minmax.resource_timeline import ResourceMaximumEvent
 from minmax.rotation_plan import RotationActionKind, RotationPlan
 from minmax.runtime_healer_wait_decision_provider import RecoveryHeavyPressureResolver
 from models.build_model import PlayerBuild
@@ -23,6 +25,10 @@ RecoveryHardObligationStateResolver = Callable[
     [RotationPlan, RotationRecoveryHeavyReplay],
     tuple[str, ...],
 ]
+RecoveryMaximumEventResolver = Callable[
+    [RotationPlan, ResourceType],
+    tuple[ResourceMaximumEvent, ...],
+]
 
 
 @dataclass(frozen=True)
@@ -40,13 +46,6 @@ class RotationRecoveryHeavyStabilizationIteration:
 
     @property
     def tracked_hard_obligations_satisfied(self) -> bool:
-        """Whether the fixed-point state contains no tracked hard failure.
-
-        Resource shortfall is always tracked directly by the stabilizer. Any other
-        hard obligation is represented by the caller-supplied canonical obligation
-        state. An absent obligation resolver therefore means only resource shortfall
-        can be proven here; it does not imply unknown obligations are satisfied.
-        """
         return self.total_shortfall == 0 and not self.hard_obligation_state
 
 
@@ -68,25 +67,13 @@ class RotationRecoveryHeavyStabilizationResult:
 
 
 class RotationRecoveryHeavyStabilizationService:
-    """Regenerate recovery-heavy rotations until the complete schedule state stabilizes.
+    """Regenerate recovery-heavy rotations until complete schedule state stabilizes.
 
-    Each iteration generates a plan from the latest pressure resolver, replays all
-    caller-verified heavy restores through the authoritative Phase 4 sustain path,
-    then builds the next pressure resolver from that replayed timeline.
-
-    Fixed-point convergence requires the semantic action schedule, heavy positions,
-    replayed resource floor/shortfall, and caller-supplied hard-obligation state to
-    remain unchanged. Repeating only the heavy list is not sufficient because a
-    heavy can displace other casts or change whether a mandatory responsibility is
-    still satisfied.
-
-    A repeated complete state is classified separately from a valid fixed point. If
-    tracked hard failures remain unchanged, the loop terminates as deterministic
-    no-legal-improvement rather than pretending the resulting rotation is valid.
-
-    The service never invents restoration amounts, reserve requirements, hard
-    obligations, or a recovery threshold. Those remain explicit caller evidence. A
-    hard iteration cap prevents oscillating policies from looping indefinitely.
+    Each iteration generates a plan from the latest pressure resolver, derives any
+    caller-verified bar-sensitive resource-ceiling events for that *actual* plan,
+    then replays sustain with the canonical static calculation context. The next
+    pressure resolver therefore observes the same bar-aware resource history that
+    produced the candidate's hard-obligation state.
     """
 
     def __init__(
@@ -107,6 +94,8 @@ class RotationRecoveryHeavyStabilizationService:
         reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None,
         hard_obligation_state_resolver: RecoveryHardObligationStateResolver | None = None,
         max_iterations: int = 6,
+        calculation_context: BuildCalculationContext | None = None,
+        maximum_event_resolver: RecoveryMaximumEventResolver | None = None,
     ) -> RotationRecoveryHeavyStabilizationResult:
         limit = int(max_iterations)
         if limit <= 0:
@@ -121,11 +110,18 @@ class RotationRecoveryHeavyStabilizationService:
 
         for index in range(1, limit + 1):
             plan = generate(pressure_resolver)
+            maximum_events = (
+                tuple(maximum_event_resolver(plan, resource))
+                if maximum_event_resolver is not None
+                else ()
+            )
             replay = self.replay_service.replay(
                 build=build,
                 plan=plan,
                 resource=resource,
                 restoration_resolver=restoration_resolver,
+                maximum_events=maximum_events,
+                calculation_context=calculation_context,
             )
             heavy_signature = self._heavy_signature(plan)
             plan_signature = self._plan_signature(plan)
@@ -247,3 +243,13 @@ class RotationRecoveryHeavyStabilizationService:
             key = value.casefold()
             by_key.setdefault(key, value)
         return tuple(by_key[key] for key in sorted(by_key))
+
+
+__all__ = [
+    "RecoveryAwareRotationGenerator",
+    "RecoveryHardObligationStateResolver",
+    "RecoveryMaximumEventResolver",
+    "RotationRecoveryHeavyStabilizationIteration",
+    "RotationRecoveryHeavyStabilizationResult",
+    "RotationRecoveryHeavyStabilizationService",
+]
