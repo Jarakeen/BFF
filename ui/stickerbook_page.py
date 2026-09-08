@@ -235,10 +235,6 @@ class StickerbookPage(FoundryPage):
         piece_scroll.setWidget(self.piece_host)
         detail_layout.addWidget(piece_scroll, 1)
 
-        self.missing_box = QLabel("Select a set to see missing pieces.")
-        self.missing_box.setWordWrap(True)
-        self.missing_box.setProperty("stickerMissing", True)
-        detail_layout.addWidget(self.missing_box)
         right.addWidget(detail_host)
         splitter.addWidget(right)
         splitter.setStretchFactor(0, 2)
@@ -276,10 +272,6 @@ class StickerbookPage(FoundryPage):
             "QLabel[stickerBonusBox='true'] {"
             f"background:{theme.panel}; color:{theme.text}; border:1px solid {theme.border}; "
             "border-radius:4px; padding:10px;"
-            "}"
-            "QLabel[stickerMissing='true'] {"
-            f"background:{theme.panel_alt}; color:{theme.text}; border:1px solid {theme.border}; "
-            "border-radius:4px; padding:9px;"
             "}"
             "QProgressBar {"
             f"background:{theme.meter_background}; border:1px solid {theme.border}; border-radius:4px;"
@@ -406,7 +398,6 @@ class StickerbookPage(FoundryPage):
         self.set_percent.setText("0%")
         self.set_progress.setValue(0)
         self.bonus_box.setText("No set selected.")
-        self.missing_box.setText("No pieces to display.")
         self._replace_piece_groups([])
 
     def _show_selected(self, current: QListWidgetItem | None, _previous=None) -> None:
@@ -435,15 +426,6 @@ class StickerbookPage(FoundryPage):
 
         pieces = self.service.pieces(set_id, self.profile_id)
         self._replace_piece_groups(pieces)
-        missing = [piece.label for piece in pieces if not piece.collected]
-        if not pieces:
-            self.missing_box.setText("No canonical piece records are available for this set yet.")
-        elif not missing:
-            self.missing_box.setText(f"✓ Complete • all {len(pieces)} pieces collected.")
-        else:
-            self.missing_box.setText(
-                f"Missing {len(missing)} piece(s):\n• " + "\n• ".join(missing)
-            )
 
     def _replace_piece_groups(self, pieces: list[StickerbookPiece]) -> None:
         while self.piece_layout.count():
@@ -471,6 +453,8 @@ class StickerbookPage(FoundryPage):
             grid = QGridLayout()
             grid.setHorizontalSpacing(12)
             grid.setVerticalSpacing(3)
+            for column in range(3):
+                grid.setColumnStretch(column, 1)
             for index, piece in enumerate(group_pieces):
                 checkbox = QCheckBox(piece.label)
                 checkbox.setChecked(piece.collected)
