@@ -4,6 +4,7 @@ from dataclasses import dataclass, replace
 
 from minmax.build_candidate import BuildCandidate
 from minmax.character_progression import AttributeAllocation, CharacterProgression
+from minmax.race_repository import RaceRepository
 from models.build_model import PlayerBuild
 from services.extreme_complete_optimization_service import ExtremeCompleteOptimizationService
 from services.extreme_healing_event_service import (
@@ -54,13 +55,18 @@ class ExtremeActualHealOptimizationService:
 
     This is the scoring engine for ``MOST Actual Heal``. It deliberately starts
     with mutation families already owned by the shared Extreme optimizer, then
-    adds all-resource attribute allocations because heal coefficients scale from
-    the character's highest Max Resource. Class/race/gear-set/skill replacement
-    remain explicit omitted scope until their candidate generators are widened.
+    adds resource-allocation and canonical-race candidates. Every accepted race
+    is re-evaluated through the same BuildCalculationContextFactory used by the
+    rest of MinMax, so racial resource/power/healing effects participate through
+    canonical math rather than an Extreme-only lookup score.
+
+    Class/subclass, gear-set, and skill replacement remain explicit omitted
+    scope until their candidate generators are widened.
     """
 
     SEARCH_SCOPE = (
         "attribute allocation across Health/Magicka/Stamina",
+        "race",
         "Mundus",
         "armor traits",
         "armor enchants",
@@ -75,7 +81,6 @@ class ExtremeActualHealOptimizationService:
     OMITTED_SCOPE = (
         "gear-set replacement",
         "class change / subclass route",
-        "race change",
         "healing-skill replacement",
         "skill-bar passive/proc search",
         "group-only buffs",
@@ -87,10 +92,15 @@ class ExtremeActualHealOptimizationService:
         *,
         optimizer: ExtremeCompleteOptimizationService | None = None,
         healing_events: ExtremeHealingEventService | None = None,
+        race_repository: RaceRepository | None = None,
     ) -> None:
         self.optimizer = optimizer or ExtremeCompleteOptimizationService()
         self.healing_events = healing_events or ExtremeHealingEventService(
             database_path=self.optimizer.database_path
+        )
+        database_path = getattr(self.optimizer, "database_path", None)
+        self.race_repository = race_repository or (
+            RaceRepository(database_path) if database_path else None
         )
 
     def optimize(
@@ -136,16 +146,22 @@ class ExtremeActualHealOptimizationService:
         proxy_objective = self.optimizer.objective("healing_done")
         for pass_index in range(max(1, int(max_passes))):
             best: tuple[float, str, BuildCandidate, ExtremeHealingEventResult, tuple[str, ...]] | None = None
+            candidate_build_id = f"{baseline_build_id}:extreme-actual-heal:{pass_index}"
             candidates = list(self.optimizer._candidates(
                 current,
                 objective=proxy_objective,
                 character_id=character_id,
-                baseline_build_id=f"{baseline_build_id}:extreme-actual-heal:{pass_index}",
+                baseline_build_id=candidate_build_id,
             ))
             candidates.extend(self._resource_attribute_candidates(
                 current,
                 character_id=character_id,
-                baseline_build_id=f"{baseline_build_id}:extreme-actual-heal:{pass_index}",
+                baseline_build_id=candidate_build_id,
+            ))
+            candidates.extend(self._race_candidates(
+                current,
+                character_id=character_id,
+                baseline_build_id=candidate_build_id,
             ))
 
             for candidate in candidates:
@@ -275,6 +291,37 @@ class ExtremeActualHealOptimizationService:
                     before={"health": before[0], "magicka": before[1], "stamina": before[2]},
                     after={"health": allocation[0], "magicka": allocation[1], "stamina": allocation[2]},
                     source="extreme:actual-heal:attributes",
+                )
+            )
+        return tuple(result)
+
+    def _race_candidates(
+        self,
+        baseline_build: PlayerBuild,
+        *,
+        character_id: str,
+        baseline_build_id: str,
+    ) -> tuple[BuildCandidate, ...]:
+        if self.race_repository is None:
+            return ()
+        before = str(baseline_build.Race or "").strip()
+        result: list[BuildCandidate] = []
+        for race in self.race_repository.list_races():
+            name = str(race.name or "").strip()
+            if not name or name.casefold() == before.casefold():
+                continue
+            build = PlayerBuild.from_dict(baseline_build.to_dict())
+            build.Race = name
+            result.append(
+                ExtremeCompleteOptimizationService._direct_candidate(
+                    build,
+                    character_id=character_id,
+                    baseline_build_id=baseline_build_id,
+                    token=f"actual-heal-race:{name}",
+                    path="Race",
+                    before=before,
+                    after=name,
+                    source="extreme:actual-heal:race",
                 )
             )
         return tuple(result)
