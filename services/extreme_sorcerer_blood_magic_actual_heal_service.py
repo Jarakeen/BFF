@@ -8,6 +8,9 @@ from services.extreme_sorcerer_triggered_heal_service import (
     ExtremeSorcererTriggeredHealResult,
     ExtremeSorcererTriggeredHealService,
 )
+from services.extreme_whole_build_max_health_optimization_service import (
+    ExtremeWholeBuildMaxHealthOptimizationService,
+)
 
 
 @dataclass(frozen=True)
@@ -49,11 +52,10 @@ class ExtremeSorcererBloodMagicActualHealService:
     Extreme Actual Heal optimizer therefore must not attach it to some unrelated
     selected heal skill.
 
-    This first optimization lane deliberately reuses the canonical sheet-stat
-    ``max_health`` objective. Its search is consequently a lower bound relative
-    to the broader Actual Heal whole-build search, which additionally explores
-    race and reviewed gear-package replacement. Those omitted surfaces remain
-    explicit until a shared candidate-search abstraction can be reused safely.
+    The default optimizer searches canonical Max Health across the ordinary sheet
+    mutation families plus reviewed race, five-piece, 5+2, 5+5, ring-mythic, and
+    non-ring-mythic packages. Every candidate is materially applied to a real
+    build and rescored through canonical character-state math.
 
     Critical eligibility is not inferred. This service produces a proved normal
     Blood Magic heal candidate; it does not yet claim a MOST Critical Heal value.
@@ -66,8 +68,6 @@ class ExtremeSorcererBloodMagicActualHealService:
     )
     EXTRA_OMITTED_SCOPE = (
         "Blood Magic critical-heal eligibility",
-        "race replacement beyond the canonical max-health sheet optimizer",
-        "reviewed gear-set/package replacement beyond the canonical max-health sheet optimizer",
         "full legal Dark Magic trigger-cast enumeration within each subclass route",
     )
 
@@ -77,8 +77,16 @@ class ExtremeSorcererBloodMagicActualHealService:
         optimizer: ExtremeCompleteOptimizationService | None = None,
         triggered_heals: ExtremeSorcererTriggeredHealService | None = None,
     ) -> None:
-        self.optimizer = optimizer or ExtremeCompleteOptimizationService()
-        self.triggered_heals = triggered_heals or ExtremeSorcererTriggeredHealService()
+        self.optimizer = (
+            optimizer
+            if optimizer is not None
+            else ExtremeWholeBuildMaxHealthOptimizationService()
+        )
+        self.triggered_heals = (
+            triggered_heals
+            if triggered_heals is not None
+            else ExtremeSorcererTriggeredHealService()
+        )
 
     def optimize(
         self,
