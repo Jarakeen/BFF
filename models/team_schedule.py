@@ -56,15 +56,21 @@ class TeamSchedule:
 
     @property
     def display_text(self) -> str:
-        slots = self.effective_slots
-        if slots:
-            schedule_text = "  ·  ".join(slot.display_text for slot in slots if slot.display_text)
-            if self.TimeZone and self.TimeZone.strip():
-                return f"{schedule_text}  ·  {self.TimeZone.strip()}"
-            return schedule_text
-        parts = [
-            value.strip()
-            for value in (self.RaidDays, self.RaidTime, self.TimeZone)
-            if value and value.strip()
-        ]
-        return "  ·  ".join(parts) if parts else "Schedule not set"
+        # Preserve the historical compact display for legacy schedules that use
+        # one shared time across multiple days. ``effective_slots`` is useful for
+        # calendar behavior, but it must not make old schedules look like newly
+        # configured per-day schedules.
+        if not self.Slots:
+            parts = [
+                value.strip()
+                for value in (self.RaidDays, self.RaidTime, self.TimeZone)
+                if value and value.strip()
+            ]
+            return "  ·  ".join(parts) if parts else "Schedule not set"
+
+        schedule_text = "  ·  ".join(
+            slot.display_text for slot in self.Slots if slot.display_text
+        )
+        if self.TimeZone and self.TimeZone.strip():
+            return f"{schedule_text}  ·  {self.TimeZone.strip()}"
+        return schedule_text or "Schedule not set"
