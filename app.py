@@ -203,6 +203,7 @@ def main() -> int:
     from ui.build_editor_performance import install as install_build_editor_performance
     from ui.build_progression_scroll_fix import install as install_build_progression_scroll_fix
     from ui.build_progression_readiness_support import install as install_build_progression_readiness_support
+    from ui.build_screenshot_import_support import install as install_build_screenshot_import_support
     from ui.icon_consistency import install as install_icon_consistency
     from ui.encounter_board_accessibility import install as install_encounter_board_accessibility
     from ui.rylo_theme_support import install as install_rylo_theme_support
@@ -246,6 +247,10 @@ def main() -> int:
     install_build_editor_performance()
     install_build_progression_scroll_fix()
     install_build_progression_readiness_support()
+    # Builds can stage Armory + Character screenshot pairs before MainWindow
+    # constructs the Builds page. Recognition remains review-first and never
+    # writes guessed fields directly into builds.json.
+    install_build_screenshot_import_support()
     install_icon_consistency(app)
     install_encounter_board_accessibility()
     install_rylo_theme_support(app)
