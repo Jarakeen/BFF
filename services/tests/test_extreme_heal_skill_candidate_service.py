@@ -4,7 +4,7 @@ import sqlite3
 
 from minmax.character_build.class_configuration import ClassSkillLineConfiguration
 from minmax.character_progression import CharacterProgression
-from models.build_model import PlayerBuild
+from models.build_model import GearSlot, PlayerBuild
 from services.extreme_heal_skill_candidate_service import ExtremeHealSkillCandidateService
 
 
@@ -209,6 +209,60 @@ def test_passive_and_non_player_heals_never_become_legal_candidates(tmp_path):
     assert "Passive Heal Thing is passive, not an active heal" in by_name["Passive Heal Thing"].blockers
     assert by_name["Creature Heal"].legal is False
     assert "Creature Heal is not marked as a player ability" in by_name["Creature Heal"].blockers
+
+
+def test_active_bar_requires_matching_weapon_skill_line(tmp_path):
+    path = tmp_path / "eso.db"
+    _write_fixture(path)
+    service = ExtremeHealSkillCandidateService(path)
+    progression = CharacterProgression(owned_skill_lines=("Restoration Staff",))
+
+    resto = PlayerBuild(
+        EsoClass="Warden",
+        FrontBarWeapon=GearSlot(WeaponType="Restoration Staff"),
+    )
+    legal = service.candidates_for_build(resto, progression, active_bar="front")
+    assert "Grand Healing" in {candidate.name for candidate in legal}
+
+    lightning = PlayerBuild(
+        EsoClass="Warden",
+        FrontBarWeapon=GearSlot(WeaponType="Lightning Staff"),
+    )
+    blocked = service.candidates_for_build(
+        lightning,
+        progression,
+        active_bar="front",
+        include_blocked=True,
+    )
+    grand = next(candidate for candidate in blocked if candidate.name == "Grand Healing")
+    assert grand.legal is False
+    assert grand.blockers == (
+        "Grand Healing: requires Restoration Staff on front bar; equipped weapon grants destruction_staff",
+    )
+
+
+def test_active_bar_weapon_legality_fails_closed_for_aggregate_weapon_label(tmp_path):
+    path = tmp_path / "eso.db"
+    _write_fixture(path)
+    service = ExtremeHealSkillCandidateService(path)
+    progression = CharacterProgression(owned_skill_lines=("Restoration Staff",))
+    build = PlayerBuild(
+        EsoClass="Warden",
+        FrontBarWeapon=GearSlot(WeaponType="Two-Handed"),
+    )
+
+    blocked = service.candidates_for_build(
+        build,
+        progression,
+        active_bar="front",
+        include_blocked=True,
+    )
+    grand = next(candidate for candidate in blocked if candidate.name == "Grand Healing")
+
+    assert grand.legal is False
+    assert grand.blockers == (
+        "Grand Healing: weapon-skill legality unresolved: active front weapon type is unresolved: Two-Handed",
+    )
 
 
 def test_missing_canonical_classification_tables_fail_closed(tmp_path):
