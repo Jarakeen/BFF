@@ -28,9 +28,9 @@ class RotationSavedBuildActionRangeService:
     infer encounter distance, target identity, radius behavior, or units. Callers
     evaluating range legality must supply target-distance evidence in the same unit.
     NULL/zero max-range evidence is not promoted into an invented hard limit.
-    Multiple exact-name rows are accepted only when their normalized min/max range
-    evidence agrees; conflicting canonical rows remain unresolved rather than being
-    selected by rank or ability id.
+    Multiple exact-name rows are compared only at the highest represented rank;
+    matching top-rank rows may dedupe, while conflicting top-rank evidence remains
+    unresolved rather than being selected by ability id.
     """
 
     def __init__(self, database_path: str | Path = DEFAULT_DATABASE) -> None:
@@ -72,9 +72,13 @@ class RotationSavedBuildActionRangeService:
                     )
                     continue
 
+                highest_rank = max(int(row["rank"] or 0) for row in rows)
+                top_rows = tuple(
+                    row for row in rows if int(row["rank"] or 0) == highest_rank
+                )
                 normalized: set[tuple[float, float | None]] = set()
                 invalid = False
-                for row in rows:
+                for row in top_rows:
                     minimum = self._nonnegative(row["min_range"])
                     maximum = self._positive_or_none(row["max_range"])
                     if minimum is None:
@@ -96,7 +100,7 @@ class RotationSavedBuildActionRangeService:
                     continue
                 if len(normalized) != 1:
                     unresolved.append(
-                        "canonical skill range is ambiguous for exact saved name: "
+                        "canonical skill range is ambiguous at highest rank for exact saved name: "
                         f"{action_name}"
                     )
                     continue
@@ -141,6 +145,7 @@ class RotationSavedBuildActionRangeService:
             db.execute(
                 """
                 SELECT
+                    sr.rank,
                     sr.min_range,
                     sr.max_range
                 FROM skill_rank sr
