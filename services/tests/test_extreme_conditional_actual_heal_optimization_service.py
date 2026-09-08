@@ -134,6 +134,7 @@ def test_conditional_optimizer_forwards_target_health_to_every_candidate(monkeyp
     assert result.baseline_event.critical_heal == pytest.approx(200.0)
     assert result.optimized_event.critical_heal == pytest.approx(264.0)
     assert result.optimized_build.AttributeMagicka == 64
+    assert result.search_scope[0] == "explicit conditional target health fraction 0.290000"
 
 
 def test_conditional_optimizer_requires_explicit_valid_target_health():
@@ -168,7 +169,7 @@ def test_conditional_optimizer_routes_explicit_restoration_heavy_state_to_every_
         healing_events=_ConditionalHealingEvents(),
     )
 
-    service.optimize(
+    result = service.optimize(
         PlayerBuild(BuildName="Post Heavy Emergency"),
         "blessing_of_protection",
         max_passes=2,
@@ -181,6 +182,9 @@ def test_conditional_optimizer_routes_explicit_restoration_heavy_state_to_every_
         state.has_buff("Major Mending")
         for state in optimizer.context_factory.combat_states
     )
+    assert result.search_scope[0] == "explicit conditional target health fraction 0.290000"
+    assert "fully charged Restoration Staff heavy attack completed" in result.search_scope[1]
+    assert "Essence Drain Major Mending" in result.search_scope[1]
 
 
 def test_conditional_optimizer_preserves_restoration_heavy_blocker_on_selected_state(monkeypatch):
