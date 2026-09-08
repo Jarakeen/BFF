@@ -4,9 +4,12 @@ from dataclasses import dataclass
 from pathlib import Path
 import sqlite3
 
+from minmax.character_build.character_class import CharacterClass
+from minmax.character_build.class_configuration import ClassSkillLineConfiguration
 from minmax.character_progression import CharacterProgression
 from minmax.skill_coefficient_repository import ability_entity_id
 from models.build_model import PlayerBuild
+from services.extreme_heal_class_route_service import canonical_class_skill_line_id
 
 
 @dataclass(frozen=True)
@@ -29,15 +32,16 @@ class ExtremeHealSkillCandidateService:
     """Discover reviewed active-skill healing candidates from canonical data.
 
     Discovery is evidence-driven: a skill enters the catalog only when at least
-    one coefficient is explicitly classified as ``heal``. Current-character
-    legality is conservative. Class abilities must match the saved build's class;
-    non-class abilities must belong to a skill line the progression says the
+    one coefficient is explicitly classified as ``heal``. For ordinary saved-
+    build discovery, class abilities remain limited to the build's native class.
+    When an explicit ``ClassSkillLineConfiguration`` is supplied, class-skill
+    legality instead follows the three equipped class lines. That is the correct
+    boundary for subclass routes: base class and available class skill lines are
+    related, but they are not the same thing.
+
+    Non-class abilities still require a skill line the progression says the
     character owns. Unknown ownership remains a blocker rather than becoming an
     assumed legal skill.
-
-    Subclass-route discovery is intentionally outside this service. The Extreme
-    class-configuration layer can widen that boundary later without changing the
-    healing-event scorer.
     """
 
     REQUIRED_TABLES = (
@@ -56,6 +60,7 @@ class ExtremeHealSkillCandidateService:
         progression: CharacterProgression,
         *,
         include_blocked: bool = False,
+        class_configuration: ClassSkillLineConfiguration | None = None,
     ) -> tuple[ExtremeHealSkillCandidate, ...]:
         if not self.database_path.exists():
             raise FileNotFoundError(self.database_path)
@@ -89,6 +94,7 @@ class ExtremeHealSkillCandidateService:
                 class_type=class_type,
                 is_player=bool(int(row["is_player"] or 0)),
                 is_passive=bool(int(row["is_passive"] or 0)),
+                class_configuration=class_configuration,
             )
             can_crit_values = {
                 None if item["can_crit"] is None else bool(int(item["can_crit"]))
@@ -178,7 +184,16 @@ class ExtremeHealSkillCandidateService:
         ).fetchone() is not None
 
     @staticmethod
+    def _character_class(value: object) -> CharacterClass | None:
+        key = str(value or "").strip().casefold()
+        return next(
+            (character_class for character_class in CharacterClass if character_class.value == key),
+            None,
+        )
+
+    @classmethod
     def _legality_blockers(
+        cls,
         *,
         build: PlayerBuild,
         progression: CharacterProgression,
@@ -187,6 +202,7 @@ class ExtremeHealSkillCandidateService:
         class_type: str,
         is_player: bool,
         is_passive: bool,
+        class_configuration: ClassSkillLineConfiguration | None = None,
     ) -> tuple[str, ...]:
         blockers: list[str] = []
         if not name:
@@ -198,12 +214,34 @@ class ExtremeHealSkillCandidateService:
 
         build_class = str(build.EsoClass or "").strip()
         if class_type:
-            if not build_class:
-                blockers.append(f"{name}: class ownership is unresolved ({class_type})")
-            elif class_type.casefold() != build_class.casefold():
-                blockers.append(
-                    f"{name}: requires {class_type}; current build class is {build_class}"
-                )
+            if class_configuration is None:
+                if not build_class:
+                    blockers.append(f"{name}: class ownership is unresolved ({class_type})")
+                elif class_type.casefold() != build_class.casefold():
+                    blockers.append(
+                        f"{name}: requires {class_type}; current build class is {build_class}"
+                    )
+            else:
+                character_class = cls._character_class(build_class)
+                if character_class is None:
+                    blockers.append(
+                        f"{name}: subclass base class is unsupported or unresolved: {build_class or '(empty)'}"
+                    )
+                else:
+                    problems = class_configuration.validate(character_class)
+                    blockers.extend(
+                        f"{name}: invalid class-line configuration: {problem}"
+                        for problem in problems
+                    )
+                    line_id = canonical_class_skill_line_id(skill_line)
+                    if not line_id:
+                        blockers.append(f"{name}: class skill line is unavailable")
+                    elif line_id not in set(
+                        class_configuration.effective_skill_lines(character_class)
+                    ):
+                        blockers.append(
+                            f"{name}: class skill line not equipped: {skill_line}"
+                        )
         else:
             if not skill_line:
                 blockers.append(f"{name}: non-class skill line is unavailable")
