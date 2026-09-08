@@ -96,9 +96,10 @@ def test_blood_magic_rank_two_heals_ten_percent_max_health_below_full_health():
     assert result.normal_heal == pytest.approx(3210.0)
     assert result.recipient_scope is HealRecipientScope.SELF
     assert result.temporal_scope is HealTemporalScope.DIRECT
+    assert result.can_crit is False
 
 
-def test_blood_magic_full_health_branch_emits_no_heal_event():
+def test_blood_magic_full_health_branch_emits_no_heal_event_but_preserves_noncritical_policy():
     result = ExtremeSorcererTriggeredHealService().resolve(
         ability_name="Blood Magic",
         dark_magic_ability_cast_with_cost=True,
@@ -108,6 +109,7 @@ def test_blood_magic_full_health_branch_emits_no_heal_event():
 
     assert result.trigger_satisfied is False
     assert result.normal_heal is None
+    assert result.can_crit is False
     assert result.unresolved == ()
 
 
@@ -120,6 +122,7 @@ def test_blood_magic_requires_max_health_when_triggered():
 
     assert result.trigger_satisfied is True
     assert result.normal_heal is None
+    assert result.can_crit is False
     assert result.unresolved == ("Blood Magic U50 rank-2 healing requires Max Health",)
 
 
