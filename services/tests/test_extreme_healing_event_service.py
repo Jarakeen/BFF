@@ -52,13 +52,21 @@ def _result(*, component_values, actual_values=(), unresolved=()):
     )
 
 
+def _component(number, kind, *, can_crit=True):
+    return SimpleNamespace(
+        coefficient_number=number,
+        effect_kind=kind,
+        can_crit=can_crit,
+    )
+
+
 def test_healing_event_uses_actual_effect_heal_component_and_critical_healing_bonus():
     tooltip = _FakeTooltipService(
         _result(
             component_values=((1, 1000.0),),
             actual_values=((1, 1200.0),),
         ),
-        (SimpleNamespace(coefficient_number=1, effect_kind=SkillEffectKind.HEAL),),
+        (_component(1, SkillEffectKind.HEAL),),
     )
     service = ExtremeHealingEventService(tooltip_service=tooltip)
 
@@ -73,6 +81,8 @@ def test_healing_event_uses_actual_effect_heal_component_and_critical_healing_bo
     assert result.critical_multiplier == pytest.approx(1.70)
     assert result.critical_heal == pytest.approx(2040.0)
     assert result.heal_coefficient_numbers == (1,)
+    assert result.crit_eligible_coefficient_numbers == (1,)
+    assert result.noncrit_coefficient_numbers == ()
     assert result.mechanic_complete
 
 
@@ -83,8 +93,8 @@ def test_healing_event_excludes_non_heal_components_from_mixed_ability():
             actual_values=((1, 990.0),),
         ),
         (
-            SimpleNamespace(coefficient_number=1, effect_kind=SkillEffectKind.HEAL),
-            SimpleNamespace(coefficient_number=2, effect_kind=SkillEffectKind.DAMAGE),
+            _component(1, SkillEffectKind.HEAL),
+            _component(2, SkillEffectKind.DAMAGE),
         ),
     )
     service = ExtremeHealingEventService(tooltip_service=tooltip)
@@ -99,13 +109,55 @@ def test_healing_event_excludes_non_heal_components_from_mixed_ability():
     assert result.critical_heal == pytest.approx(1584.0)
 
 
+def test_noncrittable_heal_component_stays_normal_inside_critical_event():
+    tooltip = _FakeTooltipService(
+        _result(component_values=((1, 1000.0), (2, 500.0))),
+        (
+            _component(1, SkillEffectKind.HEAL, can_crit=True),
+            _component(2, SkillEffectKind.HEAL, can_crit=False),
+        ),
+    )
+    service = ExtremeHealingEventService(tooltip_service=tooltip)
+
+    result = service.evaluate(
+        build=PlayerBuild(BuildName="Mixed Crit Eligibility"),
+        context=_context(critical_healing=0.20),
+        entity_id="mixed_crit_heal",
+    )
+
+    assert result.normal_heal == pytest.approx(1500.0)
+    assert result.critical_heal == pytest.approx(2200.0)
+    assert result.crit_eligible_coefficient_numbers == (1,)
+    assert result.noncrit_coefficient_numbers == (2,)
+    assert result.mechanic_complete
+
+
+def test_unknown_heal_critical_eligibility_blocks_critical_maximum():
+    tooltip = _FakeTooltipService(
+        _result(component_values=((1, 1000.0),)),
+        (_component(1, SkillEffectKind.HEAL, can_crit=None),),
+    )
+    service = ExtremeHealingEventService(tooltip_service=tooltip)
+
+    result = service.evaluate(
+        build=PlayerBuild(BuildName="Unknown Crit"),
+        context=_context(critical_healing=0.20),
+        entity_id="unknown_crit_heal",
+    )
+
+    assert result.normal_heal == pytest.approx(1000.0)
+    assert result.critical_heal is None
+    assert any("critical eligibility unresolved" in message for message in result.unresolved)
+    assert not result.mechanic_complete
+
+
 def test_healing_event_preserves_unresolved_mechanics_instead_of_claiming_complete():
     tooltip = _FakeTooltipService(
         _result(
             component_values=((1, 1000.0),),
             unresolved=("unresolved healing passive",),
         ),
-        (SimpleNamespace(coefficient_number=1, effect_kind=SkillEffectKind.HEAL),),
+        (_component(1, SkillEffectKind.HEAL),),
     )
     service = ExtremeHealingEventService(tooltip_service=tooltip)
 
@@ -124,7 +176,7 @@ def test_healing_event_preserves_unresolved_mechanics_instead_of_claiming_comple
 def test_healing_event_requires_heal_classification():
     tooltip = _FakeTooltipService(
         _result(component_values=((1, 5000.0),)),
-        (SimpleNamespace(coefficient_number=1, effect_kind=SkillEffectKind.DAMAGE),),
+        (_component(1, SkillEffectKind.DAMAGE),),
     )
     service = ExtremeHealingEventService(tooltip_service=tooltip)
 
