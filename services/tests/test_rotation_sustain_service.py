@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 
+from minmax.resource_costs import ResourceType
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from models.build_model import PlayerBuild
 from services.rotation_sustain_service import RotationSustainService
@@ -93,6 +94,38 @@ def test_progression_infers_only_visibly_equipped_armor_lines_and_marks_boundary
     assert len(unresolved) == 1
     assert "canonical character progression has no owned skill lines" in unresolved[0]
     assert "equipped-armor inference" in unresolved[0]
+
+
+def test_rotation_sustain_forwards_time_aware_displayed_recovery() -> None:
+    captured = {}
+
+    def sustain_evaluator(**kwargs):
+        captured.update(kwargs)
+        return SimpleNamespace(
+            unresolved=(),
+            timeline=SimpleNamespace(starting_amount=32000, events=()),
+        )
+
+    service = RotationSustainService(sustain_evaluator=sustain_evaluator)
+    build = PlayerBuild(Name="Magrat", BuildName="DF Healer")
+    context = SimpleNamespace(active_bar="front", unresolved_gear_effects=())
+    recovery_at = lambda time_seconds: 1800 if time_seconds < 4.0 else 2050
+
+    service.evaluate(
+        build=build,
+        plan=RotationPlan(
+            character_name="Magrat",
+            build_name="DF Healer",
+            duration_seconds=6.0,
+            actions=(),
+        ),
+        resource=ResourceType.MAGICKA,
+        calculation_context=context,
+        displayed_recovery_at=recovery_at,
+    )
+
+    assert captured["displayed_recovery_at"] is recovery_at
+    assert captured["context"] is context
 
 
 def test_rotation_sustain_identity_requires_matching_character_and_build() -> None:
