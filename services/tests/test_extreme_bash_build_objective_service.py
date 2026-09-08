@@ -4,6 +4,7 @@ import pytest
 
 from services.extreme_bash_build_objective_service import ExtremeBashBuildObjectiveService
 from services.extreme_bash_champion_point_service import ExtremeBashChampionPointResult
+from services.extreme_bash_deadly_bash_service import ExtremeDeadlyBashResult
 from services.extreme_bash_jewelry_service import ExtremeBashJewelryResult
 from services.extreme_bash_objective_service import ExtremeBashDamageInputs
 
@@ -49,6 +50,59 @@ def test_build_objective_composes_reviewed_cp_and_jewelry_channels():
     assert result.objective.unresolved_channels == ()
     assert result.source_blockers == ()
     assert result.mechanic_complete is True
+
+
+def test_build_objective_composes_deadly_bash_skill2_damage_channel():
+    inputs = ExtremeBashDamageInputs(
+        **{
+            **_base_inputs().__dict__,
+            "skill2_bash_damage": None,
+        }
+    )
+    deadly = ExtremeDeadlyBashResult(
+        passive_name="Deadly Bash",
+        rank=2,
+        skill2_bash_damage=500.0,
+        skill_bash_cost=-0.5,
+    )
+
+    result = ExtremeBashBuildObjectiveService.evaluate_damage(
+        inputs,
+        deadly_bash=deadly,
+    )
+
+    expected = 2000.0 * 0.011250 + 1.0 + 500.0
+    assert result.reviewed_value == pytest.approx(expected)
+    assert result.objective.unresolved_channels == ()
+    assert result.source_blockers == ()
+    assert result.mechanic_complete is True
+
+
+def test_unresolved_deadly_bash_keeps_skill2_channel_and_source_blocker():
+    inputs = ExtremeBashDamageInputs(
+        **{
+            **_base_inputs().__dict__,
+            "skill2_bash_damage": None,
+        }
+    )
+    deadly = ExtremeDeadlyBashResult(
+        passive_name="Deadly Bash",
+        rank=None,
+        skill2_bash_damage=None,
+        skill_bash_cost=None,
+        unresolved=("Passive rank is not recorded for character: Deadly Bash",),
+    )
+
+    result = ExtremeBashBuildObjectiveService.evaluate_damage(
+        inputs,
+        deadly_bash=deadly,
+    )
+
+    assert "skill2_bash_damage" in result.objective.unresolved_channels
+    assert result.source_blockers == (
+        "Deadly Bash: Passive rank is not recorded for character: Deadly Bash",
+    )
+    assert result.mechanic_complete is False
 
 
 def test_build_objective_preserves_source_blockers_with_partial_jewelry_value():
@@ -124,4 +178,19 @@ def test_source_composition_rejects_double_counting_direct_cp_channel():
         ExtremeBashBuildObjectiveService.evaluate_damage(
             inputs,
             champion_point=cp,
+        )
+
+
+def test_source_composition_rejects_double_counting_direct_deadly_bash_channel():
+    deadly = ExtremeDeadlyBashResult(
+        passive_name="Deadly Bash",
+        rank=2,
+        skill2_bash_damage=500.0,
+        skill_bash_cost=-0.5,
+    )
+
+    with pytest.raises(ValueError, match="supplied directly and through Deadly Bash"):
+        ExtremeBashBuildObjectiveService.evaluate_damage(
+            _base_inputs(),
+            deadly_bash=deadly,
         )
