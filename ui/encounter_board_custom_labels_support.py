@@ -1,13 +1,20 @@
 from __future__ import annotations
 
-"""Freeform labels and a compact symbol key for the interactive Raid Map.
+"""Freeform labels, reference anchors, and a compact key for the Raid Map.
 
 Marker kind remains structural (boss, portal, healer, etc.) while label is fully
-user-owned. This lets the same portal-style marker represent a portal, poison
-spot, meteor drop, or whatever other indignity the encounter requires.
+user-owned. Entrance, exit, and hardmode banner are static reference anchors:
+they persist with the board, remain outside Position Timeline movement, and can
+be locked in place once the room orientation is established.
 """
 
+import json
+
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor, QBrush, QFont, QPen
 from PySide6.QtWidgets import (
+    QComboBox,
+    QGraphicsItem,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -17,6 +24,27 @@ from PySide6.QtWidgets import (
 
 
 _INSTALLED = False
+REFERENCE_PREFIX = "reference_"
+REFERENCE_PRESETS = {
+    "Entrance": ("reference_entrance", 480.0, 495.0),
+    "Exit": ("reference_exit", 480.0, 48.0),
+    "Banner": ("reference_banner", 150.0, 465.0),
+}
+REFERENCE_GLYPHS = {
+    "reference_entrance": "IN",
+    "reference_exit": "OUT",
+    "reference_banner": "⚑",
+}
+
+
+def _is_reference(item) -> bool:
+    from ui.components.encounter_board import EncounterToken
+
+    return isinstance(item, EncounterToken) and str(item.kind).startswith(REFERENCE_PREFIX)
+
+
+def _reference_items(board):
+    return [item for item in board._token_items() if _is_reference(item)]
 
 
 def _selected_labelable(board):
@@ -75,10 +103,11 @@ def _rename_selected(board) -> None:
     item.update()
 
     # Position Timeline owns stable item ids. If this board already has timeline
-    # state, update its human-readable labels without changing those ids.
+    # state, update its human-readable labels without changing those ids. Static
+    # reference points never enter the timeline and therefore need no timeline edit.
     timeline = getattr(board, "_position_timeline", None)
     stable_id = getattr(item, "_position_timeline_id", "")
-    if timeline is not None and stable_id:
+    if timeline is not None and stable_id and not _is_reference(item):
         from dataclasses import replace
         from services.encounter_position_timeline import PositionTimeline
 
@@ -98,22 +127,50 @@ def _rename_selected(board) -> None:
             if store is not None:
                 store.save(board._position_timeline)
 
-    # Existing board persistence already stores each item's label. Save through
-    # the board's current wrapper so uploaded backgrounds/accessibility state are
-    # preserved too.
     board.save_state()
     board.scene.update()
     board.view.viewport().update()
 
 
-def _reconcile_timeline_ids_after_reload(board) -> None:
-    """Reconnect renamed saved markers to existing timeline ids after restart.
+def _apply_reference_lock(board, locked: bool) -> None:
+    locked = bool(locked)
+    board._reference_points_locked = locked
+    for item in _reference_items(board):
+        item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, not locked)
+        item.setCursor(
+            Qt.CursorShape.ArrowCursor if locked else Qt.CursorShape.OpenHandCursor
+        )
+    if hasattr(board, "raid_map_reference_lock"):
+        board.raid_map_reference_lock.blockSignals(True)
+        board.raid_map_reference_lock.setChecked(locked)
+        board.raid_map_reference_lock.setText(
+            "🔒 References" if locked else "🔓 References"
+        )
+        board.raid_map_reference_lock.blockSignals(False)
+    board.scene.update()
 
-    Timeline v1 originally derived ids from kind+label. Once a user can rename
-    "Boss 1" to "Ice Boss", a fresh board load would derive a new id unless we
-    recover the old stable id from timeline states carrying the same current
-    family/kind/label. This keeps all previously-authored movement intact.
-    """
+
+def _toggle_reference_lock(board, checked: bool) -> None:
+    _apply_reference_lock(board, checked)
+    board.save_state()
+
+
+def _add_reference(board) -> None:
+    label = str(board.raid_map_reference_type.currentText() or "Entrance")
+    kind, x, y = REFERENCE_PRESETS.get(label, REFERENCE_PRESETS["Entrance"])
+    existing = [item for item in _reference_items(board) if item.kind == kind]
+    visible_label = label if not existing else f"{label} {len(existing) + 1}"
+    item = board._add_token(kind, visible_label, x, y, radius=16.0)
+    item._raid_map_reference = True
+    _apply_reference_lock(board, getattr(board, "_reference_points_locked", False))
+    board.scene.clearSelection()
+    item.setSelected(True)
+    board.save_state()
+    board.scene.update()
+
+
+def _reconcile_timeline_ids_after_reload(board) -> None:
+    """Reconnect renamed saved markers to existing timeline ids after restart."""
 
     timeline = getattr(board, "_position_timeline", None)
     if timeline is None or not timeline.steps:
@@ -136,7 +193,7 @@ def _reconcile_timeline_ids_after_reload(board) -> None:
     used: set[str] = set()
     current_items = []
     for item in board.scene.items():
-        if isinstance(item, EncounterToken):
+        if isinstance(item, EncounterToken) and not _is_reference(item):
             current_items.append(("token", str(item.kind), str(item.label), item))
         elif isinstance(item, EncounterZone):
             current_items.append(("zone", str(item.zone_type), str(item.label), item))
@@ -157,8 +214,6 @@ def _reconcile_timeline_ids_after_reload(board) -> None:
             item._position_timeline_id = stable_id
             used.add(stable_id)
 
-    # Timeline init has already run by the time this support layer's init wrapper
-    # returns. Re-apply the selected step once identities are reconciled.
     if hasattr(board, "position_timeline_step_combo"):
         index = board.position_timeline_step_combo.currentIndex()
         if index >= 0:
@@ -166,7 +221,39 @@ def _reconcile_timeline_ids_after_reload(board) -> None:
             timeline_ui._select_step(board, index)
 
 
+def _paint_reference(item, painter, option, widget=None) -> None:
+    r = item.radius
+    selected = item.isSelected()
+    painter.setRenderHint(painter.RenderHint.Antialiasing, True)
+    edge = QColor("#D6C6A5" if selected else "#868B88")
+    fill = QColor("#343A3B")
+    painter.setPen(QPen(edge, 2.3 if selected else 1.5))
+    painter.setBrush(QBrush(fill))
+    painter.drawEllipse(item.boundingRect().center(), r, r)
+
+    glyph = REFERENCE_GLYPHS.get(item.kind, "•")
+    glyph_font = QFont("Segoe UI", 8, QFont.Weight.Bold)
+    painter.setFont(glyph_font)
+    painter.setPen(QColor("#F0EEE8"))
+    painter.drawText(
+        item.boundingRect().adjusted(0, 0, 0, -24),
+        Qt.AlignmentFlag.AlignCenter,
+        glyph,
+    )
+
+    label_font = QFont("Segoe UI", 8, QFont.Weight.Bold)
+    painter.setFont(label_font)
+    painter.setPen(QColor("#D9D5CB"))
+    painter.drawText(
+        item.boundingRect().adjusted(0, r + 16, 0, 0),
+        Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop,
+        item.label,
+    )
+
+
 def _label_and_key_panel(board) -> QWidget:
+    """Use the existing label/key row so the top of the map gains no new row."""
+
     panel = QWidget(board)
     row = QHBoxLayout(panel)
     row.setContentsMargins(0, 0, 0, 0)
@@ -177,7 +264,7 @@ def _label_and_key_panel(board) -> QWidget:
     row.addWidget(heading)
 
     board.raid_map_custom_label = QLineEdit()
-    board.raid_map_custom_label.setMinimumWidth(180)
+    board.raid_map_custom_label.setMinimumWidth(150)
     board.raid_map_custom_label.setPlaceholderText("Select one marker or zone to rename")
     board.raid_map_custom_label.returnPressed.connect(lambda: _rename_selected(board))
     row.addWidget(board.raid_map_custom_label, 1)
@@ -186,15 +273,43 @@ def _label_and_key_panel(board) -> QWidget:
     board.raid_map_apply_label.clicked.connect(lambda: _rename_selected(board))
     row.addWidget(board.raid_map_apply_label)
 
+    reference_heading = QLabel("REFERENCE")
+    reference_heading.setProperty("sidebarHeading", True)
+    row.addWidget(reference_heading)
+
+    board.raid_map_reference_type = QComboBox()
+    for name in REFERENCE_PRESETS:
+        board.raid_map_reference_type.addItem(name)
+    board.raid_map_reference_type.setMaximumWidth(105)
+    board.raid_map_reference_type.setToolTip(
+        "Static room reference point. Reference points persist across timeline steps."
+    )
+    row.addWidget(board.raid_map_reference_type)
+
+    add_reference = QPushButton("+ Add")
+    add_reference.setToolTip("Add the selected static reference point to the Raid Map")
+    add_reference.clicked.connect(lambda: _add_reference(board))
+    row.addWidget(add_reference)
+
+    board.raid_map_reference_lock = QPushButton("🔓 References")
+    board.raid_map_reference_lock.setCheckable(True)
+    board.raid_map_reference_lock.setToolTip(
+        "Lock Entrance, Exit, and Banner reference points so they cannot be dragged accidentally"
+    )
+    board.raid_map_reference_lock.toggled.connect(
+        lambda checked: _toggle_reference_lock(board, checked)
+    )
+    row.addWidget(board.raid_map_reference_lock)
+
     key = QLabel(
-        "KEY  Boss = boss marker   M = mini-boss   T = tank   H = healer   "
-        "D = DD   P = portal-style   ! = AOE   + = stack   shaded circle = zone"
+        "KEY  Boss • M mini-boss • T tank • H healer • D DD • P portal-style • "
+        "! AOE • + stack • IN entrance • OUT exit • ⚑ banner"
     )
     key.setProperty("muted", True)
     key.setWordWrap(True)
     key.setToolTip(
-        "Marker type controls its symbol/style. The visible label is freeform, "
-        "so a portal-style marker can be named Poison Spot, North Portal, etc."
+        "Marker type controls its symbol/style. Visible labels are freeform. "
+        "Entrance, Exit, and Banner are static orientation references."
     )
     row.addWidget(key, 3)
     return panel
@@ -205,27 +320,66 @@ def install() -> None:
     if _INSTALLED:
         return
 
-    from ui.components.encounter_board import EncounterBoard
+    from ui.components.encounter_board import EncounterBoard, EncounterToken
 
     original_build_ui = EncounterBoard._build_ui
     original_init = EncounterBoard.__init__
+    original_save_state = EncounterBoard.save_state
+    original_load_state = EncounterBoard.load_state
+    original_token_paint = EncounterToken.paint
 
     def build_ui_with_labels(self):
         original_build_ui(self)
         root = self.layout()
         if root is None:
             return
-        # Keep the label/key beside the editing controls and above the timeline
-        # / map itself. Accessibility may hide the old helper paragraph at index 2.
+        # Reuse the existing label/key row. No additional toolbar row is created.
         insert_at = max(0, root.count() - 1)
         root.insertWidget(insert_at, _label_and_key_panel(self))
 
+    def save_state_with_reference_lock(self):
+        original_save_state(self)
+        try:
+            payload = json.loads(self.state_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError, TypeError):
+            return
+        payload["reference_points_locked"] = bool(
+            getattr(self, "_reference_points_locked", False)
+        )
+        self.state_path.write_text(
+            json.dumps(payload, indent=2) + "\n",
+            encoding="utf-8",
+        )
+
+    def load_state_with_reference_lock(self) -> bool:
+        loaded = original_load_state(self)
+        locked = False
+        try:
+            payload = json.loads(self.state_path.read_text(encoding="utf-8"))
+            locked = bool(payload.get("reference_points_locked", False))
+        except (OSError, json.JSONDecodeError, TypeError):
+            locked = False
+        _apply_reference_lock(self, locked)
+        return loaded
+
+    def token_paint_with_references(self, painter, option, widget=None):
+        if _is_reference(self):
+            _paint_reference(self, painter, option, widget)
+            return
+        original_token_paint(self, painter, option, widget)
+
     def init_with_labels(self, *args, **kwargs):
+        self._reference_points_locked = False
         original_init(self, *args, **kwargs)
         _reconcile_timeline_ids_after_reload(self)
+        _apply_reference_lock(self, getattr(self, "_reference_points_locked", False))
         self.scene.selectionChanged.connect(lambda: _sync_label_editor(self))
         _sync_label_editor(self)
 
     EncounterBoard._build_ui = build_ui_with_labels
+    EncounterBoard.save_state = save_state_with_reference_lock
+    EncounterBoard.load_state = load_state_with_reference_lock
+    EncounterBoard._apply_reference_lock = _apply_reference_lock
     EncounterBoard.__init__ = init_with_labels
+    EncounterToken.paint = token_paint_with_references
     _INSTALLED = True
