@@ -32,7 +32,9 @@ def _write_db(path: Path) -> None:
                 (2, 'Inferno Arena', 'standard', 2),
                 (3, 'Ordinary Five', 'standard', 5),
                 (4, 'Monster Pair', 'monster', 2),
-                (5, 'Mixed Pair', 'standard', 2);
+                (5, 'Mixed Pair', 'standard', 2),
+                (6, 'Sword Shield Arena', 'standard', 2),
+                (7, 'Sword Dagger Arena', 'standard', 2);
 
             INSERT INTO gear_set_piece(set_id, equip_type, armor_type, weapon_type) VALUES
                 (1, 11, 0, 9),
@@ -41,7 +43,11 @@ def _write_db(path: Path) -> None:
                 (4, 1, 1, 0),
                 (4, 4, 1, 0),
                 (5, 11, 0, 9),
-                (5, 8, 0, 0);
+                (5, 8, 0, 0),
+                (6, 13, 0, 3),
+                (6, 14, 0, 7),
+                (7, 13, 0, 3),
+                (7, 14, 0, 11);
             """
         )
 
@@ -80,7 +86,41 @@ def test_builds_real_active_arena_weapon_candidate_without_changing_weapon_type(
     assert build.FrontBarWeapon.Set == "Old Set"
 
 
-def test_ambiguous_or_paired_active_weapon_fails_closed(tmp_path: Path) -> None:
+def test_builds_exact_paired_one_hand_and_shield_arena_candidate(tmp_path: Path) -> None:
+    database = tmp_path / "eso.db"
+    _write_db(database)
+    service = ExtremeActualHealArenaWeaponPackageService(database)
+    build = PlayerBuild(BuildName="Tank Healer")
+    build.FrontBarWeapon.WeaponType = "Sword"
+    build.FrontBarOffHand.WeaponType = "Shield"
+
+    candidates = service.build_candidates(
+        build,
+        character_id="char-1",
+        baseline_build_id="build-1",
+    )
+
+    assert len(candidates) == 1
+    result = candidates[0].candidate_build
+    assert result.FrontBarWeapon.Set == "Sword Shield Arena"
+    assert result.FrontBarOffHand.Set == "Sword Shield Arena"
+    assert result.FrontBarWeapon.WeaponType == "Sword"
+    assert result.FrontBarOffHand.WeaponType == "Shield"
+    assert build.FrontBarWeapon.Set == ""
+    assert build.FrontBarOffHand.Set == ""
+
+
+def test_paired_arena_set_requires_both_exact_weapon_subtypes(tmp_path: Path) -> None:
+    database = tmp_path / "eso.db"
+    _write_db(database)
+    service = ExtremeActualHealArenaWeaponPackageService(database)
+
+    assert service._matching_paired_sets(3, 7) == ("Sword Shield Arena",)
+    assert service._matching_paired_sets(3, 11) == ("Sword Dagger Arena",)
+    assert service._matching_paired_sets(11, 7) == ()
+
+
+def test_ambiguous_active_weapon_fails_closed(tmp_path: Path) -> None:
     database = tmp_path / "eso.db"
     _write_db(database)
     service = ExtremeActualHealArenaWeaponPackageService(database)
@@ -93,11 +133,11 @@ def test_ambiguous_or_paired_active_weapon_fails_closed(tmp_path: Path) -> None:
         baseline_build_id="build-1",
     ) == ()
 
-    paired = PlayerBuild(BuildName="Healer")
-    paired.FrontBarWeapon.WeaponType = "Sword"
-    paired.FrontBarOffHand.WeaponType = "Shield"
+    paired_ambiguous = PlayerBuild(BuildName="Healer")
+    paired_ambiguous.FrontBarWeapon.WeaponType = "Dual Wield"
+    paired_ambiguous.FrontBarOffHand.WeaponType = "Dagger"
     assert service.build_candidates(
-        paired,
+        paired_ambiguous,
         character_id="char-1",
         baseline_build_id="build-1",
     ) == ()
