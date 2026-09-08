@@ -11,6 +11,10 @@ def install() -> None:
         return
 
     from services.extreme_complete_blueprint_service import ExtremeCompleteBlueprintService
+    from services.extreme_complete_optimization_service import (
+        CRITICAL_HEALING_OBJECTIVE,
+        ExtremeCompleteOptimizationService,
+    )
     from ui import main_window
     from ui.extreme_critical_profile_support import install as install_extreme_critical_profile_support
     from ui.extreme_class_configuration_support import install as install_extreme_class_configuration_support
@@ -28,10 +32,15 @@ def install() -> None:
             return
 
         page = ExtremeOptimizationPage()
-        # The page still owns the same public blueprint-service contract, but
-        # from-scratch searches now use the systemic completion layer rather
-        # than the earlier Spell-Damage-only profile implementation.
+        # Keep the legacy page contract while routing both saved-build and
+        # from-scratch evaluation through the systemic completion layers.
+        page.service = ExtremeCompleteOptimizationService()
         page.blueprint_service = ExtremeCompleteBlueprintService()
+        if page.objective_combo.findData(CRITICAL_HEALING_OBJECTIVE.key) < 0:
+            page.objective_combo.addItem(
+                CRITICAL_HEALING_OBJECTIVE.label,
+                CRITICAL_HEALING_OBJECTIVE.key,
+            )
         self.pages["extreme_optimization"] = page
         container = self.wrap_page(page)
         self.page_containers["extreme_optimization"] = container
