@@ -11,6 +11,9 @@ from services.rotation_healer_canonical_periodic_timing_service import (
     RotationHealerCanonicalPeriodicTimingResolution,
     RotationHealerCanonicalPeriodicTimingService,
 )
+from services.rotation_healer_u50_skill_component_repository import (
+    RotationHealerU50SkillComponentRepository,
+)
 
 
 @dataclass(frozen=True)
@@ -36,9 +39,10 @@ class RotationHealerSavedBuildPeriodicTimingService:
     """Discover canonical periodic-heal timing for the skills actually slotted.
 
     This service does not schedule ticks. It joins saved-build bar identity to the
-    already-canonical component classification and timing resolver so later
+    reviewed U50 component identity overlay and canonical timing resolver so later
     rotation work can operate on the healer's real skills rather than a generic
-    catalog. Direct heals and non-healing components are intentionally ignored.
+    catalog. Direct heals, non-healing components, and externally activated
+    synergy heals are intentionally ignored.
     """
 
     def __init__(
@@ -46,12 +50,12 @@ class RotationHealerSavedBuildPeriodicTimingService:
         database_path: str | Path,
         *,
         coefficient_repository: SkillCoefficientRepository | None = None,
-        component_repository: SkillComponentRepository | None = None,
+        component_repository: SkillComponentRepository | object | None = None,
         timing_service: RotationHealerCanonicalPeriodicTimingService | None = None,
     ) -> None:
         path = Path(database_path)
         self.coefficients = coefficient_repository or SkillCoefficientRepository(path)
-        self.components = component_repository or SkillComponentRepository(path)
+        self.components = component_repository or RotationHealerU50SkillComponentRepository(path)
         self.timing_service = timing_service or RotationHealerCanonicalPeriodicTimingService(path)
 
     def inspect(self, build: PlayerBuild) -> RotationHealerSavedBuildPeriodicTimingReport:
