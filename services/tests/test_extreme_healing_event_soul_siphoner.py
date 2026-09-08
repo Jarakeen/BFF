@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 from minmax.character_progression import CharacterProgression
+from minmax.skill_component_actual_effect_modifiers import SkillComponentActualEffectTrace
 from minmax.skill_component_classification import SkillEffectKind
 from minmax.stat_ids import StatId
 from models.build_model import PlayerBuild
@@ -26,11 +27,27 @@ class _Tooltip:
     def __init__(self):
         self.components = _Components()
 
-    def evaluate_entity_id(self, **_kwargs):
+    def evaluate_entity_id(self, **kwargs):
+        additional = float(kwargs.get("additional_healing_done_percent", 0.0) or 0.0)
+        output = 1000.0 * (1.0 + additional / 100.0)
+        traces = ()
+        if additional:
+            traces = (
+                SkillComponentActualEffectTrace(
+                    coefficient_number=1,
+                    base_power=0.0,
+                    power_bonus=0.0,
+                    effective_power=0.0,
+                    coefficient_value=1000.0,
+                    additive_percent=additional,
+                    output_value=output,
+                    sources=tuple(kwargs.get("additional_healing_done_sources", ()) or ()),
+                ),
+            )
         return SimpleNamespace(
             skill=SimpleNamespace(skill_rank_id=42, name="Combat Prayer"),
             components=(SimpleNamespace(coefficient_number=1, final_value=1000.0),),
-            component_actual_effect_trace=(),
+            component_actual_effect_trace=traces,
             unresolved=(),
         )
 
