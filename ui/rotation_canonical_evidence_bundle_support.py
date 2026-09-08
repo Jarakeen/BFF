@@ -82,11 +82,11 @@ class RotationCanonicalEvidenceBundle:
 class RotationCanonicalEvidenceBundleSupport:
     """Assemble canonical encounter evidence without inventing execution facts.
 
-    A caller may attach a build/encounter-specific mechanics coverage report. Only
-    gaps relevant to Rotation Maker are merged into this bundle; advisory coverage
-    remains visible while blocking coverage prevents a false canonical claim.
-    The global inventory is never injected automatically because unrelated incomplete
-    mechanics must not make every rotation permanently unready.
+    A caller may attach a build/encounter-specific mechanics coverage report. When
+    ``coverage_dependency_keys`` is supplied, only those declared mechanics influence
+    Rotation Maker readiness. This prevents an unrelated critical gap elsewhere in the
+    global mechanics inventory from vetoing a defensible candidate. Declared mechanics
+    with no usable coverage evidence fail closed instead of disappearing.
     """
 
     def __init__(
@@ -120,6 +120,7 @@ class RotationCanonicalEvidenceBundleSupport:
         baseline_id: str = "baseline",
         knowledge_gaps: tuple[CanonicalKnowledgeGap, ...] = (),
         coverage_report: CanonicalMechanicsCoverageReport | None = None,
+        coverage_dependency_keys: tuple[str, ...] | None = None,
     ) -> RotationCanonicalEvidenceBundle:
         encounter_key = str(encounter_id or "").strip()
         if not encounter_key:
@@ -149,7 +150,15 @@ class RotationCanonicalEvidenceBundleSupport:
         )
         merged_gaps = list(knowledge_gaps)
         if coverage_report is not None:
-            merged_gaps.extend(coverage_report.gaps_for("rotation_maker"))
+            if coverage_dependency_keys is None:
+                merged_gaps.extend(coverage_report.gaps_for("rotation_maker"))
+            else:
+                merged_gaps.extend(
+                    coverage_report.dependency_gaps_for(
+                        "rotation_maker",
+                        tuple(coverage_dependency_keys),
+                    )
+                )
 
         return RotationCanonicalEvidenceBundle(
             encounter_id=guide.encounter_id,
