@@ -121,7 +121,7 @@ def test_non_periodic_heal_text_is_rejected_as_periodic_timing(tmp_path):
     assert result.timing is None
     assert not result.timing_ready_for_runtime_binding
     assert result.unresolved == (
-        "Budding Seeds coefficient 2: canonical text does not prove periodic healing identity",
+        "Budding Seeds coefficient 2: canonical/reviewed identity does not prove periodic healing",
     )
 
 
