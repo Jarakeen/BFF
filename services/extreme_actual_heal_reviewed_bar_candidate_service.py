@@ -9,6 +9,9 @@ from minmax.character_progression import CharacterProgression
 from minmax.skill_coefficient_repository import ability_entity_id
 from models.build_model import PlayerBuild
 from services.extreme_complete_optimization_service import ExtremeCompleteOptimizationService
+from services.extreme_necromancer_living_death_slotted_healing_service import (
+    ExtremeNecromancerLivingDeathSlottedHealingService,
+)
 from services.skill_choice_service import load_skill_choices
 
 
@@ -18,24 +21,26 @@ class ExtremeActualHealReviewedBarCandidateService:
     This bar-search layer is intentionally narrow. The shared context already has
     verified slot-count math for Mages Guild ``Magicka Controller`` and Fighters
     Guild ``Slayer``. Extreme also owns reviewed Green Balance ``Emerald Moss``
-    family math and Nightblade Siphoning ``Soul Siphoner`` generic Healing Done.
-    Those reviewed families can therefore justify legal carrier-skill search while
-    the canonical context/event layer remains responsible for final scoring.
+    family math, Nightblade Siphoning ``Soul Siphoner`` generic Healing Done, and
+    the Restoring Tether-family 3% generic Healing Done while slotted. Those
+    reviewed mechanics can therefore justify legal carrier-skill search while the
+    canonical context/event layer remains responsible for final scoring.
 
-    Ability-specific cast/proc/slotted effects are *not* inferred here. A skill is
-    used only as a legal carrier for the explicitly reviewed line-count passive.
-    One deterministic representative per base skill is enough for this objective
-    family and avoids pretending that unreviewed morph mechanics have been scored.
+    Most reviewed families use one deterministic representative per base skill.
+    Living Death is narrower: only Restoring Tether and its morphs are eligible
+    because Near-Death Experience's broader "any Living Death ability" trigger
+    changes healing critical chance rather than maximum critical-heal magnitude.
     """
 
     REVIEWED_LINE_IDS = frozenset(
-        {"mages_guild", "fighters_guild", "green_balance", "siphoning"}
+        {"mages_guild", "fighters_guild", "green_balance", "siphoning", "living_death"}
     )
     PASSIVE_BY_LINE_ID = {
         "mages_guild": "Magicka Controller",
         "fighters_guild": "Slayer",
         "green_balance": "Emerald Moss",
         "siphoning": "Soul Siphoner",
+        "living_death": "Restoring Tether-family slotted Healing Done",
     }
 
     def __init__(
@@ -79,7 +84,7 @@ class ExtremeActualHealReviewedBarCandidateService:
         self,
         progression: CharacterProgression,
     ) -> tuple[dict, ...]:
-        """Return one deterministic active-skill carrier per reviewed base skill."""
+        """Return deterministic active-skill carriers for reviewed heal mechanics."""
 
         records = list(self.skill_loader(self.database_path))
         owned_line_ids = self._owned_line_ids(progression)
@@ -103,13 +108,19 @@ class ExtremeActualHealReviewedBarCandidateService:
             base_id = self._base_id(record)
             if not name or base_id <= 0:
                 continue
+            if (
+                line_id == "living_death"
+                and name.casefold()
+                not in ExtremeNecromancerLivingDeathSlottedHealingService.QUALIFYING_SKILLS
+            ):
+                continue
             grouped.setdefault(base_id, []).append(record)
 
         selected: list[dict] = []
         for base_id, choices in grouped.items():
-            # For reviewed line-count passives all morphs contribute equally.
-            # Prefer the unmorphed/base record when available so this layer does
-            # not silently choose between unreviewed morph-specific mechanics.
+            # For each reviewed base family, prefer the unmorphed/base record when
+            # available so this layer does not silently choose between unreviewed
+            # morph-specific cast/proc mechanics.
             representative = min(
                 choices,
                 key=lambda record: (
@@ -197,7 +208,7 @@ class ExtremeActualHealReviewedBarCandidateService:
                 before_base_id = base_by_name.get(before_name.casefold(), 0)
                 if before_base_id == candidate_base_id:
                     # Swapping a morph/base record of the same skill does not
-                    # change the reviewed line-count passive and would smuggle
+                    # change the reviewed contribution and would smuggle
                     # unreviewed morph mechanics into this search layer.
                     continue
 
