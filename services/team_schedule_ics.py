@@ -9,34 +9,18 @@ from zoneinfo import ZoneInfo
 from models.team_schedule import TeamSchedule, TeamScheduleSlot
 
 _DAY_CODES = {
-    "mon": (0, "MO"),
-    "monday": (0, "MO"),
-    "tue": (1, "TU"),
-    "tues": (1, "TU"),
-    "tuesday": (1, "TU"),
-    "wed": (2, "WE"),
-    "wednesday": (2, "WE"),
-    "thu": (3, "TH"),
-    "thur": (3, "TH"),
-    "thurs": (3, "TH"),
-    "thursday": (3, "TH"),
-    "fri": (4, "FR"),
-    "friday": (4, "FR"),
-    "sat": (5, "SA"),
-    "saturday": (5, "SA"),
-    "sun": (6, "SU"),
-    "sunday": (6, "SU"),
+    "mon": (0, "MO"), "monday": (0, "MO"),
+    "tue": (1, "TU"), "tues": (1, "TU"), "tuesday": (1, "TU"),
+    "wed": (2, "WE"), "wednesday": (2, "WE"),
+    "thu": (3, "TH"), "thur": (3, "TH"), "thurs": (3, "TH"), "thursday": (3, "TH"),
+    "fri": (4, "FR"), "friday": (4, "FR"),
+    "sat": (5, "SA"), "saturday": (5, "SA"),
+    "sun": (6, "SU"), "sunday": (6, "SU"),
 }
 
 
 def _escape_ics(value: str) -> str:
-    return (
-        str(value or "")
-        .replace("\\", "\\\\")
-        .replace(";", "\\;")
-        .replace(",", "\\,")
-        .replace("\n", "\\n")
-    )
+    return str(value or "").replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,").replace("\n", "\\n")
 
 
 def _parse_days(value: str) -> tuple[tuple[int, str], ...]:
@@ -86,65 +70,35 @@ def _slot_day(slot: TeamScheduleSlot) -> tuple[int, str]:
     return row
 
 
-def _first_slot_occurrence(
-    schedule: TeamSchedule,
-    slot: TeamScheduleSlot,
-    *,
-    now: datetime | None = None,
-) -> datetime:
+def _first_slot_occurrence(schedule: TeamSchedule, slot: TeamScheduleSlot, *, now: datetime | None = None) -> datetime:
     zone = _zone(schedule)
     current = now.astimezone(zone) if now is not None else datetime.now(zone)
     weekday, _code = _slot_day(slot)
     hour, minute = _parse_time(slot.StartTime)
     delta = (weekday - current.weekday()) % 7
     candidate_date = current.date() + timedelta(days=delta)
-    candidate = datetime(
-        candidate_date.year,
-        candidate_date.month,
-        candidate_date.day,
-        hour,
-        minute,
-        tzinfo=zone,
-    )
+    candidate = datetime(candidate_date.year, candidate_date.month, candidate_date.day, hour, minute, tzinfo=zone)
     if candidate <= current:
         candidate += timedelta(days=7)
     return candidate
 
 
 def _first_occurrence(schedule: TeamSchedule, *, now: datetime | None = None) -> datetime:
-    """Backward-compatible helper returning the earliest configured slot."""
-    slots = schedule.effective_slots
-    if slots:
-        return min(_first_slot_occurrence(schedule, slot, now=now) for slot in slots)
-
     zone = _zone(schedule)
     current = now.astimezone(zone) if now is not None else datetime.now(zone)
     hour, minute = _parse_time(schedule.RaidTime)
-    days = _parse_days(schedule.RaidDays)
     candidates: list[datetime] = []
-    for weekday, _code in days:
+    for weekday, _code in _parse_days(schedule.RaidDays):
         delta = (weekday - current.weekday()) % 7
         candidate_date = current.date() + timedelta(days=delta)
-        candidate = datetime(
-            candidate_date.year,
-            candidate_date.month,
-            candidate_date.day,
-            hour,
-            minute,
-            tzinfo=zone,
-        )
+        candidate = datetime(candidate_date.year, candidate_date.month, candidate_date.day, hour, minute, tzinfo=zone)
         if candidate <= current:
             candidate += timedelta(days=7)
         candidates.append(candidate)
     return min(candidates)
 
 
-def _slot_end(
-    start: datetime,
-    slot: TeamScheduleSlot,
-    *,
-    duration_minutes: int,
-) -> datetime:
+def _slot_end(start: datetime, slot: TeamScheduleSlot, *, duration_minutes: int) -> datetime:
     if not str(slot.EndTime or "").strip():
         return start + timedelta(minutes=duration_minutes)
     end_hour, end_minute = _parse_time(slot.EndTime)
@@ -154,25 +108,8 @@ def _slot_end(
     return end
 
 
-def render_team_schedule_ics(
-    schedule: TeamSchedule,
-    *,
-    duration_minutes: int = 180,
-    now: datetime | None = None,
-) -> str:
-    if not str(schedule.TeamName or "").strip():
-        raise ValueError("Team name is required for calendar export.")
-    if duration_minutes <= 0:
-        raise ValueError("Calendar event duration must be positive.")
-
-    slots = schedule.effective_slots
-    if not slots:
-        raise ValueError("At least one raid day and start time are required for calendar export.")
-
-    zone_name = str(schedule.TimeZone or "").strip()
-    _zone(schedule)
-
-    lines = [
+def _calendar_header() -> list[str]:
+    return [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",
         "PRODID:-//Black Feather Foundry//FoundryDock Team Schedule//EN",
@@ -180,19 +117,31 @@ def render_team_schedule_ics(
         "METHOD:PUBLISH",
     ]
 
-    for index, slot in enumerate(slots, start=1):
-        start = _first_slot_occurrence(schedule, slot, now=now)
-        end = _slot_end(start, slot, duration_minutes=duration_minutes)
-        _weekday, day_code = _slot_day(slot)
+
+def render_team_schedule_ics(schedule: TeamSchedule, *, duration_minutes: int = 180, now: datetime | None = None) -> str:
+    if not str(schedule.TeamName or "").strip():
+        raise ValueError("Team name is required for calendar export.")
+    if duration_minutes <= 0:
+        raise ValueError("Calendar event duration must be positive.")
+
+    zone_name = str(schedule.TimeZone or "").strip()
+    _zone(schedule)
+    lines = _calendar_header()
+
+    # Legacy schedules intentionally stay as one VEVENT with one shared time and
+    # a multi-day BYDAY rule. Per-day schedules use separate VEVENTs because each
+    # day can have a different start/end time.
+    if not schedule.Slots:
+        start = _first_occurrence(schedule, now=now)
+        end = start + timedelta(minutes=duration_minutes)
+        days = _parse_days(schedule.RaidDays)
+        byday = ",".join(code for _weekday, code in days)
         uid_seed = "-".join(
-            piece
-            for piece in (
+            piece for piece in (
                 schedule.TeamName.strip().casefold().replace(" ", "-"),
-                str(slot.Day or "").strip().casefold(),
-                str(slot.StartTime or "").strip().casefold().replace(" ", ""),
-                str(index),
-            )
-            if piece
+                schedule.RaidDays.strip().casefold().replace(" ", "-"),
+                schedule.RaidTime.strip().casefold().replace(" ", ""),
+            ) if piece
         )
         lines.extend([
             "BEGIN:VEVENT",
@@ -200,28 +149,42 @@ def render_team_schedule_ics(
             f"SUMMARY:{_escape_ics(schedule.TeamName)} Raid",
             f"DTSTART;TZID={zone_name}:{start.strftime('%Y%m%dT%H%M%S')}",
             f"DTEND;TZID={zone_name}:{end.strftime('%Y%m%dT%H%M%S')}",
-            f"RRULE:FREQ=WEEKLY;BYDAY={day_code}",
+            f"RRULE:FREQ=WEEKLY;BYDAY={byday}",
             "DESCRIPTION:Recurring ESO raid schedule exported from Black Feather Foundry.",
             "END:VEVENT",
         ])
+    else:
+        for index, slot in enumerate(schedule.Slots, start=1):
+            start = _first_slot_occurrence(schedule, slot, now=now)
+            end = _slot_end(start, slot, duration_minutes=duration_minutes)
+            _weekday, day_code = _slot_day(slot)
+            uid_seed = "-".join(
+                piece for piece in (
+                    schedule.TeamName.strip().casefold().replace(" ", "-"),
+                    str(slot.Day or "").strip().casefold(),
+                    str(slot.StartTime or "").strip().casefold().replace(" ", ""),
+                    str(index),
+                ) if piece
+            )
+            lines.extend([
+                "BEGIN:VEVENT",
+                f"UID:{_escape_ics(uid_seed)}@foundrydock",
+                f"SUMMARY:{_escape_ics(schedule.TeamName)} Raid",
+                f"DTSTART;TZID={zone_name}:{start.strftime('%Y%m%dT%H%M%S')}",
+                f"DTEND;TZID={zone_name}:{end.strftime('%Y%m%dT%H%M%S')}",
+                f"RRULE:FREQ=WEEKLY;BYDAY={day_code}",
+                "DESCRIPTION:Recurring ESO raid schedule exported from Black Feather Foundry.",
+                "END:VEVENT",
+            ])
 
     lines.extend(["END:VCALENDAR", ""])
     return "\r\n".join(lines)
 
 
-def export_team_schedule_ics(
-    schedule: TeamSchedule,
-    path: str | Path,
-    *,
-    duration_minutes: int = 180,
-) -> Path:
+def export_team_schedule_ics(schedule: TeamSchedule, path: str | Path, *, duration_minutes: int = 180) -> Path:
     target = Path(path)
     if target.suffix.casefold() != ".ics":
         target = target.with_suffix(".ics")
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(
-        render_team_schedule_ics(schedule, duration_minutes=duration_minutes),
-        encoding="utf-8",
-        newline="",
-    )
+    target.write_text(render_team_schedule_ics(schedule, duration_minutes=duration_minutes), encoding="utf-8", newline="")
     return target
