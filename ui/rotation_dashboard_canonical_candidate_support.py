@@ -7,6 +7,7 @@ from minmax.character_build.passive_grant import PassiveGrant
 from minmax.resource_costs import ResourceType
 from minmax.rotation_ability_priority import AbilityPriorityList
 from minmax.rotation_demand_window import RotationDemandWindow
+from minmax.rotation_ultimate_affordability import RotationUltimateAffordabilityRequirement
 from models.build_model import PlayerBuild
 from services.canonical_mechanics_coverage_audit import CanonicalMechanicsCoverageReport
 from services.rotation_candidate_generation_service import RotationRefreshLeadCandidateOption
@@ -36,6 +37,9 @@ from ui.rotation_generation_support import (
     RotationGenerationResult,
     RotationGenerationSupport,
 )
+from ui.rotation_ultimate_affordability_candidate_support import (
+    RotationUltimateAffordabilityCandidateSupport,
+)
 
 
 @dataclass(frozen=True)
@@ -47,7 +51,7 @@ class RotationDashboardCanonicalCandidateResult:
 
 
 class RotationDashboardCanonicalCandidateSupport:
-    """Compose the existing dashboard generator with canonical candidate evaluation.
+    """Compose dashboard seed generation with canonical candidate evaluation.
 
     The dashboard's current single-plan generator remains the owner of translating
     saved UI state into a deterministic seed schedule. This support layer then feeds
@@ -61,10 +65,11 @@ class RotationDashboardCanonicalCandidateSupport:
     readiness before recovery ranking. Mechanics coverage, when supplied, is then
     scoped to the resolved CharacterBuild and current rotation evidence.
 
-    The production default is wrapped by automatic potion-cadence support. A supplied
-    complete scenario evidence inventory lets the wrapper derive the effective shared
-    potion cooldown from canonical build evidence. Missing/partial scenario evidence
-    preserves the existing no-guess behavior.
+    Production defaults compose two final-candidate evidence adapters. Automatic
+    potion cadence derives an effective shared cooldown only from complete build and
+    scenario evidence. Ultimate affordability replays the seed projection's exact
+    resolved spend rules and generation events against every stabilized candidate.
+    Missing evidence in either subsystem preserves the existing no-guess behavior.
     """
 
     def __init__(
@@ -74,6 +79,7 @@ class RotationDashboardCanonicalCandidateSupport:
         canonical_candidates: (
             RotationCanonicalCandidateSupport
             | RotationAutomaticPotionCadenceCandidateSupport
+            | RotationUltimateAffordabilityCandidateSupport
             | None
         ) = None,
     ) -> None:
@@ -84,8 +90,11 @@ class RotationDashboardCanonicalCandidateSupport:
             canonical = RotationCanonicalCandidateSupport(
                 static_context_service=RotationStaticBuildContextService(),
             )
-            self.canonical_candidates = RotationAutomaticPotionCadenceCandidateSupport(
+            potion_aware = RotationAutomaticPotionCadenceCandidateSupport(
                 canonical_candidates=canonical,
+            )
+            self.canonical_candidates = RotationUltimateAffordabilityCandidateSupport(
+                canonical_candidates=potion_aware,
             )
 
     def run_effects(
@@ -149,6 +158,23 @@ class RotationDashboardCanonicalCandidateSupport:
         if potion_cooldown_scenario_evidence is not None:
             candidate_kwargs["potion_cooldown_scenario_evidence"] = (
                 potion_cooldown_scenario_evidence
+            )
+
+        ultimate_projection = seed_generation.ultimate_projection
+        spend_rules = tuple(
+            getattr(ultimate_projection, "spend_rules", ())
+            if ultimate_projection is not None
+            else ()
+        )
+        if spend_rules:
+            candidate_kwargs["ultimate_affordability_requirement"] = (
+                RotationUltimateAffordabilityRequirement(
+                    starting_amount=float(generation_request.starting_ultimate),
+                    spend_rules=spend_rules,
+                    generation_events=tuple(
+                        getattr(ultimate_projection, "generation_events", ())
+                    ),
+                )
             )
 
         candidate_result = self.canonical_candidates.run_effects(**candidate_kwargs)
