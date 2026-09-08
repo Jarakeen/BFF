@@ -19,6 +19,9 @@ RYLO_TOKEN_COLORS = {
     "portal": "#7764A8",
     "aoe": "#E17C24",
     "stack": "#8066A6",
+    "reference_entrance": "#5A5D61",
+    "reference_exit": "#5A5D61",
+    "reference_banner": "#6B6250",
 }
 
 RYLO_ZONE_COLORS = {
@@ -46,13 +49,28 @@ def install() -> None:
     if _INSTALLED:
         return
 
-    # Position Timeline and custom labels are behavior, not Rylo-only features.
-    # This installer is invoked for every visual theme, making it a safe
-    # pre-construction hook without adding more app.py startup dependencies.
+    # Position Timeline and custom labels/reference points are behavior, not
+    # Rylo-only features. This installer is invoked for every visual theme,
+    # keeping startup plumbing in one place without adding another app.py layer.
     from ui.encounter_position_timeline_support import install as install_position_timeline
     from ui.encounter_board_custom_labels_support import install as install_custom_labels
     install_position_timeline()
     install_custom_labels()
+
+    # Reference anchors are spatial context, not choreography. Keep them out of
+    # timeline keyframes so Entrance/Exit/Banner stay fixed while the raid moves.
+    from ui import encounter_position_timeline_support as timeline_ui
+
+    original_timeline_board_items = timeline_ui._board_items
+
+    def timeline_board_items_without_references(encounter_board):
+        return [
+            row
+            for row in original_timeline_board_items(encounter_board)
+            if not str(row[2]).startswith("reference_")
+        ]
+
+    timeline_ui._board_items = timeline_board_items_without_references
 
     from ui.components import encounter_board as board
     from ui.theme.theme_manager import ThemeManager
@@ -170,8 +188,19 @@ def install() -> None:
         painter.setPen(QPen(steel, 2.3 if selected else 1.5))
         painter.setBrush(QBrush(fill))
         painter.drawEllipse(QPointF(0, 0), r, r)
-        glyph = {"tank": "T", "healer": "H", "dps": "D", "portal": "P", "aoe": "!", "stack": "+"}.get(self.kind, "•")
-        painter.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold)); painter.setPen(QColor("#F1F1EF"))
+        glyph = {
+            "tank": "T",
+            "healer": "H",
+            "dps": "D",
+            "portal": "P",
+            "aoe": "!",
+            "stack": "+",
+            "reference_entrance": "IN",
+            "reference_exit": "OUT",
+            "reference_banner": "⚑",
+        }.get(self.kind, "•")
+        glyph_size = 8 if str(self.kind).startswith("reference_") else 10
+        painter.setFont(QFont("Segoe UI", glyph_size, QFont.Weight.Bold)); painter.setPen(QColor("#F1F1EF"))
         painter.drawText(QRectF(-r, -r, r * 2, r * 2), Qt.AlignmentFlag.AlignCenter, glyph)
         painter.setFont(QFont("Segoe UI", 8)); painter.setPen(text)
         painter.drawText(QRectF(-58, r + 4, 116, 18), Qt.AlignmentFlag.AlignHCenter, self.label)
@@ -237,6 +266,8 @@ def install() -> None:
             self._set_background_map(background)
         mode = getattr(self, "_encounter_color_vision_mode", "standard")
         self._apply_color_vision_mode(mode)
+        if hasattr(self, "_apply_reference_lock"):
+            self._apply_reference_lock(getattr(self, "_reference_points_locked", False))
         self.view.fit_arena()
 
     board.EncounterBoard._draw_arena = draw_arena_theme_aware
