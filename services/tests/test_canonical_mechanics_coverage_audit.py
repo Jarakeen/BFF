@@ -31,7 +31,7 @@ def _row(
     )
 
 
-def test_partial_and_missing_rows_become_advisory_and_blocking_gaps() -> None:
+def test_partial_missing_and_niche_rows_become_advisory_or_blocking_gaps() -> None:
     rows = (
         _row(key="ready", status=CanonicalMechanicsCoverageStatus.CALCULATION_READY),
         _row(
@@ -51,7 +51,7 @@ def test_partial_and_missing_rows_become_advisory_and_blocking_gaps() -> None:
     report = CanonicalMechanicsCoverageAuditService().audit(rows)
 
     assert report.rows == rows
-    assert [gap.key for gap in report.knowledge_gaps] == ["partial", "critical"]
+    assert [gap.key for gap in report.knowledge_gaps] == ["partial", "critical", "niche"]
     assert report.knowledge_gaps[0].needed_evidence == "verify remaining runtime behavior"
     assert report.knowledge_gaps[0].blocking is False
     assert report.knowledge_gaps[1].blocking is True
@@ -60,7 +60,9 @@ def test_partial_and_missing_rows_become_advisory_and_blocking_gaps() -> None:
         "rotation_maker",
         "optimizer",
     )
-    assert [gap.key for gap in report.advisory_gaps] == ["partial"]
+    assert report.knowledge_gaps[2].blocking is False
+    assert "selected build, encounter, or objective" in report.knowledge_gaps[2].needed_evidence
+    assert [gap.key for gap in report.advisory_gaps] == ["partial", "niche"]
     assert [gap.key for gap in report.decision_critical_gaps] == ["critical"]
 
 
@@ -131,3 +133,4 @@ def test_seed_inventory_spans_shared_decision_domains_and_emits_research_queue()
     assert report.gaps_for("rotation_maker")
     assert report.gaps_for("optimizer")
     assert report.advisory_gaps
+    assert any(gap.key == "niche:stealth_thief_bash_objectives" for gap in report.advisory_gaps)
