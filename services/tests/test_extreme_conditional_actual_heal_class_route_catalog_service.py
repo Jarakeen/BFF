@@ -57,6 +57,24 @@ def test_conditional_route_catalog_defaults_to_cross_class_search_and_labels_sce
     assert result.omitted_scope == ("remaining mechanic gap",)
 
 
+def test_conditional_route_catalog_labels_explicit_restoration_heavy_scenario():
+    catalog = _Catalog()
+    service = ExtremeConditionalActualHealClassRouteCatalogService(
+        target_health_fraction=0.29,
+        fully_charged_restoration_heavy_attack_completed=True,
+        catalog=catalog,
+    )
+
+    result = service.rank(PlayerBuild(BuildName="Heavy Emergency Healer"))
+
+    assert service.fully_charged_restoration_heavy_attack_completed is True
+    assert result.search_scope[:2] == (
+        "explicit conditional target health fraction 0.290000",
+        "explicit fully charged Restoration Staff heavy attack completed; Essence Drain Major Mending requires canonical legality proof",
+    )
+    assert result.search_scope[2:] == ("existing route search",)
+
+
 def test_conditional_route_catalog_can_deliberately_hold_base_class_fixed():
     catalog = _Catalog()
     service = ExtremeConditionalActualHealClassRouteCatalogService(
