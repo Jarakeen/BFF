@@ -51,6 +51,7 @@ def test_set_and_consumable_identity_add_only_relevant_runtime_domains() -> None
         "saved_build:canonical_structure",
         "gear:conditional_topology",
         "consumables:runtime_resource_and_buff_policy",
+        "passives:runtime_semantics",
     )
     assert "procs:conditional_topology" not in keys
 
@@ -71,6 +72,35 @@ def test_runtime_evidence_adds_passive_uptime_assignment_and_encounter_domains()
         "assignment:rotation_fulfillment_catalog",
         "encounter:target_range_movement_topology",
     )
+
+
+def test_armor_weight_distribution_is_first_class_passive_relevance_evidence() -> None:
+    service = RotationMechanicsDependencyService()
+    build = _build(
+        armor=(
+            ArmorPiece(slot=GearSlot.HEAD, weight="light"),
+            ArmorPiece(slot=GearSlot.SHOULDERS, weight="medium"),
+            ArmorPiece(slot=GearSlot.CHEST, weight="light"),
+            ArmorPiece(slot=GearSlot.HANDS, weight="light"),
+            ArmorPiece(slot=GearSlot.WAIST, weight="light"),
+            ArmorPiece(slot=GearSlot.LEGS, weight="medium"),
+            ArmorPiece(slot=GearSlot.FEET, weight="light"),
+        ),
+    )
+
+    dependencies = service.discover(
+        character_build=build,
+        recovery_enabled=False,
+    )
+    by_key = {item.key: item for item in dependencies}
+
+    assert "gear:conditional_topology" not in by_key
+    assert "passives:runtime_semantics" in by_key
+    assert by_key["passives:runtime_semantics"].evidence == (
+        "armor_weight_count:light=5",
+        "armor_weight_count:medium=2",
+    )
+    assert "armor passive bonuses" in by_key["passives:runtime_semantics"].reason
 
 
 def test_dependency_reasons_are_explanatory_and_keys_are_unique() -> None:
@@ -124,6 +154,9 @@ def test_dependencies_retain_exact_selected_build_evidence_without_inventing_sem
     assert by_key["consumables:runtime_resource_and_buff_policy"].evidence == (
         "potion=essence_of_spell_power",
         "poison=test_poison",
+    )
+    assert by_key["passives:runtime_semantics"].evidence == (
+        "armor_weight_count:light=1",
     )
     assert by_key["effect_duration:build_modifiers"].evidence == (
         "uptime_requirement_count=2",
