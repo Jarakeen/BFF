@@ -107,6 +107,7 @@ def test_projects_verified_direct_damage_component_at_cast_time():
     projection = service.project(plan=_plan(_action(time_seconds=4.5)), context=object())
 
     assert projection.unresolved == ()
+    assert projection.dot_components == ()
     assert len(projection.events) == 1
     event = projection.events[0]
     assert event.time_seconds == 4.5
@@ -145,18 +146,24 @@ def test_non_damage_component_is_not_projected_as_damage():
     projection = service.project(plan=_plan(_action()), context=object())
 
     assert projection.events == ()
+    assert projection.dot_components == ()
     assert projection.unresolved == ()
 
 
-def test_dot_component_fails_closed_without_tick_schedule():
+def test_dot_component_is_preserved_as_runtime_seed():
     service = _service(classifications=(_classification(is_dot=True),))
 
     projection = service.project(plan=_plan(_action()), context=object())
 
     assert projection.events == ()
-    assert projection.unresolved == (
-        "Hit coefficient 1 at 1s: DoT tick schedule is not canonically resolved",
-    )
+    assert projection.unresolved == ()
+    assert len(projection.dot_components) == 1
+    seed = projection.dot_components[0]
+    assert seed.cast_time_seconds == 1.0
+    assert seed.source_name == "Hit"
+    assert seed.coefficient_number == 1
+    assert seed.event.base_value == 1234.5
+    assert seed.event.is_dot is True
 
 
 def test_incomplete_damage_identity_fails_closed():
@@ -169,6 +176,7 @@ def test_incomplete_damage_identity_fails_closed():
     projection = service.project(plan=_plan(_action()), context=object())
 
     assert projection.events == ()
+    assert projection.dot_components == ()
     assert projection.unresolved == (
         "Hit coefficient 1 at 1s: damage identity is incomplete",
     )
@@ -217,6 +225,7 @@ def test_non_skill_actions_do_not_create_damage_events():
     projection = service.project(plan=plan, context=object())
 
     assert projection.events == ()
+    assert projection.dot_components == ()
     assert projection.unresolved == ()
 
 
