@@ -125,6 +125,8 @@ def install() -> None:
 
     from ui.performance_dashboard_dd_dot_support import install as install_dot_ui
     from ui.performance_dashboard_dd_weave_support import install as install_weave_ui
+    from ui.performance_dashboard_role_surface_support import install as install_role_surface
 
     install_dot_ui()
     install_weave_ui()
+    install_role_surface()
