@@ -2,9 +2,20 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import re
+from typing import Protocol
 
 from minmax.rotation_plan import RotationActionKind, RotationPlan
-from ui.rotation_duration_evidence_support import RotationDurationEvidence
+
+
+class _RotationDurationEvidenceRowLike(Protocol):
+    ability: str
+    bar: str
+    duration_seconds: float
+
+
+class RotationDurationEvidenceLike(Protocol):
+    rows: tuple[_RotationDurationEvidenceRowLike, ...]
+    unresolved: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -44,7 +55,7 @@ class RotationTimelineProjectionService:
     """Project canonical rotation evidence into a read-only timeline model.
 
     This service does not resolve ESO durations. It consumes the authoritative
-    RotationPlan and optional already-resolved RotationDurationEvidence and only
+    RotationPlan and optional already-resolved duration evidence and only
     converts them into geometry-friendly UI evidence.
     """
 
@@ -87,7 +98,7 @@ class RotationTimelineProjectionService:
         self,
         plan: RotationPlan,
         *,
-        duration_evidence: RotationDurationEvidence | None = None,
+        duration_evidence: RotationDurationEvidenceLike | None = None,
     ) -> RotationTimelineProjection:
         actions = tuple(
             RotationTimelineAction(
@@ -139,12 +150,11 @@ class RotationTimelineProjectionService:
                 if not segments:
                     continue
 
-                lane_bar = row_bar
                 lanes.append(
                     RotationTimelineLane(
-                        lane_key=f"{self._slug(row_name)}:{lane_bar}",
+                        lane_key=f"{self._slug(row_name)}:{row_bar}",
                         label=row_name,
-                        bar=lane_bar,
+                        bar=row_bar,
                         duration_seconds=duration,
                         segments=self._merge_segments(segments),
                     )
@@ -163,6 +173,7 @@ class RotationTimelineProjectionService:
 
 
 __all__ = [
+    "RotationDurationEvidenceLike",
     "RotationTimelineAction",
     "RotationTimelineLane",
     "RotationTimelineProjection",
