@@ -30,6 +30,7 @@ from ui.rotation_dashboard_canonical_candidate_support import (
 )
 from ui.rotation_dashboard_page import RotationDashboardPage
 from ui.rotation_generation_support import RotationGenerationRequest
+from ui.rotation_timeline_dashboard_support import install_rotation_timeline
 
 
 class CanonicalRotationDashboardPage(RotationDashboardPage):
@@ -43,6 +44,7 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
         canonical_render: RotationCanonicalCandidateRenderSupport | None = None,
     ) -> None:
         super().__init__(parent)
+        install_rotation_timeline(self)
         self.rotation_canonical_candidates = (
             canonical_candidates
             or RotationDashboardCanonicalCandidateSupport(
