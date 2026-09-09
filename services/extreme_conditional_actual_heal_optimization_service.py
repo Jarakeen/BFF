@@ -4,6 +4,8 @@ from dataclasses import replace
 
 from minmax.character_progression import AttributeAllocation, CharacterProgression
 from minmax.combat_state import CombatState
+from minmax.potion_cadence import PotionCadence
+from minmax.potion_use_event import PotionUseEventResolver
 from models.build_model import PlayerBuild
 from services.extreme_actual_heal_optimization_service import (
     ExtremeActualHealOptimizationResult,
@@ -90,6 +92,8 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         healer_has_negative_effect: bool | None = None,
         active_crux: int | None = None,
         active_buffs: tuple[str, ...] = (),
+        potion_elapsed_seconds: float | None = None,
+        potion_use_resolver: PotionUseEventResolver | None = None,
         restoration_heavy_state: ExtremeRestorationHeavyCombatStateService | None = None,
         templar_sacred_ground_state: ExtremeTemplarSacredGroundCombatStateService | None = None,
         templar_restoring_light_healing: ExtremeTemplarRestoringLightHealingService | None = None,
@@ -123,6 +127,14 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
                 if (name := str(raw_name or "").strip())
             )
         )
+        if potion_elapsed_seconds is None:
+            self.potion_elapsed_seconds = None
+        else:
+            potion_elapsed = float(potion_elapsed_seconds)
+            if potion_elapsed < 0.0:
+                raise ValueError("potion_elapsed_seconds cannot be negative")
+            self.potion_elapsed_seconds = potion_elapsed
+        self.potion_use_resolver = potion_use_resolver
         self.restoration_heavy_state = restoration_heavy_state
         self.templar_sacred_ground_state = templar_sacred_ground_state
         self.templar_restoring_light_healing = templar_restoring_light_healing
@@ -160,6 +172,12 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
             scenarios.append(
                 "explicit active named buffs: " + ", ".join(self.active_buffs)
             )
+        if self.potion_elapsed_seconds is not None:
+            scenarios.append(
+                "explicit saved-potion use window at "
+                f"{self.potion_elapsed_seconds:.6f} seconds; "
+                "Medicinal Use duration requires progression proof"
+            )
         if self.sacred_ground_window_active:
             scenarios.append(
                 "explicit Sacred Ground active/grace window; "
@@ -191,6 +209,41 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         active_buffs: list[str] = list(self.active_buffs)
         unresolved: list[str] = []
         in_combat = False
+
+        if self.potion_elapsed_seconds is not None:
+            potion_name = " ".join(str(build.Potion or "").strip().split())
+            if not potion_name:
+                unresolved.append(
+                    "Explicit potion-use window requested but build has no potion selection"
+                )
+            else:
+                medicinal_use_rank = progression.passive_rank("Medicinal Use")
+                if medicinal_use_rank is None:
+                    unresolved.append(
+                        "Medicinal Use rank is unresolved for explicit potion-use window"
+                    )
+                else:
+                    resolver = self.potion_use_resolver
+                    if resolver is None:
+                        resolver = PotionUseEventResolver(
+                            database_path=getattr(self.optimizer, "database_path", None)
+                        )
+                        self.potion_use_resolver = resolver
+                    event = resolver.resolve(potion_name)
+                    unresolved.extend(event.unresolved)
+                    if event.resolved:
+                        try:
+                            cadence = PotionCadence(
+                                event, medicinal_use_rank=medicinal_use_rank
+                            )
+                        except ValueError as exc:
+                            unresolved.append(str(exc))
+                        else:
+                            active_buffs.extend(
+                                cadence.window(
+                                    self.potion_elapsed_seconds
+                                ).active_buff_names
+                            )
 
         if self.fully_charged_restoration_heavy_attack_completed:
             service = self.restoration_heavy_state

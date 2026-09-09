@@ -91,13 +91,30 @@ class _RestorationHeavyState:
         )
 
 
-def _install_progression_adapter(monkeypatch):
+
+class _PotionUseResolver:
+    def __init__(self, *, duration=40.0, unresolved=()):
+        self.duration = float(duration)
+        self.unresolved = tuple(unresolved)
+        self.calls = []
+
+    def resolve(self, selected_label):
+        self.calls.append(selected_label)
+        return SimpleNamespace(
+            resolved=not self.unresolved,
+            unresolved=self.unresolved,
+            buff_grants=(
+                SimpleNamespace(buff_name="Major Sorcery", duration=self.duration),
+            ),
+        )
+
+def _install_progression_adapter(monkeypatch, *, passive_ranks=None):
     resolution = SimpleNamespace(
         resolved=True,
         character_id="char-1",
         progression=CharacterProgression(
             attributes=AttributeAllocation(),
-            passive_ranks={},
+            passive_ranks={} if passive_ranks is None else passive_ranks,
             passive_cp_points={},
         ),
         unresolved=(),
@@ -259,3 +276,94 @@ def test_conditional_optimizer_combines_explicit_named_buffs_with_triggered_mend
         state.active_buffs == ("Major Sorcery", "Major Mending")
         for state in optimizer.context_factory.combat_states
     )
+
+
+def test_conditional_optimizer_routes_saved_potion_active_window_to_combat_state(monkeypatch):
+    _install_progression_adapter(
+        monkeypatch, passive_ranks={"Medicinal Use": 3}
+    )
+    optimizer = _Optimizer()
+    potion_resolver = _PotionUseResolver(duration=40.0)
+    service = ExtremeConditionalActualHealOptimizationService(
+        target_health_fraction=0.29,
+        potion_elapsed_seconds=20.0,
+        potion_use_resolver=potion_resolver,
+        optimizer=optimizer,
+        healing_events=_ConditionalHealingEvents(),
+    )
+
+    result = service.optimize(
+        PlayerBuild(
+            BuildName="Potion Window Emergency",
+            Potion="Increase Spell Power",
+        ),
+        "blessing_of_protection",
+        max_passes=1,
+    )
+
+    assert potion_resolver.calls
+    assert optimizer.context_factory.combat_states
+    assert all(
+        state.has_buff("Major Sorcery")
+        for state in optimizer.context_factory.combat_states
+    )
+    assert any(
+        "saved-potion use window at 20.000000 seconds" in item
+        for item in result.search_scope
+    )
+
+
+def test_conditional_optimizer_respects_potion_buff_expiration_with_medicinal_use(monkeypatch):
+    _install_progression_adapter(
+        monkeypatch, passive_ranks={"Medicinal Use": 3}
+    )
+    optimizer = _Optimizer()
+    service = ExtremeConditionalActualHealOptimizationService(
+        target_health_fraction=0.29,
+        potion_elapsed_seconds=52.0,
+        potion_use_resolver=_PotionUseResolver(duration=40.0),
+        optimizer=optimizer,
+        healing_events=_ConditionalHealingEvents(),
+    )
+
+    service.optimize(
+        PlayerBuild(BuildName="Expired Potion", Potion="Increase Spell Power"),
+        "blessing_of_protection",
+        max_passes=1,
+    )
+
+    assert optimizer.context_factory.combat_states
+    assert all(
+        not state.has_buff("Major Sorcery")
+        for state in optimizer.context_factory.combat_states
+    )
+
+
+def test_conditional_optimizer_blocks_potion_window_without_medicinal_use_proof(monkeypatch):
+    _install_progression_adapter(monkeypatch)
+    service = ExtremeConditionalActualHealOptimizationService(
+        target_health_fraction=0.29,
+        potion_elapsed_seconds=0.0,
+        potion_use_resolver=_PotionUseResolver(),
+        optimizer=_Optimizer(),
+        healing_events=_ConditionalHealingEvents(),
+    )
+
+    result = service.optimize(
+        PlayerBuild(BuildName="Unproven Potion", Potion="Increase Spell Power"),
+        "blessing_of_protection",
+        max_passes=1,
+    )
+
+    assert "Medicinal Use rank is unresolved for explicit potion-use window" in result.unresolved
+    assert not result.mechanic_complete
+
+
+def test_conditional_optimizer_rejects_negative_potion_elapsed_time():
+    with pytest.raises(ValueError, match="potion_elapsed_seconds cannot be negative"):
+        ExtremeConditionalActualHealOptimizationService(
+            target_health_fraction=0.29,
+            potion_elapsed_seconds=-0.01,
+            optimizer=_Optimizer(),
+            healing_events=_ConditionalHealingEvents(),
+        )

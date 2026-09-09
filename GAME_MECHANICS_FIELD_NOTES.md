@@ -525,3 +525,14 @@ The general combat-state calculator already knew how to apply named buffs such a
 **Layman’s version:** a mechanic can be perfectly implemented in the calculator and still disappear if the optimizer never carries the active-buff evidence into that calculator. “Supported” and “actually reachable by this optimizer” are separate questions.
 
 **For BFF:** conditional named buffs are now explicit scenario evidence. They are never granted automatically, and they share the same canonical `CombatState` path as trigger-proven buffs such as Essence Drain Major Mending.
+
+
+---
+
+## 2026-09-09 — A selected potion is availability, not an active combat buff
+
+A saved potion selection proves that the build has access to that consumable. It does **not** prove that a potion-derived named buff is active at the heal snapshot. The active state depends on an explicit use event, elapsed time, the potion trait duration, and the character's recorded **Medicinal Use** rank.
+
+**Layman’s version:** equipping a spell-power potion does not mean Major Sorcery is permanently switched on. Extreme MOST Actual Heal now requires an explicit potion-use window and checks whether the buff is still alive at that exact timestamp.
+
+**For BFF:** potion-derived named buffs now enter the same canonical `CombatState` path as other proven transient buffs, and missing Medicinal Use progression remains an explicit blocker rather than an invented rank.
