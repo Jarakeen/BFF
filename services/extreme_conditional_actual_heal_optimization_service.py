@@ -14,6 +14,9 @@ from services.extreme_actual_heal_optimization_service import (
 from services.extreme_actual_heal_potion_candidate_service import (
     ExtremeActualHealPotionCandidateService,
 )
+from services.extreme_actual_heal_skill_buff_candidate_service import (
+    ExtremeActualHealSkillBuffCandidateService,
+)
 from services.extreme_arcanist_cascading_fortune_healing_service import (
     ExtremeArcanistCascadingFortuneHealingService,
 )
@@ -98,6 +101,8 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         potion_elapsed_seconds: float | None = None,
         potion_use_resolver: PotionUseEventResolver | None = None,
         potion_candidates: ExtremeActualHealPotionCandidateService | None = None,
+        skill_precast_elapsed_seconds: float | None = None,
+        skill_buff_candidates: ExtremeActualHealSkillBuffCandidateService | None = None,
         restoration_heavy_state: ExtremeRestorationHeavyCombatStateService | None = None,
         templar_sacred_ground_state: ExtremeTemplarSacredGroundCombatStateService | None = None,
         templar_restoring_light_healing: ExtremeTemplarRestoringLightHealingService | None = None,
@@ -140,6 +145,14 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
             self.potion_elapsed_seconds = potion_elapsed
         self.potion_use_resolver = potion_use_resolver
         self.potion_candidates = potion_candidates
+        if skill_precast_elapsed_seconds is None:
+            self.skill_precast_elapsed_seconds = None
+        else:
+            skill_elapsed = float(skill_precast_elapsed_seconds)
+            if skill_elapsed < 0.0:
+                raise ValueError("skill_precast_elapsed_seconds cannot be negative")
+            self.skill_precast_elapsed_seconds = skill_elapsed
+        self.skill_buff_candidates = skill_buff_candidates
         self.restoration_heavy_state = restoration_heavy_state
         self.templar_sacred_ground_state = templar_sacred_ground_state
         self.templar_restoring_light_healing = templar_restoring_light_healing
@@ -183,6 +196,12 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
                 f"{self.potion_elapsed_seconds:.6f} seconds; "
                 "Medicinal Use duration requires progression proof"
             )
+        if self.skill_precast_elapsed_seconds is not None:
+            scenarios.append(
+                "explicit self-buff skill pre-cast window at "
+                f"{self.skill_precast_elapsed_seconds:.6f} seconds; "
+                "only unconditional self-target named buffs are discoverable"
+            )
         if self.sacred_ground_window_active:
             scenarios.append(
                 "explicit Sacred Ground active/grace window; "
@@ -214,18 +233,38 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         entity_id: str,
         active_bar: str,
     ):
-        _ = progression, entity_id, active_bar
-        if self.potion_elapsed_seconds is None:
-            return ()
-        service = self.potion_candidates
-        if service is None:
-            service = ExtremeActualHealPotionCandidateService()
-            self.potion_candidates = service
-        return service.build_candidates(
-            baseline_build,
-            character_id=character_id,
-            baseline_build_id=baseline_build_id,
-        )
+        _ = progression
+        result = []
+        if self.potion_elapsed_seconds is not None:
+            service = self.potion_candidates
+            if service is None:
+                service = ExtremeActualHealPotionCandidateService()
+                self.potion_candidates = service
+            result.extend(
+                service.build_candidates(
+                    baseline_build,
+                    character_id=character_id,
+                    baseline_build_id=baseline_build_id,
+                )
+            )
+        if self.skill_precast_elapsed_seconds is not None:
+            service = self.skill_buff_candidates
+            if service is None:
+                database_path = getattr(self.optimizer, "database_path", None)
+                if database_path is not None:
+                    service = ExtremeActualHealSkillBuffCandidateService(database_path)
+                    self.skill_buff_candidates = service
+            if service is not None:
+                result.extend(
+                    service.build_candidates(
+                        baseline_build,
+                        character_id=character_id,
+                        baseline_build_id=baseline_build_id,
+                        protected_entity_id=entity_id,
+                        active_bar=active_bar,
+                    )
+                )
+        return tuple(result)
 
     def _restoration_combat_state(
         self,
@@ -237,6 +276,22 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         active_buffs: list[str] = list(self.active_buffs)
         unresolved: list[str] = []
         in_combat = False
+
+        if self.skill_precast_elapsed_seconds is not None:
+            service = self.skill_buff_candidates
+            if service is None:
+                database_path = getattr(self.optimizer, "database_path", None)
+                if database_path is not None:
+                    service = ExtremeActualHealSkillBuffCandidateService(database_path)
+                    self.skill_buff_candidates = service
+            if service is not None:
+                active_buffs.extend(
+                    service.active_named_buffs(
+                        build,
+                        active_bar=active_bar,
+                        elapsed_seconds=self.skill_precast_elapsed_seconds,
+                    )
+                )
 
         if self.potion_elapsed_seconds is not None:
             potion_name = " ".join(str(build.Potion or "").strip().split())

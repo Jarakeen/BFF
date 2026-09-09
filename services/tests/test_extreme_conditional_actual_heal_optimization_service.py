@@ -130,6 +130,22 @@ class _PotionCandidates:
             ),
         )
 
+
+class _SkillBuffCandidates:
+    def __init__(self):
+        self.candidate_calls = []
+        self.active_calls = []
+
+    def build_candidates(
+        self, baseline_build, *, character_id, baseline_build_id, protected_entity_id, active_bar
+    ):
+        self.candidate_calls.append((protected_entity_id, active_bar))
+        return ()
+
+    def active_named_buffs(self, build, *, active_bar, elapsed_seconds):
+        self.active_calls.append((build.BuildName, active_bar, elapsed_seconds))
+        return ("Major Sorcery",) if elapsed_seconds < 20.0 else ()
+
 def _install_progression_adapter(monkeypatch, *, passive_ranks=None):
     resolution = SimpleNamespace(
         resolved=True,
@@ -427,3 +443,42 @@ def test_conditional_optimizer_discovers_potion_candidates_only_for_explicit_win
         entity_id="blessing_of_protection",
         active_bar="front",
     ) == ()
+
+
+def test_conditional_optimizer_discovers_skill_buff_sources_only_for_explicit_precast_window():
+    skill_service = _SkillBuffCandidates()
+    active = ExtremeConditionalActualHealOptimizationService(
+        target_health_fraction=0.29,
+        skill_precast_elapsed_seconds=5.0,
+        skill_buff_candidates=skill_service,
+        optimizer=_Optimizer(),
+        healing_events=_ConditionalHealingEvents(),
+    )
+    assert active._additional_candidates(
+        PlayerBuild(BuildName="Skill Discovery", FrontBarSkills=["Blessing of Protection"]),
+        progression=CharacterProgression(passive_ranks={}),
+        character_id="char-1",
+        baseline_build_id="build-1",
+        entity_id="blessing_of_protection",
+        active_bar="front",
+    ) == ()
+    assert skill_service.candidate_calls == [("blessing_of_protection", "front")]
+
+    state, unresolved = active._restoration_combat_state(
+        build=PlayerBuild(BuildName="Skill Discovery"),
+        progression=CharacterProgression(passive_ranks={}),
+        active_bar="front",
+    )
+    assert unresolved == ()
+    assert state.has_buff("Major Sorcery")
+
+
+def test_conditional_optimizer_rejects_negative_skill_precast_time():
+    import pytest
+    with pytest.raises(ValueError, match="skill_precast_elapsed_seconds cannot be negative"):
+        ExtremeConditionalActualHealOptimizationService(
+            target_health_fraction=0.29,
+            skill_precast_elapsed_seconds=-0.01,
+            optimizer=_Optimizer(),
+            healing_events=_ConditionalHealingEvents(),
+        )

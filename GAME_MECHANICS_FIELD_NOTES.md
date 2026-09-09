@@ -547,3 +547,14 @@ The Extreme MOST Actual Heal search may compare canonical potion families when, 
 **Layman’s version:** the optimizer is allowed to shop the potion shelf, but only after the scenario says a potion was actually used. It still cannot treat a selected bottle as a permanent character stat.
 
 **For BFF:** standing heal optimization remains unchanged. Conditional potion-window optimization can now discover a stronger legal potion source instead of requiring the caller to preselect the winning potion.
+
+
+---
+
+## 2026-09-09 — Skill-buff discovery requires an explicit pre-cast snapshot
+
+Extreme MOST Actual Heal may discover a slottable skill as a named self-buff source only inside an explicit pre-cast timing scenario. The first reviewed slice admits only canonical CAST effects that target SELF, have a positive sourced duration, map to a supported named stat buff, and carry no extra condition or trigger.
+
+**Layman’s version:** if the optimizer wants Major Sorcery from a skill, it must actually slot a legal skill that grants it and the buff must still be alive when the heal lands. Conditional or proc-based skill effects are not waved through just because their name looks useful.
+
+**For BFF:** the scored heal's slot is protected during source discovery. Standing optimization is unchanged, and runtime/conditional skill effects remain outside this first automatic-discovery slice.
