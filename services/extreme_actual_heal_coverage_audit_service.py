@@ -58,9 +58,12 @@ class ExtremeActualHealCoverageAuditService:
     auditability but are excluded from the denominator.
 
     The broad implemented/omitted boundaries are anchored to the optimizer's
-    existing ``SEARCH_SCOPE`` and ``OMITTED_SCOPE`` contracts. Recipient ambiguity
-    is anchored to the existing reviewed guard so this audit cannot silently call
-    Blood of the Elder Dragon complete while the event evaluator still blocks it.
+    existing ``SEARCH_SCOPE`` and ``OMITTED_SCOPE`` contracts. Dragon Blood is
+    counted as implemented only because the reviewed recipient resolver can prove
+    the self component from the exact two-component 3:2 coefficient relationship
+    and the healing-event evaluator consumes that selection. Malformed or missing
+    coefficient evidence still blocks the individual event rather than being
+    treated as covered by assumption.
     """
 
     REQUIRED_CATEGORIES = (
@@ -182,9 +185,9 @@ class ExtremeActualHealCoverageAuditService:
             ExtremeActualHealCoverageItem(
                 "dragon_blood_component_recipient_identity",
                 "self_vs_ally_components",
-                "unresolved",
-                "ExtremeHealingEventRecipientScopeService.MULTI_RECIPIENT_DISTINCT_SCALING",
-                "Blood of the Elder Dragon contains differently scaled self and nearby-ally healing, but canonical coefficient metadata does not yet identify which HEAL component belongs to which recipient.",
+                "implemented",
+                "ExtremeHealingEventRecipientScopeService + ExtremeHealingEventService",
+                "Blood of the Elder Dragon uses the reviewed exact 3:2 coefficient relationship to identify and select the original/self HEAL component before one-recipient event scoring. Missing, malformed, or ambiguous coefficient evidence remains unresolved and cannot combine self plus ally healing.",
             ),
             ExtremeActualHealCoverageItem(
                 "external_group_buff_provenance",
