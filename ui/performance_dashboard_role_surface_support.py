@@ -6,10 +6,9 @@ The performance page is assembled by several compatibility/polish layers. This
 module intentionally installs last in the DD presentation chain and owns only the
 final visible surface. It does not fetch data and it does not touch local state.
 
-For DPS views the generic support-summary cards are hidden so the DD evidence
-cards are not buried under healer/tank context. The Graph Effects selector stays
-visible for every role because it controls the effect lanes drawn on the output
-graph. Healer and tank views retain the broader support-tracking controls.
+DPS views stay damage-focused and hide healer/tank support-summary controls,
+including the Graph Effects group-buff selector. Healer and tank views retain the
+broader support-tracking controls.
 """
 
 from ui.components.foundry_card import FoundryCard
@@ -82,19 +81,17 @@ def _apply_role_name_surface(page, role: str, *, has_snapshot: bool) -> None:
     is_healer = canonical_role == "Healer"
     is_support = canonical_role in {"Healer", "Tank"}
 
-    # Support summary controls are meaningful for healers/tanks only. A blank or
-    # unknown role remains neutral instead of inheriting a stale Healer surface.
+    # Support tracking controls belong to healer/tank views. A blank or unknown
+    # role remains neutral instead of inheriting a stale support surface.
     _set_visible(
         page,
-        ("support_effects_card", "_performance_tracking_card"),
+        (
+            "support_effects_card",
+            "_performance_tracking_card",
+            "graph_effect_card",
+        ),
         is_support,
     )
-
-    # Graph Effects owns the on/off checkboxes for effect lanes over the output
-    # graph and stays available for every role.
-    graph_effect_card = getattr(page, "graph_effect_card", None)
-    if graph_effect_card is not None:
-        graph_effect_card.setVisible(True)
 
     # Healer diagnostics are role-exclusive. The healer layer normally toggles
     # these itself, but this final layer deliberately repeats the boundary so a
