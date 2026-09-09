@@ -7,13 +7,16 @@ computed snapshots. Sources are explicit and actor IDs remain scoped to their re
 A stable member_key is required from the caller when the same person is linked across
 reports.
 
-Death/resource/mechanic enrichment is intentionally separate. Missing enrichment is
-left missing rather than inferred from output or uptime data.
+Optional event enrichment is additive. A failure to collect death/resource evidence
+never erases an otherwise valid base performance observation.
 """
 
 from dataclasses import dataclass
-from typing import Iterable
+from typing import Callable, Iterable
 
+from services.performance_raid_review_event_enrichment_service import (
+    RaidReviewEventEnrichment,
+)
 from services.performance_raid_review_service import RaidReviewObservation
 
 
@@ -27,6 +30,7 @@ class RaidReviewSource:
     member_key: str = ""
     immunity_buff_name: str = ""
     immunity_buff_kind: str = "Buff"
+    primary_resource_name: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -35,11 +39,23 @@ class RaidReviewCollectionResult:
     unresolved: tuple[str, ...] = ()
 
 
+RaidReviewEnrichmentResolver = Callable[
+    [RaidReviewSource, dict],
+    RaidReviewEventEnrichment,
+]
+
+
 class PerformanceRaidReviewObservationService:
     """Build fresh review observations from explicit ESO Logs actor/fight sources."""
 
-    def __init__(self, performance_service):
+    def __init__(
+        self,
+        performance_service,
+        *,
+        enrichment_resolver: RaidReviewEnrichmentResolver | None = None,
+    ):
         self.performance_service = performance_service
+        self.enrichment_resolver = enrichment_resolver
 
     def collect(
         self,
@@ -84,11 +100,29 @@ class PerformanceRaidReviewObservationService:
                     # Keep the strongest named observation rather than summing duplicates.
                     uptimes[name] = max(percent, uptimes.get(name, 0.0))
 
+            enrichment = RaidReviewEventEnrichment()
+            if self.enrichment_resolver is not None:
+                try:
+                    enrichment = self.enrichment_resolver(source, fight)
+                except Exception as exc:
+                    unresolved.append(
+                        f"{source.report_code} #{source.fight_id} {source.actor_label} enrichment: {exc}"
+                    )
+                else:
+                    unresolved.extend(
+                        f"{source.report_code} #{source.fight_id} {source.actor_label}: {message}"
+                        for message in enrichment.unresolved
+                    )
+
             observations.append(
                 RaidReviewObservation(
                     report_code=str(source.report_code),
                     fight_id=int(source.fight_id),
-                    fight_name=str(getattr(snapshot, "FightName", "") or fight.get("name") or ""),
+                    fight_name=str(
+                        getattr(snapshot, "FightName", "")
+                        or fight.get("name")
+                        or ""
+                    ),
                     kill=bool(fight.get("kill")),
                     actor_id=int(source.actor_id),
                     actor_label=str(source.actor_label),
@@ -97,11 +131,19 @@ class PerformanceRaidReviewObservationService:
                         getattr(snapshot, "FightDurationSeconds", 0.0) or 0.0
                     ),
                     member_key=str(source.member_key),
-                    output_total=float(getattr(snapshot, "OutputTotal", 0.0) or 0.0),
+                    output_total=float(
+                        getattr(snapshot, "OutputTotal", 0.0) or 0.0
+                    ),
                     output_per_second=float(
                         getattr(snapshot, "OutputPerSecond", 0.0) or 0.0
                     ),
                     boss_active_seconds=getattr(snapshot, "BossActiveSeconds", None),
+                    death_count=enrichment.death_count,
+                    first_death_seconds=enrichment.first_death_seconds,
+                    first_death_ability=enrichment.first_death_ability,
+                    minimum_primary_resource_percent=(
+                        enrichment.minimum_primary_resource_percent
+                    ),
                     key_uptimes=uptimes,
                 )
             )
@@ -115,5 +157,6 @@ class PerformanceRaidReviewObservationService:
 __all__ = [
     "PerformanceRaidReviewObservationService",
     "RaidReviewCollectionResult",
+    "RaidReviewEnrichmentResolver",
     "RaidReviewSource",
 ]
