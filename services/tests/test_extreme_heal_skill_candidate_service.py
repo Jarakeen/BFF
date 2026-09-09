@@ -103,9 +103,6 @@ def test_discovers_current_class_and_owned_weapon_heals(tmp_path):
 
     candidates = service.candidates_for_build(build, progression)
 
-    # Candidate order is deterministic presentation detail, not mechanics.
-    # Discovery correctness is the legal candidate set plus each candidate's
-    # canonical metadata.
     assert {candidate.name for candidate in candidates} == {"Budding Seeds", "Grand Healing"}
     budding = next(candidate for candidate in candidates if candidate.name == "Budding Seeds")
     assert budding.rank == 4
@@ -265,7 +262,7 @@ def test_active_bar_weapon_legality_fails_closed_for_aggregate_weapon_label(tmp_
     )
 
 
-def test_missing_canonical_classification_tables_fail_closed(tmp_path):
+def test_missing_core_candidate_metadata_tables_fail_closed(tmp_path):
     path = tmp_path / "eso.db"
     with sqlite3.connect(path) as db:
         db.execute("CREATE TABLE ability (ability_id INTEGER PRIMARY KEY)")
@@ -277,8 +274,8 @@ def test_missing_canonical_classification_tables_fail_closed(tmp_path):
     except ValueError as exc:
         message = str(exc)
     else:
-        raise AssertionError("missing canonical tables must not silently produce an empty catalog")
+        raise AssertionError("missing canonical metadata tables must not silently produce an empty catalog")
 
     assert "skill" in message
     assert "skill_rank" in message
-    assert "skill_component_classification" in message
+    assert "skill_component_classification" not in message
