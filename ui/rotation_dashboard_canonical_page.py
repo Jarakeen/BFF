@@ -22,6 +22,9 @@ from services.rotation_recovery_heavy_replay_service import (
 from services.rotation_support_cadence_progression_runner_service import (
     RotationSupportCadenceProgressionRun,
 )
+from ui.components.rotation_cadence_progression_card import (
+    RotationCadenceProgressionCard,
+)
 from ui.rotation_canonical_candidate_render_support import (
     RotationCanonicalCandidateRenderEvidence,
     RotationCanonicalCandidateRenderSupport,
@@ -55,6 +58,8 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
         super().__init__(parent)
         install_rotation_timeline(self)
         install_rotation_pdf_export(self)
+        self.cadence_progression_card = RotationCadenceProgressionCard()
+        self.workspace_layout.addWidget(self.cadence_progression_card)
         self.rotation_canonical_candidates = (
             canonical_candidates
             or RotationDashboardCanonicalCandidateSupport(
@@ -153,6 +158,9 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
         )
         self.last_canonical_candidate_result = result
         self.last_canonical_render_evidence = None
+        self.last_cadence_progression_run = None
+        self.last_cadence_progression_render_evidence = None
+        self.cadence_progression_card.clear_report()
         return result
 
     def evaluate_canonical_evidence_bundle(
@@ -244,6 +252,7 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
         self.set_sustain_projection(evidence.sustain_projection)
 
         report = evidence.report
+        self.cadence_progression_card.set_report(report)
         self.status.info(
             "Cadence optimization: "
             f"{report.advanced_steps} accepted improvement(s) across "
