@@ -25,13 +25,18 @@ _ORIGINAL_SHOW_SNAPSHOT = None
 def _enforce_dd_card_visibility(self, is_dd: bool) -> None:
     """Apply the final role-specific card state after every wrapped presenter.
 
-    The base dashboard owns three support cards that are useful for healer/tank
-    review but were still visible on live DPS tabs. DD presentation has several
-    additive wrappers, so this final wrapper is the authoritative last word on
-    card visibility rather than trusting an earlier layer to remain untouched.
+    The polished dashboard's Support Effect Uptime card is useful for healer/tank
+    review but competes with the DD-only Observed DoT Uptime card for the same
+    visible summary row. DPS tabs therefore swap that support card out for the
+    DoT card. Legacy hidden support cards are gated here too for compatibility.
     """
 
-    for name in ("buff_card", "debuff_card", "raid_debuff_card"):
+    for name in (
+        "buff_card",
+        "debuff_card",
+        "raid_debuff_card",
+        "support_effects_card",
+    ):
         card = getattr(self, name, None)
         if card is not None:
             card.setVisible(not is_dd)
