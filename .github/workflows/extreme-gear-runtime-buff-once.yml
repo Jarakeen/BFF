@@ -1,0 +1,115 @@
+name: Extreme Gear Runtime Buff Once
+
+on:
+  push:
+    branches:
+      - phase13
+    paths:
+      - .github/workflows/extreme-gear-runtime-buff-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch-test-rebase-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out current phase13.2
+        uses: actions/checkout@v4
+        with:
+          ref: phase13.2
+          fetch-depth: 0
+
+      - name: Patch gear runtime buff support
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          service_path = Path('services/extreme_actual_heal_gear_runtime_buff_service.py')
+          service_path.write_text('''from __future__ import annotations\n\nfrom dataclasses import dataclass\nfrom pathlib import Path\n\nfrom minmax.character_build.effect_layer import EffectLayer\nfrom minmax.gear_set_effect_variant_resolver import GearSetEffectVariantResolver\nfrom minmax.gear_set_repository import GearSetRepository\nfrom minmax.gear_stat_inputs import GearStatInputResolver\nfrom minmax.named_combat_buffs import canonical_buff_name, effects_for_buff\nfrom minmax.runtime_effect_eligibility import (\n    RuntimeEffectState,\n    evaluate_effect_variant_runtime_eligibility,\n)\nfrom minmax.runtime_event import RuntimeEvent, runtime_event_matches_effect_variant\nfrom minmax.support_target_type import SupportTargetType\nfrom models.build_model import PlayerBuild\n\n\n@dataclass(frozen=True)\nclass ExtremeActualHealGearRuntimeBuffResult:\n    active_buffs: tuple[str, ...] = ()\n    unresolved: tuple[str, ...] = ()\n\n\nclass ExtremeActualHealGearRuntimeBuffService:\n    """Resolve runtime-proven gear-set named buffs for one heal snapshot.\n\n    Existing Extreme gear candidates own equipment search. This service only\n    asks what verified proc effects the candidate's actually equipped sets can\n    produce at the supplied runtime event and snapshot. It does not parse set\n    descriptions or infer that ALLY/GROUP necessarily includes the wearer.\n    """\n\n    def __init__(\n        self,\n        database_path: str | Path,\n        *,\n        repository: GearSetRepository | None = None,\n        resolver: GearSetEffectVariantResolver | None = None,\n    ) -> None:\n        self.database_path = Path(database_path)\n        self.repository = repository or GearSetRepository(self.database_path)\n        self.resolver = resolver or GearSetEffectVariantResolver(self.repository)\n\n    @staticmethod\n    def _named_buff(effect) -> str | None:\n        if effect.layer is not EffectLayer.PROC:\n            return None\n        if effect.duration is None or float(effect.duration) <= 0.0:\n            return None\n        canonical = canonical_buff_name(str(effect.name or "").replace("_", " "))\n        if canonical is None or not effects_for_buff(canonical):\n            return None\n        return canonical\n\n    def resolve(\n        self,\n        build: PlayerBuild,\n        *,\n        active_bar: str,\n        event: RuntimeEvent,\n        snapshot_time_seconds: float,\n        state: RuntimeEffectState = RuntimeEffectState(),\n        chance_roll: float | None = None,\n    ) -> ExtremeActualHealGearRuntimeBuffResult:\n        snapshot = float(snapshot_time_seconds)\n        if snapshot < event.time_seconds:\n            raise ValueError("gear proc snapshot cannot precede the runtime event")\n        elapsed = snapshot - event.time_seconds\n        active: list[str] = []\n        unresolved: list[str] = []\n\n        counts = GearStatInputResolver.equipped_set_counts(build, active_bar=active_bar)\n        for set_name, piece_count in sorted(counts.items(), key=lambda item: item[0].casefold()):\n            gear_set = self.repository.get_set(set_name)\n            if gear_set is None:\n                continue\n            for effect in self.resolver.resolve(gear_set.id, int(piece_count)):\n                buff = self._named_buff(effect)\n                if buff is None:\n                    continue\n                if not runtime_event_matches_effect_variant(event, effect):\n                    continue\n                if elapsed >= float(effect.duration):\n                    continue\n\n                if effect.condition is not None:\n                    unresolved.append(\n                        f"{set_name} {buff} runtime condition is not executable: {effect.condition}"\n                    )\n                    continue\n\n                if effect.target_type is not SupportTargetType.SELF:\n                    target = (\n                        effect.target_type.value\n                        if effect.target_type is not None\n                        else "unclassified"\n                    )\n                    unresolved.append(\n                        f"{set_name} {buff} proc target {target!r} does not canonically prove wearer self-application"\n                    )\n                    continue\n\n                eligibility = evaluate_effect_variant_runtime_eligibility(\n                    event,\n                    effect,\n                    state=state,\n                    chance_roll=chance_roll,\n                )\n                if eligibility.eligible:\n                    active.append(buff)\n                elif eligibility.chance_roll_required:\n                    unresolved.append(\n                        f"{set_name} {buff} proc requires an explicit deterministic chance roll"\n                    )\n\n        return ExtremeActualHealGearRuntimeBuffResult(\n            active_buffs=tuple(dict.fromkeys(active)),\n            unresolved=tuple(dict.fromkeys(unresolved)),\n        )\n''', encoding='utf-8')
+
+          path = Path('services/extreme_conditional_actual_heal_optimization_service.py')
+          text = path.read_text(encoding='utf-8')
+
+          old = '''from services.extreme_actual_heal_potion_candidate_service import (\n    ExtremeActualHealPotionCandidateService,\n)'''
+          new = '''from services.extreme_actual_heal_gear_runtime_buff_service import (\n    ExtremeActualHealGearRuntimeBuffService,\n)\nfrom services.extreme_actual_heal_potion_candidate_service import (\n    ExtremeActualHealPotionCandidateService,\n)'''
+          if 'ExtremeActualHealGearRuntimeBuffService' not in text:
+              if old not in text:
+                  raise SystemExit('gear runtime import insertion point not found')
+              text = text.replace(old, new, 1)
+
+          old = '''        skill_trigger_chance_roll: float | None = None,\n        restoration_heavy_state: ExtremeRestorationHeavyCombatStateService | None = None,'''
+          new = '''        skill_trigger_chance_roll: float | None = None,\n        gear_trigger_event: RuntimeEvent | None = None,\n        gear_trigger_snapshot_seconds: float | None = None,\n        gear_trigger_effect_state: RuntimeEffectState = RuntimeEffectState(),\n        gear_trigger_chance_roll: float | None = None,\n        gear_runtime_buffs: ExtremeActualHealGearRuntimeBuffService | None = None,\n        restoration_heavy_state: ExtremeRestorationHeavyCombatStateService | None = None,'''
+          if old not in text:
+              raise SystemExit('gear runtime constructor insertion point not found')
+          text = text.replace(old, new, 1)
+
+          old = '''        self.skill_trigger_effect_state = skill_trigger_effect_state\n        self.skill_trigger_chance_roll = skill_trigger_chance_roll\n        self.restoration_heavy_state = restoration_heavy_state'''
+          new = '''        self.skill_trigger_effect_state = skill_trigger_effect_state\n        self.skill_trigger_chance_roll = skill_trigger_chance_roll\n        if (gear_trigger_event is None) != (gear_trigger_snapshot_seconds is None):\n            raise ValueError(\n                "gear_trigger_event and gear_trigger_snapshot_seconds must be provided together"\n            )\n        if (\n            gear_trigger_event is not None\n            and float(gear_trigger_snapshot_seconds) < gear_trigger_event.time_seconds\n        ):\n            raise ValueError("gear trigger snapshot cannot precede the runtime event")\n        self.gear_trigger_event = gear_trigger_event\n        self.gear_trigger_snapshot_seconds = (\n            None if gear_trigger_snapshot_seconds is None else float(gear_trigger_snapshot_seconds)\n        )\n        self.gear_trigger_effect_state = gear_trigger_effect_state\n        self.gear_trigger_chance_roll = gear_trigger_chance_roll\n        self.gear_runtime_buffs = gear_runtime_buffs\n        self.restoration_heavy_state = restoration_heavy_state'''
+          if old not in text:
+              raise SystemExit('gear runtime assignment insertion point not found')
+          text = text.replace(old, new, 1)
+
+          old = '''        if self.skill_trigger_event is not None:\n            scenarios.append(\n                "explicit triggered skill-buff runtime event "\n                f"{self.skill_trigger_event.trigger!r} at {self.skill_trigger_event.time_seconds:.6f}s "\n                f"with heal snapshot {self.skill_trigger_snapshot_seconds:.6f}s"\n            )\n        if self.sacred_ground_window_active:'''
+          new = '''        if self.skill_trigger_event is not None:\n            scenarios.append(\n                "explicit triggered skill-buff runtime event "\n                f"{self.skill_trigger_event.trigger!r} at {self.skill_trigger_event.time_seconds:.6f}s "\n                f"with heal snapshot {self.skill_trigger_snapshot_seconds:.6f}s"\n            )\n        if self.gear_trigger_event is not None:\n            scenarios.append(\n                "explicit gear-proc runtime event "\n                f"{self.gear_trigger_event.trigger!r} at {self.gear_trigger_event.time_seconds:.6f}s "\n                f"with heal snapshot {self.gear_trigger_snapshot_seconds:.6f}s; "\n                "wearer self-application requires canonical SELF targeting"\n            )\n        if self.sacred_ground_window_active:'''
+          if old not in text:
+              raise SystemExit('gear runtime scope insertion point not found')
+          text = text.replace(old, new, 1)
+
+          old = '''        if self.potion_elapsed_seconds is not None:\n            potion_name = " ".join(str(build.Potion or "").strip().split())'''
+          new = '''        if self.gear_trigger_event is not None:\n            service = self.gear_runtime_buffs\n            if service is None:\n                database_path = getattr(self.optimizer, "database_path", None)\n                if database_path is not None:\n                    service = ExtremeActualHealGearRuntimeBuffService(database_path)\n                    self.gear_runtime_buffs = service\n            if service is not None:\n                gear_result = service.resolve(\n                    build,\n                    active_bar=active_bar,\n                    event=self.gear_trigger_event,\n                    snapshot_time_seconds=self.gear_trigger_snapshot_seconds,\n                    state=self.gear_trigger_effect_state,\n                    chance_roll=self.gear_trigger_chance_roll,\n                )\n                active_buffs.extend(gear_result.active_buffs)\n                unresolved.extend(gear_result.unresolved)\n\n        if self.potion_elapsed_seconds is not None:\n            potion_name = " ".join(str(build.Potion or "").strip().split())'''
+          if old not in text:
+              raise SystemExit('gear runtime combat-state insertion point not found')
+          text = text.replace(old, new, 1)
+          path.write_text(text, encoding='utf-8')
+
+          test_path = Path('services/tests/test_extreme_actual_heal_gear_runtime_buff_service.py')
+          test_path.write_text('''from types import SimpleNamespace\n\nfrom minmax.character_build.effect_instance import EffectVariant\nfrom minmax.character_build.effect_layer import EffectLayer\nfrom minmax.runtime_effect_eligibility import RuntimeEffectState\nfrom minmax.runtime_event import RuntimeEvent\nfrom minmax.support_target_type import SupportTargetType\nfrom models.build_model import GearSlot, PlayerBuild\nfrom services.extreme_actual_heal_gear_runtime_buff_service import (\n    ExtremeActualHealGearRuntimeBuffService,\n)\n\n\nclass _Repository:\n    @staticmethod\n    def get_set(name):\n        return SimpleNamespace(id={"Self Proc Set": 1, "Ambiguous Proc Set": 2}.get(name, 0), name=name) if name in {"Self Proc Set", "Ambiguous Proc Set"} else None\n\n\nclass _Resolver:\n    @staticmethod\n    def resolve(set_id, piece_count):\n        if piece_count < 5:\n            return []\n        target = SupportTargetType.SELF if set_id == 1 else SupportTargetType.ALLY\n        return [\n            EffectVariant(\n                name="major_courage",\n                layer=EffectLayer.PROC,\n                source="fixture set",\n                duration=5.0,\n                cooldown=10.0,\n                trigger="overheal_self_or_ally",\n                target_type=target,\n            )\n        ]\n\n\ndef _five_piece(set_name):\n    build = PlayerBuild(BuildName="Gear Proc")\n    for slot in ("Head", "Shoulders", "Chest", "Hands", "Waist"):\n        build.Armor[slot]["Set"] = set_name\n    return build\n\n\ndef test_self_target_gear_proc_reaches_named_buff_only_inside_live_window():\n    service = ExtremeActualHealGearRuntimeBuffService(\n        "unused.db", repository=_Repository(), resolver=_Resolver()\n    )\n    event = RuntimeEvent(\n        time_seconds=10.0, trigger="overheal_self_or_ally", source="test"\n    )\n    result = service.resolve(\n        _five_piece("Self Proc Set"),\n        active_bar="front",\n        event=event,\n        snapshot_time_seconds=14.999,\n    )\n    assert result.active_buffs == ("Major Courage",)\n    assert result.unresolved == ()\n\n    expired = service.resolve(\n        _five_piece("Self Proc Set"),\n        active_bar="front",\n        event=event,\n        snapshot_time_seconds=15.0,\n    )\n    assert expired.active_buffs == ()\n\n\ndef test_nonself_gear_proc_is_not_promoted_to_wearer_buff():\n    service = ExtremeActualHealGearRuntimeBuffService(\n        "unused.db", repository=_Repository(), resolver=_Resolver()\n    )\n    event = RuntimeEvent(\n        time_seconds=0.0, trigger="overheal_self_or_ally", source="test"\n    )\n    result = service.resolve(\n        _five_piece("Ambiguous Proc Set"),\n        active_bar="front",\n        event=event,\n        snapshot_time_seconds=1.0,\n    )\n    assert result.active_buffs == ()\n    assert any("does not canonically prove wearer self-application" in item for item in result.unresolved)\n\n\ndef test_gear_proc_respects_cooldown_state():\n    service = ExtremeActualHealGearRuntimeBuffService(\n        "unused.db", repository=_Repository(), resolver=_Resolver()\n    )\n    event = RuntimeEvent(\n        time_seconds=10.0, trigger="overheal_self_or_ally", source="test"\n    )\n    result = service.resolve(\n        _five_piece("Self Proc Set"),\n        active_bar="front",\n        event=event,\n        snapshot_time_seconds=11.0,\n        state=RuntimeEffectState(last_activation_time_seconds=5.0),\n    )\n    assert result.active_buffs == ()\n\n\ndef test_gear_proc_uses_canonical_two_slot_weapon_counting():\n    build = PlayerBuild(\n        BuildName="Weapon Count",\n        FrontBarWeapon=GearSlot(\n            Set="Self Proc Set", WeaponType="Restoration Staff"\n        ),\n    )\n    for slot in ("Head", "Shoulders", "Chest"):\n        build.Armor[slot]["Set"] = "Self Proc Set"\n    service = ExtremeActualHealGearRuntimeBuffService(\n        "unused.db", repository=_Repository(), resolver=_Resolver()\n    )\n    result = service.resolve(\n        build,\n        active_bar="front",\n        event=RuntimeEvent(\n            time_seconds=0.0, trigger="overheal_self_or_ally", source="test"\n        ),\n        snapshot_time_seconds=1.0,\n    )\n    assert result.active_buffs == ("Major Courage",)\n''', encoding='utf-8')
+
+          notes_path = Path('GAME_MECHANICS_FIELD_NOTES.md')
+          notes = notes_path.read_text(encoding='utf-8')
+          heading = '## 2026-09-09 — Gear-proc self application must be explicit, not inferred from ally/group targeting'
+          if heading not in notes:
+              notes += f'''\n\n---\n\n{heading}\n\nExtreme MOST Actual Heal now evaluates verified gear-set proc effects against explicit runtime events, cooldown state, proc chance, and the exact heal snapshot. Existing Extreme gear candidates remain responsible for physically equipping sets; the runtime layer uses canonical `GearStatInputResolver.equipped_set_counts` and `GearSetEffectVariantResolver` to determine what the candidate can actually proc.\n\nA proc recorded as `ALLY` or `GROUP` is **not** automatically treated as a buff on the wearer. This matters for records such as Spell Power Cure, whose verified trigger identity currently says `overheal_self_or_ally` while its target model is `ALLY`. Until the target model can explicitly prove wearer self-application, Extreme reports that ambiguity instead of adding Major Courage to the healer.\n\n**Layman’s version:** wearing a proc set and successfully triggering it still does not prove the buff landed on *you*. Extreme now insists on that last piece of evidence before using the buff to inflate MOST Actual Heal.\n'''
+              notes_path.write_text(notes, encoding='utf-8')
+          PY
+
+      - name: Install focused test dependencies
+        run: python -m pip install --disable-pip-version-check pytest==9.1.1 pydantic==2.13.4
+
+      - name: Test patched head
+        run: |
+          python -m pytest \
+            services/tests/test_extreme_actual_heal_gear_runtime_buff_service.py \
+            services/tests/test_extreme_actual_heal_skill_buff_candidate_service.py \
+            services/tests/test_extreme_conditional_actual_heal_optimization_service.py \
+            minmax/tests/test_runtime_effect_eligibility.py \
+            minmax/tests/test_gear_stat_inputs.py \
+            minmax/tests/test_weapon_set_counting.py \
+            services/tests/test_extreme_optimization_read_only_database.py
+
+      - name: Commit, rebase, retest, and push
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Jarakeen"
+          git config user.email "jarakeene@gmail.com"
+          git add \
+            services/extreme_actual_heal_gear_runtime_buff_service.py \
+            services/extreme_conditional_actual_heal_optimization_service.py \
+            services/tests/test_extreme_actual_heal_gear_runtime_buff_service.py \
+            GAME_MECHANICS_FIELD_NOTES.md
+          git commit -m "feat: prove gear proc buffs in Extreme heals"
+          git fetch origin phase13.2
+          git rebase origin/phase13.2
+          python -m pytest \
+            services/tests/test_extreme_actual_heal_gear_runtime_buff_service.py \
+            services/tests/test_extreme_actual_heal_skill_buff_candidate_service.py \
+            services/tests/test_extreme_conditional_actual_heal_optimization_service.py \
+            minmax/tests/test_runtime_effect_eligibility.py \
+            minmax/tests/test_gear_stat_inputs.py \
+            minmax/tests/test_weapon_set_counting.py \
+            services/tests/test_extreme_optimization_read_only_database.py
+          git push origin HEAD:phase13.2
