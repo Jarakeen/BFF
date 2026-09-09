@@ -28,8 +28,8 @@ class TeamProviderScheduledActionCost:
     time_seconds: float
     sequence: int
     gcd_seconds: float | None
-    resource_type: str | None = None
-    resource_cost: float | None = None
+    cast_channel_seconds: float | None = 0.0
+    resource_costs: tuple[tuple[str, float], ...] | None = None
     ultimate_cost: float | None = None
     primary_role_displacement_seconds: float | None = None
 
@@ -43,7 +43,7 @@ class TeamProviderScheduledActionCost:
 
         for field_name in (
             "gcd_seconds",
-            "resource_cost",
+            "cast_channel_seconds",
             "ultimate_cost",
             "primary_role_displacement_seconds",
         ):
@@ -55,14 +55,27 @@ class TeamProviderScheduledActionCost:
                 raise ValueError(f"{field_name} must be finite and non-negative")
             object.__setattr__(self, field_name, normalized)
 
-        resource_type = _canonical(self.resource_type)
-        object.__setattr__(self, "resource_type", resource_type or None)
-        if resource_type and self.resource_cost is None:
-            raise ValueError("resource_cost is required when resource_type is supplied")
-        if not resource_type and self.resource_cost is not None:
-            raise ValueError("resource_type is required when resource_cost is supplied")
-        if resource_type == "none" and self.resource_cost != 0.0:
-            raise ValueError("resource_type='none' requires resource_cost=0")
+        if self.resource_costs is not None:
+            normalized_costs: list[tuple[str, float]] = []
+            seen_resources: set[str] = set()
+            for raw_resource, raw_cost in self.resource_costs:
+                resource = _canonical(raw_resource)
+                cost = float(raw_cost)
+                if not resource:
+                    raise ValueError("provider resource cost requires a resource type")
+                if resource == "ultimate":
+                    raise ValueError("Ultimate cost must use ultimate_cost")
+                if resource in seen_resources:
+                    raise ValueError(f"duplicate provider resource cost: {resource}")
+                if not isfinite(cost) or cost < 0:
+                    raise ValueError("provider resource costs must be finite and non-negative")
+                seen_resources.add(resource)
+                normalized_costs.append((resource, cost))
+            object.__setattr__(
+                self,
+                "resource_costs",
+                tuple(sorted(normalized_costs)),
+            )
 
 
 @dataclass(frozen=True)
@@ -83,6 +96,7 @@ class TeamProviderRotationWorkload:
     provider_applications_per_minute: float
     provider_refreshes: int
     provider_gcd_seconds: float
+    provider_cast_channel_seconds: float
     refreshes_per_minute: float
     resource_costs: tuple[tuple[str, float], ...]
     ultimate_spent: float
@@ -112,6 +126,7 @@ class TeamProviderRotationWorkloadComparison:
     provider_applications_per_minute_delta: float
     provider_refreshes_delta: int
     provider_gcd_seconds_delta: float
+    provider_cast_channel_seconds_delta: float
     refreshes_per_minute_delta: float
     resource_cost_deltas: tuple[tuple[str, float], ...]
     ultimate_spent_delta: float
@@ -168,6 +183,7 @@ class TeamProviderRotationWorkloadService:
         provider_applications = 0
         provider_refreshes = 0
         provider_gcd_seconds = 0.0
+        provider_cast_channel_seconds = 0.0
         ultimate_spent = 0.0
         primary_role_displacement_seconds = 0.0
         total_burdens: list[RotationExecutionBurden] = []
@@ -220,16 +236,22 @@ class TeamProviderRotationWorkloadService:
                 else:
                     provider_gcd_seconds += evidence.gcd_seconds
 
-                if evidence.resource_type is not None:
-                    if evidence.resource_type != "none":
-                        resource_totals[evidence.resource_type] = (
-                            resource_totals.get(evidence.resource_type, 0.0)
-                            + float(evidence.resource_cost or 0.0)
+                if evidence.cast_channel_seconds is None:
+                    issues.append(
+                        f"{contributor}: {action_label} has unresolved cast/channel occupancy"
+                    )
+                else:
+                    provider_cast_channel_seconds += evidence.cast_channel_seconds
+
+                if evidence.resource_costs is not None:
+                    for resource_type, resource_cost in evidence.resource_costs:
+                        resource_totals[resource_type] = (
+                            resource_totals.get(resource_type, 0.0) + resource_cost
                         )
                 elif action.kind is RotationActionKind.SKILL:
                     issues.append(
                         f"{contributor}: {action_label} has unresolved resource cost; "
-                        "use resource_type='none' and resource_cost=0 for a reviewed free cast"
+                        "use an empty resource_costs tuple for a reviewed free cast"
                     )
 
                 if action.kind is RotationActionKind.ULTIMATE:
@@ -273,6 +295,7 @@ class TeamProviderRotationWorkloadService:
             provider_applications_per_minute=provider_applications * 60.0 / duration,
             provider_refreshes=provider_refreshes,
             provider_gcd_seconds=provider_gcd_seconds,
+            provider_cast_channel_seconds=provider_cast_channel_seconds,
             refreshes_per_minute=provider_refreshes * 60.0 / duration,
             resource_costs=tuple(sorted(resource_totals.items())),
             ultimate_spent=ultimate_spent,
@@ -324,6 +347,10 @@ class TeamProviderRotationWorkloadService:
             ),
             provider_gcd_seconds_delta=(
                 candidate.provider_gcd_seconds - baseline.provider_gcd_seconds
+            ),
+            provider_cast_channel_seconds_delta=(
+                candidate.provider_cast_channel_seconds
+                - baseline.provider_cast_channel_seconds
             ),
             refreshes_per_minute_delta=(
                 candidate.refreshes_per_minute - baseline.refreshes_per_minute

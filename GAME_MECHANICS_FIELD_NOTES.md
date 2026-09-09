@@ -427,3 +427,44 @@ heavies, or attention from a particular role.
 separate workload evidence. BFF must not hide those tradeoffs inside one arbitrary
 score that pretends a bar slot, a heavy attack, a GCD, and 200 Ultimate are naturally
 interchangeable.
+
+---
+
+## 2026-09-09 — An instant skill is not proof of a free rotation slot
+
+While connecting provider workload to canonical skill timing, BFF could prove when
+a skill had a cast time or channel time. An instant skill usually had zero in both
+database fields. That still did **not** prove that the action consumed zero general
+combat cadence or could be squeezed between two other abilities for free.
+
+**Layman's version:** "instant" means the character does not stand there casting or
+channeling it. It does not mean the button press takes no place in the rotation.
+
+**What it means in actual play:** an instant support skill can still replace another
+skill cast, delay a heal or damage action, and make a rotation busier even though its
+tooltip does not show a cast time.
+
+**For BFF:** imported cast/channel time and the general global cooldown are separate
+facts. Zero cast/channel time must not silently become zero workload. Until BFF has
+versioned canonical GCD evidence, the planning GCD remains an explicit input and a
+missing value blocks workload comparison.
+
+---
+
+## 2026-09-09 — The skill's base price is not always what the build pays
+
+The canonical ability row stores a skill's base resource cost, but a real saved build
+may pay less because of verified racial passives, armor passives, or jewelry cost
+glyphs. Compound skills can also charge more than one resource pool at once.
+
+**Layman's version:** the database price tag is the starting price. Your character's
+actual receipt can be different.
+
+**What it means in actual play:** assigning the same support skill to two players can
+create different sustain pressure even when they cast it the same number of times.
+A Breton healer wearing Light Armor, for example, may not pay the same Magicka cost
+as another character carrying the identical skill.
+
+**For BFF:** provider workload must use the existing final-action-cost engine after
+class/racial, armor, and jewelry evidence is resolved. If a selected modifier is not
+verified, BFF blocks the comparison rather than quietly falling back to base cost.

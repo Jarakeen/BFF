@@ -664,7 +664,25 @@ coverage, and have resolved workload evidence. The comparison deliberately repor
 independent deltas rather than declaring that one heavy attack, GCD, bar slot,
 resource cost, or Ultimate point has a universal exchange rate.
 
-Expanded provider-workload and provider-coverage checkpoint: **83 passed in 0.59s**.
+The canonical workload bridge now derives provider-action evidence from the exact
+saved Character → Build identity and scheduled action. It reuses authoritative
+ability-cost, saved-build slot, and imported cast/channel-timing services to resolve:
+
+- final Magicka, Stamina, or Health skill cost after currently verified racial,
+  armor, and jewelry cost modifiers;
+- final ordinary canonical Ultimate cost after currently verified build modifiers;
+- independent cost accounting for supported compound-resource skills;
+- exact scheduled-bar legality and occupied provider slot;
+- cast/channel occupancy for each provider application;
+- only action-relevant unresolved evidence, without allowing an unrelated unused
+  skill gap elsewhere on the build to poison the comparison.
+
+General GCD duration and primary-role displacement remain explicit caller policy or
+evidence. They are not inferred from zero cast/channel time. Persistent/secondary
+Ultimate activations remain an explicit next-step gap.
+
+Expanded canonical provider-workload, final-cost, and provider-coverage checkpoint:
+**116 passed in 1.01s**.
 Latest user-reported full-suite checkpoint before this workload slice:
 **2,623 passed in 82.46s**.
 
@@ -673,7 +691,7 @@ Active next work:
 1. convert the user-supplied BTV screenshot corpus into structured benchmark fixtures with provenance, encounter scope, observed uptime, target/reference uptime where visible, theoretical maximum where visible, and explicit unknown fields rather than guessed values;
 2. test policy selection, target-vs-theoretical-max validation, temporal window scoring, overlap/gap explanation, and BTV-style feedback against those fixtures;
 3. connect those benchmark fixtures to Comp Maker / Optimization explanation paths without treating them as canonical ESO mechanics;
-4. connect provider workload inputs to canonical action timing, resource cost, Ultimate cost, slot ownership, temporal coverage, and Comp Maker / Optimization explanation paths;
+4. connect provider workload to canonical temporal-coverage results and Comp Maker / Optimization explanations; add persistent/secondary Ultimate activation evidence;
 5. continue thorough healer, tank, and DD rotation coverage with class passives, armor/set duration modifiers, runtime proc conditions, and encounter-specific timing.
 
 Fight-horizon policy: most raid fights are expected to finish within roughly six minutes in the user's working context, so **360 seconds may be used only as an overrideable fallback planning ceiling when encounter-specific timing is unavailable**. It is not a canonical encounter duration. Optimization should prioritize important burn/mechanic windows over meaningless attempts to force every support effect to 100% global uptime.

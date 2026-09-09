@@ -21,8 +21,8 @@ def _action_cost(
     sequence,
     *,
     gcd=1.0,
-    resource_type=None,
-    resource_cost=None,
+    cast_channel=0.0,
+    resource_costs=None,
     ultimate_cost=None,
     displacement=0.0,
 ):
@@ -30,8 +30,8 @@ def _action_cost(
         time_seconds=time_seconds,
         sequence=sequence,
         gcd_seconds=gcd,
-        resource_type=resource_type,
-        resource_cost=resource_cost,
+        cast_channel_seconds=cast_channel,
+        resource_costs=resource_costs,
         ultimate_cost=ultimate_cost,
         primary_role_displacement_seconds=displacement,
     )
@@ -79,6 +79,7 @@ def test_assesses_multi_carrier_workload_without_weighting_unlike_dimensions():
     assert workload.provider_applications_per_minute == 2.0
     assert workload.provider_refreshes == 0
     assert workload.provider_gcd_seconds == 2.0
+    assert workload.provider_cast_channel_seconds == 0.0
     assert workload.refreshes_per_minute == 0.0
     assert workload.resource_costs == ()
     assert workload.ultimate_spent == 500.0
@@ -116,8 +117,7 @@ def test_compare_exposes_tradeoffs_for_two_resolved_coverage_plans():
                     _action_cost(
                         time,
                         0,
-                        resource_type="magicka",
-                        resource_cost=2700,
+                        resource_costs=(("magicka", 2700),),
                         displacement=1.0,
                     )
                     for time in (0.0, 20.0, 40.0)
@@ -145,6 +145,7 @@ def test_compare_exposes_tradeoffs_for_two_resolved_coverage_plans():
     assert comparison.provider_applications_per_minute_delta == -2.0
     assert comparison.provider_refreshes_delta == -2
     assert comparison.provider_gcd_seconds_delta == -2.0
+    assert comparison.provider_cast_channel_seconds_delta == 0.0
     assert comparison.refreshes_per_minute_delta == -2.0
     assert comparison.resource_cost_deltas == (("magicka", -8100.0),)
     assert comparison.ultimate_spent_delta == 200.0
@@ -298,7 +299,7 @@ def test_reviewed_free_skill_cost_is_explicit_not_assumed():
             TeamProviderRotationContribution(
                 plan=plan,
                 provider_actions=(
-                    _action_cost(0.0, 0, resource_type="none", resource_cost=0),
+                    _action_cost(0.0, 0, resource_costs=()),
                 ),
             ),
         ),
