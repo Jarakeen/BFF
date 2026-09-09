@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import re
-from typing import Protocol
+from typing import Callable, Protocol
 
 from minmax.rotation_plan import RotationActionKind, RotationPlan
 
@@ -26,6 +26,7 @@ class RotationTimelineAction:
     kind: str
     bar: str | None
     icon_key: str
+    icon_path: str | None = None
 
 
 @dataclass(frozen=True)
@@ -56,7 +57,9 @@ class RotationTimelineProjectionService:
 
     This service does not resolve ESO durations. It consumes the authoritative
     RotationPlan and optional already-resolved duration evidence and only
-    converts them into geometry-friendly UI evidence.
+    converts them into geometry-friendly UI evidence. Optional icon resolution
+    is caller-supplied so the projection can carry one explicit resource path
+    without teaching the painter how to rediscover database identity.
     """
 
     _ICON_KINDS = {
@@ -99,21 +102,31 @@ class RotationTimelineProjectionService:
         plan: RotationPlan,
         *,
         duration_evidence: RotationDurationEvidenceLike | None = None,
+        icon_path_resolver: Callable[[str, str], str | None] | None = None,
     ) -> RotationTimelineProjection:
-        actions = tuple(
-            RotationTimelineAction(
-                time_seconds=float(action.time_seconds),
-                sequence=int(action.sequence),
-                name=str(action.name or action.kind.value.replace("_", " ").title()),
-                kind=action.kind.value,
-                bar=action.bar,
-                icon_key=self._slug(
-                    str(action.name or action.kind.value.replace("_", " ").title())
-                ),
+        projected_actions: list[RotationTimelineAction] = []
+        for action in plan.actions:
+            if action.kind not in self._ICON_KINDS:
+                continue
+            name = str(action.name or action.kind.value.replace("_", " ").title())
+            icon_key = self._slug(name)
+            icon_path = (
+                icon_path_resolver(name, icon_key)
+                if icon_path_resolver is not None
+                else None
             )
-            for action in plan.actions
-            if action.kind in self._ICON_KINDS
-        )
+            projected_actions.append(
+                RotationTimelineAction(
+                    time_seconds=float(action.time_seconds),
+                    sequence=int(action.sequence),
+                    name=name,
+                    kind=action.kind.value,
+                    bar=action.bar,
+                    icon_key=icon_key,
+                    icon_path=str(icon_path) if icon_path else None,
+                )
+            )
+        actions = tuple(projected_actions)
 
         lanes: list[RotationTimelineLane] = []
         if duration_evidence is not None:
