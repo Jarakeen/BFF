@@ -14,6 +14,7 @@ def install_rotation_timeline(page) -> None:
 
     page.rotation_timeline_projection = RotationTimelineProjectionService()
     page.rotation_timeline_duration_evidence = None
+    page.rotation_timeline_error = None
     page.rotation_timeline_widget = RotationTimelineWidget()
 
     controls = QWidget()
@@ -55,16 +56,30 @@ def install_rotation_timeline(page) -> None:
     page.rotation_timeline_view_button.clicked.connect(show_timeline)
     page.rotation_timeline_details_button.clicked.connect(show_details)
 
-    def refresh_visual_timeline() -> None:
+    def refresh_visual_timeline() -> bool:
+        """Refresh optional visual evidence without becoming rotation authority.
+
+        The RotationPlan/details path must remain usable even if a visual-only
+        projection or rendering dependency fails.  A timeline failure is retained
+        as explicit UI evidence instead of being allowed to abort Generate Rotation.
+        """
         plan = getattr(page, "rotation_plan", None)
         if plan is None:
+            page.rotation_timeline_error = None
             page.rotation_timeline_widget.clear_projection()
-            return
-        projection = page.rotation_timeline_projection.project(
-            plan,
-            duration_evidence=page.rotation_timeline_duration_evidence,
-        )
-        page.rotation_timeline_widget.set_projection(projection)
+            return True
+        try:
+            projection = page.rotation_timeline_projection.project(
+                plan,
+                duration_evidence=page.rotation_timeline_duration_evidence,
+            )
+            page.rotation_timeline_widget.set_projection(projection)
+        except Exception as exc:  # visual-only boundary; never invalidate the plan
+            page.rotation_timeline_error = str(exc) or exc.__class__.__name__
+            page.rotation_timeline_widget.clear_projection()
+            return False
+        page.rotation_timeline_error = None
+        return True
 
     page.refresh_visual_rotation_timeline = refresh_visual_timeline
 
