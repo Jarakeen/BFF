@@ -113,3 +113,9 @@ def install() -> None:
     PerformanceDashboard.show_snapshot = _show_snapshot_with_dd
     PerformanceDashboard._update_abilities_list = _update_abilities_with_contribution
     _INSTALLED = True
+
+    # The DoT presentation wraps this DD-aware UI after the crit and contribution
+    # pieces are installed, preserving all existing dashboard behavior.
+    from ui.performance_dashboard_dd_dot_support import install as install_dot_ui
+
+    install_dot_ui()
