@@ -105,15 +105,19 @@ def test_candidate_render_applies_policy_and_explains_scope_and_selection():
         policy=_policy(),
     )
 
+    assert "PROTECTS ROLE • major_slayer • FRONTIER • SELECTED" in rendered
+    assert "SAVES ULTIMATE • major_slayer • FRONTIER" in rendered
+    assert "SAVES ULTIMATE • major_slayer • FRONTIER • SELECTED" not in rendered
     assert "POLICY • Lokke healer support" in rendered
     assert "encounter=sunspire_lokke_hm" in rendered
     assert "role=healer" in rendered
-    assert "preferred protects role; considered protects role, saves ultimate" in rendered
+    assert "selected protects role; considered protects role, saves ultimate" in rendered
     assert (
         "primary_role_displacement_seconds: kept protects role at 0.25; "
         "deprioritized saves ultimate=1.5"
     ) in rendered
-    assert "Encounter / role policy is applied below" in rendered
+    assert "Encounter / role policy selected this retained frontier plan." in rendered
+    assert "considered this retained frontier tradeoff" in rendered
     assert "Encounter / role policy is still required" not in rendered
     assert "not weighted exchange rates" in rendered
 
@@ -127,7 +131,9 @@ def test_policy_render_keeps_unresolved_tie_explicit():
         policy=_policy(),
     )
 
-    assert "preferred alpha, beta; considered alpha, beta" in rendered
+    assert "ALPHA • major_slayer • FRONTIER • SELECTED" in rendered
+    assert "BETA • major_slayer • FRONTIER • SELECTED" in rendered
+    assert "selected alpha, beta; considered alpha, beta" in rendered
     assert "Policy leaves these frontier alternatives tied." in rendered
 
 
@@ -148,6 +154,7 @@ def test_candidate_render_without_policy_preserves_frontier_boundary():
     )
 
     assert "Encounter / role policy is still required" in rendered
+    assert "• SELECTED" not in rendered
     assert "POLICY •" not in rendered
 
 
@@ -159,7 +166,8 @@ def test_policy_render_explains_single_frontier_survivor_without_fake_tiebreak()
         policy=_policy(),
     )
 
-    assert "preferred only viable; considered only viable" in rendered
+    assert "ONLY VIABLE • major_slayer • FRONTIER • SELECTED" in rendered
+    assert "selected only viable; considered only viable" in rendered
     assert "Only one frontier alternative remained in this scope." in rendered
 
 
@@ -176,5 +184,6 @@ def test_policy_render_does_not_promote_rejected_candidate():
     )
 
     assert "MISSING ROTATION • major_slayer • REJECTED" in rendered
+    assert "MISSING ROTATION • major_slayer • REJECTED • SELECTED" not in rendered
     assert "No frontier alternatives were available for policy selection." in rendered
     assert "no exact rotation plan is attached" in rendered
