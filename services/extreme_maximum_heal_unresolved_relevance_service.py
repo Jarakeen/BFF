@@ -18,8 +18,16 @@ class ExtremeMaximumHealUnresolvedRelevanceService:
 
     This classifier is deliberately conservative. Unknown diagnostics remain
     objective-relevant. Only mechanics whose modeled domain cannot change the
-    magnitude, recipient legality, activation legality, or event identity of a
-    single healing event are downgraded to ambient build diagnostics.
+    magnitude, recipient legality, activation legality, setup state, or event
+    identity of a maximum healing event are downgraded to ambient build
+    diagnostics.
+
+    Weapon traits such as Charged and Decisive remain relevant even when they do
+    not directly alter a heal coefficient. Charged can alter status-effect state
+    on targets, which may feed conditional healing/proc interactions. Decisive can
+    alter Ultimate generation, which may change access to Ultimate heals or
+    Ultimate-dependent passives/procs. Those state-space effects belong to the
+    maximum-heal proof boundary rather than ambient character-sheet noise.
     """
 
     _AMBIENT_SUBSTRINGS = (
@@ -27,8 +35,6 @@ class ExtremeMaximumHealUnresolvedRelevanceService:
         "champion point is dynamic or not yet stat-mapped: celerity",
         "movement_speed unresolved",
         "training: non-combat experience trait",
-        "charged: requires status-effect chance model",
-        "decisive: requires ultimate generation model",
     )
 
     def classify(self, unresolved) -> ExtremeMaximumHealUnresolvedRelevanceResult:
