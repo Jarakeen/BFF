@@ -10,6 +10,7 @@ per ranked player.
 
 from collections import Counter
 from dataclasses import dataclass, field
+import json
 
 from models.top_team_model import TopTeamPlayer
 from services.esologs_client import EsoLogsApiError, EsoLogsClient
@@ -18,10 +19,10 @@ from services.top_team_service import TopTeamService
 _DEFAULT_PLAYER_LIMIT = 5
 _MAX_SAMPLE_PLAYERS_PER_ROLE = 6
 _ROLE_KEYS = ("dps", "healer", "tank")
-_ROLE_RANKING_QUERY = {
+_ROLE_RANKING_METRIC = {
     "dps": ("DPS", "dps"),
     "healer": ("Healer", "hps"),
-    "tank": ("Tank", "dps"),
+    "tank": ("Tank", "tankcombineddps"),
 }
 
 
@@ -95,11 +96,11 @@ class EsoLogsTrendingService:
         report_player_cache: dict[tuple[str, int], list[TopTeamPlayer] | None] = {}
 
         for role_key in _ROLE_KEYS:
-            eso_role, metric = _ROLE_RANKING_QUERY[role_key]
+            role_label, metric = _ROLE_RANKING_METRIC[role_key]
             try:
-                rankings = self.client.get_role_rankings(
-                    int(encounter_id),
-                    role=eso_role,
+                rankings = self._get_metric_rankings(
+                    encounter_id=int(encounter_id),
+                    role_label=role_label,
                     metric=metric,
                     limit=limit,
                 )
@@ -141,6 +142,93 @@ class EsoLogsTrendingService:
             role_summaries=summaries,
             role_errors=role_errors,
         )
+
+    def _get_metric_rankings(
+        self,
+        *,
+        encounter_id: int,
+        role_label: str,
+        metric: str,
+        limit: int,
+    ) -> list[dict]:
+        """Read Encounter.characterRankings using only schema-valid arguments.
+
+        ESO Logs' Encounter.characterRankings field does not accept a RoleType
+        argument. The leaderboard metric selects the relevant role-specific ranking
+        family for this view: dps for DD, hps for healers, and tankcombineddps for
+        tanks. We retain ``role_label`` only for clear error messages.
+        """
+
+        query = """
+        query TrendingRankings(
+          $encounterID: Int!
+          $metric: CharacterRankingMetricType
+        ) {
+          worldData {
+            encounter(id: $encounterID) {
+              characterRankings(metric: $metric)
+            }
+          }
+        }
+        """
+
+        data = self.client._query(
+            query,
+            {"encounterID": int(encounter_id), "metric": metric},
+        )
+        encounter = ((data.get("worldData") or {}).get("encounter")) or {}
+        rankings = encounter.get("characterRankings")
+
+        if isinstance(rankings, str):
+            try:
+                rankings = json.loads(rankings)
+            except json.JSONDecodeError as exc:
+                raise EsoLogsApiError(
+                    f"ESO Logs returned an unreadable {role_label} rankings payload."
+                ) from exc
+
+        rows = None
+        if isinstance(rankings, dict):
+            rows = rankings.get("rankings") or rankings.get("data")
+        elif isinstance(rankings, list):
+            rows = rankings
+
+        if not rows:
+            raise EsoLogsApiError(
+                f"No ranked {role_label} parses were found for this encounter."
+            )
+
+        entries: list[dict] = []
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+
+            report = row.get("report")
+            if not isinstance(report, dict) or not report.get("code"):
+                continue
+
+            fight_id = report.get("fightID", report.get("fightId"))
+            if fight_id is None:
+                continue
+
+            entries.append(
+                {
+                    "name": row.get("name"),
+                    "class": row.get("class") or row.get("className"),
+                    "report_code": str(report["code"]),
+                    "fight_id": int(fight_id),
+                }
+            )
+            if len(entries) >= limit:
+                break
+
+        if not entries:
+            raise EsoLogsApiError(
+                f"None of the ranked {role_label} entries included a usable "
+                "report pointer (report.code / report.fightID)."
+            )
+
+        return entries
 
     def _resolve_ranked_player(
         self,
