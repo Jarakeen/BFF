@@ -21,6 +21,14 @@ class _DurationCard:
         self.evidence.append(evidence)
 
 
+class _CadenceCard:
+    def __init__(self) -> None:
+        self.reports = []
+
+    def set_report(self, report) -> None:
+        self.reports.append(report)
+
+
 class _Status:
     def __init__(self) -> None:
         self.messages = []
@@ -35,6 +43,7 @@ class _PageState:
         self.last_cadence_progression_run = None
         self.last_cadence_progression_render_evidence = None
         self.duration_evidence_card = _DurationCard()
+        self.cadence_progression_card = _CadenceCard()
         self.status = _Status()
         self.plans = []
         self.sustain = []
@@ -76,6 +85,7 @@ def test_page_applies_one_final_cadence_progression_evidence_bundle() -> None:
     assert page.plans == [final_plan]
     assert page.duration_evidence_card.evidence == [duration]
     assert page.sustain == [final_sustain]
+    assert page.cadence_progression_card.reports == [report]
     assert page.status.messages == [
         "Cadence optimization: 2 accepted improvement(s) across 3 iteration(s). "
         "No eligible local cadence candidate improved the accepted rotation."
@@ -101,6 +111,7 @@ def test_page_status_uses_report_acceptance_count_not_proposed_step_count() -> N
         object(),  # type: ignore[arg-type]
     )
 
+    assert page.cadence_progression_card.reports == [report]
     assert "1 accepted improvement(s)" in page.status.messages[0]
     assert "across 2 iteration(s)" in page.status.messages[0]
     assert "repeated an already accepted executable schedule" in page.status.messages[0]
