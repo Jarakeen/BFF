@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from html import escape
+from urllib.parse import quote, unquote
+
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QComboBox,
     QHBoxLayout,
@@ -11,7 +15,11 @@ from PySide6.QtWidgets import (
 )
 
 from services.esologs_client import EsoLogsApiError
-from services.esologs_trending_service import EsoLogsTrendingReport, RoleTrendingSummary
+from services.esologs_trending_service import (
+    EsoLogsTrendingReport,
+    RoleTrendingSummary,
+    TrendMovementItem,
+)
 from ui.components.foundry_button import ButtonRole, FoundryButton
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_status_badge import FoundryStatusBadge
@@ -29,7 +37,9 @@ _TOP_CLASS_ROWS = 5
 
 
 class EsoLogsTrendingCard(FoundryCard):
-    """Role-aware popularity snapshot across top individual ESO Logs players."""
+    """Role-aware popularity and momentum snapshot for top ESO Logs players."""
+
+    setRequested = Signal(str)
 
     def __init__(self, service_factory, parent=None):
         super().__init__(title="ESO Logs Trending", icon="achievement", parent=parent)
@@ -39,6 +49,23 @@ class EsoLogsTrendingCard(FoundryCard):
         self._build_ui()
         self._connect_signals()
         self.load_trials()
+
+    @staticmethod
+    def _configure_set_links(label: QLabel) -> None:
+        label.setOpenExternalLinks(False)
+        label.linkActivated.connect(
+            lambda href: label.window().findChild(EsoLogsTrendingCard)._emit_set_link(href)
+            if label.window().findChild(EsoLogsTrendingCard) is not None
+            else None
+        )
+
+    def _emit_set_link(self, href: str) -> None:
+        if href.startswith("set:"):
+            self.setRequested.emit(unquote(href[4:]))
+
+    @staticmethod
+    def _set_link(name: str) -> str:
+        return f'<a href="set:{quote(name, safe="")}">{escape(name)}</a>'
 
     def _build_ui(self) -> None:
         root = QWidget()
@@ -76,8 +103,8 @@ class EsoLogsTrendingCard(FoundryCard):
 
         self.summary = QLabel(
             "Choose a trial and boss. This view inspects up to five top-ranked "
-            "individual players per role and shows the gear most commonly observed "
-            "among those DDs, healers, and tanks."
+            "individual players per role, then compares the current set usage with "
+            "your previous saved snapshot for that same boss."
         )
         self.summary.setWordWrap(True)
         self.summary.setStyleSheet(f"color: {Colors.TEXT_MUTED};")
@@ -120,7 +147,8 @@ class EsoLogsTrendingCard(FoundryCard):
 
             gear_label = QLabel("No data loaded.")
             gear_label.setWordWrap(True)
-            gear_label.setTextInteractionFlags(gear_label.textInteractionFlags())
+            gear_label.setOpenExternalLinks(False)
+            gear_label.linkActivated.connect(self._emit_set_link)
             layout.addWidget(gear_label)
 
             class_heading = QLabel("Top Classes")
@@ -131,16 +159,25 @@ class EsoLogsTrendingCard(FoundryCard):
             class_label.setWordWrap(True)
             layout.addWidget(class_label)
 
-            loadout_heading = QLabel("Top Player Loadouts")
-            loadout_heading.setFont(Fonts.label())
-            layout.addWidget(loadout_heading)
+            movement_labels: dict[str, QLabel] = {}
+            for key, heading in (
+                ("making_waves", "Making Waves"),
+                ("cooling_off", "Cooling Off"),
+                ("new_arrivals", "New Arrival"),
+                ("breakouts", "Breakout"),
+            ):
+                heading_label = QLabel(heading)
+                heading_label.setFont(Fonts.label())
+                layout.addWidget(heading_label)
 
-            loadout_label = QLabel("No data loaded.")
-            loadout_label.setWordWrap(True)
-            loadout_label.setTextInteractionFlags(loadout_label.textInteractionFlags())
-            layout.addWidget(loadout_label)
+                value_label = QLabel("Needs another snapshot.")
+                value_label.setWordWrap(True)
+                value_label.setOpenExternalLinks(False)
+                value_label.linkActivated.connect(self._emit_set_link)
+                layout.addWidget(value_label)
+                movement_labels[key] = value_label
+
             layout.addStretch()
-
             section.addWidget(content)
             board_layout.addWidget(section, 1)
 
@@ -148,11 +185,20 @@ class EsoLogsTrendingCard(FoundryCard):
                 "count": count_label,
                 "gear": gear_label,
                 "classes": class_label,
-                "loadouts": loadout_label,
+                **movement_labels,
             }
 
         scroll.setWidget(board)
         root_layout.addWidget(scroll, 1)
+
+        fun_note = QLabel(
+            "*Just for fun: movement signals compare your saved ESO Logs snapshots. "
+            "They describe what ranked players are wearing, not what the game declares best-in-slot."
+        )
+        fun_note.setWordWrap(True)
+        fun_note.setFont(Fonts.small())
+        fun_note.setStyleSheet(f"color: {Colors.TEXT_MUTED};")
+        root_layout.addWidget(fun_note)
 
         self.status = FoundryStatusBar()
         self.status.message.setWordWrap(True)
@@ -260,7 +306,7 @@ class EsoLogsTrendingCard(FoundryCard):
         self.summary.setText(
             f"{report.trial_name} · {report.encounter_name} · "
             f"{report.ranked_players_analyzed} top-ranked player observations. "
-            "Popularity is descriptive ESO Logs evidence, not canonical best-in-slot."
+            "Popularity and movement are descriptive ESO Logs evidence, not canonical best-in-slot."
         )
         for role_key, _ in _ROLE_SECTIONS:
             self._render_role(report.role_summaries[role_key])
@@ -274,8 +320,9 @@ class EsoLogsTrendingCard(FoundryCard):
 
         if summary.gear_sets:
             refs["gear"].setText(
-                "\n".join(
-                    f"{index}. {row.name} — {row.count}/{row.player_count} ({row.percent:.0f}%)"
+                "<br>".join(
+                    f"{index}. {self._set_link(row.name)} — "
+                    f"{row.count}/{row.player_count} ({row.percent:.0f}%)"
                     for index, row in enumerate(
                         summary.gear_sets[:_TOP_GEAR_ROWS], start=1
                     )
@@ -296,14 +343,47 @@ class EsoLogsTrendingCard(FoundryCard):
         else:
             refs["classes"].setText("No class data was exposed for this role.")
 
-        examples: list[str] = []
-        for player in summary.sample_players:
-            class_name = player.ClassName or "Unknown class"
-            gear = " · ".join(player.GearSets) if player.GearSets else "No sets exposed"
-            examples.append(f"{player.Name} — {class_name}\n  {gear}")
-        refs["loadouts"].setText(
-            "\n\n".join(examples) if examples else "No ranked player loadouts available."
+        if not summary.has_history:
+            for key in ("making_waves", "cooling_off", "new_arrivals", "breakouts"):
+                refs[key].setText("Needs another snapshot.")
+            return
+
+        refs["making_waves"].setText(
+            self._movement_html(summary.making_waves, positive=True)
+            if summary.making_waves
+            else "No sets rising quickly outside the top 10."
         )
+        refs["cooling_off"].setText(
+            self._movement_html(summary.cooling_off, positive=False)
+            if summary.cooling_off
+            else "No meaningful declines detected."
+        )
+        refs["new_arrivals"].setText(
+            self._movement_html(summary.new_arrivals, positive=True)
+            if summary.new_arrivals
+            else "No new sets appeared in this snapshot."
+        )
+        refs["breakouts"].setText(
+            self._movement_html(summary.breakouts, positive=True)
+            if summary.breakouts
+            else "No sets broke into the top 10."
+        )
+
+    def _movement_html(
+        self,
+        rows: tuple[TrendMovementItem, ...],
+        *,
+        positive: bool,
+    ) -> str:
+        lines = []
+        for row in rows:
+            sign = "+" if row.delta_points > 0 else ""
+            rank = f" • #{row.current_rank}" if row.current_rank is not None else ""
+            lines.append(
+                f"{self._set_link(row.name)} — {row.current_percent:.0f}% "
+                f"({sign}{row.delta_points:.0f} pts){rank}"
+            )
+        return "<br>".join(lines)
 
 
 __all__ = ["EsoLogsTrendingCard"]
