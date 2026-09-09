@@ -80,7 +80,7 @@ APPLICATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=True,
         evidence_class=EvidenceClass.OBSERVATIONAL,
         provenance=("ESO Logs ranked reports", "ESO Logs playerDetails"),
-        notes="Popularity is descriptive observational evidence only. Set counts are per observed player, not per equipped item, and neither frequency nor absence establishes canonical best-in-slot or mechanic truth.",
+        notes="Popularity is descriptive observational evidence only. Set counts are per observed player, not per equipped item. This is not canonical best-in-slot evidence: neither frequency nor absence establishes mechanic truth.",
     ),
     ServiceDescriptor(
         service_id="build.skill_choice.reference",
