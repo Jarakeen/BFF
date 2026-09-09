@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication, QLabel, QTextEdit, QWidget
+from PySide6.QtWidgets import QApplication, QHBoxLayout, QLabel, QTextEdit, QWidget
 
 from engine.config import get_data_dir
 from services.accessibility_preferences import VISUAL_THEME_RYLO
@@ -147,7 +147,7 @@ def _refresh_active_with_status_pills(self, slots) -> None:
         status = str(slot.status or "OPEN").upper()
         pill = _pill(status, status)
         host = QWidget()
-        layout = __import__("PySide6.QtWidgets", fromlist=["QHBoxLayout"]).QHBoxLayout(host)
+        layout = QHBoxLayout(host)
         layout.setContentsMargins(6, 3, 6, 3)
         layout.addWidget(pill, 0, Qt.AlignmentFlag.AlignCenter)
         self.active_table.setCellWidget(row, 3, host)
