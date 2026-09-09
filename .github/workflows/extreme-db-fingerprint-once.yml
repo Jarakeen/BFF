@@ -80,7 +80,7 @@ jobs:
 
           db.execute('''
               UPDATE mundus_effect
-              SET supported = 1, notes = NULL
+              SET supported = 1, notes = ''
               WHERE stat_id = 'critical_healing'
                 AND mundus_id IN (SELECT id FROM mundus_stone WHERE name = 'The Shadow')
           ''')
@@ -95,7 +95,7 @@ jobs:
           db.close()
           if integrity != 'ok':
               raise SystemExit(f'SQLite integrity failure: {integrity}')
-          if any(int(supported) != 1 or notes is not None for _id, _value, supported, notes in after):
+          if any(int(supported) != 1 or str(notes) != '' for _id, _value, supported, notes in after):
               raise SystemExit(f'Shadow row repair failed: {after!r}')
           print('Shadow DB before:', before)
           print('Shadow DB after:', after)
