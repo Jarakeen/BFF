@@ -109,6 +109,12 @@ jobs:
               notes_path.write_text(notes, encoding='utf-8')
           PY
 
+      - name: Install focused test dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check pytest==9.1.1 pydantic==2.13.4
+
       - name: Run focused Extreme tests
         shell: bash
         run: |
