@@ -104,6 +104,8 @@ def install() -> None:
 
     _install_sidebar_route()
     _install_read_only_dashboard_refresh()
+    from ui.raid_engine_dashboard_polish_support import install as install_dashboard_polish
+    install_dashboard_polish()
     _ORIGINAL_BUILD_UI = MainWindow.build_ui
     MainWindow.build_ui = _build_ui_with_raid_engine_dashboard
     _INSTALLED = True
