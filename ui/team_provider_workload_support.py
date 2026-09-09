@@ -17,6 +17,7 @@ from services.team_provider_workload_candidate_service import (
 from services.team_provider_workload_explanation_service import (
     TeamProviderWorkloadExplanationService,
 )
+from services.team_provider_workload_policy_service import TeamProviderWorkloadPolicy
 from ui.components.foundry_card import FoundryCard
 
 
@@ -41,6 +42,7 @@ def _install_workload_card(page) -> None:
     page._provider_rotation_workloads = ()
     page._provider_rotation_workload_comparison = None
     page._provider_workload_candidate_result = None
+    page._provider_workload_policy = None
     page._provider_workload_candidate_service = TeamProviderWorkloadCandidateService(
         get_data_dir() / "eso.db"
     )
@@ -57,6 +59,7 @@ def _render_provider_workload(page) -> None:
             TeamProviderWorkloadExplanationService.render_candidate_result(
                 candidate_result,
                 comparison=getattr(page, "_provider_rotation_workload_comparison", None),
+                policy=getattr(page, "_provider_workload_policy", None),
             )
         )
     else:
@@ -89,6 +92,7 @@ def _set_provider_workload_evidence(
     page._provider_rotation_workloads = normalized
     page._provider_rotation_workload_comparison = comparison
     page._provider_workload_candidate_result = None
+    page._provider_workload_policy = None
     _render_provider_workload(page)
 
 
@@ -97,6 +101,7 @@ def _set_provider_workload_candidates(
     result: TeamProviderWorkloadCandidateResult,
     *,
     comparison: TeamProviderRotationWorkloadComparison | None = None,
+    policy: TeamProviderWorkloadPolicy | None = None,
 ) -> None:
     if not isinstance(result, TeamProviderWorkloadCandidateResult):
         raise TypeError("provider workload candidates have the wrong result type")
@@ -104,9 +109,24 @@ def _set_provider_workload_candidates(
         comparison, TeamProviderRotationWorkloadComparison
     ):
         raise TypeError("provider workload comparison has the wrong result type")
+    if policy is not None and not isinstance(policy, TeamProviderWorkloadPolicy):
+        raise TypeError("provider workload policy has the wrong result type")
     page._provider_workload_candidate_result = result
     page._provider_rotation_workloads = result.workloads
     page._provider_rotation_workload_comparison = comparison
+    page._provider_workload_policy = policy
+    _render_provider_workload(page)
+
+
+def _set_provider_workload_policy(
+    page,
+    policy: TeamProviderWorkloadPolicy | None,
+) -> None:
+    if policy is not None and not isinstance(policy, TeamProviderWorkloadPolicy):
+        raise TypeError("provider workload policy has the wrong result type")
+    if policy is not None and getattr(page, "_provider_workload_candidate_result", None) is None:
+        raise ValueError("provider workload policy requires projected candidate evidence")
+    page._provider_workload_policy = policy
     _render_provider_workload(page)
 
 
@@ -114,6 +134,7 @@ def _clear_provider_workload_evidence(page) -> None:
     page._provider_rotation_workloads = ()
     page._provider_rotation_workload_comparison = None
     page._provider_workload_candidate_result = None
+    page._provider_workload_policy = None
     _render_provider_workload(page)
 
 
@@ -171,6 +192,7 @@ def _generate_provider_workload_candidates(
     rotation_plans,
     progression_by_identity,
     alternatives: tuple[TeamProviderWorkloadAlternativeRequest, ...],
+    policy: TeamProviderWorkloadPolicy | None = None,
 ) -> TeamProviderWorkloadCandidateResult:
     result = page._provider_workload_candidate_service.generate(
         selected_builds=tuple(selected_builds),
@@ -178,12 +200,12 @@ def _generate_provider_workload_candidates(
         progression_by_identity=progression_by_identity,
         alternatives=tuple(alternatives),
     )
-    _set_provider_workload_candidates(page, result)
+    _set_provider_workload_candidates(page, result, policy=policy)
     return result
 
 
 def _generate_comp_provider_workload_candidates(
-    page, *, rotation_plans, progression_by_identity, alternatives
+    page, *, rotation_plans, progression_by_identity, alternatives, policy=None
 ) -> TeamProviderWorkloadCandidateResult:
     return _generate_provider_workload_candidates(
         page,
@@ -191,11 +213,12 @@ def _generate_comp_provider_workload_candidates(
         rotation_plans=rotation_plans,
         progression_by_identity=progression_by_identity,
         alternatives=alternatives,
+        policy=policy,
     )
 
 
 def _generate_optimization_provider_workload_candidates(
-    page, *, rotation_plans, progression_by_identity, alternatives
+    page, *, rotation_plans, progression_by_identity, alternatives, policy=None
 ) -> TeamProviderWorkloadCandidateResult:
     return _generate_provider_workload_candidates(
         page,
@@ -203,6 +226,7 @@ def _generate_optimization_provider_workload_candidates(
         rotation_plans=rotation_plans,
         progression_by_identity=progression_by_identity,
         alternatives=alternatives,
+        policy=policy,
     )
 
 
@@ -246,6 +270,7 @@ def install() -> None:
     CompBuilderPage._refresh_coverage = _comp_refresh_with_provider_invalidation
     CompBuilderPage.set_provider_workload_evidence = _set_provider_workload_evidence
     CompBuilderPage.set_provider_workload_candidates = _set_provider_workload_candidates
+    CompBuilderPage.set_provider_workload_policy = _set_provider_workload_policy
     CompBuilderPage.generate_provider_workload_candidates = (
         _generate_comp_provider_workload_candidates
     )
@@ -257,6 +282,7 @@ def install() -> None:
     OptimizationPage._update_team_analysis = _optimization_update_with_provider_invalidation
     OptimizationPage.set_provider_workload_evidence = _set_provider_workload_evidence
     OptimizationPage.set_provider_workload_candidates = _set_provider_workload_candidates
+    OptimizationPage.set_provider_workload_policy = _set_provider_workload_policy
     OptimizationPage.generate_provider_workload_candidates = (
         _generate_optimization_provider_workload_candidates
     )
