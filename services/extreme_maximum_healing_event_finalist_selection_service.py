@@ -29,11 +29,19 @@ class ExtremeMaximumHealingEventFinalistSelectionService:
     retained per family. Equal baseline values across different routes are never
     assumed mechanically interchangeable because later build mutations can make
     route passives relevant.
+
+    ``max_families`` is the ranked baseline-family budget, not permission to erase
+    a distinct modeled scaling source. After the ranked families are selected,
+    the best family from every scored ``source_kind`` is force-included if that
+    source would otherwise be absent. This matters today for Blood Magic, whose
+    Max-Health scaling can improve very differently under whole-build mutation
+    than ordinary coefficient-backed heals. Source-diversity safety families may
+    therefore make ``represented_families`` exceed ``max_families``.
     """
 
     OMITTED_SCOPE = (
         "whole-build optimization outside the selected Stage-2 finalist families/routes",
-        "proof that a lower baseline family cannot overtake after whole-build mutation",
+        "proof that a lower baseline family within an already represented source kind cannot overtake after whole-build mutation",
     )
 
     def select(
@@ -58,15 +66,27 @@ class ExtremeMaximumHealingEventFinalistSelectionService:
 
         family_order: list[tuple] = []
         by_family: dict[tuple, list[ExtremeMaximumHealingEventRouteEntry]] = {}
+        family_source: dict[tuple, str] = {}
+        first_family_for_source: dict[str, tuple] = {}
         for entry in unique:
             family = self._family_key(entry)
             if family not in by_family:
                 by_family[family] = []
                 family_order.append(family)
+                family_source[family] = entry.source_kind
+                first_family_for_source.setdefault(entry.source_kind, family)
             by_family[family].append(entry)
 
+        selected_families = list(family_order[:family_limit])
+        selected_sources = {family_source[family] for family in selected_families}
+        for source_kind, family in first_family_for_source.items():
+            if source_kind in selected_sources:
+                continue
+            selected_families.append(family)
+            selected_sources.add(source_kind)
+
         finalists: list[ExtremeMaximumHealingEventRouteEntry] = []
-        for family in family_order[:family_limit]:
+        for family in selected_families:
             seen_routes: set[tuple[str, ...]] = set()
             for entry in by_family[family]:
                 route = tuple(entry.route.equipped_skill_lines)
@@ -81,7 +101,7 @@ class ExtremeMaximumHealingEventFinalistSelectionService:
             finalists=tuple(finalists),
             screened_scored_entries=len(scored),
             exact_duplicates_removed=len(scored) - len(unique),
-            represented_families=min(len(family_order), family_limit),
+            represented_families=len(selected_families),
             max_families=family_limit,
             routes_per_family=route_limit,
             omitted_scope=self.OMITTED_SCOPE,
