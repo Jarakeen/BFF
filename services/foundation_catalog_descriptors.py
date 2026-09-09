@@ -8,6 +8,7 @@ wiring rather than resolving services dynamically from catalog strings.
 """
 
 from services.collection_catalog_descriptors import COLLECTION_SERVICE_DESCRIPTORS
+from services.infrastructure_catalog_descriptors import INFRASTRUCTURE_SERVICE_DESCRIPTORS
 from services.reference_catalog_descriptors import REFERENCE_SERVICE_DESCRIPTORS
 from services.service_catalog import EvidenceClass, ServiceBehavior, ServiceDescriptor
 
@@ -55,6 +56,7 @@ FOUNDATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
     ),
     *REFERENCE_SERVICE_DESCRIPTORS,
     *COLLECTION_SERVICE_DESCRIPTORS,
+    *INFRASTRUCTURE_SERVICE_DESCRIPTORS,
 )
 
 
