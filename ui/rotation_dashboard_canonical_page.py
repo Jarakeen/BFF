@@ -19,6 +19,9 @@ from services.rotation_recovery_heavy_replay_service import (
     RecoveryReserveAssessmentResolver,
     VerifiedRecoveryHeavyRestorationResolver,
 )
+from services.rotation_support_cadence_progression_runner_service import (
+    RotationSupportCadenceProgressionRun,
+)
 from ui.rotation_canonical_candidate_render_support import (
     RotationCanonicalCandidateRenderEvidence,
     RotationCanonicalCandidateRenderSupport,
@@ -31,11 +34,15 @@ from ui.rotation_dashboard_canonical_candidate_support import (
 from ui.rotation_dashboard_page import RotationDashboardPage
 from ui.rotation_generation_support import RotationGenerationRequest
 from ui.rotation_pdf_export_support import install_rotation_pdf_export
+from ui.rotation_support_cadence_progression_render_support import (
+    RotationSupportCadenceProgressionRenderEvidence,
+    RotationSupportCadenceProgressionRenderSupport,
+)
 from ui.rotation_timeline_dashboard_support import install_rotation_timeline
 
 
 class CanonicalRotationDashboardPage(RotationDashboardPage):
-    """Rotation dashboard with an explicit canonical-candidate execution seam."""
+    """Rotation dashboard with explicit canonical-candidate execution seams."""
 
     def __init__(
         self,
@@ -43,6 +50,7 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
         *,
         canonical_candidates: RotationDashboardCanonicalCandidateSupport | None = None,
         canonical_render: RotationCanonicalCandidateRenderSupport | None = None,
+        cadence_progression_render: RotationSupportCadenceProgressionRenderSupport | None = None,
     ) -> None:
         super().__init__(parent)
         install_rotation_timeline(self)
@@ -56,11 +64,18 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
         self.rotation_canonical_render = (
             canonical_render or RotationCanonicalCandidateRenderSupport()
         )
+        self.rotation_cadence_progression_render = (
+            cadence_progression_render or RotationSupportCadenceProgressionRenderSupport()
+        )
         self.last_canonical_candidate_result: (
             RotationDashboardCanonicalCandidateResult | None
         ) = None
         self.last_canonical_render_evidence: (
             RotationCanonicalCandidateRenderEvidence | None
+        ) = None
+        self.last_cadence_progression_run: RotationSupportCadenceProgressionRun | None = None
+        self.last_cadence_progression_render_evidence: (
+            RotationSupportCadenceProgressionRenderEvidence | None
         ) = None
 
     def canonical_generation_request(self) -> RotationGenerationRequest:
@@ -213,6 +228,27 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
         self.set_rotation_plan(evidence.plan)
         self.duration_evidence_card.set_evidence(evidence.duration_evidence)
         self.set_sustain_projection(evidence.sustain_projection)
+        return evidence
+
+    def apply_cadence_progression_run(
+        self,
+        run: RotationSupportCadenceProgressionRun,
+    ) -> RotationSupportCadenceProgressionRenderEvidence:
+        """Render one completed cadence progression run as one consistent final bundle."""
+        evidence = self.rotation_cadence_progression_render.build(run)
+        self.last_cadence_progression_run = run
+        self.last_cadence_progression_render_evidence = evidence
+
+        self.set_rotation_plan(evidence.plan)
+        self.duration_evidence_card.set_evidence(evidence.duration_evidence)
+        self.set_sustain_projection(evidence.sustain_projection)
+
+        report = evidence.report
+        self.status.info(
+            "Cadence optimization: "
+            f"{report.advanced_steps} accepted improvement(s) across "
+            f"{report.iterations} iteration(s). {report.stop_summary}"
+        )
         return evidence
 
 
