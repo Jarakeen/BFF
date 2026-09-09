@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import re
 
 from PySide6.QtCore import QPointF, QRectF, QSize, Qt
 from PySide6.QtGui import QColor, QFontMetrics, QPainter, QPen, QPixmap
@@ -78,22 +79,39 @@ class _RotationTimelineCanvas(QWidget):
             color.setAlpha(220)
         return color
 
+    @staticmethod
+    def _canonical_key(value: str) -> str:
+        return re.sub(r"[^a-z0-9]+", "_", str(value or "").casefold()).strip("_")
+
     @classmethod
     def _canonical_skill_icon_lookup(cls) -> dict[str, Path]:
         if cls._skill_icon_lookup is not None:
             return cls._skill_icon_lookup
 
+        # This is the same packaged ESO icon directory used by the Build editor.
         root = get_resource_path("assets", "AbilityIcons", "icons", "128")
         lookup: dict[str, Path] = {}
         for skill in load_skill_choices():
-            name = str(skill.get("name", "") or "").strip().casefold()
             texture = str(skill.get("texture", "") or "").strip()
-            if not name or not texture:
+            if not texture:
                 continue
             filename = Path(texture.replace("\\", "/")).name
             local = root / Path(filename).with_suffix(".png")
-            if local.exists():
-                lookup.setdefault(name, local)
+            if not local.exists():
+                continue
+
+            display_name = str(skill.get("name", "") or "").strip()
+            index_name = str(skill.get("index_name", "") or "").strip()
+            keys = {
+                display_name.casefold(),
+                index_name.casefold(),
+                cls._canonical_key(display_name),
+                cls._canonical_key(index_name),
+            }
+            for key in keys:
+                if key:
+                    lookup.setdefault(key, local)
+
         cls._skill_icon_lookup = lookup
         return lookup
 
@@ -103,6 +121,7 @@ class _RotationTimelineCanvas(QWidget):
         return tuple(
             get_resource_path(*parts)
             for parts in (
+                ("assets", "AbilityIcons", "icons", "128", f"{key}.png"),
                 ("assets", "ability_icons", f"{key}.png"),
                 ("assets", "AbilityIcons", f"{key}.png"),
                 ("assets", "icons", "skills", f"{key}.png"),
@@ -112,8 +131,15 @@ class _RotationTimelineCanvas(QWidget):
 
     @classmethod
     def _icon_pixmap(cls, action: RotationTimelineAction) -> QPixmap | None:
-        canonical = cls._canonical_skill_icon_lookup().get(action.name.casefold())
-        if canonical is not None:
+        lookup = cls._canonical_skill_icon_lookup()
+        for key in (
+            action.name.casefold(),
+            cls._canonical_key(action.name),
+            action.icon_key.casefold(),
+        ):
+            canonical = lookup.get(key)
+            if canonical is None:
+                continue
             pixmap = QPixmap(str(canonical))
             if not pixmap.isNull():
                 return pixmap
