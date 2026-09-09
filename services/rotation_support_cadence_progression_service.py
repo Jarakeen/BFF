@@ -1,15 +1,22 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Mapping, Protocol
+from typing import Iterable, Mapping, Protocol
 
+from minmax.character_build.passive_grant import PassiveGrant
 from minmax.rotation_ability_priority import AbilityPriorityList
 from minmax.rotation_plan import RotationPlan
 from models.build_model import PlayerBuild
 from services.rotation_candidate_effect_obligation_service import (
     RotationEffectObligationRankingResult,
 )
-from services.rotation_effect_uptime_service import RotationEffectUptimeAssessment
+from services.rotation_effect_uptime_service import (
+    RotationEffectUptimeAssessment,
+    RotationEffectUptimeRequirement,
+)
+from services.rotation_support_cadence_effect_evidence_service import (
+    RotationSupportCadenceEffectEvidence,
+)
 from services.rotation_support_cadence_evaluation_service import (
     RotationSupportCadenceEvaluatedCandidate,
     RotationSupportCadenceEvaluationContext,
@@ -64,6 +71,18 @@ class _RecommendationSelector(Protocol):
     ) -> RotationSupportCadenceRecommendationResult: ...
 
 
+class _EffectEvidenceProvider(Protocol):
+    def assess(
+        self,
+        *,
+        build: PlayerBuild,
+        candidates: tuple[object, ...],
+        requirements: tuple[RotationEffectUptimeRequirement, ...],
+        passives: Iterable[PassiveGrant] = (),
+        character_id: str | None = None,
+    ) -> RotationSupportCadenceEffectEvidence: ...
+
+
 @dataclass(frozen=True)
 class RotationSupportCadenceProgressionStep:
     """One bounded optimization step with enough evidence to continue safely."""
@@ -77,6 +96,7 @@ class RotationSupportCadenceProgressionStep:
     next_seed_plan: RotationPlan
     next_seed_sustain: RotationSustainProjection
     promoted_candidate_id: str | None
+    effect_evidence: RotationSupportCadenceEffectEvidence | None = None
 
     @property
     def advanced(self) -> bool:
@@ -84,7 +104,21 @@ class RotationSupportCadenceProgressionStep:
 
     @property
     def unresolved(self) -> tuple[str, ...]:
-        return self.neighborhood.unresolved
+        values = list(self.neighborhood.unresolved)
+        if self.effect_evidence is not None:
+            values.extend(self.effect_evidence.unresolved)
+        seen: set[str] = set()
+        ordered: list[str] = []
+        for raw in values:
+            value = str(raw or "").strip()
+            if not value:
+                continue
+            key = value.casefold()
+            if key in seen:
+                continue
+            seen.add(key)
+            ordered.append(value)
+        return tuple(ordered)
 
 
 class RotationSupportCadenceProgressionService:
@@ -96,10 +130,14 @@ class RotationSupportCadenceProgressionService:
     recommendation may become the next seed. If no candidate is recommendable, the
     current seed and its already-known sustain projection are retained unchanged.
 
+    When an effect-evidence provider and explicit requirements are supplied, uptime
+    evidence is recomputed for this freshly generated neighborhood before ranking.
+    This prevents progressive optimization from reusing stale coverage measurements
+    after a rotation changes. Callers may still provide an explicit assessment map
+    for one-off composition; supplying both evidence paths is rejected.
+
     This service performs exactly one step. It does not loop, set convergence policy,
-    form Cartesian products, or bypass unresolved mechanics. Callers may explicitly
-    feed ``next_seed_plan`` and ``next_seed_sustain`` into another step when further
-    progressive optimization is desired.
+    form Cartesian products, or bypass unresolved mechanics.
     """
 
     def __init__(
@@ -108,10 +146,12 @@ class RotationSupportCadenceProgressionService:
         neighborhood_service: _NeighborhoodGenerator,
         evaluation_service: _CandidateEvaluator,
         recommendation_service: _RecommendationSelector,
+        effect_evidence_service: _EffectEvidenceProvider | None = None,
     ) -> None:
         self.neighborhood_service = neighborhood_service
         self.evaluation_service = evaluation_service
         self.recommendation_service = recommendation_service
+        self.effect_evidence_service = effect_evidence_service
 
     def step(
         self,
@@ -125,12 +165,37 @@ class RotationSupportCadenceProgressionService:
         effect_uptime_assessments_by_candidate: Mapping[
             str, tuple[RotationEffectUptimeAssessment, ...]
         ] | None = None,
+        effect_uptime_requirements: tuple[RotationEffectUptimeRequirement, ...] = (),
+        passives: Iterable[PassiveGrant] = (),
+        character_id: str | None = None,
     ) -> RotationSupportCadenceProgressionStep:
         neighborhood = self.neighborhood_service.generate(
             seed_plan=seed_plan,
             obligations=obligations,
             priorities=priorities,
         )
+
+        effect_evidence: RotationSupportCadenceEffectEvidence | None = None
+        effect_map = effect_uptime_assessments_by_candidate
+        if effect_map is not None and effect_uptime_requirements:
+            raise ValueError(
+                "support cadence progression cannot combine explicit effect assessment map "
+                "with effect_uptime_requirements"
+            )
+        if effect_uptime_requirements:
+            if self.effect_evidence_service is None:
+                raise ValueError(
+                    "effect_uptime_requirements need a configured effect_evidence_service"
+                )
+            effect_evidence = self.effect_evidence_service.assess(
+                build=build,
+                candidates=neighborhood.candidates,
+                requirements=effect_uptime_requirements,
+                passives=tuple(passives),
+                character_id=character_id,
+            )
+            effect_map = effect_evidence.assessments_by_candidate
+
         evaluated = self.evaluation_service.evaluate(
             build=build,
             baseline_plan=seed_plan,
@@ -140,7 +205,7 @@ class RotationSupportCadenceProgressionService:
         )
         ranking = self.evaluation_service.rank(
             evaluated,
-            effect_uptime_assessments_by_candidate=effect_uptime_assessments_by_candidate,
+            effect_uptime_assessments_by_candidate=effect_map,
         )
         recommendation = self.recommendation_service.recommend(
             evaluated=evaluated,
@@ -168,6 +233,7 @@ class RotationSupportCadenceProgressionService:
             next_seed_plan=next_seed_plan,
             next_seed_sustain=next_seed_sustain,
             promoted_candidate_id=promoted_candidate_id,
+            effect_evidence=effect_evidence,
         )
 
 
