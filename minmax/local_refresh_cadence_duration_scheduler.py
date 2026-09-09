@@ -7,7 +7,7 @@ from .refresh_cadence_duration_scheduler import (
     PriorityAwareRefreshCadenceDurationRotationScheduler,
     RotationRefreshIntervalPolicy,
 )
-from .rotation_plan import RotationActionKind, RotationPlan
+from .rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from .rotation_recast import RotationRecastRule
 
 
@@ -17,8 +17,9 @@ class _LocalCadenceScopeMixin:
     All verified duration skills remain protected from filler substitution, but only
     skills named by the supplied cadence policies are allowed to establish or satisfy
     refresh obligations during this refinement pass. Accepted seed-plan casts for
-    unrelated duration skills also keep their exact decision slots; a newly due local
-    cadence waits for the next eligible slot instead of displacing those accepted casts.
+    unrelated duration skills keep their exact decision slots. If the ordinary
+    displacement queue moves one, the local pass restores that protected slot and
+    moves the occupying action forward into the displaced action's slot instead.
     """
 
     def _init_local_scope(
@@ -35,6 +36,7 @@ class _LocalCadenceScopeMixin:
             for name, bar in tuple(protected_duration_keys)
         )
         self._protected_seed_slots: frozenset[tuple[float, str | None]] = frozenset()
+        self._protected_seed_actions: tuple[RotationAction, ...] = ()
 
     def refine(
         self,
@@ -42,7 +44,7 @@ class _LocalCadenceScopeMixin:
         rules: tuple[RotationRecastRule, ...],
         **kwargs,
     ) -> RotationPlan:
-        protected_slots: set[tuple[float, str | None]] = set()
+        protected_actions: list[RotationAction] = []
         for action in plan.actions:
             if action.kind not in {RotationActionKind.SKILL, RotationActionKind.ULTIMATE}:
                 continue
@@ -53,9 +55,101 @@ class _LocalCadenceScopeMixin:
                 key in self._protected_duration_keys
                 and key not in self._active_duration_keys
             ):
-                protected_slots.add((float(action.time_seconds), action.bar))
-        self._protected_seed_slots = frozenset(protected_slots)
-        return super().refine(plan, rules, **kwargs)
+                protected_actions.append(action)
+
+        self._protected_seed_actions = tuple(protected_actions)
+        self._protected_seed_slots = frozenset(
+            (float(action.time_seconds), action.bar)
+            for action in protected_actions
+        )
+        refined = super().refine(plan, rules, **kwargs)
+        return self._restore_protected_seed_actions(refined)
+
+    def _restore_protected_seed_actions(self, plan: RotationPlan) -> RotationPlan:
+        actions = list(plan.actions)
+        changed = False
+
+        for protected in self._protected_seed_actions:
+            if protected.name is None:
+                continue
+
+            exact = next(
+                (
+                    action
+                    for action in actions
+                    if action.time_seconds == protected.time_seconds
+                    and action.kind is protected.kind
+                    and action.name == protected.name
+                    and action.bar == protected.bar
+                ),
+                None,
+            )
+            if exact is not None:
+                continue
+
+            protected_index = next(
+                (
+                    index
+                    for index, action in enumerate(actions)
+                    if action.kind is protected.kind
+                    and action.name == protected.name
+                    and action.bar == protected.bar
+                    and action.time_seconds > protected.time_seconds
+                ),
+                None,
+            )
+            if protected_index is None:
+                continue
+
+            displaced_index = next(
+                (
+                    index
+                    for index, action in enumerate(actions)
+                    if action.time_seconds == protected.time_seconds
+                    and action.sequence == protected.sequence
+                ),
+                None,
+            )
+            if displaced_index is None:
+                continue
+
+            moved_protected = actions[protected_index]
+            displaced = actions[displaced_index]
+            actions[displaced_index] = RotationAction(
+                time_seconds=protected.time_seconds,
+                sequence=protected.sequence,
+                kind=moved_protected.kind,
+                name=moved_protected.name,
+                bar=protected.bar,
+            )
+            actions[protected_index] = RotationAction(
+                time_seconds=moved_protected.time_seconds,
+                sequence=moved_protected.sequence,
+                kind=displaced.kind,
+                name=displaced.name,
+                bar=displaced.bar,
+            )
+            changed = True
+
+        if not changed:
+            return plan
+
+        assumptions = tuple(
+            dict.fromkeys(
+                tuple(plan.assumptions)
+                + (
+                    "local cadence refinement restores accepted unrelated duration casts to their seed decision slots",
+                )
+            )
+        )
+        return RotationPlan(
+            character_name=plan.character_name,
+            build_name=plan.build_name,
+            duration_seconds=plan.duration_seconds,
+            actions=tuple(actions),
+            assumptions=assumptions,
+            unresolved=plan.unresolved,
+        )
 
     def _due_refresh(
         self,
