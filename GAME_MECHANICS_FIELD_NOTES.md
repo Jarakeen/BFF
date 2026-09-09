@@ -596,3 +596,10 @@ Canonical support targeting now includes `SELF_OR_ALLY` for effects that can exp
 Runtime proc eligibility now accepts the same opaque named `ConditionContext` used by the canonical effect-relationship layer. A conditional skill/set proc is not eligible merely because its trigger fired. If no runtime condition context is supplied, the result is `condition_context_required`; if a context is supplied but the required condition name is absent, it is `condition_unsatisfied`. Extreme MOST Actual Heal forwards independent skill and gear condition evidence into this shared gate.
 
 **Layman's version:** seeing the event happen is not proof that every extra clause on the proc was true. The optimizer now needs explicit evidence for those clauses before it uses the buff.
+
+
+---
+
+## 2026-09-09 — Maximum-heal snapshots need ordered runtime history, not isolated proc events
+
+The canonical runtime stream now carries each event attempt's deterministic chance roll and named condition evidence together. Extreme actual-heal skill and gear runtime services can evaluate ordered event histories and query the retained canonical active windows at one exact heal snapshot. This permits independently triggered buffs to overlap only when their real windows overlap, while cooldown, failed conditions, chance failures, refresh/stacking behavior, and exact end-time boundaries remain owned by the shared runtime engine. Missing stacking semantics remain an explicit blocker rather than being guessed.

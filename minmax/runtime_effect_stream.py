@@ -89,6 +89,7 @@ def process_effect_variant_runtime_stream(
             state=state,
             cooldown_scope=cooldown_scope,
             chance_roll=attempt.chance_roll,
+            condition_context=attempt.condition_context,
         )
         state = transition.state
         steps.append(

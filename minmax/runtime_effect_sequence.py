@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from typing import Iterable
 
 from .character_build.effect_instance import EffectVariant
+from .character_build.effect_relationship import ConditionContext
 from .runtime_effect_activation import (
     RuntimeEffectActivationResult,
     apply_effect_variant_runtime_activation,
@@ -22,10 +23,11 @@ from .runtime_event import RuntimeEvent
 
 @dataclass(frozen=True)
 class RuntimeEffectEventAttempt:
-    """One observed runtime event and its deterministic chance input, if any."""
+    """One observed runtime event plus deterministic chance/condition evidence."""
 
     event: RuntimeEvent
     chance_roll: float | None = None
+    condition_context: ConditionContext | None = None
 
 
 @dataclass(frozen=True)
@@ -89,6 +91,7 @@ def process_effect_variant_runtime_sequence(
             state=state,
             cooldown_scope=cooldown_scope,
             chance_roll=attempt.chance_roll,
+            condition_context=attempt.condition_context,
         )
         state = activation.state
         steps.append(

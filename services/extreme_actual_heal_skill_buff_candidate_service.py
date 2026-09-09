@@ -11,6 +11,9 @@ from minmax.runtime_effect_eligibility import (
     evaluate_effect_variant_runtime_eligibility,
 )
 from minmax.runtime_event import RuntimeEvent
+from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
+from minmax.runtime_effect_stream import process_effect_variant_runtime_stream
+from minmax.runtime_effect_window import partition_runtime_effect_windows
 from minmax.skill_coefficient_repository import ability_entity_id
 from minmax.skill_effect_repository import SkillEffectRepository
 from minmax.support_target_type import SupportTargetType
@@ -257,6 +260,35 @@ class ExtremeActualHealSkillBuffCandidateService:
                     and buff is not None
                     and elapsed < float(effect.duration)
                 ):
+                    result.append(buff)
+        return tuple(dict.fromkeys(result))
+
+    def active_triggered_named_buffs_history(
+        self,
+        build: PlayerBuild,
+        *,
+        active_bar: str,
+        attempts: tuple[RuntimeEffectEventAttempt, ...],
+        snapshot_time_seconds: float,
+    ) -> tuple[str, ...]:
+        snapshot = float(snapshot_time_seconds)
+        available = {name.casefold(): effects for _, name, effects in self._triggered_available(build)}
+        attr = "BackBarSkills" if str(active_bar or "front").casefold() == "back" else "FrontBarSkills"
+        result: list[str] = []
+        for raw_name in list(getattr(build, attr))[:5]:
+            effects = available.get(str(raw_name or "").strip().casefold())
+            if not effects:
+                continue
+            for effect in effects:
+                buff = self._triggered_buff_name(effect)
+                if buff is None:
+                    continue
+                relevant = tuple(attempt for attempt in attempts if attempt.event.time_seconds <= snapshot)
+                if not relevant:
+                    continue
+                stream = process_effect_variant_runtime_stream(relevant, effect)
+                partition = partition_runtime_effect_windows(stream.final_state.windows, at_time_seconds=snapshot)
+                if any(window.effect_name == effect.name for window in partition.active):
                     result.append(buff)
         return tuple(dict.fromkeys(result))
 

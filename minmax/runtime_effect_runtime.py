@@ -11,6 +11,7 @@ state after processing an event.
 from dataclasses import dataclass
 
 from .character_build.effect_instance import EffectVariant
+from .character_build.effect_relationship import ConditionContext
 from .runtime_effect_activation import (
     RuntimeEffectActivationResult,
     apply_effect_variant_runtime_activation,
@@ -61,6 +62,7 @@ def apply_effect_variant_runtime_event(
     state: RuntimeEffectRuntimeState = RuntimeEffectRuntimeState(),
     cooldown_scope: RuntimeCooldownScope = RuntimeCooldownScope.GLOBAL,
     chance_roll: float | None = None,
+    condition_context: ConditionContext | None = None,
 ) -> RuntimeEffectTransitionResult:
     """Apply one event to activation history and bounded active-window state.
 
@@ -77,6 +79,7 @@ def apply_effect_variant_runtime_event(
         state=state.activation_state,
         cooldown_scope=cooldown_scope,
         chance_roll=chance_roll,
+        condition_context=condition_context,
     )
 
     if not activation.activated:

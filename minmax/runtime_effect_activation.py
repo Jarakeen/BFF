@@ -11,6 +11,7 @@ from free-form source text.
 from dataclasses import dataclass
 
 from .character_build.effect_instance import EffectVariant
+from .character_build.effect_relationship import ConditionContext
 from .runtime_effect_eligibility import (
     RuntimeCooldownScope,
     RuntimeEffectEligibilityResult,
@@ -71,6 +72,7 @@ def apply_effect_variant_runtime_activation(
     state: RuntimeEffectState = RuntimeEffectState(),
     cooldown_scope: RuntimeCooldownScope = RuntimeCooldownScope.GLOBAL,
     chance_roll: float | None = None,
+    condition_context: ConditionContext | None = None,
 ) -> RuntimeEffectActivationResult:
     """Evaluate and, when eligible, record one EffectVariant activation.
 
@@ -86,6 +88,7 @@ def apply_effect_variant_runtime_activation(
         state=state,
         cooldown_scope=cooldown_scope,
         chance_roll=chance_roll,
+        condition_context=condition_context,
     )
     if not eligibility.eligible:
         return RuntimeEffectActivationResult(

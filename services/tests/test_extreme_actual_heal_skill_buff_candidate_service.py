@@ -1,6 +1,7 @@
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_build.effect_layer import EffectLayer
 from minmax.support_target_type import SupportTargetType
+from minmax.support_stacking import StackingBehavior
 from models.build_model import PlayerBuild
 from services.extreme_actual_heal_skill_buff_candidate_service import (
     ExtremeActualHealSkillBuffCandidateService,
@@ -260,3 +261,24 @@ def test_triggered_skill_buff_condition_requires_explicit_matching_context():
     assert service.triggered_build_candidates(
         **kwargs, condition_context=frozenset({"target_below_half_health"})
     )
+
+
+def test_triggered_skill_history_uses_latest_surviving_window():
+    from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
+    from minmax.runtime_event import RuntimeEvent
+    class HistoryRepository(_Repository):
+        @staticmethod
+        def available_skills(character_class=None):
+            return ((7, "History Power"),)
+        @staticmethod
+        def resolve(ability_id):
+            return (EffectVariant(name="major_sorcery", layer=EffectLayer.CAST, source="History Power", duration=10.0, trigger="critical_heal", target_type=SupportTargetType.SELF, stacking=StackingBehavior.UNIQUE),)
+    service = ExtremeActualHealSkillBuffCandidateService("unused.db", repository=HistoryRepository())
+    build = _build()
+    build.FrontBarSkills[1] = "History Power"
+    attempts = (
+        RuntimeEffectEventAttempt(RuntimeEvent(time_seconds=0.0, trigger="critical_heal", source="first")),
+        RuntimeEffectEventAttempt(RuntimeEvent(time_seconds=11.0, trigger="critical_heal", source="second")),
+    )
+    assert service.active_triggered_named_buffs_history(build, active_bar="front", attempts=attempts, snapshot_time_seconds=15.0) == ("Major Sorcery",)
+    assert service.active_triggered_named_buffs_history(build, active_bar="front", attempts=attempts, snapshot_time_seconds=21.0) == ()

@@ -5,6 +5,7 @@ from minmax.character_build.effect_layer import EffectLayer
 from minmax.runtime_effect_eligibility import RuntimeEffectState
 from minmax.runtime_event import RuntimeEvent
 from minmax.support_target_type import SupportTargetType
+from minmax.support_stacking import StackingBehavior
 from models.build_model import GearSlot, PlayerBuild
 from services.extreme_actual_heal_gear_runtime_buff_service import (
     ExtremeActualHealGearRuntimeBuffService,
@@ -195,3 +196,20 @@ def test_conditional_gear_proc_requires_explicit_matching_context():
     )
     assert proven.active_buffs == ("Major Courage",)
     assert proven.unresolved == ()
+
+
+def test_gear_runtime_history_uses_surviving_window_at_snapshot():
+    from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
+    class HistoryResolver:
+        @staticmethod
+        def resolve(set_id, piece_count):
+            if piece_count < 5:
+                return []
+            return [EffectVariant(name="major_courage", layer=EffectLayer.PROC, source="fixture set", duration=5.0, cooldown=10.0, trigger="overheal_self_or_ally", target_type=SupportTargetType.SELF, stacking=StackingBehavior.UNIQUE)]
+    service = ExtremeActualHealGearRuntimeBuffService("unused.db", repository=_Repository(), resolver=HistoryResolver())
+    attempts = (
+        RuntimeEffectEventAttempt(RuntimeEvent(time_seconds=0.0, trigger="overheal_self_or_ally", source="first")),
+        RuntimeEffectEventAttempt(RuntimeEvent(time_seconds=11.0, trigger="overheal_self_or_ally", source="second")),
+    )
+    assert service.resolve_history(_five_piece("Self Proc Set"), active_bar="front", attempts=attempts, snapshot_time_seconds=14.0).active_buffs == ("Major Courage",)
+    assert service.resolve_history(_five_piece("Self Proc Set"), active_bar="front", attempts=attempts, snapshot_time_seconds=16.0).active_buffs == ()

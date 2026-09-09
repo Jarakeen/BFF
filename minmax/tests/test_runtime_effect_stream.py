@@ -168,3 +168,15 @@ def test_empty_stream_returns_initial_state_and_zero_activations():
     assert result.activation_count == 0
     assert result.final_state == initial
     assert result.resolved
+
+
+def test_runtime_stream_carries_per_attempt_condition_context():
+    effect = _effect(condition="target_below_half_health")
+    attempts = (
+        RuntimeEffectEventAttempt(event=RuntimeEvent(time_seconds=1.0, trigger="damage_dealt", source="Observed Event"), condition_context=frozenset()),
+        RuntimeEffectEventAttempt(event=RuntimeEvent(time_seconds=2.0, trigger="damage_dealt", source="Observed Event", sequence=1), condition_context=frozenset({"target_below_half_health"})),
+    )
+    result = process_effect_variant_runtime_stream(attempts, effect)
+    assert result.activation_count == 1
+    assert result.steps[0].transition.activation.eligibility.reasons == ("condition_unsatisfied",)
+    assert result.steps[1].activated

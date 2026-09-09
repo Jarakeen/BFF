@@ -14,6 +14,9 @@ from minmax.runtime_effect_eligibility import (
     evaluate_effect_variant_runtime_eligibility,
 )
 from minmax.runtime_event import RuntimeEvent, runtime_event_matches_effect_variant
+from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
+from minmax.runtime_effect_stream import process_effect_variant_runtime_stream
+from minmax.runtime_effect_window import partition_runtime_effect_windows
 from minmax.support_target_type import SupportTargetType
 from models.build_model import PlayerBuild
 
@@ -124,3 +127,37 @@ class ExtremeActualHealGearRuntimeBuffService:
             active_buffs=tuple(dict.fromkeys(active)),
             unresolved=tuple(dict.fromkeys(unresolved)),
         )
+
+
+    def resolve_history(
+        self,
+        build: PlayerBuild,
+        *,
+        active_bar: str,
+        attempts: tuple[RuntimeEffectEventAttempt, ...],
+        snapshot_time_seconds: float,
+    ) -> ExtremeActualHealGearRuntimeBuffResult:
+        snapshot = float(snapshot_time_seconds)
+        active: list[str] = []
+        unresolved: list[str] = []
+        counts = GearStatInputResolver.equipped_set_counts(build, active_bar=active_bar)
+        for set_name, piece_count in sorted(counts.items(), key=lambda item: item[0].casefold()):
+            gear_set = self.repository.get_set(set_name)
+            if gear_set is None:
+                continue
+            for effect in self.resolver.resolve(gear_set.id, int(piece_count)):
+                buff = self._named_buff(effect)
+                if buff is None or effect.target_type not in (SupportTargetType.SELF, SupportTargetType.SELF_OR_ALLY):
+                    continue
+                relevant = tuple(attempt for attempt in attempts if attempt.event.time_seconds <= snapshot and runtime_event_matches_effect_variant(attempt.event, effect))
+                if not relevant:
+                    continue
+                stream = process_effect_variant_runtime_stream(relevant, effect)
+                for step in stream.unresolved_steps:
+                    reasons = step.transition.unresolved or step.transition.activation.eligibility.reasons
+                    if reasons:
+                        unresolved.append(f"{set_name} {buff} runtime history unresolved: {', '.join(reasons)}")
+                partition = partition_runtime_effect_windows(stream.final_state.windows, at_time_seconds=snapshot)
+                if any(window.effect_name == effect.name for window in partition.active):
+                    active.append(buff)
+        return ExtremeActualHealGearRuntimeBuffResult(active_buffs=tuple(dict.fromkeys(active)), unresolved=tuple(dict.fromkeys(unresolved)))
