@@ -131,6 +131,7 @@ def test_audit_ignores_catalog_infrastructure_module(tmp_path: Path) -> None:
 
 
 def test_audit_ignores_verified_old_page_only_service_utilities(tmp_path: Path) -> None:
+    _write_module(tmp_path, "services.ai_service", "class AIService: pass\n")
     _write_module(tmp_path, "services.json_service", "class JsonService: pass\n")
     _write_module(tmp_path, "services.validation_service", "class ValidationService: pass\n")
     _write_module(tmp_path, "services.still_current_service")
@@ -142,6 +143,7 @@ def test_audit_ignores_verified_old_page_only_service_utilities(tmp_path: Path) 
         if row.code == "unregistered-service-module"
     }
 
+    assert "services/ai_service.py" not in warning_paths
     assert "services/json_service.py" not in warning_paths
     assert "services/validation_service.py" not in warning_paths
     assert "services/still_current_service.py" in warning_paths
