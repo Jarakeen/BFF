@@ -41,6 +41,17 @@ def test_top_team_is_observed_ranked_log_evidence_not_optimal_comp_truth():
     assert "must not be promoted into game-mechanic truth" in service.notes
 
 
+def test_trending_is_multi_report_observation_not_best_in_slot_truth():
+    service = canonical_service_for("esologs_ranked_role_trending_evidence")
+
+    assert service is not None
+    assert service.service_id == "logs.trending.observed_role_meta"
+    assert service.dependencies == ("logs.top_team.observed_build_evidence",)
+    assert service.evidence_class is EvidenceClass.OBSERVATIONAL
+    assert "per observed player" in service.notes
+    assert "not canonical best-in-slot" in service.notes
+
+
 def test_skill_choice_numeric_ids_never_replace_semantic_skill_identity():
     service = canonical_service_for("skill_bar_choice_reference_projection")
 
@@ -58,6 +69,7 @@ def test_application_services_remain_separate_capabilities():
         get_service("broadcast.expedition.session_state").service_id,
         get_service("broadcast.raid.progress_events").service_id,
         get_service("logs.top_team.observed_build_evidence").service_id,
+        get_service("logs.trending.observed_role_meta").service_id,
         get_service("build.skill_choice.reference").service_id,
     }
 
@@ -66,5 +78,6 @@ def test_application_services_remain_separate_capabilities():
         "broadcast.expedition.session_state",
         "broadcast.raid.progress_events",
         "logs.top_team.observed_build_evidence",
+        "logs.trending.observed_role_meta",
         "build.skill_choice.reference",
     }
