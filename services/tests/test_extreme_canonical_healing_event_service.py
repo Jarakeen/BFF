@@ -182,6 +182,39 @@ def test_canonical_identity_still_sums_coefficients_proven_to_share_one_event():
     assert result.unresolved == ()
 
 
+def test_pet_special_activation_keeps_numeric_score_but_requires_runtime_pet_proof():
+    service = _service(
+        "Summon Twilight Matriarch",
+        (
+            _component(
+                1,
+                recipient_scope=HealRecipientScope.GROUP,
+                temporal_scope=HealTemporalScope.DIRECT,
+                recipient_key="friendly_targets",
+                event_key="pet_special_activation",
+            ),
+            _component(
+                2,
+                recipient_scope=HealRecipientScope.PET,
+                temporal_scope=HealTemporalScope.DIRECT,
+                recipient_key="summoned_pet",
+                event_key="pet_special_activation",
+            ),
+        ),
+    )
+
+    result = service.evaluate(
+        build=PlayerBuild(BuildName="Pet"),
+        context=_context(),
+        entity_id="summon_twilight_matriarch",
+    )
+
+    assert result.normal_heal == pytest.approx(1000.0)
+    assert result.critical_heal == pytest.approx(1700.0)
+    assert ExtremeCanonicalHealingEventService.PET_SPECIAL_ACTIVATION_UNRESOLVED in result.unresolved
+    assert not result.mechanic_complete
+
+
 def test_missing_identity_preserves_legacy_multi_recipient_guard():
     service = _service(
         "Blood of the Elder Dragon",
