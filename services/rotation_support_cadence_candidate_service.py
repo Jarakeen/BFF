@@ -8,6 +8,9 @@ from minmax.refresh_cadence_duration_scheduler import RotationRefreshIntervalPol
 from minmax.rotation_ability_priority import AbilityPriorityList
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from services.rotation_duration_refinement_service import RotationDurationRefinement
+from services.rotation_local_cadence_duration_refinement_service import (
+    RotationLocalCadenceDurationRefinementService,
+)
 from services.rotation_support_refresh_cadence_service import (
     RotationSupportRefreshCadenceCandidate,
     RotationSupportRefreshCadenceResult,
@@ -56,10 +59,16 @@ class RotationSupportCadenceCandidateService:
     The cadence proposal uses semantic ``lower_snake_case`` skill identity. The
     seed plan may use a display name, so this service resolves the matching skill
     action and then builds the scheduler policy with that exact plan name/bar.
+
+    The default duration refiner is deliberately local: previously accepted cadence
+    scheduling for unrelated duration skills is preserved unless the newly proposed
+    cadence actually collides with and displaces one of those timeline slots.
     """
 
-    def __init__(self, duration_refiner: _DurationRefiner) -> None:
-        self.duration_refiner = duration_refiner
+    def __init__(self, duration_refiner: _DurationRefiner | None = None) -> None:
+        self.duration_refiner = (
+            duration_refiner or RotationLocalCadenceDurationRefinementService()
+        )
 
     def materialize(
         self,
