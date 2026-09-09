@@ -1,1 +1,0 @@
-This file temporarily documents that the Phase 13 Lokkestiiz audit must support direct execution from the repository root via `python tools\audit_phase13_lokkestiiz_healer_profile.py`. The script should bootstrap the repository root onto `sys.path` before importing project modules.
