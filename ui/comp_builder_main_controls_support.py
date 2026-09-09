@@ -159,7 +159,9 @@ def install() -> None:
         return
 
     from ui.comp_builder_page import CompBuilderPage
+    from ui.raid_engine_dashboard_support import install as install_raid_engine_dashboard
 
     _ORIGINAL_COMP_INIT = CompBuilderPage.__init__
     CompBuilderPage.__init__ = _comp_init_with_main_controls
+    install_raid_engine_dashboard()
     _INSTALLED = True
