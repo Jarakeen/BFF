@@ -110,7 +110,13 @@ class PerformanceRaidReviewLokkestiizRecoveryObligationService:
                 max_delay_seconds=max_delay_seconds,
             )
             observations.extend(result.observations)
-            unresolved.extend(result.unresolved)
+            unresolved.extend(
+                self._name_unresolved_obligation(
+                    signal=signal,
+                    actor_labels=tuple(actor.actor_label for actor in matching_actors),
+                    messages=result.unresolved,
+                )
+            )
 
         observations.sort(
             key=lambda item: (
@@ -123,6 +129,24 @@ class PerformanceRaidReviewLokkestiizRecoveryObligationService:
         return LokkestiizRecoveryObligationResult(
             observations=tuple(observations),
             unresolved=tuple(unresolved),
+        )
+
+    @staticmethod
+    def _name_unresolved_obligation(
+        *,
+        signal: RaidReviewRecoverySignal,
+        actor_labels: tuple[str, ...],
+        messages: tuple[str, ...],
+    ) -> tuple[str, ...]:
+        if not messages:
+            return ()
+
+        label = str(signal.label or signal.semantic_key).strip()
+        actors = ", ".join(str(value) for value in actor_labels if str(value).strip())
+        subject = f" for {actors}" if actors else ""
+        return tuple(
+            f"{label}{subject}: {message}"
+            for message in messages
         )
 
     @staticmethod
