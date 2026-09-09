@@ -10,15 +10,15 @@
 # Three desk-level tabs:
 #   "Ranked Team Builds" -- ESO Logs top-ranked-team gear/skill
 #     evidence for a chosen trial (TopTeamCard, untouched here).
+#   "ESO Logs Trending" -- top individual DD, healer, and tank
+#     rankings for a chosen encounter, summarized into observed gear,
+#     class, and player-loadout trends.
 #   "Performance Dashboard" -- up to 12 raid team member tabs,
 #     each pulling a report/fight from ESO Logs, letting you pick
 #     which player in that fight is you (by name, or by an
 #     anonymized label like "Anonymous 7" when the report owner
 #     hid names), and charting that player's buff/debuff uptime
 #     plus their healing or damage output.
-#   "ESO Logs Trending" -- a bounded multi-report sample of ranked
-#     teams, summarized by role to show commonly observed gear sets,
-#     classes, and example loadouts.
 #
 # Wired to the sidebar's existing "Capabilities" nav entry
 # (Raid Operations > Capabilities, page key "console:3").
@@ -78,8 +78,8 @@ CAPABILITIES_PATH = "data/capabilities.json"
 
 class CapabilitiesPage(FoundryPage):
     """
-    Capabilities Desk -- ranked-team build evidence, per-member
-    performance dashboards, and multi-report ESO Logs trend summaries.
+    Capabilities Desk -- ranked-team build evidence, top-player ESO Logs trends,
+    and per-member performance dashboards.
     """
 
     def __init__(self, parent=None):
@@ -292,27 +292,26 @@ class CapabilitiesPage(FoundryPage):
         performance_column_layout.addWidget(self.performance_stack, 1)
 
         #
-        # Desk-level tabs: ranked-team build evidence, per-member
-        # performance dashboards, and multi-report ESO Logs trends.
-        # Use a real QTabBar here (and for the member roster below)
-        # so tabs read as tabs instead of rounded action pills.
+        # Desk-level tabs: ranked-team build evidence, top-player ESO Logs trends,
+        # then per-member performance dashboards. Use a real QTabBar here (and for
+        # the member roster below) so tabs read as tabs instead of action pills.
         #
 
         self.desk_tabs = QTabBar()
         self.desk_tabs.setExpanding(False)
         self.desk_tabs.setDrawBase(True)
         self.desk_tabs.addTab("Ranked Team Builds")
-        self.desk_tabs.addTab("Performance Dashboard")
         self.desk_tabs.addTab("ESO Logs Trending")
+        self.desk_tabs.addTab("Performance Dashboard")
         self.desk_tabs.currentChanged.connect(self._select_desk_tab)
 
         self.desk_stack = QStackedWidget()
 
         self.desk_stack.addWidget(self.top_team_card)  # index 0: Ranked Team Builds
 
-        self.desk_stack.addWidget(self.performance_member_column)  # index 1: Performance Dashboard
+        self.desk_stack.addWidget(self.trending_card)  # index 1: ESO Logs Trending
 
-        self.desk_stack.addWidget(self.trending_card)  # index 2: ESO Logs Trending
+        self.desk_stack.addWidget(self.performance_member_column)  # index 2: Performance Dashboard
 
         desk_container = QWidget()
 
