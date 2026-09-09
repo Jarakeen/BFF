@@ -2,11 +2,30 @@ from __future__ import annotations
 
 """DD-only observed DoT uptime presentation for Performance Dashboard."""
 
+from PySide6.QtWidgets import QGridLayout
+
 from ui.theme.colors import Colors
 
 _INSTALLED = False
 _ORIGINAL_BUILD_UI = None
 _ORIGINAL_SHOW_SNAPSHOT = None
+
+
+def _add_dot_card_to_charts_layout(layout, dot_card) -> None:
+    """Place the DoT card without assuming the dashboard still uses a grid.
+
+    The base dashboard currently uses QGridLayout, but local/extension layers can
+    legitimately replace ``charts_widget`` with a box layout. QGridLayout accepts
+    row/column span arguments while QBoxLayout does not, so blindly calling the
+    grid-shaped overload can crash the entire app during CapabilitiesPage startup.
+    """
+
+    if layout is None:
+        return
+    if isinstance(layout, QGridLayout):
+        layout.addWidget(dot_card, 3, 0, 1, 2)
+    else:
+        layout.addWidget(dot_card)
 
 
 def _build_ui_with_dot_card(self):
@@ -18,9 +37,7 @@ def _build_ui_with_dot_card(self):
     )
     self.dot_card = dot_card
 
-    grid = self.charts_widget.layout()
-    if grid is not None:
-        grid.addWidget(dot_card, 3, 0, 1, 2)
+    _add_dot_card_to_charts_layout(self.charts_widget.layout(), dot_card)
     dot_card.setVisible(False)
 
 
