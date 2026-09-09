@@ -468,3 +468,26 @@ as another character carrying the identical skill.
 **For BFF:** provider workload must use the existing final-action-cost engine after
 class/racial, armor, and jewelry evidence is resolved. If a selected modifier is not
 verified, BFF blocks the comparison rather than quietly falling back to base cost.
+
+---
+
+## 2026-09-09 — A zero-cost Ultimate can still spend Ultimate after it is summoned
+
+While closing the provider-workload Ultimate gap, BFF confirmed that persistent
+Ultimates need a different cost shape from ordinary one-button Ultimates. Eternal
+Guardian's slotted summon has no positive base cost in the canonical ability row,
+but its description explicitly says that the later Guardian's Wrath activation
+costs 75 Ultimate.
+
+**Layman's version:** the bear can be free to keep around while its special mauling
+button still charges Ultimate. Zero on the summon is not proof that every later
+activation is free.
+
+**What it means in actual play:** a persistent Ultimate can occupy a slot and remain
+active while repeated paid activations consume the shared Ultimate pool. Its rotation
+burden therefore cannot be modeled like either a normal skill or a single ordinary
+Ultimate cast.
+
+**For BFF:** only an explicit secondary-activation contract from canonical ability
+text may replace the missing positive base cost. Unsupported zero-cost Ultimates
+remain unresolved; BFF does not hunt for a nearby number and declare it the price.

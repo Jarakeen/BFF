@@ -8,6 +8,15 @@ from services.team_provider_canonical_workload_service import (
     TeamProviderCanonicalContribution,
     TeamProviderCanonicalWorkloadService,
 )
+from services.team_provider_coverage_service import (
+    TeamProviderCoverageProfile,
+    TeamProviderCoverageService,
+)
+from services.team_provider_temporal_coverage_service import (
+    TeamProviderTemporalCoverageService,
+    TeamProviderTemporalRequirement,
+    TeamProviderTimedApplication,
+)
 
 
 def _database(tmp_path):
@@ -46,7 +55,8 @@ def _database(tmp_path):
                 name TEXT,
                 base_cost REAL,
                 base_mechanic INTEGER,
-                skill_line TEXT
+                skill_line TEXT,
+                description TEXT
             );
 
             INSERT INTO skill VALUES (1, 100, 'Provider Skill');
@@ -55,7 +65,7 @@ def _database(tmp_path):
             );
             INSERT INTO skill_coefficient VALUES (10, 1, '8', .1, 1, 0, 1, NULL);
             INSERT INTO ability VALUES (
-                101, 'Provider Skill', 2700, 1, 'Restoration Staff'
+                101, 'Provider Skill', 2700, 1, 'Restoration Staff', NULL
             );
 
             INSERT INTO skill VALUES (2, 200, 'Provider Ultimate');
@@ -64,7 +74,7 @@ def _database(tmp_path):
             );
             INSERT INTO skill_coefficient VALUES (20, 1, '8', .1, 1, 0, 1, NULL);
             INSERT INTO ability VALUES (
-                202, 'Provider Ultimate', 250, 8, 'Assault'
+                202, 'Provider Ultimate', 250, 8, 'Assault', NULL
             );
 
             INSERT INTO skill VALUES (3, 300, 'Hybrid Provider Skill');
@@ -73,7 +83,17 @@ def _database(tmp_path):
             );
             INSERT INTO skill_coefficient VALUES (30, 1, '8', .1, 1, 0, 1, NULL);
             INSERT INTO ability VALUES (
-                303, 'Hybrid Provider Skill', 2700, 5, 'Restoration Staff'
+                303, 'Hybrid Provider Skill', 2700, 5, 'Restoration Staff', NULL
+            );
+
+            INSERT INTO skill VALUES (4, 400, 'Eternal Guardian');
+            INSERT INTO skill_rank VALUES (
+                40, 4, 404, 4, 1, 'Eternal Guardian', 0, 0, 0
+            );
+            INSERT INTO skill_coefficient VALUES (40, 1, '8', .1, 1, 0, 1, NULL);
+            INSERT INTO ability VALUES (
+                404, 'Eternal Guardian', 0, 8, 'Animal Companions',
+                'Once summoned you can activate Guardian''s Wrath for 75 Ultimate.'
             );
             """
         )
@@ -345,3 +365,112 @@ def test_plan_and_saved_build_identity_must_match(tmp_path):
         assert "character does not match" in str(exc)
     else:
         raise AssertionError("expected mismatched saved-build identity to fail")
+
+
+def test_coverage_results_override_stale_manual_success_flags(tmp_path):
+    plan = _plan(
+        RotationAction(0.0, 0, RotationActionKind.SKILL, "Provider Skill", "front"),
+    )
+    recipient = TeamProviderCoverageService.evaluate(
+        TeamProviderCoverageProfile("combat_prayer", 6, 1),
+        required_recipients=12,
+    )
+    temporal = TeamProviderTemporalCoverageService.evaluate(
+        TeamProviderTemporalRequirement("minor courage", 0.0, 60.0),
+        applications=(TeamProviderTimedApplication("minor courage", "Magrat", 0.0, 60.0),),
+    )
+
+    projection = TeamProviderCanonicalWorkloadService(_database(tmp_path)).project(
+        alternative_id="stale caller flags",
+        effect_key="minor courage",
+        duration_seconds=60.0,
+        recipient_coverage_met=True,
+        temporal_coverage_met=True,
+        contributions=(
+            TeamProviderCanonicalContribution(
+                build=_build(),
+                progression=_progression(),
+                plan=plan,
+                provider_actions=(TeamProviderCanonicalActionReference(0.0, 0, 0.0),),
+            ),
+        ),
+        gcd_seconds_per_application=1.0,
+        recipient_coverage_result=recipient,
+        temporal_coverage_result=temporal,
+    )
+
+    assert not projection.workload.viable
+    assert not projection.workload.recipient_coverage_met
+    assert projection.workload.temporal_coverage_met
+    assert projection.workload.recipient_coverage_result is recipient
+    assert projection.workload.temporal_coverage_result is temporal
+
+
+def test_projects_persistent_ultimate_secondary_activation_cost(tmp_path):
+    build = _build()
+    build.BackBarSkills[-1] = "Eternal Guardian"
+    plan = _plan(
+        RotationAction(10.0, 0, RotationActionKind.ULTIMATE, "Eternal Guardian", "back"),
+    )
+
+    projection = TeamProviderCanonicalWorkloadService(_database(tmp_path)).project(
+        alternative_id="guardian activation",
+        effect_key="guardian wrath",
+        duration_seconds=60.0,
+        recipient_coverage_met=True,
+        temporal_coverage_met=True,
+        contributions=(
+            TeamProviderCanonicalContribution(
+                build=build,
+                progression=_progression(),
+                plan=plan,
+                provider_actions=(TeamProviderCanonicalActionReference(10.0, 0, 0.0),),
+            ),
+        ),
+        gcd_seconds_per_application=1.0,
+    )
+
+    assert projection.workload.viable
+    assert projection.workload.ultimate_spent == 75.0
+    assert projection.workload.resource_costs == ()
+
+
+def test_project_from_coverage_uses_canonical_result_objects(tmp_path):
+    plan = _plan(
+        RotationAction(0.0, 0, RotationActionKind.SKILL, "Provider Skill", "front"),
+    )
+    recipient = TeamProviderCoverageService.evaluate(
+        TeamProviderCoverageProfile("combat_prayer", 12, 1),
+        required_recipients=12,
+    )
+    temporal = TeamProviderTemporalCoverageService.evaluate(
+        TeamProviderTemporalRequirement("minor courage", 0.0, 60.0),
+        applications=(
+            TeamProviderTimedApplication("minor courage", "Magrat", 0.0, 60.0),
+        ),
+    )
+
+    projection = TeamProviderCanonicalWorkloadService(
+        _database(tmp_path)
+    ).project_from_coverage(
+        alternative_id="canonical coverage",
+        effect_key="minor courage",
+        duration_seconds=60.0,
+        recipient_coverage_result=recipient,
+        temporal_coverage_result=temporal,
+        contributions=(
+            TeamProviderCanonicalContribution(
+                build=_build(),
+                progression=_progression(),
+                plan=plan,
+                provider_actions=(
+                    TeamProviderCanonicalActionReference(0.0, 0, 0.0),
+                ),
+            ),
+        ),
+        gcd_seconds_per_application=1.0,
+    )
+
+    assert projection.workload.viable
+    assert projection.workload.recipient_coverage_result is recipient
+    assert projection.workload.temporal_coverage_result is temporal

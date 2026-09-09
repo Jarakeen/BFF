@@ -8,6 +8,10 @@ from services.rotation_execution_burden_service import (
     RotationExecutionBurden,
     RotationExecutionBurdenService,
 )
+from services.team_provider_coverage_service import TeamProviderCoverageResult
+from services.team_provider_temporal_coverage_service import (
+    TeamProviderTemporalCoverageResult,
+)
 
 
 def _canonical(value: object) -> str:
@@ -104,6 +108,8 @@ class TeamProviderRotationWorkload:
     primary_role_displacement_seconds: float
     whole_plan_burden: RotationExecutionBurden
     unresolved: tuple[str, ...]
+    recipient_coverage_result: TeamProviderCoverageResult | None = None
+    temporal_coverage_result: TeamProviderTemporalCoverageResult | None = None
 
     @property
     def viable(self) -> bool:
@@ -164,6 +170,8 @@ class TeamProviderRotationWorkloadService:
         temporal_coverage_met: bool,
         contributions: tuple[TeamProviderRotationContribution, ...],
         unresolved: tuple[str, ...] = (),
+        recipient_coverage_result: TeamProviderCoverageResult | None = None,
+        temporal_coverage_result: TeamProviderTemporalCoverageResult | None = None,
     ) -> TeamProviderRotationWorkload:
         alternative = str(alternative_id or "").strip()
         effect = _canonical(effect_key)
@@ -176,6 +184,15 @@ class TeamProviderRotationWorkloadService:
             raise ValueError("provider workload duration_seconds must be positive")
         if not contributions:
             raise ValueError("provider workload requires at least one rotation contribution")
+
+        if recipient_coverage_result is not None:
+            recipient_coverage_met = recipient_coverage_result.fully_covered
+        if temporal_coverage_result is not None:
+            if _canonical(temporal_coverage_result.effect_key) != effect:
+                raise ValueError(
+                    "temporal coverage result must describe the workload effect"
+                )
+            temporal_coverage_met = temporal_coverage_result.full_requirement_met
 
         issues = [str(item).strip() for item in unresolved if str(item).strip()]
         resource_totals: dict[str, float] = {}
@@ -303,6 +320,38 @@ class TeamProviderRotationWorkloadService:
             primary_role_displacement_seconds=primary_role_displacement_seconds,
             whole_plan_burden=burden,
             unresolved=tuple(dict.fromkeys(issues)),
+            recipient_coverage_result=recipient_coverage_result,
+            temporal_coverage_result=temporal_coverage_result,
+        )
+
+    def assess_from_coverage(
+        self,
+        *,
+        alternative_id: str,
+        effect_key: str,
+        duration_seconds: float,
+        recipient_coverage_result: TeamProviderCoverageResult,
+        temporal_coverage_result: TeamProviderTemporalCoverageResult,
+        contributions: tuple[TeamProviderRotationContribution, ...],
+        unresolved: tuple[str, ...] = (),
+    ) -> TeamProviderRotationWorkload:
+        """Assess workload with canonical coverage results as the hard gates.
+
+        This entry point prevents Comp Maker and Optimization callers from copying
+        coverage outcomes into hand-maintained booleans that can drift away from
+        the recipient/timeline evidence used to produce the recommendation.
+        """
+
+        return self.assess(
+            alternative_id=alternative_id,
+            effect_key=effect_key,
+            duration_seconds=duration_seconds,
+            recipient_coverage_met=recipient_coverage_result.fully_covered,
+            temporal_coverage_met=temporal_coverage_result.full_requirement_met,
+            contributions=contributions,
+            unresolved=unresolved,
+            recipient_coverage_result=recipient_coverage_result,
+            temporal_coverage_result=temporal_coverage_result,
         )
 
     @staticmethod

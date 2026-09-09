@@ -678,20 +678,30 @@ ability-cost, saved-build slot, and imported cast/channel-timing services to res
   skill gap elsewhere on the build to poison the comparison.
 
 General GCD duration and primary-role displacement remain explicit caller policy or
-evidence. They are not inferred from zero cast/channel time. Persistent/secondary
-Ultimate activations remain an explicit next-step gap.
+evidence. They are not inferred from zero cast/channel time.
 
-Expanded canonical provider-workload, final-cost, and provider-coverage checkpoint:
-**116 passed in 1.01s**.
-Latest user-reported full-suite checkpoint before this workload slice:
-**2,623 passed in 82.46s**.
+Provider workload can now retain the canonical recipient-capacity and temporal-
+coverage result objects that authorized the comparison. Their actual conclusions
+override stale copied booleans, and UI-ready explanation evidence exposes recipient
+counts, covered time, targets, gaps, distinct-carrier failures, casts, resources,
+Ultimate, bar space, and role displacement without inventing a universal winner.
+
+Persistent/summoned Ultimates with an explicit secondary activation contract now
+reuse the existing canonical ability-description resolver. For example, a zero-base-
+cost Eternal Guardian can contribute the evidenced 75-Ultimate Guardian's Wrath
+activation cost; unsupported zero-cost Ultimates remain unresolved.
+
+Expanded canonical provider-workload, coverage, explanation, final-cost, saved-slot,
+timing, and Ultimate checkpoint: **118 passed in 0.95s**.
+Latest user-reported full-suite checkpoint after the canonical workload slice:
+**2,626 passed in 73.30s** on Windows / Python 3.12.4.
 
 Active next work:
 
 1. convert the user-supplied BTV screenshot corpus into structured benchmark fixtures with provenance, encounter scope, observed uptime, target/reference uptime where visible, theoretical maximum where visible, and explicit unknown fields rather than guessed values;
 2. test policy selection, target-vs-theoretical-max validation, temporal window scoring, overlap/gap explanation, and BTV-style feedback against those fixtures;
 3. connect those benchmark fixtures to Comp Maker / Optimization explanation paths without treating them as canonical ESO mechanics;
-4. connect provider workload to canonical temporal-coverage results and Comp Maker / Optimization explanations; add persistent/secondary Ultimate activation evidence;
+4. wire the new provider workload explanation evidence into the visible Comp Maker / Optimization result surfaces;
 5. continue thorough healer, tank, and DD rotation coverage with class passives, armor/set duration modifiers, runtime proc conditions, and encounter-specific timing.
 
 Fight-horizon policy: most raid fights are expected to finish within roughly six minutes in the user's working context, so **360 seconds may be used only as an overrideable fallback planning ceiling when encounter-specific timing is unavailable**. It is not a canonical encounter duration. Optimization should prioritize important burn/mechanic windows over meaningless attempts to force every support effect to 100% global uptime.

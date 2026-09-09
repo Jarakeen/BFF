@@ -13,6 +13,9 @@ from minmax.jewelry_cost_modifier_repository import JewelryCostModifierRepositor
 from minmax.jewelry_trait_repository import JewelryTraitRepository
 from minmax.resource_costs import ResourceType
 from minmax.rotation_plan import RotationActionKind, RotationPlan
+from minmax.secondary_ultimate_activation_repository import (
+    SecondaryUltimateActivationRepository,
+)
 from models.build_model import PlayerBuild
 from services.rotation_saved_build_action_slot_service import (
     RotationSavedBuildActionSlotService,
@@ -25,6 +28,10 @@ from services.team_provider_rotation_workload_service import (
     TeamProviderRotationWorkload,
     TeamProviderRotationWorkloadService,
     TeamProviderScheduledActionCost,
+)
+from services.team_provider_coverage_service import TeamProviderCoverageResult
+from services.team_provider_temporal_coverage_service import (
+    TeamProviderTemporalCoverageResult,
 )
 
 
@@ -91,6 +98,7 @@ class TeamProviderCanonicalWorkloadService:
         timing_service: RotationSavedBuildActionTimingService | None = None,
         slot_service: RotationSavedBuildActionSlotService | None = None,
         workload_service: TeamProviderRotationWorkloadService | None = None,
+        secondary_activation_repository: SecondaryUltimateActivationRepository | None = None,
     ) -> None:
         self.ability_cost_repository = (
             ability_cost_repository or AbilityCostRepository(database_path)
@@ -106,6 +114,10 @@ class TeamProviderCanonicalWorkloadService:
         )
         self.slot_service = slot_service or RotationSavedBuildActionSlotService()
         self.workload_service = workload_service or TeamProviderRotationWorkloadService()
+        self.secondary_activation_repository = (
+            secondary_activation_repository
+            or SecondaryUltimateActivationRepository(database_path)
+        )
 
     def project(
         self,
@@ -117,6 +129,8 @@ class TeamProviderCanonicalWorkloadService:
         temporal_coverage_met: bool,
         contributions: tuple[TeamProviderCanonicalContribution, ...],
         gcd_seconds_per_application: float | None,
+        recipient_coverage_result: TeamProviderCoverageResult | None = None,
+        temporal_coverage_result: TeamProviderTemporalCoverageResult | None = None,
     ) -> TeamProviderCanonicalWorkloadProjection:
         if not contributions:
             raise ValueError("canonical provider workload requires at least one contribution")
@@ -207,9 +221,30 @@ class TeamProviderCanonicalWorkloadService:
                 ultimate_cost: float | None = None
                 base_cost = resolution.base_cost
                 if base_cost is None:
-                    unresolved.extend(
-                        f"{contributor}: {detail}" for detail in resolution.unresolved
+                    secondary = (
+                        self.secondary_activation_repository.resolve_name(action_name)
+                        if action.kind is RotationActionKind.ULTIMATE
+                        else None
                     )
+                    if secondary is not None and secondary.activation is not None:
+                        ultimate_cost = float(secondary.activation.cost)
+                        resource_costs = ()
+                        unresolved.extend(
+                            f"{contributor}: {detail}"
+                            for detail in resolution.unresolved
+                            if "no positive canonical base cost"
+                            not in str(detail).casefold()
+                        )
+                    else:
+                        unresolved.extend(
+                            f"{contributor}: {detail}"
+                            for detail in resolution.unresolved
+                        )
+                        if secondary is not None:
+                            unresolved.extend(
+                                f"{contributor}: {detail}"
+                                for detail in secondary.unresolved
+                            )
                 else:
                     final_resolution = self.final_cost_resolver.resolve(
                         build,
@@ -279,10 +314,37 @@ class TeamProviderCanonicalWorkloadService:
             temporal_coverage_met=temporal_coverage_met,
             contributions=tuple(resolved),
             unresolved=tuple(dict.fromkeys(unresolved)),
+            recipient_coverage_result=recipient_coverage_result,
+            temporal_coverage_result=temporal_coverage_result,
         )
         return TeamProviderCanonicalWorkloadProjection(
             workload=workload,
             resolved_contributions=tuple(resolved),
+        )
+
+    def project_from_coverage(
+        self,
+        *,
+        alternative_id: str,
+        effect_key: str,
+        duration_seconds: float,
+        recipient_coverage_result: TeamProviderCoverageResult,
+        temporal_coverage_result: TeamProviderTemporalCoverageResult,
+        contributions: tuple[TeamProviderCanonicalContribution, ...],
+        gcd_seconds_per_application: float | None,
+    ) -> TeamProviderCanonicalWorkloadProjection:
+        """Project canonical cost with recipient/timeline results as authority."""
+
+        return self.project(
+            alternative_id=alternative_id,
+            effect_key=effect_key,
+            duration_seconds=duration_seconds,
+            recipient_coverage_met=recipient_coverage_result.fully_covered,
+            temporal_coverage_met=temporal_coverage_result.full_requirement_met,
+            contributions=contributions,
+            gcd_seconds_per_application=gcd_seconds_per_application,
+            recipient_coverage_result=recipient_coverage_result,
+            temporal_coverage_result=temporal_coverage_result,
         )
 
     @staticmethod
