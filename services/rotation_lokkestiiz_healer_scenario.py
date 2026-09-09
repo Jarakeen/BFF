@@ -35,6 +35,43 @@ class RotationBossSkillReplacement:
 class LokkestiizHealerScenario:
     execution: LokkestiizHealerExecutionProfile
     skill_replacements: tuple[RotationBossSkillReplacement, ...]
+    selected_ultimate_semantic_id: str
+
+    def __post_init__(self) -> None:
+        ultimate = str(self.selected_ultimate_semantic_id or "").strip().casefold()
+        if not ultimate:
+            raise ValueError("Lokkestiiz healer scenario requires a selected Ultimate")
+        object.__setattr__(self, "selected_ultimate_semantic_id", ultimate)
+
+    @property
+    def unresolved(self) -> tuple[str, ...]:
+        """Return scenario-specific blockers without inventing a Light Attack count.
+
+        The generic execution profile records the user's original request as an
+        unresolved Light Attack count. For this real scenario the engine already
+        owns the relevant mechanic: successful damaging Light/Heavy Attacks start
+        or refresh the base-combat Ultimate-generation window. The remaining proof
+        is therefore Ultimate affordability at each landing, which depends on the
+        unresolved encounter clock windows and each candidate's actual attack
+        schedule.
+        """
+
+        resolved: list[str] = []
+        for item in self.execution.unresolved:
+            if item.startswith("light-attack count required to restore the selected Ultimate"):
+                resolved.append(
+                    "Aggressive Horn affordability at each landing cannot be proven until "
+                    "landing clock windows are canonically resolved; candidate Light/Heavy "
+                    "Attacks must sustain the base-combat Ultimate-generation window before "
+                    "each landing"
+                )
+            else:
+                resolved.append(item)
+        return tuple(resolved)
+
+    @property
+    def ready_for_clock_scheduling(self) -> bool:
+        return not self.unresolved
 
 
 def build_magrat_df_healer_lokkestiiz_scenario() -> LokkestiizHealerScenario:
@@ -42,7 +79,8 @@ def build_magrat_df_healer_lokkestiiz_scenario() -> LokkestiizHealerScenario:
 
     Lokkestiiz has three canonical Aerial Onslaught transitions at 80/50/20.
     The encounter loadout explicitly replaces Winter's Revenge with Elemental
-    Blockade on the back bar. The base DF Healer saved build is not mutated.
+    Blockade on the back bar. Aggressive Horn is the explicit landing Ultimate.
+    The base DF Healer saved build is not mutated.
     """
 
     return LokkestiizHealerScenario(
@@ -54,6 +92,7 @@ def build_magrat_df_healer_lokkestiiz_scenario() -> LokkestiizHealerScenario:
                 incoming_semantic_id="elemental_blockade",
             ),
         ),
+        selected_ultimate_semantic_id="aggressive_horn",
     )
 
 
