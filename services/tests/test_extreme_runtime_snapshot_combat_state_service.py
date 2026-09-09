@@ -6,7 +6,10 @@ from minmax.character_progression import CharacterProgression
 from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
 from minmax.runtime_event import RuntimeEvent
 from models.build_model import PlayerBuild
-from services.extreme_runtime_snapshot import ExtremeRuntimeSnapshot
+from services.extreme_runtime_snapshot import (
+    ExtremeRuntimePotionUse,
+    ExtremeRuntimeSnapshot,
+)
 from services.extreme_runtime_snapshot_combat_state_service import (
     ExtremeRuntimeSnapshotCombatStateService,
 )
@@ -45,12 +48,13 @@ class _PotionResolver:
         )
 
 
-def _attempt():
+def _attempt(*, time_seconds=1.0, sequence=0):
     return RuntimeEffectEventAttempt(
         event=RuntimeEvent(
-            time_seconds=1.0,
+            time_seconds=time_seconds,
             trigger="critical_heal",
             source="snapshot state test",
+            sequence=sequence,
         )
     )
 
@@ -86,6 +90,60 @@ def test_snapshot_state_projects_skill_gear_and_potion_into_one_combat_state():
     )
     assert skill.calls[0][2:] == (attempts, 5.0)
     assert gear.calls[0][2:] == (attempts, 5.0)
+
+
+def test_snapshot_state_projects_unified_history_into_existing_consumers():
+    late_attempt = _attempt(time_seconds=4.0, sequence=2)
+    early_attempt = _attempt(time_seconds=1.0, sequence=3)
+    expected_attempts = (early_attempt, late_attempt)
+    skill = _SkillHistory()
+    gear = _GearHistory()
+    service = ExtremeRuntimeSnapshotCombatStateService(
+        skill_buff_candidates=skill,
+        gear_runtime_buffs=gear,
+        potion_use_resolver=_PotionResolver(),
+    )
+
+    result = service.resolve(
+        PlayerBuild(BuildName="Unified Snapshot", Potion="Increase Spell Power"),
+        progression=CharacterProgression(passive_ranks={"Medicinal Use": 3}),
+        active_bar="back",
+        snapshot=ExtremeRuntimeSnapshot(
+            runtime_history=(
+                late_attempt,
+                ExtremeRuntimePotionUse(time_seconds=2.0, sequence=1),
+                early_attempt,
+            ),
+            snapshot_time_seconds=5.0,
+        ),
+    )
+
+    assert result.unresolved == ()
+    assert result.combat_state.in_combat
+    assert result.combat_state.active_buffs == (
+        "Major Sorcery",
+        "Major Courage",
+    )
+    assert skill.calls == [("Unified Snapshot", "back", expected_attempts, 5.0)]
+    assert gear.calls == [("Unified Snapshot", "back", expected_attempts, 5.0)]
+
+
+def test_snapshot_state_future_potion_use_does_not_activate_buff():
+    service = ExtremeRuntimeSnapshotCombatStateService(
+        potion_use_resolver=_PotionResolver()
+    )
+    result = service.resolve(
+        PlayerBuild(BuildName="Future Potion", Potion="Increase Spell Power"),
+        progression=CharacterProgression(passive_ranks={"Medicinal Use": 3}),
+        active_bar="front",
+        snapshot=ExtremeRuntimeSnapshot(
+            runtime_history=(ExtremeRuntimePotionUse(time_seconds=6.0),),
+            snapshot_time_seconds=5.0,
+        ),
+    )
+
+    assert result.combat_state.active_buffs == ()
+    assert result.unresolved == ()
 
 
 def test_snapshot_state_preserves_gear_runtime_blockers():
