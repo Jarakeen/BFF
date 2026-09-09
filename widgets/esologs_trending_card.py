@@ -29,7 +29,7 @@ _TOP_CLASS_ROWS = 5
 
 
 class EsoLogsTrendingCard(FoundryCard):
-    """Role-aware popularity snapshot across several top ranked ESO Logs teams."""
+    """Role-aware popularity snapshot across top individual ESO Logs players."""
 
     def __init__(self, service_factory, parent=None):
         super().__init__(title="ESO Logs Trending", icon="achievement", parent=parent)
@@ -56,7 +56,7 @@ class EsoLogsTrendingCard(FoundryCard):
         self.encounter_combo.setEnabled(False)
 
         self.fetch_button = FoundryButton(
-            "Analyze Top 5 Teams",
+            "Analyze Top Players",
             role=ButtonRole.PRIMARY,
             compact=True,
         )
@@ -75,8 +75,9 @@ class EsoLogsTrendingCard(FoundryCard):
         root_layout.addLayout(picker_row)
 
         self.summary = QLabel(
-            "Choose a trial and boss. This view samples up to five top-ranked teams "
-            "and shows the most commonly observed gear sets by role."
+            "Choose a trial and boss. This view inspects up to five top-ranked "
+            "individual players per role and shows the gear most commonly observed "
+            "among those DDs, healers, and tanks."
         )
         self.summary.setWordWrap(True)
         self.summary.setStyleSheet(f"color: {Colors.TEXT_MUTED};")
@@ -105,7 +106,7 @@ class EsoLogsTrendingCard(FoundryCard):
 
             header = QHBoxLayout()
             badge = FoundryStatusBadge(role_label, scale="role", key=role_key)
-            count_label = QLabel("0 players")
+            count_label = QLabel("0 ranked players")
             count_label.setFont(Fonts.small())
             count_label.setStyleSheet(f"color: {Colors.TEXT_MUTED};")
             header.addWidget(badge)
@@ -130,7 +131,7 @@ class EsoLogsTrendingCard(FoundryCard):
             class_label.setWordWrap(True)
             layout.addWidget(class_label)
 
-            loadout_heading = QLabel("Observed Loadout Examples")
+            loadout_heading = QLabel("Top Player Loadouts")
             loadout_heading.setFont(Fonts.label())
             layout.addWidget(loadout_heading)
 
@@ -224,7 +225,7 @@ class EsoLogsTrendingCard(FoundryCard):
         trial = self.trial_combo.itemData(trial_index) or {}
         encounter = self.encounter_combo.itemData(encounter_index) or {}
         self.status.info(
-            f"Sampling top-ranked {encounter.get('name', 'encounter')} teams..."
+            f"Loading top-ranked {encounter.get('name', 'encounter')} players..."
         )
         self.fetch_button.setEnabled(False)
 
@@ -234,7 +235,7 @@ class EsoLogsTrendingCard(FoundryCard):
                 zone_name=str(trial["name"]),
                 encounter_id=int(encounter["id"]),
                 encounter_name=str(encounter["name"]),
-                report_limit=5,
+                player_limit=5,
             )
         except EsoLogsApiError as exc:
             self.status.error(str(exc))
@@ -247,17 +248,18 @@ class EsoLogsTrendingCard(FoundryCard):
 
         self._render_report(report)
         skipped = (
-            f"; {report.reports_skipped} skipped" if report.reports_skipped else ""
+            f"; {report.ranked_players_skipped} skipped"
+            if report.ranked_players_skipped
+            else ""
         )
         self.status.success(
-            f"Analyzed {report.reports_analyzed} ranked team report(s){skipped}."
+            f"Analyzed {report.ranked_players_analyzed} top-ranked player(s){skipped}."
         )
 
     def _render_report(self, report: EsoLogsTrendingReport) -> None:
         self.summary.setText(
             f"{report.trial_name} · {report.encounter_name} · "
-            f"{report.reports_analyzed} ranked team report(s) · "
-            f"{report.players_analyzed} player observations. "
+            f"{report.ranked_players_analyzed} top-ranked player observations. "
             "Popularity is descriptive ESO Logs evidence, not canonical best-in-slot."
         )
         for role_key, _ in _ROLE_SECTIONS:
@@ -266,7 +268,8 @@ class EsoLogsTrendingCard(FoundryCard):
     def _render_role(self, summary: RoleTrendingSummary) -> None:
         refs = self._sections[summary.role]
         refs["count"].setText(
-            f"{summary.player_count} player{'s' if summary.player_count != 1 else ''}"
+            f"{summary.player_count} ranked player"
+            f"{'s' if summary.player_count != 1 else ''}"
         )
 
         if summary.gear_sets:
@@ -299,7 +302,7 @@ class EsoLogsTrendingCard(FoundryCard):
             gear = " · ".join(player.GearSets) if player.GearSets else "No sets exposed"
             examples.append(f"{player.Name} — {class_name}\n  {gear}")
         refs["loadouts"].setText(
-            "\n\n".join(examples) if examples else "No observed loadouts available."
+            "\n\n".join(examples) if examples else "No ranked player loadouts available."
         )
 
 
