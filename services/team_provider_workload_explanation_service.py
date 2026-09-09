@@ -14,6 +14,11 @@ from services.team_provider_workload_decision_service import (
     TeamProviderWorkloadDecisionService,
     TeamProviderWorkloadDecisionStatus,
 )
+from services.team_provider_workload_policy_service import (
+    TeamProviderWorkloadPolicy,
+    TeamProviderWorkloadPolicyResult,
+    TeamProviderWorkloadPolicyService,
+)
 
 
 @dataclass(frozen=True)
@@ -200,14 +205,23 @@ class TeamProviderWorkloadExplanationService:
         result: TeamProviderWorkloadCandidateResult,
         *,
         comparison: TeamProviderRotationWorkloadComparison | None = None,
+        policy: TeamProviderWorkloadPolicy | None = None,
     ) -> str:
-        """Render projected candidates with explicit frontier decision state."""
+        """Render projected candidates with explicit frontier and policy state."""
 
         analysis = TeamProviderWorkloadDecisionService.analyze(result)
         if not analysis.decisions:
             return cls.render_panel(())
 
-        sections = [cls._render_decision(item) for item in analysis.decisions]
+        policy_applied = policy is not None
+        sections = [
+            cls._render_decision(item, policy_applied=policy_applied)
+            for item in analysis.decisions
+        ]
+        if policy is not None:
+            policy_result = TeamProviderWorkloadPolicyService.select(analysis, policy)
+            sections.append(cls.render_policy_result(policy_result))
+
         if comparison is not None:
             workloads = result.workloads
             if comparison.baseline not in workloads or comparison.candidate not in workloads:
@@ -218,7 +232,54 @@ class TeamProviderWorkloadExplanationService:
         return "\n\n".join(sections)
 
     @classmethod
-    def _render_decision(cls, decision: TeamProviderWorkloadDecision) -> str:
+    def render_policy_result(
+        cls,
+        result: TeamProviderWorkloadPolicyResult,
+    ) -> str:
+        """Render an explicit ordered policy without disguising it as math."""
+
+        policy = result.policy
+        scope: list[str] = []
+        if policy.encounter_key:
+            scope.append(f"encounter={policy.encounter_key}")
+        if policy.role_key:
+            scope.append(f"role={policy.role_key}")
+
+        header = f"POLICY • {policy.policy_id}"
+        if scope:
+            header += " • " + " • ".join(scope)
+        lines = [header]
+
+        if not result.selections:
+            lines.append("No frontier alternatives were available for policy selection.")
+        else:
+            for selection in result.selections:
+                preferred = ", ".join(selection.preferred_ids)
+                considered = ", ".join(selection.considered_ids)
+                lines.append(
+                    f"{selection.effect_key} @ {selection.duration_seconds:g}s: "
+                    f"preferred {preferred}; considered {considered}."
+                )
+                if selection.rationale:
+                    lines.extend(f"• {item}" for item in selection.rationale)
+                elif len(selection.preferred_ids) > 1:
+                    lines.append("• Policy leaves these frontier alternatives tied.")
+                else:
+                    lines.append("• Only one frontier alternative remained in this scope.")
+
+        lines.append(
+            "Policy priorities are ordered preferences among non-dominated plans, "
+            "not weighted exchange rates."
+        )
+        return "\n".join(lines)
+
+    @classmethod
+    def _render_decision(
+        cls,
+        decision: TeamProviderWorkloadDecision,
+        *,
+        policy_applied: bool = False,
+    ) -> str:
         status = decision.status.value.upper()
         lines = [f"{decision.alternative_id.upper()} • {decision.effect_key} • {status}"]
 
@@ -239,10 +300,16 @@ class TeamProviderWorkloadExplanationService:
                 "Workload frontier: retained; no measured provider plan is no-worse "
                 "in every comparable cost and strictly better in at least one."
             )
-            lines.append(
-                "Encounter / role policy is still required before choosing among "
-                "frontier tradeoffs."
-            )
+            if policy_applied:
+                lines.append(
+                    "Encounter / role policy is applied below to the retained frontier "
+                    "tradeoffs."
+                )
+            else:
+                lines.append(
+                    "Encounter / role policy is still required before choosing among "
+                    "frontier tradeoffs."
+                )
         elif decision.status is TeamProviderWorkloadDecisionStatus.DOMINATED:
             lines.append("Dominated by: " + ", ".join(decision.dominated_by) + ".")
             lines.append("Measured improvements in the dominating plan(s):")
