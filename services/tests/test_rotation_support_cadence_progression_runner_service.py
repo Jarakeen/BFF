@@ -81,6 +81,7 @@ def test_runs_promotions_until_next_step_has_no_promotion() -> None:
     assert result.final_sustain is s2
     assert result.stop_reason is RotationSupportCadenceProgressionStopReason.NO_PROMOTION
     assert result.iterations == 3
+    assert result.proposed_promotions == 2
     assert result.advanced_steps == 2
     assert [call["seed_plan"] for call in stepper.calls] == [p0, p1, p2]
     assert [call["seed_sustain"] for call in stepper.calls] == [s0, s1, s2]
@@ -89,7 +90,7 @@ def test_runs_promotions_until_next_step_has_no_promotion() -> None:
     assert all(call["character_id"] == "magrat-id" for call in stepper.calls)
 
 
-def test_repeated_schedule_is_not_reaccepted() -> None:
+def test_repeated_schedule_is_not_reaccepted_or_counted_as_an_accepted_promotion() -> None:
     p0 = _plan("Combat Prayer")
     p1 = _plan("Energy Orb")
     s0, s1, s_cycle = object(), object(), object()
@@ -110,11 +111,13 @@ def test_repeated_schedule_is_not_reaccepted() -> None:
 
     assert result.stop_reason is RotationSupportCadenceProgressionStopReason.REPEATED_PLAN
     assert result.iterations == 2
+    assert result.proposed_promotions == 2
+    assert result.advanced_steps == 1
     assert result.final_plan is p1
     assert result.final_sustain is s1
 
 
-def test_schedule_repetition_ignores_provenance_only_changes() -> None:
+def test_schedule_repetition_ignores_provenance_only_changes_and_counts_no_accepted_step() -> None:
     p0 = _plan("Combat Prayer")
     same_schedule = _plan(
         "Combat Prayer",
@@ -135,6 +138,8 @@ def test_schedule_repetition_ignores_provenance_only_changes() -> None:
     )
 
     assert result.stop_reason is RotationSupportCadenceProgressionStopReason.REPEATED_PLAN
+    assert result.proposed_promotions == 1
+    assert result.advanced_steps == 0
     assert result.final_plan is p0
     assert result.final_sustain is s0
 
@@ -162,6 +167,8 @@ def test_max_iteration_cap_accepts_last_unique_promotion() -> None:
 
     assert result.stop_reason is RotationSupportCadenceProgressionStopReason.MAX_ITERATIONS
     assert result.iterations == 2
+    assert result.proposed_promotions == 2
+    assert result.advanced_steps == 2
     assert result.final_plan is p2
     assert result.final_sustain is s2
 
