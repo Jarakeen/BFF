@@ -72,7 +72,18 @@ class ExtremeCanonicalHealingEventService(ExtremeHealingEventService):
     remains untouched. The existing reviewed ability-name recipient/time guards
     remain a compatibility fallback for skills whose canonical component identity
     has not yet been enriched or whose periodic tick identity is still unresolved.
+
+    A reviewed ``pet_special_activation`` identity proves what the heal does when
+    the special can be activated; it does not prove the corresponding Sorcerer pet
+    is actually summoned and alive at runtime. Until a canonical runtime pet-state
+    input exists, those events retain their numeric lower-bound score but carry an
+    explicit unresolved legality blocker and therefore cannot be mechanically
+    complete.
     """
+
+    PET_SPECIAL_ACTIVATION_UNRESOLVED = (
+        "Sorcerer pet special activation requires runtime proof that the corresponding pet is summoned and alive"
+    )
 
     def __init__(
         self,
@@ -176,6 +187,26 @@ class ExtremeCanonicalHealingEventService(ExtremeHealingEventService):
             unresolved=unresolved,
         )
 
+    @classmethod
+    def _winner_runtime_unresolved(cls, *, components, scoring) -> tuple[str, ...]:
+        winner_numbers = tuple(
+            getattr(scoring, "critical_winner_coefficients", ())
+            or getattr(scoring, "normal_winner_coefficients", ())
+            or ()
+        )
+        if not winner_numbers:
+            return ()
+        by_number = {
+            int(component.coefficient_number): component
+            for component in tuple(components or ())
+        }
+        for number in winner_numbers:
+            component = by_number.get(int(number))
+            event_key = str(getattr(component, "heal_event_key", "") or "").strip().casefold()
+            if event_key == "pet_special_activation":
+                return (cls.PET_SPECIAL_ACTIVATION_UNRESOLVED,)
+        return ()
+
     def evaluate(self, **kwargs) -> ExtremeHealingEventResult:
         event = super().evaluate(**kwargs)
         result = event.tooltip_result
@@ -213,7 +244,16 @@ class ExtremeCanonicalHealingEventService(ExtremeHealingEventService):
             critical_multiplier=float(critical_multiplier),
         )
         unresolved = tuple(
-            dict.fromkeys((*event.unresolved, *scoring.unresolved))
+            dict.fromkeys(
+                (
+                    *event.unresolved,
+                    *scoring.unresolved,
+                    *self._winner_runtime_unresolved(
+                        components=components,
+                        scoring=scoring,
+                    ),
+                )
+            )
         )
         return replace(
             event,
