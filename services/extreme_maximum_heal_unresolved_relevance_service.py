@@ -23,10 +23,10 @@ class ExtremeMaximumHealUnresolvedRelevanceService:
     event. This is intentionally different from a live-snapshot objective, where
     the same state may still require runtime proof.
 
-    Sorcerer pet special activation is the first reviewed setup prerequisite: when
-    the candidate legally slots the pet skill, an Extreme setup may summon the pet
-    before activating its special heal. The requirement remains visible in the
-    report, but it does not by itself make an achievable-maximum candidate
+    Reviewed setup prerequisites include summoning a legally slotted Sorcerer pet
+    before using its special heal and activating a selected Spell Power potion
+    before the target healing event. These requirements remain visible in the
+    report but do not, by themselves, make an achievable-maximum candidate
     mechanically unprovable.
 
     Weapon traits such as Charged and Decisive remain relevant even when they do
@@ -39,6 +39,7 @@ class ExtremeMaximumHealUnresolvedRelevanceService:
 
     _SETUP_PREREQUISITE_SUBSTRINGS = (
         "sorcerer pet special activation requires runtime proof that the corresponding pet is summoned and alive",
+        "potion selected; activation/uptime is not part of static build state: spell power",
     )
 
     _AMBIENT_SUBSTRINGS = (
