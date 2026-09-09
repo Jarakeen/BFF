@@ -71,11 +71,35 @@ class RotationTimelineIconResolver:
         return None
 
 
+def _gray_out_unimplemented_rotation_modes(page) -> None:
+    """Keep future rotation modes visible while making current support explicit."""
+    combo = getattr(page, "rotation_type_combo", None)
+    if combo is None:
+        return
+
+    model = combo.model()
+    for index in range(combo.count()):
+        text = str(combo.itemText(index) or "").strip()
+        if text not in {"Static", "Dynamic"}:
+            continue
+        item = model.item(index) if hasattr(model, "item") else None
+        if item is not None:
+            item.setEnabled(False)
+            item.setToolTip(f"{text} rotation generation is planned but not implemented yet.")
+
+    combo.setCurrentText("Semi-static")
+    combo.setToolTip(
+        "Semi-static generation is currently available. Static and Dynamic remain visible as planned Phase 13 modes."
+    )
+
+
 def install_rotation_timeline(page) -> None:
     """Add a visual Timeline/Details view without changing rotation authority."""
     if getattr(page, "_rotation_timeline_installed", False):
         return
     page._rotation_timeline_installed = True
+
+    _gray_out_unimplemented_rotation_modes(page)
 
     page.rotation_timeline_projection = RotationTimelineProjectionService()
     page.rotation_timeline_icon_resolver = RotationTimelineIconResolver()
@@ -195,4 +219,8 @@ def install_rotation_timeline(page) -> None:
     refresh_visual_timeline()
 
 
-__all__ = ["RotationTimelineIconResolver", "install_rotation_timeline"]
+__all__ = [
+    "RotationTimelineIconResolver",
+    "_gray_out_unimplemented_rotation_modes",
+    "install_rotation_timeline",
+]
