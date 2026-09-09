@@ -27,53 +27,58 @@ jobs:
 
           p = Path('minmax/support_target_type.py')
           text = p.read_text()
-          text = text.replace('    ALLY = "ally"\n    GROUP = "group"', '    ALLY = "ally"\n    SELF_OR_ALLY = "self_or_ally"\n    GROUP = "group"')
+          if 'SELF_OR_ALLY' not in text:
+              text = text.replace('    ALLY = "ally"\n    GROUP = "group"', '    ALLY = "ally"\n    SELF_OR_ALLY = "self_or_ally"\n    GROUP = "group"')
           p.write_text(text)
 
           p = Path('minmax/gear_set_known_effects.py')
           text = p.read_text()
           old = 'trigger="overheal_self_or_ally",\n        target_type=SupportTargetType.ALLY,'
           new = 'trigger="overheal_self_or_ally",\n        target_type=SupportTargetType.SELF_OR_ALLY,'
-          if old not in text:
+          if old in text:
+              text = text.replace(old, new, 1)
+          elif new not in text:
               raise SystemExit('SPC target row not found')
-          p.write_text(text.replace(old, new, 1))
+          p.write_text(text)
 
           p = Path('minmax/support_effect_registry.py')
           text = p.read_text()
-          text = text.replace(
-              'in (SupportTargetType.ALLY, SupportTargetType.GROUP)',
-              'in (SupportTargetType.ALLY, SupportTargetType.SELF_OR_ALLY, SupportTargetType.GROUP)',
-          )
+          old = 'in (SupportTargetType.ALLY, SupportTargetType.GROUP)'
+          new = 'in (SupportTargetType.ALLY, SupportTargetType.SELF_OR_ALLY, SupportTargetType.GROUP)'
+          if old in text:
+              text = text.replace(old, new)
           p.write_text(text)
 
           p = Path('services/extreme_actual_heal_gear_runtime_buff_service.py')
           text = p.read_text()
-          text = text.replace(
-              'if effect.target_type is not SupportTargetType.SELF:',
-              'if effect.target_type not in (SupportTargetType.SELF, SupportTargetType.SELF_OR_ALLY):',
-          )
+          old = 'if effect.target_type is not SupportTargetType.SELF:'
+          new = 'if effect.target_type not in (SupportTargetType.SELF, SupportTargetType.SELF_OR_ALLY):'
+          if old in text:
+              text = text.replace(old, new)
           p.write_text(text)
 
           p = Path('services/tests/test_extreme_actual_heal_gear_runtime_buff_service.py')
           text = p.read_text()
-          text += '''\n\ndef test_self_or_ally_gear_proc_can_apply_to_wearer():\n    class HybridResolver:\n        @staticmethod\n        def resolve(set_id, piece_count):\n            if piece_count < 5:\n                return []\n            return [\n                EffectVariant(\n                    name="major_courage",\n                    layer=EffectLayer.PROC,\n                    source="fixture set",\n                    duration=5.0,\n                    trigger="overheal_self_or_ally",\n                    target_type=SupportTargetType.SELF_OR_ALLY,\n                )\n            ]\n\n    service = ExtremeActualHealGearRuntimeBuffService(\n        "unused.db", repository=_Repository(), resolver=HybridResolver()\n    )\n    result = service.resolve(\n        _five_piece("Self Proc Set"),\n        active_bar="front",\n        event=RuntimeEvent(\n            time_seconds=0.0, trigger="overheal_self_or_ally", source="test"\n        ),\n        snapshot_time_seconds=1.0,\n    )\n    assert result.active_buffs == ("Major Courage",)\n    assert result.unresolved == ()\n'''
+          if 'test_self_or_ally_gear_proc_can_apply_to_wearer' not in text:
+              text += '''\n\ndef test_self_or_ally_gear_proc_can_apply_to_wearer():\n    class HybridResolver:\n        @staticmethod\n        def resolve(set_id, piece_count):\n            if piece_count < 5:\n                return []\n            return [\n                EffectVariant(\n                    name="major_courage",\n                    layer=EffectLayer.PROC,\n                    source="fixture set",\n                    duration=5.0,\n                    trigger="overheal_self_or_ally",\n                    target_type=SupportTargetType.SELF_OR_ALLY,\n                )\n            ]\n\n    service = ExtremeActualHealGearRuntimeBuffService(\n        "unused.db", repository=_Repository(), resolver=HybridResolver()\n    )\n    result = service.resolve(\n        _five_piece("Self Proc Set"),\n        active_bar="front",\n        event=RuntimeEvent(time_seconds=0.0, trigger="overheal_self_or_ally", source="test"),\n        snapshot_time_seconds=1.0,\n    )\n    assert result.active_buffs == ("Major Courage",)\n    assert result.unresolved == ()\n'''
           p.write_text(text)
 
           p = Path('minmax/tests/test_support_effect_registry.py')
           text = p.read_text()
-          text += '''\n\ndef test_self_or_ally_counts_as_ally_reaching_and_group_contributing():\n    effect = SupportEffect(\n        source="SPC",\n        name="Major Courage",\n        category=SupportEffectCategory.BUFF,\n        effect_type="weapon_spell_damage",\n        target_type=SupportTargetType.SELF_OR_ALLY,\n    )\n    registry = SupportEffectRegistry([effect])\n    assert registry.targeting_allies() == (effect,)\n    assert registry.contributing_to_group() == (effect,)\n'''
+          if 'test_self_or_ally_counts_as_ally_reaching_and_group_contributing' not in text:
+              text += '''\n\ndef test_self_or_ally_counts_as_ally_reaching_and_group_contributing():\n    effect = SupportEffect(\n        source="SPC",\n        name="Major Courage",\n        category=SupportEffectCategory.BUFF,\n        effect_type="weapon_spell_damage",\n        target_type=SupportTargetType.SELF_OR_ALLY,\n    )\n    registry = SupportEffectRegistry([effect])\n    assert registry.targeting_allies() == (effect,)\n    assert registry.contributing_to_group() == (effect,)\n'''
           p.write_text(text)
 
-          p = Path('minmax/tests/test_gear_set_known_effects.py')
+          p = Path('minmax/tests/test_gear_set_effect_variant_resolver.py')
           text = p.read_text()
-          text += '''\n\ndef test_spell_power_cure_explicitly_targets_self_or_ally():\n    effects = known_effects_for_bonus_row(0, 0, "Spell Power Cure", 5)\n    assert len(effects) == 1\n    assert effects[0].target_type == SupportTargetType.SELF_OR_ALLY\n'''
-          if 'SupportTargetType' not in text.split('\n', 20)[0:20].__str__():
-              lines = text.splitlines()
-              insert_at = 0
-              while insert_at < len(lines) and (lines[insert_at].startswith('from ') or lines[insert_at].startswith('import ') or not lines[insert_at].strip()):
-                  insert_at += 1
-              lines.insert(insert_at, 'from minmax.support_target_type import SupportTargetType')
-              text = '\n'.join(lines) + '\n'
+          if 'known_effects_for_bonus_row' not in text.split('OTHER_SET_ID', 1)[0]:
+              text = text.replace(
+                  '    MASTER_ARCHITECT_SET_ID,\n)',
+                  '    MASTER_ARCHITECT_SET_ID,\n    known_effects_for_bonus_row,\n)',
+                  1,
+              )
+          if 'test_spell_power_cure_explicitly_targets_self_or_ally' not in text:
+              text += '''\n\ndef test_spell_power_cure_explicitly_targets_self_or_ally():\n    effects = known_effects_for_bonus_row(0, 0, "Spell Power Cure", 5)\n    assert len(effects) == 1\n    assert effects[0].target_type == SupportTargetType.SELF_OR_ALLY\n'''
           p.write_text(text)
 
           p = Path('GAME_MECHANICS_FIELD_NOTES.md')
@@ -94,7 +99,6 @@ jobs:
             services/tests/test_extreme_conditional_actual_heal_optimization_service.py \
             minmax/tests/test_support_effect_registry.py \
             minmax/tests/test_support_effect.py \
-            minmax/tests/test_gear_set_known_effects.py \
             minmax/tests/test_gear_set_effect_variant_resolver.py \
             minmax/tests/test_runtime_effect_eligibility.py \
             services/tests/test_extreme_optimization_read_only_database.py
@@ -105,7 +109,7 @@ jobs:
           set -euo pipefail
           git config user.name Jarakeen
           git config user.email jarakeene@gmail.com
-          git add minmax/support_target_type.py minmax/gear_set_known_effects.py minmax/support_effect_registry.py services/extreme_actual_heal_gear_runtime_buff_service.py services/tests/test_extreme_actual_heal_gear_runtime_buff_service.py minmax/tests/test_support_effect_registry.py minmax/tests/test_gear_set_known_effects.py GAME_MECHANICS_FIELD_NOTES.md
+          git add minmax/support_target_type.py minmax/gear_set_known_effects.py minmax/support_effect_registry.py services/extreme_actual_heal_gear_runtime_buff_service.py services/tests/test_extreme_actual_heal_gear_runtime_buff_service.py minmax/tests/test_support_effect_registry.py minmax/tests/test_gear_set_effect_variant_resolver.py GAME_MECHANICS_FIELD_NOTES.md
           git commit -m "feat: model self-or-ally proc targeting"
           git fetch origin phase13.2
           git rebase origin/phase13.2
@@ -114,7 +118,6 @@ jobs:
             services/tests/test_extreme_conditional_actual_heal_optimization_service.py \
             minmax/tests/test_support_effect_registry.py \
             minmax/tests/test_support_effect.py \
-            minmax/tests/test_gear_set_known_effects.py \
             minmax/tests/test_gear_set_effect_variant_resolver.py \
             minmax/tests/test_runtime_effect_eligibility.py \
             services/tests/test_extreme_optimization_read_only_database.py
