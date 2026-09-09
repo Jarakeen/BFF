@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from minmax.skill_component_classification import HealRecipientScope
 from services.extreme_healing_component_identity_service import (
     ExtremeHealingComponentIdentityService,
 )
@@ -34,7 +35,13 @@ class ExtremeHealingEventGroupScoringResult:
 
 
 class ExtremeHealingEventGroupScoringService:
-    """Score one-recipient, one-time heal groups without cross-event summation."""
+    """Score one-recipient, one-time heal groups without cross-event summation.
+
+    Callers may optionally restrict eligible recipient scopes for a concrete
+    objective. The default remains unrestricted so other Extreme objectives keep
+    their existing behavior. A group whose reviewed coefficients disagree about
+    recipient scope fails closed rather than being partially scored.
+    """
 
     def __init__(
         self,
@@ -48,6 +55,7 @@ class ExtremeHealingEventGroupScoringService:
         components,
         value_by_coefficient: dict[int, float],
         critical_multiplier: float,
+        allowed_recipient_scopes: tuple[HealRecipientScope, ...] | None = None,
     ) -> ExtremeHealingEventGroupScoringResult:
         identity = self.identity_service.resolve(components)
         if not identity.complete:
@@ -64,10 +72,37 @@ class ExtremeHealingEventGroupScoringService:
             int(getattr(component, "coefficient_number")): component
             for component in tuple(components or ())
         }
+        allowed = None if allowed_recipient_scopes is None else set(allowed_recipient_scopes)
         group_scores: list[ExtremeHealingEventGroupScore] = []
         unresolved: list[str] = []
 
         for group in identity.groups:
+            group_scopes = {
+                getattr(by_number[number], "heal_recipient_scope", None)
+                for number in group.coefficient_numbers
+            }
+            if len(group_scopes) != 1 or None in group_scopes:
+                message = (
+                    "HEAL event group has mixed or unresolved recipient scope for coefficient(s): "
+                    + ", ".join(str(number) for number in group.coefficient_numbers)
+                )
+                unresolved.append(message)
+                group_scores.append(
+                    ExtremeHealingEventGroupScore(
+                        coefficient_numbers=group.coefficient_numbers,
+                        normal_heal=None,
+                        critical_heal=None,
+                        unresolved=(message,),
+                    )
+                )
+                continue
+            group_scope = next(iter(group_scopes))
+            if allowed is not None and group_scope not in allowed:
+                # Ineligible recipient groups are not unresolved mechanics. They
+                # are simply outside the requested objective (for example, PET
+                # healing during a player-recipient maximum-heal search).
+                continue
+
             missing_values = tuple(
                 number
                 for number in group.coefficient_numbers
