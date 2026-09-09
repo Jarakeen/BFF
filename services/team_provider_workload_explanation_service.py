@@ -9,6 +9,11 @@ from services.team_provider_rotation_workload_service import (
 from services.team_provider_workload_candidate_service import (
     TeamProviderWorkloadCandidateResult,
 )
+from services.team_provider_workload_decision_service import (
+    TeamProviderWorkloadDecision,
+    TeamProviderWorkloadDecisionService,
+    TeamProviderWorkloadDecisionStatus,
+)
 
 
 @dataclass(frozen=True)
@@ -185,13 +190,7 @@ class TeamProviderWorkloadExplanationService:
                 raise ValueError(
                     "provider workload comparison must reference displayed workloads"
                 )
-            rendered = cls.compare(comparison)
-            lines = [
-                f"COMPARISON • {rendered.baseline_id} → {rendered.candidate_id}",
-                *(f"• {item}" for item in rendered.tradeoffs),
-                rendered.boundary,
-            ]
-            sections.append("\n".join(lines))
+            sections.append(cls._render_comparison(comparison))
 
         return "\n\n".join(sections)
 
@@ -202,21 +201,70 @@ class TeamProviderWorkloadExplanationService:
         *,
         comparison: TeamProviderRotationWorkloadComparison | None = None,
     ) -> str:
-        """Render projected candidates and exact attachment failures together."""
+        """Render projected candidates with explicit frontier decision state."""
 
-        sections: list[str] = []
-        if result.workloads:
-            sections.append(cls.render_panel(result.workloads, comparison=comparison))
-        for rejection in result.rejected:
-            lines = [
-                f"{rejection.alternative_id.upper()} • {rejection.effect_key}",
-                "Candidate not projected:",
-                *(f"• {item}" for item in rejection.blockers),
-            ]
-            sections.append("\n".join(lines))
-        if sections:
-            return "\n\n".join(sections)
-        return cls.render_panel(())
+        analysis = TeamProviderWorkloadDecisionService.analyze(result)
+        if not analysis.decisions:
+            return cls.render_panel(())
+
+        sections = [cls._render_decision(item) for item in analysis.decisions]
+        if comparison is not None:
+            workloads = result.workloads
+            if comparison.baseline not in workloads or comparison.candidate not in workloads:
+                raise ValueError(
+                    "provider workload comparison must reference displayed workloads"
+                )
+            sections.append(cls._render_comparison(comparison))
+        return "\n\n".join(sections)
+
+    @classmethod
+    def _render_decision(cls, decision: TeamProviderWorkloadDecision) -> str:
+        status = decision.status.value.upper()
+        lines = [f"{decision.alternative_id.upper()} • {decision.effect_key} • {status}"]
+
+        if decision.status is TeamProviderWorkloadDecisionStatus.REJECTED:
+            lines.append("Candidate not projected:")
+            lines.extend(f"• {item}" for item in decision.blockers)
+            return "\n".join(lines)
+
+        if decision.workload is None:
+            raise ValueError("projected provider decision is missing workload evidence")
+
+        explanation = cls.describe(decision.workload)
+        lines.extend(explanation.coverage)
+        lines.extend(explanation.workload)
+
+        if decision.status is TeamProviderWorkloadDecisionStatus.FRONTIER:
+            lines.append(
+                "Workload frontier: retained; no measured provider plan is no-worse "
+                "in every comparable cost and strictly better in at least one."
+            )
+            lines.append(
+                "Encounter / role policy is still required before choosing among "
+                "frontier tradeoffs."
+            )
+        elif decision.status is TeamProviderWorkloadDecisionStatus.DOMINATED:
+            lines.append("Dominated by: " + ", ".join(decision.dominated_by) + ".")
+            lines.append("Measured improvements in the dominating plan(s):")
+            lines.extend(f"• {item}" for item in decision.improvements)
+        elif decision.status is TeamProviderWorkloadDecisionStatus.BLOCKED:
+            lines.append("Blocked / unresolved:")
+            lines.extend(f"• {item}" for item in decision.blockers)
+
+        return "\n".join(lines)
+
+    @classmethod
+    def _render_comparison(
+        cls,
+        comparison: TeamProviderRotationWorkloadComparison,
+    ) -> str:
+        rendered = cls.compare(comparison)
+        lines = [
+            f"COMPARISON • {rendered.baseline_id} → {rendered.candidate_id}",
+            *(f"• {item}" for item in rendered.tradeoffs),
+            rendered.boundary,
+        ]
+        return "\n".join(lines)
 
     @staticmethod
     def _delta_sentence(label: str, delta: float) -> str:
