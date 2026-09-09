@@ -120,7 +120,11 @@ class TeamProviderWorkloadDecisionService:
                     status = TeamProviderWorkloadDecisionStatus.BLOCKED
                     dominated_by = ()
                     improvements = ()
-                    blockers = workload.unresolved or cls._coverage_blockers(workload)
+                    blockers = tuple(
+                        dict.fromkeys(
+                            (*workload.unresolved, *cls._coverage_blockers(workload))
+                        )
+                    )
                 else:
                     raise RuntimeError(
                         f"provider workload was not classified: {workload.alternative_id}"
