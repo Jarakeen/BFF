@@ -644,12 +644,36 @@ Visible examples include:
 
 The screenshot corpus also includes buff pages and critical-damage timelines that can support later calibration of overlapping Major Force / Brittle / other support windows. Screenshot-derived benchmarks must retain provenance and fight scope and may not silently become universal game constants.
 
+### D. Provider rotation-workload comparison
+
+The first source-neutral provider-workload contract now sits on top of the existing
+recipient and temporal coverage gates. It can aggregate one or more contributor
+rotations and expose, without inventing a universal weighted score:
+
+- provider applications and refreshes per minute;
+- provider GCD occupancy;
+- resource spend by resource type;
+- Ultimate spend;
+- occupied provider bar slots;
+- whole-plan skill, Ultimate, heavy-attack, bar-swap, and other action counts;
+- caller-evidenced primary-role displacement;
+- unresolved cost, action binding, and bar ownership as comparison-blocking evidence.
+
+Two plans may be compared only when both meet recipient coverage, meet temporal
+coverage, and have resolved workload evidence. The comparison deliberately reports
+independent deltas rather than declaring that one heavy attack, GCD, bar slot,
+resource cost, or Ultimate point has a universal exchange rate.
+
+Expanded provider-workload and provider-coverage checkpoint: **83 passed in 0.59s**.
+Latest user-reported full-suite checkpoint before this workload slice:
+**2,623 passed in 82.46s**.
+
 Active next work:
 
 1. convert the user-supplied BTV screenshot corpus into structured benchmark fixtures with provenance, encounter scope, observed uptime, target/reference uptime where visible, theoretical maximum where visible, and explicit unknown fields rather than guessed values;
 2. test policy selection, target-vs-theoretical-max validation, temporal window scoring, overlap/gap explanation, and BTV-style feedback against those fixtures;
 3. connect those benchmark fixtures to Comp Maker / Optimization explanation paths without treating them as canonical ESO mechanics;
-4. add provider workload / rotation cost so two viable coverage plans can be compared by casts, heavy attacks, GCDs, resources, ultimate economy, bar space, refresh burden, and primary-role opportunity cost;
+4. connect provider workload inputs to canonical action timing, resource cost, Ultimate cost, slot ownership, temporal coverage, and Comp Maker / Optimization explanation paths;
 5. continue thorough healer, tank, and DD rotation coverage with class passives, armor/set duration modifiers, runtime proc conditions, and encounter-specific timing.
 
 Fight-horizon policy: most raid fights are expected to finish within roughly six minutes in the user's working context, so **360 seconds may be used only as an overrideable fallback planning ceiling when encounter-specific timing is unavailable**. It is not a canonical encounter duration. Optimization should prioritize important burn/mechanic windows over meaningless attempts to force every support effect to 100% global uptime.

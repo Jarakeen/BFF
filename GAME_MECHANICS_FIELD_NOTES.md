@@ -400,3 +400,30 @@ The mechanically odd part is that this can still make a heal larger. Heal coeffi
 **What it means in actual play:** Minor Sorcery is not equivalent to "10% stronger heals." If Spell Damage is not the power value actually controlling the resolved heal, the benefit can be smaller or absent. Illuminate rank I and II also change the buff duration rather than the Minor Sorcery magnitude, so a learned rank-I window is real math rather than an unknown partial-value case.
 
 **For BFF:** conditional power buffs must enter the canonical stat context before tooltip/heal coefficient evaluation. They must not be bolted on afterward as Healing Done multipliers, and duration/rank legality must remain separate from the named buff's stat magnitude.
+
+---
+
+## 2026-09-09 — The same buff coverage can have very different raid costs
+
+While adding provider-workload comparison, BFF reached an important distinction:
+two plans can both cover the same named buff for the right people at the right time
+without being equally expensive to execute.
+
+One plan might use several ordinary skill refreshes and spend Magicka plus multiple
+global cooldowns. Another might use fewer casts but consume Ultimate, occupy a
+different bar slot, require a heavy attack, or pull a healer, tank, or damage dealer
+away from their primary job at a worse moment.
+
+**Layman's version:** "the buff was covered" tells us the job got done. It does not
+tell us how annoying or expensive the job was, or which player had to stop doing
+something else to maintain it.
+
+**What it means in actual play:** two raid compositions with identical buff uptime
+can still feel and perform differently. The better assignment may depend on whether
+the group can more easily spare Magicka, Ultimate, bar space, refresh casts, recovery
+heavies, or attention from a particular role.
+
+**For BFF:** provider coverage remains a hard gate, but viable plans must retain
+separate workload evidence. BFF must not hide those tradeoffs inside one arbitrary
+score that pretends a bar slot, a heavy attack, a GCD, and 200 Ultimate are naturally
+interchangeable.
