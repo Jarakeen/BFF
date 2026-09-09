@@ -19,6 +19,13 @@ from minmax.demand_aware_priority_duration_scheduler import (
 )
 from minmax.duration_aware_rotation_scheduler import DurationAwareRotationScheduler
 from minmax.priority_aware_duration_scheduler import PriorityAwareDurationRotationScheduler
+from minmax.refresh_cadence_duration_scheduler import (
+    PriorityAwareRefreshCadenceDurationRotationScheduler,
+    PriorityAwareRefreshCadenceSoftActionDurationRotationScheduler,
+    RefreshCadenceDurationRotationScheduler,
+    RefreshCadenceSoftActionDurationRotationScheduler,
+    RotationRefreshIntervalPolicy,
+)
 from minmax.rotation_ability_priority import AbilityPriorityList
 from minmax.rotation_demand_window import RotationDemandWindow
 from minmax.rotation_plan import RotationPlan
@@ -65,6 +72,7 @@ class RotationDurationRefinementService:
         demands: tuple[RotationDemandWindow, ...] = (),
         demand_refresh_leads: tuple[DemandRefreshLead, ...] = (),
         demand_action_claims: tuple[DemandActionClaim, ...] = (),
+        refresh_cadences: tuple[RotationRefreshIntervalPolicy, ...] = (),
     ) -> RotationDurationRefinement:
         # The first projection supplies canonical duration rules used to refine
         # the seed schedule. It is not returned as final evidence because its
@@ -73,6 +81,7 @@ class RotationDurationRefinementService:
         demand_windows = tuple(demands)
         refresh_leads = tuple(demand_refresh_leads)
         action_claims = tuple(demand_action_claims)
+        cadence_policies = tuple(refresh_cadences)
         if demand_windows and priorities is None:
             raise ValueError("rotation demand windows require explicit ability priorities")
         if refresh_leads and not demand_windows:
@@ -91,9 +100,18 @@ class RotationDurationRefinementService:
             raise ValueError(
                 "demand action claims cannot yet be combined with caller-proven soft actions"
             )
+        if cadence_policies and (demand_windows or refresh_leads or action_claims):
+            raise ValueError(
+                "global refresh cadence policy cannot yet be combined with encounter demand scheduling"
+            )
 
         if wait_decision is not None and priorities is not None:
-            if refresh_leads:
+            if cadence_policies:
+                scheduler = PriorityAwareRefreshCadenceSoftActionDurationRotationScheduler(
+                    priorities,
+                    cadence_policies,
+                )
+            elif refresh_leads:
                 scheduler = DemandAnticipatoryPrioritySoftActionDurationRotationScheduler(
                     priorities,
                     demand_windows,
@@ -113,7 +131,11 @@ class RotationDurationRefinementService:
                 soft_decision=wait_decision,
             )
         elif wait_decision is not None:
-            scheduler = SoftActionDurationRotationScheduler()
+            scheduler = (
+                RefreshCadenceSoftActionDurationRotationScheduler(cadence_policies)
+                if cadence_policies
+                else SoftActionDurationRotationScheduler()
+            )
             refined = scheduler.refine(
                 plan,
                 seed_projection.rules,
@@ -138,8 +160,15 @@ class RotationDurationRefinementService:
                     priorities,
                     demand_windows,
                 )
+            elif priorities is not None and cadence_policies:
+                scheduler = PriorityAwareRefreshCadenceDurationRotationScheduler(
+                    priorities,
+                    cadence_policies,
+                )
             elif priorities is not None:
                 scheduler = PriorityAwareDurationRotationScheduler(priorities)
+            elif cadence_policies:
+                scheduler = RefreshCadenceDurationRotationScheduler(cadence_policies)
             else:
                 scheduler = self.scheduler
             refined = scheduler.refine(
