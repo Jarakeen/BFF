@@ -79,11 +79,29 @@ class ExtremeCanonicalHealingEventService(ExtremeHealingEventService):
     input exists, those events retain their numeric lower-bound score but carry an
     explicit unresolved legality blocker and therefore cannot be mechanically
     complete.
+
+    Dragon Blood-family coefficient identity likewise proves which recipient/event
+    is being scored, but the U50 family also has missing-Health-dependent healing
+    behavior that is not yet represented at per-component scope. Those candidates
+    retain their currently calculable coefficient value as a lower bound and carry
+    a specific unresolved blocker so the optimizer cannot mistake that lower bound
+    for a proved maximum event.
     """
 
     PET_SPECIAL_ACTIVATION_UNRESOLVED = (
         "Sorcerer pet special activation requires runtime proof that the corresponding pet is summoned and alive"
     )
+    DRAGON_BLOOD_WOUND_UNRESOLVED = {
+        ExtremeDragonBloodSkillComponentRepository.DRAGON_BLOOD_RANK_ID: (
+            "Dragon Blood maximum-event scaling requires explicit caster missing-Health input"
+        ),
+        ExtremeDragonBloodSkillComponentRepository.GREEN_DRAGON_BLOOD_RANK_ID: (
+            "Blood of the Green Dragon maximum-event scaling requires component-specific missing-Health and periodic-tick proof"
+        ),
+        ExtremeDragonBloodSkillComponentRepository.ELDER_DRAGON_BLOOD_RANK_ID: (
+            "Blood of the Elder Dragon maximum-event scaling requires component-specific missing-Health proof for the winning recipient"
+        ),
+    }
 
     def __init__(
         self,
@@ -188,7 +206,7 @@ class ExtremeCanonicalHealingEventService(ExtremeHealingEventService):
         )
 
     @classmethod
-    def _winner_runtime_unresolved(cls, *, components, scoring) -> tuple[str, ...]:
+    def _winner_runtime_unresolved(cls, *, skill_rank_id: int, components, scoring) -> tuple[str, ...]:
         winner_numbers = tuple(
             getattr(scoring, "critical_winner_coefficients", ())
             or getattr(scoring, "normal_winner_coefficients", ())
@@ -196,6 +214,8 @@ class ExtremeCanonicalHealingEventService(ExtremeHealingEventService):
         )
         if not winner_numbers:
             return ()
+
+        unresolved: list[str] = []
         by_number = {
             int(component.coefficient_number): component
             for component in tuple(components or ())
@@ -204,8 +224,14 @@ class ExtremeCanonicalHealingEventService(ExtremeHealingEventService):
             component = by_number.get(int(number))
             event_key = str(getattr(component, "heal_event_key", "") or "").strip().casefold()
             if event_key == "pet_special_activation":
-                return (cls.PET_SPECIAL_ACTIVATION_UNRESOLVED,)
-        return ()
+                unresolved.append(cls.PET_SPECIAL_ACTIVATION_UNRESOLVED)
+                break
+
+        wound_message = cls.DRAGON_BLOOD_WOUND_UNRESOLVED.get(int(skill_rank_id))
+        if wound_message:
+            unresolved.append(wound_message)
+
+        return tuple(dict.fromkeys(unresolved))
 
     def evaluate(self, **kwargs) -> ExtremeHealingEventResult:
         event = super().evaluate(**kwargs)
@@ -249,6 +275,7 @@ class ExtremeCanonicalHealingEventService(ExtremeHealingEventService):
                     *event.unresolved,
                     *scoring.unresolved,
                     *self._winner_runtime_unresolved(
+                        skill_rank_id=skill.skill_rank_id,
                         components=components,
                         scoring=scoring,
                     ),
