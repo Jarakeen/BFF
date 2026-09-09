@@ -213,13 +213,21 @@ class TeamProviderWorkloadExplanationService:
         if not analysis.decisions:
             return cls.render_panel(())
 
-        policy_applied = policy is not None
+        policy_result = (
+            TeamProviderWorkloadPolicyService.select(analysis, policy)
+            if policy is not None
+            else None
+        )
+        selected_ids = set(policy_result.preferred_ids if policy_result is not None else ())
         sections = [
-            cls._render_decision(item, policy_applied=policy_applied)
+            cls._render_decision(
+                item,
+                policy_applied=policy is not None,
+                selected_by_policy=item.alternative_id in selected_ids,
+            )
             for item in analysis.decisions
         ]
-        if policy is not None:
-            policy_result = TeamProviderWorkloadPolicyService.select(analysis, policy)
+        if policy_result is not None:
             sections.append(cls.render_policy_result(policy_result))
 
         if comparison is not None:
@@ -254,11 +262,11 @@ class TeamProviderWorkloadExplanationService:
             lines.append("No frontier alternatives were available for policy selection.")
         else:
             for selection in result.selections:
-                preferred = ", ".join(selection.preferred_ids)
+                selected = ", ".join(selection.preferred_ids)
                 considered = ", ".join(selection.considered_ids)
                 lines.append(
                     f"{selection.effect_key} @ {selection.duration_seconds:g}s: "
-                    f"preferred {preferred}; considered {considered}."
+                    f"selected {selected}; considered {considered}."
                 )
                 if selection.rationale:
                     lines.extend(f"• {item}" for item in selection.rationale)
@@ -279,8 +287,11 @@ class TeamProviderWorkloadExplanationService:
         decision: TeamProviderWorkloadDecision,
         *,
         policy_applied: bool = False,
+        selected_by_policy: bool = False,
     ) -> str:
         status = decision.status.value.upper()
+        if selected_by_policy:
+            status += " • SELECTED"
         lines = [f"{decision.alternative_id.upper()} • {decision.effect_key} • {status}"]
 
         if decision.status is TeamProviderWorkloadDecisionStatus.REJECTED:
@@ -300,10 +311,14 @@ class TeamProviderWorkloadExplanationService:
                 "Workload frontier: retained; no measured provider plan is no-worse "
                 "in every comparable cost and strictly better in at least one."
             )
-            if policy_applied:
+            if selected_by_policy:
                 lines.append(
-                    "Encounter / role policy is applied below to the retained frontier "
-                    "tradeoffs."
+                    "Encounter / role policy selected this retained frontier plan."
+                )
+            elif policy_applied:
+                lines.append(
+                    "Encounter / role policy considered this retained frontier tradeoff "
+                    "but selected another plan in the same scope."
                 )
             else:
                 lines.append(
