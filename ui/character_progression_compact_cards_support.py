@@ -11,6 +11,7 @@ a multi-column grid.
 
 from collections import defaultdict
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QCheckBox,
     QGridLayout,
