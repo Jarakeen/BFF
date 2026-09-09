@@ -20,6 +20,13 @@ def _ability_value_text(percent: float, total: float) -> str:
     return f"{percent:.1f}% • {total_text}"
 
 
+def _set_support_cards_visible(self, visible: bool) -> None:
+    for name in ("buff_card", "debuff_card", "raid_debuff_card"):
+        card = getattr(self, name, None)
+        if card is not None:
+            card.setVisible(visible)
+
+
 def _build_kpi_card_with_crit(self):
     assert _ORIGINAL_BUILD_KPI_CARD is not None
     card = _ORIGINAL_BUILD_KPI_CARD(self)
@@ -42,6 +49,8 @@ def _show_snapshot_with_dd(self, snapshot):
     _ORIGINAL_SHOW_SNAPSHOT(self, snapshot)
 
     is_dd = str(getattr(snapshot, "Role", "")).casefold() == "dps"
+    _set_support_cards_visible(self, not is_dd)
+
     crit = getattr(snapshot, "CritRatePercent", None)
     self.kpi_crit.setVisible(is_dd)
     if is_dd:
@@ -114,7 +123,6 @@ def install() -> None:
     PerformanceDashboard._update_abilities_list = _update_abilities_with_contribution
     _INSTALLED = True
 
-    # DD presentation layers wrap this base DD-aware UI in order.
     from ui.performance_dashboard_dd_dot_support import install as install_dot_ui
     from ui.performance_dashboard_dd_weave_support import install as install_weave_ui
 
