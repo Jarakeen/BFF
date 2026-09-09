@@ -67,6 +67,22 @@ def _dd_readout_lines(snapshot) -> list[str]:
             f"No internal eligible skill-to-skill gap exceeded {gap_threshold:.1f}s."
         )
 
+    if gap_count > 0:
+        quiet = int(getattr(snapshot, "ActionGapRaidQuietCount", 0) or 0)
+        active = int(getattr(snapshot, "ActionGapRaidActiveCount", 0) or 0)
+        unknown = int(getattr(snapshot, "ActionGapUnknownCount", 0) or 0)
+        if quiet or active or unknown:
+            parts: list[str] = []
+            if quiet:
+                parts.append(f"{quiet:,} raid-quiet")
+            if active:
+                parts.append(f"{active:,} raid-active")
+            if unknown:
+                parts.append(f"{unknown:,} unresolved")
+            lines.append(
+                "Gap context: " + ", ".join(parts) + ". Raid activity is context, not proof of cause."
+            )
+
     dot_rows = list(getattr(snapshot, "ObservedDotUptimes", []) or [])
     if dot_rows:
         ordered = sorted(
@@ -123,7 +139,7 @@ def _build_ui_with_dd_summary(self):
     self.dd_readout_card.addWidget(self.dd_readout_label)
 
     self.dd_readout_note = QLabel(
-        "Observed evidence only. Crit rate and DoT coverage are not graded against build-specific targets. Action gaps are observations, not graded dead time."
+        "Observed evidence only. Crit rate and DoT coverage are not graded against build-specific targets. Action gaps are observations, not graded dead time. Raid activity provides context but does not prove why a gap occurred."
     )
     self.dd_readout_note.setWordWrap(True)
     self.dd_readout_note.setStyleSheet(
