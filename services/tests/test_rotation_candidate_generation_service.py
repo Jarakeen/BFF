@@ -2,6 +2,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from minmax.demand_action_claim_duration_scheduler import DemandActionClaim
 from minmax.demand_anticipatory_duration_scheduler import DemandRefreshLead
 from minmax.rotation_plan import RotationPlan
 from services.rotation_candidate_generation_service import (
@@ -22,6 +23,7 @@ class _RefinementService:
         wait_decision=None,
         demands=(),
         demand_refresh_leads=(),
+        demand_action_claims=(),
     ):
         self.calls.append(
             {
@@ -30,6 +32,7 @@ class _RefinementService:
                 "wait_decision": wait_decision,
                 "demands": tuple(demands),
                 "leads": tuple(demand_refresh_leads),
+                "claims": tuple(demand_action_claims),
             }
         )
         return SimpleNamespace(plan=plan)
@@ -50,6 +53,14 @@ def _lead(skill: str, seconds: float, *, demand: str = "Phase 2", bar: str = "fr
         bar=bar,
         skill_name=skill,
         lead_seconds=seconds,
+    )
+
+
+def _claim(skill: str, *, demand: str = "Phase 2", bar: str = "front"):
+    return DemandActionClaim(
+        demand_name=demand,
+        bar=bar,
+        skill_name=skill,
     )
 
 
@@ -91,9 +102,76 @@ def test_generates_baseline_then_explicit_variants_through_same_refinement_path(
         _lead("Budding Seeds", 2.0),
         _lead("Combat Prayer", 1.0),
     )
+    assert all(call["claims"] == () for call in refinement.calls)
     assert all(call["priorities"] is priorities for call in refinement.calls)
     assert all(call["demands"] == demands for call in refinement.calls)
     assert all(call["wait_decision"] is wait_decision for call in refinement.calls)
+
+
+def test_generate_policy_carries_canonical_encounter_action_claims() -> None:
+    refinement = _RefinementService()
+    service = RotationCandidateGenerationService(refinement)
+    priorities = object()
+    demands = (object(),)
+
+    result = service.generate_policy(
+        candidate_id="mechanic-ready",
+        seed_plan=_seed(),
+        priorities=priorities,
+        demands=demands,
+        action_claims=(
+            _claim("Combat Prayer"),
+            _claim("Budding Seeds"),
+        ),
+    )
+
+    expected = (
+        _claim("Budding Seeds"),
+        _claim("Combat Prayer"),
+    )
+    assert result.candidate_id == "mechanic-ready"
+    assert result.action_claims == expected
+    assert result.refresh_leads == ()
+    assert refinement.calls == [
+        {
+            "plan": _seed(),
+            "priorities": priorities,
+            "wait_decision": None,
+            "demands": demands,
+            "leads": (),
+            "claims": expected,
+        }
+    ]
+
+
+def test_generate_policy_rejects_duplicate_action_claim_target() -> None:
+    service = RotationCandidateGenerationService(_RefinementService())
+
+    with pytest.raises(ValueError, match="duplicate demand action claim target"):
+        service.generate_policy(
+            candidate_id="duplicate-claim",
+            seed_plan=_seed(),
+            priorities=object(),
+            demands=(object(),),
+            action_claims=(
+                _claim("Budding Seeds"),
+                _claim("budding seeds"),
+            ),
+        )
+
+
+def test_generate_policy_rejects_mixed_refresh_lead_and_action_claim() -> None:
+    service = RotationCandidateGenerationService(_RefinementService())
+
+    with pytest.raises(ValueError, match="cannot combine demand refresh leads and demand action claims"):
+        service.generate_policy(
+            candidate_id="mixed-policy",
+            seed_plan=_seed(),
+            priorities=object(),
+            demands=(object(),),
+            refresh_leads=(_lead("Budding Seeds", 2.0),),
+            action_claims=(_claim("Combat Prayer"),),
+        )
 
 
 def test_semantic_duplicates_and_empty_baseline_equivalent_options_are_removed() -> None:
