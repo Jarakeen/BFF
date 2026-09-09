@@ -90,7 +90,15 @@ class EsoLogsTrendingService:
 
     def __init__(self, client: EsoLogsClient, history_path: Path | None = None):
         self.client = client
-        self.history_path = history_path or (get_data_dir() / "esologs_trending_history.json")
+        if history_path is not None:
+            self.history_path: Path | None = history_path
+        elif isinstance(client, EsoLogsClient):
+            self.history_path = get_data_dir() / "esologs_trending_history.json"
+        else:
+            # Test doubles and alternate hosts are read-only by default. They can opt
+            # into persistence explicitly with history_path when that behavior is
+            # under test.
+            self.history_path = None
 
     def list_trials(self) -> list[dict]:
         return self.client.get_trial_zones()
@@ -380,7 +388,7 @@ class EsoLogsTrendingService:
         )
 
     def _load_history(self) -> dict:
-        if not self.history_path.exists():
+        if self.history_path is None or not self.history_path.exists():
             return {"version": _HISTORY_VERSION, "snapshots": []}
         try:
             payload = json.loads(self.history_path.read_text(encoding="utf-8"))
@@ -391,6 +399,8 @@ class EsoLogsTrendingService:
         return payload
 
     def _save_history(self, history: dict) -> None:
+        if self.history_path is None:
+            return
         try:
             self.history_path.parent.mkdir(parents=True, exist_ok=True)
             self.history_path.write_text(
