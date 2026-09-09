@@ -1,6 +1,9 @@
 from types import SimpleNamespace
 
-from ui.performance_dashboard_role_surface_support import _apply_role_surface
+from ui.performance_dashboard_role_surface_support import (
+    _apply_role_name_surface,
+    _apply_role_surface,
+)
 
 
 class _Card:
@@ -53,6 +56,38 @@ def test_healer_surface_restores_support_surface() -> None:
     page = _page()
 
     _apply_role_surface(page, SimpleNamespace(Role="Healer"))
+
+    assert page.support_effects_card.visible is True
+    assert page.graph_effect_card.visible is True
+    assert page._performance_tracking_card.visible is True
+
+
+def test_fresh_dps_member_hides_healer_support_surface_without_showing_blank_results() -> None:
+    page = _page()
+
+    _apply_role_name_surface(page, "DPS", has_snapshot=False)
+
+    assert page.support_effects_card.visible is False
+    assert page.graph_effect_card.visible is False
+    assert page._performance_tracking_card.visible is False
+    assert page.buff_card.visible is False
+    assert page.debuff_card.visible is False
+    assert page.raid_debuff_card.visible is False
+
+    # Initial empty-state plumbing still owns result visibility until a fight is shown.
+    assert page.kpi_card.visible is None
+    assert page.dot_card.visible is None
+    assert page.dd_readout_card.visible is None
+    assert page.output_card.visible is None
+    assert page.abilities_card.visible is None
+    assert page.quick_read_card.visible is None
+
+
+def test_role_picker_can_restore_support_surface_before_snapshot() -> None:
+    page = _page()
+
+    _apply_role_name_surface(page, "DPS", has_snapshot=False)
+    _apply_role_name_surface(page, "Healer", has_snapshot=False)
 
     assert page.support_effects_card.visible is True
     assert page.graph_effect_card.visible is True
