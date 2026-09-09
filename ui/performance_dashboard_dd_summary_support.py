@@ -107,8 +107,7 @@ def _build_ui_with_dd_summary(self):
     self.dd_readout_card.addWidget(self.dd_readout_label)
 
     self.dd_readout_note = QLabel(
-        "Observed evidence only. Crit rate and DoT coverage are not graded against "
-        "build-specific targets."
+        "Observed evidence only. Crit rate and DoT coverage are not graded against build-specific targets."
     )
     self.dd_readout_note.setWordWrap(True)
     self.dd_readout_note.setStyleSheet(
