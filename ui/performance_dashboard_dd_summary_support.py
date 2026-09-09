@@ -46,12 +46,17 @@ def _dd_readout_lines(snapshot) -> list[str]:
             f"({float(pairing):.1f}%); {unpaired:,} unpaired."
         )
         if median_delay is not None:
-            weave_line = weave_line[:-1] + f"; median LA→skill delay {float(median_delay):,.0f} ms."
+            weave_line = weave_line[:-1] + (
+                f"; median LA→skill delay {float(median_delay):,.0f} ms."
+            )
         lines.append(weave_line)
 
     dot_rows = list(getattr(snapshot, "ObservedDotUptimes", []) or [])
     if dot_rows:
-        ordered = sorted(dot_rows, key=lambda row: float(getattr(row, "UptimePercent", 0.0)))
+        ordered = sorted(
+            dot_rows,
+            key=lambda row: float(getattr(row, "UptimePercent", 0.0)),
+        )
         lowest = ordered[0]
         highest = ordered[-1]
         if len(ordered) == 1:
@@ -63,7 +68,7 @@ def _dd_readout_lines(snapshot) -> list[str]:
             lines.append(
                 f"Periodic damage: {len(ordered)} DoTs had observed coverage from "
                 f"{float(getattr(lowest, 'UptimePercent', 0.0)):.1f}% "
-                f"({escape(str(getattr(lowest, 'Name', 'lowest')))} ) to "
+                f"({escape(str(getattr(lowest, 'Name', 'lowest')))}) to "
                 f"{float(getattr(highest, 'UptimePercent', 0.0)):.1f}% "
                 f"({escape(str(getattr(highest, 'Name', 'highest')))})."
             )
@@ -99,7 +104,6 @@ def _build_ui_with_dd_summary(self):
     self.dd_readout_card = FoundryCard("DD Readout")
     self.dd_readout_label = QLabel("No DD diagnostic evidence yet.")
     self.dd_readout_label.setWordWrap(True)
-    self.dd_readout_label.setTextFormat(self.dd_readout_label.textFormat())
     self.dd_readout_card.addWidget(self.dd_readout_label)
 
     self.dd_readout_note = QLabel(
