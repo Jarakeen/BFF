@@ -104,3 +104,42 @@ def test_learned_collection_services_remain_distinct_capabilities():
         "collectible.recipe.progress",
         "collectible.lorebook.progress",
     }
+
+
+def test_local_achievement_workbook_is_import_adapter_not_progress_authority():
+    service = canonical_service_for("local_achievement_workbook_import")
+
+    assert service is not None
+    assert service.service_id == "achievement.workbook.local_import"
+    assert service.evidence_class is EvidenceClass.NONE
+    assert "does not become the achievement completion authority" in service.notes
+    assert "achievement.progress.persistence" in service.notes
+
+
+def test_local_collectible_workbook_keeps_other_progress_domains_out_of_scope():
+    service = canonical_service_for("local_collectible_workbook_import")
+
+    assert service is not None
+    assert service.service_id == "collectible.workbook.local_import"
+    assert "Motifs, recipes, titles, antiquities, stickerbook" in service.notes
+    assert "own progress systems" in service.notes
+
+
+def test_local_motif_workbook_preserves_historical_whole_row_semantics():
+    service = canonical_service_for("local_motif_workbook_import")
+
+    assert service is not None
+    assert service.service_id == "collectible.motif.workbook_import"
+    assert "whole-motif row level" in service.notes
+    assert "not silently reinterpreted" in service.notes
+
+
+def test_google_sheets_sync_is_external_surface_not_local_progress_authority():
+    service = canonical_service_for("google_sheets_achievement_sync")
+
+    assert service is not None
+    assert service.service_id == "achievement.google_sheets.sync"
+    assert service.evidence_class is EvidenceClass.NONE
+    assert "external synchronization surface" in service.notes
+    assert "not BFF's local completion authority" in service.notes
+    assert "remain explicit" in service.notes
