@@ -230,6 +230,8 @@ def main() -> int:
     from ui.team_optimization_mode_defaults import install as install_team_optimization_mode_defaults
     from ui.team_optimization_hybrid_anchor_support import install as install_team_optimization_hybrid_anchor_support
     from ui.extreme_optimization_support import install as install_extreme_optimization_support
+    from services.performance_dd_analysis_support import install as install_performance_dd_analysis_support
+    from ui.performance_dashboard_dd_support import install as install_performance_dashboard_dd_support
 
     install_searchable_selectors()
     install_scribing_support()
@@ -303,6 +305,10 @@ def main() -> int:
     install_team_optimization_hybrid_anchor_support()
     # Tools gets the deliberately unconstrained single-stat lab before MainWindow is built.
     install_extreme_optimization_support()
+    # DD performance diagnostics extend the existing ESO Logs dashboard without
+    # mutating any local ESO database state.
+    install_performance_dd_analysis_support()
+    install_performance_dashboard_dd_support()
 
     from ui.main_window import MainWindow
 
