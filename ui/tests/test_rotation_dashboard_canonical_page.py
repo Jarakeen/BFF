@@ -38,12 +38,23 @@ class _CanonicalCandidates:
         return self.result
 
 
+class _CadenceCard:
+    def __init__(self) -> None:
+        self.clear_calls = 0
+
+    def clear_report(self) -> None:
+        self.clear_calls += 1
+
+
 class _PageState:
     def __init__(self, *, build=None) -> None:
         self.build = _build() if build is None else build
         self.rotation_canonical_candidates = _CanonicalCandidates()
         self.last_canonical_candidate_result = None
         self.last_canonical_render_evidence = None
+        self.last_cadence_progression_run = object()
+        self.last_cadence_progression_render_evidence = object()
+        self.cadence_progression_card = _CadenceCard()
 
     def _selected_build(self):
         return self.build
@@ -161,6 +172,9 @@ def test_page_candidate_evaluation_forwards_explicit_evidence_and_records_result
     assert result is page.rotation_canonical_candidates.result
     assert page.last_canonical_candidate_result is result
     assert page.last_canonical_render_evidence is None
+    assert page.last_cadence_progression_run is None
+    assert page.last_cadence_progression_render_evidence is None
+    assert page.cadence_progression_card.clear_calls == 1
     assert len(page.rotation_canonical_candidates.calls) == 1
     call = page.rotation_canonical_candidates.calls[0]
     assert call["player_build"] is page.build
