@@ -17,6 +17,10 @@ def _snapshot(**overrides):
         "WeaveSkillCasts": 131,
         "WeaveUnpairedSkillCasts": 10,
         "WeaveMedianPairDelayMs": 137.0,
+        "ObservedActionGapCount": 3,
+        "ObservedLargestActionGapSeconds": 6.1,
+        "ObservedActionGapExcessSeconds": 8.6,
+        "ActivityGapThresholdSeconds": 2.5,
         "ObservedDotUptimes": [
             AbilityUptime(Name="Burning Embers", UptimeSeconds=80.0, UptimePercent=80.0),
             AbilityUptime(Name="Trap", UptimeSeconds=63.2, UptimePercent=63.2),
@@ -34,10 +38,25 @@ def test_dd_readout_combines_actionable_observations_without_grading() -> None:
 
     assert "Crit: 42.7% of observed damage events (427/1,000)." in lines
     assert any("LA pairing: 121/131" in line and "10 unpaired" in line for line in lines)
+    assert any("Action gaps: 3 internal skill-to-skill gaps exceeded 2.5s" in line for line in lines)
+    assert any("largest 6.1s" in line and "8.6s total beyond" in line for line in lines)
     assert any("63.2% (Trap) to 80.0% (Burning Embers)" in line for line in lines)
     assert "Top damage source: Whip at 23.4% of total damage." in lines
     assert "Review first: 10 eligible skill casts had no observed preceding Light Attack." in lines
     assert not any("good" in line.casefold() or "bad" in line.casefold() for line in lines)
+
+
+def test_dd_readout_reports_no_long_internal_gap_when_none_exceeds_threshold() -> None:
+    lines = _dd_readout_lines(
+        _snapshot(
+            ObservedActionGapCount=0,
+            ObservedLargestActionGapSeconds=None,
+            ObservedActionGapExcessSeconds=0.0,
+        )
+    )
+
+    assert "No internal eligible skill-to-skill gap exceeded 2.5s." in lines
+    assert not any(line.startswith("Action gaps:") for line in lines)
 
 
 def test_dd_readout_does_not_invent_a_problem_when_pairing_has_no_misses() -> None:
@@ -65,6 +84,9 @@ def test_dd_readout_has_an_explicit_empty_evidence_state() -> None:
             WeaveSkillCasts=0,
             WeaveUnpairedSkillCasts=0,
             WeaveMedianPairDelayMs=None,
+            ObservedActionGapCount=0,
+            ObservedLargestActionGapSeconds=None,
+            ObservedActionGapExcessSeconds=0.0,
             ObservedDotUptimes=[],
             TopAbilities=[],
         )
@@ -73,14 +95,23 @@ def test_dd_readout_has_an_explicit_empty_evidence_state() -> None:
     assert lines == ["No DD diagnostic evidence is available for this snapshot yet."]
 
 
-def test_dd_stack_wires_weave_and_summary_from_existing_startup_hooks() -> None:
+def test_dd_readout_does_not_call_action_gaps_dead_time() -> None:
+    lines = _dd_readout_lines(_snapshot())
+
+    assert not any("dead time" in line.casefold() for line in lines)
+
+
+def test_dd_stack_wires_weave_activity_and_summary_from_existing_startup_hooks() -> None:
     service_dot = Path("services/performance_dd_dot_support.py").read_text(encoding="utf-8")
+    service_weave = Path("services/performance_dd_weave_support.py").read_text(encoding="utf-8")
     ui_dot = Path("ui/performance_dashboard_dd_dot_support.py").read_text(encoding="utf-8")
     ui_weave = Path("ui/performance_dashboard_dd_weave_support.py").read_text(encoding="utf-8")
     summary = Path("ui/performance_dashboard_dd_summary_support.py").read_text(encoding="utf-8")
 
     assert "performance_dd_weave_support" in service_dot
+    assert "performance_dd_activity_support" in service_weave
     assert "performance_dashboard_dd_weave_support" in ui_dot
     assert "performance_dashboard_dd_summary_support" in ui_weave
     assert 'FoundryCard("DD Readout")' in summary
     assert "not graded against build-specific targets" in summary
+    assert "not graded dead time" in summary
