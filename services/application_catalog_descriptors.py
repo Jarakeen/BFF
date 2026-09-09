@@ -69,9 +69,9 @@ APPLICATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
     ServiceDescriptor(
         service_id="logs.trending.observed_role_meta",
         domain="logs",
-        purpose="Aggregate a bounded sample of top-ranked ESO Logs encounter reports into role-specific observed gear-set, class, and example-loadout popularity summaries.",
+        purpose="Aggregate bounded top individual ESO Logs character rankings into role-specific observed gear-set, class, and player-loadout popularity summaries.",
         implementation_path="services.esologs_trending_service",
-        inputs=("EsoLogsClient", "EncounterId", "RankedReportSample"),
+        inputs=("EsoLogsClient", "EncounterId", "RankedCharacterSample"),
         outputs=("EsoLogsTrendingReport", "RoleTrendingSummary", "TrendingItem"),
         dependencies=("logs.top_team.observed_build_evidence",),
         responsibilities=("esologs_ranked_role_trending_evidence",),
@@ -79,8 +79,8 @@ APPLICATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ui_safe=True,
         encounter_aware=True,
         evidence_class=EvidenceClass.OBSERVATIONAL,
-        provenance=("ESO Logs ranked reports", "ESO Logs playerDetails"),
-        notes="Popularity is descriptive observational evidence only. Set counts are per observed player, not per equipped item. This is not canonical best-in-slot evidence: neither frequency nor absence establishes mechanic truth.",
+        provenance=("ESO Logs characterRankings", "ESO Logs playerDetails"),
+        notes="Popularity is descriptive observational evidence only. Set counts are per matched top-ranked individual player, never per full team or equipped item. Ranked identities that cannot be matched exactly back to playerDetails are skipped rather than guessed. This is not canonical best-in-slot evidence: neither frequency nor absence establishes mechanic truth.",
     ),
     ServiceDescriptor(
         service_id="build.skill_choice.reference",
