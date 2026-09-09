@@ -11,34 +11,43 @@ from ui.components.foundry_card import FoundryCard
 class RotationCadenceProgressionCard(FoundryCard):
     """Compact read-only explanation card for cadence optimization results."""
 
+    EMPTY_SUMMARY = "No cadence optimization has been applied yet."
+    EMPTY_DETAIL = (
+        "Accepted changes, winning rationale, stop reason, and unresolved mechanics will appear here."
+    )
+
     def __init__(self, parent=None) -> None:
         super().__init__("Cadence Optimization", "compass", parent)
         self.set_watermark("compass", 0.035)
         self.setMaximumHeight(190)
 
-        self.summary = QLabel("No cadence optimization has been applied yet.")
+        self.summary = QLabel(self.EMPTY_SUMMARY)
         self.summary.setWordWrap(True)
         self.addWidget(self.summary)
 
-        self.detail = QLabel(
-            "Accepted changes, winning rationale, stop reason, and unresolved mechanics will appear here."
-        )
+        self.detail = QLabel(self.EMPTY_DETAIL)
         self.detail.setWordWrap(True)
         self.detail.setProperty("muted", True)
         self.addWidget(self.detail)
 
     def clear_report(self) -> None:
-        self.summary.setText("No cadence optimization has been applied yet.")
-        self.detail.setText(
-            "Accepted changes, winning rationale, stop reason, and unresolved mechanics will appear here."
-        )
+        self.summary.setText(self.EMPTY_SUMMARY)
+        self.detail.setText(self.EMPTY_DETAIL)
 
     def set_report(self, report: RotationSupportCadenceProgressionReport) -> None:
+        summary, detail = self.text_for_report(report)
+        self.summary.setText(summary)
+        self.detail.setText(detail)
+
+    @staticmethod
+    def text_for_report(
+        report: RotationSupportCadenceProgressionReport,
+    ) -> tuple[str, str]:
         accepted = int(report.advanced_steps)
         iterations = int(report.iterations)
         change_word = "change" if accepted == 1 else "changes"
         iteration_word = "iteration" if iterations == 1 else "iterations"
-        self.summary.setText(
+        summary = (
             f"{accepted} accepted {change_word} across {iterations} {iteration_word}. "
             f"{report.stop_summary}"
         )
@@ -58,7 +67,7 @@ class RotationCadenceProgressionCard(FoundryCard):
         elif not parts:
             parts.append("No accepted cadence change was needed.")
 
-        self.detail.setText("  •  ".join(parts))
+        return summary, "  •  ".join(parts)
 
 
 __all__ = ["RotationCadenceProgressionCard"]
