@@ -50,18 +50,41 @@ class EsoLogsTrendingCard(FoundryCard):
         self._connect_signals()
         self.load_trials()
 
-    @staticmethod
-    def _configure_set_links(label: QLabel) -> None:
-        label.setOpenExternalLinks(False)
-        label.linkActivated.connect(
-            lambda href: label.window().findChild(EsoLogsTrendingCard)._emit_set_link(href)
-            if label.window().findChild(EsoLogsTrendingCard) is not None
-            else None
-        )
-
     def _emit_set_link(self, href: str) -> None:
-        if href.startswith("set:"):
-            self.setRequested.emit(unquote(href[4:]))
+        if not href.startswith("set:"):
+            return
+        set_name = unquote(href[4:])
+        self.setRequested.emit(set_name)
+
+        # MainWindow already owns the canonical Gear Lookup page. Route there
+        # directly when hosted in the real app; keep the signal above for tests or
+        # alternate hosts. This avoids introducing a second gear-detail surface.
+        window = self.window()
+        pages = getattr(window, "pages", {})
+        gear_page = pages.get("gear_lookup") if isinstance(pages, dict) else None
+        show_page = getattr(window, "show_page", None)
+        if gear_page is None or not callable(show_page):
+            return
+
+        # Clear Gear Lookup facets so an exact-name navigation cannot be hidden by
+        # whatever filters the user happened to leave selected last time.
+        for combo_name in ("weight", "bonus", "acquisition_type"):
+            combo = getattr(gear_page, combo_name, None)
+            if combo is not None and hasattr(combo, "setCurrentIndex"):
+                combo.setCurrentIndex(0)
+
+        search = getattr(gear_page, "search", None)
+        results = getattr(gear_page, "results", None)
+        if search is not None:
+            search.setText(set_name)
+        if results is not None:
+            for index in range(results.count()):
+                item = results.item(index)
+                if item is not None and item.text().strip().casefold() == set_name.casefold():
+                    results.setCurrentItem(item)
+                    break
+
+        show_page("gear_lookup")
 
     @staticmethod
     def _set_link(name: str) -> str:
@@ -349,32 +372,27 @@ class EsoLogsTrendingCard(FoundryCard):
             return
 
         refs["making_waves"].setText(
-            self._movement_html(summary.making_waves, positive=True)
+            self._movement_html(summary.making_waves)
             if summary.making_waves
             else "No sets rising quickly outside the top 10."
         )
         refs["cooling_off"].setText(
-            self._movement_html(summary.cooling_off, positive=False)
+            self._movement_html(summary.cooling_off)
             if summary.cooling_off
             else "No meaningful declines detected."
         )
         refs["new_arrivals"].setText(
-            self._movement_html(summary.new_arrivals, positive=True)
+            self._movement_html(summary.new_arrivals)
             if summary.new_arrivals
             else "No new sets appeared in this snapshot."
         )
         refs["breakouts"].setText(
-            self._movement_html(summary.breakouts, positive=True)
+            self._movement_html(summary.breakouts)
             if summary.breakouts
             else "No sets broke into the top 10."
         )
 
-    def _movement_html(
-        self,
-        rows: tuple[TrendMovementItem, ...],
-        *,
-        positive: bool,
-    ) -> str:
+    def _movement_html(self, rows: tuple[TrendMovementItem, ...]) -> str:
         lines = []
         for row in rows:
             sign = "+" if row.delta_points > 0 else ""
