@@ -89,6 +89,18 @@ def test_legacy_runtime_inputs_remain_supported_during_migration():
     assert snapshot.has_runtime_history_at_snapshot
 
 
+def test_legacy_positional_constructor_order_remains_compatible():
+    attempt = _attempt(time_seconds=1.0)
+    snapshot = ExtremeRuntimeSnapshot((attempt,), 5.0, 3.0)
+
+    assert snapshot.attempts == (attempt,)
+    assert snapshot.snapshot_time_seconds == pytest.approx(5.0)
+    assert snapshot.potion_elapsed_seconds == pytest.approx(3.0)
+    assert snapshot.runtime_history == ()
+    assert snapshot.effect_attempts == (attempt,)
+    assert snapshot.effective_potion_elapsed_seconds == pytest.approx(3.0)
+
+
 def test_runtime_potion_use_rejects_invalid_time_and_sequence():
     with pytest.raises(ValueError, match="runtime potion-use time"):
         ExtremeRuntimePotionUse(time_seconds=-1.0)
