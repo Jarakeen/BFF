@@ -4,9 +4,10 @@ from __future__ import annotations
 
 This card intentionally summarizes observed evidence without inventing build-
 specific grades. Crit rate is not labelled good/bad without build context, and
-observed DoT coverage is not treated as a canonical uptime target. The one direct
-execution leak we can name from the current evidence is an eligible skill cast
-that had no preceding Light Attack inside the observed pairing window.
+observed DoT coverage is not treated as a canonical uptime target. The direct
+execution observations we can name are unpaired eligible skill casts and long
+internal skill-to-skill intervals. Long intervals are explicitly not called
+"dead time" because mechanics or target unavailability may explain them.
 """
 
 from html import escape
@@ -50,6 +51,21 @@ def _dd_readout_lines(snapshot) -> list[str]:
                 f"; median LA→skill delay {float(median_delay):,.0f} ms."
             )
         lines.append(weave_line)
+
+    gap_count = int(getattr(snapshot, "ObservedActionGapCount", 0) or 0)
+    largest_gap = getattr(snapshot, "ObservedLargestActionGapSeconds", None)
+    excess_gap = float(getattr(snapshot, "ObservedActionGapExcessSeconds", 0.0) or 0.0)
+    gap_threshold = float(getattr(snapshot, "ActivityGapThresholdSeconds", 2.5) or 2.5)
+    if gap_count > 0 and largest_gap is not None:
+        lines.append(
+            f"Action gaps: {gap_count:,} internal skill-to-skill gap"
+            f"{'s' if gap_count != 1 else ''} exceeded {gap_threshold:.1f}s; "
+            f"largest {float(largest_gap):.1f}s; {excess_gap:.1f}s total beyond the threshold."
+        )
+    elif skills >= 2:
+        lines.append(
+            f"No internal eligible skill-to-skill gap exceeded {gap_threshold:.1f}s."
+        )
 
     dot_rows = list(getattr(snapshot, "ObservedDotUptimes", []) or [])
     if dot_rows:
@@ -107,7 +123,7 @@ def _build_ui_with_dd_summary(self):
     self.dd_readout_card.addWidget(self.dd_readout_label)
 
     self.dd_readout_note = QLabel(
-        "Observed evidence only. Crit rate and DoT coverage are not graded against build-specific targets."
+        "Observed evidence only. Crit rate and DoT coverage are not graded against build-specific targets. Action gaps are observations, not graded dead time."
     )
     self.dd_readout_note.setWordWrap(True)
     self.dd_readout_note.setStyleSheet(
