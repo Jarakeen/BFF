@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-"""Aggregate observed ranked ESO Logs gear usage by combat role.
+"""Aggregate observed top-ranked ESO Logs player gear usage by combat role.
 
-This is descriptive meta evidence, not canonical build truth. The service samples a
-bounded number of ranked encounter reports, parses playerDetails through the existing
-TopTeamService boundary, and counts distinct set usage per player.
+This is descriptive meta evidence, not canonical build truth. The service asks ESO
+Logs for the top individual character rankings for DD, healer, and tank, resolves only
+those ranked players back to their report playerDetails, and counts distinct set usage
+per ranked player.
 """
 
 from collections import Counter
@@ -14,9 +15,14 @@ from models.top_team_model import TopTeamPlayer
 from services.esologs_client import EsoLogsApiError, EsoLogsClient
 from services.top_team_service import TopTeamService
 
-_DEFAULT_REPORT_LIMIT = 5
+_DEFAULT_PLAYER_LIMIT = 5
 _MAX_SAMPLE_PLAYERS_PER_ROLE = 6
 _ROLE_KEYS = ("dps", "healer", "tank")
+_ROLE_RANKING_QUERY = {
+    "dps": ("DPS", "dps"),
+    "healer": ("Healer", "hps"),
+    "tank": ("Tank", "dps"),
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -45,9 +51,10 @@ class RoleTrendingSummary:
 class EsoLogsTrendingReport:
     trial_name: str
     encounter_name: str
-    reports_analyzed: int
-    reports_skipped: int
+    ranked_players_analyzed: int
+    ranked_players_skipped: int
     role_summaries: dict[str, RoleTrendingSummary] = field(default_factory=dict)
+    role_errors: dict[str, str] = field(default_factory=dict)
 
     @property
     def players_analyzed(self) -> int:
@@ -55,7 +62,7 @@ class EsoLogsTrendingReport:
 
 
 class EsoLogsTrendingService:
-    """Build a role-aware gear popularity snapshot from top ranked reports."""
+    """Build role-aware popularity summaries from top individual ranked players."""
 
     def __init__(self, client: EsoLogsClient):
         self.client = client
@@ -70,50 +77,56 @@ class EsoLogsTrendingService:
         zone_name: str,
         encounter_id: int,
         encounter_name: str,
-        report_limit: int = _DEFAULT_REPORT_LIMIT,
+        player_limit: int = _DEFAULT_PLAYER_LIMIT,
     ) -> EsoLogsTrendingReport:
         del zone_id  # kept in the call shape for the shared trial picker boundary.
 
-        limit = max(1, int(report_limit))
-        candidates = self.client.get_top_reports_for_encounter(
-            int(encounter_id),
-            limit=limit,
-        )
-
+        limit = max(1, int(player_limit))
         players_by_role: dict[str, list[TopTeamPlayer]] = {
             role: [] for role in _ROLE_KEYS
         }
-        reports_analyzed = 0
-        reports_skipped = 0
+        role_errors: dict[str, str] = {}
+        ranked_players_analyzed = 0
+        ranked_players_skipped = 0
 
-        for report_code, fight_id in candidates:
+        # Multiple top-ranked players can come from the same fight. Cache its parsed
+        # playerDetails so one fight is fetched once even if several ranked players
+        # point to it.
+        report_player_cache: dict[tuple[str, int], list[TopTeamPlayer] | None] = {}
+
+        for role_key in _ROLE_KEYS:
+            eso_role, metric = _ROLE_RANKING_QUERY[role_key]
             try:
-                fight = self.client.get_fight(report_code, fight_id)
-                start = float(fight.get("startTime", 0.0))
-                end = float(fight.get("endTime", 0.0))
-                details = self.client.get_report_player_summary(
-                    report_code,
-                    fight_id,
-                    start,
-                    end,
+                rankings = self.client.get_role_rankings(
+                    int(encounter_id),
+                    role=eso_role,
+                    metric=metric,
+                    limit=limit,
                 )
-            except EsoLogsApiError:
-                reports_skipped += 1
+            except EsoLogsApiError as exc:
+                role_errors[role_key] = str(exc)
                 continue
 
-            players = TopTeamService._players_from_details(details)
-            if not players:
-                reports_skipped += 1
-                continue
+            for ranking in rankings:
+                player = self._resolve_ranked_player(
+                    role_key=role_key,
+                    ranking=ranking,
+                    cache=report_player_cache,
+                )
+                if player is None:
+                    ranked_players_skipped += 1
+                    continue
 
-            reports_analyzed += 1
-            for player in players:
-                if player.Role in players_by_role:
-                    players_by_role[player.Role].append(player)
+                players_by_role[role_key].append(player)
+                ranked_players_analyzed += 1
 
-        if reports_analyzed == 0:
+        if ranked_players_analyzed == 0:
+            reason = "; ".join(
+                f"{role}: {message}" for role, message in role_errors.items()
+            )
+            suffix = f" ({reason})" if reason else ""
             raise EsoLogsApiError(
-                f"Could not load usable ranked reports for {encounter_name}."
+                f"Could not load usable top-ranked players for {encounter_name}{suffix}."
             )
 
         summaries = {
@@ -123,13 +136,73 @@ class EsoLogsTrendingService:
         return EsoLogsTrendingReport(
             trial_name=str(zone_name),
             encounter_name=str(encounter_name),
-            reports_analyzed=reports_analyzed,
-            reports_skipped=reports_skipped,
+            ranked_players_analyzed=ranked_players_analyzed,
+            ranked_players_skipped=ranked_players_skipped,
             role_summaries=summaries,
+            role_errors=role_errors,
         )
 
+    def _resolve_ranked_player(
+        self,
+        *,
+        role_key: str,
+        ranking: dict,
+        cache: dict[tuple[str, int], list[TopTeamPlayer] | None],
+    ) -> TopTeamPlayer | None:
+        name = str(ranking.get("name") or "").strip()
+        report_code = str(ranking.get("report_code") or "").strip()
+        fight_id = ranking.get("fight_id")
+        if not name or not report_code or fight_id is None:
+            return None
+
+        try:
+            normalized_fight_id = int(fight_id)
+        except (TypeError, ValueError):
+            return None
+
+        cache_key = (report_code, normalized_fight_id)
+        if cache_key not in cache:
+            try:
+                fight = self.client.get_fight(report_code, normalized_fight_id)
+                start = float(fight.get("startTime", 0.0))
+                end = float(fight.get("endTime", 0.0))
+                details = self.client.get_report_player_summary(
+                    report_code,
+                    normalized_fight_id,
+                    start,
+                    end,
+                )
+                cache[cache_key] = TopTeamService._players_from_details(details)
+            except EsoLogsApiError:
+                cache[cache_key] = None
+
+        players = cache[cache_key] or []
+        name_key = name.casefold()
+        class_key = str(ranking.get("class") or "").strip().casefold()
+
+        matches = [
+            player
+            for player in players
+            if player.Role == role_key and player.Name.strip().casefold() == name_key
+        ]
+        if class_key:
+            class_matches = [
+                player
+                for player in matches
+                if player.ClassName.strip().casefold() == class_key
+            ]
+            if class_matches:
+                matches = class_matches
+
+        # Do not guess an anonymized or renamed player from roster position/class alone.
+        # If the ranked identity cannot be matched exactly, that observation is skipped.
+        return matches[0] if len(matches) == 1 else None
+
     @staticmethod
-    def _rank_counter(counter: Counter[str], player_count: int) -> tuple[TrendingItem, ...]:
+    def _rank_counter(
+        counter: Counter[str],
+        player_count: int,
+    ) -> tuple[TrendingItem, ...]:
         rows = sorted(
             counter.items(),
             key=lambda item: (-item[1], item[0].casefold()),
@@ -150,8 +223,8 @@ class EsoLogsTrendingService:
 
         for player in players:
             # TopTeamService already deduplicates a player's repeated gear pieces into
-            # distinct set names. Counting once per player avoids a five-piece set
-            # appearing five times merely because five equipped items share the set.
+            # distinct set names. Counting once per ranked player avoids a five-piece
+            # set appearing five times merely because five equipped items share it.
             gear_counts.update(player.GearSets)
             if player.ClassName:
                 class_counts[player.ClassName] += 1
