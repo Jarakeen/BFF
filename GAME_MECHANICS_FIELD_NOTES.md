@@ -491,3 +491,15 @@ Ultimate cast.
 **For BFF:** only an explicit secondary-activation contract from canonical ability
 text may replace the missing positive base cost. Unsupported zero-cost Ultimates
 remain unresolved; BFF does not hunt for a nearby number and declare it the price.
+
+---
+
+## 2026-09-09 — A blocked provider plan is not the same thing as an expensive one
+
+While connecting provider workload candidates to frontier comparison, BFF had to keep three outcomes separate: a plan that cannot be projected, a projected plan that fails required coverage or contains unresolved mechanics, and a viable plan that is simply more expensive than another viable plan.
+
+**Layman's version:** failing to do the job is not the same as doing the job badly. If a support setup misses required recipients or uptime, it should not enter the same cost contest as setups that actually satisfy the assignment.
+
+**What it means in actual play:** a plan with fewer casts or lower resource cost can still be unusable if it drops the required buff or cannot be modeled honestly. Only after the hard job requirements are met does it make sense to ask whether another legal plan needs fewer casts, less Magicka, less bar space, less Ultimate, or less role displacement.
+
+**For BFF:** candidate evaluation now treats projection rejection and workload blockers as hard gates before Pareto-style dominance. Frontier comparison only happens among candidates for the same effect and comparison horizon, and surviving frontier plans remain policy choices rather than being collapsed into a fake universal winner.
