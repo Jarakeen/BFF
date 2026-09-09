@@ -82,3 +82,8 @@ def install() -> None:
     PerformanceDashboard._build_kpi_card = _build_kpi_card_with_weave
     PerformanceDashboard.show_snapshot = _show_snapshot_with_weave
     _INSTALLED = True
+
+    # Finish the DD presentation stack with a concise evidence summary.
+    from ui.performance_dashboard_dd_summary_support import install as install_dd_summary
+
+    install_dd_summary()
