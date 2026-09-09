@@ -7,6 +7,9 @@ from services.extreme_actual_heal_class_route_catalog_service import (
     ExtremeActualHealClassRouteCatalogService,
     ExtremeActualHealClassRouteEntry,
 )
+from services.extreme_actual_heal_optimization_service import (
+    ExtremeActualHealEvaluationCache,
+)
 from services.extreme_maximum_healing_event_class_route_catalog_service import (
     ExtremeMaximumHealingEventClassRouteCatalogResult,
     ExtremeMaximumHealingEventClassRouteCatalogService,
@@ -47,6 +50,7 @@ class ExtremeMaximumHealingEventFinalistOptimizationService:
         "STAGE 2: full whole-build optimization of selected Stage-1 finalists",
         "exact screened class route, active-bar slot, and heal/trigger preserved",
         "hypothetical route progression rebuilt before finalist optimization",
+        "shared structural ordinary-heal evaluation cache across finalists",
     )
 
     def __init__(
@@ -82,6 +86,7 @@ class ExtremeMaximumHealingEventFinalistOptimizationService:
         )
         ordinary_progression = self.ordinary._progression(baseline_build)
         blood_progression = self.blood_magic._progression(baseline_build)
+        ordinary_evaluation_cache: ExtremeActualHealEvaluationCache = {}
 
         optimized: list[ExtremeMaximumHealingEventRouteEntry] = []
         errors: list[str] = []
@@ -99,6 +104,7 @@ class ExtremeMaximumHealingEventFinalistOptimizationService:
                         active_bar=active_bar,
                         max_passes=max(1, int(max_passes)),
                         progression_override=route_progression,
+                        evaluation_cache=ordinary_evaluation_cache,
                     )
                     entry = ExtremeActualHealClassRouteEntry(
                         route=source.route,
