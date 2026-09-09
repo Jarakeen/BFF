@@ -23,6 +23,11 @@ from services.service_catalog import (
 _NON_SERVICE_MODULES = frozenset(
     {
         "services.service_catalog",
+        # Verified historical compatibility utilities. Their only application
+        # consumers live under old_pages/, so cataloging them as current services
+        # would misrepresent the runtime architecture merely to silence coverage.
+        "services.json_service",
+        "services.validation_service",
     }
 )
 
