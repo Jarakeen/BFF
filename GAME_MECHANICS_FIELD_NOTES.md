@@ -610,3 +610,10 @@ The canonical runtime stream now carries each event attempt's deterministic chan
 ## 2026-09-09 — Extreme snapshot optimization needs one runtime-history contract
 
 Extreme role objectives should not maintain separate temporal truth for skill triggers, gear procs, and potion windows. The first unified runtime-snapshot contract carries one ordered `RuntimeEffectEventAttempt` history, one exact snapshot time, and potion elapsed timing while potion use remains outside the shared runtime stream. Skill and gear buffs are both resolved from that same ordered history before the candidate `CombatState` is built. Legacy single-trigger inputs remain supported only when the unified snapshot is absent; mixing the two paths is rejected to prevent double application. Class-specific emergency assumptions still layer into the same `CombatState` until their windows are represented by role-neutral canonical runtime evidence.
+
+
+---
+
+## 2026-09-09 — Extreme runtime snapshots need one role-neutral CombatState projector
+
+The unified `ExtremeRuntimeSnapshot` contract is projected through one shared `ExtremeRuntimeSnapshotCombatStateService` before a role objective evaluates its own healing, tanking, or damage semantics. The projector owns ordered skill-history named buffs, gear-proc history, and explicit potion-window activation, deduplicates the resulting named buffs, and preserves runtime blockers. Healer-specific states such as Restoration Staff heavy completion or Sacred Ground still layer afterward until those mechanics are represented as role-neutral canonical runtime evidence. Tank and Damage Dealer Extreme objectives should consume this projector rather than recreate runtime truth.

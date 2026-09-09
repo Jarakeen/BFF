@@ -34,6 +34,9 @@ from services.extreme_necromancer_living_death_healing_service import (
     ExtremeNecromancerLivingDeathHealingService,
 )
 from services.extreme_runtime_snapshot import ExtremeRuntimeSnapshot
+from services.extreme_runtime_snapshot_combat_state_service import (
+    ExtremeRuntimeSnapshotCombatStateService,
+)
 from services.extreme_restoration_heavy_combat_state_service import (
     ExtremeRestorationHeavyCombatStateService,
 )
@@ -122,6 +125,7 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         gear_trigger_chance_roll: float | None = None,
         gear_trigger_condition_context: ConditionContext | None = None,
         gear_runtime_buffs: ExtremeActualHealGearRuntimeBuffService | None = None,
+        runtime_snapshot_state: ExtremeRuntimeSnapshotCombatStateService | None = None,
         restoration_heavy_state: ExtremeRestorationHeavyCombatStateService | None = None,
         templar_sacred_ground_state: ExtremeTemplarSacredGroundCombatStateService | None = None,
         templar_restoring_light_healing: ExtremeTemplarRestoringLightHealingService | None = None,
@@ -228,6 +232,7 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
             None if gear_trigger_condition_context is None else frozenset(str(value) for value in gear_trigger_condition_context)
         )
         self.gear_runtime_buffs = gear_runtime_buffs
+        self.runtime_snapshot_state = runtime_snapshot_state
         self.restoration_heavy_state = restoration_heavy_state
         self.templar_sacred_ground_state = templar_sacred_ground_state
         self.templar_restoring_light_healing = templar_restoring_light_healing
@@ -441,40 +446,26 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
                     )
                 )
 
-        if self.runtime_snapshot is not None and self.runtime_snapshot.attempts:
-            snapshot = self.runtime_snapshot
-            skill_service = self.skill_buff_candidates
-            if skill_service is None:
-                database_path = getattr(self.optimizer, "database_path", None)
-                if database_path is not None:
-                    skill_service = ExtremeActualHealSkillBuffCandidateService(database_path)
-                    self.skill_buff_candidates = skill_service
-            if skill_service is not None:
-                active_buffs.extend(
-                    skill_service.active_triggered_named_buffs_history(
-                        build,
-                        active_bar=active_bar,
-                        attempts=snapshot.attempts,
-                        snapshot_time_seconds=snapshot.snapshot_time_seconds,
-                    )
+        if self.runtime_snapshot is not None:
+            state_service = self.runtime_snapshot_state
+            if state_service is None:
+                state_service = ExtremeRuntimeSnapshotCombatStateService(
+                    getattr(self.optimizer, "database_path", None),
+                    skill_buff_candidates=self.skill_buff_candidates,
+                    gear_runtime_buffs=self.gear_runtime_buffs,
+                    potion_use_resolver=self.potion_use_resolver,
                 )
-
-            gear_service = self.gear_runtime_buffs
-            if gear_service is None:
-                database_path = getattr(self.optimizer, "database_path", None)
-                if database_path is not None:
-                    gear_service = ExtremeActualHealGearRuntimeBuffService(database_path)
-                    self.gear_runtime_buffs = gear_service
-            if gear_service is not None:
-                gear_result = gear_service.resolve_history(
-                    build,
-                    active_bar=active_bar,
-                    attempts=snapshot.attempts,
-                    snapshot_time_seconds=snapshot.snapshot_time_seconds,
-                )
-                active_buffs.extend(gear_result.active_buffs)
-                unresolved.extend(gear_result.unresolved)
-            in_combat = True
+                self.runtime_snapshot_state = state_service
+            snapshot_result = state_service.resolve(
+                build,
+                progression=progression,
+                active_bar=active_bar,
+                snapshot=self.runtime_snapshot,
+                base_active_buffs=tuple(active_buffs),
+            )
+            active_buffs = list(snapshot_result.combat_state.active_buffs)
+            unresolved.extend(snapshot_result.unresolved)
+            in_combat = in_combat or bool(snapshot_result.combat_state.in_combat)
 
         if self.skill_trigger_event is not None:
             service = self.skill_buff_candidates
@@ -515,7 +506,7 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
                 active_buffs.extend(gear_result.active_buffs)
                 unresolved.extend(gear_result.unresolved)
 
-        if self.potion_elapsed_seconds is not None:
+        if self.potion_elapsed_seconds is not None and self.runtime_snapshot is None:
             potion_name = " ".join(str(build.Potion or "").strip().split())
             if not potion_name:
                 unresolved.append(
