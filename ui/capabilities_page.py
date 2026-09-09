@@ -7,7 +7,7 @@
 # Purpose:
 # Capabilities Desk.
 #
-# Two desk-level tabs:
+# Three desk-level tabs:
 #   "Ranked Team Builds" -- ESO Logs top-ranked-team gear/skill
 #     evidence for a chosen trial (TopTeamCard, untouched here).
 #   "Performance Dashboard" -- up to 12 raid team member tabs,
@@ -16,6 +16,9 @@
 #     anonymized label like "Anonymous 7" when the report owner
 #     hid names), and charting that player's buff/debuff uptime
 #     plus their healing or damage output.
+#   "ESO Logs Trending" -- a bounded multi-report sample of ranked
+#     teams, summarized by role to show commonly observed gear sets,
+#     classes, and example loadouts.
 #
 # Wired to the sidebar's existing "Capabilities" nav entry
 # (Raid Operations > Capabilities, page key "console:3").
@@ -48,6 +51,7 @@ from ui.foundry_page import FoundryPage
 from widgets.capability_editor import CapabilityEditor
 from widgets.performance_dashboard import PerformanceDashboard
 from widgets.top_team_card import TopTeamCard
+from widgets.esologs_trending_card import EsoLogsTrendingCard
 from widgets.build_dashboard import BuildDashboard
 
 from models.capability_model import CapabilityRoster, CapabilityProfile
@@ -55,6 +59,7 @@ from models.performance_model import PerformanceRoster, PerformanceProfile
 from services.capability_service import CapabilityService
 from services.performance_dashboard_service import PerformanceDashboardService
 from services.top_team_service import TopTeamService
+from services.esologs_trending_service import EsoLogsTrendingService
 from services.top_team_template_intake import TopTeamTemplateIntake
 from services.team_prescription_template_catalog import (
     TeamPrescriptionTemplateCatalog,
@@ -73,8 +78,8 @@ CAPABILITIES_PATH = "data/capabilities.json"
 
 class CapabilitiesPage(FoundryPage):
     """
-    Capabilities Desk -- ranked-team build evidence, plus one tab
-    per raid team member's ESO Logs-driven performance dashboard.
+    Capabilities Desk -- ranked-team build evidence, per-member
+    performance dashboards, and multi-report ESO Logs trend summaries.
     """
 
     def __init__(self, parent=None):
@@ -144,6 +149,10 @@ class CapabilitiesPage(FoundryPage):
         """Rebuild on demand so credential changes apply without restart."""
         return TopTeamService(self._build_esologs_client())
 
+    def _build_trending_service(self) -> EsoLogsTrendingService:
+        """Rebuild on demand so credential changes apply without restart."""
+        return EsoLogsTrendingService(self._build_esologs_client())
+
     # --------------------------------------------------
     # UI
     # --------------------------------------------------
@@ -174,6 +183,14 @@ class CapabilitiesPage(FoundryPage):
             default_game_update=self.template_catalog_snapshot.game_update,
         )
         self.top_team_card.setSizePolicy(
+            QSizePolicy.Policy.Preferred,
+            QSizePolicy.Policy.Expanding,
+        )
+
+        self.trending_card = EsoLogsTrendingCard(
+            service_factory=self._build_trending_service,
+        )
+        self.trending_card.setSizePolicy(
             QSizePolicy.Policy.Preferred,
             QSizePolicy.Policy.Expanding,
         )
@@ -275,10 +292,10 @@ class CapabilitiesPage(FoundryPage):
         performance_column_layout.addWidget(self.performance_stack, 1)
 
         #
-        # Desk-level tabs: ranked-team build evidence and per-member
-        # performance dashboards. Use a real QTabBar here (and
-        # for the member roster below) so tabs read as tabs instead
-        # of rounded action pills.
+        # Desk-level tabs: ranked-team build evidence, per-member
+        # performance dashboards, and multi-report ESO Logs trends.
+        # Use a real QTabBar here (and for the member roster below)
+        # so tabs read as tabs instead of rounded action pills.
         #
 
         self.desk_tabs = QTabBar()
@@ -286,6 +303,7 @@ class CapabilitiesPage(FoundryPage):
         self.desk_tabs.setDrawBase(True)
         self.desk_tabs.addTab("Ranked Team Builds")
         self.desk_tabs.addTab("Performance Dashboard")
+        self.desk_tabs.addTab("ESO Logs Trending")
         self.desk_tabs.currentChanged.connect(self._select_desk_tab)
 
         self.desk_stack = QStackedWidget()
@@ -293,6 +311,8 @@ class CapabilitiesPage(FoundryPage):
         self.desk_stack.addWidget(self.top_team_card)  # index 0: Ranked Team Builds
 
         self.desk_stack.addWidget(self.performance_member_column)  # index 1: Performance Dashboard
+
+        self.desk_stack.addWidget(self.trending_card)  # index 2: ESO Logs Trending
 
         desk_container = QWidget()
 
