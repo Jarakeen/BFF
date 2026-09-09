@@ -34,8 +34,14 @@ class ExtremeRuntimeSnapshot:
     ordinary effect attempts and explicit potion activations on the same
     timestamp / sequence ordered timeline. The older positional fields remain
     in their original order as a compatibility bridge for existing callers,
-    but they cannot be mixed with ``runtime_history`` so two competing versions
-    of runtime truth cannot enter one evaluation.
+    but they cannot be supplied alongside ``runtime_history`` so two competing
+    versions of runtime truth cannot enter one evaluation.
+
+    When unified history is supplied, ``attempts`` and
+    ``potion_elapsed_seconds`` are populated as derived compatibility views.
+    This keeps older downstream consumers on the same authoritative runtime
+    truth while E1 call sites finish migrating to the explicit projection
+    properties.
     """
 
     # Keep the original positional order intact while E1 callers migrate.
@@ -52,10 +58,11 @@ class ExtremeRuntimeSnapshot:
 
         history = tuple(self.runtime_history)
         attempts = tuple(self.attempts)
+        supplied_potion_elapsed = self.potion_elapsed_seconds
         object.__setattr__(self, "runtime_history", history)
         object.__setattr__(self, "attempts", attempts)
 
-        if history and (attempts or self.potion_elapsed_seconds is not None):
+        if history and (attempts or supplied_potion_elapsed is not None):
             raise ValueError(
                 "runtime_history cannot be combined with legacy attempts or potion_elapsed_seconds"
             )
@@ -66,9 +73,35 @@ class ExtremeRuntimeSnapshot:
                     "runtime_history entries must be RuntimeEffectEventAttempt or ExtremeRuntimePotionUse"
                 )
 
-        if self.potion_elapsed_seconds is None:
+        if history:
+            ordered = tuple(sorted(history, key=self._entry_order))
+            projected_attempts = tuple(
+                entry
+                for entry in ordered
+                if isinstance(entry, RuntimeEffectEventAttempt)
+            )
+            potion_uses = tuple(
+                entry
+                for entry in ordered
+                if isinstance(entry, ExtremeRuntimePotionUse)
+                and entry.time_seconds <= snapshot + 1e-12
+            )
+            projected_potion_elapsed = (
+                None
+                if not potion_uses
+                else snapshot - potion_uses[-1].time_seconds
+            )
+            object.__setattr__(self, "attempts", projected_attempts)
+            object.__setattr__(
+                self,
+                "potion_elapsed_seconds",
+                projected_potion_elapsed,
+            )
             return
-        potion_elapsed = float(self.potion_elapsed_seconds)
+
+        if supplied_potion_elapsed is None:
+            return
+        potion_elapsed = float(supplied_potion_elapsed)
         if not math.isfinite(potion_elapsed) or potion_elapsed < 0.0:
             raise ValueError(
                 "runtime snapshot potion elapsed time must be finite and non-negative"
