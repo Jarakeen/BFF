@@ -4,20 +4,28 @@ from __future__ import annotations
 
 This is descriptive meta evidence, not canonical build truth. The service asks ESO
 Logs for the top individual character rankings for DD, healer, and tank, resolves only
-those ranked players back to their report playerDetails, and counts distinct set usage
-per ranked player.
+those ranked players back to their report playerDetails, counts distinct set usage per
+ranked player, and compares the current snapshot with the previous saved snapshot for
+that same encounter/role.
 """
 
 from collections import Counter
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
+from datetime import datetime, timezone
 import json
+from pathlib import Path
 
+from engine.config import get_data_dir
 from models.top_team_model import TopTeamPlayer
 from services.esologs_client import EsoLogsApiError, EsoLogsClient
 from services.top_team_service import TopTeamService
 
 _DEFAULT_PLAYER_LIMIT = 5
 _MAX_SAMPLE_PLAYERS_PER_ROLE = 6
+_MAX_MOVEMENT_ROWS = 3
+_HISTORY_VERSION = 1
+_HISTORY_LIMIT_PER_ROLE = 24
+_TOP_GEAR_CUTOFF = 10
 _ROLE_KEYS = ("dps", "healer", "tank")
 _ROLE_RANKING_METRIC = {
     "dps": ("DPS", "dps"),
@@ -40,12 +48,27 @@ class TrendingItem:
 
 
 @dataclass(frozen=True, slots=True)
+class TrendMovementItem:
+    name: str
+    current_percent: float
+    previous_percent: float
+    delta_points: float
+    current_rank: int | None
+    previous_rank: int | None
+
+
+@dataclass(frozen=True, slots=True)
 class RoleTrendingSummary:
     role: str
     player_count: int
     gear_sets: tuple[TrendingItem, ...] = ()
     classes: tuple[TrendingItem, ...] = ()
     sample_players: tuple[TopTeamPlayer, ...] = ()
+    making_waves: tuple[TrendMovementItem, ...] = ()
+    cooling_off: tuple[TrendMovementItem, ...] = ()
+    new_arrivals: tuple[TrendMovementItem, ...] = ()
+    breakouts: tuple[TrendMovementItem, ...] = ()
+    has_history: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -65,8 +88,9 @@ class EsoLogsTrendingReport:
 class EsoLogsTrendingService:
     """Build role-aware popularity summaries from top individual ranked players."""
 
-    def __init__(self, client: EsoLogsClient):
+    def __init__(self, client: EsoLogsClient, history_path: Path | None = None):
         self.client = client
+        self.history_path = history_path or (get_data_dir() / "esologs_trending_history.json")
 
     def list_trials(self) -> list[dict]:
         return self.client.get_trial_zones()
@@ -149,10 +173,16 @@ class EsoLogsTrendingService:
                 f"Could not load usable top-ranked players for {encounter_name}{suffix}."
             )
 
-        summaries = {
-            role: self._summarize_role(role, players_by_role[role])
-            for role in _ROLE_KEYS
-        }
+        history = self._load_history()
+        summaries: dict[str, RoleTrendingSummary] = {}
+        for role in _ROLE_KEYS:
+            summary = self._summarize_role(role, players_by_role[role])
+            previous = self._latest_snapshot(history, int(encounter_id), role)
+            summary = self._with_movement(summary, previous)
+            summaries[role] = summary
+            self._append_snapshot(history, int(encounter_id), role, summary)
+        self._save_history(history)
+
         return EsoLogsTrendingReport(
             trial_name=str(zone_name),
             encounter_name=str(encounter_name),
@@ -349,10 +379,192 @@ class EsoLogsTrendingService:
             sample_players=tuple(players[:_MAX_SAMPLE_PLAYERS_PER_ROLE]),
         )
 
+    def _load_history(self) -> dict:
+        if not self.history_path.exists():
+            return {"version": _HISTORY_VERSION, "snapshots": []}
+        try:
+            payload = json.loads(self.history_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return {"version": _HISTORY_VERSION, "snapshots": []}
+        if not isinstance(payload, dict) or not isinstance(payload.get("snapshots"), list):
+            return {"version": _HISTORY_VERSION, "snapshots": []}
+        return payload
+
+    def _save_history(self, history: dict) -> None:
+        try:
+            self.history_path.parent.mkdir(parents=True, exist_ok=True)
+            self.history_path.write_text(
+                json.dumps(history, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+        except OSError:
+            # Trending analysis remains usable even if the local history file cannot
+            # be written. Momentum simply will not persist to the next app session.
+            return
+
+    @staticmethod
+    def _latest_snapshot(history: dict, encounter_id: int, role: str) -> dict | None:
+        for snapshot in reversed(history.get("snapshots", [])):
+            if (
+                snapshot.get("encounter_id") == encounter_id
+                and snapshot.get("role") == role
+            ):
+                return snapshot
+        return None
+
+    @staticmethod
+    def _snapshot_signature(snapshot: dict) -> tuple:
+        sets = snapshot.get("sets", [])
+        return (
+            int(snapshot.get("player_count", 0)),
+            tuple(
+                (str(row.get("name", "")), int(row.get("count", 0)))
+                for row in sets
+                if isinstance(row, dict)
+            ),
+        )
+
+    def _append_snapshot(
+        self,
+        history: dict,
+        encounter_id: int,
+        role: str,
+        summary: RoleTrendingSummary,
+    ) -> None:
+        snapshot = {
+            "encounter_id": encounter_id,
+            "role": role,
+            "captured_at": datetime.now(timezone.utc).isoformat(),
+            "player_count": summary.player_count,
+            "sets": [
+                {
+                    "name": row.name,
+                    "count": row.count,
+                    "percent": row.percent,
+                    "rank": index,
+                }
+                for index, row in enumerate(summary.gear_sets, start=1)
+            ],
+        }
+
+        previous = self._latest_snapshot(history, encounter_id, role)
+        if previous and self._snapshot_signature(previous) == self._snapshot_signature(snapshot):
+            return
+
+        history.setdefault("snapshots", []).append(snapshot)
+        matching_indexes = [
+            index
+            for index, row in enumerate(history["snapshots"])
+            if row.get("encounter_id") == encounter_id and row.get("role") == role
+        ]
+        excess = len(matching_indexes) - _HISTORY_LIMIT_PER_ROLE
+        if excess > 0:
+            remove = set(matching_indexes[:excess])
+            history["snapshots"] = [
+                row for index, row in enumerate(history["snapshots"]) if index not in remove
+            ]
+
+    @staticmethod
+    def _previous_rows(snapshot: dict | None) -> dict[str, dict]:
+        if not snapshot:
+            return {}
+        return {
+            str(row.get("name", "")): row
+            for row in snapshot.get("sets", [])
+            if isinstance(row, dict) and row.get("name")
+        }
+
+    @classmethod
+    def _with_movement(
+        cls,
+        summary: RoleTrendingSummary,
+        previous_snapshot: dict | None,
+    ) -> RoleTrendingSummary:
+        if previous_snapshot is None:
+            return summary
+
+        previous = cls._previous_rows(previous_snapshot)
+        current = {
+            row.name: {
+                "percent": row.percent,
+                "rank": rank,
+            }
+            for rank, row in enumerate(summary.gear_sets, start=1)
+        }
+        previous_player_count = max(1, int(previous_snapshot.get("player_count", 0)))
+        movement_step = max(
+            10.0,
+            100.0 / max(summary.player_count, previous_player_count, 1),
+        )
+
+        all_names = set(previous) | set(current)
+        movements: list[TrendMovementItem] = []
+        for name in all_names:
+            current_row = current.get(name, {})
+            previous_row = previous.get(name, {})
+            current_percent = float(current_row.get("percent", 0.0))
+            previous_percent = float(previous_row.get("percent", 0.0))
+            movements.append(
+                TrendMovementItem(
+                    name=name,
+                    current_percent=current_percent,
+                    previous_percent=previous_percent,
+                    delta_points=current_percent - previous_percent,
+                    current_rank=(
+                        int(current_row["rank"]) if current_row.get("rank") is not None else None
+                    ),
+                    previous_rank=(
+                        int(previous_row["rank"]) if previous_row.get("rank") is not None else None
+                    ),
+                )
+            )
+
+        new_arrivals = [
+            row
+            for row in movements
+            if row.previous_percent <= 0.0 and row.current_percent > 0.0
+        ]
+        breakouts = [
+            row
+            for row in movements
+            if row.previous_percent > 0.0
+            and row.current_rank is not None
+            and row.current_rank <= _TOP_GEAR_CUTOFF
+            and (row.previous_rank is None or row.previous_rank > _TOP_GEAR_CUTOFF)
+        ]
+        making_waves = [
+            row
+            for row in movements
+            if row.previous_percent > 0.0
+            and row.current_rank is not None
+            and row.current_rank > _TOP_GEAR_CUTOFF
+            and row.delta_points >= movement_step
+        ]
+        cooling_off = [
+            row
+            for row in movements
+            if row.previous_percent > 0.0 and row.delta_points <= -movement_step
+        ]
+
+        new_arrivals.sort(key=lambda row: (-row.current_percent, row.name.casefold()))
+        breakouts.sort(key=lambda row: (-row.delta_points, row.current_rank or 999, row.name.casefold()))
+        making_waves.sort(key=lambda row: (-row.delta_points, row.current_rank or 999, row.name.casefold()))
+        cooling_off.sort(key=lambda row: (row.delta_points, row.name.casefold()))
+
+        return replace(
+            summary,
+            making_waves=tuple(making_waves[:_MAX_MOVEMENT_ROWS]),
+            cooling_off=tuple(cooling_off[:_MAX_MOVEMENT_ROWS]),
+            new_arrivals=tuple(new_arrivals[:_MAX_MOVEMENT_ROWS]),
+            breakouts=tuple(breakouts[:_MAX_MOVEMENT_ROWS]),
+            has_history=True,
+        )
+
 
 __all__ = [
     "EsoLogsTrendingReport",
     "EsoLogsTrendingService",
     "RoleTrendingSummary",
+    "TrendMovementItem",
     "TrendingItem",
 ]
