@@ -85,3 +85,79 @@ def test_encounter_provider_layers_remain_distinct_capabilities():
         "encounter.provider.assignment",
         "encounter.provider.responsibility_audit",
     }
+
+
+def test_boss_guide_prefers_reviewed_timeline_without_inventing_missing_semantics():
+    service = canonical_service_for("encounter_boss_guide_read_model")
+
+    assert service is not None
+    assert service.service_id == "encounter.boss_guide.read_model"
+    assert service.ui_safe is True
+    assert service.evidence_class is EvidenceClass.GAME_MECHANIC
+    assert "take precedence over structural phase rows" in service.notes
+    assert "Missing semantics are not invented" in service.notes
+
+
+def test_cleanse_method_does_not_turn_generic_cleanse_requirement_into_player_skill_proof():
+    service = canonical_service_for("encounter_cleanse_method_resolution")
+
+    assert service is not None
+    assert service.service_id == "encounter.execution.cleanse_method"
+    assert service.dependencies == ("encounter.domain_read_model",)
+    assert "does not prove which cleanse method works" in service.notes
+    assert "does not prove ordinary player cleanse skills are effective" in service.notes
+
+
+def test_interrupt_method_preserves_encounter_uncertainty_over_global_fallback():
+    service = canonical_service_for("encounter_interrupt_method_resolution")
+
+    assert service is not None
+    assert service.service_id == "encounter.execution.interrupt_method"
+    assert service.dependencies == ("encounter.domain_read_model",)
+    assert "Encounter-specific evidence wins" in service.notes
+    assert "suppresses the generic bash fallback" in service.notes
+
+
+def test_execution_method_never_converts_demand_flags_into_strategy():
+    service = canonical_service_for("encounter_execution_method_resolution")
+
+    assert service is not None
+    assert service.service_id == "encounter.execution.method"
+    assert service.dependencies == ("encounter.domain_read_model",)
+    assert "establish demand only, not strategy" in service.notes
+    assert "exact structured fields" in service.notes
+
+
+def test_execution_availability_does_not_invent_alternate_solution():
+    service = canonical_service_for("encounter_execution_availability_resolution")
+
+    assert service is not None
+    assert service.service_id == "encounter.execution.availability"
+    assert service.dependencies == (
+        "encounter.domain_read_model",
+        "encounter.execution.method",
+    )
+    assert "no alternate is proven" in service.notes
+    assert "fabricating a replacement strategy" in service.notes
+
+
+def test_health_threshold_clock_projection_requires_explicit_raid_damage_trajectory():
+    service = canonical_service_for("encounter_health_threshold_clock_projection")
+
+    assert service is not None
+    assert service.service_id == "encounter.health_threshold.clock_projection"
+    assert service.dependencies == ("encounter.boss_guide.read_model",)
+    assert service.evidence_class is EvidenceClass.MIXED
+    assert "Raid DPS must be explicit caller input" in service.notes
+    assert "candidate-ranking metrics" in service.notes
+
+
+def test_position_gif_service_owns_timing_not_encounter_truth_or_pixels():
+    service = canonical_service_for("encounter_position_gif_frame_planning")
+
+    assert service is not None
+    assert service.service_id == "encounter.position_gif.frame_plan"
+    assert service.ui_safe is True
+    assert service.evidence_class is EvidenceClass.NONE
+    assert "owns export timing only" in service.notes
+    assert "render pixels" in service.notes
