@@ -1,0 +1,177 @@
+name: Extreme Unified Runtime Snapshot Once
+
+on:
+  push:
+    branches: [phase13]
+    paths:
+      - .github/workflows/extreme-unified-runtime-snapshot-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch-test-rebase-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: phase13.2
+          fetch-depth: 0
+
+      - name: Patch unified runtime snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > services/extreme_runtime_snapshot.py <<'PY'
+          from __future__ import annotations
+
+          import math
+          from dataclasses import dataclass
+
+          from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
+
+
+          @dataclass(frozen=True)
+          class ExtremeRuntimeSnapshot:
+              """One deterministic runtime history evaluated at one exact snapshot.
+
+              The shared contract stays role-neutral. Ordered effect attempts carry
+              their own chance and condition evidence; potion timing is retained here
+              until potion use is represented by the same canonical runtime stream.
+              """
+
+              attempts: tuple[RuntimeEffectEventAttempt, ...] = ()
+              snapshot_time_seconds: float = 0.0
+              potion_elapsed_seconds: float | None = None
+
+              def __post_init__(self) -> None:
+                  snapshot = float(self.snapshot_time_seconds)
+                  if not math.isfinite(snapshot) or snapshot < 0.0:
+                      raise ValueError("runtime snapshot time must be a finite non-negative number")
+                  object.__setattr__(self, "snapshot_time_seconds", snapshot)
+                  object.__setattr__(self, "attempts", tuple(self.attempts))
+                  if self.potion_elapsed_seconds is None:
+                      return
+                  potion_elapsed = float(self.potion_elapsed_seconds)
+                  if not math.isfinite(potion_elapsed) or potion_elapsed < 0.0:
+                      raise ValueError("runtime snapshot potion elapsed time must be finite and non-negative")
+                  object.__setattr__(self, "potion_elapsed_seconds", potion_elapsed)
+          PY
+
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('services/extreme_conditional_actual_heal_optimization_service.py')
+          text = path.read_text()
+
+          import_anchor = 'from services.extreme_necromancer_living_death_healing_service import (\n    ExtremeNecromancerLivingDeathHealingService,\n)\n'
+          if 'from services.extreme_runtime_snapshot import ExtremeRuntimeSnapshot\n' not in text:
+              text = text.replace(
+                  import_anchor,
+                  import_anchor + 'from services.extreme_runtime_snapshot import ExtremeRuntimeSnapshot\n',
+                  1,
+              )
+
+          arg_anchor = '        active_buffs: tuple[str, ...] = (),\n        potion_elapsed_seconds: float | None = None,\n'
+          text = text.replace(
+              arg_anchor,
+              '        active_buffs: tuple[str, ...] = (),\n        runtime_snapshot: ExtremeRuntimeSnapshot | None = None,\n        potion_elapsed_seconds: float | None = None,\n',
+              1,
+          )
+
+          potion_anchor = '        if potion_elapsed_seconds is None:\n            self.potion_elapsed_seconds = None\n'
+          if 'self.runtime_snapshot = runtime_snapshot' not in text:
+              runtime_init = '''        self.runtime_snapshot = runtime_snapshot\n        if runtime_snapshot is not None:\n            if any(\n                value is not None\n                for value in (\n                    skill_trigger_event,\n                    skill_trigger_snapshot_seconds,\n                    gear_trigger_event,\n                    gear_trigger_snapshot_seconds,\n                )\n            ):\n                raise ValueError(\n                    "runtime_snapshot cannot be combined with legacy skill/gear trigger inputs"\n                )\n            if potion_elapsed_seconds is not None:\n                raise ValueError(\n                    "runtime_snapshot potion timing must be supplied on the snapshot contract"\n                )\n            potion_elapsed_seconds = runtime_snapshot.potion_elapsed_seconds\n'''
+              text = text.replace(potion_anchor, runtime_init + potion_anchor, 1)
+
+          scenario_anchor = '        if self.potion_elapsed_seconds is not None:\n            scenarios.append(\n'
+          optimize_start = text.index('    def optimize(')
+          scenario_pos = text.index(scenario_anchor, optimize_start)
+          if 'unified runtime snapshot at ' not in text[optimize_start:scenario_pos]:
+              unified_scenario = '''        if self.runtime_snapshot is not None:\n            scenarios.append(\n                "unified runtime snapshot at "\n                f"{self.runtime_snapshot.snapshot_time_seconds:.6f}s from "\n                f"{len(self.runtime_snapshot.attempts)} ordered event attempts"\n            )\n'''
+              text = text[:scenario_pos] + unified_scenario + text[scenario_pos:]
+
+          additional_start = text.index('    def _additional_candidates(')
+          additional_return = text.index('        return tuple(result)', additional_start)
+          trigger_anchor = '        if self.skill_trigger_event is not None:\n'
+          trigger_pos = text.index(trigger_anchor, additional_start, additional_return)
+          if 'for attempt in self.runtime_snapshot.attempts' not in text[additional_start:trigger_pos]:
+              candidate_block = '''        if self.runtime_snapshot is not None and self.runtime_snapshot.attempts:\n            service = self.skill_buff_candidates\n            if service is None:\n                database_path = getattr(self.optimizer, "database_path", None)\n                if database_path is not None:\n                    service = ExtremeActualHealSkillBuffCandidateService(database_path)\n                    self.skill_buff_candidates = service\n            if service is not None:\n                for attempt in self.runtime_snapshot.attempts:\n                    result.extend(\n                        service.triggered_build_candidates(\n                            baseline_build,\n                            character_id=character_id,\n                            baseline_build_id=baseline_build_id,\n                            protected_entity_id=entity_id,\n                            active_bar=active_bar,\n                            event=attempt.event,\n                            snapshot_time_seconds=self.runtime_snapshot.snapshot_time_seconds,\n                            chance_roll=attempt.chance_roll,\n                            condition_context=attempt.condition_context,\n                        )\n                    )\n'''
+              text = text[:trigger_pos] + candidate_block + text[trigger_pos:]
+
+          restoration_start = text.index('    def _restoration_combat_state(')
+          restoration_end = text.index('    def _templar_mending_event(', restoration_start)
+          trigger_pos = text.index(trigger_anchor, restoration_start, restoration_end)
+          if 'active_triggered_named_buffs_history' not in text[restoration_start:trigger_pos]:
+              history_block = '''        if self.runtime_snapshot is not None and self.runtime_snapshot.attempts:\n            snapshot = self.runtime_snapshot\n            skill_service = self.skill_buff_candidates\n            if skill_service is None:\n                database_path = getattr(self.optimizer, "database_path", None)\n                if database_path is not None:\n                    skill_service = ExtremeActualHealSkillBuffCandidateService(database_path)\n                    self.skill_buff_candidates = skill_service\n            if skill_service is not None:\n                active_buffs.extend(\n                    skill_service.active_triggered_named_buffs_history(\n                        build,\n                        active_bar=active_bar,\n                        attempts=snapshot.attempts,\n                        snapshot_time_seconds=snapshot.snapshot_time_seconds,\n                    )\n                )\n\n            gear_service = self.gear_runtime_buffs\n            if gear_service is None:\n                database_path = getattr(self.optimizer, "database_path", None)\n                if database_path is not None:\n                    gear_service = ExtremeActualHealGearRuntimeBuffService(database_path)\n                    self.gear_runtime_buffs = gear_service\n            if gear_service is not None:\n                gear_result = gear_service.resolve_history(\n                    build,\n                    active_bar=active_bar,\n                    attempts=snapshot.attempts,\n                    snapshot_time_seconds=snapshot.snapshot_time_seconds,\n                )\n                active_buffs.extend(gear_result.active_buffs)\n                unresolved.extend(gear_result.unresolved)\n            in_combat = True\n\n'''
+              text = text[:trigger_pos] + history_block + text[trigger_pos:]
+
+          path.write_text(text)
+          PY
+
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('services/tests/test_extreme_conditional_actual_heal_optimization_service.py')
+          text = path.read_text()
+          if 'from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt\n' not in text:
+              text = text.replace(
+                  'from minmax.combat_state import CombatState\n',
+                  'from minmax.combat_state import CombatState\nfrom minmax.runtime_effect_sequence import RuntimeEffectEventAttempt\nfrom minmax.runtime_event import RuntimeEvent\n',
+                  1,
+              )
+          text = text.replace(
+              'from services.extreme_conditional_actual_heal_optimization_service import (\n    ExtremeConditionalActualHealOptimizationService,\n)\n',
+              'from services.extreme_conditional_actual_heal_optimization_service import (\n    ExtremeConditionalActualHealOptimizationService,\n)\nfrom services.extreme_runtime_snapshot import ExtremeRuntimeSnapshot\n',
+              1,
+          )
+          marker = 'def test_unified_runtime_snapshot_combines_skill_and_gear_history():'
+          if marker not in text:
+              text += '''\n\nclass _HistorySkillBuffCandidates:\n    def __init__(self):\n        self.history_calls = []\n\n    def active_triggered_named_buffs_history(\n        self, build, *, active_bar, attempts, snapshot_time_seconds\n    ):\n        self.history_calls.append((build.BuildName, active_bar, attempts, snapshot_time_seconds))\n        return ("Major Sorcery",)\n\n    def triggered_build_candidates(self, *args, **kwargs):\n        _ = args, kwargs\n        return ()\n\n\nclass _HistoryGearRuntimeBuffs:\n    def __init__(self):\n        self.history_calls = []\n\n    def resolve_history(self, build, *, active_bar, attempts, snapshot_time_seconds):\n        self.history_calls.append((build.BuildName, active_bar, attempts, snapshot_time_seconds))\n        return SimpleNamespace(active_buffs=("Major Courage",), unresolved=())\n\n\ndef _runtime_attempt(time_seconds=1.0, trigger="critical_heal"):\n    return RuntimeEffectEventAttempt(\n        event=RuntimeEvent(\n            time_seconds=time_seconds,\n            trigger=trigger,\n            source="test runtime history",\n        )\n    )\n\n\ndef test_unified_runtime_snapshot_combines_skill_and_gear_history():\n    attempts = (_runtime_attempt(1.0), _runtime_attempt(3.0, "overheal_self_or_ally"))\n    skill = _HistorySkillBuffCandidates()\n    gear = _HistoryGearRuntimeBuffs()\n    service = ExtremeConditionalActualHealOptimizationService(\n        target_health_fraction=0.29,\n        runtime_snapshot=ExtremeRuntimeSnapshot(\n            attempts=attempts, snapshot_time_seconds=5.0\n        ),\n        skill_buff_candidates=skill,\n        gear_runtime_buffs=gear,\n        optimizer=_Optimizer(),\n        healing_events=_ConditionalHealingEvents(),\n    )\n\n    state, unresolved = service._restoration_combat_state(\n        build=PlayerBuild(BuildName="Unified Snapshot"),\n        progression=CharacterProgression(passive_ranks={}),\n        active_bar="front",\n    )\n\n    assert unresolved == ()\n    assert state.in_combat\n    assert state.active_buffs == ("Major Sorcery", "Major Courage")\n    assert skill.history_calls[0][2:] == (attempts, 5.0)\n    assert gear.history_calls[0][2:] == (attempts, 5.0)\n\n\ndef test_unified_runtime_snapshot_routes_potion_timing_through_same_contract():\n    service = ExtremeConditionalActualHealOptimizationService(\n        target_health_fraction=0.29,\n        runtime_snapshot=ExtremeRuntimeSnapshot(\n            snapshot_time_seconds=20.0, potion_elapsed_seconds=20.0\n        ),\n        potion_use_resolver=_PotionUseResolver(duration=40.0),\n        optimizer=_Optimizer(),\n        healing_events=_ConditionalHealingEvents(),\n    )\n\n    state, unresolved = service._restoration_combat_state(\n        build=PlayerBuild(\n            BuildName="Unified Potion Snapshot", Potion="Increase Spell Power"\n        ),\n        progression=CharacterProgression(passive_ranks={"Medicinal Use": 3}),\n        active_bar="front",\n    )\n\n    assert unresolved == ()\n    assert state.has_buff("Major Sorcery")\n    assert service.potion_elapsed_seconds == 20.0\n\n\ndef test_unified_runtime_snapshot_rejects_legacy_trigger_inputs():\n    with pytest.raises(ValueError, match="cannot be combined with legacy skill/gear trigger inputs"):\n        ExtremeConditionalActualHealOptimizationService(\n            target_health_fraction=0.29,\n            runtime_snapshot=ExtremeRuntimeSnapshot(snapshot_time_seconds=5.0),\n            skill_trigger_event=RuntimeEvent(\n                time_seconds=1.0, trigger="critical_heal", source="legacy"\n            ),\n            skill_trigger_snapshot_seconds=5.0,\n            optimizer=_Optimizer(),\n            healing_events=_ConditionalHealingEvents(),\n        )\n\n\ndef test_unified_runtime_snapshot_rejects_legacy_potion_timing():\n    with pytest.raises(ValueError, match="potion timing must be supplied on the snapshot contract"):\n        ExtremeConditionalActualHealOptimizationService(\n            target_health_fraction=0.29,\n            runtime_snapshot=ExtremeRuntimeSnapshot(snapshot_time_seconds=5.0),\n            potion_elapsed_seconds=1.0,\n            optimizer=_Optimizer(),\n            healing_events=_ConditionalHealingEvents(),\n        )\n\n\ndef test_unified_runtime_snapshot_is_stamped_in_search_scope(monkeypatch):\n    _install_progression_adapter(monkeypatch)\n    service = ExtremeConditionalActualHealOptimizationService(\n        target_health_fraction=0.29,\n        runtime_snapshot=ExtremeRuntimeSnapshot(\n            attempts=(_runtime_attempt(1.0),), snapshot_time_seconds=5.0\n        ),\n        skill_buff_candidates=_HistorySkillBuffCandidates(),\n        gear_runtime_buffs=_HistoryGearRuntimeBuffs(),\n        optimizer=_Optimizer(),\n        healing_events=_ConditionalHealingEvents(),\n    )\n\n    result = service.optimize(\n        PlayerBuild(BuildName="Unified Scope"),\n        "blessing_of_protection",\n        max_passes=1,\n    )\n\n    assert any(\n        "unified runtime snapshot at 5.000000s from 1 ordered event attempts" in item\n        for item in result.search_scope\n    )\n\n\ndef test_unified_runtime_snapshot_validates_time_boundaries():\n    with pytest.raises(ValueError, match="finite non-negative"):\n        ExtremeRuntimeSnapshot(snapshot_time_seconds=-0.01)\n    with pytest.raises(ValueError, match="potion elapsed time must be finite and non-negative"):\n        ExtremeRuntimeSnapshot(snapshot_time_seconds=0.0, potion_elapsed_seconds=-0.01)\n'''
+          path.write_text(text)
+          PY
+
+          cat >> GAME_MECHANICS_FIELD_NOTES.md <<'EOF'
+
+---
+
+## 2026-09-09 — Extreme snapshot optimization needs one runtime-history contract
+
+Extreme role objectives should not maintain separate temporal truth for skill triggers, gear procs, and potion windows. The first unified runtime-snapshot contract carries one ordered `RuntimeEffectEventAttempt` history, one exact snapshot time, and potion elapsed timing while potion use remains outside the shared runtime stream. Skill and gear buffs are both resolved from that same ordered history before the candidate `CombatState` is built. Legacy single-trigger inputs remain supported only when the unified snapshot is absent; mixing the two paths is rejected to prevent double application. Class-specific emergency assumptions still layer into the same `CombatState` until their windows are represented by role-neutral canonical runtime evidence.
+EOF
+
+          git diff --check
+
+      - name: Install focused test dependencies
+        run: python -m pip install --disable-pip-version-check pytest==9.1.1 pydantic==2.13.4
+
+      - name: Test patched head
+        run: |
+          python -m pytest \
+            services/tests/test_extreme_conditional_actual_heal_optimization_service.py \
+            services/tests/test_extreme_actual_heal_skill_buff_candidate_service.py \
+            services/tests/test_extreme_actual_heal_gear_runtime_buff_service.py \
+            minmax/tests/test_runtime_effect_stream.py \
+            services/tests/test_extreme_optimization_read_only_database.py
+
+      - name: Commit rebase retest push
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name Jarakeen
+          git config user.email jarakeene@gmail.com
+          git add \
+            services/extreme_runtime_snapshot.py \
+            services/extreme_conditional_actual_heal_optimization_service.py \
+            services/tests/test_extreme_conditional_actual_heal_optimization_service.py \
+            GAME_MECHANICS_FIELD_NOTES.md
+          git commit -m "feat: unify Extreme runtime heal snapshots"
+          git fetch origin phase13.2
+          git rebase origin/phase13.2
+          python -m pytest \
+            services/tests/test_extreme_conditional_actual_heal_optimization_service.py \
+            services/tests/test_extreme_actual_heal_skill_buff_candidate_service.py \
+            services/tests/test_extreme_actual_heal_gear_runtime_buff_service.py \
+            minmax/tests/test_runtime_effect_stream.py \
+            services/tests/test_extreme_optimization_read_only_database.py
+          git push origin HEAD:phase13.2
