@@ -121,15 +121,12 @@ def _build_snapshot_with_gap_context(self, *args, **kwargs):
         snapshot.ActionGapContextNote = "No long internal action gaps required raid-context classification."
         return snapshot
 
-    fight_start = getattr(snapshot, "WeaveFightStartTimestampMs", None)
-    if fight_start is None:
-        snapshot.ActionGapUnknownCount = len(gaps)
-        snapshot.ActionGapContextNote = "Raid-context classification unavailable because fight-start timing was not retained."
-        return snapshot
-
     try:
-        start = float(fight_start)
-        end = start + float(snapshot.FightDurationSeconds) * 1000.0
+        fight = self.capability_service.fetch_fight_summary(
+            snapshot.ReportCode, int(snapshot.FightId)
+        )
+        start = float(fight["start_time"])
+        end = float(fight["end_time"])
         raid_points = self.client.get_output_graph(
             snapshot.ReportCode,
             int(snapshot.FightId),
