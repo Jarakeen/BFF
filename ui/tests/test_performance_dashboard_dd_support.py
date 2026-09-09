@@ -16,3 +16,12 @@ def test_dd_support_adds_crit_kpi_and_contribution_title() -> None:
     assert '"Top Damage Abilities • contribution to total"' in source
     assert "CriticalDamageEvents" in source
     assert "DamageHitEvents" in source
+
+
+def test_dd_support_is_installed_before_main_window_construction() -> None:
+    source = Path("app.py").read_text(encoding="utf-8")
+    assert "install_performance_dd_analysis_support()" in source
+    assert "install_performance_dashboard_dd_support()" in source
+    assert source.index("install_performance_dd_analysis_support()") < source.index(
+        "from ui.main_window import MainWindow"
+    )
