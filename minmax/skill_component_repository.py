@@ -23,9 +23,9 @@ class SkillComponentRepository:
     stored positive runtime proof resolves ``can_crit`` to True. Absence of
     runtime evidence remains None and never becomes False.
 
-    Healer event-identity columns were added after the original classification
-    schema. They are loaded when present and remain ``None`` for older databases,
-    preserving backward compatibility without discarding newer reviewed evidence.
+    Classification columns have grown over time. Optional columns are loaded when
+    present and remain ``None`` for older databases, preserving backward
+    compatibility without fabricating missing mechanics.
     """
 
     TABLE = "skill_component_classification"
@@ -103,7 +103,7 @@ class SkillComponentRepository:
 
             columns = self._table_columns(db, self.TABLE)
             has_runtime_crit = self._table_exists(db, self.CRITICAL_EVIDENCE_TABLE)
-            if has_runtime_crit:
+            if has_runtime_crit and "can_crit" in columns:
                 can_crit_expression = f"""
                     CASE
                         WHEN c.can_crit IS NOT NULL THEN c.can_crit
@@ -118,8 +118,10 @@ class SkillComponentRepository:
                         ELSE NULL
                     END
                 """
-            else:
+            elif "can_crit" in columns:
                 can_crit_expression = "c.can_crit"
+            else:
+                can_crit_expression = "NULL"
 
             def optional_column(name: str) -> str:
                 return f"c.{name}" if name in columns else "NULL"
@@ -129,13 +131,13 @@ class SkillComponentRepository:
                 SELECT
                     c.skill_rank_id,
                     c.coefficient_number,
-                    c.effect_kind,
-                    c.damage_type,
-                    c.is_dot,
-                    c.is_aoe,
+                    {optional_column('effect_kind')} AS effect_kind,
+                    {optional_column('damage_type')} AS damage_type,
+                    {optional_column('is_dot')} AS is_dot,
+                    {optional_column('is_aoe')} AS is_aoe,
                     {can_crit_expression} AS can_crit,
-                    c.source,
-                    c.confidence,
+                    {optional_column('source')} AS source,
+                    {optional_column('confidence')} AS confidence,
                     {optional_column('heal_recipient_scope')} AS heal_recipient_scope,
                     {optional_column('heal_temporal_scope')} AS heal_temporal_scope,
                     {optional_column('heal_recipient_key')} AS heal_recipient_key,
