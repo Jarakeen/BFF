@@ -4,24 +4,18 @@ from ui.components.foundry_sidebar import CORE_NAV_SECTIONS
 from ui.main_window import MainWindow
 
 
-def test_raid_engine_menu_matches_workflow_order():
+def test_raid_engine_menu_matches_dashboard_workflow():
     section = next(
         item for item in CORE_NAV_SECTIONS
         if isinstance(item, dict) and item.get("label") == "Raid Engine"
     )
+    assert section.get("page") == "raid_engine_dashboard"
     assert section["children"] == [
-        ("Overview", "operations_console"),
-        ("Builds", "console:2"),
-        ("Rotations", "rotations"),
-        ("Comp Builder", "comp_builder"),
-        ("Roster", "roster_page"),
+        ("Comp Maker", "comp_builder"),
         ("Optimization", "console:6"),
         ("Coverage", "console:7"),
         ("Encounters", "console:1"),
         ("Performance", "console:3"),
-        ("Mechanics", "console:4"),
-        ("Reference Data", "console:8"),
-        ("Timers", "timers"),
     ]
 
 
