@@ -182,6 +182,33 @@ The recent `is_crafted` hotspot was a repeated static database check, not eviden
 - Do not hard-code skill or morph names; resolve them from canonical data.
 - ESO tooltip/source formatting may contain inline color markup. Do not infer mechanics from formatting artifacts. Preserve canonical/raw evidence when normalizing text.
 
+## Canonical ESO identity versus numeric combat IDs
+**This is a hard architectural rule. Do not drift back to numeric IDs as semantic identity.**
+
+BFF's stable semantic identity for skills/effects/mechanics is the canonical lower-snake-case key, such as `radiating_regeneration`, `budding_seeds`, or `major_breach`.
+
+ESO numeric IDs are observational aliases/evidence only. The same semantic skill or effect can have many numeric IDs depending on rank, morph representation, source/caster, proc/combat bundle, patch/version, context, or other engine details. Conversely, numeric IDs may be repurposed over time. Therefore:
+
+- Never make one numeric `ability_id`, `display_id`, effect ID, or ESO Logs ID the canonical identity of a skill/effect.
+- Never infer semantic equivalence merely because two events share a numeric ID, name fragment, cadence, or tooltip wording.
+- Resolve from the canonical lower-snake-case key outward to zero-or-more observed numeric aliases.
+- Treat mappings as many numeric IDs -> one canonical semantic key where evidence supports that mapping.
+- Preserve provenance for every alias mapping and keep version/context-specific aliases explicit when necessary.
+- ESO Logs/import/runtime code must normalize observed numeric IDs into canonical string identity before downstream rotation, coverage, provider, or optimization logic consumes them.
+- Missing alias evidence must fail closed. It must not cause the engine to invent a new canonical entity or silently substitute a nearby rank/morph/effect.
+- Do not use rank-family numeric expansion as a replacement for canonical identity. Rank/morph IDs are supporting evidence after the canonical skill key is known.
+- Major/Minor effect mappings are the model to remember: one semantic effect may legitimately own many combat IDs. Skills must be treated with the same identity discipline.
+
+Mental model:
+
+`canonical_key -> reviewed alias set -> observed ESO numeric ids`
+
+not:
+
+`numeric id -> guessed canonical identity`
+
+If a new implementation starts by asking "which single numeric ID is this skill/effect?", stop and re-anchor it on the canonical lower-snake-case identity first.
+
 ## Ability scaling
 Keep these scaling rules distinct:
 - explicit Health scaling
