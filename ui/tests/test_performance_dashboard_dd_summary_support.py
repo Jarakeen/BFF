@@ -52,6 +52,7 @@ def test_final_dd_card_visibility_hides_support_cards_and_keeps_dot_card() -> No
         buff_card=_VisibleCard(),
         debuff_card=_VisibleCard(),
         raid_debuff_card=_VisibleCard(),
+        support_effects_card=_VisibleCard(),
         dot_card=_VisibleCard(),
     )
 
@@ -60,6 +61,7 @@ def test_final_dd_card_visibility_hides_support_cards_and_keeps_dot_card() -> No
     assert dashboard.buff_card.visible is False
     assert dashboard.debuff_card.visible is False
     assert dashboard.raid_debuff_card.visible is False
+    assert dashboard.support_effects_card.visible is False
     assert dashboard.dot_card.visible is True
 
     _enforce_dd_card_visibility(dashboard, False)
@@ -67,6 +69,7 @@ def test_final_dd_card_visibility_hides_support_cards_and_keeps_dot_card() -> No
     assert dashboard.buff_card.visible is True
     assert dashboard.debuff_card.visible is True
     assert dashboard.raid_debuff_card.visible is True
+    assert dashboard.support_effects_card.visible is True
     assert dashboard.dot_card.visible is False
 
 
@@ -164,4 +167,5 @@ def test_dd_stack_wires_weave_activity_context_and_summary_from_existing_startup
     assert "not graded against build-specific targets" in summary
     assert "not graded dead time" in summary
     assert "Raid activity provides context but does not prove why a gap occurred" in summary
+    assert '"support_effects_card"' in summary
     assert "_enforce_dd_card_visibility(self, is_dd)" in summary
