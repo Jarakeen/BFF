@@ -11,6 +11,7 @@ from services.collection_catalog_descriptors import COLLECTION_SERVICE_DESCRIPTO
 from services.encounter_catalog_descriptors import ENCOUNTER_SERVICE_DESCRIPTORS
 from services.infrastructure_catalog_descriptors import INFRASTRUCTURE_SERVICE_DESCRIPTORS
 from services.reference_catalog_descriptors import REFERENCE_SERVICE_DESCRIPTORS
+from services.scribing_catalog_descriptors import SCRIBING_SERVICE_DESCRIPTORS
 from services.service_catalog import EvidenceClass, ServiceBehavior, ServiceDescriptor
 
 
@@ -59,6 +60,7 @@ FOUNDATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
     *COLLECTION_SERVICE_DESCRIPTORS,
     *INFRASTRUCTURE_SERVICE_DESCRIPTORS,
     *ENCOUNTER_SERVICE_DESCRIPTORS,
+    *SCRIBING_SERVICE_DESCRIPTORS,
 )
 
 
