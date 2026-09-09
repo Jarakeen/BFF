@@ -179,8 +179,10 @@ def install() -> None:
     PerformanceDashboardService.build_snapshot = _build_snapshot_with_dd_analysis
     _INSTALLED = True
 
-    # Keep DD diagnostics layered in one startup hook. The DoT layer wraps this
-    # crit-aware snapshot and likewise never writes to the local ESO database.
+    # Keep DD diagnostics layered in one startup hook. These wrap the crit-aware
+    # snapshot in order and never write to the local ESO database.
     from services.performance_dd_dot_support import install as install_dot_support
+    from services.performance_dd_weave_support import install as install_weave_support
 
     install_dot_support()
+    install_weave_support()
