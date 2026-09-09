@@ -512,7 +512,9 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
     ),
 )
 
+from services.comp_maker_catalog_descriptors import COMP_MAKER_SERVICE_DESCRIPTORS
 
+SERVICE_DESCRIPTORS = (*SERVICE_DESCRIPTORS, *COMP_MAKER_SERVICE_DESCRIPTORS)
 SERVICE_CATALOG = ServiceCatalog(SERVICE_DESCRIPTORS)
 
 
