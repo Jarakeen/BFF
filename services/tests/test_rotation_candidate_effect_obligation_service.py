@@ -161,6 +161,89 @@ def test_no_effect_requirements_preserves_existing_base_order() -> None:
     assert [item.rank for item in ranked] == [1, 2]
 
 
+def test_pareto_superior_uptime_beats_better_base_rank_after_both_meet_floor() -> None:
+    service = RotationCandidateEffectObligationService(
+        _FakeBaseRanker((
+            ("base-favorite", RotationCandidateTier.ELIGIBLE),
+            ("uptime-better", RotationCandidateTier.ELIGIBLE),
+        ))
+    )
+
+    ranked = service.rank((
+        RotationEffectObligationCandidate(
+            _input("base-favorite"),
+            (
+                _assessment(uptime=0.92, effect="minor_courage", source="Combat Prayer", bar="front"),
+                _assessment(uptime=0.93, effect="major_resolve", source="Expansive Frost Cloak", bar="back"),
+            ),
+        ),
+        RotationEffectObligationCandidate(
+            _input("uptime-better"),
+            (
+                _assessment(uptime=0.98, effect="minor_courage", source="Combat Prayer", bar="front"),
+                _assessment(uptime=0.97, effect="major_resolve", source="Expansive Frost Cloak", bar="back"),
+            ),
+        ),
+    ))
+
+    assert [item.candidate_id for item in ranked] == ["uptime-better", "base-favorite"]
+    assert all(item.tier is RotationCandidateTier.ELIGIBLE for item in ranked)
+    assert any(
+        "Pareto-dominated by uptime-better" in reason
+        for reason in ranked[1].reasons
+    )
+
+
+def test_incomparable_effect_uptime_tradeoff_preserves_base_order() -> None:
+    service = RotationCandidateEffectObligationService(
+        _FakeBaseRanker((
+            ("courage-heavy", RotationCandidateTier.ELIGIBLE),
+            ("resolve-heavy", RotationCandidateTier.ELIGIBLE),
+        ))
+    )
+
+    ranked = service.rank((
+        RotationEffectObligationCandidate(
+            _input("courage-heavy"),
+            (
+                _assessment(uptime=0.99, effect="minor_courage", source="Combat Prayer", bar="front"),
+                _assessment(uptime=0.92, effect="major_resolve", source="Expansive Frost Cloak", bar="back"),
+            ),
+        ),
+        RotationEffectObligationCandidate(
+            _input("resolve-heavy"),
+            (
+                _assessment(uptime=0.94, effect="minor_courage", source="Combat Prayer", bar="front"),
+                _assessment(uptime=0.99, effect="major_resolve", source="Expansive Frost Cloak", bar="back"),
+            ),
+        ),
+    ))
+
+    assert [item.candidate_id for item in ranked] == ["courage-heavy", "resolve-heavy"]
+    assert not any("Pareto-dominated" in reason for item in ranked for reason in item.reasons)
+
+
+def test_effect_uptime_candidates_require_same_explicit_requirement_set() -> None:
+    service = RotationCandidateEffectObligationService(
+        _FakeBaseRanker((
+            ("one", RotationCandidateTier.ELIGIBLE),
+            ("two", RotationCandidateTier.ELIGIBLE),
+        ))
+    )
+
+    with pytest.raises(ValueError, match="same explicit requirement set"):
+        service.rank((
+            RotationEffectObligationCandidate(
+                _input("one"),
+                (_assessment(uptime=0.95, effect="minor_courage", source="Combat Prayer", bar="front"),),
+            ),
+            RotationEffectObligationCandidate(
+                _input("two"),
+                (_assessment(uptime=0.95, effect="major_resolve", source="Expansive Frost Cloak", bar="back"),),
+            ),
+        ))
+
+
 def test_duplicate_candidate_ids_fail_closed() -> None:
     service = RotationCandidateEffectObligationService(
         _FakeBaseRanker((("same", RotationCandidateTier.ELIGIBLE),))
