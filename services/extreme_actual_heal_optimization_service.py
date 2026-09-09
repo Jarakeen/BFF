@@ -327,6 +327,16 @@ class ExtremeActualHealOptimizationService:
                         active_bar=active_bar,
                     )
                 )
+            candidates.extend(
+                self._additional_candidates(
+                    current,
+                    progression=progression,
+                    character_id=character_id,
+                    baseline_build_id=candidate_build_id,
+                    entity_id=normalized_entity,
+                    active_bar=active_bar,
+                )
+            )
 
             for candidate in candidates:
                 event, candidate_unresolved = self._evaluate_cached(
@@ -383,6 +393,26 @@ class ExtremeActualHealOptimizationService:
             search_scope=self.SEARCH_SCOPE,
             omitted_scope=self.OMITTED_SCOPE,
         )
+
+    def _additional_candidates(
+        self,
+        baseline_build: PlayerBuild,
+        *,
+        progression: CharacterProgression,
+        character_id: str,
+        baseline_build_id: str,
+        entity_id: str,
+        active_bar: str,
+    ) -> tuple[BuildCandidate, ...]:
+        _ = (
+            baseline_build,
+            progression,
+            character_id,
+            baseline_build_id,
+            entity_id,
+            active_bar,
+        )
+        return ()
 
     @staticmethod
     def _evaluation_key(

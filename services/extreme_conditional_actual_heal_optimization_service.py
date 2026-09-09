@@ -11,6 +11,9 @@ from services.extreme_actual_heal_optimization_service import (
     ExtremeActualHealOptimizationResult,
     ExtremeActualHealOptimizationService,
 )
+from services.extreme_actual_heal_potion_candidate_service import (
+    ExtremeActualHealPotionCandidateService,
+)
 from services.extreme_arcanist_cascading_fortune_healing_service import (
     ExtremeArcanistCascadingFortuneHealingService,
 )
@@ -94,6 +97,7 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         active_buffs: tuple[str, ...] = (),
         potion_elapsed_seconds: float | None = None,
         potion_use_resolver: PotionUseEventResolver | None = None,
+        potion_candidates: ExtremeActualHealPotionCandidateService | None = None,
         restoration_heavy_state: ExtremeRestorationHeavyCombatStateService | None = None,
         templar_sacred_ground_state: ExtremeTemplarSacredGroundCombatStateService | None = None,
         templar_restoring_light_healing: ExtremeTemplarRestoringLightHealingService | None = None,
@@ -135,6 +139,7 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
                 raise ValueError("potion_elapsed_seconds cannot be negative")
             self.potion_elapsed_seconds = potion_elapsed
         self.potion_use_resolver = potion_use_resolver
+        self.potion_candidates = potion_candidates
         self.restoration_heavy_state = restoration_heavy_state
         self.templar_sacred_ground_state = templar_sacred_ground_state
         self.templar_restoring_light_healing = templar_restoring_light_healing
@@ -197,6 +202,29 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         return replace(
             result,
             search_scope=(*scenarios, *result.search_scope),
+        )
+
+    def _additional_candidates(
+        self,
+        baseline_build: PlayerBuild,
+        *,
+        progression: CharacterProgression,
+        character_id: str,
+        baseline_build_id: str,
+        entity_id: str,
+        active_bar: str,
+    ):
+        _ = progression, entity_id, active_bar
+        if self.potion_elapsed_seconds is None:
+            return ()
+        service = self.potion_candidates
+        if service is None:
+            service = ExtremeActualHealPotionCandidateService()
+            self.potion_candidates = service
+        return service.build_candidates(
+            baseline_build,
+            character_id=character_id,
+            baseline_build_id=baseline_build_id,
         )
 
     def _restoration_combat_state(

@@ -108,6 +108,28 @@ class _PotionUseResolver:
             ),
         )
 
+
+class _PotionCandidates:
+    def __init__(self):
+        self.calls = []
+
+    def build_candidates(self, baseline_build, *, character_id, baseline_build_id):
+        self.calls.append((baseline_build.Potion, character_id, baseline_build_id))
+        build = PlayerBuild.from_dict(baseline_build.to_dict())
+        build.Potion = "Increase Spell Power"
+        return (
+            base_module.ExtremeCompleteOptimizationService._direct_candidate(
+                build,
+                character_id=character_id,
+                baseline_build_id=baseline_build_id,
+                token="test-potion-candidate",
+                path="Potion",
+                before=baseline_build.Potion,
+                after="Increase Spell Power",
+                source="test:potion",
+            ),
+        )
+
 def _install_progression_adapter(monkeypatch, *, passive_ranks=None):
     resolution = SimpleNamespace(
         resolved=True,
@@ -367,3 +389,41 @@ def test_conditional_optimizer_rejects_negative_potion_elapsed_time():
             optimizer=_Optimizer(),
             healing_events=_ConditionalHealingEvents(),
         )
+
+
+def test_conditional_optimizer_discovers_potion_candidates_only_for_explicit_window():
+    candidates = _PotionCandidates()
+    active = ExtremeConditionalActualHealOptimizationService(
+        target_health_fraction=0.29,
+        potion_elapsed_seconds=0.0,
+        potion_candidates=candidates,
+        optimizer=_Optimizer(),
+        healing_events=_ConditionalHealingEvents(),
+    )
+    proposed = active._additional_candidates(
+        PlayerBuild(BuildName="Candidate Discovery", Potion="Restore Magicka"),
+        progression=CharacterProgression(passive_ranks={"Medicinal Use": 3}),
+        character_id="char-1",
+        baseline_build_id="build-1",
+        entity_id="blessing_of_protection",
+        active_bar="front",
+    )
+
+    assert len(proposed) == 1
+    assert proposed[0].candidate_build.Potion == "Increase Spell Power"
+    assert candidates.calls
+
+    inactive = ExtremeConditionalActualHealOptimizationService(
+        target_health_fraction=0.29,
+        potion_candidates=candidates,
+        optimizer=_Optimizer(),
+        healing_events=_ConditionalHealingEvents(),
+    )
+    assert inactive._additional_candidates(
+        PlayerBuild(BuildName="No Window", Potion="Restore Magicka"),
+        progression=CharacterProgression(passive_ranks={"Medicinal Use": 3}),
+        character_id="char-1",
+        baseline_build_id="build-1",
+        entity_id="blessing_of_protection",
+        active_bar="front",
+    ) == ()

@@ -536,3 +536,14 @@ A saved potion selection proves that the build has access to that consumable. It
 **Layman’s version:** equipping a spell-power potion does not mean Major Sorcery is permanently switched on. Extreme MOST Actual Heal now requires an explicit potion-use window and checks whether the buff is still alive at that exact timestamp.
 
 **For BFF:** potion-derived named buffs now enter the same canonical `CombatState` path as other proven transient buffs, and missing Medicinal Use progression remains an explicit blocker rather than an invented rank.
+
+
+---
+
+## 2026-09-09 — Extreme may discover potion families only inside an explicit potion-use scenario
+
+The Extreme MOST Actual Heal search may compare canonical potion families when, and only when, the caller has explicitly requested a potion-use snapshot. Candidate generation proves potion-family availability; the existing potion event/cadence layer still proves whether each named buff is actually active at the requested elapsed time.
+
+**Layman’s version:** the optimizer is allowed to shop the potion shelf, but only after the scenario says a potion was actually used. It still cannot treat a selected bottle as a permanent character stat.
+
+**For BFF:** standing heal optimization remains unchanged. Conditional potion-window optimization can now discover a stronger legal potion source instead of requiring the caller to preselect the winning potion.
