@@ -111,7 +111,7 @@ class RotationSupportCadenceCandidateService:
             )
             materialized.append(
                 RotationSupportCadencePlanCandidate(
-                    candidate_id=self._candidate_id(cadence),
+                    candidate_id=self._candidate_id(cadence, source_action.bar),
                     effect_key=cadence_result.effect_key,
                     source_skill_id=cadence_result.source_skill_id,
                     cadence=cadence,
@@ -167,12 +167,15 @@ class RotationSupportCadenceCandidateService:
         return next(iter(matches.values()))
 
     @staticmethod
-    def _candidate_id(cadence: RotationSupportRefreshCadenceCandidate) -> str:
+    def _candidate_id(
+        cadence: RotationSupportRefreshCadenceCandidate, source_bar: str | None,
+    ) -> str:
         return ":".join(
             (
                 cadence.effect_key,
                 cadence.source_skill_id,
                 cadence.candidate_key,
+                source_bar or "unspecified",
             )
         )
 

@@ -127,4 +127,4 @@ def test_second_cadence_candidate_preserves_first_accepted_local_schedule() -> N
     # The second candidate remains a one-change neighborhood member. It does not
     # reconstruct Effect A from its canonical 10-second duration or combine cadence
     # families as a Cartesian product.
-    assert b_candidate.candidate_id == "effect_b:effect_b:test"
+    assert b_candidate.candidate_id == "effect_b:effect_b:test:front"

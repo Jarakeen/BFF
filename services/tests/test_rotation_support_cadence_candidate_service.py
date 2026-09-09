@@ -128,8 +128,8 @@ def test_materializes_each_cadence_as_a_complete_refined_plan() -> None:
     )
 
     assert [candidate.candidate_id for candidate in candidates] == [
-        "minor_berserk:combat_prayer:full_coverage",
-        "minor_berserk:combat_prayer:target_floor",
+        "minor_berserk:combat_prayer:full_coverage:front",
+        "minor_berserk:combat_prayer:target_floor:front",
     ]
     assert len(refiner.calls) == 2
     assert all(call.plan is seed for call in refiner.calls)
@@ -217,3 +217,89 @@ def test_unresolved_or_empty_cadence_result_creates_no_plan_candidates() -> None
 
     assert service.materialize(seed_plan=_seed_plan(), cadence_result=result) == ()
     assert refiner.calls == []
+
+
+def test_two_bar_healer_cadence_neighborhood_has_distinct_complete_plans():
+    """Both legal bar alternatives survive materialization without ID collisions.
+
+    Durations here are explicit fixture evidence, not current ESO tooltip claims.
+    The real local scheduler keeps unrelated heals and the other bar's casts.
+    """
+    from minmax.rotation_recast import RotationRecastAnalysis, RotationRecastRule
+    from services.rotation_duration_analysis_service import RotationDurationProjection
+    from services.rotation_local_cadence_duration_refinement_service import (
+        RotationLocalCadenceDurationRefinementService,
+    )
+    from services.rotation_support_cadence_neighborhood_service import (
+        RotationSupportCadenceNeighborhoodObligation,
+        RotationSupportCadenceNeighborhoodService,
+    )
+
+    class DurationAnalysis:
+        def analyze(self, plan):
+            return RotationDurationProjection(
+                analysis=RotationRecastAnalysis(windows=(), summaries=()),
+                rules=(
+                    RotationRecastRule("Combat Prayer", 10.0, bar="front"),
+                    RotationRecastRule("Combat Prayer", 10.0, bar="back"),
+                    RotationRecastRule("Energy Orb", 10.0, bar="back"),
+                    RotationRecastRule("Illustrious Healing", 10.0, bar="front"),
+                ),
+                unresolved=(),
+            )
+
+    actions = []
+    for start in (0.0, 10.0, 20.0):
+        actions.extend((
+            RotationAction(start, 0, RotationActionKind.SKILL, "Combat Prayer", "front"),
+            RotationAction(start + 1, 0, RotationActionKind.SKILL, "Illustrious Healing", "front"),
+            RotationAction(start + 2, 0, RotationActionKind.BAR_SWAP, bar="back"),
+            RotationAction(start + 3, 0, RotationActionKind.SKILL, "Combat Prayer", "back"),
+            RotationAction(start + 4, 0, RotationActionKind.SKILL, "Energy Orb", "back"),
+            RotationAction(start + 5, 0, RotationActionKind.LIGHT_ATTACK, bar="back"),
+            RotationAction(start + 6, 0, RotationActionKind.BAR_SWAP, bar="front"),
+        ))
+    seed = RotationPlan("Healer", "Two restoration bars", 30.0, tuple(actions))
+    materializer = RotationSupportCadenceCandidateService(
+        RotationLocalCadenceDurationRefinementService(duration_analysis=DurationAnalysis())
+    )
+    neighborhood = RotationSupportCadenceNeighborhoodService(materializer)
+    obligations = tuple(
+        RotationSupportCadenceNeighborhoodObligation(
+            _result(_cadence("target_floor", 20.0)), source_bar=bar,
+        )
+        for bar in ("front", "back")
+    )
+    result = neighborhood.generate(seed_plan=seed, obligations=obligations)
+    again = neighborhood.generate(seed_plan=seed, obligations=obligations)
+
+    assert len(result.candidates) == 2
+    assert [c.candidate_id for c in result.candidates] == [
+        "minor_berserk:combat_prayer:target_floor:front",
+        "minor_berserk:combat_prayer:target_floor:back",
+    ]
+    assert [c.plan for c in again.candidates] == [c.plan for c in result.candidates]
+    for candidate in result.candidates:
+        changed_bar = candidate.refresh_policy.bar
+        other_bar = "back" if changed_bar == "front" else "front"
+        preserved = lambda action: (
+            action.name in {"Energy Orb", "Illustrious Healing"}
+            or (action.name == "Combat Prayer" and action.bar == other_bar)
+            or action.kind in {RotationActionKind.BAR_SWAP, RotationActionKind.LIGHT_ATTACK}
+        )
+        assert tuple(filter(preserved, candidate.plan.actions)) == tuple(filter(preserved, seed.actions))
+        times = [a.time_seconds for a in candidate.plan.actions
+                 if a.name == "Combat Prayer" and a.bar == changed_bar]
+        assert times == ([0.0, 20.0] if changed_bar == "front" else [3.0, 23.0])
+        assert candidate.plan.character_name == seed.character_name
+        assert candidate.plan.build_name == seed.build_name
+        assert candidate.plan.duration_seconds == seed.duration_seconds
+    assert seed.actions == tuple(actions)
+
+
+def test_implicit_and_explicit_source_bar_have_same_candidate_identity():
+    service = RotationSupportCadenceCandidateService(_RecordingRefiner())
+    kwargs = dict(seed_plan=_seed_plan(), cadence_result=_result(_cadence("full_coverage", 10.0)))
+    implicit = service.materialize(**kwargs)[0]
+    explicit = service.materialize(**kwargs, source_bar=" FRONT ")[0]
+    assert implicit.candidate_id == explicit.candidate_id
