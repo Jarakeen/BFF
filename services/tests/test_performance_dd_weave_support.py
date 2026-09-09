@@ -37,6 +37,7 @@ def test_weave_pairing_counts_nearest_preceding_light_attacks() -> None:
     assert result.UnpairedSkillCasts == 1
     assert result.PairingPercent == 66.7
     assert result.MedianPairDelayMs == 150.0
+    assert result.EligibleSkillTimestampsMs == (1120.0, 2180.0, 3200.0)
 
 
 def test_weave_pairing_does_not_reuse_one_light_attack_for_two_skills() -> None:
@@ -76,6 +77,7 @@ def test_weave_pairing_ignores_utility_heavy_attack_and_synergy_casts() -> None:
     assert result.SkillCasts == 1
     assert result.PairedSkillCasts == 1
     assert result.PairingPercent == 100.0
+    assert result.EligibleSkillTimestampsMs == (1100.0,)
 
 
 def test_weave_pairing_respects_pair_window_and_dedupes_cast_track_id() -> None:
@@ -93,6 +95,7 @@ def test_weave_pairing_respects_pair_window_and_dedupes_cast_track_id() -> None:
     assert result.PairedSkillCasts == 0
     assert result.PairingPercent == 0.0
     assert result.MedianPairDelayMs is None
+    assert result.EligibleSkillTimestampsMs == (2401.0,)
 
 
 def test_decode_cast_event_data_accepts_json_scalar_shape() -> None:
