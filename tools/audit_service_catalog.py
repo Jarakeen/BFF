@@ -20,6 +20,12 @@ from services.service_catalog import (
     ServiceLifecycle,
 )
 
+_NON_SERVICE_MODULES = frozenset(
+    {
+        "services.service_catalog",
+    }
+)
+
 
 @dataclass(frozen=True)
 class CatalogFinding:
@@ -59,7 +65,10 @@ def _service_modules(root: Path) -> tuple[str, ...]:
             continue
         if path.name.endswith(("_model.py", "_models.py", "_types.py", "_protocol.py")):
             continue
-        modules.append(f"services.{path.stem}")
+        module = f"services.{path.stem}"
+        if module in _NON_SERVICE_MODULES:
+            continue
+        modules.append(module)
     return tuple(sorted(modules))
 
 

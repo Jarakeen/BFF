@@ -114,6 +114,22 @@ def test_audit_reports_unregistered_service_module_as_warning(tmp_path: Path) ->
     )
 
 
+def test_audit_ignores_catalog_infrastructure_module(tmp_path: Path) -> None:
+    _write_module(
+        tmp_path,
+        "services.service_catalog",
+        "class ServiceCatalog: pass\n",
+    )
+
+    result = audit_service_catalog(root=tmp_path, descriptors=())
+
+    assert not any(
+        row.code == "unregistered-service-module"
+        and row.message == "services/service_catalog.py"
+        for row in result.warnings
+    )
+
+
 def test_audit_reports_deprecated_service_without_successor(tmp_path: Path) -> None:
     _write_module(tmp_path, "services.old_service")
     descriptors = (

@@ -7,6 +7,7 @@ from services.service_catalog import (
     EvidenceClass,
     SERVICE_CATALOG,
     ServiceAuthority,
+    ServiceBehavior,
     ServiceCatalog,
     ServiceCatalogAmbiguityError,
     ServiceDescriptor,
@@ -103,3 +104,48 @@ def test_dependencies_are_descriptor_relationships_not_runtime_resolution() -> N
         "team.prescription.optimizer",
         "team.prescription.candidate_source",
     }
+
+
+def test_logs_and_calibration_services_preserve_evidence_boundaries() -> None:
+    composition = SERVICE_CATALOG.get("logs.esologs.composition_evidence")
+    discovery = SERVICE_CATALOG.get("logs.esologs.healer_sqlite_discovery")
+    aliases = SERVICE_CATALOG.get("logs.esologs.canonical_skill_alias")
+    btv = SERVICE_CATALOG.get("calibration.btv.benchmark_evidence")
+    dashboard = SERVICE_CATALOG.get("performance.dashboard")
+
+    assert composition is not None
+    assert discovery is not None
+    assert aliases is not None
+    assert btv is not None
+    assert dashboard is not None
+
+    assert composition.evidence_class is EvidenceClass.OBSERVATIONAL
+    assert discovery.evidence_class is EvidenceClass.OBSERVATIONAL
+    assert aliases.evidence_class is EvidenceClass.MIXED
+    assert btv.evidence_class is EvidenceClass.CALIBRATION
+    assert btv.behavior is ServiceBehavior.CALIBRATED
+    assert dashboard.evidence_class is EvidenceClass.OBSERVATIONAL
+    assert "numeric ESO ability IDs are aliases only" in aliases.notes
+
+
+def test_team_provider_decision_spine_is_discoverable() -> None:
+    decision = canonical_service_for("team_provider_workload_decision")
+
+    assert decision is not None
+    assert decision.service_id == "team.provider.workload_decision"
+    assert {row.service_id for row in SERVICE_CATALOG.dependencies_of(decision.service_id)} == {
+        "team.provider.workload_candidate",
+        "team.provider.workload_frontier",
+    }
+    assert capability_status("team_provider_recipient_coverage") is CapabilityStatus.IMPLEMENTED
+    assert capability_status("team_provider_temporal_coverage") is CapabilityStatus.IMPLEMENTED
+
+
+def test_performance_snapshot_is_ui_safe_observational_capability() -> None:
+    dashboard = canonical_service_for("performance_dashboard_snapshot")
+
+    assert dashboard is not None
+    assert dashboard.ui_safe is True
+    assert dashboard.encounter_aware is True
+    assert dashboard.evidence_class is EvidenceClass.OBSERVATIONAL
+    assert set(dashboard.roles) == {"Tank", "Healer", "DPS"}
