@@ -6,6 +6,9 @@ from services.performance_raid_review_coordinator_service import (
 from services.performance_raid_review_event_enrichment_service import (
     RaidReviewEventEnrichment,
 )
+from services.performance_raid_review_mechanic_window_service import (
+    RaidReviewEncounterWindow,
+)
 from services.performance_raid_review_observation_service import RaidReviewSource
 
 
@@ -23,6 +26,12 @@ class _Client:
                 "kill": False,
                 "startTime": 12000.0,
                 "endTime": 22000.0,
+            },
+            ("A", 3): {
+                "name": "Lokkestiiz",
+                "kill": False,
+                "startTime": 23000.0,
+                "endTime": 33000.0,
             },
         }
 
@@ -84,6 +93,39 @@ def test_coordinator_collects_enriched_observations_then_analyzes() -> None:
     assert result.unresolved == ()
     assert [row.death_count for row in result.collection.observations] == [0, 1]
     assert provider.calls == [("A", 1, 7), ("A", 2, 7)]
+
+
+def test_coordinator_merges_explicit_reviewed_mechanic_window_findings() -> None:
+    performance = _PerformanceService()
+    service = PerformanceRaidReviewCoordinatorService(
+        performance,
+        event_provider=_EventProvider(),
+    )
+
+    result = service.review(
+        [
+            RaidReviewSource("A", 2, 7, "DD One", "DPS", member_key="dd-one"),
+            RaidReviewSource("A", 3, 7, "DD One", "DPS", member_key="dd-one"),
+        ],
+        encounter_name="Lokkestiiz",
+        mechanic_windows=[
+            RaidReviewEncounterWindow(
+                "A", 2, "first_landing_recovery", "First Landing Recovery", 8.0, 9.0,
+                evidence_source="reviewed runtime evidence",
+            ),
+            RaidReviewEncounterWindow(
+                "A", 3, "first_landing_recovery", "First Landing Recovery", 8.0, 9.0,
+                evidence_source="reviewed runtime evidence",
+            ),
+        ],
+    )
+
+    finding = next(
+        item for item in result.report.findings
+        if item.scope == "raid" and item.category == "mechanic_window"
+    )
+    assert finding.title == "First deaths repeatedly land in First Landing Recovery"
+    assert "2/2 measured wipe pulls" in finding.evidence
 
 
 def test_coordinator_preserves_collection_unresolved_messages() -> None:
