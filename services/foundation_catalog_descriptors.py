@@ -7,6 +7,7 @@ multiple BFF workstreams; runtime code continues to use typed imports and explic
 wiring rather than resolving services dynamically from catalog strings.
 """
 
+from services.broadcast_catalog_descriptors import BROADCAST_SERVICE_DESCRIPTORS
 from services.collection_catalog_descriptors import COLLECTION_SERVICE_DESCRIPTORS
 from services.encounter_catalog_descriptors import ENCOUNTER_SERVICE_DESCRIPTORS
 from services.infrastructure_catalog_descriptors import INFRASTRUCTURE_SERVICE_DESCRIPTORS
@@ -61,6 +62,7 @@ FOUNDATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
     *INFRASTRUCTURE_SERVICE_DESCRIPTORS,
     *ENCOUNTER_SERVICE_DESCRIPTORS,
     *SCRIBING_SERVICE_DESCRIPTORS,
+    *BROADCAST_SERVICE_DESCRIPTORS,
 )
 
 
