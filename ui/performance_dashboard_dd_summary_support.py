@@ -22,6 +22,25 @@ _ORIGINAL_BUILD_UI = None
 _ORIGINAL_SHOW_SNAPSHOT = None
 
 
+def _enforce_dd_card_visibility(self, is_dd: bool) -> None:
+    """Apply the final role-specific card state after every wrapped presenter.
+
+    The base dashboard owns three support cards that are useful for healer/tank
+    review but were still visible on live DPS tabs. DD presentation has several
+    additive wrappers, so this final wrapper is the authoritative last word on
+    card visibility rather than trusting an earlier layer to remain untouched.
+    """
+
+    for name in ("buff_card", "debuff_card", "raid_debuff_card"):
+        card = getattr(self, name, None)
+        if card is not None:
+            card.setVisible(not is_dd)
+
+    dot_card = getattr(self, "dot_card", None)
+    if dot_card is not None:
+        dot_card.setVisible(is_dd)
+
+
 def _dd_readout_lines(snapshot) -> list[str]:
     """Return concise, non-judgmental DD observations for one snapshot."""
 
@@ -157,7 +176,8 @@ def _show_snapshot_with_dd_summary(self, snapshot):
     assert _ORIGINAL_SHOW_SNAPSHOT is not None
     _ORIGINAL_SHOW_SNAPSHOT(self, snapshot)
 
-    is_dd = str(getattr(snapshot, "Role", "")).casefold() == "dps"
+    is_dd = str(getattr(snapshot, "Role", "")).strip().casefold() == "dps"
+    _enforce_dd_card_visibility(self, is_dd)
     self.dd_readout_card.setVisible(is_dd)
     if not is_dd:
         return
