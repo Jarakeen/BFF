@@ -7,6 +7,7 @@ Comp Maker / Roster workflow persistence, adoption, migration repair, and audit.
 They do not replace typed imports or explicit runtime wiring.
 """
 
+from services.build_catalog_descriptors import BUILD_SERVICE_DESCRIPTORS
 from services.service_catalog import EvidenceClass, ServiceBehavior, ServiceDescriptor
 
 
@@ -79,6 +80,7 @@ TEAM_WORKFLOW_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.NONE,
         notes="Read-only integrity audit. Recruit/open chairs and unresolved encounter-facing details are boundaries, not failures; encounter compliance and raid outcome remain later-phase responsibilities.",
     ),
+    *BUILD_SERVICE_DESCRIPTORS,
 )
 
 
