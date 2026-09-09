@@ -30,6 +30,9 @@ from ui.rotation_support_cadence_progression_render_support import (
     RotationSupportCadenceProgressionRenderEvidence,
     RotationSupportCadenceProgressionRenderSupport,
 )
+from ui.rotation_support_cadence_runtime_support import (
+    build_rotation_support_cadence_progression_runner,
+)
 
 
 class _CadenceRunner(Protocol):
@@ -86,7 +89,7 @@ class RotationCanonicalCadenceOrchestrationSupport:
     ) -> None:
         self.canonical_candidates = canonical_candidates or RotationDashboardCanonicalCandidateSupport()
         self.canonical_render = canonical_render or RotationCanonicalCandidateRenderSupport()
-        self.cadence_runner = cadence_runner
+        self.cadence_runner = cadence_runner or build_rotation_support_cadence_progression_runner()
         self.cadence_render = cadence_render or RotationSupportCadenceProgressionRenderSupport()
 
     def run(
@@ -129,11 +132,6 @@ class RotationCanonicalCadenceOrchestrationSupport:
             return RotationCanonicalCadenceOrchestrationResult(
                 canonical_result=canonical_result,
                 canonical_evidence=canonical_evidence,
-            )
-
-        if self.cadence_runner is None:
-            raise ValueError(
-                "cadence obligations were supplied but no cadence progression runner is configured"
             )
 
         cadence_run = self.cadence_runner.run(
