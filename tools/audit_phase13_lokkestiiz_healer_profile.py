@@ -11,14 +11,18 @@ if str(ROOT) not in sys.path:
 
 from engine.config import get_data_dir
 from services.build_service import BuildService
-from services.rotation_lokkestiiz_healer_execution_profile import (
-    build_magrat_df_healer_lokkestiiz_profile,
+from services.rotation_lokkestiiz_healer_scenario import (
+    build_magrat_df_healer_lokkestiiz_scenario,
 )
 
 
 def _semantic_id(value: object) -> str:
     text = str(value or "").strip().casefold().replace("'", "")
     return re.sub(r"[^a-z0-9]+", "_", text).strip("_")
+
+
+def _display_name(semantic_id: str) -> str:
+    return " ".join(part.capitalize() for part in semantic_id.split("_") if part)
 
 
 def _character_name(build) -> str:
@@ -69,15 +73,57 @@ def _slotted_skill_map(build) -> dict[str, tuple[str, int, str]]:
     return result
 
 
+def _apply_boss_replacements(
+    slotted: dict[str, tuple[str, int, str]],
+    replacements,
+) -> tuple[dict[str, tuple[str, int, str]], tuple[str, ...]]:
+    effective = dict(slotted)
+    notes: list[str] = []
+    for replacement in replacements:
+        outgoing = effective.get(replacement.outgoing_semantic_id)
+        if outgoing is None:
+            raise ValueError(
+                "boss loadout replacement source is not slotted: "
+                f"{replacement.outgoing_semantic_id}"
+            )
+        bar, slot, _display = outgoing
+        if bar != replacement.bar:
+            raise ValueError(
+                "boss loadout replacement source is on the wrong bar: "
+                f"{replacement.outgoing_semantic_id} expected {replacement.bar}, got {bar}"
+            )
+        if replacement.incoming_semantic_id in effective:
+            raise ValueError(
+                "boss loadout replacement target is already slotted: "
+                f"{replacement.incoming_semantic_id}"
+            )
+        del effective[replacement.outgoing_semantic_id]
+        effective[replacement.incoming_semantic_id] = (
+            bar,
+            slot,
+            _display_name(replacement.incoming_semantic_id),
+        )
+        notes.append(
+            f"{bar} slot {slot}: {replacement.outgoing_semantic_id} -> "
+            f"{replacement.incoming_semantic_id}"
+        )
+    return effective, tuple(notes)
+
+
 def audit(*, builds_path: Path) -> tuple[str, ...]:
-    profile = build_magrat_df_healer_lokkestiiz_profile()
+    scenario = build_magrat_df_healer_lokkestiiz_scenario()
+    profile = scenario.execution
     roster = BuildService(builds_path).load()
     build = _find_build(
         roster,
         character_name=profile.character_name,
         build_name=profile.build_name,
     )
-    slotted = _slotted_skill_map(build)
+    base_slotted = _slotted_skill_map(build)
+    slotted, replacement_notes = _apply_boss_replacements(
+        base_slotted,
+        scenario.skill_replacements,
+    )
 
     lines: list[str] = []
     lines.append("PHASE 13 LOKKESTIIZ HEALER EXECUTION AUDIT")
@@ -88,6 +134,8 @@ def audit(*, builds_path: Path) -> tuple[str, ...]:
         "CANONICAL_FLIGHT_TRIGGERS: "
         + ", ".join(f"{value}%" for value in profile.canonical_flight_health_thresholds)
     )
+    for note in replacement_notes:
+        lines.append(f"BOSS LOADOUT SWAP: {note}")
 
     missing: list[str] = []
     for semantic_id in profile.required_skill_ids:
