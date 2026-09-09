@@ -39,6 +39,8 @@ def _page():
         "support_effects_card",
         "graph_effect_card",
         "_performance_tracking_card",
+        "_performance_effect_timeline_label",
+        "effect_timeline_widget",
         "kpi_card",
         "dot_card",
         "dd_readout_card",
@@ -65,6 +67,8 @@ def test_dps_surface_hides_healer_support_and_shows_dd_diagnostics() -> None:
     assert page.support_effects_card.visible is False
     assert page.graph_effect_card.visible is False
     assert page._performance_tracking_card.visible is False
+    assert page._performance_effect_timeline_label.visible is False
+    assert page.effect_timeline_widget.visible is False
     assert page.buff_card.visible is False
     assert page.debuff_card.visible is False
     assert page.raid_debuff_card.visible is False
@@ -91,6 +95,8 @@ def test_healer_surface_restores_support_and_hides_dd_diagnostics() -> None:
     assert page.support_effects_card.visible is True
     assert page.graph_effect_card.visible is True
     assert page._performance_tracking_card.visible is True
+    assert page._performance_effect_timeline_label.visible is True
+    assert page.effect_timeline_widget.visible is True
 
     assert page.healer_readout_card.visible is True
     assert page.hot_card.visible is True
@@ -111,6 +117,8 @@ def test_tank_surface_retains_support_controls() -> None:
     assert page.support_effects_card.visible is True
     assert page.graph_effect_card.visible is True
     assert page._performance_tracking_card.visible is True
+    assert page._performance_effect_timeline_label.visible is True
+    assert page.effect_timeline_widget.visible is True
 
     assert page.healer_readout_card.visible is False
     assert page.hot_card.visible is False
@@ -127,6 +135,8 @@ def test_fresh_dps_member_hides_support_controls_without_showing_blank_results()
     assert page.support_effects_card.visible is False
     assert page.graph_effect_card.visible is False
     assert page._performance_tracking_card.visible is False
+    assert page._performance_effect_timeline_label.visible is False
+    assert page.effect_timeline_widget.visible is False
     assert page.buff_card.visible is False
     assert page.debuff_card.visible is False
     assert page.raid_debuff_card.visible is False
@@ -153,6 +163,8 @@ def test_role_picker_can_restore_support_surface_before_snapshot() -> None:
     assert page.support_effects_card.visible is True
     assert page.graph_effect_card.visible is True
     assert page._performance_tracking_card.visible is True
+    assert page._performance_effect_timeline_label.visible is True
+    assert page.effect_timeline_widget.visible is True
     assert page.healer_readout_card.visible is False
     assert page.dot_card.visible is False
 
@@ -199,5 +211,7 @@ def test_unknown_role_surface_does_not_fall_back_to_support_mode() -> None:
     assert page.support_effects_card.visible is False
     assert page._performance_tracking_card.visible is False
     assert page.graph_effect_card.visible is False
+    assert page._performance_effect_timeline_label.visible is False
+    assert page.effect_timeline_widget.visible is False
     assert page.healer_readout_card.visible is False
     assert page.dot_card.visible is False

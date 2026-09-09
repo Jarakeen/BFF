@@ -11,6 +11,8 @@ including the Graph Effects group-buff selector. Healer and tank views retain th
 broader support-tracking controls.
 """
 
+from PySide6.QtWidgets import QLabel
+
 from ui.components.foundry_card import FoundryCard
 
 _INSTALLED = False
@@ -51,12 +53,21 @@ def _card_with_title(page, title: str):
     return None
 
 
+def _label_with_text(page, text: str):
+    wanted = str(text or "").strip().casefold()
+    for label in page.findChildren(QLabel):
+        if label.text().strip().casefold() == wanted:
+            return label
+    return None
+
+
 def _capture_polished_role_cards(page) -> None:
-    """Remember polished cards that were not stored as page attributes."""
+    """Remember polished surfaces that were not stored as page attributes."""
 
     page._performance_tracking_card = _card_with_title(
         page, "Track Specific Buffs / Debuffs"
     )
+    page._performance_effect_timeline_label = _label_with_text(page, "Effect timeline")
 
 
 def _set_visible(page, names: tuple[str, ...], visible: bool) -> None:
@@ -81,14 +92,18 @@ def _apply_role_name_surface(page, role: str, *, has_snapshot: bool) -> None:
     is_healer = canonical_role == "Healer"
     is_support = canonical_role in {"Healer", "Tank"}
 
-    # Support tracking controls belong to healer/tank views. A blank or unknown
-    # role remains neutral instead of inheriting a stale support surface.
+    # Support tracking controls belong to healer/tank views. The exact-effect
+    # timeline is embedded inside output_card, so its heading and widget must be
+    # role-gated independently while DPS keeps the output graph itself visible.
+    # A blank or unknown role remains neutral instead of inheriting stale support.
     _set_visible(
         page,
         (
             "support_effects_card",
             "_performance_tracking_card",
             "graph_effect_card",
+            "_performance_effect_timeline_label",
+            "effect_timeline_widget",
         ),
         is_support,
     )
