@@ -18,6 +18,9 @@ from services.team_prescription_catalog_descriptors import (
 from services.team_provider_catalog_descriptors import (
     TEAM_PROVIDER_SERVICE_DESCRIPTORS,
 )
+from services.team_workflow_catalog_descriptors import (
+    TEAM_WORKFLOW_SERVICE_DESCRIPTORS,
+)
 
 
 COMP_MAKER_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
@@ -121,6 +124,7 @@ COMP_MAKER_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
     ),
     *TEAM_PRESCRIPTION_SERVICE_DESCRIPTORS,
     *TEAM_PROVIDER_SERVICE_DESCRIPTORS,
+    *TEAM_WORKFLOW_SERVICE_DESCRIPTORS,
 )
 
 
