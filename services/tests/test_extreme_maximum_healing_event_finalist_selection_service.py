@@ -55,6 +55,25 @@ def _entry(lines, *, value=13997.715, slot=0, name="Summon Twilight Matriarch"):
     )
 
 
+def _blood_magic_entry(lines, *, value=9000.0, trigger="Dark Exchange"):
+    return _Entry(
+        source_kind="blood_magic",
+        source_name=f"Blood Magic via {trigger}",
+        event_value=value,
+        event_kind="normal_noncritical",
+        mechanic_complete=True,
+        unresolved=(),
+        route=_Route(CharacterClass.WARDEN, tuple(lines)),
+        slotted_index=0,
+        trace=ExtremeMaximumHealingEventTrace(
+            recipient_scopes=("self",),
+            recipient_keys=("caster",),
+            event_keys=("blood_magic_costed_dark_magic_trigger",),
+            temporal_scopes=("direct",),
+        ),
+    )
+
+
 def test_tied_matriarch_routes_remain_distinct_stage_two_finalists():
     entries = tuple(
         _entry(("animal_companions", "daedric_summoning", third))
@@ -121,6 +140,44 @@ def test_family_limit_preserves_rank_order_across_distinct_heal_families():
         "Combat Prayer",
     ]
     assert selected.represented_families == 2
+
+
+def test_lower_ranked_distinct_source_kind_is_force_included_for_stage_two():
+    matriarch = _entry(
+        ("animal_companions", "daedric_summoning", "green_balance"),
+        value=14000.0,
+    )
+    twilight = _entry(
+        ("animal_companions", "daedric_summoning", "winters_embrace"),
+        value=13000.0,
+        name="Summon Winged Twilight",
+    )
+    elder = _entry(
+        ("animal_companions", "daedric_summoning", "draconic_power"),
+        value=12000.0,
+        name="Blood of the Elder Dragon",
+    )
+    blood_magic = _blood_magic_entry(
+        ("animal_companions", "dark_magic", "green_balance"),
+        value=8000.0,
+    )
+    result = SimpleNamespace(entries=(matriarch, twilight, elder, blood_magic))
+
+    selected = ExtremeMaximumHealingEventFinalistSelectionService().select(
+        result,
+        max_families=3,
+        routes_per_family=1,
+    )
+
+    assert [entry.source_kind for entry in selected.finalists] == [
+        "ordinary_skill",
+        "ordinary_skill",
+        "ordinary_skill",
+        "blood_magic",
+    ]
+    assert selected.finalists[-1].source_name == "Blood Magic via Dark Exchange"
+    assert selected.represented_families == 4
+    assert selected.max_families == 3
 
 
 def test_unscored_entries_never_enter_stage_two_shortlist():
