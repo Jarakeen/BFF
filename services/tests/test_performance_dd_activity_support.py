@@ -38,9 +38,12 @@ def test_action_gap_analysis_ranks_longest_gaps_but_sums_all_excess() -> None:
         limit=2,
     )
 
+    # Gaps are 3.0s, 4.0s, 3.6s, and 2.6s. With a 2.5s threshold,
+    # excess is 0.5 + 1.5 + 1.1 + 0.1 = 3.2s. The display limit only
+    # truncates the ranked detail rows; aggregate excess still includes all gaps.
     assert result.GapCount == 4
     assert result.LargestGapSeconds == 4.0
-    assert result.ExcessGapSeconds == pytest.approx(3.8)
+    assert result.ExcessGapSeconds == pytest.approx(3.2)
     assert [gap.DurationSeconds for gap in result.Gaps] == [4.0, 3.6]
 
 
