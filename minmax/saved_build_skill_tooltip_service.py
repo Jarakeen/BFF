@@ -38,7 +38,10 @@ class SavedBuildSkillTooltipService:
         self.database_path = Path(database_path)
         self.coefficients = coefficient_repository or SkillCoefficientRepository(database_path)
         self.components = component_repository or SkillComponentRepository(database_path)
-        self.healing_cp = healing_cp_resolver or HealingChampionPointComponentResolver(database_path)
+        self.healing_cp = healing_cp_resolver or HealingChampionPointComponentResolver(
+            database_path,
+            component_repository=self.components,
+        )
         self.calculator = calculator or SkillTooltipCalculator(self.coefficients)
 
     @staticmethod
