@@ -46,6 +46,9 @@ from services.extreme_templar_restoring_light_healing_service import (
 from services.extreme_templar_sacred_ground_combat_state_service import (
     ExtremeTemplarSacredGroundCombatStateService,
 )
+from services.extreme_warden_accelerated_growth_combat_state_service import (
+    ExtremeWardenAcceleratedGrowthCombatStateService,
+)
 
 
 class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizationService):
@@ -90,6 +93,12 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
     canonical ``CombatState``. The +16% therefore remains owned by the named-buff
     Healing Done layer rather than becoming an ad-hoc event multiplier.
 
+    Reviewed Warden ``Accelerated Growth`` may likewise be activated only by an
+    explicit already-active post-trigger window. Its resolver proves Green Balance
+    and passive-rank legality, then contributes Major Mending through canonical
+    ``CombatState``. The triggering Green Balance heal itself is never assumed to
+    benefit from the buff it creates.
+
     Conditional scenario assumptions are added to the returned search scope so a
     standalone optimization result cannot be mistaken for the ordinary standing
     maximum or for a different emergency/combat-state window.
@@ -105,6 +114,7 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         target_health_fraction: float,
         fully_charged_restoration_heavy_attack_completed: bool = False,
         sacred_ground_window_active: bool = False,
+        accelerated_growth_window_active: bool = False,
         healer_has_negative_effect: bool | None = None,
         active_crux: int | None = None,
         active_buffs: tuple[str, ...] = (),
@@ -128,6 +138,7 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         runtime_snapshot_state: ExtremeRuntimeSnapshotCombatStateService | None = None,
         restoration_heavy_state: ExtremeRestorationHeavyCombatStateService | None = None,
         templar_sacred_ground_state: ExtremeTemplarSacredGroundCombatStateService | None = None,
+        warden_accelerated_growth_state: ExtremeWardenAcceleratedGrowthCombatStateService | None = None,
         templar_restoring_light_healing: ExtremeTemplarRestoringLightHealingService | None = None,
         necromancer_living_death_healing: ExtremeNecromancerLivingDeathHealingService | None = None,
         arcanist_curative_runeforms_healing: ExtremeArcanistCurativeRuneformsHealingService | None = None,
@@ -150,6 +161,7 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
             fully_charged_restoration_heavy_attack_completed
         )
         self.sacred_ground_window_active = bool(sacred_ground_window_active)
+        self.accelerated_growth_window_active = bool(accelerated_growth_window_active)
         self.healer_has_negative_effect = healer_has_negative_effect
         self.active_crux = active_crux
         self.active_buffs = tuple(
@@ -235,6 +247,7 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         self.runtime_snapshot_state = runtime_snapshot_state
         self.restoration_heavy_state = restoration_heavy_state
         self.templar_sacred_ground_state = templar_sacred_ground_state
+        self.warden_accelerated_growth_state = warden_accelerated_growth_state
         self.templar_restoring_light_healing = templar_restoring_light_healing
         self.necromancer_living_death_healing = necromancer_living_death_healing
         self.arcanist_curative_runeforms_healing = arcanist_curative_runeforms_healing
@@ -315,6 +328,11 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
             scenarios.append(
                 "explicit Sacred Ground active/grace window; "
                 "Sacred Ground Minor Mending requires canonical legality proof"
+            )
+        if self.accelerated_growth_window_active:
+            scenarios.append(
+                "explicit Accelerated Growth post-trigger window; "
+                "Accelerated Growth Major Mending requires canonical legality proof"
             )
         if self.healer_has_negative_effect is not None:
             scenarios.append(
@@ -569,6 +587,20 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
                 build=build,
                 progression=progression,
                 sacred_ground_window_active=True,
+            )
+            active_buffs.extend(result.combat_state.active_buffs)
+            unresolved.extend(result.unresolved)
+            in_combat = in_combat or bool(result.combat_state.in_combat)
+
+        if self.accelerated_growth_window_active:
+            service = self.warden_accelerated_growth_state
+            if service is None:
+                service = ExtremeWardenAcceleratedGrowthCombatStateService()
+                self.warden_accelerated_growth_state = service
+            result = service.resolve(
+                build=build,
+                progression=progression,
+                accelerated_growth_window_active=True,
             )
             active_buffs.extend(result.combat_state.active_buffs)
             unresolved.extend(result.unresolved)
