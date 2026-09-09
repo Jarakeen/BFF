@@ -187,3 +187,30 @@ def test_team_optimization_static_boundary_is_explicit() -> None:
     assert analysis.service_id in comparison.dependencies
     assert "cannot prove encounter uptime" in analysis.notes
     assert "without choosing an encounter-aware raid winner" in comparison.purpose
+
+
+def test_comp_novelty_is_observational_and_never_hard_validity() -> None:
+    novelty = canonical_service_for("comp_builder_novelty_evidence")
+
+    assert novelty is not None
+    assert novelty.service_id == "comp.builder.novelty_evidence"
+    assert novelty.evidence_class is EvidenceClass.OBSERVATIONAL
+    assert novelty.behavior is ServiceBehavior.CALIBRATED
+    assert "descriptive evidence only" in novelty.notes
+    assert "hard validity" in novelty.notes
+
+
+def test_prescription_generation_and_constraints_preserve_unresolved_evidence() -> None:
+    generator = canonical_service_for("team_prescription_saved_build_generation")
+    coverage = canonical_service_for("team_prescription_provider_coverage_projection")
+    constraints = canonical_service_for("team_prescription_slot_build_constraints")
+
+    assert generator is not None
+    assert coverage is not None
+    assert constraints is not None
+    assert generator.service_id == "team.prescription.saved_build_generator"
+    assert coverage.service_id == "team.prescription.provider_coverage_projection"
+    assert constraints.service_id == "team.prescription.slot_constraints"
+    assert "open chairs remain unresolved" in generator.notes
+    assert "Phase 11 provider assignments remain authoritative" in coverage.notes
+    assert "hard gates" in constraints.notes
