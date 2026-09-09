@@ -95,6 +95,9 @@ class ExtremeHealingEventService:
     The resulting critical bonus is constrained by ESO's reviewed Critical
     Healing ceiling. Pure Nightblade ``Above and Beyond`` may legally add Critical
     Healing and raise that ceiling; subclassed builds cannot claim Class Mastery.
+    ``An Eye for Exploitation`` is fed into HEAL coefficient evaluation as an
+    event-only Weapon/Spell Damage bonus instead of being approximated as a
+    post-coefficient multiplier.
 
     Critical chance is intentionally absent. "Largest actual heal" asks how big
     the event can be when it crits; an expected-heal objective is a separate
@@ -171,6 +174,12 @@ class ExtremeHealingEventService:
             if not 0.0 <= target_health_fraction <= 1.0:
                 raise ValueError("target_health_fraction must be between 0 and 1")
 
+        mastery = self.nightblade_class_mastery_healing.resolve(
+            build=build,
+            target_health_fraction=target_health_fraction,
+            battle_spirit_active=False,
+        )
+
         bar_multiplier, bar_unresolved = self._reviewed_bar_healing_multiplier(
             build=build,
             context=context,
@@ -181,6 +190,11 @@ class ExtremeHealingEventService:
         reviewed_sources = list(additional_healing_done_sources)
         if abs(float(bar_multiplier) - 1.0) > 1e-12:
             reviewed_sources.append("Extreme reviewed active-bar Healing Done")
+        mastery_power_sources = (
+            ("Nightblade Class Mastery: An Eye for Exploitation",)
+            if abs(float(mastery.weapon_spell_damage_bonus)) > 1e-12
+            else ()
+        )
 
         result = self.tooltip_service.evaluate_entity_id(
             build=build,
@@ -188,8 +202,11 @@ class ExtremeHealingEventService:
             entity_id=entity_id,
             additional_healing_done_percent=reviewed_healing_done_bonus * 100.0,
             additional_healing_done_sources=tuple(reviewed_sources),
+            additional_power_bonus=float(mastery.weapon_spell_damage_bonus),
+            additional_power_sources=mastery_power_sources,
         )
         unresolved = list(bar_unresolved)
+        unresolved.extend(mastery.unresolved)
         unresolved.extend(result.unresolved)
 
         skill_name = str(getattr(getattr(result, "skill", None), "name", "") or "").strip()
@@ -330,35 +347,6 @@ class ExtremeHealingEventService:
             tooltip_result=result,
             unresolved=tuple(dict.fromkeys(message for message in unresolved if message)),
         )
-
-        mastery = self.nightblade_class_mastery_healing.resolve(
-            build=build,
-            target_health_fraction=target_health_fraction,
-            battle_spirit_active=False,
-        )
-        mastery_unresolved = list(mastery.unresolved)
-        if any(
-            str(name or "").strip().casefold() == "an eye for exploitation"
-            for name in mastery.selected_masteries
-        ):
-            mastery_unresolved.append(
-                "An Eye for Exploitation Weapon/Spell Damage contribution is not yet applied to the canonical heal coefficient context"
-            )
-        if mastery_unresolved:
-            event = ExtremeHealingEventResult(
-                entity_id=event.entity_id,
-                normal_heal=event.normal_heal,
-                critical_heal=event.critical_heal,
-                critical_healing_bonus=event.critical_healing_bonus,
-                critical_multiplier=event.critical_multiplier,
-                heal_coefficient_numbers=event.heal_coefficient_numbers,
-                crit_eligible_coefficient_numbers=event.crit_eligible_coefficient_numbers,
-                noncrit_coefficient_numbers=event.noncrit_coefficient_numbers,
-                tooltip_result=event.tooltip_result,
-                unresolved=tuple(
-                    dict.fromkeys((*event.unresolved, *mastery_unresolved))
-                ),
-            )
 
         return self.critical_healing_cap.apply(
             event,
