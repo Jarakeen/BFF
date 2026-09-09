@@ -17,6 +17,29 @@ from ui.components.foundry_card import FoundryCard
 _INSTALLED = False
 _ORIGINAL_BUILD_UI = None
 _ORIGINAL_SHOW_SNAPSHOT = None
+_ORIGINAL_ACTOR_SELECTED = None
+
+
+_ROLE_ALIASES = {
+    "dps": "DPS",
+    "dd": "DPS",
+    "damage": "DPS",
+    "damage dealer": "DPS",
+    "healer": "Healer",
+    "heal": "Healer",
+    "healing": "Healer",
+    "tank": "Tank",
+    "tanking": "Tank",
+}
+
+
+def _canonical_performance_role(role: str) -> str | None:
+    """Return the dashboard's canonical role name without guessing unknown roles."""
+
+    normalized = " ".join(
+        str(role or "").strip().casefold().replace("_", " ").replace("-", " ").split()
+    )
+    return _ROLE_ALIASES.get(normalized)
 
 
 def _card_with_title(page, title: str):
@@ -47,17 +70,19 @@ def _apply_role_name_surface(page, role: str, *, has_snapshot: bool) -> None:
     the surface follows that selection immediately.
     """
 
-    normalized = str(role or "").strip().casefold()
-    is_dd = normalized == "dps"
+    canonical_role = _canonical_performance_role(role)
+    is_dd = canonical_role == "DPS"
+    is_support = canonical_role in {"Healer", "Tank"}
 
-    # These are support-summary surfaces, not graph controls. Hide them for DD.
+    # These are support-summary surfaces, not graph controls. Unknown/blank roles
+    # stay neutral rather than inheriting a stale healer surface from the picker.
     for name in (
         "support_effects_card",
         "_performance_tracking_card",
     ):
         card = getattr(page, name, None)
         if card is not None:
-            card.setVisible(not is_dd)
+            card.setVisible(is_support)
 
     # Graph Effects owns the on/off checkboxes for the buff/debuff lanes painted
     # over the output graph. It must remain visible for DPS too, otherwise the
@@ -108,8 +133,33 @@ def _apply_selected_role_surface(page) -> None:
     )
 
 
+def _sync_actor_role_picker(page) -> str | None:
+    """Sync the role picker from the selected actor without preserving stale state.
+
+    ESO Logs/service adapters are expected to emit canonical role names, but older
+    paths and fixtures may still supply common aliases or casing variants. A role
+    mismatch must never leave the previous actor's Healer selection in place.
+    """
+
+    choice = page.selected_actor()
+    if choice is None:
+        return None
+
+    picker = getattr(page, "role_override", None)
+    if picker is None:
+        return None
+
+    canonical_role = _canonical_performance_role(getattr(choice, "Role", ""))
+    if canonical_role is None:
+        picker.setCurrentIndex(-1)
+    else:
+        picker.setCurrentText(canonical_role)
+
+    return canonical_role
+
+
 def install() -> None:
-    global _INSTALLED, _ORIGINAL_BUILD_UI, _ORIGINAL_SHOW_SNAPSHOT
+    global _INSTALLED, _ORIGINAL_BUILD_UI, _ORIGINAL_SHOW_SNAPSHOT, _ORIGINAL_ACTOR_SELECTED
     if _INSTALLED:
         return
 
@@ -117,6 +167,7 @@ def install() -> None:
 
     _ORIGINAL_BUILD_UI = PerformanceDashboard.build_ui
     _ORIGINAL_SHOW_SNAPSHOT = PerformanceDashboard.show_snapshot
+    _ORIGINAL_ACTOR_SELECTED = PerformanceDashboard._on_actor_selected
 
     def build_ui_with_role_surface(self):
         _ORIGINAL_BUILD_UI(self)
@@ -126,17 +177,37 @@ def install() -> None:
         if picker is not None:
             # PerformanceProfile defaults to DPS. Make the freshly-created UI
             # agree with that model before the user loads a fight.
-            default_role = str(getattr(getattr(self, "_last_profile", None), "Role", "DPS") or "DPS")
+            default_role = _canonical_performance_role(
+                getattr(getattr(self, "_last_profile", None), "Role", "DPS")
+            ) or "DPS"
             picker.setCurrentText(default_role)
             picker.currentTextChanged.connect(
                 lambda _text, page=self: _apply_selected_role_surface(page)
             )
             _apply_selected_role_surface(self)
 
+    def actor_selected_with_role_surface(self, index: int):
+        _ORIGINAL_ACTOR_SELECTED(self, index)
+        _sync_actor_role_picker(self)
+        _apply_selected_role_surface(self)
+
     def show_snapshot_with_role_surface(self, snapshot):
         _ORIGINAL_SHOW_SNAPSHOT(self, snapshot)
+
+        # Keep the picker and final surface aligned with the snapshot that was
+        # actually built. This prevents later polish wrappers from displaying a
+        # stale support role after a DPS result has loaded.
+        picker = getattr(self, "role_override", None)
+        snapshot_role = _canonical_performance_role(getattr(snapshot, "Role", ""))
+        if picker is not None:
+            if snapshot_role is None:
+                picker.setCurrentIndex(-1)
+            else:
+                picker.setCurrentText(snapshot_role)
+
         _apply_role_surface(self, snapshot)
 
     PerformanceDashboard.build_ui = build_ui_with_role_surface
+    PerformanceDashboard._on_actor_selected = actor_selected_with_role_surface
     PerformanceDashboard.show_snapshot = show_snapshot_with_role_surface
     _INSTALLED = True
