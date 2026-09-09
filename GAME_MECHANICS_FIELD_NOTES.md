@@ -558,3 +558,14 @@ Extreme MOST Actual Heal may discover a slottable skill as a named self-buff sou
 **Layman’s version:** if the optimizer wants Major Sorcery from a skill, it must actually slot a legal skill that grants it and the buff must still be alive when the heal lands. Conditional or proc-based skill effects are not waved through just because their name looks useful.
 
 **For BFF:** the scored heal's slot is protected during source discovery. Standing optimization is unchanged, and runtime/conditional skill effects remain outside this first automatic-discovery slice.
+
+
+---
+
+## 2026-09-09 — Triggered skill buffs require observed runtime-event proof
+
+Extreme MOST Actual Heal may search triggered self-buff skills only when the caller supplies an observed canonical `RuntimeEvent` and an explicit heal snapshot time. The shared runtime eligibility layer remains authoritative for trigger matching, cooldown readiness, and deterministic proc chance. Free-form conditional effects are still excluded from automatic discovery.
+
+**Layman’s version:** a skill proc does not exist because the build could theoretically proc it. Extreme needs the actual trigger scenario, checks proc chance/cooldown rules, and then verifies the buff has not expired before the heal lands.
+
+**For BFF:** triggered skill-source candidates physically slot the skill without replacing the scored heal, and only an eligible, still-active named self-buff reaches canonical `CombatState`.

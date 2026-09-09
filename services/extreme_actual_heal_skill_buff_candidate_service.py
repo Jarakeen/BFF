@@ -5,6 +5,11 @@ from pathlib import Path
 from minmax.build_candidate import BuildCandidate
 from minmax.character_build.effect_layer import EffectLayer
 from minmax.named_combat_buffs import canonical_buff_name, effects_for_buff
+from minmax.runtime_effect_eligibility import (
+    RuntimeEffectState,
+    evaluate_effect_variant_runtime_eligibility,
+)
+from minmax.runtime_event import RuntimeEvent
 from minmax.skill_coefficient_repository import ability_entity_id
 from minmax.skill_effect_repository import SkillEffectRepository
 from minmax.support_target_type import SupportTargetType
@@ -88,6 +93,167 @@ class ExtremeActualHealSkillBuffCandidateService:
                 seen.add(key)
                 buffs.append(buff)
         return tuple(buffs)
+
+    @staticmethod
+    def _triggered_buff_name(effect) -> str | None:
+        if effect.layer is not EffectLayer.CAST:
+            return None
+        if effect.target_type is not SupportTargetType.SELF:
+            return None
+        if effect.condition is not None or effect.trigger is None:
+            return None
+        if effect.duration is None or float(effect.duration) <= 0.0:
+            return None
+        canonical = canonical_buff_name(str(effect.name or "").replace("_", " "))
+        if canonical is None or not effects_for_buff(canonical):
+            return None
+        return canonical
+
+    def _triggered_available(self, build: PlayerBuild):
+        result = []
+        for ability_id, name in self.repository.available_skills(build.EsoClass):
+            effects = tuple(
+                effect
+                for effect in self.repository.resolve(ability_id)
+                if self._triggered_buff_name(effect) is not None
+            )
+            if effects:
+                result.append((int(ability_id), str(name).strip(), effects))
+        return tuple(result)
+
+    def triggered_build_candidates(
+        self,
+        baseline_build: PlayerBuild,
+        *,
+        character_id: str,
+        baseline_build_id: str,
+        protected_entity_id: str,
+        active_bar: str,
+        event: RuntimeEvent,
+        snapshot_time_seconds: float,
+        state: RuntimeEffectState = RuntimeEffectState(),
+        chance_roll: float | None = None,
+    ) -> tuple[BuildCandidate, ...]:
+        snapshot = float(snapshot_time_seconds)
+        if snapshot < event.time_seconds:
+            raise ValueError("triggered skill buff snapshot cannot precede the runtime event")
+        entity = str(protected_entity_id or "").strip()
+        if not entity:
+            return ()
+        attr = "BackBarSkills" if str(active_bar or "front").casefold() == "back" else "FrontBarSkills"
+        original = list(getattr(baseline_build, attr))
+        while len(original) < 6:
+            original.append("")
+        original = original[:6]
+        protected = {
+            index
+            for index, raw_name in enumerate(original[:5])
+            if ability_entity_id(str(raw_name or "").strip()) == entity
+        }
+        if not protected:
+            return ()
+
+        result: list[BuildCandidate] = []
+        elapsed = snapshot - event.time_seconds
+        for ability_id, candidate_name, effects in self._triggered_available(baseline_build):
+            active_buffs = []
+            for effect in effects:
+                eligibility = evaluate_effect_variant_runtime_eligibility(
+                    event,
+                    effect,
+                    state=state,
+                    chance_roll=chance_roll,
+                )
+                buff = self._triggered_buff_name(effect)
+                if (
+                    eligibility.eligible
+                    and buff is not None
+                    and elapsed < float(effect.duration)
+                ):
+                    active_buffs.append(buff)
+            active_buffs = list(dict.fromkeys(active_buffs))
+            if not active_buffs:
+                continue
+
+            for slot_index in range(5):
+                if slot_index in protected:
+                    continue
+                before = str(original[slot_index] or "").strip()
+                if before.casefold() == candidate_name.casefold():
+                    continue
+                if any(
+                    index != slot_index
+                    and str(name or "").strip().casefold() == candidate_name.casefold()
+                    for index, name in enumerate(original[:5])
+                ):
+                    continue
+                build = PlayerBuild.from_dict(baseline_build.to_dict())
+                skills = list(getattr(build, attr))
+                while len(skills) < 6:
+                    skills.append("")
+                skills = skills[:6]
+                skills[slot_index] = candidate_name
+                setattr(build, attr, skills)
+                result.append(
+                    ExtremeCompleteOptimizationService._direct_candidate(
+                        build,
+                        character_id=character_id,
+                        baseline_build_id=baseline_build_id,
+                        token=(
+                            f"actual-heal-triggered-skill-buff:{active_bar}:"
+                            f"{slot_index}:{ability_id}:{event.trigger}"
+                        ),
+                        path=f"{attr}[{slot_index}]",
+                        before=before,
+                        after={
+                            "skill": candidate_name,
+                            "ability_id": ability_id,
+                            "runtime_trigger": event.trigger,
+                            "named_buffs": tuple(active_buffs),
+                        },
+                        source="extreme:actual-heal:triggered-skill-buff",
+                    )
+                )
+        return tuple(result)
+
+    def active_triggered_named_buffs(
+        self,
+        build: PlayerBuild,
+        *,
+        active_bar: str,
+        event: RuntimeEvent,
+        snapshot_time_seconds: float,
+        state: RuntimeEffectState = RuntimeEffectState(),
+        chance_roll: float | None = None,
+    ) -> tuple[str, ...]:
+        snapshot = float(snapshot_time_seconds)
+        if snapshot < event.time_seconds:
+            raise ValueError("triggered skill buff snapshot cannot precede the runtime event")
+        elapsed = snapshot - event.time_seconds
+        available = {name.casefold(): (ability_id, effects) for ability_id, name, effects in self._triggered_available(build)}
+        attr = "BackBarSkills" if str(active_bar or "front").casefold() == "back" else "FrontBarSkills"
+        result: list[str] = []
+        for raw_name in list(getattr(build, attr))[:5]:
+            name = str(raw_name or "").strip()
+            resolved = available.get(name.casefold())
+            if resolved is None:
+                continue
+            _, effects = resolved
+            for effect in effects:
+                eligibility = evaluate_effect_variant_runtime_eligibility(
+                    event,
+                    effect,
+                    state=state,
+                    chance_roll=chance_roll,
+                )
+                buff = self._triggered_buff_name(effect)
+                if (
+                    eligibility.eligible
+                    and buff is not None
+                    and elapsed < float(effect.duration)
+                ):
+                    result.append(buff)
+        return tuple(dict.fromkeys(result))
 
     def build_candidates(
         self,

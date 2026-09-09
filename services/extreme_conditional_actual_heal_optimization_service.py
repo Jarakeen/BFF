@@ -6,6 +6,8 @@ from minmax.character_progression import AttributeAllocation, CharacterProgressi
 from minmax.combat_state import CombatState
 from minmax.potion_cadence import PotionCadence
 from minmax.potion_use_event import PotionUseEventResolver
+from minmax.runtime_effect_eligibility import RuntimeEffectState
+from minmax.runtime_event import RuntimeEvent
 from models.build_model import PlayerBuild
 from services.extreme_actual_heal_optimization_service import (
     ExtremeActualHealOptimizationResult,
@@ -103,6 +105,10 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         potion_candidates: ExtremeActualHealPotionCandidateService | None = None,
         skill_precast_elapsed_seconds: float | None = None,
         skill_buff_candidates: ExtremeActualHealSkillBuffCandidateService | None = None,
+        skill_trigger_event: RuntimeEvent | None = None,
+        skill_trigger_snapshot_seconds: float | None = None,
+        skill_trigger_effect_state: RuntimeEffectState = RuntimeEffectState(),
+        skill_trigger_chance_roll: float | None = None,
         restoration_heavy_state: ExtremeRestorationHeavyCombatStateService | None = None,
         templar_sacred_ground_state: ExtremeTemplarSacredGroundCombatStateService | None = None,
         templar_restoring_light_healing: ExtremeTemplarRestoringLightHealingService | None = None,
@@ -153,6 +159,21 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
                 raise ValueError("skill_precast_elapsed_seconds cannot be negative")
             self.skill_precast_elapsed_seconds = skill_elapsed
         self.skill_buff_candidates = skill_buff_candidates
+        if (skill_trigger_event is None) != (skill_trigger_snapshot_seconds is None):
+            raise ValueError(
+                "skill_trigger_event and skill_trigger_snapshot_seconds must be provided together"
+            )
+        if (
+            skill_trigger_event is not None
+            and float(skill_trigger_snapshot_seconds) < skill_trigger_event.time_seconds
+        ):
+            raise ValueError("skill trigger snapshot cannot precede the runtime event")
+        self.skill_trigger_event = skill_trigger_event
+        self.skill_trigger_snapshot_seconds = (
+            None if skill_trigger_snapshot_seconds is None else float(skill_trigger_snapshot_seconds)
+        )
+        self.skill_trigger_effect_state = skill_trigger_effect_state
+        self.skill_trigger_chance_roll = skill_trigger_chance_roll
         self.restoration_heavy_state = restoration_heavy_state
         self.templar_sacred_ground_state = templar_sacred_ground_state
         self.templar_restoring_light_healing = templar_restoring_light_healing
@@ -201,6 +222,12 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
                 "explicit self-buff skill pre-cast window at "
                 f"{self.skill_precast_elapsed_seconds:.6f} seconds; "
                 "only unconditional self-target named buffs are discoverable"
+            )
+        if self.skill_trigger_event is not None:
+            scenarios.append(
+                "explicit triggered skill-buff runtime event "
+                f"{self.skill_trigger_event.trigger!r} at {self.skill_trigger_event.time_seconds:.6f}s "
+                f"with heal snapshot {self.skill_trigger_snapshot_seconds:.6f}s"
             )
         if self.sacred_ground_window_active:
             scenarios.append(
@@ -264,6 +291,27 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
                         active_bar=active_bar,
                     )
                 )
+        if self.skill_trigger_event is not None:
+            service = self.skill_buff_candidates
+            if service is None:
+                database_path = getattr(self.optimizer, "database_path", None)
+                if database_path is not None:
+                    service = ExtremeActualHealSkillBuffCandidateService(database_path)
+                    self.skill_buff_candidates = service
+            if service is not None:
+                result.extend(
+                    service.triggered_build_candidates(
+                        baseline_build,
+                        character_id=character_id,
+                        baseline_build_id=baseline_build_id,
+                        protected_entity_id=entity_id,
+                        active_bar=active_bar,
+                        event=self.skill_trigger_event,
+                        snapshot_time_seconds=self.skill_trigger_snapshot_seconds,
+                        state=self.skill_trigger_effect_state,
+                        chance_roll=self.skill_trigger_chance_roll,
+                    )
+                )
         return tuple(result)
 
     def _restoration_combat_state(
@@ -290,6 +338,25 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
                         build,
                         active_bar=active_bar,
                         elapsed_seconds=self.skill_precast_elapsed_seconds,
+                    )
+                )
+
+        if self.skill_trigger_event is not None:
+            service = self.skill_buff_candidates
+            if service is None:
+                database_path = getattr(self.optimizer, "database_path", None)
+                if database_path is not None:
+                    service = ExtremeActualHealSkillBuffCandidateService(database_path)
+                    self.skill_buff_candidates = service
+            if service is not None:
+                active_buffs.extend(
+                    service.active_triggered_named_buffs(
+                        build,
+                        active_bar=active_bar,
+                        event=self.skill_trigger_event,
+                        snapshot_time_seconds=self.skill_trigger_snapshot_seconds,
+                        state=self.skill_trigger_effect_state,
+                        chance_roll=self.skill_trigger_chance_roll,
                     )
                 )
 
