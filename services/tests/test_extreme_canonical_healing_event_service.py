@@ -215,6 +215,47 @@ def test_pet_special_activation_keeps_numeric_score_but_requires_runtime_pet_pro
     assert not result.mechanic_complete
 
 
+def test_larger_pet_component_cannot_win_player_recipient_objective():
+    rows = (
+        _component(
+            1,
+            recipient_scope=HealRecipientScope.GROUP,
+            temporal_scope=HealTemporalScope.DIRECT,
+            recipient_key="friendly_targets",
+            event_key="pet_special_activation",
+        ),
+        _component(
+            2,
+            recipient_scope=HealRecipientScope.PET,
+            temporal_scope=HealTemporalScope.DIRECT,
+            recipient_key="summoned_pet",
+            event_key="pet_special_activation",
+        ),
+    )
+    result = SimpleNamespace(
+        skill=SimpleNamespace(skill_rank_id=42, name="Summon Twilight Matriarch"),
+        components=(
+            SimpleNamespace(coefficient_number=1, final_value=1000.0),
+            SimpleNamespace(coefficient_number=2, final_value=5000.0),
+        ),
+        component_actual_effect_trace=(),
+        unresolved=(),
+    )
+    service = ExtremeCanonicalHealingEventService(
+        tooltip_service=_FakeTooltipService(result, rows)
+    )
+
+    evaluated = service.evaluate(
+        build=PlayerBuild(BuildName="Pet"),
+        context=_context(),
+        entity_id="summon_twilight_matriarch",
+    )
+
+    assert evaluated.normal_heal == pytest.approx(1000.0)
+    assert evaluated.critical_heal == pytest.approx(1700.0)
+    assert ExtremeCanonicalHealingEventService.PET_SPECIAL_ACTIVATION_UNRESOLVED in evaluated.unresolved
+
+
 def test_missing_identity_preserves_legacy_multi_recipient_guard():
     service = _service(
         "Blood of the Elder Dragon",
