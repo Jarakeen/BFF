@@ -26,10 +26,12 @@ class ExtremeRuntimeSnapshotCombatStateResult:
 class ExtremeRuntimeSnapshotCombatStateService:
     """Project one role-neutral Extreme runtime snapshot into CombatState.
 
-    This is the shared E1 projection boundary for role objectives. It reuses the
-    existing named-buff skill and gear history resolvers and owns potion-window
-    projection until potion use joins the same canonical runtime-event stream.
-    Role-specific healing, tanking, or damage modifiers layer on top afterward.
+    This is the shared E1 projection boundary for role objectives. Skill, gear,
+    and potion runtime evidence now enter through the snapshot's authoritative
+    ordered runtime history. Existing callers that still supply the legacy
+    ``attempts`` / ``potion_elapsed_seconds`` fields are normalized by the
+    snapshot before they reach this service. Role-specific healing, tanking, or
+    damage modifiers layer on top afterward.
     """
 
     def __init__(
@@ -61,8 +63,9 @@ class ExtremeRuntimeSnapshotCombatStateService:
         ]
         unresolved: list[str] = []
         in_combat = False
+        attempts = snapshot.effect_attempts
 
-        if snapshot.attempts:
+        if attempts:
             skill_service = self.skill_buff_candidates
             if skill_service is None and self.database_path is not None:
                 skill_service = ExtremeActualHealSkillBuffCandidateService(self.database_path)
@@ -72,7 +75,7 @@ class ExtremeRuntimeSnapshotCombatStateService:
                     skill_service.active_triggered_named_buffs_history(
                         build,
                         active_bar=active_bar,
-                        attempts=snapshot.attempts,
+                        attempts=attempts,
                         snapshot_time_seconds=snapshot.snapshot_time_seconds,
                     )
                 )
@@ -85,14 +88,15 @@ class ExtremeRuntimeSnapshotCombatStateService:
                 gear_result = gear_service.resolve_history(
                     build,
                     active_bar=active_bar,
-                    attempts=snapshot.attempts,
+                    attempts=attempts,
                     snapshot_time_seconds=snapshot.snapshot_time_seconds,
                 )
                 active_buffs.extend(gear_result.active_buffs)
                 unresolved.extend(gear_result.unresolved)
             in_combat = True
 
-        if snapshot.potion_elapsed_seconds is not None:
+        potion_elapsed_seconds = snapshot.effective_potion_elapsed_seconds
+        if potion_elapsed_seconds is not None:
             potion_name = " ".join(str(build.Potion or "").strip().split())
             if not potion_name:
                 unresolved.append(
@@ -121,7 +125,7 @@ class ExtremeRuntimeSnapshotCombatStateService:
                         else:
                             active_buffs.extend(
                                 cadence.window(
-                                    snapshot.potion_elapsed_seconds
+                                    potion_elapsed_seconds
                                 ).active_buff_names
                             )
 
