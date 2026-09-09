@@ -24,10 +24,10 @@ def test_maximum_heal_relevance_downgrades_only_proven_ambient_diagnostics():
         "Champion Point is dynamic or not yet stat-mapped: Celerity",
         "The Steed: movement_speed unresolved (Movement speed is outside the current character-sheet stat layer.)",
         "Front Bar Training: non-combat experience trait",
-        "Front Bar Charged: requires status-effect chance model",
-        "Front Bar Decisive: requires Ultimate generation model",
     )
     assert result.relevant == (
+        "Front Bar Charged: requires status-effect chance model",
+        "Front Bar Decisive: requires Ultimate generation model",
         "Potion selected; activation/uptime is not part of static build state: spell power",
         "Sorcerer pet special activation requires runtime proof that the corresponding pet is summoned and alive",
     )
