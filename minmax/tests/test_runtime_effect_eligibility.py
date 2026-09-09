@@ -147,3 +147,24 @@ def test_runtime_state_rejects_duplicate_target_cooldown_entries():
         RuntimeEffectState(
             target_last_activation_times=(("ally", 1.0), ("ally", 2.0)),
         )
+
+
+def test_conditional_effect_requires_explicit_runtime_condition_context():
+    effect = _effect(condition="target_below_half_health")
+    missing = evaluate_effect_variant_runtime_eligibility(_event(), effect)
+    assert not missing.eligible
+    assert missing.reasons == ("condition_context_required",)
+
+    absent = evaluate_effect_variant_runtime_eligibility(
+        _event(), effect, condition_context=frozenset()
+    )
+    assert not absent.eligible
+    assert absent.reasons == ("condition_unsatisfied",)
+
+    proven = evaluate_effect_variant_runtime_eligibility(
+        _event(),
+        effect,
+        condition_context=frozenset({"target_below_half_health"}),
+    )
+    assert proven.eligible
+    assert proven.reasons == ()

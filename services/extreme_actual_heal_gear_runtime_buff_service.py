@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from minmax.character_build.effect_layer import EffectLayer
+from minmax.character_build.effect_relationship import ConditionContext
 from minmax.gear_set_effect_variant_resolver import GearSetEffectVariantResolver
 from minmax.gear_set_repository import GearSetRepository
 from minmax.gear_stat_inputs import GearStatInputResolver
@@ -63,6 +64,7 @@ class ExtremeActualHealGearRuntimeBuffService:
         snapshot_time_seconds: float,
         state: RuntimeEffectState = RuntimeEffectState(),
         chance_roll: float | None = None,
+        condition_context: ConditionContext | None = None,
     ) -> ExtremeActualHealGearRuntimeBuffResult:
         snapshot = float(snapshot_time_seconds)
         if snapshot < event.time_seconds:
@@ -85,12 +87,6 @@ class ExtremeActualHealGearRuntimeBuffService:
                 if elapsed >= float(effect.duration):
                     continue
 
-                if effect.condition is not None:
-                    unresolved.append(
-                        f"{set_name} {buff} runtime condition is not executable: {effect.condition}"
-                    )
-                    continue
-
                 if effect.target_type not in (SupportTargetType.SELF, SupportTargetType.SELF_OR_ALLY):
                     target = (
                         effect.target_type.value
@@ -107,12 +103,21 @@ class ExtremeActualHealGearRuntimeBuffService:
                     effect,
                     state=state,
                     chance_roll=chance_roll,
+                    condition_context=condition_context,
                 )
                 if eligibility.eligible:
                     active.append(buff)
                 elif eligibility.chance_roll_required:
                     unresolved.append(
                         f"{set_name} {buff} proc requires an explicit deterministic chance roll"
+                    )
+                elif "condition_context_required" in eligibility.reasons:
+                    unresolved.append(
+                        f"{set_name} {buff} proc requires explicit runtime condition evidence: {effect.condition}"
+                    )
+                elif "condition_unsatisfied" in eligibility.reasons:
+                    unresolved.append(
+                        f"{set_name} {buff} proc condition is not satisfied: {effect.condition}"
                     )
 
         return ExtremeActualHealGearRuntimeBuffResult(

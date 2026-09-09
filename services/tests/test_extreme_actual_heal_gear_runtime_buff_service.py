@@ -153,3 +153,45 @@ def test_self_or_ally_gear_proc_can_apply_to_wearer():
     )
     assert result.active_buffs == ("Major Courage",)
     assert result.unresolved == ()
+
+
+def test_conditional_gear_proc_requires_explicit_matching_context():
+    class ConditionalResolver:
+        @staticmethod
+        def resolve(set_id, piece_count):
+            if piece_count < 5:
+                return []
+            return [
+                EffectVariant(
+                    name="major_courage",
+                    layer=EffectLayer.PROC,
+                    source="fixture set",
+                    duration=5.0,
+                    trigger="overheal_self_or_ally",
+                    condition="overheal_confirmed",
+                    target_type=SupportTargetType.SELF,
+                )
+            ]
+
+    service = ExtremeActualHealGearRuntimeBuffService(
+        "unused.db", repository=_Repository(), resolver=ConditionalResolver()
+    )
+    kwargs = dict(
+        build=_five_piece("Self Proc Set"),
+        active_bar="front",
+        event=RuntimeEvent(time_seconds=0.0, trigger="overheal_self_or_ally", source="test"),
+        snapshot_time_seconds=1.0,
+    )
+    missing = service.resolve(**kwargs)
+    assert missing.active_buffs == ()
+    assert any("requires explicit runtime condition evidence" in item for item in missing.unresolved)
+
+    absent = service.resolve(**kwargs, condition_context=frozenset())
+    assert absent.active_buffs == ()
+    assert any("condition is not satisfied" in item for item in absent.unresolved)
+
+    proven = service.resolve(
+        **kwargs, condition_context=frozenset({"overheal_confirmed"})
+    )
+    assert proven.active_buffs == ("Major Courage",)
+    assert proven.unresolved == ()

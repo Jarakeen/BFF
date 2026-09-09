@@ -13,6 +13,7 @@ from enum import Enum
 import math
 
 from .character_build.effect_instance import EffectVariant
+from .character_build.effect_relationship import ConditionContext
 from .runtime_event import RuntimeEvent, runtime_event_matches_effect_variant
 
 
@@ -71,6 +72,7 @@ def evaluate_effect_variant_runtime_eligibility(
     state: RuntimeEffectState = RuntimeEffectState(),
     cooldown_scope: RuntimeCooldownScope = RuntimeCooldownScope.GLOBAL,
     chance_roll: float | None = None,
+    condition_context: ConditionContext | None = None,
 ) -> RuntimeEffectEligibilityResult:
     """Evaluate whether an EffectVariant may activate for one observed event.
 
@@ -90,6 +92,12 @@ def evaluate_effect_variant_runtime_eligibility(
 
     if not runtime_event_matches_effect_variant(event, effect):
         reasons.append("trigger_mismatch")
+
+    if effect.condition is not None:
+        if condition_context is None:
+            reasons.append("condition_context_required")
+        elif effect.condition not in condition_context:
+            reasons.append("condition_unsatisfied")
 
     cooldown_ready_at: float | None = None
     if effect.cooldown is not None and effect.cooldown > 0:

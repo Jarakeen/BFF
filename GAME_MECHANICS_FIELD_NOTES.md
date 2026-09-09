@@ -587,3 +587,12 @@ A proc recorded as `ALLY` or `GROUP` is **not** automatically treated as a buff 
 ## 2026-09-09 — Self-or-ally targeting is distinct from ally-only targeting
 
 Canonical support targeting now includes `SELF_OR_ALLY` for effects that can explicitly land on either the source or another friendly target. This is intentionally distinct from `ALLY`: ally-only effects still do not prove wearer application. Spell Power Cure Major Courage is classified `SELF_OR_ALLY` because its verified trigger semantics are `overheal_self_or_ally`. Extreme MOST Actual Heal may therefore use SPC on the healer only when the proc runtime event, duration, and other eligibility checks also pass.
+
+
+---
+
+## 2026-09-09 — Runtime condition names require explicit evidence, not interpretation
+
+Runtime proc eligibility now accepts the same opaque named `ConditionContext` used by the canonical effect-relationship layer. A conditional skill/set proc is not eligible merely because its trigger fired. If no runtime condition context is supplied, the result is `condition_context_required`; if a context is supplied but the required condition name is absent, it is `condition_unsatisfied`. Extreme MOST Actual Heal forwards independent skill and gear condition evidence into this shared gate.
+
+**Layman's version:** seeing the event happen is not proof that every extra clause on the proc was true. The optimizer now needs explicit evidence for those clauses before it uses the buff.

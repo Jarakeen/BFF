@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 
 from minmax.character_progression import AttributeAllocation, CharacterProgression
+from minmax.character_build.effect_relationship import ConditionContext
 from minmax.combat_state import CombatState
 from minmax.potion_cadence import PotionCadence
 from minmax.potion_use_event import PotionUseEventResolver
@@ -112,10 +113,12 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         skill_trigger_snapshot_seconds: float | None = None,
         skill_trigger_effect_state: RuntimeEffectState = RuntimeEffectState(),
         skill_trigger_chance_roll: float | None = None,
+        skill_trigger_condition_context: ConditionContext | None = None,
         gear_trigger_event: RuntimeEvent | None = None,
         gear_trigger_snapshot_seconds: float | None = None,
         gear_trigger_effect_state: RuntimeEffectState = RuntimeEffectState(),
         gear_trigger_chance_roll: float | None = None,
+        gear_trigger_condition_context: ConditionContext | None = None,
         gear_runtime_buffs: ExtremeActualHealGearRuntimeBuffService | None = None,
         restoration_heavy_state: ExtremeRestorationHeavyCombatStateService | None = None,
         templar_sacred_ground_state: ExtremeTemplarSacredGroundCombatStateService | None = None,
@@ -182,6 +185,9 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         )
         self.skill_trigger_effect_state = skill_trigger_effect_state
         self.skill_trigger_chance_roll = skill_trigger_chance_roll
+        self.skill_trigger_condition_context = (
+            None if skill_trigger_condition_context is None else frozenset(str(value) for value in skill_trigger_condition_context)
+        )
         if (gear_trigger_event is None) != (gear_trigger_snapshot_seconds is None):
             raise ValueError(
                 "gear_trigger_event and gear_trigger_snapshot_seconds must be provided together"
@@ -197,6 +203,9 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         )
         self.gear_trigger_effect_state = gear_trigger_effect_state
         self.gear_trigger_chance_roll = gear_trigger_chance_roll
+        self.gear_trigger_condition_context = (
+            None if gear_trigger_condition_context is None else frozenset(str(value) for value in gear_trigger_condition_context)
+        )
         self.gear_runtime_buffs = gear_runtime_buffs
         self.restoration_heavy_state = restoration_heavy_state
         self.templar_sacred_ground_state = templar_sacred_ground_state
@@ -253,6 +262,11 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
                 f"{self.skill_trigger_event.trigger!r} at {self.skill_trigger_event.time_seconds:.6f}s "
                 f"with heal snapshot {self.skill_trigger_snapshot_seconds:.6f}s"
             )
+            if self.skill_trigger_condition_context is not None:
+                scenarios.append(
+                    "explicit skill runtime conditions: "
+                    + ", ".join(sorted(self.skill_trigger_condition_context))
+                )
         if self.gear_trigger_event is not None:
             scenarios.append(
                 "explicit gear-proc runtime event "
@@ -260,6 +274,11 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
                 f"with heal snapshot {self.gear_trigger_snapshot_seconds:.6f}s; "
                 "wearer self-application requires canonical SELF targeting"
             )
+            if self.gear_trigger_condition_context is not None:
+                scenarios.append(
+                    "explicit gear runtime conditions: "
+                    + ", ".join(sorted(self.gear_trigger_condition_context))
+                )
         if self.sacred_ground_window_active:
             scenarios.append(
                 "explicit Sacred Ground active/grace window; "
@@ -341,6 +360,7 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
                         snapshot_time_seconds=self.skill_trigger_snapshot_seconds,
                         state=self.skill_trigger_effect_state,
                         chance_roll=self.skill_trigger_chance_roll,
+                        condition_context=self.skill_trigger_condition_context,
                     )
                 )
         return tuple(result)
@@ -388,6 +408,7 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
                         snapshot_time_seconds=self.skill_trigger_snapshot_seconds,
                         state=self.skill_trigger_effect_state,
                         chance_roll=self.skill_trigger_chance_roll,
+                        condition_context=self.skill_trigger_condition_context,
                     )
                 )
 

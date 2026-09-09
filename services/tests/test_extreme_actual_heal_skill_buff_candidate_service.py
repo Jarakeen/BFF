@@ -215,3 +215,48 @@ def test_triggered_skill_buff_respects_explicit_proc_chance_roll():
     assert service.triggered_build_candidates(**kwargs) == ()
     assert service.triggered_build_candidates(**kwargs, chance_roll=0.49)
     assert service.triggered_build_candidates(**kwargs, chance_roll=0.50) == ()
+
+
+def test_triggered_skill_buff_condition_requires_explicit_matching_context():
+    from minmax.runtime_event import RuntimeEvent
+
+    class ConditionalTriggeredRepository(_Repository):
+        @staticmethod
+        def available_skills(character_class=None):
+            _ = character_class
+            return ((6, "Conditional Triggered Power"),)
+
+        @staticmethod
+        def resolve(ability_id):
+            assert ability_id == 6
+            return (
+                EffectVariant(
+                    name="major_sorcery",
+                    layer=EffectLayer.CAST,
+                    source="Conditional Triggered Power",
+                    duration=10.0,
+                    trigger="critical_heal",
+                    condition="target_below_half_health",
+                    target_type=SupportTargetType.SELF,
+                ),
+            )
+
+    service = ExtremeActualHealSkillBuffCandidateService(
+        "unused.db", repository=ConditionalTriggeredRepository()
+    )
+    kwargs = dict(
+        baseline_build=_build(),
+        character_id="char-1",
+        baseline_build_id="build-1",
+        protected_entity_id="blessing_of_protection",
+        active_bar="front",
+        event=RuntimeEvent(time_seconds=0.0, trigger="critical_heal", source="test"),
+        snapshot_time_seconds=1.0,
+    )
+    assert service.triggered_build_candidates(**kwargs) == ()
+    assert service.triggered_build_candidates(
+        **kwargs, condition_context=frozenset()
+    ) == ()
+    assert service.triggered_build_candidates(
+        **kwargs, condition_context=frozenset({"target_below_half_health"})
+    )

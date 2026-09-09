@@ -4,6 +4,7 @@ from pathlib import Path
 
 from minmax.build_candidate import BuildCandidate
 from minmax.character_build.effect_layer import EffectLayer
+from minmax.character_build.effect_relationship import ConditionContext
 from minmax.named_combat_buffs import canonical_buff_name, effects_for_buff
 from minmax.runtime_effect_eligibility import (
     RuntimeEffectState,
@@ -100,7 +101,7 @@ class ExtremeActualHealSkillBuffCandidateService:
             return None
         if effect.target_type is not SupportTargetType.SELF:
             return None
-        if effect.condition is not None or effect.trigger is None:
+        if effect.trigger is None:
             return None
         if effect.duration is None or float(effect.duration) <= 0.0:
             return None
@@ -133,6 +134,7 @@ class ExtremeActualHealSkillBuffCandidateService:
         snapshot_time_seconds: float,
         state: RuntimeEffectState = RuntimeEffectState(),
         chance_roll: float | None = None,
+        condition_context: ConditionContext | None = None,
     ) -> tuple[BuildCandidate, ...]:
         snapshot = float(snapshot_time_seconds)
         if snapshot < event.time_seconds:
@@ -163,6 +165,7 @@ class ExtremeActualHealSkillBuffCandidateService:
                     effect,
                     state=state,
                     chance_roll=chance_roll,
+                    condition_context=condition_context,
                 )
                 buff = self._triggered_buff_name(effect)
                 if (
@@ -225,6 +228,7 @@ class ExtremeActualHealSkillBuffCandidateService:
         snapshot_time_seconds: float,
         state: RuntimeEffectState = RuntimeEffectState(),
         chance_roll: float | None = None,
+        condition_context: ConditionContext | None = None,
     ) -> tuple[str, ...]:
         snapshot = float(snapshot_time_seconds)
         if snapshot < event.time_seconds:
@@ -245,6 +249,7 @@ class ExtremeActualHealSkillBuffCandidateService:
                     effect,
                     state=state,
                     chance_roll=chance_roll,
+                    condition_context=condition_context,
                 )
                 buff = self._triggered_buff_name(effect)
                 if (
