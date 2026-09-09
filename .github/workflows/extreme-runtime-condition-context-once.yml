@@ -1,0 +1,224 @@
+name: Extreme Runtime Condition Context Once
+
+on:
+  push:
+    branches: [phase13]
+    paths:
+      - .github/workflows/extreme-runtime-condition-context-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch-test-rebase-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: phase13.2
+          fetch-depth: 0
+
+      - name: Patch runtime condition context support
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          # Runtime eligibility: explicit condition evidence is now a first-class gate.
+          p = Path('minmax/runtime_effect_eligibility.py')
+          text = p.read_text()
+          if 'from .character_build.effect_relationship import ConditionContext' not in text:
+              text = text.replace(
+                  'from .character_build.effect_instance import EffectVariant\n',
+                  'from .character_build.effect_instance import EffectVariant\nfrom .character_build.effect_relationship import ConditionContext\n',
+                  1,
+              )
+          old = '''    cooldown_scope: RuntimeCooldownScope = RuntimeCooldownScope.GLOBAL,\n    chance_roll: float | None = None,\n) -> RuntimeEffectEligibilityResult:'''
+          new = '''    cooldown_scope: RuntimeCooldownScope = RuntimeCooldownScope.GLOBAL,\n    chance_roll: float | None = None,\n    condition_context: ConditionContext | None = None,\n) -> RuntimeEffectEligibilityResult:'''
+          if old in text:
+              text = text.replace(old, new, 1)
+          elif new not in text:
+              raise SystemExit('runtime eligibility signature insertion point not found')
+          needle = '''    if not runtime_event_matches_effect_variant(event, effect):\n        reasons.append("trigger_mismatch")\n\n    cooldown_ready_at: float | None = None'''
+          replacement = '''    if not runtime_event_matches_effect_variant(event, effect):\n        reasons.append("trigger_mismatch")\n\n    if effect.condition is not None:\n        if condition_context is None:\n            reasons.append("condition_context_required")\n        elif effect.condition not in condition_context:\n            reasons.append("condition_unsatisfied")\n\n    cooldown_ready_at: float | None = None'''
+          if needle in text:
+              text = text.replace(needle, replacement, 1)
+          elif 'condition_context_required' not in text:
+              raise SystemExit('runtime eligibility condition gate insertion point not found')
+          p.write_text(text)
+
+          # Skill runtime candidates: conditional triggered buffs can be considered,
+          # but only through the shared runtime condition context gate.
+          p = Path('services/extreme_actual_heal_skill_buff_candidate_service.py')
+          text = p.read_text()
+          if 'from minmax.character_build.effect_relationship import ConditionContext' not in text:
+              text = text.replace(
+                  'from minmax.character_build.effect_layer import EffectLayer\n',
+                  'from minmax.character_build.effect_layer import EffectLayer\nfrom minmax.character_build.effect_relationship import ConditionContext\n',
+                  1,
+              )
+          text = text.replace(
+              '        if effect.condition is not None or effect.trigger is None:\n            return None\n',
+              '        if effect.trigger is None:\n            return None\n',
+              1,
+          )
+          # Add condition_context to both triggered public methods.
+          sig = '''        state: RuntimeEffectState = RuntimeEffectState(),\n        chance_roll: float | None = None,\n    ) -> tuple[BuildCandidate, ...]:'''
+          repl = '''        state: RuntimeEffectState = RuntimeEffectState(),\n        chance_roll: float | None = None,\n        condition_context: ConditionContext | None = None,\n    ) -> tuple[BuildCandidate, ...]:'''
+          if sig in text:
+              text = text.replace(sig, repl, 1)
+          sig2 = '''        state: RuntimeEffectState = RuntimeEffectState(),\n        chance_roll: float | None = None,\n    ) -> tuple[str, ...]:'''
+          repl2 = '''        state: RuntimeEffectState = RuntimeEffectState(),\n        chance_roll: float | None = None,\n        condition_context: ConditionContext | None = None,\n    ) -> tuple[str, ...]:'''
+          if sig2 in text:
+              text = text.replace(sig2, repl2, 1)
+          text = text.replace(
+              '                    chance_roll=chance_roll,\n                )\n',
+              '                    chance_roll=chance_roll,\n                    condition_context=condition_context,\n                )\n',
+          )
+          p.write_text(text)
+
+          # Gear runtime buffs: replace the bespoke "condition not executable"
+          # blocker with the same shared condition-context evaluation.
+          p = Path('services/extreme_actual_heal_gear_runtime_buff_service.py')
+          text = p.read_text()
+          if 'from minmax.character_build.effect_relationship import ConditionContext' not in text:
+              text = text.replace(
+                  'from minmax.character_build.effect_layer import EffectLayer\n',
+                  'from minmax.character_build.effect_layer import EffectLayer\nfrom minmax.character_build.effect_relationship import ConditionContext\n',
+                  1,
+              )
+          old = '''        state: RuntimeEffectState = RuntimeEffectState(),\n        chance_roll: float | None = None,\n    ) -> ExtremeActualHealGearRuntimeBuffResult:'''
+          new = '''        state: RuntimeEffectState = RuntimeEffectState(),\n        chance_roll: float | None = None,\n        condition_context: ConditionContext | None = None,\n    ) -> ExtremeActualHealGearRuntimeBuffResult:'''
+          if old in text:
+              text = text.replace(old, new, 1)
+          blocker = '''                if effect.condition is not None:\n                    unresolved.append(\n                        f"{set_name} {buff} runtime condition is not executable: {effect.condition}"\n                    )\n                    continue\n\n'''
+          text = text.replace(blocker, '', 1)
+          text = text.replace(
+              '                    chance_roll=chance_roll,\n                )\n                if eligibility.eligible:\n',
+              '                    chance_roll=chance_roll,\n                    condition_context=condition_context,\n                )\n                if eligibility.eligible:\n',
+              1,
+          )
+          old_tail = '''                elif eligibility.chance_roll_required:\n                    unresolved.append(\n                        f"{set_name} {buff} proc requires an explicit deterministic chance roll"\n                    )\n'''
+          new_tail = '''                elif eligibility.chance_roll_required:\n                    unresolved.append(\n                        f"{set_name} {buff} proc requires an explicit deterministic chance roll"\n                    )\n                elif "condition_context_required" in eligibility.reasons:\n                    unresolved.append(\n                        f"{set_name} {buff} proc requires explicit runtime condition evidence: {effect.condition}"\n                    )\n                elif "condition_unsatisfied" in eligibility.reasons:\n                    unresolved.append(\n                        f"{set_name} {buff} proc condition is not satisfied: {effect.condition}"\n                    )\n'''
+          if old_tail in text:
+              text = text.replace(old_tail, new_tail, 1)
+          p.write_text(text)
+
+          # Conditional Extreme optimizer: expose independent skill/gear condition evidence.
+          p = Path('services/extreme_conditional_actual_heal_optimization_service.py')
+          text = p.read_text()
+          if 'from minmax.character_build.effect_relationship import ConditionContext' not in text:
+              text = text.replace(
+                  'from minmax.character_progression import AttributeAllocation, CharacterProgression\n',
+                  'from minmax.character_progression import AttributeAllocation, CharacterProgression\nfrom minmax.character_build.effect_relationship import ConditionContext\n',
+                  1,
+              )
+          text = text.replace(
+              '        skill_trigger_chance_roll: float | None = None,\n        gear_trigger_event: RuntimeEvent | None = None,\n',
+              '        skill_trigger_chance_roll: float | None = None,\n        skill_trigger_condition_context: ConditionContext | None = None,\n        gear_trigger_event: RuntimeEvent | None = None,\n',
+              1,
+          )
+          text = text.replace(
+              '        gear_trigger_chance_roll: float | None = None,\n        gear_runtime_buffs:',
+              '        gear_trigger_chance_roll: float | None = None,\n        gear_trigger_condition_context: ConditionContext | None = None,\n        gear_runtime_buffs:',
+              1,
+          )
+          text = text.replace(
+              '        self.skill_trigger_chance_roll = skill_trigger_chance_roll\n',
+              '        self.skill_trigger_chance_roll = skill_trigger_chance_roll\n        self.skill_trigger_condition_context = (\n            None if skill_trigger_condition_context is None else frozenset(str(value) for value in skill_trigger_condition_context)\n        )\n',
+              1,
+          )
+          text = text.replace(
+              '        self.gear_trigger_chance_roll = gear_trigger_chance_roll\n',
+              '        self.gear_trigger_chance_roll = gear_trigger_chance_roll\n        self.gear_trigger_condition_context = (\n            None if gear_trigger_condition_context is None else frozenset(str(value) for value in gear_trigger_condition_context)\n        )\n',
+              1,
+          )
+          # Pass condition evidence through candidate and active-state paths.
+          text = text.replace(
+              '                        chance_roll=self.skill_trigger_chance_roll,\n                    )\n',
+              '                        chance_roll=self.skill_trigger_chance_roll,\n                        condition_context=self.skill_trigger_condition_context,\n                    )\n',
+          )
+          text = text.replace(
+              '                        chance_roll=self.gear_trigger_chance_roll,\n                )\n',
+              '                        chance_roll=self.gear_trigger_chance_roll,\n                        condition_context=self.gear_trigger_condition_context,\n                )\n',
+              1,
+          )
+          # Add scenario evidence to search scope.
+          skill_scope = '''        if self.skill_trigger_event is not None:\n            scenarios.append(\n                "explicit triggered skill-buff runtime event "\n                f"{self.skill_trigger_event.trigger!r} at {self.skill_trigger_event.time_seconds:.6f}s "\n                f"with heal snapshot {self.skill_trigger_snapshot_seconds:.6f}s"\n            )\n'''
+          if skill_scope in text and 'explicit skill runtime conditions:' not in text:
+              text = text.replace(skill_scope, skill_scope + '''            if self.skill_trigger_condition_context is not None:\n                scenarios.append(\n                    "explicit skill runtime conditions: "\n                    + ", ".join(sorted(self.skill_trigger_condition_context))\n                )\n''', 1)
+          gear_scope = '''        if self.gear_trigger_event is not None:\n            scenarios.append(\n                "explicit gear-proc runtime event "\n                f"{self.gear_trigger_event.trigger!r} at {self.gear_trigger_event.time_seconds:.6f}s "\n                f"with heal snapshot {self.gear_trigger_snapshot_seconds:.6f}s; "\n                "wearer self-application requires canonical SELF targeting"\n            )\n'''
+          if gear_scope in text and 'explicit gear runtime conditions:' not in text:
+              text = text.replace(gear_scope, gear_scope + '''            if self.gear_trigger_condition_context is not None:\n                scenarios.append(\n                    "explicit gear runtime conditions: "\n                    + ", ".join(sorted(self.gear_trigger_condition_context))\n                )\n''', 1)
+          p.write_text(text)
+
+          # Tests: shared runtime gate.
+          p = Path('minmax/tests/test_runtime_effect_eligibility.py')
+          text = p.read_text()
+          if 'test_conditional_effect_requires_explicit_runtime_condition_context' not in text:
+              text += '''\n\ndef test_conditional_effect_requires_explicit_runtime_condition_context():\n    effect = _effect(condition="target_below_half_health")\n    missing = evaluate_effect_variant_runtime_eligibility(_event(), effect)\n    assert not missing.eligible\n    assert missing.reasons == ("condition_context_required",)\n\n    absent = evaluate_effect_variant_runtime_eligibility(\n        _event(), effect, condition_context=frozenset()\n    )\n    assert not absent.eligible\n    assert absent.reasons == ("condition_unsatisfied",)\n\n    proven = evaluate_effect_variant_runtime_eligibility(\n        _event(),\n        effect,\n        condition_context=frozenset({"target_below_half_health"}),\n    )\n    assert proven.eligible\n    assert proven.reasons == ()\n'''
+          p.write_text(text)
+
+          # Tests: triggered skill conditional source discovery.
+          p = Path('services/tests/test_extreme_actual_heal_skill_buff_candidate_service.py')
+          text = p.read_text()
+          if 'test_triggered_skill_buff_condition_requires_explicit_matching_context' not in text:
+              text += '''\n\ndef test_triggered_skill_buff_condition_requires_explicit_matching_context():\n    from minmax.runtime_event import RuntimeEvent\n\n    class ConditionalTriggeredRepository(_Repository):\n        @staticmethod\n        def available_skills(character_class=None):\n            _ = character_class\n            return ((6, "Conditional Triggered Power"),)\n\n        @staticmethod\n        def resolve(ability_id):\n            assert ability_id == 6\n            return (\n                EffectVariant(\n                    name="major_sorcery",\n                    layer=EffectLayer.CAST,\n                    source="Conditional Triggered Power",\n                    duration=10.0,\n                    trigger="critical_heal",\n                    condition="target_below_half_health",\n                    target_type=SupportTargetType.SELF,\n                ),\n            )\n\n    service = ExtremeActualHealSkillBuffCandidateService(\n        "unused.db", repository=ConditionalTriggeredRepository()\n    )\n    kwargs = dict(\n        baseline_build=_build(),\n        character_id="char-1",\n        baseline_build_id="build-1",\n        protected_entity_id="blessing_of_protection",\n        active_bar="front",\n        event=RuntimeEvent(time_seconds=0.0, trigger="critical_heal", source="test"),\n        snapshot_time_seconds=1.0,\n    )\n    assert service.triggered_build_candidates(**kwargs) == ()\n    assert service.triggered_build_candidates(\n        **kwargs, condition_context=frozenset()\n    ) == ()\n    assert service.triggered_build_candidates(\n        **kwargs, condition_context=frozenset({"target_below_half_health"})\n    )\n'''
+          p.write_text(text)
+
+          # Tests: gear condition evidence and blocker reporting.
+          p = Path('services/tests/test_extreme_actual_heal_gear_runtime_buff_service.py')
+          text = p.read_text()
+          if 'test_conditional_gear_proc_requires_explicit_matching_context' not in text:
+              text += '''\n\ndef test_conditional_gear_proc_requires_explicit_matching_context():\n    class ConditionalResolver:\n        @staticmethod\n        def resolve(set_id, piece_count):\n            if piece_count < 5:\n                return []\n            return [\n                EffectVariant(\n                    name="major_courage",\n                    layer=EffectLayer.PROC,\n                    source="fixture set",\n                    duration=5.0,\n                    trigger="overheal_self_or_ally",\n                    condition="overheal_confirmed",\n                    target_type=SupportTargetType.SELF,\n                )\n            ]\n\n    service = ExtremeActualHealGearRuntimeBuffService(\n        "unused.db", repository=_Repository(), resolver=ConditionalResolver()\n    )\n    kwargs = dict(\n        build=_five_piece("Self Proc Set"),\n        active_bar="front",\n        event=RuntimeEvent(time_seconds=0.0, trigger="overheal_self_or_ally", source="test"),\n        snapshot_time_seconds=1.0,\n    )\n    missing = service.resolve(**kwargs)\n    assert missing.active_buffs == ()\n    assert any("requires explicit runtime condition evidence" in item for item in missing.unresolved)\n\n    absent = service.resolve(**kwargs, condition_context=frozenset())\n    assert absent.active_buffs == ()\n    assert any("condition is not satisfied" in item for item in absent.unresolved)\n\n    proven = service.resolve(\n        **kwargs, condition_context=frozenset({"overheal_confirmed"})\n    )\n    assert proven.active_buffs == ("Major Courage",)\n    assert proven.unresolved == ()\n'''
+          p.write_text(text)
+
+          # Mechanics notes.
+          p = Path('GAME_MECHANICS_FIELD_NOTES.md')
+          text = p.read_text()
+          heading = '## 2026-09-09 — Runtime condition names require explicit evidence, not interpretation'
+          if heading not in text:
+              text += f'''\n\n---\n\n{heading}\n\nRuntime proc eligibility now accepts the same opaque named `ConditionContext` used by the canonical effect-relationship layer. A conditional skill/set proc is not eligible merely because its trigger fired. If no runtime condition context is supplied, the result is `condition_context_required`; if a context is supplied but the required condition name is absent, it is `condition_unsatisfied`. Extreme MOST Actual Heal forwards independent skill and gear condition evidence into this shared gate.\n\n**Layman's version:** seeing the event happen is not proof that every extra clause on the proc was true. The optimizer now needs explicit evidence for those clauses before it uses the buff.\n'''
+          p.write_text(text)
+          PY
+
+      - name: Install focused test dependencies
+        run: python -m pip install --disable-pip-version-check pytest==9.1.1 pydantic==2.13.4
+
+      - name: Test patched head
+        run: |
+          python -m pytest \
+            minmax/tests/test_runtime_effect_eligibility.py \
+            services/tests/test_extreme_actual_heal_skill_buff_candidate_service.py \
+            services/tests/test_extreme_actual_heal_gear_runtime_buff_service.py \
+            services/tests/test_extreme_conditional_actual_heal_optimization_service.py \
+            minmax/tests/test_effect_relationship_conditions_and_procs.py \
+            services/tests/test_extreme_optimization_read_only_database.py
+
+      - name: Commit rebase retest push
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name Jarakeen
+          git config user.email jarakeene@gmail.com
+          git add \
+            minmax/runtime_effect_eligibility.py \
+            services/extreme_actual_heal_skill_buff_candidate_service.py \
+            services/extreme_actual_heal_gear_runtime_buff_service.py \
+            services/extreme_conditional_actual_heal_optimization_service.py \
+            minmax/tests/test_runtime_effect_eligibility.py \
+            services/tests/test_extreme_actual_heal_skill_buff_candidate_service.py \
+            services/tests/test_extreme_actual_heal_gear_runtime_buff_service.py \
+            GAME_MECHANICS_FIELD_NOTES.md
+          git commit -m "feat: prove runtime proc conditions in Extreme heals"
+          git fetch origin phase13.2
+          git rebase origin/phase13.2
+          python -m pytest \
+            minmax/tests/test_runtime_effect_eligibility.py \
+            services/tests/test_extreme_actual_heal_skill_buff_candidate_service.py \
+            services/tests/test_extreme_actual_heal_gear_runtime_buff_service.py \
+            services/tests/test_extreme_conditional_actual_heal_optimization_service.py \
+            minmax/tests/test_effect_relationship_conditions_and_procs.py \
+            services/tests/test_extreme_optimization_read_only_database.py
+          git push origin HEAD:phase13.2
