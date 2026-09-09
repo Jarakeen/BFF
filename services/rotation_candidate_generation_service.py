@@ -78,6 +78,8 @@ class RotationCandidateGenerationService:
     repeatedly without generating unrelated siblings on every iteration. Explicit
     demand action claims are also preserved here so encounter-owned mechanic casts
     can become executable candidate actions instead of stopping at obligation data.
+    Demand action claims and caller-proven refresh leads may coexist in one policy;
+    their deterministic precedence is owned by the canonical duration refiner.
     """
 
     DEFAULT_MAX_CANDIDATES = 32
@@ -176,10 +178,6 @@ class RotationCandidateGenerationService:
             raise ValueError("rotation candidate candidate_id is required")
         canonical_leads = self._canonical_leads(tuple(refresh_leads))
         canonical_claims = self._canonical_claims(tuple(action_claims))
-        if canonical_leads and canonical_claims:
-            raise ValueError(
-                "rotation candidate policy cannot combine demand refresh leads and demand action claims"
-            )
         return self._generate_one(
             candidate_id=resolved_id,
             seed_plan=seed_plan,
