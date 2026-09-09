@@ -300,3 +300,9 @@ def install() -> None:
     _ORIGINAL_BUILD_SNAPSHOT = PerformanceDashboardService.build_snapshot
     PerformanceDashboardService.build_snapshot = _build_snapshot_with_dot_analysis
     _INSTALLED = True
+
+    # Keep the DD stack contiguous: crit -> observed DoT -> observed LA pairing.
+    # Every layer is additive and read-only with respect to the local ESO database.
+    from services.performance_dd_weave_support import install as install_weave_support
+
+    install_weave_support()
