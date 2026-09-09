@@ -94,3 +94,47 @@ def test_compare_reports_independent_tradeoffs_without_inventing_winner():
     assert "Candidate uses 2 fewer applications per minute." in explanation.tradeoffs
     assert "Candidate spends 4000 less Magicka." in explanation.tradeoffs
     assert "not a universal winner" in explanation.boundary
+
+    panel = TeamProviderWorkloadExplanationService.render_panel(
+        (baseline, candidate),
+        comparison=service.compare(baseline, candidate),
+    )
+    assert "COMPARISON • healer provider → healer provider" in panel
+    assert "Candidate spends 4000 less Magicka." in panel
+
+
+def test_empty_panel_preserves_static_vs_rotation_boundary():
+    panel = TeamProviderWorkloadExplanationService.render_panel(())
+
+    assert "No canonical provider rotation workload" in panel
+    assert "Static capability availability does not prove" in panel
+
+
+def test_panel_rejects_comparison_for_hidden_workloads():
+    recipient = TeamProviderCoverageService.evaluate(
+        TeamProviderCoverageProfile("provider", 12, 1),
+        required_recipients=12,
+    )
+    temporal = TeamProviderTemporalCoverageService.evaluate(
+        TeamProviderTemporalRequirement("minor courage", 0.0, 60.0),
+        applications=(
+            TeamProviderTimedApplication("minor courage", "Magrat", 0.0, 60.0),
+        ),
+    )
+    service = TeamProviderRotationWorkloadService()
+    baseline = _workload(
+        applications=(0.0, 20.0), recipient=recipient, temporal=temporal
+    )
+    candidate = _workload(
+        applications=(0.0,), recipient=recipient, temporal=temporal
+    )
+
+    try:
+        TeamProviderWorkloadExplanationService.render_panel(
+            (baseline,),
+            comparison=service.compare(baseline, candidate),
+        )
+    except ValueError as exc:
+        assert "displayed workloads" in str(exc)
+    else:
+        raise AssertionError("expected hidden comparison evidence to fail closed")

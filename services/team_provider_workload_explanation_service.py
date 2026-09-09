@@ -147,6 +147,51 @@ class TeamProviderWorkloadExplanationService:
             ),
         )
 
+    @classmethod
+    def render_panel(
+        cls,
+        workloads: tuple[TeamProviderRotationWorkload, ...],
+        *,
+        comparison: TeamProviderRotationWorkloadComparison | None = None,
+    ) -> str:
+        """Render exact workload evidence for shared Comp/Optimization cards."""
+
+        if not workloads:
+            return (
+                "No canonical provider rotation workload is attached to this team yet.\n\n"
+                "Static capability availability does not prove recipient coverage, "
+                "encounter uptime, sustain through the rotation, or which role can "
+                "perform the job with the least disruption."
+            )
+
+        sections: list[str] = []
+        for workload in workloads:
+            explanation = cls.describe(workload)
+            lines = [
+                explanation.alternative_id.upper(),
+                *explanation.coverage,
+                *explanation.workload,
+            ]
+            if explanation.blockers:
+                lines.append("Blocked / unresolved:")
+                lines.extend(f"• {item}" for item in explanation.blockers)
+            sections.append("\n".join(lines))
+
+        if comparison is not None:
+            if comparison.baseline not in workloads or comparison.candidate not in workloads:
+                raise ValueError(
+                    "provider workload comparison must reference displayed workloads"
+                )
+            rendered = cls.compare(comparison)
+            lines = [
+                f"COMPARISON • {rendered.baseline_id} → {rendered.candidate_id}",
+                *(f"• {item}" for item in rendered.tradeoffs),
+                rendered.boundary,
+            ]
+            sections.append("\n".join(lines))
+
+        return "\n\n".join(sections)
+
     @staticmethod
     def _delta_sentence(label: str, delta: float) -> str:
         direction = "more" if delta > 0 else "fewer"

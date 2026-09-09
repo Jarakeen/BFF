@@ -686,13 +686,24 @@ override stale copied booleans, and UI-ready explanation evidence exposes recipi
 counts, covered time, targets, gaps, distinct-carrier failures, casts, resources,
 Ultimate, bar space, and role displacement without inventing a universal winner.
 
+Comp Maker and Team Optimization now share a theme-native Provider Rotation Workload
+card and typed presentation path for those exact workload/comparison objects. Until
+a canonical rotation result is attached, the visible card explicitly distinguishes
+static capability availability from recipient coverage, uptime, sustain, and role
+disruption. Editing the composition or optimization selection clears attached
+workload evidence so a result from an older team cannot remain on screen as if it
+still applied.
+
 Persistent/summoned Ultimates with an explicit secondary activation contract now
 reuse the existing canonical ability-description resolver. For example, a zero-base-
 cost Eternal Guardian can contribute the evidenced 75-Ultimate Guardian's Wrath
 activation cost; unsupported zero-cost Ultimates remain unresolved.
 
-Expanded canonical provider-workload, coverage, explanation, final-cost, saved-slot,
-timing, and Ultimate checkpoint: **118 passed in 0.95s**.
+Expanded canonical provider-workload, coverage, explanation, presentation, final-
+cost, saved-slot, timing, and Ultimate checkpoint: **122 passed, 1 skipped in 1.07s**.
+The single local skip is the real PySide widget check because PySide6 is unavailable
+in the Linux scratch runtime; the source-level dual-surface/install checks passed and
+the widget test remains included for the user's Windows environment.
 Latest user-reported full-suite checkpoint after the canonical workload slice:
 **2,626 passed in 73.30s** on Windows / Python 3.12.4.
 
@@ -701,7 +712,7 @@ Active next work:
 1. convert the user-supplied BTV screenshot corpus into structured benchmark fixtures with provenance, encounter scope, observed uptime, target/reference uptime where visible, theoretical maximum where visible, and explicit unknown fields rather than guessed values;
 2. test policy selection, target-vs-theoretical-max validation, temporal window scoring, overlap/gap explanation, and BTV-style feedback against those fixtures;
 3. connect those benchmark fixtures to Comp Maker / Optimization explanation paths without treating them as canonical ESO mechanics;
-4. wire the new provider workload explanation evidence into the visible Comp Maker / Optimization result surfaces;
+4. generate canonical provider workload candidates from the selected Comp Maker / Optimization team and attach them to the now-visible shared result surface;
 5. continue thorough healer, tank, and DD rotation coverage with class passives, armor/set duration modifiers, runtime proc conditions, and encounter-specific timing.
 
 Fight-horizon policy: most raid fights are expected to finish within roughly six minutes in the user's working context, so **360 seconds may be used only as an overrideable fallback planning ceiling when encounter-specific timing is unavailable**. It is not a canonical encounter duration. Optimization should prioritize important burn/mechanic windows over meaningless attempts to force every support effect to 100% global uptime.

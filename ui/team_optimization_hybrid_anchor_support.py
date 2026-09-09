@@ -163,3 +163,8 @@ def install() -> None:
 
     from ui.comp_builder_polish_support import install as install_comp_builder_polish
     install_comp_builder_polish()
+
+    from ui.team_provider_workload_support import (
+        install as install_team_provider_workload_support,
+    )
+    install_team_provider_workload_support()
