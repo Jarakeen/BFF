@@ -42,6 +42,27 @@ BUILD_COVERAGE_ALIASES = {
 }
 
 
+_CLASS_LABELS = {
+    "arcanist": "Arc",
+    "dragonknight": "DK",
+    "necromancer": "Necro",
+    "nightblade": "NB",
+    "sorcerer": "Sorc",
+    "templar": "Templar",
+    "warden": "Warden",
+}
+
+_ROLE_LABELS = {
+    "damage dealer": "DD",
+    "damage": "DD",
+    "dps": "DD",
+    "dd": "DD",
+    "healer": "Healer",
+    "heal": "Healer",
+    "tank": "Tank",
+}
+
+
 def build_search_text(build) -> str:
     values: list[object] = []
     values.extend(getattr(build, "FrontBarSkills", ()) or ())
@@ -67,6 +88,29 @@ def build_search_text(build) -> str:
     return " ".join(str(value or "") for value in values).casefold()
 
 
+def compact_provider_label(build) -> str:
+    """Return a short coverage-card label without exposing long roster names.
+
+    Coverage tiles only need enough identity to distinguish the provider's build
+    archetype. Full player/character names remain available everywhere else in the
+    roster and build models; this is deliberately a display-only projection.
+    """
+
+    eso_class = str(getattr(build, "EsoClass", "") or "").strip()
+    role = str(getattr(build, "Role", "") or "").strip()
+
+    class_label = _CLASS_LABELS.get(eso_class.casefold(), eso_class)
+    role_label = _ROLE_LABELS.get(role.casefold(), role)
+    compact = " ".join(part for part in (class_label, role_label) if part).strip()
+    if compact:
+        return compact
+
+    build_name = str(getattr(build, "BuildName", "") or "").strip()
+    if build_name:
+        return build_name[:28].rstrip()
+    return "Saved build"
+
+
 def coverage_from_builds(builds) -> tuple[TeamCoverageItem, ...]:
     rows: list[TeamCoverageItem] = []
     build_rows = tuple(builds)
@@ -77,12 +121,7 @@ def coverage_from_builds(builds) -> tuple[TeamCoverageItem, ...]:
             text = build_search_text(build)
             if not any(alias.casefold() in text for alias in aliases):
                 continue
-            provider = (
-                str(getattr(build, "Name", "") or "").strip()
-                or str(getattr(build, "Gamertag", "") or "").strip()
-                or str(getattr(build, "BuildName", "") or "").strip()
-                or "Saved build"
-            )
+            provider = compact_provider_label(build)
             if provider not in providers:
                 providers.append(provider)
         rows.append(
