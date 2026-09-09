@@ -1,10 +1,15 @@
 import os
+from pathlib import Path
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QApplication, QTableWidget, QVBoxLayout, QWidget
 
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
+from services.rotation_timeline_projection_service import RotationTimelineAction
+from ui.components import rotation_timeline_widget as timeline_widget_module
+from ui.components.rotation_timeline_widget import _RotationTimelineCanvas
 from ui.rotation_duration_evidence_support import (
     RotationDurationEvidence,
     RotationDurationEvidenceRow,
@@ -110,3 +115,44 @@ def test_plan_and_duration_wrappers_refresh_one_shared_visual_projection():
 
     page.clear_rotation_plan(refresh=False)
     assert page.rotation_timeline_widget.canvas._projection is None
+
+
+def test_timeline_icon_lookup_accepts_canonical_skill_identity(monkeypatch, tmp_path):
+    icon_root = tmp_path / "assets" / "AbilityIcons" / "icons" / "128"
+    icon_root.mkdir(parents=True)
+    icon_path = icon_root / "ability_restorationstaff_001.png"
+    pixmap = QPixmap(8, 8)
+    assert pixmap.save(str(icon_path))
+
+    def fake_resource_path(*parts):
+        return tmp_path.joinpath(*parts)
+
+    monkeypatch.setattr(timeline_widget_module, "get_resource_path", fake_resource_path)
+    monkeypatch.setattr(
+        timeline_widget_module,
+        "load_skill_choices",
+        lambda: [
+            {
+                "name": "Combat Prayer",
+                "index_name": "combat_prayer",
+                "texture": "/esoui/art/icons/ability_restorationstaff_001.dds",
+            }
+        ],
+    )
+    _RotationTimelineCanvas._skill_icon_lookup = None
+
+    action = RotationTimelineAction(
+        time_seconds=0.0,
+        sequence=0,
+        name="combat_prayer",
+        kind="skill",
+        bar="front",
+        icon_key="combat_prayer",
+    )
+
+    resolved = _RotationTimelineCanvas._icon_pixmap(action)
+    assert resolved is not None
+    assert not resolved.isNull()
+
+    first_candidate = _RotationTimelineCanvas._candidate_icon_paths(action)[0]
+    assert first_candidate == Path(icon_root / "combat_prayer.png")
