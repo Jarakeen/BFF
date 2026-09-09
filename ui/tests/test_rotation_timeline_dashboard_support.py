@@ -4,17 +4,20 @@ from pathlib import Path
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import QApplication, QTableWidget, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QApplication, QComboBox, QTableWidget, QVBoxLayout, QWidget
 
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from services.rotation_timeline_projection_service import RotationTimelineAction
-from ui.components import rotation_timeline_widget as timeline_widget_module
 from ui.components.rotation_timeline_widget import _RotationTimelineCanvas
 from ui.rotation_duration_evidence_support import (
     RotationDurationEvidence,
     RotationDurationEvidenceRow,
 )
-from ui.rotation_timeline_dashboard_support import install_rotation_timeline
+from ui import rotation_timeline_dashboard_support as timeline_support_module
+from ui.rotation_timeline_dashboard_support import (
+    RotationTimelineIconResolver,
+    install_rotation_timeline,
+)
 
 
 _APP = QApplication.instance() or QApplication([])
@@ -39,6 +42,9 @@ class _FakePage:
         self.timeline_table = QTableWidget()
         self.timeline_body.layout().addWidget(self.timeline_table)
         self.duration_evidence_card = _DurationEvidenceCard()
+        self.rotation_type_combo = QComboBox()
+        self.rotation_type_combo.addItems(["Static", "Semi-static", "Dynamic"])
+        self.rotation_type_combo.setCurrentText("Semi-static")
 
     def set_rotation_plan(self, plan) -> None:
         self.rotation_plan = plan
@@ -96,6 +102,22 @@ def test_install_defaults_to_visual_timeline_and_preserves_details_toggle():
     assert page.timeline_table.isHidden()
 
 
+def test_unimplemented_rotation_modes_remain_visible_but_disabled():
+    page = _FakePage()
+    install_rotation_timeline(page)
+
+    assert [page.rotation_type_combo.itemText(i) for i in range(page.rotation_type_combo.count())] == [
+        "Static",
+        "Semi-static",
+        "Dynamic",
+    ]
+    model = page.rotation_type_combo.model()
+    assert not model.item(0).isEnabled()
+    assert model.item(1).isEnabled()
+    assert not model.item(2).isEnabled()
+    assert page.rotation_type_combo.currentText() == "Semi-static"
+
+
 def test_plan_and_duration_wrappers_refresh_one_shared_visual_projection():
     page = _FakePage()
     install_rotation_timeline(page)
@@ -135,7 +157,7 @@ def test_visual_timeline_failure_does_not_abort_authoritative_plan(monkeypatch):
     assert page.refresh_visual_rotation_timeline() is False
 
 
-def test_timeline_icon_lookup_accepts_canonical_skill_identity(monkeypatch, tmp_path):
+def test_timeline_icon_resolver_accepts_canonical_skill_identity(monkeypatch, tmp_path):
     icon_root = tmp_path / "assets" / "AbilityIcons" / "icons" / "128"
     icon_root.mkdir(parents=True)
     icon_path = icon_root / "ability_restorationstaff_001.png"
@@ -145,9 +167,9 @@ def test_timeline_icon_lookup_accepts_canonical_skill_identity(monkeypatch, tmp_
     def fake_resource_path(*parts):
         return tmp_path.joinpath(*parts)
 
-    monkeypatch.setattr(timeline_widget_module, "get_resource_path", fake_resource_path)
+    monkeypatch.setattr(timeline_support_module, "get_resource_path", fake_resource_path)
     monkeypatch.setattr(
-        timeline_widget_module,
+        timeline_support_module,
         "load_skill_choices",
         lambda: [
             {
@@ -157,7 +179,10 @@ def test_timeline_icon_lookup_accepts_canonical_skill_identity(monkeypatch, tmp_
             }
         ],
     )
-    _RotationTimelineCanvas._skill_icon_lookup = None
+
+    resolver = RotationTimelineIconResolver()
+    resolved = resolver.resolve("combat_prayer", "combat_prayer")
+    assert resolved == str(icon_path)
 
     action = RotationTimelineAction(
         time_seconds=0.0,
@@ -166,11 +191,11 @@ def test_timeline_icon_lookup_accepts_canonical_skill_identity(monkeypatch, tmp_
         kind="skill",
         bar="front",
         icon_key="combat_prayer",
+        icon_path=resolved,
     )
-
-    resolved = _RotationTimelineCanvas._icon_pixmap(action)
-    assert resolved is not None
-    assert not resolved.isNull()
+    rendered = _RotationTimelineCanvas._icon_pixmap(action)
+    assert rendered is not None
+    assert not rendered.isNull()
 
     first_candidate = _RotationTimelineCanvas._candidate_icon_paths(action)[0]
-    assert first_candidate == Path(icon_root / "combat_prayer.png")
+    assert first_candidate.name == "combat_prayer.png"
