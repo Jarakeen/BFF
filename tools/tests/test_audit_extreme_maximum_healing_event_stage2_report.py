@@ -14,6 +14,7 @@ from tools.audit_extreme_maximum_healing_event_stage2 import (
 PET = (
     "Sorcerer pet special activation requires runtime proof that the corresponding pet is summoned and alive"
 )
+POTION = "Potion selected; activation/uptime is not part of static build state: spell power"
 ELDER = (
     "Blood of the Elder Dragon maximum-event scaling requires component-specific missing-Health proof for the winning recipient"
 )
@@ -22,11 +23,11 @@ ELDER = (
 def _entries():
     return (
         SimpleNamespace(unresolved=(PET, ELDER, "Champion Point is dynamic or not yet stat-mapped: Celerity")),
-        SimpleNamespace(unresolved=(PET, ELDER, "Potion selected; activation/uptime is not part of static build state: spell power")),
+        SimpleNamespace(unresolved=(PET, ELDER, POTION)),
     )
 
 
-def test_decisive_blockers_exclude_achievable_pet_setup_and_prioritize_search_proof():
+def test_decisive_blockers_exclude_achievable_setup_and_prioritize_search_proof():
     omitted = (
         "whole-build optimization outside the selected Stage-2 finalist families/routes",
         "proof that a lower baseline family within an already represented source kind cannot overtake after whole-build mutation",
@@ -53,7 +54,7 @@ def test_decisive_blockers_exclude_achievable_pet_setup_and_prioritize_search_pr
     assert all("Potion selected" not in message for _, message in blockers)
 
 
-def test_stage2_setup_prerequisites_deduplicate_pet_requirement_across_routes():
+def test_stage2_setup_prerequisites_deduplicate_across_routes():
     relevance = ExtremeMaximumHealUnresolvedRelevanceService()
 
-    assert _setup_prerequisites(_entries(), relevance) == (PET,)
+    assert _setup_prerequisites(_entries(), relevance) == (PET, POTION)
