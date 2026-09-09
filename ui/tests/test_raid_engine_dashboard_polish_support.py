@@ -10,10 +10,11 @@ from ui.raid_engine_dashboard_polish_support import (
 )
 
 
-def test_dashboard_polish_makes_composition_surface_larger() -> None:
+def test_dashboard_polish_uses_balanced_composition_surface() -> None:
     source = Path("ui/raid_engine_dashboard_polish_support.py").read_text(encoding="utf-8")
-    assert "setMinimumSize(690, 430)" in source
-    assert "setMinimumWidth(700)" in source
+    assert "setMinimumSize(630, 400)" in source
+    assert "setMinimumWidth(640)" in source
+    assert "setMinimumHeight(400)" in source
 
 
 def test_dashboard_polish_uses_status_pills_and_colored_coverage() -> None:
