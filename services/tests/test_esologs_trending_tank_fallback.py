@@ -16,6 +16,7 @@ class _TankFallbackClient:
         spec_name = variables.get("specName")
 
         if metric == "dps" and class_name == "Tanks":
+            assert "includeCombatantInfo: true" in query
             return {
                 "worldData": {
                     "encounter": {
@@ -24,6 +25,12 @@ class _TankFallbackClient:
                                 {
                                     "name": "TankA",
                                     "class": "Dragonknight",
+                                    "combatantInfo": {
+                                        "gear": [
+                                            {"setName": "Pearlescent Ward"},
+                                            {"setName": "Turning Tide"},
+                                        ]
+                                    },
                                     "report": {"code": "A", "fightID": 1},
                                 }
                             ]
@@ -44,6 +51,8 @@ class _TankFallbackClient:
         return {"startTime": 0, "endTime": 10_000}
 
     def get_report_player_summary(self, report_code, fight_id, start, end):
+        # Deliberately wrong gear here. Tank Trending must prefer the combatantInfo
+        # attached to the ranked Tank row and never replace it with this later summary.
         return {
             "tanks": [
                 {
@@ -51,8 +60,8 @@ class _TankFallbackClient:
                     "type": "Dragonknight",
                     "combatantInfo": {
                         "gear": [
-                            {"setName": "Pearlescent Ward"},
-                            {"setName": "Turning Tide"},
+                            {"setName": "Coral Riptide"},
+                            {"setName": "Deadly Strike"},
                         ]
                     },
                 }
@@ -76,7 +85,12 @@ def test_trending_prefers_live_tanks_class_damage_rankings():
     tank = report.role_summaries["tank"]
     assert tank.player_count == 1
     assert tank.sample_players[0].Name == "TankA"
-    assert tank.gear_sets[0].name == "Pearlescent Ward"
+    assert tank.sample_players[0].Role == "tank"
+    assert [row.name for row in tank.gear_sets] == [
+        "Pearlescent Ward",
+        "Turning Tide",
+    ]
+    assert all(row.name not in {"Coral Riptide", "Deadly Strike"} for row in tank.gear_sets)
 
     tank_queries = [variables for _, variables in client.calls if variables["metric"] == "dps"]
     assert any(
