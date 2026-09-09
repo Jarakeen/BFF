@@ -29,3 +29,22 @@ def test_lokkestiiz_scenario_does_not_mutate_base_build_definition() -> None:
 
     assert "elemental_blockade" in scenario.execution.required_skill_ids
     assert "winters_revenge" not in scenario.execution.required_skill_ids
+
+
+def test_lokkestiiz_scenario_selects_aggressive_horn_for_each_landing() -> None:
+    scenario = build_magrat_df_healer_lokkestiiz_scenario()
+
+    assert scenario.selected_ultimate_semantic_id == "aggressive_horn"
+
+
+def test_lokkestiiz_scenario_models_horn_readiness_as_affordability_not_attack_count() -> None:
+    scenario = build_magrat_df_healer_lokkestiiz_scenario()
+
+    assert not any("light-attack count" in item for item in scenario.unresolved)
+    readiness = next(
+        item for item in scenario.unresolved
+        if "Aggressive Horn affordability at each landing" in item
+    )
+    assert "landing clock windows" in readiness
+    assert "base-combat Ultimate-generation window" in readiness
+    assert scenario.ready_for_clock_scheduling is False
