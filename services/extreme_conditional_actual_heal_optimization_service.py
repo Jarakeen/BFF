@@ -13,6 +13,9 @@ from services.extreme_actual_heal_optimization_service import (
     ExtremeActualHealOptimizationResult,
     ExtremeActualHealOptimizationService,
 )
+from services.extreme_actual_heal_gear_runtime_buff_service import (
+    ExtremeActualHealGearRuntimeBuffService,
+)
 from services.extreme_actual_heal_potion_candidate_service import (
     ExtremeActualHealPotionCandidateService,
 )
@@ -109,6 +112,11 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         skill_trigger_snapshot_seconds: float | None = None,
         skill_trigger_effect_state: RuntimeEffectState = RuntimeEffectState(),
         skill_trigger_chance_roll: float | None = None,
+        gear_trigger_event: RuntimeEvent | None = None,
+        gear_trigger_snapshot_seconds: float | None = None,
+        gear_trigger_effect_state: RuntimeEffectState = RuntimeEffectState(),
+        gear_trigger_chance_roll: float | None = None,
+        gear_runtime_buffs: ExtremeActualHealGearRuntimeBuffService | None = None,
         restoration_heavy_state: ExtremeRestorationHeavyCombatStateService | None = None,
         templar_sacred_ground_state: ExtremeTemplarSacredGroundCombatStateService | None = None,
         templar_restoring_light_healing: ExtremeTemplarRestoringLightHealingService | None = None,
@@ -174,6 +182,22 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         )
         self.skill_trigger_effect_state = skill_trigger_effect_state
         self.skill_trigger_chance_roll = skill_trigger_chance_roll
+        if (gear_trigger_event is None) != (gear_trigger_snapshot_seconds is None):
+            raise ValueError(
+                "gear_trigger_event and gear_trigger_snapshot_seconds must be provided together"
+            )
+        if (
+            gear_trigger_event is not None
+            and float(gear_trigger_snapshot_seconds) < gear_trigger_event.time_seconds
+        ):
+            raise ValueError("gear trigger snapshot cannot precede the runtime event")
+        self.gear_trigger_event = gear_trigger_event
+        self.gear_trigger_snapshot_seconds = (
+            None if gear_trigger_snapshot_seconds is None else float(gear_trigger_snapshot_seconds)
+        )
+        self.gear_trigger_effect_state = gear_trigger_effect_state
+        self.gear_trigger_chance_roll = gear_trigger_chance_roll
+        self.gear_runtime_buffs = gear_runtime_buffs
         self.restoration_heavy_state = restoration_heavy_state
         self.templar_sacred_ground_state = templar_sacred_ground_state
         self.templar_restoring_light_healing = templar_restoring_light_healing
@@ -228,6 +252,13 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
                 "explicit triggered skill-buff runtime event "
                 f"{self.skill_trigger_event.trigger!r} at {self.skill_trigger_event.time_seconds:.6f}s "
                 f"with heal snapshot {self.skill_trigger_snapshot_seconds:.6f}s"
+            )
+        if self.gear_trigger_event is not None:
+            scenarios.append(
+                "explicit gear-proc runtime event "
+                f"{self.gear_trigger_event.trigger!r} at {self.gear_trigger_event.time_seconds:.6f}s "
+                f"with heal snapshot {self.gear_trigger_snapshot_seconds:.6f}s; "
+                "wearer self-application requires canonical SELF targeting"
             )
         if self.sacred_ground_window_active:
             scenarios.append(
@@ -359,6 +390,25 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
                         chance_roll=self.skill_trigger_chance_roll,
                     )
                 )
+
+        if self.gear_trigger_event is not None:
+            service = self.gear_runtime_buffs
+            if service is None:
+                database_path = getattr(self.optimizer, "database_path", None)
+                if database_path is not None:
+                    service = ExtremeActualHealGearRuntimeBuffService(database_path)
+                    self.gear_runtime_buffs = service
+            if service is not None:
+                gear_result = service.resolve(
+                    build,
+                    active_bar=active_bar,
+                    event=self.gear_trigger_event,
+                    snapshot_time_seconds=self.gear_trigger_snapshot_seconds,
+                    state=self.gear_trigger_effect_state,
+                    chance_roll=self.gear_trigger_chance_roll,
+                )
+                active_buffs.extend(gear_result.active_buffs)
+                unresolved.extend(gear_result.unresolved)
 
         if self.potion_elapsed_seconds is not None:
             potion_name = " ".join(str(build.Potion or "").strip().split())

@@ -569,3 +569,14 @@ Extreme MOST Actual Heal may search triggered self-buff skills only when the cal
 **Layman’s version:** a skill proc does not exist because the build could theoretically proc it. Extreme needs the actual trigger scenario, checks proc chance/cooldown rules, and then verifies the buff has not expired before the heal lands.
 
 **For BFF:** triggered skill-source candidates physically slot the skill without replacing the scored heal, and only an eligible, still-active named self-buff reaches canonical `CombatState`.
+
+
+---
+
+## 2026-09-09 — Gear-proc self application must be explicit, not inferred from ally/group targeting
+
+Extreme MOST Actual Heal now evaluates verified gear-set proc effects against explicit runtime events, cooldown state, proc chance, and the exact heal snapshot. Existing Extreme gear candidates remain responsible for physically equipping sets; the runtime layer uses canonical `GearStatInputResolver.equipped_set_counts` and `GearSetEffectVariantResolver` to determine what the candidate can actually proc.
+
+A proc recorded as `ALLY` or `GROUP` is **not** automatically treated as a buff on the wearer. This matters for records such as Spell Power Cure, whose verified trigger identity currently says `overheal_self_or_ally` while its target model is `ALLY`. Until the target model can explicitly prove wearer self-application, Extreme reports that ambiguity instead of adding Major Courage to the healer.
+
+**Layman’s version:** wearing a proc set and successfully triggering it still does not prove the buff landed on *you*. Extreme now insists on that last piece of evidence before using the buff to inflate MOST Actual Heal.
