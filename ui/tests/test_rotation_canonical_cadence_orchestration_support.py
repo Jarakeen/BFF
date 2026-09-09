@@ -211,24 +211,11 @@ def test_cadence_progression_starts_from_final_canonical_plan_and_forwards_bundl
     assert result.final_sustain == "cadence-sustain"
 
 
-def test_cadence_obligations_require_configured_runner_only_after_canonical_selection() -> None:
-    canonical_evidence = SimpleNamespace(
-        plan="canonical-plan",
-        sustain_projection="canonical-sustain",
-    )
-    canonical = _CanonicalCandidates()
-    render = _CanonicalRender(canonical_evidence)
+def test_default_constructor_composes_production_cadence_runner() -> None:
     support = RotationCanonicalCadenceOrchestrationSupport(
-        canonical_candidates=canonical,
-        canonical_render=render,
-        cadence_runner=None,
+        canonical_candidates=_CanonicalCandidates(),
+        canonical_render=_CanonicalRender(None),
         cadence_render=_CadenceRender(),
     )
 
-    with pytest.raises(ValueError, match="no cadence progression runner"):
-        support.run(
-            player_build=object(),  # type: ignore[arg-type]
-            generation_request=object(),  # type: ignore[arg-type]
-            evidence_bundle=_bundle(),  # type: ignore[arg-type]
-            cadence_obligations=(object(),),  # type: ignore[arg-type]
-        )
+    assert support.cadence_runner is not None
