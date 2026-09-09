@@ -131,12 +131,12 @@ def _init_with_dashboard_polish(self, parent=None) -> None:
     assert _ORIGINAL_INIT is not None
     _ORIGINAL_INIT(self, parent)
 
-    # Keep the composition ring comfortably larger than the original version,
-    # but leave enough breathing room for Active Composition and the right rail.
-    self.composition_ring.setMinimumSize(630, 400)
-    self.composition_card.setMinimumWidth(640)
-    self.active_card.setMinimumWidth(335)
-    self.active_table.setMinimumHeight(400)
+    # Keep the composition art readable without forcing the dashboard wider
+    # than the normal Field Office viewport.
+    self.composition_ring.setMinimumSize(560, 350)
+    self.composition_card.setMinimumWidth(575)
+    self.active_card.setMinimumWidth(300)
+    self.active_table.setMinimumHeight(380)
 
     _replace_next_actions_editor(self)
 
