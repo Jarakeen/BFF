@@ -16,7 +16,7 @@ class _TrendingClient:
                 {"name": "HealA", "class": "Warden", "report": {"code": "A", "fightID": 1}},
                 {"name": "HealB", "class": "Warden", "report": {"code": "B", "fightID": 2}},
             ],
-            "tankcombineddps": [
+            "tank": [
                 {"name": "TankA", "class": "Dragonknight", "report": {"code": "A", "fightID": 1}},
                 {"name": "TankB", "class": "Necromancer", "report": {"code": "B", "fightID": 2}},
             ],
@@ -37,10 +37,16 @@ class _TrendingClient:
         assert "$role" not in query
         metric = variables["metric"]
         self.query_calls.append((metric, dict(variables)))
+
+        if metric == "dps" and variables.get("className") == "Tanks":
+            rows = self.rankings["tank"]
+        else:
+            rows = self.rankings[metric]
+
         return {
             "worldData": {
                 "encounter": {
-                    "characterRankings": {"rankings": self.rankings[metric]}
+                    "characterRankings": {"rankings": rows}
                 }
             }
         }
@@ -162,9 +168,12 @@ def test_trending_aggregates_top_individual_players_by_role():
     assert [metric for metric, _ in client.query_calls] == [
         "dps",
         "hps",
-        "tankcombineddps",
+        "dps",
     ]
     assert all("role" not in variables for _, variables in client.query_calls)
+    tank_variables = client.query_calls[2][1]
+    assert tank_variables["className"] == "Tanks"
+    assert tank_variables["specName"] is None
     assert report.ranked_players_analyzed == 7
     assert report.ranked_players_skipped == 0
     assert report.players_analyzed == 7
