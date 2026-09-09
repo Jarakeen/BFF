@@ -17,6 +17,7 @@ def _row(
     output_per_second: float = 0.0,
     boss_active_seconds: float | None = None,
     death_count: int = 0,
+    first_death_seconds: float | None = None,
     first_death_ability: str = "",
     resource: float | None = None,
     uptimes: dict[str, float] | None = None,
@@ -35,6 +36,7 @@ def _row(
         output_per_second=output_per_second,
         boss_active_seconds=boss_active_seconds,
         death_count=death_count,
+        first_death_seconds=first_death_seconds,
         first_death_ability=first_death_ability,
         minimum_primary_resource_percent=resource,
         key_uptimes=uptimes or {},
@@ -84,7 +86,8 @@ def test_dd_output_uses_boss_active_time_when_available() -> None:
     assert finding.priority == "medium"
     assert "kills 105,000/s" in finding.evidence
     assert "wipes 72,500/s" in finding.evidence
-    assert "movement" in finding.recommendation
+    assert "successful pulls" in finding.title
+    assert "Preserve" in finding.recommendation
 
 
 def test_higher_wipe_damage_does_not_get_called_a_rotation_failure() -> None:
@@ -128,7 +131,7 @@ def test_support_resource_pressure_is_timing_question_not_build_verdict() -> Non
     assert "not proof that the build needs more recovery" in finding.recommendation
 
 
-def test_key_uptime_comparison_calls_out_eligible_window_review() -> None:
+def test_key_uptime_comparison_calls_out_success_pattern_and_eligible_window_review() -> None:
     report = PerformanceRaidReviewService().analyze(
         [
             _row(fight_id=1, kill=True, role="Healer", uptimes={"Major Brittle": 92.0}),
@@ -138,9 +141,38 @@ def test_key_uptime_comparison_calls_out_eligible_window_review() -> None:
         ]
     )
     finding = next(item for item in report.findings if item.category == "uptime")
-    assert "Major Brittle" in finding.title
+    assert finding.title == "Major Brittle is stronger on successful pulls"
     assert "eligible encounter windows" in finding.recommendation
     assert "owns the effect obligation" in finding.recommendation
+
+
+def test_raid_first_deaths_cluster_into_group_finding() -> None:
+    report = PerformanceRaidReviewService().analyze(
+        [
+            _row(fight_id=1, kill=False, actor_id=1, death_count=1, first_death_seconds=72.0),
+            _row(fight_id=1, kill=False, actor_id=2, death_count=1, first_death_seconds=75.0),
+            _row(fight_id=2, kill=False, actor_id=1, death_count=1, first_death_seconds=70.5),
+            _row(fight_id=3, kill=False, actor_id=1, death_count=1, first_death_seconds=77.0),
+            _row(fight_id=4, kill=True, actor_id=1),
+        ]
+    )
+    finding = next(item for item in report.findings if item.category == "death_window")
+    assert finding.scope == "raid"
+    assert finding.subject == "Raid"
+    assert "70.5s" in finding.evidence
+    assert "77.0s" in finding.evidence
+    assert "encounter timeline" in finding.recommendation
+
+
+def test_scattered_first_deaths_do_not_invent_a_shared_failure_window() -> None:
+    report = PerformanceRaidReviewService().analyze(
+        [
+            _row(fight_id=1, kill=False, death_count=1, first_death_seconds=20.0),
+            _row(fight_id=2, kill=False, death_count=1, first_death_seconds=80.0),
+            _row(fight_id=3, kill=False, death_count=1, first_death_seconds=160.0),
+        ]
+    )
+    assert all(item.category != "death_window" for item in report.findings)
 
 
 def test_other_encounters_are_filtered_out() -> None:
