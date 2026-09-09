@@ -114,8 +114,9 @@ def install() -> None:
     PerformanceDashboard._update_abilities_list = _update_abilities_with_contribution
     _INSTALLED = True
 
-    # The DoT presentation wraps this DD-aware UI after the crit and contribution
-    # pieces are installed, preserving all existing dashboard behavior.
+    # DD presentation layers wrap this base DD-aware UI in order.
     from ui.performance_dashboard_dd_dot_support import install as install_dot_ui
+    from ui.performance_dashboard_dd_weave_support import install as install_weave_ui
 
     install_dot_ui()
+    install_weave_ui()
