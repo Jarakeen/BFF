@@ -4,6 +4,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from engine.config import DEFAULT_DATABASE
+from minmax.demand_action_claim_anticipatory_duration_scheduler import (
+    DemandActionClaimAnticipatoryPriorityDurationRotationScheduler,
+)
 from minmax.demand_action_claim_duration_scheduler import (
     DemandActionClaim,
     DemandActionClaimPriorityDurationRotationScheduler,
@@ -92,10 +95,6 @@ class RotationDurationRefinementService:
             raise ValueError("demand action claims require at least one rotation demand window")
         if action_claims and priorities is None:
             raise ValueError("demand action claims require explicit ability priorities")
-        if action_claims and refresh_leads:
-            raise ValueError(
-                "demand action claims and demand refresh leads cannot yet be combined in one refinement"
-            )
         if action_claims and wait_decision is not None:
             raise ValueError(
                 "demand action claims cannot yet be combined with caller-proven soft actions"
@@ -143,7 +142,14 @@ class RotationDurationRefinementService:
                 soft_decision=wait_decision,
             )
         else:
-            if priorities is not None and action_claims:
+            if priorities is not None and action_claims and refresh_leads:
+                scheduler = DemandActionClaimAnticipatoryPriorityDurationRotationScheduler(
+                    priorities,
+                    demand_windows,
+                    action_claims,
+                    refresh_leads,
+                )
+            elif priorities is not None and action_claims:
                 scheduler = DemandActionClaimPriorityDurationRotationScheduler(
                     priorities,
                     demand_windows,
