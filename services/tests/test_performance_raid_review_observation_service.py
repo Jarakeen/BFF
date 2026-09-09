@@ -1,5 +1,8 @@
 from types import SimpleNamespace
 
+from services.performance_raid_review_event_enrichment_service import (
+    RaidReviewEventEnrichment,
+)
 from services.performance_raid_review_observation_service import (
     PerformanceRaidReviewObservationService,
     RaidReviewSource,
@@ -126,3 +129,62 @@ def test_without_member_key_actor_identity_remains_report_local() -> None:
     assert first.stable_member_key == "a:7"
     assert second.stable_member_key == "b:7"
     assert first.stable_member_key != second.stable_member_key
+
+
+def test_optional_enrichment_populates_coaching_evidence() -> None:
+    performance = _PerformanceService()
+
+    def enrich(source, fight):
+        assert source.primary_resource_name == "Magicka"
+        assert fight["name"] == "Lokkestiiz"
+        return RaidReviewEventEnrichment(
+            death_count=2,
+            first_death_seconds=72.4,
+            first_death_ability="Ice Cage",
+            minimum_primary_resource_percent=11.5,
+        )
+
+    service = PerformanceRaidReviewObservationService(
+        performance,
+        enrichment_resolver=enrich,
+    )
+    result = service.collect(
+        [
+            RaidReviewSource(
+                "A",
+                1,
+                7,
+                "Magrat",
+                "Healer",
+                member_key="magrat",
+                primary_resource_name="Magicka",
+            )
+        ]
+    )
+
+    row = result.observations[0]
+    assert row.death_count == 2
+    assert row.first_death_seconds == 72.4
+    assert row.first_death_ability == "Ice Cage"
+    assert row.minimum_primary_resource_percent == 11.5
+    assert result.unresolved == ()
+
+
+def test_enrichment_failure_keeps_base_observation_and_reports_gap() -> None:
+    performance = _PerformanceService()
+
+    def fail_enrichment(source, fight):
+        raise RuntimeError("raw event query failed")
+
+    service = PerformanceRaidReviewObservationService(
+        performance,
+        enrichment_resolver=fail_enrichment,
+    )
+    result = service.collect(
+        [RaidReviewSource("B", 2, 7, "Magrat", "Healer", member_key="magrat")]
+    )
+
+    assert len(result.observations) == 1
+    assert result.observations[0].death_count == 0
+    assert len(result.unresolved) == 1
+    assert "enrichment: raw event query failed" in result.unresolved[0]
