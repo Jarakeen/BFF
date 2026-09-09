@@ -5,7 +5,12 @@ from services.extreme_maximum_heal_unresolved_relevance_service import (
 )
 
 
-def test_maximum_heal_relevance_downgrades_only_proven_ambient_diagnostics():
+PET = (
+    "Sorcerer pet special activation requires runtime proof that the corresponding pet is summoned and alive"
+)
+
+
+def test_maximum_heal_relevance_separates_blockers_setup_and_ambient_diagnostics():
     result = ExtremeMaximumHealUnresolvedRelevanceService().classify(
         (
             "Champion Point is dynamic or not yet stat-mapped: Master Gatherer",
@@ -15,7 +20,7 @@ def test_maximum_heal_relevance_downgrades_only_proven_ambient_diagnostics():
             "Front Bar Charged: requires status-effect chance model",
             "Front Bar Decisive: requires Ultimate generation model",
             "Potion selected; activation/uptime is not part of static build state: spell power",
-            "Sorcerer pet special activation requires runtime proof that the corresponding pet is summoned and alive",
+            PET,
         )
     )
 
@@ -25,10 +30,19 @@ def test_maximum_heal_relevance_downgrades_only_proven_ambient_diagnostics():
         "The Steed: movement_speed unresolved (Movement speed is outside the current character-sheet stat layer.)",
         "Front Bar Training: non-combat experience trait",
     )
+    assert result.setup_prerequisites == (PET,)
     assert result.relevant == (
         "Front Bar Charged: requires status-effect chance model",
         "Front Bar Decisive: requires Ultimate generation model",
         "Potion selected; activation/uptime is not part of static build state: spell power",
-        "Sorcerer pet special activation requires runtime proof that the corresponding pet is summoned and alive",
     )
     assert not result.objective_complete
+
+
+def test_setup_prerequisite_alone_does_not_block_achievable_maximum_proof():
+    result = ExtremeMaximumHealUnresolvedRelevanceService().classify((PET,))
+
+    assert result.relevant == ()
+    assert result.setup_prerequisites == (PET,)
+    assert result.ambient == ()
+    assert result.objective_complete
