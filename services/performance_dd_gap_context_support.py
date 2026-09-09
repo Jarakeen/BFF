@@ -41,6 +41,24 @@ class ActionGapContextDiagnostics:
     Rows: tuple[ActionGapContext, ...] = ()
 
 
+def _raid_activity_baseline(values) -> float:
+    """Return a conservative normal-raid-activity reference level.
+
+    A median across every positive bucket is too easy for a long low-damage
+    transition to drag downward. That can make merely partial raid activity look
+    fully active. Use the median of the upper half of positive raid-damage
+    buckets instead, which represents the report's ordinary active-damage state
+    while still resisting one-off burst spikes.
+    """
+
+    positive = sorted(float(value) for value in values if float(value) > 0)
+    if not positive:
+        return 0.0
+
+    upper_half = positive[len(positive) // 2 :]
+    return float(median(upper_half))
+
+
 def _classify_action_gap_context(
     gaps,
     raid_damage_points,
@@ -56,8 +74,7 @@ def _classify_action_gap_context(
         for t, v in raid_damage_points
         if t is not None and v is not None
     )
-    positive = [value for _time, value in points if value > 0]
-    baseline = float(median(positive)) if positive else 0.0
+    baseline = _raid_activity_baseline(value for _time, value in points)
 
     rows: list[ActionGapContext] = []
     quiet = active = unknown = 0
