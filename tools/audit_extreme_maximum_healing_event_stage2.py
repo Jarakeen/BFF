@@ -74,6 +74,41 @@ def _screen(build, *, database_path: Path, builds_path: Path, active_bar: str, i
     )
 
 
+def _decisive_blockers(entries, omitted_scope):
+    """Return proof blockers that can materially change or invalidate the leader."""
+    priorities = (
+        (
+            "winner legality",
+            "Sorcerer pet special activation requires runtime proof that the corresponding pet is summoned and alive",
+        ),
+        (
+            "winner magnitude",
+            "Blood of the Elder Dragon maximum-event scaling requires component-specific missing-Health proof for the winning recipient",
+        ),
+    )
+    found: list[tuple[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+    for label, needle in priorities:
+        if any(needle in tuple(entry.unresolved) for entry in entries):
+            key = (label, needle)
+            if key not in seen:
+                seen.add(key)
+                found.append(key)
+
+    boundary_priorities = (
+        "proof that a lower baseline family within an already represented source kind cannot overtake after whole-build mutation",
+        "whole-build optimization outside the selected Stage-2 finalist families/routes",
+        "base-class change",
+    )
+    for boundary in boundary_priorities:
+        if boundary in tuple(omitted_scope):
+            key = ("search proof", boundary)
+            if key not in seen:
+                seen.add(key)
+                found.append(key)
+    return tuple(found)
+
+
 def audit(
     *,
     build_name: str,
@@ -175,7 +210,7 @@ def audit(
 
     print("\nUNRESOLVED CEILING THREATS")
     leader_value = None if leader is None else leader.event_value
-    threats = []
+    threat_families: dict[tuple, tuple[object, object, int]] = {}
     if leader_value is not None:
         for entry in result.entries:
             bound = bounds.bound(entry)
@@ -185,18 +220,38 @@ def audit(
                 and bound.upper_bound > bound.lower_bound + 1e-9
                 and bound.upper_bound > float(leader_value) + 1e-9
             ):
-                threats.append((entry, bound))
-    if not threats:
+                key = (
+                    entry.source_kind,
+                    entry.source_name.casefold(),
+                    float(bound.lower_bound),
+                    float(bound.upper_bound),
+                    str(bound.reason or ""),
+                )
+                if key in threat_families:
+                    original_entry, original_bound, count = threat_families[key]
+                    threat_families[key] = (original_entry, original_bound, count + 1)
+                else:
+                    threat_families[key] = (entry, bound, 1)
+    if not threat_families:
         print("  None among the optimized finalists with currently modeled numeric bounds.")
     else:
-        for entry, bound in threats:
+        for entry, bound, route_count in threat_families.values():
+            suffix = f" across {route_count} optimized routes" if route_count > 1 else ""
             print(
                 f"  - {entry.source_name}: modeled {bound.lower_bound:.3f}; "
-                f"source-supported ceiling {bound.upper_bound:.3f}"
+                f"source-supported ceiling {bound.upper_bound:.3f}{suffix}"
             )
             if bound.reason:
                 print(f"    reason: {bound.reason}")
         print("  Result: current numeric leader cannot yet be proven against these ceilings.")
+
+    blockers = _decisive_blockers(result.entries, result.omitted_scope)
+    print("\nDECISIVE PROOF BLOCKERS")
+    if not blockers:
+        print("  None among currently modeled finalist mechanics and search boundaries.")
+    else:
+        for label, message in blockers:
+            print(f"  - [{label}] {message}")
 
     if result.errors:
         print("\nFINALIST ERRORS")
