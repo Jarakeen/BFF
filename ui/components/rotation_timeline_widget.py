@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PySide6.QtCore import QPointF, QRectF, QSize, Qt
 from PySide6.QtGui import QColor, QFontMetrics, QPainter, QPen, QPixmap
-from PySide6.QtWidgets import QScrollArea, QSizePolicy, QToolTip, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFrame, QScrollArea, QSizePolicy, QToolTip, QVBoxLayout, QWidget
 
 from engine.config import get_resource_path
 from services.rotation_timeline_projection_service import (
@@ -12,6 +12,7 @@ from services.rotation_timeline_projection_service import (
     RotationTimelineLane,
     RotationTimelineProjection,
 )
+from services.skill_choice_service import load_skill_choices
 
 
 class _RotationTimelineCanvas(QWidget):
@@ -24,6 +25,7 @@ class _RotationTimelineCanvas(QWidget):
     LANE_HEIGHT = 22
     LANE_GAP = 6
     PIXELS_PER_SECOND = 34
+    _skill_icon_lookup: dict[str, Path] | None = None
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -76,6 +78,25 @@ class _RotationTimelineCanvas(QWidget):
             color.setAlpha(220)
         return color
 
+    @classmethod
+    def _canonical_skill_icon_lookup(cls) -> dict[str, Path]:
+        if cls._skill_icon_lookup is not None:
+            return cls._skill_icon_lookup
+
+        root = get_resource_path("assets", "AbilityIcons", "icons", "128")
+        lookup: dict[str, Path] = {}
+        for skill in load_skill_choices():
+            name = str(skill.get("name", "") or "").strip().casefold()
+            texture = str(skill.get("texture", "") or "").strip()
+            if not name or not texture:
+                continue
+            filename = Path(texture.replace("\\", "/")).name
+            local = root / Path(filename).with_suffix(".png")
+            if local.exists():
+                lookup.setdefault(name, local)
+        cls._skill_icon_lookup = lookup
+        return lookup
+
     @staticmethod
     def _candidate_icon_paths(action: RotationTimelineAction) -> tuple[Path, ...]:
         key = action.icon_key
@@ -91,6 +112,12 @@ class _RotationTimelineCanvas(QWidget):
 
     @classmethod
     def _icon_pixmap(cls, action: RotationTimelineAction) -> QPixmap | None:
+        canonical = cls._canonical_skill_icon_lookup().get(action.name.casefold())
+        if canonical is not None:
+            pixmap = QPixmap(str(canonical))
+            if not pixmap.isNull():
+                return pixmap
+
         for path in cls._candidate_icon_paths(action):
             if not path.exists():
                 continue
@@ -209,7 +236,15 @@ class _RotationTimelineCanvas(QWidget):
                 painter.setPen(self.palette().highlightedText().color())
                 metrics = QFontMetrics(painter.font())
                 initials = self._fallback_initials(action.name)
-                painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, metrics.elidedText(initials, Qt.TextElideMode.ElideRight, int(rect.width() - 4)))
+                painter.drawText(
+                    rect,
+                    Qt.AlignmentFlag.AlignCenter,
+                    metrics.elidedText(
+                        initials,
+                        Qt.TextElideMode.ElideRight,
+                        int(rect.width() - 4),
+                    ),
+                )
 
             painter.setPen(QPen(self.palette().mid().color(), 1))
             painter.drawRoundedRect(rect, 5, 5)
@@ -267,7 +302,7 @@ class RotationTimelineWidget(QWidget):
         self.scroll.setWidgetResizable(False)
         self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        self.scroll.setFrameShape(QScrollArea.Shape.NoFrame)
+        self.scroll.setFrameShape(QFrame.Shape.NoFrame)
 
         self.canvas = _RotationTimelineCanvas()
         self.scroll.setWidget(self.canvas)
