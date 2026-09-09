@@ -30,18 +30,19 @@ ExtremeRuntimeHistoryEntry = RuntimeEffectEventAttempt | ExtremeRuntimePotionUse
 class ExtremeRuntimeSnapshot:
     """One deterministic runtime history evaluated at one exact snapshot.
 
-    ``runtime_history`` is the authoritative E1 input. It carries ordinary
-    effect attempts and explicit potion activations on the same timestamp /
-    sequence ordered timeline. The older ``attempts`` and
-    ``potion_elapsed_seconds`` fields remain as a compatibility bridge for
-    existing callers, but they cannot be mixed with ``runtime_history`` so two
-    competing versions of runtime truth cannot enter one evaluation.
+    ``runtime_history`` is the authoritative E1 input when supplied. It carries
+    ordinary effect attempts and explicit potion activations on the same
+    timestamp / sequence ordered timeline. The older positional fields remain
+    in their original order as a compatibility bridge for existing callers,
+    but they cannot be mixed with ``runtime_history`` so two competing versions
+    of runtime truth cannot enter one evaluation.
     """
 
-    runtime_history: tuple[ExtremeRuntimeHistoryEntry, ...] = ()
-    snapshot_time_seconds: float = 0.0
+    # Keep the original positional order intact while E1 callers migrate.
     attempts: tuple[RuntimeEffectEventAttempt, ...] = ()
+    snapshot_time_seconds: float = 0.0
     potion_elapsed_seconds: float | None = None
+    runtime_history: tuple[ExtremeRuntimeHistoryEntry, ...] = ()
 
     def __post_init__(self) -> None:
         snapshot = float(self.snapshot_time_seconds)
