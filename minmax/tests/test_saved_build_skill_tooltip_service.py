@@ -62,6 +62,19 @@ def _context(healing_done: float = 0.0):
     )
 
 
+def test_default_healing_cp_resolver_reuses_reviewed_component_repository():
+    components = _ComponentRepository()
+    service = SavedBuildSkillTooltipService(
+        "unused.db",
+        coefficient_repository=_CoefficientRepository(),
+        component_repository=components,
+        calculator=_Calculator(),
+    )
+
+    assert service.components is components
+    assert service.healing_cp.components is components
+
+
 def test_saved_build_service_routes_only_heal_components_and_marks_saved_cp_as_slotted():
     cp_resolver = _HealingResolver()
     calculator = _Calculator()
