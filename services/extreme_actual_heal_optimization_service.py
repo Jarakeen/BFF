@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, replace
 
 from minmax.build_candidate import BuildCandidate
@@ -33,6 +34,12 @@ from services.extreme_healing_event_service import (
     ExtremeHealingEventService,
 )
 from services.minmax_character_progression_adapter import MinmaxCharacterProgressionAdapter
+
+
+ExtremeActualHealEvaluationCache = dict[
+    tuple[str, str, str, str, str],
+    tuple[ExtremeHealingEventResult, tuple[str, ...]],
+]
 
 
 @dataclass(frozen=True)
@@ -87,6 +94,12 @@ class ExtremeActualHealOptimizationService:
     the exact progression snapshot that must survive every candidate context
     rebuild. The saved-build adapter still resolves the character identity; the
     override changes progression math only.
+
+    ``evaluation_cache`` is an optional caller-owned structural cache. Cache keys
+    contain the complete saved-build payload, normalized progression, character,
+    active bar, and heal entity. Diagnostic ``build_id`` is deliberately excluded
+    because it does not affect combat math. This lets staged searches share proved
+    evaluations without creating persistent process-wide state.
     """
 
     SEARCH_SCOPE = (
@@ -184,6 +197,7 @@ class ExtremeActualHealOptimizationService:
         active_bar: str = "front",
         max_passes: int = 24,
         progression_override: CharacterProgression | None = None,
+        evaluation_cache: ExtremeActualHealEvaluationCache | None = None,
     ) -> ExtremeActualHealOptimizationResult:
         normalized_entity = str(entity_id or "").strip()
         if not normalized_entity:
@@ -202,15 +216,17 @@ class ExtremeActualHealOptimizationService:
             or str(baseline_build.BuildName or "").strip()
             or "saved-build"
         )
+        cache = evaluation_cache if evaluation_cache is not None else {}
 
         current = PlayerBuild.from_dict(baseline_build.to_dict())
-        baseline_event, baseline_unresolved = self._evaluate(
+        baseline_event, baseline_unresolved = self._evaluate_cached(
             current,
             progression=progression,
             character_id=character_id,
             build_id=f"{baseline_build_id}:extreme-actual-heal:baseline",
             entity_id=normalized_entity,
             active_bar=active_bar,
+            evaluation_cache=cache,
         )
         current_score = self._score(baseline_event)
         current_event = baseline_event
@@ -313,13 +329,14 @@ class ExtremeActualHealOptimizationService:
                 )
 
             for candidate in candidates:
-                event, candidate_unresolved = self._evaluate(
+                event, candidate_unresolved = self._evaluate_cached(
                     candidate.candidate_build,
                     progression=progression,
                     character_id=character_id,
                     build_id=candidate.candidate_id,
                     entity_id=normalized_entity,
                     active_bar=active_bar,
+                    evaluation_cache=cache,
                 )
                 score = self._score(event)
                 if score <= current_score + 1e-9:
@@ -366,6 +383,61 @@ class ExtremeActualHealOptimizationService:
             search_scope=self.SEARCH_SCOPE,
             omitted_scope=self.OMITTED_SCOPE,
         )
+
+    @staticmethod
+    def _evaluation_key(
+        build: PlayerBuild,
+        *,
+        progression: CharacterProgression,
+        character_id: str,
+        entity_id: str,
+        active_bar: str,
+    ) -> tuple[str, str, str, str, str]:
+        build_payload = json.dumps(
+            build.to_dict(),
+            sort_keys=True,
+            separators=(",", ":"),
+            default=str,
+        )
+        return (
+            build_payload,
+            repr(progression),
+            str(character_id or ""),
+            str(entity_id or "").strip(),
+            str(active_bar or "front").casefold(),
+        )
+
+    def _evaluate_cached(
+        self,
+        build: PlayerBuild,
+        *,
+        progression: CharacterProgression,
+        character_id: str,
+        build_id: str,
+        entity_id: str,
+        active_bar: str,
+        evaluation_cache: ExtremeActualHealEvaluationCache,
+    ) -> tuple[ExtremeHealingEventResult, tuple[str, ...]]:
+        key = self._evaluation_key(
+            build,
+            progression=progression,
+            character_id=character_id,
+            entity_id=entity_id,
+            active_bar=active_bar,
+        )
+        cached = evaluation_cache.get(key)
+        if cached is not None:
+            return cached
+        resolved = self._evaluate(
+            build,
+            progression=progression,
+            character_id=character_id,
+            build_id=build_id,
+            entity_id=entity_id,
+            active_bar=active_bar,
+        )
+        evaluation_cache[key] = resolved
+        return resolved
 
     def _evaluate(
         self,
