@@ -63,3 +63,8 @@ def install() -> None:
     PerformanceDashboard.build_ui = _build_ui_with_dot_card
     PerformanceDashboard.show_snapshot = _show_snapshot_with_dot
     _INSTALLED = True
+
+    # Crit/contribution UI -> observed DoT -> observed LA pairing.
+    from ui.performance_dashboard_dd_weave_support import install as install_weave_ui
+
+    install_weave_ui()
