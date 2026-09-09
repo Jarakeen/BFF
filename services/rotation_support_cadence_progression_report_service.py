@@ -19,11 +19,12 @@ class RotationSupportCadenceProgressionStepReport:
     promoted_candidate_id: str | None
     promoted_rationale: str | None
     promoted_reasons: tuple[str, ...]
+    accepted: bool
     unresolved: tuple[str, ...]
 
     @property
     def advanced(self) -> bool:
-        return self.promoted_candidate_id is not None
+        return self.accepted
 
 
 @dataclass(frozen=True)
@@ -52,6 +53,7 @@ class RotationSupportCadenceProgressionReportService:
         run: RotationSupportCadenceProgressionRun,
     ) -> RotationSupportCadenceProgressionReport:
         reports: list[RotationSupportCadenceProgressionStepReport] = []
+        final_iteration = len(run.steps)
         for iteration, step in enumerate(run.steps, start=1):
             eligible = sum(
                 1 for item in step.ranking if item.tier is RotationCandidateTier.ELIGIBLE
@@ -74,6 +76,14 @@ class RotationSupportCadenceProgressionReportService:
                 promoted_rationale = promoted.rationale
                 promoted_reasons = tuple(promoted.reasons)
 
+            accepted = promoted_id is not None
+            if (
+                accepted
+                and run.stop_reason is RotationSupportCadenceProgressionStopReason.REPEATED_PLAN
+                and iteration == final_iteration
+            ):
+                accepted = False
+
             reports.append(
                 RotationSupportCadenceProgressionStepReport(
                     iteration=iteration,
@@ -84,6 +94,7 @@ class RotationSupportCadenceProgressionReportService:
                     promoted_candidate_id=promoted_id,
                     promoted_rationale=promoted_rationale,
                     promoted_reasons=promoted_reasons,
+                    accepted=accepted,
                     unresolved=tuple(step.unresolved),
                 )
             )
