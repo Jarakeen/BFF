@@ -78,12 +78,8 @@ def _screen(build, *, database_path: Path, builds_path: Path, active_bar: str, i
 
 
 def _decisive_blockers(entries, omitted_scope):
-    """Return proof blockers that can materially change or invalidate the leader."""
+    """Return unresolved mechanics/search gaps that can still change the leader."""
     priorities = (
-        (
-            "winner legality",
-            "Sorcerer pet special activation requires runtime proof that the corresponding pet is summoned and alive",
-        ),
         (
             "winner magnitude",
             "Blood of the Elder Dragon maximum-event scaling requires component-specific missing-Health proof for the winning recipient",
@@ -112,15 +108,23 @@ def _decisive_blockers(entries, omitted_scope):
     return tuple(found)
 
 
+def _setup_prerequisites(entries, relevance):
+    values: list[str] = []
+    for entry in entries:
+        values.extend(relevance.classify(entry.unresolved).setup_prerequisites)
+    return tuple(dict.fromkeys(values))
+
+
 def _format_objective_entry(entry, *, index: int, relevance):
     classified = relevance.classify(entry.unresolved)
     ambient = set(classified.ambient)
+    prerequisites = set(classified.setup_prerequisites)
     lines = []
     for line in _format_entry(entry, index=index):
         stripped = line.strip()
         if stripped.startswith("unresolved:"):
             message = stripped.split("unresolved:", 1)[1].strip()
-            if message in ambient:
+            if message in ambient or message in prerequisites:
                 continue
         if stripped.startswith("evidence:"):
             lines.append(
@@ -128,6 +132,8 @@ def _format_objective_entry(entry, *, index: int, relevance):
             )
             continue
         lines.append(line)
+    for prerequisite in classified.setup_prerequisites:
+        lines.append(f"     setup prerequisite: {prerequisite}")
     if classified.ambient:
         lines.append(f"     ambient diagnostics omitted: {len(classified.ambient)}")
     return tuple(lines)
@@ -222,6 +228,11 @@ def audit(
         print(f"  {leader.source_name}")
         print(f"  Modeled event: {float(leader.event_value):.3f} ({leader.event_kind})")
         print(f"  Objective evidence complete: {'YES' if leader_relevance.objective_complete else 'NO'}")
+        if leader_relevance.setup_prerequisites:
+            print(
+                "  Achievable setup prerequisites: "
+                + str(len(leader_relevance.setup_prerequisites))
+            )
         if leader_relevance.ambient:
             print(f"  Ambient build diagnostics ignored for this objective: {len(leader_relevance.ambient)}")
         print(f"  Route: {', '.join(leader.route.equipped_skill_lines)}")
@@ -272,6 +283,15 @@ def audit(
             if bound.reason:
                 print(f"    reason: {bound.reason}")
         print("  Result: current numeric leader cannot yet be proven against these ceilings.")
+
+    prerequisites = _setup_prerequisites(result.entries, relevance)
+    print("\nACHIEVABLE SETUP PREREQUISITES")
+    if not prerequisites:
+        print("  None among currently modeled finalists.")
+    else:
+        for message in prerequisites:
+            print(f"  - {message}")
+        print("  These are setup requirements for an Extreme achievable maximum, not live-snapshot proof blockers.")
 
     blockers = _decisive_blockers(result.entries, result.omitted_scope)
     print("\nDECISIVE PROOF BLOCKERS")
