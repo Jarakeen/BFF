@@ -152,6 +152,24 @@ def test_projected_coverage_failure_is_blocked_not_dominated():
     )
 
 
+def test_blocked_candidate_preserves_unresolved_and_coverage_reasons():
+    blocked = _workload(
+        "double blocked",
+        recipient_coverage_met=False,
+        temporal_coverage_met=False,
+        unresolved=("canonical resource cost is unresolved",),
+    )
+
+    result = TeamProviderWorkloadDecisionService.analyze(_result(blocked))
+
+    decision = result.blocked[0]
+    assert decision.blockers == (
+        "canonical resource cost is unresolved",
+        "recipient coverage requirement is not met",
+        "temporal coverage requirement is not met",
+    )
+
+
 def test_projection_rejection_remains_distinct_from_workload_blocker():
     rejection = TeamProviderWorkloadCandidateRejection(
         alternative_id="missing rotation",
