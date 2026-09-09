@@ -8,6 +8,7 @@ replacing the long-lived Raid Engine pages it summarizes.
 
 _INSTALLED = False
 _ORIGINAL_BUILD_UI = None
+_DASHBOARD_REFRESH_PATCHED = False
 
 
 def _install_sidebar_route() -> None:
@@ -18,6 +19,42 @@ def _install_sidebar_route() -> None:
         if isinstance(section, dict) and section.get("label") == "Raid Engine":
             section["page"] = "raid_engine_dashboard"
             return
+
+
+def _install_read_only_dashboard_refresh() -> None:
+    """Do not let visiting the dashboard re-autofill Team Optimization.
+
+    OptimizationPage.refresh() rebuilds its editor. The dashboard is a summary
+    surface, so it must never mutate that working team merely because the user
+    opened the Raid Engine landing page.
+    """
+    global _DASHBOARD_REFRESH_PATCHED
+    if _DASHBOARD_REFRESH_PATCHED:
+        return
+
+    from ui.raid_engine_dashboard_page import RaidEngineDashboardPage
+
+    original_refresh = RaidEngineDashboardPage.refresh
+
+    def refresh_without_optimization_reset(self) -> None:
+        page = getattr(self, "optimization", None)
+        if page is None:
+            original_refresh(self)
+            return
+
+        had_instance_refresh = "refresh" in getattr(page, "__dict__", {})
+        prior_instance_refresh = page.__dict__.get("refresh") if had_instance_refresh else None
+        page.refresh = lambda: None
+        try:
+            original_refresh(self)
+        finally:
+            if had_instance_refresh:
+                page.refresh = prior_instance_refresh
+            else:
+                delattr(page, "refresh")
+
+    RaidEngineDashboardPage.refresh = refresh_without_optimization_reset
+    _DASHBOARD_REFRESH_PATCHED = True
 
 
 def _open_dashboard_help(window) -> None:
@@ -66,6 +103,7 @@ def install() -> None:
     from ui.main_window import MainWindow
 
     _install_sidebar_route()
+    _install_read_only_dashboard_refresh()
     _ORIGINAL_BUILD_UI = MainWindow.build_ui
     MainWindow.build_ui = _build_ui_with_raid_engine_dashboard
     _INSTALLED = True
