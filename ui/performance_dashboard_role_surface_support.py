@@ -60,58 +60,80 @@ def _capture_polished_role_cards(page) -> None:
     )
 
 
+def _set_visible(page, names: tuple[str, ...], visible: bool) -> None:
+    for name in names:
+        widget = getattr(page, name, None)
+        if widget is not None:
+            widget.setVisible(visible)
+
+
 def _apply_role_name_surface(page, role: str, *, has_snapshot: bool) -> None:
-    """Apply the visible role surface from either a picker or a loaded snapshot.
+    """Apply the final visible surface for one canonical performance role.
 
     New member tabs exist before an ESO Logs snapshot does. Their persisted model
     defaults to DPS, so the UI must not temporarily present the healer/support
-    surface just because the polished role combo happens to be constructed with a
-    different first item. Once a fight actor or saved profile changes the role,
-    the surface follows that selection immediately.
+    surface just because a compatibility layer constructed a different first item.
+    Once a fight actor or saved profile changes the role, the surface follows that
+    selection immediately.
     """
 
     canonical_role = _canonical_performance_role(role)
     is_dd = canonical_role == "DPS"
+    is_healer = canonical_role == "Healer"
     is_support = canonical_role in {"Healer", "Tank"}
 
-    # These are support-summary surfaces, not graph controls. Unknown/blank roles
-    # stay neutral rather than inheriting a stale healer surface from the picker.
-    for name in (
-        "support_effects_card",
-        "_performance_tracking_card",
-    ):
-        card = getattr(page, name, None)
-        if card is not None:
-            card.setVisible(is_support)
+    # Support summary controls are meaningful for healers/tanks only. A blank or
+    # unknown role remains neutral instead of inheriting a stale Healer surface.
+    _set_visible(
+        page,
+        ("support_effects_card", "_performance_tracking_card"),
+        is_support,
+    )
 
-    # Graph Effects owns the on/off checkboxes for the buff/debuff lanes painted
-    # over the output graph. It must remain visible for DPS too, otherwise the
-    # graph can show effect lanes that the user has no way to toggle.
+    # Graph Effects owns the on/off checkboxes for effect lanes over the output
+    # graph and stays available for every role.
     graph_effect_card = getattr(page, "graph_effect_card", None)
     if graph_effect_card is not None:
         graph_effect_card.setVisible(True)
 
-    # Result cards only make sense after a snapshot exists. Before that, keep the
-    # polished dashboard's normal empty-state behavior instead of revealing blank
-    # DD result cards merely because the role picker says DPS.
-    if has_snapshot and is_dd:
-        for name in (
-            "kpi_card",
-            "dot_card",
-            "dd_readout_card",
-            "output_card",
-            "abilities_card",
-            "quick_read_card",
-        ):
-            card = getattr(page, name, None)
-            if card is not None:
-                card.setVisible(True)
+    # Healer diagnostics are role-exclusive. The healer layer normally toggles
+    # these itself, but this final layer deliberately repeats the boundary so a
+    # later/earlier wrapper cannot leak healer cards into a DPS snapshot.
+    _set_visible(
+        page,
+        (
+            "healer_readout_card",
+            "hot_card",
+            "kpi_heal_crit",
+            "kpi_heal_response",
+            "kpi_heal_cadence",
+        ),
+        bool(has_snapshot and is_healer),
+    )
 
+    # DD-only diagnostics are likewise symmetrical. Generic result cards are left
+    # to the dashboard's normal empty/snapshot plumbing.
+    _set_visible(
+        page,
+        ("dot_card", "dd_readout_card", "quick_read_card"),
+        bool(has_snapshot and is_dd),
+    )
+
+    if has_snapshot and is_dd:
+        _set_visible(
+            page,
+            ("kpi_card", "output_card", "abilities_card"),
+            True,
+        )
+
+    # These older support-oriented chart cards are not part of the final DD view.
+    # Healer/tank wrappers may populate/show them for their own role afterward.
     if is_dd:
-        for name in ("buff_card", "debuff_card", "raid_debuff_card"):
-            card = getattr(page, name, None)
-            if card is not None:
-                card.setVisible(False)
+        _set_visible(
+            page,
+            ("buff_card", "debuff_card", "raid_debuff_card"),
+            False,
+        )
 
 
 def _apply_role_surface(page, snapshot) -> None:
@@ -195,8 +217,8 @@ def install() -> None:
         _ORIGINAL_SHOW_SNAPSHOT(self, snapshot)
 
         # Keep the picker and final surface aligned with the snapshot that was
-        # actually built. This prevents later polish wrappers from displaying a
-        # stale support role after a DPS result has loaded.
+        # actually built. This prevents compatibility wrappers from displaying a
+        # stale role after the requested performance result has loaded.
         picker = getattr(self, "role_override", None)
         snapshot_role = _canonical_performance_role(getattr(snapshot, "Role", ""))
         if picker is not None:
