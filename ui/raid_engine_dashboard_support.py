@@ -10,6 +10,16 @@ _INSTALLED = False
 _ORIGINAL_BUILD_UI = None
 
 
+def _install_sidebar_route() -> None:
+    """Make the Raid Engine category header open the dashboard."""
+    from ui.components import foundry_sidebar
+
+    for section in foundry_sidebar.CORE_NAV_SECTIONS:
+        if isinstance(section, dict) and section.get("label") == "Raid Engine":
+            section["page"] = "raid_engine_dashboard"
+            return
+
+
 def _open_dashboard_help(window) -> None:
     settings = window.pages.get("settings")
     if settings is None:
@@ -55,6 +65,7 @@ def install() -> None:
 
     from ui.main_window import MainWindow
 
+    _install_sidebar_route()
     _ORIGINAL_BUILD_UI = MainWindow.build_ui
     MainWindow.build_ui = _build_ui_with_raid_engine_dashboard
     _INSTALLED = True
