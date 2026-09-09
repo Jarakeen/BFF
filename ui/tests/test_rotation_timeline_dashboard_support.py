@@ -117,6 +117,24 @@ def test_plan_and_duration_wrappers_refresh_one_shared_visual_projection():
     assert page.rotation_timeline_widget.canvas._projection is None
 
 
+def test_visual_timeline_failure_does_not_abort_authoritative_plan(monkeypatch):
+    page = _FakePage()
+    install_rotation_timeline(page)
+
+    def explode(*args, **kwargs):
+        raise RuntimeError("icon lookup exploded")
+
+    monkeypatch.setattr(page.rotation_timeline_projection, "project", explode)
+
+    plan = _plan()
+    page.set_rotation_plan(plan)
+
+    assert page.rotation_plan is plan
+    assert page.rotation_timeline_widget.canvas._projection is None
+    assert page.rotation_timeline_error == "icon lookup exploded"
+    assert page.refresh_visual_rotation_timeline() is False
+
+
 def test_timeline_icon_lookup_accepts_canonical_skill_identity(monkeypatch, tmp_path):
     icon_root = tmp_path / "assets" / "AbilityIcons" / "icons" / "128"
     icon_root.mkdir(parents=True)
