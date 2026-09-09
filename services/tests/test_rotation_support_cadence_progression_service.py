@@ -1,6 +1,9 @@
 from types import SimpleNamespace
 
 from minmax.rotation_plan import RotationPlan
+from services.rotation_support_cadence_effect_evidence_service import (
+    RotationSupportCadenceEffectEvidence,
+)
 from services.rotation_support_cadence_neighborhood_service import (
     RotationSupportCadenceNeighborhood,
 )
@@ -83,6 +86,16 @@ class _RecommendationService:
                 "ranking": tuple(ranking),
             }
         )
+        return self.result
+
+
+class _EffectEvidenceService:
+    def __init__(self, result):
+        self.result = result
+        self.calls = []
+
+    def assess(self, **kwargs):
+        self.calls.append(kwargs)
         return self.result
 
 
@@ -213,6 +226,60 @@ def test_step_forwards_neighborhood_evaluation_and_effect_evidence_without_infer
     ]
     assert result.evaluated == (evaluated,)
     assert result.ranking == (ranking,)
+
+
+def test_step_recomputes_effect_evidence_for_fresh_neighborhood_candidates() -> None:
+    seed = _plan("Seed")
+    raw_candidate = object()
+    evaluated = SimpleNamespace(candidate_id="candidate-a")
+    ranking = object()
+    recommendation = SimpleNamespace(recommended=None)
+    neighborhood = RotationSupportCadenceNeighborhood(
+        seed_plan=seed,
+        candidates=(raw_candidate,),  # type: ignore[arg-type]
+    )
+    neighborhood_service = _NeighborhoodService(neighborhood)
+    evaluation_service = _EvaluationService(evaluated=(evaluated,), ranking=(ranking,))
+    recommendation_service = _RecommendationService(recommendation)
+    effect_map = {"candidate-a": (object(),)}
+    evidence = RotationSupportCadenceEffectEvidence(
+        assessments_by_candidate=effect_map,  # type: ignore[arg-type]
+        canonical_build=None,
+        unresolved=("saved build adaptation note",),
+    )
+    effect_service = _EffectEvidenceService(evidence)
+    service = RotationSupportCadenceProgressionService(
+        neighborhood_service=neighborhood_service,
+        evaluation_service=evaluation_service,
+        recommendation_service=recommendation_service,
+        effect_evidence_service=effect_service,
+    )
+    build = object()
+    requirement = object()
+    passive = object()
+
+    result = service.step(
+        build=build,  # type: ignore[arg-type]
+        seed_plan=seed,
+        seed_sustain=object(),  # type: ignore[arg-type]
+        obligations=(),
+        effect_uptime_requirements=(requirement,),  # type: ignore[arg-type]
+        passives=(passive,),  # type: ignore[arg-type]
+        character_id="magrat-id",
+    )
+
+    assert effect_service.calls == [
+        {
+            "build": build,
+            "candidates": (raw_candidate,),
+            "requirements": (requirement,),
+            "passives": (passive,),
+            "character_id": "magrat-id",
+        }
+    ]
+    assert evaluation_service.rank_calls[0]["effect_uptime_assessments_by_candidate"] is effect_map
+    assert result.effect_evidence is evidence
+    assert result.unresolved == ("saved build adaptation note",)
 
 
 def test_neighborhood_unresolved_evidence_is_preserved_on_step_result() -> None:
