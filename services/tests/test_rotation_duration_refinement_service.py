@@ -1,3 +1,4 @@
+from minmax.refresh_cadence_duration_scheduler import RotationRefreshIntervalPolicy
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from minmax.rotation_recast import (
     RotationRecastAnalysis,
@@ -81,6 +82,35 @@ def test_refinement_service_uses_duration_projection_rules() -> None:
         if action.kind is RotationActionKind.SKILL
     ]
     assert names == ["Long Buff", "Filler", "Filler", "Filler", "Filler"]
+    assert result.duration_projection is final_projection
+
+
+def test_refinement_service_applies_explicit_refresh_cadence_policy() -> None:
+    seed_projection = _projection(
+        rules=(RotationRecastRule("Long Buff", 2.0, bar="front"),)
+    )
+    final_projection = _projection(uptime_fraction=0.75)
+    fake = _FakeDurationAnalysis(seed_projection, final_projection)
+    service = RotationDurationRefinementService(duration_analysis=fake)
+
+    result = service.refine(
+        _plan(),
+        refresh_cadences=(
+            RotationRefreshIntervalPolicy(
+                "Long Buff",
+                3.0,
+                bar="front",
+                source="explicit support uptime target",
+            ),
+        ),
+    )
+
+    casts = [
+        action.time_seconds
+        for action in result.plan.actions
+        if action.kind is RotationActionKind.SKILL and action.name == "Long Buff"
+    ]
+    assert casts == [0.0, 3.0]
     assert result.duration_projection is final_projection
 
 
