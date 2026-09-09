@@ -106,6 +106,16 @@ def _route(*lines):
     return SimpleNamespace(equipped_skill_lines=tuple(lines))
 
 
+def _ordinary_finalist(*, name: str, entity_id: str, build_name: str, lines):
+    source = SimpleNamespace(
+        route=_route(*lines),
+        candidate=SimpleNamespace(name=name, entity_id=entity_id),
+        slotted_index=0,
+        candidate_build=PlayerBuild(BuildName=build_name),
+    )
+    return SimpleNamespace(source_kind="ordinary_skill", route_entry=source)
+
+
 def test_stage_two_optimizes_only_selected_concrete_entries_with_route_progression():
     ordinary_source = SimpleNamespace(
         route=_route("animal_companions", "daedric_summoning", "green_balance"),
@@ -149,6 +159,7 @@ def test_stage_two_optimizes_only_selected_concrete_entries_with_route_progressi
     assert ordinary_call[2]["active_bar"] == "back"
     assert ordinary_call[2]["max_passes"] == 4
     assert ordinary_call[2]["progression_override"].startswith("ordinary:")
+    assert isinstance(ordinary_call[2]["evaluation_cache"], dict)
     blood_call = blood.blood_magic.calls[0]
     assert blood_call[1]["active_bar"] == "back"
     assert blood_call[1]["max_passes"] == 4
@@ -158,3 +169,38 @@ def test_stage_two_optimizes_only_selected_concrete_entries_with_route_progressi
     assert result.global_maximum_proven is False
     assert "shortlist pruning" in result.omitted_scope
     assert "screen omission" in result.omitted_scope
+
+
+def test_stage_two_shares_one_cache_across_ordinary_finalists():
+    finalists = (
+        _ordinary_finalist(
+            name="Summon Twilight Matriarch",
+            entity_id="summon_twilight_matriarch",
+            build_name="Matriarch A",
+            lines=("animal_companions", "daedric_summoning", "green_balance"),
+        ),
+        _ordinary_finalist(
+            name="Summon Twilight Matriarch",
+            entity_id="summon_twilight_matriarch",
+            build_name="Matriarch B",
+            lines=("animal_companions", "daedric_summoning", "restoring_light"),
+        ),
+    )
+    ordinary = _Ordinary()
+    service = ExtremeMaximumHealingEventFinalistOptimizationService(
+        ordinary=ordinary,
+        blood_magic=_Blood(),
+        selector=_Selector(finalists),
+        aggregator=_Aggregator(),
+    )
+
+    service.optimize(
+        PlayerBuild(BuildName="Baseline"),
+        SimpleNamespace(omitted_scope=()),
+        max_passes=2,
+    )
+
+    assert len(ordinary.optimizer.calls) == 2
+    first_cache = ordinary.optimizer.calls[0][2]["evaluation_cache"]
+    second_cache = ordinary.optimizer.calls[1][2]["evaluation_cache"]
+    assert first_cache is second_cache
