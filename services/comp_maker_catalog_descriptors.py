@@ -15,6 +15,9 @@ from services.service_catalog import (
 from services.team_prescription_catalog_descriptors import (
     TEAM_PRESCRIPTION_SERVICE_DESCRIPTORS,
 )
+from services.team_provider_catalog_descriptors import (
+    TEAM_PROVIDER_SERVICE_DESCRIPTORS,
+)
 
 
 COMP_MAKER_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
@@ -117,6 +120,7 @@ COMP_MAKER_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         notes="Comparison is bounded to static capability presence, redundancy, gaps, conditional sources, recruits, and evidence boundaries.",
     ),
     *TEAM_PRESCRIPTION_SERVICE_DESCRIPTORS,
+    *TEAM_PROVIDER_SERVICE_DESCRIPTORS,
 )
 
 
