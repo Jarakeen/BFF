@@ -3,11 +3,17 @@ from pathlib import Path
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtGui import QPixmap
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor, QPixmap
 from PySide6.QtWidgets import QApplication, QComboBox, QTableWidget, QVBoxLayout, QWidget
 
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
-from services.rotation_timeline_projection_service import RotationTimelineAction
+from services.rotation_timeline_projection_service import (
+    RotationTimelineAction,
+    RotationTimelineLane,
+    RotationTimelineProjection,
+    RotationTimelineSegment,
+)
 from ui.components.rotation_timeline_widget import _RotationTimelineCanvas
 from ui.rotation_duration_evidence_support import (
     RotationDurationEvidence,
@@ -199,3 +205,51 @@ def test_timeline_icon_resolver_accepts_canonical_skill_identity(monkeypatch, tm
 
     first_candidate = _RotationTimelineCanvas._candidate_icon_paths(action)[0]
     assert first_candidate.name == "combat_prayer.png"
+
+
+def test_duration_brush_does_not_cover_rendered_timeline_icon(tmp_path):
+    icon_path = tmp_path / "icon.png"
+    source = QPixmap(48, 48)
+    source.fill(QColor(220, 20, 20))
+    assert source.save(str(icon_path))
+
+    projection = RotationTimelineProjection(
+        duration_seconds=5.0,
+        actions=(
+            RotationTimelineAction(
+                time_seconds=1.0,
+                sequence=0,
+                name="Combat Prayer",
+                kind="skill",
+                bar="front",
+                icon_key="combat_prayer",
+                icon_path=str(icon_path),
+            ),
+        ),
+        lanes=(
+            RotationTimelineLane(
+                lane_key="combat_prayer:front",
+                label="Combat Prayer",
+                bar="front",
+                duration_seconds=5.0,
+                segments=(RotationTimelineSegment(0.0, 5.0),),
+            ),
+        ),
+        unresolved=(),
+    )
+
+    canvas = _RotationTimelineCanvas()
+    canvas.set_projection(projection)
+    canvas.show()
+    _APP.processEvents()
+
+    image = canvas.grab().toImage()
+    center = QColor(
+        image.pixel(
+            int(canvas._time_x(1.0)),
+            canvas.TOP_MARGIN + canvas.ICON_SIZE // 2,
+        )
+    )
+    assert center.red() > 180
+    assert center.green() < 80
+    assert center.blue() < 80
