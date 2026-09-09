@@ -38,7 +38,7 @@ def test_dps_surface_hides_generic_support_and_shows_dd_diagnostics() -> None:
     _apply_role_surface(page, SimpleNamespace(Role="DPS"))
 
     assert page.support_effects_card.visible is False
-    assert page.graph_effect_card.visible is False
+    assert page.graph_effect_card.visible is True
     assert page._performance_tracking_card.visible is False
     assert page.buff_card.visible is False
     assert page.debuff_card.visible is False
@@ -62,13 +62,13 @@ def test_healer_surface_restores_support_surface() -> None:
     assert page._performance_tracking_card.visible is True
 
 
-def test_fresh_dps_member_hides_healer_support_surface_without_showing_blank_results() -> None:
+def test_fresh_dps_member_keeps_graph_controls_without_showing_blank_results() -> None:
     page = _page()
 
     _apply_role_name_surface(page, "DPS", has_snapshot=False)
 
     assert page.support_effects_card.visible is False
-    assert page.graph_effect_card.visible is False
+    assert page.graph_effect_card.visible is True
     assert page._performance_tracking_card.visible is False
     assert page.buff_card.visible is False
     assert page.debuff_card.visible is False
