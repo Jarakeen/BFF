@@ -17,9 +17,6 @@ class RaidReviewObservation:
     actor_label: str
     role: str
     fight_duration_seconds: float
-    # Stable identity supplied by the caller when observations from multiple
-    # reports belong to the same person. ESO Logs actor IDs are report-scoped.
-    # If absent, grouping deliberately stays report-local.
     member_key: str = ""
     output_total: float = 0.0
     output_per_second: float = 0.0
@@ -103,6 +100,7 @@ class PerformanceRaidReviewService:
         wipe_keys = pull_keys - kill_keys
 
         findings: list[RaidReviewFinding] = []
+        findings.extend(self._raid_first_death_window(rows))
         findings.extend(self._repeated_player_deaths(rows))
         findings.extend(self._dd_kill_wipe_output(rows))
         findings.extend(self._support_resource_pressure(rows))
@@ -126,13 +124,62 @@ class PerformanceRaidReviewService:
         )
 
     @staticmethod
-    def _by_player(
-        rows: tuple[RaidReviewObservation, ...],
-    ) -> dict[str, list[RaidReviewObservation]]:
+    def _by_player(rows: tuple[RaidReviewObservation, ...]) -> dict[str, list[RaidReviewObservation]]:
         grouped: dict[str, list[RaidReviewObservation]] = {}
         for row in rows:
             grouped.setdefault(row.stable_member_key, []).append(row)
         return grouped
+
+    def _raid_first_death_window(self, rows) -> list[RaidReviewFinding]:
+        by_pull: dict[tuple[str, int], list[RaidReviewObservation]] = {}
+        for row in rows:
+            if row.kill:
+                continue
+            by_pull.setdefault((row.report_code, row.fight_id), []).append(row)
+
+        first_times: list[float] = []
+        durations: list[float] = []
+        for pull_rows in by_pull.values():
+            candidates = [
+                float(row.first_death_seconds)
+                for row in pull_rows
+                if row.death_count > 0 and row.first_death_seconds is not None
+            ]
+            if not candidates:
+                continue
+            first_times.append(min(candidates))
+            durations.append(max(float(row.fight_duration_seconds) for row in pull_rows))
+
+        if len(first_times) < 3:
+            return []
+
+        span = max(first_times) - min(first_times)
+        typical_duration = median(durations) if durations else 0.0
+        threshold = max(8.0, min(20.0, typical_duration * 0.08 if typical_duration > 0 else 12.0))
+        if span > threshold:
+            return []
+
+        center = median(first_times)
+        return [
+            RaidReviewFinding(
+                "raid",
+                "Raid",
+                "Group",
+                "death_window",
+                "high",
+                "First deaths cluster in the same part of wipe pulls",
+                (
+                    f"Earliest player death occurred between {min(first_times):.1f}s and "
+                    f"{max(first_times):.1f}s across {len(first_times)} measured wipes "
+                    f"(median {center:.1f}s)."
+                ),
+                (
+                    "Review this repeated time window against the encounter timeline, positioning, incoming damage, "
+                    "support coverage, and assigned mechanics before blaming raw throughput."
+                ),
+                "high" if len(first_times) >= 5 else "medium",
+            )
+        ]
 
     def _repeated_player_deaths(self, rows) -> list[RaidReviewFinding]:
         findings: list[RaidReviewFinding] = []
@@ -146,11 +193,7 @@ class PerformanceRaidReviewService:
             if share < 0.5:
                 continue
 
-            causes = [
-                row.first_death_ability.strip()
-                for row in death_wipes
-                if row.first_death_ability.strip()
-            ]
+            causes = [row.first_death_ability.strip() for row in death_wipes if row.first_death_ability.strip()]
             cause_note = ""
             if causes:
                 counts: dict[str, int] = {}
@@ -181,16 +224,8 @@ class PerformanceRaidReviewService:
             if player_rows[0].canonical_role != "DPS":
                 continue
             label = player_rows[0].actor_label
-            kills = [
-                row.active_output_per_second
-                for row in player_rows
-                if row.kill and row.active_output_per_second > 0
-            ]
-            wipes = [
-                row.active_output_per_second
-                for row in player_rows
-                if not row.kill and row.active_output_per_second > 0
-            ]
+            kills = [row.active_output_per_second for row in player_rows if row.kill and row.active_output_per_second > 0]
+            wipes = [row.active_output_per_second for row in player_rows if not row.kill and row.active_output_per_second > 0]
             if len(kills) < 2 or len(wipes) < 2:
                 continue
             kill_median = median(kills)
@@ -209,10 +244,10 @@ class PerformanceRaidReviewService:
                     "DPS",
                     "damage",
                     "medium" if lower else "note",
-                    "Damage falls meaningfully on wipe pulls" if lower else "Raw damage is not the wipe signal",
+                    "Damage is stronger on successful pulls" if lower else "Raw damage is not the wipe signal",
                     f"Median boss-active output: kills {kill_median:,.0f}/s vs wipes {wipe_median:,.0f}/s ({delta * 100:+.0f}%).",
                     (
-                        "Inspect movement, target reacquisition, deaths, mechanic assignments, and burst alignment in the lower-output pulls. Do not assume the rotation itself is the cause until those windows are checked."
+                        "Preserve the successful-pull pattern, then inspect movement, target reacquisition, deaths, mechanic assignments, and burst alignment in the lower-output wipes before changing the base rotation."
                         if lower
                         else "Wipe pulls are not showing a damage-rate deficit for this player. Prioritize survival, mechanics, target choice, and group timing before asking for more raw DPS."
                     ),
@@ -227,16 +262,10 @@ class PerformanceRaidReviewService:
             role = player_rows[0].canonical_role
             if role not in {"Healer", "Tank"}:
                 continue
-            measured = [
-                row for row in player_rows
-                if row.minimum_primary_resource_percent is not None
-            ]
+            measured = [row for row in player_rows if row.minimum_primary_resource_percent is not None]
             if len(measured) < 3:
                 continue
-            pressured = [
-                row for row in measured
-                if float(row.minimum_primary_resource_percent or 0.0) <= 15.0
-            ]
+            pressured = [row for row in measured if float(row.minimum_primary_resource_percent or 0.0) <= 15.0]
             if len(pressured) < 2:
                 continue
             wipe_pressure = sum(1 for row in pressured if not row.kill)
@@ -259,25 +288,12 @@ class PerformanceRaidReviewService:
         findings: list[RaidReviewFinding] = []
         for player_rows in self._by_player(rows).values():
             effect_names = sorted(
-                {
-                    name
-                    for row in player_rows
-                    for name in row.key_uptimes
-                    if name.strip()
-                },
+                {name for row in player_rows for name in row.key_uptimes if name.strip()},
                 key=str.casefold,
             )
             for effect_name in effect_names:
-                kills = [
-                    row.key_uptimes[effect_name]
-                    for row in player_rows
-                    if row.kill and effect_name in row.key_uptimes
-                ]
-                wipes = [
-                    row.key_uptimes[effect_name]
-                    for row in player_rows
-                    if not row.kill and effect_name in row.key_uptimes
-                ]
+                kills = [row.key_uptimes[effect_name] for row in player_rows if row.kill and effect_name in row.key_uptimes]
+                wipes = [row.key_uptimes[effect_name] for row in player_rows if not row.kill and effect_name in row.key_uptimes]
                 if len(kills) < 2 or len(wipes) < 2:
                     continue
                 kill_median = median(kills)
@@ -293,9 +309,17 @@ class PerformanceRaidReviewService:
                         player_rows[0].canonical_role,
                         "uptime",
                         "medium" if lower else "note",
-                        f"{effect_name} uptime is {'lower' if lower else 'higher'} on wipes",
+                        (
+                            f"{effect_name} is stronger on successful pulls"
+                            if lower
+                            else f"{effect_name} uptime is higher on wipes"
+                        ),
                         f"Median uptime: kills {kill_median:.1f}% vs wipes {wipe_median:.1f}% ({delta:+.1f} points).",
-                        "Inspect whether the difference occurs during eligible encounter windows and whether this player owns the effect obligation. Do not score impossible or unassigned uptime as a mistake.",
+                        (
+                            "Preserve the successful-pull pattern, then inspect whether the difference occurs during eligible encounter windows and whether this player owns the effect obligation. Do not score impossible or unassigned uptime as a mistake."
+                            if lower
+                            else "Higher uptime on wipes means this effect is not, by itself, explaining the failure. Check encounter eligibility and assigned ownership before drawing a coaching conclusion."
+                        ),
                         "medium",
                     )
                 )
