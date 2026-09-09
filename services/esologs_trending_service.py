@@ -95,9 +95,6 @@ class EsoLogsTrendingService:
         elif isinstance(client, EsoLogsClient):
             self.history_path = get_data_dir() / "esologs_trending_history.json"
         else:
-            # Test doubles and alternate hosts are read-only by default. They can opt
-            # into persistence explicitly with history_path when that behavior is
-            # under test.
             self.history_path = None
 
     def list_trials(self) -> list[dict]:
@@ -112,7 +109,7 @@ class EsoLogsTrendingService:
         encounter_name: str,
         player_limit: int = _DEFAULT_PLAYER_LIMIT,
     ) -> EsoLogsTrendingReport:
-        del zone_id  # kept in the call shape for the shared trial picker boundary.
+        del zone_id
 
         limit = max(1, int(player_limit))
         players_by_role: dict[str, list[TopTeamPlayer]] = {
@@ -121,42 +118,28 @@ class EsoLogsTrendingService:
         role_errors: dict[str, str] = {}
         ranked_players_analyzed = 0
         ranked_players_skipped = 0
-
-        # Multiple top-ranked players can come from the same fight. Cache its parsed
-        # playerDetails so one fight is fetched once even if several ranked players
-        # point to it.
         report_player_cache: dict[tuple[str, int], list[TopTeamPlayer] | None] = {}
 
         for role_key in _ROLE_KEYS:
             role_label, metric = _ROLE_RANKING_METRIC[role_key]
-            try:
-                rankings = self._get_metric_rankings(
+            if role_key == "tank":
+                rankings, tank_error = self._get_tank_rankings(
                     encounter_id=int(encounter_id),
-                    role_label=role_label,
-                    metric=metric,
                     limit=limit,
                 )
-            except EsoLogsApiError as primary_exc:
-                # ESO Logs' public Tank rankings are exposed as a Tank-spec-filtered
-                # damage leaderboard on content where the specialized combined tank
-                # metric is unavailable. Keep the combined metric as the first choice
-                # for compatibility, then fall back explicitly rather than dropping
-                # the entire tank lane.
-                if role_key != "tank":
-                    role_errors[role_key] = str(primary_exc)
+                if rankings is None:
+                    role_errors[role_key] = tank_error or "Tank rankings were unavailable."
                     continue
+            else:
                 try:
                     rankings = self._get_metric_rankings(
                         encounter_id=int(encounter_id),
                         role_label=role_label,
-                        metric="dps",
-                        spec_name="Tank",
+                        metric=metric,
                         limit=limit,
                     )
-                except EsoLogsApiError as fallback_exc:
-                    role_errors[role_key] = (
-                        f"{primary_exc}; Tank-spec fallback failed: {fallback_exc}"
-                    )
+                except EsoLogsApiError as exc:
+                    role_errors[role_key] = str(exc)
                     continue
 
             for ranking in rankings:
@@ -200,6 +183,43 @@ class EsoLogsTrendingService:
             role_errors=role_errors,
         )
 
+    def _get_tank_rankings(
+        self,
+        *,
+        encounter_id: int,
+        limit: int,
+    ) -> tuple[list[dict] | None, str | None]:
+        """Resolve Tank rankings using the filters ESO Logs currently exposes.
+
+        The public Tank Damage Rankings page uses the ``Tanks`` class filter. Prefer
+        that evidence-backed path first. Older/specialized ranking shapes remain as
+        fallbacks for compatibility with content or partitions that expose them.
+        """
+
+        attempts = (
+            {"metric": "dps", "class_name": "Tanks", "label": "Tank-class DPS"},
+            {"metric": "tankcombineddps", "label": "combined Tank"},
+            {"metric": "dps", "spec_name": "Tank", "label": "Tank-spec DPS"},
+            {"metric": "dps", "spec_name": "tank", "label": "tank-spec DPS"},
+        )
+        errors: list[str] = []
+        for attempt in attempts:
+            try:
+                return (
+                    self._get_metric_rankings(
+                        encounter_id=encounter_id,
+                        role_label="Tank",
+                        metric=str(attempt["metric"]),
+                        limit=limit,
+                        spec_name=attempt.get("spec_name"),
+                        class_name=attempt.get("class_name"),
+                    ),
+                    None,
+                )
+            except EsoLogsApiError as exc:
+                errors.append(f"{attempt['label']}: {exc}")
+        return None, "; ".join(errors)
+
     def _get_metric_rankings(
         self,
         *,
@@ -208,24 +228,24 @@ class EsoLogsTrendingService:
         metric: str,
         limit: int,
         spec_name: str | None = None,
+        class_name: str | None = None,
     ) -> list[dict]:
-        """Read Encounter.characterRankings using only schema-valid arguments.
-
-        Encounter.characterRankings accepts a ranking metric and an optional specName,
-        but not RoleType. DD and healer use their direct metrics. Tank first attempts
-        the specialized combined metric, with an explicit Tank-spec DPS fallback in
-        ``analyze_encounter`` for ESO Logs content that exposes tanks that way.
-        """
+        """Read Encounter.characterRankings with explicit schema-supported filters."""
 
         query = """
         query TrendingRankings(
           $encounterID: Int!
           $metric: CharacterRankingMetricType
           $specName: String
+          $className: String
         ) {
           worldData {
             encounter(id: $encounterID) {
-              characterRankings(metric: $metric, specName: $specName)
+              characterRankings(
+                metric: $metric
+                specName: $specName
+                className: $className
+              )
             }
           }
         }
@@ -235,6 +255,7 @@ class EsoLogsTrendingService:
             "encounterID": int(encounter_id),
             "metric": metric,
             "specName": spec_name,
+            "className": class_name,
         }
         data = self.client._query(query, variables)
         encounter = ((data.get("worldData") or {}).get("encounter")) or {}
@@ -263,15 +284,12 @@ class EsoLogsTrendingService:
         for row in rows:
             if not isinstance(row, dict):
                 continue
-
             report = row.get("report")
             if not isinstance(report, dict) or not report.get("code"):
                 continue
-
             fight_id = report.get("fightID", report.get("fightId"))
             if fight_id is None:
                 continue
-
             entries.append(
                 {
                     "name": row.get("name"),
@@ -288,7 +306,6 @@ class EsoLogsTrendingService:
                 f"None of the ranked {role_label} entries included a usable "
                 "report pointer (report.code / report.fightID)."
             )
-
         return entries
 
     def _resolve_ranked_player(
@@ -342,9 +359,6 @@ class EsoLogsTrendingService:
             ]
             if class_matches:
                 matches = class_matches
-
-        # Do not guess an anonymized or renamed player from roster position/class alone.
-        # If the ranked identity cannot be matched exactly, that observation is skipped.
         return matches[0] if len(matches) == 1 else None
 
     @staticmethod
@@ -352,10 +366,7 @@ class EsoLogsTrendingService:
         counter: Counter[str],
         player_count: int,
     ) -> tuple[TrendingItem, ...]:
-        rows = sorted(
-            counter.items(),
-            key=lambda item: (-item[1], item[0].casefold()),
-        )
+        rows = sorted(counter.items(), key=lambda item: (-item[1], item[0].casefold()))
         return tuple(
             TrendingItem(name=name, count=count, player_count=player_count)
             for name, count in rows
@@ -369,11 +380,7 @@ class EsoLogsTrendingService:
     ) -> RoleTrendingSummary:
         gear_counts: Counter[str] = Counter()
         class_counts: Counter[str] = Counter()
-
         for player in players:
-            # TopTeamService already deduplicates a player's repeated gear pieces into
-            # distinct set names. Counting once per ranked player avoids a five-piece
-            # set appearing five times merely because five equipped items share it.
             gear_counts.update(player.GearSets)
             if player.ClassName:
                 class_counts[player.ClassName] += 1
@@ -408,17 +415,12 @@ class EsoLogsTrendingService:
                 encoding="utf-8",
             )
         except OSError:
-            # Trending analysis remains usable even if the local history file cannot
-            # be written. Momentum simply will not persist to the next app session.
             return
 
     @staticmethod
     def _latest_snapshot(history: dict, encounter_id: int, role: str) -> dict | None:
         for snapshot in reversed(history.get("snapshots", [])):
-            if (
-                snapshot.get("encounter_id") == encounter_id
-                and snapshot.get("role") == role
-            ):
+            if snapshot.get("encounter_id") == encounter_id and snapshot.get("role") == role:
                 return snapshot
         return None
 
@@ -456,11 +458,9 @@ class EsoLogsTrendingService:
                 for index, row in enumerate(summary.gear_sets, start=1)
             ],
         }
-
         previous = self._latest_snapshot(history, encounter_id, role)
         if previous and self._snapshot_signature(previous) == self._snapshot_signature(snapshot):
             return
-
         history.setdefault("snapshots", []).append(snapshot)
         matching_indexes = [
             index
@@ -495,10 +495,7 @@ class EsoLogsTrendingService:
 
         previous = cls._previous_rows(previous_snapshot)
         current = {
-            row.name: {
-                "percent": row.percent,
-                "rank": rank,
-            }
+            row.name: {"percent": row.percent, "rank": rank}
             for rank, row in enumerate(summary.gear_sets, start=1)
         }
         previous_player_count = max(1, int(previous_snapshot.get("player_count", 0)))
@@ -520,20 +517,12 @@ class EsoLogsTrendingService:
                     current_percent=current_percent,
                     previous_percent=previous_percent,
                     delta_points=current_percent - previous_percent,
-                    current_rank=(
-                        int(current_row["rank"]) if current_row.get("rank") is not None else None
-                    ),
-                    previous_rank=(
-                        int(previous_row["rank"]) if previous_row.get("rank") is not None else None
-                    ),
+                    current_rank=(int(current_row["rank"]) if current_row.get("rank") is not None else None),
+                    previous_rank=(int(previous_row["rank"]) if previous_row.get("rank") is not None else None),
                 )
             )
 
-        new_arrivals = [
-            row
-            for row in movements
-            if row.previous_percent <= 0.0 and row.current_percent > 0.0
-        ]
+        new_arrivals = [row for row in movements if row.previous_percent <= 0.0 and row.current_percent > 0.0]
         breakouts = [
             row
             for row in movements
