@@ -104,9 +104,28 @@ class EsoLogsTrendingService:
                     metric=metric,
                     limit=limit,
                 )
-            except EsoLogsApiError as exc:
-                role_errors[role_key] = str(exc)
-                continue
+            except EsoLogsApiError as primary_exc:
+                # ESO Logs' public Tank rankings are exposed as a Tank-spec-filtered
+                # damage leaderboard on content where the specialized combined tank
+                # metric is unavailable. Keep the combined metric as the first choice
+                # for compatibility, then fall back explicitly rather than dropping
+                # the entire tank lane.
+                if role_key != "tank":
+                    role_errors[role_key] = str(primary_exc)
+                    continue
+                try:
+                    rankings = self._get_metric_rankings(
+                        encounter_id=int(encounter_id),
+                        role_label=role_label,
+                        metric="dps",
+                        spec_name="Tank",
+                        limit=limit,
+                    )
+                except EsoLogsApiError as fallback_exc:
+                    role_errors[role_key] = (
+                        f"{primary_exc}; Tank-spec fallback failed: {fallback_exc}"
+                    )
+                    continue
 
             for ranking in rankings:
                 player = self._resolve_ranked_player(
@@ -150,32 +169,36 @@ class EsoLogsTrendingService:
         role_label: str,
         metric: str,
         limit: int,
+        spec_name: str | None = None,
     ) -> list[dict]:
         """Read Encounter.characterRankings using only schema-valid arguments.
 
-        ESO Logs' Encounter.characterRankings field does not accept a RoleType
-        argument. The leaderboard metric selects the relevant role-specific ranking
-        family for this view: dps for DD, hps for healers, and tankcombineddps for
-        tanks. We retain ``role_label`` only for clear error messages.
+        Encounter.characterRankings accepts a ranking metric and an optional specName,
+        but not RoleType. DD and healer use their direct metrics. Tank first attempts
+        the specialized combined metric, with an explicit Tank-spec DPS fallback in
+        ``analyze_encounter`` for ESO Logs content that exposes tanks that way.
         """
 
         query = """
         query TrendingRankings(
           $encounterID: Int!
           $metric: CharacterRankingMetricType
+          $specName: String
         ) {
           worldData {
             encounter(id: $encounterID) {
-              characterRankings(metric: $metric)
+              characterRankings(metric: $metric, specName: $specName)
             }
           }
         }
         """
 
-        data = self.client._query(
-            query,
-            {"encounterID": int(encounter_id), "metric": metric},
-        )
+        variables = {
+            "encounterID": int(encounter_id),
+            "metric": metric,
+            "specName": spec_name,
+        }
+        data = self.client._query(query, variables)
         encounter = ((data.get("worldData") or {}).get("encounter")) or {}
         rankings = encounter.get("characterRankings")
 
