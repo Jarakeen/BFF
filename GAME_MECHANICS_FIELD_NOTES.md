@@ -580,3 +580,10 @@ Extreme MOST Actual Heal now evaluates verified gear-set proc effects against ex
 A proc recorded as `ALLY` or `GROUP` is **not** automatically treated as a buff on the wearer. This matters for records such as Spell Power Cure, whose verified trigger identity currently says `overheal_self_or_ally` while its target model is `ALLY`. Until the target model can explicitly prove wearer self-application, Extreme reports that ambiguity instead of adding Major Courage to the healer.
 
 **Layman’s version:** wearing a proc set and successfully triggering it still does not prove the buff landed on *you*. Extreme now insists on that last piece of evidence before using the buff to inflate MOST Actual Heal.
+
+
+---
+
+## 2026-09-09 — Self-or-ally targeting is distinct from ally-only targeting
+
+Canonical support targeting now includes `SELF_OR_ALLY` for effects that can explicitly land on either the source or another friendly target. This is intentionally distinct from `ALLY`: ally-only effects still do not prove wearer application. Spell Power Cure Major Courage is classified `SELF_OR_ALLY` because its verified trigger semantics are `overheal_self_or_ally`. Extreme MOST Actual Heal may therefore use SPC on the healer only when the proc runtime event, duration, and other eligibility checks also pass.

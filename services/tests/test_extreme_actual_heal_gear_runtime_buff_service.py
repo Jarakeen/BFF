@@ -123,3 +123,33 @@ def test_gear_proc_uses_canonical_two_slot_weapon_counting():
         snapshot_time_seconds=1.0,
     )
     assert result.active_buffs == ("Major Courage",)
+
+
+def test_self_or_ally_gear_proc_can_apply_to_wearer():
+    class HybridResolver:
+        @staticmethod
+        def resolve(set_id, piece_count):
+            if piece_count < 5:
+                return []
+            return [
+                EffectVariant(
+                    name="major_courage",
+                    layer=EffectLayer.PROC,
+                    source="fixture set",
+                    duration=5.0,
+                    trigger="overheal_self_or_ally",
+                    target_type=SupportTargetType.SELF_OR_ALLY,
+                )
+            ]
+
+    service = ExtremeActualHealGearRuntimeBuffService(
+        "unused.db", repository=_Repository(), resolver=HybridResolver()
+    )
+    result = service.resolve(
+        _five_piece("Self Proc Set"),
+        active_bar="front",
+        event=RuntimeEvent(time_seconds=0.0, trigger="overheal_self_or_ally", source="test"),
+        snapshot_time_seconds=1.0,
+    )
+    assert result.active_buffs == ("Major Courage",)
+    assert result.unresolved == ()

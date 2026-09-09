@@ -6,5 +6,6 @@ class SupportTargetType(str, Enum):
 
     SELF = "self"
     ALLY = "ally"
+    SELF_OR_ALLY = "self_or_ally"
     GROUP = "group"
     ENEMY = "enemy"

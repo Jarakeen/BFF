@@ -78,7 +78,7 @@ class SupportEffectRegistry:
             effect
             for effect in self._effects
             if effect.target_type
-            in (SupportTargetType.ALLY, SupportTargetType.GROUP)
+            in (SupportTargetType.ALLY, SupportTargetType.SELF_OR_ALLY, SupportTargetType.GROUP)
         )
 
     def for_role(self, role: Role) -> tuple[SupportEffect, ...]:

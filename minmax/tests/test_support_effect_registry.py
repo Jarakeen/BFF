@@ -149,3 +149,16 @@ def test_add_extends_registry():
 
     assert len(registry) == 1
     assert registry.all()[0].name == "New Buff"
+
+
+def test_self_or_ally_counts_as_ally_reaching_and_group_contributing():
+    effect = SupportEffect(
+        source="SPC",
+        name="Major Courage",
+        category=SupportEffectCategory.BUFF,
+        effect_type="weapon_spell_damage",
+        target_type=SupportTargetType.SELF_OR_ALLY,
+    )
+    registry = SupportEffectRegistry([effect])
+    assert registry.targeting_allies() == (effect,)
+    assert registry.contributing_to_group() == (effect,)

@@ -91,7 +91,7 @@ class ExtremeActualHealGearRuntimeBuffService:
                     )
                     continue
 
-                if effect.target_type is not SupportTargetType.SELF:
+                if effect.target_type not in (SupportTargetType.SELF, SupportTargetType.SELF_OR_ALLY):
                     target = (
                         effect.target_type.value
                         if effect.target_type is not None

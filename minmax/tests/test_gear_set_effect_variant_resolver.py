@@ -33,6 +33,7 @@ from minmax.gear_set_effect_variant_resolver import GearSetEffectVariantResolver
 from minmax.gear_set_known_effects import (
     MASTER_ARCHITECT_FIVE_PIECE_BONUS_ID,
     MASTER_ARCHITECT_SET_ID,
+    known_effects_for_bonus_row,
 )
 from minmax.gear_set_repository import GearSetRepository
 from minmax.role import Role
@@ -311,3 +312,9 @@ def test_resolved_variant_flows_through_existing_character_build_pipeline(
     assert support_effect.exclusivity_group == "major_slayer"
     assert support_effect.trigger is not None
     assert support_effect.trigger.trigger == "ultimate_activation_in_combat"
+
+
+def test_spell_power_cure_explicitly_targets_self_or_ally():
+    effects = known_effects_for_bonus_row(0, 0, "Spell Power Cure", 5)
+    assert len(effects) == 1
+    assert effects[0].target_type == SupportTargetType.SELF_OR_ALLY
