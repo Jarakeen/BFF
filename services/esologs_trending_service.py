@@ -245,6 +245,7 @@ class EsoLogsTrendingService:
                 metric: $metric
                 specName: $specName
                 className: $className
+                includeCombatantInfo: true
               )
             }
           }
@@ -296,6 +297,7 @@ class EsoLogsTrendingService:
                     "class": row.get("class") or row.get("className"),
                     "report_code": str(report["code"]),
                     "fight_id": int(fight_id),
+                    "combatant_info": row.get("combatantInfo"),
                 }
             )
             if len(entries) >= limit:
@@ -320,6 +322,31 @@ class EsoLogsTrendingService:
         fight_id = ranking.get("fight_id")
         if not name or not report_code or fight_id is None:
             return None
+
+        # For Tank Trending, prefer the combatant info returned on the ranked Tank
+        # row itself. That keeps gear provenance attached to the exact ranked player
+        # and avoids role-bucket disagreements in a later report Summary payload.
+        direct_info = ranking.get("combatant_info")
+        if role_key == "tank" and isinstance(direct_info, dict):
+            direct_actor = {
+                "name": name,
+                "class": ranking.get("class"),
+                "combatantInfo": direct_info,
+            }
+            direct_gear = TopTeamService._gear_sets(direct_actor)
+            if direct_gear:
+                return TopTeamPlayer(
+                    Name=name,
+                    Role="tank",
+                    GearSets=direct_gear,
+                    ClassName=(
+                        str(ranking.get("class") or "").strip()
+                        or TopTeamService._class_name(direct_actor)
+                    ),
+                    Abilities=TopTeamService._abilities(direct_actor),
+                    Mundus="",
+                    ActorId=None,
+                )
 
         try:
             normalized_fight_id = int(fight_id)
