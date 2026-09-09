@@ -42,7 +42,10 @@ from ui.rotation_canonical_candidate_render_support import (
     RotationCanonicalCandidateRenderEvidence,
     RotationCanonicalCandidateRenderSupport,
 )
-from ui.rotation_canonical_evidence_bundle_support import RotationCanonicalEvidenceBundle
+from ui.rotation_canonical_evidence_bundle_support import (
+    RotationCanonicalEvidenceBundle,
+    RotationCanonicalEvidenceBundleSupport,
+)
 from ui.rotation_dashboard_canonical_candidate_support import (
     RotationDashboardCanonicalCandidateResult,
     RotationDashboardCanonicalCandidateSupport,
@@ -51,6 +54,10 @@ from ui.rotation_dashboard_page import RotationDashboardPage
 from ui.rotation_encounter_selector_support import RotationEncounterSelectorSupport
 from ui.rotation_generation_support import RotationGenerationRequest
 from ui.rotation_pdf_export_support import install_rotation_pdf_export
+from ui.rotation_selected_encounter_evidence_support import (
+    RotationSelectedEncounterEvidenceInputs,
+    RotationSelectedEncounterEvidenceSupport,
+)
 from ui.rotation_support_cadence_progression_render_support import (
     RotationSupportCadenceProgressionRenderEvidence,
     RotationSupportCadenceProgressionRenderSupport,
@@ -70,6 +77,7 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
         cadence_progression_render: RotationSupportCadenceProgressionRenderSupport | None = None,
         canonical_cadence_orchestration: RotationCanonicalCadenceOrchestrationSupport | None = None,
         encounter_guide_service: EncounterBossGuideService | None = None,
+        selected_encounter_evidence: RotationSelectedEncounterEvidenceSupport | None = None,
     ) -> None:
         super().__init__(parent)
         install_rotation_timeline(self)
@@ -79,6 +87,14 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
         )
         self.rotation_encounter_selector = RotationEncounterSelectorSupport(guide_service)
         self.rotation_encounter_selector.install(self)
+        self.rotation_selected_encounter_evidence = (
+            selected_encounter_evidence
+            or RotationSelectedEncounterEvidenceSupport(
+                bundle_support=RotationCanonicalEvidenceBundleSupport(
+                    guide_service=guide_service,
+                )
+            )
+        )
         self.cadence_progression_card = RotationCadenceProgressionCard()
         self.workspace_layout.addWidget(self.cadence_progression_card)
         self.rotation_canonical_candidates = (
@@ -118,6 +134,16 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
     def selected_encounter_id(self) -> str | None:
         """Return the persisted encounter selected for later evidence resolution."""
         return self.rotation_encounter_selector.selected_encounter_id(self)
+
+    def selected_encounter_evidence_bundle(
+        self,
+        inputs: RotationSelectedEncounterEvidenceInputs,
+    ) -> RotationCanonicalEvidenceBundle:
+        """Resolve canonical evidence for the exact currently selected encounter."""
+        return self.rotation_selected_encounter_evidence.build(
+            encounter_id=self.selected_encounter_id(),
+            inputs=inputs,
+        )
 
     def canonical_generation_request(self) -> RotationGenerationRequest:
         """Capture the dashboard's current saved-build generation inputs exactly once."""
