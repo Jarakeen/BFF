@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from minmax.rotation_effective_duration import RotationEffectiveDurationOverride
+
 from services.rotation_local_cadence_duration_refinement_service import (
     RotationLocalCadenceDurationRefinementService,
 )
@@ -27,16 +29,22 @@ from services.rotation_support_cadence_recommendation_service import (
 
 
 def build_rotation_support_cadence_progression_runner(
+    *,
+    effective_duration_overrides: tuple[RotationEffectiveDurationOverride, ...] = (),
 ) -> RotationSupportCadenceProgressionRunnerService:
     """Compose the production support-cadence local-search stack.
 
     Mechanics remain owned by the existing services. This function only wires the
     tested production implementations together so UI/controller code does not grow a
     parallel service graph or accidentally fall back to the global duration refiner.
+    Supply already-resolved duration evidence for the selected build, and construct
+    a new runner when that build/evidence changes. No gear applicability is inferred.
     """
 
     materializer = RotationSupportCadenceCandidateService(
-        RotationLocalCadenceDurationRefinementService()
+        RotationLocalCadenceDurationRefinementService(
+            effective_duration_overrides=effective_duration_overrides,
+        )
     )
     neighborhood = RotationSupportCadenceNeighborhoodService(materializer)
     evaluation = RotationSupportCadenceEvaluationService()

@@ -10,7 +10,12 @@ from minmax.local_refresh_cadence_duration_scheduler import (
 from minmax.refresh_cadence_duration_scheduler import RotationRefreshIntervalPolicy
 from minmax.rotation_ability_priority import AbilityPriorityList
 from minmax.rotation_plan import RotationPlan
-from services.rotation_duration_analysis_service import RotationDurationAnalysisService
+from minmax.rotation_effective_duration import (
+    RotationEffectiveDurationOverride, index_effective_duration_overrides,
+)
+from services.rotation_duration_analysis_service import (
+    RotationDurationAnalysisService, RotationDurationProjection,
+)
 from services.rotation_duration_refinement_service import RotationDurationRefinement
 
 
@@ -22,6 +27,8 @@ class RotationLocalCadenceDurationRefinementService:
     duration skills cannot be mistaken for filler actions. Only the skill(s) named by
     the current cadence policies are active refresh obligations in this refinement pass.
     Final duration evidence is then recomputed from the complete refined plan.
+    Explicit build-duration overrides are retained across both analyses; construct
+    a new refiner when the selected build or its duration evidence changes.
     """
 
     def __init__(
@@ -29,7 +36,10 @@ class RotationLocalCadenceDurationRefinementService:
         database_path: Path = DEFAULT_DATABASE,
         *,
         duration_analysis: RotationDurationAnalysisService | None = None,
+        effective_duration_overrides: tuple[RotationEffectiveDurationOverride, ...] = (),
     ) -> None:
+        self.effective_duration_overrides = tuple(effective_duration_overrides)
+        index_effective_duration_overrides(self.effective_duration_overrides)
         self.duration_analysis = duration_analysis or RotationDurationAnalysisService(
             database_path
         )
@@ -45,7 +55,7 @@ class RotationLocalCadenceDurationRefinementService:
         if not cadence_policies:
             raise ValueError("local cadence refinement requires at least one refresh cadence policy")
 
-        seed_projection = self.duration_analysis.analyze(plan)
+        seed_projection = self._analyze(plan)
         protected_keys = tuple(
             (rule.skill_name.casefold(), rule.bar)
             for rule in seed_projection.rules
@@ -70,7 +80,7 @@ class RotationLocalCadenceDurationRefinementService:
         if unresolved != refined.unresolved:
             refined = self._with_unresolved(refined, unresolved)
 
-        final_projection = self.duration_analysis.analyze(refined)
+        final_projection = self._analyze(refined)
         final_unresolved = self._dedupe(
             tuple(refined.unresolved) + tuple(final_projection.unresolved)
         )
@@ -81,6 +91,15 @@ class RotationLocalCadenceDurationRefinementService:
             plan=refined,
             duration_projection=final_projection,
         )
+
+    def _analyze(self, plan: RotationPlan) -> RotationDurationProjection:
+        # Preserve build evidence on both passes and every local-search iteration.
+        # Strategic refresh intervals never substitute for mechanical duration.
+        if self.effective_duration_overrides:
+            return self.duration_analysis.analyze(
+                plan, effective_duration_overrides=self.effective_duration_overrides,
+            )
+        return self.duration_analysis.analyze(plan)
 
     @staticmethod
     def _with_unresolved(
