@@ -4,6 +4,7 @@ from collections.abc import Iterable
 
 from minmax.character_build.passive_grant import PassiveGrant
 from minmax.resource_costs import ResourceType
+from minmax.rotation_ability_priority import AbilityPriorityList
 from minmax.rotation_demand_window import RotationDemandWindow
 from services.canonical_mechanics_coverage_audit import CanonicalMechanicsCoverageReport
 from services.rotation_candidate_generation_service import RotationRefreshLeadCandidateOption
@@ -19,11 +20,21 @@ from services.rotation_recovery_heavy_replay_service import (
     RecoveryReserveAssessmentResolver,
     VerifiedRecoveryHeavyRestorationResolver,
 )
+from services.rotation_support_cadence_evaluation_service import (
+    RotationSupportCadenceEvaluationContext,
+)
+from services.rotation_support_cadence_neighborhood_service import (
+    RotationSupportCadenceNeighborhoodObligation,
+)
 from services.rotation_support_cadence_progression_runner_service import (
     RotationSupportCadenceProgressionRun,
 )
 from ui.components.rotation_cadence_progression_card import (
     RotationCadenceProgressionCard,
+)
+from ui.rotation_canonical_cadence_orchestration_support import (
+    RotationCanonicalCadenceOrchestrationResult,
+    RotationCanonicalCadenceOrchestrationSupport,
 )
 from ui.rotation_canonical_candidate_render_support import (
     RotationCanonicalCandidateRenderEvidence,
@@ -54,6 +65,7 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
         canonical_candidates: RotationDashboardCanonicalCandidateSupport | None = None,
         canonical_render: RotationCanonicalCandidateRenderSupport | None = None,
         cadence_progression_render: RotationSupportCadenceProgressionRenderSupport | None = None,
+        canonical_cadence_orchestration: RotationCanonicalCadenceOrchestrationSupport | None = None,
     ) -> None:
         super().__init__(parent)
         install_rotation_timeline(self)
@@ -72,6 +84,14 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
         self.rotation_cadence_progression_render = (
             cadence_progression_render or RotationSupportCadenceProgressionRenderSupport()
         )
+        self.rotation_canonical_cadence_orchestration = (
+            canonical_cadence_orchestration
+            or RotationCanonicalCadenceOrchestrationSupport(
+                canonical_candidates=self.rotation_canonical_candidates,
+                canonical_render=self.rotation_canonical_render,
+                cadence_render=self.rotation_cadence_progression_render,
+            )
+        )
         self.last_canonical_candidate_result: (
             RotationDashboardCanonicalCandidateResult | None
         ) = None
@@ -81,6 +101,9 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
         self.last_cadence_progression_run: RotationSupportCadenceProgressionRun | None = None
         self.last_cadence_progression_render_evidence: (
             RotationSupportCadenceProgressionRenderEvidence | None
+        ) = None
+        self.last_canonical_cadence_orchestration_result: (
+            RotationCanonicalCadenceOrchestrationResult | None
         ) = None
 
     def canonical_generation_request(self) -> RotationGenerationRequest:
@@ -160,6 +183,7 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
         self.last_canonical_render_evidence = None
         self.last_cadence_progression_run = None
         self.last_cadence_progression_render_evidence = None
+        self.last_canonical_cadence_orchestration_result = None
         self.cadence_progression_card.clear_report()
         return result
 
@@ -214,6 +238,64 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
             character_id=character_id,
             coverage_report=getattr(bundle, "coverage_report", None),
         )
+
+    def run_canonical_cadence_orchestration(
+        self,
+        bundle: RotationCanonicalEvidenceBundle,
+        *,
+        cadence_obligations: tuple[RotationSupportCadenceNeighborhoodObligation, ...] = (),
+        cadence_priorities: AbilityPriorityList | None = None,
+        cadence_evaluation_context: RotationSupportCadenceEvaluationContext | None = None,
+        cadence_max_iterations: int = 8,
+        character_id: str | None = None,
+    ) -> RotationCanonicalCadenceOrchestrationResult:
+        """Run one ready encounter bundle through canonical and optional cadence stages."""
+        build = self._selected_build()
+        if build is None:
+            raise ValueError("select a saved build before canonical cadence orchestration")
+
+        result = self.rotation_canonical_cadence_orchestration.run(
+            player_build=build,
+            generation_request=self.canonical_generation_request(),
+            evidence_bundle=bundle,
+            cadence_obligations=tuple(cadence_obligations),
+            cadence_priorities=cadence_priorities,
+            cadence_evaluation_context=cadence_evaluation_context,
+            cadence_max_iterations=int(cadence_max_iterations),
+            character_id=character_id,
+        )
+        self.last_canonical_cadence_orchestration_result = result
+        self.last_canonical_candidate_result = result.canonical_result
+        self.last_canonical_render_evidence = result.canonical_evidence
+        self.last_cadence_progression_run = result.cadence_run
+        self.last_cadence_progression_render_evidence = result.cadence_evidence
+
+        if result.cadence_evidence is not None:
+            evidence = result.cadence_evidence
+            self.set_rotation_plan(evidence.plan)
+            self.duration_evidence_card.set_evidence(evidence.duration_evidence)
+            self.set_sustain_projection(evidence.sustain_projection)
+            self.cadence_progression_card.set_report(evidence.report)
+            self.status.info(
+                "Cadence optimization: "
+                f"{evidence.report.advanced_steps} accepted improvement(s) across "
+                f"{evidence.report.iterations} iteration(s). {evidence.report.stop_summary}"
+            )
+            return result
+
+        self.cadence_progression_card.clear_report()
+        if result.canonical_evidence is None:
+            self.status.warning(
+                "Canonical candidate evaluation produced no selectable rotation; "
+                "the existing dashboard plan was not replaced."
+            )
+            return result
+
+        evidence = result.canonical_evidence
+        self.set_rotation_plan(evidence.plan)
+        self.duration_evidence_card.set_evidence(evidence.duration_evidence)
+        self.set_sustain_projection(evidence.sustain_projection)
+        return result
 
     def apply_canonical_candidate_result(
         self,
