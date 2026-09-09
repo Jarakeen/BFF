@@ -6,9 +6,10 @@ The performance page is assembled by several compatibility/polish layers. This
 module intentionally installs last in the DD presentation chain and owns only the
 final visible surface. It does not fetch data and it does not touch local state.
 
-For DPS views the generic raid-support tracking controls are hidden so the DD
-evidence cards are not buried under healer/tank context. Healer and tank views
-retain the support controls.
+For DPS views the generic support-summary cards are hidden so the DD evidence
+cards are not buried under healer/tank context. The Graph Effects selector stays
+visible for every role because it controls the effect lanes drawn on the output
+graph. Healer and tank views retain the broader support-tracking controls.
 """
 
 from ui.components.foundry_card import FoundryCard
@@ -49,14 +50,21 @@ def _apply_role_name_surface(page, role: str, *, has_snapshot: bool) -> None:
     normalized = str(role or "").strip().casefold()
     is_dd = normalized == "dps"
 
+    # These are support-summary surfaces, not graph controls. Hide them for DD.
     for name in (
         "support_effects_card",
-        "graph_effect_card",
         "_performance_tracking_card",
     ):
         card = getattr(page, name, None)
         if card is not None:
             card.setVisible(not is_dd)
+
+    # Graph Effects owns the on/off checkboxes for the buff/debuff lanes painted
+    # over the output graph. It must remain visible for DPS too, otherwise the
+    # graph can show effect lanes that the user has no way to toggle.
+    graph_effect_card = getattr(page, "graph_effect_card", None)
+    if graph_effect_card is not None:
+        graph_effect_card.setVisible(True)
 
     # Result cards only make sense after a snapshot exists. Before that, keep the
     # polished dashboard's normal empty-state behavior instead of revealing blank
