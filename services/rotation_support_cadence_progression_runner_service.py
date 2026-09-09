@@ -60,8 +60,21 @@ class RotationSupportCadenceProgressionRun:
         return len(self.steps)
 
     @property
-    def advanced_steps(self) -> int:
+    def proposed_promotions(self) -> int:
+        """Number of steps that proposed an eligible next seed before runner guards."""
         return sum(1 for step in self.steps if step.advanced)
+
+    @property
+    def advanced_steps(self) -> int:
+        """Number of unique promoted schedules actually accepted by the runner."""
+        proposed = self.proposed_promotions
+        if (
+            self.stop_reason is RotationSupportCadenceProgressionStopReason.REPEATED_PLAN
+            and self.steps
+            and self.steps[-1].advanced
+        ):
+            return max(0, proposed - 1)
+        return proposed
 
     @property
     def unresolved(self) -> tuple[str, ...]:
