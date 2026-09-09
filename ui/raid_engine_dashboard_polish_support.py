@@ -131,11 +131,12 @@ def _init_with_dashboard_polish(self, parent=None) -> None:
     assert _ORIGINAL_INIT is not None
     _ORIGINAL_INIT(self, parent)
 
-    # Give the focal composition art enough room that slot labels can breathe.
-    self.composition_ring.setMinimumSize(690, 430)
-    self.composition_card.setMinimumWidth(700)
+    # Keep the composition ring comfortably larger than the original version,
+    # but leave enough breathing room for Active Composition and the right rail.
+    self.composition_ring.setMinimumSize(630, 400)
+    self.composition_card.setMinimumWidth(640)
     self.active_card.setMinimumWidth(335)
-    self.active_table.setMinimumHeight(420)
+    self.active_table.setMinimumHeight(400)
 
     _replace_next_actions_editor(self)
 
