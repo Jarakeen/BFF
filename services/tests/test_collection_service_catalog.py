@@ -62,3 +62,45 @@ def test_stickerbook_repairs_collection_shape_without_mutating_canonical_source_
     assert service.evidence_class is EvidenceClass.MIXED
     assert "Crafted sets are intentionally excluded" in service.notes
     assert "do not mutate canonical source tables" in service.notes
+
+
+def test_stickerbook_bookmarks_are_intent_not_ownership_or_optimization_evidence():
+    service = canonical_service_for("stickerbook_bookmark_persistence")
+
+    assert service is not None
+    assert service.service_id == "stickerbook.bookmarks"
+    assert service.dependencies == ("stickerbook.progress",)
+    assert service.evidence_class is EvidenceClass.NONE
+    assert "user intent only" in service.notes
+    assert "do not prove set ownership" in service.notes
+    assert "optimization value" in service.notes
+
+
+def test_motif_recipe_and_lorebook_progress_keep_reference_and_profile_state_separate():
+    motif = canonical_service_for("learned_motif_progress")
+    recipe = canonical_service_for("learned_recipe_progress")
+    lorebook = canonical_service_for("lorebook_progress")
+
+    assert motif is not None
+    assert recipe is not None
+    assert lorebook is not None
+    assert motif.evidence_class is EvidenceClass.MIXED
+    assert recipe.evidence_class is EvidenceClass.MIXED
+    assert lorebook.evidence_class is EvidenceClass.MIXED
+    assert "profile-owned progress" in motif.notes
+    assert "user-owned progress" in recipe.notes
+    assert "profile-owned progress" in lorebook.notes
+
+
+def test_learned_collection_services_remain_distinct_capabilities():
+    ids = {
+        get_service("collectible.motif.progress").service_id,
+        get_service("collectible.recipe.progress").service_id,
+        get_service("collectible.lorebook.progress").service_id,
+    }
+
+    assert ids == {
+        "collectible.motif.progress",
+        "collectible.recipe.progress",
+        "collectible.lorebook.progress",
+    }
