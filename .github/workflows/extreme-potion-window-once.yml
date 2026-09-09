@@ -1,0 +1,121 @@
+name: Extreme Potion Window Once
+
+on:
+  push:
+    branches:
+      - phase13
+    paths:
+      - .github/workflows/extreme-potion-window-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch-test-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out current phase13.2
+        uses: actions/checkout@v4
+        with:
+          ref: phase13.2
+          fetch-depth: 0
+
+      - name: Patch explicit potion active-window support
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('services/extreme_conditional_actual_heal_optimization_service.py')
+          text = path.read_text(encoding='utf-8')
+
+          old = '''from minmax.combat_state import CombatState\nfrom models.build_model import PlayerBuild'''
+          new = '''from minmax.combat_state import CombatState\nfrom minmax.potion_cadence import PotionCadence\nfrom minmax.potion_use_event import PotionUseEventResolver\nfrom models.build_model import PlayerBuild'''
+          if old not in text:
+              raise SystemExit('potion import insertion point not found')
+          text = text.replace(old, new, 1)
+
+          old = '''        active_crux: int | None = None,\n        active_buffs: tuple[str, ...] = (),\n        restoration_heavy_state: ExtremeRestorationHeavyCombatStateService | None = None,'''
+          new = '''        active_crux: int | None = None,\n        active_buffs: tuple[str, ...] = (),\n        potion_elapsed_seconds: float | None = None,\n        potion_use_resolver: PotionUseEventResolver | None = None,\n        restoration_heavy_state: ExtremeRestorationHeavyCombatStateService | None = None,'''
+          if old not in text:
+              raise SystemExit('potion constructor insertion point not found')
+          text = text.replace(old, new, 1)
+
+          old = '''        self.active_buffs = tuple(\n            dict.fromkeys(\n                name\n                for raw_name in active_buffs\n                if (name := str(raw_name or "").strip())\n            )\n        )\n        self.restoration_heavy_state = restoration_heavy_state'''
+          new = '''        self.active_buffs = tuple(\n            dict.fromkeys(\n                name\n                for raw_name in active_buffs\n                if (name := str(raw_name or "").strip())\n            )\n        )\n        if potion_elapsed_seconds is None:\n            self.potion_elapsed_seconds = None\n        else:\n            potion_elapsed = float(potion_elapsed_seconds)\n            if potion_elapsed < 0.0:\n                raise ValueError("potion_elapsed_seconds cannot be negative")\n            self.potion_elapsed_seconds = potion_elapsed\n        self.potion_use_resolver = potion_use_resolver\n        self.restoration_heavy_state = restoration_heavy_state'''
+          if old not in text:
+              raise SystemExit('potion assignment insertion point not found')
+          text = text.replace(old, new, 1)
+
+          old = '''        if self.active_buffs:\n            scenarios.append(\n                "explicit active named buffs: " + ", ".join(self.active_buffs)\n            )\n        if self.sacred_ground_window_active:'''
+          new = '''        if self.active_buffs:\n            scenarios.append(\n                "explicit active named buffs: " + ", ".join(self.active_buffs)\n            )\n        if self.potion_elapsed_seconds is not None:\n            scenarios.append(\n                "explicit saved-potion use window at "\n                f"{self.potion_elapsed_seconds:.6f} seconds; "\n                "Medicinal Use duration requires progression proof"\n            )\n        if self.sacred_ground_window_active:'''
+          if old not in text:
+              raise SystemExit('potion search-scope insertion point not found')
+          text = text.replace(old, new, 1)
+
+          old = '''        in_combat = False\n\n        if self.fully_charged_restoration_heavy_attack_completed:'''
+          new = '''        in_combat = False\n\n        if self.potion_elapsed_seconds is not None:\n            potion_name = " ".join(str(build.Potion or "").strip().split())\n            if not potion_name:\n                unresolved.append(\n                    "Explicit potion-use window requested but build has no potion selection"\n                )\n            else:\n                medicinal_use_rank = progression.passive_rank("Medicinal Use")\n                if medicinal_use_rank is None:\n                    unresolved.append(\n                        "Medicinal Use rank is unresolved for explicit potion-use window"\n                    )\n                else:\n                    resolver = self.potion_use_resolver\n                    if resolver is None:\n                        resolver = PotionUseEventResolver(\n                            database_path=getattr(self.optimizer, "database_path", None)\n                        )\n                        self.potion_use_resolver = resolver\n                    event = resolver.resolve(potion_name)\n                    unresolved.extend(event.unresolved)\n                    if event.resolved:\n                        try:\n                            cadence = PotionCadence(\n                                event, medicinal_use_rank=medicinal_use_rank\n                            )\n                        except ValueError as exc:\n                            unresolved.append(str(exc))\n                        else:\n                            active_buffs.extend(\n                                cadence.window(\n                                    self.potion_elapsed_seconds\n                                ).active_buff_names\n                            )\n\n        if self.fully_charged_restoration_heavy_attack_completed:'''
+          if old not in text:
+              raise SystemExit('potion combat-state insertion point not found')
+          text = text.replace(old, new, 1)
+          path.write_text(text, encoding='utf-8')
+
+          test_path = Path('services/tests/test_extreme_conditional_actual_heal_optimization_service.py')
+          tests = test_path.read_text(encoding='utf-8')
+
+          old = '''def _install_progression_adapter(monkeypatch):\n    resolution = SimpleNamespace(\n        resolved=True,\n        character_id="char-1",\n        progression=CharacterProgression(\n            attributes=AttributeAllocation(),\n            passive_ranks={},\n            passive_cp_points={},\n        ),'''
+          new = '''def _install_progression_adapter(monkeypatch, *, passive_ranks=None):\n    resolution = SimpleNamespace(\n        resolved=True,\n        character_id="char-1",\n        progression=CharacterProgression(\n            attributes=AttributeAllocation(),\n            passive_ranks={} if passive_ranks is None else passive_ranks,\n            passive_cp_points={},\n        ),'''
+          if old not in tests:
+              raise SystemExit('progression helper insertion point not found')
+          tests = tests.replace(old, new, 1)
+
+          marker = 'class _PotionUseResolver:'
+          if marker not in tests:
+              insert_at = tests.index('\ndef _install_progression_adapter')
+              helper = '''\n\nclass _PotionUseResolver:\n    def __init__(self, *, duration=40.0, unresolved=()):\n        self.duration = float(duration)\n        self.unresolved = tuple(unresolved)\n        self.calls = []\n\n    def resolve(self, selected_label):\n        self.calls.append(selected_label)\n        return SimpleNamespace(\n            resolved=not self.unresolved,\n            unresolved=self.unresolved,\n            buff_grants=(\n                SimpleNamespace(buff_name="Major Sorcery", duration=self.duration),\n            ),\n        )\n'''
+              tests = tests[:insert_at] + helper + tests[insert_at:]
+
+          marker = 'def test_conditional_optimizer_routes_saved_potion_active_window_to_combat_state'
+          if marker not in tests:
+              tests += '''\n\ndef test_conditional_optimizer_routes_saved_potion_active_window_to_combat_state(monkeypatch):\n    _install_progression_adapter(\n        monkeypatch, passive_ranks={"Medicinal Use": 3}\n    )\n    optimizer = _Optimizer()\n    potion_resolver = _PotionUseResolver(duration=40.0)\n    service = ExtremeConditionalActualHealOptimizationService(\n        target_health_fraction=0.29,\n        potion_elapsed_seconds=20.0,\n        potion_use_resolver=potion_resolver,\n        optimizer=optimizer,\n        healing_events=_ConditionalHealingEvents(),\n    )\n\n    result = service.optimize(\n        PlayerBuild(\n            BuildName="Potion Window Emergency",\n            Potion="Increase Spell Power",\n        ),\n        "blessing_of_protection",\n        max_passes=1,\n    )\n\n    assert potion_resolver.calls\n    assert optimizer.context_factory.combat_states\n    assert all(\n        state.has_buff("Major Sorcery")\n        for state in optimizer.context_factory.combat_states\n    )\n    assert any(\n        "saved-potion use window at 20.000000 seconds" in item\n        for item in result.search_scope\n    )\n\n\ndef test_conditional_optimizer_respects_potion_buff_expiration_with_medicinal_use(monkeypatch):\n    _install_progression_adapter(\n        monkeypatch, passive_ranks={"Medicinal Use": 3}\n    )\n    optimizer = _Optimizer()\n    service = ExtremeConditionalActualHealOptimizationService(\n        target_health_fraction=0.29,\n        potion_elapsed_seconds=52.0,\n        potion_use_resolver=_PotionUseResolver(duration=40.0),\n        optimizer=optimizer,\n        healing_events=_ConditionalHealingEvents(),\n    )\n\n    service.optimize(\n        PlayerBuild(BuildName="Expired Potion", Potion="Increase Spell Power"),\n        "blessing_of_protection",\n        max_passes=1,\n    )\n\n    assert optimizer.context_factory.combat_states\n    assert all(\n        not state.has_buff("Major Sorcery")\n        for state in optimizer.context_factory.combat_states\n    )\n\n\ndef test_conditional_optimizer_blocks_potion_window_without_medicinal_use_proof(monkeypatch):\n    _install_progression_adapter(monkeypatch)\n    service = ExtremeConditionalActualHealOptimizationService(\n        target_health_fraction=0.29,\n        potion_elapsed_seconds=0.0,\n        potion_use_resolver=_PotionUseResolver(),\n        optimizer=_Optimizer(),\n        healing_events=_ConditionalHealingEvents(),\n    )\n\n    result = service.optimize(\n        PlayerBuild(BuildName="Unproven Potion", Potion="Increase Spell Power"),\n        "blessing_of_protection",\n        max_passes=1,\n    )\n\n    assert "Medicinal Use rank is unresolved for explicit potion-use window" in result.unresolved\n    assert not result.mechanic_complete\n\n\ndef test_conditional_optimizer_rejects_negative_potion_elapsed_time():\n    with pytest.raises(ValueError, match="potion_elapsed_seconds cannot be negative"):\n        ExtremeConditionalActualHealOptimizationService(\n            target_health_fraction=0.29,\n            potion_elapsed_seconds=-0.01,\n            optimizer=_Optimizer(),\n            healing_events=_ConditionalHealingEvents(),\n        )\n'''
+              test_path.write_text(tests, encoding='utf-8')
+
+          notes_path = Path('GAME_MECHANICS_FIELD_NOTES.md')
+          notes = notes_path.read_text(encoding='utf-8')
+          heading = '## 2026-09-09 — A selected potion is availability, not an active combat buff'
+          if heading not in notes:
+              notes += f'''\n\n---\n\n{heading}\n\nA saved potion selection proves that the build has access to that consumable. It does **not** prove that a potion-derived named buff is active at the heal snapshot. The active state depends on an explicit use event, elapsed time, the potion trait duration, and the character's recorded **Medicinal Use** rank.\n\n**Layman’s version:** equipping a spell-power potion does not mean Major Sorcery is permanently switched on. Extreme MOST Actual Heal now requires an explicit potion-use window and checks whether the buff is still alive at that exact timestamp.\n\n**For BFF:** potion-derived named buffs now enter the same canonical `CombatState` path as other proven transient buffs, and missing Medicinal Use progression remains an explicit blocker rather than an invented rank.\n'''
+              notes_path.write_text(notes, encoding='utf-8')
+          PY
+
+      - name: Install focused test dependencies
+        run: python -m pip install --disable-pip-version-check pytest==9.1.1 pydantic==2.13.4
+
+      - name: Run focused potion and conditional tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pytest \
+            services/tests/test_extreme_conditional_actual_heal_optimization_service.py \
+            minmax/tests/test_potion_active_window.py \
+            minmax/tests/test_potion_cadence.py \
+            minmax/tests/test_potion_use_event.py \
+            minmax/tests/test_named_combat_buffs.py \
+            services/tests/test_extreme_optimization_read_only_database.py
+
+      - name: Commit and push if phase13.2 is unchanged
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin phase13.2
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/phase13.2)" || { echo 'phase13.2 moved during potion-window repair; refusing stale push'; exit 1; }
+          git config user.name "Jarakeen"
+          git config user.email "jarakeene@gmail.com"
+          git add \
+            services/extreme_conditional_actual_heal_optimization_service.py \
+            services/tests/test_extreme_conditional_actual_heal_optimization_service.py \
+            GAME_MECHANICS_FIELD_NOTES.md
+          git diff --cached --stat
+          git commit -m "feat: model potion windows in Extreme heals"
+          git push origin HEAD:phase13.2
