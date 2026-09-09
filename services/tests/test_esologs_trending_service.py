@@ -5,20 +5,20 @@ from services.esologs_trending_service import EsoLogsTrendingService
 class _TrendingClient:
     def __init__(self):
         self.summary_calls = []
-        self.ranking_calls = []
+        self.query_calls = []
         self.rankings = {
-            "DPS": [
-                {"name": "DDA", "class": "Arcanist", "report_code": "A", "fight_id": 1},
-                {"name": "DDB", "class": "Arcanist", "report_code": "A", "fight_id": 1},
-                {"name": "DDC", "class": "Arcanist", "report_code": "B", "fight_id": 2},
+            "dps": [
+                {"name": "DDA", "class": "Arcanist", "report": {"code": "A", "fightID": 1}},
+                {"name": "DDB", "class": "Arcanist", "report": {"code": "A", "fightID": 1}},
+                {"name": "DDC", "class": "Arcanist", "report": {"code": "B", "fightID": 2}},
             ],
-            "Healer": [
-                {"name": "HealA", "class": "Warden", "report_code": "A", "fight_id": 1},
-                {"name": "HealB", "class": "Warden", "report_code": "B", "fight_id": 2},
+            "hps": [
+                {"name": "HealA", "class": "Warden", "report": {"code": "A", "fightID": 1}},
+                {"name": "HealB", "class": "Warden", "report": {"code": "B", "fightID": 2}},
             ],
-            "Tank": [
-                {"name": "TankA", "class": "Dragonknight", "report_code": "A", "fight_id": 1},
-                {"name": "TankB", "class": "Necromancer", "report_code": "B", "fight_id": 2},
+            "tankcombineddps": [
+                {"name": "TankA", "class": "Dragonknight", "report": {"code": "A", "fightID": 1}},
+                {"name": "TankB", "class": "Necromancer", "report": {"code": "B", "fightID": 2}},
             ],
         }
 
@@ -31,10 +31,19 @@ class _TrendingClient:
             }
         ]
 
-    def get_role_rankings(self, encounter_id, role, metric, limit=5):
-        assert encounter_id == 99
-        self.ranking_calls.append((role, metric, limit))
-        return self.rankings[role][:limit]
+    def _query(self, query, variables):
+        assert variables["encounterID"] == 99
+        assert "role:" not in query
+        assert "$role" not in query
+        metric = variables["metric"]
+        self.query_calls.append((metric, dict(variables)))
+        return {
+            "worldData": {
+                "encounter": {
+                    "characterRankings": {"rankings": self.rankings[metric]}
+                }
+            }
+        }
 
     def get_fight(self, report_code, fight_id):
         return {"startTime": 0, "endTime": 10_000}
@@ -150,11 +159,12 @@ def test_trending_aggregates_top_individual_players_by_role():
         player_limit=3,
     )
 
-    assert client.ranking_calls == [
-        ("DPS", "dps", 3),
-        ("Healer", "hps", 3),
-        ("Tank", "dps", 3),
+    assert [metric for metric, _ in client.query_calls] == [
+        "dps",
+        "hps",
+        "tankcombineddps",
     ]
+    assert all("role" not in variables for _, variables in client.query_calls)
     assert report.ranked_players_analyzed == 7
     assert report.ranked_players_skipped == 0
     assert report.players_analyzed == 7
@@ -201,8 +211,8 @@ def test_trending_does_not_count_duplicate_equipped_pieces_as_multiple_players()
 
 def test_trending_skips_ranked_identity_that_cannot_be_matched_exactly():
     client = _TrendingClient()
-    client.rankings["DPS"] = [
-        {"name": "MissingDD", "class": "Arcanist", "report_code": "B", "fight_id": 2}
+    client.rankings["dps"] = [
+        {"name": "MissingDD", "class": "Arcanist", "report": {"code": "B", "fightID": 2}}
     ]
 
     report = EsoLogsTrendingService(client).analyze_encounter(
