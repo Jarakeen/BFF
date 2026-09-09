@@ -115,19 +115,26 @@ jobs:
           set -euo pipefail
           python -m pip install --disable-pip-version-check pytest==9.1.1 pydantic==2.13.4
 
-      - name: Run focused Extreme tests
+      - name: Run focused Shadow and critical-healing tests
         shell: bash
         run: |
           set -euo pipefail
           python -m pytest \
             minmax/tests/test_shadow_mundus_critical_healing.py \
             minmax/tests/test_phase2_static_build_inputs.py \
-            services/tests/test_extreme_*.py
+            services/tests/test_extreme_critical_healing_blueprint.py \
+            services/tests/test_extreme_critical_healing_cap_service.py \
+            services/tests/test_extreme_critical_profile_support.py \
+            services/tests/test_extreme_divines_mundus_objective_service.py \
+            services/tests/test_extreme_mundus_objective_service.py \
+            services/tests/test_extreme_optimization_read_only_database.py
 
       - name: Commit repaired Extreme Shadow path
         shell: bash
         run: |
           set -euo pipefail
+          git fetch origin phase13.2
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/phase13.2)" || { echo 'phase13.2 moved during repair; refusing stale push'; exit 1; }
           git config user.name "Jarakeen"
           git config user.email "jarakeene@gmail.com"
           git add minmax/gear_stat_inputs.py minmax/tests/test_shadow_mundus_critical_healing.py data/eso.db GAME_MECHANICS_FIELD_NOTES.md
