@@ -133,3 +133,10 @@ def install() -> None:
     _ORIGINAL_BUILD_SNAPSHOT = PerformanceDashboardService.build_snapshot
     PerformanceDashboardService.build_snapshot = _build_snapshot_with_activity_analysis
     _INSTALLED = True
+
+    # The final DD layer compares observed personal gaps with raid-wide damage.
+    # That provides context without pretending a quiet interval proves a mechanic
+    # or an active interval proves player error.
+    from services.performance_dd_gap_context_support import install as install_gap_context_support
+
+    install_gap_context_support()
