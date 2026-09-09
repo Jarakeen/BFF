@@ -2,7 +2,13 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from tools.audit_extreme_maximum_healing_event_stage2 import _decisive_blockers
+from services.extreme_maximum_heal_unresolved_relevance_service import (
+    ExtremeMaximumHealUnresolvedRelevanceService,
+)
+from tools.audit_extreme_maximum_healing_event_stage2 import (
+    _decisive_blockers,
+    _setup_prerequisites,
+)
 
 
 PET = (
@@ -13,11 +19,14 @@ ELDER = (
 )
 
 
-def test_decisive_blockers_deduplicate_repeated_route_messages_and_prioritize_search_proof():
-    entries = (
+def _entries():
+    return (
         SimpleNamespace(unresolved=(PET, ELDER, "Champion Point is dynamic or not yet stat-mapped: Celerity")),
         SimpleNamespace(unresolved=(PET, ELDER, "Potion selected; activation/uptime is not part of static build state: spell power")),
     )
+
+
+def test_decisive_blockers_exclude_achievable_pet_setup_and_prioritize_search_proof():
     omitted = (
         "whole-build optimization outside the selected Stage-2 finalist families/routes",
         "proof that a lower baseline family within an already represented source kind cannot overtake after whole-build mutation",
@@ -25,10 +34,9 @@ def test_decisive_blockers_deduplicate_repeated_route_messages_and_prioritize_se
         "group-only buffs",
     )
 
-    blockers = _decisive_blockers(entries, omitted)
+    blockers = _decisive_blockers(_entries(), omitted)
 
     assert blockers == (
-        ("winner legality", PET),
         ("winner magnitude", ELDER),
         (
             "search proof",
@@ -40,5 +48,12 @@ def test_decisive_blockers_deduplicate_repeated_route_messages_and_prioritize_se
         ),
         ("search proof", "base-class change"),
     )
+    assert all(PET not in message for _, message in blockers)
     assert all("Celerity" not in message for _, message in blockers)
     assert all("Potion selected" not in message for _, message in blockers)
+
+
+def test_stage2_setup_prerequisites_deduplicate_pet_requirement_across_routes():
+    relevance = ExtremeMaximumHealUnresolvedRelevanceService()
+
+    assert _setup_prerequisites(_entries(), relevance) == (PET,)
