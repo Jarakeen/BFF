@@ -278,6 +278,7 @@ def _build_snapshot_with_weave_analysis(self, *args, **kwargs):
     snapshot.WeaveUnpairedSkillCasts = 0
     snapshot.WeaveMedianPairDelayMs = None
     snapshot.WeaveEligibleSkillTimestampsMs = ()
+    snapshot.WeaveFightStartTimestampMs = None
     snapshot.WeaveAnalysisNote = ""
 
     if str(getattr(snapshot, "Role", "")).casefold() != "dps":
@@ -290,6 +291,7 @@ def _build_snapshot_with_weave_analysis(self, *args, **kwargs):
         start = float(fight["start_time"])
         end = float(fight["end_time"])
         actor_id = int(snapshot.ActorId)
+        snapshot.WeaveFightStartTimestampMs = start
 
         cast_entries, _total = self.client.get_actor_table(
             snapshot.ReportCode,
