@@ -36,7 +36,8 @@ def test_workload_support_targets_both_surfaces_and_invalidates_stale_results():
         "OptimizationPage._update_team_analysis = "
         "_optimization_update_with_provider_invalidation"
     ) in source
-    assert "page._provider_workload_policy = None" in source
+    assert "page._provider_workload_decision_result = None" in source
+    assert "page._provider_workload_policy_result = None" in source
     assert "setStyleSheet" not in source
 
 
@@ -63,13 +64,16 @@ def test_workload_card_starts_with_honest_boundary_and_rejects_wrong_evidence():
     app.processEvents()
 
 
-def test_policy_renders_with_candidate_decisions_and_is_cleared_with_stale_evidence():
+def test_policy_renders_from_materialized_decision_and_clears_stale_state(monkeypatch):
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication, QVBoxLayout, QWidget
     from services.team_provider_workload_candidate_service import (
         TeamProviderWorkloadCandidateRejection,
         TeamProviderWorkloadCandidateResult,
+    )
+    from services.team_provider_workload_decision_service import (
+        TeamProviderWorkloadDecisionService,
     )
     from services.team_provider_workload_policy_service import (
         TeamProviderWorkloadPolicy,
@@ -78,8 +82,10 @@ def test_policy_renders_with_candidate_decisions_and_is_cleared_with_stale_evide
     )
     from ui.team_provider_workload_support import (
         _install_workload_card,
+        _render_provider_workload,
         _set_provider_workload_candidates,
         _set_provider_workload_evidence,
+        _set_provider_workload_policy,
     )
 
     app = QApplication.instance() or QApplication([])
@@ -110,15 +116,31 @@ def test_policy_renders_with_candidate_decisions_and_is_cleared_with_stale_evide
 
     _set_provider_workload_candidates(page, result, policy=policy)
 
-    rendered = page.provider_workload_text.text()
+    decision_result = page._provider_workload_decision_result
+    policy_result = page._provider_workload_policy_result
+    assert decision_result is not None
+    assert policy_result is not None
     assert page._provider_workload_policy is policy
+
+    def fail_reanalysis(_result):
+        raise AssertionError("shared UI must render the materialized decision result")
+
+    monkeypatch.setattr(TeamProviderWorkloadDecisionService, "analyze", fail_reanalysis)
+    _render_provider_workload(page)
+    _set_provider_workload_policy(page, policy)
+
+    assert page._provider_workload_decision_result is decision_result
+    assert page._provider_workload_policy_result is not None
+    rendered = page.provider_workload_text.text()
     assert "BLOCKED PROVIDER • major_slayer • REJECTED" in rendered
     assert "POLICY • healer encounter policy" in rendered
     assert "No frontier alternatives were available for policy selection." in rendered
 
     _set_provider_workload_evidence(page, ())
 
+    assert page._provider_workload_decision_result is None
     assert page._provider_workload_policy is None
+    assert page._provider_workload_policy_result is None
     assert "POLICY • healer encounter policy" not in page.provider_workload_text.text()
     assert "No canonical provider rotation workload" in page.provider_workload_text.text()
     page.deleteLater()
