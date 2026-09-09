@@ -1,0 +1,76 @@
+name: Extreme Triggered Skill Publish Once
+
+on:
+  push:
+    branches:
+      - phase13
+    paths:
+      - .github/workflows/extreme-triggered-skill-publish-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch-test-rebase-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out current phase13.2
+        uses: actions/checkout@v4
+        with:
+          ref: phase13.2
+          fetch-depth: 0
+
+      - name: Reuse tested triggered-skill patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin phase13
+          git show origin/phase13:.github/workflows/extreme-triggered-skill-buff-once.yml > /tmp/source-workflow.yml
+          python - <<'PY'
+          from pathlib import Path
+          lines = Path('/tmp/source-workflow.yml').read_text(encoding='utf-8').splitlines()
+          start = next(i for i, line in enumerate(lines) if '- name: Patch triggered skill buff support' in line)
+          run_index = next(i for i in range(start, len(lines)) if lines[i].strip() == 'run: |')
+          end = next((i for i in range(run_index + 1, len(lines)) if lines[i].startswith('      - name:')), len(lines))
+          body = []
+          for line in lines[run_index + 1:end]:
+              body.append(line[10:] if line.startswith('          ') else line)
+          Path('/tmp/triggered-skill-patch.sh').write_text('\n'.join(body) + '\n', encoding='utf-8')
+          PY
+          bash /tmp/triggered-skill-patch.sh
+
+      - name: Install focused test dependencies
+        run: python -m pip install --disable-pip-version-check pytest==9.1.1 pydantic==2.13.4
+
+      - name: Test patched head
+        run: |
+          python -m pytest \
+            services/tests/test_extreme_actual_heal_skill_buff_candidate_service.py \
+            services/tests/test_extreme_conditional_actual_heal_optimization_service.py \
+            minmax/tests/test_runtime_effect_eligibility.py \
+            minmax/tests/test_runtime_event.py \
+            minmax/tests/test_named_combat_buffs.py \
+            services/tests/test_extreme_optimization_read_only_database.py
+
+      - name: Commit, rebase, retest, and push
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Jarakeen"
+          git config user.email "jarakeene@gmail.com"
+          git add \
+            services/extreme_actual_heal_skill_buff_candidate_service.py \
+            services/extreme_conditional_actual_heal_optimization_service.py \
+            services/tests/test_extreme_actual_heal_skill_buff_candidate_service.py \
+            GAME_MECHANICS_FIELD_NOTES.md
+          git commit -m "feat: prove triggered skill buffs in Extreme heals"
+          git fetch origin phase13.2
+          git rebase origin/phase13.2
+          python -m pytest \
+            services/tests/test_extreme_actual_heal_skill_buff_candidate_service.py \
+            services/tests/test_extreme_conditional_actual_heal_optimization_service.py \
+            minmax/tests/test_runtime_effect_eligibility.py \
+            minmax/tests/test_runtime_event.py \
+            minmax/tests/test_named_combat_buffs.py \
+            services/tests/test_extreme_optimization_read_only_database.py
+          git push origin HEAD:phase13.2
