@@ -2,9 +2,9 @@ from __future__ import annotations
 
 """Encounter-domain service catalog descriptors.
 
-Metadata only. These entries document encounter truth, explicit overlays, and the
-provider-candidate/suitability/assignment chain without making the catalog a runtime
-service locator.
+Metadata only. These entries document encounter truth, explicit overlays, provider
+selection evidence, execution-method semantics, and read-only guide/projection layers
+without making the catalog a runtime service locator.
 """
 
 from services.service_catalog import EvidenceClass, ServiceBehavior, ServiceDescriptor
@@ -95,6 +95,104 @@ ENCOUNTER_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=True,
         evidence_class=EvidenceClass.POLICY,
         notes="A player appearing on multiple provider rows is not itself a conflict. Double-duty conflicts exist only when explicit evidence says the same member cannot carry the exact pair of requirements together.",
+    ),
+    ServiceDescriptor(
+        service_id="encounter.boss_guide.read_model",
+        domain="encounter",
+        purpose="Project persisted encounter identity, health, abilities, structural phases, and reviewed canonical timeline facts into a UI-ready read-only boss guide.",
+        implementation_path="services.encounter_boss_guide",
+        inputs=("CanonicalEncounterDatabase", "EncounterId"),
+        outputs=("EncounterBossGuide", "BossGuideEncounterSummary"),
+        responsibilities=("encounter_boss_guide_read_model",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        ui_safe=True,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes="Reviewed canonical timeline facts take precedence over structural phase rows only when present. Missing semantics are not invented, and malformed persisted canonical facts fail explicitly.",
+    ),
+    ServiceDescriptor(
+        service_id="encounter.execution.cleanse_method",
+        domain="encounter",
+        purpose="Resolve how explicit cleanse mechanics are handled from source-qualified structured encounter evidence without inferring methods from prose or player skill availability.",
+        implementation_path="services.encounter_cleanse_method",
+        inputs=("EncounterEvidenceFact",),
+        outputs=("EncounterCleanseMethod",),
+        dependencies=("encounter.domain_read_model",),
+        responsibilities=("encounter_cleanse_method_resolution",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes="A generic requires_cleanse flag does not prove which cleanse method works. Legacy cleanse-pool evidence may establish an encounter interaction but does not prove ordinary player cleanse skills are effective.",
+    ),
+    ServiceDescriptor(
+        service_id="encounter.execution.interrupt_method",
+        domain="encounter",
+        purpose="Resolve encounter interrupt methods with explicit encounter evidence overriding the sourced ESO-wide standard bash rule.",
+        implementation_path="services.encounter_interrupt_method",
+        inputs=("EncounterEvidenceFact", "StandardInterruptRule"),
+        outputs=("EncounterInterruptMethod",),
+        dependencies=("encounter.domain_read_model",),
+        responsibilities=("encounter_interrupt_method_resolution",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes="Encounter-specific evidence wins even when unresolved or conflicting; uncertainty suppresses the generic bash fallback rather than being overwritten by it.",
+    ),
+    ServiceDescriptor(
+        service_id="encounter.execution.method",
+        domain="encounter",
+        purpose="Resolve coarse movement and positioning handling methods from exact structured evidence without inventing coordinates, assignments, or raid choreography.",
+        implementation_path="services.encounter_execution_method",
+        inputs=("EncounterEvidenceFact",),
+        outputs=("EncounterExecutionMethod",),
+        dependencies=("encounter.domain_read_model",),
+        responsibilities=("encounter_execution_method_resolution",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes="Generic movement/positioning flags establish demand only, not strategy. Narrow legacy mappings are accepted only for exact structured fields already present in reconciled evidence.",
+    ),
+    ServiceDescriptor(
+        service_id="encounter.execution.availability",
+        domain="encounter",
+        purpose="Resolve difficulty-specific availability of known encounter interactions from structured evidence without inventing alternate solutions.",
+        implementation_path="services.encounter_execution_availability",
+        inputs=("EncounterEvidenceFact", "EncounterDifficulty"),
+        outputs=("EncounterExecutionAvailability",),
+        dependencies=("encounter.domain_read_model", "encounter.execution.method"),
+        responsibilities=("encounter_execution_availability_resolution",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes="When evidence disables a known interaction and no alternate is proven, availability remains unknown rather than fabricating a replacement strategy.",
+    ),
+    ServiceDescriptor(
+        service_id="encounter.health_threshold.clock_projection",
+        domain="encounter",
+        purpose="Project reviewed encounter health-threshold facts into clock times using explicit caller-supplied raid damage trajectories.",
+        implementation_path="services.encounter_health_threshold_projection_service",
+        inputs=("EncounterBossGuide", "Difficulty", "RaidDamageSegment"),
+        outputs=("EncounterHealthThresholdProjection", "EncounterThresholdClockPoint"),
+        dependencies=("encounter.boss_guide.read_model",),
+        responsibilities=("encounter_health_threshold_clock_projection",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes="Encounter facts own threshold truth and boss-guide persistence owns health text. Raid DPS must be explicit caller input; single-event build potency or candidate-ranking metrics are never substituted for raid damage trajectory.",
+    ),
+    ServiceDescriptor(
+        service_id="encounter.position_gif.frame_plan",
+        domain="encounter",
+        purpose="Build deterministic fixed-rate frame plans for Raid Map GIF exports while leaving pixel rendering to the UI layer.",
+        implementation_path="services.encounter_position_gif_export_service",
+        inputs=("PositionTimeline", "FramesPerSecond", "HoldSeconds"),
+        outputs=("GifFrameSpec",),
+        responsibilities=("encounter_position_gif_frame_planning",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        ui_safe=True,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.NONE,
+        notes="This service owns export timing only. It does not create encounter truth, infer positions, or render pixels; frame timing is deterministic and independent of wall-clock timers.",
     ),
 )
 
