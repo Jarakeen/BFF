@@ -206,3 +206,9 @@ def install() -> None:
     PerformanceDashboard.build_ui = _build_ui_with_dd_summary
     PerformanceDashboard.show_snapshot = _show_snapshot_with_dd_summary
     _INSTALLED = True
+
+    # Install the final role surface last so generic polish/overlay cards cannot
+    # bury the DD presentation after all other wrappers have run.
+    from ui.performance_dashboard_role_surface_support import install as install_role_surface
+
+    install_role_surface()
