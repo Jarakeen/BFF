@@ -2,11 +2,13 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
+from engine.config import get_data_dir
 from minmax.character_build.passive_grant import PassiveGrant
 from minmax.resource_costs import ResourceType
 from minmax.rotation_ability_priority import AbilityPriorityList
 from minmax.rotation_demand_window import RotationDemandWindow
 from services.canonical_mechanics_coverage_audit import CanonicalMechanicsCoverageReport
+from services.encounter_boss_guide import EncounterBossGuideService
 from services.rotation_candidate_generation_service import RotationRefreshLeadCandidateOption
 from services.rotation_effect_uptime_service import RotationEffectUptimeRequirement
 from services.rotation_recovery_heavy_candidate_generation_bridge_service import (
@@ -46,6 +48,7 @@ from ui.rotation_dashboard_canonical_candidate_support import (
     RotationDashboardCanonicalCandidateSupport,
 )
 from ui.rotation_dashboard_page import RotationDashboardPage
+from ui.rotation_encounter_selector_support import RotationEncounterSelectorSupport
 from ui.rotation_generation_support import RotationGenerationRequest
 from ui.rotation_pdf_export_support import install_rotation_pdf_export
 from ui.rotation_support_cadence_progression_render_support import (
@@ -66,10 +69,16 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
         canonical_render: RotationCanonicalCandidateRenderSupport | None = None,
         cadence_progression_render: RotationSupportCadenceProgressionRenderSupport | None = None,
         canonical_cadence_orchestration: RotationCanonicalCadenceOrchestrationSupport | None = None,
+        encounter_guide_service: EncounterBossGuideService | None = None,
     ) -> None:
         super().__init__(parent)
         install_rotation_timeline(self)
         install_rotation_pdf_export(self)
+        guide_service = encounter_guide_service or EncounterBossGuideService(
+            get_data_dir() / "eso.db"
+        )
+        self.rotation_encounter_selector = RotationEncounterSelectorSupport(guide_service)
+        self.rotation_encounter_selector.install(self)
         self.cadence_progression_card = RotationCadenceProgressionCard()
         self.workspace_layout.addWidget(self.cadence_progression_card)
         self.rotation_canonical_candidates = (
@@ -105,6 +114,10 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
         self.last_canonical_cadence_orchestration_result: (
             RotationCanonicalCadenceOrchestrationResult | None
         ) = None
+
+    def selected_encounter_id(self) -> str | None:
+        """Return the persisted encounter selected for later evidence resolution."""
+        return self.rotation_encounter_selector.selected_encounter_id(self)
 
     def canonical_generation_request(self) -> RotationGenerationRequest:
         """Capture the dashboard's current saved-build generation inputs exactly once."""
