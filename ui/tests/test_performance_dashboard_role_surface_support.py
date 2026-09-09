@@ -63,7 +63,7 @@ def test_dps_surface_hides_healer_support_and_shows_dd_diagnostics() -> None:
     _apply_role_surface(page, SimpleNamespace(Role="DPS"))
 
     assert page.support_effects_card.visible is False
-    assert page.graph_effect_card.visible is True
+    assert page.graph_effect_card.visible is False
     assert page._performance_tracking_card.visible is False
     assert page.buff_card.visible is False
     assert page.debuff_card.visible is False
@@ -103,13 +103,29 @@ def test_healer_surface_restores_support_and_hides_dd_diagnostics() -> None:
     assert page.quick_read_card.visible is False
 
 
-def test_fresh_dps_member_keeps_graph_controls_without_showing_blank_results() -> None:
+def test_tank_surface_retains_support_controls() -> None:
+    page = _page()
+
+    _apply_role_surface(page, SimpleNamespace(Role="Tank"))
+
+    assert page.support_effects_card.visible is True
+    assert page.graph_effect_card.visible is True
+    assert page._performance_tracking_card.visible is True
+
+    assert page.healer_readout_card.visible is False
+    assert page.hot_card.visible is False
+    assert page.dot_card.visible is False
+    assert page.dd_readout_card.visible is False
+    assert page.quick_read_card.visible is False
+
+
+def test_fresh_dps_member_hides_support_controls_without_showing_blank_results() -> None:
     page = _page()
 
     _apply_role_name_surface(page, "DPS", has_snapshot=False)
 
     assert page.support_effects_card.visible is False
-    assert page.graph_effect_card.visible is True
+    assert page.graph_effect_card.visible is False
     assert page._performance_tracking_card.visible is False
     assert page.buff_card.visible is False
     assert page.debuff_card.visible is False
@@ -182,6 +198,6 @@ def test_unknown_role_surface_does_not_fall_back_to_support_mode() -> None:
 
     assert page.support_effects_card.visible is False
     assert page._performance_tracking_card.visible is False
-    assert page.graph_effect_card.visible is True
+    assert page.graph_effect_card.visible is False
     assert page.healer_readout_card.visible is False
     assert page.dot_card.visible is False
