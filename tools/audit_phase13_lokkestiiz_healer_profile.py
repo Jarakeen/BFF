@@ -10,6 +10,8 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from engine.config import get_data_dir
+from minmax.ability_cost_repository import AbilityCostRepository
+from minmax.resource_costs import ResourceType
 from services.build_service import BuildService
 from services.rotation_lokkestiiz_healer_scenario import (
     build_magrat_df_healer_lokkestiiz_scenario,
@@ -110,7 +112,30 @@ def _apply_boss_replacements(
     return effective, tuple(notes)
 
 
-def audit(*, builds_path: Path) -> tuple[str, ...]:
+def _ultimate_cost_lines(*, database_path: Path, semantic_id: str) -> tuple[str, ...]:
+    display_name = _display_name(semantic_id)
+    resolution = AbilityCostRepository(database_path).resolve_name(display_name)
+    lines = [f"SELECTED_ULTIMATE: {semantic_id} -> {display_name}"]
+    cost = resolution.base_cost
+    if cost is None:
+        detail = "; ".join(resolution.unresolved) or "canonical cost is unresolved"
+        lines.append(f"ULTIMATE_COST: UNRESOLVED: {detail}")
+        return tuple(lines)
+    if ResourceType.ULTIMATE not in cost.resources:
+        resources = ", ".join(resource.value for resource in cost.resources)
+        lines.append(
+            "ULTIMATE_COST: UNRESOLVED: canonical action cost does not consume "
+            f"Ultimate (resources={resources})"
+        )
+        return tuple(lines)
+    lines.append(
+        f"ULTIMATE_COST: {cost.amount:g} ultimate "
+        f"(ability_id={cost.ability_id}, rank={cost.rank}, morph={cost.morph})"
+    )
+    return tuple(lines)
+
+
+def audit(*, builds_path: Path, database_path: Path | None = None) -> tuple[str, ...]:
     scenario = build_magrat_df_healer_lokkestiiz_scenario()
     profile = scenario.execution
     roster = BuildService(builds_path).load()
@@ -162,19 +187,41 @@ def audit(*, builds_path: Path) -> tuple[str, ...]:
             ultimates.append(f"{bar} -> {name}")
     lines.append("AVAILABLE_ULTIMATES: " + ("; ".join(ultimates) if ultimates else "none"))
 
-    if missing:
+    selected_display = _display_name(scenario.selected_ultimate_semantic_id)
+    selected_available = any(
+        _semantic_id(item.split(" -> ", 1)[-1]) == scenario.selected_ultimate_semantic_id
+        for item in ultimates
+    )
+    lines.append(
+        "SELECTED_ULTIMATE_SLOTTED: "
+        + ("PASS" if selected_available else f"FAIL ({selected_display} is not slotted)")
+    )
+    lines.extend(
+        _ultimate_cost_lines(
+            database_path=database_path or (get_data_dir() / "eso.db"),
+            semantic_id=scenario.selected_ultimate_semantic_id,
+        )
+    )
+    lines.append(
+        "ULTIMATE_GENERATION_RULE: successful damaging Light/Heavy Attacks start or "
+        "refresh the canonical base-combat Ultimate-generation window; candidate "
+        "attack schedules are evaluated rather than converted to a fixed attack count"
+    )
+
+    if missing or not selected_available:
         lines.append("BUILD_MATCH: FAIL")
-        lines.append("MISSING_REQUIRED_SKILLS: " + ", ".join(missing))
+        if missing:
+            lines.append("MISSING_REQUIRED_SKILLS: " + ", ".join(missing))
     else:
         lines.append("BUILD_MATCH: PASS")
 
     lines.append(
         "PROFILE_READY_FOR_CLOCK_SCHEDULING: "
-        + ("true" if profile.ready_for_clock_scheduling else "false")
+        + ("true" if scenario.ready_for_clock_scheduling else "false")
     )
-    if profile.unresolved:
+    if scenario.unresolved:
         lines.append("UNRESOLVED:")
-        lines.extend(f"- {item}" for item in profile.unresolved)
+        lines.extend(f"- {item}" for item in scenario.unresolved)
     else:
         lines.append("UNRESOLVED: none")
 
@@ -190,10 +237,15 @@ def main() -> int:
         type=Path,
         default=get_data_dir() / "builds.json",
     )
+    parser.add_argument(
+        "--database",
+        type=Path,
+        default=get_data_dir() / "eso.db",
+    )
     args = parser.parse_args()
 
     try:
-        lines = audit(builds_path=args.builds)
+        lines = audit(builds_path=args.builds, database_path=args.database)
     except (OSError, ValueError) as exc:
         print(f"AUDIT ERROR: {exc}")
         return 2
