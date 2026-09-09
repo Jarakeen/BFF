@@ -74,11 +74,15 @@ def test_elder_dragon_blood_uses_canonical_self_vs_allies_identity_not_legacy_gu
         entity_id="blood_of_the_elder_dragon",
     )
 
+    rank_id = ExtremeDragonBloodSkillComponentRepository.ELDER_DRAGON_BLOOD_RANK_ID
     assert result.heal_coefficient_numbers == (1, 2)
     assert result.normal_heal == pytest.approx(1000.0)
     assert result.critical_heal == pytest.approx(1700.0)
-    assert result.unresolved == ()
-    assert result.mechanic_complete
+    assert (
+        ExtremeCanonicalHealingEventService.DRAGON_BLOOD_WOUND_UNRESOLVED[rank_id]
+        in result.unresolved
+    )
+    assert not result.mechanic_complete
 
 
 def test_green_dragon_blood_still_blocks_until_periodic_total_has_tick_identity():
