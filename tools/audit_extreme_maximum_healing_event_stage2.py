@@ -34,6 +34,9 @@ from services.extreme_maximum_healing_event_class_route_catalog_service import (
 from services.extreme_maximum_healing_event_finalist_optimization_service import (
     ExtremeMaximumHealingEventFinalistOptimizationService,
 )
+from services.extreme_maximum_healing_event_uncertainty_bound_service import (
+    ExtremeMaximumHealingEventUncertaintyBoundService,
+)
 from services.extreme_sorcerer_blood_magic_actual_heal_service import (
     ExtremeSorcererBloodMagicActualHealService,
 )
@@ -134,6 +137,7 @@ def audit(
         routes_per_family=routes_per_family,
         progress=_progress,
     )
+    bounds = ExtremeMaximumHealingEventUncertaintyBoundService()
 
     print("====================================================")
     print(" EXTREME MAXIMUM HEALING EVENT - STAGE 2")
@@ -149,24 +153,50 @@ def audit(
     print(f"Successfully optimized finalists: {len(result.entries)}")
     print("Global maximum proven: NO")
 
-    winner = result.best_scored
-    print("\nWINNER")
-    if winner is None or winner.event_value is None:
-        print("  No Stage-2 finalist produced a proved maximum-event value.")
+    leader = result.best_scored
+    print("\nCURRENT NUMERIC LEADER")
+    if leader is None or leader.event_value is None:
+        print("  No Stage-2 finalist produced a scored maximum-event value.")
     else:
-        print(f"  {winner.source_name}")
-        print(f"  Maximum event: {float(winner.event_value):.3f} ({winner.event_kind})")
-        print(f"  Route: {', '.join(winner.route.equipped_skill_lines)}")
-        print(f"  Active-bar slot: {winner.slotted_index + 1}")
-        if winner.trace.recipient_scopes or winner.trace.recipient_keys:
+        print(f"  {leader.source_name}")
+        print(f"  Modeled event: {float(leader.event_value):.3f} ({leader.event_kind})")
+        print(f"  Evidence complete: {'YES' if leader.mechanic_complete else 'NO'}")
+        print(f"  Route: {', '.join(leader.route.equipped_skill_lines)}")
+        print(f"  Active-bar slot: {leader.slotted_index + 1}")
+        if leader.trace.recipient_scopes or leader.trace.recipient_keys:
             print(
                 "  Recipient: "
-                + ", ".join(winner.trace.recipient_scopes)
+                + ", ".join(leader.trace.recipient_scopes)
                 + " / "
-                + ", ".join(winner.trace.recipient_keys)
+                + ", ".join(leader.trace.recipient_keys)
             )
-        if winner.trace.event_keys:
-            print("  Event identity: " + ", ".join(winner.trace.event_keys))
+        if leader.trace.event_keys:
+            print("  Event identity: " + ", ".join(leader.trace.event_keys))
+
+    print("\nUNRESOLVED CEILING THREATS")
+    leader_value = None if leader is None else leader.event_value
+    threats = []
+    if leader_value is not None:
+        for entry in result.entries:
+            bound = bounds.bound(entry)
+            if (
+                bound.lower_bound is not None
+                and bound.upper_bound is not None
+                and bound.upper_bound > bound.lower_bound + 1e-9
+                and bound.upper_bound > float(leader_value) + 1e-9
+            ):
+                threats.append((entry, bound))
+    if not threats:
+        print("  None among the optimized finalists with currently modeled numeric bounds.")
+    else:
+        for entry, bound in threats:
+            print(
+                f"  - {entry.source_name}: modeled {bound.lower_bound:.3f}; "
+                f"source-supported ceiling {bound.upper_bound:.3f}"
+            )
+            if bound.reason:
+                print(f"    reason: {bound.reason}")
+        print("  Result: current numeric leader cannot yet be proven against these ceilings.")
 
     if result.errors:
         print("\nFINALIST ERRORS")
@@ -177,6 +207,13 @@ def audit(
     for index, entry in enumerate(result.entries[: max(0, int(top))], 1):
         for line in _format_entry(entry, index=index):
             print(line)
+        bound = bounds.bound(entry)
+        if (
+            bound.lower_bound is not None
+            and bound.upper_bound is not None
+            and bound.upper_bound > bound.lower_bound + 1e-9
+        ):
+            print(f"     source-supported ceiling: {bound.upper_bound:.3f}")
 
     print("\nREMAINING BOUNDARIES")
     for item in result.omitted_scope:
