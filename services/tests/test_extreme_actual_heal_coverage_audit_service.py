@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from minmax.skill_coefficients import SkillCoefficientTrace
 from services.extreme_actual_heal_coverage_audit_service import (
     ExtremeActualHealCoverageAuditService,
 )
@@ -16,6 +17,29 @@ def _by_id():
         row.mechanic_id: row
         for row in ExtremeActualHealCoverageAuditService().items()
     }
+
+
+def _trace(number: int, *, a: float, b: float, c: float) -> SkillCoefficientTrace:
+    max_stat = 30000.0
+    power = 5000.0
+    resource_term = a * max_stat
+    power_term = b * power
+    before_r = resource_term + power_term + c
+    return SkillCoefficientTrace(
+        coefficient_number=number,
+        coefficient_type="8",
+        max_stat=max_stat,
+        power=power,
+        a=a,
+        b=b,
+        c=c,
+        r=1.0,
+        resource_term=resource_term,
+        power_term=power_term,
+        constant_term=c,
+        before_r=before_r,
+        final_value=before_r,
+    )
 
 
 def test_h1_audit_classifies_every_required_surface() -> None:
@@ -45,22 +69,54 @@ def test_h1_audit_keeps_conditional_and_irrelevant_out_of_covered_count() -> Non
     assert summary.coverage_fraction == summary.covered / summary.denominator
 
 
-def test_h1_audit_keeps_dragon_blood_recipient_identity_unresolved() -> None:
+def test_h1_audit_promotes_dragon_blood_after_exact_recipient_selection_is_implemented() -> None:
     rows = _by_id()
     dragon_blood = rows["dragon_blood_component_recipient_identity"]
+    resolver = ExtremeHealingEventRecipientScopeService()
+    resolved = resolver.resolve(
+        ability_name="Blood of the Elder Dragon",
+        heal_coefficient_numbers=(1, 2),
+        coefficient_traces=(
+            _trace(1, a=0.10, b=1.20, c=3.0),
+            _trace(2, a=0.10 * 2.0 / 3.0, b=0.80, c=2.0),
+        ),
+    )
 
-    assert dragon_blood.status == "unresolved"
+    assert resolved.single_recipient_safe
+    assert resolved.selected_coefficient_numbers == (1,)
+    assert resolved.unresolved == ()
+    assert dragon_blood.status == "implemented"
     assert "blood of the elder dragon" in {
         name.casefold()
-        for name in ExtremeHealingEventRecipientScopeService.MULTI_RECIPIENT_DISTINCT_SCALING
+        for name in resolver.MULTI_RECIPIENT_DISTINCT_SCALING
     }
     assert "coagulating blood" in {
         name.casefold()
-        for name in ExtremeHealingEventRecipientScopeService.MULTI_RECIPIENT_DISTINCT_SCALING
+        for name in resolver.MULTI_RECIPIENT_DISTINCT_SCALING
     }
-    assert "dragon_blood_component_recipient_identity" in (
+    assert "dragon_blood_component_recipient_identity" not in (
         ExtremeActualHealCoverageAuditService().summary().blocker_ids
     )
+
+
+def test_h1_dragon_blood_missing_or_malformed_recipient_evidence_still_blocks() -> None:
+    resolver = ExtremeHealingEventRecipientScopeService()
+
+    missing = resolver.resolve(ability_name="Blood of the Elder Dragon")
+    malformed = resolver.resolve(
+        ability_name="Blood of the Elder Dragon",
+        heal_coefficient_numbers=(1, 2),
+        coefficient_traces=(
+            _trace(1, a=0.10, b=1.20, c=3.0),
+            _trace(2, a=0.07, b=0.80, c=2.0),
+        ),
+    )
+
+    for result in (missing, malformed):
+        assert not result.single_recipient_safe
+        assert result.recipient_selection_required
+        assert result.selected_coefficient_numbers is None
+        assert result.unresolved
 
 
 def test_h1_audit_reflects_existing_optimizer_scope_boundaries() -> None:
