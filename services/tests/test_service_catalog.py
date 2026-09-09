@@ -149,3 +149,41 @@ def test_performance_snapshot_is_ui_safe_observational_capability() -> None:
     assert dashboard.encounter_aware is True
     assert dashboard.evidence_class is EvidenceClass.OBSERVATIONAL
     assert set(dashboard.roles) == {"Tank", "Healer", "DPS"}
+
+
+def test_comp_maker_whole_team_optimizer_owns_candidate_selection() -> None:
+    optimizer = canonical_service_for("comp_builder_whole_team_candidate_optimization")
+    prescription = canonical_service_for(
+        "comp_builder_authoritative_prescription_materialization"
+    )
+
+    assert optimizer is not None
+    assert prescription is not None
+    assert optimizer.service_id == "comp.builder.team_candidate_optimizer"
+    assert prescription.service_id == "comp.builder.authoritative_prescription"
+    assert optimizer.service_id in prescription.dependencies
+    assert "must not rerank" in prescription.notes
+
+
+def test_comp_provider_evidence_stays_separate_from_strategy_policy() -> None:
+    provider = SERVICE_CATALOG.get("comp.builder.provider_evidence")
+    strategy = SERVICE_CATALOG.get("comp.builder.strategy_evidence")
+
+    assert provider is not None
+    assert strategy is not None
+    assert provider.evidence_class is EvidenceClass.GAME_MECHANIC
+    assert strategy.evidence_class is EvidenceClass.POLICY
+    assert strategy.behavior is ServiceBehavior.HEURISTIC
+    assert provider.service_id in strategy.dependencies
+
+
+def test_team_optimization_static_boundary_is_explicit() -> None:
+    analysis = canonical_service_for("team_optimization_canonical_static_analysis")
+    comparison = canonical_service_for("team_optimization_static_comparison")
+
+    assert analysis is not None
+    assert comparison is not None
+    assert analysis.service_id == "team.optimization.canonical_static_analysis"
+    assert analysis.service_id in comparison.dependencies
+    assert "cannot prove encounter uptime" in analysis.notes
+    assert "without choosing an encounter-aware raid winner" in comparison.purpose
