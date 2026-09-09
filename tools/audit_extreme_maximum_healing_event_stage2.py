@@ -28,6 +28,9 @@ from services.extreme_baseline_canonical_actual_heal_optimization_service import
 from services.extreme_baseline_route_aware_max_health_optimization_service import (
     ExtremeBaselineRouteAwareMaxHealthOptimizationService,
 )
+from services.extreme_maximum_heal_unresolved_relevance_service import (
+    ExtremeMaximumHealUnresolvedRelevanceService,
+)
 from services.extreme_maximum_healing_event_class_route_catalog_service import (
     ExtremeMaximumHealingEventClassRouteCatalogService,
 )
@@ -109,6 +112,27 @@ def _decisive_blockers(entries, omitted_scope):
     return tuple(found)
 
 
+def _format_objective_entry(entry, *, index: int, relevance):
+    classified = relevance.classify(entry.unresolved)
+    ambient = set(classified.ambient)
+    lines = []
+    for line in _format_entry(entry, index=index):
+        stripped = line.strip()
+        if stripped.startswith("unresolved:"):
+            message = stripped.split("unresolved:", 1)[1].strip()
+            if message in ambient:
+                continue
+        if stripped.startswith("evidence:"):
+            lines.append(
+                f"     objective evidence: {'complete' if classified.objective_complete else 'incomplete'}"
+            )
+            continue
+        lines.append(line)
+    if classified.ambient:
+        lines.append(f"     ambient diagnostics omitted: {len(classified.ambient)}")
+    return tuple(lines)
+
+
 def audit(
     *,
     build_name: str,
@@ -173,6 +197,7 @@ def audit(
         progress=_progress,
     )
     bounds = ExtremeMaximumHealingEventUncertaintyBoundService()
+    relevance = ExtremeMaximumHealUnresolvedRelevanceService()
 
     print("====================================================")
     print(" EXTREME MAXIMUM HEALING EVENT - STAGE 2")
@@ -193,9 +218,12 @@ def audit(
     if leader is None or leader.event_value is None:
         print("  No Stage-2 finalist produced a scored maximum-event value.")
     else:
+        leader_relevance = relevance.classify(leader.unresolved)
         print(f"  {leader.source_name}")
         print(f"  Modeled event: {float(leader.event_value):.3f} ({leader.event_kind})")
-        print(f"  Evidence complete: {'YES' if leader.mechanic_complete else 'NO'}")
+        print(f"  Objective evidence complete: {'YES' if leader_relevance.objective_complete else 'NO'}")
+        if leader_relevance.ambient:
+            print(f"  Ambient build diagnostics ignored for this objective: {len(leader_relevance.ambient)}")
         print(f"  Route: {', '.join(leader.route.equipped_skill_lines)}")
         print(f"  Active-bar slot: {leader.slotted_index + 1}")
         if leader.trace.recipient_scopes or leader.trace.recipient_keys:
@@ -260,7 +288,7 @@ def audit(
 
     print("\nTOP OPTIMIZED FINALISTS")
     for index, entry in enumerate(result.entries[: max(0, int(top))], 1):
-        for line in _format_entry(entry, index=index):
+        for line in _format_objective_entry(entry, index=index, relevance=relevance):
             print(line)
         bound = bounds.bound(entry)
         if (
