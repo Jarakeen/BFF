@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Mapping, Protocol
+from dataclasses import dataclass, replace
+from typing import Callable, Mapping, Protocol
 
 from minmax.build_calculation_context import BuildCalculationContext
 from minmax.encounter_requirements import EncounterRequirementSet
@@ -49,6 +49,9 @@ from services.rotation_support_cadence_candidate_service import (
 from services.rotation_sustain_service import RotationSustainProjection, RotationSustainService
 
 
+CandidateHardObligationResolver = Callable[[RotationPlan], tuple[str, ...]]
+
+
 class _SustainEvaluator(Protocol):
     def evaluate(
         self,
@@ -80,7 +83,10 @@ class RotationSupportCadenceEvaluationContext:
 
     This object contains no inferred encounter policy. Its fields mirror existing
     sustain and scorecard inputs so candidate evaluation remains a composition step,
-    not a second mechanics implementation.
+    not a second mechanics implementation. ``candidate_hard_obligation_resolver``
+    is explicitly candidate-specific and runs against each completed plan before
+    ranking; any returned evidence item becomes a hard-failing candidate-specific
+    unresolved item through the existing scorecard contract.
     """
 
     resource: ResourceType = ResourceType.MAGICKA
@@ -104,6 +110,7 @@ class RotationSupportCadenceEvaluationContext:
     support_coverage: SupportCoverage | None = None
     runtime_uptime_requirements: tuple[RotationRuntimeUptimeRequirement, ...] = ()
     runtime_uptime_objective: RotationRuntimeUptimeObjective | None = None
+    candidate_hard_obligation_resolver: CandidateHardObligationResolver | None = None
 
 
 @dataclass(frozen=True)
@@ -194,6 +201,17 @@ class RotationSupportCadenceEvaluationService:
                 runtime_uptime_requirements=evidence.runtime_uptime_requirements,
                 runtime_uptime_objective=evidence.runtime_uptime_objective,
             )
+            if evidence.candidate_hard_obligation_resolver is not None:
+                added = self._dedupe(
+                    evidence.candidate_hard_obligation_resolver(candidate.plan)
+                )
+                if added:
+                    scorecard = replace(
+                        scorecard,
+                        candidate_specific_unresolved=self._dedupe(
+                            scorecard.candidate_specific_unresolved + added
+                        ),
+                    )
             ranking_input = RotationCandidateRankingInput(
                 candidate_id=candidate.candidate_id,
                 scorecard=scorecard,
@@ -296,8 +314,24 @@ class RotationSupportCadenceEvaluationService:
             )
         return normalized
 
+    @staticmethod
+    def _dedupe(values: tuple[str, ...]) -> tuple[str, ...]:
+        seen: set[str] = set()
+        ordered: list[str] = []
+        for raw in values:
+            value = str(raw or "").strip()
+            if not value:
+                continue
+            key = value.casefold()
+            if key in seen:
+                continue
+            seen.add(key)
+            ordered.append(value)
+        return tuple(ordered)
+
 
 __all__ = [
+    "CandidateHardObligationResolver",
     "RotationSupportCadenceEvaluatedCandidate",
     "RotationSupportCadenceEvaluationContext",
     "RotationSupportCadenceEvaluationService",
