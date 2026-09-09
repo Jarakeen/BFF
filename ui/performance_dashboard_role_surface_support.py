@@ -2,13 +2,13 @@ from __future__ import annotations
 
 """Final role-aware visibility for the polished Performance Dashboard.
 
-The performance page is assembled by several compatibility/polish layers.  This
+The performance page is assembled by several compatibility/polish layers. This
 module intentionally installs last in the DD presentation chain and owns only the
-final visible surface.  It does not fetch data and it does not touch local state.
+final visible surface. It does not fetch data and it does not touch local state.
 
-For DPS snapshots the generic raid-support tracking controls are hidden so the
-DD evidence cards are not buried under healer/tank context.  Healer and tank
-snapshots retain the support controls.
+For DPS views the generic raid-support tracking controls are hidden so the DD
+evidence cards are not buried under healer/tank context. Healer and tank views
+retain the support controls.
 """
 
 from ui.components.foundry_card import FoundryCard
@@ -36,13 +36,19 @@ def _capture_polished_role_cards(page) -> None:
     )
 
 
-def _apply_role_surface(page, snapshot) -> None:
-    role = str(getattr(snapshot, "Role", "") or "").strip().casefold()
-    is_dd = role == "dps"
+def _apply_role_name_surface(page, role: str, *, has_snapshot: bool) -> None:
+    """Apply the visible role surface from either a picker or a loaded snapshot.
 
-    # Generic support controls are useful for healer/tank review but they were
-    # visually dominating the DPS page and obscuring the diagnostics built for
-    # damage dealers.
+    New member tabs exist before an ESO Logs snapshot does. Their persisted model
+    defaults to DPS, so the UI must not temporarily present the healer/support
+    surface just because the polished role combo happens to be constructed with a
+    different first item. Once a fight actor or saved profile changes the role,
+    the surface follows that selection immediately.
+    """
+
+    normalized = str(role or "").strip().casefold()
+    is_dd = normalized == "dps"
+
     for name in (
         "support_effects_card",
         "graph_effect_card",
@@ -52,28 +58,46 @@ def _apply_role_surface(page, snapshot) -> None:
         if card is not None:
             card.setVisible(not is_dd)
 
-    # These are the DD cards/sections that must remain visible on a DPS result.
-    # Guard every attribute because the base dashboard can still be used without
-    # the optional DD extensions in isolated tests/tools.
-    for name in (
-        "kpi_card",
-        "dot_card",
-        "dd_readout_card",
-        "output_card",
-        "abilities_card",
-        "quick_read_card",
-    ):
-        card = getattr(page, name, None)
-        if card is not None and is_dd:
-            card.setVisible(True)
+    # Result cards only make sense after a snapshot exists. Before that, keep the
+    # polished dashboard's normal empty-state behavior instead of revealing blank
+    # DD result cards merely because the role picker says DPS.
+    if has_snapshot and is_dd:
+        for name in (
+            "kpi_card",
+            "dot_card",
+            "dd_readout_card",
+            "output_card",
+            "abilities_card",
+            "quick_read_card",
+        ):
+            card = getattr(page, name, None)
+            if card is not None:
+                card.setVisible(True)
 
-    # The old category-chart cards are compatibility objects only.  Never let a
-    # later wrapper resurrect them on the polished DPS surface.
     if is_dd:
         for name in ("buff_card", "debuff_card", "raid_debuff_card"):
             card = getattr(page, name, None)
             if card is not None:
                 card.setVisible(False)
+
+
+def _apply_role_surface(page, snapshot) -> None:
+    _apply_role_name_surface(
+        page,
+        str(getattr(snapshot, "Role", "") or ""),
+        has_snapshot=True,
+    )
+
+
+def _apply_selected_role_surface(page) -> None:
+    picker = getattr(page, "role_override", None)
+    if picker is None:
+        return
+    _apply_role_name_surface(
+        page,
+        picker.currentText(),
+        has_snapshot=getattr(page, "_last_snapshot", None) is not None,
+    )
 
 
 def install() -> None:
@@ -89,6 +113,17 @@ def install() -> None:
     def build_ui_with_role_surface(self):
         _ORIGINAL_BUILD_UI(self)
         _capture_polished_role_cards(self)
+
+        picker = getattr(self, "role_override", None)
+        if picker is not None:
+            # PerformanceProfile defaults to DPS. Make the freshly-created UI
+            # agree with that model before the user loads a fight.
+            default_role = str(getattr(getattr(self, "_last_profile", None), "Role", "DPS") or "DPS")
+            picker.setCurrentText(default_role)
+            picker.currentTextChanged.connect(
+                lambda _text, page=self: _apply_selected_role_surface(page)
+            )
+            _apply_selected_role_surface(self)
 
     def show_snapshot_with_role_surface(self, snapshot):
         _ORIGINAL_SHOW_SNAPSHOT(self, snapshot)
