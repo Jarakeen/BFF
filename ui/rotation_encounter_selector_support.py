@@ -4,6 +4,8 @@ from typing import Protocol
 
 from PySide6.QtWidgets import QComboBox
 
+from ui.rotation_generate_action_support import install_rotation_generate_action
+
 
 class _EncounterSummary(Protocol):
     encounter_id: str
@@ -44,6 +46,7 @@ class RotationEncounterSelectorSupport:
             lambda _index: self.populate_bosses(page)
         )
         self.refresh(page)
+        install_rotation_generate_action(page)
 
     def refresh(self, page) -> None:
         self.summaries = tuple(self.guide_service.encounter_summaries())
