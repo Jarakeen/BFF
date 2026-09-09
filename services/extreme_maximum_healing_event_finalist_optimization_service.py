@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Callable
 
 from models.build_model import PlayerBuild
 from services.extreme_actual_heal_class_route_catalog_service import (
@@ -78,6 +79,7 @@ class ExtremeMaximumHealingEventFinalistOptimizationService:
         max_passes: int = 6,
         max_families: int = 8,
         routes_per_family: int = 3,
+        progress: Callable[[int, int, ExtremeMaximumHealingEventRouteEntry], None] | None = None,
     ) -> ExtremeMaximumHealingEventFinalistOptimizationResult:
         selection = self.selector.select(
             screening,
@@ -90,7 +92,10 @@ class ExtremeMaximumHealingEventFinalistOptimizationService:
 
         optimized: list[ExtremeMaximumHealingEventRouteEntry] = []
         errors: list[str] = []
-        for finalist in selection.finalists:
+        total = len(selection.finalists)
+        for index, finalist in enumerate(selection.finalists, 1):
+            if progress is not None:
+                progress(index, total, finalist)
             try:
                 if finalist.source_kind == "ordinary_skill":
                     source = finalist.route_entry
