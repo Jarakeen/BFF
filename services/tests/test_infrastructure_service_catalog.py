@@ -27,7 +27,7 @@ def test_application_update_preserves_user_owned_state_and_rejects_unsafe_archiv
 
 
 def test_reference_update_orchestration_is_explicit_maintenance_not_app_updater():
-    service = canonical_service_for("reference_update_task_orchestration")
+    service = get_service("maintenance.reference_update_orchestration")
 
     assert service is not None
     assert service.service_id == "maintenance.reference_update_orchestration"
