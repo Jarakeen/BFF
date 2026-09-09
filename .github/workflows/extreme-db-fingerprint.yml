@@ -1,0 +1,81 @@
+name: Extreme DB Fingerprint
+
+on:
+  push:
+    branches:
+      - phase13.2-temp-unused
+    paths:
+      - .github/workflows/extreme-db-fingerprint.yml
+
+permissions:
+  contents: read
+
+jobs:
+  fingerprint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out current phase13.2
+        uses: actions/checkout@v4
+        with:
+          ref: phase13.2
+          fetch-depth: 1
+
+      - name: Fingerprint SQLite tables
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import sqlite3
+
+          path = 'data/eso.db'
+          con = sqlite3.connect(f'file:{path}?mode=ro', uri=True)
+          con.row_factory = sqlite3.Row
+
+          def qident(name: str) -> str:
+              return '"' + name.replace('"', '""') + '"'
+
+          tables = [
+              row[0]
+              for row in con.execute(
+                  "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name"
+              )
+          ]
+          print('DB_META ' + json.dumps({
+              'integrity': con.execute('PRAGMA integrity_check').fetchone()[0],
+              'page_size': con.execute('PRAGMA page_size').fetchone()[0],
+              'page_count': con.execute('PRAGMA page_count').fetchone()[0],
+              'freelist_count': con.execute('PRAGMA freelist_count').fetchone()[0],
+              'schema_version': con.execute('PRAGMA schema_version').fetchone()[0],
+              'table_count': len(tables),
+          }, sort_keys=True))
+
+          for table in tables:
+              cols = [row[1] for row in con.execute(f'PRAGMA table_info({qident(table)})')]
+              order = ', '.join(qident(c) for c in cols) if cols else 'rowid'
+              h = hashlib.sha256()
+              count = 0
+              query = f'SELECT * FROM {qident(table)} ORDER BY {order}'
+              for row in con.execute(query):
+                  count += 1
+                  values = []
+                  for value in tuple(row):
+                      if isinstance(value, bytes):
+                          values.append({'__blob_sha256__': hashlib.sha256(value).hexdigest(), '__len__': len(value)})
+                      else:
+                          values.append(value)
+                  h.update(json.dumps(values, ensure_ascii=False, sort_keys=True, separators=(',', ':'), default=str).encode('utf-8'))
+                  h.update(b'\n')
+              print('TABLE ' + json.dumps({'name': table, 'count': count, 'sha256': h.hexdigest()}, sort_keys=True))
+
+          for row in con.execute('''
+              SELECT ms.id AS stone_id, ms.name, ms.game_update,
+                     me.id AS effect_id, me.stat_id, me.value, me.unit, me.supported, me.notes
+              FROM mundus_stone AS ms
+              LEFT JOIN mundus_effect AS me ON me.mundus_id = ms.id
+              WHERE ms.name = 'The Shadow'
+              ORDER BY ms.game_update, me.id
+          '''):
+              print('SHADOW ' + json.dumps(dict(row), sort_keys=True))
+          con.close()
+          PY
