@@ -4,9 +4,14 @@ from __future__ import annotations
 
 import argparse
 import ast
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
+
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
 
 from services.service_catalog import (
     SERVICE_DESCRIPTORS,
@@ -144,7 +149,7 @@ def audit_service_catalog(
                 CatalogFinding(
                     "ERROR",
                     "broken-implementation-path",
-                    f"{row.service_id}: missing {implementation_file.relative_to(root)}",
+                    f"{row.service_id}: missing {implementation_file.relative_to(root).as_posix()}",
                 )
             )
         for dependency in row.dependencies:
@@ -222,7 +227,7 @@ def audit_service_catalog(
                 CatalogFinding(
                     "WARNING",
                     "unregistered-service-module",
-                    str(path.relative_to(root)),
+                    path.relative_to(root).as_posix(),
                 )
             )
 
@@ -264,7 +269,7 @@ def main() -> int:
     parser.add_argument(
         "--root",
         type=Path,
-        default=Path(__file__).resolve().parents[1],
+        default=_REPO_ROOT,
         help="Repository root (defaults to the parent of tools/).",
     )
     args = parser.parse_args()
