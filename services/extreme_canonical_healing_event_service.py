@@ -5,6 +5,7 @@ from pathlib import Path
 
 from engine.config import get_data_dir
 from minmax.saved_build_skill_tooltip_service import SavedBuildSkillTooltipService
+from minmax.skill_component_classification import HealRecipientScope
 from services.extreme_dragon_blood_skill_component_repository import (
     ExtremeDragonBloodSkillComponentRepository,
 )
@@ -64,8 +65,9 @@ class ExtremeCanonicalHealingEventService(ExtremeHealingEventService):
     When every HEAL coefficient has reviewed recipient and event identity, the
     adapter reconstructs the already-calculated per-coefficient values and lets
     ``ExtremeHealingEventGroupScoringService`` select the largest legitimate
-    event. Coefficients delivered to another recipient or at another time are not
-    added together.
+    player-recipient event. Coefficients delivered to another recipient or at
+    another time are not added together, and PET-only groups are outside this
+    objective rather than allowed to win it.
 
     The default tooltip path layers reviewed U50 Dragon Blood-family, Sorcerer,
     and common healer component identity in memory. The persistent ``eso.db``
@@ -88,6 +90,12 @@ class ExtremeCanonicalHealingEventService(ExtremeHealingEventService):
     for a proved maximum event.
     """
 
+    PLAYER_RECIPIENT_SCOPES = (
+        HealRecipientScope.SELF,
+        HealRecipientScope.ALLY,
+        HealRecipientScope.SELF_OR_ALLY,
+        HealRecipientScope.GROUP,
+    )
     PET_SPECIAL_ACTIVATION_UNRESOLVED = (
         "Sorcerer pet special activation requires runtime proof that the corresponding pet is summoned and alive"
     )
@@ -268,6 +276,7 @@ class ExtremeCanonicalHealingEventService(ExtremeHealingEventService):
             components=components,
             value_by_coefficient=self._component_values(event),
             critical_multiplier=float(critical_multiplier),
+            allowed_recipient_scopes=self.PLAYER_RECIPIENT_SCOPES,
         )
         unresolved = tuple(
             dict.fromkeys(
