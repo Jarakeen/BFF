@@ -72,17 +72,22 @@ class SavedBuildSkillTooltipService:
         cp_modifiers: tuple[SkillComponentActualEffectModifier, ...],
         additional_healing_done_percent: float = 0.0,
         additional_healing_done_sources: tuple[str, ...] = (),
+        additional_power_bonus: float = 0.0,
+        additional_power_sources: tuple[str, ...] = (),
     ) -> tuple[SkillComponentActualEffectModifier, ...]:
-        """Combine every reviewed generic Healing Done source additively.
+        """Combine reviewed HEAL-component actual-effect modifiers.
 
         Sheet/combat-state Healing Done, verified per-component healing CP, and
         reviewed extra generic Healing Done all belong to the same additive
-        actual-effect bucket. Critical Healing and ability-family modifiers are
-        deliberately excluded because they are different mechanics.
+        actual-effect bucket. Reviewed event-only Weapon/Spell Damage can also be
+        supplied as a component power bonus so coefficient math is re-evaluated
+        through ``SkillTooltipCalculator`` rather than approximated afterward.
+        Critical Healing and ability-family multipliers remain separate mechanics.
         """
 
         sheet_healing_done = cls._sheet_healing_done_percent(context)
         reviewed_extra = float(additional_healing_done_percent)
+        reviewed_power = float(additional_power_bonus)
         by_coefficient = {
             int(modifier.coefficient_number): modifier
             for modifier in cp_modifiers
@@ -93,6 +98,9 @@ class SavedBuildSkillTooltipService:
             power_bonus = float(cp.power_bonus) if cp is not None else 0.0
             additive_percent = float(cp.additive_percent) if cp is not None else 0.0
             sources = tuple(cp.sources) if cp is not None else ()
+            if reviewed_power:
+                power_bonus += reviewed_power
+                sources = sources + tuple(additional_power_sources)
             if sheet_healing_done:
                 additive_percent += sheet_healing_done
                 sources = sources + ("Character sheet: Healing Done",)
@@ -118,6 +126,8 @@ class SavedBuildSkillTooltipService:
         entity_id: str,
         additional_healing_done_percent: float = 0.0,
         additional_healing_done_sources: tuple[str, ...] = (),
+        additional_power_bonus: float = 0.0,
+        additional_power_sources: tuple[str, ...] = (),
     ) -> SkillTooltipResult:
         resolution = self.coefficients.resolve_entity_id(entity_id)
         if resolution.rank is None:
@@ -149,6 +159,8 @@ class SavedBuildSkillTooltipService:
             cp_modifiers=cp_modifiers,
             additional_healing_done_percent=additional_healing_done_percent,
             additional_healing_done_sources=additional_healing_done_sources,
+            additional_power_bonus=additional_power_bonus,
+            additional_power_sources=additional_power_sources,
         )
         result = self.calculator.evaluate_entity_id(
             entity_id,
