@@ -694,6 +694,14 @@ disruption. Editing the composition or optimization selection clears attached
 workload evidence so a result from an older team cannot remain on screen as if it
 still applied.
 
+The shared team surfaces can now generate candidate workload projections from their
+currently selected exact saved builds when supplied explicit provider strategy,
+coverage, rotation-plan, progression, GCD, and role-displacement evidence. The
+orchestrator binds contributors by exact Character → Build identity, matches only
+explicit action names, retains every scheduled matching cast, and renders missing
+plans, progression, contributors, or actions as candidate blockers. Reference and
+ESO Logs candidates do not silently become saved-build rotation evidence.
+
 Persistent/summoned Ultimates with an explicit secondary activation contract now
 reuse the existing canonical ability-description resolver. For example, a zero-base-
 cost Eternal Guardian can contribute the evidenced 75-Ultimate Guardian's Wrath
@@ -706,13 +714,15 @@ in the Linux scratch runtime; the source-level dual-surface/install checks passe
 the widget test remains included for the user's Windows environment.
 Latest user-reported full-suite checkpoint after the canonical workload slice:
 **2,626 passed in 73.30s** on Windows / Python 3.12.4.
+Candidate-generation focused checkpoint: **98 passed, 1 skipped in 0.69s**. The
+skip remains the PySide6 widget check in the Linux scratch runtime.
 
 Active next work:
 
 1. convert the user-supplied BTV screenshot corpus into structured benchmark fixtures with provenance, encounter scope, observed uptime, target/reference uptime where visible, theoretical maximum where visible, and explicit unknown fields rather than guessed values;
 2. test policy selection, target-vs-theoretical-max validation, temporal window scoring, overlap/gap explanation, and BTV-style feedback against those fixtures;
 3. connect those benchmark fixtures to Comp Maker / Optimization explanation paths without treating them as canonical ESO mechanics;
-4. generate canonical provider workload candidates from the selected Comp Maker / Optimization team and attach them to the now-visible shared result surface;
+4. feed encounter/provider assignment policies and the growing set of saved team rotation plans into the new Comp Maker / Optimization candidate-generation seam;
 5. continue thorough healer, tank, and DD rotation coverage with class passives, armor/set duration modifiers, runtime proc conditions, and encounter-specific timing.
 
 Fight-horizon policy: most raid fights are expected to finish within roughly six minutes in the user's working context, so **360 seconds may be used only as an overrideable fallback planning ceiling when encounter-specific timing is unavailable**. It is not a canonical encounter duration. Optimization should prioritize important burn/mechanic windows over meaningless attempts to force every support effect to 100% global uptime.

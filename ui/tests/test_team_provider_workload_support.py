@@ -25,6 +25,10 @@ def test_workload_support_targets_both_surfaces_and_invalidates_stale_results():
     assert 'FoundryCard("Provider Rotation Workload", "↻")' in source
     assert "CompBuilderPage.set_provider_workload_evidence" in source
     assert "OptimizationPage.set_provider_workload_evidence" in source
+    assert "CompBuilderPage.generate_provider_workload_candidates" in source
+    assert "OptimizationPage.generate_provider_workload_candidates" in source
+    assert "_comp_selected_saved_builds(page)" in source
+    assert "_optimization_selected_saved_builds(page)" in source
     assert "CompBuilderPage._refresh_coverage = _comp_refresh_with_provider_invalidation" in source
     assert (
         "OptimizationPage._update_team_analysis = "

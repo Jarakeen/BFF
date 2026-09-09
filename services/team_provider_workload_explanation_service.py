@@ -6,6 +6,9 @@ from services.team_provider_rotation_workload_service import (
     TeamProviderRotationWorkload,
     TeamProviderRotationWorkloadComparison,
 )
+from services.team_provider_workload_candidate_service import (
+    TeamProviderWorkloadCandidateResult,
+)
 
 
 @dataclass(frozen=True)
@@ -191,6 +194,29 @@ class TeamProviderWorkloadExplanationService:
             sections.append("\n".join(lines))
 
         return "\n\n".join(sections)
+
+    @classmethod
+    def render_candidate_result(
+        cls,
+        result: TeamProviderWorkloadCandidateResult,
+        *,
+        comparison: TeamProviderRotationWorkloadComparison | None = None,
+    ) -> str:
+        """Render projected candidates and exact attachment failures together."""
+
+        sections: list[str] = []
+        if result.workloads:
+            sections.append(cls.render_panel(result.workloads, comparison=comparison))
+        for rejection in result.rejected:
+            lines = [
+                f"{rejection.alternative_id.upper()} • {rejection.effect_key}",
+                "Candidate not projected:",
+                *(f"• {item}" for item in rejection.blockers),
+            ]
+            sections.append("\n".join(lines))
+        if sections:
+            return "\n\n".join(sections)
+        return cls.render_panel(())
 
     @staticmethod
     def _delta_sentence(label: str, delta: float) -> str:

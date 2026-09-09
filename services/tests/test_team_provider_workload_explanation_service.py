@@ -16,6 +16,10 @@ from services.team_provider_temporal_coverage_service import (
 from services.team_provider_workload_explanation_service import (
     TeamProviderWorkloadExplanationService,
 )
+from services.team_provider_workload_candidate_service import (
+    TeamProviderWorkloadCandidateRejection,
+    TeamProviderWorkloadCandidateResult,
+)
 
 
 def _workload(*, applications, recipient, temporal):
@@ -138,3 +142,23 @@ def test_panel_rejects_comparison_for_hidden_workloads():
         assert "displayed workloads" in str(exc)
     else:
         raise AssertionError("expected hidden comparison evidence to fail closed")
+
+
+def test_renders_candidate_attachment_blockers_without_claiming_workload():
+    result = TeamProviderWorkloadCandidateResult(
+        projections=(),
+        rejected=(
+            TeamProviderWorkloadCandidateRejection(
+                alternative_id="prayer cadence",
+                effect_key="minor_berserk",
+                blockers=("Magrat / Trial Healer: no exact rotation plan is attached",),
+            ),
+        ),
+    )
+
+    rendered = TeamProviderWorkloadExplanationService.render_candidate_result(result)
+
+    assert "PRAYER CADENCE • minor_berserk" in rendered
+    assert "Candidate not projected" in rendered
+    assert "no exact rotation plan is attached" in rendered
+    assert "Provider work:" not in rendered

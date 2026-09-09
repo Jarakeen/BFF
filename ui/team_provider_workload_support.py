@@ -3,9 +3,16 @@ from __future__ import annotations
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel
 
+from engine.config import get_data_dir
+from services.build_service import BuildService
 from services.team_provider_rotation_workload_service import (
     TeamProviderRotationWorkload,
     TeamProviderRotationWorkloadComparison,
+)
+from services.team_provider_workload_candidate_service import (
+    TeamProviderWorkloadAlternativeRequest,
+    TeamProviderWorkloadCandidateResult,
+    TeamProviderWorkloadCandidateService,
 )
 from services.team_provider_workload_explanation_service import (
     TeamProviderWorkloadExplanationService,
@@ -33,6 +40,10 @@ def _install_workload_card(page) -> None:
     page.workspace_layout.addWidget(page.provider_workload_card)
     page._provider_rotation_workloads = ()
     page._provider_rotation_workload_comparison = None
+    page._provider_workload_candidate_result = None
+    page._provider_workload_candidate_service = TeamProviderWorkloadCandidateService(
+        get_data_dir() / "eso.db"
+    )
     _render_provider_workload(page)
 
 
@@ -40,16 +51,25 @@ def _render_provider_workload(page) -> None:
     label = getattr(page, "provider_workload_text", None)
     if label is None:
         return
-    label.setText(
-        TeamProviderWorkloadExplanationService.render_panel(
-            tuple(getattr(page, "_provider_rotation_workloads", ()) or ()),
-            comparison=getattr(
-                page,
-                "_provider_rotation_workload_comparison",
-                None,
-            ),
+    candidate_result = getattr(page, "_provider_workload_candidate_result", None)
+    if candidate_result is not None:
+        label.setText(
+            TeamProviderWorkloadExplanationService.render_candidate_result(
+                candidate_result,
+                comparison=getattr(page, "_provider_rotation_workload_comparison", None),
+            )
         )
-    )
+    else:
+        label.setText(
+            TeamProviderWorkloadExplanationService.render_panel(
+                tuple(getattr(page, "_provider_rotation_workloads", ()) or ()),
+                comparison=getattr(
+                    page,
+                    "_provider_rotation_workload_comparison",
+                    None,
+                ),
+            )
+        )
 
 
 def _set_provider_workload_evidence(
@@ -68,13 +88,122 @@ def _set_provider_workload_evidence(
         raise TypeError("provider workload comparison has the wrong result type")
     page._provider_rotation_workloads = normalized
     page._provider_rotation_workload_comparison = comparison
+    page._provider_workload_candidate_result = None
+    _render_provider_workload(page)
+
+
+def _set_provider_workload_candidates(
+    page,
+    result: TeamProviderWorkloadCandidateResult,
+    *,
+    comparison: TeamProviderRotationWorkloadComparison | None = None,
+) -> None:
+    if not isinstance(result, TeamProviderWorkloadCandidateResult):
+        raise TypeError("provider workload candidates have the wrong result type")
+    if comparison is not None and not isinstance(
+        comparison, TeamProviderRotationWorkloadComparison
+    ):
+        raise TypeError("provider workload comparison has the wrong result type")
+    page._provider_workload_candidate_result = result
+    page._provider_rotation_workloads = result.workloads
+    page._provider_rotation_workload_comparison = comparison
     _render_provider_workload(page)
 
 
 def _clear_provider_workload_evidence(page) -> None:
     page._provider_rotation_workloads = ()
     page._provider_rotation_workload_comparison = None
+    page._provider_workload_candidate_result = None
     _render_provider_workload(page)
+
+
+def _comp_selected_saved_builds(page):
+    """Resolve only exact saved candidates currently applied to Comp chairs."""
+
+    roster = BuildService(get_data_dir() / "builds.json").load().Members
+    resolved = []
+    seen: set[tuple[str, str]] = set()
+    for candidate in getattr(page, "_comp_applied_candidates", {}).values():
+        if getattr(candidate, "source_kind", "") != "saved_build":
+            continue
+        candidate_name = str(getattr(candidate, "name", "") or "").strip().casefold()
+        candidate_owner = str(
+            getattr(candidate, "source_name", "") or ""
+        ).strip().casefold()
+        matches = [
+            build
+            for build in roster
+            if str(getattr(build, "BuildName", "") or "").strip().casefold()
+            == candidate_name
+            and str(
+                getattr(build, "Name", "")
+                or getattr(build, "Gamertag", "")
+                or ""
+            ).strip().casefold()
+            == candidate_owner
+        ]
+        if len(matches) != 1:
+            continue
+        build = matches[0]
+        key = (
+            str(getattr(build, "Name", "") or "").strip().casefold(),
+            str(getattr(build, "BuildName", "") or "").strip().casefold(),
+        )
+        if key not in seen:
+            seen.add(key)
+            resolved.append(build)
+    return tuple(resolved)
+
+
+def _optimization_selected_saved_builds(page):
+    from ui.team_optimization_canonical_analysis_support import (
+        _selected_builds_and_recruits,
+    )
+
+    builds, _recruits = _selected_builds_and_recruits(page)
+    return builds
+
+
+def _generate_provider_workload_candidates(
+    page,
+    *,
+    selected_builds,
+    rotation_plans,
+    progression_by_identity,
+    alternatives: tuple[TeamProviderWorkloadAlternativeRequest, ...],
+) -> TeamProviderWorkloadCandidateResult:
+    result = page._provider_workload_candidate_service.generate(
+        selected_builds=tuple(selected_builds),
+        rotation_plans=tuple(rotation_plans),
+        progression_by_identity=progression_by_identity,
+        alternatives=tuple(alternatives),
+    )
+    _set_provider_workload_candidates(page, result)
+    return result
+
+
+def _generate_comp_provider_workload_candidates(
+    page, *, rotation_plans, progression_by_identity, alternatives
+) -> TeamProviderWorkloadCandidateResult:
+    return _generate_provider_workload_candidates(
+        page,
+        selected_builds=_comp_selected_saved_builds(page),
+        rotation_plans=rotation_plans,
+        progression_by_identity=progression_by_identity,
+        alternatives=alternatives,
+    )
+
+
+def _generate_optimization_provider_workload_candidates(
+    page, *, rotation_plans, progression_by_identity, alternatives
+) -> TeamProviderWorkloadCandidateResult:
+    return _generate_provider_workload_candidates(
+        page,
+        selected_builds=_optimization_selected_saved_builds(page),
+        rotation_plans=rotation_plans,
+        progression_by_identity=progression_by_identity,
+        alternatives=alternatives,
+    )
 
 
 def _comp_init_with_provider_workload(self, parent=None) -> None:
@@ -116,6 +245,10 @@ def install() -> None:
     CompBuilderPage.__init__ = _comp_init_with_provider_workload
     CompBuilderPage._refresh_coverage = _comp_refresh_with_provider_invalidation
     CompBuilderPage.set_provider_workload_evidence = _set_provider_workload_evidence
+    CompBuilderPage.set_provider_workload_candidates = _set_provider_workload_candidates
+    CompBuilderPage.generate_provider_workload_candidates = (
+        _generate_comp_provider_workload_candidates
+    )
     CompBuilderPage.clear_provider_workload_evidence = _clear_provider_workload_evidence
 
     _ORIGINAL_OPTIMIZATION_INIT = OptimizationPage.__init__
@@ -123,6 +256,10 @@ def install() -> None:
     OptimizationPage.__init__ = _optimization_init_with_provider_workload
     OptimizationPage._update_team_analysis = _optimization_update_with_provider_invalidation
     OptimizationPage.set_provider_workload_evidence = _set_provider_workload_evidence
+    OptimizationPage.set_provider_workload_candidates = _set_provider_workload_candidates
+    OptimizationPage.generate_provider_workload_candidates = (
+        _generate_optimization_provider_workload_candidates
+    )
     OptimizationPage.clear_provider_workload_evidence = _clear_provider_workload_evidence
     _INSTALLED = True
 
