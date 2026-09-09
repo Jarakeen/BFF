@@ -26,6 +26,7 @@ _NON_SERVICE_MODULES = frozenset(
         # Verified historical compatibility utilities. Their only application
         # consumers live under old_pages/, so cataloging them as current services
         # would misrepresent the runtime architecture merely to silence coverage.
+        "services.ai_service",
         "services.json_service",
         "services.validation_service",
     }
