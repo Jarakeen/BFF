@@ -230,6 +230,10 @@ class _RotationTimelineCanvas(QWidget):
                     ),
                 )
 
+            # Duration lanes intentionally use a fill brush. Clear it before
+            # drawing the icon border or the border pass will paint a solid
+            # rounded rectangle over the already-rendered ability icon.
+            painter.setBrush(Qt.BrushStyle.NoBrush)
             painter.setPen(QPen(self.palette().mid().color(), 1))
             painter.drawRoundedRect(rect, 5, 5)
             self._icon_rects.append((rect, action))
