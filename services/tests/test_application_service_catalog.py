@@ -41,14 +41,16 @@ def test_top_team_is_observed_ranked_log_evidence_not_optimal_comp_truth():
     assert "must not be promoted into game-mechanic truth" in service.notes
 
 
-def test_trending_is_multi_report_observation_not_best_in_slot_truth():
+def test_trending_is_ranked_player_observation_not_team_or_best_in_slot_truth():
     service = canonical_service_for("esologs_ranked_role_trending_evidence")
 
     assert service is not None
     assert service.service_id == "logs.trending.observed_role_meta"
     assert service.dependencies == ("logs.top_team.observed_build_evidence",)
     assert service.evidence_class is EvidenceClass.OBSERVATIONAL
-    assert "per observed player" in service.notes
+    assert "top-ranked individual player" in service.notes
+    assert "never per full team" in service.notes
+    assert "skipped rather than guessed" in service.notes
     assert "not canonical best-in-slot" in service.notes
 
 
