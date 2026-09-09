@@ -63,11 +63,15 @@ def _run(*, steps, stop_reason, unresolved=()):
         max_iterations=8,
     )
     if unresolved:
+        proposed = sum(1 for step in steps if step.advanced)
+        accepted = proposed
+        if stop_reason is RotationSupportCadenceProgressionStopReason.REPEATED_PLAN and steps and steps[-1].advanced:
+            accepted = max(0, proposed - 1)
         run = SimpleNamespace(
             initial_plan=initial,
             final_plan=final,
             iterations=len(steps),
-            advanced_steps=sum(1 for step in steps if step.advanced),
+            advanced_steps=accepted,
             steps=tuple(steps),
             stop_reason=stop_reason,
             unresolved=tuple(unresolved),
@@ -105,6 +109,7 @@ def test_report_exposes_promoted_rationale_reasons_and_candidate_counts() -> Non
     assert item.promoted_candidate_id == "major_courage:skill:target_floor"
     assert item.promoted_rationale == "longest cadence that still meets the uptime target"
     assert item.promoted_reasons == ("sustain improved", "uptime obligation satisfied")
+    assert item.accepted is True
     assert item.advanced is True
     assert report.changed is True
 
@@ -127,11 +132,42 @@ def test_no_promotion_step_reports_no_promoted_explanation() -> None:
     assert item.promoted_candidate_id is None
     assert item.promoted_rationale is None
     assert item.promoted_reasons == ()
+    assert item.accepted is False
     assert item.eligible_candidate_count == 0
     assert report.stop_summary == (
         "No eligible local cadence candidate improved the accepted rotation."
     )
     assert report.changed is False
+
+
+def test_repeated_final_proposal_is_reported_but_not_marked_as_accepted() -> None:
+    first = _step(
+        seed_name="Seed",
+        candidate_count=1,
+        tiers=(RotationCandidateTier.ELIGIBLE,),
+        promoted_id="candidate-a",
+    )
+    repeated = _step(
+        seed_name="After A",
+        candidate_count=1,
+        tiers=(RotationCandidateTier.ELIGIBLE,),
+        promoted_id="candidate-cycle",
+        rationale="would return to an earlier schedule",
+    )
+
+    report = RotationSupportCadenceProgressionReportService().build(
+        _run(
+            steps=(first, repeated),
+            stop_reason=RotationSupportCadenceProgressionStopReason.REPEATED_PLAN,
+        )
+    )
+
+    assert report.advanced_steps == 1
+    assert report.changed is True
+    assert report.steps[0].accepted is True
+    assert report.steps[1].promoted_candidate_id == "candidate-cycle"
+    assert report.steps[1].accepted is False
+    assert report.steps[1].advanced is False
 
 
 @pytest.mark.parametrize(
