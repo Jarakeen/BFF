@@ -4,8 +4,8 @@ from __future__ import annotations
 
 The coordinator is intentionally thin: collect fresh per-source observations,
 optionally enrich them from raw ESO Logs events, run cross-pull analysis, and then
-add findings from explicitly supplied reviewed mechanic windows. It does not persist
-computed review state.
+add findings from explicitly supplied reviewed mechanic windows and landing-recovery
+evidence. It does not persist computed review state.
 """
 
 from dataclasses import dataclass
@@ -13,6 +13,13 @@ from typing import Iterable
 
 from services.performance_raid_review_esologs_event_provider import (
     PerformanceRaidReviewEsoLogsEventProvider,
+)
+from services.performance_raid_review_landing_recovery_analysis_service import (
+    PerformanceRaidReviewLandingRecoveryAnalysisService,
+    RaidReviewPullOutcome,
+)
+from services.performance_raid_review_landing_recovery_service import (
+    RaidReviewLandingRecoveryObservation,
 )
 from services.performance_raid_review_mechanic_window_service import (
     PerformanceRaidReviewMechanicWindowService,
@@ -50,6 +57,7 @@ class PerformanceRaidReviewCoordinatorService:
         review_service: PerformanceRaidReviewService | None = None,
         event_provider: PerformanceRaidReviewEsoLogsEventProvider | None = None,
         mechanic_window_service: PerformanceRaidReviewMechanicWindowService | None = None,
+        landing_recovery_analysis_service: PerformanceRaidReviewLandingRecoveryAnalysisService | None = None,
     ) -> None:
         self.performance_service = performance_service
         self.event_provider = event_provider or PerformanceRaidReviewEsoLogsEventProvider(
@@ -63,6 +71,9 @@ class PerformanceRaidReviewCoordinatorService:
         self.mechanic_window_service = (
             mechanic_window_service or PerformanceRaidReviewMechanicWindowService()
         )
+        self.landing_recovery_analysis_service = (
+            landing_recovery_analysis_service or PerformanceRaidReviewLandingRecoveryAnalysisService()
+        )
 
     def review(
         self,
@@ -70,6 +81,7 @@ class PerformanceRaidReviewCoordinatorService:
         *,
         encounter_name: str | None = None,
         mechanic_windows: Iterable[RaidReviewEncounterWindow] = (),
+        landing_recovery_observations: Iterable[RaidReviewLandingRecoveryObservation] = (),
     ) -> PerformanceRaidReviewResult:
         collection = self.observation_service.collect(tuple(sources))
         report = self.review_service.analyze(
@@ -77,15 +89,35 @@ class PerformanceRaidReviewCoordinatorService:
             encounter_name=encounter_name,
         )
 
-        window_findings = self.mechanic_window_service.findings(
-            collection.observations,
-            tuple(mechanic_windows),
+        extra_findings = list(
+            self.mechanic_window_service.findings(
+                collection.observations,
+                tuple(mechanic_windows),
+            )
         )
-        if window_findings:
+
+        recovery_rows = tuple(landing_recovery_observations)
+        if recovery_rows:
+            outcomes_by_pull: dict[tuple[str, int], RaidReviewPullOutcome] = {}
+            for row in collection.observations:
+                key = (str(row.report_code), int(row.fight_id))
+                outcomes_by_pull[key] = RaidReviewPullOutcome(
+                    report_code=key[0],
+                    fight_id=key[1],
+                    kill=bool(row.kill),
+                )
+            extra_findings.extend(
+                self.landing_recovery_analysis_service.findings(
+                    recovery_rows,
+                    tuple(outcomes_by_pull.values()),
+                )
+            )
+
+        if extra_findings:
             priority_order = {"high": 0, "medium": 1, "note": 2}
             combined = tuple(
                 sorted(
-                    (*report.findings, *window_findings),
+                    (*report.findings, *extra_findings),
                     key=lambda item: (
                         priority_order.get(item.priority, 9),
                         item.scope,
