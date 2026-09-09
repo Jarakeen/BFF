@@ -48,6 +48,7 @@ class WeaveDiagnostics:
     PairingPercent: float | None = None
     MedianPairDelayMs: float | None = None
     UnpairedSkillCasts: int = 0
+    EligibleSkillTimestampsMs: tuple[float, ...] = ()
 
 
 def _decode_cast_event_data(raw) -> list[dict]:
@@ -262,6 +263,7 @@ def _analyze_weave_pairing(
         PairingPercent=pairing_percent,
         MedianPairDelayMs=median_delay,
         UnpairedSkillCasts=max(0, skill_count - paired),
+        EligibleSkillTimestampsMs=tuple(ts for ts, _ability_id, _name in skill_casts),
     )
 
 
@@ -275,6 +277,7 @@ def _build_snapshot_with_weave_analysis(self, *args, **kwargs):
     snapshot.WeavePairedSkillCasts = 0
     snapshot.WeaveUnpairedSkillCasts = 0
     snapshot.WeaveMedianPairDelayMs = None
+    snapshot.WeaveEligibleSkillTimestampsMs = ()
     snapshot.WeaveAnalysisNote = ""
 
     if str(getattr(snapshot, "Role", "")).casefold() != "dps":
@@ -324,6 +327,7 @@ def _build_snapshot_with_weave_analysis(self, *args, **kwargs):
         snapshot.WeavePairedSkillCasts = diagnostics.PairedSkillCasts
         snapshot.WeaveUnpairedSkillCasts = diagnostics.UnpairedSkillCasts
         snapshot.WeaveMedianPairDelayMs = diagnostics.MedianPairDelayMs
+        snapshot.WeaveEligibleSkillTimestampsMs = diagnostics.EligibleSkillTimestampsMs
 
         if diagnostics.PairingPercent is None:
             snapshot.WeaveAnalysisNote = (
@@ -349,3 +353,9 @@ def install() -> None:
     _ORIGINAL_BUILD_SNAPSHOT = PerformanceDashboardService.build_snapshot
     PerformanceDashboardService.build_snapshot = _build_snapshot_with_weave_analysis
     _INSTALLED = True
+
+    # Activity-gap analysis reuses the eligible-skill timestamps already fetched
+    # here, avoiding another ESO Logs cast-event request.
+    from services.performance_dd_activity_support import install as install_activity_support
+
+    install_activity_support()
