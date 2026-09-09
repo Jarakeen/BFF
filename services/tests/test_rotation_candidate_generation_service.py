@@ -160,18 +160,47 @@ def test_generate_policy_rejects_duplicate_action_claim_target() -> None:
         )
 
 
-def test_generate_policy_rejects_mixed_refresh_lead_and_action_claim() -> None:
-    service = RotationCandidateGenerationService(_RefinementService())
+def test_generate_policy_carries_mixed_refresh_leads_and_action_claims() -> None:
+    refinement = _RefinementService()
+    service = RotationCandidateGenerationService(refinement)
+    priorities = object()
+    demands = (object(),)
 
-    with pytest.raises(ValueError, match="cannot combine demand refresh leads and demand action claims"):
-        service.generate_policy(
-            candidate_id="mixed-policy",
-            seed_plan=_seed(),
-            priorities=object(),
-            demands=(object(),),
-            refresh_leads=(_lead("Budding Seeds", 2.0),),
-            action_claims=(_claim("Combat Prayer"),),
-        )
+    result = service.generate_policy(
+        candidate_id="mixed-policy",
+        seed_plan=_seed(),
+        priorities=priorities,
+        demands=demands,
+        refresh_leads=(
+            _lead("Combat Prayer", 1.0),
+            _lead("Budding Seeds", 2.0),
+        ),
+        action_claims=(
+            _claim("Combat Prayer"),
+            _claim("Budding Seeds"),
+        ),
+    )
+
+    expected_leads = (
+        _lead("Budding Seeds", 2.0),
+        _lead("Combat Prayer", 1.0),
+    )
+    expected_claims = (
+        _claim("Budding Seeds"),
+        _claim("Combat Prayer"),
+    )
+    assert result.refresh_leads == expected_leads
+    assert result.action_claims == expected_claims
+    assert refinement.calls == [
+        {
+            "plan": _seed(),
+            "priorities": priorities,
+            "wait_decision": None,
+            "demands": demands,
+            "leads": expected_leads,
+            "claims": expected_claims,
+        }
+    ]
 
 
 def test_semantic_duplicates_and_empty_baseline_equivalent_options_are_removed() -> None:
