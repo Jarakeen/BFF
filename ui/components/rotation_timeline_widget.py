@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from PySide6.QtCore import QPointF, QRectF, QSize, Qt
-from PySide6.QtGui import QColor, QFontMetrics, QPainter, QPen, QPixmap
+from PySide6.QtGui import QColor, QFontMetrics, QIcon, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import QFrame, QScrollArea, QSizePolicy, QToolTip, QVBoxLayout, QWidget
 
 from engine.config import get_resource_path
@@ -91,11 +91,20 @@ class _RotationTimelineCanvas(QWidget):
         )
 
     @classmethod
+    def _pixmap_from_icon_path(cls, path: str | Path) -> QPixmap | None:
+        """Load one ability icon using the same QIcon path as the Build editor."""
+        icon = QIcon(str(path))
+        if icon.isNull():
+            return None
+        pixmap = icon.pixmap(QSize(cls.ICON_SIZE, cls.ICON_SIZE))
+        return None if pixmap.isNull() else pixmap
+
+    @classmethod
     def _icon_pixmap(cls, action: RotationTimelineAction) -> QPixmap | None:
         explicit = str(action.icon_path or "").strip()
         if explicit:
-            pixmap = QPixmap(explicit)
-            if not pixmap.isNull():
+            pixmap = cls._pixmap_from_icon_path(explicit)
+            if pixmap is not None:
                 return pixmap
 
         # Last-resort compatibility lookup for any older projection that does not
@@ -104,8 +113,8 @@ class _RotationTimelineCanvas(QWidget):
         for path in cls._candidate_icon_paths(action):
             if not path.exists():
                 continue
-            pixmap = QPixmap(str(path))
-            if not pixmap.isNull():
+            pixmap = cls._pixmap_from_icon_path(path)
+            if pixmap is not None:
                 return pixmap
         return None
 
@@ -201,15 +210,7 @@ class _RotationTimelineCanvas(QWidget):
             )
             pixmap = self._icon_pixmap(action)
             if pixmap is not None:
-                painter.drawPixmap(
-                    rect.toRect(),
-                    pixmap.scaled(
-                        self.ICON_SIZE,
-                        self.ICON_SIZE,
-                        Qt.AspectRatioMode.KeepAspectRatio,
-                        Qt.TransformationMode.SmoothTransformation,
-                    ),
-                )
+                painter.drawPixmap(rect.toRect(), pixmap)
             else:
                 fill = QColor(self.palette().highlight().color())
                 fill.setAlpha(170)
