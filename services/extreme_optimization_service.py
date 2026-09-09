@@ -134,11 +134,19 @@ class ExtremeOptimizationService:
         self.build_service = BuildService(self.builds_path)
         self.race_repository = RaceRepository(self.database_path)
         self.gear_set_repository = GearSetRepository(self.database_path)
-        self.mundus_repository = MundusRepository(self.database_path)
+        # Extreme searches are calculation-only.  The canonical database is
+        # imported elsewhere and must not be rewritten just because an audit or
+        # UI search constructed the optimizer.
+        self.mundus_repository = MundusRepository(
+            self.database_path,
+            initialize=False,
+        )
         self.provisioning_repository = ProvisioningStaticRepository(self.database_path)
         self.context_factory = BuildCalculationContextFactory(
             race_repository=self.race_repository,
             gear_set_repository=self.gear_set_repository,
+            mundus_repository=self.mundus_repository,
+            provisioning_repository=self.provisioning_repository,
         )
 
     def saved_builds(self) -> tuple[PlayerBuild, ...]:

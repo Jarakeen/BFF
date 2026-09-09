@@ -86,12 +86,25 @@ class MundusEffectRecord:
 
 
 class MundusRepository:
-    """DB-backed, update-versioned Mundus Stone reference data."""
+    """DB-backed, update-versioned Mundus Stone reference data.
 
-    def __init__(self, database_path: str | Path, *, game_update: int = U50_GAME_UPDATE) -> None:
+    ``initialize=False`` is for calculation/audit paths that consume an already
+    imported canonical database.  It prevents a read-only calculation from
+    rewriting the database merely because a repository object was constructed.
+    Import/bootstrap callers retain the historical seed-on-construction default.
+    """
+
+    def __init__(
+        self,
+        database_path: str | Path,
+        *,
+        game_update: int = U50_GAME_UPDATE,
+        initialize: bool = True,
+    ) -> None:
         self.database_path = str(database_path)
         self.game_update = int(game_update)
-        self.ensure_schema_and_seed()
+        if initialize:
+            self.ensure_schema_and_seed()
 
     def _connect(self) -> sqlite3.Connection:
         connection = sqlite3.connect(self.database_path)
