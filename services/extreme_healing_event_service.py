@@ -193,9 +193,6 @@ class ExtremeHealingEventService:
         unresolved.extend(result.unresolved)
 
         skill_name = str(getattr(getattr(result, "skill", None), "name", "") or "").strip()
-        recipient_scope = self.recipient_scope.resolve(ability_name=skill_name)
-        unresolved.extend(recipient_scope.unresolved)
-        single_recipient_safe = bool(recipient_scope.single_recipient_safe)
         temporal_scope = self.temporal_scope.resolve(ability_name=skill_name)
         unresolved.extend(temporal_scope.unresolved)
         single_instant_safe = bool(temporal_scope.single_instant_safe)
@@ -213,6 +210,25 @@ class ExtremeHealingEventService:
             )
             if not heal_components:
                 unresolved.append(f"{entity_id}: no HEAL-classified coefficient components")
+
+        all_heal_numbers = tuple(
+            int(component.coefficient_number) for component in heal_components
+        )
+        recipient_scope = self.recipient_scope.resolve(
+            ability_name=skill_name,
+            heal_coefficient_numbers=all_heal_numbers,
+            coefficient_traces=tuple(result.components),
+        )
+        unresolved.extend(recipient_scope.unresolved)
+        single_recipient_safe = bool(recipient_scope.single_recipient_safe)
+        selected_numbers = recipient_scope.selected_coefficient_numbers
+        if selected_numbers is not None:
+            selected = {int(number) for number in selected_numbers}
+            heal_components = tuple(
+                component
+                for component in heal_components
+                if int(component.coefficient_number) in selected
+            )
 
         heal_numbers = tuple(int(component.coefficient_number) for component in heal_components)
         crit_eligible = tuple(
