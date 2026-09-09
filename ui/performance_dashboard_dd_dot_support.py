@@ -28,6 +28,30 @@ def _add_dot_card_to_charts_layout(layout, dot_card) -> None:
         layout.addWidget(dot_card)
 
 
+def _visible_summary_layout(page):
+    """Return the polished dashboard's visible KPI/support row when present.
+
+    ``performance_dashboard_polish_support`` intentionally keeps ``charts_widget``
+    hidden as a compatibility container. DD cards must therefore attach beside
+    the visible Support Effect Uptime card rather than disappearing into that
+    hidden container. The base dashboard has no such row, so callers can fall
+    back to its normal charts layout.
+    """
+
+    support_card = getattr(page, "support_effects_card", None)
+    if support_card is None:
+        return None
+
+    parent = support_card.parentWidget()
+    if parent is None:
+        return None
+
+    layout = parent.layout()
+    if layout is None or layout.indexOf(support_card) < 0:
+        return None
+    return layout
+
+
 def _build_ui_with_dot_card(self):
     assert _ORIGINAL_BUILD_UI is not None
     _ORIGINAL_BUILD_UI(self)
@@ -37,7 +61,11 @@ def _build_ui_with_dot_card(self):
     )
     self.dot_card = dot_card
 
-    _add_dot_card_to_charts_layout(self.charts_widget.layout(), dot_card)
+    visible_layout = _visible_summary_layout(self)
+    if visible_layout is not None:
+        visible_layout.addWidget(dot_card, 1)
+    else:
+        _add_dot_card_to_charts_layout(self.charts_widget.layout(), dot_card)
     dot_card.setVisible(False)
 
 
