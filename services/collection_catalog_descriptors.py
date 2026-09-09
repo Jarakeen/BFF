@@ -7,6 +7,7 @@ records and user-owned completion/collection state. Runtime code keeps using typ
 imports and explicit dependency wiring rather than catalog-driven service location.
 """
 
+from services.collection_sync_catalog_descriptors import COLLECTION_SYNC_SERVICE_DESCRIPTORS
 from services.service_catalog import EvidenceClass, ServiceBehavior, ServiceDescriptor
 
 
@@ -145,6 +146,7 @@ COLLECTION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.MIXED,
         notes="Lorebook text and indexing remain shared imported reference evidence; learned state is profile-owned progress and is not a game-mechanic or character-power calculation.",
     ),
+    *COLLECTION_SYNC_SERVICE_DESCRIPTORS,
 )
 
 
