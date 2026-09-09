@@ -132,3 +132,51 @@ def test_missing_component_value_is_explicit_not_zero():
     assert result.unresolved == (
         "HEAL coefficient values unavailable for event group: 1",
     )
+
+
+def test_player_recipient_filter_excludes_larger_pet_only_event():
+    result = ExtremeHealingEventGroupScoringService().score(
+        components=(
+            _heal(
+                1,
+                recipient_key="friendly_target",
+                recipient_scope=HealRecipientScope.ALLY,
+            ),
+            _heal(
+                2,
+                recipient_key="summoned_pet",
+                recipient_scope=HealRecipientScope.PET,
+            ),
+        ),
+        value_by_coefficient={1: 1000.0, 2: 5000.0},
+        critical_multiplier=1.5,
+        allowed_recipient_scopes=(
+            HealRecipientScope.SELF,
+            HealRecipientScope.ALLY,
+            HealRecipientScope.SELF_OR_ALLY,
+            HealRecipientScope.GROUP,
+        ),
+    )
+
+    assert result.largest_normal_heal == pytest.approx(1000.0)
+    assert result.largest_critical_heal == pytest.approx(1500.0)
+    assert result.normal_winner_coefficients == (1,)
+    assert result.critical_winner_coefficients == (1,)
+    assert result.unresolved == ()
+
+
+def test_mixed_recipient_scope_inside_one_identity_group_fails_closed():
+    result = ExtremeHealingEventGroupScoringService().score(
+        components=(
+            _heal(1, recipient_scope=HealRecipientScope.ALLY),
+            _heal(2, recipient_scope=HealRecipientScope.PET),
+        ),
+        value_by_coefficient={1: 1000.0, 2: 5000.0},
+        critical_multiplier=1.5,
+        allowed_recipient_scopes=(HealRecipientScope.ALLY,),
+    )
+
+    assert result.largest_normal_heal is None
+    assert result.largest_critical_heal is None
+    assert any("mixed or unresolved recipient scope" in message for message in result.unresolved)
+    assert not result.complete
