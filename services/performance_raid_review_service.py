@@ -1,19 +1,6 @@
 from __future__ import annotations
 
-"""Cross-pull raid review analysis for the Performance Dashboard.
-
-The existing performance dashboard is intentionally actor/fight focused.  This
-module sits one layer above those snapshots: it compares repeated observations
-from the same encounter and turns stable differences into coaching-oriented,
-evidence-backed findings.
-
-Important boundaries:
-- Descriptive evidence comes first; recommendations never invent missing mechanics.
-- Healing throughput is not treated as "higher is better" by itself.
-- DD output comparisons use boss-active rate when available so immune/airborne
-  downtime does not masquerade as a rotation problem.
-- A finding always states the evidence that caused it to exist.
-"""
+"""Cross-pull, evidence-backed raid review analysis for Performance."""
 
 from dataclasses import dataclass, field
 from statistics import median
@@ -30,6 +17,10 @@ class RaidReviewObservation:
     actor_label: str
     role: str
     fight_duration_seconds: float
+    # Stable identity supplied by the caller when observations from multiple
+    # reports belong to the same person. ESO Logs actor IDs are report-scoped.
+    # If absent, grouping deliberately stays report-local.
+    member_key: str = ""
     output_total: float = 0.0
     output_per_second: float = 0.0
     boss_active_seconds: float | None = None
@@ -59,18 +50,25 @@ class RaidReviewObservation:
             return self.output_total / active
         return max(0.0, self.output_per_second)
 
+    @property
+    def stable_member_key(self) -> str:
+        explicit = self.member_key.strip().casefold()
+        if explicit:
+            return explicit
+        return f"{self.report_code.strip().casefold()}:{self.actor_id}"
+
 
 @dataclass(frozen=True, slots=True)
 class RaidReviewFinding:
-    scope: str  # player | role | raid
+    scope: str
     subject: str
     role: str
     category: str
-    priority: str  # high | medium | note
+    priority: str
     title: str
     evidence: str
     recommendation: str
-    confidence: str  # high | medium | low
+    confidence: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -93,31 +91,15 @@ class PerformanceRaidReviewService:
     ) -> RaidReviewReport:
         rows = tuple(observations)
         if not rows:
-            return RaidReviewReport(
-                encounter_name=encounter_name or "",
-                pull_count=0,
-                kill_count=0,
-                wipe_count=0,
-                findings=(),
-            )
+            return RaidReviewReport(encounter_name or "", 0, 0, 0, ())
 
         encounter_key = (encounter_name or rows[0].fight_name).strip().casefold()
         rows = tuple(row for row in rows if row.encounter_key == encounter_key)
         if not rows:
-            return RaidReviewReport(
-                encounter_name=encounter_name or "",
-                pull_count=0,
-                kill_count=0,
-                wipe_count=0,
-                findings=(),
-            )
+            return RaidReviewReport(encounter_name or "", 0, 0, 0, ())
 
         pull_keys = {(row.report_code, row.fight_id) for row in rows}
-        kill_keys = {
-            (row.report_code, row.fight_id)
-            for row in rows
-            if row.kill
-        }
+        kill_keys = {(row.report_code, row.fight_id) for row in rows if row.kill}
         wipe_keys = pull_keys - kill_keys
 
         findings: list[RaidReviewFinding] = []
@@ -126,49 +108,49 @@ class PerformanceRaidReviewService:
         findings.extend(self._support_resource_pressure(rows))
         findings.extend(self._uptime_consistency(rows))
 
-        priority_order = {"high": 0, "medium": 1, "note": 2}
+        order = {"high": 0, "medium": 1, "note": 2}
         findings.sort(
             key=lambda item: (
-                priority_order.get(item.priority, 9),
+                order.get(item.priority, 9),
                 item.scope,
                 item.subject.casefold(),
                 item.category,
             )
         )
-
         return RaidReviewReport(
-            encounter_name=rows[0].fight_name,
-            pull_count=len(pull_keys),
-            kill_count=len(kill_keys),
-            wipe_count=len(wipe_keys),
-            findings=tuple(findings),
+            rows[0].fight_name,
+            len(pull_keys),
+            len(kill_keys),
+            len(wipe_keys),
+            tuple(findings),
         )
 
     @staticmethod
-    def _by_player(rows: tuple[RaidReviewObservation, ...]) -> dict[tuple[int, str], list[RaidReviewObservation]]:
-        grouped: dict[tuple[int, str], list[RaidReviewObservation]] = {}
+    def _by_player(
+        rows: tuple[RaidReviewObservation, ...],
+    ) -> dict[str, list[RaidReviewObservation]]:
+        grouped: dict[str, list[RaidReviewObservation]] = {}
         for row in rows:
-            grouped.setdefault((row.actor_id, row.actor_label), []).append(row)
+            grouped.setdefault(row.stable_member_key, []).append(row)
         return grouped
 
-    def _repeated_player_deaths(
-        self,
-        rows: tuple[RaidReviewObservation, ...],
-    ) -> list[RaidReviewFinding]:
+    def _repeated_player_deaths(self, rows) -> list[RaidReviewFinding]:
         findings: list[RaidReviewFinding] = []
-        for (_, label), player_rows in self._by_player(rows).items():
+        for player_rows in self._by_player(rows).values():
+            label = player_rows[0].actor_label
             wipes = [row for row in player_rows if not row.kill]
-            if len(wipes) < 2:
-                continue
             death_wipes = [row for row in wipes if row.death_count > 0]
-            if len(death_wipes) < 2:
+            if len(wipes) < 2 or len(death_wipes) < 2:
                 continue
-
             share = len(death_wipes) / len(wipes)
             if share < 0.5:
                 continue
 
-            causes = [row.first_death_ability.strip() for row in death_wipes if row.first_death_ability.strip()]
+            causes = [
+                row.first_death_ability.strip()
+                for row in death_wipes
+                if row.first_death_ability.strip()
+            ]
             cause_note = ""
             if causes:
                 counts: dict[str, int] = {}
@@ -178,41 +160,39 @@ class PerformanceRaidReviewService:
                 if count >= 2:
                     cause_note = f" Most common first-death cause: {cause} ({count} pulls)."
 
-            role = player_rows[0].canonical_role
             findings.append(
                 RaidReviewFinding(
-                    scope="player",
-                    subject=label,
-                    role=role,
-                    category="survival",
-                    priority="high" if share >= 0.75 else "medium",
-                    title="Repeated deaths are appearing in wipes",
-                    evidence=(
-                        f"Died in {len(death_wipes)}/{len(wipes)} observed wipes "
-                        f"({share * 100:.0f}%).{cause_note}"
-                    ),
-                    recommendation=(
-                        "Review the repeated death windows before changing throughput. "
-                        "Check mechanic handling, positioning, mitigation, and whether required support coverage was already active."
-                    ),
-                    confidence="high" if len(wipes) >= 4 else "medium",
+                    "player",
+                    label,
+                    player_rows[0].canonical_role,
+                    "survival",
+                    "high" if share >= 0.75 else "medium",
+                    "Repeated deaths are appearing in wipes",
+                    f"Died in {len(death_wipes)}/{len(wipes)} observed wipes ({share * 100:.0f}%).{cause_note}",
+                    "Review the repeated death windows before changing throughput. Check mechanic handling, positioning, mitigation, and whether required support coverage was already active.",
+                    "high" if len(wipes) >= 4 else "medium",
                 )
             )
         return findings
 
-    def _dd_kill_wipe_output(
-        self,
-        rows: tuple[RaidReviewObservation, ...],
-    ) -> list[RaidReviewFinding]:
+    def _dd_kill_wipe_output(self, rows) -> list[RaidReviewFinding]:
         findings: list[RaidReviewFinding] = []
-        for (_, label), player_rows in self._by_player(rows).items():
+        for player_rows in self._by_player(rows).values():
             if player_rows[0].canonical_role != "DPS":
                 continue
-            kills = [row.active_output_per_second for row in player_rows if row.kill and row.active_output_per_second > 0]
-            wipes = [row.active_output_per_second for row in player_rows if not row.kill and row.active_output_per_second > 0]
+            label = player_rows[0].actor_label
+            kills = [
+                row.active_output_per_second
+                for row in player_rows
+                if row.kill and row.active_output_per_second > 0
+            ]
+            wipes = [
+                row.active_output_per_second
+                for row in player_rows
+                if not row.kill and row.active_output_per_second > 0
+            ]
             if len(kills) < 2 or len(wipes) < 2:
                 continue
-
             kill_median = median(kills)
             wipe_median = median(wipes)
             if kill_median <= 0:
@@ -221,43 +201,29 @@ class PerformanceRaidReviewService:
             if abs(delta) < 0.12:
                 continue
 
-            if delta < 0:
-                title = "Damage falls meaningfully on wipe pulls"
-                recommendation = (
-                    "Inspect movement, target reacquisition, deaths, mechanic assignments, and burst alignment in the lower-output pulls. "
-                    "Do not assume the rotation itself is the cause until those windows are checked."
-                )
-            else:
-                title = "Raw damage is not the wipe signal"
-                recommendation = (
-                    "Wipe pulls are not showing a damage-rate deficit for this player. "
-                    "Prioritize survival, mechanics, target choice, and group timing before asking for more raw DPS."
-                )
-
+            lower = delta < 0
             findings.append(
                 RaidReviewFinding(
-                    scope="player",
-                    subject=label,
-                    role="DPS",
-                    category="damage",
-                    priority="medium" if delta < 0 else "note",
-                    title=title,
-                    evidence=(
-                        f"Median boss-active output: kills {kill_median:,.0f}/s vs wipes {wipe_median:,.0f}/s "
-                        f"({delta * 100:+.0f}%)."
+                    "player",
+                    label,
+                    "DPS",
+                    "damage",
+                    "medium" if lower else "note",
+                    "Damage falls meaningfully on wipe pulls" if lower else "Raw damage is not the wipe signal",
+                    f"Median boss-active output: kills {kill_median:,.0f}/s vs wipes {wipe_median:,.0f}/s ({delta * 100:+.0f}%).",
+                    (
+                        "Inspect movement, target reacquisition, deaths, mechanic assignments, and burst alignment in the lower-output pulls. Do not assume the rotation itself is the cause until those windows are checked."
+                        if lower
+                        else "Wipe pulls are not showing a damage-rate deficit for this player. Prioritize survival, mechanics, target choice, and group timing before asking for more raw DPS."
                     ),
-                    recommendation=recommendation,
-                    confidence="high" if len(kills) >= 4 and len(wipes) >= 4 else "medium",
+                    "high" if len(kills) >= 4 and len(wipes) >= 4 else "medium",
                 )
             )
         return findings
 
-    def _support_resource_pressure(
-        self,
-        rows: tuple[RaidReviewObservation, ...],
-    ) -> list[RaidReviewFinding]:
+    def _support_resource_pressure(self, rows) -> list[RaidReviewFinding]:
         findings: list[RaidReviewFinding] = []
-        for (_, label), player_rows in self._by_player(rows).items():
+        for player_rows in self._by_player(rows).values():
             role = player_rows[0].canonical_role
             if role not in {"Healer", "Tank"}:
                 continue
@@ -273,35 +239,25 @@ class PerformanceRaidReviewService:
             ]
             if len(pressured) < 2:
                 continue
-
             wipe_pressure = sum(1 for row in pressured if not row.kill)
             findings.append(
                 RaidReviewFinding(
-                    scope="player",
-                    subject=label,
-                    role=role,
-                    category="sustain",
-                    priority="medium",
-                    title="Repeated resource pressure deserves review",
-                    evidence=(
-                        f"Primary resource reached 15% or lower in {len(pressured)}/{len(measured)} measured pulls; "
-                        f"{wipe_pressure} of those were wipes."
-                    ),
-                    recommendation=(
-                        "Inspect the exact low-resource windows and preceding cast/block cadence. "
-                        "Treat this as a timing/sustain question, not proof that the build needs more recovery."
-                    ),
-                    confidence="medium",
+                    "player",
+                    player_rows[0].actor_label,
+                    role,
+                    "sustain",
+                    "medium",
+                    "Repeated resource pressure deserves review",
+                    f"Primary resource reached 15% or lower in {len(pressured)}/{len(measured)} measured pulls; {wipe_pressure} of those were wipes.",
+                    "Inspect the exact low-resource windows and preceding cast/block cadence. Treat this as a timing/sustain question, not proof that the build needs more recovery.",
+                    "medium",
                 )
             )
         return findings
 
-    def _uptime_consistency(
-        self,
-        rows: tuple[RaidReviewObservation, ...],
-    ) -> list[RaidReviewFinding]:
+    def _uptime_consistency(self, rows) -> list[RaidReviewFinding]:
         findings: list[RaidReviewFinding] = []
-        for (_, label), player_rows in self._by_player(rows).items():
+        for player_rows in self._by_player(rows).values():
             effect_names = sorted(
                 {
                     name
@@ -329,26 +285,18 @@ class PerformanceRaidReviewService:
                 delta = wipe_median - kill_median
                 if abs(delta) < 10.0:
                     continue
-
-                role = player_rows[0].canonical_role
-                direction = "lower" if delta < 0 else "higher"
+                lower = delta < 0
                 findings.append(
                     RaidReviewFinding(
-                        scope="player",
-                        subject=label,
-                        role=role,
-                        category="uptime",
-                        priority="medium" if delta < 0 else "note",
-                        title=f"{effect_name} uptime is {direction} on wipes",
-                        evidence=(
-                            f"Median uptime: kills {kill_median:.1f}% vs wipes {wipe_median:.1f}% "
-                            f"({delta:+.1f} points)."
-                        ),
-                        recommendation=(
-                            "Inspect whether the difference occurs during eligible encounter windows and whether this player owns the effect obligation. "
-                            "Do not score impossible or unassigned uptime as a mistake."
-                        ),
-                        confidence="medium",
+                        "player",
+                        player_rows[0].actor_label,
+                        player_rows[0].canonical_role,
+                        "uptime",
+                        "medium" if lower else "note",
+                        f"{effect_name} uptime is {'lower' if lower else 'higher'} on wipes",
+                        f"Median uptime: kills {kill_median:.1f}% vs wipes {wipe_median:.1f}% ({delta:+.1f} points).",
+                        "Inspect whether the difference occurs during eligible encounter windows and whether this player owns the effect obligation. Do not score impossible or unassigned uptime as a mistake.",
+                        "medium",
                     )
                 )
         return findings
