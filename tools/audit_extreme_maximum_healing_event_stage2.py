@@ -116,6 +116,15 @@ def audit(
         "STAGE 2: optimizing route-diverse finalists "
         f"(families={max_families}, routes/family={routes_per_family}, passes={max_passes})..."
     )
+
+    def _progress(index, total, finalist):
+        route = ", ".join(finalist.route.equipped_skill_lines)
+        print(
+            f"  [{index}/{total}] {finalist.source_name} | "
+            f"{finalist.source_kind} | route: {route} | slot {finalist.slotted_index + 1}",
+            flush=True,
+        )
+
     result = service.optimize(
         build,
         screening,
@@ -123,6 +132,7 @@ def audit(
         max_passes=max_passes,
         max_families=max_families,
         routes_per_family=routes_per_family,
+        progress=_progress,
     )
 
     print("====================================================")
