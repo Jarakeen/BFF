@@ -503,3 +503,14 @@ While connecting provider workload candidates to frontier comparison, BFF had to
 **What it means in actual play:** a plan with fewer casts or lower resource cost can still be unusable if it drops the required buff or cannot be modeled honestly. Only after the hard job requirements are met does it make sense to ask whether another legal plan needs fewer casts, less Magicka, less bar space, less Ultimate, or less role displacement.
 
 **For BFF:** candidate evaluation now treats projection rejection and workload blockers as hard gates before Pareto-style dominance. Frontier comparison only happens among candidates for the same effect and comparison horizon, and surviving frontier plans remain policy choices rather than being collapsed into a fake universal winner.
+
+
+---
+
+## 2026-09-09 — Critical Healing can exist in data and still vanish before calculation
+
+The Shadow correctly carried an **11% Critical Healing** effect in the Mundus data, and the core stat calculator already knew how to calculate Critical Healing. The bonus was still missing from Extreme healing results because the static build-input router did not include `critical_healing` in its core-field and ratio-point mappings.
+
+**Layman’s version:** having the right number in the database is not enough. Every layer between the database and the final heal has to know how to carry that number forward. One missing routing entry can make a valid bonus quietly disappear.
+
+**For BFF:** static combat stats need end-to-end regression tests that prove a mechanic survives repository resolution, input routing, and calculation.
