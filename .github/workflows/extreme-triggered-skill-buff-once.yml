@@ -1,0 +1,131 @@
+name: Extreme Triggered Skill Buff Once
+
+on:
+  push:
+    branches:
+      - phase13
+    paths:
+      - .github/workflows/extreme-triggered-skill-buff-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch-test-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out current phase13.2
+        uses: actions/checkout@v4
+        with:
+          ref: phase13.2
+          fetch-depth: 0
+
+      - name: Patch triggered skill buff support
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          service_path = Path('services/extreme_actual_heal_skill_buff_candidate_service.py')
+          text = service_path.read_text(encoding='utf-8')
+
+          old = '''from minmax.named_combat_buffs import canonical_buff_name, effects_for_buff\nfrom minmax.skill_coefficient_repository import ability_entity_id'''
+          new = '''from minmax.named_combat_buffs import canonical_buff_name, effects_for_buff\nfrom minmax.runtime_effect_eligibility import (\n    RuntimeEffectState,\n    evaluate_effect_variant_runtime_eligibility,\n)\nfrom minmax.runtime_event import RuntimeEvent\nfrom minmax.skill_coefficient_repository import ability_entity_id'''
+          if old not in text:
+              raise SystemExit('trigger import insertion point not found')
+          text = text.replace(old, new, 1)
+
+          marker = '''    def build_candidates(\n'''
+          helper = '''    @staticmethod\n    def _triggered_buff_name(effect) -> str | None:\n        if effect.layer is not EffectLayer.CAST:\n            return None\n        if effect.target_type is not SupportTargetType.SELF:\n            return None\n        if effect.condition is not None or effect.trigger is None:\n            return None\n        if effect.duration is None or float(effect.duration) <= 0.0:\n            return None\n        canonical = canonical_buff_name(str(effect.name or "").replace("_", " "))\n        if canonical is None or not effects_for_buff(canonical):\n            return None\n        return canonical\n\n    def _triggered_available(self, build: PlayerBuild):\n        result = []\n        for ability_id, name in self.repository.available_skills(build.EsoClass):\n            effects = tuple(\n                effect\n                for effect in self.repository.resolve(ability_id)\n                if self._triggered_buff_name(effect) is not None\n            )\n            if effects:\n                result.append((int(ability_id), str(name).strip(), effects))\n        return tuple(result)\n\n    def triggered_build_candidates(\n        self,\n        baseline_build: PlayerBuild,\n        *,\n        character_id: str,\n        baseline_build_id: str,\n        protected_entity_id: str,\n        active_bar: str,\n        event: RuntimeEvent,\n        snapshot_time_seconds: float,\n        state: RuntimeEffectState = RuntimeEffectState(),\n        chance_roll: float | None = None,\n    ) -> tuple[BuildCandidate, ...]:\n        snapshot = float(snapshot_time_seconds)\n        if snapshot < event.time_seconds:\n            raise ValueError("triggered skill buff snapshot cannot precede the runtime event")\n        entity = str(protected_entity_id or "").strip()\n        if not entity:\n            return ()\n        attr = "BackBarSkills" if str(active_bar or "front").casefold() == "back" else "FrontBarSkills"\n        original = list(getattr(baseline_build, attr))\n        while len(original) < 6:\n            original.append("")\n        original = original[:6]\n        protected = {\n            index\n            for index, raw_name in enumerate(original[:5])\n            if ability_entity_id(str(raw_name or "").strip()) == entity\n        }\n        if not protected:\n            return ()\n\n        result: list[BuildCandidate] = []\n        elapsed = snapshot - event.time_seconds\n        for ability_id, candidate_name, effects in self._triggered_available(baseline_build):\n            active_buffs = []\n            for effect in effects:\n                eligibility = evaluate_effect_variant_runtime_eligibility(\n                    event,\n                    effect,\n                    state=state,\n                    chance_roll=chance_roll,\n                )\n                buff = self._triggered_buff_name(effect)\n                if (\n                    eligibility.eligible\n                    and buff is not None\n                    and elapsed < float(effect.duration)\n                ):\n                    active_buffs.append(buff)\n            active_buffs = list(dict.fromkeys(active_buffs))\n            if not active_buffs:\n                continue\n\n            for slot_index in range(5):\n                if slot_index in protected:\n                    continue\n                before = str(original[slot_index] or "").strip()\n                if before.casefold() == candidate_name.casefold():\n                    continue\n                if any(\n                    index != slot_index\n                    and str(name or "").strip().casefold() == candidate_name.casefold()\n                    for index, name in enumerate(original[:5])\n                ):\n                    continue\n                build = PlayerBuild.from_dict(baseline_build.to_dict())\n                skills = list(getattr(build, attr))\n                while len(skills) < 6:\n                    skills.append("")\n                skills = skills[:6]\n                skills[slot_index] = candidate_name\n                setattr(build, attr, skills)\n                result.append(\n                    ExtremeCompleteOptimizationService._direct_candidate(\n                        build,\n                        character_id=character_id,\n                        baseline_build_id=baseline_build_id,\n                        token=(\n                            f"actual-heal-triggered-skill-buff:{active_bar}:"\n                            f"{slot_index}:{ability_id}:{event.trigger}"\n                        ),\n                        path=f"{attr}[{slot_index}]",\n                        before=before,\n                        after={\n                            "skill": candidate_name,\n                            "ability_id": ability_id,\n                            "runtime_trigger": event.trigger,\n                            "named_buffs": tuple(active_buffs),\n                        },\n                        source="extreme:actual-heal:triggered-skill-buff",\n                    )\n                )\n        return tuple(result)\n\n    def active_triggered_named_buffs(\n        self,\n        build: PlayerBuild,\n        *,\n        active_bar: str,\n        event: RuntimeEvent,\n        snapshot_time_seconds: float,\n        state: RuntimeEffectState = RuntimeEffectState(),\n        chance_roll: float | None = None,\n    ) -> tuple[str, ...]:\n        snapshot = float(snapshot_time_seconds)\n        if snapshot < event.time_seconds:\n            raise ValueError("triggered skill buff snapshot cannot precede the runtime event")\n        elapsed = snapshot - event.time_seconds\n        available = {name.casefold(): (ability_id, effects) for ability_id, name, effects in self._triggered_available(build)}\n        attr = "BackBarSkills" if str(active_bar or "front").casefold() == "back" else "FrontBarSkills"\n        result: list[str] = []\n        for raw_name in list(getattr(build, attr))[:5]:\n            name = str(raw_name or "").strip()\n            resolved = available.get(name.casefold())\n            if resolved is None:\n                continue\n            _, effects = resolved\n            for effect in effects:\n                eligibility = evaluate_effect_variant_runtime_eligibility(\n                    event,\n                    effect,\n                    state=state,\n                    chance_roll=chance_roll,\n                )\n                buff = self._triggered_buff_name(effect)\n                if (\n                    eligibility.eligible\n                    and buff is not None\n                    and elapsed < float(effect.duration)\n                ):\n                    result.append(buff)\n        return tuple(dict.fromkeys(result))\n\n'''
+          if 'def triggered_build_candidates(' not in text:
+              if marker not in text:
+                  raise SystemExit('triggered skill helper insertion point not found')
+              text = text.replace(marker, helper + marker, 1)
+          service_path.write_text(text, encoding='utf-8')
+
+          conditional_path = Path('services/extreme_conditional_actual_heal_optimization_service.py')
+          conditional = conditional_path.read_text(encoding='utf-8')
+
+          old = '''from minmax.potion_use_event import PotionUseEventResolver\nfrom models.build_model import PlayerBuild'''
+          new = '''from minmax.potion_use_event import PotionUseEventResolver\nfrom minmax.runtime_effect_eligibility import RuntimeEffectState\nfrom minmax.runtime_event import RuntimeEvent\nfrom models.build_model import PlayerBuild'''
+          if old not in conditional:
+              raise SystemExit('conditional runtime import insertion point not found')
+          conditional = conditional.replace(old, new, 1)
+
+          old = '''        skill_precast_elapsed_seconds: float | None = None,\n        skill_buff_candidates: ExtremeActualHealSkillBuffCandidateService | None = None,\n        restoration_heavy_state: ExtremeRestorationHeavyCombatStateService | None = None,'''
+          new = '''        skill_precast_elapsed_seconds: float | None = None,\n        skill_buff_candidates: ExtremeActualHealSkillBuffCandidateService | None = None,\n        skill_trigger_event: RuntimeEvent | None = None,\n        skill_trigger_snapshot_seconds: float | None = None,\n        skill_trigger_effect_state: RuntimeEffectState = RuntimeEffectState(),\n        skill_trigger_chance_roll: float | None = None,\n        restoration_heavy_state: ExtremeRestorationHeavyCombatStateService | None = None,'''
+          if old not in conditional:
+              raise SystemExit('conditional trigger constructor insertion point not found')
+          conditional = conditional.replace(old, new, 1)
+
+          old = '''        self.skill_buff_candidates = skill_buff_candidates\n        self.restoration_heavy_state = restoration_heavy_state'''
+          new = '''        self.skill_buff_candidates = skill_buff_candidates\n        if (skill_trigger_event is None) != (skill_trigger_snapshot_seconds is None):\n            raise ValueError(\n                "skill_trigger_event and skill_trigger_snapshot_seconds must be provided together"\n            )\n        if (\n            skill_trigger_event is not None\n            and float(skill_trigger_snapshot_seconds) < skill_trigger_event.time_seconds\n        ):\n            raise ValueError("skill trigger snapshot cannot precede the runtime event")\n        self.skill_trigger_event = skill_trigger_event\n        self.skill_trigger_snapshot_seconds = (\n            None if skill_trigger_snapshot_seconds is None else float(skill_trigger_snapshot_seconds)\n        )\n        self.skill_trigger_effect_state = skill_trigger_effect_state\n        self.skill_trigger_chance_roll = skill_trigger_chance_roll\n        self.restoration_heavy_state = restoration_heavy_state'''
+          if old not in conditional:
+              raise SystemExit('conditional trigger assignment point not found')
+          conditional = conditional.replace(old, new, 1)
+
+          old = '''        if self.skill_precast_elapsed_seconds is not None:\n            scenarios.append(\n                "explicit self-buff skill pre-cast window at "\n                f"{self.skill_precast_elapsed_seconds:.6f} seconds; "\n                "only unconditional self-target named buffs are discoverable"\n            )\n        if self.sacred_ground_window_active:'''
+          new = '''        if self.skill_precast_elapsed_seconds is not None:\n            scenarios.append(\n                "explicit self-buff skill pre-cast window at "\n                f"{self.skill_precast_elapsed_seconds:.6f} seconds; "\n                "only unconditional self-target named buffs are discoverable"\n            )\n        if self.skill_trigger_event is not None:\n            scenarios.append(\n                "explicit triggered skill-buff runtime event "\n                f"{self.skill_trigger_event.trigger!r} at {self.skill_trigger_event.time_seconds:.6f}s "\n                f"with heal snapshot {self.skill_trigger_snapshot_seconds:.6f}s"\n            )\n        if self.sacred_ground_window_active:'''
+          if old not in conditional:
+              raise SystemExit('conditional trigger scope insertion point not found')
+          conditional = conditional.replace(old, new, 1)
+
+          old = '''        if self.skill_precast_elapsed_seconds is not None:\n            service = self.skill_buff_candidates\n            if service is None:\n                database_path = getattr(self.optimizer, "database_path", None)\n                if database_path is not None:\n                    service = ExtremeActualHealSkillBuffCandidateService(database_path)\n                    self.skill_buff_candidates = service\n            if service is not None:\n                result.extend(\n                    service.build_candidates(\n                        baseline_build,\n                        character_id=character_id,\n                        baseline_build_id=baseline_build_id,\n                        protected_entity_id=entity_id,\n                        active_bar=active_bar,\n                    )\n                )\n        return tuple(result)'''
+          new = '''        if self.skill_precast_elapsed_seconds is not None:\n            service = self.skill_buff_candidates\n            if service is None:\n                database_path = getattr(self.optimizer, "database_path", None)\n                if database_path is not None:\n                    service = ExtremeActualHealSkillBuffCandidateService(database_path)\n                    self.skill_buff_candidates = service\n            if service is not None:\n                result.extend(\n                    service.build_candidates(\n                        baseline_build,\n                        character_id=character_id,\n                        baseline_build_id=baseline_build_id,\n                        protected_entity_id=entity_id,\n                        active_bar=active_bar,\n                    )\n                )\n        if self.skill_trigger_event is not None:\n            service = self.skill_buff_candidates\n            if service is None:\n                database_path = getattr(self.optimizer, "database_path", None)\n                if database_path is not None:\n                    service = ExtremeActualHealSkillBuffCandidateService(database_path)\n                    self.skill_buff_candidates = service\n            if service is not None:\n                result.extend(\n                    service.triggered_build_candidates(\n                        baseline_build,\n                        character_id=character_id,\n                        baseline_build_id=baseline_build_id,\n                        protected_entity_id=entity_id,\n                        active_bar=active_bar,\n                        event=self.skill_trigger_event,\n                        snapshot_time_seconds=self.skill_trigger_snapshot_seconds,\n                        state=self.skill_trigger_effect_state,\n                        chance_roll=self.skill_trigger_chance_roll,\n                    )\n                )\n        return tuple(result)'''
+          if old not in conditional:
+              raise SystemExit('conditional trigger candidate insertion point not found')
+          conditional = conditional.replace(old, new, 1)
+
+          old = '''        if self.skill_precast_elapsed_seconds is not None:\n            service = self.skill_buff_candidates\n            if service is None:\n                database_path = getattr(self.optimizer, "database_path", None)\n                if database_path is not None:\n                    service = ExtremeActualHealSkillBuffCandidateService(database_path)\n                    self.skill_buff_candidates = service\n            if service is not None:\n                active_buffs.extend(\n                    service.active_named_buffs(\n                        build,\n                        active_bar=active_bar,\n                        elapsed_seconds=self.skill_precast_elapsed_seconds,\n                    )\n                )\n\n        if self.potion_elapsed_seconds is not None:'''
+          new = '''        if self.skill_precast_elapsed_seconds is not None:\n            service = self.skill_buff_candidates\n            if service is None:\n                database_path = getattr(self.optimizer, "database_path", None)\n                if database_path is not None:\n                    service = ExtremeActualHealSkillBuffCandidateService(database_path)\n                    self.skill_buff_candidates = service\n            if service is not None:\n                active_buffs.extend(\n                    service.active_named_buffs(\n                        build,\n                        active_bar=active_bar,\n                        elapsed_seconds=self.skill_precast_elapsed_seconds,\n                    )\n                )\n\n        if self.skill_trigger_event is not None:\n            service = self.skill_buff_candidates\n            if service is None:\n                database_path = getattr(self.optimizer, "database_path", None)\n                if database_path is not None:\n                    service = ExtremeActualHealSkillBuffCandidateService(database_path)\n                    self.skill_buff_candidates = service\n            if service is not None:\n                active_buffs.extend(\n                    service.active_triggered_named_buffs(\n                        build,\n                        active_bar=active_bar,\n                        event=self.skill_trigger_event,\n                        snapshot_time_seconds=self.skill_trigger_snapshot_seconds,\n                        state=self.skill_trigger_effect_state,\n                        chance_roll=self.skill_trigger_chance_roll,\n                    )\n                )\n\n        if self.potion_elapsed_seconds is not None:'''
+          if old not in conditional:
+              raise SystemExit('conditional trigger active buff insertion point not found')
+          conditional = conditional.replace(old, new, 1)
+          conditional_path.write_text(conditional, encoding='utf-8')
+
+          test_path = Path('services/tests/test_extreme_actual_heal_skill_buff_candidate_service.py')
+          tests = test_path.read_text(encoding='utf-8')
+          if 'test_triggered_skill_buff_requires_matching_runtime_trigger_and_duration' not in tests:
+              tests += '''\n\ndef test_triggered_skill_buff_requires_matching_runtime_trigger_and_duration():\n    from minmax.runtime_event import RuntimeEvent\n\n    class TriggeredRepository(_Repository):\n        @staticmethod\n        def available_skills(character_class=None):\n            _ = character_class\n            return ((4, "Triggered Power"),)\n\n        @staticmethod\n        def resolve(ability_id):\n            assert ability_id == 4\n            return (\n                EffectVariant(\n                    name="major_sorcery",\n                    layer=EffectLayer.CAST,\n                    source="Triggered Power",\n                    duration=10.0,\n                    trigger="critical_heal",\n                    target_type=SupportTargetType.SELF,\n                ),\n            )\n\n    service = ExtremeActualHealSkillBuffCandidateService(\n        "unused.db", repository=TriggeredRepository()\n    )\n    build = _build()\n    event = RuntimeEvent(time_seconds=5.0, trigger="critical_heal", source="test")\n\n    candidates = service.triggered_build_candidates(\n        build,\n        character_id="char-1",\n        baseline_build_id="build-1",\n        protected_entity_id="blessing_of_protection",\n        active_bar="front",\n        event=event,\n        snapshot_time_seconds=14.999,\n    )\n    assert candidates\n    assert {candidate.changes[0].after["skill"] for candidate in candidates} == {"Triggered Power"}\n\n    assert service.triggered_build_candidates(\n        build,\n        character_id="char-1",\n        baseline_build_id="build-1",\n        protected_entity_id="blessing_of_protection",\n        active_bar="front",\n        event=event,\n        snapshot_time_seconds=15.0,\n    ) == ()\n\n    mismatch = RuntimeEvent(time_seconds=5.0, trigger="other_trigger", source="test")\n    assert service.triggered_build_candidates(\n        build,\n        character_id="char-1",\n        baseline_build_id="build-1",\n        protected_entity_id="blessing_of_protection",\n        active_bar="front",\n        event=mismatch,\n        snapshot_time_seconds=6.0,\n    ) == ()\n\n\ndef test_triggered_skill_buff_respects_explicit_proc_chance_roll():\n    from minmax.runtime_event import RuntimeEvent\n\n    class ChanceRepository(_Repository):\n        @staticmethod\n        def available_skills(character_class=None):\n            _ = character_class\n            return ((5, "Chance Power"),)\n\n        @staticmethod\n        def resolve(ability_id):\n            assert ability_id == 5\n            return (\n                EffectVariant(\n                    name="major_sorcery",\n                    layer=EffectLayer.CAST,\n                    source="Chance Power",\n                    duration=10.0,\n                    trigger="critical_heal",\n                    chance=0.5,\n                    target_type=SupportTargetType.SELF,\n                ),\n            )\n\n    service = ExtremeActualHealSkillBuffCandidateService(\n        "unused.db", repository=ChanceRepository()\n    )\n    build = _build()\n    event = RuntimeEvent(time_seconds=0.0, trigger="critical_heal", source="test")\n    kwargs = dict(\n        baseline_build=build,\n        character_id="char-1",\n        baseline_build_id="build-1",\n        protected_entity_id="blessing_of_protection",\n        active_bar="front",\n        event=event,\n        snapshot_time_seconds=1.0,\n    )\n    assert service.triggered_build_candidates(**kwargs) == ()\n    assert service.triggered_build_candidates(**kwargs, chance_roll=0.49)\n    assert service.triggered_build_candidates(**kwargs, chance_roll=0.50) == ()\n'''
+              test_path.write_text(tests, encoding='utf-8')
+
+          notes_path = Path('GAME_MECHANICS_FIELD_NOTES.md')
+          notes = notes_path.read_text(encoding='utf-8')
+          heading = '## 2026-09-09 — Triggered skill buffs require observed runtime-event proof'
+          if heading not in notes:
+              notes += f'''\n\n---\n\n{heading}\n\nExtreme MOST Actual Heal may search triggered self-buff skills only when the caller supplies an observed canonical `RuntimeEvent` and an explicit heal snapshot time. The shared runtime eligibility layer remains authoritative for trigger matching, cooldown readiness, and deterministic proc chance. Free-form conditional effects are still excluded from automatic discovery.\n\n**Layman’s version:** a skill proc does not exist because the build could theoretically proc it. Extreme needs the actual trigger scenario, checks proc chance/cooldown rules, and then verifies the buff has not expired before the heal lands.\n\n**For BFF:** triggered skill-source candidates physically slot the skill without replacing the scored heal, and only an eligible, still-active named self-buff reaches canonical `CombatState`.\n'''
+              notes_path.write_text(notes, encoding='utf-8')
+          PY
+
+      - name: Install focused test dependencies
+        run: python -m pip install --disable-pip-version-check pytest==9.1.1 pydantic==2.13.4
+
+      - name: Run focused triggered skill tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pytest \
+            services/tests/test_extreme_actual_heal_skill_buff_candidate_service.py \
+            services/tests/test_extreme_conditional_actual_heal_optimization_service.py \
+            minmax/tests/test_runtime_effect_eligibility.py \
+            minmax/tests/test_runtime_event.py \
+            minmax/tests/test_named_combat_buffs.py \
+            services/tests/test_extreme_optimization_read_only_database.py
+
+      - name: Commit and push if phase13.2 is unchanged
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin phase13.2
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/phase13.2)" || { echo 'phase13.2 moved during triggered skill repair; refusing stale push'; exit 1; }
+          git config user.name "Jarakeen"
+          git config user.email "jarakeene@gmail.com"
+          git add \
+            services/extreme_actual_heal_skill_buff_candidate_service.py \
+            services/extreme_conditional_actual_heal_optimization_service.py \
+            services/tests/test_extreme_actual_heal_skill_buff_candidate_service.py \
+            GAME_MECHANICS_FIELD_NOTES.md
+          git diff --cached --stat
+          git commit -m "feat: prove triggered skill buffs in Extreme heals"
+          git push origin HEAD:phase13.2
