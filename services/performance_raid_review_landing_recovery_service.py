@@ -69,6 +69,7 @@ class PerformanceRaidReviewLandingRecoveryService:
     """Resolve first reviewed role action after each observed landing."""
 
     _DEFAULT_EVENT_TYPES = {"cast", "damage", "calculateddamage", "applydebuff", "applybuff"}
+    _TIMING_PRECISION = 6
 
     def measure(
         self,
@@ -135,6 +136,8 @@ class PerformanceRaidReviewLandingRecoveryService:
                     continue
 
                 event, signal, recovery_seconds = candidate
+                landing_seconds = self._normalize_seconds(boundary.time_seconds)
+                normalized_recovery = self._normalize_seconds(recovery_seconds)
                 observations.append(
                     RaidReviewLandingRecoveryObservation(
                         report_code=str(report_code),
@@ -144,9 +147,11 @@ class PerformanceRaidReviewLandingRecoveryService:
                         actor_label=str(actor.actor_label),
                         role=role,
                         member_key=str(actor.member_key or ""),
-                        landing_seconds=float(boundary.time_seconds),
-                        recovery_seconds=recovery_seconds,
-                        delay_seconds=max(0.0, recovery_seconds - float(boundary.time_seconds)),
+                        landing_seconds=landing_seconds,
+                        recovery_seconds=normalized_recovery,
+                        delay_seconds=self._normalize_seconds(
+                            max(0.0, normalized_recovery - landing_seconds)
+                        ),
                         signal_semantic_key=signal.semantic_key,
                         signal_label=signal.label or signal.semantic_key,
                         evidence_ability_name=self._ability_name(event),
@@ -199,7 +204,13 @@ class PerformanceRaidReviewLandingRecoveryService:
         if not candidates:
             return None
         timestamp, event, signal = min(candidates, key=lambda item: (item[0], item[2].semantic_key))
-        return event, signal, max(0.0, (timestamp - fight_start_time_ms) / 1000.0)
+        return event, signal, self._normalize_seconds(
+            max(0.0, (timestamp - fight_start_time_ms) / 1000.0)
+        )
+
+    @classmethod
+    def _normalize_seconds(cls, value: float) -> float:
+        return round(float(value), cls._TIMING_PRECISION)
 
     @staticmethod
     def _canonical_role(role: str) -> str:
