@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable, Protocol
 
+from minmax.demand_action_claim_duration_scheduler import DemandActionClaim
 from minmax.demand_anticipatory_duration_scheduler import DemandRefreshLead
 from minmax.rotation_ability_priority import AbilityPriorityList
 from minmax.rotation_demand_window import RotationDemandWindow
@@ -42,6 +43,7 @@ class GeneratedRotationCandidate:
     candidate_id: str
     plan: RotationPlan
     refresh_leads: tuple[DemandRefreshLead, ...]
+    action_claims: tuple[DemandActionClaim, ...] = ()
 
 
 class _RefinementService(Protocol):
@@ -53,6 +55,7 @@ class _RefinementService(Protocol):
         wait_decision: PrematureRecastDecisionProvider | None = None,
         demands: tuple[RotationDemandWindow, ...] = (),
         demand_refresh_leads: tuple[DemandRefreshLead, ...] = (),
+        demand_action_claims: tuple[DemandActionClaim, ...] = (),
     ): ...
 
 
@@ -72,7 +75,9 @@ class RotationCandidateGenerationService:
 
     ``generate_policy`` exposes the same canonical refinement path for one explicit
     candidate policy. Recovery fixed-point adapters use it to regenerate one policy
-    repeatedly without generating unrelated siblings on every iteration.
+    repeatedly without generating unrelated siblings on every iteration. Explicit
+    demand action claims are also preserved here so encounter-owned mechanic casts
+    can become executable candidate actions instead of stopping at obligation data.
     """
 
     DEFAULT_MAX_CANDIDATES = 32
@@ -156,6 +161,7 @@ class RotationCandidateGenerationService:
         priorities: AbilityPriorityList,
         demands: tuple[RotationDemandWindow, ...] = (),
         refresh_leads: tuple[DemandRefreshLead, ...] = (),
+        action_claims: tuple[DemandActionClaim, ...] = (),
         wait_decision: PrematureRecastDecisionProvider | None = None,
         wait_decision_factory: RotationCandidateWaitDecisionFactory | None = None,
     ) -> GeneratedRotationCandidate:
@@ -169,12 +175,18 @@ class RotationCandidateGenerationService:
         if not resolved_id:
             raise ValueError("rotation candidate candidate_id is required")
         canonical_leads = self._canonical_leads(tuple(refresh_leads))
+        canonical_claims = self._canonical_claims(tuple(action_claims))
+        if canonical_leads and canonical_claims:
+            raise ValueError(
+                "rotation candidate policy cannot combine demand refresh leads and demand action claims"
+            )
         return self._generate_one(
             candidate_id=resolved_id,
             seed_plan=seed_plan,
             priorities=priorities,
             demands=tuple(demands),
             refresh_leads=canonical_leads,
+            action_claims=canonical_claims,
             wait_decision=self._candidate_wait_decision(
                 wait_decision=wait_decision,
                 wait_decision_factory=wait_decision_factory,
@@ -189,6 +201,7 @@ class RotationCandidateGenerationService:
         priorities: AbilityPriorityList,
         demands: tuple[RotationDemandWindow, ...],
         refresh_leads: tuple[DemandRefreshLead, ...],
+        action_claims: tuple[DemandActionClaim, ...],
         wait_decision: PrematureRecastDecisionProvider | None,
     ) -> GeneratedRotationCandidate:
         refinement = self.refinement_service.refine(
@@ -197,11 +210,13 @@ class RotationCandidateGenerationService:
             wait_decision=wait_decision,
             demands=demands,
             demand_refresh_leads=refresh_leads,
+            demand_action_claims=action_claims,
         )
         return GeneratedRotationCandidate(
             candidate_id=candidate_id,
             plan=refinement.plan,
             refresh_leads=refresh_leads,
+            action_claims=action_claims,
         )
 
     @staticmethod
@@ -274,6 +289,29 @@ class RotationCandidateGenerationService:
             if target in seen_targets:
                 raise ValueError(
                     "rotation candidate contains duplicate refresh-lead target: "
+                    f"{item.demand_name}: {item.skill_name} on {item.bar} bar"
+                )
+            seen_targets.add(target)
+        return tuple(ordered)
+
+    @staticmethod
+    def _canonical_claims(
+        claims: tuple[DemandActionClaim, ...],
+    ) -> tuple[DemandActionClaim, ...]:
+        ordered = sorted(
+            tuple(claims),
+            key=lambda item: (
+                item.demand_name.casefold(),
+                item.bar,
+                item.skill_name.casefold(),
+            ),
+        )
+        seen_targets: set[tuple[str, str, str]] = set()
+        for item in ordered:
+            target = (item.demand_name.casefold(), item.bar, item.skill_name.casefold())
+            if target in seen_targets:
+                raise ValueError(
+                    "rotation candidate contains duplicate demand action claim target: "
                     f"{item.demand_name}: {item.skill_name} on {item.bar} bar"
                 )
             seen_targets.add(target)
