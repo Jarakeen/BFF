@@ -57,6 +57,14 @@ class RotationCandidateEffectObligationService:
     or lack evidence needed to prove it, are ineligible even when their resource
     consequences or other soft metrics are better.
 
+    Among candidates that satisfy every explicit uptime floor, effect coverage is
+    then treated as a Pareto preference rather than collapsed into a weighted
+    score. A candidate is uptime-dominated only when another eligible candidate is
+    at least as good on every required effect and strictly better on at least one.
+    Incomparable uptime tradeoffs remain on the same frontier and retain the base
+    ranker's ordering. This keeps arithmetic evidence separate from encounter/role
+    policy while still preferring plainly better support coverage.
+
     Existing hard obligations remain authoritative through the delegated base
     ranking service; this layer never invents an effect target or uptime floor.
     """
@@ -81,6 +89,7 @@ class RotationCandidateEffectObligationService:
                 )
             by_id[key] = candidate
             self._validate_assessments(candidate)
+        self._validate_common_requirement_set(tuple(by_id.values()))
 
         base_results = self.base_ranker.rank(
             tuple(candidate.ranking_input for candidate in candidates)
@@ -88,17 +97,60 @@ class RotationCandidateEffectObligationService:
         if {result.candidate_id.casefold() for result in base_results} != set(by_id):
             raise ValueError("base rotation ranking did not return the same candidate set")
 
-        staged: list[tuple[tuple[object, ...], RotationEffectObligationRankingResult]] = []
+        intermediate: dict[str, RotationEffectObligationRankingResult] = {}
+        combined_eligible: set[str] = set()
+        failed_by_id: dict[str, tuple[RotationEffectUptimeAssessment, ...]] = {}
+
         for base_result in base_results:
-            candidate = by_id[base_result.candidate_id.casefold()]
+            key = base_result.candidate_id.casefold()
+            candidate = by_id[key]
             failed = tuple(
                 assessment
                 for assessment in candidate.effect_uptime_assessments
                 if not assessment.satisfied
             )
-            combined_eligible = (
+            failed_by_id[key] = failed
+            is_eligible = (
                 base_result.tier is RotationCandidateTier.ELIGIBLE and not failed
             )
+            if is_eligible:
+                combined_eligible.add(key)
+            intermediate[key] = RotationEffectObligationRankingResult(
+                candidate_id=base_result.candidate_id,
+                base_result=base_result,
+                effect_uptime_assessments=candidate.effect_uptime_assessments,
+                tier=(
+                    RotationCandidateTier.ELIGIBLE
+                    if is_eligible
+                    else RotationCandidateTier.INELIGIBLE
+                ),
+                rank=0,
+                reasons=tuple(base_result.reasons) + self._effect_reasons(failed),
+            )
+
+        dominators_by_id: dict[str, tuple[str, ...]] = {}
+        for candidate_key in combined_eligible:
+            dominators = tuple(
+                intermediate[other_key].candidate_id
+                for other_key in combined_eligible
+                if other_key != candidate_key
+                and self._uptime_dominates(
+                    by_id[other_key],
+                    by_id[candidate_key],
+                )
+            )
+            dominators_by_id[candidate_key] = tuple(
+                sorted(dominators, key=str.casefold)
+            )
+
+        staged: list[tuple[tuple[object, ...], RotationEffectObligationRankingResult]] = []
+        for base_result in base_results:
+            key = base_result.candidate_id.casefold()
+            result = intermediate[key]
+            failed = failed_by_id[key]
+            is_eligible = key in combined_eligible
+            dominators = dominators_by_id.get(key, ())
+
             evidence_missing = sum(
                 1 for assessment in failed if assessment.observed_uptime is None
             )
@@ -107,23 +159,24 @@ class RotationCandidateEffectObligationService:
                 for assessment in failed
                 if assessment.observed_uptime is not None
             )
-            reasons = tuple(base_result.reasons) + self._effect_reasons(failed)
-            result = RotationEffectObligationRankingResult(
-                candidate_id=base_result.candidate_id,
-                base_result=base_result,
-                effect_uptime_assessments=candidate.effect_uptime_assessments,
-                tier=(
-                    RotationCandidateTier.ELIGIBLE
-                    if combined_eligible
-                    else RotationCandidateTier.INELIGIBLE
-                ),
-                rank=0,
-                reasons=reasons,
-            )
+            reasons = result.reasons
+            if is_eligible and dominators:
+                reasons += (
+                    "effect uptime Pareto-dominated by " + ", ".join(dominators),
+                )
+                result = RotationEffectObligationRankingResult(
+                    candidate_id=result.candidate_id,
+                    base_result=result.base_result,
+                    effect_uptime_assessments=result.effect_uptime_assessments,
+                    tier=result.tier,
+                    rank=0,
+                    reasons=reasons,
+                )
+
             staged.append(
                 (
                     (
-                        0 if combined_eligible else 1,
+                        0 if is_eligible and not dominators else 1 if is_eligible else 2,
                         len(failed),
                         evidence_missing,
                         shortfall,
@@ -153,11 +206,7 @@ class RotationCandidateEffectObligationService:
         seen: set[tuple[str, str, str | None]] = set()
         for assessment in candidate.effect_uptime_assessments:
             requirement = assessment.requirement
-            key = (
-                requirement.effect_name.casefold(),
-                cls._stable_skill_id(requirement.source_skill_name),
-                requirement.bar,
-            )
+            key = cls._requirement_key(assessment)
             if key in seen:
                 raise ValueError(
                     "duplicate effect uptime assessment for candidate "
@@ -165,6 +214,68 @@ class RotationCandidateEffectObligationService:
                     f"{requirement.effect_name!r} from {requirement.source_skill_name!r}"
                 )
             seen.add(key)
+
+    @classmethod
+    def _validate_common_requirement_set(
+        cls,
+        candidates: tuple[RotationEffectObligationCandidate, ...],
+    ) -> None:
+        expected: set[tuple[str, str, str | None]] | None = None
+        for candidate in candidates:
+            current = {
+                cls._requirement_key(assessment)
+                for assessment in candidate.effect_uptime_assessments
+            }
+            if expected is None:
+                expected = current
+                continue
+            if current != expected:
+                raise ValueError(
+                    "effect uptime candidates must carry the same explicit requirement set"
+                )
+
+    @classmethod
+    def _uptime_dominates(
+        cls,
+        left: RotationEffectObligationCandidate,
+        right: RotationEffectObligationCandidate,
+    ) -> bool:
+        left_map = {
+            cls._requirement_key(assessment): assessment.observed_uptime
+            for assessment in left.effect_uptime_assessments
+        }
+        right_map = {
+            cls._requirement_key(assessment): assessment.observed_uptime
+            for assessment in right.effect_uptime_assessments
+        }
+        if not left_map or left_map.keys() != right_map.keys():
+            return False
+        if any(value is None for value in left_map.values()) or any(
+            value is None for value in right_map.values()
+        ):
+            return False
+
+        at_least_as_good = all(
+            float(left_map[key]) >= float(right_map[key])
+            for key in left_map
+        )
+        strictly_better = any(
+            float(left_map[key]) > float(right_map[key])
+            for key in left_map
+        )
+        return at_least_as_good and strictly_better
+
+    @classmethod
+    def _requirement_key(
+        cls,
+        assessment: RotationEffectUptimeAssessment,
+    ) -> tuple[str, str, str | None]:
+        requirement = assessment.requirement
+        return (
+            requirement.effect_name.casefold(),
+            cls._stable_skill_id(requirement.source_skill_name),
+            requirement.bar,
+        )
 
     @staticmethod
     def _stable_skill_id(value: object) -> str:
