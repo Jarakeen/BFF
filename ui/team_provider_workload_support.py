@@ -14,10 +14,18 @@ from services.team_provider_workload_candidate_service import (
     TeamProviderWorkloadCandidateResult,
     TeamProviderWorkloadCandidateService,
 )
+from services.team_provider_workload_decision_service import (
+    TeamProviderWorkloadDecisionResult,
+    TeamProviderWorkloadDecisionService,
+)
 from services.team_provider_workload_explanation_service import (
     TeamProviderWorkloadExplanationService,
 )
-from services.team_provider_workload_policy_service import TeamProviderWorkloadPolicy
+from services.team_provider_workload_policy_service import (
+    TeamProviderWorkloadPolicy,
+    TeamProviderWorkloadPolicyResult,
+    TeamProviderWorkloadPolicyService,
+)
 from ui.components.foundry_card import FoundryCard
 
 
@@ -42,11 +50,49 @@ def _install_workload_card(page) -> None:
     page._provider_rotation_workloads = ()
     page._provider_rotation_workload_comparison = None
     page._provider_workload_candidate_result = None
+    page._provider_workload_decision_result = None
     page._provider_workload_policy = None
+    page._provider_workload_policy_result = None
     page._provider_workload_candidate_service = TeamProviderWorkloadCandidateService(
         get_data_dir() / "eso.db"
     )
     _render_provider_workload(page)
+
+
+def _render_materialized_provider_workload_decision(
+    decision_result: TeamProviderWorkloadDecisionResult,
+    *,
+    candidate_result: TeamProviderWorkloadCandidateResult,
+    policy_result: TeamProviderWorkloadPolicyResult | None = None,
+    comparison: TeamProviderRotationWorkloadComparison | None = None,
+) -> str:
+    if not decision_result.decisions:
+        return TeamProviderWorkloadExplanationService.render_panel(())
+
+    selected_ids = set(policy_result.preferred_ids if policy_result is not None else ())
+    sections = [
+        TeamProviderWorkloadExplanationService._render_decision(
+            item,
+            policy_applied=policy_result is not None,
+            selected_by_policy=item.alternative_id in selected_ids,
+        )
+        for item in decision_result.decisions
+    ]
+    if policy_result is not None:
+        sections.append(
+            TeamProviderWorkloadExplanationService.render_policy_result(policy_result)
+        )
+
+    if comparison is not None:
+        workloads = candidate_result.workloads
+        if comparison.baseline not in workloads or comparison.candidate not in workloads:
+            raise ValueError(
+                "provider workload comparison must reference displayed workloads"
+            )
+        sections.append(
+            TeamProviderWorkloadExplanationService._render_comparison(comparison)
+        )
+    return "\n\n".join(sections)
 
 
 def _render_provider_workload(page) -> None:
@@ -54,12 +100,18 @@ def _render_provider_workload(page) -> None:
     if label is None:
         return
     candidate_result = getattr(page, "_provider_workload_candidate_result", None)
+    decision_result = getattr(page, "_provider_workload_decision_result", None)
     if candidate_result is not None:
+        if decision_result is None:
+            raise ValueError(
+                "provider workload candidates require a materialized decision result"
+            )
         label.setText(
-            TeamProviderWorkloadExplanationService.render_candidate_result(
-                candidate_result,
+            _render_materialized_provider_workload_decision(
+                decision_result,
+                candidate_result=candidate_result,
+                policy_result=getattr(page, "_provider_workload_policy_result", None),
                 comparison=getattr(page, "_provider_rotation_workload_comparison", None),
-                policy=getattr(page, "_provider_workload_policy", None),
             )
         )
     else:
@@ -92,7 +144,9 @@ def _set_provider_workload_evidence(
     page._provider_rotation_workloads = normalized
     page._provider_rotation_workload_comparison = comparison
     page._provider_workload_candidate_result = None
+    page._provider_workload_decision_result = None
     page._provider_workload_policy = None
+    page._provider_workload_policy_result = None
     _render_provider_workload(page)
 
 
@@ -111,10 +165,19 @@ def _set_provider_workload_candidates(
         raise TypeError("provider workload comparison has the wrong result type")
     if policy is not None and not isinstance(policy, TeamProviderWorkloadPolicy):
         raise TypeError("provider workload policy has the wrong result type")
+
+    decision_result = TeamProviderWorkloadDecisionService.analyze(result)
+    policy_result = (
+        TeamProviderWorkloadPolicyService.select(decision_result, policy)
+        if policy is not None
+        else None
+    )
     page._provider_workload_candidate_result = result
+    page._provider_workload_decision_result = decision_result
     page._provider_rotation_workloads = result.workloads
     page._provider_rotation_workload_comparison = comparison
     page._provider_workload_policy = policy
+    page._provider_workload_policy_result = policy_result
     _render_provider_workload(page)
 
 
@@ -124,9 +187,15 @@ def _set_provider_workload_policy(
 ) -> None:
     if policy is not None and not isinstance(policy, TeamProviderWorkloadPolicy):
         raise TypeError("provider workload policy has the wrong result type")
-    if policy is not None and getattr(page, "_provider_workload_candidate_result", None) is None:
+    decision_result = getattr(page, "_provider_workload_decision_result", None)
+    if policy is not None and decision_result is None:
         raise ValueError("provider workload policy requires projected candidate evidence")
     page._provider_workload_policy = policy
+    page._provider_workload_policy_result = (
+        TeamProviderWorkloadPolicyService.select(decision_result, policy)
+        if policy is not None
+        else None
+    )
     _render_provider_workload(page)
 
 
@@ -134,7 +203,9 @@ def _clear_provider_workload_evidence(page) -> None:
     page._provider_rotation_workloads = ()
     page._provider_rotation_workload_comparison = None
     page._provider_workload_candidate_result = None
+    page._provider_workload_decision_result = None
     page._provider_workload_policy = None
+    page._provider_workload_policy_result = None
     _render_provider_workload(page)
 
 
