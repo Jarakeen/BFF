@@ -603,3 +603,10 @@ Runtime proc eligibility now accepts the same opaque named `ConditionContext` us
 ## 2026-09-09 — Maximum-heal snapshots need ordered runtime history, not isolated proc events
 
 The canonical runtime stream now carries each event attempt's deterministic chance roll and named condition evidence together. Extreme actual-heal skill and gear runtime services can evaluate ordered event histories and query the retained canonical active windows at one exact heal snapshot. This permits independently triggered buffs to overlap only when their real windows overlap, while cooldown, failed conditions, chance failures, refresh/stacking behavior, and exact end-time boundaries remain owned by the shared runtime engine. Missing stacking semantics remain an explicit blocker rather than being guessed.
+
+
+---
+
+## 2026-09-09 — Extreme snapshot optimization needs one runtime-history contract
+
+Extreme role objectives should not maintain separate temporal truth for skill triggers, gear procs, and potion windows. The first unified runtime-snapshot contract carries one ordered `RuntimeEffectEventAttempt` history, one exact snapshot time, and potion elapsed timing while potion use remains outside the shared runtime stream. Skill and gear buffs are both resolved from that same ordered history before the candidate `CombatState` is built. Legacy single-trigger inputs remain supported only when the unified snapshot is absent; mixing the two paths is rejected to prevent double application. Class-specific emergency assumptions still layer into the same `CombatState` until their windows are represented by role-neutral canonical runtime evidence.

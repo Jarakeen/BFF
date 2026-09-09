@@ -6,11 +6,14 @@ import pytest
 
 from minmax.character_progression import AttributeAllocation, CharacterProgression
 from minmax.combat_state import CombatState
+from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
+from minmax.runtime_event import RuntimeEvent
 from models.build_model import PlayerBuild
 from services import extreme_actual_heal_optimization_service as base_module
 from services.extreme_conditional_actual_heal_optimization_service import (
     ExtremeConditionalActualHealOptimizationService,
 )
+from services.extreme_runtime_snapshot import ExtremeRuntimeSnapshot
 
 
 class _Event:
@@ -482,3 +485,146 @@ def test_conditional_optimizer_rejects_negative_skill_precast_time():
             optimizer=_Optimizer(),
             healing_events=_ConditionalHealingEvents(),
         )
+
+
+class _HistorySkillBuffCandidates:
+    def __init__(self):
+        self.history_calls = []
+
+    def active_triggered_named_buffs_history(
+        self, build, *, active_bar, attempts, snapshot_time_seconds
+    ):
+        self.history_calls.append((build.BuildName, active_bar, attempts, snapshot_time_seconds))
+        return ("Major Sorcery",)
+
+    def triggered_build_candidates(self, *args, **kwargs):
+        _ = args, kwargs
+        return ()
+
+
+class _HistoryGearRuntimeBuffs:
+    def __init__(self):
+        self.history_calls = []
+
+    def resolve_history(self, build, *, active_bar, attempts, snapshot_time_seconds):
+        self.history_calls.append((build.BuildName, active_bar, attempts, snapshot_time_seconds))
+        return SimpleNamespace(active_buffs=("Major Courage",), unresolved=())
+
+
+def _runtime_attempt(time_seconds=1.0, trigger="critical_heal"):
+    return RuntimeEffectEventAttempt(
+        event=RuntimeEvent(
+            time_seconds=time_seconds,
+            trigger=trigger,
+            source="test runtime history",
+        )
+    )
+
+
+def test_unified_runtime_snapshot_combines_skill_and_gear_history():
+    attempts = (_runtime_attempt(1.0), _runtime_attempt(3.0, "overheal_self_or_ally"))
+    skill = _HistorySkillBuffCandidates()
+    gear = _HistoryGearRuntimeBuffs()
+    service = ExtremeConditionalActualHealOptimizationService(
+        target_health_fraction=0.29,
+        runtime_snapshot=ExtremeRuntimeSnapshot(
+            attempts=attempts, snapshot_time_seconds=5.0
+        ),
+        skill_buff_candidates=skill,
+        gear_runtime_buffs=gear,
+        optimizer=_Optimizer(),
+        healing_events=_ConditionalHealingEvents(),
+    )
+
+    state, unresolved = service._restoration_combat_state(
+        build=PlayerBuild(BuildName="Unified Snapshot"),
+        progression=CharacterProgression(passive_ranks={}),
+        active_bar="front",
+    )
+
+    assert unresolved == ()
+    assert state.in_combat
+    assert state.active_buffs == ("Major Sorcery", "Major Courage")
+    assert skill.history_calls[0][2:] == (attempts, 5.0)
+    assert gear.history_calls[0][2:] == (attempts, 5.0)
+
+
+def test_unified_runtime_snapshot_routes_potion_timing_through_same_contract():
+    service = ExtremeConditionalActualHealOptimizationService(
+        target_health_fraction=0.29,
+        runtime_snapshot=ExtremeRuntimeSnapshot(
+            snapshot_time_seconds=20.0, potion_elapsed_seconds=20.0
+        ),
+        potion_use_resolver=_PotionUseResolver(duration=40.0),
+        optimizer=_Optimizer(),
+        healing_events=_ConditionalHealingEvents(),
+    )
+
+    state, unresolved = service._restoration_combat_state(
+        build=PlayerBuild(
+            BuildName="Unified Potion Snapshot", Potion="Increase Spell Power"
+        ),
+        progression=CharacterProgression(passive_ranks={"Medicinal Use": 3}),
+        active_bar="front",
+    )
+
+    assert unresolved == ()
+    assert state.has_buff("Major Sorcery")
+    assert service.potion_elapsed_seconds == 20.0
+
+
+def test_unified_runtime_snapshot_rejects_legacy_trigger_inputs():
+    with pytest.raises(ValueError, match="cannot be combined with legacy skill/gear trigger inputs"):
+        ExtremeConditionalActualHealOptimizationService(
+            target_health_fraction=0.29,
+            runtime_snapshot=ExtremeRuntimeSnapshot(snapshot_time_seconds=5.0),
+            skill_trigger_event=RuntimeEvent(
+                time_seconds=1.0, trigger="critical_heal", source="legacy"
+            ),
+            skill_trigger_snapshot_seconds=5.0,
+            optimizer=_Optimizer(),
+            healing_events=_ConditionalHealingEvents(),
+        )
+
+
+def test_unified_runtime_snapshot_rejects_legacy_potion_timing():
+    with pytest.raises(ValueError, match="potion timing must be supplied on the snapshot contract"):
+        ExtremeConditionalActualHealOptimizationService(
+            target_health_fraction=0.29,
+            runtime_snapshot=ExtremeRuntimeSnapshot(snapshot_time_seconds=5.0),
+            potion_elapsed_seconds=1.0,
+            optimizer=_Optimizer(),
+            healing_events=_ConditionalHealingEvents(),
+        )
+
+
+def test_unified_runtime_snapshot_is_stamped_in_search_scope(monkeypatch):
+    _install_progression_adapter(monkeypatch)
+    service = ExtremeConditionalActualHealOptimizationService(
+        target_health_fraction=0.29,
+        runtime_snapshot=ExtremeRuntimeSnapshot(
+            attempts=(_runtime_attempt(1.0),), snapshot_time_seconds=5.0
+        ),
+        skill_buff_candidates=_HistorySkillBuffCandidates(),
+        gear_runtime_buffs=_HistoryGearRuntimeBuffs(),
+        optimizer=_Optimizer(),
+        healing_events=_ConditionalHealingEvents(),
+    )
+
+    result = service.optimize(
+        PlayerBuild(BuildName="Unified Scope"),
+        "blessing_of_protection",
+        max_passes=1,
+    )
+
+    assert any(
+        "unified runtime snapshot at 5.000000s from 1 ordered event attempts" in item
+        for item in result.search_scope
+    )
+
+
+def test_unified_runtime_snapshot_validates_time_boundaries():
+    with pytest.raises(ValueError, match="finite non-negative"):
+        ExtremeRuntimeSnapshot(snapshot_time_seconds=-0.01)
+    with pytest.raises(ValueError, match="potion elapsed time must be finite and non-negative"):
+        ExtremeRuntimeSnapshot(snapshot_time_seconds=0.0, potion_elapsed_seconds=-0.01)

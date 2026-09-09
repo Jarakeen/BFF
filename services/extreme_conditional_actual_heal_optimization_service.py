@@ -33,6 +33,7 @@ from services.extreme_healing_event_service import ExtremeHealingEventResult
 from services.extreme_necromancer_living_death_healing_service import (
     ExtremeNecromancerLivingDeathHealingService,
 )
+from services.extreme_runtime_snapshot import ExtremeRuntimeSnapshot
 from services.extreme_restoration_heavy_combat_state_service import (
     ExtremeRestorationHeavyCombatStateService,
 )
@@ -104,6 +105,7 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         healer_has_negative_effect: bool | None = None,
         active_crux: int | None = None,
         active_buffs: tuple[str, ...] = (),
+        runtime_snapshot: ExtremeRuntimeSnapshot | None = None,
         potion_elapsed_seconds: float | None = None,
         potion_use_resolver: PotionUseEventResolver | None = None,
         potion_candidates: ExtremeActualHealPotionCandidateService | None = None,
@@ -153,6 +155,25 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
                 if (name := str(raw_name or "").strip())
             )
         )
+        self.runtime_snapshot = runtime_snapshot
+        if runtime_snapshot is not None:
+            if any(
+                value is not None
+                for value in (
+                    skill_trigger_event,
+                    skill_trigger_snapshot_seconds,
+                    gear_trigger_event,
+                    gear_trigger_snapshot_seconds,
+                )
+            ):
+                raise ValueError(
+                    "runtime_snapshot cannot be combined with legacy skill/gear trigger inputs"
+                )
+            if potion_elapsed_seconds is not None:
+                raise ValueError(
+                    "runtime_snapshot potion timing must be supplied on the snapshot contract"
+                )
+            potion_elapsed_seconds = runtime_snapshot.potion_elapsed_seconds
         if potion_elapsed_seconds is None:
             self.potion_elapsed_seconds = None
         else:
@@ -243,6 +264,12 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         if self.active_buffs:
             scenarios.append(
                 "explicit active named buffs: " + ", ".join(self.active_buffs)
+            )
+        if self.runtime_snapshot is not None:
+            scenarios.append(
+                "unified runtime snapshot at "
+                f"{self.runtime_snapshot.snapshot_time_seconds:.6f}s from "
+                f"{len(self.runtime_snapshot.attempts)} ordered event attempts"
             )
         if self.potion_elapsed_seconds is not None:
             scenarios.append(
@@ -341,6 +368,28 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
                         active_bar=active_bar,
                     )
                 )
+        if self.runtime_snapshot is not None and self.runtime_snapshot.attempts:
+            service = self.skill_buff_candidates
+            if service is None:
+                database_path = getattr(self.optimizer, "database_path", None)
+                if database_path is not None:
+                    service = ExtremeActualHealSkillBuffCandidateService(database_path)
+                    self.skill_buff_candidates = service
+            if service is not None:
+                for attempt in self.runtime_snapshot.attempts:
+                    result.extend(
+                        service.triggered_build_candidates(
+                            baseline_build,
+                            character_id=character_id,
+                            baseline_build_id=baseline_build_id,
+                            protected_entity_id=entity_id,
+                            active_bar=active_bar,
+                            event=attempt.event,
+                            snapshot_time_seconds=self.runtime_snapshot.snapshot_time_seconds,
+                            chance_roll=attempt.chance_roll,
+                            condition_context=attempt.condition_context,
+                        )
+                    )
         if self.skill_trigger_event is not None:
             service = self.skill_buff_candidates
             if service is None:
@@ -391,6 +440,41 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
                         elapsed_seconds=self.skill_precast_elapsed_seconds,
                     )
                 )
+
+        if self.runtime_snapshot is not None and self.runtime_snapshot.attempts:
+            snapshot = self.runtime_snapshot
+            skill_service = self.skill_buff_candidates
+            if skill_service is None:
+                database_path = getattr(self.optimizer, "database_path", None)
+                if database_path is not None:
+                    skill_service = ExtremeActualHealSkillBuffCandidateService(database_path)
+                    self.skill_buff_candidates = skill_service
+            if skill_service is not None:
+                active_buffs.extend(
+                    skill_service.active_triggered_named_buffs_history(
+                        build,
+                        active_bar=active_bar,
+                        attempts=snapshot.attempts,
+                        snapshot_time_seconds=snapshot.snapshot_time_seconds,
+                    )
+                )
+
+            gear_service = self.gear_runtime_buffs
+            if gear_service is None:
+                database_path = getattr(self.optimizer, "database_path", None)
+                if database_path is not None:
+                    gear_service = ExtremeActualHealGearRuntimeBuffService(database_path)
+                    self.gear_runtime_buffs = gear_service
+            if gear_service is not None:
+                gear_result = gear_service.resolve_history(
+                    build,
+                    active_bar=active_bar,
+                    attempts=snapshot.attempts,
+                    snapshot_time_seconds=snapshot.snapshot_time_seconds,
+                )
+                active_buffs.extend(gear_result.active_buffs)
+                unresolved.extend(gear_result.unresolved)
+            in_combat = True
 
         if self.skill_trigger_event is not None:
             service = self.skill_buff_candidates
