@@ -8,6 +8,7 @@ from services.extreme_maximum_heal_unresolved_relevance_service import (
 PET = (
     "Sorcerer pet special activation requires runtime proof that the corresponding pet is summoned and alive"
 )
+POTION = "Potion selected; activation/uptime is not part of static build state: spell power"
 
 
 def test_maximum_heal_relevance_separates_blockers_setup_and_ambient_diagnostics():
@@ -19,7 +20,7 @@ def test_maximum_heal_relevance_separates_blockers_setup_and_ambient_diagnostics
             "Front Bar Training: non-combat experience trait",
             "Front Bar Charged: requires status-effect chance model",
             "Front Bar Decisive: requires Ultimate generation model",
-            "Potion selected; activation/uptime is not part of static build state: spell power",
+            POTION,
             PET,
         )
     )
@@ -30,19 +31,18 @@ def test_maximum_heal_relevance_separates_blockers_setup_and_ambient_diagnostics
         "The Steed: movement_speed unresolved (Movement speed is outside the current character-sheet stat layer.)",
         "Front Bar Training: non-combat experience trait",
     )
-    assert result.setup_prerequisites == (PET,)
+    assert result.setup_prerequisites == (POTION, PET)
     assert result.relevant == (
         "Front Bar Charged: requires status-effect chance model",
         "Front Bar Decisive: requires Ultimate generation model",
-        "Potion selected; activation/uptime is not part of static build state: spell power",
     )
     assert not result.objective_complete
 
 
-def test_setup_prerequisite_alone_does_not_block_achievable_maximum_proof():
-    result = ExtremeMaximumHealUnresolvedRelevanceService().classify((PET,))
+def test_constructible_setup_prerequisites_do_not_block_achievable_maximum_proof():
+    result = ExtremeMaximumHealUnresolvedRelevanceService().classify((PET, POTION))
 
     assert result.relevant == ()
-    assert result.setup_prerequisites == (PET,)
+    assert result.setup_prerequisites == (PET, POTION)
     assert result.ambient == ()
     assert result.objective_complete
