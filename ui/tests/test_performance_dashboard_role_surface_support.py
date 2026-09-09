@@ -48,11 +48,16 @@ def _page():
         "buff_card",
         "debuff_card",
         "raid_debuff_card",
+        "healer_readout_card",
+        "hot_card",
+        "kpi_heal_crit",
+        "kpi_heal_response",
+        "kpi_heal_cadence",
     )
     return SimpleNamespace(**{name: _Card() for name in names})
 
 
-def test_dps_surface_hides_generic_support_and_shows_dd_diagnostics() -> None:
+def test_dps_surface_hides_healer_support_and_shows_dd_diagnostics() -> None:
     page = _page()
 
     _apply_role_surface(page, SimpleNamespace(Role="DPS"))
@@ -64,6 +69,12 @@ def test_dps_surface_hides_generic_support_and_shows_dd_diagnostics() -> None:
     assert page.debuff_card.visible is False
     assert page.raid_debuff_card.visible is False
 
+    assert page.healer_readout_card.visible is False
+    assert page.hot_card.visible is False
+    assert page.kpi_heal_crit.visible is False
+    assert page.kpi_heal_response.visible is False
+    assert page.kpi_heal_cadence.visible is False
+
     assert page.kpi_card.visible is True
     assert page.dot_card.visible is True
     assert page.dd_readout_card.visible is True
@@ -72,7 +83,7 @@ def test_dps_surface_hides_generic_support_and_shows_dd_diagnostics() -> None:
     assert page.quick_read_card.visible is True
 
 
-def test_healer_surface_restores_support_surface() -> None:
+def test_healer_surface_restores_support_and_hides_dd_diagnostics() -> None:
     page = _page()
 
     _apply_role_surface(page, SimpleNamespace(Role="Healer"))
@@ -80,6 +91,16 @@ def test_healer_surface_restores_support_surface() -> None:
     assert page.support_effects_card.visible is True
     assert page.graph_effect_card.visible is True
     assert page._performance_tracking_card.visible is True
+
+    assert page.healer_readout_card.visible is True
+    assert page.hot_card.visible is True
+    assert page.kpi_heal_crit.visible is True
+    assert page.kpi_heal_response.visible is True
+    assert page.kpi_heal_cadence.visible is True
+
+    assert page.dot_card.visible is False
+    assert page.dd_readout_card.visible is False
+    assert page.quick_read_card.visible is False
 
 
 def test_fresh_dps_member_keeps_graph_controls_without_showing_blank_results() -> None:
@@ -94,13 +115,17 @@ def test_fresh_dps_member_keeps_graph_controls_without_showing_blank_results() -
     assert page.debuff_card.visible is False
     assert page.raid_debuff_card.visible is False
 
-    # Initial empty-state plumbing still owns result visibility until a fight is shown.
+    # Role-only result surfaces are explicitly hidden until a snapshot exists.
+    assert page.dot_card.visible is False
+    assert page.dd_readout_card.visible is False
+    assert page.quick_read_card.visible is False
+    assert page.healer_readout_card.visible is False
+    assert page.hot_card.visible is False
+
+    # Generic snapshot cards remain under the dashboard's empty-state plumbing.
     assert page.kpi_card.visible is None
-    assert page.dot_card.visible is None
-    assert page.dd_readout_card.visible is None
     assert page.output_card.visible is None
     assert page.abilities_card.visible is None
-    assert page.quick_read_card.visible is None
 
 
 def test_role_picker_can_restore_support_surface_before_snapshot() -> None:
@@ -112,6 +137,8 @@ def test_role_picker_can_restore_support_surface_before_snapshot() -> None:
     assert page.support_effects_card.visible is True
     assert page.graph_effect_card.visible is True
     assert page._performance_tracking_card.visible is True
+    assert page.healer_readout_card.visible is False
+    assert page.dot_card.visible is False
 
 
 def test_common_damage_role_aliases_canonicalize_to_dps() -> None:
@@ -156,3 +183,5 @@ def test_unknown_role_surface_does_not_fall_back_to_support_mode() -> None:
     assert page.support_effects_card.visible is False
     assert page._performance_tracking_card.visible is False
     assert page.graph_effect_card.visible is True
+    assert page.healer_readout_card.visible is False
+    assert page.dot_card.visible is False
