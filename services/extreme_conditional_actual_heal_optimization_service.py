@@ -89,6 +89,7 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         sacred_ground_window_active: bool = False,
         healer_has_negative_effect: bool | None = None,
         active_crux: int | None = None,
+        active_buffs: tuple[str, ...] = (),
         restoration_heavy_state: ExtremeRestorationHeavyCombatStateService | None = None,
         templar_sacred_ground_state: ExtremeTemplarSacredGroundCombatStateService | None = None,
         templar_restoring_light_healing: ExtremeTemplarRestoringLightHealingService | None = None,
@@ -115,6 +116,13 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         self.sacred_ground_window_active = bool(sacred_ground_window_active)
         self.healer_has_negative_effect = healer_has_negative_effect
         self.active_crux = active_crux
+        self.active_buffs = tuple(
+            dict.fromkeys(
+                name
+                for raw_name in active_buffs
+                if (name := str(raw_name or "").strip())
+            )
+        )
         self.restoration_heavy_state = restoration_heavy_state
         self.templar_sacred_ground_state = templar_sacred_ground_state
         self.templar_restoring_light_healing = templar_restoring_light_healing
@@ -148,6 +156,10 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
                 f"explicit active Crux count {self.active_crux}; "
                 "Healing Tides requires canonical legality proof"
             )
+        if self.active_buffs:
+            scenarios.append(
+                "explicit active named buffs: " + ", ".join(self.active_buffs)
+            )
         if self.sacred_ground_window_active:
             scenarios.append(
                 "explicit Sacred Ground active/grace window; "
@@ -176,7 +188,7 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         progression: CharacterProgression,
         active_bar: str,
     ) -> tuple[CombatState, tuple[str, ...]]:
-        active_buffs: list[str] = []
+        active_buffs: list[str] = list(self.active_buffs)
         unresolved: list[str] = []
         in_combat = False
 

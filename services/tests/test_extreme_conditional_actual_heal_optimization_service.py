@@ -207,3 +207,55 @@ def test_conditional_optimizer_preserves_restoration_heavy_blocker_on_selected_s
 
     assert "Essence Drain passive rank unresolved" in result.unresolved
     assert not result.mechanic_complete
+
+
+def test_conditional_optimizer_routes_explicit_named_buffs_to_every_context(monkeypatch):
+    _install_progression_adapter(monkeypatch)
+    optimizer = _Optimizer()
+    service = ExtremeConditionalActualHealOptimizationService(
+        target_health_fraction=0.29,
+        active_buffs=("Major Sorcery", "Minor Brutality", "Major Sorcery", ""),
+        optimizer=optimizer,
+        healing_events=_ConditionalHealingEvents(),
+    )
+
+    result = service.optimize(
+        PlayerBuild(BuildName="Named Buff Emergency"),
+        "blessing_of_protection",
+        max_passes=2,
+    )
+
+    assert service.active_buffs == ("Major Sorcery", "Minor Brutality")
+    assert optimizer.context_factory.combat_states
+    assert all(
+        state.active_buffs == ("Major Sorcery", "Minor Brutality")
+        for state in optimizer.context_factory.combat_states
+    )
+    assert result.search_scope[1] == (
+        "explicit active named buffs: Major Sorcery, Minor Brutality"
+    )
+
+
+def test_conditional_optimizer_combines_explicit_named_buffs_with_triggered_mending(monkeypatch):
+    _install_progression_adapter(monkeypatch)
+    optimizer = _Optimizer()
+    service = ExtremeConditionalActualHealOptimizationService(
+        target_health_fraction=0.29,
+        active_buffs=("Major Sorcery",),
+        fully_charged_restoration_heavy_attack_completed=True,
+        restoration_heavy_state=_RestorationHeavyState(),
+        optimizer=optimizer,
+        healing_events=_ConditionalHealingEvents(),
+    )
+
+    service.optimize(
+        PlayerBuild(BuildName="Combined Buff Emergency"),
+        "blessing_of_protection",
+        max_passes=1,
+    )
+
+    assert optimizer.context_factory.combat_states
+    assert all(
+        state.active_buffs == ("Major Sorcery", "Major Mending")
+        for state in optimizer.context_factory.combat_states
+    )

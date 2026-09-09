@@ -514,3 +514,14 @@ The Shadow correctly carried an **11% Critical Healing** effect in the Mundus da
 **Layman’s version:** having the right number in the database is not enough. Every layer between the database and the final heal has to know how to carry that number forward. One missing routing entry can make a valid bonus quietly disappear.
 
 **For BFF:** static combat stats need end-to-end regression tests that prove a mechanic survives repository resolution, input routing, and calculation.
+
+
+---
+
+## 2026-09-09 — Supported named buffs still need optimizer scenario plumbing
+
+The general combat-state calculator already knew how to apply named buffs such as **Major Sorcery** to raw coefficient inputs like Spell Damage. The conditional MOST Actual Heal optimizer could still miss that bonus because it only constructed combat state from its own trigger-specific services and had no explicit named-buff scenario input.
+
+**Layman’s version:** a mechanic can be perfectly implemented in the calculator and still disappear if the optimizer never carries the active-buff evidence into that calculator. “Supported” and “actually reachable by this optimizer” are separate questions.
+
+**For BFF:** conditional named buffs are now explicit scenario evidence. They are never granted automatically, and they share the same canonical `CombatState` path as trigger-proven buffs such as Essence Drain Major Mending.
