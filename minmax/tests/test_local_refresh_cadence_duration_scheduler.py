@@ -90,7 +90,7 @@ def test_local_cadence_preserves_unrelated_accepted_duration_schedule() -> None:
     assert 31.0 in filler_times
 
 
-def test_local_cadence_exposes_real_collision_instead_of_silently_preserving() -> None:
+def test_local_cadence_delays_new_due_refresh_at_protected_accepted_slot() -> None:
     policy = RotationRefreshIntervalPolicy(
         skill_name="Effect B",
         interval_seconds=14.0,
@@ -104,9 +104,13 @@ def test_local_cadence_exposes_real_collision_instead_of_silently_preserving() -
 
     refined = scheduler.refine(_seed(), _rules())
 
-    # B becomes due exactly on A's accepted 15-second slot. That is genuine local
-    # interference, so A is displaced rather than magically frozen. Downstream fresh
-    # effect evidence can then reject this candidate if A's obligation regresses.
-    assert _times(refined, "Effect B")[:2] == [1.0, 15.0]
-    assert _times(refined, "Effect A")[:2] == [0.0, 20.0]
-    assert any("displaced skill will cascade" in item for item in refined.unresolved)
+    # B becomes due exactly on A's already-accepted 15-second slot. The local move
+    # is not allowed to rewrite that prior decision, so A keeps the slot and B stays
+    # due until the next eligible front-bar decision at 20 seconds. Downstream
+    # workload/uptime evidence evaluates that concrete one-slot delay.
+    assert _times(refined, "Effect A")[:2] == [0.0, 15.0]
+    assert _times(refined, "Effect B")[:2] == [1.0, 20.0]
+    assert not any(
+        "claimed the 15s front-bar slot from 'Effect A'" in item
+        for item in refined.unresolved
+    )
