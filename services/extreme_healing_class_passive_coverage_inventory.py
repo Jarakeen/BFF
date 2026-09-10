@@ -3,6 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from minmax.passive_eligibility import CLASS_SKILL_LINES
+from services.extreme_arcanist_curative_runeforms_passive_review import (
+    ExtremeArcanistCurativeRuneformsPassiveReview,
+)
 from services.extreme_necromancer_living_death_passive_review import (
     ExtremeNecromancerLivingDeathPassiveReview,
 )
@@ -117,6 +120,16 @@ class ExtremeHealingClassPassiveCoverageInventory:
 
     def _entries(self) -> tuple[ExtremeHealingClassPassiveCoverageEntry, ...]:
         overrides = {
+            ("arcanist", "Curative Runeforms"): ExtremeHealingClassPassiveCoverageEntry(
+                "arcanist",
+                "Curative Runeforms",
+                REVIEWED,
+                True,
+                IMPLEMENTED,
+                True,
+                "ExtremeArcanistCurativeRuneformsPassiveReview + ExtremeArcanistCurativeRuneformsHealingService + ExtremeConditionalActualHealOptimizationService",
+                "All four Curative Runeforms passives are reviewed for MOST Actual Heal: Healing Tides is implemented through explicit active-Crux conditional orchestration; Hideous Clarity and Erudition are sustain-only; Intricate Runeforms affects damage shields rather than healing-event magnitude.",
+            ),
             ("necromancer", "Living Death"): ExtremeHealingClassPassiveCoverageEntry(
                 "necromancer",
                 "Living Death",
@@ -253,6 +266,13 @@ class ExtremeHealingClassPassiveCoverageInventory:
             }:
                 raise ValueError(
                     f"Healing-relevant class-passive family has invalid coverage status: {row.family_id}"
+                )
+            if (
+                row.family_id == "arcanist:Curative Runeforms"
+                and not ExtremeArcanistCurativeRuneformsPassiveReview().complete
+            ):
+                raise ValueError(
+                    "Curative Runeforms cannot be reviewed until its passive-level review is complete"
                 )
             if (
                 row.family_id == "necromancer:Living Death"
