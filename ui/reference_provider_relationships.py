@@ -207,7 +207,13 @@ def enrich_reference_entries_with_passive_providers(
 def enrich_reference_entries_with_reviewed_research(
     entries: Iterable[ReferenceEntry],
 ) -> tuple[ReferenceEntry, ...]:
-    """Add reviewed research and fill matching unresolved display fields when possible."""
+    """Add reviewed research and fill matching unresolved display fields when possible.
+
+    The helper is also a presentation boundary: after research enrichment, any
+    unresolved canonical placeholders are converted into specific evidence-gap
+    language so callers never receive a mixture of useful research and bare
+    ``Not modeled`` values.
+    """
 
     research = ReferenceResearchEnrichmentService()
     enriched: list[ReferenceEntry] = []
@@ -242,7 +248,7 @@ def enrich_reference_entries_with_reviewed_research(
             )
         )
         enriched.append(replace(entry, details=tuple(details), evidence=evidence))
-    return tuple(enriched)
+    return clarify_unresolved_reference_values(enriched)
 
 
 _UNRESOLVED_DETAIL_TEXT = {
