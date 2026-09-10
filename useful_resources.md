@@ -86,6 +86,15 @@ https://eso-hub.com/en/skills
 
 **Notes:** Useful for confirming the current visible passive roster and effect wording. Versioned numerical changes should still be reconciled against official patch notes or canonical game data before hardcoding combat math.
 
+### ESO-Hub set pages
+https://eso-hub.com/en/sets
+
+**Use for:** Current readable gear-set tooltip wording, including set-trigger conditions, cooldown/lockout wording, target descriptions, and duration modifiers such as Jorvuld's Guidance.
+
+**Confidence:** Validation / corroboration.
+
+**Notes:** For U50 Jorvuld's Guidance, the five-piece tooltip was rechecked 2026-09-10 and states a 40% duration increase to Major buffs, Minor buffs, and damage shields applied by the wearer to self/allies while in combat. Preserve patch/version provenance and reconcile against primary game data before broadening hardcoded semantics.
+
 ### ESO-Hub Scribing Simulator
 https://eso-hub.com/en/scribing-simulator
 
