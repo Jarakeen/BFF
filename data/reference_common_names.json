@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {
+      "entry_name": "Rapid Deluge — Tideborn Taleria",
+      "common_names": ["Bubbles"],
+      "source": "player_raid_terminology",
+      "notes": "User-confirmed raid callout for the Rapid Deluge mechanic where affected players move into the water before detonation."
+    }
+  ]
+}
