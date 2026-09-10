@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "scope": "organized_endgame_pve",
+  "description": "Contextual gameplay-practice policies that sit above canonical ESO mechanics and below encounter/assignment overrides.",
+  "confidence_levels": [
+    "canonical",
+    "strong_practice",
+    "observed_practice",
+    "experimental"
+  ],
+  "policies": [
+    {
+      "id": "dd_redundant_personal_heal",
+      "role": "dd",
+      "content_type": ["trial", "raid"],
+      "default_behavior": "disfavor",
+      "subject": "personal_heal_skill_slot",
+      "confidence": "strong_practice",
+      "summary": "A damage dealer with reliable group-healer coverage normally does not spend a bar slot on a redundant personal heal.",
+      "rationale": [
+        "organized endgame groups normally provide dedicated healer coverage",
+        "DD bar space has damage, execute, proc, passive-enabling, buff, debuff, and rotation opportunity cost"
+      ],
+      "exceptions": [
+        "portal_or_split_group_assignment",
+        "kite_or_runner_assignment",
+        "deliberate_range_separation_from_healers",
+        "mechanic_repeatedly_removes_external_healing_coverage",
+        "explicit_progression_survival_requirement",
+        "build_or_encounter_mechanic_requires_personal_healing"
+      ],
+      "affected_systems": [
+        "rotation_builder",
+        "extreme_builder",
+        "comp_maker",
+        "team_optimization",
+        "performance_review"
+      ],
+      "explanation_requirement": "If an exception causes BFF to recommend a DD personal heal, identify the encounter/assignment reason and the bar-space opportunity cost."
+    },
+    {
+      "id": "dd_bar_space_opportunity_cost",
+      "role": "dd",
+      "content_type": ["trial", "raid"],
+      "default_behavior": "score_cost",
+      "subject": "utility_skill_slot",
+      "confidence": "canonical",
+      "summary": "A DD skill slot is not free; utility replacing a normal damage/rotation component has an opportunity cost.",
+      "exceptions": [
+        "encounter_obligation_outweighs_damage_cost",
+        "required_group_support_assignment"
+      ],
+      "affected_systems": [
+        "rotation_builder",
+        "extreme_builder",
+        "comp_maker",
+        "team_optimization"
+      ]
+    },
+    {
+      "id": "healer_support_not_raw_hps",
+      "role": "healer",
+      "content_type": ["trial", "raid"],
+      "default_behavior": "require_balanced_objective",
+      "subject": "healer_optimization",
+      "confidence": "canonical",
+      "summary": "Healer quality is not raw HPS or ending Magicka alone; healing coverage, support uptime, mechanic readiness, positioning, sustain reserve, and emergency response all matter.",
+      "affected_systems": [
+        "rotation_builder",
+        "extreme_builder",
+        "comp_maker",
+        "team_optimization",
+        "performance_review"
+      ]
+    },
+    {
+      "id": "healer_assignments_not_interchangeable",
+      "role": "healer",
+      "content_type": ["trial", "raid"],
+      "default_behavior": "assignment_aware",
+      "subject": "healer_role_assignment",
+      "confidence": "strong_practice",
+      "summary": "Two healer positions may have materially different gear, support, positioning, group-coverage, and mechanic responsibilities.",
+      "affected_systems": [
+        "rotation_builder",
+        "comp_maker",
+        "team_optimization",
+        "encounter_assignment"
+      ]
+    },
+    {
+      "id": "tank_survival_not_only_objective",
+      "role": "tank",
+      "content_type": ["trial", "raid"],
+      "default_behavior": "require_balanced_objective",
+      "subject": "tank_optimization",
+      "confidence": "canonical",
+      "summary": "Tank survival is necessary but does not replace encounter control, positioning, debuffs, support effects, sustain, and assignment utility.",
+      "affected_systems": [
+        "rotation_builder",
+        "extreme_builder",
+        "comp_maker",
+        "team_optimization",
+        "performance_review"
+      ]
+    },
+    {
+      "id": "encounter_assignment_overrides_role_default",
+      "role": "any",
+      "content_type": ["trial", "raid"],
+      "default_behavior": "context_override",
+      "subject": "role_practice",
+      "confidence": "canonical",
+      "summary": "Encounter and assignment context may override a generic role convention when it materially changes the player's obligations or support access.",
+      "override_contexts": [
+        "isolation",
+        "portal",
+        "kiting",
+        "runner_duty",
+        "add_control",
+        "interrupt_duty",
+        "ranged_positioning",
+        "special_mitigation_check",
+        "burst_heal_check",
+        "group_split"
+      ],
+      "affected_systems": [
+        "rotation_builder",
+        "extreme_builder",
+        "comp_maker",
+        "team_optimization",
+        "performance_review",
+        "encounter_assignment"
+      ]
+    },
+    {
+      "id": "standard_light_attack_weave_window",
+      "role": "any",
+      "content_type": ["trial", "raid", "dungeon", "solo_pve"],
+      "default_behavior": "shared_cadence_window",
+      "subject": "light_attack_weaving",
+      "confidence": "canonical",
+      "summary": "A standard light-attack weave pairs the light attack with the skill in the same normal skill-cadence window; the light attack must not be modeled as an additional full one-second rotation slot.",
+      "modeling_requirements": [
+        "preserve_light_attack_as_an_explicit_combat_event_for_damage_and_trigger_resolution",
+        "associate_the_light_attack_with_its_woven_skill_window",
+        "do_not_advance_the_rotation_clock_by_an_extra_full_second_for_the_light_attack",
+        "allow_nonwoven_or_deliberately_delayed_attacks_to_be_represented_explicitly_when_context_requires_them"
+      ],
+      "affected_systems": [
+        "rotation_builder",
+        "rotation_timeline",
+        "combat_event_projection",
+        "damage_projection",
+        "proc_trigger_resolution",
+        "performance_review"
+      ]
+    }
+  ]
+}
