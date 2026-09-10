@@ -102,7 +102,6 @@ class ExtremeActualHealCoverageAuditService:
             else "unresolved"
         )
         runtime_omitted = self._scope_contains(omitted_scope, "runtime conditional stacks/procs")
-        group_omitted = self._scope_contains(omitted_scope, "group-only buffs")
         dragon_blood_guarded = {
             "blood of the elder dragon",
             "coagulating blood",
@@ -183,9 +182,9 @@ class ExtremeActualHealCoverageAuditService:
             ExtremeActualHealCoverageItem(
                 "external_group_buff_provenance",
                 "external_group_buffs",
-                "unresolved" if group_omitted else "conditional",
-                "ExtremeActualHealOptimizationService.OMITTED_SCOPE",
-                "Group-only buffs are still explicitly omitted; source, recipient, legality, and snapshot timing must be proven before they can affect MOST Actual Heal.",
+                "conditional",
+                "ExternalGroupBuffProvenanceResolver + ExtremeRuntimeSnapshot + ExtremeRuntimeSnapshotCombatStateService",
+                "External group buffs are supported only through explicit provenance: canonical buff identity, proven source and recipient group membership, legal target semantics, source evidence, and an active snapshot window. The standing optimizer still omits group-only buffs rather than inventing raid support.",
             ),
             ExtremeActualHealCoverageItem(
                 "race_stat_and_healing_bonuses",
