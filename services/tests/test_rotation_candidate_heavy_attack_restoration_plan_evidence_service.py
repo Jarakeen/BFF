@@ -16,9 +16,9 @@ from services.rotation_candidate_heavy_attack_restoration_plan_evidence_service 
 from services.rotation_sustain_service import RotationSustainProjection
 
 
-def _candidate() -> GeneratedRotationCandidate:
+def _candidate(candidate_id: str = "candidate") -> GeneratedRotationCandidate:
     return GeneratedRotationCandidate(
-        candidate_id="candidate",
+        candidate_id=candidate_id,
         plan=RotationPlan(
             character_name="Magrat",
             build_name="DF Healer",
@@ -190,3 +190,51 @@ def test_heavy_plan_provider_reuses_existing_projection_and_preserves_fail_close
         "restore amount unresolved for second heavy",
         "heavy claims back bar while front is active",
     )
+
+
+def test_heavy_plan_provider_resolves_completion_evidence_per_exact_candidate() -> None:
+    projection = SimpleNamespace(
+        restoration_events=(),
+        unresolved=(),
+        weapon_projection=SimpleNamespace(violations=()),
+    )
+    delegate = _HeavyRestorationService(projection)
+    baseline_completion = object()
+    heavy_completion = object()
+    resolver_calls = []
+
+    def resolve(candidate):
+        resolver_calls.append(candidate.candidate_id)
+        return {
+            "baseline": (baseline_completion,),
+            "heavy": (heavy_completion,),
+        }[candidate.candidate_id]
+
+    provider = RotationCandidateHeavyAttackRestorationPlanEvidenceService(
+        build=object(),
+        initial_bar="front",
+        completion_evidence_resolver=resolve,
+        restoration_service=delegate,
+    )
+    baseline = _candidate("baseline")
+    heavy = _candidate("heavy")
+
+    provider.evaluate_plan(baseline)
+    provider.evaluate_plan(heavy)
+
+    assert resolver_calls == ["baseline", "heavy"]
+    assert delegate.calls[0]["completion_evidence"] == (baseline_completion,)
+    assert delegate.calls[1]["completion_evidence"] == (heavy_completion,)
+    assert delegate.calls[0]["plan"] is baseline.plan
+    assert delegate.calls[1]["plan"] is heavy.plan
+
+
+def test_heavy_plan_provider_rejects_ambiguous_fixed_and_resolved_completion_sources() -> None:
+    with pytest.raises(ValueError, match="either a fixed tuple or a candidate resolver"):
+        RotationCandidateHeavyAttackRestorationPlanEvidenceService(
+            build=object(),
+            initial_bar="front",
+            completion_evidence=(object(),),
+            completion_evidence_resolver=lambda candidate: (),
+            restoration_service=_HeavyRestorationService(object()),
+        )
