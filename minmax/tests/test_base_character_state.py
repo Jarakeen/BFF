@@ -96,8 +96,9 @@ def test_race_contributions_are_named_in_the_trace():
     assert "race" in [step.label for step in state.traces[StatId.MAGICKA_RECOVERY].steps]
 
 
-def test_eso_rounding_uses_ceiling():
+def test_eso_rounding_uses_ceiling_without_promoting_float_noise():
     assert BaseCharacterCalculator.eso_round(100.0) == 100
+    assert BaseCharacterCalculator.eso_round(100.00000000000001) == 100
     assert BaseCharacterCalculator.eso_round(100.0001) == 101
     assert BaseCharacterCalculator.eso_round(100.9999) == 101
 
