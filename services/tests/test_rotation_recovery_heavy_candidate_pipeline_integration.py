@@ -80,6 +80,7 @@ class _ControlledRefinementService:
         wait_decision=None,
         demands=(),
         demand_refresh_leads=(),
+        demand_action_claims=(),
     ):
         risky = bool(tuple(demand_refresh_leads))
         pressured = bool(getattr(wait_decision, "has_pressure", False))
