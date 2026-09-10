@@ -80,6 +80,12 @@ class RotationHealerActionHealingService:
     front/back bar are evaluated against that exact bar's static context. Missing
     mapped bar state fails closed for that action rather than borrowing the default
     context and silently applying the wrong bar stats.
+
+    Reviewed synergy/external healing components may be intentionally absent from
+    caster-owned healer classification. When the component repository explicitly
+    identifies such an exclusion, the projector skips it rather than converting the
+    intentional ownership boundary back into a false unresolved diagnostic. Any
+    other missing component classification remains fail-closed.
     """
 
     def __init__(
@@ -164,6 +170,11 @@ class RotationHealerActionHealingService:
                     result.skill.skill_rank_id
                 )
             }
+            intentional_exclusion = getattr(
+                self.tooltip_service.components,
+                "is_intentionally_excluded_caster_healing_component",
+                None,
+            )
             actual_by_number = {
                 int(trace.coefficient_number): float(trace.output_value)
                 for trace in result.component_actual_effect_trace
@@ -173,6 +184,11 @@ class RotationHealerActionHealingService:
                 number = int(trace.coefficient_number)
                 classification = classifications.get(number)
                 if classification is None:
+                    if callable(intentional_exclusion) and intentional_exclusion(
+                        skill_rank_id=result.skill.skill_rank_id,
+                        coefficient_number=number,
+                    ):
+                        continue
                     unresolved.append(
                         f"{action.name} coefficient {number} at {action.time_seconds:g}s: "
                         "canonical component classification unavailable"
