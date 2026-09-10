@@ -24,6 +24,9 @@ from services.performance_raid_review_healer_effect_coverage_service import (
     RaidReviewHealerEffectCoverageObservation,
     RaidReviewHealerEffectRequirement,
 )
+from services.performance_raid_review_landing_recovery_completion_analysis_service import (
+    RaidReviewRecoveryOpportunity,
+)
 from services.performance_raid_review_landing_recovery_service import (
     RaidReviewRecoveryActor,
 )
@@ -48,6 +51,7 @@ class LokkestiizRaidReviewSessionResult:
     review: PerformanceRaidReviewResult
     pull_evidence: tuple[LokkestiizPullRaidReviewEvidence, ...]
     healer_effect_coverage: tuple[RaidReviewHealerEffectCoverageObservation, ...] = ()
+    landing_recovery_opportunities: tuple[RaidReviewRecoveryOpportunity, ...] = ()
     unresolved: tuple[str, ...] = ()
 
 
@@ -100,12 +104,14 @@ class PerformanceRaidReviewLokkestiizSessionService:
                 review=review,
                 pull_evidence=(),
                 healer_effect_coverage=(),
+                landing_recovery_opportunities=(),
                 unresolved=("No Lokkestiiz pulls were supplied for Raid Review.",),
             )
 
         all_sources: list[RaidReviewSource] = []
         mechanic_windows = []
         recovery_observations = []
+        recovery_opportunities: list[RaidReviewRecoveryOpportunity] = []
         healer_effect_coverage: list[RaidReviewHealerEffectCoverageObservation] = []
         pull_evidence: list[LokkestiizPullRaidReviewEvidence] = []
         unresolved: list[str] = []
@@ -187,6 +193,30 @@ class PerformanceRaidReviewLokkestiizSessionService:
                 f"{report_code} #{fight_id}: {message}" for message in evidence.unresolved
             )
 
+            landing_occurrences = tuple(
+                int(boundary.occurrence)
+                for boundary in evidence.boundaries
+                if boundary.fact_key == "aerial_onslaught_flight" and boundary.boundary == "end"
+            )
+            if landing_occurrences:
+                for actor in actors:
+                    if not self._is_dps(actor.role):
+                        continue
+                    for occurrence in landing_occurrences:
+                        recovery_opportunities.append(
+                            RaidReviewRecoveryOpportunity(
+                                report_code=report_code,
+                                fight_id=fight_id,
+                                occurrence=occurrence,
+                                actor_id=int(actor.actor_id),
+                                actor_label=str(actor.actor_label),
+                                role="DPS",
+                                member_key=str(actor.member_key or ""),
+                                signal_semantic_key="boss_damage_reacquisition_after_landing",
+                                signal_label="Boss Damage Reacquisition",
+                            )
+                        )
+
             if coverage_requirements:
                 runtime_windows = self.effect_window_service.build(
                     events,
@@ -213,6 +243,7 @@ class PerformanceRaidReviewLokkestiizSessionService:
             encounter_name="Lokkestiiz",
             mechanic_windows=tuple(mechanic_windows),
             landing_recovery_observations=tuple(recovery_observations),
+            landing_recovery_opportunities=tuple(recovery_opportunities),
             healer_effect_coverage_observations=tuple(healer_effect_coverage),
         )
         unresolved.extend(review.unresolved)
@@ -221,8 +252,19 @@ class PerformanceRaidReviewLokkestiizSessionService:
             review=review,
             pull_evidence=tuple(pull_evidence),
             healer_effect_coverage=tuple(healer_effect_coverage),
+            landing_recovery_opportunities=tuple(recovery_opportunities),
             unresolved=tuple(dict.fromkeys(unresolved)),
         )
+
+    @staticmethod
+    def _is_dps(role: str) -> bool:
+        return str(role or "").strip().casefold() in {
+            "dps",
+            "dd",
+            "damage",
+            "damage dealer",
+            "damage_dealer",
+        }
 
 
 __all__ = [
