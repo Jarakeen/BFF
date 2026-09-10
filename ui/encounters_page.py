@@ -27,6 +27,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from engine.config import get_data_dir
+from services.encounter_boss_guide import EncounterBossGuideService
 from services.expedition_service import ExpeditionService
 from ui.components.encounter_board import EncounterBoard
 from ui.components.foundry_card import FoundryCard
@@ -38,10 +40,20 @@ from ui.foundry_page import FoundryPage
 class EncountersPage(FoundryPage):
     """Encounter positioning, timelines, mechanics, and assignments."""
 
-    def __init__(self, expedition: ExpeditionService, parent=None):
+    def __init__(
+        self,
+        expedition: ExpeditionService,
+        guide_service: EncounterBossGuideService | None = None,
+        parent=None,
+    ):
         super().__init__(parent)
         self.expedition = expedition
+        self.guide_service = guide_service or EncounterBossGuideService(
+            get_data_dir() / "eso.db"
+        )
+        self._guide_summaries = ()
         self._build_ui()
+        self._connect_boss_selector()
         self.refresh_context()
 
     @staticmethod
@@ -138,10 +150,11 @@ class EncountersPage(FoundryPage):
         controls = FoundryCard("Select Boss", "boss")
         boss_row = QHBoxLayout()
         self.boss_combo = QComboBox()
-        self.boss_combo.addItem("Current Objective")
         boss_row.addWidget(self.boss_combo, 1)
-        boss_row.addWidget(QPushButton("‹"))
-        boss_row.addWidget(QPushButton("›"))
+        self.previous_boss_button = QPushButton("‹")
+        self.next_boss_button = QPushButton("›")
+        boss_row.addWidget(self.previous_boss_button)
+        boss_row.addWidget(self.next_boss_button)
         controls.addLayout(boss_row)
 
         phase_row = QHBoxLayout()
@@ -237,6 +250,65 @@ class EncountersPage(FoundryPage):
         root.addLayout(upper, 1)
         return tab
 
+    def _connect_boss_selector(self) -> None:
+        self.boss_combo.currentIndexChanged.connect(self._boss_changed)
+        self.previous_boss_button.clicked.connect(lambda: self._step_boss(-1))
+        self.next_boss_button.clicked.connect(lambda: self._step_boss(1))
+
+    def _boss_rows_for_active_trial(self):
+        rows = tuple(self.guide_service.encounter_summaries())
+        current_trial = str(self.expedition.expedition.Expedition or "").strip().casefold()
+        if not current_trial:
+            return rows
+        matching = tuple(
+            row for row in rows
+            if str(row.content_name or "").strip().casefold() == current_trial
+        )
+        return matching or rows
+
+    def _load_boss_index(self) -> None:
+        self._guide_summaries = self._boss_rows_for_active_trial()
+        objective = str(self.expedition.expedition.Objective or "").strip().casefold()
+
+        self.boss_combo.blockSignals(True)
+        self.boss_combo.clear()
+        for row in self._guide_summaries:
+            self.boss_combo.addItem(row.name, row.encounter_id)
+        self.boss_combo.blockSignals(False)
+
+        if objective:
+            match = next(
+                (
+                    index
+                    for index, row in enumerate(self._guide_summaries)
+                    if row.name.casefold() == objective
+                ),
+                -1,
+            )
+            if match >= 0:
+                self.boss_combo.setCurrentIndex(match)
+
+        if self.boss_combo.count() > 0 and self.boss_combo.currentIndex() < 0:
+            self.boss_combo.setCurrentIndex(0)
+
+        enabled = self.boss_combo.count() > 0
+        self.previous_boss_button.setEnabled(enabled)
+        self.next_boss_button.setEnabled(enabled)
+
+    def _boss_changed(self, index: int) -> None:
+        if index < 0 or index >= len(self._guide_summaries):
+            return
+        row = self._guide_summaries[index]
+        self.expedition.expedition.Objective = row.name
+        if hasattr(self, "status"):
+            self.status.info(f"Selected boss: {row.name}.")
+
+    def _step_boss(self, delta: int) -> None:
+        count = self.boss_combo.count()
+        if count <= 0:
+            return
+        self.boss_combo.setCurrentIndex((self.boss_combo.currentIndex() + delta) % count)
+
     def _mechanics_tab(self) -> QWidget:
         tab = QWidget()
         root = QVBoxLayout(tab)
@@ -294,9 +366,7 @@ class EncountersPage(FoundryPage):
         current = self.expedition.expedition
         trial = current.Expedition or "No Active Expedition"
         difficulty = current.Difficulty or ""
-        boss = current.Objective or "No Encounter Selected"
 
         self.active_trial.setText(f"{trial}{f' ({difficulty})' if difficulty else ''}")
         self.group_size.setText("— / —")
-        if hasattr(self, "boss_combo"):
-            self.boss_combo.setItemText(0, boss)
+        self._load_boss_index()
