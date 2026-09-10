@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from types import SimpleNamespace
 
 from minmax.character_progression import CharacterProgression
@@ -19,7 +19,7 @@ class _Event:
     normal_heal: float
     critical_heal: float
     unresolved: tuple[str, ...] = ()
-    tooltip_result: object = SimpleNamespace(skill=None)
+    tooltip_result: object = field(default_factory=lambda: SimpleNamespace(skill=None))
 
 
 class _HealingEvents:
