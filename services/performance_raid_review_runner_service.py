@@ -5,6 +5,10 @@ from __future__ import annotations
 The UI supplies an encounter key, report code/URL, and selected fight IDs. This
 facade delegates discovery and review to the registered encounter adapter so UI code
 does not need encounter-specific runner method names.
+
+Fight discovery also establishes the evidence-selection context used by the picker.
+If the encounter or report input changes after fights were loaded, the runner fails
+closed instead of reviewing stale fight IDs against a different source.
 """
 
 from dataclasses import dataclass
@@ -29,6 +33,14 @@ class PerformanceRaidReviewRunnerService:
 
     def __init__(self, registry: RaidReviewEncounterRegistry | None = None) -> None:
         self.registry = registry or RaidReviewEncounterRegistry.default()
+        self._loaded_selection_context: tuple[str, str] | None = None
+
+    @staticmethod
+    def _selection_context(encounter_key: str, report_code: str) -> tuple[str, str]:
+        return (
+            str(encounter_key or "").strip().casefold(),
+            str(report_code or "").strip(),
+        )
 
     def available_encounters(self) -> tuple[RaidReviewEncounterChoice, ...]:
         return tuple(
@@ -45,10 +57,22 @@ class PerformanceRaidReviewRunnerService:
 
     def list_fights(self, encounter_key: str, report_code: str):
         adapter = self.registry.get(encounter_key)
-        return adapter.list_fights(report_code)
+        self._loaded_selection_context = None
+        fights = adapter.list_fights(report_code)
+        self._loaded_selection_context = self._selection_context(encounter_key, report_code)
+        return fights
 
     def review_report(self, encounter_key: str, report_code: str, fight_ids):
         adapter = self.registry.get(encounter_key)
+        requested_context = self._selection_context(encounter_key, report_code)
+        if (
+            self._loaded_selection_context is not None
+            and requested_context != self._loaded_selection_context
+        ):
+            raise RuntimeError(
+                "Raid Review encounter/report changed after fights were loaded. "
+                "Load fights again before running the review."
+            )
         return adapter.review_report(report_code, tuple(int(value) for value in fight_ids))
 
 
