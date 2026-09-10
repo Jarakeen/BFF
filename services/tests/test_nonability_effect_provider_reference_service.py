@@ -1,4 +1,5 @@
 import sqlite3
+from pathlib import Path
 
 from services.nonability_effect_provider_reference_service import (
     NonAbilityEffectProviderReferenceService,
@@ -61,7 +62,7 @@ def test_gear_provider_does_not_parse_unknown_bonus_prose(tmp_path):
 
 
 def test_potion_trait_provider_semantics_are_versioned():
-    rows = NonAbilityEffectProviderReferenceService(tmp_path := __import__('pathlib').Path('missing.db')).potions()
+    rows = NonAbilityEffectProviderReferenceService(Path("missing.db")).potions()
 
     spell_power = [row for row in rows if row.source_name == "Increase Spell Power"]
     assert len(spell_power) == 1
