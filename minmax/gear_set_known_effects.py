@@ -150,6 +150,24 @@ _KNOWN_EFFECTS_BY_SET: tuple[GearSetKnownEffect, ...] = (
     GearSetKnownEffect(
         bonus_id=None,
         set_id=None,
+        set_name="Jorvuld's Guidance",
+        piece_count=5,
+        name="major_minor_buff_duration_increase",
+        layer=EffectLayer.PASSIVE,
+        magnitude=0.40,
+        scaling=(
+            "increases by 40% the duration of Major buffs, Minor buffs, and damage "
+            "shields applied by the wearer to self or allies while in combat"
+        ),
+        condition="in_combat",
+        target_type=SupportTargetType.SELF_OR_ALLY,
+        category=SupportEffectCategory.OTHER,
+        stacking=StackingBehavior.UNIQUE,
+        exclusivity_group="jorvulds_guidance_duration",
+    ),
+    GearSetKnownEffect(
+        bonus_id=None,
+        set_id=None,
         set_name="Spell Power Cure",
         piece_count=5,
         name="major_courage",
