@@ -159,6 +159,7 @@ class CoveragePage(FoundryPage):
         self.raid_review_encounter_combo.currentIndexChanged.connect(self._raid_review_encounter_changed)
         self.raid_review_report_input = QLineEdit()
         self.raid_review_report_input.setPlaceholderText("ESO Logs report code or report URL")
+        self.raid_review_report_input.textChanged.connect(self._raid_review_report_changed)
         self.raid_review_load_fights_button = QPushButton("Load Fights")
         self.raid_review_load_fights_button.clicked.connect(self._load_raid_review_fights)
         self.raid_review_run_button = QPushButton("Run Raid Review")
@@ -237,6 +238,11 @@ class CoveragePage(FoundryPage):
         return self.raid_review_encounter_combo.currentText().strip() or "selected encounter"
 
     def _raid_review_encounter_changed(self) -> None:
+        self.raid_review_fights_table.setRowCount(0)
+        self.raid_review_run_button.setEnabled(False)
+        self._update_raid_review_selection_mode()
+
+    def _raid_review_report_changed(self) -> None:
         self.raid_review_fights_table.setRowCount(0)
         self.raid_review_run_button.setEnabled(False)
         self._update_raid_review_selection_mode()
