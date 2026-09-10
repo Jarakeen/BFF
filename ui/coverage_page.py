@@ -43,7 +43,7 @@ ALIASES = {
 
 
 class CoveragePage(FoundryPage):
-    """Buff/debuff planning desk. Planned coverage now, observed uptime later."""
+    """Buff/debuff planning desk plus observed Raid Review workspace."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -55,7 +55,7 @@ class CoveragePage(FoundryPage):
     def _build_ui(self):
         self.header = FoundryHeader(
             title="Coverage & Buff Management",
-            subtitle="Track required buffs and debuffs. Know what's covered, what's missing, and by whom.",
+            subtitle="Plan encounter coverage, then review what actually happened in combat.",
             department="Raid Engine • Coverage",
         )
         self.set_header(self.header)
@@ -67,7 +67,7 @@ class CoveragePage(FoundryPage):
         self.tabs = QTabWidget()
         self.tabs.addTab(self._coverage_tab(), "BUFFS & DEBUFFS")
         self.tabs.addTab(self._placeholder("Providers", "Provider reliability and substitutions will live here."), "PROVIDERS")
-        self.tabs.addTab(self._placeholder("Uptime Analysis", "Combat-log uptime comparison will live here when imported logs are connected."), "UPTIME ANALYSIS")
+        self.tabs.addTab(self._raid_review_tab(), "RAID REVIEW")
         self.tabs.addTab(self._placeholder("Encounter Needs", "Encounter-specific required and optional effects will live here."), "ENCOUNTER NEEDS")
         self.tabs.addTab(self._placeholder("Reports", "Coverage exports and historical comparisons will live here."), "REPORTS")
         self.add_workspace(self.tabs)
@@ -135,6 +135,46 @@ class CoveragePage(FoundryPage):
         lower.addWidget(self.providers_card, 2)
         lower.addWidget(notes, 2)
         root.addLayout(lower, 1)
+        return page
+
+    def _raid_review_tab(self) -> QWidget:
+        """Observed-performance workspace; backend result binding lands separately."""
+        page = QWidget()
+        root = QVBoxLayout(page)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(8)
+
+        overview = FoundryCard("Raid Review", "◈").set_watermark("compass", 0.045)
+        overview.addWidget(QLabel(
+            "Compare pulls for the selected encounter and surface evidence-backed patterns.\n"
+            "Review focuses on what worked, what changed on wipes, and the highest-value next adjustments."
+        ))
+        root.addWidget(overview)
+
+        upper = QHBoxLayout()
+        upper.setSpacing(8)
+        self.raid_review_priorities_card = FoundryCard("Top Priorities", "△").set_watermark("compass", 0.04)
+        self.raid_review_working_card = FoundryCard("What Is Working", "✓").set_watermark("feather", 0.05)
+        self.raid_review_role_focus_card = FoundryCard("Role Focus", "◎").set_watermark("compass", 0.04)
+        self.raid_review_priorities_card.addWidget(QLabel("Run or load a Raid Review to see prioritized findings."))
+        self.raid_review_working_card.addWidget(QLabel("Successful-pull patterns and non-problems will appear here."))
+        self.raid_review_role_focus_card.addWidget(QLabel("Healer, Tank, DPS, and Group focus will appear here."))
+        upper.addWidget(self.raid_review_priorities_card, 2)
+        upper.addWidget(self.raid_review_working_card, 2)
+        upper.addWidget(self.raid_review_role_focus_card, 2)
+        root.addLayout(upper)
+
+        self.raid_review_players_card = FoundryCard("Player Review", "♟").set_watermark("feather", 0.04)
+        self.raid_review_players_card.addWidget(QLabel(
+            "Per-player strengths, highest-value improvements, and supporting evidence will appear here."
+        ))
+        root.addWidget(self.raid_review_players_card, 2)
+
+        self.raid_review_evidence_card = FoundryCard("Evidence & Unresolved", "✎").make_parchment().set_watermark("feather", 0.08)
+        self.raid_review_evidence_card.addWidget(QLabel(
+            "Mechanic windows, recovery timing, coverage evidence, and unresolved observations remain auditable here."
+        ))
+        root.addWidget(self.raid_review_evidence_card)
         return page
 
     def _placeholder(self, title: str, text: str) -> QWidget:
