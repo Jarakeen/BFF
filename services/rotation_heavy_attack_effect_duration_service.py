@@ -1,16 +1,23 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+from pathlib import Path
 from typing import Iterable, Protocol
 
+from engine.config import DEFAULT_DATABASE
 from minmax.character_build.character_build import CharacterBuild
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_build.effect_layer import BarId, EffectLayer
 from minmax.character_build.passive_grant import PassiveGrant
+from minmax.character_build.saved_build_adapter import (
+    SavedBuildAdaptation,
+    SavedBuildCharacterAdapter,
+)
 from minmax.healer_heavy_attack_build_discovery import (
     HeavyAttackBuildIncentiveKind,
     HealerHeavyAttackBuildIncentive,
 )
+from models.build_model import PlayerBuild
 from services.rotation_build_effect_duration_service import RotationBuildEffectDurationService
 
 
@@ -25,11 +32,21 @@ class _DurationService(Protocol):
     ): ...
 
 
+class _SavedBuildAdapter(Protocol):
+    def adapt(
+        self,
+        saved: PlayerBuild,
+        *,
+        character_id: str | None = None,
+    ) -> SavedBuildAdaptation: ...
+
+
 @dataclass(frozen=True)
 class RotationHeavyAttackEffectDurationEvidence:
     """Build-effective duration evidence for required heavy-triggered effects."""
 
     incentives: tuple[HealerHeavyAttackBuildIncentive, ...]
+    canonical_build: CharacterBuild | None = None
     unresolved: tuple[str, ...] = ()
 
 
@@ -42,8 +59,53 @@ class RotationHeavyAttackEffectDurationService:
     set math, scheduling, recipient coverage, or heavy-attack legality.
     """
 
-    def __init__(self, duration_service: _DurationService | None = None) -> None:
-        self.duration_service = duration_service or RotationBuildEffectDurationService()
+    def __init__(
+        self,
+        duration_service: _DurationService | None = None,
+        *,
+        database_path: str | Path = DEFAULT_DATABASE,
+        build_adapter: _SavedBuildAdapter | None = None,
+    ) -> None:
+        self.database_path = Path(database_path)
+        self.duration_service = duration_service or RotationBuildEffectDurationService(
+            database_path=self.database_path
+        )
+        self.build_adapter = build_adapter or SavedBuildCharacterAdapter(
+            self.database_path
+        )
+
+    def enrich_saved_build(
+        self,
+        *,
+        build: PlayerBuild,
+        incentives: tuple[HealerHeavyAttackBuildIncentive, ...],
+        passives: Iterable[PassiveGrant] = (),
+        character_id: str | None = None,
+    ) -> RotationHeavyAttackEffectDurationEvidence:
+        adaptation = self.build_adapter.adapt(build, character_id=character_id)
+        adaptation_unresolved = self._dedupe(tuple(adaptation.unresolved))
+        if adaptation.build is None:
+            details = adaptation_unresolved or (
+                "saved-build adaptation returned no canonical CharacterBuild",
+            )
+            return RotationHeavyAttackEffectDurationEvidence(
+                incentives=tuple(incentives),
+                canonical_build=None,
+                unresolved=details,
+            )
+
+        resolved = self.enrich(
+            build=adaptation.build,
+            incentives=tuple(incentives),
+            passives=passives,
+        )
+        return RotationHeavyAttackEffectDurationEvidence(
+            incentives=resolved.incentives,
+            canonical_build=adaptation.build,
+            unresolved=self._dedupe(
+                adaptation_unresolved + tuple(resolved.unresolved)
+            ),
+        )
 
     def enrich(
         self,
@@ -107,6 +169,7 @@ class RotationHeavyAttackEffectDurationService:
 
         return RotationHeavyAttackEffectDurationEvidence(
             incentives=tuple(enriched),
+            canonical_build=build,
             unresolved=self._dedupe(tuple(unresolved)),
         )
 
