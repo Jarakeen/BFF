@@ -109,16 +109,14 @@ class RotationHealerEsoLogsObservationExtractor:
     """Extract review candidates for healer HoT micro-timing from raw ESO Logs.
 
     Canonical lower-snake-case skill identity owns the meaning of a tracked skill.
-    Numeric ESO ability ids are observational aliases only and are resolved through
-    ``RotationHealerEsoLogsCanonicalSkillAliasService`` when the production database
-    can provide them. The target's historical single numeric id remains only as a
-    compatibility fallback for small synthetic/test databases that do not expose
-    ``ability.index_name``.
+    Numeric ESO ability ids are observational aliases only. Canonical skill aliases
+    identify cast/activation events, while separately reviewed component-specific
+    effect aliases identify the periodic healing stream when such evidence exists.
 
     This service does not promote runtime facts. It only pairs isolated casts with
-    same-caster periodic heal events for reviewed canonical skill aliases and emits
-    candidate samples. The resulting payload is explicitly marked ``candidate`` and
-    must be human-reviewed before the runtime fixture loader will accept it.
+    same-caster periodic heal events for reviewed aliases and emits candidate samples.
+    The resulting payload is explicitly marked ``candidate`` and must be human-reviewed
+    before the runtime fixture loader will accept it.
 
     Multiple recipients healed on the same periodic tick are collapsed to one
     timestamp. Activations recast before canonical expiry are skipped because
@@ -184,12 +182,33 @@ class RotationHealerEsoLogsObservationExtractor:
         self,
         target: RotationHealerEsoLogsObservationTarget,
     ) -> tuple[int, ...]:
+        """Return canonical cast/activation aliases for a tracked skill."""
+
         canonical_skill_id = str(target.canonical_skill_id or "").strip().casefold()
         if canonical_skill_id:
             resolved = self.skill_aliases.resolve(canonical_skill_id)
             if resolved is not None and resolved.ability_game_ids:
                 return tuple(int(value) for value in resolved.ability_game_ids)
         return (int(target.ability_game_id),)
+
+    def periodic_effect_ids_for_target(
+        self,
+        target: RotationHealerEsoLogsObservationTarget,
+        *,
+        game_version: str = "U50",
+    ) -> tuple[int, ...]:
+        """Return reviewed periodic-heal aliases, falling back only for legacy tests."""
+
+        canonical_skill_id = str(target.canonical_skill_id or "").strip().casefold()
+        if canonical_skill_id:
+            reviewed = self.skill_aliases.reviewed_periodic_effects(
+                canonical_skill_id,
+                coefficient_number=target.coefficient_number,
+                game_version=game_version,
+            )
+            if reviewed is not None and reviewed.ability_game_ids:
+                return tuple(int(value) for value in reviewed.ability_game_ids)
+        return self.ability_ids_for_target(target)
 
     def target_alias_map(
         self,
@@ -244,17 +263,21 @@ class RotationHealerEsoLogsObservationExtractor:
                 )
                 continue
 
-            ability_ids = self.ability_ids_for_target(target)
+            cast_ability_ids = self.ability_ids_for_target(target)
+            periodic_effect_ids = self.periodic_effect_ids_for_target(
+                target,
+                game_version=str(game_version),
+            )
             assert canonical.duration_seconds is not None
             activations = self._activation_events(
                 events,
                 caster_id=int(caster_id),
-                ability_game_ids=ability_ids,
+                ability_game_ids=cast_ability_ids,
             )
             if not activations:
                 unresolved.append(
                     f"{target.source_name}: no matching cast/completecast event for caster {caster_id} "
-                    f"across canonical aliases {ability_ids}"
+                    f"across canonical aliases {cast_ability_ids}"
                 )
                 continue
 
@@ -280,7 +303,7 @@ class RotationHealerEsoLogsObservationExtractor:
                     for event in events
                     if event.event_kind == SemanticEventKind.HEAL
                     and event.source_id == int(caster_id)
-                    and event.ability_game_id in ability_ids
+                    and event.ability_game_id in periodic_effect_ids
                     and (event.tick is True or event.raw_event_type == "hot")
                     and activation_seconds - expiry_tolerance_seconds
                     <= event.timestamp * scale
@@ -296,7 +319,7 @@ class RotationHealerEsoLogsObservationExtractor:
                 )
                 if not tick_times:
                     unresolved.append(
-                        f"{target.source_name} activation event {activation_index}: no same-caster periodic heal events found within canonical active window"
+                        f"{target.source_name} activation event {activation_index}: no same-caster periodic heal events found within canonical active window across reviewed effect aliases {periodic_effect_ids}"
                     )
                     continue
 
@@ -320,9 +343,9 @@ class RotationHealerEsoLogsObservationExtractor:
                     provenance=(
                         f"candidate extracted from ESO Logs raw export {fight.report_code} fight {fight.fight_id}",
                         f"casterID={int(caster_id)} canonical_skill_id={target.canonical_skill_id or '(legacy)'} "
-                        f"abilityAliases={ability_ids} activationAbilityID={observed_ability_game_id} "
-                        f"activation_event_index={activation_index}",
-                        "same-caster periodic heal events only; same-timestamp recipient heals deduplicated",
+                        f"castAbilityAliases={cast_ability_ids} periodicEffectAliases={periodic_effect_ids} "
+                        f"activationAbilityID={observed_ability_game_id} activation_event_index={activation_index}",
+                        "same-caster reviewed periodic heal aliases only; same-timestamp recipient heals deduplicated",
                     ),
                     game_version=str(game_version),
                 )
