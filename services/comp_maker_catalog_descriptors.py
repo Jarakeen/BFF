@@ -12,6 +12,7 @@ from services.service_catalog import (
     ServiceBehavior,
     ServiceDescriptor,
 )
+from services.rotation_catalog_descriptors import ROTATION_SERVICE_DESCRIPTORS
 from services.team_prescription_catalog_descriptors import (
     TEAM_PRESCRIPTION_SERVICE_DESCRIPTORS,
 )
@@ -122,6 +123,7 @@ COMP_MAKER_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.POLICY,
         notes="Comparison is bounded to static capability presence, redundancy, gaps, conditional sources, recruits, and evidence boundaries.",
     ),
+    *ROTATION_SERVICE_DESCRIPTORS,
     *TEAM_PRESCRIPTION_SERVICE_DESCRIPTORS,
     *TEAM_PROVIDER_SERVICE_DESCRIPTORS,
     *TEAM_WORKFLOW_SERVICE_DESCRIPTORS,
