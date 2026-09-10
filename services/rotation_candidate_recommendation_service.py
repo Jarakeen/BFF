@@ -33,6 +33,10 @@ class RotationCandidateRecommendationEvidence:
     measurements from the appropriate damage/support/workload services. Unknown
     role-critical evidence remains ``None`` and therefore fails closed in the
     role-aware ranking layer instead of being silently converted to zero.
+
+    Role-specific hard obligations remain a separate channel from the generic
+    scorecard so encounter healer criteria, future tank checks, and similar role
+    gates do not masquerade as missing support effects or unresolved mechanics.
     """
 
     candidate_id: str
@@ -41,12 +45,25 @@ class RotationCandidateRecommendationEvidence:
     assigned_support_value: float | None
     sustain_margin: float | None
     primary_role_displacement_seconds: float | None
+    role_hard_obligation_satisfied: bool | None = True
+    role_hard_obligation_reasons: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         candidate_id = str(self.candidate_id or "").strip()
         if not candidate_id:
             raise ValueError("rotation recommendation evidence candidate_id is required")
         object.__setattr__(self, "candidate_id", candidate_id)
+        object.__setattr__(
+            self,
+            "role_hard_obligation_reasons",
+            tuple(
+                dict.fromkeys(
+                    str(item).strip()
+                    for item in self.role_hard_obligation_reasons
+                    if str(item).strip()
+                )
+            ),
+        )
 
 
 class RotationCandidateRecommendationEvidenceProvider(Protocol):
@@ -192,6 +209,12 @@ class RotationCandidateRecommendationService:
                     sustain_margin=evidence.sustain_margin,
                     primary_role_displacement_seconds=(
                         evidence.primary_role_displacement_seconds
+                    ),
+                    role_hard_obligation_satisfied=(
+                        evidence.role_hard_obligation_satisfied
+                    ),
+                    role_hard_obligation_reasons=(
+                        evidence.role_hard_obligation_reasons
                     ),
                 )
             )
