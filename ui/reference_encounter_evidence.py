@@ -8,8 +8,9 @@ whose boss backing exists but does not carry the reviewed trial mechanic.
 Nothing here promotes evidence into canonical encounter truth.
 """
 
+from dataclasses import replace
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
 from engine.config import get_data_dir
 from services.encounter_evidence import ReconciledEncounterFact, reconcile_encounter_evidence
@@ -84,6 +85,13 @@ def _title_from_exists_key(fact_key: str) -> str:
     return stem.replace("_", " ").title() if stem else ""
 
 
+def _exists_stem(fact: ReconciledEncounterFact) -> str:
+    if fact.fact_type.casefold() != "mechanic_state" or fact.value is not True:
+        return ""
+    key = str(fact.fact_key or "").strip().casefold()
+    return key[:-7].strip("_") if key.endswith("_exists") else ""
+
+
 def _named_mechanic_fact(fact: ReconciledEncounterFact) -> str:
     kind = fact.fact_type.casefold()
     if kind not in _MECHANIC_FACT_TYPES:
@@ -95,7 +103,52 @@ def _named_mechanic_fact(fact: ReconciledEncounterFact) -> str:
     return ""
 
 
-def _entry_from_fact(packet, fact: ReconciledEncounterFact) -> ReferenceEntry | None:
+def _fact_label(fact: ReconciledEncounterFact) -> str:
+    return str(fact.fact_key or "").replace("_", " ").strip().title()
+
+
+def _evidence_lines(fact: ReconciledEncounterFact) -> tuple[str, ...]:
+    lines = []
+    for row in fact.evidence:
+        locator = f" • {row.source_locator}" if row.source_locator else ""
+        update = f" • {row.game_update}" if row.game_update else ""
+        lines.append(
+            f"{row.source_type}: {row.source_name}{locator}{update} • {row.confidence} confidence"
+        )
+    return tuple(lines)
+
+
+def _related_safe_facts(
+    seed: ReconciledEncounterFact,
+    facts: Iterable[ReconciledEncounterFact],
+) -> tuple[ReconciledEncounterFact, ...]:
+    """Join reviewed split evidence around an explicit ``*_exists`` mechanic stem.
+
+    Encounter evidence intentionally stores timing, response, difficulty, and
+    transition facts separately. Reference may present those together when the
+    fact key clearly contains the reviewed mechanic stem, while conflicting rows
+    remain excluded by ``safe_for_review``.
+    """
+
+    stem = _exists_stem(seed)
+    if not stem:
+        return ()
+    marker = f"_{stem}_"
+    result = []
+    for fact in facts:
+        if fact is seed or not fact.safe_for_review:
+            continue
+        key = str(fact.fact_key or "").strip().casefold()
+        if key.startswith(f"{stem}_") or key.endswith(f"_{stem}") or marker in f"_{key}_":
+            result.append(fact)
+    return tuple(result)
+
+
+def _entry_from_fact(
+    packet,
+    fact: ReconciledEncounterFact,
+    all_facts: Iterable[ReconciledEncounterFact] = (),
+) -> ReferenceEntry | None:
     name = _named_mechanic_fact(fact)
     if not name or not fact.safe_for_review:
         return None
@@ -112,13 +165,12 @@ def _entry_from_fact(packet, fact: ReconciledEncounterFact) -> ReferenceEntry | 
     if rendered:
         details.append(("Reviewed details", rendered))
 
-    evidence = []
-    for row in fact.evidence:
-        locator = f" • {row.source_locator}" if row.source_locator else ""
-        update = f" • {row.game_update}" if row.game_update else ""
-        evidence.append(
-            f"{row.source_type}: {row.source_name}{locator}{update} • {row.confidence} confidence"
-        )
+    evidence = list(_evidence_lines(fact))
+    for related_fact in _related_safe_facts(fact, all_facts):
+        related_rendered = _render_value(related_fact.value)
+        if related_rendered:
+            details.append((f"Evidence • {_fact_label(related_fact)}", related_rendered))
+        evidence.extend(_evidence_lines(related_fact))
 
     return ReferenceEntry(
         name=f"{name} — {packet.encounter_name}",
@@ -129,7 +181,7 @@ def _entry_from_fact(packet, fact: ReconciledEncounterFact) -> ReferenceEntry | 
             "Reviewed source evidence exists for this encounter mechanic, but this exact mechanic "
             "is not yet represented by a canonical encounter mechanic record."
         ),
-        details=tuple(details),
+        details=tuple(dict.fromkeys(details)),
         related=(packet.encounter_name,),
         death_note=(
             "Use the reviewed mechanic evidence as context only. Death analysis should prefer a "
@@ -141,6 +193,16 @@ def _entry_from_fact(packet, fact: ReconciledEncounterFact) -> ReferenceEntry | 
         ),
         used_by=("Combat Reference", "Encounter Research"),
         evidence=tuple(dict.fromkeys(evidence)),
+    )
+
+
+def _merge_entries(existing: ReferenceEntry, entry: ReferenceEntry) -> ReferenceEntry:
+    return replace(
+        existing,
+        details=tuple(dict.fromkeys((*existing.details, *entry.details))),
+        related=tuple(dict.fromkeys((*existing.related, *entry.related))),
+        used_by=tuple(dict.fromkeys((*existing.used_by, *entry.used_by))),
+        evidence=tuple(dict.fromkeys((*existing.evidence, *entry.evidence))),
     )
 
 
@@ -159,30 +221,16 @@ def _load_evidence_entries(
         packet = load_encounter_evidence_packet(path)
         if packet.encounter_id in backed_ids:
             continue
-        for fact in reconcile_encounter_evidence(packet.evidence):
-            entry = _entry_from_fact(packet, fact)
+        facts = tuple(reconcile_encounter_evidence(packet.evidence))
+        for fact in facts:
+            entry = _entry_from_fact(packet, fact, facts)
             if entry is None:
                 continue
             identity = entry.name.casefold()
             if identity in represented:
                 continue
             existing = entries.get(identity)
-            if existing is None:
-                entries[identity] = entry
-                continue
-            entries[identity] = ReferenceEntry(
-                name=existing.name,
-                entry_type=existing.entry_type,
-                source_scope=existing.source_scope,
-                tags=existing.tags,
-                summary=existing.summary,
-                details=tuple(dict.fromkeys((*existing.details, *entry.details))),
-                related=tuple(dict.fromkeys((*existing.related, *entry.related))),
-                death_note=existing.death_note,
-                field_note=existing.field_note,
-                used_by=tuple(dict.fromkeys((*existing.used_by, *entry.used_by))),
-                evidence=tuple(dict.fromkeys((*existing.evidence, *entry.evidence))),
-            )
+            entries[identity] = entry if existing is None else _merge_entries(existing, entry)
 
     return tuple(sorted(entries.values(), key=lambda entry: (entry.name.casefold(), entry.name)))
 
