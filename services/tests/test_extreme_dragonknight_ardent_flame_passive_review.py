@@ -1,6 +1,5 @@
 from services.extreme_dragonknight_ardent_flame_passive_review import (
     IMPLEMENTED,
-    INTEGRATION_PENDING,
     IRRELEVANT,
     ExtremeDragonknightArdentFlamePassiveReview,
 )
@@ -23,7 +22,7 @@ def test_only_a_soul_ablaze_is_relevant_to_most_actual_heal() -> None:
     relevant = [row for row in rows if row.objective_relevant]
 
     assert [(row.passive_name, row.coverage_status) for row in relevant] == [
-        ("A Soul Ablaze", INTEGRATION_PENDING),
+        ("A Soul Ablaze", IMPLEMENTED),
     ]
     assert all(
         row.coverage_status == IRRELEVANT
@@ -32,12 +31,12 @@ def test_only_a_soul_ablaze_is_relevant_to_most_actual_heal() -> None:
     )
 
 
-def test_ardent_flame_review_remains_incomplete_until_context_wiring() -> None:
+def test_ardent_flame_review_is_complete_after_context_wiring() -> None:
     review = ExtremeDragonknightArdentFlamePassiveReview()
 
-    assert not review.complete
+    assert review.complete
     assert all(
-        row.coverage_status != IMPLEMENTED
+        row.coverage_status == IMPLEMENTED
         for row in review.items()
         if row.objective_relevant
     )
