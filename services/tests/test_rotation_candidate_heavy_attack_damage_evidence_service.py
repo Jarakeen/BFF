@@ -40,7 +40,7 @@ def _build(weapon_type: WeaponType = WeaponType.FLAME_STAFF) -> CharacterBuild:
     return CharacterBuild(
         name="Heavy Damage Build",
         character_class=CharacterClass.WARDEN,
-        role=Role.DAMAGE,
+        role=Role.DD,
         front_bar=Bar(
             bar_id=BarId.FRONT,
             main_hand=Weapon(weapon_type),
