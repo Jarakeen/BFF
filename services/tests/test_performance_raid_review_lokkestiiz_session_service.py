@@ -154,6 +154,7 @@ def test_session_aggregates_pull_evidence_into_one_generic_review() -> None:
     assert kwargs["encounter_name"] == "Lokkestiiz"
     assert len(kwargs["mechanic_windows"]) == 2
     assert len(kwargs["landing_recovery_observations"]) == 2
+    assert kwargs["healer_effect_coverage_observations"] == ()
     assert "A #2: sample pull gap" in result.unresolved
 
 
@@ -238,7 +239,10 @@ def test_session_projects_reviewed_healer_effect_coverage_from_same_fight_events
     assert len(events.calls) == 1
     assert len(result.healer_effect_coverage) == 1
     observation = result.healer_effect_coverage[0]
+    assert observation.source_actor_id == 11
     assert observation.covered
     assert observation.mechanic_semantic_key == "flight_1"
     assert observation.requirement_semantic_key == "major_courage_precoverage"
     assert observation.active_effect_names == ("Major Courage",)
+    _sources, kwargs = coordinator.calls[0]
+    assert kwargs["healer_effect_coverage_observations"] == result.healer_effect_coverage
