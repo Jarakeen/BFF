@@ -67,6 +67,10 @@ def evaluate_required_heavy_attack_due_state(
     function does not decide encounter safety, channel duration, ability priority,
     resource state, or whether a candidate heavy actually lands. Those remain
     caller-owned runtime facts.
+
+    Effect expiry is diagnostic and uses the build-effective duration when the
+    shared duration layer has resolved one. The source mechanic's base/capped
+    duration remains preserved separately on the incentive.
     """
 
     if incentive.kind is not HeavyAttackBuildIncentiveKind.REQUIRED_EFFECT:
@@ -108,10 +112,15 @@ def evaluate_required_heavy_attack_due_state(
 
     next_eligible = last_trigger + recurrence
     effect_expires: float | None = None
-    if incentive.maximum_effect_duration_seconds is not None:
-        duration = float(incentive.maximum_effect_duration_seconds)
+    duration_value = (
+        incentive.effective_effect_duration_seconds
+        if incentive.effective_effect_duration_seconds is not None
+        else incentive.maximum_effect_duration_seconds
+    )
+    if duration_value is not None:
+        duration = float(duration_value)
         if not math.isfinite(duration) or duration < 0:
-            raise ValueError("heavy attack maximum effect duration must be finite and non-negative")
+            raise ValueError("heavy attack effect duration must be finite and non-negative")
         effect_expires = last_trigger + duration
 
     due = now >= next_eligible
