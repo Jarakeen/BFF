@@ -51,7 +51,6 @@ class ExtremeSorcererConditionalActualHealService(
         active_bar: str = "front",
         max_passes: int = 24,
         progression_override: CharacterProgression | None = None,
-        evaluation_cache=None,
     ) -> ExtremeActualHealOptimizationResult:
         result = super().optimize(
             baseline_build,
@@ -59,7 +58,6 @@ class ExtremeSorcererConditionalActualHealService(
             active_bar=active_bar,
             max_passes=max_passes,
             progression_override=progression_override,
-            evaluation_cache=evaluation_cache,
         )
         if not self.permanent_pet_active:
             return result
