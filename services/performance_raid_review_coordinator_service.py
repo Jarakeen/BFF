@@ -5,7 +5,8 @@ from __future__ import annotations
 The coordinator is intentionally thin: collect fresh per-source observations,
 optionally enrich them from raw ESO Logs events, run cross-pull analysis, and then
 add findings from explicitly supplied reviewed mechanic windows, landing-recovery,
-and healer pre-coverage evidence. It does not persist computed review state.
+landing-recovery completion, and healer pre-coverage evidence. It does not persist
+computed review state.
 """
 
 from dataclasses import dataclass
@@ -23,6 +24,10 @@ from services.performance_raid_review_healer_effect_coverage_service import (
 from services.performance_raid_review_landing_recovery_analysis_service import (
     PerformanceRaidReviewLandingRecoveryAnalysisService,
     RaidReviewPullOutcome,
+)
+from services.performance_raid_review_landing_recovery_completion_analysis_service import (
+    PerformanceRaidReviewLandingRecoveryCompletionAnalysisService,
+    RaidReviewRecoveryOpportunity,
 )
 from services.performance_raid_review_landing_recovery_service import (
     RaidReviewLandingRecoveryObservation,
@@ -64,6 +69,7 @@ class PerformanceRaidReviewCoordinatorService:
         event_provider: PerformanceRaidReviewEsoLogsEventProvider | None = None,
         mechanic_window_service: PerformanceRaidReviewMechanicWindowService | None = None,
         landing_recovery_analysis_service: PerformanceRaidReviewLandingRecoveryAnalysisService | None = None,
+        landing_recovery_completion_analysis_service: PerformanceRaidReviewLandingRecoveryCompletionAnalysisService | None = None,
         healer_effect_coverage_analysis_service: PerformanceRaidReviewHealerEffectCoverageAnalysisService | None = None,
     ) -> None:
         self.performance_service = performance_service
@@ -81,6 +87,10 @@ class PerformanceRaidReviewCoordinatorService:
         self.landing_recovery_analysis_service = (
             landing_recovery_analysis_service or PerformanceRaidReviewLandingRecoveryAnalysisService()
         )
+        self.landing_recovery_completion_analysis_service = (
+            landing_recovery_completion_analysis_service
+            or PerformanceRaidReviewLandingRecoveryCompletionAnalysisService()
+        )
         self.healer_effect_coverage_analysis_service = (
             healer_effect_coverage_analysis_service
             or PerformanceRaidReviewHealerEffectCoverageAnalysisService()
@@ -93,6 +103,7 @@ class PerformanceRaidReviewCoordinatorService:
         encounter_name: str | None = None,
         mechanic_windows: Iterable[RaidReviewEncounterWindow] = (),
         landing_recovery_observations: Iterable[RaidReviewLandingRecoveryObservation] = (),
+        landing_recovery_opportunities: Iterable[RaidReviewRecoveryOpportunity] = (),
         healer_effect_coverage_observations: Iterable[
             RaidReviewHealerEffectCoverageObservation
         ] = (),
@@ -111,7 +122,8 @@ class PerformanceRaidReviewCoordinatorService:
         )
 
         recovery_rows = tuple(landing_recovery_observations)
-        if recovery_rows:
+        opportunity_rows = tuple(landing_recovery_opportunities)
+        if recovery_rows or opportunity_rows:
             outcomes_by_pull: dict[tuple[str, int], RaidReviewPullOutcome] = {}
             for row in collection.observations:
                 key = (str(row.report_code), int(row.fight_id))
@@ -120,12 +132,22 @@ class PerformanceRaidReviewCoordinatorService:
                     fight_id=key[1],
                     kill=bool(row.kill),
                 )
-            extra_findings.extend(
-                self.landing_recovery_analysis_service.findings(
-                    recovery_rows,
-                    tuple(outcomes_by_pull.values()),
+            outcomes = tuple(outcomes_by_pull.values())
+            if recovery_rows:
+                extra_findings.extend(
+                    self.landing_recovery_analysis_service.findings(
+                        recovery_rows,
+                        outcomes,
+                    )
                 )
-            )
+            if opportunity_rows:
+                extra_findings.extend(
+                    self.landing_recovery_completion_analysis_service.findings(
+                        opportunity_rows,
+                        recovery_rows,
+                        outcomes,
+                    )
+                )
 
         coverage_rows = tuple(healer_effect_coverage_observations)
         if coverage_rows:
