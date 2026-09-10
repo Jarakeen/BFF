@@ -105,7 +105,7 @@ def test_conflicting_fact_never_becomes_criterion_even_if_review_id_is_supplied(
 
     assert result.criteria == ()
     assert result.unresolved == (
-        f"{fact.fact_id}: healer demand criterion value must be an object",
+        f"{fact.fact_id}: conflicting healer demand criterion evidence",
     )
 
 
