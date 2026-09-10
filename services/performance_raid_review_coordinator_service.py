@@ -5,8 +5,8 @@ from __future__ import annotations
 The coordinator is intentionally thin: collect fresh per-source observations,
 optionally enrich them from raw ESO Logs events, run cross-pull analysis, and then
 add findings from explicitly supplied reviewed mechanic windows, landing-recovery,
-landing-recovery completion, healer pre-coverage, and DD boss-contact continuity
-evidence. It does not persist computed review state.
+landing-recovery completion, healer pre-coverage, DD boss-contact continuity, and
+DD output-context evidence. It does not persist computed review state.
 """
 
 from dataclasses import dataclass
@@ -17,6 +17,9 @@ from services.performance_raid_review_dd_ground_continuity_analysis_service impo
 )
 from services.performance_raid_review_dd_ground_continuity_service import (
     RaidReviewDDGroundContinuityObservation,
+)
+from services.performance_raid_review_dd_output_context_service import (
+    PerformanceRaidReviewDDOutputContextService,
 )
 from services.performance_raid_review_esologs_event_provider import (
     PerformanceRaidReviewEsoLogsEventProvider,
@@ -78,6 +81,7 @@ class PerformanceRaidReviewCoordinatorService:
         landing_recovery_completion_analysis_service: PerformanceRaidReviewLandingRecoveryCompletionAnalysisService | None = None,
         healer_effect_coverage_analysis_service: PerformanceRaidReviewHealerEffectCoverageAnalysisService | None = None,
         dd_ground_continuity_analysis_service: PerformanceRaidReviewDDGroundContinuityAnalysisService | None = None,
+        dd_output_context_service: PerformanceRaidReviewDDOutputContextService | None = None,
     ) -> None:
         self.performance_service = performance_service
         self.event_provider = event_provider or PerformanceRaidReviewEsoLogsEventProvider(
@@ -105,6 +109,9 @@ class PerformanceRaidReviewCoordinatorService:
         self.dd_ground_continuity_analysis_service = (
             dd_ground_continuity_analysis_service
             or PerformanceRaidReviewDDGroundContinuityAnalysisService()
+        )
+        self.dd_output_context_service = (
+            dd_output_context_service or PerformanceRaidReviewDDOutputContextService()
         )
 
     def review(
@@ -170,6 +177,14 @@ class PerformanceRaidReviewCoordinatorService:
                         outcomes,
                     )
                 )
+
+        context_findings = self.dd_output_context_service.findings(
+            collection.observations,
+            continuity_observations=continuity_rows,
+            recovery_opportunities=opportunity_rows,
+            recovery_observations=recovery_rows,
+        )
+        extra_findings.extend(context_findings)
 
         coverage_rows = tuple(healer_effect_coverage_observations)
         if coverage_rows:
