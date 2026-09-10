@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
+from minmax.external_group_buff_provenance import ExternalGroupBuffApplication
 from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
 
 
@@ -23,7 +24,9 @@ class ExtremeRuntimePotionUse:
         object.__setattr__(self, "sequence", int(self.sequence))
 
 
-ExtremeRuntimeHistoryEntry = RuntimeEffectEventAttempt | ExtremeRuntimePotionUse
+ExtremeRuntimeHistoryEntry = (
+    RuntimeEffectEventAttempt | ExtremeRuntimePotionUse | ExternalGroupBuffApplication
+)
 
 
 @dataclass(frozen=True)
@@ -31,11 +34,16 @@ class ExtremeRuntimeSnapshot:
     """One deterministic runtime history evaluated at one exact snapshot.
 
     ``runtime_history`` is the authoritative E1 input when supplied. It carries
-    ordinary effect attempts and explicit potion activations on the same
-    timestamp / sequence ordered timeline. The older positional fields remain
-    in their original order as a compatibility bridge for existing callers,
-    but they cannot be supplied alongside ``runtime_history`` so two competing
-    versions of runtime truth cannot enter one evaluation.
+    ordinary effect attempts, explicit potion activations, and explicitly
+    evidenced external group-buff applications on one ordered timeline. The
+    older positional fields remain in their original order as a compatibility
+    bridge for existing callers, but they cannot be supplied alongside
+    ``runtime_history`` so two competing versions of runtime truth cannot enter
+    one evaluation.
+
+    ``recipient_actor_id`` and ``group_member_ids`` provide the roster identity
+    evidence required to project external applications. They are ignored when
+    no external application exists in the runtime history.
 
     When unified history is supplied, ``attempts`` and
     ``potion_elapsed_seconds`` are populated as derived compatibility views.
@@ -49,6 +57,8 @@ class ExtremeRuntimeSnapshot:
     snapshot_time_seconds: float = 0.0
     potion_elapsed_seconds: float | None = None
     runtime_history: tuple[ExtremeRuntimeHistoryEntry, ...] = ()
+    recipient_actor_id: str | None = None
+    group_member_ids: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         snapshot = float(self.snapshot_time_seconds)
@@ -59,8 +69,18 @@ class ExtremeRuntimeSnapshot:
         history = tuple(self.runtime_history)
         attempts = tuple(self.attempts)
         supplied_potion_elapsed = self.potion_elapsed_seconds
+        recipient = str(self.recipient_actor_id or "").strip() or None
+        members = tuple(
+            dict.fromkeys(
+                str(value or "").strip()
+                for value in self.group_member_ids
+                if str(value or "").strip()
+            )
+        )
         object.__setattr__(self, "runtime_history", history)
         object.__setattr__(self, "attempts", attempts)
+        object.__setattr__(self, "recipient_actor_id", recipient)
+        object.__setattr__(self, "group_member_ids", members)
 
         if history and (attempts or supplied_potion_elapsed is not None):
             raise ValueError(
@@ -68,9 +88,13 @@ class ExtremeRuntimeSnapshot:
             )
 
         for entry in history:
-            if not isinstance(entry, (RuntimeEffectEventAttempt, ExtremeRuntimePotionUse)):
+            if not isinstance(
+                entry,
+                (RuntimeEffectEventAttempt, ExtremeRuntimePotionUse, ExternalGroupBuffApplication),
+            ):
                 raise TypeError(
-                    "runtime_history entries must be RuntimeEffectEventAttempt or ExtremeRuntimePotionUse"
+                    "runtime_history entries must be RuntimeEffectEventAttempt, "
+                    "ExtremeRuntimePotionUse, or ExternalGroupBuffApplication"
                 )
 
         if history:
@@ -112,7 +136,9 @@ class ExtremeRuntimeSnapshot:
     def _entry_order(entry: ExtremeRuntimeHistoryEntry) -> tuple[float, int]:
         if isinstance(entry, RuntimeEffectEventAttempt):
             return (float(entry.event.time_seconds), int(entry.event.sequence))
-        return (float(entry.time_seconds), int(entry.sequence))
+        if isinstance(entry, ExtremeRuntimePotionUse):
+            return (float(entry.time_seconds), int(entry.sequence))
+        return (float(entry.applied_at_seconds), int(entry.sequence))
 
     @property
     def ordered_runtime_history(self) -> tuple[ExtremeRuntimeHistoryEntry, ...]:
@@ -130,6 +156,18 @@ class ExtremeRuntimeSnapshot:
             entry
             for entry in self.ordered_runtime_history
             if isinstance(entry, RuntimeEffectEventAttempt)
+        )
+
+    @property
+    def external_group_buff_applications(self) -> tuple[ExternalGroupBuffApplication, ...]:
+        """Return explicitly evidenced external applications on the shared timeline."""
+
+        if not self.runtime_history:
+            return ()
+        return tuple(
+            entry
+            for entry in self.ordered_runtime_history
+            if isinstance(entry, ExternalGroupBuffApplication)
         )
 
     @property
