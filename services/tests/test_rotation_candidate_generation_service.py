@@ -108,6 +108,68 @@ def test_generates_baseline_then_explicit_variants_through_same_refinement_path(
     assert all(call["wait_decision"] is wait_decision for call in refinement.calls)
 
 
+def test_generate_carries_shared_action_claims_into_baseline_and_every_variant() -> None:
+    refinement = _RefinementService()
+    service = RotationCandidateGenerationService(refinement)
+    claims = (
+        _claim("Combat Prayer"),
+        _claim("Budding Seeds"),
+    )
+
+    result = service.generate(
+        seed_plan=_seed(),
+        priorities=object(),
+        demands=(object(),),
+        action_claims=claims,
+        options=(
+            RotationRefreshLeadCandidateOption(
+                option_id="early-seeds",
+                refresh_leads=(_lead("Budding Seeds", 2.0),),
+            ),
+            RotationRefreshLeadCandidateOption(
+                option_id="early-prayer",
+                refresh_leads=(_lead("Combat Prayer", 1.0),),
+            ),
+        ),
+    )
+
+    expected_claims = (
+        _claim("Budding Seeds"),
+        _claim("Combat Prayer"),
+    )
+    assert [candidate.candidate_id for candidate in result] == [
+        "baseline",
+        "early-seeds",
+        "early-prayer",
+    ]
+    assert all(candidate.action_claims == expected_claims for candidate in result)
+    assert all(call["claims"] == expected_claims for call in refinement.calls)
+
+
+def test_generate_rejects_duplicate_shared_action_claim_target_before_family_generation() -> None:
+    refinement = _RefinementService()
+    service = RotationCandidateGenerationService(refinement)
+
+    with pytest.raises(ValueError, match="duplicate demand action claim target"):
+        service.generate(
+            seed_plan=_seed(),
+            priorities=object(),
+            demands=(object(),),
+            action_claims=(
+                _claim("Budding Seeds"),
+                _claim("budding seeds"),
+            ),
+            options=(
+                RotationRefreshLeadCandidateOption(
+                    option_id="early-seeds",
+                    refresh_leads=(_lead("Budding Seeds", 2.0),),
+                ),
+            ),
+        )
+
+    assert refinement.calls == []
+
+
 def test_generate_policy_carries_canonical_encounter_action_claims() -> None:
     refinement = _RefinementService()
     service = RotationCandidateGenerationService(refinement)
