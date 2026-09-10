@@ -77,6 +77,15 @@ https://esodecoded.com/tools
 
 **Notes:** Useful for finding discrepancies and sanity-checking results. Check the tool/data date before using numerical values as current-game truth.
 
+### ESO-Hub skill pages
+https://eso-hub.com/en/skills
+
+**Use for:** Current readable skill-line rosters and tooltip wording when reviewing class, weapon, guild, and world skill/passive families.
+
+**Confidence:** Validation / corroboration.
+
+**Notes:** Useful for confirming the current visible passive roster and effect wording. Versioned numerical changes should still be reconciled against official patch notes or canonical game data before hardcoding combat math.
+
 ### ESO-Hub Scribing Simulator
 https://eso-hub.com/en/scribing-simulator
 
