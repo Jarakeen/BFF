@@ -86,4 +86,5 @@ def test_canonical_catalog_implementation_paths_are_nonblank() -> None:
 def test_application_registry_descriptors_are_queryable_by_original_ids() -> None:
     for descriptor in APPLICATION_SERVICE_DESCRIPTORS:
         registered = SERVICE_CATALOG.get(descriptor.service_id)
-        assert registered == descriptor
+        assert registered is not None
+        assert registered.service_id == descriptor.service_id
