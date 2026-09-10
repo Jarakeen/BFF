@@ -3,7 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from minmax.build_calculation_context import BuildCalculationContext
+from minmax.combat_state import CombatState
 from minmax.formulas.final_calculations import calculate_healing_total
+from minmax.healing_received_combat_state import resolve_healing_received_combat_state
 from minmax.runtime_event import RuntimeEvent
 from minmax.stat_ids import StatId
 from minmax.triggered_healing import TriggeredHealingEvent
@@ -18,6 +20,8 @@ class ExtremeSorcererBloodMagicHealingEventResult:
     critical_heal: float | None
     critical_healing_bonus: float | None
     critical_multiplier: float | None
+    healing_received_ratio_points: float = 0.0
+    healing_received_sources: tuple[str, ...] = ()
     unresolved: tuple[str, ...] = ()
 
     @property
@@ -38,8 +42,9 @@ class ExtremeSorcererBloodMagicHealingEventService:
     ``ExtremeSorcererBloodMagicService`` owns trigger/passive/subclass legality and
     resolves the unmodified 10%-Max-Health self-heal. This adapter owns the
     healing-event layer only. Because the caster is also the recipient, canonical
-    Healing Done and Healing Taken both apply. The shared engine currently has no
-    separate standing Healing Received stat, so that formula input remains zero.
+    Healing Done and Healing Taken both apply. Explicit recipient-side Vitality and
+    Defile state is resolved through the shared component-layer Healing Received
+    resolver rather than being assumed to be zero.
 
     Blood Magic is crit-eligible. The ordinary ESO Critical Healing ceiling is
     applied to the universal 50% base critical-healing bonus plus the character's
@@ -98,6 +103,8 @@ class ExtremeSorcererBloodMagicHealingEventService:
                 (*done_unresolved, *taken_unresolved, *critical_unresolved)
             )
         )
+        combat_state = getattr(context, "combat_state", CombatState())
+        healing_received = resolve_healing_received_combat_state(combat_state)
         if unresolved:
             return ExtremeSorcererBloodMagicHealingEventResult(
                 normal_event=None,
@@ -105,6 +112,8 @@ class ExtremeSorcererBloodMagicHealingEventService:
                 critical_heal=None,
                 critical_healing_bonus=critical_healing,
                 critical_multiplier=None,
+                healing_received_ratio_points=healing_received.ratio_points,
+                healing_received_sources=healing_received.sources,
                 unresolved=unresolved,
             )
 
@@ -114,7 +123,7 @@ class ExtremeSorcererBloodMagicHealingEventService:
         healing_multiplier = calculate_healing_total(
             healing_done=healing_done,
             healing_taken=healing_taken,
-            healing_received=0.0,
+            healing_received=healing_received.ratio_points,
         )
         normal = base * healing_multiplier
         total_critical_bonus = min(
@@ -138,5 +147,7 @@ class ExtremeSorcererBloodMagicHealingEventService:
                 total_critical_bonus - self.BASE_CRITICAL_HEALING,
             ),
             critical_multiplier=critical_multiplier,
+            healing_received_ratio_points=healing_received.ratio_points,
+            healing_received_sources=healing_received.sources,
             unresolved=(),
         )
