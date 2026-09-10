@@ -9,6 +9,7 @@ from .heavy_attack_restoration import (
     resource_for_heavy_attack_weapon,
 )
 from .resource_costs import ResourceType
+from .support_effect_category import SupportEffectCategory
 from .weapon_passive_classification import (
     VERIFIED_WEAPON_PASSIVE_RULES,
     WeaponPassiveLayer,
@@ -28,6 +29,12 @@ class HealerHeavyAttackBuildIncentive:
     This is deliberately not a runtime scheduling decision. Encounter safety,
     resource state, effect uptime, exact channel duration, and refresh collisions
     must still be proven at the decision point before a HEAVY_ATTACK is scheduled.
+
+    ``maximum_effect_duration_seconds`` preserves the source mechanic's own base or
+    capped duration. ``effective_effect_duration_seconds`` is a later build-aware
+    resolution and must never overwrite that source value. Required-effect identity
+    and category allow the shared duration layer to apply generic modifiers such as
+    Jorvuld's Guidance without hard-coding one set combination into the scheduler.
     """
 
     bar: str
@@ -38,6 +45,9 @@ class HealerHeavyAttackBuildIncentive:
     recurrence_seconds: float | None = None
     maximum_effect_duration_seconds: float | None = None
     requires_active_effect: str | None = None
+    required_effect_name: str | None = None
+    required_effect_category: SupportEffectCategory | None = None
+    effective_effect_duration_seconds: float | None = None
 
 
 _WEAPON_TYPES = {
@@ -154,6 +164,8 @@ def discover_healer_heavy_attack_build_incentives(
                     source=_RO_SOURCE,
                     recurrence_seconds=22.0,
                     maximum_effect_duration_seconds=12.0,
+                    required_effect_name="major_slayer",
+                    required_effect_category=SupportEffectCategory.BUFF,
                 )
             )
 
