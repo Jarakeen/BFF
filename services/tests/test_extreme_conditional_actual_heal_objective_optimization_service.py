@@ -6,6 +6,9 @@ from services.extreme_conditional_actual_heal_objective_optimization_service imp
     ExtremeConditionalActualHealObjectiveOptimizationService,
     ExtremeConditionalHealingObjectiveEventResult,
 )
+from services.extreme_conditional_actual_heal_optimization_service import (
+    ExtremeConditionalActualHealOptimizationService,
+)
 from services.extreme_healing_event_service import ExtremeHealingEventResult
 from services.extreme_sorcerer_blood_magic_healing_event_service import (
     ExtremeSorcererBloodMagicHealingEventResult,
@@ -86,3 +89,43 @@ def test_plain_healing_event_score_keeps_legacy_selected_event_semantics() -> No
     selected = _selected(critical_heal=9000.0)
 
     assert ExtremeConditionalActualHealObjectiveOptimizationService._score(selected) == 9000.0
+
+
+def test_enhanced_evaluator_replaces_pending_blocker_with_ranked_self_heal(
+    monkeypatch,
+) -> None:
+    selected = _selected(critical_heal=9000.0)
+    pending = ExtremeConditionalActualHealObjectiveOptimizationService.BLOOD_MAGIC_PENDING_MESSAGE
+
+    def fake_parent_evaluate(self, *args, **kwargs):
+        return selected, (pending,)
+
+    monkeypatch.setattr(
+        ExtremeConditionalActualHealOptimizationService,
+        "_evaluate",
+        fake_parent_evaluate,
+    )
+
+    service = object.__new__(ExtremeConditionalActualHealObjectiveOptimizationService)
+    monkeypatch.setattr(
+        service,
+        "_blood_magic_self_heal_event",
+        lambda **kwargs: (_blood_magic(critical_heal=12000.0), ()),
+    )
+
+    event, unresolved = service._evaluate(
+        SimpleNamespace(AttributeHealth=0, AttributeMagicka=64, AttributeStamina=0),
+        progression=SimpleNamespace(),
+        character_id="char",
+        build_id="build",
+        entity_id="combat_prayer",
+        active_bar="front",
+    )
+
+    assert unresolved == ()
+    assert isinstance(event, ExtremeConditionalHealingObjectiveEventResult)
+    assert event.objective_source == "Sorcerer: Blood Magic"
+    assert event.objective_target == "self"
+    assert event.objective_critical_heal == 12000.0
+    assert event.blood_magic_event is not None
+    assert event.blood_magic_event.normal_event.target == "self"
