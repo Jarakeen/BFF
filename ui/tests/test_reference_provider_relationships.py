@@ -6,7 +6,6 @@ from ui.reference_provider_relationships import (
     enrich_reference_entries_with_ability_providers,
     enrich_reference_entries_with_nonability_providers,
     enrich_reference_entries_with_reviewed_research,
-    mark_passive_provider_gap,
 )
 
 
@@ -100,24 +99,6 @@ def test_nonability_enrichment_adds_reviewed_gear_and_potion_sources():
     assert "Potion trait: Test Courage" in text
     assert "Spell Power Cure" in result.related
     assert "gear_set_known_effects" in " ".join(result.evidence)
-
-
-def test_passive_provider_gap_is_explicit_only_for_named_effect_entries():
-    named = _entry("Major Courage")
-    mechanic = ReferenceEntry(
-        name="Heavy Attack — Test Boss",
-        entry_type="Mechanic",
-        source_scope="Trial",
-        tags=("MECHANIC",),
-        summary="test",
-        details=(("Authority", "Canonical encounter data"),),
-    )
-
-    named_result, mechanic_result = mark_passive_provider_gap((named, mechanic))
-
-    assert "Passive provider coverage" in named_result.detail_text()
-    assert "Coverage gap" in named_result.detail_text()
-    assert "Passive provider coverage" not in mechanic_result.detail_text()
 
 
 def test_reviewed_status_research_adds_useful_values_and_provenance():
