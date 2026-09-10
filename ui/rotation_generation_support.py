@@ -20,6 +20,9 @@ from minmax.runtime_healer_wait_decision_provider import (
 )
 from minmax.semi_static_rotation_planner import SemiStaticRotationPlanner
 from services.rotation_duration_refinement_service import RotationDurationRefinementService
+from services.rotation_heavy_attack_effect_duration_service import (
+    RotationHeavyAttackEffectDurationService,
+)
 from services.rotation_recovery_heavy_replay_service import (
     RecoveryReserveAssessmentResolver,
     VerifiedRecoveryHeavyRestorationResolver,
@@ -102,6 +105,7 @@ class RotationGenerationSupport:
         duration_evidence: RotationDurationEvidenceSupport | None = None,
         ultimate_service: RotationUltimateService | None = None,
         recovery_stabilization: RotationRecoveryHeavyStabilizationService | None = None,
+        heavy_attack_effect_duration: RotationHeavyAttackEffectDurationService | None = None,
     ) -> None:
         self.planner = planner or SemiStaticRotationPlanner()
         self.duration_refinement = duration_refinement or RotationDurationRefinementService()
@@ -109,6 +113,9 @@ class RotationGenerationSupport:
         self.ultimate_service = ultimate_service or RotationUltimateService()
         self.recovery_stabilization = (
             recovery_stabilization or RotationRecoveryHeavyStabilizationService()
+        )
+        self.heavy_attack_effect_duration = (
+            heavy_attack_effect_duration or RotationHeavyAttackEffectDurationService()
         )
 
     def generate(self, *, build, request: RotationGenerationRequest) -> RotationPlan:
@@ -390,6 +397,12 @@ class RotationGenerationSupport:
             )
         if not incentives:
             return None
+
+        enriched = self.heavy_attack_effect_duration.enrich_saved_build(
+            build=build,
+            incentives=tuple(incentives),
+        )
+        incentives = list(enriched.incentives)
 
         channel = float(request.required_heavy_channel_seconds)
         if channel <= 0:
