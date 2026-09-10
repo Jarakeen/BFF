@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -72,6 +73,13 @@ class RotationHealerActionHealingService:
     Direct heals may attach to cast time. Periodic heals become recurring-runtime
     seeds. Delayed heals become delayed-runtime seeds. Channel-tick healing remains
     an explicit blocker until its distinct event timing is modeled.
+
+    A legacy single ``context`` remains the default for backward compatibility.
+    Callers evaluating a real dual-bar build may additionally supply
+    ``contexts_by_bar``. When supplied, skill/Ultimate actions with an explicit
+    front/back bar are evaluated against that exact bar's static context. Missing
+    mapped bar state fails closed for that action rather than borrowing the default
+    context and silently applying the wrong bar stats.
     """
 
     def __init__(
@@ -94,11 +102,13 @@ class RotationHealerActionHealingService:
         plan: RotationPlan,
         build: PlayerBuild,
         context: BuildCalculationContext,
+        contexts_by_bar: Mapping[str, BuildCalculationContext] | None = None,
     ) -> RotationHealerActionHealingProjection:
         direct_events: list[RotationHealerResolvedHealEvent] = []
         periodic_seeds: list[RotationHealerPeriodicHealSeed] = []
         delayed_seeds: list[RotationHealerDelayedHealSeed] = []
         unresolved: list[str] = []
+        bar_contexts = self._normalize_bar_contexts(contexts_by_bar)
 
         for action in plan.actions:
             if action.kind not in {
@@ -108,6 +118,18 @@ class RotationHealerActionHealingService:
                 continue
             if not action.name:
                 continue
+
+            action_context = context
+            if bar_contexts is not None and action.bar is not None:
+                bar = str(action.bar or "").strip().casefold()
+                if bar in {"front", "back"}:
+                    action_context = bar_contexts.get(bar)
+                    if action_context is None:
+                        unresolved.append(
+                            f"{action.name} at {action.time_seconds:g}s: "
+                            f"static build context unavailable for {bar} bar"
+                        )
+                        continue
 
             resolution = self.tooltip_service.coefficients.resolve_name(action.name)
             if resolution.rank is None:
@@ -120,7 +142,7 @@ class RotationHealerActionHealingService:
 
             result = self.tooltip_service.evaluate_entity_id(
                 build=build,
-                context=context,
+                context=action_context,
                 entity_id=resolution.rank.entity_id,
             )
             if result.unresolved:
@@ -231,6 +253,22 @@ class RotationHealerActionHealingService:
             unresolved=self._dedupe(tuple(unresolved)),
             delayed_seeds=tuple(sorted(delayed_seeds, key=sort_key)),
         )
+
+    @staticmethod
+    def _normalize_bar_contexts(
+        contexts_by_bar: Mapping[str, BuildCalculationContext] | None,
+    ) -> dict[str, BuildCalculationContext] | None:
+        if contexts_by_bar is None:
+            return None
+        result: dict[str, BuildCalculationContext] = {}
+        for raw_bar, context in contexts_by_bar.items():
+            bar = str(raw_bar or "").strip().casefold()
+            if bar not in {"front", "back"}:
+                raise ValueError("healer action build-context key must be front or back")
+            if bar in result:
+                raise ValueError(f"duplicate healer action build-context bar: {bar}")
+            result[bar] = context
+        return result
 
     @staticmethod
     def _dedupe(values: tuple[str, ...]) -> tuple[str, ...]:
