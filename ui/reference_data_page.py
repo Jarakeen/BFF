@@ -19,7 +19,7 @@ from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
 from ui.foundry_page import FoundryPage
 from ui.reference_common_names import enrich_reference_entries_with_common_names
-from ui.reference_data_model import build_reference_entries, entry_types, source_scopes
+from ui.reference_data_model import ReferenceEntry, build_reference_entries, entry_types, source_scopes
 from ui.reference_encounter_evidence import enrich_reference_entries_with_encounter_evidence
 from ui.reference_mitigations import enrich_reference_entries_with_mitigations
 from ui.reference_named_effects import build_named_effect_reference_entries
@@ -35,6 +35,79 @@ def _reference_details_html(details) -> str:
         safe_value = escape(str(value or "")).replace("\n", "<br>")
         rows.append(f"<b>{safe_label}:</b> {safe_value}")
     return "<br>".join(rows)
+
+
+def _first_detail(entry: ReferenceEntry, *needles: str) -> str:
+    """Return the first useful detail whose label matches one of the requested concepts."""
+
+    wanted = tuple(value.casefold() for value in needles)
+    for label, value in entry.details:
+        label_text = str(label or "").casefold()
+        value_text = str(value or "").strip()
+        if not value_text:
+            continue
+        if any(needle in label_text for needle in wanted):
+            if value_text.casefold() in {"yes", "no", "unknown", "not modeled"}:
+                continue
+            return value_text
+    return ""
+
+
+def _encounter_name(entry: ReferenceEntry) -> str:
+    for label, value in entry.details:
+        if str(label).casefold() == "encounter" and str(value).strip():
+            return str(value).strip()
+    if " — " in entry.name:
+        return entry.name.rsplit(" — ", 1)[1].strip()
+    return ""
+
+
+def _raid_lead_snapshot_rows(entry: ReferenceEntry) -> tuple[tuple[str, str], ...]:
+    """Project the most useful mechanic facts for fast raid-lead scanning.
+
+    This is presentation only. Values come from the already assembled canonical /
+    reviewed Reference entry and are never invented when the source data is absent.
+    """
+
+    if entry.entry_type not in {"Mechanic", "Mechanic Evidence"}:
+        return ()
+
+    what = _first_detail(
+        entry,
+        "core behavior",
+        "veteran behavior",
+        "behavior",
+        "damage pattern",
+        "handling",
+        "reviewed details",
+    )
+    timing = _first_detail(entry, "duration", "detonation", "timing", "window", "cadence")
+    size = _first_detail(entry, "radius", "range", "size", "distance")
+    targets = _first_detail(entry, "target count", "targeting", "target pattern", "targets")
+    kill_risk = _first_detail(entry, "failure severity", "fatal", "wipe", "kill")
+    source = _encounter_name(entry)
+
+    rows = [
+        ("What it does", what or entry.summary),
+        ("Duration / timing", timing or "No reviewed timing value yet."),
+        ("Size / radius", size or "No reviewed size or radius yet."),
+        ("Targets / kill risk", targets or kill_risk or "No reviewed target or kill-risk value yet."),
+        ("Comes from", source or "Source encounter not recorded."),
+    ]
+    if entry.mitigation_note:
+        rows.append(("How to mitigate", entry.mitigation_note))
+    return tuple(rows)
+
+
+def _raid_lead_snapshot_html(entry: ReferenceEntry) -> str:
+    rows = _raid_lead_snapshot_rows(entry)
+    if not rows:
+        return ""
+    body = "<br>".join(
+        f"<b>{escape(label)}:</b> {escape(value)}"
+        for label, value in rows
+    )
+    return f"<b>RAID LEAD SNAPSHOT</b><br>{body}"
 
 
 class ReferenceDataPage(FoundryPage):
@@ -64,7 +137,7 @@ class ReferenceDataPage(FoundryPage):
             title="Combat Reference",
             subtitle=(
                 "Search mechanics, combat rules, roles, effects, and gameplay practice. "
-                "See what BFF knows, why it believes it, and where that knowledge is used."
+                "See what BFF knows, what the mechanic does, and how to survive it."
             ),
             department="Raid Engine • Reference",
         )
@@ -104,6 +177,12 @@ class ReferenceDataPage(FoundryPage):
         self.entry_card = FoundryCard("Reference Entry", "✦").set_watermark("compass", 0.055)
         self.entry_name = QLabel()
         self.entry_name.setProperty("heroTitle", True)
+        self.raid_lead_snapshot = QLabel()
+        self.raid_lead_snapshot.setWordWrap(True)
+        self.raid_lead_snapshot.setTextFormat(Qt.TextFormat.RichText)
+        snapshot_font = self.raid_lead_snapshot.font()
+        snapshot_font.setPointSize(max(11, snapshot_font.pointSize() + 1))
+        self.raid_lead_snapshot.setFont(snapshot_font)
         self.entry_summary = QLabel()
         self.entry_summary.setWordWrap(True)
         self.entry_details = QLabel()
@@ -111,6 +190,7 @@ class ReferenceDataPage(FoundryPage):
         self.entry_details.setTextFormat(Qt.TextFormat.RichText)
         self.entry_details.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.entry_card.addWidget(self.entry_name)
+        self.entry_card.addWidget(self.raid_lead_snapshot)
         self.entry_card.addWidget(self.entry_summary)
         self.entry_card.addWidget(self.entry_details)
         self.entry_card.addStretch(1)
@@ -231,6 +311,8 @@ class ReferenceDataPage(FoundryPage):
     def _clear_entry(self):
         self.entry_card.set_title("REFERENCE ENTRY")
         self.entry_name.setText("NO MATCHING ENTRY")
+        self.raid_lead_snapshot.clear()
+        self.raid_lead_snapshot.hide()
         self.entry_summary.setText("Adjust the search or filters.")
         self.entry_details.clear()
         self.related_label.setText("No related entries.")
@@ -246,6 +328,9 @@ class ReferenceDataPage(FoundryPage):
 
         self.entry_card.set_title(" • ".join(entry.tags) or entry.entry_type.upper())
         self.entry_name.setText(entry.name.upper())
+        snapshot = _raid_lead_snapshot_html(entry)
+        self.raid_lead_snapshot.setVisible(bool(snapshot))
+        self.raid_lead_snapshot.setText(snapshot)
         self.entry_summary.setText(entry.summary)
         self.entry_details.setText(_reference_details_html(entry.details))
         self.related_label.setText(
