@@ -79,12 +79,29 @@ Covered values include:
 
 Update 41 is the version boundary for the current Vitality/Defile semantics: those effects now modify damage shield strength and no longer use the older Defile Health Recovery wording.
 
+## Completed encounter slice: Xalvakka
+
+Xalvakka is the first encounter to use reviewed research as a direct replacement for unresolved display fields while leaving the canonical encounter record untouched.
+
+Initial replacements and additions include:
+
+- **Deadstar** — movement is required; the attack is three sequential player-location meteor impacts rather than one simple fixed target-count event.
+- **Summon Wraiths** — failure severity is group-fatal when enough wraiths reach Xalvakka to create an unbreakable shield/wipe state.
+- **Soul Resonance** — cleansing creates a persistent Corrupted Azureplasm hazard, so cleanse placement is also a positioning decision.
+- **Split** — the flame-covered floor is a persistent hazard and requires movement through limited safe ground while identifying the real copy.
+- **Corrupted Blast** — damage scales with absorbed wraith count while Xalvakka's shield is active.
+
+The BFF canonical Xalvakka source record is the primary local evidence for these facts, with Xynode's Rockgrove guide used as gameplay/mechanic corroboration where appropriate. Ambiguous values such as a single integer `Target count` are deliberately left unresolved when the mechanic is actually sequential or pattern-based.
+
 ## Missing-value presentation rule
 
 Bare `Not modeled` should not survive the normal Combat Reference loading path.
 
+When reviewed research has a fact for the same field, the unresolved display value should be replaced directly while retaining an explicit `reviewed research` marker, update scope, confidence, and provenance. A canonical structured value always wins and is never overwritten by research.
+
 Examples:
 
+- `Requires movement: Yes ... [reviewed research; U30+; medium-high confidence]`
 - `Damage type: Unknown — canonical encounter record has no reviewed damage type yet.`
 - `Interruptible: Unknown — interruptibility has not yet been reviewed for this mechanic.`
 - `Maximum stacks: No stack mechanic is recorded for this effect.`
@@ -94,9 +111,9 @@ This wording is deliberately honest about what is known without pretending that 
 
 ## Next research families
 
-1. Named Major/Minor provider completeness across skills, sets, passives, potions, scribing, and class mastery sources.
-2. Gear-set provider completeness beyond the currently reviewed registry.
-3. Encounter mechanics, prioritizing trials used by Comp Maker / Rotation Builder and fields that currently have explicit unresolved states.
+1. Continue encounter mechanics, prioritizing Rockgrove, Dreadsail Reef, Sunspire, Kyne's Aegis, and other trials consumed by Comp Maker / Rotation Builder.
+2. Named Major/Minor provider completeness across skills, sets, passives, potions, scribing, and class mastery sources.
+3. Gear-set provider completeness beyond the currently reviewed registry.
 4. Skill/passive reference entries and combat-rule terminology.
 5. Promote repeatedly corroborated research facts into owning canonical contracts only when the runtime actually needs them.
 
