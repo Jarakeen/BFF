@@ -54,8 +54,10 @@ def _candidate() -> GeneratedRotationCandidate:
 class _ActionHealingService:
     def __init__(self, projection):
         self.projection = projection
+        self.calls = []
 
     def project(self, **kwargs):
+        self.calls.append(kwargs)
         return self.projection
 
 
@@ -88,12 +90,17 @@ def _provider(
     periodic_timing_service=None,
     periodic_runtime_evidence_service=None,
     delayed_runtime_evidence=(),
+    contexts_by_bar=None,
+    action_healing_service=None,
 ):
     return RotationCandidateHealerCanonicalDemandEvidenceProvider(
         database_path="unused.sqlite",
         build=object(),
         context=object(),
-        action_healing_service=_ActionHealingService(projection),
+        contexts_by_bar=contexts_by_bar,
+        action_healing_service=(
+            action_healing_service or _ActionHealingService(projection)
+        ),
         periodic_timing_service=periodic_timing_service or _PeriodicTimingService(),
         periodic_runtime_evidence_service=(
             periodic_runtime_evidence_service or _PeriodicRuntimeEvidenceService()
@@ -254,3 +261,27 @@ def test_missing_periodic_runtime_facts_fail_closed_in_role_output() -> None:
     assert role_output.resolved_value is None
     assert "Illustrious Healing coefficient 2: first-tick offset is not verified" in role_output.unresolved
     assert any("periodic healing runtime evidence unavailable" in item for item in role_output.unresolved)
+
+
+def test_bar_context_map_is_forwarded_to_action_healing_projection() -> None:
+    projection = RotationHealerActionHealingProjection(
+        direct_events=(),
+        periodic_seeds=(),
+        delayed_seeds=(),
+        unresolved=(),
+    )
+    action_service = _ActionHealingService(projection)
+    front_context = object()
+    back_context = object()
+    provider = _provider(
+        projection,
+        action_healing_service=action_service,
+        contexts_by_bar={"front": front_context, "back": back_context},
+    )
+
+    provider.evaluate_demand(candidate=_candidate(), demand=_DEMAND)
+
+    assert action_service.calls[0]["contexts_by_bar"] == {
+        "front": front_context,
+        "back": back_context,
+    }
