@@ -10,7 +10,6 @@ from services.extreme_healing_class_passive_coverage_inventory import (
     IMPLEMENTED,
     PARTIAL,
     REVIEWED,
-    UNREVIEWED,
     ExtremeHealingClassPassiveCoverageInventory,
 )
 
@@ -28,7 +27,7 @@ def test_inventory_exactly_matches_canonical_class_skill_line_universe() -> None
     assert len({row.family_id for row in rows}) == len(rows)
 
 
-def test_green_balance_is_first_completed_family_review() -> None:
+def test_green_balance_and_living_death_are_completed_family_reviews() -> None:
     rows = ExtremeHealingClassPassiveCoverageInventory().items()
     reviewed = [row for row in rows if row.review_status == REVIEWED]
     partial = {
@@ -38,28 +37,28 @@ def test_green_balance_is_first_completed_family_review() -> None:
     }
 
     assert [(row.eso_class, row.skill_line) for row in reviewed] == [
-        ("warden", "Green Balance")
-    ]
-    assert reviewed[0].healing_relevant is True
-    assert reviewed[0].coverage_status == IMPLEMENTED
-    assert reviewed[0].implemented_hook
-    assert partial == {
         ("necromancer", "Living Death"),
+        ("warden", "Green Balance"),
+    ]
+    assert all(row.healing_relevant is True for row in reviewed)
+    assert all(row.coverage_status == IMPLEMENTED for row in reviewed)
+    assert all(row.implemented_hook for row in reviewed)
+    assert partial == {
         ("nightblade", "Siphoning"),
     }
 
 
-def test_inventory_summary_counts_completed_green_balance_family() -> None:
+def test_inventory_summary_counts_two_completed_families() -> None:
     summary = ExtremeHealingClassPassiveCoverageInventory().summary()
 
     assert summary.total_families == 21
-    assert summary.reviewed_families == 1
-    assert summary.partially_reviewed_families == 2
+    assert summary.reviewed_families == 2
+    assert summary.partially_reviewed_families == 1
     assert summary.unreviewed_families == 18
     assert summary.healing_relevant_families == 3
-    assert summary.implemented == 1
+    assert summary.implemented == 2
     assert summary.explicitly_unsupported == 0
-    assert summary.healing_relevant_unreviewed == 2
+    assert summary.healing_relevant_unreviewed == 1
     assert summary.implemented_hooks == 3
     assert not summary.complete
 
@@ -86,13 +85,13 @@ def test_actual_heal_audit_derives_remaining_class_passive_blocker_from_inventor
         if item.mechanic_id == "reviewed_class_passive_families"
     )
 
-    assert summary.reviewed_families == 1
-    assert summary.partially_reviewed_families == 2
+    assert summary.reviewed_families == 2
+    assert summary.partially_reviewed_families == 1
     assert summary.unreviewed_families == 18
-    assert summary.healing_relevant_unreviewed == 2
+    assert summary.healing_relevant_unreviewed == 1
     assert row.status == "unresolved"
     assert row.evidence == "ExtremeHealingClassPassiveCoverageInventory"
-    assert "reviewed 1/21" in row.detail
-    assert "healing-relevant unreviewed 2" in row.detail
+    assert "reviewed 2/21" in row.detail
+    assert "healing-relevant unreviewed 1" in row.detail
     assert "families awaiting relevance review 18" in row.detail
     assert "reviewed_class_passive_families" in audit.summary().blocker_ids
