@@ -29,6 +29,7 @@ from .race_repository import RaceRepository
 from .skill_line_repository import SkillLineRepository
 from .sorcerer_passive_input_resolver import SorcererPassiveInputResolver
 from .static_build_inputs import StaticBuildInputResolver
+from .templar_passive_input_resolver import TemplarPassiveInputResolver
 from .undaunted_passive_input_resolver import UndauntedPassiveInputResolver
 from .warden_passive_input_resolver import WardenPassiveInputResolver
 
@@ -68,6 +69,7 @@ class BuildCalculationContextFactory:
         alliance_support_passive_resolver: AllianceSupportPassiveInputResolver | None = None,
         nightblade_passive_resolver: NightbladePassiveInputResolver | None = None,
         sorcerer_passive_resolver: SorcererPassiveInputResolver | None = None,
+        templar_passive_resolver: TemplarPassiveInputResolver | None = None,
         one_hand_shield_passive_resolver: OneHandShieldPassiveInputResolver | None = None,
         block_item_resolver: BlockItemInputResolver | None = None,
         combat_state_resolver: CombatStateInputResolver | None = None,
@@ -128,6 +130,11 @@ class BuildCalculationContextFactory:
         )
         self.sorcerer_passive_resolver = sorcerer_passive_resolver or (
             SorcererPassiveInputResolver(skill_line_repository)
+            if skill_line_repository is not None
+            else None
+        )
+        self.templar_passive_resolver = templar_passive_resolver or (
+            TemplarPassiveInputResolver()
             if skill_line_repository is not None
             else None
         )
@@ -401,6 +408,22 @@ class BuildCalculationContextFactory:
                 active_bar=active_bar,
                 expert_summoner_owned=expert_summoner,
                 expert_mage_owned=expert_mage,
+            )
+
+        templar_lines = TemplarPassiveInputResolver.equipped_templar_line_ids(build)
+        aedric_spear = TemplarPassiveInputResolver.AEDRIC_SPEAR_ID in templar_lines
+        balanced_warrior, message = self._maxed_passive(
+            progression,
+            "Balanced Warrior",
+            relevant=aedric_spear,
+        )
+        if message:
+            unresolved.append(message)
+        if self.templar_passive_resolver is not None:
+            gear = self.templar_passive_resolver.apply(
+                gear,
+                build,
+                balanced_warrior_owned=balanced_warrior,
             )
 
         light_line = progression.owns_skill_line("Light Armor")
