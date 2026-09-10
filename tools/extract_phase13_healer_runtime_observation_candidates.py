@@ -86,8 +86,10 @@ def main(argv: list[str] | None = None) -> int:
             print(f"- {item}")
     print()
     print(
-        "Boundary: this output is candidate evidence only. Inspect the event pairing "
-        "before changing review_status to 'reviewed' and passing it to the runtime observation audit."
+        "Boundary: this output is candidate evidence only. Inspect the event pairing, "
+        "then promote only explicitly approved samples with "
+        "tools/review_phase13_healer_runtime_observations.py. Do not edit review_status "
+        "in the candidate fixture by hand."
     )
     return 0 if report.candidates else 1
 
