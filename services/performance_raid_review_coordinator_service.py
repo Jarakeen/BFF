@@ -59,6 +59,10 @@ from services.performance_raid_review_service import (
     PerformanceRaidReviewService,
     RaidReviewReport,
 )
+from services.performance_raid_review_synthesis_service import (
+    PerformanceRaidReviewSynthesisService,
+    RaidReviewSynthesis,
+)
 from services.performance_raid_review_tank_effect_continuity_analysis_service import (
     PerformanceRaidReviewTankEffectContinuityAnalysisService,
 )
@@ -72,6 +76,7 @@ class PerformanceRaidReviewResult:
     report: RaidReviewReport
     collection: RaidReviewCollectionResult
     priorities: tuple[RaidReviewPriorityItem, ...] = ()
+    synthesis: RaidReviewSynthesis | None = None
 
     @property
     def unresolved(self) -> tuple[str, ...]:
@@ -96,6 +101,7 @@ class PerformanceRaidReviewCoordinatorService:
         dd_output_context_service: PerformanceRaidReviewDDOutputContextService | None = None,
         tank_effect_continuity_analysis_service: PerformanceRaidReviewTankEffectContinuityAnalysisService | None = None,
         priority_service: PerformanceRaidReviewPriorityService | None = None,
+        synthesis_service: PerformanceRaidReviewSynthesisService | None = None,
     ) -> None:
         self.performance_service = performance_service
         self.event_provider = event_provider or PerformanceRaidReviewEsoLogsEventProvider(
@@ -132,6 +138,7 @@ class PerformanceRaidReviewCoordinatorService:
             or PerformanceRaidReviewTankEffectContinuityAnalysisService()
         )
         self.priority_service = priority_service or PerformanceRaidReviewPriorityService()
+        self.synthesis_service = synthesis_service or PerformanceRaidReviewSynthesisService()
 
     def review(
         self,
@@ -250,10 +257,13 @@ class PerformanceRaidReviewCoordinatorService:
                 findings=combined,
             )
 
+        priorities = self.priority_service.rank(report.findings)
+        synthesis = self.synthesis_service.synthesize(report, priorities)
         return PerformanceRaidReviewResult(
             report=report,
             collection=collection,
-            priorities=self.priority_service.rank(report.findings),
+            priorities=priorities,
+            synthesis=synthesis,
         )
 
 
