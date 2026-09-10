@@ -6,6 +6,9 @@ from services.performance_raid_review_coordinator_service import (
 from services.performance_raid_review_event_enrichment_service import (
     RaidReviewEventEnrichment,
 )
+from services.performance_raid_review_healer_effect_coverage_service import (
+    RaidReviewHealerEffectCoverageObservation,
+)
 from services.performance_raid_review_landing_recovery_service import (
     RaidReviewLandingRecoveryObservation,
 )
@@ -97,6 +100,22 @@ def _recovery(fight_id: int, delay: float) -> RaidReviewLandingRecoveryObservati
     )
 
 
+def _coverage(fight_id: int, covered: bool) -> RaidReviewHealerEffectCoverageObservation:
+    return RaidReviewHealerEffectCoverageObservation(
+        report_code="A",
+        fight_id=fight_id,
+        mechanic_semantic_key="ice_cage_one",
+        mechanic_label="Ice Cage One",
+        mechanic_start_seconds=50.0,
+        requirement_semantic_key="budding_seeds_precoverage",
+        requirement_label="Budding Seeds Pre-Coverage",
+        source_actor_id=11,
+        covered=covered,
+        active_target_count=1 if covered else 0,
+        active_effect_names=(("Budding Seeds",) if covered else ()),
+    )
+
+
 def test_coordinator_collects_enriched_observations_then_analyzes() -> None:
     performance = _PerformanceService()
     provider = _EventProvider()
@@ -185,6 +204,40 @@ def test_coordinator_merges_cross_pull_landing_recovery_findings() -> None:
     assert finding.subject == "Magrat"
     assert finding.priority == "medium"
     assert "kills 0.60s vs wipes 2.20s" in finding.evidence
+
+
+def test_coordinator_merges_cross_pull_healer_precoverage_findings() -> None:
+    performance = _PerformanceService()
+    service = PerformanceRaidReviewCoordinatorService(
+        performance,
+        event_provider=_EventProvider(),
+    )
+
+    result = service.review(
+        [
+            RaidReviewSource("A", 1, 11, "Magrat", "Healer", member_key="magrat"),
+            RaidReviewSource("A", 2, 11, "Magrat", "Healer", member_key="magrat"),
+            RaidReviewSource("A", 3, 11, "Magrat", "Healer", member_key="magrat"),
+            RaidReviewSource("A", 4, 11, "Magrat", "Healer", member_key="magrat"),
+        ],
+        encounter_name="Lokkestiiz",
+        healer_effect_coverage_observations=[
+            _coverage(1, True),
+            _coverage(4, True),
+            _coverage(2, False),
+            _coverage(3, False),
+        ],
+    )
+
+    finding = next(
+        item for item in result.report.findings
+        if item.category == "mechanic_precoverage"
+    )
+    assert finding.subject == "Magrat"
+    assert finding.priority == "medium"
+    assert "stronger on successful pulls" in finding.title
+    assert "2/2 kills" in finding.evidence
+    assert "0/2 wipes" in finding.evidence
 
 
 def test_coordinator_preserves_collection_unresolved_messages() -> None:
