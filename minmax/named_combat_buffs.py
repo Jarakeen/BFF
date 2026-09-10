@@ -55,6 +55,14 @@ U50_NAMED_BUFF_EFFECTS: dict[str, tuple[NamedBuffEffect, ...]] = {
     "Minor Endurance": (NamedBuffEffect(StatId.STAMINA_RECOVERY, 0.15, "resource_percent"),),
     "Major Endurance": (NamedBuffEffect(StatId.STAMINA_RECOVERY, 0.30, "resource_percent"),),
     "Minor Toughness": (NamedBuffEffect(StatId.MAX_HEALTH, 0.10, "resource_percent"),),
+    # Internal canonical runtime labels for Blood Magic's live-U50 full-Health branch.
+    # The passive chooses exactly one of these after comparing the pre-window resources.
+    "Blood Magic: Max Magicka": (
+        NamedBuffEffect(StatId.MAX_MAGICKA, 0.10, "resource_percent"),
+    ),
+    "Blood Magic: Max Stamina": (
+        NamedBuffEffect(StatId.MAX_STAMINA, 0.10, "resource_percent"),
+    ),
 }
 
 # Compatibility alias retained for existing callers/tests that inspect the map.
