@@ -13,9 +13,9 @@ class ExternalGroupBuffApplication:
 
     This contract is deliberately role-neutral. It records source identity,
     recipient identity, source target semantics, and the exact active window.
-    Consumers may project only applications whose recipient legality and snapshot
-    timing are proven. Merely knowing that a group member could provide a buff is
-    not evidence that the evaluated character actually had it.
+    Consumers may project only applications whose source membership, recipient
+    legality, and snapshot timing are proven. Merely knowing that somebody could
+    provide a buff is not evidence that the evaluated character actually had it.
     """
 
     source_actor_id: str
@@ -25,6 +25,7 @@ class ExternalGroupBuffApplication:
     applied_at_seconds: float
     duration_seconds: float
     source_evidence: str
+    sequence: int = 0
 
     def __post_init__(self) -> None:
         source = str(self.source_actor_id or "").strip()
@@ -41,16 +42,21 @@ class ExternalGroupBuffApplication:
             raise ValueError("external group buff source evidence is required")
         applied = float(self.applied_at_seconds)
         duration = float(self.duration_seconds)
+        sequence = int(self.sequence)
         if not math.isfinite(applied) or applied < 0.0:
             raise ValueError("external group buff application time must be finite and non-negative")
         if not math.isfinite(duration) or duration <= 0.0:
             raise ValueError("external group buff duration must be finite and positive")
+        if sequence < 0:
+            raise ValueError("external group buff sequence cannot be negative")
         object.__setattr__(self, "source_actor_id", source)
         object.__setattr__(self, "recipient_actor_id", recipient)
         object.__setattr__(self, "buff_name", canonical)
+        object.__setattr__(self, "target_type", SupportTargetType(self.target_type))
         object.__setattr__(self, "source_evidence", evidence)
         object.__setattr__(self, "applied_at_seconds", applied)
         object.__setattr__(self, "duration_seconds", duration)
+        object.__setattr__(self, "sequence", sequence)
 
     @property
     def ends_at_seconds(self) -> float:
@@ -102,23 +108,33 @@ class ExternalGroupBuffProvenanceResolver:
         recipient = str(recipient_actor_id or "").strip()
         if not recipient:
             raise ValueError("external group buff projection recipient is required")
-        members = frozenset(str(value or "").strip() for value in group_member_ids if str(value or "").strip())
+        members = frozenset(
+            str(value or "").strip()
+            for value in group_member_ids
+            if str(value or "").strip()
+        )
         active: list[str] = []
         unresolved: list[str] = []
 
         for application in applications:
             if application.recipient_actor_id != recipient:
                 continue
-            if not self._recipient_legal(application, group_member_ids=members):
+            if application.source_actor_id not in members:
                 unresolved.append(
-                    f"External buff recipient is not legal for {application.buff_name}: "
-                    f"source={application.source_actor_id}, recipient={application.recipient_actor_id}, "
-                    f"target_type={application.target_type.value}"
+                    f"External buff source is not a proven group member for {application.buff_name}: "
+                    f"source={application.source_actor_id}"
                 )
                 continue
             if application.target_type is SupportTargetType.ENEMY:
                 unresolved.append(
                     f"Enemy-targeted support effect cannot be projected as a friendly buff: {application.buff_name}"
+                )
+                continue
+            if not self._recipient_legal(application, group_member_ids=members):
+                unresolved.append(
+                    f"External buff recipient is not legal for {application.buff_name}: "
+                    f"source={application.source_actor_id}, recipient={application.recipient_actor_id}, "
+                    f"target_type={application.target_type.value}"
                 )
                 continue
             if application.is_active_at(snapshot_time_seconds):
