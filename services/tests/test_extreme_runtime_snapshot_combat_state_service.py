@@ -3,8 +3,10 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from minmax.character_progression import CharacterProgression
+from minmax.external_group_buff_provenance import ExternalGroupBuffApplication
 from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
 from minmax.runtime_event import RuntimeEvent
+from minmax.support_target_type import SupportTargetType
 from models.build_model import PlayerBuild
 from services.extreme_runtime_snapshot import (
     ExtremeRuntimePotionUse,
@@ -57,6 +59,20 @@ def _attempt(*, time_seconds=1.0, sequence=0):
             sequence=sequence,
         )
     )
+
+
+def _external_buff(**overrides):
+    values = {
+        "source_actor_id": "healer_2",
+        "recipient_actor_id": "healer_1",
+        "buff_name": "Major Courage",
+        "target_type": SupportTargetType.SELF_OR_ALLY,
+        "applied_at_seconds": 2.0,
+        "duration_seconds": 8.0,
+        "source_evidence": "observed support application",
+    }
+    values.update(overrides)
+    return ExternalGroupBuffApplication(**values)
 
 
 def test_snapshot_state_projects_skill_gear_and_potion_into_one_combat_state():
@@ -126,6 +142,77 @@ def test_snapshot_state_projects_unified_history_into_existing_consumers():
     )
     assert skill.calls == [("Unified Snapshot", "back", expected_attempts, 5.0)]
     assert gear.calls == [("Unified Snapshot", "back", expected_attempts, 5.0)]
+
+
+def test_snapshot_state_projects_external_group_buff_only_with_roster_and_recipient_proof():
+    service = ExtremeRuntimeSnapshotCombatStateService()
+    result = service.resolve(
+        PlayerBuild(BuildName="External Buff Snapshot"),
+        progression=CharacterProgression(passive_ranks={}),
+        active_bar="front",
+        snapshot=ExtremeRuntimeSnapshot(
+            runtime_history=(_external_buff(),),
+            snapshot_time_seconds=5.0,
+            recipient_actor_id="healer_1",
+            group_member_ids=("healer_1", "healer_2"),
+        ),
+    )
+
+    assert result.combat_state.active_buffs == ("Major Courage",)
+    assert result.unresolved == ()
+
+
+def test_snapshot_state_external_group_buff_fails_closed_without_identity_proof():
+    service = ExtremeRuntimeSnapshotCombatStateService()
+    application = _external_buff()
+
+    missing_recipient = service.resolve(
+        PlayerBuild(BuildName="Missing Recipient"),
+        progression=CharacterProgression(passive_ranks={}),
+        active_bar="front",
+        snapshot=ExtremeRuntimeSnapshot(
+            runtime_history=(application,),
+            snapshot_time_seconds=5.0,
+            group_member_ids=("healer_1", "healer_2"),
+        ),
+    )
+    missing_group = service.resolve(
+        PlayerBuild(BuildName="Missing Group"),
+        progression=CharacterProgression(passive_ranks={}),
+        active_bar="front",
+        snapshot=ExtremeRuntimeSnapshot(
+            runtime_history=(application,),
+            snapshot_time_seconds=5.0,
+            recipient_actor_id="healer_1",
+        ),
+    )
+
+    assert missing_recipient.combat_state.active_buffs == ()
+    assert missing_recipient.unresolved == (
+        "External group buff applications require a proven recipient actor id",
+    )
+    assert missing_group.combat_state.active_buffs == ()
+    assert missing_group.unresolved == (
+        "External group buff applications require proven group membership",
+    )
+
+
+def test_snapshot_state_external_group_buff_preserves_provenance_blocker():
+    service = ExtremeRuntimeSnapshotCombatStateService()
+    result = service.resolve(
+        PlayerBuild(BuildName="Unknown Source"),
+        progression=CharacterProgression(passive_ranks={}),
+        active_bar="front",
+        snapshot=ExtremeRuntimeSnapshot(
+            runtime_history=(_external_buff(source_actor_id="outsider"),),
+            snapshot_time_seconds=5.0,
+            recipient_actor_id="healer_1",
+            group_member_ids=("healer_1", "healer_2"),
+        ),
+    )
+
+    assert result.combat_state.active_buffs == ()
+    assert any("source is not a proven group member" in item for item in result.unresolved)
 
 
 def test_snapshot_state_future_potion_use_does_not_activate_buff():
