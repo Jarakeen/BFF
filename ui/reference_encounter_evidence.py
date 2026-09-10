@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-"""Presentation-only projection for reviewed encounter evidence without boss backing.
+"""Presentation-only projection for reviewed encounter evidence.
 
 Canonical encounter rows remain preferred. This helper exists for source-model
-mismatches such as Dreadsail Reef's Lylanar + Turlassil pair: raid operations
-model one encounter while the raw boss corpus stores the brothers separately.
-Only reconciled, non-conflicting mechanic evidence with an explicit human name is
-projected. Nothing here promotes evidence into canonical encounter truth.
+mismatches such as Dreadsail Reef's Lylanar + Turlassil pair and source records
+whose boss backing exists but does not carry the reviewed trial mechanic.
+Nothing here promotes evidence into canonical encounter truth.
 """
 
 from pathlib import Path
@@ -15,6 +14,7 @@ from typing import Any
 from engine.config import get_data_dir
 from services.encounter_evidence import ReconciledEncounterFact, reconcile_encounter_evidence
 from services.encounter_evidence_packet import load_encounter_evidence_packet
+from services.encounter_repository import EncounterRepository
 from ui.reference_data_model import ReferenceEntry
 
 
@@ -36,6 +36,31 @@ def _boss_ids(data_root: Path) -> frozenset[str]:
             if identity:
                 ids.add(identity)
     return frozenset(ids)
+
+
+def _canonical_mechanic_entry_names(data_root: Path) -> frozenset[str]:
+    """Return display identities already represented by canonical mechanics.
+
+    Fail closed if a partial test fixture cannot instantiate the repository.
+    Evidence projection may still operate in that fixture, but production callers
+    with a complete data root get duplicate suppression against canonical rows.
+    """
+
+    try:
+        repository = EncounterRepository.from_data_root(data_root)
+    except (OSError, ValueError):
+        return frozenset()
+
+    names: set[str] = set()
+    for encounter_id in repository.encounter_ids():
+        try:
+            encounter = repository.get(encounter_id)
+        except (OSError, ValueError, LookupError):
+            continue
+        for mechanic in encounter.mechanics:
+            if mechanic.name:
+                names.add(f"{mechanic.name} — {encounter.name}".casefold())
+    return frozenset(names)
 
 
 def _render_value(value: Any) -> str:
@@ -94,8 +119,8 @@ def _entry_from_fact(packet, fact: ReconciledEncounterFact) -> ReferenceEntry | 
         source_scope="Trial",
         tags=("ENCOUNTER", "REVIEWED EVIDENCE"),
         summary=(
-            "Reviewed source evidence exists for this encounter mechanic, but the paired/source "
-            "encounter does not yet have a canonical boss-backed mechanic record."
+            "Reviewed source evidence exists for this encounter mechanic, but this exact mechanic "
+            "is not yet represented by a canonical encounter mechanic record."
         ),
         details=tuple(details),
         related=(packet.encounter_name,),
@@ -112,12 +137,15 @@ def _entry_from_fact(packet, fact: ReconciledEncounterFact) -> ReferenceEntry | 
     )
 
 
-def load_unbacked_encounter_evidence_entries(
-    data_root: Path | None = None,
+def _load_evidence_entries(
+    data_root: Path,
+    *,
+    skip_backed_encounters: bool,
+    suppress_canonical_mechanics: bool,
 ) -> tuple[ReferenceEntry, ...]:
-    root = data_root or get_data_dir()
-    backed_ids = _boss_ids(root)
-    evidence_root = root / "encounter_evidence"
+    backed_ids = _boss_ids(data_root) if skip_backed_encounters else frozenset()
+    represented = _canonical_mechanic_entry_names(data_root) if suppress_canonical_mechanics else frozenset()
+    evidence_root = data_root / "encounter_evidence"
     entries: list[ReferenceEntry] = []
 
     for path in sorted(evidence_root.glob("*.json"), key=lambda item: item.name.casefold()):
@@ -126,9 +154,41 @@ def load_unbacked_encounter_evidence_entries(
             continue
         for fact in reconcile_encounter_evidence(packet.evidence):
             entry = _entry_from_fact(packet, fact)
-            if entry is not None:
-                entries.append(entry)
+            if entry is None:
+                continue
+            if entry.name.casefold() in represented:
+                continue
+            entries.append(entry)
 
-    return tuple(
-        sorted(entries, key=lambda entry: (entry.name.casefold(), entry.name))
+    return tuple(sorted(entries, key=lambda entry: (entry.name.casefold(), entry.name)))
+
+
+def load_reviewed_encounter_evidence_entries(
+    data_root: Path | None = None,
+) -> tuple[ReferenceEntry, ...]:
+    """Project safe reviewed mechanic evidence missing from canonical Reference.
+
+    This is the production path. A boss backing record by itself is not enough to
+    suppress evidence; only an already-represented canonical mechanic with the
+    same display identity suppresses the evidence-only entry.
+    """
+
+    root = data_root or get_data_dir()
+    return _load_evidence_entries(
+        root,
+        skip_backed_encounters=False,
+        suppress_canonical_mechanics=True,
+    )
+
+
+def load_unbacked_encounter_evidence_entries(
+    data_root: Path | None = None,
+) -> tuple[ReferenceEntry, ...]:
+    """Compatibility loader for evidence packets with no boss backing record."""
+
+    root = data_root or get_data_dir()
+    return _load_evidence_entries(
+        root,
+        skip_backed_encounters=True,
+        suppress_canonical_mechanics=False,
     )
