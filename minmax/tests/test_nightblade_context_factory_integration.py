@@ -91,7 +91,9 @@ def test_foreign_class_shadow_route_can_receive_dark_vigor() -> None:
             ClassSkillLines=["Green Balance", "Winter's Embrace", "Shadow"],
             FrontBarSkills=["Refreshing Path"],
         ),
-        CharacterProgression(passive_ranks={"Dark Vigor": 2}),
+        CharacterProgression(
+            passive_ranks={"Dark Vigor": 2, "Frozen Armor": 0},
+        ),
     )
 
     contribution = result.health.skill_percent_contributions[-1]
