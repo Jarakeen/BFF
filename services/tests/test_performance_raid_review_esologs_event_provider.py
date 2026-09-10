@@ -83,6 +83,37 @@ def test_provider_paginates_then_reuses_fight_cache_for_other_actor() -> None:
     assert client.calls[1][1]["startTime"] == 6000.0
 
 
+def test_public_fight_event_contract_reuses_same_cached_stream_as_enrichment() -> None:
+    rows = [
+        {"timestamp": 2500.0, "type": "death", "targetID": 7},
+        {"timestamp": 3000.0, "type": "cast", "sourceID": 8, "abilityName": "Aggressive Horn"},
+    ]
+    client = _Client([_page(rows)])
+    provider = PerformanceRaidReviewEsoLogsEventProvider(client)
+
+    events = provider.events_for_fight(
+        report_code="A",
+        fight_id=1,
+        start_time=1000.0,
+        end_time=11000.0,
+    )
+    enrichment = provider.resolve(
+        RaidReviewSource("A", 1, 7, "Healer", "Healer"),
+        _fight(),
+    )
+    repeated = provider.events_for_fight(
+        report_code="A",
+        fight_id=1,
+        start_time=1000.0,
+        end_time=11000.0,
+    )
+
+    assert events == tuple(rows)
+    assert repeated is events
+    assert enrichment.death_count == 1
+    assert len(client.calls) == 1
+
+
 def test_provider_decodes_json_scalar_event_payload() -> None:
     client = _Client(
         [
