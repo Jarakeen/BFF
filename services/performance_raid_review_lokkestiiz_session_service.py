@@ -16,6 +16,10 @@ from services.performance_raid_review_coordinator_service import (
     PerformanceRaidReviewCoordinatorService,
     PerformanceRaidReviewResult,
 )
+from services.performance_raid_review_dd_ground_continuity_service import (
+    PerformanceRaidReviewDDGroundContinuityService,
+    RaidReviewDDGroundContinuityObservation,
+)
 from services.performance_raid_review_esologs_event_provider import (
     PerformanceRaidReviewEsoLogsEventProvider,
 )
@@ -52,6 +56,7 @@ class LokkestiizRaidReviewSessionResult:
     pull_evidence: tuple[LokkestiizPullRaidReviewEvidence, ...]
     healer_effect_coverage: tuple[RaidReviewHealerEffectCoverageObservation, ...] = ()
     landing_recovery_opportunities: tuple[RaidReviewRecoveryOpportunity, ...] = ()
+    dd_ground_continuity: tuple[RaidReviewDDGroundContinuityObservation, ...] = ()
     unresolved: tuple[str, ...] = ()
 
 
@@ -67,6 +72,7 @@ class PerformanceRaidReviewLokkestiizSessionService:
         coordinator_service: PerformanceRaidReviewCoordinatorService | None = None,
         effect_window_service: EsoLogsRuntimeEffectWindowService | None = None,
         healer_effect_coverage_service: PerformanceRaidReviewHealerEffectCoverageService | None = None,
+        dd_ground_continuity_service: PerformanceRaidReviewDDGroundContinuityService | None = None,
     ) -> None:
         self.performance_service = performance_service
         self.event_provider = event_provider or PerformanceRaidReviewEsoLogsEventProvider(
@@ -81,12 +87,16 @@ class PerformanceRaidReviewLokkestiizSessionService:
         self.healer_effect_coverage_service = (
             healer_effect_coverage_service or PerformanceRaidReviewHealerEffectCoverageService()
         )
+        self.dd_ground_continuity_service = (
+            dd_ground_continuity_service or PerformanceRaidReviewDDGroundContinuityService()
+        )
 
     def review(
         self,
         pulls: Iterable[LokkestiizRaidReviewPullRequest],
         *,
         healer_effect_requirements: Iterable[RaidReviewHealerEffectRequirement] = (),
+        dd_inactivity_threshold_seconds: float = 3.0,
     ) -> LokkestiizRaidReviewSessionResult:
         requests = tuple(pulls)
         coverage_requirements = tuple(item for item in healer_effect_requirements if item.reviewed)
@@ -105,6 +115,7 @@ class PerformanceRaidReviewLokkestiizSessionService:
                 pull_evidence=(),
                 healer_effect_coverage=(),
                 landing_recovery_opportunities=(),
+                dd_ground_continuity=(),
                 unresolved=("No Lokkestiiz pulls were supplied for Raid Review.",),
             )
 
@@ -113,6 +124,7 @@ class PerformanceRaidReviewLokkestiizSessionService:
         recovery_observations = []
         recovery_opportunities: list[RaidReviewRecoveryOpportunity] = []
         healer_effect_coverage: list[RaidReviewHealerEffectCoverageObservation] = []
+        dd_ground_continuity: list[RaidReviewDDGroundContinuityObservation] = []
         pull_evidence: list[LokkestiizPullRaidReviewEvidence] = []
         unresolved: list[str] = []
 
@@ -193,6 +205,24 @@ class PerformanceRaidReviewLokkestiizSessionService:
                 f"{report_code} #{fight_id}: {message}" for message in evidence.unresolved
             )
 
+            continuity_result = self.dd_ground_continuity_service.measure(
+                report_code=report_code,
+                fight_id=fight_id,
+                fight_start_time_ms=start,
+                fight_end_time_ms=end,
+                events=events,
+                boss_actor_id=int(request.boss_actor_id),
+                actors=actors,
+                excluded_mechanic_windows=evidence.mechanic_windows,
+                inactivity_threshold_seconds=float(dd_inactivity_threshold_seconds),
+            )
+            dd_ground_continuity.extend(continuity_result.observations)
+            unresolved.extend(
+                f"{report_code} #{fight_id}: {message}"
+                for message in continuity_result.unresolved
+                if "No DPS actors were supplied" not in message
+            )
+
             landing_occurrences = tuple(
                 int(boundary.occurrence)
                 for boundary in evidence.boundaries
@@ -245,6 +275,7 @@ class PerformanceRaidReviewLokkestiizSessionService:
             landing_recovery_observations=tuple(recovery_observations),
             landing_recovery_opportunities=tuple(recovery_opportunities),
             healer_effect_coverage_observations=tuple(healer_effect_coverage),
+            dd_ground_continuity_observations=tuple(dd_ground_continuity),
         )
         unresolved.extend(review.unresolved)
 
@@ -253,6 +284,7 @@ class PerformanceRaidReviewLokkestiizSessionService:
             pull_evidence=tuple(pull_evidence),
             healer_effect_coverage=tuple(healer_effect_coverage),
             landing_recovery_opportunities=tuple(recovery_opportunities),
+            dd_ground_continuity=tuple(dd_ground_continuity),
             unresolved=tuple(dict.fromkeys(unresolved)),
         )
 
