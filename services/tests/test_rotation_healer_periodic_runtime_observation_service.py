@@ -66,6 +66,52 @@ def test_spacing_conflict_is_reported_without_silently_changing_canonical_cadenc
     assert any("conflicts with canonical cadence" in item for item in result.unresolved)
 
 
+def test_cadence_jitter_tolerance_does_not_loosen_expiry_boundary_truth():
+    sample = _sample(
+        ticks=(10.04, 11.08, 12.03, 13.07, 14.01, 15.06, 16.018),
+        end=16.02,
+    )
+
+    result = RotationHealerPeriodicRuntimeObservationService().resolve(
+        sample=sample,
+        canonical_duration_seconds=6.0,
+        canonical_cadence_seconds=1.0,
+    )
+
+    assert result.observation is not None
+    assert result.observation.tick_on_expiry_boundary is False
+    assert not any("conflicts with canonical cadence" in item for item in result.unresolved)
+    assert any("canonical 1s cadence" in item for item in result.evidence)
+
+
+def test_cadence_tolerance_can_be_tightened_without_changing_expiry_tolerance():
+    sample = _sample(
+        ticks=(10.04, 11.08, 12.03, 13.07, 14.01, 15.06, 16.018),
+        end=16.02,
+    )
+
+    result = RotationHealerPeriodicRuntimeObservationService().resolve(
+        sample=sample,
+        canonical_duration_seconds=6.0,
+        canonical_cadence_seconds=1.0,
+        cadence_tolerance_seconds=0.01,
+    )
+
+    assert result.observation is not None
+    assert result.observation.tick_on_expiry_boundary is False
+    assert any("conflicts with canonical cadence" in item for item in result.unresolved)
+
+
+def test_rejects_invalid_cadence_tolerance():
+    with pytest.raises(ValueError, match="cadence_tolerance_seconds"):
+        RotationHealerPeriodicRuntimeObservationService().resolve(
+            sample=_sample(),
+            canonical_duration_seconds=6.0,
+            canonical_cadence_seconds=1.0,
+            cadence_tolerance_seconds=-0.01,
+        )
+
+
 def test_sample_requires_provenance():
     with pytest.raises(ValueError, match="requires provenance"):
         RotationHealerPeriodicObservedSample(
