@@ -14,6 +14,10 @@ from services.nonability_effect_provider_reference_service import (
     NonAbilityEffectProviderReferenceService,
     canonical_identity,
 )
+from services.passive_effect_provider_reference_service import (
+    PassiveEffectProviderReference,
+    PassiveEffectProviderReferenceService,
+)
 from services.reference_research_enrichment_service import ReferenceResearchEnrichmentService
 from ui.reference_data_model import ReferenceEntry
 
@@ -55,6 +59,26 @@ def _nonability_provider_text(provider: NonAbilityEffectProviderReference) -> st
     if provider.scaling:
         parts.append(f"scaling: {provider.scaling}")
     return " • ".join(parts)
+
+
+def _passive_provider_text(provider: PassiveEffectProviderReference) -> str:
+    if provider.duration_rank_1 == provider.duration_rank_2:
+        duration = (
+            f"{provider.duration_rank_1:g}s"
+            if provider.duration_rank_1 is not None
+            else "runtime-dependent"
+        )
+    else:
+        duration = (
+            f"rank 1: {provider.duration_rank_1:g}s; rank 2: {provider.duration_rank_2:g}s"
+            if provider.duration_rank_1 is not None and provider.duration_rank_2 is not None
+            else "rank-dependent"
+        )
+    return (
+        f"{provider.passive_name} [{provider.passive_key}] • {provider.eso_class} / "
+        f"{provider.skill_line} • {provider.relationship} • {provider.game_update} • "
+        f"target: {provider.target} • duration: {duration} • condition: {provider.condition}"
+    )
 
 
 def enrich_reference_entries_with_ability_providers(
@@ -127,6 +151,57 @@ def enrich_reference_entries_with_nonability_providers(
         enriched.append(replace(entry, details=tuple(details), related=related, evidence=evidence))
 
     return tuple(enriched)
+
+
+def enrich_reference_entries_with_passive_providers(
+    entries: Iterable[ReferenceEntry],
+    providers: Iterable[PassiveEffectProviderReference],
+) -> tuple[ReferenceEntry, ...]:
+    by_effect: dict[str, list[PassiveEffectProviderReference]] = {}
+    for provider in providers:
+        by_effect.setdefault(canonical_identity(provider.effect_name), []).append(provider)
+
+    result: list[ReferenceEntry] = []
+    for entry in entries:
+        if entry.entry_type != "Named Effect":
+            result.append(entry)
+            continue
+
+        matches = tuple(by_effect.get(canonical_identity(entry.name), ()))
+        if not matches:
+            result.append(
+                replace(
+                    entry,
+                    details=(
+                        *entry.details,
+                        (
+                            "Passive provider coverage",
+                            "No reviewed shared passive-provider relationship is registered for this named effect yet; research remains open.",
+                        ),
+                    ),
+                )
+            )
+            continue
+
+        result.append(
+            replace(
+                entry,
+                details=(
+                    *entry.details,
+                    (
+                        "Reviewed passive providers",
+                        "; ".join(_passive_provider_text(row) for row in matches),
+                    ),
+                ),
+                related=tuple(dict.fromkeys((*entry.related, *(row.passive_name for row in matches)))),
+                evidence=tuple(
+                    dict.fromkeys(
+                        (*entry.evidence, *(item for row in matches for item in row.evidence))
+                    )
+                ),
+            )
+        )
+    return tuple(result)
 
 
 def enrich_reference_entries_with_reviewed_research(
@@ -205,29 +280,6 @@ def clarify_unresolved_reference_values(
     return tuple(result)
 
 
-def mark_passive_provider_gap(entries: Iterable[ReferenceEntry]) -> tuple[ReferenceEntry, ...]:
-    """Keep the absence of a shared passive-provider authority explicit on named effects."""
-
-    result: list[ReferenceEntry] = []
-    for entry in entries:
-        if entry.entry_type != "Named Effect":
-            result.append(entry)
-            continue
-        result.append(
-            replace(
-                entry,
-                details=(
-                    *entry.details,
-                    (
-                        "Passive provider coverage",
-                        "Coverage gap — reviewed passive mechanics exist in role-specific services, but no shared passive-to-effect provider authority has been extracted yet.",
-                    ),
-                ),
-            )
-        )
-    return tuple(result)
-
-
 def load_and_enrich_reference_entries(
     entries: Iterable[ReferenceEntry],
     database_path: Path | None = None,
@@ -235,9 +287,10 @@ def load_and_enrich_reference_entries(
     path = database_path or (get_data_dir() / "eso.db")
     ability_service = AbilityEffectProviderReferenceService(path)
     nonability_service = NonAbilityEffectProviderReferenceService(path)
+    passive_service = PassiveEffectProviderReferenceService()
 
     result = enrich_reference_entries_with_ability_providers(entries, ability_service.all())
     result = enrich_reference_entries_with_nonability_providers(result, nonability_service.all())
+    result = enrich_reference_entries_with_passive_providers(result, passive_service.all())
     result = enrich_reference_entries_with_reviewed_research(result)
-    result = clarify_unresolved_reference_values(result)
-    return mark_passive_provider_gap(result)
+    return clarify_unresolved_reference_values(result)
