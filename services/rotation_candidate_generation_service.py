@@ -78,8 +78,10 @@ class RotationCandidateGenerationService:
     repeatedly without generating unrelated siblings on every iteration. Explicit
     demand action claims are also preserved here so encounter-owned mechanic casts
     can become executable candidate actions instead of stopping at obligation data.
-    Demand action claims and caller-proven refresh leads may coexist in one policy;
-    their deterministic precedence is owned by the canonical duration refiner.
+    Family-level ``action_claims`` are shared hard encounter obligations and are
+    therefore applied identically to the baseline and every generated refresh-lead
+    sibling. Demand action claims and caller-proven refresh leads may coexist in one
+    policy; their deterministic precedence is owned by the canonical duration refiner.
     """
 
     DEFAULT_MAX_CANDIDATES = 32
@@ -102,6 +104,7 @@ class RotationCandidateGenerationService:
         priorities: AbilityPriorityList,
         demands: tuple[RotationDemandWindow, ...] = (),
         options: tuple[RotationRefreshLeadCandidateOption, ...] = (),
+        action_claims: tuple[DemandActionClaim, ...] = (),
         wait_decision: PrematureRecastDecisionProvider | None = None,
         wait_decision_factory: RotationCandidateWaitDecisionFactory | None = None,
         baseline_id: str = "baseline",
@@ -115,6 +118,7 @@ class RotationCandidateGenerationService:
         if not baseline:
             raise ValueError("rotation candidate baseline_id is required")
 
+        canonical_claims = self._canonical_claims(tuple(action_claims))
         normalized_options = self._dedupe_options(tuple(options))
         candidate_count = 1 + len(normalized_options)
         if candidate_count > self.max_candidates:
@@ -137,6 +141,7 @@ class RotationCandidateGenerationService:
                 priorities=priorities,
                 demands=tuple(demands),
                 refresh_leads=(),
+                action_claims=canonical_claims,
                 wait_decision=wait_decision,
                 wait_decision_factory=wait_decision_factory,
             )
@@ -149,6 +154,7 @@ class RotationCandidateGenerationService:
                     priorities=priorities,
                     demands=tuple(demands),
                     refresh_leads=option.refresh_leads,
+                    action_claims=canonical_claims,
                     wait_decision=wait_decision,
                     wait_decision_factory=wait_decision_factory,
                 )
