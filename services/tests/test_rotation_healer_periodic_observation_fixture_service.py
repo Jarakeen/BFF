@@ -102,11 +102,50 @@ def test_loads_fixture_and_derives_reviewed_runtime_observation(tmp_path):
 
     assert report.unresolved == ()
     assert len(report.entries) == 1
+    assert len(report.reviewed_sample_observations) == 1
     assert len(report.reviewed_observations) == 1
     observation = report.reviewed_observations[0]
     assert observation.first_tick_offset_seconds == 1.0
     assert observation.tick_on_expiry_boundary is True
     assert observation.game_version == "U50"
+
+
+def test_reviewed_observations_collapse_repeated_samples_to_consensus(tmp_path):
+    samples = []
+    for label, activation, offset in (
+        ("A", 10.0, 0.04),
+        ("B", 20.0, 0.06),
+        ("C", 30.0, 0.05),
+    ):
+        samples.append(
+            {
+                "source_name": "Budding Seeds",
+                "coefficient_number": 2,
+                "activation_time_seconds": activation,
+                "observed_tick_times_seconds": [
+                    activation + offset + step for step in range(6)
+                ],
+                "observation_end_seconds": activation + 6.1,
+                "provenance": [f"reviewed combat-log sample {label}"],
+            }
+        )
+    payload = {
+        "schema_version": 1,
+        "game_version": "U50",
+        "samples": samples,
+    }
+
+    report = RotationHealerPeriodicObservationFixtureService(_database(tmp_path)).load(
+        _fixture(tmp_path, payload)
+    )
+
+    assert report.unresolved == ()
+    assert len(report.reviewed_sample_observations) == 3
+    assert len(report.reviewed_observations) == 1
+    observation = report.reviewed_observations[0]
+    assert abs(observation.first_tick_offset_seconds - 0.05) < 1e-9
+    assert observation.tick_on_expiry_boundary is False
+    assert any("consensus from 3 explicitly reviewed" in item for item in observation.provenance)
 
 
 def test_fixture_uses_canonical_cadence_and_reports_conflict(tmp_path):
