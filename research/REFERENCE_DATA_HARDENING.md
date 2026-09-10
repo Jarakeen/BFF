@@ -39,6 +39,17 @@ The facts include delivery shape and important secondary behavior such as Minor 
 
 The canonical `combat_effect` tables remain authoritative for fields they already store. Research enrichment is additive and provenance-bearing.
 
+## Second completed research family: non-status combat effects
+
+The reviewed research layer also carries useful evidence for:
+
+- **Off Balance** — official player-source duration, reapplication lockout, and non-consumption behavior from the Update 25-era combat changes.
+- **Hindered** — Dreadsail Reef heavy-attack context, healing absorption behavior, duration, and purge restriction from Qcell's ESO-Hub guide corroborated by the original Update 34 PTS discussion.
+- **Rattled** — Dreadsail Reef context, damage-done reduction, damage-taken increase, duration, and purge restriction.
+- **Devitalized** — Dreadsail Reef context, resistance reduction, damage-taken increase, shield reduction, duration, and purge restriction.
+
+The Dreadsail values are deliberately marked medium-high confidence rather than primary/canonical because the useful numerical detail comes from a respected endgame guide and PTS player evidence rather than a clean ZOS mechanic specification.
+
 ## Missing-value presentation rule
 
 Bare `Not modeled` should not survive the normal Combat Reference loading path.
@@ -56,9 +67,8 @@ This wording is deliberately honest about what is known without pretending that 
 
 1. Shared passive -> named-effect provider authority.
 2. Named Major/Minor effect provider completeness and current Update 50/51 version boundaries.
-3. Off Balance and other non-status combat effects.
-4. Gear-set provider completeness beyond the currently reviewed registry.
-5. Encounter mechanics, prioritizing trials used by Comp Maker / Rotation Builder and fields that currently have explicit unresolved states.
-6. Skill/passive reference entries and combat-rule terminology.
+3. Gear-set provider completeness beyond the currently reviewed registry.
+4. Encounter mechanics, prioritizing trials used by Comp Maker / Rotation Builder and fields that currently have explicit unresolved states.
+5. Skill/passive reference entries and combat-rule terminology.
 
 For encounter research, gameplay handling belongs in Field Notes / gameplay-practice evidence unless it is a canonical mechanic fact.
