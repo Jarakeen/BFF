@@ -18,6 +18,7 @@ from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
 from ui.foundry_page import FoundryPage
+from ui.reference_common_names import enrich_reference_entries_with_common_names
 from ui.reference_data_model import build_reference_entries, entry_types, source_scopes
 from ui.reference_encounter_evidence import enrich_reference_entries_with_encounter_evidence
 from ui.reference_named_effects import build_named_effect_reference_entries
@@ -49,6 +50,7 @@ class ReferenceDataPage(FoundryPage):
         )
         base_entries = enrich_reference_entries_with_encounter_evidence(base_entries)
         entries = load_and_enrich_reference_entries(base_entries)
+        entries = enrich_reference_entries_with_common_names(entries)
         self._entries = {entry.name: entry for entry in entries}
         self._build_ui()
         self._load_list()
@@ -174,7 +176,7 @@ class ReferenceDataPage(FoundryPage):
         self.status = FoundryStatusBar()
         self.set_status(self.status)
         self.status.info(
-            f"Combat Reference ready • {len(self._entries)} entries loaded from canonical encounter/effect, reviewed encounter evidence, named-effect, reviewed provider, and shared gameplay-practice data."
+            f"Combat Reference ready • {len(self._entries)} entries loaded from canonical encounter/effect, reviewed encounter evidence, named-effect, reviewed provider, shared gameplay-practice, and player-facing terminology data."
         )
 
     @staticmethod
