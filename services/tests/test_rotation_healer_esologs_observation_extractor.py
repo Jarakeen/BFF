@@ -1,6 +1,8 @@
 import json
 import sqlite3
 
+import pytest
+
 from services.rotation_healer_esologs_observation_extractor import (
     RotationHealerEsoLogsObservationExtractor,
     RotationHealerEsoLogsObservationTarget,
@@ -101,6 +103,29 @@ def _raw(tmp_path, events):
                 "events": events,
                 "event_count": len(events),
             }
+        },
+    }
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    return path
+
+
+def _corpus(tmp_path, events):
+    path = tmp_path / "corpus.json"
+    payload = {
+        "schema_version": 1,
+        "encounter": "lokkestiiz",
+        "reports": {
+            "ABC123": {
+                "matching_fight_count": 1,
+                "fights": {
+                    "4": {
+                        "metadata": {"id": 4, "name": "Lokkestiiz"},
+                        "events": events,
+                        "event_count": len(events),
+                    }
+                },
+            },
+            "OTHER": {"matching_fight_count": 0, "fights": {}},
         },
     }
     path.write_text(json.dumps(payload), encoding="utf-8")
@@ -210,3 +235,38 @@ def test_seconds_timestamp_unit_does_not_divide_again(tmp_path):
 
     assert report.candidates[0].sample.activation_time_seconds == 10.0
     assert report.candidates[0].sample.observed_tick_times_seconds[0] == 11.0
+
+
+def test_extracts_from_multi_report_corpus_when_report_code_is_explicit(tmp_path):
+    events = [_event(10000, "cast")]
+    events.extend(_event(value, "hot", tick=True) for value in (11000, 12000, 13000, 14000, 15000, 16000))
+    events.append(_event(16020, "damage", source=99, target=99, ability=1))
+
+    report = RotationHealerEsoLogsObservationExtractor(_database(tmp_path)).extract(
+        _corpus(tmp_path, events),
+        report_code="ABC123",
+        fight_id=4,
+        caster_id=7,
+        targets=_target(),
+    )
+
+    assert report.report_code == "ABC123"
+    assert report.fight_id == 4
+    assert len(report.candidates) == 1
+
+
+def test_multi_report_corpus_requires_explicit_report_code(tmp_path):
+    with pytest.raises(ValueError, match="requires report_code"):
+        RotationHealerEsoLogsObservationExtractor.load_fight(
+            _corpus(tmp_path, []),
+            fight_id=4,
+        )
+
+
+def test_multi_report_corpus_rejects_unknown_report_code(tmp_path):
+    with pytest.raises(ValueError, match="is not present in corpus"):
+        RotationHealerEsoLogsObservationExtractor.load_fight(
+            _corpus(tmp_path, []),
+            fight_id=4,
+            report_code="MISSING",
+        )
