@@ -28,6 +28,28 @@ The registry is discovery metadata, not a dynamic service locator. Application c
 
 Registry consultation is a required architectural discovery step, not an optional convenience. This applies across Extreme Builder, Rotation Builder, Comp Maker, Team Optimization, Performance / Raid Review, encounter/provider systems, and future engines.
 
+## Project knowledge capture
+
+BFF keeps durable project knowledge in three shared indexes. Development work should update them when the corresponding kind of knowledge is discovered or created.
+
+### Game mechanics field notes
+
+Whenever development, testing, real-build validation, encounter research, or data reconciliation reveals something mechanically odd or noteworthy, add a short layman's note to `GAME_MECHANICS_FIELD_NOTES.md`.
+
+Use this for ESO behavior that is easy to misunderstand, surprising in practice, version-sensitive, or likely to cause future implementation drift. Capture the practical rule and why it matters. Do not turn ordinary refactoring, architecture cleanup, or routine implementation details into game-mechanics field notes.
+
+### Feature index
+
+Whenever a new user-visible capability or feature is created, add or update its entry in `FEATURES.md` so the application has a durable index of what it can do.
+
+Keep the index descriptive rather than sales-oriented. Internal correctness work, tests, caches, audits, and implementation plumbing do not need feature entries unless they create or materially change a user-visible capability.
+
+### Useful source registry
+
+Whenever research uncovers a useful external source for ESO mechanics, data, logs, calibration, validation, or implementation reference, add it to `useful_resources.md`.
+
+`useful_resources.md` is a working source registry for BFF / FoundryDock research and combat-math validation. It is not merely a link collection. Each source entry should say what the source is useful for and how much confidence should be placed in it before turning information into hardcoded game math. Record version, date, provenance, or limitations when those materially affect interpretation.
+
 ## Gameplay-practice policy is a separate layer
 
 BFF must distinguish between **what ESO mechanically permits** and **how organized players normally choose to play**.
