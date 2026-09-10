@@ -3,6 +3,7 @@ import pytest
 from minmax.character_build.character_build import CharacterBuild
 from minmax.character_build.character_class import CharacterClass
 from minmax.character_build.effect_duration_resolver import EffectDurationResolution
+from minmax.character_build.saved_build_adapter import SavedBuildAdaptation
 from minmax.healer_heavy_attack_build_discovery import (
     HeavyAttackBuildIncentiveKind,
     HealerHeavyAttackBuildIncentive,
@@ -10,6 +11,7 @@ from minmax.healer_heavy_attack_build_discovery import (
 from minmax.heavy_attack_restoration import HeavyAttackWeaponType
 from minmax.role import Role
 from minmax.support_effect_category import SupportEffectCategory
+from models.build_model import PlayerBuild
 from services.rotation_heavy_attack_effect_duration_service import (
     RotationHeavyAttackEffectDurationService,
 )
@@ -29,6 +31,16 @@ class _DurationService:
             effective_duration_seconds=self.effective,
             unresolved=self.unresolved,
         )
+
+
+class _BuildAdapter:
+    def __init__(self, adaptation: SavedBuildAdaptation):
+        self.adaptation = adaptation
+        self.calls = []
+
+    def adapt(self, saved, *, character_id=None):
+        self.calls.append((saved, character_id))
+        return self.adaptation
 
 
 def _build() -> CharacterBuild:
@@ -69,6 +81,55 @@ def test_required_heavy_effect_receives_build_effective_duration_without_overwri
     assert duration.calls[0][2].name == "major_slayer"
     assert duration.calls[0][2].duration == pytest.approx(12.0)
     assert duration.calls[0][2].category is SupportEffectCategory.BUFF
+
+
+def test_saved_build_enrichment_adapts_once_then_uses_shared_duration_service() -> None:
+    canonical = _build()
+    saved = PlayerBuild(Name="Magrat", BuildName="RoJo Healer", Role="Healer")
+    adapter = _BuildAdapter(SavedBuildAdaptation(canonical, ()))
+    duration = _DurationService(effective=16.8)
+    service = RotationHeavyAttackEffectDurationService(
+        duration,
+        build_adapter=adapter,
+    )
+
+    result = service.enrich_saved_build(
+        build=saved,
+        incentives=(_ro(),),
+        character_id="magrat",
+    )
+
+    assert adapter.calls == [(saved, "magrat")]
+    assert result.canonical_build is canonical
+    assert result.unresolved == ()
+    assert result.incentives[0].effective_effect_duration_seconds == pytest.approx(16.8)
+    assert duration.calls[0][0] is canonical
+
+
+def test_failed_saved_build_adaptation_preserves_incentive_and_fails_closed() -> None:
+    saved = PlayerBuild(Name="Magrat", BuildName="RoJo Healer", Role="Healer")
+    adapter = _BuildAdapter(
+        SavedBuildAdaptation(
+            None,
+            ("front main hand: gear set not found in GearSetRepository: Jorvuld's Guidance",),
+        )
+    )
+    service = RotationHeavyAttackEffectDurationService(
+        _DurationService(),
+        build_adapter=adapter,
+    )
+
+    result = service.enrich_saved_build(
+        build=saved,
+        incentives=(_ro(),),
+    )
+
+    assert result.canonical_build is None
+    assert result.incentives == (_ro(),)
+    assert result.incentives[0].effective_effect_duration_seconds is None
+    assert result.unresolved == (
+        "front main hand: gear set not found in GearSetRepository: Jorvuld's Guidance",
+    )
 
 
 def test_non_required_heavy_incentive_is_not_sent_through_effect_duration_resolution() -> None:
