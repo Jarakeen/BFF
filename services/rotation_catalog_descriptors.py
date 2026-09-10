@@ -223,7 +223,7 @@ ROTATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         roles=("Healer",),
         behavior=ServiceBehavior.DETERMINISTIC,
         encounter_aware=False,
-        evidence_class=EvidenceClass.CANONICAL,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
         notes=(
             "Only diagnostics whose non-healing role is already established are ambient. "
             "Potion activation, Charged runtime state, and any unknown diagnostic remain "
