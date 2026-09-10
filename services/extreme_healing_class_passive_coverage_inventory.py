@@ -3,6 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from minmax.passive_eligibility import CLASS_SKILL_LINES
+from services.extreme_warden_green_balance_passive_review import (
+    ExtremeWardenGreenBalancePassiveReview,
+)
 
 
 REVIEWED = "reviewed"
@@ -51,75 +54,95 @@ class ExtremeHealingClassPassiveCoverageSummary:
 
 
 class ExtremeHealingClassPassiveCoverageInventory:
-    """Canonical review denominator for healing-relevant class passive families.
+    """Canonical family-review denominator for Extreme MOST Actual Heal.
 
-    Every class skill-line family in ``CLASS_SKILL_LINES`` must appear exactly
-    once. ``reviewed`` means the family has been exhaustively checked for every
-    passive that can change the MOST Actual Heal objective. ``partial`` means
-    concrete healing behavior is already modeled but the entire family has not
-    yet earned that completeness claim. ``unreviewed`` means no family-level
-    review has been recorded.
-
-    Family coverage and individual implemented hooks are deliberately separate.
-    A working hook inside a family must never promote the whole family to
-    reviewed by implication.
+    The explicit family declaration is intentionally duplicated against
+    ``CLASS_SKILL_LINES``. That makes a newly-added canonical class family fail
+    closed until Extreme deliberately adds and classifies it here.
     """
 
+    _DECLARED_FAMILIES = (
+        ("arcanist", "Herald of the Tome"),
+        ("arcanist", "Soldier of Apocrypha"),
+        ("arcanist", "Curative Runeforms"),
+        ("dragonknight", "Ardent Flame"),
+        ("dragonknight", "Draconic Power"),
+        ("dragonknight", "Earthen Heart"),
+        ("necromancer", "Grave Lord"),
+        ("necromancer", "Bone Tyrant"),
+        ("necromancer", "Living Death"),
+        ("nightblade", "Assassination"),
+        ("nightblade", "Shadow"),
+        ("nightblade", "Siphoning"),
+        ("sorcerer", "Daedric Summoning"),
+        ("sorcerer", "Dark Magic"),
+        ("sorcerer", "Storm Calling"),
+        ("templar", "Aedric Spear"),
+        ("templar", "Dawn's Wrath"),
+        ("templar", "Restoring Light"),
+        ("warden", "Animal Companions"),
+        ("warden", "Green Balance"),
+        ("warden", "Winter's Embrace"),
+    )
     _NO_REVIEW_EVIDENCE = "No completed Extreme healer class-passive review recorded"
     _NO_REVIEW_DETAIL = (
         "Class-passive relevance to MOST Actual Heal has not yet been reviewed."
     )
 
-    _ENTRIES = (
-        ExtremeHealingClassPassiveCoverageEntry("arcanist", "Herald of the Tome", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
-        ExtremeHealingClassPassiveCoverageEntry("arcanist", "Soldier of Apocrypha", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
-        ExtremeHealingClassPassiveCoverageEntry("arcanist", "Curative Runeforms", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
-        ExtremeHealingClassPassiveCoverageEntry("dragonknight", "Ardent Flame", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
-        ExtremeHealingClassPassiveCoverageEntry("dragonknight", "Draconic Power", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
-        ExtremeHealingClassPassiveCoverageEntry("dragonknight", "Earthen Heart", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
-        ExtremeHealingClassPassiveCoverageEntry("necromancer", "Grave Lord", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
-        ExtremeHealingClassPassiveCoverageEntry("necromancer", "Bone Tyrant", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
-        ExtremeHealingClassPassiveCoverageEntry(
-            "necromancer",
-            "Living Death",
-            PARTIAL,
-            True,
+    @classmethod
+    def _unreviewed(
+        cls,
+        eso_class: str,
+        skill_line: str,
+    ) -> ExtremeHealingClassPassiveCoverageEntry:
+        return ExtremeHealingClassPassiveCoverageEntry(
+            eso_class,
+            skill_line,
             UNREVIEWED,
-            True,
-            "ExtremeNecromancerLivingDeathHealingService",
-            "Curative Curse has an implemented Extreme healing hook, but the full Living Death passive family has not yet been exhaustively reviewed.",
-        ),
-        ExtremeHealingClassPassiveCoverageEntry("nightblade", "Assassination", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
-        ExtremeHealingClassPassiveCoverageEntry("nightblade", "Shadow", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
-        ExtremeHealingClassPassiveCoverageEntry(
-            "nightblade",
-            "Siphoning",
-            PARTIAL,
-            True,
+            None,
             UNREVIEWED,
-            True,
-            "ExtremeNightbladeSiphoningHealingService",
-            "Soul Siphoner has an implemented Extreme healing hook, but the full Siphoning passive family has not yet been exhaustively reviewed.",
-        ),
-        ExtremeHealingClassPassiveCoverageEntry("sorcerer", "Daedric Summoning", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
-        ExtremeHealingClassPassiveCoverageEntry("sorcerer", "Dark Magic", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
-        ExtremeHealingClassPassiveCoverageEntry("sorcerer", "Storm Calling", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
-        ExtremeHealingClassPassiveCoverageEntry("templar", "Aedric Spear", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
-        ExtremeHealingClassPassiveCoverageEntry("templar", "Dawn's Wrath", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
-        ExtremeHealingClassPassiveCoverageEntry("templar", "Restoring Light", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
-        ExtremeHealingClassPassiveCoverageEntry("warden", "Animal Companions", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
-        ExtremeHealingClassPassiveCoverageEntry(
-            "warden",
-            "Green Balance",
-            PARTIAL,
-            True,
-            UNREVIEWED,
-            True,
-            "ExtremeWardenGreenBalanceHealingService",
-            "Emerald Moss has an implemented Extreme healing hook, but the full Green Balance passive family has not yet been exhaustively reviewed.",
-        ),
-        ExtremeHealingClassPassiveCoverageEntry("warden", "Winter's Embrace", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
-    )
+            False,
+            cls._NO_REVIEW_EVIDENCE,
+            cls._NO_REVIEW_DETAIL,
+        )
+
+    def _entries(self) -> tuple[ExtremeHealingClassPassiveCoverageEntry, ...]:
+        overrides = {
+            ("necromancer", "Living Death"): ExtremeHealingClassPassiveCoverageEntry(
+                "necromancer",
+                "Living Death",
+                PARTIAL,
+                True,
+                UNREVIEWED,
+                True,
+                "ExtremeNecromancerLivingDeathHealingService",
+                "Curative Curse has an implemented Extreme healing hook, but the full Living Death passive family has not yet been exhaustively reviewed.",
+            ),
+            ("nightblade", "Siphoning"): ExtremeHealingClassPassiveCoverageEntry(
+                "nightblade",
+                "Siphoning",
+                PARTIAL,
+                True,
+                UNREVIEWED,
+                True,
+                "ExtremeNightbladeSiphoningHealingService",
+                "Soul Siphoner has an implemented Extreme healing hook, but the full Siphoning passive family has not yet been exhaustively reviewed.",
+            ),
+            ("warden", "Green Balance"): ExtremeHealingClassPassiveCoverageEntry(
+                "warden",
+                "Green Balance",
+                REVIEWED,
+                True,
+                IMPLEMENTED,
+                True,
+                "ExtremeWardenGreenBalancePassiveReview + ExtremeWardenGreenBalanceHealingService + ExtremeWardenAcceleratedGrowthCombatStateService",
+                "All four Green Balance passives are reviewed for MOST Actual Heal: Accelerated Growth and Emerald Moss are implemented; Nature's Gift and Maturation are objective-irrelevant.",
+            ),
+        }
+        return tuple(
+            overrides.get(family, self._unreviewed(*family))
+            for family in self._DECLARED_FAMILIES
+        )
 
     @staticmethod
     def _canonical_families() -> tuple[tuple[str, str], ...]:
@@ -130,7 +153,7 @@ class ExtremeHealingClassPassiveCoverageInventory:
         )
 
     def items(self) -> tuple[ExtremeHealingClassPassiveCoverageEntry, ...]:
-        rows = self._ENTRIES
+        rows = self._entries()
         self._validate(rows)
         return rows
 
@@ -161,13 +184,13 @@ class ExtremeHealingClassPassiveCoverageInventory:
         rows: tuple[ExtremeHealingClassPassiveCoverageEntry, ...],
     ) -> None:
         canonical = self._canonical_families()
+        declared = self._DECLARED_FAMILIES
         actual = tuple((row.eso_class, row.skill_line) for row in rows)
-        if len(actual) != len(set(actual)):
+        if len(declared) != len(set(declared)) or len(actual) != len(set(actual)):
             raise ValueError("Extreme healer class-passive inventory contains duplicate families")
-
-        missing = tuple(family for family in canonical if family not in actual)
-        extra = tuple(family for family in actual if family not in canonical)
-        if missing or extra:
+        if declared != canonical or actual != canonical:
+            missing = tuple(family for family in canonical if family not in declared)
+            extra = tuple(family for family in declared if family not in canonical)
             raise ValueError(
                 "Extreme healer class-passive inventory must exactly match canonical class skill lines; "
                 f"missing={missing}, extra={extra}"
@@ -179,13 +202,13 @@ class ExtremeHealingClassPassiveCoverageInventory:
                     f"Invalid class-passive review status for {row.family_id}: {row.review_status}"
                 )
             if row.review_status == UNREVIEWED:
-                if row.healing_relevant is not None or row.coverage_status != UNREVIEWED:
+                if (
+                    row.healing_relevant is not None
+                    or row.coverage_status != UNREVIEWED
+                    or row.implemented_hook
+                ):
                     raise ValueError(
                         f"Unreviewed class-passive family must remain unresolved: {row.family_id}"
-                    )
-                if row.implemented_hook:
-                    raise ValueError(
-                        f"Implemented hook requires at least partial family review: {row.family_id}"
                     )
                 continue
             if row.healing_relevant is None:
@@ -211,4 +234,11 @@ class ExtremeHealingClassPassiveCoverageInventory:
             }:
                 raise ValueError(
                     f"Healing-relevant class-passive family has invalid coverage status: {row.family_id}"
+                )
+            if (
+                row.family_id == "warden:Green Balance"
+                and not ExtremeWardenGreenBalancePassiveReview().complete
+            ):
+                raise ValueError(
+                    "Green Balance cannot be reviewed until its passive-level review is complete"
                 )
