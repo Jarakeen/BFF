@@ -19,7 +19,7 @@ _CONFIDENCE_ORDER = {"high": 0, "medium": 1, "low": 2}
 # When two findings cover the same subject/theme, prefer the finding that already
 # joins multiple reviewed evidence streams over the narrower raw comparison.
 _CATEGORY_SPECIFICITY = {
-    "output_context": 0,
+    "damage_context": 0,
     "mechanic_window": 0,
     "death_window": 0,
     "survival": 1,
@@ -37,7 +37,7 @@ _CATEGORY_THEME = {
     "death_window": "survival_mechanics",
     "mechanic_window": "survival_mechanics",
     "survival": "survival_mechanics",
-    "output_context": "damage_execution",
+    "damage_context": "damage_execution",
     "damage": "damage_execution",
     "boss_contact": "damage_execution",
     "recovery_completion": "landing_execution",
