@@ -27,6 +27,7 @@ from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
 from ui.foundry_page import FoundryPage
+from ui.raid_review_async_task import RaidReviewAsyncTask
 
 
 CORE_COVERAGE = tuple(
@@ -54,6 +55,7 @@ class CoveragePage(FoundryPage):
         self.raid_review_runner = (
             raid_review_runner or PerformanceRaidReviewLokkestiizRunnerService()
         )
+        self._raid_review_task: RaidReviewAsyncTask | None = None
         self.roster = BuildRoster()
         self._build_ui()
         self.refresh()
@@ -216,24 +218,53 @@ class CoveragePage(FoundryPage):
         root.addWidget(self.raid_review_evidence_card)
         return page
 
+    def _set_raid_review_busy(self, busy: bool) -> None:
+        self.raid_review_report_input.setEnabled(not busy)
+        self.raid_review_fights_table.setEnabled(not busy)
+        self.raid_review_load_fights_button.setEnabled(not busy)
+        self.raid_review_run_button.setEnabled(
+            (not busy) and self.raid_review_fights_table.rowCount() > 0
+        )
+
+    def _start_raid_review_task(self, operation, on_success, error_prefix: str) -> bool:
+        if self._raid_review_task is not None and self._raid_review_task.isRunning():
+            self.status.warning("A Raid Review API operation is already running.")
+            return False
+
+        task = RaidReviewAsyncTask(operation, self)
+        self._raid_review_task = task
+        task.succeeded.connect(on_success)
+        task.failed.connect(lambda message: self._raid_review_task_failed(error_prefix, message))
+        task.finished.connect(self._raid_review_task_finished)
+        self._set_raid_review_busy(True)
+        task.start()
+        return True
+
+    def _raid_review_task_failed(self, error_prefix: str, message: str) -> None:
+        self.status.error(f"{error_prefix}: {message}")
+
+    def _raid_review_task_finished(self) -> None:
+        task = self._raid_review_task
+        self._raid_review_task = None
+        self._set_raid_review_busy(False)
+        if task is not None:
+            task.deleteLater()
+
     def _load_raid_review_fights(self) -> None:
         report_code = self.raid_review_report_input.text().strip()
         if not report_code:
             self.status.warning("Enter an ESO Logs report code or report URL first.")
             return
 
-        self.raid_review_load_fights_button.setEnabled(False)
-        self.raid_review_run_button.setEnabled(False)
         self.raid_review_fights_table.setRowCount(0)
         self.status.info("Loading Lokkestiiz pulls from ESO Logs...")
-        try:
-            choices = self.raid_review_runner.list_lokkestiiz_fights(report_code)
-        except Exception as exc:
-            self.status.error(f"Could not load Raid Review fights: {exc}")
-            return
-        finally:
-            self.raid_review_load_fights_button.setEnabled(True)
+        self._start_raid_review_task(
+            lambda: self.raid_review_runner.list_lokkestiiz_fights(report_code),
+            self._raid_review_fights_loaded,
+            "Could not load Raid Review fights",
+        )
 
+    def _raid_review_fights_loaded(self, choices) -> None:
         for choice in choices:
             row = self.raid_review_fights_table.rowCount()
             self.raid_review_fights_table.insertRow(row)
@@ -253,7 +284,6 @@ class CoveragePage(FoundryPage):
             ):
                 self.raid_review_fights_table.setItem(row, column, QTableWidgetItem(value))
 
-        self.raid_review_run_button.setEnabled(bool(choices))
         if choices:
             self.status.success(f"Loaded {len(choices)} Lokkestiiz pull(s). Uncheck any pulls you do not want compared.")
         else:
@@ -281,21 +311,16 @@ class CoveragePage(FoundryPage):
             self.status.warning("Check at least one Lokkestiiz pull before running Raid Review.")
             return
 
-        self.raid_review_load_fights_button.setEnabled(False)
-        self.raid_review_run_button.setEnabled(False)
         self.status.info(
             f"Running Raid Review for {len(fight_ids)} selected Lokkestiiz pull(s) from ESO Logs..."
         )
-        try:
-            api_result = self.raid_review_runner.review_report(report_code, fight_ids)
-        except Exception as exc:
-            self.apply_raid_review_result(None, extra_unresolved=(f"Raid Review failed: {exc}",))
-            self.status.error(f"Raid Review failed: {exc}")
-            return
-        finally:
-            self.raid_review_load_fights_button.setEnabled(True)
-            self.raid_review_run_button.setEnabled(self.raid_review_fights_table.rowCount() > 0)
+        self._start_raid_review_task(
+            lambda: self.raid_review_runner.review_report(report_code, fight_ids),
+            self._raid_review_result_loaded,
+            "Raid Review failed",
+        )
 
+    def _raid_review_result_loaded(self, api_result) -> None:
         review = getattr(api_result, "review", None)
         unresolved = tuple(getattr(api_result, "unresolved", ()) or ())
         self.apply_raid_review_result(review, extra_unresolved=unresolved)
