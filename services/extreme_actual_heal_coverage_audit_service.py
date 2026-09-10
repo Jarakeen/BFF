@@ -1,7 +1,12 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-
+from minmax.mechanic_coverage import (
+    MechanicCoverageItem,
+    MechanicCoverageSummary,
+    VALID_COVERAGE_STATUSES,
+    summarize_mechanic_coverage,
+    validate_mechanic_coverage,
+)
 from services.extreme_actual_heal_optimization_service import (
     ExtremeActualHealOptimizationService,
 )
@@ -11,59 +16,31 @@ from services.extreme_healing_event_recipient_scope_service import (
 
 
 CoverageStatus = str
-
-
-@dataclass(frozen=True)
-class ExtremeActualHealCoverageItem:
-    mechanic_id: str
-    category: str
-    status: CoverageStatus
-    evidence: str
-    detail: str
-
-    @property
-    def counts_toward_denominator(self) -> bool:
-        return self.status != "irrelevant"
-
-    @property
-    def is_fully_covered(self) -> bool:
-        return self.status == "implemented"
-
-
-@dataclass(frozen=True)
-class ExtremeActualHealCoverageSummary:
-    implemented: int
-    conditional: int
-    unresolved: int
-    irrelevant: int
-    denominator: int
-    covered: int
-    blocker_ids: tuple[str, ...]
-
-    @property
-    def coverage_fraction(self) -> float:
-        if self.denominator == 0:
-            return 1.0
-        return self.covered / self.denominator
+ExtremeActualHealCoverageItem = MechanicCoverageItem
+ExtremeActualHealCoverageSummary = MechanicCoverageSummary
 
 
 class ExtremeActualHealCoverageAuditService:
     """Read-only H1 coverage audit for the MOST Actual Heal objective.
 
-    The audit deliberately distinguishes mechanics that are fully modeled from
-    mechanics that only become legal under explicit runtime/evidence state.
-    Conditional mechanics remain visible in the denominator but do not count as
-    fully covered. Unsupported recipient/group semantics are blockers rather than
-    optimistic assumptions. Objective-irrelevant mechanics remain visible for
-    auditability but are excluded from the denominator.
+    The audit distinguishes fully standing mechanics from mechanics that are
+    supported only when explicit runtime/scenario evidence is supplied.
+    ``conditional`` therefore means supported-but-scenario-bound and counts as
+    covered. ``unresolved`` is the fail-closed state that blocks an exhaustive
+    completeness claim. Objective-irrelevant mechanics stay visible but remain
+    outside the denominator.
+
+    This service uses the shared BFF mechanic-coverage contract so Extreme,
+    Comp Maker, Team Optimization, Rotation, provider/coverage, and later
+    consumers do not invent conflicting meanings for coverage status.
 
     The broad implemented/omitted boundaries are anchored to the optimizer's
     existing ``SEARCH_SCOPE`` and ``OMITTED_SCOPE`` contracts. Dragon Blood is
-    counted as implemented only because the reviewed recipient resolver can prove
-    the self component from the exact two-component 3:2 coefficient relationship
-    and the healing-event evaluator consumes that selection. Malformed or missing
-    coefficient evidence still blocks the individual event rather than being
-    treated as covered by assumption.
+    counted as implemented only because the reviewed recipient resolver can
+    prove the self component from the exact two-component 3:2 coefficient
+    relationship and the healing-event evaluator consumes that selection.
+    Malformed or missing coefficient evidence still blocks the individual event
+    rather than being treated as covered by assumption.
     """
 
     REQUIRED_CATEGORIES = (
@@ -81,7 +58,7 @@ class ExtremeActualHealCoverageAuditService:
         "artifact_buffs",
     )
 
-    _VALID_STATUSES = frozenset({"implemented", "conditional", "unresolved", "irrelevant"})
+    _VALID_STATUSES = VALID_COVERAGE_STATUSES
 
     @staticmethod
     def _scope_contains(values: tuple[str, ...], token: str) -> bool:
@@ -136,9 +113,9 @@ class ExtremeActualHealCoverageAuditService:
             ExtremeActualHealCoverageItem(
                 "reviewed_class_passive_families",
                 "class_passives",
-                "conditional" if unreviewed_passives_omitted else "implemented",
+                "unresolved" if unreviewed_passives_omitted else "implemented",
                 "ExtremeHealingEventService class-family resolvers + optimizer OMITTED_SCOPE",
-                "Reviewed class passive families are modeled, but the optimizer still explicitly omits unreviewed skill-bar passive/proc families.",
+                "Reviewed class passive families are modeled, but the optimizer still explicitly omits unreviewed skill-bar passive/proc families. An unreviewed family is an unresolved coverage gap, not a supported conditional scenario.",
             ),
             ExtremeActualHealCoverageItem(
                 "reviewed_gear_packages_and_bonuses",
@@ -158,8 +135,8 @@ class ExtremeActualHealCoverageAuditService:
                 "runtime_stat_buff_windows",
                 "conditional_stat_buffs",
                 "conditional" if runtime_omitted else "implemented",
-                "ExtremeRuntimeSnapshotCombatStateService + optimizer OMITTED_SCOPE",
-                "Explicit runtime snapshots can prove modeled skill, gear, and potion windows; unproved runtime stacks/procs remain outside the standing optimizer.",
+                "ExtremeRuntimeSnapshotCombatStateService + ExtremeConditionalActualHealOptimizationService",
+                "Explicit runtime snapshots prove modeled skill, gear, and potion windows. Runtime state is supported when supplied explicitly; the standing optimizer intentionally does not invent those conditions.",
             ),
             ExtremeActualHealCoverageItem(
                 "heal_component_classification_and_crit_eligibility",
@@ -180,7 +157,7 @@ class ExtremeActualHealCoverageAuditService:
                 "target_state_scaling",
                 "conditional",
                 "ExtremeConditionalActualHealOptimizationService",
-                "Target-health-dependent healing is legal only when the caller supplies an explicit target health fraction; no emergency-health assumption is invented.",
+                "Target-health-dependent healing is supported when the caller supplies an explicit target health fraction; no emergency-health assumption is invented.",
             ),
             ExtremeActualHealCoverageItem(
                 "dragon_blood_component_recipient_identity",
@@ -194,7 +171,7 @@ class ExtremeActualHealCoverageAuditService:
                 "external_group_buffs",
                 "unresolved" if group_omitted else "conditional",
                 "ExtremeActualHealOptimizationService.OMITTED_SCOPE",
-                "Group-only buffs are still explicitly omitted; H2 must prove source, recipient, legality, and snapshot timing before they can affect MOST Actual Heal.",
+                "Group-only buffs are still explicitly omitted; source, recipient, legality, and snapshot timing must be proven before they can affect MOST Actual Heal.",
             ),
             ExtremeActualHealCoverageItem(
                 "race_stat_and_healing_bonuses",
@@ -236,39 +213,16 @@ class ExtremeActualHealCoverageAuditService:
         return rows
 
     def summary(self) -> ExtremeActualHealCoverageSummary:
-        rows = self.items()
-        counts = {
-            status: sum(1 for row in rows if row.status == status)
-            for status in self._VALID_STATUSES
-        }
-        denominator = sum(1 for row in rows if row.counts_toward_denominator)
-        covered = sum(1 for row in rows if row.is_fully_covered)
-        blockers = tuple(
-            row.mechanic_id
-            for row in rows
-            if row.status in {"conditional", "unresolved"}
-        )
-        return ExtremeActualHealCoverageSummary(
-            implemented=counts["implemented"],
-            conditional=counts["conditional"],
-            unresolved=counts["unresolved"],
-            irrelevant=counts["irrelevant"],
-            denominator=denominator,
-            covered=covered,
-            blocker_ids=blockers,
+        return summarize_mechanic_coverage(
+            self.items(),
+            required_categories=self.REQUIRED_CATEGORIES,
         )
 
     def _validate(self, rows: tuple[ExtremeActualHealCoverageItem, ...]) -> None:
-        ids = tuple(row.mechanic_id for row in rows)
-        if len(ids) != len(set(ids)):
-            raise ValueError("Extreme Actual Heal coverage audit contains duplicate mechanic ids")
-        invalid = tuple(row.status for row in rows if row.status not in self._VALID_STATUSES)
-        if invalid:
-            raise ValueError(f"Extreme Actual Heal coverage audit has invalid status: {invalid[0]}")
-        categories = {row.category for row in rows}
-        missing = tuple(category for category in self.REQUIRED_CATEGORIES if category not in categories)
-        if missing:
-            raise ValueError(
-                "Extreme Actual Heal coverage audit is missing required categories: "
-                + ", ".join(missing)
+        try:
+            validate_mechanic_coverage(
+                rows,
+                required_categories=self.REQUIRED_CATEGORIES,
             )
+        except ValueError as exc:
+            raise ValueError(f"Extreme Actual Heal coverage audit: {exc}") from exc

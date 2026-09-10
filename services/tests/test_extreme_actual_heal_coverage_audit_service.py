@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from minmax.skill_coefficients import SkillCoefficientTrace
 from services.extreme_actual_heal_coverage_audit_service import (
     ExtremeActualHealCoverageAuditService,
@@ -57,16 +59,40 @@ def test_h1_audit_classifies_every_required_surface() -> None:
     }
 
 
-def test_h1_audit_keeps_conditional_and_irrelevant_out_of_covered_count() -> None:
+def test_h1_audit_counts_proven_conditionals_as_supported_coverage() -> None:
     service = ExtremeActualHealCoverageAuditService()
     rows = service.items()
     summary = service.summary()
 
     assert summary.denominator == sum(row.status != "irrelevant" for row in rows)
-    assert summary.covered == sum(row.status == "implemented" for row in rows)
+    assert summary.covered == sum(
+        row.status in {"implemented", "conditional"}
+        for row in rows
+        if row.status != "irrelevant"
+    )
     assert summary.conditional > 0
     assert summary.irrelevant > 0
-    assert summary.coverage_fraction == summary.covered / summary.denominator
+    assert summary.coverage_fraction == pytest.approx(
+        summary.covered / summary.denominator
+    )
+
+
+def test_h1_audit_distinguishes_supported_conditionals_from_real_blockers() -> None:
+    rows = _by_id()
+    summary = ExtremeActualHealCoverageAuditService().summary()
+
+    assert rows["runtime_stat_buff_windows"].status == "conditional"
+    assert rows["explicit_target_health_conditionals"].status == "conditional"
+    assert rows["runtime_stat_buff_windows"].is_supported
+    assert rows["explicit_target_health_conditionals"].is_supported
+
+    assert rows["reviewed_class_passive_families"].status == "unresolved"
+    assert rows["external_group_buff_provenance"].status == "unresolved"
+    assert summary.blocker_ids == (
+        "reviewed_class_passive_families",
+        "external_group_buff_provenance",
+    )
+    assert not summary.complete
 
 
 def test_h1_audit_promotes_dragon_blood_after_exact_recipient_selection_is_implemented() -> None:
@@ -130,6 +156,8 @@ def test_h1_audit_reflects_existing_optimizer_scope_boundaries() -> None:
     assert rows["external_group_buff_provenance"].status == "unresolved"
     assert "runtime conditional stacks/procs" in omitted_scope
     assert rows["runtime_stat_buff_windows"].status == "conditional"
+    assert "unreviewed skill-bar passive/proc families" in omitted_scope
+    assert rows["reviewed_class_passive_families"].status == "unresolved"
 
 
 def test_h1_audit_summary_is_deterministic() -> None:
@@ -142,5 +170,5 @@ def test_h1_audit_summary_is_deterministic() -> None:
     assert first.blocker_ids == tuple(
         row.mechanic_id
         for row in service.items()
-        if row.status in {"conditional", "unresolved"}
+        if row.status == "unresolved"
     )
