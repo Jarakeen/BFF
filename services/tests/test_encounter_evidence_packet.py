@@ -6,6 +6,9 @@ import pytest
 from services.encounter_evidence_packet import load_encounter_evidence_packet
 
 
+ROOT = Path(__file__).resolve().parents[2]
+
+
 def _write_packet(path: Path, payload: dict) -> Path:
     path.write_text(json.dumps(payload), encoding="utf-8")
     return path
@@ -89,4 +92,14 @@ def test_load_encounter_evidence_packet_rejects_non_list_evidence(tmp_path: Path
     )
 
     with pytest.raises(ValueError, match="evidence must be a list"):
+        load_encounter_evidence_packet(path)
+
+
+def test_real_encounter_evidence_packets_are_schema_valid() -> None:
+    """Every checked-in evidence packet must satisfy the shared evidence schema."""
+
+    paths = sorted((ROOT / "data" / "encounter_evidence").glob("*.json"))
+    assert paths, "expected checked-in encounter evidence packets"
+
+    for path in paths:
         load_encounter_evidence_packet(path)
