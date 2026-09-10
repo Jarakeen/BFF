@@ -38,14 +38,15 @@ from services.rotation_candidate_healer_role_output_service import (
     RotationCandidateHealerCanonicalDemandEvidenceProvider,
 )
 from services.rotation_duration_refinement_service import RotationDurationRefinementService
-from services.rotation_healer_demand_criteria_service import (
-    RotationHealerDemandCriteriaService,
-)
+from services.rotation_healer_demand_criteria_service import RotationHealerDemandCriteriaService
 from services.rotation_healer_encounter_criteria_provider import (
     RotationHealerEncounterCriteriaProvider,
 )
 from services.rotation_healer_encounter_demand_bundle_service import (
     RotationHealerEncounterDemandBundleService,
+)
+from services.rotation_healer_output_context_relevance_service import (
+    RotationHealerOutputContextRelevanceService,
 )
 from services.rotation_healer_periodic_observation_fixture_service import (
     RotationHealerPeriodicObservationFixtureService,
@@ -124,13 +125,7 @@ def _guide_from_source_definition(definition) -> EncounterBossGuide:
 
 
 class _SourceStructuralThresholdProjectionService:
-    """Audit-only threshold projector over exact source structural phase rows.
-
-    Production threshold projection intentionally requires reviewed persisted timeline
-    facts. This fallback does not weaken that contract; it exists only so this audit
-    can diagnose a checkout whose source corpus is present but whose local database
-    has not persisted the encounter row yet.
-    """
+    """Audit-only clock projection over exact source structural phase rows."""
 
     def project(self, *, guide, difficulty, damage_segments):
         difficulty_key = str(difficulty or "").strip().casefold()
@@ -147,6 +142,7 @@ class _SourceStructuralThresholdProjectionService:
                     f"{difficulty_key}: source-backed encounter health is missing or not unambiguously numeric",
                 ),
             )
+
         maximum_health = int(match.group(1).replace(",", ""))
         rows = []
         for phase in guide.structural_phases:
@@ -154,9 +150,9 @@ class _SourceStructuralThresholdProjectionService:
             if threshold_match is None:
                 continue
             percent = float(threshold_match.group(1))
-            if percent <= 0 or percent >= 100:
-                continue
-            rows.append((phase, percent / 100.0))
+            if 0 < percent < 100:
+                rows.append((phase, percent / 100.0))
+
         if not rows:
             return EncounterHealthThresholdProjection(
                 encounter_id=guide.encounter_id,
@@ -166,6 +162,7 @@ class _SourceStructuralThresholdProjectionService:
                 points=(),
                 unresolved=("no source-backed structural health thresholds are available",),
             )
+
         trajectory = project_health_threshold_times(
             maximum_health=maximum_health,
             thresholds=tuple(fraction for _, fraction in rows),
@@ -192,6 +189,7 @@ class _SourceStructuralThresholdProjectionService:
             )
             if not projected.resolved:
                 unresolved.append(f"{fact_key} at {fraction * 100:g}%: {reason}")
+
         return EncounterHealthThresholdProjection(
             encounter_id=guide.encounter_id,
             difficulty=difficulty_key,
@@ -202,7 +200,12 @@ class _SourceStructuralThresholdProjectionService:
         )
 
 
-def _load_guide_for_audit(*, database_path: Path, repository: EncounterRepository, encounter_id: str):
+def _load_guide_for_audit(
+    *,
+    database_path: Path,
+    repository: EncounterRepository,
+    encounter_id: str,
+):
     try:
         guide = EncounterBossGuideService(database_path).get(encounter_id)
     except EncounterBossGuideNotFound:
@@ -213,6 +216,35 @@ def _load_guide_for_audit(*, database_path: Path, repository: EncounterRepositor
             "source-backed structural fallback",
         )
     return guide, None, "persisted reviewed boss guide"
+
+
+def _load_reviewed_runtime_observations(
+    database_path: Path | None,
+    fixture_path: Path | None,
+):
+    if fixture_path is None:
+        return (), ()
+    report = RotationHealerPeriodicObservationFixtureService(database_path).load(fixture_path)
+    return tuple(report.reviewed_observations), tuple(report.unresolved)
+
+
+def _with_static_context_blockers(
+    output: RotationCandidateHealerMultiDemandOutput,
+    blockers: tuple[str, ...],
+) -> RotationCandidateHealerMultiDemandOutput:
+    if not blockers:
+        return output
+    unresolved = tuple(
+        dict.fromkeys(
+            tuple(output.unresolved)
+            + tuple(f"static healer-output context: {message}" for message in blockers)
+        )
+    )
+    return RotationCandidateHealerMultiDemandOutput(
+        candidate_id=output.candidate_id,
+        windows=output.windows,
+        unresolved=unresolved,
+    )
 
 
 def _print_candidate_output(
@@ -240,16 +272,17 @@ def _print_candidate_output(
                 f"{action.kind.value:12s} | {str(action.name or '(unnamed)')}"
             )
 
+        provisional = bool(output.unresolved or window.unresolved)
+        prefix = "Provisional modeled healing evidence" if provisional else "Modeled healing evidence"
         print(
-            "Modeled healing evidence: "
-            f"direct={evidence.modeled_direct_healing:g}, "
+            f"{prefix}: direct={evidence.modeled_direct_healing:g}, "
             f"periodic={evidence.modeled_periodic_healing:g}, "
             f"delayed={evidence.modeled_delayed_healing:g}, "
             f"total={evidence.modeled_total_healing:g}"
         )
         value = window.modeled_healing_per_demand_second
         print(
-            "Modeled healing per demand-second: "
+            "Per-window modeled healing per demand-second: "
             + (f"{value:g}" if value is not None else "UNRESOLVED")
         )
         print(
@@ -258,12 +291,16 @@ def _print_candidate_output(
             f"delayed={len(evidence.delayed_events)}"
         )
         if window.unresolved:
-            print("Unresolved canonical evidence:")
+            print("Unresolved canonical window evidence:")
             for item in window.unresolved:
                 print(f"  - {item}")
         else:
-            print("Unresolved canonical evidence: none")
+            print("Unresolved canonical window evidence: none")
 
+    if output.unresolved:
+        print("Aggregate blockers:")
+        for item in output.unresolved:
+            print(f"  - {item}")
     weakest = output.weakest_window_value
     print(
         "Candidate weakest-window modeled output: "
@@ -271,22 +308,11 @@ def _print_candidate_output(
     )
 
 
-def _load_reviewed_runtime_observations(
-    database_path: Path,
-    fixture_path: Path | None,
-):
-    if fixture_path is None:
-        return (), ()
-    report = RotationHealerPeriodicObservationFixtureService(database_path).load(fixture_path)
-    return tuple(report.reviewed_observations), tuple(report.unresolved)
-
-
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
-            "Evaluate a saved healer build's canonical modeled healing inside the real projected "
-            "Xalvakka Phase 2 preparation window. The audit compares an ordinary refined plan "
-            "with an encounter-window-aware refined plan and never invents a survival threshold."
+            "Evaluate a saved healer build's canonical modeled healing inside the projected "
+            "Xalvakka Phase 2 preparation window without inventing a survival threshold."
         )
     )
     parser.add_argument("--character", default="Magrat")
@@ -307,19 +333,13 @@ def main() -> int:
         "--runtime-observations",
         type=Path,
         default=None,
-        help=(
-            "optional reviewed healer periodic-runtime fixture; omitted means periodic first-tick/"
-            "expiry/refresh evidence stays unresolved rather than being guessed"
-        ),
+        help="optional reviewed healer periodic-runtime observation fixture",
     )
     parser.add_argument(
         "--reviewed-criterion-fact-id",
         action="append",
         default=[],
-        help=(
-            "exact healer_demand_criterion encounter fact id explicitly approved for hard-gate use; "
-            "may be supplied more than once"
-        ),
+        help="exact healer_demand_criterion fact id explicitly approved for hard-gate use",
     )
     args = parser.parse_args()
 
@@ -339,6 +359,7 @@ def main() -> int:
         character=args.character,
         build_name=args.build,
     )
+
     encounter_repository = EncounterRepository(
         data_root / "eso_info" / "bosses",
         data_root / "encounter_evidence",
@@ -349,15 +370,18 @@ def main() -> int:
         repository=encounter_repository,
         encounter_id=args.encounter,
     )
-
     encounter_service = EncounterService(encounter_repository)
     criteria_provider = RotationHealerEncounterCriteriaProvider(encounter_service)
-    bundle_service = RotationHealerEncounterDemandBundleService(
-        criteria_provider=criteria_provider,
-        threshold_projection_service=fallback_threshold_service,
-    ) if fallback_threshold_service is not None else RotationHealerEncounterDemandBundleService(
-        criteria_provider=criteria_provider
-    )
+    if fallback_threshold_service is None:
+        bundle_service = RotationHealerEncounterDemandBundleService(
+            criteria_provider=criteria_provider
+        )
+    else:
+        bundle_service = RotationHealerEncounterDemandBundleService(
+            criteria_provider=criteria_provider,
+            threshold_projection_service=fallback_threshold_service,
+        )
+
     bundle = bundle_service.project(
         guide=guide,
         difficulty=args.difficulty,
@@ -391,14 +415,17 @@ def main() -> int:
         builds_path=Path(args.builds),
         database_path=database_path,
     ).resolve(build)
-    if not static_contexts.resolved:
-        detail = "; ".join(static_contexts.unresolved) or "static build contexts unresolved"
-        raise RuntimeError(f"saved-build static context is not fully resolved: {detail}")
     front_context = static_contexts.context_for("front")
     back_context = static_contexts.context_for("back")
     if front_context is None or back_context is None:
-        raise RuntimeError("saved-build healer audit requires both front and back static contexts")
+        detail = "; ".join(static_contexts.unresolved) or "no usable static contexts"
+        raise RuntimeError(
+            "saved-build healer audit requires front and back static contexts: " + detail
+        )
     contexts_by_bar = {"front": front_context, "back": back_context}
+    static_relevance = RotationHealerOutputContextRelevanceService().classify(
+        static_contexts.unresolved
+    )
 
     runtime_observations, runtime_fixture_unresolved = _load_reviewed_runtime_observations(
         database_path,
@@ -445,14 +472,21 @@ def main() -> int:
 
     ordinary = _candidate("ordinary", ordinary_plan)
     encounter_aware = _candidate("xalvakka-aware", encounter_plan)
-    ordinary_output = role_output.evaluate_windows(ordinary)
-    encounter_output = role_output.evaluate_windows(encounter_aware)
+    ordinary_output = _with_static_context_blockers(
+        role_output.evaluate_windows(ordinary),
+        static_relevance.relevant,
+    )
+    encounter_output = _with_static_context_blockers(
+        role_output.evaluate_windows(encounter_aware),
+        static_relevance.relevant,
+    )
 
     phase_2 = next(
         point
         for point in bundle.threshold_projection.points
         if point.fact_key == "phase_2" and abs(point.threshold_fraction - 0.70) <= 1e-9
     )
+    demand = bundle.demands[0]
 
     print("=" * 112)
     print(" PHASE 13 XALVAKKA SAVED-BUILD HEALER ENCOUNTER OUTPUT AUDIT")
@@ -464,22 +498,39 @@ def main() -> int:
     print(f"Raid DPS trajectory: {float(args.raid_dps):,.0f} (caller supplied)")
     print(
         "Projected Phase 2 threshold: "
-        + (f"{phase_2.time_seconds:.2f}s at 70% health" if phase_2.time_seconds is not None else "UNRESOLVED")
+        + (
+            f"{phase_2.time_seconds:.2f}s at 70% health"
+            if phase_2.time_seconds is not None
+            else "UNRESOLVED"
+        )
     )
-    demand = bundle.demands[0]
     print(f"Healing prep window: {demand.start_seconds:.2f}s-{demand.end_seconds:.2f}s")
-    print(
-        "Static build state: exact front/back canonical contexts resolved; actions are evaluated "
-        "against the bar on which they are scheduled."
-    )
+    print("Static build state: front/back canonical contexts are evaluated on the scheduled action bar.")
     print(
         "Healing unit: modeled pre-recipient, pre-overheal healing per demand-second. "
-        "This is not observed HPS and is not a survival threshold."
+        "This is not observed HPS or a survival threshold."
     )
     print(
         "Encounter criteria: "
-        + (f"{len(bundle.criteria)} selected structured criterion/criteria" if bundle.criteria else "none; no numeric healer floor is invented")
+        + (
+            f"{len(bundle.criteria)} selected structured criterion/criteria"
+            if bundle.criteria
+            else "none; no numeric healer floor is invented"
+        )
     )
+
+    if static_relevance.ambient:
+        print("Static context diagnostics irrelevant to modeled healer output:")
+        for item in static_relevance.ambient:
+            print(f"  - {item}")
+    if static_relevance.relevant:
+        print("Static context blockers retained fail-closed:")
+        for item in static_relevance.relevant:
+            print(f"  - {item}")
+        print("  Result status: INCOMPLETE; component values below are diagnostic/provisional.")
+    else:
+        print("Static healer-output context blockers: none")
+
     if runtime_fixture_unresolved:
         print("Reviewed periodic-runtime fixture unresolved evidence:")
         for item in runtime_fixture_unresolved:
@@ -522,8 +573,10 @@ def main() -> int:
         print("- Source fallback is audit-only and is not promoted or written into canonical persistence by this tool.")
     print("- Threshold clock time depends on supplied raid DPS.")
     print("- Healer demand priority is strategy/audit policy, not canonical encounter truth.")
+    print("- Static context diagnostics irrelevant to healer output are reported but do not block this objective.")
+    print("- Unknown or healing-relevant static diagnostics remain aggregate blockers and keep weakest-window output unresolved.")
     print("- No numeric healer survival threshold is inferred from prose such as 'continuous high flame damage'.")
-    print("- Missing periodic/delayed runtime evidence remains unresolved and prevents a fake resolved output value.")
+    print("- Missing periodic/delayed runtime evidence remains unresolved instead of becoming fake ticks.")
     return 0
 
 
