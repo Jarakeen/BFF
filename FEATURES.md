@@ -136,6 +136,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Searchable combat-reference workspace
 - Source and entry-type filtering
 - Player-facing common mechanic names / raid callouts are displayed and searchable without replacing canonical mechanic identity
+- Short reviewed **How to Mitigate** guidance gives a large, scan-friendly survival instruction for supported mechanics
 - Human-readable gameplay-practice entries sourced from the shared gameplay-policy registry
 - Canonical encounter-mechanic entries sourced through the shared encounter repository / projection
 - Canonical combat-effect entries sourced read-only from `combat_effect`, `combat_effect_trigger`, and `combat_effect_interaction`
@@ -160,7 +161,6 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Structured role, content, default-behavior, confidence, exception, and modeling-requirement details
 - Related-concept links and cross-reference text
 - Evidence / provenance display per reference entry
-- Field Notes that distinguish organized-player practice from canonical mechanics
 - Per-entry death-review guidance
 - **Used By FoundryDock** display showing which systems consume or are affected by the referenced rule
 - Mechanic / attack visual placeholder retained for future artwork, combat-log samples, and positioning diagrams
@@ -546,7 +546,7 @@ These are easy to lose in the size of the project because they are not necessari
 - Combat math keeps unsupported mechanics explicit instead of quietly converting uncertainty into zero.
 - ESO numeric ability IDs are not treated as stable canonical skill identity when context-dependent IDs would make the data unreliable.
 - The app contains both player-facing tools and research / audit surfaces used to verify the underlying ESO model.
-- Combat Reference exposes gameplay-practice rules, canonical encounter mechanics, canonical combat effects, versioned Major / Minor named-effect semantics, reviewed ability / gear / potion providers, reviewed research enrichment, explicit passive-provider gaps, provenance, death-review guidance, and downstream FoundryDock consumers in one human-readable surface.
+- Combat Reference exposes gameplay-practice rules, canonical encounter mechanics, canonical combat effects, versioned Major / Minor named-effect semantics, reviewed ability / gear / potion providers, reviewed research enrichment, player-facing common names, mitigation guidance, provenance, death-review guidance, and downstream FoundryDock consumers in one human-readable surface.
 
 ---
 
