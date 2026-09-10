@@ -35,7 +35,14 @@ from services.rotation_healer_u50_skill_component_repository import (
 class _CanonicalIdentityRecipientScope:
     """Let canonical component identity own recipient separation during base math."""
 
-    def resolve(self, *, ability_name: str) -> ExtremeHealingEventRecipientScopeResult:
+    def resolve(
+        self,
+        *,
+        ability_name: str,
+        heal_coefficient_numbers: tuple[int, ...] = (),
+        coefficient_traces: tuple[object, ...] = (),
+    ) -> ExtremeHealingEventRecipientScopeResult:
+        _ = (ability_name, heal_coefficient_numbers, coefficient_traces)
         return ExtremeHealingEventRecipientScopeResult(
             single_recipient_safe=True,
             recipient_selection_required=False,
