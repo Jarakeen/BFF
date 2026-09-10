@@ -53,21 +53,27 @@ def test_raid_review_binding_clears_stale_cards_and_has_explicit_empty_state() -
     assert "No unresolved evidence was reported for this review." in source
 
 
-def test_raid_review_workspace_exposes_direct_api_intake_controls() -> None:
+def test_raid_review_workspace_exposes_api_loaded_pull_picker() -> None:
     source = Path("ui/coverage_page.py").read_text(encoding="utf-8")
 
     assert "raid_review_report_input" in source
-    assert "raid_review_fights_input" in source
+    assert "raid_review_load_fights_button" in source
+    assert "raid_review_fights_table" in source
     assert "raid_review_run_button" in source
+    assert 'QPushButton("Load Fights")' in source
     assert 'QPushButton("Run Raid Review")' in source
-    assert "def _run_raid_review(self) -> None:" in source
+    assert "def _load_raid_review_fights(self) -> None:" in source
+    assert "self.raid_review_runner.list_lokkestiiz_fights(report_code)" in source
     assert "self.raid_review_runner.review_report(report_code, fight_ids)" in source
     assert "Raw research JSON is not required." in source
+    assert "raid_review_fights_input" not in source
 
 
-def test_raid_review_fight_id_parser_accepts_commas_spaces_and_semicolons() -> None:
+def test_raid_review_pull_picker_uses_checked_api_rows_as_review_input() -> None:
     source = Path("ui/coverage_page.py").read_text(encoding="utf-8")
 
-    assert 're.split(r"[\\s,;]+"' in source
-    assert "Fight IDs must be positive integers." in source
-    assert "if fight_id not in fight_ids:" in source
+    assert "def _selected_raid_review_fight_ids(self) -> tuple[int, ...]:" in source
+    assert "Qt.CheckState.Checked" in source
+    assert "Qt.ItemDataRole.UserRole" in source
+    assert '"Use", "Fight", "Result", "Boss %", "Duration"' in source
+    assert "Check at least one Lokkestiiz pull before running Raid Review." in source
