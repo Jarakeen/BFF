@@ -131,6 +131,21 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 
 ---
 
+## Combat Reference
+
+- Searchable combat-reference workspace
+- Source and entry-type filtering
+- Human-readable gameplay-practice entries sourced from the shared gameplay-policy registry
+- Structured role, content, default-behavior, confidence, exception, and modeling-requirement details
+- Related-concept links and cross-reference text
+- Evidence / provenance display per reference entry
+- Field Notes that distinguish organized-player practice from canonical mechanics
+- Per-entry death-review guidance
+- **Used By FoundryDock** display showing which systems consume or are affected by the referenced rule
+- Mechanic / attack visual placeholder retained for future artwork, combat-log samples, and positioning diagrams
+
+---
+
 ## Roster
 
 - Player roster
@@ -510,6 +525,7 @@ These are easy to lose in the size of the project because they are not necessari
 - Combat math keeps unsupported mechanics explicit instead of quietly converting uncertainty into zero.
 - ESO numeric ability IDs are not treated as stable canonical skill identity when context-dependent IDs would make the data unreliable.
 - The app contains both player-facing tools and research / audit surfaces used to verify the underlying ESO model.
+- Combat Reference exposes gameplay-practice rules, provenance, death-review guidance, and downstream FoundryDock consumers in one human-readable surface.
 
 ---
 
