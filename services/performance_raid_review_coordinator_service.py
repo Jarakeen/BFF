@@ -4,8 +4,8 @@ from __future__ import annotations
 
 The coordinator is intentionally thin: collect fresh per-source observations,
 optionally enrich them from raw ESO Logs events, run cross-pull analysis, and then
-add findings from explicitly supplied reviewed mechanic windows and landing-recovery
-evidence. It does not persist computed review state.
+add findings from explicitly supplied reviewed mechanic windows, landing-recovery,
+and healer pre-coverage evidence. It does not persist computed review state.
 """
 
 from dataclasses import dataclass
@@ -13,6 +13,12 @@ from typing import Iterable
 
 from services.performance_raid_review_esologs_event_provider import (
     PerformanceRaidReviewEsoLogsEventProvider,
+)
+from services.performance_raid_review_healer_effect_coverage_analysis_service import (
+    PerformanceRaidReviewHealerEffectCoverageAnalysisService,
+)
+from services.performance_raid_review_healer_effect_coverage_service import (
+    RaidReviewHealerEffectCoverageObservation,
 )
 from services.performance_raid_review_landing_recovery_analysis_service import (
     PerformanceRaidReviewLandingRecoveryAnalysisService,
@@ -58,6 +64,7 @@ class PerformanceRaidReviewCoordinatorService:
         event_provider: PerformanceRaidReviewEsoLogsEventProvider | None = None,
         mechanic_window_service: PerformanceRaidReviewMechanicWindowService | None = None,
         landing_recovery_analysis_service: PerformanceRaidReviewLandingRecoveryAnalysisService | None = None,
+        healer_effect_coverage_analysis_service: PerformanceRaidReviewHealerEffectCoverageAnalysisService | None = None,
     ) -> None:
         self.performance_service = performance_service
         self.event_provider = event_provider or PerformanceRaidReviewEsoLogsEventProvider(
@@ -74,6 +81,10 @@ class PerformanceRaidReviewCoordinatorService:
         self.landing_recovery_analysis_service = (
             landing_recovery_analysis_service or PerformanceRaidReviewLandingRecoveryAnalysisService()
         )
+        self.healer_effect_coverage_analysis_service = (
+            healer_effect_coverage_analysis_service
+            or PerformanceRaidReviewHealerEffectCoverageAnalysisService()
+        )
 
     def review(
         self,
@@ -82,6 +93,9 @@ class PerformanceRaidReviewCoordinatorService:
         encounter_name: str | None = None,
         mechanic_windows: Iterable[RaidReviewEncounterWindow] = (),
         landing_recovery_observations: Iterable[RaidReviewLandingRecoveryObservation] = (),
+        healer_effect_coverage_observations: Iterable[
+            RaidReviewHealerEffectCoverageObservation
+        ] = (),
     ) -> PerformanceRaidReviewResult:
         collection = self.observation_service.collect(tuple(sources))
         report = self.review_service.analyze(
@@ -110,6 +124,15 @@ class PerformanceRaidReviewCoordinatorService:
                 self.landing_recovery_analysis_service.findings(
                     recovery_rows,
                     tuple(outcomes_by_pull.values()),
+                )
+            )
+
+        coverage_rows = tuple(healer_effect_coverage_observations)
+        if coverage_rows:
+            extra_findings.extend(
+                self.healer_effect_coverage_analysis_service.analyze(
+                    coverage_rows,
+                    collection.observations,
                 )
             )
 
