@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -9,10 +10,19 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from engine.config import DEFAULT_DATABASE, get_data_dir
-from minmax.fight_damage_trajectory import RaidDamageSegment
+from minmax.fight_damage_trajectory import RaidDamageSegment, project_health_threshold_times
 from minmax.rotation_demand_window import RotationDemandKind, RotationDemandPattern
 from minmax.rotation_plan import RotationActionKind
-from services.encounter_boss_guide import EncounterBossGuideService
+from services.encounter_boss_guide import (
+    BossGuidePhase,
+    EncounterBossGuide,
+    EncounterBossGuideNotFound,
+    EncounterBossGuideService,
+)
+from services.encounter_health_threshold_projection_service import (
+    EncounterHealthThresholdProjection,
+    EncounterThresholdClockPoint,
+)
 from services.encounter_repository import EncounterRepository
 from services.encounter_service import EncounterService
 from services.encounter_threshold_rotation_demand_service import (
@@ -51,6 +61,8 @@ from ui.rotation_generation_support import RotationGenerationRequest, RotationGe
 
 
 DEFAULT_BUILDS = get_data_dir() / "builds.json"
+_PERCENT = re.compile(r"^\s*(100|[1-9]?\d(?:\.\d+)?)\s*%\s*$")
+_HEALTH = re.compile(r"^\s*(\d{1,3}(?:,\d{3})*|\d+)(?:\s*\([^()]*\))?\s*$")
 
 
 def _candidate(candidate_id: str, plan) -> GeneratedRotationCandidate:
@@ -69,6 +81,138 @@ def _window_actions(plan, demand):
         if demand.start_seconds <= float(action.time_seconds) < demand.end_seconds
         and action.kind is not RotationActionKind.LIGHT_ATTACK
     )
+
+
+def _slug(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", str(value or "").casefold()).strip("_")
+
+
+def _guide_from_source_definition(definition) -> EncounterBossGuide:
+    structural_phases = tuple(
+        BossGuidePhase(
+            phase_id=index,
+            label=phase.label,
+            threshold=phase.threshold,
+            description=phase.description,
+            source_section="source-backed structural phase",
+            source_url=definition.source.url,
+            source_revision_id=definition.source.revision_id,
+        )
+        for index, phase in enumerate(definition.phases, start=1)
+    )
+    return EncounterBossGuide(
+        encounter_id=definition.encounter_id,
+        content_id=definition.content_id,
+        content_name=definition.content_id.replace("_", " ").title(),
+        name=definition.name,
+        summary="",
+        location="",
+        species=definition.actors[0].species if definition.actors else "",
+        reaction="",
+        health_record_present=bool(definition.difficulty_health),
+        health=tuple(definition.difficulty_health),
+        abilities=(),
+        phases=structural_phases,
+        structural_phases=structural_phases,
+        timeline_facts=(),
+        source_url=definition.source.url,
+        source_page_title=definition.source.page_title,
+        source_revision_id=definition.source.revision_id,
+        retrieved_at=definition.source.retrieved_at,
+        source_license=definition.source.license,
+    )
+
+
+class _SourceStructuralThresholdProjectionService:
+    """Audit-only threshold projector over exact source structural phase rows.
+
+    Production threshold projection intentionally requires reviewed persisted timeline
+    facts. This fallback does not weaken that contract; it exists only so this audit
+    can diagnose a checkout whose source corpus is present but whose local database
+    has not persisted the encounter row yet.
+    """
+
+    def project(self, *, guide, difficulty, damage_segments):
+        difficulty_key = str(difficulty or "").strip().casefold()
+        raw_health = dict(guide.health).get(difficulty_key, "")
+        match = _HEALTH.fullmatch(raw_health)
+        if match is None:
+            return EncounterHealthThresholdProjection(
+                encounter_id=guide.encounter_id,
+                difficulty=difficulty_key,
+                maximum_health=None,
+                trajectory=None,
+                points=(),
+                unresolved=(
+                    f"{difficulty_key}: source-backed encounter health is missing or not unambiguously numeric",
+                ),
+            )
+        maximum_health = int(match.group(1).replace(",", ""))
+        rows = []
+        for phase in guide.structural_phases:
+            threshold_match = _PERCENT.fullmatch(str(phase.threshold or ""))
+            if threshold_match is None:
+                continue
+            percent = float(threshold_match.group(1))
+            if percent <= 0 or percent >= 100:
+                continue
+            rows.append((phase, percent / 100.0))
+        if not rows:
+            return EncounterHealthThresholdProjection(
+                encounter_id=guide.encounter_id,
+                difficulty=difficulty_key,
+                maximum_health=maximum_health,
+                trajectory=None,
+                points=(),
+                unresolved=("no source-backed structural health thresholds are available",),
+            )
+        trajectory = project_health_threshold_times(
+            maximum_health=maximum_health,
+            thresholds=tuple(fraction for _, fraction in rows),
+            segments=tuple(damage_segments),
+        )
+        points = []
+        unresolved = []
+        for (phase, fraction), projected in zip(rows, trajectory.thresholds):
+            fact_key = _slug(phase.label) or f"phase_{phase.phase_id}"
+            reason = (
+                "projected from exact source-backed structural phase threshold and supplied raid DPS"
+                if projected.resolved
+                else projected.reason
+            )
+            points.append(
+                EncounterThresholdClockPoint(
+                    fact_key=fact_key,
+                    label=phase.label or fact_key.replace("_", " ").title(),
+                    threshold_fraction=fraction,
+                    time_seconds=projected.time_seconds,
+                    resolved=projected.resolved,
+                    reason=reason,
+                )
+            )
+            if not projected.resolved:
+                unresolved.append(f"{fact_key} at {fraction * 100:g}%: {reason}")
+        return EncounterHealthThresholdProjection(
+            encounter_id=guide.encounter_id,
+            difficulty=difficulty_key,
+            maximum_health=maximum_health,
+            trajectory=trajectory,
+            points=tuple(points),
+            unresolved=tuple(unresolved),
+        )
+
+
+def _load_guide_for_audit(*, database_path: Path, repository: EncounterRepository, encounter_id: str):
+    try:
+        guide = EncounterBossGuideService(database_path).get(encounter_id)
+    except EncounterBossGuideNotFound:
+        definition = repository.get(encounter_id)
+        return (
+            _guide_from_source_definition(definition),
+            _SourceStructuralThresholdProjectionService(),
+            "source-backed structural fallback",
+        )
+    return guide, None, "persisted reviewed boss guide"
 
 
 def _print_candidate_output(
@@ -195,16 +339,23 @@ def main() -> int:
         character=args.character,
         build_name=args.build,
     )
-    guide = EncounterBossGuideService(database_path).get(args.encounter)
-
     encounter_repository = EncounterRepository(
         data_root / "eso_info" / "bosses",
         data_root / "encounter_evidence",
         database_path=database_path,
     )
+    guide, fallback_threshold_service, guide_source = _load_guide_for_audit(
+        database_path=database_path,
+        repository=encounter_repository,
+        encounter_id=args.encounter,
+    )
+
     encounter_service = EncounterService(encounter_repository)
     criteria_provider = RotationHealerEncounterCriteriaProvider(encounter_service)
     bundle_service = RotationHealerEncounterDemandBundleService(
+        criteria_provider=criteria_provider,
+        threshold_projection_service=fallback_threshold_service,
+    ) if fallback_threshold_service is not None else RotationHealerEncounterDemandBundleService(
         criteria_provider=criteria_provider
     )
     bundle = bundle_service.project(
@@ -308,6 +459,7 @@ def main() -> int:
     print("=" * 112)
     print(f"Character: {args.character} | Build: {args.build}")
     print(f"Encounter: {guide.name} ({guide.encounter_id}) | Difficulty: {args.difficulty}")
+    print(f"Encounter timing source: {guide_source}")
     print(f"Boss health: {bundle.threshold_projection.maximum_health:,}")
     print(f"Raid DPS trajectory: {float(args.raid_dps):,.0f} (caller supplied)")
     print(
@@ -363,7 +515,12 @@ def main() -> int:
 
     print("\nBOUNDARIES")
     print("-" * 112)
-    print("- 70% Phase 2 threshold is reviewed encounter truth; its clock time depends on supplied raid DPS.")
+    if guide_source == "persisted reviewed boss guide":
+        print("- 70% Phase 2 threshold came from persisted reviewed encounter timeline data.")
+    else:
+        print("- 70% Phase 2 threshold came from exact source-backed structural encounter data because local persistence was absent.")
+        print("- Source fallback is audit-only and is not promoted or written into canonical persistence by this tool.")
+    print("- Threshold clock time depends on supplied raid DPS.")
     print("- Healer demand priority is strategy/audit policy, not canonical encounter truth.")
     print("- No numeric healer survival threshold is inferred from prose such as 'continuous high flame damage'.")
     print("- Missing periodic/delayed runtime evidence remains unresolved and prevents a fake resolved output value.")
