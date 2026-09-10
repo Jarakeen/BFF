@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import defaultdict
 import json
 from pathlib import Path
 import sys
@@ -10,7 +11,10 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from services.esologs_event_interpreter import SemanticEventKind
+from services.esologs_json_adapter import EsoLogsJsonEventInterpreter, EsoLogsJsonFight
 from services.rotation_healer_esologs_observation_extractor import (
+    DF_HEALER_U50_OBSERVATION_TARGETS,
     RotationHealerEsoLogsObservationExtractor,
     RotationHealerEsoLogsTimestampUnit,
 )
@@ -25,8 +29,22 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--raw", required=True, help="raw ESO Logs JSON export")
     parser.add_argument("--fight-id", required=True, type=int, help="fight id inside the raw export")
-    parser.add_argument("--caster-id", required=True, type=int, help="ESO Logs sourceID for the healer")
-    parser.add_argument("--out", required=True, help="candidate observation JSON output path")
+    parser.add_argument(
+        "--caster-id",
+        type=int,
+        default=None,
+        help="ESO Logs sourceID for the healer; omit with --list-casters",
+    )
+    parser.add_argument(
+        "--out",
+        default=None,
+        help="candidate observation JSON output path; required unless --list-casters",
+    )
+    parser.add_argument(
+        "--list-casters",
+        action="store_true",
+        help="discover sourceIDs that cast or produced healing from the tracked healer HoTs",
+    )
     parser.add_argument("--db", default="data/eso.db", help="canonical ESO database path")
     parser.add_argument(
         "--timestamp-unit",
@@ -38,8 +56,96 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _candidate_caster_rows(events, targets=DF_HEALER_U50_OBSERVATION_TARGETS):
+    target_by_id = {
+        int(target.ability_game_id): target.source_name
+        for target in targets
+    }
+    stats = defaultdict(lambda: {"casts": 0, "heals": 0, "abilities": set()})
+
+    for event in events:
+        source_id = getattr(event, "source_id", None)
+        ability_id = getattr(event, "ability_game_id", None)
+        if source_id is None or ability_id is None:
+            continue
+        source_name = target_by_id.get(int(ability_id))
+        if source_name is None:
+            continue
+
+        event_kind = getattr(event, "event_kind", None)
+        if event_kind is SemanticEventKind.CAST:
+            stats[int(source_id)]["casts"] += 1
+        elif event_kind is SemanticEventKind.HEAL:
+            stats[int(source_id)]["heals"] += 1
+        else:
+            continue
+        stats[int(source_id)]["abilities"].add(source_name)
+
+    rows = []
+    for source_id, values in stats.items():
+        rows.append(
+            {
+                "source_id": int(source_id),
+                "casts": int(values["casts"]),
+                "heals": int(values["heals"]),
+                "abilities": tuple(sorted(values["abilities"], key=str.casefold)),
+            }
+        )
+    return tuple(
+        sorted(
+            rows,
+            key=lambda row: (
+                -len(row["abilities"]),
+                -row["casts"],
+                -row["heals"],
+                row["source_id"],
+            ),
+        )
+    )
+
+
+def _list_candidate_casters(raw_path: Path, *, fight_id: int) -> int:
+    fight = EsoLogsJsonFight.load(raw_path, fight_id=int(fight_id))
+    events = tuple(EsoLogsJsonEventInterpreter(fight).iter_events())
+    rows = _candidate_caster_rows(events)
+
+    print("================================================================")
+    print(" PHASE 13 HEALER ESO LOGS CASTER DISCOVERY")
+    print("================================================================")
+    print(f"Raw export:     {raw_path}")
+    print(f"Report / fight: {fight.report_code} / {fight.fight_id}")
+    print()
+    if not rows:
+        print("No sourceID cast or produced healing from the tracked DF-healer HoTs.")
+        return 1
+
+    print("Candidate sourceIDs (best coverage first):")
+    for row in rows:
+        abilities = ", ".join(row["abilities"])
+        print(
+            f"- sourceID={row['source_id']} | abilities={len(row['abilities'])} "
+            f"| casts={row['casts']} | heals={row['heals']} | {abilities}"
+        )
+    print()
+    print(
+        "Use the sourceID with the strongest healer-HoT coverage as --caster-id. "
+        "This discovery is only routing assistance; the extractor still validates exact "
+        "ability IDs and event timing before emitting candidate observations."
+    )
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
+    parser = build_parser()
+    args = parser.parse_args(argv)
+
+    if args.list_casters:
+        return _list_candidate_casters(Path(args.raw), fight_id=args.fight_id)
+    if args.caster_id is None:
+        parser.error("--caster-id is required unless --list-casters is used")
+    if not args.out:
+        parser.error("--out is required unless --list-casters is used")
+
     report = RotationHealerEsoLogsObservationExtractor(Path(args.db)).extract(
         Path(args.raw),
         fight_id=args.fight_id,
