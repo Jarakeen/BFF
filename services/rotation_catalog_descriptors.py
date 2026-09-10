@@ -208,6 +208,28 @@ ROTATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "and reviewed criterion evidence owns any numeric healer hard gate."
         ),
     ),
+    ServiceDescriptor(
+        service_id="rotation.healer.output_context_relevance",
+        domain="rotation",
+        purpose=(
+            "Classify broad static build-context diagnostics by whether they can invalidate "
+            "modeled healer output, preserving unknown diagnostics fail-closed."
+        ),
+        implementation_path="services.rotation_healer_output_context_relevance_service",
+        inputs=("BuildCalculationContextUnresolved",),
+        outputs=("RotationHealerOutputContextRelevance",),
+        dependencies=(),
+        responsibilities=("rotation_healer_output_context_unresolved_relevance",),
+        roles=("Healer",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.CANONICAL,
+        notes=(
+            "Only diagnostics whose non-healing role is already established are ambient. "
+            "Potion activation, Charged runtime state, and any unknown diagnostic remain "
+            "healer-output relevant until explicitly resolved."
+        ),
+    ),
 )
 
 
