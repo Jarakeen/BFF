@@ -57,7 +57,6 @@ from services.extreme_structural_mundus_food_core_stat_record_service import (
     _FOOD_SCOPE,
 )
 from services.extreme_structural_mundus_food_potion_core_stat_record_service import (
-    ExtremeBestMundusFoodPotionStructuralStatEvaluator,
     _POTION_DEFERRED_AXIS,
     _POTION_SCOPE,
 )
@@ -147,18 +146,26 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
         )
         result: ExtremeStructuralGlobalSearchResult[dict[str, Any]] = search_service.search(key)
 
-        # Probe the already-established finite-axis evaluator only for denominator
-        # sizes.  This does not score a candidate and therefore does not duplicate
-        # any mechanic calculation.
+        # Probe the established finite-axis evaluator only for denominator sizes.
+        # Depend on the evaluator contract rather than one concrete class so test
+        # doubles and future compatible implementations cannot accidentally zero
+        # otherwise valid search-coverage accounting.
         mundus_count = 0
         food_count = 0
         potion_count = 0
         if gear_candidates:
             probe = factory(gear_candidates[0])
-            if isinstance(probe, ExtremeBestMundusFoodPotionStructuralStatEvaluator):
-                potion_count = len(probe.potion_states())
-                food_count = len(probe.food_evaluator.food_choices())
-                mundus_count = len(probe.food_evaluator.mundus_evaluator.mundus_choices())
+            potion_states = getattr(probe, "potion_states", None)
+            food_evaluator = getattr(probe, "food_evaluator", None)
+            food_choices = getattr(food_evaluator, "food_choices", None)
+            mundus_evaluator = getattr(food_evaluator, "mundus_evaluator", None)
+            mundus_choices = getattr(mundus_evaluator, "mundus_choices", None)
+            if callable(potion_states):
+                potion_count = len(tuple(potion_states()))
+            if callable(food_choices):
+                food_count = len(tuple(food_choices()))
+            if callable(mundus_choices):
+                mundus_count = len(tuple(mundus_choices()))
 
         searched = tuple((*result.structural_scope, _GEAR_SCOPE, _MUNDUS_SCOPE, _FOOD_SCOPE, _POTION_SCOPE))
         closed_axes = {_MUNDUS_DEFERRED_AXIS, _FOOD_DEFERRED_AXIS, _POTION_DEFERRED_AXIS}
