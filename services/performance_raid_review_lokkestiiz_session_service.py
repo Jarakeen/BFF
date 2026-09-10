@@ -213,6 +213,7 @@ class PerformanceRaidReviewLokkestiizSessionService:
             encounter_name="Lokkestiiz",
             mechanic_windows=tuple(mechanic_windows),
             landing_recovery_observations=tuple(recovery_observations),
+            healer_effect_coverage_observations=tuple(healer_effect_coverage),
         )
         unresolved.extend(review.unresolved)
 
