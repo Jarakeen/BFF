@@ -7,6 +7,7 @@ from minmax.rotation_effective_duration import RotationEffectiveDurationOverride
 from minmax.rotation_plan import RotationPlan
 from services.rotation_candidate_canonical_plan_evidence_service import (
     RotationCandidateCanonicalPlanEvidenceService,
+    RotationCandidateRoleOutputEvidence,
 )
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 
@@ -53,6 +54,16 @@ class _WorkloadProvider:
     def evaluate_plan(self, candidate):
         self.calls.append(candidate)
         return self.workload
+
+
+class _RoleOutputProvider:
+    def __init__(self, evidence):
+        self.evidence = evidence
+        self.calls = []
+
+    def evaluate_plan(self, candidate):
+        self.calls.append(candidate)
+        return self.evidence
 
 
 def _sustain_projection(minimum_amount: int = 1000):
@@ -163,6 +174,76 @@ def test_provider_does_not_invent_role_or_support_measurements() -> None:
     assert evidence.role_output_value is None
     assert evidence.assigned_support_value is None
     assert evidence.primary_role_displacement_seconds is None
+
+
+def test_provider_carries_resolved_authoritative_role_output_for_exact_candidate() -> None:
+    candidate = _candidate()
+    output_provider = _RoleOutputProvider(
+        RotationCandidateRoleOutputEvidence(
+            candidate_id="candidate",
+            value=143250.5,
+        )
+    )
+    service = RotationCandidateCanonicalPlanEvidenceService(
+        build=object(),
+        sustain_service=_SustainService(_sustain_projection()),
+        duration_service=_DurationService(object()),
+        role_output_evidence_provider=output_provider,
+    )
+
+    evidence = service.evaluate_plan(candidate)
+
+    assert output_provider.calls == [candidate]
+    assert evidence.role_output_value == 143250.5
+    assert evidence.assigned_support_value is None
+
+
+def test_provider_keeps_role_output_unknown_when_authority_reports_unresolved_evidence() -> None:
+    candidate = _candidate()
+    output_provider = _RoleOutputProvider(
+        RotationCandidateRoleOutputEvidence(
+            candidate_id="candidate",
+            value=143250.5,
+            unresolved=("light-attack damage consequence unresolved",),
+        )
+    )
+    service = RotationCandidateCanonicalPlanEvidenceService(
+        build=object(),
+        sustain_service=_SustainService(_sustain_projection()),
+        duration_service=_DurationService(object()),
+        role_output_evidence_provider=output_provider,
+    )
+
+    evidence = service.evaluate_plan(candidate)
+
+    assert evidence.role_output_value is None
+
+
+def test_provider_rejects_role_output_evidence_for_a_different_candidate() -> None:
+    candidate = _candidate()
+    output_provider = _RoleOutputProvider(
+        RotationCandidateRoleOutputEvidence(
+            candidate_id="other-candidate",
+            value=140000.0,
+        )
+    )
+    service = RotationCandidateCanonicalPlanEvidenceService(
+        build=object(),
+        sustain_service=_SustainService(_sustain_projection()),
+        duration_service=_DurationService(object()),
+        role_output_evidence_provider=output_provider,
+    )
+
+    with pytest.raises(ValueError, match="role-output evidence candidate mismatch"):
+        service.evaluate_plan(candidate)
+
+
+def test_role_output_evidence_rejects_non_finite_values() -> None:
+    with pytest.raises(ValueError, match="must be finite"):
+        RotationCandidateRoleOutputEvidence(
+            candidate_id="candidate",
+            value=float("nan"),
+        )
 
 
 def test_provider_uses_viable_canonical_workload_displacement_for_exact_candidate() -> None:
