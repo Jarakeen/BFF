@@ -177,6 +177,35 @@ ROTATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "criterion becomes VERIFIED_ENCOUNTER_EVIDENCE."
         ),
     ),
+    ServiceDescriptor(
+        service_id="rotation.healer.encounter_demand_bundle",
+        domain="rotation",
+        purpose=(
+            "Compose reviewed health-threshold clock projection, explicit healer demand "
+            "policy, and encounter-backed healer criteria into one encounter input bundle."
+        ),
+        implementation_path="services.rotation_healer_encounter_demand_bundle_service",
+        inputs=(
+            "EncounterBossGuide",
+            "RaidDamageSegment",
+            "EncounterThresholdRotationDemandPolicy",
+            "ReviewedFactId",
+        ),
+        outputs=("RotationHealerEncounterDemandBundle",),
+        dependencies=(
+            "rotation.healer.encounter_criteria_provider",
+        ),
+        responsibilities=("rotation_healer_encounter_demand_bundle_composition",),
+        roles=("Healer",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Composition only. Health thresholds own encounter timing facts, raid-damage "
+            "trajectory owns projected clock time, role policy owns preparation windows, "
+            "and reviewed criterion evidence owns any numeric healer hard gate."
+        ),
+    ),
 )
 
 
