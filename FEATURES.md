@@ -144,6 +144,9 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Named-effect entries expose U50 standing semantics and explicit U51 semantic differences without mutating the U50 default
 - Component-owned effects such as Vulnerability, Protection, Berserk, Slayer, Vitality, and Defile remain labeled as component-layer semantics instead of receiving invented standing-stat values
 - Named-effect stacking guidance follows the canonical rule that duplicate copies of the same named effect/objective do not stack while Major and Minor variants remain distinct
+- Reviewed ability providers are sourced read-only from the `ability_combat_effect` relationship table and enrich matching effect entries with ability, relationship, weapon, condition, confidence, and provenance
+- Ability-provider identity uses canonical lower-snake-case `index_name` values; duplicate numeric ESO ability aliases are collapsed and never promoted to semantic identity
+- Provider relationships are shown only when explicit source-backed rows exist; missing provider mappings remain absent rather than being inferred from tooltip prose
 - Encounter entries expose only structured known fields such as mechanic type, damage type, target count, movement / positioning / cleanse requirements, hazard state, fatal-failure state, interruptibility, phases, and provenance
 - Unknown encounter and effect properties remain explicitly **Not modeled** rather than being inferred from prose
 - Structured role, content, default-behavior, confidence, exception, and modeling-requirement details
@@ -535,7 +538,7 @@ These are easy to lose in the size of the project because they are not necessari
 - Combat math keeps unsupported mechanics explicit instead of quietly converting uncertainty into zero.
 - ESO numeric ability IDs are not treated as stable canonical skill identity when context-dependent IDs would make the data unreliable.
 - The app contains both player-facing tools and research / audit surfaces used to verify the underlying ESO model.
-- Combat Reference exposes gameplay-practice rules, canonical encounter mechanics, canonical combat effects, versioned Major / Minor named-effect semantics, provenance, death-review guidance, and downstream FoundryDock consumers in one human-readable surface.
+- Combat Reference exposes gameplay-practice rules, canonical encounter mechanics, canonical combat effects, versioned Major / Minor named-effect semantics, reviewed ability providers, provenance, death-review guidance, and downstream FoundryDock consumers in one human-readable surface.
 
 ---
 
