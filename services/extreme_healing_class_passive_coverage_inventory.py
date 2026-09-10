@@ -12,6 +12,9 @@ from services.extreme_necromancer_living_death_passive_review import (
 from services.extreme_nightblade_siphoning_passive_review import (
     ExtremeNightbladeSiphoningPassiveReview,
 )
+from services.extreme_sorcerer_dark_magic_passive_review import (
+    ExtremeSorcererDarkMagicPassiveReview,
+)
 from services.extreme_templar_restoring_light_passive_review import (
     ExtremeTemplarRestoringLightPassiveReview,
 )
@@ -150,6 +153,16 @@ class ExtremeHealingClassPassiveCoverageInventory:
                 "ExtremeNightbladeSiphoningPassiveReview + NightbladePassiveInputResolver + ExtremeNightbladeSiphoningHealingService",
                 "All four Siphoning passives are reviewed for MOST Actual Heal: Magicka Flood and Soul Siphoner are implemented; Catalyst and Transfer are objective-irrelevant.",
             ),
+            ("sorcerer", "Dark Magic"): ExtremeHealingClassPassiveCoverageEntry(
+                "sorcerer",
+                "Dark Magic",
+                REVIEWED,
+                True,
+                EXPLICITLY_UNSUPPORTED,
+                False,
+                "ExtremeSorcererDarkMagicPassiveReview",
+                "All four live-U50 Dark Magic passives are reviewed for MOST Actual Heal. Blood Magic is objective-relevant but remains unsupported: its below-full-Health Max-Health-scaled self-heal and full-Health 10-second highest-resource bonus are not yet executable in Extreme Actual Heal. Unholy Knowledge, Persistence, and Exploitation are objective-irrelevant.",
+            ),
             ("templar", "Restoring Light"): ExtremeHealingClassPassiveCoverageEntry(
                 "templar",
                 "Restoring Light",
@@ -287,6 +300,13 @@ class ExtremeHealingClassPassiveCoverageInventory:
             ):
                 raise ValueError(
                     "Siphoning cannot be reviewed until its passive-level review is complete"
+                )
+            if (
+                row.family_id == "sorcerer:Dark Magic"
+                and not ExtremeSorcererDarkMagicPassiveReview().complete
+            ):
+                raise ValueError(
+                    "Dark Magic cannot be reviewed until its passive-level review is complete"
                 )
             if (
                 row.family_id == "templar:Restoring Light"
