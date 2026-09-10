@@ -4,11 +4,14 @@ from __future__ import annotations
 
 This layer closes the named gear-set/package axis only when the canonical topology,
 slot eligibility, objective relevance, and physical realization services all prove
-their denominator.  Surviving named gear witnesses are scored beneath the existing
-Mundus -> food -> potion finite-axis stack and through the canonical stat pipeline.
+their denominator. For objectives with reviewed armor support, surviving named gear
+witnesses are crossed with every reviewed seven-piece armor weight/static-trait
+state beneath the existing Mundus -> food -> potion stack and through the canonical
+stat pipeline.
 
-Armor weights, traits, glyphs/enchants, skill bars, CP, and runtime-only mechanics
-remain separate axes and therefore continue to block global proof.
+The reviewed armor source family is narrower than the whole equipment-trait axis.
+Glyph-dependent/runtime armor traits plus jewelry and weapon traits remain explicit
+coverage gaps until their own canonical finite axes are closed.
 """
 
 from pathlib import Path
@@ -19,6 +22,11 @@ from minmax.gear_set_repository import GearSetRepository
 from minmax.mundus_repository import MundusRepository, U50_GAME_UPDATE
 from minmax.potion_availability_repository import PotionAvailabilityRepository
 from minmax.provisioning_static_repository import ProvisioningStaticRepository
+from services.extreme_armor_weight_trait_state_service import ExtremeArmorWeightTraitStateService
+from services.extreme_best_named_gear_armor_mundus_food_potion_structural_stat_evaluator import (
+    ExtremeBestNamedGearArmorMundusFoodPotionStructuralStatEvaluator,
+    ExtremeNamedGearArmorFiniteAxisEvaluatorFactory,
+)
 from services.extreme_best_named_gear_mundus_food_potion_structural_stat_evaluator import (
     ExtremeBestNamedGearMundusFoodPotionStructuralStatEvaluator,
     ExtremeNamedGearFiniteAxisEvaluatorFactory,
@@ -63,9 +71,17 @@ from services.extreme_structural_mundus_food_potion_core_stat_record_service imp
 
 
 _GEAR_DEFERRED_AXIS = "gear and legal set/package topology"
+_EQUIPMENT_TRAIT_DEFERRED_AXIS = "armor, jewelry, and weapon traits"
+_REMAINING_EQUIPMENT_TRAIT_AXIS = (
+    "glyph-dependent/runtime armor traits plus jewelry and weapon traits"
+)
 _GEAR_SCOPE = (
     "all objective-surviving canonical named gear-set breakpoint assignments "
     "with proven active-snapshot physical slot witnesses"
+)
+_REVIEWED_ARMOR_SCOPE = (
+    "all reviewed seven-piece Light/Medium/Heavy armor weight and static-trait states "
+    "(None, Divines, Reinforced, Nirnhoned, Invigorating)"
 )
 
 
@@ -127,17 +143,39 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
             self.database_path,
             game_update=GameUpdate.U50,
         )
-        factory = ExtremeNamedGearFiniteAxisEvaluatorFactory(
-            canonical_evaluator=canonical,
-            mundus_repository=mundus_repository,
-            provisioning_repository=provisioning_repository,
-            potion_repository=potion_repository,
-        )
-        evaluator = ExtremeBestNamedGearMundusFoodPotionStructuralStatEvaluator(
-            gear_realization=gear_realization,
-            evaluator_factory=factory,
-        )
-        gear_candidates = evaluator.gear_realizations()
+
+        armor_catalog = None
+        armor_count = 1
+        reviewed_armor = key in ExtremeArmorWeightTraitStateService.REVIEWED_OBJECTIVES
+        if reviewed_armor:
+            armor_catalog = ExtremeArmorWeightTraitStateService.build(key)
+            factory = ExtremeNamedGearArmorFiniteAxisEvaluatorFactory(
+                canonical_evaluator=canonical,
+                mundus_repository=mundus_repository,
+                provisioning_repository=provisioning_repository,
+                potion_repository=potion_repository,
+            )
+            evaluator = ExtremeBestNamedGearArmorMundusFoodPotionStructuralStatEvaluator(
+                gear_realization=gear_realization,
+                armor_catalog=armor_catalog,
+                evaluator_factory=factory,
+            )
+            gear_candidates = evaluator.gear_realizations()
+            armor_states = evaluator.armor_states()
+            armor_count = len(armor_states)
+        else:
+            factory = ExtremeNamedGearFiniteAxisEvaluatorFactory(
+                canonical_evaluator=canonical,
+                mundus_repository=mundus_repository,
+                provisioning_repository=provisioning_repository,
+                potion_repository=potion_repository,
+            )
+            evaluator = ExtremeBestNamedGearMundusFoodPotionStructuralStatEvaluator(
+                gear_realization=gear_realization,
+                evaluator_factory=factory,
+            )
+            gear_candidates = evaluator.gear_realizations()
+            armor_states = ()
 
         universe_service = ExtremeGlobalSearchUniverseService(self.database_path)
         search_service = ExtremeStructuralGlobalSearchService(
@@ -147,14 +185,18 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
         result: ExtremeStructuralGlobalSearchResult[dict[str, Any]] = search_service.search(key)
 
         # Probe the established finite-axis evaluator only for denominator sizes.
-        # Depend on the evaluator contract rather than one concrete class so test
-        # doubles and future compatible implementations cannot accidentally zero
-        # otherwise valid search-coverage accounting.
+        # Depend on the evaluator contract rather than concrete classes so test
+        # doubles and future compatible implementations cannot silently zero
+        # otherwise valid coverage accounting.
         mundus_count = 0
         food_count = 0
         potion_count = 0
-        if gear_candidates:
-            probe = factory(gear_candidates[0])
+        if gear_candidates and (not reviewed_armor or armor_states):
+            probe = (
+                factory(gear_candidates[0], armor_states[0])
+                if reviewed_armor
+                else factory(gear_candidates[0])
+            )
             potion_states = getattr(probe, "potion_states", None)
             food_evaluator = getattr(probe, "food_evaluator", None)
             food_choices = getattr(food_evaluator, "food_choices", None)
@@ -167,23 +209,44 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
             if callable(mundus_choices):
                 mundus_count = len(tuple(mundus_choices()))
 
-        searched = tuple((*result.structural_scope, _GEAR_SCOPE, _MUNDUS_SCOPE, _FOOD_SCOPE, _POTION_SCOPE))
+        searched_parts = [*result.structural_scope, _GEAR_SCOPE]
+        if reviewed_armor:
+            searched_parts.append(_REVIEWED_ARMOR_SCOPE)
+        searched_parts.extend((_MUNDUS_SCOPE, _FOOD_SCOPE, _POTION_SCOPE))
+        searched = tuple(searched_parts)
+
         closed_axes = {_MUNDUS_DEFERRED_AXIS, _FOOD_DEFERRED_AXIS, _POTION_DEFERRED_AXIS}
         if evaluator.gear_denominator_proven:
             closed_axes.add(_GEAR_DEFERRED_AXIS)
-        omitted = tuple(axis for axis in result.deferred_dynamic_axes if axis not in closed_axes)
+
+        omitted_rows: list[str] = []
+        for axis in result.deferred_dynamic_axes:
+            if axis in closed_axes:
+                continue
+            if axis == _EQUIPMENT_TRAIT_DEFERRED_AXIS and reviewed_armor:
+                omitted_rows.append(_REMAINING_EQUIPMENT_TRAIT_AXIS)
+            else:
+                omitted_rows.append(axis)
+        omitted = tuple(omitted_rows)
 
         expanded_count = (
             int(result.candidates_scored)
             * len(gear_candidates)
+            * armor_count
             * mundus_count
             * food_count
             * potion_count
         )
+        reviewed_armor_denominator_proven = bool(
+            not reviewed_armor
+            or getattr(evaluator, "reviewed_armor_denominator_proven", False)
+        )
         denominator_proven = bool(
             result.structural_denominator_proven
             and evaluator.gear_denominator_proven
+            and reviewed_armor_denominator_proven
             and gear_candidates
+            and armor_count
             and mundus_count
             and food_count
             and potion_count
@@ -198,10 +261,11 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
             denominator_proven=denominator_proven,
         )
 
+        armor_unresolved = tuple(armor_catalog.unresolved) if armor_catalog is not None else ()
         aggregate_unresolved = tuple(
             dict.fromkeys(
                 str(item)
-                for item in (*gear_realization.unresolved, *result.unresolved)
+                for item in (*gear_realization.unresolved, *armor_unresolved, *result.unresolved)
                 if str(item)
             )
         )
@@ -223,13 +287,28 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
 
         winner = result.best
         payload = winner.payload if isinstance(winner.payload, dict) else {}
-        explanation = (
-            "Searched race × legal class route × all 64-point attribute allocations × active bar × objective-surviving named gear witnesses × every Update-50 Mundus × canonical food/drink × canonical potion snapshot.",
+        explanation_rows = [
+            "Searched race × legal class route × all 64-point attribute allocations × active bar × objective-surviving named gear witnesses"
+            + (" × every reviewed armor weight/static-trait state" if reviewed_armor else "")
+            + " × every Update-50 Mundus × canonical food/drink × canonical potion snapshot.",
             f"Named gear realization reviewed {gear_realization.breakpoints_reviewed:,} set-bonus breakpoints; safely pruned {gear_realization.breakpoints_pruned_irrelevant:,} objective-irrelevant breakpoints.",
             f"Considered {gear_realization.assignments_considered:,} named set assignments; physically realized {gear_realization.assignments_realized:,} and rejected {gear_realization.assignments_rejected:,}.",
-            f"Scored {len(gear_candidates):,} distinct gear witnesses per structural candidate across {mundus_count:,} Mundus, {food_count:,} food, and {potion_count:,} potion states.",
-            "Armor weights, traits, glyphs/enchants, skills, Champion Points, remaining passives, and runtime-only axes remain separate unless coverage says otherwise.",
+        ]
+        if reviewed_armor:
+            explanation_rows.append(
+                f"Scored {armor_count:,} reviewed armor states for each of {len(gear_candidates):,} distinct gear witnesses before Mundus/food/potion selection."
+            )
+        else:
+            explanation_rows.append(
+                f"Scored {len(gear_candidates):,} distinct gear witnesses per structural candidate; this objective has no reviewed armor weight/static-trait search yet."
+            )
+        explanation_rows.extend(
+            (
+                f"Finite axes include {mundus_count:,} Mundus, {food_count:,} food, and {potion_count:,} potion states.",
+                "Glyph-dependent/runtime armor traits, jewelry and weapon traits, glyphs/enchants, skills, Champion Points, remaining passives, and runtime-only axes remain separate unless coverage says otherwise.",
+            )
         )
+
         runtime_prerequisites = ()
         if str(payload.get("potion") or ""):
             runtime_prerequisites = (
@@ -250,5 +329,5 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
             self_provided_conditions=tuple(payload.get("active_buffs") or ()),
             unresolved=aggregate_unresolved,
             search_coverage=coverage,
-            explanation=explanation,
+            explanation=tuple(explanation_rows),
         )
