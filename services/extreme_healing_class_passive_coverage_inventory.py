@@ -9,6 +9,8 @@ from services.extreme_arcanist_soldier_of_apocrypha_passive_review import Extrem
 from services.extreme_dragonknight_ardent_flame_passive_review import ExtremeDragonknightArdentFlamePassiveReview
 from services.extreme_dragonknight_draconic_power_passive_review import ExtremeDragonknightDraconicPowerPassiveReview
 from services.extreme_dragonknight_earthen_heart_passive_review import ExtremeDragonknightEarthenHeartPassiveReview
+from services.extreme_necromancer_bone_tyrant_passive_review import ExtremeNecromancerBoneTyrantPassiveReview
+from services.extreme_necromancer_grave_lord_passive_review import ExtremeNecromancerGraveLordPassiveReview
 from services.extreme_necromancer_living_death_passive_review import ExtremeNecromancerLivingDeathPassiveReview
 from services.extreme_nightblade_assassination_passive_review import ExtremeNightbladeAssassinationPassiveReview
 from services.extreme_nightblade_shadow_passive_review import ExtremeNightbladeShadowPassiveReview
@@ -155,6 +157,16 @@ class ExtremeHealingClassPassiveCoverageInventory:
                 "ExtremeDragonknightEarthenHeartPassiveReview",
                 "All current Earthen Heart passives are reviewed and none enlarge one healing-event magnitude.",
             ),
+            ("necromancer", "Grave Lord"): self._reviewed(
+                "necromancer", "Grave Lord", False,
+                "ExtremeNecromancerGraveLordPassiveReview",
+                "All live-U50 Grave Lord passives are reviewed and affect damage, offensive critical chance, penetration, or summon economy rather than one healing-event magnitude.",
+            ),
+            ("necromancer", "Bone Tyrant"): self._reviewed(
+                "necromancer", "Bone Tyrant", True,
+                "ExtremeNecromancerBoneTyrantPassiveReview + NecromancerPassiveInputResolver + BuildCalculationContextFactory",
+                "Last Gasp adds rank-aware canonical Max Health, while Health Avarice adds rank-aware Healing Received from explicit active-bar Bone Tyrant slot count before heal evaluation.",
+            ),
             ("necromancer", "Living Death"): self._reviewed(
                 "necromancer", "Living Death", True,
                 "ExtremeNecromancerLivingDeathPassiveReview + ExtremeNecromancerLivingDeathHealingService",
@@ -275,6 +287,8 @@ class ExtremeHealingClassPassiveCoverageInventory:
             "dragonknight:Ardent Flame": ExtremeDragonknightArdentFlamePassiveReview,
             "dragonknight:Draconic Power": ExtremeDragonknightDraconicPowerPassiveReview,
             "dragonknight:Earthen Heart": ExtremeDragonknightEarthenHeartPassiveReview,
+            "necromancer:Grave Lord": ExtremeNecromancerGraveLordPassiveReview,
+            "necromancer:Bone Tyrant": ExtremeNecromancerBoneTyrantPassiveReview,
             "necromancer:Living Death": ExtremeNecromancerLivingDeathPassiveReview,
             "nightblade:Assassination": ExtremeNightbladeAssassinationPassiveReview,
             "nightblade:Shadow": ExtremeNightbladeShadowPassiveReview,
