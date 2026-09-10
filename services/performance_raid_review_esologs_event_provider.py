@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-"""Read-only ESO Logs event provider for raid-review enrichment.
+"""Read-only ESO Logs event provider for raid-review evidence.
 
 The provider fetches one full fight event stream at most once per service instance,
-then reuses that cached evidence for every player observation in the same fight.
-This avoids issuing the same expensive ESO Logs event query once per raid member.
+then reuses that cached evidence for every consumer of the same fight. Observation
+enrichment and encounter-specific review services should use this shared event stream
+rather than fetching or caching parallel copies of runtime truth.
 
 Raw numeric ability/resource IDs remain raw evidence. Semantic interpretation belongs
-in the enrichment/review layers, which already refuse unsupported inference.
+in higher layers, which already refuse unsupported inference.
 """
 
 import json
@@ -51,7 +52,7 @@ query RaidReviewEvents(
 
 
 class PerformanceRaidReviewEsoLogsEventProvider:
-    """Fetch and cache raw fight events, then derive one actor's enrichment."""
+    """Fetch and cache one authoritative raw event stream per reviewed fight."""
 
     def __init__(
         self,
@@ -70,22 +71,45 @@ class PerformanceRaidReviewEsoLogsEventProvider:
     def resolve(self, source: RaidReviewSource, fight: dict) -> RaidReviewEventEnrichment:
         start = float(fight.get("startTime", 0.0) or 0.0)
         end = float(fight.get("endTime", 0.0) or 0.0)
-        if end <= start:
-            raise ValueError(
-                f"Fight {source.report_code} #{source.fight_id} has invalid start/end timestamps."
-            )
-
-        events = self._events_for_fight(
-            source.report_code,
-            int(source.fight_id),
-            start,
-            end,
+        events = self.events_for_fight(
+            report_code=source.report_code,
+            fight_id=int(source.fight_id),
+            start_time=start,
+            end_time=end,
         )
         return self.enrichment_service.enrich(
             events,
             actor_id=int(source.actor_id),
             fight_start_time_ms=start,
             primary_resource_name=source.primary_resource_name,
+        )
+
+    def events_for_fight(
+        self,
+        *,
+        report_code: str,
+        fight_id: int,
+        start_time: float,
+        end_time: float,
+    ) -> tuple[dict, ...]:
+        """Return the shared complete raw event stream for one explicit fight.
+
+        This is the public runtime-evidence contract for Raid Review consumers. The
+        returned tuple is immutable at the collection level and is cached by exact
+        report/fight clock identity. Partial pagination is never accepted.
+        """
+
+        start = float(start_time)
+        end = float(end_time)
+        if end <= start:
+            raise ValueError(
+                f"Fight {report_code} #{int(fight_id)} has invalid start/end timestamps."
+            )
+        return self._events_for_fight(
+            report_code,
+            int(fight_id),
+            start,
+            end,
         )
 
     def _events_for_fight(
