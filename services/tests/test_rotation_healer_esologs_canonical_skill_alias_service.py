@@ -61,3 +61,71 @@ def test_does_not_resolve_unrelated_skill(tmp_path):
     service = RotationHealerEsoLogsCanonicalSkillAliasService(_database(tmp_path))
 
     assert service.resolve("combat_prayer") is None
+
+
+def test_reviewed_periodic_effect_aliases_are_component_specific(tmp_path):
+    service = RotationHealerEsoLogsCanonicalSkillAliasService(_database(tmp_path))
+
+    seeds = service.reviewed_periodic_effects(
+        "Budding Seeds",
+        coefficient_number=2,
+        game_version="U50",
+    )
+    illustrious = service.reviewed_periodic_effects(
+        "illustrious_healing",
+        coefficient_number=1,
+        game_version="u50",
+    )
+
+    assert seeds is not None
+    assert seeds.canonical_skill_id == "budding_seeds"
+    assert seeds.coefficient_number == 2
+    assert seeds.ability_game_ids == (129434,)
+    assert seeds.game_version == "U50"
+    assert any("50/50" in item for item in seeds.evidence)
+    assert any("85841 remains unpromoted" in item for item in seeds.evidence)
+
+    assert illustrious is not None
+    assert illustrious.ability_game_ids == (40059,)
+    assert any("79/79" in item for item in illustrious.evidence)
+
+
+def test_reviewed_periodic_effect_aliases_cover_all_cross_fight_promotions(tmp_path):
+    service = RotationHealerEsoLogsCanonicalSkillAliasService(_database(tmp_path))
+
+    expected = {
+        ("budding_seeds", 2): (129434,),
+        ("radiating_regeneration", 1): (40079,),
+        ("illustrious_healing", 1): (40059,),
+        ("energy_orb", 1): (42039,),
+        ("echoing_vigor", 1): (61506,),
+    }
+
+    resolved = {
+        key: service.reviewed_periodic_effects(
+            key[0],
+            coefficient_number=key[1],
+            game_version="U50",
+        )
+        for key in expected
+    }
+
+    assert {
+        key: value.ability_game_ids if value is not None else None
+        for key, value in resolved.items()
+    } == expected
+
+
+def test_reviewed_periodic_effect_aliases_fail_closed_for_other_component_or_version(tmp_path):
+    service = RotationHealerEsoLogsCanonicalSkillAliasService(_database(tmp_path))
+
+    assert service.reviewed_periodic_effects(
+        "budding_seeds",
+        coefficient_number=1,
+        game_version="U50",
+    ) is None
+    assert service.reviewed_periodic_effects(
+        "budding_seeds",
+        coefficient_number=2,
+        game_version="U49",
+    ) is None
