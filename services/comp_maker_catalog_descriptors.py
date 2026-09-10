@@ -5,8 +5,13 @@ from __future__ import annotations
 This module contains metadata only. It must not import, instantiate, or execute the
 services it describes. Runtime code continues to use typed imports and explicit
 dependency wiring.
+
+The canonical service catalog currently loads extension descriptor families through
+this module. Keep mature application-domain descriptors in the aggregate so every
+explicit descriptor family reaches ``SERVICE_CATALOG``.
 """
 
+from services.application_catalog_descriptors import APPLICATION_SERVICE_DESCRIPTORS
 from services.service_catalog import (
     EvidenceClass,
     ServiceBehavior,
@@ -24,6 +29,7 @@ from services.team_workflow_catalog_descriptors import (
 
 
 COMP_MAKER_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
+    *APPLICATION_SERVICE_DESCRIPTORS,
     ServiceDescriptor(
         service_id="comp.builder.build_candidates",
         domain="comp",
