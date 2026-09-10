@@ -194,8 +194,8 @@ def test_selected_reviewed_criterion_is_retained_when_clock_projection_is_unreso
             RaidDamageSegment(
                 0.0,
                 10.0,
-                0.0,
-                "no damage reaches threshold",
+                1.0,
+                "finite low-DPS segment ends before threshold",
             ),
         ),
         demand_policies=(_policy(),),
