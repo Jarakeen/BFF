@@ -5,7 +5,6 @@ from dataclasses import dataclass
 
 IMPLEMENTED = "implemented"
 IRRELEVANT = "irrelevant"
-INTEGRATION_PENDING = "integration_pending"
 
 
 @dataclass(frozen=True)
@@ -21,9 +20,9 @@ class ExtremeSorcererDaedricSummoningPassiveReview:
     """Live-U50 Daedric Summoning review for MOST Actual Heal.
 
     Expert Summoner has two relevant resource branches. Its standing 5% Max
-    Magicka/Stamina contribution is already canonical. The separate 5% Max
-    Health branch requires an explicitly active permanent pet and is not yet
-    represented in the shared context, so this family must remain incomplete.
+    Magicka/Stamina contribution is canonical through ``SorcererPassiveInputResolver``.
+    Its separate 5% Max Health branch is now modeled through an explicit permanent-
+    pet conditional context rebuild before healing coefficient evaluation.
     """
 
     PASSIVE_NAMES = (
@@ -39,7 +38,7 @@ class ExtremeSorcererDaedricSummoningPassiveReview:
             False,
             IRRELEVANT,
             "Live-U50 Daedric Summoning passive review",
-            "Restores Magicka when a summoned non-Ultimate Daedric Summoning pet ends; sustain does not enlarge one healing event.",
+            "Restores Magicka or Stamina when a non-Ultimate Daedric Summoning ability ends; sustain does not enlarge one healing event.",
         ),
         ExtremeSorcererDaedricSummoningPassiveReviewEntry(
             "Power Stone",
@@ -53,14 +52,14 @@ class ExtremeSorcererDaedricSummoningPassiveReview:
             False,
             IRRELEVANT,
             "Live-U50 Daedric Summoning passive review",
-            "Changes Health/Stamina Recovery while a Daedric Summoning ability is slotted; recovery does not enlarge one healing event.",
+            "Reduces damage taken while a Daedric Summoning ability is active; mitigation does not enlarge one healing event.",
         ),
         ExtremeSorcererDaedricSummoningPassiveReviewEntry(
             "Expert Summoner",
             True,
-            INTEGRATION_PENDING,
-            "SorcererPassiveInputResolver + BuildCalculationContextFactory",
-            "Standing 5% Max Magicka and Max Stamina is implemented. The separate 5% Max Health branch requires proof that a permanent pet is active and still needs explicit runtime/context wiring before health-scaled heals can be exact.",
+            IMPLEMENTED,
+            "SorcererPassiveInputResolver + ExtremeSorcererExpertSummonerPetContextService + ExtremeSorcererConditionalActualHealService",
+            "Standing 5% Max Magicka and Max Stamina is canonical. The separate 5% Max Health branch is applied only when the caller explicitly proves a permanent pet is active, and the additive Health percentage is inserted before canonical resource rounding and healing coefficient evaluation.",
         ),
     )
 
@@ -78,10 +77,8 @@ class ExtremeSorcererDaedricSummoningPassiveReview:
             raise ValueError(
                 "Daedric Summoning healing review must identify only Expert Summoner as objective-relevant"
             )
-        if relevant[0].coverage_status != INTEGRATION_PENDING:
-            raise ValueError(
-                "Expert Summoner must remain integration_pending until the permanent-pet Max Health branch is wired"
-            )
+        if relevant[0].coverage_status != IMPLEMENTED:
+            raise ValueError("Expert Summoner must remain implemented")
         if any(
             row.coverage_status != IRRELEVANT
             for row in rows
@@ -92,5 +89,8 @@ class ExtremeSorcererDaedricSummoningPassiveReview:
 
     @property
     def complete(self) -> bool:
-        self.items()
-        return False
+        rows = self.items()
+        return all(
+            row.coverage_status in {IMPLEMENTED, IRRELEVANT}
+            for row in rows
+        )
