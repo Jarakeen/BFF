@@ -65,6 +65,7 @@ def test_provider_evaluates_exact_final_candidate_plan_through_shared_services()
     override = RotationEffectiveDurationOverride(
         skill_name="combat_prayer",
         duration_seconds=12.0,
+        source="test canonical duration evidence",
         bar="front",
     )
 
