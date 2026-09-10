@@ -1,5 +1,5 @@
 from services.extreme_sorcerer_daedric_summoning_passive_review import (
-    INTEGRATION_PENDING,
+    IMPLEMENTED,
     IRRELEVANT,
     ExtremeSorcererDaedricSummoningPassiveReview,
 )
@@ -23,7 +23,7 @@ def test_only_expert_summoner_is_relevant_to_most_actual_heal() -> None:
     relevant = [row for row in rows if row.objective_relevant]
 
     assert [(row.passive_name, row.coverage_status) for row in relevant] == [
-        ("Expert Summoner", INTEGRATION_PENDING),
+        ("Expert Summoner", IMPLEMENTED),
     ]
     assert all(
         row.coverage_status == IRRELEVANT
@@ -32,11 +32,12 @@ def test_only_expert_summoner_is_relevant_to_most_actual_heal() -> None:
     )
 
 
-def test_daedric_summoning_review_stays_incomplete_until_pet_health_branch_exists() -> None:
+def test_daedric_summoning_review_is_complete_with_explicit_pet_health_branch() -> None:
     review = ExtremeSorcererDaedricSummoningPassiveReview()
     row = next(row for row in review.items() if row.passive_name == "Expert Summoner")
 
-    assert not review.complete
+    assert review.complete
     assert "5% Max Magicka and Max Stamina" in row.detail
     assert "5% Max Health" in row.detail
     assert "permanent pet" in row.detail
+    assert "before canonical resource rounding" in row.detail
