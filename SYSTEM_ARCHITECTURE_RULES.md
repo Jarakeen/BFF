@@ -14,6 +14,22 @@ The intended direction is:
 
 Role-specific logic belongs above shared mechanics. Healer, tank, and damage-dealer objectives may interpret or rank the same canonical state differently, but they should not fork the underlying truth.
 
+## Gameplay-practice policy is a separate layer
+
+BFF must distinguish between **what ESO mechanically permits** and **how organized players normally choose to play**.
+
+Canonical mechanics remain the authority for coefficients, costs, durations, targets, triggers, cooldowns, range, combat events, and other engine truth. Gameplay-practice policy may rank, discourage, prefer, require, or explain choices made from those mechanically legal options, but it must not rewrite the underlying mechanic.
+
+The shared gameplay-practice registry lives in `data/gameplay_policy/` with human-readable rationale in `ENDGAME_PLAY_PRACTICES.md` and read-only access through `services/gameplay_policy_service.py`.
+
+The intended decision order is:
+
+`mechanical legality -> normal role/content practice -> encounter/assignment context -> explainable override`
+
+Do not hardcode the same raid convention independently into Extreme Builder, Rotation Builder, Comp Maker, Team Optimization, or Performance. Consumers should query the shared policy layer and apply their own feature-specific objective above it.
+
+Practice rules are contextual defaults, not universal laws. Encounter assignments may override them when the assignment materially changes support access, survival obligations, positioning, role responsibilities, or other conditions that made the default sensible.
+
 ## Testing rule: prove reusable contracts
 
 When work in one engine exposes or verifies a reusable mechanic, state, timing rule, legality rule, candidate rule, or optimization invariant, tests should be written with downstream reuse in mind.
