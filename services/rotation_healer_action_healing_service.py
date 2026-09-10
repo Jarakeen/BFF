@@ -9,6 +9,10 @@ from minmax.rotation_plan import RotationActionKind, RotationPlan
 from minmax.saved_build_skill_tooltip_service import SavedBuildSkillTooltipService
 from minmax.skill_component_classification import HealTemporalScope, SkillEffectKind
 from models.build_model import PlayerBuild
+from services.rotation_healer_caster_healing_relevance_service import (
+    RotationHealerCasterHealingRelevance,
+    RotationHealerCasterHealingRelevanceService,
+)
 from services.rotation_healer_u50_skill_component_repository import (
     RotationHealerU50SkillComponentRepository,
 )
@@ -81,8 +85,15 @@ class RotationHealerActionHealingService:
     mapped bar state fails closed for that action rather than borrowing the default
     context and silently applying the wrong bar stats.
 
-    Reviewed synergy/external healing components may be intentionally absent from
-    caster-owned healer classification. When the component repository explicitly
+    Reviewed skill-level relevance is consulted after canonical name resolution.
+    Skills proven to have no caster-owned healing consequence do not enter tooltip
+    healing projection merely because they appear on a healer bar. Reviewed
+    externally triggered healing remains unresolved here until its own trigger path
+    is modeled. Unknown skill identities continue through the normal fail-closed
+    component path.
+
+    Reviewed synergy/external healing components may also be intentionally absent
+    from caster-owned healer classification. When the component repository explicitly
     identifies such an exclusion, the projector skips it rather than converting the
     intentional ownership boundary back into a false unresolved diagnostic. Any
     other missing component classification remains fail-closed.
@@ -93,6 +104,8 @@ class RotationHealerActionHealingService:
         database_path: str | Path,
         *,
         tooltip_service: SavedBuildSkillTooltipService | None = None,
+        caster_healing_relevance_service: RotationHealerCasterHealingRelevanceService
+        | None = None,
     ) -> None:
         self.database_path = Path(database_path)
         self.tooltip_service = tooltip_service or SavedBuildSkillTooltipService(
@@ -100,6 +113,10 @@ class RotationHealerActionHealingService:
             component_repository=RotationHealerU50SkillComponentRepository(
                 self.database_path
             ),
+        )
+        self.caster_healing_relevance_service = (
+            caster_healing_relevance_service
+            or RotationHealerCasterHealingRelevanceService()
         )
 
     def project(
@@ -145,6 +162,26 @@ class RotationHealerActionHealingService:
                     for message in messages
                 )
                 continue
+
+            skill_relevance = self.caster_healing_relevance_service.resolve(
+                resolution.rank.entity_id
+            )
+            if skill_relevance is not None:
+                if (
+                    skill_relevance.relevance
+                    is RotationHealerCasterHealingRelevance.NO_CASTER_HEALING
+                ):
+                    continue
+                if (
+                    skill_relevance.relevance
+                    is RotationHealerCasterHealingRelevance.EXTERNAL_CONDITIONAL_HEALING
+                ):
+                    unresolved.append(
+                        f"{action.name} at {action.time_seconds:g}s: "
+                        "reviewed healing consequence is externally triggered and is not "
+                        "modeled by caster action healing projection"
+                    )
+                    continue
 
             result = self.tooltip_service.evaluate_entity_id(
                 build=build,
