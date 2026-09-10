@@ -51,6 +51,10 @@ from services.performance_raid_review_observation_service import (
     RaidReviewCollectionResult,
     RaidReviewSource,
 )
+from services.performance_raid_review_player_summary_service import (
+    PerformanceRaidReviewPlayerSummaryService,
+    RaidReviewPlayerSummary,
+)
 from services.performance_raid_review_priority_service import (
     PerformanceRaidReviewPriorityService,
     RaidReviewPriorityItem,
@@ -77,10 +81,12 @@ class PerformanceRaidReviewResult:
     collection: RaidReviewCollectionResult
     priorities: tuple[RaidReviewPriorityItem, ...] = ()
     synthesis: RaidReviewSynthesis | None = None
+    player_summaries: tuple[RaidReviewPlayerSummary, ...] = ()
+    player_summary_unresolved: tuple[str, ...] = ()
 
     @property
     def unresolved(self) -> tuple[str, ...]:
-        return self.collection.unresolved
+        return tuple(dict.fromkeys((*self.collection.unresolved, *self.player_summary_unresolved)))
 
 
 class PerformanceRaidReviewCoordinatorService:
@@ -102,6 +108,7 @@ class PerformanceRaidReviewCoordinatorService:
         tank_effect_continuity_analysis_service: PerformanceRaidReviewTankEffectContinuityAnalysisService | None = None,
         priority_service: PerformanceRaidReviewPriorityService | None = None,
         synthesis_service: PerformanceRaidReviewSynthesisService | None = None,
+        player_summary_service: PerformanceRaidReviewPlayerSummaryService | None = None,
     ) -> None:
         self.performance_service = performance_service
         self.event_provider = event_provider or PerformanceRaidReviewEsoLogsEventProvider(
@@ -139,6 +146,7 @@ class PerformanceRaidReviewCoordinatorService:
         )
         self.priority_service = priority_service or PerformanceRaidReviewPriorityService()
         self.synthesis_service = synthesis_service or PerformanceRaidReviewSynthesisService()
+        self.player_summary_service = player_summary_service or PerformanceRaidReviewPlayerSummaryService()
 
     def review(
         self,
@@ -259,11 +267,17 @@ class PerformanceRaidReviewCoordinatorService:
 
         priorities = self.priority_service.rank(report.findings)
         synthesis = self.synthesis_service.synthesize(report, priorities)
+        player_summary_result = self.player_summary_service.summarize(
+            collection.observations,
+            report.findings,
+        )
         return PerformanceRaidReviewResult(
             report=report,
             collection=collection,
             priorities=priorities,
             synthesis=synthesis,
+            player_summaries=player_summary_result.summaries,
+            player_summary_unresolved=player_summary_result.unresolved,
         )
 
 
