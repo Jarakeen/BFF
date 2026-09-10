@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {
+      "entry_name": "Rapid Deluge — Tideborn Taleria",
+      "mitigation": "Get in the water and swim before it detonates. Blocking will not save you.",
+      "source": "reviewed_encounter_evidence",
+      "notes": "Rapid Deluge is survived by being in swimming state at detonation; official U34 patch history says it cannot be blocked."
+    }
+  ]
+}
