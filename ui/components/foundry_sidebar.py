@@ -40,6 +40,7 @@ CORE_NAV_SECTIONS = [
     {"label": "Roster", "page": "operations_console", "children": [
         ("Characters", "characters"),
         ("Builds", "console:2"),
+        ("Rotations", "rotations"),
     ]},
     {"label": "Raid Engine", "page": "raid_engine_dashboard", "children": [
         ("Comp Maker", "comp_builder"),
@@ -47,11 +48,7 @@ CORE_NAV_SECTIONS = [
         ("Coverage", "console:7"),
         ("Encounters", "console:1"),
         ("Performance", "console:3"),
-    ]},
-    {"label": "Mechanics", "children": [
         ("Mechanics", "console:4"),
-        ("Reference Data", "console:8"),
-        ("Rotations", "rotations"),
     ]},
     ("Achievements", "achievements"),
     {"label": "Collectibles", "page": "collectibles", "children": [
