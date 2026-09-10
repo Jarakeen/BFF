@@ -103,17 +103,10 @@ def test_ro_required_heavies_survive_fixed_point_without_recovery_pressure() -> 
             required_window_seconds=1.8,
             recovery_pressure_resolver=pressure_resolver,
         )
-        actions = DurationAwareRotationScheduler().refine(
+        return DurationAwareRotationScheduler().refine(
             seed,
             rules,
             wait_decision=provider,
-        )
-        return RotationPlan(
-            character_name=seed.character_name,
-            build_name=seed.build_name,
-            duration_seconds=seed.duration_seconds,
-            actions=tuple(actions),
-            unresolved=tuple(getattr(actions, "unresolved", ())),
         )
 
     result = RotationRecoveryHeavyStabilizationService(
@@ -139,4 +132,11 @@ def test_ro_required_heavies_survive_fixed_point_without_recovery_pressure() -> 
         if action.kind is RotationActionKind.HEAVY_ATTACK
     )
     assert heavies == (2.0, 28.0)
-    assert all(iteration.heavy_signature == ((2.0, 0, "front", "Roaring Opportunist"), (28.0, 0, "front", "Roaring Opportunist")) for iteration in result.iterations)
+    expected_signature = (
+        (2.0, 0, "front", "Roaring Opportunist"),
+        (28.0, 0, "front", "Roaring Opportunist"),
+    )
+    assert all(
+        iteration.heavy_signature == expected_signature
+        for iteration in result.iterations
+    )
