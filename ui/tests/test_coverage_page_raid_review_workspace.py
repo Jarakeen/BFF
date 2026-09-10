@@ -76,3 +76,28 @@ def test_raid_review_pull_picker_uses_checked_api_rows_as_review_input() -> None
     assert "Qt.ItemDataRole.UserRole" in source
     assert '"Use", "Fight", "Result", "Boss %", "Duration"' in source
     assert "Check at least one Lokkestiiz pull before running Raid Review." in source
+
+
+def test_raid_review_api_work_runs_off_the_qt_gui_thread() -> None:
+    page_source = Path("ui/coverage_page.py").read_text(encoding="utf-8")
+    task_source = Path("ui/raid_review_async_task.py").read_text(encoding="utf-8")
+
+    assert "from ui.raid_review_async_task import RaidReviewAsyncTask" in page_source
+    assert "def _start_raid_review_task(" in page_source
+    assert "task.start()" in page_source
+    assert "task.succeeded.connect(on_success)" in page_source
+    assert "task.failed.connect(" in page_source
+    assert "class RaidReviewAsyncTask(QThread):" in task_source
+    assert "result = self._operation()" in task_source
+    assert "self.succeeded.emit(result)" in task_source
+    assert "self.failed.emit(str(exc))" in task_source
+
+
+def test_raid_review_disables_mutable_inputs_while_async_work_is_running() -> None:
+    source = Path("ui/coverage_page.py").read_text(encoding="utf-8")
+
+    assert "def _set_raid_review_busy(self, busy: bool) -> None:" in source
+    assert "self.raid_review_report_input.setEnabled(not busy)" in source
+    assert "self.raid_review_fights_table.setEnabled(not busy)" in source
+    assert "self.raid_review_load_fights_button.setEnabled(not busy)" in source
+    assert '"A Raid Review API operation is already running."' in source
