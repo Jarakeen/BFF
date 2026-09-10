@@ -22,9 +22,6 @@ class ReviewedReferenceFact:
     source: str
 
 
-# Update 41's status-effect rework is the primary change-history anchor. ESO-Hub
-# is retained as a current readable corroboration source for the resulting
-# player-facing behavior. These are presentation/reference facts, not formulas.
 _STATUS_EFFECT_FACTS: tuple[ReviewedReferenceFact, ...] = (
     ReviewedReferenceFact("Burning", "Delivery", "Damage over time for 4 seconds; canonical corpus records 2-second tick spacing.", "U41+", "high", "official + corroboration", "ESO Update 41 patch notes; ESO-Hub Status Effects"),
     ReviewedReferenceFact("Burning", "Damage association", "Flame Damage", "U41+", "high", "corroborated", "ESO-Hub Status Effects"),
@@ -56,7 +53,24 @@ _COMBAT_EFFECT_FACTS: tuple[ReviewedReferenceFact, ...] = (
     ReviewedReferenceFact("Devitalized", "Effect", "For 8 seconds, Physical and Spell Resistance are reduced by 60%, damage taken is increased by 30%, and damage shields are reduced by 30%; guide evidence says it cannot be purged by negative-effect removal skills.", "U34+", "medium-high", "guide + PTS corroboration", "ESO-Hub Dreadsail Reef guide by Qcell; Update 34 PTS feedback"),
 )
 
-_ALL_FACTS = (*_STATUS_EFFECT_FACTS, *_COMBAT_EFFECT_FACTS)
+_NAMED_EFFECT_FACTS: tuple[ReviewedReferenceFact, ...] = (
+    ReviewedReferenceFact("Minor Berserk", "Standard effect", "Increases damage done by 5%.", "U28+", "high", "official + corroboration", "ESO Update 28 patch notes; ESO-Hub Minor Berserk"),
+    ReviewedReferenceFact("Major Berserk", "Standard effect", "Increases damage done by 10%.", "U28+", "high", "official + corroboration", "ESO Update 28 patch notes; ESO-Hub Major Berserk"),
+    ReviewedReferenceFact("Minor Protection", "Standard effect", "Reduces damage taken by 5%.", "U28+", "high", "official + corroboration", "ESO Update 28 patch notes; ESO-Hub Minor Protection"),
+    ReviewedReferenceFact("Major Protection", "Standard effect", "Reduces damage taken by 10%.", "U28+", "high", "official + corroboration", "ESO Update 28 patch notes; ESO-Hub Major Protection"),
+    ReviewedReferenceFact("Minor Vulnerability", "Standard effect", "Increases damage taken by 5%.", "U28+", "high", "official + corroboration", "ESO Update 28 patch notes; ESO-Hub Minor Vulnerability"),
+    ReviewedReferenceFact("Major Vulnerability", "Standard effect", "Increases damage taken by 10%.", "U28+", "high", "official + corroboration", "ESO Update 28 patch notes; ESO-Hub Major Vulnerability"),
+    ReviewedReferenceFact("Minor Slayer", "Standard effect", "Increases damage done to Dungeon, Trial, and Arena monsters by 5%.", "U28+", "high", "official + corroboration", "ESO Update 28 standardization; ESO-Hub Minor Slayer and trial-set tooltips"),
+    ReviewedReferenceFact("Major Slayer", "Standard effect", "Increases damage done to Dungeon, Trial, and Arena monsters by 10%.", "U28+", "high", "official + corroboration", "ESO Update 28 standardization; ESO-Hub Major Slayer and trial-set tooltips"),
+    ReviewedReferenceFact("Minor Aegis", "Standard effect", "Reduces damage taken from Dungeon, Trial, and Arena monsters by 5%.", "U28+", "high", "official + corroboration", "ESO Update 28 standardization; ESO-Hub Minor Aegis and trial-set tooltips"),
+    ReviewedReferenceFact("Major Aegis", "Standard effect", "Reduces damage taken from Dungeon, Trial, and Arena monsters by 10%.", "U28+", "high", "official + corroboration", "ESO Update 28 standardization; ESO-Hub Major Aegis and trial-set tooltips"),
+    ReviewedReferenceFact("Minor Vitality", "Standard effect", "Increases healing received and damage shield strength by 6%.", "U41+", "high", "official + corroboration", "ESO Update 41 patch notes; ESO-Hub Minor Vitality"),
+    ReviewedReferenceFact("Major Vitality", "Standard effect", "Increases healing received and damage shield strength by 12%.", "U41+", "high", "official + corroboration", "ESO Update 41 patch notes; ESO-Hub Major Vitality"),
+    ReviewedReferenceFact("Minor Defile", "Standard effect", "Reduces healing received and damage shield strength by 6%.", "U41+", "high", "official + corroboration", "ESO Update 41 patch notes; ESO-Hub Minor Defile"),
+    ReviewedReferenceFact("Major Defile", "Standard effect", "Reduces healing received and damage shield strength by 12%.", "U41+", "high", "official + corroboration", "ESO Update 41 patch notes; ESO-Hub Major Defile"),
+)
+
+_ALL_FACTS = (*_STATUS_EFFECT_FACTS, *_COMBAT_EFFECT_FACTS, *_NAMED_EFFECT_FACTS)
 
 
 class ReferenceResearchEnrichmentService:
