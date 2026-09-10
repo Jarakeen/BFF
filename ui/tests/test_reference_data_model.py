@@ -1,3 +1,8 @@
+from services.combat_effect_reference_service import (
+    CombatEffectInteractionReference,
+    CombatEffectReference,
+    CombatEffectTriggerReference,
+)
 from services.encounter_projection import (
     EncounterDefinition,
     EncounterMechanic,
@@ -7,6 +12,7 @@ from services.encounter_projection import (
 from services.gameplay_policy_service import GameplayPolicy
 from ui.reference_data_model import (
     build_reference_entries,
+    entry_from_combat_effect,
     entry_from_encounter_mechanic,
     entry_from_policy,
     entry_types,
@@ -80,6 +86,43 @@ def _mechanic(**overrides) -> EncounterMechanic:
     }
     values.update(overrides)
     return EncounterMechanic(**values)
+
+
+def _effect(**overrides) -> CombatEffectReference:
+    values = {
+        "effect_id": 2,
+        "name": "Chilled",
+        "category": "Status",
+        "description": "Frost status effect.",
+        "duration": 4.0,
+        "tick_interval": None,
+        "stack_max": None,
+        "immunity_duration": None,
+        "raw_source": "canonical row",
+        "triggers": (
+            CombatEffectTriggerReference(
+                trigger_type="Damage",
+                damage_type="Frost",
+                weapon_requirement=None,
+                condition=None,
+                raw_source="ESO Wiki combat effects",
+            ),
+        ),
+        "interactions": (
+            CombatEffectInteractionReference(
+                target_name="Minor Maim",
+                interaction_type="Applies",
+                condition=None,
+                duration=4.0,
+                target_value=5.0,
+                target_unit="percent",
+                target_scope="Target",
+                raw_source="ESO Wiki combat effects",
+            ),
+        ),
+    }
+    values.update(overrides)
+    return CombatEffectReference(**values)
 
 
 def test_policy_entry_keeps_mechanics_and_practice_authority_explicit():
@@ -173,16 +216,43 @@ def test_encounter_mechanic_entry_keeps_unknowns_explicit_instead_of_guessing():
     assert "Gameplay-practice handling is not inferred" in entry.field_note
 
 
-def test_build_reference_entries_can_merge_policy_and_encounter_records():
+def test_combat_effect_entry_exposes_trigger_interaction_and_canonical_authority():
+    entry = entry_from_combat_effect(_effect())
+
+    assert entry.name == "Chilled"
+    assert entry.entry_type == "Status Effect"
+    assert entry.source_scope == "Global Combat"
+    assert ("Authority", "Canonical combat-effect data") in entry.details
+    assert ("Duration", "4 s") in entry.details
+    assert "Frost damage" in entry.detail_text()
+    assert "Applies Minor Maim" in entry.detail_text()
+    assert entry.related == ("Minor Maim",)
+    assert "Rotation Builder" in entry.used_by
+
+
+def test_combat_effect_entry_keeps_missing_values_explicit():
+    entry = entry_from_combat_effect(
+        _effect(duration=None, triggers=(), interactions=())
+    )
+
+    assert ("Duration", "Not modeled") in entry.details
+    assert ("Tick interval", "Not modeled") in entry.details
+    assert entry.related == ()
+    assert "Provider choice" in entry.field_note
+
+
+def test_build_reference_entries_can_merge_policy_encounter_and_effect_records():
     mechanic = _mechanic()
     entries = build_reference_entries(
         (_policy(),),
         encounters=(_encounter(mechanic),),
+        effects=(_effect(),),
     )
 
     assert [entry.name for entry in entries] == [
+        "Chilled",
         "Crushing Darkness — Test Boss",
         "Light Attack Weaving",
     ]
-    assert entry_types(entries) == ("Combat Rule", "Mechanic")
+    assert entry_types(entries) == ("Combat Rule", "Mechanic", "Status Effect")
     assert source_scopes(entries) == ("Global Combat", "Trial")
