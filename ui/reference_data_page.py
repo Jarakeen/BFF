@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from html import escape
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QComboBox,
@@ -20,6 +22,17 @@ from ui.reference_data_model import build_reference_entries, entry_types, source
 from ui.reference_encounter_evidence import enrich_reference_entries_with_encounter_evidence
 from ui.reference_named_effects import build_named_effect_reference_entries
 from ui.reference_provider_relationships import load_and_enrich_reference_entries
+
+
+def _reference_details_html(details) -> str:
+    """Render Reference detail labels with a strong visual anchor."""
+
+    rows = []
+    for label, value in details:
+        safe_label = escape(str(label or ""))
+        safe_value = escape(str(value or "")).replace("\n", "<br>")
+        rows.append(f"<b>{safe_label}:</b> {safe_value}")
+    return "<br>".join(rows)
 
 
 class ReferenceDataPage(FoundryPage):
@@ -91,6 +104,7 @@ class ReferenceDataPage(FoundryPage):
         self.entry_summary.setWordWrap(True)
         self.entry_details = QLabel()
         self.entry_details.setWordWrap(True)
+        self.entry_details.setTextFormat(Qt.TextFormat.RichText)
         self.entry_details.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.entry_card.addWidget(self.entry_name)
         self.entry_card.addWidget(self.entry_summary)
@@ -225,7 +239,7 @@ class ReferenceDataPage(FoundryPage):
         self.entry_card.set_title(" • ".join(entry.tags) or entry.entry_type.upper())
         self.entry_name.setText(entry.name.upper())
         self.entry_summary.setText(entry.summary)
-        self.entry_details.setText(entry.detail_text())
+        self.entry_details.setText(_reference_details_html(entry.details))
         self.related_label.setText(
             "\n".join(f"• {value}" for value in entry.related)
             if entry.related
