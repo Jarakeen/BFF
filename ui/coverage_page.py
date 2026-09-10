@@ -19,9 +19,7 @@ from PySide6.QtWidgets import (
 from engine.config import get_data_dir
 from models.build_model import BuildRoster, PlayerBuild
 from services.build_service import BuildService
-from services.performance_raid_review_lokkestiiz_runner_service import (
-    PerformanceRaidReviewLokkestiizRunnerService,
-)
+from services.performance_raid_review_runner_service import PerformanceRaidReviewRunnerService
 from services.raid_coverage_profile import DEFAULT_RAID_COVERAGE_PROFILE
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
@@ -52,9 +50,7 @@ class CoveragePage(FoundryPage):
     def __init__(self, parent=None, raid_review_runner=None):
         super().__init__(parent)
         self.build_service = BuildService(get_data_dir() / "builds.json")
-        self.raid_review_runner = (
-            raid_review_runner or PerformanceRaidReviewLokkestiizRunnerService()
-        )
+        self.raid_review_runner = raid_review_runner or PerformanceRaidReviewRunnerService()
         self._raid_review_task: RaidReviewAsyncTask | None = None
         self.roster = BuildRoster()
         self._build_ui()
@@ -153,6 +149,10 @@ class CoveragePage(FoundryPage):
 
         intake = FoundryCard("Run Raid Review", "⌕").set_watermark("compass", 0.04)
         intake_row = QHBoxLayout()
+        self.raid_review_encounter_combo = QComboBox()
+        for encounter in self.raid_review_runner.available_encounters():
+            self.raid_review_encounter_combo.addItem(encounter.display_name, encounter.key)
+        self.raid_review_encounter_combo.currentIndexChanged.connect(self._raid_review_encounter_changed)
         self.raid_review_report_input = QLineEdit()
         self.raid_review_report_input.setPlaceholderText("ESO Logs report code or report URL")
         self.raid_review_load_fights_button = QPushButton("Load Fights")
@@ -161,9 +161,11 @@ class CoveragePage(FoundryPage):
         self.raid_review_run_button.setProperty("primary", True)
         self.raid_review_run_button.setEnabled(False)
         self.raid_review_run_button.setToolTip(
-            "Query the checked Lokkestiiz fights directly from ESO Logs and compare them as one Raid Review."
+            "Query the checked encounter fights directly from ESO Logs and compare them as one Raid Review."
         )
         self.raid_review_run_button.clicked.connect(self._run_raid_review)
+        intake_row.addWidget(QLabel("ENCOUNTER"))
+        intake_row.addWidget(self.raid_review_encounter_combo)
         intake_row.addWidget(QLabel("REPORT"))
         intake_row.addWidget(self.raid_review_report_input, 1)
         intake_row.addWidget(self.raid_review_load_fights_button)
@@ -180,7 +182,7 @@ class CoveragePage(FoundryPage):
         self.raid_review_fights_table.setMinimumHeight(135)
         intake.addWidget(self.raid_review_fights_table)
         intake.addWidget(QLabel(
-            "Load the report, check the Lokkestiiz pulls you want compared, then run the review. "
+            "Choose a supported encounter, load the report, check the pulls you want compared, then run the review. "
             "Fight discovery and analysis both use the ESO Logs API; raw research JSON is not required."
         ))
         root.addWidget(intake)
@@ -218,7 +220,19 @@ class CoveragePage(FoundryPage):
         root.addWidget(self.raid_review_evidence_card)
         return page
 
+    def _raid_review_encounter_key(self) -> str:
+        value = self.raid_review_encounter_combo.currentData()
+        return str(value or "").strip()
+
+    def _raid_review_encounter_name(self) -> str:
+        return self.raid_review_encounter_combo.currentText().strip() or "selected encounter"
+
+    def _raid_review_encounter_changed(self) -> None:
+        self.raid_review_fights_table.setRowCount(0)
+        self.raid_review_run_button.setEnabled(False)
+
     def _set_raid_review_busy(self, busy: bool) -> None:
+        self.raid_review_encounter_combo.setEnabled(not busy)
         self.raid_review_report_input.setEnabled(not busy)
         self.raid_review_fights_table.setEnabled(not busy)
         self.raid_review_load_fights_button.setEnabled(not busy)
@@ -251,15 +265,20 @@ class CoveragePage(FoundryPage):
             task.deleteLater()
 
     def _load_raid_review_fights(self) -> None:
+        encounter_key = self._raid_review_encounter_key()
+        encounter_name = self._raid_review_encounter_name()
         report_code = self.raid_review_report_input.text().strip()
+        if not encounter_key:
+            self.status.warning("Choose a supported Raid Review encounter first.")
+            return
         if not report_code:
             self.status.warning("Enter an ESO Logs report code or report URL first.")
             return
 
         self.raid_review_fights_table.setRowCount(0)
-        self.status.info("Loading Lokkestiiz pulls from ESO Logs...")
+        self.status.info(f"Loading {encounter_name} pulls from ESO Logs...")
         self._start_raid_review_task(
-            lambda: self.raid_review_runner.list_lokkestiiz_fights(report_code),
+            lambda: self.raid_review_runner.list_fights(encounter_key, report_code),
             self._raid_review_fights_loaded,
             "Could not load Raid Review fights",
         )
@@ -284,10 +303,13 @@ class CoveragePage(FoundryPage):
             ):
                 self.raid_review_fights_table.setItem(row, column, QTableWidgetItem(value))
 
+        encounter_name = self._raid_review_encounter_name()
         if choices:
-            self.status.success(f"Loaded {len(choices)} Lokkestiiz pull(s). Uncheck any pulls you do not want compared.")
+            self.status.success(
+                f"Loaded {len(choices)} {encounter_name} pull(s). Uncheck any pulls you do not want compared."
+            )
         else:
-            self.status.warning("No Lokkestiiz pulls were found in that report.")
+            self.status.warning(f"No {encounter_name} pulls were found in that report.")
 
     def _selected_raid_review_fight_ids(self) -> tuple[int, ...]:
         selected: list[int] = []
@@ -301,21 +323,26 @@ class CoveragePage(FoundryPage):
         return tuple(selected)
 
     def _run_raid_review(self) -> None:
+        encounter_key = self._raid_review_encounter_key()
+        encounter_name = self._raid_review_encounter_name()
         report_code = self.raid_review_report_input.text().strip()
+        if not encounter_key:
+            self.status.warning("Choose a supported Raid Review encounter first.")
+            return
         if not report_code:
             self.status.warning("Enter an ESO Logs report code or report URL first.")
             return
 
         fight_ids = self._selected_raid_review_fight_ids()
         if not fight_ids:
-            self.status.warning("Check at least one Lokkestiiz pull before running Raid Review.")
+            self.status.warning(f"Check at least one {encounter_name} pull before running Raid Review.")
             return
 
         self.status.info(
-            f"Running Raid Review for {len(fight_ids)} selected Lokkestiiz pull(s) from ESO Logs..."
+            f"Running Raid Review for {len(fight_ids)} selected {encounter_name} pull(s) from ESO Logs..."
         )
         self._start_raid_review_task(
-            lambda: self.raid_review_runner.review_report(report_code, fight_ids),
+            lambda: self.raid_review_runner.review_report(encounter_key, report_code, fight_ids),
             self._raid_review_result_loaded,
             "Raid Review failed",
         )
