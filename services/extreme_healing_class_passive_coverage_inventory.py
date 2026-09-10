@@ -15,6 +15,9 @@ from services.extreme_nightblade_siphoning_passive_review import (
 from services.extreme_sorcerer_dark_magic_passive_review import (
     ExtremeSorcererDarkMagicPassiveReview,
 )
+from services.extreme_templar_aedric_spear_passive_review import (
+    ExtremeTemplarAedricSpearPassiveReview,
+)
 from services.extreme_templar_restoring_light_passive_review import (
     ExtremeTemplarRestoringLightPassiveReview,
 )
@@ -163,6 +166,16 @@ class ExtremeHealingClassPassiveCoverageInventory:
                 "ExtremeSorcererDarkMagicPassiveReview + ExtremeSorcererBloodMagicService + ExtremeSorcererBloodMagicHealingEventService + ExtremeConditionalActualHealOptimizationService + ExtremeConditionalActualHealObjectiveOptimizationService",
                 "All four live-U50 Dark Magic passives are reviewed for MOST Actual Heal. Blood Magic is implemented: its below-full-Health Max-Health-scaled caster self-heal is evaluated with canonical healing modifiers and ranked as a distinct recipient event, while its full-Health 10-second higher-resource branch rebuilds canonical context before selected-heal scoring. Unholy Knowledge, Persistence, and Exploitation are objective-irrelevant.",
             ),
+            ("templar", "Aedric Spear"): ExtremeHealingClassPassiveCoverageEntry(
+                "templar",
+                "Aedric Spear",
+                REVIEWED,
+                True,
+                IMPLEMENTED,
+                True,
+                "ExtremeTemplarAedricSpearPassiveReview + TemplarPassiveInputResolver + BuildCalculationContextFactory",
+                "All four live-U50 Aedric Spear passives are reviewed for MOST Actual Heal. Balanced Warrior is implemented through canonical Weapon/Spell Damage percent buckets; Piercing Spear is Critical Damage rather than Critical Healing, Spear Wall is damage/mitigation utility, and Burning Light is a damage proc.",
+            ),
             ("templar", "Restoring Light"): ExtremeHealingClassPassiveCoverageEntry(
                 "templar",
                 "Restoring Light",
@@ -307,6 +320,13 @@ class ExtremeHealingClassPassiveCoverageInventory:
             ):
                 raise ValueError(
                     "Dark Magic cannot be reviewed until its passive-level review is complete"
+                )
+            if (
+                row.family_id == "templar:Aedric Spear"
+                and not ExtremeTemplarAedricSpearPassiveReview().complete
+            ):
+                raise ValueError(
+                    "Aedric Spear cannot be reviewed until its passive-level review is complete"
                 )
             if (
                 row.family_id == "templar:Restoring Light"
