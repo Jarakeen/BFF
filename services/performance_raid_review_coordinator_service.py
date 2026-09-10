@@ -63,6 +63,9 @@ from services.performance_raid_review_service import (
     PerformanceRaidReviewService,
     RaidReviewReport,
 )
+from services.performance_raid_review_snapshot_service import (
+    PerformanceRaidReviewSnapshotService,
+)
 from services.performance_raid_review_synthesis_service import (
     PerformanceRaidReviewSynthesisService,
     RaidReviewSynthesis,
@@ -114,10 +117,31 @@ class PerformanceRaidReviewCoordinatorService:
         self.event_provider = event_provider or PerformanceRaidReviewEsoLogsEventProvider(
             performance_service.client
         )
-        self.observation_service = observation_service or PerformanceRaidReviewObservationService(
-            performance_service,
-            enrichment_resolver=self.event_provider.resolve,
-        )
+
+        if observation_service is not None:
+            self.observation_service = observation_service
+        else:
+            client = performance_service.client
+            can_use_lean_snapshot = all(
+                hasattr(client, name)
+                for name in ("get_fight", "get_aura_table", "get_actor_table")
+            ) and hasattr(performance_service, "capability_service")
+            if can_use_lean_snapshot:
+                snapshot_service = PerformanceRaidReviewSnapshotService(performance_service)
+                self.observation_service = PerformanceRaidReviewObservationService(
+                    performance_service,
+                    enrichment_resolver=self.event_provider.resolve,
+                    snapshot_resolver=snapshot_service.build_snapshot,
+                    fight_resolver=snapshot_service.fight,
+                )
+            else:
+                # Lightweight fakes and compatibility callers keep the established
+                # PerformanceDashboardService snapshot path.
+                self.observation_service = PerformanceRaidReviewObservationService(
+                    performance_service,
+                    enrichment_resolver=self.event_provider.resolve,
+                )
+
         self.review_service = review_service or PerformanceRaidReviewService()
         self.mechanic_window_service = (
             mechanic_window_service or PerformanceRaidReviewMechanicWindowService()
