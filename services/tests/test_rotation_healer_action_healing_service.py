@@ -57,10 +57,10 @@ class _FakeTooltipService:
         return self.result
 
 
-def _resolution(rank_id=10, unresolved=()):
+def _resolution(rank_id=10, unresolved=(), entity_id="heal_entity"):
     rank = None if rank_id is None else SimpleNamespace(
         skill_rank_id=rank_id,
-        entity_id="heal_entity",
+        entity_id=entity_id,
     )
     return SimpleNamespace(rank=rank, unresolved=tuple(unresolved))
 
@@ -204,6 +204,47 @@ def test_non_healing_component_does_not_become_healing_consequence():
     assert projection.direct_events == ()
     assert projection.periodic_seeds == ()
     assert projection.unresolved == ()
+
+
+def test_reviewed_non_caster_healing_skill_skips_tooltip_projection():
+    service = _service(
+        resolution=_resolution(entity_id="expansive_frost_cloak"),
+        classifications=(),
+    )
+
+    projection = service.project(
+        plan=_plan(_action()),
+        build=PlayerBuild(),
+        context=object(),
+    )
+
+    assert projection.direct_events == ()
+    assert projection.periodic_seeds == ()
+    assert projection.delayed_seeds == ()
+    assert projection.unresolved == ()
+    assert service.tooltip_service.calls == []
+
+
+def test_reviewed_external_conditional_healing_remains_explicitly_unresolved():
+    service = _service(
+        resolution=_resolution(entity_id="overflowing_altar"),
+        classifications=(),
+    )
+
+    projection = service.project(
+        plan=_plan(_action(time_seconds=4.0)),
+        build=PlayerBuild(),
+        context=object(),
+    )
+
+    assert projection.direct_events == ()
+    assert projection.periodic_seeds == ()
+    assert projection.delayed_seeds == ()
+    assert projection.unresolved == (
+        "Heal at 4s: reviewed healing consequence is externally triggered and is not "
+        "modeled by caster action healing projection",
+    )
+    assert service.tooltip_service.calls == []
 
 
 def test_missing_component_classification_fails_closed():
