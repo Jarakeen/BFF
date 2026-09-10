@@ -2,10 +2,14 @@ from __future__ import annotations
 
 """Fresh ESO Logs observation collection for cross-pull raid review.
 
-This service deliberately reuses PerformanceDashboardService rather than persisting
-computed snapshots. Sources are explicit and actor IDs remain scoped to their report.
-A stable member_key is required from the caller when the same person is linked across
-reports.
+This service deliberately reuses shared Performance data contracts rather than
+persisting computed snapshots. Sources are explicit and actor IDs remain scoped to
+their report. A stable member_key is required from the caller when the same person is
+linked across reports.
+
+Optional snapshot/fight resolvers let the production coordinator reuse one lean,
+cached per-pull fetch path. Tests and other callers may omit them and retain the
+existing PerformanceDashboardService behavior.
 
 Optional event enrichment is additive. A failure to collect death/resource evidence
 never erases an otherwise valid base performance observation.
@@ -43,6 +47,8 @@ RaidReviewEnrichmentResolver = Callable[
     [RaidReviewSource, dict],
     RaidReviewEventEnrichment,
 ]
+RaidReviewSnapshotResolver = Callable[..., object]
+RaidReviewFightResolver = Callable[[str, int], dict]
 
 
 class PerformanceRaidReviewObservationService:
@@ -53,9 +59,13 @@ class PerformanceRaidReviewObservationService:
         performance_service,
         *,
         enrichment_resolver: RaidReviewEnrichmentResolver | None = None,
+        snapshot_resolver: RaidReviewSnapshotResolver | None = None,
+        fight_resolver: RaidReviewFightResolver | None = None,
     ):
         self.performance_service = performance_service
         self.enrichment_resolver = enrichment_resolver
+        self.snapshot_resolver = snapshot_resolver or performance_service.build_snapshot
+        self.fight_resolver = fight_resolver or performance_service.client.get_fight
 
     def collect(
         self,
@@ -66,11 +76,11 @@ class PerformanceRaidReviewObservationService:
 
         for source in sources:
             try:
-                fight = self.performance_service.client.get_fight(
+                fight = self.fight_resolver(
                     source.report_code,
                     int(source.fight_id),
                 )
-                snapshot = self.performance_service.build_snapshot(
+                snapshot = self.snapshot_resolver(
                     source.report_code,
                     int(source.fight_id),
                     int(source.actor_id),
@@ -158,5 +168,7 @@ __all__ = [
     "PerformanceRaidReviewObservationService",
     "RaidReviewCollectionResult",
     "RaidReviewEnrichmentResolver",
+    "RaidReviewFightResolver",
+    "RaidReviewSnapshotResolver",
     "RaidReviewSource",
 ]
