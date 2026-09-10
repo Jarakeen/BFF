@@ -5,13 +5,19 @@ from __future__ import annotations
 The coordinator is intentionally thin: collect fresh per-source observations,
 optionally enrich them from raw ESO Logs events, run cross-pull analysis, and then
 add findings from explicitly supplied reviewed mechanic windows, landing-recovery,
-landing-recovery completion, and healer pre-coverage evidence. It does not persist
-computed review state.
+landing-recovery completion, healer pre-coverage, and DD boss-contact continuity
+evidence. It does not persist computed review state.
 """
 
 from dataclasses import dataclass
 from typing import Iterable
 
+from services.performance_raid_review_dd_ground_continuity_analysis_service import (
+    PerformanceRaidReviewDDGroundContinuityAnalysisService,
+)
+from services.performance_raid_review_dd_ground_continuity_service import (
+    RaidReviewDDGroundContinuityObservation,
+)
 from services.performance_raid_review_esologs_event_provider import (
     PerformanceRaidReviewEsoLogsEventProvider,
 )
@@ -71,6 +77,7 @@ class PerformanceRaidReviewCoordinatorService:
         landing_recovery_analysis_service: PerformanceRaidReviewLandingRecoveryAnalysisService | None = None,
         landing_recovery_completion_analysis_service: PerformanceRaidReviewLandingRecoveryCompletionAnalysisService | None = None,
         healer_effect_coverage_analysis_service: PerformanceRaidReviewHealerEffectCoverageAnalysisService | None = None,
+        dd_ground_continuity_analysis_service: PerformanceRaidReviewDDGroundContinuityAnalysisService | None = None,
     ) -> None:
         self.performance_service = performance_service
         self.event_provider = event_provider or PerformanceRaidReviewEsoLogsEventProvider(
@@ -95,6 +102,10 @@ class PerformanceRaidReviewCoordinatorService:
             healer_effect_coverage_analysis_service
             or PerformanceRaidReviewHealerEffectCoverageAnalysisService()
         )
+        self.dd_ground_continuity_analysis_service = (
+            dd_ground_continuity_analysis_service
+            or PerformanceRaidReviewDDGroundContinuityAnalysisService()
+        )
 
     def review(
         self,
@@ -106,6 +117,9 @@ class PerformanceRaidReviewCoordinatorService:
         landing_recovery_opportunities: Iterable[RaidReviewRecoveryOpportunity] = (),
         healer_effect_coverage_observations: Iterable[
             RaidReviewHealerEffectCoverageObservation
+        ] = (),
+        dd_ground_continuity_observations: Iterable[
+            RaidReviewDDGroundContinuityObservation
         ] = (),
     ) -> PerformanceRaidReviewResult:
         collection = self.observation_service.collect(tuple(sources))
@@ -123,7 +137,8 @@ class PerformanceRaidReviewCoordinatorService:
 
         recovery_rows = tuple(landing_recovery_observations)
         opportunity_rows = tuple(landing_recovery_opportunities)
-        if recovery_rows or opportunity_rows:
+        continuity_rows = tuple(dd_ground_continuity_observations)
+        if recovery_rows or opportunity_rows or continuity_rows:
             outcomes_by_pull: dict[tuple[str, int], RaidReviewPullOutcome] = {}
             for row in collection.observations:
                 key = (str(row.report_code), int(row.fight_id))
@@ -145,6 +160,13 @@ class PerformanceRaidReviewCoordinatorService:
                     self.landing_recovery_completion_analysis_service.findings(
                         opportunity_rows,
                         recovery_rows,
+                        outcomes,
+                    )
+                )
+            if continuity_rows:
+                extra_findings.extend(
+                    self.dd_ground_continuity_analysis_service.findings(
+                        continuity_rows,
                         outcomes,
                     )
                 )
