@@ -18,6 +18,9 @@ from services.extreme_sorcerer_dark_magic_passive_review import (
 from services.extreme_templar_aedric_spear_passive_review import (
     ExtremeTemplarAedricSpearPassiveReview,
 )
+from services.extreme_templar_dawns_wrath_passive_review import (
+    ExtremeTemplarDawnsWrathPassiveReview,
+)
 from services.extreme_templar_restoring_light_passive_review import (
     ExtremeTemplarRestoringLightPassiveReview,
 )
@@ -176,6 +179,16 @@ class ExtremeHealingClassPassiveCoverageInventory:
                 "ExtremeTemplarAedricSpearPassiveReview + TemplarPassiveInputResolver + BuildCalculationContextFactory",
                 "All four live-U50 Aedric Spear passives are reviewed for MOST Actual Heal. Balanced Warrior is implemented through canonical Weapon/Spell Damage percent buckets; Piercing Spear is Critical Damage rather than Critical Healing, Spear Wall is damage/mitigation utility, and Burning Light is a damage proc.",
             ),
+            ("templar", "Dawn's Wrath"): ExtremeHealingClassPassiveCoverageEntry(
+                "templar",
+                "Dawn's Wrath",
+                REVIEWED,
+                True,
+                IMPLEMENTED,
+                True,
+                "ExtremeTemplarDawnsWrathPassiveReview + ExtremeTemplarIlluminateCombatStateService + ExtremeTemplarConditionalActualHealService + canonical Minor Sorcery",
+                "All four live-U50 Dawn's Wrath passives are reviewed for MOST Actual Heal. Illuminate is implemented through an explicit active window that contributes canonical Minor Sorcery before coefficient evaluation; Enduring Rays, Prism, and Restoring Spirit affect duration, Ultimate economy, or sustain rather than one healing-event magnitude.",
+            ),
             ("templar", "Restoring Light"): ExtremeHealingClassPassiveCoverageEntry(
                 "templar",
                 "Restoring Light",
@@ -327,6 +340,13 @@ class ExtremeHealingClassPassiveCoverageInventory:
             ):
                 raise ValueError(
                     "Aedric Spear cannot be reviewed until its passive-level review is complete"
+                )
+            if (
+                row.family_id == "templar:Dawn's Wrath"
+                and not ExtremeTemplarDawnsWrathPassiveReview().complete
+            ):
+                raise ValueError(
+                    "Dawn's Wrath cannot be reviewed until its passive-level review is complete"
                 )
             if (
                 row.family_id == "templar:Restoring Light"
