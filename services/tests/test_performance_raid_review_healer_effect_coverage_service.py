@@ -45,6 +45,7 @@ def test_effect_active_at_mechanic_start_satisfies_requirement() -> None:
     assert result.unresolved == ()
     assert len(result.observations) == 1
     observation = result.observations[0]
+    assert observation.source_actor_id == 11
     assert observation.covered
     assert observation.active_target_count == 1
     assert observation.active_effect_names == ("Budding Seeds",)
@@ -73,6 +74,7 @@ def test_effect_starting_after_mechanic_does_not_count_as_precoverage() -> None:
         ],
     )
 
+    assert result.observations[0].source_actor_id == 11
     assert not result.observations[0].covered
     assert result.observations[0].active_target_count == 0
 
@@ -100,6 +102,7 @@ def test_source_actor_filter_prevents_crediting_other_healer() -> None:
         ],
     )
 
+    assert result.observations[0].source_actor_id == 11
     assert not result.observations[0].covered
 
 
@@ -122,6 +125,7 @@ def test_minimum_target_requirement_uses_distinct_active_targets() -> None:
         ],
     )
 
+    assert result.observations[0].source_actor_id == 11
     assert result.observations[0].covered
     assert result.observations[0].active_target_count == 2
 
