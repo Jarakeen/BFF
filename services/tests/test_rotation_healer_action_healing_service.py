@@ -32,8 +32,16 @@ class _FakeTooltipService:
         self.coefficients = _FakeCoefficients({"Heal": resolution})
         self.components = _FakeComponents({10: tuple(classifications)})
         self.result = result
+        self.calls = []
 
     def evaluate_entity_id(self, *, build, context, entity_id):
+        self.calls.append(
+            {
+                "build": build,
+                "context": context,
+                "entity_id": entity_id,
+            }
+        )
         return self.result
 
 
@@ -92,13 +100,18 @@ def _plan(*actions):
     )
 
 
-def _action(time_seconds=1.0, sequence=0, kind=RotationActionKind.SKILL):
+def _action(
+    time_seconds=1.0,
+    sequence=0,
+    kind=RotationActionKind.SKILL,
+    bar="front",
+):
     return RotationAction(
         time_seconds=time_seconds,
         sequence=sequence,
         kind=kind,
         name="Heal",
-        bar="front",
+        bar=bar,
     )
 
 
@@ -277,3 +290,45 @@ def test_non_skill_actions_do_not_create_healing_consequences():
     assert projection.direct_events == ()
     assert projection.periodic_seeds == ()
     assert projection.unresolved == ()
+
+
+def test_explicit_bar_contexts_follow_each_scheduled_action_bar():
+    service = _service(classifications=(_classification(is_periodic=False),))
+    default_context = object()
+    front_context = object()
+    back_context = object()
+
+    projection = service.project(
+        plan=_plan(
+            _action(time_seconds=1.0, sequence=0, bar="front"),
+            _action(time_seconds=2.0, sequence=1, bar="back"),
+        ),
+        build=PlayerBuild(),
+        context=default_context,
+        contexts_by_bar={"front": front_context, "back": back_context},
+    )
+
+    assert projection.unresolved == ()
+    assert [call["context"] for call in service.tooltip_service.calls] == [
+        front_context,
+        back_context,
+    ]
+
+
+def test_missing_explicit_bar_context_fails_closed_instead_of_using_default():
+    service = _service(classifications=(_classification(is_periodic=False),))
+    default_context = object()
+    front_context = object()
+
+    projection = service.project(
+        plan=_plan(_action(time_seconds=2.0, bar="back")),
+        build=PlayerBuild(),
+        context=default_context,
+        contexts_by_bar={"front": front_context},
+    )
+
+    assert projection.direct_events == ()
+    assert projection.unresolved == (
+        "Heal at 2s: static build context unavailable for back bar",
+    )
+    assert service.tooltip_service.calls == []
