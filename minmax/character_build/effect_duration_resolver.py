@@ -8,6 +8,7 @@ from .effect_instance import EffectVariant
 
 
 STATUS_EFFECT_DURATION_INCREASE = "status_effect_duration_increase"
+MAJOR_MINOR_BUFF_DURATION_INCREASE = "major_minor_buff_duration_increase"
 
 
 @dataclass(frozen=True)
@@ -38,11 +39,10 @@ class EffectDurationResolution:
 class EffectDurationResolver:
     """Apply verified build duration modifiers to a concrete effect.
 
-    Serpent's Disdain is currently the only canonical duration modifier in the
-    repository. Its known EffectVariant identity is explicitly scoped to STATUS
-    effects and adds seconds. Future duration mechanics should be added here only
-    after the upstream effect registry has a verified semantic identity and the
-    stacking/applicability rule is known.
+    Serpent's Disdain extends STATUS effects by a verified additive number of
+    seconds. Jorvuld's Guidance extends wearer-applied Major/Minor BUFF effects by
+    a verified percentage. Damage-shield duration remains outside this resolver
+    until the canonical effect taxonomy can identify shields explicitly.
     """
 
     def resolve(
@@ -60,49 +60,57 @@ class EffectDurationResolver:
                 unresolved=(f"{effect.name}: base effect duration unresolved",),
             )
 
-        if effect.category is not SupportEffectCategory.STATUS:
+        applicable = self._applicable_modifiers(effect, available_effects)
+        if not applicable:
             return EffectDurationResolution(
                 effect_name=effect.name,
                 base_duration_seconds=base,
                 effective_duration_seconds=base,
             )
 
-        candidates = tuple(
-            candidate
-            for candidate in available_effects
-            if candidate.eligible
-            and candidate.name.casefold() == STATUS_EFFECT_DURATION_INCREASE
-        )
-        if not candidates:
-            return EffectDurationResolution(
-                effect_name=effect.name,
-                base_duration_seconds=base,
-                effective_duration_seconds=base,
-            )
-
-        if len(candidates) > 1:
-            sources = ", ".join(sorted({candidate.source for candidate in candidates}))
+        if len(applicable) > 1:
+            sources = ", ".join(sorted({candidate.source for candidate in applicable}))
             return EffectDurationResolution(
                 effect_name=effect.name,
                 base_duration_seconds=base,
                 effective_duration_seconds=None,
                 unresolved=(
-                    f"{effect.name}: multiple status-effect duration modifiers require "
+                    f"{effect.name}: multiple applicable duration modifiers require "
                     f"explicit stacking resolution ({sources})",
                 ),
             )
 
-        modifier = candidates[0]
-        seconds = self._finite_nonnegative(modifier.magnitude)
-        if seconds is None:
+        modifier = applicable[0]
+        if modifier.name.casefold() == STATUS_EFFECT_DURATION_INCREASE:
+            seconds = self._finite_nonnegative(modifier.magnitude)
+            if seconds is None:
+                return EffectDurationResolution(
+                    effect_name=effect.name,
+                    base_duration_seconds=base,
+                    effective_duration_seconds=None,
+                    unresolved=(
+                        f"{effect.name}: {modifier.source} has unresolved "
+                        "status-effect duration magnitude",
+                    ),
+                )
+        elif modifier.name.casefold() == MAJOR_MINOR_BUFF_DURATION_INCREASE:
+            fraction = self._finite_nonnegative(modifier.magnitude)
+            if fraction is None:
+                return EffectDurationResolution(
+                    effect_name=effect.name,
+                    base_duration_seconds=base,
+                    effective_duration_seconds=None,
+                    unresolved=(
+                        f"{effect.name}: {modifier.source} has unresolved "
+                        "Major/Minor buff duration magnitude",
+                    ),
+                )
+            seconds = base * fraction
+        else:
             return EffectDurationResolution(
                 effect_name=effect.name,
                 base_duration_seconds=base,
-                effective_duration_seconds=None,
-                unresolved=(
-                    f"{effect.name}: {modifier.source} has unresolved "
-                    "status-effect duration magnitude",
-                ),
+                effective_duration_seconds=base,
             )
 
         applied = AppliedEffectDurationModifier(
@@ -116,6 +124,30 @@ class EffectDurationResolver:
             effective_duration_seconds=base + seconds,
             applied_modifiers=(applied,),
         )
+
+    @staticmethod
+    def _applicable_modifiers(
+        effect: EffectVariant,
+        available_effects: tuple[EffectVariant, ...],
+    ) -> tuple[EffectVariant, ...]:
+        candidates: list[EffectVariant] = []
+        for candidate in available_effects:
+            if not candidate.eligible:
+                continue
+            name = candidate.name.casefold()
+            if (
+                name == STATUS_EFFECT_DURATION_INCREASE
+                and effect.category is SupportEffectCategory.STATUS
+            ):
+                candidates.append(candidate)
+                continue
+            if (
+                name == MAJOR_MINOR_BUFF_DURATION_INCREASE
+                and effect.category is SupportEffectCategory.BUFF
+                and effect.name.casefold().startswith(("major_", "minor_"))
+            ):
+                candidates.append(candidate)
+        return tuple(candidates)
 
     @staticmethod
     def _finite_positive(value: float | None) -> float | None:
@@ -140,5 +172,6 @@ __all__ = [
     "AppliedEffectDurationModifier",
     "EffectDurationResolution",
     "EffectDurationResolver",
+    "MAJOR_MINOR_BUFF_DURATION_INCREASE",
     "STATUS_EFFECT_DURATION_INCREASE",
 ]
