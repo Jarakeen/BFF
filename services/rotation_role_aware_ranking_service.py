@@ -24,16 +24,15 @@ def _canonical(value: object) -> str:
 class RotationRoleAwareRankingInput:
     """One whole-plan scorecard plus explicit role-policy measurements.
 
-    The scorecard owns hard mechanics, effect, legality, sustain, and unresolved
-    evidence. These values are downstream measurements only; this policy layer does
-    not recompute ESO truth or convert unlike dimensions into a weighted score.
+    The scorecard owns shared hard mechanics, effect, legality, sustain, and
+    unresolved evidence. Role-specific encounter gates travel separately through
+    ``role_hard_obligation_satisfied`` so they are never mislabeled as generic
+    scorecard failures.
 
     Role evidence may be explicitly unknown. Missing evidence that is required for
     the selected role family makes the candidate ineligible rather than coercing an
-    unknown measurement to zero. Damage Dealer ranking requires role output,
-    sustain margin, and primary-role displacement. Support ranking requires assigned
-    support, sustain margin, and primary-role displacement. Incidental support on a
-    DD and optional output on a support plan remain diagnostic/soft evidence.
+    unknown measurement to zero. A role hard-obligation value of ``False`` fails the
+    candidate; ``None`` fails closed because the hard-gate state is unresolved.
     """
 
     candidate_id: str
@@ -45,6 +44,8 @@ class RotationRoleAwareRankingInput:
     assigned_support_label: str
     sustain_margin: float | None
     primary_role_displacement_seconds: float | None
+    role_hard_obligation_satisfied: bool | None = True
+    role_hard_obligation_reasons: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         candidate_id = str(self.candidate_id or "").strip()
@@ -82,6 +83,18 @@ class RotationRoleAwareRankingInput:
                 raise ValueError(f"{field_name} must be non-empty")
             object.__setattr__(self, field_name, value)
 
+        object.__setattr__(
+            self,
+            "role_hard_obligation_reasons",
+            tuple(
+                dict.fromkeys(
+                    str(item).strip()
+                    for item in self.role_hard_obligation_reasons
+                    if str(item).strip()
+                )
+            ),
+        )
+
     @property
     def role_family(self) -> str:
         return "damage" if self.role_key in _DAMAGE_ROLES else "support"
@@ -114,13 +127,13 @@ class RotationRoleAwareRankingResult:
 
 
 class RotationRoleAwareRankingService:
-    """Apply role policy only after shared whole-plan hard gates pass.
+    """Apply role policy only after shared and role-specific hard gates pass.
 
     The existing candidate ranker remains authoritative for mechanic correctness,
     required effects, runtime uptime floors, legality, resource reserves, sustain
     shortfall, and candidate-specific unresolved mechanics. This layer cannot rescue
-    an ineligible plan. It also fails closed when role-critical comparison evidence
-    is absent instead of treating missing measurements as numeric zeroes.
+    an ineligible plan. Explicit role hard obligations are an additional gate, not a
+    weighted objective, and unresolved hard-gate evidence fails closed.
 
     Eligible Damage Dealer candidates prioritize effective role output first. Extra
     support value does not make a DD plan win unless that support was already an
@@ -163,6 +176,7 @@ class RotationRoleAwareRankingService:
         ineligible.sort(
             key=lambda item: (
                 base_by_id[item.candidate_id.casefold()].rank,
+                self._hard_obligation_sort_key(item),
                 len(item.missing_required_role_evidence),
                 item.candidate_id.casefold(),
                 item.candidate_id,
@@ -189,12 +203,21 @@ class RotationRoleAwareRankingService:
         )
 
     @staticmethod
+    def _hard_obligation_sort_key(item: RotationRoleAwareRankingInput) -> int:
+        if item.role_hard_obligation_satisfied is True:
+            return 0
+        if item.role_hard_obligation_satisfied is False:
+            return 1
+        return 2
+
+    @staticmethod
     def _is_role_eligible(
         item: RotationRoleAwareRankingInput,
         base: RotationCandidateRankingResult,
     ) -> bool:
         return (
             base.tier is RotationCandidateTier.ELIGIBLE
+            and item.role_hard_obligation_satisfied is True
             and not item.missing_required_role_evidence
         )
 
@@ -236,6 +259,12 @@ class RotationRoleAwareRankingService:
     @classmethod
     def _role_reasons(cls, item: RotationRoleAwareRankingInput) -> tuple[str, ...]:
         reasons: list[str] = []
+        if item.role_hard_obligation_satisfied is False:
+            reasons.append("role-specific hard obligation failed")
+        elif item.role_hard_obligation_satisfied is None:
+            reasons.append("role-specific hard obligation evidence unresolved")
+        reasons.extend(item.role_hard_obligation_reasons)
+
         if item.missing_required_role_evidence:
             reasons.append(
                 "role ranking evidence missing: "
