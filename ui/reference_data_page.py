@@ -26,7 +26,10 @@ class ReferenceDataPage(FoundryPage):
         super().__init__(parent)
         self._entries = {
             entry.name: entry
-            for entry in build_reference_entries(include_encounters=True)
+            for entry in build_reference_entries(
+                include_encounters=True,
+                include_effects=True,
+            )
         }
         self._build_ui()
         self._load_list()
@@ -151,7 +154,7 @@ class ReferenceDataPage(FoundryPage):
         self.status = FoundryStatusBar()
         self.set_status(self.status)
         self.status.info(
-            f"Combat Reference ready • {len(self._entries)} entries loaded from canonical encounter and shared gameplay-practice data."
+            f"Combat Reference ready • {len(self._entries)} entries loaded from canonical encounter/effect and shared gameplay-practice data."
         )
 
     @staticmethod
