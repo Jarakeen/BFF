@@ -21,6 +21,26 @@ from ui.reference_data_model import ReferenceEntry
 
 _MECHANIC_FACT_TYPES = frozenset({"mechanic", "mechanic_detail", "mechanic_state"})
 
+# Source packets deliberately split encounter knowledge into small facts. Some
+# mechanic families use different nouns across those facts, so literal stem
+# matching alone cannot join the evidence for a human-readable Reference entry.
+# This map is presentation metadata only: it groups already-reviewed evidence and
+# does not promote or reinterpret any value as canonical encounter truth.
+_RELATED_MECHANIC_TOKENS: dict[tuple[str, str], tuple[str, ...]] = {
+    ("lylanar_turlassil", "destructive_ember"): ("destructive_ember", "dome", "sphere", "overload"),
+    ("lylanar_turlassil", "piercing_hailstone"): ("piercing_hailstone", "dome", "sphere", "overload"),
+    ("lylanar_turlassil", "firebrand"): ("firebrand", "brand"),
+    ("lylanar_turlassil", "frostbrand"): ("frostbrand", "brand"),
+    ("reef_guardian", "acid_reflux"): ("acid_reflux", "acid_pool"),
+    ("reef_guardian", "replication"): ("replication",),
+    ("reef_guardian", "heartburn"): ("heartburn", "reef_heart"),
+    ("tideborn_taleria", "rapid_deluge"): ("rapid_deluge", "deluge"),
+    ("tideborn_taleria", "crashing_wave"): ("crashing_wave",),
+    ("tideborn_taleria", "maelstrom"): ("maelstrom",),
+    ("tideborn_taleria", "coral_slam"): ("coral_slam", "rising_tide"),
+    ("tideborn_taleria", "arcing_slash"): ("arcing_slash", "soaked_wound"),
+}
+
 
 def _boss_ids(data_root: Path) -> frozenset[str]:
     root = data_root / "eso_info" / "bosses"
@@ -96,11 +116,14 @@ def _title_from_exists_key(fact_key: str) -> str:
     return stem.replace("_", " ").title() if stem else ""
 
 
-def _exists_stem(fact: ReconciledEncounterFact) -> str:
-    if fact.fact_type.casefold() != "mechanic_state" or fact.value is not True:
-        return ""
+def _mechanic_stem(fact: ReconciledEncounterFact) -> str:
+    kind = fact.fact_type.casefold()
     key = str(fact.fact_key or "").strip().casefold()
-    return key[:-7].strip("_") if key.endswith("_exists") else ""
+    if kind == "mechanic_state" and fact.value is True and key.endswith("_exists"):
+        return key[:-7].strip("_")
+    if kind == "mechanic" and isinstance(fact.value, dict) and fact.value.get("name"):
+        return key
+    return ""
 
 
 def _named_mechanic_fact(fact: ReconciledEncounterFact) -> str:
@@ -129,22 +152,36 @@ def _evidence_lines(fact: ReconciledEncounterFact) -> tuple[str, ...]:
     return tuple(lines)
 
 
+def _key_matches_token(key: str, token: str) -> bool:
+    if key == token:
+        return True
+    marker = f"_{token}_"
+    padded = f"_{key}_"
+    return key.startswith(f"{token}_") or key.endswith(f"_{token}") or marker in padded
+
+
 def _related_facts(
+    encounter_id: str,
     seed: ReconciledEncounterFact,
     facts: Iterable[ReconciledEncounterFact],
 ) -> tuple[ReconciledEncounterFact, ...]:
-    """Find split evidence around an explicit ``*_exists`` mechanic stem."""
+    """Find split reviewed evidence that belongs with one visible mechanic.
 
-    stem = _exists_stem(seed)
+    Literal mechanic stems are the default. A small presentation-only token map
+    joins source-schema families such as DSR dome, Reef Heart, and Deluge facts
+    whose reviewed evidence intentionally uses a different fact-key noun.
+    """
+
+    stem = _mechanic_stem(seed)
     if not stem:
         return ()
-    marker = f"_{stem}_"
+    tokens = _RELATED_MECHANIC_TOKENS.get((str(encounter_id).casefold(), stem), (stem,))
     result = []
     for fact in facts:
         if fact is seed:
             continue
         key = str(fact.fact_key or "").strip().casefold()
-        if key.startswith(f"{stem}_") or key.endswith(f"_{stem}") or marker in f"_{key}_":
+        if any(_key_matches_token(key, token) for token in tokens):
             result.append(fact)
     return tuple(result)
 
@@ -171,7 +208,7 @@ def _entry_from_fact(
         details.append(("Reviewed details", rendered))
 
     evidence = list(_evidence_lines(fact))
-    for related_fact in _related_facts(fact, all_facts):
+    for related_fact in _related_facts(packet.encounter_id, fact, all_facts):
         if related_fact.safe_for_review:
             related_rendered = _render_value(related_fact.value)
             if related_rendered:
