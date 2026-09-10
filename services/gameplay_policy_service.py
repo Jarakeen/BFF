@@ -73,7 +73,7 @@ class GameplayPolicyService:
                     role=str(raw.get("role") or "any").strip().casefold(),
                     content_type=tuple(
                         str(value).strip().casefold()
-                        for value in raw.get("content_type", ())
+                        for value in raw.get("content_type", [])
                         if str(value).strip()
                     ),
                     default_behavior=str(raw.get("default_behavior") or "").strip(),
@@ -96,7 +96,7 @@ class GameplayPolicyService:
 
     @staticmethod
     def _tuple_field(raw: dict, key: str) -> tuple[str, ...]:
-        value = raw.get(key, ())
+        value = raw.get(key, [])
         if value is None:
             return ()
         if not isinstance(value, list):
