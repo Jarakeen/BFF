@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import sqlite3
+
+import pytest
+
 from minmax.mundus_repository import MundusRepository
 from services.extreme_optimization_service import ExtremeOptimizationService
 
@@ -26,3 +30,26 @@ def test_explicit_read_only_mundus_repository_does_not_create_a_database(tmp_pat
     MundusRepository(database, initialize=False)
 
     assert not database.exists()
+
+
+def test_explicit_read_only_mundus_repository_can_read_seeded_records(tmp_path):
+    database = tmp_path / "eso.db"
+    MundusRepository(database)
+
+    repository = MundusRepository(database, initialize=False)
+    records = repository.get_records("The Shadow")
+
+    assert {record.stat_id for record in records} == {
+        "critical_damage",
+        "critical_healing",
+    }
+
+
+def test_explicit_read_only_mundus_repository_rejects_database_writes(tmp_path):
+    database = tmp_path / "eso.db"
+    MundusRepository(database)
+    repository = MundusRepository(database, initialize=False)
+
+    with repository._connect() as connection:
+        with pytest.raises(sqlite3.OperationalError, match="readonly|read-only"):
+            connection.execute("CREATE TABLE forbidden_extreme_write(id INTEGER)")
