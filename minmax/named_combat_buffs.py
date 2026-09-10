@@ -107,6 +107,12 @@ COMPONENT_LAYER_BUFFS = frozenset({
     "Major Slayer",
     "Minor Aegis",
     "Major Aegis",
+    # Recipient-side healing modifiers. These do not belong on the standing
+    # character sheet; healing-event consumers resolve their ratio points.
+    "Minor Vitality",
+    "Major Vitality",
+    "Minor Defile",
+    "Major Defile",
 })
 
 
