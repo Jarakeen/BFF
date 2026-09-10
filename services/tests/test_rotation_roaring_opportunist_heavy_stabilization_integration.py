@@ -133,8 +133,8 @@ def test_ro_required_heavies_survive_fixed_point_without_recovery_pressure() -> 
     )
     assert heavies == (2.0, 28.0)
     expected_signature = (
-        (2.0, 0, "front", "Roaring Opportunist"),
-        (28.0, 0, "front", "Roaring Opportunist"),
+        (2.0, 0, "front", "Heavy Attack"),
+        (28.0, 0, "front", "Heavy Attack"),
     )
     assert all(
         iteration.heavy_signature == expected_signature
