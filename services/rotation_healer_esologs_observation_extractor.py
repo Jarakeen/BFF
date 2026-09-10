@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+import json
 from pathlib import Path
 
 from services.esologs_event_interpreter import SemanticEventKind
@@ -102,6 +103,10 @@ class RotationHealerEsoLogsObservationExtractor:
     timestamp. Activations recast before canonical expiry are skipped because
     ordinary first-tick/expiry observations must not silently cross unresolved
     reapplication semantics.
+
+    Both the legacy single-report raw export and the research multi-report corpus
+    are accepted. A corpus requires an explicit report code because fight ids are
+    only unique within a report and must never be resolved by file order.
     """
 
     def __init__(self, database_path: str | Path) -> None:
@@ -110,12 +115,54 @@ class RotationHealerEsoLogsObservationExtractor:
             self.database_path
         )
 
+    @staticmethod
+    def load_fight(
+        raw_path: str | Path,
+        *,
+        fight_id: int,
+        report_code: str | None = None,
+    ) -> EsoLogsJsonFight:
+        path = Path(raw_path)
+        with path.open("r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+
+        reports = payload.get("reports") if isinstance(payload, dict) else None
+        if not isinstance(reports, dict):
+            return EsoLogsJsonFight.from_payload(
+                payload,
+                fight_id=int(fight_id),
+                report_code=report_code,
+                source_name=str(path),
+            )
+
+        requested = str(report_code or "").strip()
+        if not requested:
+            available = ", ".join(sorted(str(key) for key in reports))
+            raise ValueError(
+                f"{path}: multi-report ESO Logs corpus requires report_code; "
+                f"available reports: {available or '(none)'}"
+            )
+        report_payload = reports.get(requested)
+        if not isinstance(report_payload, dict):
+            available = ", ".join(sorted(str(key) for key in reports))
+            raise ValueError(
+                f"{path}: report {requested!r} is not present in corpus; "
+                f"available reports: {available or '(none)'}"
+            )
+        return EsoLogsJsonFight.from_payload(
+            report_payload,
+            fight_id=int(fight_id),
+            report_code=requested,
+            source_name=f"{path} report {requested}",
+        )
+
     def extract(
         self,
         raw_path: str | Path,
         *,
         fight_id: int,
         caster_id: int,
+        report_code: str | None = None,
         targets: tuple[RotationHealerEsoLogsObservationTarget, ...] = DF_HEALER_U50_OBSERVATION_TARGETS,
         timestamp_unit: RotationHealerEsoLogsTimestampUnit | str = RotationHealerEsoLogsTimestampUnit.MILLISECONDS,
         game_version: str = "U50",
@@ -127,7 +174,11 @@ class RotationHealerEsoLogsObservationExtractor:
             else RotationHealerEsoLogsTimestampUnit(str(timestamp_unit))
         )
         scale = unit.seconds_scale
-        fight = EsoLogsJsonFight.load(raw_path, fight_id=int(fight_id))
+        fight = self.load_fight(
+            raw_path,
+            fight_id=int(fight_id),
+            report_code=report_code,
+        )
         events = list(EsoLogsJsonEventInterpreter(fight).iter_events())
         fight_observation_end = max((event.timestamp * scale for event in events), default=0.0)
 
