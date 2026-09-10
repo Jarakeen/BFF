@@ -62,11 +62,22 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _candidate_caster_rows(events, targets=DF_HEALER_U50_OBSERVATION_TARGETS):
-    target_by_id = {
-        int(target.ability_game_id): target.source_name
-        for target in targets
-    }
+def _candidate_caster_rows(
+    events,
+    targets=DF_HEALER_U50_OBSERVATION_TARGETS,
+    *,
+    alias_map: dict[str, tuple[int, ...]] | None = None,
+):
+    target_by_id: dict[int, str] = {}
+    for target in targets:
+        ids = (
+            alias_map.get(target.source_name, ())
+            if alias_map is not None
+            else (int(target.ability_game_id),)
+        )
+        for ability_id in ids:
+            target_by_id[int(ability_id)] = target.source_name
+
     stats = defaultdict(lambda: {"casts": 0, "heals": 0, "abilities": set()})
 
     for event in events:
@@ -115,23 +126,33 @@ def _list_candidate_casters(
     *,
     fight_id: int,
     report_code: str | None = None,
+    database_path: Path = Path("data/eso.db"),
 ) -> int:
-    fight = RotationHealerEsoLogsObservationExtractor.load_fight(
+    extractor = RotationHealerEsoLogsObservationExtractor(database_path)
+    fight = extractor.load_fight(
         raw_path,
         fight_id=int(fight_id),
         report_code=report_code,
     )
     events = tuple(EsoLogsJsonEventInterpreter(fight).iter_events())
-    rows = _candidate_caster_rows(events)
+    alias_map = extractor.target_alias_map()
+    rows = _candidate_caster_rows(events, alias_map=alias_map)
 
     print("================================================================")
     print(" PHASE 13 HEALER ESO LOGS CASTER DISCOVERY")
     print("================================================================")
     print(f"Raw export:     {raw_path}")
     print(f"Report / fight: {fight.report_code} / {fight.fight_id}")
+    print("Canonical skill aliases:")
+    for target in DF_HEALER_U50_OBSERVATION_TARGETS:
+        aliases = alias_map.get(target.source_name, ())
+        print(
+            f"- {target.canonical_skill_id or target.source_name}: "
+            + ", ".join(str(value) for value in aliases)
+        )
     print()
     if not rows:
-        print("No sourceID cast or produced healing from the tracked DF-healer HoTs.")
+        print("No sourceID cast or produced healing from the tracked healer HoTs across canonical aliases.")
         return 1
 
     print("Candidate sourceIDs (best coverage first):")
@@ -144,8 +165,8 @@ def _list_candidate_casters(
     print()
     print(
         "Use the sourceID with the strongest healer-HoT coverage as --caster-id. "
-        "This discovery is only routing assistance; the extractor still validates exact "
-        "ability IDs and event timing before emitting candidate observations."
+        "Canonical lower-snake-case skill identity owns matching; numeric ESO ids are "
+        "aliases resolved from the database and are not treated as semantic identity."
     )
     return 0
 
@@ -159,6 +180,7 @@ def main(argv: list[str] | None = None) -> int:
             Path(args.raw),
             fight_id=args.fight_id,
             report_code=args.report_code,
+            database_path=Path(args.db),
         )
     if args.caster_id is None:
         parser.error("--caster-id is required unless --list-casters is used")
@@ -202,7 +224,8 @@ def main(argv: list[str] | None = None) -> int:
             f"- {sample.source_name} coefficient {sample.coefficient_number}: "
             f"activation={sample.activation_time_seconds:g}s "
             f"unique_ticks={len(sample.observed_tick_times_seconds)} "
-            f"raw_heal_events={candidate.raw_periodic_heal_event_count}"
+            f"raw_heal_events={candidate.raw_periodic_heal_event_count} "
+            f"observed_ability_id={candidate.observed_ability_game_id}"
         )
     if report.unresolved:
         print()
