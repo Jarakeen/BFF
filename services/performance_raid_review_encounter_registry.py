@@ -3,8 +3,8 @@ from __future__ import annotations
 """Encounter adapter registry for Raid Review.
 
 The generic review UI should not know about encounter-specific services. Each adapter
-exposes a stable encounter key/display label and delegates fight discovery/review to
-that encounter's application runner.
+exposes stable encounter/trial metadata and delegates fight discovery/review to that
+encounter's application runner.
 
 Adapters also expose a review level so baseline cross-pull support is never confused
 with encounter-specific mechanic enrichment. Baseline adapters use the canonical
@@ -27,6 +27,9 @@ class RaidReviewEncounterAdapter(Protocol):
     key: str
     display_name: str
     review_level: str
+    trial_key: str
+    trial_display_name: str
+    boss_order: int
 
     def list_fights(self, report_code: str): ...
 
@@ -39,6 +42,9 @@ class LokkestiizRaidReviewEncounterAdapter:
     key: str = "lokkestiiz"
     display_name: str = "Lokkestiiz"
     review_level: str = "mechanic_enriched"
+    trial_key: str = "sunspire"
+    trial_display_name: str = "Sunspire"
+    boss_order: int = 1
 
     def list_fights(self, report_code: str):
         return self.runner.list_lokkestiiz_fights(report_code)
@@ -53,6 +59,9 @@ class XalvakkaRaidReviewEncounterAdapter:
     key: str = "xalvakka"
     display_name: str = "Xalvakka"
     review_level: str = "baseline"
+    trial_key: str = "rockgrove"
+    trial_display_name: str = "Rockgrove"
+    boss_order: int = 3
 
     def list_fights(self, report_code: str):
         return self.runner.list_fights(report_code)
@@ -80,6 +89,13 @@ class RaidReviewEncounterRegistry:
             raise ValueError(
                 "Raid Review encounter adapter review_level must be 'baseline' or 'mechanic_enriched'."
             )
+        trial_key = str(getattr(adapter, "trial_key", "") or "").strip().casefold()
+        trial_display_name = str(getattr(adapter, "trial_display_name", "") or "").strip()
+        if not trial_key or not trial_display_name:
+            raise ValueError("Raid Review encounter adapter requires trial metadata.")
+        boss_order = int(getattr(adapter, "boss_order", 0) or 0)
+        if boss_order <= 0:
+            raise ValueError("Raid Review encounter adapter boss_order must be positive.")
         self._adapters[key] = adapter
 
     def get(self, key: str) -> RaidReviewEncounterAdapter:
@@ -93,7 +109,12 @@ class RaidReviewEncounterRegistry:
         return tuple(
             sorted(
                 self._adapters.values(),
-                key=lambda adapter: (adapter.display_name.casefold(), adapter.key),
+                key=lambda adapter: (
+                    adapter.trial_display_name.casefold(),
+                    int(adapter.boss_order),
+                    adapter.display_name.casefold(),
+                    adapter.key,
+                ),
             )
         )
 
