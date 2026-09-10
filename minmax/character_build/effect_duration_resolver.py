@@ -70,14 +70,27 @@ class EffectDurationResolver:
 
         if len(applicable) > 1:
             sources = ", ".join(sorted({candidate.source for candidate in applicable}))
+            names = {candidate.name.casefold() for candidate in applicable}
+            if names == {STATUS_EFFECT_DURATION_INCREASE}:
+                message = (
+                    f"{effect.name}: multiple status-effect duration modifiers require "
+                    f"explicit stacking resolution ({sources})"
+                )
+            elif names == {MAJOR_MINOR_BUFF_DURATION_INCREASE}:
+                message = (
+                    f"{effect.name}: multiple Major/Minor buff duration modifiers require "
+                    f"explicit stacking resolution ({sources})"
+                )
+            else:
+                message = (
+                    f"{effect.name}: multiple applicable duration modifiers require "
+                    f"explicit stacking resolution ({sources})"
+                )
             return EffectDurationResolution(
                 effect_name=effect.name,
                 base_duration_seconds=base,
                 effective_duration_seconds=None,
-                unresolved=(
-                    f"{effect.name}: multiple applicable duration modifiers require "
-                    f"explicit stacking resolution ({sources})",
-                ),
+                unresolved=(message,),
             )
 
         modifier = applicable[0]
