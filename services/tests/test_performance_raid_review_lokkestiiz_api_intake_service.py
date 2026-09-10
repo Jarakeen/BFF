@@ -10,9 +10,13 @@ from services.performance_raid_review_lokkestiiz_api_intake_service import (
 
 class _Client:
     def __init__(self, *, actors=None, fights=None):
-        self.actors = actors or [
-            {"id": 900, "name": "Lokkestiiz", "type": "NPC", "subType": "Boss"},
-        ]
+        self.actors = (
+            [
+                {"id": 900, "name": "Lokkestiiz", "type": "NPC", "subType": "Boss"},
+            ]
+            if actors is None
+            else actors
+        )
         self.fights = fights or {
             3: {"id": 3, "name": "Lokkestiiz"},
             4: {"id": 4, "name": "Lokkestiiz"},
