@@ -26,7 +26,12 @@ def _factory():
 
 def _progression(rank=2):
     return CharacterProgression(
-        passive_ranks={"Magicka Flood": rank},
+        passive_ranks={
+            "Magicka Flood": rank,
+            # This fixture isolates Magicka Flood. Dark Vigor is explicitly
+            # known to be unpurchased rather than mechanically unknown.
+            "Dark Vigor": 0,
+        },
         passive_cp_points={},
     )
 
