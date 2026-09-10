@@ -40,6 +40,9 @@ from services.extreme_runtime_snapshot_combat_state_service import (
 from services.extreme_restoration_heavy_combat_state_service import (
     ExtremeRestorationHeavyCombatStateService,
 )
+from services.extreme_sorcerer_blood_magic_service import (
+    ExtremeSorcererBloodMagicService,
+)
 from services.extreme_templar_restoring_light_healing_service import (
     ExtremeTemplarRestoringLightHealingService,
 )
@@ -87,6 +90,14 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
     default ``None`` state means the caller did not request that scenario and no
     negative-effect assumption is invented.
 
+    Reviewed Sorcerer ``Blood Magic`` can be evaluated from explicit caster
+    Health state plus a canonical runtime skill-cast event. Its full-Health branch
+    grants 10% to the pre-window higher Max Magicka or Max Stamina for 10 seconds.
+    The selected resource is routed back through CombatState and the normal
+    context rebuild so resource-scaled heals are recalculated rather than
+    post-multiplied. The below-full-Health self-heal remains a separate recipient
+    event and is never added to the target heal being optimized.
+
     A caller may also state that a fully charged Restoration Staff heavy attack
     has just completed. When that trigger is requested, the reviewed Essence
     Drain resolver proves weapon/passive legality and routes Major Mending through
@@ -116,6 +127,8 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         sacred_ground_window_active: bool = False,
         accelerated_growth_window_active: bool = False,
         healer_has_negative_effect: bool | None = None,
+        blood_magic_caster_health_fraction: float | None = None,
+        blood_magic_trigger_ability_has_cost: bool | None = None,
         active_crux: int | None = None,
         active_buffs: tuple[str, ...] = (),
         runtime_snapshot: ExtremeRuntimeSnapshot | None = None,
@@ -141,6 +154,7 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         warden_accelerated_growth_state: ExtremeWardenAcceleratedGrowthCombatStateService | None = None,
         templar_restoring_light_healing: ExtremeTemplarRestoringLightHealingService | None = None,
         necromancer_living_death_healing: ExtremeNecromancerLivingDeathHealingService | None = None,
+        sorcerer_blood_magic: ExtremeSorcererBloodMagicService | None = None,
         arcanist_curative_runeforms_healing: ExtremeArcanistCurativeRuneformsHealingService | None = None,
         arcanist_cascading_fortune_healing: ExtremeArcanistCascadingFortuneHealingService | None = None,
         **kwargs,
@@ -148,6 +162,11 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         value = float(target_health_fraction)
         if not 0.0 <= value <= 1.0:
             raise ValueError("target_health_fraction must be between 0 and 1")
+        if blood_magic_caster_health_fraction is not None:
+            blood_health = float(blood_magic_caster_health_fraction)
+            if not 0.0 <= blood_health <= 1.0:
+                raise ValueError("blood_magic_caster_health_fraction must be between 0 and 1")
+            blood_magic_caster_health_fraction = blood_health
         if active_crux is not None:
             try:
                 normalized_crux = int(active_crux)
@@ -163,6 +182,8 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         self.sacred_ground_window_active = bool(sacred_ground_window_active)
         self.accelerated_growth_window_active = bool(accelerated_growth_window_active)
         self.healer_has_negative_effect = healer_has_negative_effect
+        self.blood_magic_caster_health_fraction = blood_magic_caster_health_fraction
+        self.blood_magic_trigger_ability_has_cost = blood_magic_trigger_ability_has_cost
         self.active_crux = active_crux
         self.active_buffs = tuple(
             dict.fromkeys(
@@ -250,6 +271,7 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         self.warden_accelerated_growth_state = warden_accelerated_growth_state
         self.templar_restoring_light_healing = templar_restoring_light_healing
         self.necromancer_living_death_healing = necromancer_living_death_healing
+        self.sorcerer_blood_magic = sorcerer_blood_magic
         self.arcanist_curative_runeforms_healing = arcanist_curative_runeforms_healing
         self.arcanist_cascading_fortune_healing = arcanist_cascading_fortune_healing
         super().__init__(**kwargs)
@@ -287,7 +309,7 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
             scenarios.append(
                 "unified runtime snapshot at "
                 f"{self.runtime_snapshot.snapshot_time_seconds:.6f}s from "
-                f"{len(self.runtime_snapshot.attempts)} ordered event attempts"
+                f"{len(self.runtime_snapshot.effect_attempts)} ordered event attempts"
             )
         if self.potion_elapsed_seconds is not None:
             scenarios.append(
@@ -312,6 +334,12 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
                     "explicit skill runtime conditions: "
                     + ", ".join(sorted(self.skill_trigger_condition_context))
                 )
+        if self.blood_magic_caster_health_fraction is not None:
+            scenarios.append(
+                "explicit Blood Magic caster Health fraction "
+                f"{self.blood_magic_caster_health_fraction:.6f}; "
+                "runtime trigger and passive legality must be proven"
+            )
         if self.gear_trigger_event is not None:
             scenarios.append(
                 "explicit gear-proc runtime event "
@@ -391,7 +419,7 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
                         active_bar=active_bar,
                     )
                 )
-        if self.runtime_snapshot is not None and self.runtime_snapshot.attempts:
+        if self.runtime_snapshot is not None and self.runtime_snapshot.effect_attempts:
             service = self.skill_buff_candidates
             if service is None:
                 database_path = getattr(self.optimizer, "database_path", None)
@@ -399,7 +427,7 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
                     service = ExtremeActualHealSkillBuffCandidateService(database_path)
                     self.skill_buff_candidates = service
             if service is not None:
-                for attempt in self.runtime_snapshot.attempts:
+                for attempt in self.runtime_snapshot.effect_attempts:
                     result.extend(
                         service.triggered_build_candidates(
                             baseline_build,
@@ -611,6 +639,95 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
             tuple(dict.fromkeys(message for message in unresolved if message)),
         )
 
+    def _blood_magic_trigger_event(self) -> tuple[RuntimeEvent | None, float | None]:
+        if self.runtime_snapshot is not None:
+            snapshot_time = self.runtime_snapshot.snapshot_time_seconds
+            attempts = tuple(
+                attempt
+                for attempt in self.runtime_snapshot.effect_attempts
+                if attempt.event.time_seconds <= snapshot_time + 1e-12
+            )
+            if attempts:
+                latest = max(
+                    attempts,
+                    key=lambda attempt: (
+                        attempt.event.time_seconds,
+                        attempt.event.sequence,
+                    ),
+                )
+                return latest.event, snapshot_time
+            return None, snapshot_time
+        if self.skill_trigger_event is not None:
+            return self.skill_trigger_event, self.skill_trigger_snapshot_seconds
+        return None, None
+
+    def _blood_magic_combat_state(
+        self,
+        *,
+        build: PlayerBuild,
+        progression: CharacterProgression,
+        context,
+        combat_state: CombatState,
+    ) -> tuple[CombatState, tuple[str, ...]]:
+        if self.blood_magic_caster_health_fraction is None:
+            return combat_state, ()
+        if self.blood_magic_trigger_ability_has_cost is None:
+            return combat_state, (
+                "Blood Magic requires explicit proof that the triggering Dark Magic ability has a cost",
+            )
+
+        event, snapshot_time = self._blood_magic_trigger_event()
+        if event is None or snapshot_time is None:
+            return combat_state, (
+                "Blood Magic requires a runtime skill-cast event at or before the heal snapshot",
+            )
+
+        service = self.sorcerer_blood_magic
+        if service is None:
+            service = ExtremeSorcererBloodMagicService(
+                getattr(self.optimizer, "database_path", None)
+            )
+            self.sorcerer_blood_magic = service
+        resolved = service.resolve(
+            build=build,
+            progression=progression,
+            context=context,
+            trigger_ability_name=event.source,
+            trigger_ability_has_cost=self.blood_magic_trigger_ability_has_cost,
+            caster_health_fraction=self.blood_magic_caster_health_fraction,
+        )
+        if resolved.unresolved:
+            return combat_state, resolved.unresolved
+        if resolved.branch == "self_heal":
+            return combat_state, (
+                "Blood Magic Max-Health-scaled self-heal is resolved as a separate caster event but is not yet ranked against the selected target heal",
+            )
+        if resolved.branch != "resource_window":
+            return combat_state, ()
+
+        elapsed = float(snapshot_time) - float(event.time_seconds)
+        duration = float(resolved.duration_seconds or 0.0)
+        if elapsed < 0.0:
+            return combat_state, ("Blood Magic runtime snapshot precedes its triggering cast",)
+        if elapsed >= duration:
+            return combat_state, ()
+        if resolved.resource_stat == "max_magicka":
+            buff_name = "Blood Magic: Max Magicka"
+        elif resolved.resource_stat == "max_stamina":
+            buff_name = "Blood Magic: Max Stamina"
+        else:
+            return combat_state, (
+                "Blood Magic higher-resource window did not resolve a canonical resource",
+            )
+        return (
+            CombatState(
+                in_combat=True,
+                active_buffs=(*combat_state.active_buffs, buff_name),
+                game_update=combat_state.game_update,
+            ),
+            (),
+        )
+
     def _templar_mending_event(
         self,
         *,
@@ -818,6 +935,21 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
             combat_state=combat_state,
             active_bar=active_bar,
         )
+        combat_state, blood_magic_unresolved = self._blood_magic_combat_state(
+            build=build,
+            progression=candidate_progression,
+            context=context,
+            combat_state=combat_state,
+        )
+        if combat_state != context.combat_state:
+            context = self.optimizer.context_factory.build(
+                character_id=character_id,
+                build_id=build_id,
+                build=build,
+                progression=candidate_progression,
+                combat_state=combat_state,
+                active_bar=active_bar,
+            )
         event = self.healing_events.evaluate(
             build=build,
             context=context,
@@ -846,6 +978,7 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         unresolved = (
             tuple(context.unresolved_gear_effects)
             + tuple(combat_unresolved)
+            + tuple(blood_magic_unresolved)
             + tuple(event.unresolved)
         )
         return event, tuple(dict.fromkeys(message for message in unresolved if message))
