@@ -67,6 +67,40 @@ ROTATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "service does not claim observed/received HPS or survival."
         ),
     ),
+    ServiceDescriptor(
+        service_id="rotation.healer.multi_demand_role_output",
+        domain="rotation",
+        purpose=(
+            "Evaluate one healer candidate across multiple explicit encounter healing "
+            "windows while preserving each window and exposing a weakest-window floor."
+        ),
+        implementation_path=(
+            "services.rotation_candidate_healer_multi_demand_role_output_service"
+        ),
+        inputs=(
+            "GeneratedRotationCandidate",
+            "RotationDemandWindow",
+            "RotationHealerDemandHealingEvidence",
+        ),
+        outputs=(
+            "RotationCandidateHealerMultiDemandOutput",
+            "RotationCandidateRoleOutputEvidence",
+        ),
+        dependencies=(
+            "rotation.healer.canonical_demand_evidence",
+            "rotation.healer.role_output",
+        ),
+        responsibilities=("rotation_healer_multi_demand_role_output",),
+        roles=("Healer",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "The comparison scalar is the lowest resolved modeled-healing-per-demand-second "
+            "value across required healing windows. It is not an averaged score, required-HPS "
+            "threshold, or survival claim; unresolved evidence in any window fails closed."
+        ),
+    ),
 )
 
 
