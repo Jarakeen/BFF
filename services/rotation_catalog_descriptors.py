@@ -151,6 +151,32 @@ ROTATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "criteria fail closed. Caller-assumption criteria never enter this gate."
         ),
     ),
+    ServiceDescriptor(
+        service_id="rotation.healer.encounter_criteria_provider",
+        domain="rotation",
+        purpose=(
+            "Project explicitly reviewed structured encounter evidence facts into healer "
+            "demand criteria while preserving the encounter review/promotion boundary."
+        ),
+        implementation_path="services.rotation_healer_encounter_criteria_provider",
+        inputs=(
+            "EncounterService",
+            "EncounterEvidenceFact",
+            "ReviewedFactId",
+        ),
+        outputs=("RotationHealerEncounterCriteriaProjection",),
+        dependencies=("rotation.healer.demand_criteria",),
+        responsibilities=("rotation_healer_reviewed_encounter_criteria_projection",),
+        roles=("Healer",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Only explicit healer_demand_criterion facts are read. Reconciliation alone "
+            "does not promote a fact: an exact reviewed fact id is required before the "
+            "criterion becomes VERIFIED_ENCOUNTER_EVIDENCE."
+        ),
+    ),
 )
 
 
