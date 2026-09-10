@@ -14,6 +14,7 @@ from services.nonability_effect_provider_reference_service import (
     NonAbilityEffectProviderReferenceService,
     canonical_identity,
 )
+from services.reference_research_enrichment_service import ReferenceResearchEnrichmentService
 from ui.reference_data_model import ReferenceEntry
 
 
@@ -128,6 +129,82 @@ def enrich_reference_entries_with_nonability_providers(
     return tuple(enriched)
 
 
+def enrich_reference_entries_with_reviewed_research(
+    entries: Iterable[ReferenceEntry],
+) -> tuple[ReferenceEntry, ...]:
+    """Add reviewed, provenance-bearing research without redefining canonical mechanics."""
+
+    research = ReferenceResearchEnrichmentService()
+    enriched: list[ReferenceEntry] = []
+    for entry in entries:
+        facts = research.facts_for(entry.name)
+        if not facts:
+            enriched.append(entry)
+            continue
+
+        details = list(entry.details)
+        for fact in facts:
+            details.append(
+                (
+                    f"Research • {fact.label}",
+                    f"{fact.value} [{fact.game_update}; {fact.confidence} confidence]",
+                )
+            )
+        evidence = tuple(
+            dict.fromkeys(
+                (
+                    *entry.evidence,
+                    *(
+                        f"Reviewed research ({fact.source_tier}): {fact.source}"
+                        for fact in facts
+                    ),
+                )
+            )
+        )
+        enriched.append(replace(entry, details=tuple(details), evidence=evidence))
+    return tuple(enriched)
+
+
+_UNRESOLVED_DETAIL_TEXT = {
+    "Mechanic type": "Unknown — canonical encounter record has no reviewed mechanic classification yet.",
+    "Damage type": "Unknown — canonical encounter record has no reviewed damage type yet.",
+    "Target count": "Unknown — canonical encounter record has no reviewed target count yet.",
+    "Requires movement": "Unknown — movement requirement has not yet been reviewed for this mechanic.",
+    "Requires positioning": "Unknown — positioning requirement has not yet been reviewed for this mechanic.",
+    "Requires cleanse": "Unknown — cleanse requirement has not yet been reviewed for this mechanic.",
+    "Persistent hazard": "Unknown — persistent-hazard behavior has not yet been reviewed for this mechanic.",
+    "Failure is fatal": "Unknown — failure severity has not yet been reviewed for this mechanic.",
+    "Interruptible": "Unknown — interruptibility has not yet been reviewed for this mechanic.",
+    "Duration": "Unknown — no reviewed duration is stored for this effect yet.",
+    "Tick interval": "No periodic tick cadence is recorded; this may be an instant effect or a remaining evidence gap.",
+    "Maximum stacks": "No stack mechanic is recorded for this effect.",
+    "Immunity duration": "No immunity window is recorded for this effect.",
+}
+
+
+def clarify_unresolved_reference_values(
+    entries: Iterable[ReferenceEntry],
+) -> tuple[ReferenceEntry, ...]:
+    """Replace bare 'Not modeled' labels with actionable evidence-state language."""
+
+    result: list[ReferenceEntry] = []
+    for entry in entries:
+        details = tuple(
+            (
+                label,
+                _UNRESOLVED_DETAIL_TEXT.get(
+                    label,
+                    "Unknown — this field does not yet have a reviewed source-backed value.",
+                )
+                if value == "Not modeled"
+                else value,
+            )
+            for label, value in entry.details
+        )
+        result.append(replace(entry, details=details))
+    return tuple(result)
+
+
 def mark_passive_provider_gap(entries: Iterable[ReferenceEntry]) -> tuple[ReferenceEntry, ...]:
     """Keep the absence of a shared passive-provider authority explicit on named effects."""
 
@@ -143,7 +220,7 @@ def mark_passive_provider_gap(entries: Iterable[ReferenceEntry]) -> tuple[Refere
                     *entry.details,
                     (
                         "Passive provider coverage",
-                        "Not yet available from one shared reviewed passive-provider authority.",
+                        "Coverage gap — reviewed passive mechanics exist in role-specific services, but no shared passive-to-effect provider authority has been extracted yet.",
                     ),
                 ),
             )
@@ -161,4 +238,6 @@ def load_and_enrich_reference_entries(
 
     result = enrich_reference_entries_with_ability_providers(entries, ability_service.all())
     result = enrich_reference_entries_with_nonability_providers(result, nonability_service.all())
+    result = enrich_reference_entries_with_reviewed_research(result)
+    result = clarify_unresolved_reference_values(result)
     return mark_passive_provider_gap(result)
