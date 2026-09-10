@@ -41,9 +41,14 @@ class RotationCandidatePlanEvidence:
     """Canonical evaluated evidence for one generated whole rotation plan.
 
     The adapter does not calculate these measurements. Damage/healing/support,
-    sustain, duration, and workload services remain authoritative and provide the
-    values here. Unknown role-policy evidence stays ``None`` so recommendation
-    ranking can fail closed rather than inventing a zero.
+    sustain, duration, workload, and role hard-obligation services remain
+    authoritative and provide the values here. Unknown role-policy evidence stays
+    ``None`` so recommendation ranking can fail closed rather than inventing a zero.
+
+    ``role_hard_obligation_satisfied`` is deliberately separate from the generic
+    scorecard. It carries role-specific encounter gates, such as a verified healer
+    demand criterion, without pretending they are support-effect gaps or unresolved
+    mechanics. ``None`` means the hard-obligation state itself is unresolved.
     """
 
     sustain: RotationSustainProjection
@@ -52,6 +57,21 @@ class RotationCandidatePlanEvidence:
     assigned_support_value: float | None = None
     sustain_margin: float | None = None
     primary_role_displacement_seconds: float | None = None
+    role_hard_obligation_satisfied: bool | None = True
+    role_hard_obligation_reasons: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "role_hard_obligation_reasons",
+            tuple(
+                dict.fromkeys(
+                    str(item).strip()
+                    for item in self.role_hard_obligation_reasons
+                    if str(item).strip()
+                )
+            ),
+        )
 
 
 class RotationCandidatePlanEvidenceProvider(Protocol):
@@ -163,6 +183,12 @@ class RotationCandidateRecommendationEvidenceService:
             sustain_margin=candidate_evidence.sustain_margin,
             primary_role_displacement_seconds=(
                 candidate_evidence.primary_role_displacement_seconds
+            ),
+            role_hard_obligation_satisfied=(
+                candidate_evidence.role_hard_obligation_satisfied
+            ),
+            role_hard_obligation_reasons=(
+                candidate_evidence.role_hard_obligation_reasons
             ),
         )
 
