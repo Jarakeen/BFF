@@ -55,8 +55,6 @@ class ExtremeBestMundusStructuralStatEvaluator:
         self.mundus_repository = mundus_repository
 
     def mundus_choices(self) -> tuple[str, ...]:
-        # Empty string is a real legal baseline: a character may have no stone.
-        # Exact-name dedupe preserves canonical repository spelling/order.
         values: list[str] = [""]
         seen = {""}
         for raw in self.mundus_repository.list_names():
@@ -80,13 +78,14 @@ class ExtremeBestMundusStructuralStatEvaluator:
         candidate: ExtremeStructuralCandidate,
         *,
         food: str = "",
+        potion: str = "",
+        active_buffs: tuple[str, ...] = (),
     ) -> tuple[float, dict[str, Any], tuple[str, ...]]:
-        """Pick the best Mundus while preserving an optional outer food choice.
+        """Pick best Mundus while preserving optional outer finite selections.
 
-        ``food`` is forwarded only when an outer food search actually selected a
-        value.  This preserves the pre-food evaluator contract for ordinary
-        structural/Mundus callers and test doubles while still allowing the
-        compositional food layer to pass its explicit choice inward.
+        Optional values are forwarded only when actually present.  This keeps the
+        original structural/Mundus evaluator contract compatible with simpler
+        canonical scorers while still allowing food/potion layers to compose.
         """
         best_value: float | None = None
         best_payload: dict[str, Any] | None = None
@@ -94,9 +93,13 @@ class ExtremeBestMundusStructuralStatEvaluator:
         best_mundus = ""
 
         for mundus in self.mundus_choices():
-            kwargs = {"mundus": mundus}
+            kwargs: dict[str, Any] = {"mundus": mundus}
             if str(food or "").strip():
                 kwargs["food"] = food
+            if str(potion or "").strip():
+                kwargs["potion"] = potion
+            if tuple(active_buffs or ()):
+                kwargs["active_buffs"] = tuple(active_buffs)
             value, payload, unresolved = self.evaluator.evaluate_candidate(
                 objective_key,
                 candidate,
