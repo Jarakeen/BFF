@@ -30,12 +30,45 @@ class RotationHealerPeriodicObservationFixtureReport:
     unresolved: tuple[str, ...]
 
     @property
-    def reviewed_observations(self):
+    def reviewed_sample_observations(self):
+        """Return each explicitly reviewed sample observation without aggregation."""
         return tuple(
             entry.observed.observation
             for entry in self.entries
             if entry.observed.observation is not None
         )
+
+    @property
+    def reviewed_observations(self):
+        """Return consumer-ready consensus observations grouped by component/version.
+
+        Individual reviewed samples remain available through
+        ``reviewed_sample_observations`` and ``entries`` for evidence inspection.
+        Downstream runtime consumers receive one consensus observation per canonical
+        component and game version so file ordering cannot choose a runtime fact.
+        Groups that fail consensus are omitted here and remain visible through the
+        consensus audit and entry-level unresolved evidence.
+        """
+        from services.rotation_healer_periodic_observation_consensus_service import (
+            RotationHealerPeriodicObservationConsensusService,
+        )
+
+        groups: dict[tuple[str, int, str | None], list[RotationHealerPeriodicObservationFixtureEntry]] = {}
+        for entry in self.entries:
+            key = (
+                entry.sample.source_name.casefold(),
+                int(entry.sample.coefficient_number),
+                entry.sample.game_version,
+            )
+            groups.setdefault(key, []).append(entry)
+
+        service = RotationHealerPeriodicObservationConsensusService()
+        observations = []
+        for key in sorted(groups, key=lambda item: (item[0], item[1], item[2] or "")):
+            resolution = service.resolve(tuple(groups[key]))
+            if resolution.ready and resolution.observation is not None:
+                observations.append(resolution.observation)
+        return tuple(observations)
 
 
 class RotationHealerPeriodicObservationFixtureService:
