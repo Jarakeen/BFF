@@ -21,11 +21,17 @@ class ExtremeTemplarSacredGroundCombatStateResult:
 class ExtremeTemplarSacredGroundCombatStateService:
     """Resolve reviewed Templar Sacred Ground Minor Mending state.
 
-    At reviewed max rank, Sacred Ground grants Minor Mending while the character
-    stands in their own Cleansing Ritual, Rune Focus, or Rite of Passage area and
-    for up to four seconds after leaving it. The caller must explicitly state that
-    this Sacred Ground window is active. The service never infers position or a
-    recently-left grace window from merely owning Restoring Light.
+    Sacred Ground grants Minor Mending while the character stands in their own
+    Cleansing Ritual, Rune Focus, or Rite of Passage area. The post-area grace
+    window is rank-dependent: up to two seconds at rank 1 and up to four seconds
+    at rank 2. Both ranks grant the same Minor Mending effect while the reviewed
+    window is active.
+
+    The caller must explicitly state that the Sacred Ground window is active.
+    This service never infers position or a recently-left grace window from merely
+    owning Restoring Light. When future callers need to derive the window from
+    timestamps, they must use the recorded passive rank to choose the correct
+    duration before calling this resolver.
 
     Once legality is proven, Minor Mending is routed through ``CombatState`` so
     the canonical named-buff layer owns the +8% Healing Done semantics.
@@ -33,6 +39,7 @@ class ExtremeTemplarSacredGroundCombatStateService:
 
     PASSIVE_NAME = "Sacred Ground"
     RESTORING_LIGHT_ID = "restoring_light"
+    GRACE_SECONDS_BY_RANK = {1: 2.0, 2: 4.0}
 
     def __init__(
         self,
@@ -117,12 +124,12 @@ class ExtremeTemplarSacredGroundCombatStateService:
                     "Passive max rank is not available in canonical data: Sacred Ground",
                 ),
             )
-        if rank != maximum:
+        if rank not in self.GRACE_SECONDS_BY_RANK or rank > maximum:
             return ExtremeTemplarSacredGroundCombatStateResult(
                 combat_state=base_state,
                 minor_mending_active=False,
                 unresolved=(
-                    f"Partial passive rank is not yet modeled: Sacred Ground {rank}/{maximum}",
+                    f"Unsupported passive rank: Sacred Ground {rank}/{maximum}",
                 ),
             )
 
