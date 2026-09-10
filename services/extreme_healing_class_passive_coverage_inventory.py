@@ -9,6 +9,9 @@ from services.extreme_necromancer_living_death_passive_review import (
 from services.extreme_nightblade_siphoning_passive_review import (
     ExtremeNightbladeSiphoningPassiveReview,
 )
+from services.extreme_templar_restoring_light_passive_review import (
+    ExtremeTemplarRestoringLightPassiveReview,
+)
 from services.extreme_warden_green_balance_passive_review import (
     ExtremeWardenGreenBalancePassiveReview,
 )
@@ -134,6 +137,16 @@ class ExtremeHealingClassPassiveCoverageInventory:
                 "ExtremeNightbladeSiphoningPassiveReview + NightbladePassiveInputResolver + ExtremeNightbladeSiphoningHealingService",
                 "All four Siphoning passives are reviewed for MOST Actual Heal: Magicka Flood and Soul Siphoner are implemented; Catalyst and Transfer are objective-irrelevant.",
             ),
+            ("templar", "Restoring Light"): ExtremeHealingClassPassiveCoverageEntry(
+                "templar",
+                "Restoring Light",
+                REVIEWED,
+                True,
+                EXPLICITLY_UNSUPPORTED,
+                True,
+                "ExtremeTemplarRestoringLightPassiveReview + ExtremeTemplarRestoringLightHealingService + ExtremeTemplarSacredGroundCombatStateService",
+                "All four live-U50 Restoring Light passives are reviewed. Mending and Sacred Ground have dedicated mechanic models, while Light Weaver and Master Ritualist are objective-irrelevant; production ExtremeHealingEventService orchestration for the two relevant mechanics remains explicit work before this family is fully implemented.",
+            ),
             ("warden", "Green Balance"): ExtremeHealingClassPassiveCoverageEntry(
                 "warden",
                 "Green Balance",
@@ -254,6 +267,13 @@ class ExtremeHealingClassPassiveCoverageInventory:
             ):
                 raise ValueError(
                     "Siphoning cannot be reviewed until its passive-level review is complete"
+                )
+            if (
+                row.family_id == "templar:Restoring Light"
+                and not ExtremeTemplarRestoringLightPassiveReview().complete
+            ):
+                raise ValueError(
+                    "Restoring Light cannot be reviewed until its passive-level review is complete"
                 )
             if (
                 row.family_id == "warden:Green Balance"
