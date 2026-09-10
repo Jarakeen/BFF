@@ -14,6 +14,7 @@ from minmax.stat_ids import StatId
 from models.build_model import PlayerBuild
 from services.extreme_canonical_healing_event_service import (
     ExtremeCanonicalHealingEventService,
+    _CanonicalIdentityRecipientScope,
 )
 
 
@@ -83,6 +84,19 @@ def _service(skill_name, rows):
     return ExtremeCanonicalHealingEventService(
         tooltip_service=_FakeTooltipService(_result(skill_name), rows)
     )
+
+
+def test_canonical_recipient_adapter_accepts_base_recipient_proof_inputs():
+    result = _CanonicalIdentityRecipientScope().resolve(
+        ability_name="Reviewed Composite Heal",
+        heal_coefficient_numbers=(1, 2),
+        coefficient_traces=(SimpleNamespace(coefficient_number=1),),
+    )
+
+    assert result.single_recipient_safe
+    assert not result.recipient_selection_required
+    assert result.selected_coefficient_numbers is None
+    assert result.unresolved == ()
 
 
 def test_canonical_identity_scores_different_recipients_as_independent_events():
