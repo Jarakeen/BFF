@@ -15,15 +15,22 @@ from minmax.dd_stat_evaluation import evaluate_dd_stats
 from minmax.evaluation_context import EvaluationContext
 from minmax.rotation_plan import RotationAction, RotationActionKind
 from minmax.skill_coefficient_repository import SkillCoefficientRepository
-from minmax.skill_component_classification import SkillEffectKind
+from minmax.skill_component_classification import (
+    SkillComponentClassification,
+    SkillEffectKind,
+)
 from minmax.skill_component_repository import SkillComponentRepository
 from minmax.skill_tooltip_calculator import SkillTooltipCalculator
 from services.rotation_candidate_dd_role_output_service import RotationActionDamageEvidence
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
+from services.rotation_candidate_periodic_damage_runtime_projection_service import (
+    RotationCandidatePeriodicDamageRuntimeProjectionService,
+    RotationPeriodicDamageRuntimeSemantics,
+)
 
 
 class RotationCandidateSkillDamageEvidenceService:
-    """Resolve direct scheduled skill damage through existing canonical combat math.
+    """Resolve scheduled skill damage through existing canonical combat math.
 
     This service is composition only. Canonical lower-snake-case skill identity and
     coefficient resolution remain owned by ``SkillCoefficientRepository`` and
@@ -31,9 +38,12 @@ class RotationCandidateSkillDamageEvidenceService:
     ``SkillComponentRepository``. DD stat caps, Damage Done, mitigation, critical
     handling, and Damage Taken remain owned by their existing combat services.
 
-    Periodic damage is deliberately unresolved here. A cast-time action cannot claim
-    the full value of a DoT without a horizon-aware tick projection that understands
-    refreshes, expirations, target state, and encounter downtime.
+    Direct and periodic components deliberately share the same combat-routing
+    helper. Periodic components differ only in *when* their already-resolved
+    coefficient consequence occurs: the Phase 7 runtime projection proves the
+    actual tick events for the exact parent cast, including recast and horizon
+    clipping. Missing periodic runtime evidence remains unresolved rather than
+    turning a full DoT tooltip value into cast-time damage.
     """
 
     def __init__(
@@ -45,6 +55,12 @@ class RotationCandidateSkillDamageEvidenceService:
         component_repository: SkillComponentRepository | None = None,
         target_combat_state: CombatState | None = None,
         target_critical_resistance: float = 0.0,
+        periodic_runtime_projection_service: (
+            RotationCandidatePeriodicDamageRuntimeProjectionService | None
+        ) = None,
+        periodic_runtime_semantics: (
+            tuple[RotationPeriodicDamageRuntimeSemantics, ...]
+        ) = (),
     ) -> None:
         self.database_path = Path(database_path)
         self.context = context
@@ -55,6 +71,8 @@ class RotationCandidateSkillDamageEvidenceService:
         )
         self.target_combat_state = target_combat_state
         self.target_critical_resistance = float(target_critical_resistance)
+        self.periodic_runtime_projection_service = periodic_runtime_projection_service
+        self.periodic_runtime_semantics = tuple(periodic_runtime_semantics)
 
     def evaluate_action(
         self,
@@ -62,8 +80,6 @@ class RotationCandidateSkillDamageEvidenceService:
         candidate: GeneratedRotationCandidate,
         action: RotationAction,
     ) -> RotationActionDamageEvidence:
-        del candidate  # Exact action identity is verified by the whole-plan aggregator.
-
         if action.kind is not RotationActionKind.SKILL:
             return self._unresolved(
                 action,
@@ -103,6 +119,7 @@ class RotationCandidateSkillDamageEvidenceService:
         damage_done = damage_done_from_combat_state(self.context.combat_state)
         damage_taken = damage_taken_from_target_state(self.target_combat_state)
 
+        periodic_projection = None
         unresolved: list[str] = []
         total_damage = 0.0
         saw_damage_component = False
@@ -128,51 +145,57 @@ class RotationCandidateSkillDamageEvidenceService:
                     f"{action.name}: coefficient {component.coefficient_number} damage classification incomplete"
                 )
                 continue
+
+            component_damage = self._resolve_component_damage(
+                base_value=float(component.final_value),
+                classification=classification,
+                dd_stats=dd_stats,
+                damage_done=damage_done,
+                damage_taken=damage_taken,
+            )
+
             if classification.is_dot:
-                unresolved.append(
-                    f"{action.name}: coefficient {component.coefficient_number} periodic damage requires horizon-aware runtime tick projection"
+                if self.periodic_runtime_projection_service is None:
+                    unresolved.append(
+                        f"{action.name}: coefficient {component.coefficient_number} periodic damage requires horizon-aware runtime tick projection"
+                    )
+                    continue
+                if periodic_projection is None:
+                    periodic_projection = self.periodic_runtime_projection_service.project(
+                        plan=candidate.plan,
+                        semantics=self.periodic_runtime_semantics,
+                    )
+
+                matching = tuple(
+                    entry
+                    for entry in periodic_projection.entries
+                    if entry.action.time_seconds == action.time_seconds
+                    and entry.action.sequence == action.sequence
+                    and entry.coefficient_number == component.coefficient_number
                 )
+                if len(matching) != 1:
+                    unresolved.append(
+                        f"{action.name}: coefficient {component.coefficient_number} periodic runtime projection expected one exact parent-cast match, found {len(matching)}"
+                    )
+                    continue
+                runtime_entry = matching[0]
+                if runtime_entry.unresolved:
+                    unresolved.extend(runtime_entry.unresolved)
+                    continue
+
+                # The coefficient's final value is the consequence for one
+                # periodic occurrence. Runtime projection owns how many such
+                # occurrences actually exist inside this exact cast instance.
+                total_damage += component_damage * len(runtime_entry.events)
                 continue
 
-            event = DDDamageEvent(
-                base_value=float(component.final_value),
-                scaling_coefficient=0.0,
-                damage_type=classification.damage_type,
-                can_crit=bool(classification.can_crit),
-                is_dot=False,
-                is_aoe=bool(classification.is_aoe),
-            )
-            raw = calculate_dd_damage(
-                event,
-                dd_stats,
-                damage_done=damage_done,
-                damage_taken=damage_taken,
-                target_critical_resistance=self.target_critical_resistance,
-            )
-            mitigation = None
-            if (
-                self.context.target_resistance is not None
-                and raw.penetration_stat is not None
-            ):
-                mitigation = calculate_dd_mitigation(
-                    target_resistance=self.context.target_resistance,
-                    penetration=raw.penetration,
-                )
-            resolved = calculate_dd_damage(
-                event,
-                dd_stats,
-                mitigation=mitigation,
-                damage_done=damage_done,
-                damage_taken=damage_taken,
-                target_critical_resistance=self.target_critical_resistance,
-            )
-            total_damage += float(resolved.final_damage)
+            total_damage += component_damage
 
         if unresolved:
             return self._unresolved(action, *unresolved)
 
         # A fully classified utility/healing skill legitimately contributes zero
-        # direct damage. Unknown component identity was already rejected above.
+        # damage. Unknown component identity was already rejected above.
         if not saw_damage_component:
             total_damage = 0.0
 
@@ -181,6 +204,51 @@ class RotationCandidateSkillDamageEvidenceService:
             sequence=action.sequence,
             damage_value=total_damage,
         )
+
+    def _resolve_component_damage(
+        self,
+        *,
+        base_value: float,
+        classification: SkillComponentClassification,
+        dd_stats,
+        damage_done,
+        damage_taken,
+    ) -> float:
+        """Route one already-resolved coefficient value through canonical DD math."""
+
+        event = DDDamageEvent(
+            base_value=float(base_value),
+            scaling_coefficient=0.0,
+            damage_type=classification.damage_type,
+            can_crit=bool(classification.can_crit),
+            is_dot=bool(classification.is_dot),
+            is_aoe=bool(classification.is_aoe),
+        )
+        raw = calculate_dd_damage(
+            event,
+            dd_stats,
+            damage_done=damage_done,
+            damage_taken=damage_taken,
+            target_critical_resistance=self.target_critical_resistance,
+        )
+        mitigation = None
+        if (
+            self.context.target_resistance is not None
+            and raw.penetration_stat is not None
+        ):
+            mitigation = calculate_dd_mitigation(
+                target_resistance=self.context.target_resistance,
+                penetration=raw.penetration,
+            )
+        resolved = calculate_dd_damage(
+            event,
+            dd_stats,
+            mitigation=mitigation,
+            damage_done=damage_done,
+            damage_taken=damage_taken,
+            target_critical_resistance=self.target_critical_resistance,
+        )
+        return float(resolved.final_damage)
 
     @staticmethod
     def _unresolved(
@@ -192,9 +260,11 @@ class RotationCandidateSkillDamageEvidenceService:
             sequence=action.sequence,
             damage_value=None,
             unresolved=tuple(
-                str(message).strip()
-                for message in messages
-                if str(message).strip()
+                dict.fromkeys(
+                    str(message).strip()
+                    for message in messages
+                    if str(message).strip()
+                )
             ),
         )
 
