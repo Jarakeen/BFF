@@ -90,3 +90,22 @@ def test_numeric_ability_id_without_translated_name_is_not_promoted_to_effect_id
     assert result.unresolved == (
         "Aura transition with no translated ability name was not projected into runtime effect state.",
     )
+
+
+def test_reviewed_effect_filter_ignores_unrelated_and_unnamed_auras() -> None:
+    result = EsoLogsRuntimeEffectWindowService().build(
+        [
+            {"timestamp": 1000.0, "type": "applybuff", "sourceID": 7, "targetID": 9, "abilityName": "Wanted Effect"},
+            {"timestamp": 1500.0, "type": "applybuff", "sourceID": 8, "targetID": 9, "abilityName": "Unrelated Effect"},
+            {"timestamp": 1600.0, "type": "applybuff", "sourceID": 8, "targetID": 9, "abilityGameID": 555},
+            {"timestamp": 3000.0, "type": "removebuff", "sourceID": 8, "targetID": 9, "abilityName": "Unrelated Effect"},
+            {"timestamp": 4000.0, "type": "removebuff", "sourceID": 7, "targetID": 9, "abilityName": "Wanted Effect"},
+        ],
+        fight_start_time_ms=0.0,
+        effect_names=("Wanted Effect",),
+    )
+
+    assert result.unresolved == ()
+    assert [(row.effect_name, row.start_time_seconds, row.end_time_seconds) for row in result.windows] == [
+        ("Wanted Effect", 1.0, 4.0)
+    ]
