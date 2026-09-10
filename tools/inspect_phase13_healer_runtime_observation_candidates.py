@@ -15,6 +15,9 @@ from services.rotation_healer_canonical_periodic_timing_service import (
 )
 
 
+RUNTIME_EVIDENCE_TOLERANCE_SECONDS = 0.01
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
@@ -27,8 +30,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--tolerance",
         type=float,
-        default=0.05,
-        help="seconds allowed when comparing observed cadence/expiry boundaries",
+        default=RUNTIME_EVIDENCE_TOLERANCE_SECONDS,
+        help=(
+            "seconds allowed when comparing observed cadence/expiry boundaries; "
+            "defaults to the runtime observation service evidence tolerance"
+        ),
     )
     return parser
 
@@ -37,7 +43,7 @@ def inspect_samples(
     candidate_path: str | Path,
     *,
     database_path: str | Path,
-    tolerance_seconds: float = 0.05,
+    tolerance_seconds: float = RUNTIME_EVIDENCE_TOLERANCE_SECONDS,
 ) -> tuple[dict, ...]:
     tolerance = float(tolerance_seconds)
     if tolerance < 0:
