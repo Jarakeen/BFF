@@ -218,6 +218,8 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Major / Minor effect coverage awareness
 - Ability-family reconciliation for ESO Logs data
 - Rotation workload evaluation
+- Canonical whole-plan candidate evidence across sustain, duration, and provider workload
+- Provider primary-role displacement evidence retained without inventing missing workload values
 - Rotation candidate explanations
 - Encounter-specific rotation construction
 - Canonical workload evaluation
