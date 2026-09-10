@@ -5,6 +5,7 @@ from pathlib import Path
 
 from minmax.character_progression import CharacterProgression
 from minmax.combat_state import CombatState
+from minmax.external_group_buff_provenance import ExternalGroupBuffProvenanceResolver
 from minmax.potion_cadence import PotionCadence
 from minmax.potion_use_event import PotionUseEventResolver
 from models.build_model import PlayerBuild
@@ -27,11 +28,11 @@ class ExtremeRuntimeSnapshotCombatStateService:
     """Project one role-neutral Extreme runtime snapshot into CombatState.
 
     This is the shared E1 projection boundary for role objectives. Skill, gear,
-    and potion runtime evidence now enter through the snapshot's authoritative
-    ordered runtime history. Existing callers that still supply the legacy
-    ``attempts`` / ``potion_elapsed_seconds`` fields are normalized by the
-    snapshot before they reach this service. Role-specific healing, tanking, or
-    damage modifiers layer on top afterward.
+    potion, and externally supplied group-buff runtime evidence enter through the
+    snapshot's authoritative ordered runtime history. Existing callers that still
+    supply the legacy ``attempts`` / ``potion_elapsed_seconds`` fields are
+    normalized by the snapshot before they reach this service. Role-specific
+    healing, tanking, or damage modifiers layer on top afterward.
     """
 
     def __init__(
@@ -41,11 +42,13 @@ class ExtremeRuntimeSnapshotCombatStateService:
         skill_buff_candidates: ExtremeActualHealSkillBuffCandidateService | None = None,
         gear_runtime_buffs: ExtremeActualHealGearRuntimeBuffService | None = None,
         potion_use_resolver: PotionUseEventResolver | None = None,
+        external_group_buffs: ExternalGroupBuffProvenanceResolver | None = None,
     ) -> None:
         self.database_path = None if database_path is None else Path(database_path)
         self.skill_buff_candidates = skill_buff_candidates
         self.gear_runtime_buffs = gear_runtime_buffs
         self.potion_use_resolver = potion_use_resolver
+        self.external_group_buffs = external_group_buffs or ExternalGroupBuffProvenanceResolver()
 
     def resolve(
         self,
@@ -128,6 +131,26 @@ class ExtremeRuntimeSnapshotCombatStateService:
                                     potion_elapsed_seconds
                                 ).active_buff_names
                             )
+
+        external_applications = snapshot.external_group_buff_applications
+        if external_applications:
+            if snapshot.recipient_actor_id is None:
+                unresolved.append(
+                    "External group buff applications require a proven recipient actor id"
+                )
+            elif not snapshot.group_member_ids:
+                unresolved.append(
+                    "External group buff applications require proven group membership"
+                )
+            else:
+                projection = self.external_group_buffs.resolve(
+                    recipient_actor_id=snapshot.recipient_actor_id,
+                    group_member_ids=snapshot.group_member_ids,
+                    snapshot_time_seconds=snapshot.snapshot_time_seconds,
+                    applications=external_applications,
+                )
+                active_buffs.extend(projection.active_buffs)
+                unresolved.extend(projection.unresolved)
 
         return ExtremeRuntimeSnapshotCombatStateResult(
             combat_state=CombatState(
