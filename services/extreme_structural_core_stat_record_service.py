@@ -60,6 +60,22 @@ class ExtremeCanonicalStructuralStatEvaluator:
         objective_key: str,
         candidate: ExtremeStructuralCandidate,
     ) -> tuple[float, dict[str, Any], tuple[str, ...]]:
+        return self.evaluate_candidate(objective_key, candidate)
+
+    def evaluate_candidate(
+        self,
+        objective_key: str,
+        candidate: ExtremeStructuralCandidate,
+        *,
+        mundus: str = "",
+    ) -> tuple[float, dict[str, Any], tuple[str, ...]]:
+        """Score one candidate, optionally with one explicit Mundus selection.
+
+        Mundus is an input to the ordinary canonical ``PlayerBuild``/context path,
+        not a parallel formula.  Keeping the mutation here lets later exhaustive
+        search layers add the finite Mundus axis without copying route/progression
+        materialization or stat extraction logic.
+        """
         objective = self.optimizer.objective(objective_key)
 
         base = PlayerBuild(
@@ -71,6 +87,7 @@ class ExtremeCanonicalStructuralStatEvaluator:
         )
         build = ExtremeHealClassRouteService.materialize_build(base, candidate.class_route)
         build.Race = candidate.race
+        build.Mundus = str(mundus or "").strip()
         build.AttributeHealth = int(candidate.attributes.health)
         build.AttributeMagicka = int(candidate.attributes.magicka)
         build.AttributeStamina = int(candidate.attributes.stamina)
@@ -90,6 +107,7 @@ class ExtremeCanonicalStructuralStatEvaluator:
                 ",".join(identity[2]),
                 f"h{identity[3]}m{identity[4]}s{identity[5]}",
                 str(identity[6]),
+                f"mundus:{build.Mundus or 'none'}",
             )
         )
         value, unresolved = self.optimizer._evaluate(
@@ -111,6 +129,7 @@ class ExtremeCanonicalStructuralStatEvaluator:
                 "stamina": int(candidate.attributes.stamina),
             },
             "active_bar": candidate.active_bar,
+            "mundus": build.Mundus,
         }
         return float(value), payload, tuple(unresolved)
 
