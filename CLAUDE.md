@@ -26,6 +26,9 @@
 - Do not claim tests pass unless actual pytest output is available.
 - Prefer direct implementation over prolonged planning, but do not broaden a focused task into an architecture rewrite without evidence.
 - Before adding a new service, mechanic implementation, evaluator, resolver, repository, orchestration path, or architectural responsibility, consult the canonical `SERVICE_CATALOG` in `services/service_catalog.py`. Reuse or extend the canonical owner when one exists; register genuinely new responsibilities so future work can discover them.
+- Whenever development, testing, real-build validation, encounter research, or data reconciliation reveals mechanically odd or noteworthy ESO behavior, add a short layman's note to `GAME_MECHANICS_FIELD_NOTES.md`. Do not use field notes for ordinary refactoring or architecture hygiene.
+- Whenever a new user-visible feature or capability is created, index it in `FEATURES.md`. Keep the index descriptive rather than sales-oriented; internal tests/plumbing do not need entries unless they materially change user-visible capability.
+- Whenever a useful external ESO source is discovered, add it to `useful_resources.md` with what it is useful for, confidence level, and any version/provenance/limitations needed before using it as hardcoded game math.
 
 ## Phase 12 architecture and boundaries
 The current pipeline is:
