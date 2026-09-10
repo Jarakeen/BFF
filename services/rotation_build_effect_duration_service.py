@@ -59,6 +59,7 @@ class RotationBuildEffectDurationService:
                 tuple(passives),
             )
         )
+        seen = {self._effect_key(candidate) for candidate in available_effects}
         for set_id, piece_count in equipped_gear_set_counts(
             build,
             active_bar=active_bar,
@@ -67,15 +68,42 @@ class RotationBuildEffectDurationService:
                 numeric_set_id = int(set_id)
             except (TypeError, ValueError):
                 continue
-            available_effects.extend(
-                self.gear_set_effect_resolver.resolve(
-                    numeric_set_id,
-                    piece_count,
-                )
-            )
+            for candidate in self.gear_set_effect_resolver.resolve(
+                numeric_set_id,
+                piece_count,
+            ):
+                key = self._effect_key(candidate)
+                if key in seen:
+                    continue
+                seen.add(key)
+                available_effects.append(candidate)
         return self.resolver.resolve(
             effect,
             available_effects=tuple(available_effects),
+        )
+
+    @staticmethod
+    def _effect_key(effect: EffectVariant) -> tuple[object, ...]:
+        return (
+            effect.name.casefold(),
+            effect.layer,
+            effect.source.casefold(),
+            effect.magnitude,
+            effect.duration,
+            effect.chance,
+            effect.cooldown,
+            effect.target_count,
+            effect.range,
+            effect.scaling,
+            effect.condition,
+            effect.target,
+            effect.active_bar,
+            effect.trigger,
+            effect.target_type,
+            effect.category,
+            effect.stacking,
+            effect.exclusivity_group,
+            effect.eligible,
         )
 
 
