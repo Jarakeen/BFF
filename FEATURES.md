@@ -135,6 +135,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 
 - Searchable combat-reference workspace
 - Source and entry-type filtering
+- Player-facing common mechanic names / raid callouts are displayed and searchable without replacing canonical mechanic identity
 - Human-readable gameplay-practice entries sourced from the shared gameplay-policy registry
 - Canonical encounter-mechanic entries sourced through the shared encounter repository / projection
 - Canonical combat-effect entries sourced read-only from `combat_effect`, `combat_effect_trigger`, and `combat_effect_interaction`
