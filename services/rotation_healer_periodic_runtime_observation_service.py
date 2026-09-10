@@ -47,11 +47,19 @@ class RotationHealerPeriodicObservedSample:
             raise ValueError("observed tick timestamps must be finite and not precede activation")
         object.__setattr__(self, "observed_tick_times_seconds", ticks)
 
-        provenance = tuple(dict.fromkeys(str(item).strip() for item in self.provenance if str(item).strip()))
+        provenance = tuple(
+            dict.fromkeys(
+                str(item).strip() for item in self.provenance if str(item).strip()
+            )
+        )
         if not provenance:
             raise ValueError("periodic observed sample requires provenance")
         object.__setattr__(self, "provenance", provenance)
-        object.__setattr__(self, "game_version", str(self.game_version or "").strip() or None)
+        object.__setattr__(
+            self,
+            "game_version",
+            str(self.game_version or "").strip() or None,
+        )
 
 
 @dataclass(frozen=True)
@@ -71,16 +79,22 @@ class RotationHealerPeriodicRuntimeObservationService:
         canonical_duration_seconds: float,
         canonical_cadence_seconds: float,
         tolerance_seconds: float = 0.01,
+        cadence_tolerance_seconds: float = 0.1,
     ) -> RotationHealerPeriodicObservedResolution:
         duration = float(canonical_duration_seconds)
         cadence = float(canonical_cadence_seconds)
         tolerance = float(tolerance_seconds)
+        cadence_tolerance = float(cadence_tolerance_seconds)
         if not math.isfinite(duration) or duration <= 0:
             raise ValueError("canonical_duration_seconds must be finite and positive")
         if not math.isfinite(cadence) or cadence <= 0:
             raise ValueError("canonical_cadence_seconds must be finite and positive")
         if not math.isfinite(tolerance) or tolerance < 0:
             raise ValueError("tolerance_seconds must be finite and non-negative")
+        if not math.isfinite(cadence_tolerance) or cadence_tolerance < 0:
+            raise ValueError(
+                "cadence_tolerance_seconds must be finite and non-negative"
+            )
 
         evidence = list(sample.provenance)
         unresolved: list[str] = []
@@ -89,7 +103,9 @@ class RotationHealerPeriodicRuntimeObservationService:
         first_offset: float | None = None
         if ticks:
             first_offset = ticks[0] - sample.activation_time_seconds
-            evidence.append(f"observed first periodic heal at +{first_offset:g}s from activation")
+            evidence.append(
+                f"observed first periodic heal at +{first_offset:g}s from activation"
+            )
         else:
             unresolved.append(
                 f"{sample.source_name} coefficient {sample.coefficient_number}: no periodic heal event was observed"
@@ -109,13 +125,20 @@ class RotationHealerPeriodicRuntimeObservationService:
             )
 
         if len(ticks) >= 2:
-            intervals = tuple(ticks[index + 1] - ticks[index] for index in range(len(ticks) - 1))
-            if any(abs(value - cadence) > tolerance for value in intervals):
+            intervals = tuple(
+                ticks[index + 1] - ticks[index]
+                for index in range(len(ticks) - 1)
+            )
+            if any(
+                abs(value - cadence) > cadence_tolerance for value in intervals
+            ):
                 unresolved.append(
                     f"{sample.source_name} coefficient {sample.coefficient_number}: observed tick spacing conflicts with canonical cadence"
                 )
             else:
-                evidence.append(f"observed tick spacing agrees with canonical {cadence:g}s cadence")
+                evidence.append(
+                    f"observed tick spacing agrees with canonical {cadence:g}s cadence"
+                )
 
         if first_offset is None or expiry_rule is None:
             return RotationHealerPeriodicObservedResolution(
