@@ -1,7 +1,11 @@
 import json
 from pathlib import Path
 
-from ui.reference_encounter_evidence import load_reviewed_encounter_evidence_entries
+from ui.reference_data_model import ReferenceEntry
+from ui.reference_encounter_evidence import (
+    enrich_reference_entries_with_encounter_evidence,
+    load_reviewed_encounter_evidence_entries,
+)
 
 
 def _write(path: Path, payload: dict) -> None:
@@ -168,3 +172,55 @@ def test_conflicting_related_fact_is_shown_as_unresolved_conflict(tmp_path):
     assert "Unresolved: 2 reviewed values across 2 source families/records." in text
     assert "Evidence • Heartburn Duration Seconds: 60" not in text
     assert "Evidence • Heartburn Duration Seconds: 45" not in text
+
+
+def test_canonical_reference_entry_keeps_authority_and_gains_reviewed_evidence(tmp_path):
+    _packet(
+        tmp_path,
+        "tideborn_taleria",
+        "Tideborn Taleria",
+        [
+            {
+                "fact_type": "mechanic_state",
+                "fact_key": "maelstrom_exists",
+                "value": True,
+                "source_type": "guide",
+                "source_name": "Reviewed Guide",
+                "confidence": "high",
+            },
+            {
+                "fact_type": "mechanic_detail",
+                "fact_key": "maelstrom_veteran_behavior",
+                "value": {
+                    "duration_seconds": 6,
+                    "tick_interval_seconds": 0.3,
+                    "damage_ramps": True,
+                    "heal_check": True,
+                },
+                "source_type": "guide",
+                "source_name": "Reviewed Guide",
+                "confidence": "high",
+            },
+        ],
+    )
+    canonical = ReferenceEntry(
+        name="Maelstrom — Tideborn Taleria",
+        entry_type="Mechanic",
+        source_scope="Trial",
+        tags=("ENCOUNTER", "MECHANIC"),
+        summary="Canonical Maelstrom description.",
+        details=(("Authority", "Canonical encounter data"), ("Damage type", "frost")),
+        evidence=("Canonical mechanic: taleria:maelstrom",),
+    )
+
+    enriched = enrich_reference_entries_with_encounter_evidence((canonical,), tmp_path)
+
+    assert len(enriched) == 1
+    entry = enriched[0]
+    assert entry.entry_type == "Mechanic"
+    assert entry.summary == "Canonical Maelstrom description."
+    assert dict(entry.details)["Authority"] == "Canonical encounter data"
+    assert "Duration Seconds: 6" in entry.detail_text()
+    assert "Tick Interval Seconds: 0.3" in entry.detail_text()
+    assert "Canonical mechanic: taleria:maelstrom" in entry.evidence
+    assert any("Reviewed Guide" in value for value in entry.evidence)
