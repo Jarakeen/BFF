@@ -53,9 +53,12 @@ def test_raid_review_binding_clears_stale_cards_and_has_explicit_empty_state() -
     assert "No unresolved evidence was reported for this review." in source
 
 
-def test_raid_review_workspace_exposes_api_loaded_pull_picker() -> None:
+def test_raid_review_workspace_exposes_registry_driven_pull_picker() -> None:
     source = Path("ui/coverage_page.py").read_text(encoding="utf-8")
 
+    assert "PerformanceRaidReviewRunnerService" in source
+    assert "raid_review_encounter_combo" in source
+    assert "self.raid_review_runner.available_encounters()" in source
     assert "raid_review_report_input" in source
     assert "raid_review_load_fights_button" in source
     assert "raid_review_fights_table" in source
@@ -63,8 +66,9 @@ def test_raid_review_workspace_exposes_api_loaded_pull_picker() -> None:
     assert 'QPushButton("Load Fights")' in source
     assert 'QPushButton("Run Raid Review")' in source
     assert "def _load_raid_review_fights(self) -> None:" in source
-    assert "self.raid_review_runner.list_lokkestiiz_fights(report_code)" in source
-    assert "self.raid_review_runner.review_report(report_code, fight_ids)" in source
+    assert "self.raid_review_runner.list_fights(encounter_key, report_code)" in source
+    assert "self.raid_review_runner.review_report(encounter_key, report_code, fight_ids)" in source
+    assert "list_lokkestiiz_fights" not in source
     assert "raid_review_fights_input" not in source
 
 
@@ -75,7 +79,15 @@ def test_raid_review_pull_picker_uses_checked_api_rows_as_review_input() -> None
     assert "Qt.CheckState.Checked" in source
     assert "Qt.ItemDataRole.UserRole" in source
     assert '"Use", "Fight", "Result", "Boss %", "Duration"' in source
-    assert "Check at least one Lokkestiiz pull before running Raid Review." in source
+    assert "Check at least one {encounter_name} pull before running Raid Review." in source
+
+
+def test_raid_review_encounter_selection_clears_stale_pull_rows() -> None:
+    source = Path("ui/coverage_page.py").read_text(encoding="utf-8")
+
+    assert "def _raid_review_encounter_changed(self) -> None:" in source
+    assert "self.raid_review_fights_table.setRowCount(0)" in source
+    assert "self.raid_review_run_button.setEnabled(False)" in source
 
 
 def test_raid_review_api_work_runs_off_the_qt_gui_thread() -> None:
@@ -97,6 +109,7 @@ def test_raid_review_disables_mutable_inputs_while_async_work_is_running() -> No
     source = Path("ui/coverage_page.py").read_text(encoding="utf-8")
 
     assert "def _set_raid_review_busy(self, busy: bool) -> None:" in source
+    assert "self.raid_review_encounter_combo.setEnabled(not busy)" in source
     assert "self.raid_review_report_input.setEnabled(not busy)" in source
     assert "self.raid_review_fights_table.setEnabled(not busy)" in source
     assert "self.raid_review_load_fights_button.setEnabled(not busy)" in source
