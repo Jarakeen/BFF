@@ -32,6 +32,20 @@ def test_sacred_ground_grants_minor_mending_in_explicit_active_window():
     assert result.unresolved == ()
 
 
+def test_sacred_ground_rank_one_also_grants_minor_mending_in_proven_window():
+    service = _service()
+    result = service.resolve(
+        build=PlayerBuild(EsoClass="Templar"),
+        progression=CharacterProgression(passive_ranks={"Sacred Ground": 1}),
+        sacred_ground_window_active=True,
+    )
+
+    assert service.GRACE_SECONDS_BY_RANK == {1: 2.0, 2: 4.0}
+    assert result.minor_mending_active
+    assert result.combat_state.has_buff("Minor Mending")
+    assert result.unresolved == ()
+
+
 def test_sacred_ground_is_not_invented_without_explicit_window():
     result = _service().resolve(
         build=PlayerBuild(EsoClass="Templar"),
@@ -86,17 +100,3 @@ def test_unknown_sacred_ground_rank_preserves_unbuffed_state_and_blocker():
     assert not result.minor_mending_active
     assert not result.combat_state.has_buff("Minor Mending")
     assert result.unresolved == ("Sacred Ground passive rank is not recorded",)
-
-
-def test_partial_sacred_ground_rank_is_blocked_instead_of_guessed():
-    result = _service().resolve(
-        build=PlayerBuild(EsoClass="Templar"),
-        progression=CharacterProgression(passive_ranks={"Sacred Ground": 1}),
-        sacred_ground_window_active=True,
-    )
-
-    assert not result.minor_mending_active
-    assert not result.combat_state.has_buff("Minor Mending")
-    assert result.unresolved == (
-        "Partial passive rank is not yet modeled: Sacred Ground 1/2",
-    )
