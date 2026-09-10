@@ -36,8 +36,14 @@ class EsoLogsRuntimeEffectWindowService:
         events: Iterable[dict],
         *,
         fight_start_time_ms: float,
+        effect_names: Iterable[str] = (),
     ) -> EsoLogsRuntimeEffectWindowResult:
         start_ms = float(fight_start_time_ms)
+        wanted_names = {
+            str(name).strip().casefold()
+            for name in effect_names
+            if str(name or "").strip()
+        }
         rows = tuple(
             sorted(
                 (row for row in events if isinstance(row, dict)),
@@ -57,7 +63,13 @@ class EsoLogsRuntimeEffectWindowService:
                 continue
 
             name = self._ability_name(row)
+            if wanted_names and name and name.casefold() not in wanted_names:
+                continue
             if not name:
+                # When a caller supplied an explicit semantic filter, an unnamed aura
+                # cannot match that filter and is irrelevant to this projection.
+                if wanted_names:
+                    continue
                 unresolved.append(
                     "Aura transition with no translated ability name was not projected into runtime effect state."
                 )
