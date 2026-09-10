@@ -1,8 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Iterable
 
+from engine.config import get_data_dir
+from services.encounter_projection import EncounterDefinition, EncounterMechanic
+from services.encounter_repository import EncounterRepository
 from services.gameplay_policy_service import GameplayPolicy, GameplayPolicyService
 
 
@@ -193,12 +197,145 @@ def entry_from_policy(policy: GameplayPolicy) -> ReferenceEntry:
     )
 
 
+def _yes_no_unknown(value: bool | None) -> str:
+    if value is True:
+        return "Yes"
+    if value is False:
+        return "No"
+    return "Not modeled"
+
+
+def _encounter_mechanic_details(
+    encounter: EncounterDefinition,
+    mechanic: EncounterMechanic,
+) -> tuple[tuple[str, str], ...]:
+    details: list[tuple[str, str]] = [
+        ("Authority", "Canonical encounter data"),
+        ("Encounter", encounter.name),
+        ("Content ID", encounter.content_id or "Not recorded"),
+        ("Review status", mechanic.interpretation_status or "Not recorded"),
+        ("Mechanic type", mechanic.mechanic_type or "Not modeled"),
+        ("Damage type", mechanic.damage_type or "Not modeled"),
+        ("Target count", str(mechanic.target_count) if mechanic.target_count is not None else "Not modeled"),
+        ("Requires movement", _yes_no_unknown(mechanic.requires_movement)),
+        ("Requires positioning", _yes_no_unknown(mechanic.requires_positioning)),
+        ("Requires cleanse", _yes_no_unknown(mechanic.requires_cleanse)),
+        ("Persistent hazard", _yes_no_unknown(mechanic.persistent_hazard)),
+        ("Failure is fatal", _yes_no_unknown(mechanic.failure_is_fatal)),
+        ("Interruptible", _yes_no_unknown(mechanic.interruptible)),
+    ]
+    if mechanic.requirement_subjects:
+        details.append(
+            (
+                "Requirement subjects",
+                "; ".join(f"{kind}: {subject}" for kind, subject in mechanic.requirement_subjects),
+            )
+        )
+    return tuple(details)
+
+
+def _encounter_death_note(mechanic: EncounterMechanic) -> str:
+    checks: list[str] = []
+    if mechanic.failure_is_fatal is True:
+        checks.append("The canonical record marks failure of this mechanic as fatal.")
+    if mechanic.requires_movement is True:
+        checks.append("Check whether the player completed the required movement.")
+    if mechanic.requires_positioning is True:
+        checks.append("Check positioning at the mechanic window.")
+    if mechanic.requires_cleanse is True:
+        checks.append("Check cleanse availability and timing.")
+    if mechanic.interruptible is True:
+        checks.append("Check whether the required interrupt occurred.")
+    if not checks:
+        return (
+            "The canonical encounter record does not currently contain enough structured failure "
+            "data to diagnose a death from this mechanic alone."
+        )
+    return " ".join(checks)
+
+
+def _encounter_evidence(encounter: EncounterDefinition, mechanic: EncounterMechanic) -> tuple[str, ...]:
+    evidence = [f"Canonical mechanic: {mechanic.mechanic_id}"]
+    if encounter.source.page_title:
+        evidence.append(f"Source page: {encounter.source.page_title}")
+    if encounter.source.revision_id:
+        evidence.append(f"Source revision: {encounter.source.revision_id}")
+    if encounter.source.url:
+        evidence.append(f"Source URL: {encounter.source.url}")
+    return tuple(evidence)
+
+
+def entry_from_encounter_mechanic(
+    encounter: EncounterDefinition,
+    mechanic: EncounterMechanic,
+) -> ReferenceEntry:
+    tags = ["ENCOUNTER", "MECHANIC"]
+    if mechanic.mechanic_type:
+        tags.append(str(mechanic.mechanic_type).replace("_", " ").upper())
+    if mechanic.damage_type:
+        tags.append(str(mechanic.damage_type).replace("_", " ").upper())
+    if mechanic.failure_is_fatal is True:
+        tags.append("FATAL FAILURE")
+    if mechanic.interruptible is True:
+        tags.append("INTERRUPTIBLE")
+
+    related = [encounter.name]
+    related.extend(phase.label for phase in encounter.phases if phase.label)
+
+    description = mechanic.description.strip() or (
+        "Canonical mechanic record exists, but no prose description is currently available."
+    )
+    return ReferenceEntry(
+        name=f"{mechanic.name} — {encounter.name}" if mechanic.name else encounter.name,
+        entry_type="Mechanic",
+        source_scope="Trial",
+        tags=tuple(tags),
+        summary=description,
+        details=_encounter_mechanic_details(encounter, mechanic),
+        related=tuple(dict.fromkeys(related)),
+        death_note=_encounter_death_note(mechanic),
+        field_note=(
+            "Canonical encounter record only. Gameplay-practice handling is not inferred from "
+            "mechanic prose; add or link a reviewed practice rule when raid handling is known."
+        ),
+        used_by=("Encounter System",),
+        evidence=_encounter_evidence(encounter, mechanic),
+    )
+
+
+def load_encounter_reference_entries(
+    data_root: Path | None = None,
+) -> tuple[ReferenceEntry, ...]:
+    repository = EncounterRepository.from_data_root(data_root or get_data_dir())
+    entries: list[ReferenceEntry] = []
+    for encounter_id in repository.encounter_ids():
+        encounter = repository.get(encounter_id)
+        entries.extend(
+            entry_from_encounter_mechanic(encounter, mechanic)
+            for mechanic in encounter.mechanics
+        )
+    return tuple(entries)
+
+
 def build_reference_entries(
     policies: Iterable[GameplayPolicy] | None = None,
+    *,
+    encounters: Iterable[EncounterDefinition] = (),
+    include_encounters: bool = False,
 ) -> tuple[ReferenceEntry, ...]:
     if policies is None:
         policies = GameplayPolicyService().all()
-    return tuple(sorted((entry_from_policy(policy) for policy in policies), key=lambda row: row.name.casefold()))
+
+    rows = [entry_from_policy(policy) for policy in policies]
+    rows.extend(
+        entry_from_encounter_mechanic(encounter, mechanic)
+        for encounter in encounters
+        for mechanic in encounter.mechanics
+    )
+    if include_encounters:
+        rows.extend(load_encounter_reference_entries())
+
+    return tuple(sorted(rows, key=lambda row: row.name.casefold()))
 
 
 def entry_types(entries: Iterable[ReferenceEntry]) -> tuple[str, ...]:
