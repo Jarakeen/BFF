@@ -72,6 +72,16 @@ class ExtremeBestMundusStructuralStatEvaluator:
         objective_key: str,
         candidate: ExtremeStructuralCandidate,
     ) -> tuple[float, dict[str, Any], tuple[str, ...]]:
+        return self.evaluate_candidate(objective_key, candidate)
+
+    def evaluate_candidate(
+        self,
+        objective_key: str,
+        candidate: ExtremeStructuralCandidate,
+        *,
+        food: str = "",
+    ) -> tuple[float, dict[str, Any], tuple[str, ...]]:
+        """Pick the best Mundus while preserving an optional outer food choice."""
         best_value: float | None = None
         best_payload: dict[str, Any] | None = None
         best_unresolved: tuple[str, ...] = ()
@@ -82,6 +92,7 @@ class ExtremeBestMundusStructuralStatEvaluator:
                 objective_key,
                 candidate,
                 mundus=mundus,
+                food=food,
             )
             score = float(value)
             if (
