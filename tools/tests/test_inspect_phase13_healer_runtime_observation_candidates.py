@@ -104,3 +104,33 @@ def test_inspector_reports_canonical_cadence_and_expiry_boundary(tmp_path):
     assert row["observation_reaches_expiry"]
     assert row["tick_on_expiry_boundary"] is True
     assert row["last_tick_to_expiry_seconds"] == 0.0
+
+
+def test_default_runtime_tolerance_does_not_treat_eighteen_ms_late_tick_as_boundary(tmp_path):
+    candidate = tmp_path / "candidate_late.json"
+    candidate.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "review_status": "candidate",
+                "game_version": "U50",
+                "samples": [
+                    {
+                        "source_name": "Illustrious Healing",
+                        "coefficient_number": 1,
+                        "activation_time_seconds": 10.0,
+                        "observed_tick_times_seconds": [25.018],
+                        "observation_end_seconds": 25.02,
+                        "provenance": ["fixture"],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    row = inspect_samples(candidate, database_path=_database(tmp_path))[0]
+
+    assert row["observation_reaches_expiry"]
+    assert row["tick_on_expiry_boundary"] is False
+    assert row["last_tick_to_expiry_seconds"] == 0.018
