@@ -12,7 +12,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from services.esologs_event_interpreter import SemanticEventKind
-from services.esologs_json_adapter import EsoLogsJsonEventInterpreter, EsoLogsJsonFight
+from services.esologs_json_adapter import EsoLogsJsonEventInterpreter
 from services.rotation_healer_esologs_observation_extractor import (
     DF_HEALER_U50_OBSERVATION_TARGETS,
     RotationHealerEsoLogsObservationExtractor,
@@ -24,11 +24,17 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
             "Extract candidate healer HoT activation/tick observations from a raw "
-            "ESO Logs JSON fight. Output remains candidate evidence until reviewed."
+            "ESO Logs JSON fight or multi-report research corpus. Output remains "
+            "candidate evidence until reviewed."
         )
     )
-    parser.add_argument("--raw", required=True, help="raw ESO Logs JSON export")
-    parser.add_argument("--fight-id", required=True, type=int, help="fight id inside the raw export")
+    parser.add_argument("--raw", required=True, help="raw ESO Logs JSON export or research corpus")
+    parser.add_argument("--fight-id", required=True, type=int, help="fight id inside the selected report")
+    parser.add_argument(
+        "--report-code",
+        default=None,
+        help="ESO Logs report code; required when --raw is a multi-report corpus",
+    )
     parser.add_argument(
         "--caster-id",
         type=int,
@@ -104,8 +110,17 @@ def _candidate_caster_rows(events, targets=DF_HEALER_U50_OBSERVATION_TARGETS):
     )
 
 
-def _list_candidate_casters(raw_path: Path, *, fight_id: int) -> int:
-    fight = EsoLogsJsonFight.load(raw_path, fight_id=int(fight_id))
+def _list_candidate_casters(
+    raw_path: Path,
+    *,
+    fight_id: int,
+    report_code: str | None = None,
+) -> int:
+    fight = RotationHealerEsoLogsObservationExtractor.load_fight(
+        raw_path,
+        fight_id=int(fight_id),
+        report_code=report_code,
+    )
     events = tuple(EsoLogsJsonEventInterpreter(fight).iter_events())
     rows = _candidate_caster_rows(events)
 
@@ -140,7 +155,11 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.list_casters:
-        return _list_candidate_casters(Path(args.raw), fight_id=args.fight_id)
+        return _list_candidate_casters(
+            Path(args.raw),
+            fight_id=args.fight_id,
+            report_code=args.report_code,
+        )
     if args.caster_id is None:
         parser.error("--caster-id is required unless --list-casters is used")
     if not args.out:
@@ -150,6 +169,7 @@ def main(argv: list[str] | None = None) -> int:
         Path(args.raw),
         fight_id=args.fight_id,
         caster_id=args.caster_id,
+        report_code=args.report_code,
         timestamp_unit=args.timestamp_unit,
         game_version=args.game_version,
     )
