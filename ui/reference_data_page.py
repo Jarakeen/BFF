@@ -16,39 +16,48 @@ from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
 from ui.foundry_page import FoundryPage
+from ui.reference_data_model import build_reference_entries, entry_types, source_scopes
 
 
 class ReferenceDataPage(FoundryPage):
-    """Fast combat dictionary for mechanics, attacks, effects, and death review."""
+    """Human-readable window into BFF combat knowledge and gameplay practice."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._entries = self._dummy_entries()
+        self._entries = {entry.name: entry for entry in build_reference_entries()}
         self._build_ui()
         self._load_list()
-        self._show_entry("Crushing Darkness")
+        if self.results.count():
+            self.results.setCurrentRow(0)
 
     def _build_ui(self):
         self.header = FoundryHeader(
             title="Combat Reference",
-            subtitle="Search mechanics, attacks, and status effects. Understand what they do and how to survive.",
+            subtitle=(
+                "Search mechanics, combat rules, roles, effects, and gameplay practice. "
+                "See what BFF knows, why it believes it, and where that knowledge is used."
+            ),
             department="Raid Engine • Reference",
         )
         self.set_header(self.header)
 
         self.search = QLineEdit()
-        self.search.setPlaceholderText("Search mechanics, attacks, or effects...")
+        self.search.setPlaceholderText("Search mechanics, rules, roles, effects, or terminology...")
         self.search.setClearButtonEnabled(True)
         self.search.textChanged.connect(self._load_list)
         self.header.add_context_widget(self._context_field("SEARCH", self.search))
 
-        self.trial_filter = QComboBox()
-        self.trial_filter.addItems(["All Trials", "Cloudrest", "Lucent Citadel", "Dreadsail Reef", "Sunspire"])
-        self.header.add_context_widget(self._context_field("FILTER BY", self.trial_filter))
+        self.source_filter = QComboBox()
+        self.source_filter.addItem("All Sources")
+        self.source_filter.addItems(source_scopes(self._entries.values()))
+        self.source_filter.currentTextChanged.connect(self._load_list)
+        self.header.add_context_widget(self._context_field("SOURCE", self.source_filter))
 
         self.type_filter = QComboBox()
-        self.type_filter.addItems(["All Types", "Attack", "Mechanic", "Status Effect", "Raid Damage"])
-        self.header.add_context_widget(self._context_field("TYPE", self.type_filter))
+        self.type_filter.addItem("All Types")
+        self.type_filter.addItems(entry_types(self._entries.values()))
+        self.type_filter.currentTextChanged.connect(self._load_list)
+        self.header.add_context_widget(self._context_field("ENTRY TYPE", self.type_filter))
 
         workspace = QHBoxLayout()
         workspace.setContentsMargins(0, 0, 0, 0)
@@ -62,6 +71,7 @@ class ReferenceDataPage(FoundryPage):
 
         center = QVBoxLayout()
         center.setSpacing(8)
+
         self.entry_card = FoundryCard("Reference Entry", "✦").set_watermark("compass", 0.055)
         self.entry_name = QLabel()
         self.entry_name.setProperty("heroTitle", True)
@@ -76,45 +86,70 @@ class ReferenceDataPage(FoundryPage):
         self.entry_card.addStretch(1)
         center.addWidget(self.entry_card, 4)
 
-        related = FoundryCard("Related Effects / Appears In", "↗").set_watermark("compass", 0.035)
+        related = FoundryCard("Related / Appears In", "↗").set_watermark("compass", 0.035)
         self.related_label = QLabel()
         self.related_label.setWordWrap(True)
         related.addWidget(self.related_label)
         center.addWidget(related, 1)
+
+        evidence = FoundryCard("Evidence / Provenance", "⌁").set_watermark("compass", 0.035)
+        self.evidence_label = QLabel()
+        self.evidence_label.setWordWrap(True)
+        self.evidence_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        evidence.addWidget(self.evidence_label)
+        center.addWidget(evidence, 1)
+
         workspace.addLayout(center, 3)
 
         right = QVBoxLayout()
         right.setSpacing(8)
+
         death = FoundryCard("Why Did We Die?", "☠").make_parchment().set_watermark("compass", 0.10)
         self.death_label = QLabel()
         self.death_label.setWordWrap(True)
         death.addWidget(self.death_label)
-        death.addWidget(QPushButton("Analyze Selected Death"))
+        self.death_button = QPushButton("Analyze Selected Death")
+        self.death_button.setToolTip(
+            "Death-log analysis wiring is planned; this entry currently shows reference guidance."
+        )
+        death.addWidget(self.death_button)
         right.addWidget(death, 2)
 
         image = FoundryCard("Mechanic Visual", "◉").set_watermark("compass", 0.06)
-        visual = QLabel("MECHANIC / ATTACK VISUAL\n\nArtwork, icon, combat-log sample,\nor positioning diagram can live here.")
-        visual.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        visual.setMinimumHeight(260)
-        visual.setProperty("bossArtworkPlaceholder", True)
-        image.addWidget(visual)
+        self.visual = QLabel(
+            "MECHANIC / ATTACK VISUAL\n\n"
+            "Artwork, icon, combat-log sample,\n"
+            "or positioning diagram can live here."
+        )
+        self.visual.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.visual.setMinimumHeight(260)
+        self.visual.setProperty("bossArtworkPlaceholder", True)
+        image.addWidget(self.visual)
         right.addWidget(image, 2)
 
         notes = FoundryCard("Field Notes", "✎").make_parchment().set_watermark("feather", 0.12)
-        notes.addWidget(QLabel(
-            "Use this page during prog when somebody asks:\n\n"
-            "'What was THAT?'\n\n"
-            "The answer should eventually be faster than opening six browser tabs and interrogating the dead person."
-        ))
-        right.addWidget(notes, 1)
+        self.field_note_label = QLabel()
+        self.field_note_label.setWordWrap(True)
+        notes.addWidget(self.field_note_label)
+        right.addWidget(notes, 2)
+
+        used_by = FoundryCard("Used By FoundryDock", "⚙").set_watermark("compass", 0.04)
+        self.used_by_label = QLabel()
+        self.used_by_label.setWordWrap(True)
+        used_by.addWidget(self.used_by_label)
+        right.addWidget(used_by, 1)
+
         workspace.addLayout(right, 2)
 
         host = QWidget()
         host.setLayout(workspace)
         self.add_workspace(host)
+
         self.status = FoundryStatusBar()
         self.set_status(self.status)
-        self.status.info("Combat Reference ready • sample entries shown until encounter/reference data is wired in.")
+        self.status.info(
+            f"Combat Reference ready • {len(self._entries)} entries loaded from shared gameplay-practice data."
+        )
 
     @staticmethod
     def _context_field(title: str, widget: QWidget) -> QWidget:
@@ -128,66 +163,73 @@ class ReferenceDataPage(FoundryPage):
         layout.addWidget(widget)
         return box
 
-    def _dummy_entries(self):
-        return {
-            "Crushing Darkness": {
-                "tags": "EXECUTE • RAID DAMAGE • UNBLOCKABLE",
-                "summary": "A dark void erupts under random players, dealing massive damage if the group fails to react.",
-                "details": (
-                    "Source: Z'Maja\nTrial: Cloudrest\nType: Execute / Raid Damage\nTarget: Random Players\n"
-                    "Damage Type: Magic\nBlockable: No\nDodgeable: No\nInterruptible: No\nPurgeable: No\n"
-                    "Mitigated By: resistance, shields, healing\nTrigger: encounter threshold\n"
-                    "Failure Effect: heavy raid damage / deaths\nRecommended Response: spread, heal, shield, call early"
-                ),
-                "related": "Related: Major Maim • Major Defile • Twilight Tormentor\nAppears in: Cloudrest (Z'Maja)",
-                "death": "DEATH ANALYSIS\nPlayer took lethal Magic Damage from Crushing Darkness.\n\nLIKELY CAUSE\nHit during an execute damage window without enough mitigation.\n\nNEXT TIME\nSpread, save shields/heals, and call the window early.",
-            },
-            "Heavy Attack": {
-                "tags": "ATTACK • BLOCK CHECK",
-                "summary": "A high-damage telegraphed attack commonly aimed at the tank or current aggro target.",
-                "details": "Type: Direct Attack\nBlockable: Usually yes\nDodgeable: Encounter-dependent\nCommon Failure: missed block, debuff stack, wrong target\nRecommended Response: block or follow encounter-specific handling.",
-                "related": "Related: taunt • block mitigation • tank swap",
-                "death": "DEATH ANALYSIS\nIf a heavy attack killed someone, first check target, block state, debuff stacks, and whether the attack was meant to be shared or dodged.",
-            },
-            "Portal Spawn": {
-                "tags": "MECHANIC • POSITIONING",
-                "summary": "Encounter event that opens a portal or side-space and assigns players to leave the main arena.",
-                "details": "Type: Mechanic\nFailure Risk: missed portal, wrong group, delayed return\nRecommended Response: pre-assign portal groups and backups.",
-                "related": "Related: portal adds • group split • return timing",
-                "death": "DEATH ANALYSIS\nPortal failures are usually assignment or timing failures rather than raw incoming damage. Check who was assigned and whether the spawn was called.",
-            },
-            "Minor Brittle": {
-                "tags": "STATUS EFFECT • DEBUFF",
-                "summary": "A target debuff used as part of group critical-damage optimization.",
-                "details": "Type: Debuff\nUse: Group damage support\nPlanning Question: who provides it, from what source, and how reliably for this encounter?",
-                "related": "Related: frost damage • critical damage • Coverage page",
-                "death": "DEATH ANALYSIS\nMinor Brittle is not normally the thing that killed you. It may be the thing your optimizer is sulking about instead.",
-            },
-        }
-
     def _load_list(self, *_args):
-        query = self.search.text().strip().lower() if hasattr(self, "search") else ""
-        current = self.results.currentItem().text() if hasattr(self, "results") and self.results.currentItem() else ""
+        query = self.search.text().strip().casefold() if hasattr(self, "search") else ""
+        source = self.source_filter.currentText() if hasattr(self, "source_filter") else "All Sources"
+        entry_type = self.type_filter.currentText() if hasattr(self, "type_filter") else "All Types"
+        current = (
+            self.results.currentItem().text()
+            if hasattr(self, "results") and self.results.currentItem()
+            else ""
+        )
+
         self.results.blockSignals(True)
         self.results.clear()
-        for name, entry in self._entries.items():
-            haystack = f"{name} {entry['tags']} {entry['summary']}".lower()
-            if not query or query in haystack:
-                self.results.addItem(name)
+        for entry in self._entries.values():
+            if query and query not in entry.search_text:
+                continue
+            if source != "All Sources" and entry.source_scope != source:
+                continue
+            if entry_type != "All Types" and entry.entry_type != entry_type:
+                continue
+            self.results.addItem(entry.name)
         self.results.blockSignals(False)
+
         matches = self.results.findItems(current, Qt.MatchFlag.MatchExactly)
         if matches:
             self.results.setCurrentItem(matches[0])
         elif self.results.count():
             self.results.setCurrentRow(0)
+            self._show_entry(self.results.currentItem().text())
+        else:
+            self._clear_entry()
+
+    def _clear_entry(self):
+        self.entry_card.set_title("REFERENCE ENTRY")
+        self.entry_name.setText("NO MATCHING ENTRY")
+        self.entry_summary.setText("Adjust the search or filters.")
+        self.entry_details.clear()
+        self.related_label.setText("No related entries.")
+        self.evidence_label.setText("No evidence for the current filter result.")
+        self.death_label.setText("No death-analysis guidance for the current filter result.")
+        self.field_note_label.setText("No field note.")
+        self.used_by_label.setText("No consuming systems shown.")
 
     def _show_entry(self, name: str):
-        if not name or name not in self._entries:
+        entry = self._entries.get(name)
+        if entry is None:
             return
-        entry = self._entries[name]
-        self.entry_card.set_title(entry["tags"])
-        self.entry_name.setText(name.upper())
-        self.entry_summary.setText(entry["summary"])
-        self.entry_details.setText(entry["details"])
-        self.related_label.setText(entry["related"])
-        self.death_label.setText(entry["death"])
+
+        self.entry_card.set_title(" • ".join(entry.tags) or entry.entry_type.upper())
+        self.entry_name.setText(entry.name.upper())
+        self.entry_summary.setText(entry.summary)
+        self.entry_details.setText(entry.detail_text())
+        self.related_label.setText(
+            "\n".join(f"• {value}" for value in entry.related)
+            if entry.related
+            else "No related entries registered."
+        )
+        self.evidence_label.setText(
+            "\n".join(f"• {value}" for value in entry.evidence)
+            if entry.evidence
+            else "Evidence source not registered. Treat this entry as unresolved."
+        )
+        self.death_label.setText(entry.death_note or "No death-analysis guidance registered.")
+        self.field_note_label.setText(
+            entry.field_note or "No gameplay-practice field note registered."
+        )
+        self.used_by_label.setText(
+            "\n".join(f"• {value}" for value in entry.used_by)
+            if entry.used_by
+            else "No consuming FoundryDock system registered."
+        )
