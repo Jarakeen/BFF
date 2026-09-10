@@ -86,16 +86,17 @@ class ExtremeGlobalSearchUniverseService:
         self.route_service = route_service or ExtremeHealClassRouteService()
 
     def build(self) -> ExtremeGlobalSearchUniverse:
-        races = tuple(
-            sorted(
-                {
-                    str(race.name).strip()
-                    for race in self.race_repository.list_races()
-                    if str(race.name).strip()
-                },
-                key=str.casefold,
+        # Preserve the first exact spelling supplied by the canonical repository.
+        # Sorting is case-insensitive but stable so names that differ only by case
+        # remain distinct until a later canonical identity layer proves otherwise.
+        race_names = tuple(
+            dict.fromkeys(
+                str(race.name).strip()
+                for race in self.race_repository.list_races()
+                if str(race.name).strip()
             )
         )
+        races = tuple(sorted(race_names, key=str.casefold))
         routes = tuple(self.route_service.all_routes())
         allocations = self.attribute_allocations()
         return ExtremeGlobalSearchUniverse(
