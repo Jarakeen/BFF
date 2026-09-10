@@ -1,6 +1,13 @@
+from services.encounter_projection import (
+    EncounterDefinition,
+    EncounterMechanic,
+    EncounterPhase,
+    EncounterSource,
+)
 from services.gameplay_policy_service import GameplayPolicy
 from ui.reference_data_model import (
     build_reference_entries,
+    entry_from_encounter_mechanic,
     entry_from_policy,
     entry_types,
     source_scopes,
@@ -25,6 +32,54 @@ def _policy(**overrides):
     }
     values.update(overrides)
     return GameplayPolicy(**values)
+
+
+def _encounter(mechanic: EncounterMechanic) -> EncounterDefinition:
+    return EncounterDefinition(
+        encounter_id="test_boss",
+        content_id="test_trial",
+        name="Test Boss",
+        difficulty_health=(("veteran", "1000000"),),
+        source=EncounterSource(
+            url="https://example.invalid/test-boss",
+            page_title="Test Boss source",
+            revision_id="12345",
+            retrieved_at="2026-09-10",
+            license="test",
+        ),
+        actors=(),
+        mechanics=(mechanic,),
+        phases=(
+            EncounterPhase(
+                phase_id="test_boss:phase:1",
+                label="Execute",
+                threshold="20%",
+                description="Final phase",
+            ),
+        ),
+        evidence_facts=(),
+    )
+
+
+def _mechanic(**overrides) -> EncounterMechanic:
+    values = {
+        "mechanic_id": "test_boss:canonical:crushing_darkness",
+        "name": "Crushing Darkness",
+        "description": "A dangerous encounter mechanic.",
+        "interpretation_status": "reviewed",
+        "mechanic_type": "raid_damage",
+        "damage_type": "magic",
+        "target_count": 4,
+        "requires_movement": True,
+        "requires_positioning": True,
+        "requires_cleanse": False,
+        "persistent_hazard": False,
+        "failure_is_fatal": True,
+        "interruptible": False,
+        "requirement_subjects": (("movement", "player"),),
+    }
+    values.update(overrides)
+    return EncounterMechanic(**values)
 
 
 def test_policy_entry_keeps_mechanics_and_practice_authority_explicit():
@@ -79,3 +134,55 @@ def test_reference_entries_are_sorted_and_filter_dimensions_are_derived():
     assert [entry.name for entry in entries] == ["Healer Support Objective", "Light Attack Weaving"]
     assert entry_types(entries) == ("Combat Rule", "Role")
     assert source_scopes(entries) == ("Global Combat", "Player")
+
+
+def test_encounter_mechanic_entry_preserves_canonical_authority_and_known_fields():
+    mechanic = _mechanic()
+    entry = entry_from_encounter_mechanic(_encounter(mechanic), mechanic)
+
+    assert entry.name == "Crushing Darkness — Test Boss"
+    assert entry.entry_type == "Mechanic"
+    assert entry.source_scope == "Trial"
+    assert ("Authority", "Canonical encounter data") in entry.details
+    assert ("Damage type", "magic") in entry.details
+    assert ("Target count", "4") in entry.details
+    assert ("Requires movement", "Yes") in entry.details
+    assert ("Interruptible", "No") in entry.details
+    assert "FATAL FAILURE" in entry.tags
+    assert "The canonical record marks failure of this mechanic as fatal." in entry.death_note
+
+
+def test_encounter_mechanic_entry_keeps_unknowns_explicit_instead_of_guessing():
+    mechanic = _mechanic(
+        damage_type=None,
+        target_count=None,
+        requires_movement=None,
+        requires_positioning=None,
+        requires_cleanse=None,
+        persistent_hazard=None,
+        failure_is_fatal=None,
+        interruptible=None,
+    )
+    entry = entry_from_encounter_mechanic(_encounter(mechanic), mechanic)
+
+    assert ("Damage type", "Not modeled") in entry.details
+    assert ("Target count", "Not modeled") in entry.details
+    assert ("Requires movement", "Not modeled") in entry.details
+    assert ("Interruptible", "Not modeled") in entry.details
+    assert "does not currently contain enough structured failure data" in entry.death_note
+    assert "Gameplay-practice handling is not inferred" in entry.field_note
+
+
+def test_build_reference_entries_can_merge_policy_and_encounter_records():
+    mechanic = _mechanic()
+    entries = build_reference_entries(
+        (_policy(),),
+        encounters=(_encounter(mechanic),),
+    )
+
+    assert [entry.name for entry in entries] == [
+        "Crushing Darkness — Test Boss",
+        "Light Attack Weaving",
+    ]
+    assert entry_types(entries) == ("Combat Rule", "Mechanic")
+    assert source_scopes(entries) == ("Global Combat", "Trial")
