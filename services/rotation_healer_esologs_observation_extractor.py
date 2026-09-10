@@ -10,6 +10,9 @@ from services.esologs_json_adapter import EsoLogsJsonEventInterpreter, EsoLogsJs
 from services.rotation_healer_canonical_periodic_timing_service import (
     RotationHealerCanonicalPeriodicTimingService,
 )
+from services.rotation_healer_esologs_canonical_skill_alias_service import (
+    RotationHealerEsoLogsCanonicalSkillAliasService,
+)
 from services.rotation_healer_periodic_runtime_observation_service import (
     RotationHealerPeriodicObservedSample,
 )
@@ -29,14 +32,19 @@ class RotationHealerEsoLogsObservationTarget:
     source_name: str
     coefficient_number: int
     ability_game_id: int
+    canonical_skill_id: str | None = None
 
 
 DF_HEALER_U50_OBSERVATION_TARGETS = (
-    RotationHealerEsoLogsObservationTarget("Budding Seeds", 2, 93807),
-    RotationHealerEsoLogsObservationTarget("Radiating Regeneration", 1, 41288),
-    RotationHealerEsoLogsObservationTarget("Illustrious Healing", 1, 41255),
-    RotationHealerEsoLogsObservationTarget("Energy Orb", 1, 43447),
-    RotationHealerEsoLogsObservationTarget("Echoing Vigor", 1, 63247),
+    RotationHealerEsoLogsObservationTarget("Budding Seeds", 2, 93807, "budding_seeds"),
+    RotationHealerEsoLogsObservationTarget(
+        "Radiating Regeneration", 1, 41288, "radiating_regeneration"
+    ),
+    RotationHealerEsoLogsObservationTarget(
+        "Illustrious Healing", 1, 41255, "illustrious_healing"
+    ),
+    RotationHealerEsoLogsObservationTarget("Energy Orb", 1, 43447, "energy_orb"),
+    RotationHealerEsoLogsObservationTarget("Echoing Vigor", 1, 63247, "echoing_vigor"),
 )
 
 
@@ -46,6 +54,7 @@ class RotationHealerEsoLogsObservationCandidate:
     sample: RotationHealerPeriodicObservedSample
     activation_event_index: int
     raw_periodic_heal_event_count: int
+    observed_ability_game_id: int | None = None
 
 
 @dataclass(frozen=True)
@@ -81,7 +90,12 @@ class RotationHealerEsoLogsObservationExtractionReport:
                     "provenance": list(item.sample.provenance),
                     "game_version": item.sample.game_version,
                     "candidate_metadata": {
-                        "ability_game_id": item.target.ability_game_id,
+                        "canonical_skill_id": item.target.canonical_skill_id,
+                        "ability_game_id": (
+                            item.observed_ability_game_id
+                            if item.observed_ability_game_id is not None
+                            else item.target.ability_game_id
+                        ),
                         "activation_event_index": item.activation_event_index,
                         "raw_periodic_heal_event_count": item.raw_periodic_heal_event_count,
                     },
@@ -94,10 +108,17 @@ class RotationHealerEsoLogsObservationExtractionReport:
 class RotationHealerEsoLogsObservationExtractor:
     """Extract review candidates for healer HoT micro-timing from raw ESO Logs.
 
+    Canonical lower-snake-case skill identity owns the meaning of a tracked skill.
+    Numeric ESO ability ids are observational aliases only and are resolved through
+    ``RotationHealerEsoLogsCanonicalSkillAliasService`` when the production database
+    can provide them. The target's historical single numeric id remains only as a
+    compatibility fallback for small synthetic/test databases that do not expose
+    ``ability.index_name``.
+
     This service does not promote runtime facts. It only pairs isolated casts with
-    same-caster periodic heal events for exact reviewed ability IDs and emits
-    candidate samples. The resulting payload is explicitly marked ``candidate``
-    and must be human-reviewed before the runtime fixture loader will accept it.
+    same-caster periodic heal events for reviewed canonical skill aliases and emits
+    candidate samples. The resulting payload is explicitly marked ``candidate`` and
+    must be human-reviewed before the runtime fixture loader will accept it.
 
     Multiple recipients healed on the same periodic tick are collapsed to one
     timestamp. Activations recast before canonical expiry are skipped because
@@ -112,6 +133,9 @@ class RotationHealerEsoLogsObservationExtractor:
     def __init__(self, database_path: str | Path) -> None:
         self.database_path = Path(database_path)
         self.canonical_timing = RotationHealerCanonicalPeriodicTimingService(
+            self.database_path
+        )
+        self.skill_aliases = RotationHealerEsoLogsCanonicalSkillAliasService(
             self.database_path
         )
 
@@ -155,6 +179,26 @@ class RotationHealerEsoLogsObservationExtractor:
             report_code=requested,
             source_name=f"{path} report {requested}",
         )
+
+    def ability_ids_for_target(
+        self,
+        target: RotationHealerEsoLogsObservationTarget,
+    ) -> tuple[int, ...]:
+        canonical_skill_id = str(target.canonical_skill_id or "").strip().casefold()
+        if canonical_skill_id:
+            resolved = self.skill_aliases.resolve(canonical_skill_id)
+            if resolved is not None and resolved.ability_game_ids:
+                return tuple(int(value) for value in resolved.ability_game_ids)
+        return (int(target.ability_game_id),)
+
+    def target_alias_map(
+        self,
+        targets: tuple[RotationHealerEsoLogsObservationTarget, ...] = DF_HEALER_U50_OBSERVATION_TARGETS,
+    ) -> dict[str, tuple[int, ...]]:
+        return {
+            target.source_name: self.ability_ids_for_target(target)
+            for target in targets
+        }
 
     def extract(
         self,
@@ -200,15 +244,17 @@ class RotationHealerEsoLogsObservationExtractor:
                 )
                 continue
 
+            ability_ids = self.ability_ids_for_target(target)
             assert canonical.duration_seconds is not None
             activations = self._activation_events(
                 events,
                 caster_id=int(caster_id),
-                ability_game_id=target.ability_game_id,
+                ability_game_ids=ability_ids,
             )
             if not activations:
                 unresolved.append(
-                    f"{target.source_name}: no matching cast/completecast event for caster {caster_id}"
+                    f"{target.source_name}: no matching cast/completecast event for caster {caster_id} "
+                    f"across canonical aliases {ability_ids}"
                 )
                 continue
 
@@ -234,7 +280,7 @@ class RotationHealerEsoLogsObservationExtractor:
                     for event in events
                     if event.event_kind == SemanticEventKind.HEAL
                     and event.source_id == int(caster_id)
-                    and event.ability_game_id == target.ability_game_id
+                    and event.ability_game_id in ability_ids
                     and (event.tick is True or event.raw_event_type == "hot")
                     and activation_seconds - expiry_tolerance_seconds
                     <= event.timestamp * scale
@@ -254,6 +300,11 @@ class RotationHealerEsoLogsObservationExtractor:
                     )
                     continue
 
+                observed_ability_game_id = (
+                    int(activation.ability_game_id)
+                    if activation.ability_game_id is not None
+                    else None
+                )
                 sample = RotationHealerPeriodicObservedSample(
                     source_name=target.source_name,
                     coefficient_number=target.coefficient_number,
@@ -268,7 +319,9 @@ class RotationHealerEsoLogsObservationExtractor:
                     ),
                     provenance=(
                         f"candidate extracted from ESO Logs raw export {fight.report_code} fight {fight.fight_id}",
-                        f"casterID={int(caster_id)} abilityGameID={target.ability_game_id} activation_event_index={activation_index}",
+                        f"casterID={int(caster_id)} canonical_skill_id={target.canonical_skill_id or '(legacy)'} "
+                        f"abilityAliases={ability_ids} activationAbilityID={observed_ability_game_id} "
+                        f"activation_event_index={activation_index}",
                         "same-caster periodic heal events only; same-timestamp recipient heals deduplicated",
                     ),
                     game_version=str(game_version),
@@ -279,6 +332,7 @@ class RotationHealerEsoLogsObservationExtractor:
                         sample=sample,
                         activation_event_index=activation_index,
                         raw_periodic_heal_event_count=len(periodic_heals),
+                        observed_ability_game_id=observed_ability_game_id,
                     )
                 )
 
@@ -293,13 +347,14 @@ class RotationHealerEsoLogsObservationExtractor:
         )
 
     @staticmethod
-    def _activation_events(events, *, caster_id: int, ability_game_id: int):
+    def _activation_events(events, *, caster_id: int, ability_game_ids: tuple[int, ...]):
+        aliases = {int(value) for value in ability_game_ids}
         matching = [
             (event.event_index, event)
             for event in events
             if event.event_kind == SemanticEventKind.CAST
             and event.source_id == caster_id
-            and event.ability_game_id == ability_game_id
+            and event.ability_game_id in aliases
             and event.raw_event_type in {"cast", "completecast"}
         ]
 
