@@ -19,12 +19,12 @@ class ExtremeTemplarRestoringLightHealingResult:
 class ExtremeTemplarRestoringLightHealingService:
     """Resolve reviewed Templar Mending healing for Extreme builds.
 
-    Under BFF's current live U50 boundary, reviewed max-rank Mending increases
-    the healing effects of Restoring Light abilities by up to 12% in proportion
-    to the severity of the target's wounds. This service models that wording
-    linearly against missing-health fraction: a full-health target receives no
-    Mending bonus, a half-health target receives 6%, and a theoretical
-    zero-health fraction reaches 12%.
+    Reviewed live Mending increases the healing effects of Restoring Light
+    abilities in proportion to the severity of the target's wounds. Rank 1
+    reaches up to 6% and rank 2 reaches up to 13%. This service models that
+    wording linearly against missing-health fraction: a full-health target
+    receives no Mending bonus and a theoretical zero-health fraction reaches
+    the active rank's maximum.
 
     The passive is an ability-family modifier, not generic Healing Done. It must
     therefore never increase Restoration Staff, guild, or other class-line heals.
@@ -38,7 +38,10 @@ class ExtremeTemplarRestoringLightHealingService:
 
     PASSIVE_NAME = "Mending"
     RESTORING_LIGHT_ID = "restoring_light"
-    MAX_HEALING_BONUS = 0.12
+    RANK_MAX_HEALING_BONUS = {
+        1: 0.06,
+        2: 0.13,
+    }
 
     def __init__(
         self,
@@ -112,10 +115,20 @@ class ExtremeTemplarRestoringLightHealingService:
                 1.0,
                 ("Passive max rank is not available in canonical data: Mending",),
             )
-        if rank != maximum:
+        if maximum != max(self.RANK_MAX_HEALING_BONUS):
             return ExtremeTemplarRestoringLightHealingResult(
                 1.0,
-                (f"Partial passive rank is not yet modeled: Mending {rank}/{maximum}",),
+                (
+                    "Canonical passive max rank is not supported for Mending: "
+                    f"{maximum}",
+                ),
+            )
+
+        rank_maximum = self.RANK_MAX_HEALING_BONUS.get(rank)
+        if rank_maximum is None or rank > maximum:
+            return ExtremeTemplarRestoringLightHealingResult(
+                1.0,
+                (f"Passive rank is not supported for Mending: {rank}/{maximum}",),
             )
 
         if target_health_fraction is None:
@@ -127,6 +140,6 @@ class ExtremeTemplarRestoringLightHealingService:
 
         missing_health_fraction = 1.0 - target_health_fraction
         return ExtremeTemplarRestoringLightHealingResult(
-            multiplier=1.0 + self.MAX_HEALING_BONUS * missing_health_fraction,
+            multiplier=1.0 + rank_maximum * missing_health_fraction,
             unresolved=(),
         )

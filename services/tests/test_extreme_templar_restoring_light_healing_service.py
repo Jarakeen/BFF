@@ -31,7 +31,7 @@ def _service():
     )
 
 
-def test_mending_scales_linearly_with_missing_target_health():
+def test_mending_rank_two_scales_linearly_with_missing_target_health():
     service = _service()
     build = PlayerBuild(EsoClass="templar")
     progression = CharacterProgression(passive_ranks={"Mending": 2})
@@ -62,10 +62,22 @@ def test_mending_scales_linearly_with_missing_target_health():
     )
 
     assert full.multiplier == pytest.approx(1.0)
-    assert half.multiplier == pytest.approx(1.06)
-    assert quarter.multiplier == pytest.approx(1.09)
-    assert empty.multiplier == pytest.approx(1.12)
+    assert half.multiplier == pytest.approx(1.065)
+    assert quarter.multiplier == pytest.approx(1.0975)
+    assert empty.multiplier == pytest.approx(1.13)
     assert empty.unresolved == ()
+
+
+def test_mending_rank_one_uses_its_reviewed_six_percent_maximum():
+    result = _service().resolve(
+        build=PlayerBuild(EsoClass="templar"),
+        progression=CharacterProgression(passive_ranks={"Mending": 1}),
+        ability_name="Breath of Life",
+        target_health_fraction=0.25,
+    )
+
+    assert result.multiplier == pytest.approx(1.045)
+    assert result.unresolved == ()
 
 
 def test_mending_does_not_modify_non_restoring_light_heals():
@@ -104,7 +116,7 @@ def test_mending_requires_restoring_light_route_when_class_lines_are_explicit():
     )
 
     assert removed.multiplier == 1.0
-    assert subclassed.multiplier == pytest.approx(1.09)
+    assert subclassed.multiplier == pytest.approx(1.0975)
 
 
 def test_mending_preserves_lower_bound_when_passive_rank_is_unknown():
@@ -117,18 +129,6 @@ def test_mending_preserves_lower_bound_when_passive_rank_is_unknown():
 
     assert result.multiplier == 1.0
     assert result.unresolved == ("Mending passive rank is not recorded",)
-
-
-def test_mending_blocks_partial_passive_rank():
-    result = _service().resolve(
-        build=PlayerBuild(EsoClass="templar"),
-        progression=CharacterProgression(passive_ranks={"Mending": 1}),
-        ability_name="Breath of Life",
-        target_health_fraction=0.25,
-    )
-
-    assert result.multiplier == 1.0
-    assert result.unresolved == ("Partial passive rank is not yet modeled: Mending 1/2",)
 
 
 def test_mending_unknown_ability_line_preserves_lower_bound_and_blocker():
