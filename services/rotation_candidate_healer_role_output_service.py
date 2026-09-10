@@ -18,6 +18,9 @@ from services.rotation_healer_action_healing_service import (
 from services.rotation_healer_budding_seeds_activation_service import (
     RotationHealerBuddingSeedsActivationService,
 )
+from services.rotation_healer_canonical_delayed_timing_service import (
+    RotationHealerCanonicalDelayedTimingService,
+)
 from services.rotation_healer_delayed_runtime_service import (
     RotationHealerDelayedRuntimeEvidence,
     RotationHealerDelayedRuntimeProjection,
@@ -60,6 +63,10 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
     a tick cadence, refresh rule, delayed offset, target multiplier, or survival
     threshold. Missing runtime facts remain explicit unresolved evidence.
 
+    Canonical coefficient-local delayed timing is bound automatically when it is
+    available. Explicit ``delayed_runtime_evidence`` remains a supported override
+    for reviewed evidence that is not derivable from canonical wording.
+
     ``context`` remains the backward-compatible default static calculation context.
     Real dual-bar evaluations may additionally provide ``contexts_by_bar`` so
     scheduled front/back skill actions use the exact static context for the bar on
@@ -82,6 +89,9 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
             RotationHealerPeriodicRuntimeEvidenceService | object | None
         ) = None,
         periodic_runtime_service: RotationHealerPeriodicRuntimeService | object | None = None,
+        canonical_delayed_timing_service: (
+            RotationHealerCanonicalDelayedTimingService | object | None
+        ) = None,
         delayed_runtime_service: RotationHealerDelayedRuntimeService | object | None = None,
         demand_healing_service: (
             RotationHealerDemandHealingEvidenceService | object | None
@@ -102,6 +112,9 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
             periodic_runtime_evidence_service or RotationHealerPeriodicRuntimeEvidenceService()
         )
         self.periodic_runtime_service = periodic_runtime_service or RotationHealerPeriodicRuntimeService()
+        self.canonical_delayed_timing_service = (
+            canonical_delayed_timing_service or RotationHealerCanonicalDelayedTimingService(path)
+        )
         self.delayed_runtime_service = delayed_runtime_service or RotationHealerDelayedRuntimeService()
         self.demand_healing_service = demand_healing_service or RotationHealerDemandHealingEvidenceService()
         self.budding_seeds_activation_service = (
@@ -127,12 +140,21 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
         if self.contexts_by_bar is not None:
             action_kwargs["contexts_by_bar"] = self.contexts_by_bar
         projection = self.action_healing_service.project(**action_kwargs)
+
+        bridge_unresolved: list[str] = []
+        delayed_runtime_evidence = tuple(self.delayed_runtime_evidence)
+        if projection.delayed_seeds:
+            delayed_runtime_evidence, delayed_unresolved = self._delayed_runtime_evidence(
+                projection
+            )
+            bridge_unresolved.extend(delayed_unresolved)
+
         projection = self._apply_special_activation_topology(
             candidate=candidate,
             projection=projection,
+            delayed_runtime_evidence=delayed_runtime_evidence,
         )
 
-        bridge_unresolved: list[str] = []
         periodic_runtime_evidence = ()
         if projection.periodic_seeds:
             periodic_runtime_evidence, timing_unresolved = self._periodic_runtime_evidence(
@@ -152,7 +174,7 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
         if projection.delayed_seeds:
             delayed_projection = self.delayed_runtime_service.project(
                 seeds=projection.delayed_seeds,
-                evidence=self.delayed_runtime_evidence,
+                evidence=delayed_runtime_evidence,
                 horizon_seconds=candidate.plan.duration_seconds,
             )
 
@@ -229,16 +251,47 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
 
         return tuple(runtime), self._dedupe(tuple(unresolved))
 
+    def _delayed_runtime_evidence(
+        self,
+        projection: RotationHealerActionHealingProjection,
+    ) -> tuple[tuple[RotationHealerDelayedRuntimeEvidence, ...], tuple[str, ...]]:
+        explicit = {
+            (item.source_name.casefold(), int(item.coefficient_number)): item
+            for item in self.delayed_runtime_evidence
+        }
+        resolved = dict(explicit)
+        unresolved: list[str] = []
+        seen_keys: set[tuple[str, int]] = set()
+
+        for seed in projection.delayed_seeds:
+            key = (seed.source_name.casefold(), int(seed.coefficient_number))
+            if key in seen_keys or key in resolved:
+                seen_keys.add(key)
+                continue
+            seen_keys.add(key)
+
+            resolution = self.canonical_delayed_timing_service.resolve(
+                source_name=seed.source_name,
+                coefficient_number=seed.coefficient_number,
+            )
+            unresolved.extend(tuple(getattr(resolution, "unresolved", ())))
+            runtime_evidence = getattr(resolution, "runtime_evidence", None)
+            if runtime_evidence is not None:
+                resolved[key] = runtime_evidence
+
+        return tuple(resolved.values()), self._dedupe(tuple(unresolved))
+
     def _apply_special_activation_topology(
         self,
         *,
         candidate: GeneratedRotationCandidate,
         projection: RotationHealerActionHealingProjection,
+        delayed_runtime_evidence: tuple[RotationHealerDelayedRuntimeEvidence, ...],
     ) -> RotationHealerActionHealingProjection:
         budding_evidence = next(
             (
                 item
-                for item in self.delayed_runtime_evidence
+                for item in delayed_runtime_evidence
                 if item.source_name.casefold() == "budding seeds"
                 and item.coefficient_number == 1
             ),
