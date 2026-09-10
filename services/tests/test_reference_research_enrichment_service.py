@@ -34,5 +34,31 @@ def test_dreadsail_debuffs_keep_encounter_scope_and_confidence_visible():
     assert all(fact.confidence == "medium-high" for fact in facts)
 
 
+def test_component_named_effects_get_human_readable_standard_values():
+    service = ReferenceResearchEnrichmentService()
+
+    assert service.facts_for("Major Berserk")[0].value == "Increases damage done by 10%."
+    assert service.facts_for("Minor Protection")[0].value == "Reduces damage taken by 5%."
+    assert service.facts_for("Major Vulnerability")[0].value == "Increases damage taken by 10%."
+    assert "Dungeon, Trial, and Arena" in service.facts_for("Major Slayer")[0].value
+    assert "12%" in service.facts_for("Major Vitality")[0].value
+    assert "damage shield strength" in service.facts_for("Major Vitality")[0].value
+
+
+def test_u41_vitality_and_defile_research_uses_current_shield_semantics():
+    service = ReferenceResearchEnrichmentService()
+
+    vitality = service.facts_for("Minor Vitality")[0]
+    defile = service.facts_for("Minor Defile")[0]
+
+    assert vitality.game_update == "U41+"
+    assert defile.game_update == "U41+"
+    assert "6%" in vitality.value
+    assert "6%" in defile.value
+    assert "damage shield strength" in vitality.value
+    assert "damage shield strength" in defile.value
+    assert "Health Recovery" not in defile.value
+
+
 def test_unknown_entry_has_no_research_fact_instead_of_inventing_one():
     assert ReferenceResearchEnrichmentService().facts_for("Imaginary Status") == ()
