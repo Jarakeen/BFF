@@ -20,6 +20,9 @@ from engine.config import get_data_dir
 from models.build_model import BuildRoster, PlayerBuild
 from services.build_service import BuildService
 from services.performance_raid_review_runner_service import PerformanceRaidReviewRunnerService
+from services.performance_raid_review_selection_mode_service import (
+    PerformanceRaidReviewSelectionModeService,
+)
 from services.raid_coverage_profile import DEFAULT_RAID_COVERAGE_PROFILE
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
@@ -51,6 +54,7 @@ class CoveragePage(FoundryPage):
         super().__init__(parent)
         self.build_service = BuildService(get_data_dir() / "builds.json")
         self.raid_review_runner = raid_review_runner or PerformanceRaidReviewRunnerService()
+        self.raid_review_selection_mode_service = PerformanceRaidReviewSelectionModeService()
         self._raid_review_task: RaidReviewAsyncTask | None = None
         self.roster = BuildRoster()
         self._build_ui()
@@ -180,7 +184,12 @@ class CoveragePage(FoundryPage):
         self.raid_review_fights_table.verticalHeader().setVisible(False)
         self.raid_review_fights_table.horizontalHeader().setStretchLastSection(True)
         self.raid_review_fights_table.setMinimumHeight(135)
+        self.raid_review_fights_table.itemChanged.connect(self._raid_review_selection_changed)
         intake.addWidget(self.raid_review_fights_table)
+        self.raid_review_selection_mode_label = QLabel()
+        self.raid_review_selection_mode_label.setWordWrap(True)
+        intake.addWidget(self.raid_review_selection_mode_label)
+        self._update_raid_review_selection_mode()
         intake.addWidget(QLabel(
             "Choose a supported encounter, load the report, check the pulls you want compared, then run the review. "
             "Fight discovery and analysis both use the ESO Logs API; raw research JSON is not required."
@@ -230,6 +239,17 @@ class CoveragePage(FoundryPage):
     def _raid_review_encounter_changed(self) -> None:
         self.raid_review_fights_table.setRowCount(0)
         self.raid_review_run_button.setEnabled(False)
+        self._update_raid_review_selection_mode()
+
+    def _raid_review_selection_changed(self) -> None:
+        self._update_raid_review_selection_mode()
+
+    def _update_raid_review_selection_mode(self) -> None:
+        fight_ids = self._selected_raid_review_fight_ids()
+        mode = self.raid_review_selection_mode_service.classify(fight_ids)
+        self.raid_review_selection_mode_label.setText(
+            f"{mode.display_name} • {mode.note}"
+        )
 
     def _set_raid_review_busy(self, busy: bool) -> None:
         self.raid_review_encounter_combo.setEnabled(not busy)
@@ -276,6 +296,7 @@ class CoveragePage(FoundryPage):
             return
 
         self.raid_review_fights_table.setRowCount(0)
+        self._update_raid_review_selection_mode()
         self.status.info(f"Loading {encounter_name} pulls from ESO Logs...")
         self._start_raid_review_task(
             lambda: self.raid_review_runner.list_fights(encounter_key, report_code),
@@ -284,24 +305,29 @@ class CoveragePage(FoundryPage):
         )
 
     def _raid_review_fights_loaded(self, choices) -> None:
-        for choice in choices:
-            row = self.raid_review_fights_table.rowCount()
-            self.raid_review_fights_table.insertRow(row)
+        self.raid_review_fights_table.blockSignals(True)
+        try:
+            for choice in choices:
+                row = self.raid_review_fights_table.rowCount()
+                self.raid_review_fights_table.insertRow(row)
 
-            select_item = QTableWidgetItem()
-            select_item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable)
-            select_item.setCheckState(Qt.CheckState.Checked)
-            select_item.setData(Qt.ItemDataRole.UserRole, int(choice.fight_id))
-            self.raid_review_fights_table.setItem(row, 0, select_item)
+                select_item = QTableWidgetItem()
+                select_item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable)
+                select_item.setCheckState(Qt.CheckState.Checked)
+                select_item.setData(Qt.ItemDataRole.UserRole, int(choice.fight_id))
+                self.raid_review_fights_table.setItem(row, 0, select_item)
 
-            result_text = "Kill" if choice.kill else "Wipe"
-            boss_text = "—" if choice.boss_percentage is None else f"{choice.boss_percentage / 100:.1f}%"
-            duration_text = f"{choice.duration_seconds:.1f}s"
-            for column, value in enumerate(
-                (str(choice.fight_id), result_text, boss_text, duration_text),
-                start=1,
-            ):
-                self.raid_review_fights_table.setItem(row, column, QTableWidgetItem(value))
+                result_text = "Kill" if choice.kill else "Wipe"
+                boss_text = "—" if choice.boss_percentage is None else f"{choice.boss_percentage / 100:.1f}%"
+                duration_text = f"{choice.duration_seconds:.1f}s"
+                for column, value in enumerate(
+                    (str(choice.fight_id), result_text, boss_text, duration_text),
+                    start=1,
+                ):
+                    self.raid_review_fights_table.setItem(row, column, QTableWidgetItem(value))
+        finally:
+            self.raid_review_fights_table.blockSignals(False)
+        self._update_raid_review_selection_mode()
 
         encounter_name = self._raid_review_encounter_name()
         if choices:
@@ -334,12 +360,13 @@ class CoveragePage(FoundryPage):
             return
 
         fight_ids = self._selected_raid_review_fight_ids()
+        mode = self.raid_review_selection_mode_service.classify(fight_ids)
         if not fight_ids:
             self.status.warning(f"Check at least one {encounter_name} pull before running Raid Review.")
             return
 
         self.status.info(
-            f"Running Raid Review for {len(fight_ids)} selected {encounter_name} pull(s) from ESO Logs..."
+            f"Running {mode.display_name.lower()} for {len(fight_ids)} selected {encounter_name} pull(s) from ESO Logs..."
         )
         self._start_raid_review_task(
             lambda: self.raid_review_runner.review_report(encounter_key, report_code, fight_ids),
