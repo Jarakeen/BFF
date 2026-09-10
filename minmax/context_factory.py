@@ -23,6 +23,7 @@ from .item_base_stats import BaseItemStatResolver
 from .jewelry_glyph_repository import JewelryGlyphEffectRepository
 from .jewelry_trait_repository import JewelryTraitRepository
 from .mundus_repository import MundusRepository
+from .necromancer_passive_input_resolver import NecromancerPassiveInputResolver
 from .nightblade_passive_input_resolver import NightbladePassiveInputResolver
 from .one_hand_shield_passive_input_resolver import OneHandShieldPassiveInputResolver
 from .provisioning_static_repository import ProvisioningStaticRepository
@@ -69,6 +70,7 @@ class BuildCalculationContextFactory:
         guild_passive_resolver: GuildPassiveInputResolver | None = None,
         alliance_support_passive_resolver: AllianceSupportPassiveInputResolver | None = None,
         dragonknight_passive_resolver: DragonknightPassiveInputResolver | None = None,
+        necromancer_passive_resolver: NecromancerPassiveInputResolver | None = None,
         nightblade_passive_resolver: NightbladePassiveInputResolver | None = None,
         sorcerer_passive_resolver: SorcererPassiveInputResolver | None = None,
         templar_passive_resolver: TemplarPassiveInputResolver | None = None,
@@ -127,6 +129,11 @@ class BuildCalculationContextFactory:
         )
         self.dragonknight_passive_resolver = dragonknight_passive_resolver or (
             DragonknightPassiveInputResolver()
+            if skill_line_repository is not None
+            else None
+        )
+        self.necromancer_passive_resolver = necromancer_passive_resolver or (
+            NecromancerPassiveInputResolver(skill_line_repository)
             if skill_line_repository is not None
             else None
         )
@@ -385,6 +392,28 @@ class BuildCalculationContextFactory:
                 gear,
                 build,
                 soul_ablaze_rank=soul_ablaze_rank,
+            )
+
+        necromancer_lines = NecromancerPassiveInputResolver.equipped_necromancer_line_ids(build)
+        bone_tyrant = NecromancerPassiveInputResolver.BONE_TYRANT_ID in necromancer_lines
+        last_gasp_rank: int | None = None
+        health_avarice_rank: int | None = None
+        if bone_tyrant and progression.passive_ranks is not None:
+            last_gasp_rank = progression.passive_rank("Last Gasp")
+            if last_gasp_rank is None:
+                unresolved.append("Passive rank is not recorded for character: Last Gasp")
+                last_gasp_rank = 0
+            health_avarice_rank = progression.passive_rank("Health Avarice")
+            if health_avarice_rank is None:
+                unresolved.append("Passive rank is not recorded for character: Health Avarice")
+                health_avarice_rank = 0
+        if self.necromancer_passive_resolver is not None:
+            gear = self.necromancer_passive_resolver.apply(
+                gear,
+                build,
+                active_bar=active_bar,
+                last_gasp_rank=last_gasp_rank,
+                health_avarice_rank=health_avarice_rank,
             )
 
         nightblade_lines = NightbladePassiveInputResolver.equipped_nightblade_line_ids(build)
