@@ -3,37 +3,25 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from minmax.passive_eligibility import CLASS_SKILL_LINES
-from services.extreme_arcanist_curative_runeforms_passive_review import (
-    ExtremeArcanistCurativeRuneformsPassiveReview,
-)
-from services.extreme_necromancer_living_death_passive_review import (
-    ExtremeNecromancerLivingDeathPassiveReview,
-)
-from services.extreme_nightblade_siphoning_passive_review import (
-    ExtremeNightbladeSiphoningPassiveReview,
-)
-from services.extreme_sorcerer_dark_magic_passive_review import (
-    ExtremeSorcererDarkMagicPassiveReview,
-)
-from services.extreme_templar_aedric_spear_passive_review import (
-    ExtremeTemplarAedricSpearPassiveReview,
-)
-from services.extreme_templar_dawns_wrath_passive_review import (
-    ExtremeTemplarDawnsWrathPassiveReview,
-)
-from services.extreme_templar_restoring_light_passive_review import (
-    ExtremeTemplarRestoringLightPassiveReview,
-)
-from services.extreme_warden_animal_companions_passive_review import (
-    ExtremeWardenAnimalCompanionsPassiveReview,
-)
-from services.extreme_warden_green_balance_passive_review import (
-    ExtremeWardenGreenBalancePassiveReview,
-)
-from services.extreme_warden_winters_embrace_passive_review import (
-    ExtremeWardenWintersEmbracePassiveReview,
-)
-
+from services.extreme_arcanist_curative_runeforms_passive_review import ExtremeArcanistCurativeRuneformsPassiveReview
+from services.extreme_arcanist_herald_of_the_tome_passive_review import ExtremeArcanistHeraldOfTheTomePassiveReview
+from services.extreme_arcanist_soldier_of_apocrypha_passive_review import ExtremeArcanistSoldierOfApocryphaPassiveReview
+from services.extreme_dragonknight_ardent_flame_passive_review import ExtremeDragonknightArdentFlamePassiveReview
+from services.extreme_dragonknight_draconic_power_passive_review import ExtremeDragonknightDraconicPowerPassiveReview
+from services.extreme_dragonknight_earthen_heart_passive_review import ExtremeDragonknightEarthenHeartPassiveReview
+from services.extreme_necromancer_living_death_passive_review import ExtremeNecromancerLivingDeathPassiveReview
+from services.extreme_nightblade_assassination_passive_review import ExtremeNightbladeAssassinationPassiveReview
+from services.extreme_nightblade_shadow_passive_review import ExtremeNightbladeShadowPassiveReview
+from services.extreme_nightblade_siphoning_passive_review import ExtremeNightbladeSiphoningPassiveReview
+from services.extreme_sorcerer_daedric_summoning_passive_review import ExtremeSorcererDaedricSummoningPassiveReview
+from services.extreme_sorcerer_dark_magic_passive_review import ExtremeSorcererDarkMagicPassiveReview
+from services.extreme_sorcerer_storm_calling_passive_review import ExtremeSorcererStormCallingPassiveReview
+from services.extreme_templar_aedric_spear_passive_review import ExtremeTemplarAedricSpearPassiveReview
+from services.extreme_templar_dawns_wrath_passive_review import ExtremeTemplarDawnsWrathPassiveReview
+from services.extreme_templar_restoring_light_passive_review import ExtremeTemplarRestoringLightPassiveReview
+from services.extreme_warden_animal_companions_passive_review import ExtremeWardenAnimalCompanionsPassiveReview
+from services.extreme_warden_green_balance_passive_review import ExtremeWardenGreenBalancePassiveReview
+from services.extreme_warden_winters_embrace_passive_review import ExtremeWardenWintersEmbracePassiveReview
 
 REVIEWED = "reviewed"
 PARTIAL = "partial"
@@ -81,12 +69,7 @@ class ExtremeHealingClassPassiveCoverageSummary:
 
 
 class ExtremeHealingClassPassiveCoverageInventory:
-    """Canonical family-review denominator for Extreme MOST Actual Heal.
-
-    The explicit family declaration is intentionally duplicated against
-    ``CLASS_SKILL_LINES``. That makes a newly-added canonical class family fail
-    closed until Extreme deliberately adds and classifies it here.
-    """
+    """Canonical family-review denominator for Extreme MOST Actual Heal."""
 
     _DECLARED_FAMILIES = (
         ("arcanist", "Herald of the Tome"),
@@ -112,134 +95,133 @@ class ExtremeHealingClassPassiveCoverageInventory:
         ("warden", "Winter's Embrace"),
     )
     _NO_REVIEW_EVIDENCE = "No completed Extreme healer class-passive review recorded"
-    _NO_REVIEW_DETAIL = (
-        "Class-passive relevance to MOST Actual Heal has not yet been reviewed."
-    )
+    _NO_REVIEW_DETAIL = "Class-passive relevance to MOST Actual Heal has not yet been reviewed."
 
     @classmethod
-    def _unreviewed(
-        cls,
+    def _unreviewed(cls, eso_class: str, skill_line: str) -> ExtremeHealingClassPassiveCoverageEntry:
+        return ExtremeHealingClassPassiveCoverageEntry(
+            eso_class, skill_line, UNREVIEWED, None, UNREVIEWED, False,
+            cls._NO_REVIEW_EVIDENCE, cls._NO_REVIEW_DETAIL,
+        )
+
+    @staticmethod
+    def _reviewed(
         eso_class: str,
         skill_line: str,
+        healing_relevant: bool,
+        evidence: str,
+        detail: str,
     ) -> ExtremeHealingClassPassiveCoverageEntry:
         return ExtremeHealingClassPassiveCoverageEntry(
-            eso_class,
-            skill_line,
-            UNREVIEWED,
-            None,
-            UNREVIEWED,
-            False,
-            cls._NO_REVIEW_EVIDENCE,
-            cls._NO_REVIEW_DETAIL,
+            eso_class=eso_class,
+            skill_line=skill_line,
+            review_status=REVIEWED,
+            healing_relevant=healing_relevant,
+            coverage_status=IMPLEMENTED if healing_relevant else NOT_APPLICABLE,
+            implemented_hook=healing_relevant,
+            evidence=evidence,
+            detail=detail,
         )
 
     def _entries(self) -> tuple[ExtremeHealingClassPassiveCoverageEntry, ...]:
         overrides = {
-            ("arcanist", "Curative Runeforms"): ExtremeHealingClassPassiveCoverageEntry(
-                "arcanist",
-                "Curative Runeforms",
-                REVIEWED,
-                True,
-                IMPLEMENTED,
-                True,
-                "ExtremeArcanistCurativeRuneformsPassiveReview + ExtremeArcanistCurativeRuneformsHealingService + ExtremeConditionalActualHealOptimizationService",
-                "All four Curative Runeforms passives are reviewed for MOST Actual Heal: Healing Tides is implemented through explicit active-Crux conditional orchestration; Hideous Clarity and Erudition are sustain-only; Intricate Runeforms affects damage shields rather than healing-event magnitude.",
+            ("arcanist", "Herald of the Tome"): self._reviewed(
+                "arcanist", "Herald of the Tome", True,
+                "ExtremeArcanistHeraldOfTheTomePassiveReview + Fated Fortune + Harnessed Quintessence canonical bridges",
+                "Fated Fortune and Harnessed Quintessence are implemented with explicit runtime proof before canonical heal evaluation.",
             ),
-            ("necromancer", "Living Death"): ExtremeHealingClassPassiveCoverageEntry(
-                "necromancer",
-                "Living Death",
-                REVIEWED,
-                True,
-                IMPLEMENTED,
-                True,
+            ("arcanist", "Soldier of Apocrypha"): self._reviewed(
+                "arcanist", "Soldier of Apocrypha", False,
+                "ExtremeArcanistSoldierOfApocryphaPassiveReview",
+                "All live-U50 Soldier passives are reviewed and none enlarge one healing-event magnitude.",
+            ),
+            ("arcanist", "Curative Runeforms"): self._reviewed(
+                "arcanist", "Curative Runeforms", True,
+                "ExtremeArcanistCurativeRuneformsPassiveReview + ExtremeArcanistCurativeRuneformsHealingService",
+                "Healing Tides is implemented through explicit active-Crux conditional orchestration.",
+            ),
+            ("dragonknight", "Ardent Flame"): self._reviewed(
+                "dragonknight", "Ardent Flame", True,
+                "ExtremeDragonknightArdentFlamePassiveReview + DragonknightPassiveInputResolver + BuildCalculationContextFactory",
+                "A Soul Ablaze is rank-aware and contributes canonical Healing Taken before self-heal scoring.",
+            ),
+            ("dragonknight", "Draconic Power"): self._reviewed(
+                "dragonknight", "Draconic Power", True,
+                "ExtremeDragonknightDraconicPowerPassiveReview + ExtremeDragonknightElderDragonCombatStateService",
+                "Elder Dragon uses an explicitly proven Minor Brutality window before coefficient evaluation.",
+            ),
+            ("dragonknight", "Earthen Heart"): self._reviewed(
+                "dragonknight", "Earthen Heart", False,
+                "ExtremeDragonknightEarthenHeartPassiveReview",
+                "All current Earthen Heart passives are reviewed and none enlarge one healing-event magnitude.",
+            ),
+            ("necromancer", "Living Death"): self._reviewed(
+                "necromancer", "Living Death", True,
                 "ExtremeNecromancerLivingDeathPassiveReview + ExtremeNecromancerLivingDeathHealingService",
-                "All four Living Death passives are reviewed for MOST Actual Heal: Curative Curse is implemented; Near-Death Experience, Corpse Consumption, and Undead Confederate are objective-irrelevant.",
+                "Curative Curse is implemented; the remaining Living Death passives are objective-irrelevant.",
             ),
-            ("nightblade", "Siphoning"): ExtremeHealingClassPassiveCoverageEntry(
-                "nightblade",
-                "Siphoning",
-                REVIEWED,
-                True,
-                IMPLEMENTED,
-                True,
+            ("nightblade", "Assassination"): self._reviewed(
+                "nightblade", "Assassination", False,
+                "ExtremeNightbladeAssassinationPassiveReview",
+                "Assassination changes crit chance, Critical Damage, or sustain, not critical-heal magnitude.",
+            ),
+            ("nightblade", "Shadow"): self._reviewed(
+                "nightblade", "Shadow", True,
+                "ExtremeNightbladeShadowPassiveReview + NightbladePassiveInputResolver + BuildCalculationContextFactory",
+                "Dark Vigor contributes canonical Max Health from explicit active-bar Shadow ability count.",
+            ),
+            ("nightblade", "Siphoning"): self._reviewed(
+                "nightblade", "Siphoning", True,
                 "ExtremeNightbladeSiphoningPassiveReview + NightbladePassiveInputResolver + ExtremeNightbladeSiphoningHealingService",
-                "All four Siphoning passives are reviewed for MOST Actual Heal: Magicka Flood and Soul Siphoner are implemented; Catalyst and Transfer are objective-irrelevant.",
+                "Magicka Flood and Soul Siphoner are implemented; the remaining passives are objective-irrelevant.",
             ),
-            ("sorcerer", "Dark Magic"): ExtremeHealingClassPassiveCoverageEntry(
-                "sorcerer",
-                "Dark Magic",
-                REVIEWED,
-                True,
-                IMPLEMENTED,
-                True,
-                "ExtremeSorcererDarkMagicPassiveReview + ExtremeSorcererBloodMagicService + ExtremeSorcererBloodMagicHealingEventService + ExtremeConditionalActualHealOptimizationService + ExtremeConditionalActualHealObjectiveOptimizationService",
-                "All four live-U50 Dark Magic passives are reviewed for MOST Actual Heal. Blood Magic is implemented: its below-full-Health Max-Health-scaled caster self-heal is evaluated with canonical healing modifiers and ranked as a distinct recipient event, while its full-Health 10-second higher-resource branch rebuilds canonical context before selected-heal scoring. Unholy Knowledge, Persistence, and Exploitation are objective-irrelevant.",
+            ("sorcerer", "Daedric Summoning"): self._reviewed(
+                "sorcerer", "Daedric Summoning", True,
+                "ExtremeSorcererDaedricSummoningPassiveReview + SorcererPassiveInputResolver + ExtremeSorcererExpertSummonerPetContextService",
+                "Expert Summoner standing resource bonuses and explicit permanent-pet Max Health branch are implemented canonically.",
             ),
-            ("templar", "Aedric Spear"): ExtremeHealingClassPassiveCoverageEntry(
-                "templar",
-                "Aedric Spear",
-                REVIEWED,
-                True,
-                IMPLEMENTED,
-                True,
+            ("sorcerer", "Dark Magic"): self._reviewed(
+                "sorcerer", "Dark Magic", True,
+                "ExtremeSorcererDarkMagicPassiveReview + ExtremeSorcererBloodMagicService",
+                "Blood Magic is implemented as a distinct self-heal/resource branch with explicit runtime state.",
+            ),
+            ("sorcerer", "Storm Calling"): self._reviewed(
+                "sorcerer", "Storm Calling", True,
+                "ExtremeSorcererStormCallingPassiveReview + SorcererPassiveInputResolver",
+                "Expert Mage is implemented through the canonical Weapon/Spell Damage pipeline.",
+            ),
+            ("templar", "Aedric Spear"): self._reviewed(
+                "templar", "Aedric Spear", True,
                 "ExtremeTemplarAedricSpearPassiveReview + TemplarPassiveInputResolver + BuildCalculationContextFactory",
-                "All four live-U50 Aedric Spear passives are reviewed for MOST Actual Heal. Balanced Warrior is implemented through canonical Weapon/Spell Damage percent buckets; Piercing Spear is Critical Damage rather than Critical Healing, Spear Wall is damage/mitigation utility, and Burning Light is a damage proc.",
+                "Balanced Warrior is implemented through canonical Weapon/Spell Damage percent buckets.",
             ),
-            ("templar", "Dawn's Wrath"): ExtremeHealingClassPassiveCoverageEntry(
-                "templar",
-                "Dawn's Wrath",
-                REVIEWED,
-                True,
-                IMPLEMENTED,
-                True,
-                "ExtremeTemplarDawnsWrathPassiveReview + ExtremeTemplarIlluminateCombatStateService + ExtremeTemplarConditionalActualHealService + canonical Minor Sorcery",
-                "All four live-U50 Dawn's Wrath passives are reviewed for MOST Actual Heal. Illuminate is implemented through an explicit active window that contributes canonical Minor Sorcery before coefficient evaluation; Enduring Rays, Prism, and Restoring Spirit affect duration, Ultimate economy, or sustain rather than one healing-event magnitude.",
+            ("templar", "Dawn's Wrath"): self._reviewed(
+                "templar", "Dawn's Wrath", True,
+                "ExtremeTemplarDawnsWrathPassiveReview + ExtremeTemplarIlluminateCombatStateService",
+                "Illuminate contributes canonical Minor Sorcery only through an explicitly proven active window.",
             ),
-            ("templar", "Restoring Light"): ExtremeHealingClassPassiveCoverageEntry(
-                "templar",
-                "Restoring Light",
-                REVIEWED,
-                True,
-                IMPLEMENTED,
-                True,
-                "ExtremeTemplarRestoringLightPassiveReview + ExtremeTemplarRestoringLightHealingService + ExtremeTemplarSacredGroundCombatStateService + ExtremeTemplarLightWeaverService + ExtremeConditionalActualHealOptimizationService",
-                "All four live-U50 Restoring Light passives are reviewed for MOST Actual Heal. Mending is rank-aware and applied against explicit target Health; Sacred Ground contributes canonical Minor Mending through the combat-state path. Light Weaver's Ultimate and automatic-block utility is modeled separately because it does not alter heal-event magnitude; Master Ritualist remains objective-irrelevant resurrection utility.",
+            ("templar", "Restoring Light"): self._reviewed(
+                "templar", "Restoring Light", True,
+                "ExtremeTemplarRestoringLightPassiveReview + ExtremeTemplarRestoringLightHealingService",
+                "Mending and Sacred Ground are implemented with explicit target/runtime state.",
             ),
-            ("warden", "Animal Companions"): ExtremeHealingClassPassiveCoverageEntry(
-                "warden",
-                "Animal Companions",
-                REVIEWED,
-                True,
-                IMPLEMENTED,
-                True,
-                "ExtremeWardenAnimalCompanionsPassiveReview + ExtremeWardenBondWithNatureService + ExtremeWardenBondWithNatureHealingEventService + WardenPassiveInputResolver",
-                "All four live-U50 Animal Companions passives are reviewed for MOST Actual Heal. Bond with Nature is implemented as a separate caster self-heal on a canonically proven Animal Companions effect-ended event; Flourish is recovery, Savage Beast is Ultimate economy, and Advanced Species is Critical Damage rather than Critical Healing.",
+            ("warden", "Animal Companions"): self._reviewed(
+                "warden", "Animal Companions", True,
+                "ExtremeWardenAnimalCompanionsPassiveReview + ExtremeWardenBondWithNatureHealingEventService",
+                "Bond with Nature is implemented as a separate caster self-heal from a proven effect-ended event.",
             ),
-            ("warden", "Green Balance"): ExtremeHealingClassPassiveCoverageEntry(
-                "warden",
-                "Green Balance",
-                REVIEWED,
-                True,
-                IMPLEMENTED,
-                True,
-                "ExtremeWardenGreenBalancePassiveReview + ExtremeWardenGreenBalanceHealingService + ExtremeWardenAcceleratedGrowthCombatStateService",
-                "All four Green Balance passives are reviewed for MOST Actual Heal: Accelerated Growth and Emerald Moss are implemented; Nature's Gift and Maturation are objective-irrelevant.",
+            ("warden", "Green Balance"): self._reviewed(
+                "warden", "Green Balance", True,
+                "ExtremeWardenGreenBalancePassiveReview + ExtremeWardenGreenBalanceHealingService",
+                "Accelerated Growth and Emerald Moss are implemented canonically.",
             ),
-            ("warden", "Winter's Embrace"): ExtremeHealingClassPassiveCoverageEntry(
-                "warden",
-                "Winter's Embrace",
-                REVIEWED,
-                False,
-                NOT_APPLICABLE,
-                False,
+            ("warden", "Winter's Embrace"): self._reviewed(
+                "warden", "Winter's Embrace", False,
                 "ExtremeWardenWintersEmbracePassiveReview + WardenPassiveInputResolver",
-                "All four live-U50 Winter's Embrace passives are reviewed and none increase one healing-event magnitude. Frozen Armor remains modeled for resistance objectives; Glacial Presence, Icy Aura, and Piercing Cold affect damage, control, mitigation, or frost/block behavior rather than MOST Actual Heal.",
+                "All live-U50 Winter's Embrace passives are reviewed and none enlarge one healing-event magnitude.",
             ),
         }
-        return tuple(
-            overrides.get(family, self._unreviewed(*family))
-            for family in self._DECLARED_FAMILIES
-        )
+        return tuple(overrides.get(family, self._unreviewed(*family)) for family in self._DECLARED_FAMILIES)
 
     @staticmethod
     def _canonical_families() -> tuple[tuple[str, str], ...]:
@@ -267,19 +249,12 @@ class ExtremeHealingClassPassiveCoverageInventory:
             unreviewed_families=sum(row.review_status == UNREVIEWED for row in rows),
             healing_relevant_families=len(known_relevant),
             implemented=sum(row.coverage_status == IMPLEMENTED for row in reviewed_relevant),
-            explicitly_unsupported=sum(
-                row.coverage_status == EXPLICITLY_UNSUPPORTED for row in reviewed_relevant
-            ),
-            healing_relevant_unreviewed=sum(
-                row.coverage_status == UNREVIEWED for row in known_relevant
-            ),
+            explicitly_unsupported=sum(row.coverage_status == EXPLICITLY_UNSUPPORTED for row in reviewed_relevant),
+            healing_relevant_unreviewed=sum(row.coverage_status == UNREVIEWED for row in known_relevant),
             implemented_hooks=sum(row.implemented_hook for row in rows),
         )
 
-    def _validate(
-        self,
-        rows: tuple[ExtremeHealingClassPassiveCoverageEntry, ...],
-    ) -> None:
+    def _validate(self, rows: tuple[ExtremeHealingClassPassiveCoverageEntry, ...]) -> None:
         canonical = self._canonical_families()
         declared = self._DECLARED_FAMILIES
         actual = tuple((row.eso_class, row.skill_line) for row in rows)
@@ -293,69 +268,49 @@ class ExtremeHealingClassPassiveCoverageInventory:
                 f"missing={missing}, extra={extra}"
             )
 
+        review_checks = {
+            "arcanist:Herald of the Tome": ExtremeArcanistHeraldOfTheTomePassiveReview,
+            "arcanist:Soldier of Apocrypha": ExtremeArcanistSoldierOfApocryphaPassiveReview,
+            "arcanist:Curative Runeforms": ExtremeArcanistCurativeRuneformsPassiveReview,
+            "dragonknight:Ardent Flame": ExtremeDragonknightArdentFlamePassiveReview,
+            "dragonknight:Draconic Power": ExtremeDragonknightDraconicPowerPassiveReview,
+            "dragonknight:Earthen Heart": ExtremeDragonknightEarthenHeartPassiveReview,
+            "necromancer:Living Death": ExtremeNecromancerLivingDeathPassiveReview,
+            "nightblade:Assassination": ExtremeNightbladeAssassinationPassiveReview,
+            "nightblade:Shadow": ExtremeNightbladeShadowPassiveReview,
+            "nightblade:Siphoning": ExtremeNightbladeSiphoningPassiveReview,
+            "sorcerer:Daedric Summoning": ExtremeSorcererDaedricSummoningPassiveReview,
+            "sorcerer:Dark Magic": ExtremeSorcererDarkMagicPassiveReview,
+            "sorcerer:Storm Calling": ExtremeSorcererStormCallingPassiveReview,
+            "templar:Aedric Spear": ExtremeTemplarAedricSpearPassiveReview,
+            "templar:Dawn's Wrath": ExtremeTemplarDawnsWrathPassiveReview,
+            "templar:Restoring Light": ExtremeTemplarRestoringLightPassiveReview,
+            "warden:Animal Companions": ExtremeWardenAnimalCompanionsPassiveReview,
+            "warden:Green Balance": ExtremeWardenGreenBalancePassiveReview,
+            "warden:Winter's Embrace": ExtremeWardenWintersEmbracePassiveReview,
+        }
+
         for row in rows:
             if row.review_status not in {REVIEWED, PARTIAL, UNREVIEWED}:
-                raise ValueError(
-                    f"Invalid class-passive review status for {row.family_id}: {row.review_status}"
-                )
+                raise ValueError(f"Invalid class-passive review status for {row.family_id}: {row.review_status}")
             if row.review_status == UNREVIEWED:
-                if (
-                    row.healing_relevant is not None
-                    or row.coverage_status != UNREVIEWED
-                    or row.implemented_hook
-                ):
-                    raise ValueError(
-                        f"Unreviewed class-passive family must remain unresolved: {row.family_id}"
-                    )
+                if row.healing_relevant is not None or row.coverage_status != UNREVIEWED or row.implemented_hook:
+                    raise ValueError(f"Unreviewed class-passive family must remain unresolved: {row.family_id}")
                 continue
             if row.healing_relevant is None:
-                raise ValueError(
-                    f"Reviewed or partial class-passive family must declare healing relevance: {row.family_id}"
-                )
+                raise ValueError(f"Reviewed or partial class-passive family must declare healing relevance: {row.family_id}")
             if row.review_status == PARTIAL:
                 if row.healing_relevant is not True or row.coverage_status != UNREVIEWED:
-                    raise ValueError(
-                        f"Partial family review must remain healing-relevant and unresolved: {row.family_id}"
-                    )
+                    raise ValueError(f"Partial family review must remain healing-relevant and unresolved: {row.family_id}")
                 continue
             if row.healing_relevant is False:
-                if row.coverage_status != NOT_APPLICABLE:
-                    raise ValueError(
-                        f"Reviewed non-healing family must be not_applicable: {row.family_id}"
-                    )
-                continue
-            if row.coverage_status not in {
-                IMPLEMENTED,
-                EXPLICITLY_UNSUPPORTED,
-                UNREVIEWED,
-            }:
-                raise ValueError(
-                    f"Healing-relevant class-passive family has invalid coverage status: {row.family_id}"
-                )
-            review_checks = {
-                "arcanist:Curative Runeforms": (ExtremeArcanistCurativeRuneformsPassiveReview, "Curative Runeforms"),
-                "necromancer:Living Death": (ExtremeNecromancerLivingDeathPassiveReview, "Living Death"),
-                "nightblade:Siphoning": (ExtremeNightbladeSiphoningPassiveReview, "Siphoning"),
-                "sorcerer:Dark Magic": (ExtremeSorcererDarkMagicPassiveReview, "Dark Magic"),
-                "templar:Aedric Spear": (ExtremeTemplarAedricSpearPassiveReview, "Aedric Spear"),
-                "templar:Dawn's Wrath": (ExtremeTemplarDawnsWrathPassiveReview, "Dawn's Wrath"),
-                "templar:Restoring Light": (ExtremeTemplarRestoringLightPassiveReview, "Restoring Light"),
-                "warden:Animal Companions": (ExtremeWardenAnimalCompanionsPassiveReview, "Animal Companions"),
-                "warden:Green Balance": (ExtremeWardenGreenBalancePassiveReview, "Green Balance"),
-            }
-            check = review_checks.get(row.family_id)
-            if check is not None:
-                review_type, label = check
-                if not review_type().complete:
-                    raise ValueError(
-                        f"{label} cannot be reviewed until its passive-level review is complete"
-                    )
+                if row.coverage_status != NOT_APPLICABLE or row.implemented_hook:
+                    raise ValueError(f"Reviewed non-healing family must be not_applicable without an implementation hook: {row.family_id}")
+            elif row.coverage_status not in {IMPLEMENTED, EXPLICITLY_UNSUPPORTED, UNREVIEWED}:
+                raise ValueError(f"Healing-relevant class-passive family has invalid coverage status: {row.family_id}")
 
-        winter = next(
-            (row for row in rows if row.family_id == "warden:Winter's Embrace"),
-            None,
-        )
-        if winter is not None and not ExtremeWardenWintersEmbracePassiveReview().complete:
-            raise ValueError(
-                "Winter's Embrace cannot be reviewed until its passive-level review is complete"
-            )
+            review_type = review_checks.get(row.family_id)
+            if review_type is None:
+                raise ValueError(f"Reviewed class-passive family lacks a passive-level review guard: {row.family_id}")
+            if not review_type().complete:
+                raise ValueError(f"{row.skill_line} cannot be reviewed until its passive-level review is complete")
