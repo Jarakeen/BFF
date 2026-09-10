@@ -118,17 +118,11 @@ def _evidence_lines(fact: ReconciledEncounterFact) -> tuple[str, ...]:
     return tuple(lines)
 
 
-def _related_safe_facts(
+def _related_facts(
     seed: ReconciledEncounterFact,
     facts: Iterable[ReconciledEncounterFact],
 ) -> tuple[ReconciledEncounterFact, ...]:
-    """Join reviewed split evidence around an explicit ``*_exists`` mechanic stem.
-
-    Encounter evidence intentionally stores timing, response, difficulty, and
-    transition facts separately. Reference may present those together when the
-    fact key clearly contains the reviewed mechanic stem, while conflicting rows
-    remain excluded by ``safe_for_review``.
-    """
+    """Find split evidence around an explicit ``*_exists`` mechanic stem."""
 
     stem = _exists_stem(seed)
     if not stem:
@@ -136,7 +130,7 @@ def _related_safe_facts(
     marker = f"_{stem}_"
     result = []
     for fact in facts:
-        if fact is seed or not fact.safe_for_review:
+        if fact is seed:
             continue
         key = str(fact.fact_key or "").strip().casefold()
         if key.startswith(f"{stem}_") or key.endswith(f"_{stem}") or marker in f"_{key}_":
@@ -166,10 +160,19 @@ def _entry_from_fact(
         details.append(("Reviewed details", rendered))
 
     evidence = list(_evidence_lines(fact))
-    for related_fact in _related_safe_facts(fact, all_facts):
-        related_rendered = _render_value(related_fact.value)
-        if related_rendered:
-            details.append((f"Evidence • {_fact_label(related_fact)}", related_rendered))
+    for related_fact in _related_facts(fact, all_facts):
+        if related_fact.safe_for_review:
+            related_rendered = _render_value(related_fact.value)
+            if related_rendered:
+                details.append((f"Evidence • {_fact_label(related_fact)}", related_rendered))
+        elif related_fact.status == "conflicting":
+            details.append(
+                (
+                    f"Evidence conflict • {_fact_label(related_fact)}",
+                    f"Unresolved: {related_fact.distinct_values} reviewed values across "
+                    f"{related_fact.distinct_sources} source families/records.",
+                )
+            )
         evidence.extend(_evidence_lines(related_fact))
 
     return ReferenceEntry(
