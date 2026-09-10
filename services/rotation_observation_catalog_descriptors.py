@@ -48,6 +48,31 @@ ROTATION_OBSERVATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "evidence fails closed. Refresh/recast semantics remain separate and are not inferred."
         ),
     ),
+    ServiceDescriptor(
+        service_id="rotation.healer.periodic_recast_observation_audit",
+        domain="rotation",
+        purpose=(
+            "Inspect overlapping healer HoT recasts against reviewed single-application timing "
+            "to surface restart-shaped or timing-ambiguous observational evidence."
+        ),
+        implementation_path="tools.audit_phase13_healer_recast_observation_candidates",
+        inputs=(
+            "EsoLogsRawExport",
+            "ReviewedObservationFixture",
+            "CanonicalPeriodicTiming",
+            "ReviewedPeriodicEffectAliases",
+        ),
+        outputs=("RecastObservationCandidateAudit",),
+        responsibilities=("rotation_healer_periodic_recast_observation_audit",),
+        roles=("Healer",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.OBSERVATIONAL,
+        notes=(
+            "Read-only evidence inspection only. Restart-shaped timing is not promotion. "
+            "Refresh/recast policy must remain unresolved until cross-fight evidence is explicitly reviewed."
+        ),
+    ),
 )
 
 
