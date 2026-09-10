@@ -41,8 +41,8 @@ def test_policy_entry_exposes_foundrydock_consumers_without_redefining_rule():
     entry = entry_from_policy(_policy())
 
     assert entry.used_by == ("Rotation Builder", "Performance / Raid Review")
-    assert "Rotation Builder" in entry.search_text
-    assert "Performance / Raid Review" in entry.search_text
+    assert "rotation builder" in entry.search_text
+    assert "performance / raid review" in entry.search_text
 
 
 def test_policy_entry_surfaces_contextual_exceptions_and_field_notes():
