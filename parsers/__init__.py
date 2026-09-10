@@ -7,6 +7,8 @@ import re
 from html import unescape
 from typing import Final
 
+from minmax.eso_markup import normalize_eso_markup
+
 
 _EFFECT_PATTERN: Final[re.Pattern[str]] = re.compile(
     r"\b(?:Major|Minor)\s+"
@@ -113,11 +115,12 @@ def parse_radius(description: str) -> float | None:
 
 
 def parse_description(description: str) -> str:
-    """Return tooltip text with markup, entities, and excess whitespace removed."""
+    """Return tooltip text with ESO/HTML markup, entities, and excess whitespace removed."""
     if not description:
         return ""
 
-    without_markup = re.sub(r"<[^>]+>", " ", description)
+    eso_normalized = normalize_eso_markup(description).text
+    without_markup = re.sub(r"<[^>]+>", " ", eso_normalized)
     normalized = " ".join(unescape(without_markup).split())
     return re.sub(r"\s+([,.;:!?])", r"\1", normalized)
 
