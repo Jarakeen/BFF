@@ -51,7 +51,7 @@ def test_dark_vigor_enters_canonical_max_health_bucket_from_progression() -> Non
     )
 
     contribution = result.health.skill_percent_contributions[-1]
-    assert contribution.source == "Nightblade: Dark Vigor"
+    assert contribution.label == "Nightblade: Dark Vigor"
     assert contribution.value == pytest.approx(0.10)
     assert result.applied_effect_count == 1
     assert result.unresolved == ()
@@ -95,6 +95,6 @@ def test_foreign_class_shadow_route_can_receive_dark_vigor() -> None:
     )
 
     contribution = result.health.skill_percent_contributions[-1]
-    assert contribution.source == "Nightblade: Dark Vigor"
+    assert contribution.label == "Nightblade: Dark Vigor"
     assert contribution.value == pytest.approx(0.05)
     assert result.unresolved == ()
