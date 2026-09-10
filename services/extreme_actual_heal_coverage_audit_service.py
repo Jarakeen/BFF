@@ -10,6 +10,10 @@ from minmax.mechanic_coverage import (
 from services.extreme_actual_heal_optimization_service import (
     ExtremeActualHealOptimizationService,
 )
+from services.extreme_healing_class_passive_coverage_inventory import (
+    ExtremeHealingClassPassiveCoverageInventory,
+    ExtremeHealingClassPassiveCoverageSummary,
+)
 from services.extreme_healing_event_recipient_scope_service import (
     ExtremeHealingEventRecipientScopeService,
 )
@@ -34,13 +38,14 @@ class ExtremeActualHealCoverageAuditService:
     Comp Maker, Team Optimization, Rotation, provider/coverage, and later
     consumers do not invent conflicting meanings for coverage status.
 
-    The broad implemented/omitted boundaries are anchored to the optimizer's
-    existing ``SEARCH_SCOPE`` and ``OMITTED_SCOPE`` contracts. Dragon Blood is
-    counted as implemented only because the reviewed recipient resolver can
-    prove the self component from the exact two-component 3:2 coefficient
-    relationship and the healing-event evaluator consumes that selection.
-    Malformed or missing coefficient evidence still blocks the individual event
-    rather than being treated as covered by assumption.
+    Class-passive coverage is derived from a canonical family inventory that
+    must exactly match ``CLASS_SKILL_LINES``. This keeps unreviewed class
+    families measurable instead of allowing them to disappear inside prose.
+    Dragon Blood is counted as implemented only because the reviewed recipient
+    resolver can prove the self component from the exact two-component 3:2
+    coefficient relationship and the healing-event evaluator consumes that
+    selection. Malformed or missing coefficient evidence still blocks the
+    individual event rather than being treated as covered by assumption.
     """
 
     REQUIRED_CATEGORIES = (
@@ -65,9 +70,13 @@ class ExtremeActualHealCoverageAuditService:
         needle = token.casefold()
         return any(needle in str(value).casefold() for value in values)
 
+    def class_passive_summary(self) -> ExtremeHealingClassPassiveCoverageSummary:
+        return ExtremeHealingClassPassiveCoverageInventory().summary()
+
     def items(self) -> tuple[ExtremeActualHealCoverageItem, ...]:
         search_scope = tuple(ExtremeActualHealOptimizationService.SEARCH_SCOPE)
         omitted_scope = tuple(ExtremeActualHealOptimizationService.OMITTED_SCOPE)
+        class_passives = self.class_passive_summary()
 
         gear_status = (
             "implemented"
@@ -94,9 +103,6 @@ class ExtremeActualHealCoverageAuditService:
         )
         runtime_omitted = self._scope_contains(omitted_scope, "runtime conditional stacks/procs")
         group_omitted = self._scope_contains(omitted_scope, "group-only buffs")
-        unreviewed_passives_omitted = self._scope_contains(
-            omitted_scope, "unreviewed skill-bar passive/proc families"
-        )
         dragon_blood_guarded = {
             "blood of the elder dragon",
             "coagulating blood",
@@ -113,9 +119,17 @@ class ExtremeActualHealCoverageAuditService:
             ExtremeActualHealCoverageItem(
                 "reviewed_class_passive_families",
                 "class_passives",
-                "unresolved" if unreviewed_passives_omitted else "implemented",
-                "ExtremeHealingEventService class-family resolvers + optimizer OMITTED_SCOPE",
-                "Reviewed class passive families are modeled, but the optimizer still explicitly omits unreviewed skill-bar passive/proc families. An unreviewed family is an unresolved coverage gap, not a supported conditional scenario.",
+                "implemented" if class_passives.complete else "unresolved",
+                "ExtremeHealingClassPassiveCoverageInventory",
+                (
+                    "Canonical class-passive review denominator: "
+                    f"reviewed {class_passives.reviewed_families}/{class_passives.total_families}; "
+                    f"healing-relevant {class_passives.healing_relevant_families}; "
+                    f"implemented {class_passives.implemented}; "
+                    f"explicitly unsupported {class_passives.explicitly_unsupported}; "
+                    f"healing-relevant unreviewed {class_passives.healing_relevant_unreviewed}; "
+                    f"families awaiting relevance review {class_passives.unreviewed_families}."
+                ),
             ),
             ExtremeActualHealCoverageItem(
                 "reviewed_gear_packages_and_bonuses",
