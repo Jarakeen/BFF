@@ -7,6 +7,7 @@ from collections import Counter
 from services.service_catalog import SERVICE_CATALOG
 from services.application_catalog_descriptors import APPLICATION_SERVICE_DESCRIPTORS
 from services.comp_maker_catalog_descriptors import COMP_MAKER_SERVICE_DESCRIPTORS
+from services.rotation_catalog_descriptors import ROTATION_SERVICE_DESCRIPTORS
 from services.team_prescription_catalog_descriptors import (
     TEAM_PRESCRIPTION_SERVICE_DESCRIPTORS,
 )
@@ -17,6 +18,7 @@ from services.team_workflow_catalog_descriptors import TEAM_WORKFLOW_SERVICE_DES
 EXPORTED_DESCRIPTOR_FAMILIES = {
     "application": APPLICATION_SERVICE_DESCRIPTORS,
     "comp_maker": COMP_MAKER_SERVICE_DESCRIPTORS,
+    "rotation": ROTATION_SERVICE_DESCRIPTORS,
     "team_prescription": TEAM_PRESCRIPTION_SERVICE_DESCRIPTORS,
     "team_provider": TEAM_PROVIDER_SERVICE_DESCRIPTORS,
     "team_workflow": TEAM_WORKFLOW_SERVICE_DESCRIPTORS,
