@@ -18,7 +18,7 @@ from services.encounter_repository import EncounterRepository
 from ui.reference_data_model import ReferenceEntry
 
 
-_MECHANIC_FACT_TYPES = frozenset({"mechanic", "mechanic_detail"})
+_MECHANIC_FACT_TYPES = frozenset({"mechanic", "mechanic_detail", "mechanic_state"})
 
 
 def _boss_ids(data_root: Path) -> frozenset[str]:
@@ -39,12 +39,7 @@ def _boss_ids(data_root: Path) -> frozenset[str]:
 
 
 def _canonical_mechanic_entry_names(data_root: Path) -> frozenset[str]:
-    """Return display identities already represented by canonical mechanics.
-
-    Fail closed if a partial test fixture cannot instantiate the repository.
-    Evidence projection may still operate in that fixture, but production callers
-    with a complete data root get duplicate suppression against canonical rows.
-    """
+    """Return display identities already represented by canonical mechanics."""
 
     try:
         repository = EncounterRepository.from_data_root(data_root)
@@ -80,12 +75,24 @@ def _render_value(value: Any) -> str:
     return str(value)
 
 
+def _title_from_exists_key(fact_key: str) -> str:
+    suffix = "_exists"
+    key = str(fact_key or "").strip()
+    if not key.casefold().endswith(suffix):
+        return ""
+    stem = key[: -len(suffix)].strip("_")
+    return stem.replace("_", " ").title() if stem else ""
+
+
 def _named_mechanic_fact(fact: ReconciledEncounterFact) -> str:
-    if fact.fact_type.casefold() not in _MECHANIC_FACT_TYPES:
+    kind = fact.fact_type.casefold()
+    if kind not in _MECHANIC_FACT_TYPES:
         return ""
-    if not isinstance(fact.value, dict):
-        return ""
-    return str(fact.value.get("name") or "").strip()
+    if isinstance(fact.value, dict):
+        return str(fact.value.get("name") or "").strip()
+    if kind == "mechanic_state" and fact.value is True:
+        return _title_from_exists_key(fact.fact_key)
+    return ""
 
 
 def _entry_from_fact(packet, fact: ReconciledEncounterFact) -> ReferenceEntry | None:
@@ -146,7 +153,7 @@ def _load_evidence_entries(
     backed_ids = _boss_ids(data_root) if skip_backed_encounters else frozenset()
     represented = _canonical_mechanic_entry_names(data_root) if suppress_canonical_mechanics else frozenset()
     evidence_root = data_root / "encounter_evidence"
-    entries: list[ReferenceEntry] = []
+    entries: dict[str, ReferenceEntry] = {}
 
     for path in sorted(evidence_root.glob("*.json"), key=lambda item: item.name.casefold()):
         packet = load_encounter_evidence_packet(path)
@@ -156,11 +163,28 @@ def _load_evidence_entries(
             entry = _entry_from_fact(packet, fact)
             if entry is None:
                 continue
-            if entry.name.casefold() in represented:
+            identity = entry.name.casefold()
+            if identity in represented:
                 continue
-            entries.append(entry)
+            existing = entries.get(identity)
+            if existing is None:
+                entries[identity] = entry
+                continue
+            entries[identity] = ReferenceEntry(
+                name=existing.name,
+                entry_type=existing.entry_type,
+                source_scope=existing.source_scope,
+                tags=existing.tags,
+                summary=existing.summary,
+                details=tuple(dict.fromkeys((*existing.details, *entry.details))),
+                related=tuple(dict.fromkeys((*existing.related, *entry.related))),
+                death_note=existing.death_note,
+                field_note=existing.field_note,
+                used_by=tuple(dict.fromkeys((*existing.used_by, *entry.used_by))),
+                evidence=tuple(dict.fromkeys((*existing.evidence, *entry.evidence))),
+            )
 
-    return tuple(sorted(entries, key=lambda entry: (entry.name.casefold(), entry.name)))
+    return tuple(sorted(entries.values(), key=lambda entry: (entry.name.casefold(), entry.name)))
 
 
 def load_reviewed_encounter_evidence_entries(
@@ -168,9 +192,8 @@ def load_reviewed_encounter_evidence_entries(
 ) -> tuple[ReferenceEntry, ...]:
     """Project safe reviewed mechanic evidence missing from canonical Reference.
 
-    This is the production path. A boss backing record by itself is not enough to
-    suppress evidence; only an already-represented canonical mechanic with the
-    same display identity suppresses the evidence-only entry.
+    A boss backing record by itself is not enough to suppress evidence; only an
+    already-represented canonical mechanic with the same display identity does.
     """
 
     root = data_root or get_data_dir()
