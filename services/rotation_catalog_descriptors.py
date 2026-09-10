@@ -209,6 +209,29 @@ ROTATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="rotation.healer.caster_healing_relevance",
+        domain="rotation",
+        purpose=(
+            "Classify reviewed canonical skill identities by whether their activation has "
+            "caster-owned healing, no caster-owned healing, or an external conditional "
+            "healing path that requires separate modeling."
+        ),
+        implementation_path="services.rotation_healer_caster_healing_relevance_service",
+        inputs=("CanonicalSkillSemanticId",),
+        outputs=("RotationHealerCasterHealingRelevanceEvidence",),
+        dependencies=(),
+        responsibilities=("rotation_healer_skill_caster_healing_relevance",),
+        roles=("Healer",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Reviewed no-caster-healing identities may bypass healer tooltip projection. "
+            "External conditional healing remains explicit and unresolved until its trigger "
+            "path is modeled. Unknown skill identities continue fail-closed."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="rotation.healer.output_context_relevance",
         domain="rotation",
         purpose=(
