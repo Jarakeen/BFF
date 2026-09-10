@@ -6,6 +6,9 @@ from minmax.passive_eligibility import CLASS_SKILL_LINES
 from services.extreme_necromancer_living_death_passive_review import (
     ExtremeNecromancerLivingDeathPassiveReview,
 )
+from services.extreme_nightblade_siphoning_passive_review import (
+    ExtremeNightbladeSiphoningPassiveReview,
+)
 from services.extreme_warden_green_balance_passive_review import (
     ExtremeWardenGreenBalancePassiveReview,
 )
@@ -124,12 +127,12 @@ class ExtremeHealingClassPassiveCoverageInventory:
             ("nightblade", "Siphoning"): ExtremeHealingClassPassiveCoverageEntry(
                 "nightblade",
                 "Siphoning",
-                PARTIAL,
+                REVIEWED,
                 True,
-                UNREVIEWED,
+                IMPLEMENTED,
                 True,
-                "ExtremeNightbladeSiphoningHealingService",
-                "Soul Siphoner has an implemented Extreme healing hook, but the full Siphoning passive family has not yet been exhaustively reviewed.",
+                "ExtremeNightbladeSiphoningPassiveReview + NightbladePassiveInputResolver + ExtremeNightbladeSiphoningHealingService",
+                "All four Siphoning passives are reviewed for MOST Actual Heal: Magicka Flood and Soul Siphoner are implemented; Catalyst and Transfer are objective-irrelevant.",
             ),
             ("warden", "Green Balance"): ExtremeHealingClassPassiveCoverageEntry(
                 "warden",
@@ -244,6 +247,13 @@ class ExtremeHealingClassPassiveCoverageInventory:
             ):
                 raise ValueError(
                     "Living Death cannot be reviewed until its passive-level review is complete"
+                )
+            if (
+                row.family_id == "nightblade:Siphoning"
+                and not ExtremeNightbladeSiphoningPassiveReview().complete
+            ):
+                raise ValueError(
+                    "Siphoning cannot be reviewed until its passive-level review is complete"
                 )
             if (
                 row.family_id == "warden:Green Balance"
