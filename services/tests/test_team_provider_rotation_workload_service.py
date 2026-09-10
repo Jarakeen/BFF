@@ -25,6 +25,7 @@ def _action_cost(
     resource_costs=None,
     ultimate_cost=None,
     displacement=0.0,
+    heavy_completed=None,
 ):
     return TeamProviderScheduledActionCost(
         time_seconds=time_seconds,
@@ -34,6 +35,7 @@ def _action_cost(
         resource_costs=resource_costs,
         ultimate_cost=ultimate_cost,
         primary_role_displacement_seconds=displacement,
+        heavy_attack_completed=heavy_completed,
     )
 
 
@@ -307,3 +309,78 @@ def test_reviewed_free_skill_cost_is_explicit_not_assumed():
 
     assert workload.viable
     assert workload.resource_costs == ()
+
+
+def test_fully_charged_heavy_attack_can_be_a_provider_application() -> None:
+    plan = _plan(
+        "Healer",
+        "HA Provider",
+        RotationAction(2.0, 0, RotationActionKind.HEAVY_ATTACK, None, "front"),
+    )
+    workload = TeamProviderRotationWorkloadService().assess(
+        alternative_id="verified heavy provider",
+        effect_key="major slayer",
+        duration_seconds=60.0,
+        recipient_coverage_met=True,
+        temporal_coverage_met=True,
+        contributions=(
+            TeamProviderRotationContribution(
+                plan=plan,
+                provider_actions=(
+                    _action_cost(
+                        2.0,
+                        0,
+                        gcd=0.0,
+                        cast_channel=1.8,
+                        resource_costs=(),
+                        displacement=1.8,
+                        heavy_completed=True,
+                    ),
+                ),
+            ),
+        ),
+    )
+
+    assert workload.viable
+    assert workload.provider_applications == 1
+    assert workload.provider_gcd_seconds == 0.0
+    assert workload.provider_cast_channel_seconds == 1.8
+    assert workload.primary_role_displacement_seconds == 1.8
+    assert workload.whole_plan_burden.heavy_attacks == 1
+
+
+def test_heavy_attack_provider_requires_verified_completion_evidence() -> None:
+    plan = _plan(
+        "Healer",
+        "HA Provider",
+        RotationAction(2.0, 0, RotationActionKind.HEAVY_ATTACK, None, "front"),
+    )
+    workload = TeamProviderRotationWorkloadService().assess(
+        alternative_id="unverified heavy provider",
+        effect_key="major slayer",
+        duration_seconds=60.0,
+        recipient_coverage_met=True,
+        temporal_coverage_met=True,
+        contributions=(
+            TeamProviderRotationContribution(
+                plan=plan,
+                provider_actions=(
+                    _action_cost(
+                        2.0,
+                        0,
+                        gcd=0.0,
+                        cast_channel=1.8,
+                        resource_costs=(),
+                        displacement=1.8,
+                    ),
+                ),
+            ),
+        ),
+    )
+
+    assert not workload.viable
+    assert workload.provider_applications == 0
+    assert any(
+        "verified fully charged completion evidence" in item
+        for item in workload.unresolved
+    )
