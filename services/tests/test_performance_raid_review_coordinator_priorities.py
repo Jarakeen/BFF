@@ -92,3 +92,14 @@ def test_coordinator_exposes_contextual_top_priority_without_removing_raw_findin
     assert result.priorities[0].category == "damage_context"
     assert result.priorities[0].title == "Lower wipe-side damage has measured context"
     assert not any(item.category == "damage" for item in result.priorities)
+
+    assert result.synthesis is not None
+    assert result.synthesis.encounter_name == "Lokkestiiz"
+    assert result.synthesis.pull_count == 4
+    assert result.synthesis.kill_count == 2
+    assert result.synthesis.wipe_count == 2
+    assert result.synthesis.top_priorities == result.priorities
+    dps_focus = next(item for item in result.synthesis.role_focus if item.role == "DPS")
+    assert dps_focus.actionable_count >= 2
+    assert "damage_context" in dps_focus.categories
+    assert "boss_contact" in dps_focus.categories
