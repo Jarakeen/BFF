@@ -101,6 +101,31 @@ ROTATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "threshold, or survival claim; unresolved evidence in any window fails closed."
         ),
     ),
+    ServiceDescriptor(
+        service_id="rotation.healer.demand_criteria",
+        domain="rotation",
+        purpose=(
+            "Assess provenance-bearing healer encounter criteria against canonical "
+            "per-window modeled output without inventing thresholds."
+        ),
+        implementation_path="services.rotation_healer_demand_criteria_service",
+        inputs=(
+            "RotationCandidateHealerMultiDemandOutput",
+            "RotationHealerDemandCriterion",
+        ),
+        outputs=("RotationHealerDemandCriteriaAssessment",),
+        dependencies=("rotation.healer.multi_demand_role_output",),
+        responsibilities=("rotation_healer_demand_criteria_evaluation",),
+        roles=("Healer",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Only verified encounter evidence may form a hard healer obligation. "
+            "Caller assumptions remain diagnostic; missing canonical window output "
+            "fails closed for authoritative criteria."
+        ),
+    ),
 )
 
 
