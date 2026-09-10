@@ -45,21 +45,34 @@ def test_budding_seeds_bloom_is_delayed_heal_and_field_is_periodic():
 
 
 def test_budding_seeds_harvest_synergy_is_not_routed_as_caster_owned_heal():
-    components = _repo().get_for_skill_rank(
-        RotationHealerU50SkillComponentRepository.BUDDING_SEEDS_RANK_ID
-    )
+    repo = _repo()
+    components = repo.get_for_skill_rank(repo.BUDDING_SEEDS_RANK_ID)
 
     assert {item.coefficient_number for item in components} == {1, 2}
+    assert repo.is_intentionally_excluded_caster_healing_component(
+        skill_rank_id=repo.BUDDING_SEEDS_RANK_ID,
+        coefficient_number=3,
+    ) is True
 
 
 def test_energy_orb_routes_periodic_orb_but_not_healing_combustion_synergy():
-    components = _repo().get_for_skill_rank(
-        RotationHealerU50SkillComponentRepository.ENERGY_ORB_RANK_ID
-    )
+    repo = _repo()
+    components = repo.get_for_skill_rank(repo.ENERGY_ORB_RANK_ID)
 
     assert len(components) == 1
     assert components[0].coefficient_number == 1
     assert components[0].heal_temporal_scope is HealTemporalScope.PERIODIC
+    assert repo.is_intentionally_excluded_caster_healing_component(
+        skill_rank_id=repo.ENERGY_ORB_RANK_ID,
+        coefficient_number=2,
+    ) is True
+
+
+def test_unknown_component_is_not_treated_as_intentional_caster_exclusion():
+    assert _repo().is_intentionally_excluded_caster_healing_component(
+        skill_rank_id=123456,
+        coefficient_number=7,
+    ) is False
 
 
 def test_common_df_healer_hots_are_periodic():
