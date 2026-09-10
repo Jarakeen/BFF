@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from math import isfinite
 from typing import Protocol
 
@@ -22,13 +22,7 @@ from services.team_provider_rotation_workload_service import TeamProviderRotatio
 
 @dataclass(frozen=True)
 class RotationCandidateRoleOutputEvidence:
-    """Authoritative whole-plan primary-role output for one exact candidate.
-
-    The value is deliberately metric-agnostic here. The owning evaluator decides
-    whether it represents effective damage, healing, mitigation, or another explicit
-    role-output metric. This composition service only carries a resolved finite value
-    forward; unresolved evidence remains unknown and therefore fails closed later.
-    """
+    """Authoritative whole-plan primary-role output for one exact candidate."""
 
     candidate_id: str
     value: float | None
@@ -59,18 +53,42 @@ class RotationCandidateRoleOutputEvidence:
         return self.value
 
 
-class RotationCandidateRoleOutputEvidenceProvider(Protocol):
-    """Provide authoritative primary-role output for one exact generated plan."""
+@dataclass(frozen=True)
+class RotationCandidateRestorationEvidence:
+    """Candidate-specific runtime restoration events with fail-closed diagnostics."""
 
+    candidate_id: str
+    restoration_events: tuple[ResourceRestorationEvent, ...] = ()
+    unresolved: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        candidate_id = str(self.candidate_id or "").strip()
+        if not candidate_id:
+            raise ValueError("rotation restoration evidence candidate_id is required")
+        object.__setattr__(self, "candidate_id", candidate_id)
+        object.__setattr__(self, "restoration_events", tuple(self.restoration_events))
+        object.__setattr__(
+            self,
+            "unresolved",
+            tuple(str(item).strip() for item in self.unresolved if str(item).strip()),
+        )
+
+
+class RotationCandidateRoleOutputEvidenceProvider(Protocol):
     def evaluate_plan(
         self,
         candidate: GeneratedRotationCandidate,
     ) -> RotationCandidateRoleOutputEvidence: ...
 
 
-class RotationCandidateProviderWorkloadEvidenceProvider(Protocol):
-    """Provide already-evaluated canonical provider workload for one exact candidate."""
+class RotationCandidateRestorationEvidenceProvider(Protocol):
+    def evaluate_plan(
+        self,
+        candidate: GeneratedRotationCandidate,
+    ) -> RotationCandidateRestorationEvidence: ...
 
+
+class RotationCandidateProviderWorkloadEvidenceProvider(Protocol):
     def evaluate_plan(
         self,
         candidate: GeneratedRotationCandidate,
@@ -80,17 +98,16 @@ class RotationCandidateProviderWorkloadEvidenceProvider(Protocol):
 class RotationCandidateCanonicalPlanEvidenceService:
     """Evaluate generated candidates through existing canonical plan mechanics.
 
-    This service is composition only. It does not calculate ESO mechanics itself:
-    Phase 4 sustain remains owned by ``RotationSustainService`` and duration/recast
-    evidence remains owned by ``RotationDurationAnalysisService``. When supplied,
-    provider workload remains owned by the existing team-provider workload path and
-    primary-role output remains owned by its explicit whole-plan evaluator.
+    This service is composition only. Phase 4 sustain remains owned by
+    ``RotationSustainService`` and duration/recast evidence remains owned by
+    ``RotationDurationAnalysisService``. Candidate-specific restoration providers may
+    add already-resolved runtime restoration events before sustain evaluation; this
+    service never calculates the restoration amount itself.
 
     Role output stays unknown until an authoritative provider supplies resolved
     evidence for this exact candidate. Assigned-support value remains unresolved
     until its own authoritative provider exists. Primary-role displacement is
-    accepted only from a viable, fully resolved canonical provider-workload result;
-    missing or blocked evidence never becomes an invented zero.
+    accepted only from a viable canonical provider-workload result.
     """
 
     def __init__(
@@ -100,6 +117,7 @@ class RotationCandidateCanonicalPlanEvidenceService:
         sustain_service: RotationSustainService | None = None,
         duration_service: RotationDurationAnalysisService | None = None,
         role_output_evidence_provider: RotationCandidateRoleOutputEvidenceProvider | None = None,
+        restoration_evidence_provider: RotationCandidateRestorationEvidenceProvider | None = None,
         provider_workload_evidence_provider: (
             RotationCandidateProviderWorkloadEvidenceProvider | None
         ) = None,
@@ -114,6 +132,7 @@ class RotationCandidateCanonicalPlanEvidenceService:
         self.sustain_service = sustain_service or RotationSustainService()
         self.duration_service = duration_service or RotationDurationAnalysisService()
         self.role_output_evidence_provider = role_output_evidence_provider
+        self.restoration_evidence_provider = restoration_evidence_provider
         self.provider_workload_evidence_provider = provider_workload_evidence_provider
         self.resource = resource
         self.restoration_events = tuple(restoration_events)
@@ -128,22 +147,38 @@ class RotationCandidateCanonicalPlanEvidenceService:
     ) -> RotationCandidatePlanEvidence:
         """Evaluate the exact final candidate plan without rebuilding or rescheduling it."""
 
+        candidate_restoration_events: tuple[ResourceRestorationEvent, ...] = ()
+        restoration_unresolved: tuple[str, ...] = ()
+        if self.restoration_evidence_provider is not None:
+            restoration = self.restoration_evidence_provider.evaluate_plan(candidate)
+            if restoration.candidate_id.casefold() != candidate.candidate_id.casefold():
+                raise ValueError(
+                    "rotation restoration evidence candidate mismatch: "
+                    f"expected {candidate.candidate_id!r}, got {restoration.candidate_id!r}"
+                )
+            candidate_restoration_events = tuple(restoration.restoration_events)
+            restoration_unresolved = tuple(restoration.unresolved)
+
         sustain = self.sustain_service.evaluate(
             build=self.build,
             plan=candidate.plan,
             resource=self.resource,
-            restoration_events=self.restoration_events,
+            restoration_events=self.restoration_events + candidate_restoration_events,
             maximum_events=self.maximum_events,
             calculation_context=self.calculation_context,
             displayed_recovery_at=self.displayed_recovery_at,
         )
+        if restoration_unresolved:
+            sustain = replace(
+                sustain,
+                unresolved=self._dedupe(tuple(sustain.unresolved) + restoration_unresolved),
+            )
+
         duration = self.duration_service.analyze(
             candidate.plan,
             effective_duration_overrides=self.effective_duration_overrides,
         )
 
-        # Minimum resource is the meaningful deterministic headroom: ending high
-        # does not erase a dangerous or failing dip earlier in the rotation.
         sustain_margin = float(sustain.run.sustain.minimum_amount)
 
         role_output_value: float | None = None
@@ -177,10 +212,27 @@ class RotationCandidateCanonicalPlanEvidenceService:
             primary_role_displacement_seconds=primary_role_displacement_seconds,
         )
 
+    @staticmethod
+    def _dedupe(values: tuple[str, ...]) -> tuple[str, ...]:
+        seen: set[str] = set()
+        ordered: list[str] = []
+        for raw in values:
+            value = str(raw or "").strip()
+            if not value:
+                continue
+            key = value.casefold()
+            if key in seen:
+                continue
+            seen.add(key)
+            ordered.append(value)
+        return tuple(ordered)
+
 
 __all__ = [
     "RotationCandidateCanonicalPlanEvidenceService",
     "RotationCandidateProviderWorkloadEvidenceProvider",
+    "RotationCandidateRestorationEvidence",
+    "RotationCandidateRestorationEvidenceProvider",
     "RotationCandidateRoleOutputEvidence",
     "RotationCandidateRoleOutputEvidenceProvider",
 ]
