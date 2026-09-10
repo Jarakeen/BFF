@@ -238,14 +238,71 @@ def _load_evidence_entries(
     return tuple(sorted(entries.values(), key=lambda entry: (entry.name.casefold(), entry.name)))
 
 
+def _canonical_evidence_details(entry: ReferenceEntry) -> tuple[tuple[str, str], ...]:
+    details = []
+    for label, value in entry.details:
+        if label in {"Authority", "Encounter", "Content ID"}:
+            continue
+        if label.startswith("Evidence •") or label.startswith("Evidence conflict •"):
+            details.append((label, value))
+        else:
+            details.append((f"Reviewed evidence • {label}", value))
+    return tuple(details)
+
+
+def enrich_reference_entries_with_encounter_evidence(
+    entries: Iterable[ReferenceEntry],
+    data_root: Path | None = None,
+) -> tuple[ReferenceEntry, ...]:
+    """Augment canonical Reference entries and append only unmatched evidence entries.
+
+    Canonical entries keep their authority, summary, structured mechanic fields, and
+    death guidance. Reviewed evidence contributes additional timing/response/HM facts
+    and provenance. Evidence-only entries are retained only when no canonical entry
+    with the same human-readable mechanic identity exists.
+    """
+
+    root = data_root or get_data_dir()
+    evidence_entries = _load_evidence_entries(
+        root,
+        skip_backed_encounters=False,
+        suppress_canonical_mechanics=False,
+    )
+    by_name = {entry.name.casefold(): entry for entry in evidence_entries}
+    result: list[ReferenceEntry] = []
+    represented: set[str] = set()
+
+    for entry in entries:
+        identity = entry.name.casefold()
+        represented.add(identity)
+        evidence_entry = by_name.get(identity)
+        if evidence_entry is None:
+            result.append(entry)
+            continue
+        result.append(
+            replace(
+                entry,
+                details=tuple(
+                    dict.fromkeys((*entry.details, *_canonical_evidence_details(evidence_entry)))
+                ),
+                related=tuple(dict.fromkeys((*entry.related, *evidence_entry.related))),
+                used_by=tuple(dict.fromkeys((*entry.used_by, *evidence_entry.used_by))),
+                evidence=tuple(dict.fromkeys((*entry.evidence, *evidence_entry.evidence))),
+            )
+        )
+
+    result.extend(
+        evidence_entry
+        for evidence_entry in evidence_entries
+        if evidence_entry.name.casefold() not in represented
+    )
+    return tuple(result)
+
+
 def load_reviewed_encounter_evidence_entries(
     data_root: Path | None = None,
 ) -> tuple[ReferenceEntry, ...]:
-    """Project safe reviewed mechanic evidence missing from canonical Reference.
-
-    A boss backing record by itself is not enough to suppress evidence; only an
-    already-represented canonical mechanic with the same display identity does.
-    """
+    """Project safe reviewed mechanic evidence missing from canonical Reference."""
 
     root = data_root or get_data_dir()
     return _load_evidence_entries(
