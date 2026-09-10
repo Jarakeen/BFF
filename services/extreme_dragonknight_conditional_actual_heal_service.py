@@ -13,6 +13,9 @@ from services.extreme_dragonknight_dragon_blood_healing_service import (
 from services.extreme_dragonknight_earthen_heart_mending_service import (
     ExtremeDragonknightEarthenHeartMendingService,
 )
+from services.extreme_dragonknight_elder_dragon_combat_state_service import (
+    ExtremeDragonknightElderDragonCombatStateService,
+)
 from services.extreme_healing_event_service import ExtremeHealingEventResult
 
 
@@ -22,8 +25,9 @@ class ExtremeDragonknightConditionalActualHealService(
     """Add reviewed Dragonknight conditional healing state.
 
     Earthen Heart shield-family sources may contribute canonical ``Major Mending``
-    during an explicit reviewed window. Duplicate Major Mending sources are still
-    deduplicated by ``CombatState``.
+    during an explicit reviewed window. Elder Dragon may likewise contribute
+    canonical ``Minor Brutality`` during an explicitly proven post-Draconic-Power
+    activation window. Duplicate named buffs remain deduplicated by CombatState.
 
     Unmorphed ``Dragon Blood`` may also use an explicit caster-Health fraction to
     resolve its reviewed missing-Health self-heal modifier. Blood of the Green
@@ -38,8 +42,10 @@ class ExtremeDragonknightConditionalActualHealService(
         *,
         dragonknight_major_mending_window_active: bool = False,
         dragonknight_major_mending_source_ability: str | None = None,
+        elder_dragon_window_active: bool = False,
         caster_health_fraction: float | None = None,
         dragonknight_earthen_heart_mending: ExtremeDragonknightEarthenHeartMendingService | None = None,
+        dragonknight_elder_dragon_state: ExtremeDragonknightElderDragonCombatStateService | None = None,
         dragonknight_dragon_blood_healing: ExtremeDragonknightDragonBloodHealingService | None = None,
         **kwargs,
     ) -> None:
@@ -53,8 +59,10 @@ class ExtremeDragonknightConditionalActualHealService(
         self.dragonknight_major_mending_source_ability = (
             str(dragonknight_major_mending_source_ability or "").strip() or None
         )
+        self.elder_dragon_window_active = bool(elder_dragon_window_active)
         self.caster_health_fraction = caster_health_fraction
         self.dragonknight_earthen_heart_mending = dragonknight_earthen_heart_mending
+        self.dragonknight_elder_dragon_state = dragonknight_elder_dragon_state
         self.dragonknight_dragon_blood_healing = dragonknight_dragon_blood_healing
         super().__init__(**kwargs)
 
@@ -72,6 +80,11 @@ class ExtremeDragonknightConditionalActualHealService(
             scenarios.append(
                 "explicit Dragonknight Major Mending window from "
                 f"{source}; Earthen Heart source requires canonical legality proof"
+            )
+        if self.elder_dragon_window_active:
+            scenarios.append(
+                "explicit Elder Dragon post-activation window; Minor Brutality "
+                "requires canonical Draconic Power and passive-rank proof"
             )
         if not scenarios:
             return result
@@ -92,32 +105,48 @@ class ExtremeDragonknightConditionalActualHealService(
             progression=progression,
             active_bar=active_bar,
         )
-        if not self.dragonknight_major_mending_window_active:
-            return base_state, base_unresolved
+        states = [base_state]
+        unresolved_messages = list(base_unresolved)
 
-        service = self.dragonknight_earthen_heart_mending
-        if service is None:
-            service = ExtremeDragonknightEarthenHeartMendingService()
-            self.dragonknight_earthen_heart_mending = service
-        result = service.resolve(
-            build=build,
-            source_ability_name=self.dragonknight_major_mending_source_ability,
-            major_mending_window_active=True,
-        )
+        if self.dragonknight_major_mending_window_active:
+            service = self.dragonknight_earthen_heart_mending
+            if service is None:
+                service = ExtremeDragonknightEarthenHeartMendingService()
+                self.dragonknight_earthen_heart_mending = service
+            result = service.resolve(
+                build=build,
+                source_ability_name=self.dragonknight_major_mending_source_ability,
+                major_mending_window_active=True,
+            )
+            states.append(result.combat_state)
+            unresolved_messages.extend(result.unresolved)
+
+        if self.elder_dragon_window_active:
+            service = self.dragonknight_elder_dragon_state
+            if service is None:
+                service = ExtremeDragonknightElderDragonCombatStateService()
+                self.dragonknight_elder_dragon_state = service
+            result = service.resolve(
+                build=build,
+                progression=progression,
+                elder_dragon_window_active=True,
+            )
+            states.append(result.combat_state)
+            unresolved_messages.extend(result.unresolved)
+
         merged = CombatState(
-            in_combat=(
-                bool(base_state.in_combat) or bool(result.combat_state.in_combat)
-            ),
-            active_buffs=(
-                *base_state.active_buffs,
-                *result.combat_state.active_buffs,
+            in_combat=any(bool(state.in_combat) for state in states),
+            active_buffs=tuple(
+                buff
+                for state in states
+                for buff in state.active_buffs
             ),
             game_update=base_state.game_update,
         )
         unresolved = tuple(
             dict.fromkeys(
                 message
-                for message in (*base_unresolved, *result.unresolved)
+                for message in unresolved_messages
                 if message
             )
         )
