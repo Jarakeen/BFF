@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Protocol
 
@@ -58,6 +59,12 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
     filtering remain owned by their existing services. The provider never invents
     a tick cadence, refresh rule, delayed offset, target multiplier, or survival
     threshold. Missing runtime facts remain explicit unresolved evidence.
+
+    ``context`` remains the backward-compatible default static calculation context.
+    Real dual-bar evaluations may additionally provide ``contexts_by_bar`` so
+    scheduled front/back skill actions use the exact static context for the bar on
+    which they are cast. Missing mapped bar state then fails closed in the action
+    healing layer instead of borrowing the default context.
     """
 
     def __init__(
@@ -66,6 +73,7 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
         database_path: str | Path,
         build: PlayerBuild,
         context: BuildCalculationContext,
+        contexts_by_bar: Mapping[str, BuildCalculationContext] | None = None,
         action_healing_service: RotationHealerActionHealingService | object | None = None,
         periodic_timing_service: (
             RotationHealerSavedBuildPeriodicTimingService | object | None
@@ -87,6 +95,7 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
         path = Path(database_path)
         self.build = build
         self.context = context
+        self.contexts_by_bar = self._normalize_contexts_by_bar(contexts_by_bar)
         self.action_healing_service = action_healing_service or RotationHealerActionHealingService(path)
         self.periodic_timing_service = periodic_timing_service or RotationHealerSavedBuildPeriodicTimingService(path)
         self.periodic_runtime_evidence_service = (
@@ -110,11 +119,14 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
         if demand.kind is not RotationDemandKind.HEALING:
             raise ValueError("canonical healer demand evidence requires a healing demand window")
 
-        projection = self.action_healing_service.project(
-            plan=candidate.plan,
-            build=self.build,
-            context=self.context,
-        )
+        action_kwargs = {
+            "plan": candidate.plan,
+            "build": self.build,
+            "context": self.context,
+        }
+        if self.contexts_by_bar is not None:
+            action_kwargs["contexts_by_bar"] = self.contexts_by_bar
+        projection = self.action_healing_service.project(**action_kwargs)
         projection = self._apply_special_activation_topology(
             candidate=candidate,
             projection=projection,
@@ -251,6 +263,22 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
             delayed_seeds=activation.delayed_seeds,
             unresolved=self._dedupe(tuple(projection.unresolved) + tuple(activation.unresolved)),
         )
+
+    @staticmethod
+    def _normalize_contexts_by_bar(
+        contexts_by_bar: Mapping[str, BuildCalculationContext] | None,
+    ) -> dict[str, BuildCalculationContext] | None:
+        if contexts_by_bar is None:
+            return None
+        result: dict[str, BuildCalculationContext] = {}
+        for raw_bar, context in contexts_by_bar.items():
+            bar = str(raw_bar or "").strip().casefold()
+            if bar not in {"front", "back"}:
+                raise ValueError("canonical healer context key must be front or back")
+            if bar in result:
+                raise ValueError(f"duplicate canonical healer context bar: {bar}")
+            result[bar] = context
+        return result
 
     @staticmethod
     def _dedupe(values: tuple[str, ...]) -> tuple[str, ...]:
