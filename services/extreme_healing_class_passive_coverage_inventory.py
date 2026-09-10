@@ -24,8 +24,14 @@ from services.extreme_templar_dawns_wrath_passive_review import (
 from services.extreme_templar_restoring_light_passive_review import (
     ExtremeTemplarRestoringLightPassiveReview,
 )
+from services.extreme_warden_animal_companions_passive_review import (
+    ExtremeWardenAnimalCompanionsPassiveReview,
+)
 from services.extreme_warden_green_balance_passive_review import (
     ExtremeWardenGreenBalancePassiveReview,
+)
+from services.extreme_warden_winters_embrace_passive_review import (
+    ExtremeWardenWintersEmbracePassiveReview,
 )
 
 
@@ -199,6 +205,16 @@ class ExtremeHealingClassPassiveCoverageInventory:
                 "ExtremeTemplarRestoringLightPassiveReview + ExtremeTemplarRestoringLightHealingService + ExtremeTemplarSacredGroundCombatStateService + ExtremeTemplarLightWeaverService + ExtremeConditionalActualHealOptimizationService",
                 "All four live-U50 Restoring Light passives are reviewed for MOST Actual Heal. Mending is rank-aware and applied against explicit target Health; Sacred Ground contributes canonical Minor Mending through the combat-state path. Light Weaver's Ultimate and automatic-block utility is modeled separately because it does not alter heal-event magnitude; Master Ritualist remains objective-irrelevant resurrection utility.",
             ),
+            ("warden", "Animal Companions"): ExtremeHealingClassPassiveCoverageEntry(
+                "warden",
+                "Animal Companions",
+                REVIEWED,
+                True,
+                IMPLEMENTED,
+                True,
+                "ExtremeWardenAnimalCompanionsPassiveReview + ExtremeWardenBondWithNatureService + ExtremeWardenBondWithNatureHealingEventService + WardenPassiveInputResolver",
+                "All four live-U50 Animal Companions passives are reviewed for MOST Actual Heal. Bond with Nature is implemented as a separate caster self-heal on a canonically proven Animal Companions effect-ended event; Flourish is recovery, Savage Beast is Ultimate economy, and Advanced Species is Critical Damage rather than Critical Healing.",
+            ),
             ("warden", "Green Balance"): ExtremeHealingClassPassiveCoverageEntry(
                 "warden",
                 "Green Balance",
@@ -208,6 +224,16 @@ class ExtremeHealingClassPassiveCoverageInventory:
                 True,
                 "ExtremeWardenGreenBalancePassiveReview + ExtremeWardenGreenBalanceHealingService + ExtremeWardenAcceleratedGrowthCombatStateService",
                 "All four Green Balance passives are reviewed for MOST Actual Heal: Accelerated Growth and Emerald Moss are implemented; Nature's Gift and Maturation are objective-irrelevant.",
+            ),
+            ("warden", "Winter's Embrace"): ExtremeHealingClassPassiveCoverageEntry(
+                "warden",
+                "Winter's Embrace",
+                REVIEWED,
+                False,
+                NOT_APPLICABLE,
+                False,
+                "ExtremeWardenWintersEmbracePassiveReview + WardenPassiveInputResolver",
+                "All four live-U50 Winter's Embrace passives are reviewed and none increase one healing-event magnitude. Frozen Armor remains modeled for resistance objectives; Glacial Presence, Icy Aura, and Piercing Cold affect damage, control, mitigation, or frost/block behavior rather than MOST Actual Heal.",
             ),
         }
         return tuple(
@@ -306,59 +332,30 @@ class ExtremeHealingClassPassiveCoverageInventory:
                 raise ValueError(
                     f"Healing-relevant class-passive family has invalid coverage status: {row.family_id}"
                 )
-            if (
-                row.family_id == "arcanist:Curative Runeforms"
-                and not ExtremeArcanistCurativeRuneformsPassiveReview().complete
-            ):
-                raise ValueError(
-                    "Curative Runeforms cannot be reviewed until its passive-level review is complete"
-                )
-            if (
-                row.family_id == "necromancer:Living Death"
-                and not ExtremeNecromancerLivingDeathPassiveReview().complete
-            ):
-                raise ValueError(
-                    "Living Death cannot be reviewed until its passive-level review is complete"
-                )
-            if (
-                row.family_id == "nightblade:Siphoning"
-                and not ExtremeNightbladeSiphoningPassiveReview().complete
-            ):
-                raise ValueError(
-                    "Siphoning cannot be reviewed until its passive-level review is complete"
-                )
-            if (
-                row.family_id == "sorcerer:Dark Magic"
-                and not ExtremeSorcererDarkMagicPassiveReview().complete
-            ):
-                raise ValueError(
-                    "Dark Magic cannot be reviewed until its passive-level review is complete"
-                )
-            if (
-                row.family_id == "templar:Aedric Spear"
-                and not ExtremeTemplarAedricSpearPassiveReview().complete
-            ):
-                raise ValueError(
-                    "Aedric Spear cannot be reviewed until its passive-level review is complete"
-                )
-            if (
-                row.family_id == "templar:Dawn's Wrath"
-                and not ExtremeTemplarDawnsWrathPassiveReview().complete
-            ):
-                raise ValueError(
-                    "Dawn's Wrath cannot be reviewed until its passive-level review is complete"
-                )
-            if (
-                row.family_id == "templar:Restoring Light"
-                and not ExtremeTemplarRestoringLightPassiveReview().complete
-            ):
-                raise ValueError(
-                    "Restoring Light cannot be reviewed until its passive-level review is complete"
-                )
-            if (
-                row.family_id == "warden:Green Balance"
-                and not ExtremeWardenGreenBalancePassiveReview().complete
-            ):
-                raise ValueError(
-                    "Green Balance cannot be reviewed until its passive-level review is complete"
-                )
+            review_checks = {
+                "arcanist:Curative Runeforms": (ExtremeArcanistCurativeRuneformsPassiveReview, "Curative Runeforms"),
+                "necromancer:Living Death": (ExtremeNecromancerLivingDeathPassiveReview, "Living Death"),
+                "nightblade:Siphoning": (ExtremeNightbladeSiphoningPassiveReview, "Siphoning"),
+                "sorcerer:Dark Magic": (ExtremeSorcererDarkMagicPassiveReview, "Dark Magic"),
+                "templar:Aedric Spear": (ExtremeTemplarAedricSpearPassiveReview, "Aedric Spear"),
+                "templar:Dawn's Wrath": (ExtremeTemplarDawnsWrathPassiveReview, "Dawn's Wrath"),
+                "templar:Restoring Light": (ExtremeTemplarRestoringLightPassiveReview, "Restoring Light"),
+                "warden:Animal Companions": (ExtremeWardenAnimalCompanionsPassiveReview, "Animal Companions"),
+                "warden:Green Balance": (ExtremeWardenGreenBalancePassiveReview, "Green Balance"),
+            }
+            check = review_checks.get(row.family_id)
+            if check is not None:
+                review_type, label = check
+                if not review_type().complete:
+                    raise ValueError(
+                        f"{label} cannot be reviewed until its passive-level review is complete"
+                    )
+
+        winter = next(
+            (row for row in rows if row.family_id == "warden:Winter's Embrace"),
+            None,
+        )
+        if winter is not None and not ExtremeWardenWintersEmbracePassiveReview().complete:
+            raise ValueError(
+                "Winter's Embrace cannot be reviewed until its passive-level review is complete"
+            )
