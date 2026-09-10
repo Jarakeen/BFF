@@ -127,8 +127,8 @@ class PerformanceRaidReviewTankEffectContinuityService:
             active_names: set[str] = set()
             for window in matching:
                 active_names.add(str(window.effect_name))
-                window_start = float(window.start_seconds)
-                window_end = float(window.end_seconds)
+                window_start = float(window.start_time_seconds)
+                window_end = float(window.end_time_seconds)
                 for segment_start, segment_end in eligible_segments:
                     start = max(window_start, segment_start)
                     end = min(window_end, segment_end)
