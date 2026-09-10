@@ -60,9 +60,10 @@ class ResourceInputs:
 
     Aggregate fields remain for backwards compatibility while optional named
     contributions let the UI explain exactly which source produced a value.
-    Named percentage contributions are additional to legacy aggregate fields;
-    callers migrating a source to a named contribution should stop adding that
-    same source to the aggregate field so it cannot be counted twice.
+    Named contributions are additional to legacy aggregate fields; callers
+    migrating a source to a named contribution should stop adding that same
+    source through an independently applied aggregate path so it cannot be
+    counted twice.
     """
 
     attribute_points: int = 0
@@ -79,6 +80,7 @@ class ResourceInputs:
     other_percent: float = 0.0
     item_contributions: tuple[FlatContribution, ...] = ()
     set_contributions: tuple[FlatContribution, ...] = ()
+    skill_flat_contributions: tuple[FlatContribution, ...] = ()
     skill_percent_contributions: tuple[PercentContribution, ...] = ()
     buff_percent_contributions: tuple[PercentContribution, ...] = ()
     other_percent_contributions: tuple[PercentContribution, ...] = ()
@@ -145,7 +147,20 @@ class BaseCharacterCalculator:
             ("food flat", inputs.food_flat),
             ("mundus flat", inputs.mundus_flat),
             ("Champion Point flat", inputs.champion_flat),
-            ("skill flat", inputs.skill_flat),
+        ):
+            if value:
+                current += value
+                trace.add(label, "add", value, current)
+
+        if inputs.skill_flat_contributions:
+            for contribution in inputs.skill_flat_contributions:
+                current += contribution.value
+                trace.add(contribution.label, "add", contribution.value, current)
+        elif inputs.skill_flat:
+            current += inputs.skill_flat
+            trace.add("skill flat", "add", inputs.skill_flat, current)
+
+        for label, value in (
             ("race", inputs.race_flat),
             ("other flat", inputs.other_flat),
         ):
