@@ -366,7 +366,15 @@ class BuildCalculationContextFactory:
             )
 
         nightblade_lines = NightbladePassiveInputResolver.equipped_nightblade_line_ids(build)
+        shadow = NightbladePassiveInputResolver.SHADOW_ID in nightblade_lines
         siphoning = NightbladePassiveInputResolver.SIPHONING_ID in nightblade_lines
+        dark_vigor, message = self._maxed_passive(
+            progression,
+            "Dark Vigor",
+            relevant=shadow,
+        )
+        if message:
+            unresolved.append(message)
         magicka_flood, message = self._maxed_passive(
             progression,
             "Magicka Flood",
@@ -380,6 +388,7 @@ class BuildCalculationContextFactory:
                 build,
                 active_bar=active_bar,
                 magicka_flood_owned=magicka_flood,
+                dark_vigor_owned=dark_vigor,
             )
 
         sorcerer_lines = SorcererPassiveInputResolver.equipped_sorcerer_line_ids(build)
