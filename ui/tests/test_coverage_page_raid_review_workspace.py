@@ -105,6 +105,17 @@ def test_raid_review_encounter_selection_clears_stale_pull_rows() -> None:
     assert "self._update_raid_review_selection_mode()" in source
 
 
+def test_raid_review_report_edit_clears_stale_pull_rows() -> None:
+    source = Path("ui/coverage_page.py").read_text(encoding="utf-8")
+
+    assert "self.raid_review_report_input.textChanged.connect(self._raid_review_report_changed)" in source
+    assert "def _raid_review_report_changed(self) -> None:" in source
+    method = source.split("def _raid_review_report_changed(self) -> None:", 1)[1].split("\n    def ", 1)[0]
+    assert "self.raid_review_fights_table.setRowCount(0)" in method
+    assert "self.raid_review_run_button.setEnabled(False)" in method
+    assert "self._update_raid_review_selection_mode()" in method
+
+
 def test_raid_review_api_work_runs_off_the_qt_gui_thread() -> None:
     page_source = Path("ui/coverage_page.py").read_text(encoding="utf-8")
     task_source = Path("ui/raid_review_async_task.py").read_text(encoding="utf-8")
