@@ -50,6 +50,10 @@ from services.performance_raid_review_observation_service import (
     RaidReviewCollectionResult,
     RaidReviewSource,
 )
+from services.performance_raid_review_priority_service import (
+    PerformanceRaidReviewPriorityService,
+    RaidReviewPriorityItem,
+)
 from services.performance_raid_review_service import (
     PerformanceRaidReviewService,
     RaidReviewReport,
@@ -60,6 +64,7 @@ from services.performance_raid_review_service import (
 class PerformanceRaidReviewResult:
     report: RaidReviewReport
     collection: RaidReviewCollectionResult
+    priorities: tuple[RaidReviewPriorityItem, ...] = ()
 
     @property
     def unresolved(self) -> tuple[str, ...]:
@@ -82,6 +87,7 @@ class PerformanceRaidReviewCoordinatorService:
         healer_effect_coverage_analysis_service: PerformanceRaidReviewHealerEffectCoverageAnalysisService | None = None,
         dd_ground_continuity_analysis_service: PerformanceRaidReviewDDGroundContinuityAnalysisService | None = None,
         dd_output_context_service: PerformanceRaidReviewDDOutputContextService | None = None,
+        priority_service: PerformanceRaidReviewPriorityService | None = None,
     ) -> None:
         self.performance_service = performance_service
         self.event_provider = event_provider or PerformanceRaidReviewEsoLogsEventProvider(
@@ -113,6 +119,7 @@ class PerformanceRaidReviewCoordinatorService:
         self.dd_output_context_service = (
             dd_output_context_service or PerformanceRaidReviewDDOutputContextService()
         )
+        self.priority_service = priority_service or PerformanceRaidReviewPriorityService()
 
     def review(
         self,
@@ -220,6 +227,7 @@ class PerformanceRaidReviewCoordinatorService:
         return PerformanceRaidReviewResult(
             report=report,
             collection=collection,
+            priorities=self.priority_service.rank(report.findings),
         )
 
 
