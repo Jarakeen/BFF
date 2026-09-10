@@ -22,7 +22,7 @@ Reviewed research must never silently become combat-math authority.
 6. Xynode and other established guide sources for encounter handling and actual-play explanation.
 7. Broader web/search results for discovery; promote only after corroboration.
 
-## First completed research family: core status effects
+## Completed research family: core status effects
 
 Update 41 is the primary change-history anchor for the modern status-effect behavior. The Reference research layer now carries reviewed U41+ facts for:
 
@@ -39,7 +39,7 @@ The facts include delivery shape and important secondary behavior such as Minor 
 
 The canonical `combat_effect` tables remain authoritative for fields they already store. Research enrichment is additive and provenance-bearing.
 
-## Second completed research family: non-status combat effects
+## Completed research family: non-status combat effects
 
 The reviewed research layer also carries useful evidence for:
 
@@ -49,6 +49,35 @@ The reviewed research layer also carries useful evidence for:
 - **Devitalized** — Dreadsail Reef context, resistance reduction, damage-taken increase, shield reduction, duration, and purge restriction.
 
 The Dreadsail values are deliberately marked medium-high confidence rather than primary/canonical because the useful numerical detail comes from a respected endgame guide and PTS player evidence rather than a clean ZOS mechanic specification.
+
+## Completed research family: shared passive providers
+
+A shared passive-to-named-effect provider reference now exists for relationships already explicitly reviewed elsewhere in FoundryDock. Initial reviewed providers are:
+
+- **Elder Dragon** -> Minor Brutality
+- **Illuminate** -> Minor Sorcery (U50 version scope)
+- **Sacred Ground** -> Minor Mending
+- **Accelerated Growth** -> Major Mending
+- **Maturation** -> Minor Toughness
+- **Shadow Barrier** -> Major Resolve
+
+The provider records retain class, skill line, activation condition, target, rank-dependent duration, version scope, and evidence. This prevents passive ownership from being mistaken for permanent uptime.
+
+## Completed research family: component-owned named effects
+
+Component-owned Major/Minor effects now receive human-readable standard-effect facts even when their numeric application remains owned by a downstream damage/healing/mitigation component instead of the standing stat sheet.
+
+Covered values include:
+
+- Minor / Major Berserk: +5% / +10% damage done
+- Minor / Major Protection: -5% / -10% damage taken
+- Minor / Major Vulnerability: +5% / +10% damage taken
+- Minor / Major Slayer: +5% / +10% damage done to Dungeon, Trial, and Arena monsters
+- Minor / Major Aegis: -5% / -10% damage taken from Dungeon, Trial, and Arena monsters
+- Minor / Major Vitality: +6% / +12% healing received and damage shield strength
+- Minor / Major Defile: -6% / -12% healing received and damage shield strength
+
+Update 41 is the version boundary for the current Vitality/Defile semantics: those effects now modify damage shield strength and no longer use the older Defile Health Recovery wording.
 
 ## Missing-value presentation rule
 
@@ -65,10 +94,10 @@ This wording is deliberately honest about what is known without pretending that 
 
 ## Next research families
 
-1. Shared passive -> named-effect provider authority.
-2. Named Major/Minor effect provider completeness and current Update 50/51 version boundaries.
-3. Gear-set provider completeness beyond the currently reviewed registry.
-4. Encounter mechanics, prioritizing trials used by Comp Maker / Rotation Builder and fields that currently have explicit unresolved states.
-5. Skill/passive reference entries and combat-rule terminology.
+1. Named Major/Minor provider completeness across skills, sets, passives, potions, scribing, and class mastery sources.
+2. Gear-set provider completeness beyond the currently reviewed registry.
+3. Encounter mechanics, prioritizing trials used by Comp Maker / Rotation Builder and fields that currently have explicit unresolved states.
+4. Skill/passive reference entries and combat-rule terminology.
+5. Promote repeatedly corroborated research facts into owning canonical contracts only when the runtime actually needs them.
 
 For encounter research, gameplay handling belongs in Field Notes / gameplay-practice evidence unless it is a canonical mechanic fact.
