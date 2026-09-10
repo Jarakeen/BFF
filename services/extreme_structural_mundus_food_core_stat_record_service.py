@@ -66,6 +66,17 @@ class ExtremeBestMundusFoodStructuralStatEvaluator:
         objective_key: str,
         candidate: ExtremeStructuralCandidate,
     ) -> tuple[float, dict[str, Any], tuple[str, ...]]:
+        return self.evaluate_candidate(objective_key, candidate)
+
+    def evaluate_candidate(
+        self,
+        objective_key: str,
+        candidate: ExtremeStructuralCandidate,
+        *,
+        potion: str = "",
+        active_buffs: tuple[str, ...] = (),
+    ) -> tuple[float, dict[str, Any], tuple[str, ...]]:
+        """Pick best food while preserving an optional outer potion-active state."""
         best_value: float | None = None
         best_payload: dict[str, Any] | None = None
         best_food = ""
@@ -76,10 +87,15 @@ class ExtremeBestMundusFoodStructuralStatEvaluator:
                 _, food_unresolved = self.provisioning_repository.resolve(food)
                 unresolved_across_foods.extend(str(item) for item in food_unresolved if item)
 
+            kwargs: dict[str, Any] = {"food": food}
+            if str(potion or "").strip():
+                kwargs["potion"] = potion
+            if tuple(active_buffs or ()):
+                kwargs["active_buffs"] = tuple(active_buffs)
             value, payload, unresolved = self.mundus_evaluator.evaluate_candidate(
                 objective_key,
                 candidate,
-                food=food,
+                **kwargs,
             )
             unresolved_across_foods.extend(str(item) for item in unresolved if item)
             score = float(value)
