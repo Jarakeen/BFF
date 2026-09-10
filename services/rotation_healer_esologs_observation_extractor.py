@@ -123,10 +123,12 @@ class RotationHealerEsoLogsObservationExtractor:
     tolerance are therefore collapsed to one logical tick, retaining the earliest
     timestamp in that cluster. Raw event counts remain available separately.
 
-    Activations recast before canonical expiry are skipped because ordinary
-    first-tick/expiry observations must not silently cross unresolved reapplication
-    semantics. Expiry tolerance applies only to the upper boundary; events before the
-    selected activation are never admitted as ticks for that sample.
+    An activation is considered isolated only when no previous same-skill activation
+    remains canonically active at its start and no following activation occurs before
+    its canonical expiry. This prevents unresolved refresh/recast behavior from
+    contaminating first-tick or expiry observations. Expiry tolerance applies only to
+    the upper event boundary; events before the selected activation are never admitted
+    as ticks for that sample.
 
     Both the legacy single-report raw export and the research multi-report corpus
     are accepted. A corpus requires an explicit report code because fight ids are
@@ -294,6 +296,21 @@ class RotationHealerEsoLogsObservationExtractor:
             for activation_index, activation in activations:
                 activation_seconds = activation.timestamp * scale
                 expiry_seconds = activation_seconds + canonical.duration_seconds
+                previous_activation_seconds = self._previous_activation_seconds(
+                    activations,
+                    before_event_index=activation_index,
+                    scale=scale,
+                )
+                if (
+                    previous_activation_seconds is not None
+                    and activation_seconds - previous_activation_seconds
+                    < canonical.duration_seconds - expiry_tolerance_seconds
+                ):
+                    unresolved.append(
+                        f"{target.source_name} activation event {activation_index}: skipped because a previous activation remains active at this activation"
+                    )
+                    continue
+
                 next_activation_seconds = self._next_activation_seconds(
                     activations,
                     after_event_index=activation_index,
@@ -354,7 +371,7 @@ class RotationHealerEsoLogsObservationExtractor:
                         f"casterID={int(caster_id)} canonical_skill_id={target.canonical_skill_id or '(legacy)'} "
                         f"castAbilityAliases={cast_ability_ids} periodicEffectAliases={periodic_effect_ids} "
                         f"activationAbilityID={observed_ability_game_id} activation_event_index={activation_index}",
-                        f"same-caster reviewed periodic heal aliases only; recipient events within {merge_tolerance:g}s clustered into one logical tick using earliest timestamp; raw event count preserved; pre-activation events excluded",
+                        f"isolated activation with no canonically overlapping same-skill cast before or after; same-caster reviewed periodic heal aliases only; recipient events within {merge_tolerance:g}s clustered into one logical tick using earliest timestamp; raw event count preserved; pre-activation events excluded",
                     ),
                     game_version=str(game_version),
                 )
@@ -426,6 +443,15 @@ class RotationHealerEsoLogsObservationExtractor:
                 seen_fallback.add(key)
             deduped.append((event_index, event))
         return tuple(deduped)
+
+    @staticmethod
+    def _previous_activation_seconds(activations, *, before_event_index: int, scale: float):
+        previous = None
+        for event_index, event in activations:
+            if event_index >= before_event_index:
+                break
+            previous = float(event.timestamp) * scale
+        return previous
 
     @staticmethod
     def _next_activation_seconds(activations, *, after_event_index: int, scale: float):
