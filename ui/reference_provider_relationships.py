@@ -207,7 +207,7 @@ def enrich_reference_entries_with_passive_providers(
 def enrich_reference_entries_with_reviewed_research(
     entries: Iterable[ReferenceEntry],
 ) -> tuple[ReferenceEntry, ...]:
-    """Add reviewed, provenance-bearing research without redefining canonical mechanics."""
+    """Add reviewed research and fill matching unresolved display fields when possible."""
 
     research = ReferenceResearchEnrichmentService()
     enriched: list[ReferenceEntry] = []
@@ -219,12 +219,17 @@ def enrich_reference_entries_with_reviewed_research(
 
         details = list(entry.details)
         for fact in facts:
-            details.append(
-                (
-                    f"Research • {fact.label}",
-                    f"{fact.value} [{fact.game_update}; {fact.confidence} confidence]",
-                )
-            )
+            rendered = f"{fact.value} [reviewed research; {fact.game_update}; {fact.confidence} confidence]"
+            replaced = False
+            if fact.replaces_label:
+                for index, (label, value) in enumerate(details):
+                    if label == fact.replaces_label and value == "Not modeled":
+                        details[index] = (label, rendered)
+                        replaced = True
+                        break
+            if not replaced:
+                details.append((f"Research • {fact.label}", rendered))
+
         evidence = tuple(
             dict.fromkeys(
                 (
