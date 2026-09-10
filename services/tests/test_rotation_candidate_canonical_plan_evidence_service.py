@@ -252,6 +252,8 @@ def test_provider_uses_viable_canonical_workload_displacement_for_exact_candidat
         alternative_id="candidate",
         viable=True,
         primary_role_displacement_seconds=3.25,
+        recipient_coverage_result=None,
+        temporal_coverage_result=None,
     )
     workload_provider = _WorkloadProvider(workload)
     service = RotationCandidateCanonicalPlanEvidenceService(
@@ -269,13 +271,65 @@ def test_provider_uses_viable_canonical_workload_displacement_for_exact_candidat
     assert evidence.role_output_value is None
 
 
-def test_provider_keeps_displacement_unknown_when_workload_is_not_viable() -> None:
+def test_provider_uses_canonical_temporal_coverage_ratio_as_assigned_support_value() -> None:
+    candidate = _candidate()
+    workload = SimpleNamespace(
+        alternative_id="candidate",
+        viable=True,
+        primary_role_displacement_seconds=2.5,
+        recipient_coverage_result=SimpleNamespace(fully_covered=True),
+        temporal_coverage_result=SimpleNamespace(
+            full_requirement_met=True,
+            coverage_ratio=0.875,
+        ),
+    )
+    service = RotationCandidateCanonicalPlanEvidenceService(
+        build=object(),
+        sustain_service=_SustainService(_sustain_projection()),
+        duration_service=_DurationService(object()),
+        provider_workload_evidence_provider=_WorkloadProvider(workload),
+    )
+
+    evidence = service.evaluate_plan(candidate)
+
+    assert evidence.assigned_support_value == pytest.approx(0.875)
+    assert evidence.primary_role_displacement_seconds == pytest.approx(2.5)
+
+
+def test_provider_does_not_promote_boolean_only_workload_to_assigned_support() -> None:
+    candidate = _candidate()
+    workload = SimpleNamespace(
+        alternative_id="candidate",
+        viable=True,
+        primary_role_displacement_seconds=1.0,
+        recipient_coverage_result=None,
+        temporal_coverage_result=None,
+    )
+    service = RotationCandidateCanonicalPlanEvidenceService(
+        build=object(),
+        sustain_service=_SustainService(_sustain_projection()),
+        duration_service=_DurationService(object()),
+        provider_workload_evidence_provider=_WorkloadProvider(workload),
+    )
+
+    evidence = service.evaluate_plan(candidate)
+
+    assert evidence.assigned_support_value is None
+    assert evidence.primary_role_displacement_seconds == pytest.approx(1.0)
+
+
+def test_provider_keeps_displacement_and_support_unknown_when_workload_is_not_viable() -> None:
     candidate = _candidate()
     workload_provider = _WorkloadProvider(
         SimpleNamespace(
             alternative_id="candidate",
             viable=False,
             primary_role_displacement_seconds=0.0,
+            recipient_coverage_result=SimpleNamespace(fully_covered=True),
+            temporal_coverage_result=SimpleNamespace(
+                full_requirement_met=True,
+                coverage_ratio=1.0,
+            ),
         )
     )
     service = RotationCandidateCanonicalPlanEvidenceService(
@@ -288,6 +342,7 @@ def test_provider_keeps_displacement_unknown_when_workload_is_not_viable() -> No
     evidence = service.evaluate_plan(candidate)
 
     assert evidence.primary_role_displacement_seconds is None
+    assert evidence.assigned_support_value is None
 
 
 def test_provider_rejects_workload_evidence_for_a_different_candidate() -> None:
@@ -297,6 +352,8 @@ def test_provider_rejects_workload_evidence_for_a_different_candidate() -> None:
             alternative_id="different-candidate",
             viable=True,
             primary_role_displacement_seconds=1.0,
+            recipient_coverage_result=None,
+            temporal_coverage_result=None,
         )
     )
     service = RotationCandidateCanonicalPlanEvidenceService(
