@@ -28,6 +28,7 @@ _CATEGORY_SPECIFICITY = {
     "landing_recovery": 1,
     "boss_contact": 1,
     "healer_effect_coverage": 1,
+    "tank_effect_continuity": 1,
     "coverage": 1,
     "sustain": 1,
     "uptime": 2,
@@ -45,6 +46,7 @@ _CATEGORY_THEME = {
     "recovery_completion": "landing_execution",
     "landing_recovery": "landing_execution",
     "healer_effect_coverage": "support_coverage",
+    "tank_effect_continuity": "support_control",
     "coverage": "support_coverage",
     "uptime": "support_coverage",
     "sustain": "sustain",
@@ -87,9 +89,6 @@ class PerformanceRaidReviewPriorityService:
         if not candidates:
             return ()
 
-        # Dedupe overlapping findings for the same subject/theme. For example, if a
-        # contextual DD finding exists, do not also spend a Top-3 slot on the narrower
-        # raw damage comparison for the same player.
         selected_by_key: dict[tuple[str, str], RaidReviewFinding] = {}
         for finding in candidates:
             key = (
