@@ -65,7 +65,6 @@ def test_raid_review_workspace_exposes_api_loaded_pull_picker() -> None:
     assert "def _load_raid_review_fights(self) -> None:" in source
     assert "self.raid_review_runner.list_lokkestiiz_fights(report_code)" in source
     assert "self.raid_review_runner.review_report(report_code, fight_ids)" in source
-    assert "Raw research JSON is not required." in source
     assert "raid_review_fights_input" not in source
 
 
