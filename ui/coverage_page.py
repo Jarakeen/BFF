@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -19,6 +21,9 @@ from PySide6.QtWidgets import (
 from engine.config import get_data_dir
 from models.build_model import BuildRoster, PlayerBuild
 from services.build_service import BuildService
+from services.performance_raid_review_lokkestiiz_runner_service import (
+    PerformanceRaidReviewLokkestiizRunnerService,
+)
 from services.raid_coverage_profile import DEFAULT_RAID_COVERAGE_PROFILE
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
@@ -45,9 +50,12 @@ ALIASES = {
 class CoveragePage(FoundryPage):
     """Buff/debuff planning desk plus observed Raid Review workspace."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, raid_review_runner=None):
         super().__init__(parent)
         self.build_service = BuildService(get_data_dir() / "builds.json")
+        self.raid_review_runner = (
+            raid_review_runner or PerformanceRaidReviewLokkestiizRunnerService()
+        )
         self.roster = BuildRoster()
         self._build_ui()
         self.refresh()
@@ -143,6 +151,30 @@ class CoveragePage(FoundryPage):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(8)
 
+        intake = FoundryCard("Run Raid Review", "⌕").set_watermark("compass", 0.04)
+        intake_row = QHBoxLayout()
+        self.raid_review_report_input = QLineEdit()
+        self.raid_review_report_input.setPlaceholderText("ESO Logs report code or report URL")
+        self.raid_review_fights_input = QLineEdit()
+        self.raid_review_fights_input.setPlaceholderText("Lokkestiiz fight IDs, e.g. 4, 7, 9, 12")
+        self.raid_review_run_button = QPushButton("Run Raid Review")
+        self.raid_review_run_button.setProperty("primary", True)
+        self.raid_review_run_button.setToolTip(
+            "Query the selected fights directly from ESO Logs and compare them as one Lokkestiiz Raid Review."
+        )
+        self.raid_review_run_button.clicked.connect(self._run_raid_review)
+        intake_row.addWidget(QLabel("REPORT"))
+        intake_row.addWidget(self.raid_review_report_input, 3)
+        intake_row.addWidget(QLabel("FIGHTS"))
+        intake_row.addWidget(self.raid_review_fights_input, 2)
+        intake_row.addWidget(self.raid_review_run_button)
+        intake.addLayout(intake_row)
+        intake.addWidget(QLabel(
+            "Selected fights are queried through the ESO Logs API. Raw research JSON is not required. "
+            "Current intake supports multiple Lokkestiiz pulls from one report; cross-report identity mapping stays explicit."
+        ))
+        root.addWidget(intake)
+
         self.raid_review_overview_card = FoundryCard("Raid Review", "◈").set_watermark("compass", 0.045)
         self.raid_review_overview_card.addWidget(QLabel(
             "Compare pulls for the selected encounter and surface evidence-backed patterns.\n"
@@ -177,17 +209,70 @@ class CoveragePage(FoundryPage):
         return page
 
     @staticmethod
+    def _parse_raid_review_fight_ids(value: str) -> tuple[int, ...]:
+        tokens = [token for token in re.split(r"[\s,;]+", str(value or "").strip()) if token]
+        fight_ids: list[int] = []
+        for token in tokens:
+            try:
+                fight_id = int(token)
+            except ValueError as exc:
+                raise ValueError(f"Fight ID {token!r} is not an integer.") from exc
+            if fight_id <= 0:
+                raise ValueError("Fight IDs must be positive integers.")
+            if fight_id not in fight_ids:
+                fight_ids.append(fight_id)
+        return tuple(fight_ids)
+
+    def _run_raid_review(self) -> None:
+        report_code = self.raid_review_report_input.text().strip()
+        if not report_code:
+            self.status.warning("Enter an ESO Logs report code or report URL first.")
+            return
+
+        try:
+            fight_ids = self._parse_raid_review_fight_ids(self.raid_review_fights_input.text())
+        except ValueError as exc:
+            self.status.warning(str(exc))
+            return
+        if not fight_ids:
+            self.status.warning("Enter at least one Lokkestiiz fight ID.")
+            return
+
+        self.raid_review_run_button.setEnabled(False)
+        self.status.info(
+            f"Running Raid Review for {len(fight_ids)} selected Lokkestiiz pull(s) from ESO Logs..."
+        )
+        try:
+            api_result = self.raid_review_runner.review_report(report_code, fight_ids)
+        except Exception as exc:
+            self.apply_raid_review_result(None, extra_unresolved=(f"Raid Review failed: {exc}",))
+            self.status.error(f"Raid Review failed: {exc}")
+            return
+        finally:
+            self.raid_review_run_button.setEnabled(True)
+
+        review = getattr(api_result, "review", None)
+        unresolved = tuple(getattr(api_result, "unresolved", ()) or ())
+        self.apply_raid_review_result(review, extra_unresolved=unresolved)
+        if review is None:
+            self.status.warning("Raid Review could not produce a completed review; see Evidence & Unresolved.")
+
+    @staticmethod
     def _review_label(text: str) -> QLabel:
         label = QLabel(text)
         label.setWordWrap(True)
         label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         return label
 
-    def apply_raid_review_result(self, result) -> None:
+    def apply_raid_review_result(self, result, *, extra_unresolved=()) -> None:
         """Render one completed Raid Review result without owning analysis or fetching."""
         synthesis = getattr(result, "synthesis", None)
         player_summaries = tuple(getattr(result, "player_summaries", ()) or ())
-        unresolved = tuple(getattr(result, "unresolved", ()) or ())
+        unresolved = tuple(
+            dict.fromkeys(
+                (*tuple(getattr(result, "unresolved", ()) or ()), *tuple(extra_unresolved or ()))
+            )
+        )
 
         for card in (
             self.raid_review_overview_card,
@@ -205,7 +290,11 @@ class CoveragePage(FoundryPage):
             self.raid_review_working_card.addWidget(self._review_label("No successful-pull patterns available."))
             self.raid_review_role_focus_card.addWidget(self._review_label("No role-focus summary available."))
             self.raid_review_players_card.addWidget(self._review_label("No player summaries available."))
-            self.raid_review_evidence_card.addWidget(self._review_label("No review evidence available."))
+            if unresolved:
+                for item in unresolved[:12]:
+                    self.raid_review_evidence_card.addWidget(self._review_label(f"• {item}"))
+            else:
+                self.raid_review_evidence_card.addWidget(self._review_label("No review evidence available."))
             self.status.warning("Raid Review result was unavailable.")
             return
 
