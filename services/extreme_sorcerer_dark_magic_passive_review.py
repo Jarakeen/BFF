@@ -20,12 +20,14 @@ class ExtremeSorcererDarkMagicPassiveReviewEntry:
 class ExtremeSorcererDarkMagicPassiveReview:
     """Exhaustive live-U50 Dark Magic passive review for MOST Actual Heal.
 
-    Blood Magic is objective-relevant but not yet executable in Extreme. Under
-    live U50 it has two branches: below full Health, casting a costed Dark Magic
-    ability heals the caster from Max Health scaling; at full Health, it grants
-    10% to the higher of Max Magicka or Stamina for 10 seconds, which can change
-    later resource-scaled healing. Those branches require explicit runtime and
-    event semantics before this family can be considered implemented.
+    Blood Magic is objective-relevant and its two live-U50 branches are now
+    resolved explicitly by ``ExtremeSorcererBloodMagicService``. Below full
+    Health, casting a costed Dark Magic ability produces a separate Max-Health-
+    scaled self-heal event. At full Health, the higher of Max Magicka or Stamina
+    receives a 10% increase for 10 seconds. The family remains explicitly
+    unsupported until the conditional Actual Heal optimizer consumes that
+    resource-window result and exposes the separate self-heal event without
+    combining recipient-distinct healing.
 
     Unholy Knowledge and Persistence only reduce ability costs. Exploitation
     grants Minor Prophecy, which changes Spell Critical chance but not the size
@@ -51,8 +53,8 @@ class ExtremeSorcererDarkMagicPassiveReview:
             "Blood Magic",
             True,
             EXPLICITLY_UNSUPPORTED,
-            "live-U50 Blood Magic review",
-            "Below full Health it creates a Max-Health-scaled self-heal; at full Health it grants 10% to the higher Max Magicka or Stamina for 10 seconds. Neither branch is yet owned by the executable Extreme Actual Heal event/runtime path.",
+            "ExtremeSorcererBloodMagicService",
+            "Both live-U50 branches are now resolved with explicit trigger, passive, subclass, and caster-Health proof. Conditional Actual Heal orchestration must still consume the 10-second higher-resource window and expose the separate self-heal event without adding it to unrelated target healing.",
         ),
         ExtremeSorcererDarkMagicPassiveReviewEntry(
             "Persistence",
