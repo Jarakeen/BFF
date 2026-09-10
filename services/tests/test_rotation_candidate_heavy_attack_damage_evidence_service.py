@@ -36,7 +36,11 @@ def _slots() -> tuple[SlottedSkill, ...]:
     )
 
 
-def _build(weapon_type: WeaponType = WeaponType.FLAME_STAFF) -> CharacterBuild:
+def _build(
+    weapon_type: WeaponType = WeaponType.FLAME_STAFF,
+    *,
+    off_hand_type: WeaponType | None = None,
+) -> CharacterBuild:
     return CharacterBuild(
         name="Heavy Damage Build",
         character_class=CharacterClass.WARDEN,
@@ -44,7 +48,7 @@ def _build(weapon_type: WeaponType = WeaponType.FLAME_STAFF) -> CharacterBuild:
         front_bar=Bar(
             bar_id=BarId.FRONT,
             main_hand=Weapon(weapon_type),
-            off_hand=None,
+            off_hand=None if off_hand_type is None else Weapon(off_hand_type),
             slots=_slots(),
         ),
         back_bar=None,
@@ -93,6 +97,17 @@ def _completion(action: RotationAction, *, fully_charged: bool = True, completio
         verified_base_restore=None,
         source="test completion evidence",
     )
+
+
+def _evaluate_heavy(build: CharacterBuild) -> float | None:
+    action = RotationAction(0.0, 0, RotationActionKind.HEAVY_ATTACK, bar="front")
+    service = RotationCandidateHeavyAttackDamageEvidenceService(
+        build=build,
+        evaluation=_evaluation(),
+        initial_bar="front",
+        completion_evidence=(_completion(action),),
+    )
+    return service.evaluate_action(candidate=_candidate(action), action=action).damage_value
 
 
 def test_fully_charged_flame_staff_heavy_uses_existing_uesp_formula() -> None:
@@ -172,7 +187,23 @@ def test_heavy_completion_after_plan_horizon_fails_closed() -> None:
     assert "completes after the rotation plan horizon" in result.unresolved[0]
 
 
-def test_martial_weapon_family_remains_explicitly_unresolved() -> None:
+def test_two_handed_heavy_uses_existing_physical_formula() -> None:
+    assert _evaluate_heavy(_build(WeaponType.GREATSWORD)) == pytest.approx(5892.0)
+
+
+def test_dual_wield_heavy_uses_existing_physical_formula() -> None:
+    assert _evaluate_heavy(
+        _build(WeaponType.DAGGER, off_hand_type=WeaponType.DAGGER)
+    ) == pytest.approx(3928.0)
+
+
+def test_one_hand_and_shield_heavy_uses_existing_physical_formula() -> None:
+    assert _evaluate_heavy(
+        _build(WeaponType.SWORD, off_hand_type=WeaponType.SHIELD)
+    ) == pytest.approx(5500.0)
+
+
+def test_bow_remains_explicitly_unresolved_without_canonical_damage_formula() -> None:
     action = RotationAction(0.0, 0, RotationActionKind.HEAVY_ATTACK, bar="front")
     service = RotationCandidateHeavyAttackDamageEvidenceService(
         build=_build(WeaponType.BOW),
