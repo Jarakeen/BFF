@@ -81,18 +81,26 @@ class ExtremeBestMundusStructuralStatEvaluator:
         *,
         food: str = "",
     ) -> tuple[float, dict[str, Any], tuple[str, ...]]:
-        """Pick the best Mundus while preserving an optional outer food choice."""
+        """Pick the best Mundus while preserving an optional outer food choice.
+
+        ``food`` is forwarded only when an outer food search actually selected a
+        value.  This preserves the pre-food evaluator contract for ordinary
+        structural/Mundus callers and test doubles while still allowing the
+        compositional food layer to pass its explicit choice inward.
+        """
         best_value: float | None = None
         best_payload: dict[str, Any] | None = None
         best_unresolved: tuple[str, ...] = ()
         best_mundus = ""
 
         for mundus in self.mundus_choices():
+            kwargs = {"mundus": mundus}
+            if str(food or "").strip():
+                kwargs["food"] = food
             value, payload, unresolved = self.evaluator.evaluate_candidate(
                 objective_key,
                 candidate,
-                mundus=mundus,
-                food=food,
+                **kwargs,
             )
             score = float(value)
             if (
