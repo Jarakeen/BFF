@@ -13,10 +13,10 @@ from .skill_line_repository import SkillLineRepository
 class NightbladePassiveInputResolver:
     """Apply reviewed Nightblade standing passives to shared character inputs.
 
-    Reviewed U50 ``Magicka Flood`` grants 8% Max Magicka while at least one
-    Siphoning ability is slotted on the active bar. The bonus belongs in the
-    primary-resource percentage bucket so it combines additively with other
-    Max-Magicka percentage sources before ESO rounding.
+    Reviewed Update 46+ ``Magicka Flood`` grants 6% Max Magicka and Max Stamina
+    while at least one Siphoning ability is slotted on the active bar. The bonus
+    belongs in the primary-resource percentage bucket so it combines additively
+    with other percentage sources before ESO rounding.
 
     Explicit ``PlayerBuild.ClassSkillLines`` are authoritative for subclass
     snapshots. A native Nightblade can therefore lose Siphoning, while another
@@ -26,7 +26,7 @@ class NightbladePassiveInputResolver:
 
     SIPHONING_ID = "siphoning"
     NIGHTBLADE_LINE_IDS = frozenset({"assassination", "shadow", SIPHONING_ID})
-    MAGICKA_FLOOD_PERCENT = 0.08
+    MAGICKA_FLOOD_PERCENT = 0.06
 
     def __init__(self, skill_line_repository: SkillLineRepository) -> None:
         self.skill_line_repository = skill_line_repository
@@ -103,7 +103,11 @@ class NightbladePassiveInputResolver:
                 unresolved=tuple(dict.fromkeys((*result.unresolved, *unresolved))),
             )
 
-        source = PercentContribution(
+        magicka_source = PercentContribution(
+            "Nightblade: Magicka Flood",
+            self.MAGICKA_FLOOD_PERCENT,
+        )
+        stamina_source = PercentContribution(
             "Nightblade: Magicka Flood",
             self.MAGICKA_FLOOD_PERCENT,
         )
@@ -113,7 +117,14 @@ class NightbladePassiveInputResolver:
                 result.magicka,
                 skill_percent_contributions=(
                     *result.magicka.skill_percent_contributions,
-                    source,
+                    magicka_source,
+                ),
+            ),
+            stamina=replace(
+                result.stamina,
+                skill_percent_contributions=(
+                    *result.stamina.skill_percent_contributions,
+                    stamina_source,
                 ),
             ),
             applied_effect_count=result.applied_effect_count + 1,
