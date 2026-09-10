@@ -2,6 +2,8 @@ from pathlib import Path
 import subprocess
 import sys
 
+import pytest
+
 from tools.audit_phase13_healer_recast_observation_candidates import (
     _next_phase_time,
     _next_recipient_tick,
