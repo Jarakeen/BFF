@@ -126,6 +126,31 @@ ROTATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "fails closed for authoritative criteria."
         ),
     ),
+    ServiceDescriptor(
+        service_id="rotation.healer.criteria_hard_gate",
+        domain="rotation",
+        purpose=(
+            "Project verified healer demand-criterion assessments into the explicit "
+            "role hard-obligation channel consumed by recommendation eligibility."
+        ),
+        implementation_path="services.rotation_healer_demand_criteria_service",
+        inputs=(
+            "GeneratedRotationCandidate",
+            "RotationCandidateHealerMultiDemandRoleOutputService",
+            "RotationHealerDemandCriterion",
+        ),
+        outputs=("RotationCandidateRoleHardObligationEvidence",),
+        dependencies=("rotation.healer.demand_criteria",),
+        responsibilities=("rotation_healer_verified_criteria_hard_gate",),
+        roles=("Healer",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Verified failures return a resolved hard-gate failure; unresolved verified "
+            "criteria fail closed. Caller-assumption criteria never enter this gate."
+        ),
+    ),
 )
 
 
