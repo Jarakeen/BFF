@@ -18,6 +18,7 @@ from services.performance_raid_review_encounter_registry import (
 class RaidReviewEncounterChoice:
     key: str
     display_name: str
+    review_level: str
 
 
 class PerformanceRaidReviewRunnerService:
@@ -31,6 +32,7 @@ class PerformanceRaidReviewRunnerService:
             RaidReviewEncounterChoice(
                 key=str(adapter.key),
                 display_name=str(adapter.display_name),
+                review_level=str(adapter.review_level),
             )
             for adapter in self.registry.available()
         )
