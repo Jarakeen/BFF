@@ -52,6 +52,18 @@ def test_external_ally_buff_projects_only_inside_proven_window() -> None:
     assert expired.active_buffs == ()
 
 
+def test_external_source_must_be_a_proven_group_member() -> None:
+    result = ExternalGroupBuffProvenanceResolver().resolve(
+        recipient_actor_id="healer_1",
+        group_member_ids=("healer_1",),
+        snapshot_time_seconds=12.0,
+        applications=(_application(),),
+    )
+
+    assert result.active_buffs == ()
+    assert any("source is not a proven group member" in item for item in result.unresolved)
+
+
 def test_ally_target_rejects_self_application() -> None:
     result = ExternalGroupBuffProvenanceResolver().resolve(
         recipient_actor_id="healer_1",
@@ -118,3 +130,9 @@ def test_duplicate_proven_applications_collapse_to_one_named_buff() -> None:
 
     assert result.active_buffs == ("Major Courage",)
     assert result.unresolved == ()
+
+
+def test_external_application_sequence_is_non_negative() -> None:
+    assert _application(sequence=2).sequence == 2
+    with pytest.raises(ValueError, match="sequence cannot be negative"):
+        _application(sequence=-1)
