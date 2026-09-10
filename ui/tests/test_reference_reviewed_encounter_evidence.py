@@ -127,7 +127,7 @@ def test_mechanic_state_exists_creates_human_readable_entry_name(tmp_path):
     assert "Swimming Mitigates Blast: Yes" in rapid.detail_text()
 
 
-def test_conflicting_related_fact_is_not_joined_into_mechanic_entry(tmp_path):
+def test_conflicting_related_fact_is_shown_as_unresolved_conflict(tmp_path):
     _packet(
         tmp_path,
         "reef_guardian",
@@ -162,5 +162,9 @@ def test_conflicting_related_fact_is_not_joined_into_mechanic_entry(tmp_path):
 
     entries = load_reviewed_encounter_evidence_entries(tmp_path)
     heartburn = next(entry for entry in entries if entry.name == "Heartburn — Reef Guardian")
+    text = heartburn.detail_text()
 
-    assert "Heartburn Duration Seconds" not in heartburn.detail_text()
+    assert "Evidence conflict • Heartburn Duration Seconds" in text
+    assert "Unresolved: 2 reviewed values across 2 source families/records." in text
+    assert "Evidence • Heartburn Duration Seconds: 60" not in text
+    assert "Evidence • Heartburn Duration Seconds: 45" not in text
