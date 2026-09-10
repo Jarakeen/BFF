@@ -54,7 +54,7 @@ class ExtremeSorcererDarkMagicPassiveReview:
             True,
             EXPLICITLY_UNSUPPORTED,
             "ExtremeSorcererBloodMagicService",
-            "Both live-U50 branches are now resolved with explicit trigger, passive, subclass, and caster-Health proof. Conditional Actual Heal orchestration must still consume the 10-second higher-resource window and expose the separate self-heal event without adding it to unrelated target healing.",
+            "Both live-U50 branches are now resolved with explicit trigger, passive, subclass, and caster-Health proof: below full Health, Blood Magic creates a separate Max-Health-scaled self-heal; at full Health, it creates the 10-second higher-resource window. Conditional Actual Heal orchestration must still consume that resource window and expose the self-heal event without adding it to unrelated target healing.",
         ),
         ExtremeSorcererDarkMagicPassiveReviewEntry(
             "Persistence",
