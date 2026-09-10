@@ -21,6 +21,7 @@ from ui.foundry_page import FoundryPage
 from ui.reference_common_names import enrich_reference_entries_with_common_names
 from ui.reference_data_model import build_reference_entries, entry_types, source_scopes
 from ui.reference_encounter_evidence import enrich_reference_entries_with_encounter_evidence
+from ui.reference_mitigations import enrich_reference_entries_with_mitigations
 from ui.reference_named_effects import build_named_effect_reference_entries
 from ui.reference_provider_relationships import load_and_enrich_reference_entries
 
@@ -51,6 +52,7 @@ class ReferenceDataPage(FoundryPage):
         base_entries = enrich_reference_entries_with_encounter_evidence(base_entries)
         entries = load_and_enrich_reference_entries(base_entries)
         entries = enrich_reference_entries_with_common_names(entries)
+        entries = enrich_reference_entries_with_mitigations(entries)
         self._entries = {entry.name: entry for entry in entries}
         self._build_ui()
         self._load_list()
@@ -155,11 +157,15 @@ class ReferenceDataPage(FoundryPage):
         image.addWidget(self.visual)
         right.addWidget(image, 2)
 
-        notes = FoundryCard("Field Notes", "✎").make_parchment().set_watermark("feather", 0.12)
-        self.field_note_label = QLabel()
-        self.field_note_label.setWordWrap(True)
-        notes.addWidget(self.field_note_label)
-        right.addWidget(notes, 2)
+        mitigation = FoundryCard("How to Mitigate", "✚").make_parchment().set_watermark("feather", 0.12)
+        self.mitigation_label = QLabel()
+        self.mitigation_label.setWordWrap(True)
+        mitigation_font = self.mitigation_label.font()
+        mitigation_font.setPointSize(max(13, mitigation_font.pointSize() + 3))
+        mitigation_font.setBold(True)
+        self.mitigation_label.setFont(mitigation_font)
+        mitigation.addWidget(self.mitigation_label)
+        right.addWidget(mitigation, 2)
 
         used_by = FoundryCard("Used By FoundryDock", "⚙").set_watermark("compass", 0.04)
         self.used_by_label = QLabel()
@@ -176,7 +182,7 @@ class ReferenceDataPage(FoundryPage):
         self.status = FoundryStatusBar()
         self.set_status(self.status)
         self.status.info(
-            f"Combat Reference ready • {len(self._entries)} entries loaded from canonical encounter/effect, reviewed encounter evidence, named-effect, reviewed provider, shared gameplay-practice, and player-facing terminology data."
+            f"Combat Reference ready • {len(self._entries)} entries loaded from canonical encounter/effect, reviewed encounter evidence, named-effect, reviewed provider, shared gameplay-practice, player-facing terminology, and mitigation data."
         )
 
     @staticmethod
@@ -230,7 +236,7 @@ class ReferenceDataPage(FoundryPage):
         self.related_label.setText("No related entries.")
         self.evidence_label.setText("No evidence for the current filter result.")
         self.death_label.setText("No death-analysis guidance for the current filter result.")
-        self.field_note_label.setText("No field note.")
+        self.mitigation_label.setText("No reviewed mitigation guidance for the current filter result.")
         self.used_by_label.setText("No consuming systems shown.")
 
     def _show_entry(self, name: str):
@@ -253,8 +259,8 @@ class ReferenceDataPage(FoundryPage):
             else "Evidence source not registered. Treat this entry as unresolved."
         )
         self.death_label.setText(entry.death_note or "No death-analysis guidance registered.")
-        self.field_note_label.setText(
-            entry.field_note or "No gameplay-practice field note registered."
+        self.mitigation_label.setText(
+            entry.mitigation_note or "No reviewed mitigation guidance registered yet."
         )
         self.used_by_label.setText(
             "\n".join(f"• {value}" for value in entry.used_by)
