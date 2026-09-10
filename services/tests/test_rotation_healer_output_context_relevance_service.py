@@ -19,6 +19,23 @@ def test_known_non_healing_static_diagnostics_are_ambient():
     assert result.output_complete is True
 
 
+def test_bar_prefixed_non_healing_warden_passives_remain_ambient():
+    messages = (
+        "front static context: Passive rank is not recorded for character: Flourish",
+        "front static context: Passive rank is not recorded for character: Advanced Species",
+        "front static context: Passive rank is not recorded for character: Frozen Armor",
+        "back static context: Passive rank is not recorded for character: Flourish",
+        "back static context: Passive rank is not recorded for character: Advanced Species",
+        "back static context: Passive rank is not recorded for character: Frozen Armor",
+    )
+
+    result = RotationHealerOutputContextRelevanceService().classify(messages)
+
+    assert result.relevant == ()
+    assert result.ambient == messages
+    assert result.output_complete is True
+
+
 def test_potion_and_charged_remain_healer_output_relevant():
     result = RotationHealerOutputContextRelevanceService().classify(
         (
