@@ -68,7 +68,7 @@ def test_bone_tyrant_passives_enter_shared_canonical_inputs() -> None:
         for step in context.character_state.traces[StatId.MAX_HEALTH].steps
     ]
     assert "Necromancer: Last Gasp" in labels
-    assert context.core_state.healing_taken == pytest.approx(0.06)
+    assert context.core_state.derived[StatId.HEALING_TAKEN].final_value == pytest.approx(0.06)
     assert context.unresolved_gear_effects == ()
 
 
