@@ -52,6 +52,35 @@ def test_ro_due_state_preserves_effect_expiry_and_target_lockout_gap() -> None:
     assert state.seconds_until_due == 7.0
 
 
+def test_ro_due_state_prefers_build_effective_duration_without_changing_lockout() -> None:
+    incentive = HealerHeavyAttackBuildIncentive(
+        bar="front",
+        weapon=HeavyAttackWeaponType.RESTORATION_STAFF,
+        kind=HeavyAttackBuildIncentiveKind.REQUIRED_EFFECT,
+        name="Roaring Opportunist",
+        source="verified fixture",
+        recurrence_seconds=22.0,
+        maximum_effect_duration_seconds=12.0,
+        effective_effect_duration_seconds=16.8,
+    )
+
+    state = evaluate_required_heavy_attack_due_state(
+        incentive=incentive,
+        current_time_seconds=20.0,
+        runtime=HeavyAttackEffectRuntimeState(
+            incentive_name="Roaring Opportunist",
+            bar="front",
+            last_trigger_seconds=5.0,
+        ),
+    )
+
+    assert state.due is False
+    assert state.effect_expires_seconds == pytest.approx(21.8)
+    assert state.next_eligible_seconds == pytest.approx(27.0)
+    assert state.seconds_until_due == pytest.approx(7.0)
+    assert incentive.maximum_effect_duration_seconds == pytest.approx(12.0)
+
+
 def test_ro_required_heavy_becomes_due_when_lockout_clears() -> None:
     state = evaluate_required_heavy_attack_due_state(
         incentive=_ro_incentive(),
