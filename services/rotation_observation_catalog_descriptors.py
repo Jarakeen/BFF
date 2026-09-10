@@ -27,6 +27,27 @@ ROTATION_OBSERVATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "semantics remain a separate evidence responsibility."
         ),
     ),
+    ServiceDescriptor(
+        service_id="rotation.healer.periodic_observation_consensus",
+        domain="rotation",
+        purpose=(
+            "Derive one conservative runtime observation from repeated explicitly reviewed "
+            "isolated healer periodic samples without hiding conflicting evidence."
+        ),
+        implementation_path="services.rotation_healer_periodic_observation_consensus_service",
+        inputs=("ReviewedObservationFixtureEntry",),
+        outputs=("ReviewedRuntimeObservationConsensus",),
+        responsibilities=("rotation_healer_periodic_observation_consensus",),
+        roles=("Healer",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.OBSERVATIONAL,
+        notes=(
+            "First-tick placement uses the median of agreeing reviewed measurements and retains "
+            "their observed range and provenance. Conflicting runtime/cadence or expiry-boundary "
+            "evidence fails closed. Refresh/recast semantics remain separate and are not inferred."
+        ),
+    ),
 )
 
 
