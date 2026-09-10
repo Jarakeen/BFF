@@ -2,8 +2,10 @@ from services.ability_effect_provider_reference_service import AbilityEffectProv
 from services.nonability_effect_provider_reference_service import NonAbilityEffectProviderReference
 from ui.reference_data_model import ReferenceEntry
 from ui.reference_provider_relationships import (
+    clarify_unresolved_reference_values,
     enrich_reference_entries_with_ability_providers,
     enrich_reference_entries_with_nonability_providers,
+    enrich_reference_entries_with_reviewed_research,
     mark_passive_provider_gap,
 )
 
@@ -114,5 +116,42 @@ def test_passive_provider_gap_is_explicit_only_for_named_effect_entries():
     named_result, mechanic_result = mark_passive_provider_gap((named, mechanic))
 
     assert "Passive provider coverage" in named_result.detail_text()
-    assert "Not yet available" in named_result.detail_text()
+    assert "Coverage gap" in named_result.detail_text()
     assert "Passive provider coverage" not in mechanic_result.detail_text()
+
+
+def test_reviewed_status_research_adds_useful_values_and_provenance():
+    chilled = ReferenceEntry(
+        name="Chilled",
+        entry_type="Status Effect",
+        source_scope="Global Combat",
+        tags=("STATUS",),
+        summary="test",
+        details=(("Duration", "4 s"),),
+    )
+
+    result = enrich_reference_entries_with_reviewed_research((chilled,))[0]
+    text = result.detail_text()
+
+    assert "Research • Delivery" in text
+    assert "Minor Maim" in text
+    assert "Minor Brittle" in text
+    assert "high confidence" in text
+    assert "ESO Update 41 patch notes" in " ".join(result.evidence)
+
+
+def test_bare_not_modeled_is_replaced_with_actionable_evidence_state():
+    mechanic = ReferenceEntry(
+        name="Unknown Mechanic",
+        entry_type="Mechanic",
+        source_scope="Trial",
+        tags=("MECHANIC",),
+        summary="test",
+        details=(("Damage type", "Not modeled"), ("Interruptible", "Not modeled")),
+    )
+
+    result = clarify_unresolved_reference_values((mechanic,))[0]
+
+    assert "Not modeled" not in result.detail_text()
+    assert "no reviewed damage type yet" in result.detail_text()
+    assert "interruptibility has not yet been reviewed" in result.detail_text()
