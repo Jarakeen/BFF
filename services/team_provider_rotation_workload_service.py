@@ -24,9 +24,12 @@ class TeamProviderScheduledActionCost:
 
     The timestamp and sequence bind the evidence to an immutable ``RotationPlan``
     action. Costs stay explicit because an effect application may be a normal skill,
-    an Ultimate, or another supported action with very different opportunity cost.
-    ``primary_role_displacement_seconds`` is caller-supplied evidence; this service
-    does not guess how much healing, tanking, or damage the action displaced.
+    an Ultimate, or a fully charged Heavy Attack with very different opportunity
+    cost. ``heavy_attack_completed`` is required only when the bound provider action
+    is a Heavy Attack; the workload layer never assumes that an attempted heavy
+    completed or triggered its support effect. ``primary_role_displacement_seconds``
+    is caller-supplied evidence; this service does not guess how much healing,
+    tanking, or damage the action displaced.
     """
 
     time_seconds: float
@@ -36,6 +39,7 @@ class TeamProviderScheduledActionCost:
     resource_costs: tuple[tuple[str, float], ...] | None = None
     ultimate_cost: float | None = None
     primary_role_displacement_seconds: float | None = None
+    heavy_attack_completed: bool | None = None
 
     def __post_init__(self) -> None:
         time_seconds = float(self.time_seconds)
@@ -236,12 +240,25 @@ class TeamProviderRotationWorkloadService:
                 if action.kind not in {
                     RotationActionKind.SKILL,
                     RotationActionKind.ULTIMATE,
+                    RotationActionKind.HEAVY_ATTACK,
                 }:
                     issues.append(
                         f"{contributor}: {action.kind.value} at {action.time_seconds:g}s "
                         "is not a supported provider cast"
                     )
                     continue
+
+                if action.kind is RotationActionKind.HEAVY_ATTACK:
+                    if evidence.heavy_attack_completed is not True:
+                        issues.append(
+                            f"{contributor}: heavy attack at {action.time_seconds:g}s "
+                            "does not have verified fully charged completion evidence"
+                        )
+                        continue
+                elif evidence.heavy_attack_completed is True:
+                    raise ValueError(
+                        "heavy_attack_completed evidence may only bind to a heavy attack"
+                    )
 
                 provider_applications += 1
                 valid_contribution_applications += 1
@@ -265,10 +282,13 @@ class TeamProviderRotationWorkloadService:
                         resource_totals[resource_type] = (
                             resource_totals.get(resource_type, 0.0) + resource_cost
                         )
-                elif action.kind is RotationActionKind.SKILL:
+                elif action.kind in {
+                    RotationActionKind.SKILL,
+                    RotationActionKind.HEAVY_ATTACK,
+                }:
                     issues.append(
                         f"{contributor}: {action_label} has unresolved resource cost; "
-                        "use an empty resource_costs tuple for a reviewed free cast"
+                        "use an empty resource_costs tuple for a reviewed free action"
                     )
 
                 if action.kind is RotationActionKind.ULTIMATE:
