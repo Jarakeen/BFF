@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+from minmax.character_progression import CharacterProgression
 from services.extreme_conditional_actual_heal_objective_optimization_service import (
     ExtremeConditionalActualHealObjectiveOptimizationService,
     ExtremeConditionalHealingObjectiveEventResult,
@@ -115,7 +116,7 @@ def test_enhanced_evaluator_replaces_pending_blocker_with_ranked_self_heal(
 
     event, unresolved = service._evaluate(
         SimpleNamespace(AttributeHealth=0, AttributeMagicka=64, AttributeStamina=0),
-        progression=SimpleNamespace(),
+        progression=CharacterProgression(),
         character_id="char",
         build_id="build",
         entity_id="combat_prayer",
