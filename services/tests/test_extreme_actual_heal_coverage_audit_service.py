@@ -86,12 +86,9 @@ def test_h1_audit_distinguishes_supported_conditionals_from_real_blockers() -> N
     assert rows["runtime_stat_buff_windows"].is_supported
     assert rows["explicit_target_health_conditionals"].is_supported
 
-    assert rows["reviewed_class_passive_families"].status == "unresolved"
+    assert rows["reviewed_class_passive_families"].status == "implemented"
     assert rows["external_group_buff_provenance"].status == "unresolved"
-    assert summary.blocker_ids == (
-        "reviewed_class_passive_families",
-        "external_group_buff_provenance",
-    )
+    assert summary.blocker_ids == ("external_group_buff_provenance",)
     assert not summary.complete
 
 
@@ -157,7 +154,7 @@ def test_h1_audit_reflects_existing_optimizer_scope_boundaries() -> None:
     assert "runtime conditional stacks/procs" in omitted_scope
     assert rows["runtime_stat_buff_windows"].status == "conditional"
     assert "unreviewed skill-bar passive/proc families" in omitted_scope
-    assert rows["reviewed_class_passive_families"].status == "unresolved"
+    assert rows["reviewed_class_passive_families"].status == "implemented"
 
 
 def test_h1_audit_summary_is_deterministic() -> None:
