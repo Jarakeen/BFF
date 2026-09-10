@@ -941,7 +941,7 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
             context=context,
             combat_state=combat_state,
         )
-        if combat_state != context.combat_state:
+        if combat_state != getattr(context, "combat_state", combat_state):
             context = self.optimizer.context_factory.build(
                 character_id=character_id,
                 build_id=build_id,
