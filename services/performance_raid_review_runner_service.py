@@ -19,6 +19,9 @@ class RaidReviewEncounterChoice:
     key: str
     display_name: str
     review_level: str
+    trial_key: str
+    trial_display_name: str
+    boss_order: int
 
 
 class PerformanceRaidReviewRunnerService:
@@ -33,6 +36,9 @@ class PerformanceRaidReviewRunnerService:
                 key=str(adapter.key),
                 display_name=str(adapter.display_name),
                 review_level=str(adapter.review_level),
+                trial_key=str(adapter.trial_key),
+                trial_display_name=str(adapter.trial_display_name),
+                boss_order=int(adapter.boss_order),
             )
             for adapter in self.registry.available()
         )
