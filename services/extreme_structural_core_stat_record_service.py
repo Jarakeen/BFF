@@ -17,6 +17,8 @@ from pathlib import Path
 from typing import Any
 
 from minmax.character_progression import CharacterProgression
+from minmax.combat_effect_semantics import GameUpdate
+from minmax.combat_state import CombatState
 from models.build_model import PlayerBuild
 from services.extreme_core_stat_record_service import ExtremeCoreStatRecordService
 from services.extreme_global_search_universe_service import (
@@ -69,12 +71,16 @@ class ExtremeCanonicalStructuralStatEvaluator:
         *,
         mundus: str = "",
         food: str = "",
+        potion: str = "",
+        active_buffs: tuple[str, ...] = (),
     ) -> tuple[float, dict[str, Any], tuple[str, ...]]:
-        """Score one candidate with optional explicit Mundus and food choices.
+        """Score one candidate with explicit finite build/runtime selections.
 
-        Mundus and food are ordinary canonical ``PlayerBuild`` inputs, not parallel
-        formulas.  Keeping those mutations here lets finite exhaustive-search axes
-        compose around one route/progression/materialization path.
+        Mundus, food, and potion identity are ordinary ``PlayerBuild`` inputs.
+        ``active_buffs`` is different: it is explicit runtime state and is only
+        supplied by a higher layer that has already proven the selected potion can
+        provide those named buffs.  A saved potion label by itself never activates
+        anything.
         """
         objective = self.optimizer.objective(objective_key)
 
@@ -89,6 +95,7 @@ class ExtremeCanonicalStructuralStatEvaluator:
         build.Race = candidate.race
         build.Mundus = str(mundus or "").strip()
         build.Food = str(food or "").strip()
+        build.Potion = str(potion or "").strip()
         build.AttributeHealth = int(candidate.attributes.health)
         build.AttributeMagicka = int(candidate.attributes.magicka)
         build.AttributeStamina = int(candidate.attributes.stamina)
@@ -100,6 +107,9 @@ class ExtremeCanonicalStructuralStatEvaluator:
         )
         progression = self.progression_service.normalize(progression, candidate.class_route)
 
+        normalized_buffs = tuple(
+            dict.fromkeys(str(value or "").strip() for value in active_buffs if str(value or "").strip())
+        )
         identity = candidate.identity
         candidate_id = "|".join(
             (
@@ -110,16 +120,35 @@ class ExtremeCanonicalStructuralStatEvaluator:
                 str(identity[6]),
                 f"mundus:{build.Mundus or 'none'}",
                 f"food:{build.Food or 'none'}",
+                f"potion:{build.Potion or 'none'}",
+                "buffs:" + (",".join(normalized_buffs) if normalized_buffs else "none"),
             )
         )
-        value, unresolved = self.optimizer._evaluate(
-            build,
-            progression=progression,
-            character_id="extreme-structural-global",
-            build_id=f"extreme-structural-global:{candidate_id}",
-            objective=objective,
-            active_bar=candidate.active_bar,
-        )
+
+        if normalized_buffs:
+            context = self.optimizer.context_factory.build(
+                character_id="extreme-structural-global",
+                build_id=f"extreme-structural-global:{candidate_id}",
+                build=build,
+                progression=progression,
+                active_bar=candidate.active_bar,
+                combat_state=CombatState(
+                    active_buffs=normalized_buffs,
+                    game_update=GameUpdate.U50,
+                ),
+            )
+            value = self.optimizer._objective_value(context, objective)
+            unresolved = tuple(context.unresolved_gear_effects)
+        else:
+            value, unresolved = self.optimizer._evaluate(
+                build,
+                progression=progression,
+                character_id="extreme-structural-global",
+                build_id=f"extreme-structural-global:{candidate_id}",
+                objective=objective,
+                active_bar=candidate.active_bar,
+            )
+
         payload = {
             "build": build.to_dict(),
             "race": candidate.race,
@@ -133,6 +162,8 @@ class ExtremeCanonicalStructuralStatEvaluator:
             "active_bar": candidate.active_bar,
             "mundus": build.Mundus,
             "food": build.Food,
+            "potion": build.Potion,
+            "active_buffs": normalized_buffs,
         }
         return float(value), payload, tuple(unresolved)
 
