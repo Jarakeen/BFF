@@ -22,11 +22,12 @@ class ExtremeTemplarRestoringLightPassiveReview:
     Mending and Sacred Ground can change the numeric size of a healing event and
     are modeled by dedicated Extreme services. Light Weaver and Master Ritualist
     are utility/resurrection mechanics and do not change the heal magnitude scored
-    by MOST Actual Heal.
+    by MOST Actual Heal. Light Weaver's reviewed runtime utility is nevertheless
+    modeled separately so broader Extreme-build consumers do not lose that class
+    behavior merely because this particular objective ignores it.
 
-    Update 51 is not live yet. Its announced Mending change is deliberately not
-    applied to this live-U50 review; the version boundary must be updated when U51
-    becomes the active game update.
+    Update 51 is not live yet. This review intentionally remains bound to live
+    Update 50 values until the application's game-version boundary advances.
     """
 
     PASSIVE_NAMES = (
@@ -42,21 +43,21 @@ class ExtremeTemplarRestoringLightPassiveReview:
             True,
             IMPLEMENTED,
             "ExtremeTemplarRestoringLightHealingService",
-            "Live U50 max rank increases Restoring Light healing by up to 12% in proportion to target missing Health.",
+            "Live U50 Mending is rank-aware: rank 1 increases healing done by up to 6% and rank 2 by up to 13%, in proportion to target missing Health.",
         ),
         ExtremeTemplarRestoringLightPassiveReviewEntry(
             "Sacred Ground",
             True,
             IMPLEMENTED,
             "ExtremeTemplarSacredGroundCombatStateService + canonical Minor Mending",
-            "A caller-proven Sacred Ground window grants Minor Mending through CombatState; canonical named-buff math owns the 8% Healing Done value.",
+            "A caller-proven Sacred Ground window grants Minor Mending through CombatState at either passive rank; the post-area grace window is 2 seconds at rank 1 and 4 seconds at rank 2.",
         ),
         ExtremeTemplarRestoringLightPassiveReviewEntry(
             "Light Weaver",
             False,
             IRRELEVANT,
-            "Restoring Light Light Weaver review",
-            "Grants ally Ultimate after qualifying healing and provides automatic blocking during cast/channel use; it does not increase the numeric size of MOST Actual Heal.",
+            "ExtremeTemplarLightWeaverService",
+            "Reviewed runtime utility is modeled separately: qualifying Restoring Light ally healing below 50% Health grants 1/2 Ultimate by rank, and qualifying cast/channel activation in combat grants 2 seconds of automatic no-cost blocking on a 30s/15s cooldown. Neither changes MOST Actual Heal magnitude.",
         ),
         ExtremeTemplarRestoringLightPassiveReviewEntry(
             "Master Ritualist",
