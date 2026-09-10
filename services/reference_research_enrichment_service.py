@@ -44,6 +44,20 @@ _STATUS_EFFECT_FACTS: tuple[ReviewedReferenceFact, ...] = (
     ReviewedReferenceFact("Sundered", "Additional behavior", "Applies Minor Breach and grants the activator 100 Weapon and Spell Damage for 4 seconds.", "U41+", "high", "official + corroboration", "ESO Update 41 patch notes; ESO-Hub Status Effects"),
 )
 
+_COMBAT_EFFECT_FACTS: tuple[ReviewedReferenceFact, ...] = (
+    ReviewedReferenceFact("Off Balance", "Player-source window", "Player-sourced Off Balance lasts 7 seconds.", "U25+", "high", "official", "ESO PTS v5.3.0 / Update 25 combat changes"),
+    ReviewedReferenceFact("Off Balance", "Reapplication lockout", "After the original player-sourced Off Balance ends, it cannot be reapplied to that target for 15 seconds; the cooldown is displayed as a debuff.", "U25+", "high", "official", "ESO PTS v5.3.0 / Update 25 combat changes"),
+    ReviewedReferenceFact("Off Balance", "Consumption rule", "Heavy Attacks and abilities do not consume Off Balance.", "U25+", "high", "official", "ESO PTS v5.3.0 / Update 25 combat changes"),
+    ReviewedReferenceFact("Hindered", "Encounter context", "Dreadsail Reef heavy-attack consequence when the relevant heavy is blocked and not fully absorbed by a shield.", "U34+", "medium-high", "guide + PTS corroboration", "ESO-Hub Dreadsail Reef guide by Qcell; Update 34 PTS feedback"),
+    ReviewedReferenceFact("Hindered", "Effect", "Prevents healing missing Health for 12 seconds or until roughly 39.7k healing is received to remove the absorption; guide evidence says it cannot be purged by negative-effect removal skills.", "U34+", "medium-high", "guide + PTS corroboration", "ESO-Hub Dreadsail Reef guide by Qcell; Update 34 PTS feedback"),
+    ReviewedReferenceFact("Rattled", "Encounter context", "Dreadsail Reef heavy-attack consequence paired with Hindered on a correctly blocked, not-fully-shielded heavy.", "U34+", "medium-high", "guide + PTS corroboration", "ESO-Hub Dreadsail Reef guide by Qcell; Update 34 PTS feedback"),
+    ReviewedReferenceFact("Rattled", "Effect", "For 12 seconds, damage done is reduced by 70% and damage taken is increased by 40%; guide evidence says it cannot be purged by negative-effect removal skills.", "U34+", "medium-high", "guide + PTS corroboration", "ESO-Hub Dreadsail Reef guide by Qcell; Update 34 PTS feedback"),
+    ReviewedReferenceFact("Devitalized", "Encounter context", "Dreadsail Reef heavy-attack consequence when the relevant heavy is not blocked or is fully absorbed by a shield.", "U34+", "medium-high", "guide + PTS corroboration", "ESO-Hub Dreadsail Reef guide by Qcell; Update 34 PTS feedback"),
+    ReviewedReferenceFact("Devitalized", "Effect", "For 8 seconds, Physical and Spell Resistance are reduced by 60%, damage taken is increased by 30%, and damage shields are reduced by 30%; guide evidence says it cannot be purged by negative-effect removal skills.", "U34+", "medium-high", "guide + PTS corroboration", "ESO-Hub Dreadsail Reef guide by Qcell; Update 34 PTS feedback"),
+)
+
+_ALL_FACTS = (*_STATUS_EFFECT_FACTS, *_COMBAT_EFFECT_FACTS)
+
 
 class ReferenceResearchEnrichmentService:
     """Read-only reviewed research facts keyed by human-readable reference entry."""
@@ -52,7 +66,7 @@ class ReferenceResearchEnrichmentService:
         wanted = str(entry_name or "").strip().casefold()
         if not wanted:
             return ()
-        return tuple(fact for fact in _STATUS_EFFECT_FACTS if fact.entry_name.casefold() == wanted)
+        return tuple(fact for fact in _ALL_FACTS if fact.entry_name.casefold() == wanted)
 
     def all(self) -> tuple[ReviewedReferenceFact, ...]:
-        return _STATUS_EFFECT_FACTS
+        return _ALL_FACTS
