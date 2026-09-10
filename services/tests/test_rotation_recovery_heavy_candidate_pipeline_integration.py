@@ -120,7 +120,16 @@ class _ControlledReplayService:
     """Controlled resource evidence while the real fixed-point service stays live."""
 
     @staticmethod
-    def replay(*, build, plan, resource, restoration_resolver):
+    def replay(
+        *,
+        build,
+        plan,
+        resource,
+        restoration_resolver,
+        maximum_events=(),
+        calculation_context=None,
+        displayed_recovery_at=None,
+    ):
         risky = any(action.name == "High Cost Action" for action in plan.actions)
         has_heavy = any(
             action.kind is RotationActionKind.HEAVY_ATTACK for action in plan.actions
