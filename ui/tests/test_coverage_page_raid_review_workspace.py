@@ -33,13 +33,14 @@ def test_raid_review_workspace_exposes_backend_binding_surfaces() -> None:
 def test_raid_review_workspace_binds_completed_result_contract() -> None:
     source = Path("ui/coverage_page.py").read_text(encoding="utf-8")
 
-    assert "def apply_raid_review_result(self, result) -> None:" in source
+    assert "def apply_raid_review_result(self, result, *, extra_unresolved=()) -> None:" in source
     assert 'getattr(result, "synthesis", None)' in source
     assert 'getattr(result, "player_summaries", ())' in source
     assert 'getattr(result, "unresolved", ())' in source
     assert 'getattr(synthesis, "top_priorities", ())' in source
     assert 'getattr(synthesis, "what_is_working", ())' in source
     assert 'getattr(synthesis, "role_focus", ())' in source
+    assert "extra_unresolved" in source
 
 
 def test_raid_review_binding_clears_stale_cards_and_has_explicit_empty_state() -> None:
@@ -50,3 +51,23 @@ def test_raid_review_binding_clears_stale_cards_and_has_explicit_empty_state() -
     assert "No priorities available." in source
     assert "No stable player summaries are available for this review." in source
     assert "No unresolved evidence was reported for this review." in source
+
+
+def test_raid_review_workspace_exposes_direct_api_intake_controls() -> None:
+    source = Path("ui/coverage_page.py").read_text(encoding="utf-8")
+
+    assert "raid_review_report_input" in source
+    assert "raid_review_fights_input" in source
+    assert "raid_review_run_button" in source
+    assert 'QPushButton("Run Raid Review")' in source
+    assert "def _run_raid_review(self) -> None:" in source
+    assert "self.raid_review_runner.review_report(report_code, fight_ids)" in source
+    assert "Raw research JSON is not required." in source
+
+
+def test_raid_review_fight_id_parser_accepts_commas_spaces_and_semicolons() -> None:
+    source = Path("ui/coverage_page.py").read_text(encoding="utf-8")
+
+    assert 're.split(r"[\\s,;]+"' in source
+    assert "Fight IDs must be positive integers." in source
+    assert "if fight_id not in fight_ids:" in source
