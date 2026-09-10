@@ -183,7 +183,7 @@ def test_candidate_payload_is_explicitly_not_reviewed(tmp_path):
     assert payload["samples"][0]["candidate_metadata"]["ability_game_id"] == 93807
 
 
-def test_recast_before_expiry_prevents_first_activation_from_becoming_isolated_sample(tmp_path):
+def test_recast_before_expiry_rejects_both_overlapping_activations(tmp_path):
     events = [
         _event(10000, "cast", cast_track=10),
         _event(11000, "hot", tick=True),
@@ -200,9 +200,15 @@ def test_recast_before_expiry_prevents_first_activation_from_becoming_isolated_s
         targets=_target(),
     )
 
-    assert len(report.candidates) == 1
-    assert report.candidates[0].sample.activation_time_seconds == 13.0
-    assert any("skipped because another activation occurs before canonical expiry" in item for item in report.unresolved)
+    assert report.candidates == ()
+    assert any(
+        "skipped because another activation occurs before canonical expiry" in item
+        for item in report.unresolved
+    )
+    assert any(
+        "skipped because a previous activation remains active at this activation" in item
+        for item in report.unresolved
+    )
 
 
 def test_wrong_caster_does_not_borrow_another_players_ticks(tmp_path):
