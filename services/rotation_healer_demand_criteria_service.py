@@ -4,8 +4,13 @@ from dataclasses import dataclass
 from enum import Enum
 from math import isfinite
 
+from services.rotation_candidate_canonical_plan_evidence_service import (
+    RotationCandidateRoleHardObligationEvidence,
+)
+from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 from services.rotation_candidate_healer_multi_demand_role_output_service import (
     RotationCandidateHealerMultiDemandOutput,
+    RotationCandidateHealerMultiDemandRoleOutputService,
 )
 
 
@@ -202,7 +207,75 @@ class RotationHealerDemandCriteriaService:
         )
 
 
+class RotationCandidateHealerCriteriaHardObligationService:
+    """Expose verified healer demand criteria through the generic role hard gate.
+
+    Caller assumptions remain outside this hard-obligation channel. A resolved
+    verified threshold miss returns ``False``; unresolved verified evidence returns
+    ``None`` so recommendation fails closed; otherwise the role hard gate passes.
+    """
+
+    def __init__(
+        self,
+        *,
+        multi_demand_output_service: RotationCandidateHealerMultiDemandRoleOutputService,
+        criteria: tuple[RotationHealerDemandCriterion, ...],
+        criteria_service: RotationHealerDemandCriteriaService | None = None,
+    ) -> None:
+        self.multi_demand_output_service = multi_demand_output_service
+        self.criteria = tuple(criteria)
+        self.criteria_service = criteria_service or RotationHealerDemandCriteriaService()
+
+    def evaluate_plan(
+        self,
+        candidate: GeneratedRotationCandidate,
+    ) -> RotationCandidateRoleHardObligationEvidence:
+        output = self.multi_demand_output_service.evaluate_windows(candidate)
+        assessment = self.criteria_service.assess(
+            output=output,
+            criteria=self.criteria,
+        )
+
+        if assessment.candidate_id.casefold() != candidate.candidate_id.casefold():
+            raise ValueError(
+                "healer criteria assessment candidate mismatch: "
+                f"expected {candidate.candidate_id!r}, got {assessment.candidate_id!r}"
+            )
+
+        reasons: list[str] = []
+        for item in assessment.failed_authoritative:
+            observed = item.modeled_healing_per_demand_second
+            required = item.criterion.minimum_modeled_healing_per_demand_second
+            provenance = "; ".join(item.criterion.provenance)
+            reasons.append(
+                f"verified healer criterion failed for {item.criterion.demand_name!r}: "
+                f"modeled {observed:g} < required {required:g}; provenance: {provenance}"
+            )
+
+        for item in assessment.unresolved_authoritative:
+            detail = "; ".join(item.unresolved) or "authoritative criterion unresolved"
+            provenance = "; ".join(item.criterion.provenance)
+            reasons.append(
+                f"verified healer criterion unresolved for {item.criterion.demand_name!r}: "
+                f"{detail}; provenance: {provenance}"
+            )
+
+        if assessment.unresolved_authoritative:
+            satisfied: bool | None = None
+        elif assessment.failed_authoritative:
+            satisfied = False
+        else:
+            satisfied = True
+
+        return RotationCandidateRoleHardObligationEvidence(
+            candidate_id=candidate.candidate_id,
+            satisfied=satisfied,
+            reasons=tuple(reasons),
+        )
+
+
 __all__ = [
+    "RotationCandidateHealerCriteriaHardObligationService",
     "RotationHealerDemandCriterion",
     "RotationHealerDemandCriterionAssessment",
     "RotationHealerDemandCriterionSourceKind",
