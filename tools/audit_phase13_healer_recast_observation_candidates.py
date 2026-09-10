@@ -30,10 +30,42 @@ def _next_phase_time(*, origin: float, first_offset: float, cadence: float, afte
     return first + steps * cadence
 
 
+def _next_recipient_tick(*, last_tick: float, cadence: float, after: float) -> float:
+    value = float(last_tick) + float(cadence)
+    while value <= after:
+        value += float(cadence)
+    return value
+
+
 def _nearest_delta(values: tuple[float, ...], expected: float) -> float | None:
     if not values:
         return None
     return min(abs(value - expected) for value in values)
+
+
+def _recipient_shape(
+    *,
+    post_ticks: tuple[float, ...],
+    restart_first: float,
+    old_next: float,
+    tolerance: float,
+) -> tuple[str, float | None, float | None]:
+    restart_delta = _nearest_delta(post_ticks, restart_first)
+    old_delta = _nearest_delta(post_ticks, old_next)
+    if restart_delta is None:
+        return "no-post-recast-evidence", restart_delta, old_delta
+    if abs(old_next - restart_first) <= tolerance:
+        return "phase-ambiguous", restart_delta, old_delta
+
+    restart_seen = restart_delta <= tolerance
+    old_seen = old_delta is not None and old_delta <= tolerance
+    if restart_seen and old_seen:
+        return "both-phases-observed", restart_delta, old_delta
+    if restart_seen:
+        return "reapplied-restart-shaped", restart_delta, old_delta
+    if old_seen:
+        return "old-phase-only", restart_delta, old_delta
+    return "timing-unresolved", restart_delta, old_delta
 
 
 def _fmt(value: float | None) -> str:
@@ -44,7 +76,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
             "Inspect overlapping healer HoT recasts in raw ESO Logs against reviewed "
-            "single-application timing. This audit is read-only and does not promote a refresh policy."
+            "single-application timing. Evidence is evaluated per recipient so old ticks on "
+            "one ally cannot be mistaken for failed refresh of another. This audit is read-only."
         )
     )
     parser.add_argument("--raw", type=Path, required=True)
@@ -63,13 +96,13 @@ def build_parser() -> argparse.ArgumentParser:
         "--timing-tolerance",
         type=float,
         default=0.1,
-        help="observational timing tolerance used only for restart-shape annotations",
+        help="observational timing tolerance used only for recipient phase annotations",
     )
     parser.add_argument(
         "--recipient-merge-tolerance",
         type=float,
         default=0.05,
-        help="collapse near-simultaneous recipient heal events into one logical tick",
+        help="collapse near-simultaneous same-recipient heal events into one logical tick",
     )
     return parser
 
@@ -97,18 +130,20 @@ def main(argv: list[str] | None = None) -> int:
     unit = RotationHealerEsoLogsTimestampUnit(args.timestamp_unit)
     scale = unit.seconds_scale
 
-    print("=" * 76)
-    print(" PHASE 13 HEALER RECAST / REFRESH OBSERVATION CANDIDATE AUDIT")
-    print("=" * 76)
+    print("=" * 84)
+    print(" PHASE 13 HEALER RECIPIENT-AWARE RECAST / REFRESH CANDIDATE AUDIT")
+    print("=" * 84)
     print(f"Raw export:          {args.raw}")
     print(f"Report:              {args.report_code}")
     print(f"Fight ids:           {', '.join(str(value) for value in args.fight_id)}")
     print(f"Caster sourceID:     {args.caster_id}")
     print(f"Reviewed timing:     {args.reviewed_observations}")
     print(f"Timing tolerance:    {tolerance:g}s")
-    print("Boundary:            read-only observational evidence; no refresh policy is promoted")
+    print("Boundary:            read-only recipient-level evidence; no refresh policy is promoted")
 
     total_overlap_pairs = 0
+    total_clean_pairs = 0
+    total_recipient_rows = 0
     for target in DF_HEALER_U50_OBSERVATION_TARGETS:
         canonical = extractor.canonical_timing.resolve(
             source_name=target.source_name,
@@ -143,7 +178,8 @@ def main(argv: list[str] | None = None) -> int:
             game_version=str(args.game_version),
         )
 
-        rows: list[tuple[int, float, float, tuple[float, ...], float, float, float | None, float | None, bool | None]] = []
+        pair_rows: list[tuple[int, float, float, list[tuple[int, float, float, tuple[float, ...], str, float | None, float | None]]]] = []
+        skipped_prior_overlap = 0
         for fight_id in args.fight_id:
             fight = extractor.load_fight(
                 args.raw,
@@ -164,6 +200,13 @@ def main(argv: list[str] | None = None) -> int:
                 cast_gap = recast_time - previous_time
                 if cast_gap >= duration:
                     continue
+                total_overlap_pairs += 1
+
+                if index > 0:
+                    prior_time = activations[index - 1][1].timestamp * scale
+                    if previous_time - prior_time < duration - tolerance:
+                        skipped_prior_overlap += 1
+                        continue
 
                 next_recast_time = (
                     activations[index + 2][1].timestamp * scale
@@ -171,107 +214,134 @@ def main(argv: list[str] | None = None) -> int:
                     else math.inf
                 )
                 inspect_end = min(recast_time + duration, next_recast_time)
-                raw_post = [
-                    event.timestamp * scale
-                    for event in events
-                    if event.event_kind == SemanticEventKind.HEAL
-                    and event.source_id == int(args.caster_id)
-                    and event.ability_game_id in effect_ids
-                    and (event.tick is True or event.raw_event_type == "hot")
-                    and recast_time <= event.timestamp * scale <= inspect_end
-                ]
-                post_ticks = extractor._collapse_recipient_tick_times(
-                    raw_post,
-                    merge_tolerance_seconds=merge_tolerance,
-                )
+                old_natural_end = previous_time + duration
+
+                by_recipient_pre: dict[int, list[float]] = {}
+                by_recipient_post: dict[int, list[float]] = {}
+                for event in events:
+                    if (
+                        event.event_kind != SemanticEventKind.HEAL
+                        or event.source_id != int(args.caster_id)
+                        or event.ability_game_id not in effect_ids
+                        or not (event.tick is True or event.raw_event_type == "hot")
+                        or event.target_id is None
+                    ):
+                        continue
+                    event_time = event.timestamp * scale
+                    recipient = int(event.target_id)
+                    if previous_time <= event_time < recast_time:
+                        by_recipient_pre.setdefault(recipient, []).append(event_time)
+                    elif recast_time <= event_time <= inspect_end:
+                        by_recipient_post.setdefault(recipient, []).append(event_time)
+
+                recipient_rows = []
                 restart_first = recast_time + first_offset
-                old_next = _next_phase_time(
-                    origin=previous_time,
-                    first_offset=first_offset,
-                    cadence=cadence,
-                    after=recast_time,
-                )
-                restart_delta = _nearest_delta(post_ticks, restart_first)
-                old_delta = _nearest_delta(post_ticks, old_next)
-                restart_shape: bool | None
-                if restart_delta is None:
-                    restart_shape = None
-                elif abs(old_next - restart_first) <= tolerance:
-                    restart_shape = None
-                else:
-                    restart_shape = restart_delta <= tolerance and (
-                        old_delta is None or old_delta > tolerance
+                for recipient in sorted(set(by_recipient_pre) & set(by_recipient_post)):
+                    pre_ticks = extractor._collapse_recipient_tick_times(
+                        by_recipient_pre[recipient],
+                        merge_tolerance_seconds=merge_tolerance,
                     )
-                rows.append(
-                    (
-                        int(fight_id),
-                        previous_time,
-                        recast_time,
-                        post_ticks,
-                        restart_first,
-                        old_next,
-                        restart_delta,
-                        old_delta,
-                        restart_shape,
+                    post_ticks = extractor._collapse_recipient_tick_times(
+                        by_recipient_post[recipient],
+                        merge_tolerance_seconds=merge_tolerance,
                     )
-                )
+                    if not pre_ticks or not post_ticks:
+                        continue
+                    old_next = _next_recipient_tick(
+                        last_tick=pre_ticks[-1],
+                        cadence=cadence,
+                        after=recast_time,
+                    )
+                    if old_next > old_natural_end + tolerance:
+                        continue
+                    shape, restart_delta, old_delta = _recipient_shape(
+                        post_ticks=post_ticks,
+                        restart_first=restart_first,
+                        old_next=old_next,
+                        tolerance=tolerance,
+                    )
+                    recipient_rows.append(
+                        (
+                            recipient,
+                            pre_ticks[-1],
+                            old_next,
+                            post_ticks,
+                            shape,
+                            restart_delta,
+                            old_delta,
+                        )
+                    )
+
+                pair_rows.append((int(fight_id), previous_time, recast_time, recipient_rows))
+                total_clean_pairs += 1
+                total_recipient_rows += len(recipient_rows)
 
         print(f"\n{target.source_name} coefficient {target.coefficient_number}")
         print(
             f"  canonical: duration={duration:g}s cadence={cadence:g}s "
             f"reviewed_first_tick=+{first_offset:g}s"
         )
-        print(f"  overlapping recast pairs: {len(rows)}")
-        total_overlap_pairs += len(rows)
-        if not rows:
-            print("  evidence: none in selected fights")
+        print(f"  clean first-overlap recast pairs: {len(pair_rows)}")
+        print(f"  pairs skipped because previous cast already overlapped an older cast: {skipped_prior_overlap}")
+        if not pair_rows:
+            print("  recipient evidence: none in selected fights")
             continue
 
-        for row_index, row in enumerate(rows, start=1):
-            (
-                fight_id,
-                previous_time,
-                recast_time,
-                post_ticks,
-                restart_first,
-                old_next,
-                restart_delta,
-                old_delta,
-                restart_shape,
-            ) = row
-            offsets = tuple(value - recast_time for value in post_ticks[:5])
-            rendered_offsets = ", ".join(f"+{value:.3f}" for value in offsets) or "none"
-            if restart_shape is True:
-                shape = "restart-shaped candidate"
-            elif restart_shape is False:
-                shape = "not restart-shaped"
-            else:
-                shape = "timing-ambiguous"
+        counts: dict[str, int] = {}
+        for row_index, (fight_id, previous_time, recast_time, recipient_rows) in enumerate(pair_rows, start=1):
             print(
                 f"  [{row_index:2d}] fight={fight_id} cast_gap={recast_time - previous_time:.3f}s "
-                f"post_ticks={rendered_offsets}"
+                f"comparable_recipients={len(recipient_rows)}"
             )
-            print(
-                f"       expected_new_first=+{restart_first - recast_time:.3f}s "
-                f"nearest_delta={_fmt(restart_delta)} | "
-                f"old_stream_next=+{old_next - recast_time:.3f}s nearest_delta={_fmt(old_delta)}"
-            )
-            print(f"       shape={shape}")
+            if not recipient_rows:
+                print("       no recipient had attributable pre-recast and post-recast ticks")
+                continue
+            for recipient, last_pre, old_next, post_ticks, shape, restart_delta, old_delta in recipient_rows:
+                counts[shape] = counts.get(shape, 0) + 1
+                offsets = tuple(value - recast_time for value in post_ticks[:4])
+                rendered_offsets = ", ".join(f"+{value:.3f}" for value in offsets) or "none"
+                print(
+                    f"       target={recipient} last_pre={last_pre - recast_time:+.3f}s "
+                    f"post={rendered_offsets}"
+                )
+                print(
+                    f"          new_first=+{first_offset:.3f}s delta={_fmt(restart_delta)} | "
+                    f"continued_old_next=+{old_next - recast_time:.3f}s delta={_fmt(old_delta)} "
+                    f"| shape={shape}"
+                )
+
+        if counts:
+            print("  recipient-level shape counts:")
+            for shape in (
+                "reapplied-restart-shaped",
+                "both-phases-observed",
+                "old-phase-only",
+                "phase-ambiguous",
+                "timing-unresolved",
+                "no-post-recast-evidence",
+            ):
+                if counts.get(shape):
+                    print(f"    - {shape}: {counts[shape]}")
 
     print("\nInterpretation:")
     print(
-        "A restart-shaped candidate means the observed post-recast stream matches the reviewed "
-        "new-application phase while a distinct old-stream phase is absent inside the selected tolerance."
+        "Recipient evidence is only compared when the previous cast was not itself already "
+        "overlapping an older same-skill cast and the same target has attributable ticks both "
+        "before and after the recast."
     )
     print(
-        "Timing-ambiguous rows are not evidence against restart; they occur when the old and new "
-        "phases are too close to distinguish or when insufficient post-recast ticks are visible."
+        "reapplied-restart-shaped means that recipient shows the reviewed new-application phase "
+        "and not the projected continuation of its own old phase. both-phases-observed is evidence "
+        "that two timing phases coexist on the same recipient and must not be modeled as simple restart."
     )
     print(
-        "This audit does not promote RESTART. Cross-fight agreement must be reviewed explicitly before "
-        "refresh/recast semantics enter runtime evidence."
+        "old-phase-only is not evidence against restart because the recast may not have reapplied "
+        "the effect to that recipient. phase-ambiguous means the two expected phases are too close "
+        "to distinguish. No row promotes a refresh policy automatically."
     )
-    print(f"Total overlapping recast pairs inspected: {total_overlap_pairs}")
+    print(f"Overlapping recast pairs encountered: {total_overlap_pairs}")
+    print(f"Clean first-overlap pairs inspected: {total_clean_pairs}")
+    print(f"Comparable recipient rows inspected: {total_recipient_rows}")
     return 0
 
 
