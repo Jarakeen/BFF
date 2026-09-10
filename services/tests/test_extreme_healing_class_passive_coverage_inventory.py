@@ -28,7 +28,7 @@ def test_inventory_exactly_matches_canonical_class_skill_line_universe() -> None
     assert len({row.family_id for row in rows}) == len(rows)
 
 
-def test_nineteen_reviewed_families_have_explicit_coverage_classification() -> None:
+def test_all_twenty_one_families_have_explicit_coverage_classification() -> None:
     rows = ExtremeHealingClassPassiveCoverageInventory().items()
     reviewed = [row for row in rows if row.review_status == REVIEWED]
     partial = [row for row in rows if row.review_status == PARTIAL]
@@ -40,6 +40,8 @@ def test_nineteen_reviewed_families_have_explicit_coverage_classification() -> N
         ("dragonknight", "Ardent Flame"),
         ("dragonknight", "Draconic Power"),
         ("dragonknight", "Earthen Heart"),
+        ("necromancer", "Grave Lord"),
+        ("necromancer", "Bone Tyrant"),
         ("necromancer", "Living Death"),
         ("nightblade", "Assassination"),
         ("nightblade", "Shadow"),
@@ -56,12 +58,13 @@ def test_nineteen_reviewed_families_have_explicit_coverage_classification() -> N
     ]
     relevant = [row for row in reviewed if row.healing_relevant is True]
     non_relevant = [row for row in reviewed if row.healing_relevant is False]
-    assert len(relevant) == 15
+    assert len(relevant) == 16
     assert all(row.coverage_status == IMPLEMENTED for row in relevant)
     assert all(row.implemented_hook for row in relevant)
     assert [(row.eso_class, row.skill_line) for row in non_relevant] == [
         ("arcanist", "Soldier of Apocrypha"),
         ("dragonknight", "Earthen Heart"),
+        ("necromancer", "Grave Lord"),
         ("nightblade", "Assassination"),
         ("warden", "Winter's Embrace"),
     ]
@@ -70,19 +73,19 @@ def test_nineteen_reviewed_families_have_explicit_coverage_classification() -> N
     assert partial == []
 
 
-def test_inventory_summary_counts_all_completed_reviews() -> None:
+def test_inventory_summary_is_complete() -> None:
     summary = ExtremeHealingClassPassiveCoverageInventory().summary()
 
     assert summary.total_families == 21
-    assert summary.reviewed_families == 19
+    assert summary.reviewed_families == 21
     assert summary.partially_reviewed_families == 0
-    assert summary.unreviewed_families == 2
-    assert summary.healing_relevant_families == 15
-    assert summary.implemented == 15
+    assert summary.unreviewed_families == 0
+    assert summary.healing_relevant_families == 16
+    assert summary.implemented == 16
     assert summary.explicitly_unsupported == 0
     assert summary.healing_relevant_unreviewed == 0
-    assert summary.implemented_hooks == 15
-    assert not summary.complete
+    assert summary.implemented_hooks == 16
+    assert summary.complete
 
 
 def test_inventory_fails_closed_when_canonical_class_family_is_added_without_review_entry(
@@ -98,7 +101,7 @@ def test_inventory_fails_closed_when_canonical_class_family_is_added_without_rev
         ExtremeHealingClassPassiveCoverageInventory().items()
 
 
-def test_actual_heal_audit_reports_nineteen_reviewed_families_but_review_incomplete() -> None:
+def test_actual_heal_audit_reports_complete_class_passive_review() -> None:
     audit = ExtremeActualHealCoverageAuditService()
     summary = audit.class_passive_summary()
     row = next(
@@ -107,16 +110,16 @@ def test_actual_heal_audit_reports_nineteen_reviewed_families_but_review_incompl
         if item.mechanic_id == "reviewed_class_passive_families"
     )
 
-    assert summary.reviewed_families == 19
+    assert summary.reviewed_families == 21
     assert summary.partially_reviewed_families == 0
-    assert summary.unreviewed_families == 2
-    assert summary.implemented == 15
+    assert summary.unreviewed_families == 0
+    assert summary.implemented == 16
     assert summary.explicitly_unsupported == 0
     assert summary.healing_relevant_unreviewed == 0
-    assert row.status == "unresolved"
+    assert row.status == "implemented"
     assert row.evidence == "ExtremeHealingClassPassiveCoverageInventory"
-    assert "reviewed 19/21" in row.detail
-    assert "implemented 15" in row.detail
+    assert "reviewed 21/21" in row.detail
+    assert "implemented 16" in row.detail
     assert "explicitly unsupported 0" in row.detail
-    assert "families awaiting relevance review 2" in row.detail
-    assert "reviewed_class_passive_families" in audit.summary().blocker_ids
+    assert "families awaiting relevance review 0" in row.detail
+    assert "reviewed_class_passive_families" not in audit.summary().blocker_ids
