@@ -37,10 +37,10 @@ def _candidate(
     candidate_id: str,
     *,
     role: str,
-    output: float,
-    support: float,
-    sustain: float = 1000.0,
-    displacement: float = 0.0,
+    output: float | None,
+    support: float | None,
+    sustain: float | None = 1000.0,
+    displacement: float | None = 0.0,
     scorecard: RotationCandidateScorecard | None = None,
 ) -> RotationRoleAwareRankingInput:
     return RotationRoleAwareRankingInput(
@@ -160,3 +160,53 @@ def test_equal_role_evidence_uses_deterministic_candidate_id_only_at_the_end() -
     )
 
     assert [item.candidate_id for item in ranked] == ["alpha", "Zulu"]
+
+
+def test_dd_missing_required_role_output_fails_closed_even_when_scorecard_is_valid() -> None:
+    ranked = RotationRoleAwareRankingService().rank(
+        (
+            _candidate("unknown-output", role="dd", output=None, support=None),
+            _candidate("proven-output", role="dd", output=100_000, support=None),
+        )
+    )
+
+    assert [item.candidate_id for item in ranked] == ["proven-output", "unknown-output"]
+    assert ranked[0].tier.value == "eligible"
+    assert ranked[1].tier.value == "ineligible"
+    assert "role ranking evidence missing: role output" in ranked[1].role_reasons
+    assert "assigned support coverage=not supplied" in ranked[0].role_reasons[-1]
+
+
+def test_dd_diagnostic_support_may_be_unknown_without_blocking_candidate() -> None:
+    ranked = RotationRoleAwareRankingService().rank(
+        (_candidate("dd", role="dps", output=123_000, support=None),)
+    )
+
+    assert ranked[0].tier.value == "eligible"
+    assert ranked[0].candidate_id == "dd"
+
+
+def test_support_missing_assigned_support_evidence_fails_closed() -> None:
+    ranked = RotationRoleAwareRankingService().rank(
+        (
+            _candidate("unknown-support", role="healer", output=2000, support=None),
+            _candidate("proven-support", role="healer", output=1000, support=0.95),
+        )
+    )
+
+    assert [item.candidate_id for item in ranked] == ["proven-support", "unknown-support"]
+    assert ranked[1].tier.value == "ineligible"
+    assert "role ranking evidence missing: assigned support" in ranked[1].role_reasons
+
+
+def test_support_optional_output_may_be_unknown_after_support_evidence_is_proven() -> None:
+    ranked = RotationRoleAwareRankingService().rank(
+        (
+            _candidate("unknown-output", role="tank", output=None, support=1.0),
+            _candidate("known-output", role="tank", output=1000, support=1.0),
+        )
+    )
+
+    assert all(item.tier.value == "eligible" for item in ranked)
+    assert [item.candidate_id for item in ranked] == ["known-output", "unknown-output"]
+    assert "Optional useful output=not supplied" in ranked[1].role_reasons[-1]
