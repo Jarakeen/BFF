@@ -170,8 +170,8 @@ class ExtremeHealingClassPassiveCoverageInventory:
                 True,
                 IMPLEMENTED,
                 True,
-                "ExtremeTemplarRestoringLightPassiveReview + ExtremeTemplarRestoringLightHealingService + ExtremeTemplarSacredGroundCombatStateService + ExtremeConditionalActualHealOptimizationService",
-                "All four live-U50 Restoring Light passives are reviewed for MOST Actual Heal. Mending is applied by the conditional Actual Heal orchestration against explicit target Health; Sacred Ground contributes canonical Minor Mending through the combat-state path; Light Weaver and Master Ritualist are objective-irrelevant.",
+                "ExtremeTemplarRestoringLightPassiveReview + ExtremeTemplarRestoringLightHealingService + ExtremeTemplarSacredGroundCombatStateService + ExtremeTemplarLightWeaverService + ExtremeConditionalActualHealOptimizationService",
+                "All four live-U50 Restoring Light passives are reviewed for MOST Actual Heal. Mending is rank-aware and applied against explicit target Health; Sacred Ground contributes canonical Minor Mending through the combat-state path. Light Weaver's Ultimate and automatic-block utility is modeled separately because it does not alter heal-event magnitude; Master Ritualist remains objective-irrelevant resurrection utility.",
             ),
             ("warden", "Green Balance"): ExtremeHealingClassPassiveCoverageEntry(
                 "warden",
