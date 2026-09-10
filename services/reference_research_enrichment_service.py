@@ -82,7 +82,39 @@ _XALVAKKA_FACTS: tuple[ReviewedReferenceFact, ...] = (
     ReviewedReferenceFact("Corrupted Blast — Xalvakka", "Scaling", "Damage increases with the number of wraiths Xalvakka has absorbed while her shield is active.", "U30+", "high", "canonical corpus", "BFF Xalvakka canonical source record"),
 )
 
-_ALL_FACTS = (*_STATUS_EFFECT_FACTS, *_COMBAT_EFFECT_FACTS, *_NAMED_EFFECT_FACTS, *_XALVAKKA_FACTS)
+_OAXILTSO_FACTS: tuple[ReviewedReferenceFact, ...] = (
+    ReviewedReferenceFact("Savage Blitz — Oaxiltso", "Target pattern", "Charges the farthest target within 25 meters; players standing in the charge path are also endangered, so this is not modeled as a simple one-target hit.", "U30+", "high", "canonical corpus", "BFF Oaxiltso canonical source record"),
+    ReviewedReferenceFact("Savage Blitz — Oaxiltso", "Handling", "The primary target and anyone in the charge lane should dodge the charge rather than relying on ordinary stacking.", "U30+", "high", "canonical corpus", "BFF Oaxiltso canonical source record"),
+    ReviewedReferenceFact("Fiery Stomp — Oaxiltso", "Telegraph", "Three stomps release outward flame trails and the source record notes there is no normal AoE indicator for the ability.", "U30+", "high", "canonical corpus", "BFF Oaxiltso canonical source record"),
+    ReviewedReferenceFact("Blistering Smash — Oaxiltso", "Damage pattern", "Mixed damage: a very high Physical initial impact followed by a lingering Flame-damage area.", "U30+", "high", "canonical corpus", "BFF Oaxiltso canonical source record"),
+    ReviewedReferenceFact("Noxious Sludge — Oaxiltso", "Damage type", "Poison. Infected players take ramping Poison damage until the mechanic is cleansed through an available corner pool.", "U30+", "high", "canonical corpus", "BFF Oaxiltso canonical source record", "Damage type"),
+    ReviewedReferenceFact("Noxious Sludge — Oaxiltso", "Targeting", "Two players are selected; the mechanic prefers players farthest from the cleansing pools when possible.", "U30+", "high", "canonical corpus", "BFF Oaxiltso canonical source record"),
+    ReviewedReferenceFact("Noxious Sludge — Oaxiltso", "Pool rule", "Cleansing by entering a corner pool temporarily poisons that pool, making placement and pool availability part of the mechanic.", "U30+", "high", "canonical corpus + achievement corroboration", "BFF Oaxiltso canonical source record; ESO-Hub What is this Filth? achievement"),
+    ReviewedReferenceFact("Summon Havocrel Annihilators — Oaxiltso", "Spawn thresholds", "Havocrel Annihilators enter at 90%, 75%, 50%, and 25% boss Health.", "U30+", "high", "canonical corpus", "BFF Oaxiltso canonical source record"),
+    ReviewedReferenceFact("Summon Havocrel Annihilators — Oaxiltso", "Positioning consequence", "On Veteran, allowing an Annihilator's enraging aura to overlap Oaxiltso empowers both sources and increases damage from their abilities, including poison DoTs and Noxious Pools.", "U30+", "high", "canonical corpus", "BFF Oaxiltso canonical source record"),
+)
+
+_BAHSEI_FACTS: tuple[ReviewedReferenceFact, ...] = (
+    ReviewedReferenceFact("Skull Salvo — Flame-Herald Bahsei", "Target pattern", "Rapidly fires blue skulls at all players in sequence; interrupting the cast staggers Bahsei.", "U30+", "high", "canonical corpus", "BFF Flame-Herald Bahsei canonical source record"),
+    ReviewedReferenceFact("Cursed Ground/Unholy Spike — Flame-Herald Bahsei", "Movement requirement", "Yes. Two farthest players receive lich-crystal ground effects that snare, apply Death Touch to players caught near them, and then explode for extreme Frost damage.", "U30+", "high", "canonical corpus + guide corroboration", "BFF Flame-Herald Bahsei canonical source record; Xynode Rockgrove guide", "Requires movement"),
+    ReviewedReferenceFact("Death Touch/Kiss of Death — Flame-Herald Bahsei", "Duration", "Death Touch deals continuous Frost damage for 10 seconds before releasing two curved moving swirls that can infect additional players.", "U30+", "high", "canonical corpus", "BFF Flame-Herald Bahsei canonical source record"),
+    ReviewedReferenceFact("Death Touch/Kiss of Death — Flame-Herald Bahsei", "Handling", "Maintain separation from the curse carrier and the outgoing swirls; touching a swirl transfers the curse and can also damage nearby players.", "U30+", "high", "canonical corpus + achievement corroboration", "BFF Flame-Herald Bahsei canonical source record; ESO-Hub Keep Your Distance achievement"),
+    ReviewedReferenceFact("Meteor Swarm — Flame-Herald Bahsei", "Movement requirement", "Yes. From 50% Health, multiple large red-circle meteors land around the arena and should be avoided while continuing the encounter mechanics.", "U30+", "high", "canonical corpus + guide corroboration", "BFF Flame-Herald Bahsei canonical source record; Xynode Rockgrove guide", "Requires movement"),
+    ReviewedReferenceFact("Meteor Swarm — Flame-Herald Bahsei", "Failure severity", "At 30% Health and below, some landed meteors become Prime Meteors. A Prime Meteor that survives its 10-second window explodes and can wipe the group.", "U30+", "high", "canonical corpus + guide corroboration", "BFF Flame-Herald Bahsei canonical source record; Xynode Rockgrove guide", "Failure is fatal"),
+    ReviewedReferenceFact("Meteor Swarm — Flame-Herald Bahsei", "Priority", "Prime Meteors are a timed kill objective; Xynode describes roughly 323k Health and a 10-second destruction window, making the meteor more important than boss damage while active.", "U30+", "medium-high", "guide corroboration", "Xynode Rockgrove guide"),
+    ReviewedReferenceFact("Summoning Runes — Flame-Herald Bahsei", "Spawn thresholds", "Flesh Abominations are summoned at 90%, 85%, 80%, 75%, 70%, 65%, and 60% Health; this sequence ends after the 55% transition.", "U30+", "high", "canonical corpus", "BFF Flame-Herald Bahsei canonical source record"),
+    ReviewedReferenceFact("Summon Behemoth — Flame-Herald Bahsei", "Spawn thresholds", "Fire Behemoths enter at 50%, 40%, 25%, 20%, and 10% boss Health.", "U30+", "high", "canonical corpus", "BFF Flame-Herald Bahsei canonical source record"),
+    ReviewedReferenceFact("Dagon's Wrath — Flame-Herald Bahsei", "Telegraph", "From 55% Health onward, moving flame walls cross the arena, deal very high Flame damage, knock players back, and do not use the normal AoE ground indicator.", "U30+", "high", "canonical corpus", "BFF Flame-Herald Bahsei canonical source record"),
+)
+
+_ALL_FACTS = (
+    *_STATUS_EFFECT_FACTS,
+    *_COMBAT_EFFECT_FACTS,
+    *_NAMED_EFFECT_FACTS,
+    *_XALVAKKA_FACTS,
+    *_OAXILTSO_FACTS,
+    *_BAHSEI_FACTS,
+)
 
 
 class ReferenceResearchEnrichmentService:
