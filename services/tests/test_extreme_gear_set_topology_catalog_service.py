@@ -59,7 +59,7 @@ def test_catalog_includes_legal_no_set_baseline_and_partial_set_allocations():
     assert "2+1|unused:9" in signatures
 
 
-def test_capacity_matching_requires_distinct_set_identities():
+def test_capacity_matching_requires_distinct_set_identities_without_forbidding_partial_sets():
     repository = _Repository(
         (
             _Set(1, "Only Five Piece", "Dungeon", 5),
@@ -71,7 +71,9 @@ def test_capacity_matching_requires_distinct_set_identities():
 
     assert "5+2|unused:5" in signatures
     assert "5+5|unused:2" not in signatures
-    assert "2+2|unused:8" not in signatures
+    # A five-piece set may legally contribute only two equipped pieces. Combined
+    # with the distinct two-piece set, this is a valid abstract partial topology.
+    assert "2+2|unused:8" in signatures
 
 
 def test_missing_capacity_is_fail_closed_and_prevents_count_denominator_proof():
