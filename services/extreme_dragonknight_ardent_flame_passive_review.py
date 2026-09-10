@@ -5,7 +5,6 @@ from dataclasses import dataclass
 
 IMPLEMENTED = "implemented"
 IRRELEVANT = "irrelevant"
-INTEGRATION_PENDING = "integration_pending"
 
 
 @dataclass(frozen=True)
@@ -22,8 +21,9 @@ class ExtremeDragonknightArdentFlamePassiveReview:
 
     A Soul Ablaze is the only Ardent Flame passive that can enlarge the numeric
     amount received by a Dragonknight self-heal. Rank 1 grants 4% Healing Taken
-    and rank 2 grants 8%. The canonical resolver exists, but production context
-    wiring remains pending, so this family intentionally stays incomplete.
+    and rank 2 grants 8%. BuildCalculationContextFactory now routes the recorded
+    passive rank through DragonknightPassiveInputResolver into canonical Healing
+    Taken before any Extreme self-heal evaluation consumes the context.
     """
 
     PASSIVE_NAMES = (
@@ -58,9 +58,9 @@ class ExtremeDragonknightArdentFlamePassiveReview:
         ExtremeDragonknightArdentFlamePassiveReviewEntry(
             "A Soul Ablaze",
             True,
-            INTEGRATION_PENDING,
-            "DragonknightPassiveInputResolver",
-            "Rank-aware 4%/8% Healing Taken contribution is implemented in the canonical Dragonknight resolver, but BuildCalculationContextFactory must still request passive ownership/rank before production self-heal evaluation is exact.",
+            IMPLEMENTED,
+            "DragonknightPassiveInputResolver + BuildCalculationContextFactory",
+            "Rank-aware 4%/8% Healing Taken is applied from explicit character progression into the canonical Healing Taken stat before self-heal scoring. Missing rank fails closed and explicit subclass routes without Ardent Flame do not claim the passive.",
         ),
     )
 
@@ -78,10 +78,8 @@ class ExtremeDragonknightArdentFlamePassiveReview:
             raise ValueError(
                 "Ardent Flame healing review must identify only A Soul Ablaze as objective-relevant"
             )
-        if relevant[0].coverage_status != INTEGRATION_PENDING:
-            raise ValueError(
-                "A Soul Ablaze must remain integration_pending until canonical context wiring exists"
-            )
+        if relevant[0].coverage_status != IMPLEMENTED:
+            raise ValueError("A Soul Ablaze must remain implemented in canonical context math")
         if any(
             row.coverage_status != IRRELEVANT
             for row in rows
@@ -93,4 +91,4 @@ class ExtremeDragonknightArdentFlamePassiveReview:
     @property
     def complete(self) -> bool:
         self.items()
-        return False
+        return True
