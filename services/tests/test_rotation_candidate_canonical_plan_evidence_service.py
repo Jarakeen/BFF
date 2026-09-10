@@ -1,5 +1,7 @@
 from types import SimpleNamespace
 
+import pytest
+
 from minmax.resource_costs import ResourceType
 from minmax.rotation_effective_duration import RotationEffectiveDurationOverride
 from minmax.rotation_plan import RotationPlan
@@ -41,6 +43,28 @@ class _DurationService:
     def analyze(self, plan, **kwargs):
         self.calls.append((plan, kwargs))
         return self.projection
+
+
+class _WorkloadProvider:
+    def __init__(self, workload):
+        self.workload = workload
+        self.calls = []
+
+    def evaluate_plan(self, candidate):
+        self.calls.append(candidate)
+        return self.workload
+
+
+def _sustain_projection(minimum_amount: int = 1000):
+    return SimpleNamespace(
+        run=SimpleNamespace(
+            sustain=SimpleNamespace(
+                minimum_amount=minimum_amount,
+                ending_margin=minimum_amount,
+                sustains=True,
+            )
+        )
+    )
 
 
 def test_provider_evaluates_exact_final_candidate_plan_through_shared_services() -> None:
@@ -128,18 +152,9 @@ def test_provider_uses_minimum_resource_as_sustain_headroom_not_ending_balance()
 
 def test_provider_does_not_invent_role_or_support_measurements() -> None:
     candidate = _candidate()
-    sustain_projection = SimpleNamespace(
-        run=SimpleNamespace(
-            sustain=SimpleNamespace(
-                minimum_amount=1000,
-                ending_margin=1000,
-                sustains=True,
-            )
-        )
-    )
     service = RotationCandidateCanonicalPlanEvidenceService(
         build=object(),
-        sustain_service=_SustainService(sustain_projection),
+        sustain_service=_SustainService(_sustain_projection()),
         duration_service=_DurationService(object()),
     )
 
@@ -148,3 +163,67 @@ def test_provider_does_not_invent_role_or_support_measurements() -> None:
     assert evidence.role_output_value is None
     assert evidence.assigned_support_value is None
     assert evidence.primary_role_displacement_seconds is None
+
+
+def test_provider_uses_viable_canonical_workload_displacement_for_exact_candidate() -> None:
+    candidate = _candidate()
+    workload = SimpleNamespace(
+        alternative_id="candidate",
+        viable=True,
+        primary_role_displacement_seconds=3.25,
+    )
+    workload_provider = _WorkloadProvider(workload)
+    service = RotationCandidateCanonicalPlanEvidenceService(
+        build=object(),
+        sustain_service=_SustainService(_sustain_projection()),
+        duration_service=_DurationService(object()),
+        provider_workload_evidence_provider=workload_provider,
+    )
+
+    evidence = service.evaluate_plan(candidate)
+
+    assert workload_provider.calls == [candidate]
+    assert evidence.primary_role_displacement_seconds == 3.25
+    assert evidence.assigned_support_value is None
+    assert evidence.role_output_value is None
+
+
+def test_provider_keeps_displacement_unknown_when_workload_is_not_viable() -> None:
+    candidate = _candidate()
+    workload_provider = _WorkloadProvider(
+        SimpleNamespace(
+            alternative_id="candidate",
+            viable=False,
+            primary_role_displacement_seconds=0.0,
+        )
+    )
+    service = RotationCandidateCanonicalPlanEvidenceService(
+        build=object(),
+        sustain_service=_SustainService(_sustain_projection()),
+        duration_service=_DurationService(object()),
+        provider_workload_evidence_provider=workload_provider,
+    )
+
+    evidence = service.evaluate_plan(candidate)
+
+    assert evidence.primary_role_displacement_seconds is None
+
+
+def test_provider_rejects_workload_evidence_for_a_different_candidate() -> None:
+    candidate = _candidate()
+    workload_provider = _WorkloadProvider(
+        SimpleNamespace(
+            alternative_id="different-candidate",
+            viable=True,
+            primary_role_displacement_seconds=1.0,
+        )
+    )
+    service = RotationCandidateCanonicalPlanEvidenceService(
+        build=object(),
+        sustain_service=_SustainService(_sustain_projection()),
+        duration_service=_DurationService(object()),
+        provider_workload_evidence_provider=workload_provider,
+    )
+
+    with pytest.raises(ValueError, match="candidate mismatch"):
+        service.evaluate_plan(candidate)
