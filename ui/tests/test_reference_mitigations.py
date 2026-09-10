@@ -51,3 +51,23 @@ def test_missing_mitigation_does_not_invent_guidance(tmp_path: Path):
     entry = enrich_reference_entries_with_mitigations((_entry(),), tmp_path)[0]
 
     assert entry.mitigation_note == ""
+
+
+def test_mitigation_field_is_appended_without_shifting_existing_positional_fields():
+    entry = ReferenceEntry(
+        "Example",
+        "Mechanic",
+        "Trial",
+        ("MECHANIC",),
+        "summary",
+        (("Authority", "test"),),
+        ("Related",),
+        "death",
+        "field",
+        ("Consumer",),
+        ("Evidence",),
+    )
+
+    assert entry.used_by == ("Consumer",)
+    assert entry.evidence == ("Evidence",)
+    assert entry.mitigation_note == ""
