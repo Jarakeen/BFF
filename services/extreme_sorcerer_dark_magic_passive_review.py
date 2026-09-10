@@ -20,14 +20,14 @@ class ExtremeSorcererDarkMagicPassiveReviewEntry:
 class ExtremeSorcererDarkMagicPassiveReview:
     """Exhaustive live-U50 Dark Magic passive review for MOST Actual Heal.
 
-    Blood Magic is objective-relevant and its two live-U50 branches are resolved
-    explicitly by ``ExtremeSorcererBloodMagicService``. Below full Health,
-    casting a costed Dark Magic ability produces a separate Max-Health-scaled
-    self-heal event. At full Health, the higher of Max Magicka or Stamina receives
-    a 10% increase for 10 seconds. The full-Health resource window is consumed by
-    conditional Actual Heal through a canonical context rebuild. The family
-    remains explicitly unsupported only until the separate self-heal can be
-    surfaced and ranked without combining recipient-distinct healing.
+    Blood Magic is objective-relevant and both live-U50 branches are implemented
+    explicitly. Below full Health, casting a costed Dark Magic ability produces a
+    separate Max-Health-scaled caster self-heal event. That event is evaluated
+    through canonical healing modifiers and ranked against the selected heal
+    without summing recipient-distinct events. At full Health, the higher of Max
+    Magicka or Stamina receives a 10% increase for 10 seconds and the conditional
+    optimizer rebuilds the calculation context before scoring resource-scaled
+    healing.
 
     Unholy Knowledge and Persistence only reduce ability costs. Exploitation
     grants Minor Prophecy, which changes Spell Critical chance but not the size
@@ -52,9 +52,9 @@ class ExtremeSorcererDarkMagicPassiveReview:
         ExtremeSorcererDarkMagicPassiveReviewEntry(
             "Blood Magic",
             True,
-            EXPLICITLY_UNSUPPORTED,
-            "ExtremeSorcererBloodMagicService + ExtremeConditionalActualHealOptimizationService",
-            "Both live-U50 branches are resolved with explicit trigger, passive, subclass, and caster-Health proof: below full Health, Blood Magic creates a separate Max-Health-scaled self-heal; at full Health, it increases the higher of Max Magicka or Max Stamina by 10% for 10 seconds. Conditional Actual Heal now consumes the resource window through a canonical context rebuild; only separate self-heal event ranking remains unsupported.",
+            IMPLEMENTED,
+            "ExtremeSorcererBloodMagicService + ExtremeSorcererBloodMagicHealingEventService + ExtremeConditionalActualHealOptimizationService + ExtremeConditionalActualHealObjectiveOptimizationService",
+            "Both live-U50 branches are implemented with explicit trigger, passive, subclass, and caster-Health proof: below full Health, Blood Magic creates a separate Max-Health-scaled caster self-heal that is evaluated with canonical healing modifiers and ranked without summing recipients; at full Health, it increases the higher of Max Magicka or Max Stamina by 10% for 10 seconds and rebuilds canonical context before the selected heal is scored.",
         ),
         ExtremeSorcererDarkMagicPassiveReviewEntry(
             "Persistence",
