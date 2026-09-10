@@ -25,9 +25,9 @@ class ReferenceEntry:
     related: tuple[str, ...] = ()
     death_note: str = ""
     field_note: str = ""
-    mitigation_note: str = ""
     used_by: tuple[str, ...] = ()
     evidence: tuple[str, ...] = ()
+    mitigation_note: str = ""
 
     @property
     def search_text(self) -> str:
