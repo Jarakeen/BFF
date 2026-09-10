@@ -78,6 +78,31 @@ def test_candidate_caster_rows_rank_broader_hot_coverage_first():
     assert rows[0]["heals"] == 1
 
 
+def test_candidate_caster_rows_accept_numeric_aliases_for_same_canonical_skill():
+    targets = (
+        RotationHealerEsoLogsObservationTarget(
+            "Hot One", 1, 101, "hot_one"
+        ),
+    )
+    events = (
+        _event(10, 9991, SemanticEventKind.CAST),
+        _event(10, 9992, SemanticEventKind.HEAL),
+        _event(20, 101, SemanticEventKind.CAST),
+        _event(30, 7777, SemanticEventKind.CAST),
+    )
+
+    rows = _candidate_caster_rows(
+        events,
+        targets,
+        alias_map={"Hot One": (101, 9991, 9992)},
+    )
+
+    assert [row["source_id"] for row in rows] == [10, 20]
+    assert rows[0]["abilities"] == ("Hot One",)
+    assert rows[0]["casts"] == 1
+    assert rows[0]["heals"] == 1
+
+
 def test_candidate_caster_rows_ignore_untracked_and_missing_sources():
     targets = (RotationHealerEsoLogsObservationTarget("Hot", 1, 101),)
     events = (
@@ -106,4 +131,5 @@ def test_cli_is_directly_executable_from_tools_path():
     assert result.returncode == 0
     assert "--caster-id" in result.stdout
     assert "--list-casters" in result.stdout
+    assert "--report-code" in result.stdout
     assert "candidate" in result.stdout.casefold()
