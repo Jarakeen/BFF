@@ -27,7 +27,7 @@ def test_inventory_exactly_matches_canonical_class_skill_line_universe() -> None
     assert len({row.family_id for row in rows}) == len(rows)
 
 
-def test_six_reviewed_families_are_implemented() -> None:
+def test_seven_reviewed_families_are_implemented() -> None:
     rows = ExtremeHealingClassPassiveCoverageInventory().items()
     reviewed = [row for row in rows if row.review_status == REVIEWED]
     partial = [row for row in rows if row.review_status == PARTIAL]
@@ -37,6 +37,7 @@ def test_six_reviewed_families_are_implemented() -> None:
         ("necromancer", "Living Death"),
         ("nightblade", "Siphoning"),
         ("sorcerer", "Dark Magic"),
+        ("templar", "Aedric Spear"),
         ("templar", "Restoring Light"),
         ("warden", "Green Balance"),
     ]
@@ -46,18 +47,18 @@ def test_six_reviewed_families_are_implemented() -> None:
     assert partial == []
 
 
-def test_inventory_summary_counts_dark_magic_as_implemented() -> None:
+def test_inventory_summary_counts_aedric_spear_as_implemented() -> None:
     summary = ExtremeHealingClassPassiveCoverageInventory().summary()
 
     assert summary.total_families == 21
-    assert summary.reviewed_families == 6
+    assert summary.reviewed_families == 7
     assert summary.partially_reviewed_families == 0
-    assert summary.unreviewed_families == 15
-    assert summary.healing_relevant_families == 6
-    assert summary.implemented == 6
+    assert summary.unreviewed_families == 14
+    assert summary.healing_relevant_families == 7
+    assert summary.implemented == 7
     assert summary.explicitly_unsupported == 0
     assert summary.healing_relevant_unreviewed == 0
-    assert summary.implemented_hooks == 6
+    assert summary.implemented_hooks == 7
     assert not summary.complete
 
 
@@ -74,7 +75,7 @@ def test_inventory_fails_closed_when_canonical_class_family_is_added_without_rev
         ExtremeHealingClassPassiveCoverageInventory().items()
 
 
-def test_actual_heal_audit_reports_dark_magic_implemented_but_class_review_incomplete() -> None:
+def test_actual_heal_audit_reports_aedric_spear_implemented_but_class_review_incomplete() -> None:
     audit = ExtremeActualHealCoverageAuditService()
     summary = audit.class_passive_summary()
     row = next(
@@ -83,16 +84,16 @@ def test_actual_heal_audit_reports_dark_magic_implemented_but_class_review_incom
         if item.mechanic_id == "reviewed_class_passive_families"
     )
 
-    assert summary.reviewed_families == 6
+    assert summary.reviewed_families == 7
     assert summary.partially_reviewed_families == 0
-    assert summary.unreviewed_families == 15
-    assert summary.implemented == 6
+    assert summary.unreviewed_families == 14
+    assert summary.implemented == 7
     assert summary.explicitly_unsupported == 0
     assert summary.healing_relevant_unreviewed == 0
     assert row.status == "unresolved"
     assert row.evidence == "ExtremeHealingClassPassiveCoverageInventory"
-    assert "reviewed 6/21" in row.detail
-    assert "implemented 6" in row.detail
+    assert "reviewed 7/21" in row.detail
+    assert "implemented 7" in row.detail
     assert "explicitly unsupported 0" in row.detail
-    assert "families awaiting relevance review 15" in row.detail
+    assert "families awaiting relevance review 14" in row.detail
     assert "reviewed_class_passive_families" in audit.summary().blocker_ids
