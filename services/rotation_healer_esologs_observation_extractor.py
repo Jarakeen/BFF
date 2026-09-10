@@ -121,7 +121,8 @@ class RotationHealerEsoLogsObservationExtractor:
     Multiple recipients healed on the same periodic tick are collapsed to one
     timestamp. Activations recast before canonical expiry are skipped because
     ordinary first-tick/expiry observations must not silently cross unresolved
-    reapplication semantics.
+    reapplication semantics. Expiry tolerance applies only to the upper boundary;
+    events before the selected activation are never admitted as ticks for that sample.
 
     Both the legacy single-report raw export and the research multi-report corpus
     are accepted. A corpus requires an explicit report code because fight ids are
@@ -305,8 +306,7 @@ class RotationHealerEsoLogsObservationExtractor:
                     and event.source_id == int(caster_id)
                     and event.ability_game_id in periodic_effect_ids
                     and (event.tick is True or event.raw_event_type == "hot")
-                    and activation_seconds - expiry_tolerance_seconds
-                    <= event.timestamp * scale
+                    and activation_seconds <= event.timestamp * scale
                     <= expiry_seconds + expiry_tolerance_seconds
                 ]
                 tick_times = tuple(
@@ -314,6 +314,7 @@ class RotationHealerEsoLogsObservationExtractor:
                         {
                             round(event.timestamp * scale, 6)
                             for event in periodic_heals
+                            if round(event.timestamp * scale, 6) >= round(activation_seconds, 6)
                         }
                     )
                 )
@@ -345,7 +346,7 @@ class RotationHealerEsoLogsObservationExtractor:
                         f"casterID={int(caster_id)} canonical_skill_id={target.canonical_skill_id or '(legacy)'} "
                         f"castAbilityAliases={cast_ability_ids} periodicEffectAliases={periodic_effect_ids} "
                         f"activationAbilityID={observed_ability_game_id} activation_event_index={activation_index}",
-                        "same-caster reviewed periodic heal aliases only; same-timestamp recipient heals deduplicated",
+                        "same-caster reviewed periodic heal aliases only; same-timestamp recipient heals deduplicated; pre-activation events excluded",
                     ),
                     game_version=str(game_version),
                 )
@@ -403,3 +404,7 @@ class RotationHealerEsoLogsObservationExtractor:
             if event_index > after_event_index:
                 return float(event.timestamp) * scale
         return None
+
+
+if __name__ == "__main__":
+    raise SystemExit(0)
