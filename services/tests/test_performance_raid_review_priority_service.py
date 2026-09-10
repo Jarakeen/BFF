@@ -45,14 +45,14 @@ def test_contextual_dd_finding_replaces_narrower_raw_damage_in_shortlist() -> No
     result = service.rank(
         [
             _finding(subject="DD One", category="damage", title="Damage is stronger on successful pulls"),
-            _finding(subject="DD One", category="output_context", title="Lower wipe-side damage has measured context"),
+            _finding(subject="DD One", category="damage_context", title="Lower wipe-side damage has measured context"),
             _finding(subject="Healer One", category="sustain"),
         ]
     )
 
     dd_rows = [item for item in result if item.subject == "DD One"]
     assert len(dd_rows) == 1
-    assert dd_rows[0].category == "output_context"
+    assert dd_rows[0].category == "damage_context"
     assert dd_rows[0].title == "Lower wipe-side damage has measured context"
 
 
@@ -85,7 +85,7 @@ def test_priority_items_preserve_original_evidence_and_recommendation() -> None:
         scope="player",
         subject="DD One",
         role="DPS",
-        category="output_context",
+        category="damage_context",
         priority="medium",
         title="Lower wipe-side damage has measured context",
         evidence="Deaths and weaker boss contact were both observed on the lower-output wipes.",
