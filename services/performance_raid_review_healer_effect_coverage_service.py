@@ -45,6 +45,7 @@ class RaidReviewHealerEffectCoverageObservation:
     mechanic_start_seconds: float
     requirement_semantic_key: str
     requirement_label: str
+    source_actor_id: int | None
     covered: bool
     active_target_count: int
     active_effect_names: tuple[str, ...]
@@ -116,6 +117,11 @@ class PerformanceRaidReviewHealerEffectCoverageService:
                         mechanic_start_seconds=float(mechanic.start_seconds),
                         requirement_semantic_key=requirement.semantic_key,
                         requirement_label=requirement.label,
+                        source_actor_id=(
+                            None
+                            if requirement.source_actor_id is None
+                            else int(requirement.source_actor_id)
+                        ),
                         covered=active_target_count >= int(requirement.minimum_active_targets),
                         active_target_count=active_target_count,
                         active_effect_names=tuple(sorted({window.effect_name for window in matching})),
