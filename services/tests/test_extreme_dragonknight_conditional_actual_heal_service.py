@@ -46,6 +46,25 @@ class _DragonknightMending:
         )
 
 
+class _ElderDragonState:
+    def __init__(self, *, buffs=("Minor Brutality",), unresolved=()):
+        self.buffs = tuple(buffs)
+        self.unresolved = tuple(unresolved)
+        self.calls = []
+
+    def resolve(self, *, build, progression, elder_dragon_window_active):
+        self.calls.append(
+            (build.BuildName, progression.passive_rank("Elder Dragon"), elder_dragon_window_active)
+        )
+        return SimpleNamespace(
+            combat_state=CombatState(
+                in_combat=True,
+                active_buffs=self.buffs if not self.unresolved else (),
+            ),
+            unresolved=self.unresolved,
+        )
+
+
 class _DragonBloodHealing:
     def __init__(self, *, multiplier=1.0, unresolved=()):
         self.multiplier = float(multiplier)
@@ -80,7 +99,9 @@ class _HeavyState:
 
 
 def _progression():
-    return CharacterProgression(passive_ranks={"Essence Drain": 2})
+    return CharacterProgression(
+        passive_ranks={"Essence Drain": 2, "Elder Dragon": 2}
+    )
 
 
 def _event(skill_name="Dragon Blood", unresolved=()):
@@ -118,6 +139,73 @@ def test_dragonknight_window_adds_major_mending():
     assert state.active_buffs == ("Major Mending",)
     assert unresolved == ()
     assert mending.calls == [("DK Healer", "Fragmented Shield", True)]
+
+
+def test_elder_dragon_window_adds_minor_brutality():
+    elder = _ElderDragonState()
+    service = ExtremeDragonknightConditionalActualHealService(
+        target_health_fraction=0.25,
+        elder_dragon_window_active=True,
+        dragonknight_elder_dragon_state=elder,
+        optimizer=_Optimizer(),
+        healing_events=_HealingEvents(),
+    )
+
+    state, unresolved = service._restoration_combat_state(
+        build=PlayerBuild(BuildName="Brutality DK", EsoClass="Dragonknight"),
+        progression=_progression(),
+        active_bar="front",
+    )
+
+    assert state.active_buffs == ("Minor Brutality",)
+    assert unresolved == ()
+    assert elder.calls == [("Brutality DK", 2, True)]
+
+
+def test_elder_dragon_and_major_mending_merge_without_overwrite():
+    service = ExtremeDragonknightConditionalActualHealService(
+        target_health_fraction=0.25,
+        dragonknight_major_mending_window_active=True,
+        dragonknight_major_mending_source_ability="Igneous Shield",
+        elder_dragon_window_active=True,
+        dragonknight_earthen_heart_mending=_DragonknightMending(),
+        dragonknight_elder_dragon_state=_ElderDragonState(),
+        optimizer=_Optimizer(),
+        healing_events=_HealingEvents(),
+    )
+
+    state, unresolved = service._restoration_combat_state(
+        build=PlayerBuild(BuildName="Two DK Buffs", EsoClass="Dragonknight"),
+        progression=_progression(),
+        active_bar="front",
+    )
+
+    assert state.active_buffs == ("Major Mending", "Minor Brutality")
+    assert unresolved == ()
+
+
+def test_elder_dragon_blocker_preserves_other_combat_state():
+    service = ExtremeDragonknightConditionalActualHealService(
+        target_health_fraction=0.25,
+        fully_charged_restoration_heavy_attack_completed=True,
+        elder_dragon_window_active=True,
+        dragonknight_elder_dragon_state=_ElderDragonState(
+            buffs=(),
+            unresolved=("Elder Dragon legality unresolved",),
+        ),
+        restoration_heavy_state=_HeavyState(),
+        optimizer=_Optimizer(),
+        healing_events=_HealingEvents(),
+    )
+
+    state, unresolved = service._restoration_combat_state(
+        build=PlayerBuild(BuildName="Blocked Elder", EsoClass="Dragonknight"),
+        progression=_progression(),
+        active_bar="front",
+    )
+
+    assert state.active_buffs == ("Major Mending",)
+    assert unresolved == ("Elder Dragon legality unresolved",)
 
 
 def test_duplicate_major_mending_sources_remain_one_named_buff():
