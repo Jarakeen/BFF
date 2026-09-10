@@ -145,6 +145,10 @@ class PerformanceRaidReviewPlayerSummaryService:
         return tuple(selected.values())
 
     @staticmethod
+    def _priority(finding: RaidReviewFinding) -> str:
+        return str(finding.priority or "").strip().casefold()
+
+    @staticmethod
     def _finding_sort_key(finding: RaidReviewFinding) -> tuple:
         return (
             _PRIORITY_ORDER.get(str(finding.priority or "").strip().casefold(), 9),
