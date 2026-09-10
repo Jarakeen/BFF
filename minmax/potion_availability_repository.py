@@ -250,12 +250,22 @@ class PotionAvailabilityRepository:
         self._catalog_cache[bool(allow_legacy_alias)] = catalog
         return catalog
 
+    def catalog(self) -> AlchemyFormulaCatalog:
+        """Return the canonical formula catalog for finite read-only enumeration.
+
+        Selection resolution and activation semantics remain separate.  Exposing
+        the source-backed catalog here lets exhaustive consumers enumerate legal
+        formula identities without reaching through the repository's private
+        loading/cache implementation.
+        """
+        return self._catalog(allow_legacy_alias=self.game_update is GameUpdate.U51)
+
     def _formulas_for_selection(self, selected_label: str) -> tuple[tuple[AlchemyFormula, ...], tuple[str, ...]]:
         clean = " ".join(str(selected_label or "").strip().split())
         if not clean:
             return (), ()
 
-        catalog = self._catalog(allow_legacy_alias=self.game_update is GameUpdate.U51)
+        catalog = self.catalog()
         if not catalog.formulas:
             return (), catalog.unresolved or ("Alchemy formula catalog is empty",)
 
