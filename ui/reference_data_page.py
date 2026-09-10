@@ -38,7 +38,12 @@ def _reference_details_html(details) -> str:
 
 
 def _first_detail(entry: ReferenceEntry, *needles: str) -> str:
-    """Return the first useful detail whose label matches one of the requested concepts."""
+    """Return the first useful detail matching requested concepts.
+
+    Reviewed evidence often stores multiple structured facts in one semicolon-
+    delimited value. Match those individual segments before falling back to the
+    whole value when the label itself describes the requested concept.
+    """
 
     wanted = tuple(value.casefold() for value in needles)
     for label, value in entry.details:
@@ -46,6 +51,14 @@ def _first_detail(entry: ReferenceEntry, *needles: str) -> str:
         value_text = str(value or "").strip()
         if not value_text:
             continue
+
+        segments = tuple(part.strip() for part in value_text.split(";") if part.strip())
+        for segment in segments:
+            segment_text = segment.casefold()
+            if any(needle in segment_text for needle in wanted):
+                if segment_text not in {"yes", "no", "unknown", "not modeled"}:
+                    return segment
+
         if any(needle in label_text for needle in wanted):
             if value_text.casefold() in {"yes", "no", "unknown", "not modeled"}:
                 continue
@@ -82,7 +95,7 @@ def _raid_lead_snapshot_rows(entry: ReferenceEntry) -> tuple[tuple[str, str], ..
         "reviewed details",
     )
     timing = _first_detail(entry, "duration", "detonation", "timing", "window", "cadence")
-    size = _first_detail(entry, "radius", "range", "size", "distance")
+    size = _first_detail(entry, "radius", "range", "size", "distance", "meters", "metres")
     targets = _first_detail(entry, "target count", "targeting", "target pattern", "targets")
     kill_risk = _first_detail(entry, "failure severity", "fatal", "wipe", "kill")
     source = _encounter_name(entry)
