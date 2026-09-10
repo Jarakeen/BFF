@@ -3,19 +3,26 @@ from __future__ import annotations
 """Assemble one multi-pull Lokkestiiz raid review from shared runtime evidence.
 
 This service deliberately does not own combat truth. It reuses the shared ESO Logs
-fight-event provider, the encounter-specific per-pull evidence builder, and the generic
-Raid Review coordinator. Its job is orchestration only.
+fight-event provider, shared runtime effect-window projection, encounter-specific
+per-pull evidence builder, and generic Raid Review coordinator. Its job is orchestration
+only.
 """
 
 from dataclasses import dataclass
 from typing import Iterable
 
+from services.esologs_runtime_effect_window_service import EsoLogsRuntimeEffectWindowService
 from services.performance_raid_review_coordinator_service import (
     PerformanceRaidReviewCoordinatorService,
     PerformanceRaidReviewResult,
 )
 from services.performance_raid_review_esologs_event_provider import (
     PerformanceRaidReviewEsoLogsEventProvider,
+)
+from services.performance_raid_review_healer_effect_coverage_service import (
+    PerformanceRaidReviewHealerEffectCoverageService,
+    RaidReviewHealerEffectCoverageObservation,
+    RaidReviewHealerEffectRequirement,
 )
 from services.performance_raid_review_landing_recovery_service import (
     RaidReviewRecoveryActor,
@@ -40,6 +47,7 @@ class LokkestiizRaidReviewPullRequest:
 class LokkestiizRaidReviewSessionResult:
     review: PerformanceRaidReviewResult
     pull_evidence: tuple[LokkestiizPullRaidReviewEvidence, ...]
+    healer_effect_coverage: tuple[RaidReviewHealerEffectCoverageObservation, ...] = ()
     unresolved: tuple[str, ...] = ()
 
 
@@ -53,6 +61,8 @@ class PerformanceRaidReviewLokkestiizSessionService:
         event_provider: PerformanceRaidReviewEsoLogsEventProvider | None = None,
         pull_service: PerformanceRaidReviewLokkestiizPullService | None = None,
         coordinator_service: PerformanceRaidReviewCoordinatorService | None = None,
+        effect_window_service: EsoLogsRuntimeEffectWindowService | None = None,
+        healer_effect_coverage_service: PerformanceRaidReviewHealerEffectCoverageService | None = None,
     ) -> None:
         self.performance_service = performance_service
         self.event_provider = event_provider or PerformanceRaidReviewEsoLogsEventProvider(
@@ -63,23 +73,40 @@ class PerformanceRaidReviewLokkestiizSessionService:
             performance_service,
             event_provider=self.event_provider,
         )
+        self.effect_window_service = effect_window_service or EsoLogsRuntimeEffectWindowService()
+        self.healer_effect_coverage_service = (
+            healer_effect_coverage_service or PerformanceRaidReviewHealerEffectCoverageService()
+        )
 
     def review(
         self,
         pulls: Iterable[LokkestiizRaidReviewPullRequest],
+        *,
+        healer_effect_requirements: Iterable[RaidReviewHealerEffectRequirement] = (),
     ) -> LokkestiizRaidReviewSessionResult:
         requests = tuple(pulls)
+        coverage_requirements = tuple(item for item in healer_effect_requirements if item.reviewed)
+        reviewed_effect_names = tuple(
+            dict.fromkeys(
+                name
+                for requirement in coverage_requirements
+                for raw_name in requirement.effect_names
+                if (name := str(raw_name or "").strip())
+            )
+        )
         if not requests:
             review = self.coordinator_service.review((), encounter_name="Lokkestiiz")
             return LokkestiizRaidReviewSessionResult(
                 review=review,
                 pull_evidence=(),
+                healer_effect_coverage=(),
                 unresolved=("No Lokkestiiz pulls were supplied for Raid Review.",),
             )
 
         all_sources: list[RaidReviewSource] = []
         mechanic_windows = []
         recovery_observations = []
+        healer_effect_coverage: list[RaidReviewHealerEffectCoverageObservation] = []
         pull_evidence: list[LokkestiizPullRaidReviewEvidence] = []
         unresolved: list[str] = []
 
@@ -160,6 +187,27 @@ class PerformanceRaidReviewLokkestiizSessionService:
                 f"{report_code} #{fight_id}: {message}" for message in evidence.unresolved
             )
 
+            if coverage_requirements:
+                runtime_windows = self.effect_window_service.build(
+                    events,
+                    fight_start_time_ms=start,
+                    effect_names=reviewed_effect_names,
+                )
+                unresolved.extend(
+                    f"{report_code} #{fight_id}: {message}"
+                    for message in runtime_windows.unresolved
+                )
+                coverage_result = self.healer_effect_coverage_service.evaluate(
+                    effect_windows=runtime_windows.windows,
+                    mechanic_windows=evidence.mechanic_windows,
+                    requirements=coverage_requirements,
+                )
+                healer_effect_coverage.extend(coverage_result.observations)
+                unresolved.extend(
+                    f"{report_code} #{fight_id}: {message}"
+                    for message in coverage_result.unresolved
+                )
+
         review = self.coordinator_service.review(
             tuple(all_sources),
             encounter_name="Lokkestiiz",
@@ -171,6 +219,7 @@ class PerformanceRaidReviewLokkestiizSessionService:
         return LokkestiizRaidReviewSessionResult(
             review=review,
             pull_evidence=tuple(pull_evidence),
+            healer_effect_coverage=tuple(healer_effect_coverage),
             unresolved=tuple(dict.fromkeys(unresolved)),
         )
 
