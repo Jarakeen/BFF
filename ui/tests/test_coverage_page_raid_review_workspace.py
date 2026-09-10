@@ -82,12 +82,27 @@ def test_raid_review_pull_picker_uses_checked_api_rows_as_review_input() -> None
     assert "Check at least one {encounter_name} pull before running Raid Review." in source
 
 
+def test_raid_review_picker_exposes_live_selection_evidence_mode() -> None:
+    source = Path("ui/coverage_page.py").read_text(encoding="utf-8")
+
+    assert "PerformanceRaidReviewSelectionModeService" in source
+    assert "raid_review_selection_mode_label" in source
+    assert "self.raid_review_fights_table.itemChanged.connect(self._raid_review_selection_changed)" in source
+    assert "def _raid_review_selection_changed(self) -> None:" in source
+    assert "def _update_raid_review_selection_mode(self) -> None:" in source
+    assert "self.raid_review_selection_mode_service.classify(fight_ids)" in source
+    assert 'f"{mode.display_name} • {mode.note}"' in source
+    assert "blockSignals(True)" in source
+    assert "blockSignals(False)" in source
+
+
 def test_raid_review_encounter_selection_clears_stale_pull_rows() -> None:
     source = Path("ui/coverage_page.py").read_text(encoding="utf-8")
 
     assert "def _raid_review_encounter_changed(self) -> None:" in source
     assert "self.raid_review_fights_table.setRowCount(0)" in source
     assert "self.raid_review_run_button.setEnabled(False)" in source
+    assert "self._update_raid_review_selection_mode()" in source
 
 
 def test_raid_review_api_work_runs_off_the_qt_gui_thread() -> None:
