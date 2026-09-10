@@ -54,6 +54,14 @@ A DD skill slot is not free. Replacing a damage, execute, proc-enabling, buff, d
 
 **For BFF:** candidate ranking must score the opportunity cost of utility rather than treating every legal skill as an independent bonus.
 
+### Light-attack weaving: LA and skill share the normal cadence window
+
+Normal endgame rotations do not treat a light attack as a separate full one-second action between skill casts. Players weave: the light attack is fired and then animation-cancelled into the skill so the pair belongs to the same normal skill-cadence window.
+
+That does **not** mean the light attack disappears from the combat model. It still matters as its own event for damage, enchant/proc triggers, Ultimate generation, sets, passives, and performance analysis.
+
+**For BFF:** keep `LIGHT_ATTACK` as an explicit combat event, but associate a woven light attack with its skill window. A standard `light attack + skill` weave must not advance the rotation clock by two full one-second slots. Deliberately unpaired attacks, missed weaves, heavy attacks, channels, waits, mechanics, or other timing exceptions remain explicit.
+
 ### Healers: raw healing output is not the whole job
 
 Organized endgame healers are not optimized by maximizing HPS or ending Magicka in isolation. Their job includes reliable healing coverage, support buffs/debuffs, set obligations, mechanic preparation, positioning/range, sustain reserve, and emergency response capacity.
