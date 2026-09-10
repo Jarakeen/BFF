@@ -10,6 +10,12 @@ from services.extreme_arcanist_curative_surge_channel_service import (
 from services.extreme_arcanist_fated_fortune_critical_healing_service import (
     ExtremeArcanistFatedFortuneCriticalHealingService,
 )
+from services.extreme_arcanist_harnessed_quintessence_context_service import (
+    ExtremeArcanistHarnessedQuintessenceContextService,
+)
+from services.extreme_arcanist_harnessed_quintessence_service import (
+    ExtremeArcanistHarnessedQuintessenceService,
+)
 from services.extreme_conditional_actual_heal_optimization_service import (
     ExtremeConditionalActualHealOptimizationService,
 )
@@ -32,6 +38,12 @@ class ExtremeArcanistConditionalActualHealService(
     existing semantics. A Crux-consuming heal does not self-award a newly
     triggered Fated Fortune window on the same event until event ordering is
     proven.
+
+    Reviewed U50 Harnessed Quintessence may add rank-aware flat Weapon and Spell
+    Damage when the caller explicitly proves that its ten-second post-resource-
+    restoration window is active. The flat power is inserted before canonical
+    percentage multipliers so power-scaled healing coefficients preserve ESO
+    stacking order.
     """
 
     def __init__(
@@ -39,26 +51,74 @@ class ExtremeArcanistConditionalActualHealService(
         *,
         arcanist_curative_surge_channel: ExtremeArcanistCurativeSurgeChannelService | None = None,
         arcanist_fated_fortune_critical_healing: ExtremeArcanistFatedFortuneCriticalHealingService | None = None,
+        arcanist_harnessed_quintessence: ExtremeArcanistHarnessedQuintessenceService | None = None,
+        arcanist_harnessed_quintessence_context: ExtremeArcanistHarnessedQuintessenceContextService | None = None,
         fated_fortune_active: bool | None = None,
+        harnessed_quintessence_active: bool | None = None,
         **kwargs,
     ) -> None:
         if fated_fortune_active is not None and not isinstance(fated_fortune_active, bool):
             raise ValueError("fated_fortune_active must be True, False, or None")
+        if harnessed_quintessence_active is not None and not isinstance(
+            harnessed_quintessence_active, bool
+        ):
+            raise ValueError(
+                "harnessed_quintessence_active must be True, False, or None"
+            )
         self.arcanist_curative_surge_channel = arcanist_curative_surge_channel
         self.arcanist_fated_fortune_critical_healing = arcanist_fated_fortune_critical_healing
+        self.arcanist_harnessed_quintessence = arcanist_harnessed_quintessence
+        self.arcanist_harnessed_quintessence_context = (
+            arcanist_harnessed_quintessence_context
+            or ExtremeArcanistHarnessedQuintessenceContextService()
+        )
         self.fated_fortune_active = fated_fortune_active
+        self.harnessed_quintessence_active = harnessed_quintessence_active
         super().__init__(**kwargs)
 
     def optimize(self, baseline_build, entity_id, **kwargs):
         result = super().optimize(baseline_build, entity_id, **kwargs)
-        if self.fated_fortune_active is None:
+        scenarios: list[str] = []
+        if self.fated_fortune_active is not None:
+            scenarios.append(
+                "explicit Fated Fortune active buff-window state "
+                f"{str(self.fated_fortune_active).casefold()}; "
+                "Critical Healing requires canonical Herald of the Tome legality proof"
+            )
+        if self.harnessed_quintessence_active is not None:
+            scenarios.append(
+                "explicit Harnessed Quintessence active buff-window state "
+                f"{str(self.harnessed_quintessence_active).casefold()}; "
+                "Weapon/Spell Damage requires canonical Herald of the Tome legality proof"
+            )
+        if not scenarios:
             return result
-        scenario = (
-            "explicit Fated Fortune active buff-window state "
-            f"{str(self.fated_fortune_active).casefold()}; "
-            "Critical Healing requires canonical Herald of the Tome legality proof"
+        return replace(result, search_scope=(*scenarios, *result.search_scope))
+
+    def _harnessed_quintessence_context(self, *, build, progression, context):
+        if self.harnessed_quintessence_active is None:
+            return context, ()
+
+        service = self.arcanist_harnessed_quintessence
+        if service is None:
+            service = ExtremeArcanistHarnessedQuintessenceService(
+                getattr(self.optimizer, "database_path", None)
+            )
+            self.arcanist_harnessed_quintessence = service
+        resolved = service.resolve(
+            build=build,
+            progression=progression,
+            harnessed_quintessence_active=self.harnessed_quintessence_active,
         )
-        return replace(result, search_scope=(scenario, *result.search_scope))
+        bonus = float(resolved.weapon_spell_damage_bonus)
+        if not bonus:
+            return context, resolved.unresolved
+
+        adjusted = self.arcanist_harnessed_quintessence_context.apply(
+            context,
+            weapon_spell_damage_bonus=bonus,
+        )
+        return adjusted, resolved.unresolved
 
     def _fated_fortune_context(self, *, build, progression, context):
         if self.fated_fortune_active is None:
@@ -177,6 +237,11 @@ class ExtremeArcanistConditionalActualHealService(
             combat_state=combat_state,
             active_bar=active_bar,
         )
+        context, harnessed_unresolved = self._harnessed_quintessence_context(
+            build=build,
+            progression=candidate_progression,
+            context=context,
+        )
         context, fortune_unresolved = self._fated_fortune_context(
             build=build,
             progression=candidate_progression,
@@ -212,6 +277,7 @@ class ExtremeArcanistConditionalActualHealService(
         unresolved = (
             tuple(context.unresolved_gear_effects)
             + tuple(combat_unresolved)
+            + tuple(harnessed_unresolved)
             + tuple(fortune_unresolved)
             + tuple(event.unresolved)
         )
