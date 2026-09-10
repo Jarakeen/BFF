@@ -26,6 +26,7 @@ ROTATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "GeneratedRotationCandidate",
             "PlayerBuild",
             "BuildCalculationContext",
+            "BuildCalculationContextByBar",
             "RotationDemandWindow",
             "RotationHealerReviewedRuntimeObservation",
             "RotationHealerDelayedRuntimeEvidence",
@@ -38,8 +39,9 @@ ROTATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=True,
         evidence_class=EvidenceClass.MIXED,
         notes=(
-            "Composition only: missing first-tick, expiry, refresh, delay, or special "
-            "activation facts remain unresolved rather than being inferred."
+            "Composition only: missing first-tick, expiry, refresh, delay, special "
+            "activation, or explicitly requested bar-specific static context remains "
+            "unresolved rather than being inferred."
         ),
     ),
     ServiceDescriptor(
