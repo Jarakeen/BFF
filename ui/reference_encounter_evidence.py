@@ -59,6 +59,15 @@ def _canonical_mechanic_entry_names(data_root: Path) -> frozenset[str]:
     return frozenset(names)
 
 
+def _render_text(value: str) -> str:
+    """Humanize source-schema tokens without changing stored evidence values."""
+
+    text = str(value or "")
+    if text and text == text.casefold() and "_" in text:
+        return text.replace("_", " ").title()
+    return text
+
+
 def _render_value(value: Any) -> str:
     if isinstance(value, bool):
         return "Yes" if value else "No"
@@ -73,6 +82,8 @@ def _render_value(value: Any) -> str:
                 continue
             parts.append(f"{str(key).replace('_', ' ').title()}: {_render_value(item)}")
         return "; ".join(parts)
+    if isinstance(value, str):
+        return _render_text(value)
     return str(value)
 
 
