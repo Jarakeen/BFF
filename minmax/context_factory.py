@@ -15,6 +15,7 @@ from .character_progression import CharacterProgression
 from .combat_state import CombatState, IncomingAttackState
 from .combat_state_input_resolver import CombatStateInputResolver
 from .core_stat_calculator import CoreStatCalculator
+from .dragonknight_passive_input_resolver import DragonknightPassiveInputResolver
 from .gear_set_repository import GearSetRepository
 from .gear_stat_inputs import GearCalculationInputs, GearStatInputResolver
 from .guild_passive_input_resolver import GuildPassiveInputResolver
@@ -67,6 +68,7 @@ class BuildCalculationContextFactory:
         undaunted_passive_resolver: UndauntedPassiveInputResolver | None = None,
         guild_passive_resolver: GuildPassiveInputResolver | None = None,
         alliance_support_passive_resolver: AllianceSupportPassiveInputResolver | None = None,
+        dragonknight_passive_resolver: DragonknightPassiveInputResolver | None = None,
         nightblade_passive_resolver: NightbladePassiveInputResolver | None = None,
         sorcerer_passive_resolver: SorcererPassiveInputResolver | None = None,
         templar_passive_resolver: TemplarPassiveInputResolver | None = None,
@@ -120,6 +122,11 @@ class BuildCalculationContextFactory:
         self.combat_state_resolver = combat_state_resolver or CombatStateInputResolver(champion_point_repository)
         self.warden_passive_resolver = (
             WardenPassiveInputResolver(skill_line_repository)
+            if skill_line_repository is not None
+            else None
+        )
+        self.dragonknight_passive_resolver = dragonknight_passive_resolver or (
+            DragonknightPassiveInputResolver()
             if skill_line_repository is not None
             else None
         )
@@ -363,6 +370,21 @@ class BuildCalculationContextFactory:
                 flourish_owned=flourish,
                 advanced_species_owned=advanced_species,
                 frozen_armor_owned=frozen_armor,
+            )
+
+        dragonknight_lines = DragonknightPassiveInputResolver.equipped_dragonknight_line_ids(build)
+        ardent_flame = DragonknightPassiveInputResolver.ARDENT_FLAME_ID in dragonknight_lines
+        soul_ablaze_rank: int | None = None
+        if ardent_flame and progression.passive_ranks is not None:
+            soul_ablaze_rank = progression.passive_rank("A Soul Ablaze")
+            if soul_ablaze_rank is None:
+                unresolved.append("Passive rank is not recorded for character: A Soul Ablaze")
+                soul_ablaze_rank = 0
+        if self.dragonknight_passive_resolver is not None:
+            gear = self.dragonknight_passive_resolver.apply(
+                gear,
+                build,
+                soul_ablaze_rank=soul_ablaze_rank,
             )
 
         nightblade_lines = NightbladePassiveInputResolver.equipped_nightblade_line_ids(build)
