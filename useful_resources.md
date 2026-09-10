@@ -21,6 +21,15 @@ https://github.com/esoui/esoui
 
 **Notes:** Default branch is `live`. Prefer this when the question is "how does the ESO client/UI expose or represent this?"
 
+### ESOUI API / developer discussions
+https://www.esoui.com/forums/
+
+**Use for:** Client API behavior that is not obvious from signatures alone, especially `GetUnitBuffInfo`, `EVENT_EFFECT_CHANGED`, effect type, status-effect type, ability IDs, stack counts, timing, and known API naming quirks.
+
+**Confidence:** Primary / reference-grade when the explanation comes from ZOS staff; otherwise validation / corroboration.
+
+**Notes:** `GetUnitBuffInfo` / `EVENT_EFFECT_CHANGED` expose timing, stacks, effect type, ability type, status-effect type, and ability ID. Do not assume the legacy `buffType` string is a real `BuffType` enum; ZOS staff documented that it is a poorly named legacy/debug value. Use the actual typed returns and live source definitions instead.
+
 ### Official ESO patch notes archive
 https://forums.elderscrollsonline.com/en/categories/patch-notes
 
@@ -28,7 +37,7 @@ https://forums.elderscrollsonline.com/en/categories/patch-notes
 
 **Confidence:** Primary / reference-grade for the documented change history. Pair with current live data or in-game validation when proving that an old rule still survives unchanged in the active update.
 
-**Notes:** Especially useful when a current third-party tooltip has already moved to PTS/future-patch data. Record the exact patch/update being cited instead of treating the newest visible wording as timeless truth.
+**Notes:** Especially useful when a current third-party tooltip has already moved to PTS/future-patch data. Record the exact patch/update being cited instead of treating the newest visible wording as timeless truth. Update 51 is a critical version boundary for named effects and Alchemy: Brutality absorbs Sorcery, Savagery absorbs Prophecy, and Vexation is introduced as Mending's healing-done reduction counterpart.
 
 ### UESP ESO Log Collector
 https://esoitem.uesp.net/viewlog.php
@@ -86,6 +95,24 @@ https://eso-hub.com/en/skills
 
 **Notes:** Useful for confirming the current visible passive roster and effect wording. Versioned numerical changes should still be reconciled against official patch notes or canonical game data before hardcoding combat math.
 
+### ESO-Hub Buffs & Debuffs
+https://eso-hub.com/en/buffs-debuffs
+
+**Use for:** Enumerating current named-effect providers across skills and sets, checking readable Major/Minor effect values, durations, targets, and provider relationships.
+
+**Confidence:** Validation / corroboration.
+
+**Notes:** Particularly useful for discovering missing provider relationships for Combat Reference. Treat provider enumeration as research candidates until reconciled against official patch history, canonical game data, or reviewed BFF relationships. Do not copy current provider lists directly into canonical registries without review.
+
+### ESO-Hub Status Effects
+https://eso-hub.com/en/status-effects
+
+**Use for:** Status-effect families, associated damage types, proc-chance categories, readable status-effect behavior, and candidate values/durations that need canonical review.
+
+**Confidence:** Validation / corroboration.
+
+**Notes:** Useful for driving the `Not modeled` gap queue. Current page lists Burning, Chilled, Concussed, Diseased, Hemorrhaging, Overcharged, Poisoned, and Sundered with their associated damage types and proc-chance categories. Cross-check numerical/status behavior against patch notes, client data, or combat evidence before promoting it to canonical truth.
+
 ### ESO-Hub set pages
 https://eso-hub.com/en/sets
 
@@ -103,6 +130,15 @@ https://eso-hub.com/en/scribing-simulator
 **Confidence:** Validation / corroboration.
 
 **Notes:** Useful for checking names and combinations against the UESP compatibility catalogue. Do not make it the sole source for hardcoded combat math.
+
+### Xynode Gaming
+https://xynodegaming.com/
+
+**Use for:** Gameplay explanations, encounter handling, role expectations, build context, and organized-player practice that can help distinguish game-engine possibility from how experienced groups actually play.
+
+**Confidence:** Validation / gameplay-practice context.
+
+**Notes:** Useful for Field Notes and practice corroboration, not as sole authority for canonical combat math. Search results may be less indexable than ESO-Hub or official sources, so use targeted page retrieval when a specific mechanic or encounter is under review.
 
 ---
 
