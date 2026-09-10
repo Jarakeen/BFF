@@ -20,17 +20,29 @@ class _FakeCoefficients:
 
 
 class _FakeComponents:
-    def __init__(self, by_rank):
+    def __init__(self, by_rank, *, excluded=()):
         self.by_rank = by_rank
+        self.excluded = set(excluded)
 
     def get_for_skill_rank(self, skill_rank_id):
         return self.by_rank.get(skill_rank_id, ())
 
+    def is_intentionally_excluded_caster_healing_component(
+        self,
+        *,
+        skill_rank_id,
+        coefficient_number,
+    ):
+        return (int(skill_rank_id), int(coefficient_number)) in self.excluded
+
 
 class _FakeTooltipService:
-    def __init__(self, *, resolution, result, classifications):
+    def __init__(self, *, resolution, result, classifications, excluded=()):
         self.coefficients = _FakeCoefficients({"Heal": resolution})
-        self.components = _FakeComponents({10: tuple(classifications)})
+        self.components = _FakeComponents(
+            {10: tuple(classifications)},
+            excluded=excluded,
+        )
         self.result = result
         self.calls = []
 
@@ -115,11 +127,12 @@ def _action(
     )
 
 
-def _service(*, resolution=None, result=None, classifications=()):
+def _service(*, resolution=None, result=None, classifications=(), excluded=()):
     tooltip = _FakeTooltipService(
         resolution=resolution or _resolution(),
         result=result or _result(_trace(1, 1000.0)),
         classifications=classifications,
+        excluded=excluded,
     )
     return RotationHealerActionHealingService(".", tooltip_service=tooltip)
 
@@ -204,6 +217,21 @@ def test_missing_component_classification_fails_closed():
     assert projection.unresolved == (
         "Heal coefficient 1 at 1s: canonical component classification unavailable",
     )
+
+
+def test_reviewed_external_component_exclusion_does_not_become_false_unresolved():
+    projection = _service(
+        result=_result(_trace(1, 1000.0), _trace(2, 500.0)),
+        classifications=(_classification(number=1, is_periodic=False),),
+        excluded=((10, 2),),
+    ).project(
+        plan=_plan(_action()),
+        build=PlayerBuild(),
+        context=object(),
+    )
+
+    assert projection.unresolved == ()
+    assert [event.coefficient_number for event in projection.direct_events] == [1]
 
 
 def test_unknown_direct_vs_periodic_identity_fails_closed():
