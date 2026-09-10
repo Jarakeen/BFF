@@ -1,5 +1,8 @@
 from types import SimpleNamespace
 
+from services.performance_raid_review_healer_effect_coverage_service import (
+    RaidReviewHealerEffectRequirement,
+)
 from services.performance_raid_review_landing_recovery_service import (
     RaidReviewLandingRecoveryObservation,
 )
@@ -38,6 +41,15 @@ class _EventProvider:
     def events_for_fight(self, *, report_code, fight_id, start_time, end_time):
         self.calls.append((report_code, fight_id, start_time, end_time))
         return ({"timestamp": start_time + 100.0, "type": "cast"},)
+
+
+class _AuraEventProvider(_EventProvider):
+    def events_for_fight(self, *, report_code, fight_id, start_time, end_time):
+        self.calls.append((report_code, fight_id, start_time, end_time))
+        return (
+            {"timestamp": start_time + 500.0, "type": "applybuff", "sourceID": 11, "targetID": 21, "abilityName": "Major Courage"},
+            {"timestamp": start_time + 2500.0, "type": "removebuff", "sourceID": 11, "targetID": 21, "abilityName": "Major Courage"},
+        )
 
 
 class _PullService:
@@ -102,6 +114,17 @@ def _source(fight_id: int, actor_id: int = 7) -> RaidReviewSource:
         "DD One",
         "DPS",
         member_key="dd-one",
+    )
+
+
+def _healer_source(fight_id: int) -> RaidReviewSource:
+    return RaidReviewSource(
+        "A",
+        fight_id,
+        11,
+        "Healer One",
+        "Healer",
+        member_key="healer-one",
     )
 
 
@@ -187,3 +210,35 @@ def test_empty_session_fails_closed_without_inventing_pull_evidence() -> None:
     sources, kwargs = coordinator.calls[0]
     assert sources == ()
     assert kwargs["encounter_name"] == "Lokkestiiz"
+
+
+def test_session_projects_reviewed_healer_effect_coverage_from_same_fight_events() -> None:
+    events = _AuraEventProvider()
+    coordinator = _Coordinator()
+    service = PerformanceRaidReviewLokkestiizSessionService(
+        _PerformanceService(),
+        event_provider=events,
+        pull_service=_PullService(),
+        coordinator_service=coordinator,
+    )
+
+    result = service.review(
+        [LokkestiizRaidReviewPullRequest("A", 1, 99, (_healer_source(1),))],
+        healer_effect_requirements=(
+            RaidReviewHealerEffectRequirement(
+                semantic_key="major_courage_precoverage",
+                label="Major Courage Pre-Coverage",
+                effect_names=("Major Courage",),
+                mechanic_keys=("flight_1",),
+                source_actor_id=11,
+            ),
+        ),
+    )
+
+    assert len(events.calls) == 1
+    assert len(result.healer_effect_coverage) == 1
+    observation = result.healer_effect_coverage[0]
+    assert observation.covered
+    assert observation.mechanic_semantic_key == "flight_1"
+    assert observation.requirement_semantic_key == "major_courage_precoverage"
+    assert observation.active_effect_names == ("Major Courage",)
