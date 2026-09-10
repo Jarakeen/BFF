@@ -5,6 +5,10 @@ from pathlib import Path
 from typing import Iterable
 
 from engine.config import get_data_dir
+from services.combat_effect_reference_service import (
+    CombatEffectReference,
+    CombatEffectReferenceService,
+)
 from services.encounter_projection import EncounterDefinition, EncounterMechanic
 from services.encounter_repository import EncounterRepository
 from services.gameplay_policy_service import GameplayPolicy, GameplayPolicyService
@@ -317,11 +321,123 @@ def load_encounter_reference_entries(
     return tuple(entries)
 
 
+def _number(value: float | int | None, unit: str = "s") -> str:
+    if value is None:
+        return "Not modeled"
+    number = float(value)
+    rendered = str(int(number)) if number.is_integer() else f"{number:g}"
+    return f"{rendered} {unit}" if unit else rendered
+
+
+def _effect_entry_type(effect: CombatEffectReference) -> str:
+    category = effect.category.strip().casefold()
+    if category == "status":
+        return "Status Effect"
+    return "Combat Effect"
+
+
+def entry_from_combat_effect(effect: CombatEffectReference) -> ReferenceEntry:
+    details: list[tuple[str, str]] = [
+        ("Authority", "Canonical combat-effect data"),
+        ("Category", effect.category or "Not recorded"),
+        ("Duration", _number(effect.duration)),
+        ("Tick interval", _number(effect.tick_interval)),
+        ("Maximum stacks", _number(effect.stack_max, "")),
+        ("Immunity duration", _number(effect.immunity_duration)),
+    ]
+
+    trigger_text: list[str] = []
+    for trigger in effect.triggers:
+        parts = [trigger.trigger_type]
+        if trigger.damage_type:
+            parts.append(f"{trigger.damage_type} damage")
+        if trigger.weapon_requirement:
+            parts.append(f"weapon: {trigger.weapon_requirement}")
+        if trigger.condition:
+            parts.append(f"condition: {trigger.condition}")
+        trigger_text.append(" • ".join(part for part in parts if part))
+    if trigger_text:
+        details.append(("Triggers", "; ".join(trigger_text)))
+
+    related: list[str] = []
+    interaction_text: list[str] = []
+    for interaction in effect.interactions:
+        related.append(interaction.target_name)
+        parts = [f"{interaction.interaction_type} {interaction.target_name}"]
+        if interaction.target_value is not None:
+            amount = _number(interaction.target_value, interaction.target_unit or "")
+            parts.append(amount)
+        if interaction.duration is not None:
+            parts.append(f"for {_number(interaction.duration)}")
+        if interaction.target_scope:
+            parts.append(f"scope: {interaction.target_scope}")
+        if interaction.condition:
+            parts.append(f"condition: {interaction.condition}")
+        interaction_text.append(" • ".join(parts))
+    if interaction_text:
+        details.append(("Interactions", "; ".join(interaction_text)))
+
+    evidence = [f"Canonical combat effect row: {effect.effect_id}"]
+    evidence.extend(
+        dict.fromkeys(
+            source
+            for source in (
+                *(trigger.raw_source for trigger in effect.triggers),
+                *(interaction.raw_source for interaction in effect.interactions),
+            )
+            if source
+        )
+    )
+
+    tags = [effect.category.upper() if effect.category else "COMBAT EFFECT"]
+    tags.extend(
+        trigger.damage_type.upper()
+        for trigger in effect.triggers
+        if trigger.damage_type
+    )
+
+    return ReferenceEntry(
+        name=effect.name,
+        entry_type=_effect_entry_type(effect),
+        source_scope="Global Combat",
+        tags=tuple(dict.fromkeys(tags)),
+        summary=effect.description.strip() or "Canonical combat-effect record has no description.",
+        details=tuple(details),
+        related=tuple(dict.fromkeys(related)),
+        death_note=(
+            "This is a combat-effect reference entry. For a death review, check whether the effect "
+            "was active, which source applied it, and whether its documented interaction changed "
+            "damage, healing, mitigation, or control at the lethal event."
+        ),
+        field_note=(
+            "Canonical effect data only. Provider choice, expected uptime, and organized-raid "
+            "practice belong to the gameplay-policy and team-coverage layers."
+        ),
+        used_by=(
+            "Effects & Buff / Debuff System",
+            "Rotation Builder",
+            "Comp Maker",
+            "Team Optimization",
+            "Performance / Raid Review",
+        ),
+        evidence=tuple(dict.fromkeys(evidence)),
+    )
+
+
+def load_combat_effect_reference_entries(
+    database_path: Path | None = None,
+) -> tuple[ReferenceEntry, ...]:
+    service = CombatEffectReferenceService(database_path or (get_data_dir() / "eso.db"))
+    return tuple(entry_from_combat_effect(effect) for effect in service.all())
+
+
 def build_reference_entries(
     policies: Iterable[GameplayPolicy] | None = None,
     *,
     encounters: Iterable[EncounterDefinition] = (),
+    effects: Iterable[CombatEffectReference] = (),
     include_encounters: bool = False,
+    include_effects: bool = False,
 ) -> tuple[ReferenceEntry, ...]:
     if policies is None:
         policies = GameplayPolicyService().all()
@@ -332,8 +448,11 @@ def build_reference_entries(
         for encounter in encounters
         for mechanic in encounter.mechanics
     )
+    rows.extend(entry_from_combat_effect(effect) for effect in effects)
     if include_encounters:
         rows.extend(load_encounter_reference_entries())
+    if include_effects:
+        rows.extend(load_combat_effect_reference_entries())
 
     return tuple(sorted(rows, key=lambda row: row.name.casefold()))
 
