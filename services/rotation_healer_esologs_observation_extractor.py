@@ -118,11 +118,15 @@ class RotationHealerEsoLogsObservationExtractor:
     The resulting payload is explicitly marked ``candidate`` and must be human-reviewed
     before the runtime fixture loader will accept it.
 
-    Multiple recipients healed on the same periodic tick are collapsed to one
-    timestamp. Activations recast before canonical expiry are skipped because
-    ordinary first-tick/expiry observations must not silently cross unresolved
-    reapplication semantics. Expiry tolerance applies only to the upper boundary;
-    events before the selected activation are never admitted as ticks for that sample.
+    ESO Logs can timestamp one logical group-heal tick a few milliseconds differently
+    for different recipients. Recipient events within a narrow deterministic merge
+    tolerance are therefore collapsed to one logical tick, retaining the earliest
+    timestamp in that cluster. Raw event counts remain available separately.
+
+    Activations recast before canonical expiry are skipped because ordinary
+    first-tick/expiry observations must not silently cross unresolved reapplication
+    semantics. Expiry tolerance applies only to the upper boundary; events before the
+    selected activation are never admitted as ticks for that sample.
 
     Both the legacy single-report raw export and the research multi-report corpus
     are accepted. A corpus requires an explicit report code because fight ids are
@@ -231,6 +235,7 @@ class RotationHealerEsoLogsObservationExtractor:
         timestamp_unit: RotationHealerEsoLogsTimestampUnit | str = RotationHealerEsoLogsTimestampUnit.MILLISECONDS,
         game_version: str = "U50",
         expiry_tolerance_seconds: float = 0.02,
+        recipient_tick_merge_tolerance_seconds: float = 0.05,
     ) -> RotationHealerEsoLogsObservationExtractionReport:
         unit = (
             timestamp_unit
@@ -238,6 +243,10 @@ class RotationHealerEsoLogsObservationExtractor:
             else RotationHealerEsoLogsTimestampUnit(str(timestamp_unit))
         )
         scale = unit.seconds_scale
+        merge_tolerance = float(recipient_tick_merge_tolerance_seconds)
+        if merge_tolerance < 0:
+            raise ValueError("recipient_tick_merge_tolerance_seconds must be non-negative")
+
         fight = self.load_fight(
             raw_path,
             fight_id=int(fight_id),
@@ -309,14 +318,13 @@ class RotationHealerEsoLogsObservationExtractor:
                     and activation_seconds <= event.timestamp * scale
                     <= expiry_seconds + expiry_tolerance_seconds
                 ]
-                tick_times = tuple(
-                    sorted(
-                        {
-                            round(event.timestamp * scale, 6)
-                            for event in periodic_heals
-                            if round(event.timestamp * scale, 6) >= round(activation_seconds, 6)
-                        }
-                    )
+                tick_times = self._collapse_recipient_tick_times(
+                    (
+                        round(event.timestamp * scale, 6)
+                        for event in periodic_heals
+                        if round(event.timestamp * scale, 6) >= round(activation_seconds, 6)
+                    ),
+                    merge_tolerance_seconds=merge_tolerance,
                 )
                 if not tick_times:
                     unresolved.append(
@@ -346,7 +354,7 @@ class RotationHealerEsoLogsObservationExtractor:
                         f"casterID={int(caster_id)} canonical_skill_id={target.canonical_skill_id or '(legacy)'} "
                         f"castAbilityAliases={cast_ability_ids} periodicEffectAliases={periodic_effect_ids} "
                         f"activationAbilityID={observed_ability_game_id} activation_event_index={activation_index}",
-                        "same-caster reviewed periodic heal aliases only; same-timestamp recipient heals deduplicated; pre-activation events excluded",
+                        f"same-caster reviewed periodic heal aliases only; recipient events within {merge_tolerance:g}s clustered into one logical tick using earliest timestamp; raw event count preserved; pre-activation events excluded",
                     ),
                     game_version=str(game_version),
                 )
@@ -369,6 +377,27 @@ class RotationHealerEsoLogsObservationExtractor:
             candidates=tuple(candidates),
             unresolved=tuple(dict.fromkeys(unresolved)),
         )
+
+    @staticmethod
+    def _collapse_recipient_tick_times(
+        timestamps,
+        *,
+        merge_tolerance_seconds: float,
+    ) -> tuple[float, ...]:
+        """Collapse near-simultaneous recipient events into logical periodic ticks."""
+
+        tolerance = float(merge_tolerance_seconds)
+        if tolerance < 0:
+            raise ValueError("merge_tolerance_seconds must be non-negative")
+
+        ordered = sorted(float(value) for value in timestamps)
+        collapsed: list[float] = []
+        cluster_start: float | None = None
+        for value in ordered:
+            if cluster_start is None or value - cluster_start > tolerance:
+                cluster_start = value
+                collapsed.append(round(value, 6))
+        return tuple(collapsed)
 
     @staticmethod
     def _activation_events(events, *, caster_id: int, ability_game_ids: tuple[int, ...]):
@@ -404,7 +433,3 @@ class RotationHealerEsoLogsObservationExtractor:
             if event_index > after_event_index:
                 return float(event.timestamp) * scale
         return None
-
-
-if __name__ == "__main__":
-    raise SystemExit(0)
