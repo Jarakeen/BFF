@@ -6,6 +6,7 @@ from minmax.passive_eligibility import CLASS_SKILL_LINES
 
 
 REVIEWED = "reviewed"
+PARTIAL = "partial"
 UNREVIEWED = "unreviewed"
 IMPLEMENTED = "implemented"
 EXPLICITLY_UNSUPPORTED = "explicitly_unsupported"
@@ -19,6 +20,7 @@ class ExtremeHealingClassPassiveCoverageEntry:
     review_status: str
     healing_relevant: bool | None
     coverage_status: str
+    implemented_hook: bool
     evidence: str
     detail: str
 
@@ -31,16 +33,18 @@ class ExtremeHealingClassPassiveCoverageEntry:
 class ExtremeHealingClassPassiveCoverageSummary:
     total_families: int
     reviewed_families: int
+    partially_reviewed_families: int
     unreviewed_families: int
     healing_relevant_families: int
     implemented: int
     explicitly_unsupported: int
     healing_relevant_unreviewed: int
+    implemented_hooks: int
 
     @property
     def complete(self) -> bool:
         return (
-            self.unreviewed_families == 0
+            self.reviewed_families == self.total_families
             and self.explicitly_unsupported == 0
             and self.healing_relevant_unreviewed == 0
         )
@@ -50,206 +54,71 @@ class ExtremeHealingClassPassiveCoverageInventory:
     """Canonical review denominator for healing-relevant class passive families.
 
     Every class skill-line family in ``CLASS_SKILL_LINES`` must appear exactly
-    once. A family remains ``unreviewed`` until Extreme has deliberately decided
-    whether its passives can change the actual-heal objective. Reviewed families
-    that are healing-relevant then declare whether that behavior is implemented,
-    explicitly unsupported, or still unreviewed.
+    once. ``reviewed`` means the family has been exhaustively checked for every
+    passive that can change the MOST Actual Heal objective. ``partial`` means
+    concrete healing behavior is already modeled but the entire family has not
+    yet earned that completeness claim. ``unreviewed`` means no family-level
+    review has been recorded.
 
-    The inventory intentionally starts conservative. Existing dedicated Extreme
-    healer services are evidence for the three currently reviewed families; the
-    remaining canonical class families stay visible as unresolved review work.
+    Family coverage and individual implemented hooks are deliberately separate.
+    A working hook inside a family must never promote the whole family to
+    reviewed by implication.
     """
 
+    _NO_REVIEW_EVIDENCE = "No completed Extreme healer class-passive review recorded"
+    _NO_REVIEW_DETAIL = (
+        "Class-passive relevance to MOST Actual Heal has not yet been reviewed."
+    )
+
     _ENTRIES = (
-        ExtremeHealingClassPassiveCoverageEntry(
-            "arcanist",
-            "Herald of the Tome",
-            UNREVIEWED,
-            None,
-            UNREVIEWED,
-            "No completed Extreme healer class-passive review recorded",
-            "Class-passive relevance to MOST Actual Heal has not yet been reviewed.",
-        ),
-        ExtremeHealingClassPassiveCoverageEntry(
-            "arcanist",
-            "Soldier of Apocrypha",
-            UNREVIEWED,
-            None,
-            UNREVIEWED,
-            "No completed Extreme healer class-passive review recorded",
-            "Class-passive relevance to MOST Actual Heal has not yet been reviewed.",
-        ),
-        ExtremeHealingClassPassiveCoverageEntry(
-            "arcanist",
-            "Curative Runeforms",
-            UNREVIEWED,
-            None,
-            UNREVIEWED,
-            "No completed Extreme healer class-passive review recorded",
-            "Class-passive relevance to MOST Actual Heal has not yet been reviewed.",
-        ),
-        ExtremeHealingClassPassiveCoverageEntry(
-            "dragonknight",
-            "Ardent Flame",
-            UNREVIEWED,
-            None,
-            UNREVIEWED,
-            "No completed Extreme healer class-passive review recorded",
-            "Class-passive relevance to MOST Actual Heal has not yet been reviewed.",
-        ),
-        ExtremeHealingClassPassiveCoverageEntry(
-            "dragonknight",
-            "Draconic Power",
-            UNREVIEWED,
-            None,
-            UNREVIEWED,
-            "No completed Extreme healer class-passive review recorded",
-            "Class-passive relevance to MOST Actual Heal has not yet been reviewed.",
-        ),
-        ExtremeHealingClassPassiveCoverageEntry(
-            "dragonknight",
-            "Earthen Heart",
-            UNREVIEWED,
-            None,
-            UNREVIEWED,
-            "No completed Extreme healer class-passive review recorded",
-            "Class-passive relevance to MOST Actual Heal has not yet been reviewed.",
-        ),
-        ExtremeHealingClassPassiveCoverageEntry(
-            "necromancer",
-            "Grave Lord",
-            UNREVIEWED,
-            None,
-            UNREVIEWED,
-            "No completed Extreme healer class-passive review recorded",
-            "Class-passive relevance to MOST Actual Heal has not yet been reviewed.",
-        ),
-        ExtremeHealingClassPassiveCoverageEntry(
-            "necromancer",
-            "Bone Tyrant",
-            UNREVIEWED,
-            None,
-            UNREVIEWED,
-            "No completed Extreme healer class-passive review recorded",
-            "Class-passive relevance to MOST Actual Heal has not yet been reviewed.",
-        ),
+        ExtremeHealingClassPassiveCoverageEntry("arcanist", "Herald of the Tome", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
+        ExtremeHealingClassPassiveCoverageEntry("arcanist", "Soldier of Apocrypha", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
+        ExtremeHealingClassPassiveCoverageEntry("arcanist", "Curative Runeforms", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
+        ExtremeHealingClassPassiveCoverageEntry("dragonknight", "Ardent Flame", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
+        ExtremeHealingClassPassiveCoverageEntry("dragonknight", "Draconic Power", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
+        ExtremeHealingClassPassiveCoverageEntry("dragonknight", "Earthen Heart", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
+        ExtremeHealingClassPassiveCoverageEntry("necromancer", "Grave Lord", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
+        ExtremeHealingClassPassiveCoverageEntry("necromancer", "Bone Tyrant", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
         ExtremeHealingClassPassiveCoverageEntry(
             "necromancer",
             "Living Death",
-            REVIEWED,
+            PARTIAL,
             True,
-            IMPLEMENTED,
+            UNREVIEWED,
+            True,
             "ExtremeNecromancerLivingDeathHealingService",
-            "Reviewed Living Death healing-passive behavior is modeled with explicit condition evidence.",
+            "Curative Curse has an implemented Extreme healing hook, but the full Living Death passive family has not yet been exhaustively reviewed.",
         ),
-        ExtremeHealingClassPassiveCoverageEntry(
-            "nightblade",
-            "Assassination",
-            UNREVIEWED,
-            None,
-            UNREVIEWED,
-            "No completed Extreme healer class-passive review recorded",
-            "Class-passive relevance to MOST Actual Heal has not yet been reviewed.",
-        ),
-        ExtremeHealingClassPassiveCoverageEntry(
-            "nightblade",
-            "Shadow",
-            UNREVIEWED,
-            None,
-            UNREVIEWED,
-            "No completed Extreme healer class-passive review recorded",
-            "Class-passive relevance to MOST Actual Heal has not yet been reviewed.",
-        ),
+        ExtremeHealingClassPassiveCoverageEntry("nightblade", "Assassination", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
+        ExtremeHealingClassPassiveCoverageEntry("nightblade", "Shadow", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
         ExtremeHealingClassPassiveCoverageEntry(
             "nightblade",
             "Siphoning",
-            REVIEWED,
+            PARTIAL,
             True,
-            IMPLEMENTED,
+            UNREVIEWED,
+            True,
             "ExtremeNightbladeSiphoningHealingService",
-            "Reviewed Siphoning healing-passive behavior is modeled from active-bar and passive-rank evidence.",
+            "Soul Siphoner has an implemented Extreme healing hook, but the full Siphoning passive family has not yet been exhaustively reviewed.",
         ),
-        ExtremeHealingClassPassiveCoverageEntry(
-            "sorcerer",
-            "Daedric Summoning",
-            UNREVIEWED,
-            None,
-            UNREVIEWED,
-            "No completed Extreme healer class-passive review recorded",
-            "Class-passive relevance to MOST Actual Heal has not yet been reviewed.",
-        ),
-        ExtremeHealingClassPassiveCoverageEntry(
-            "sorcerer",
-            "Dark Magic",
-            UNREVIEWED,
-            None,
-            UNREVIEWED,
-            "No completed Extreme healer class-passive review recorded",
-            "Class-passive relevance to MOST Actual Heal has not yet been reviewed.",
-        ),
-        ExtremeHealingClassPassiveCoverageEntry(
-            "sorcerer",
-            "Storm Calling",
-            UNREVIEWED,
-            None,
-            UNREVIEWED,
-            "No completed Extreme healer class-passive review recorded",
-            "Class-passive relevance to MOST Actual Heal has not yet been reviewed.",
-        ),
-        ExtremeHealingClassPassiveCoverageEntry(
-            "templar",
-            "Aedric Spear",
-            UNREVIEWED,
-            None,
-            UNREVIEWED,
-            "No completed Extreme healer class-passive review recorded",
-            "Class-passive relevance to MOST Actual Heal has not yet been reviewed.",
-        ),
-        ExtremeHealingClassPassiveCoverageEntry(
-            "templar",
-            "Dawn's Wrath",
-            UNREVIEWED,
-            None,
-            UNREVIEWED,
-            "No completed Extreme healer class-passive review recorded",
-            "Class-passive relevance to MOST Actual Heal has not yet been reviewed.",
-        ),
-        ExtremeHealingClassPassiveCoverageEntry(
-            "templar",
-            "Restoring Light",
-            UNREVIEWED,
-            None,
-            UNREVIEWED,
-            "No completed Extreme healer class-passive review recorded",
-            "Class-passive relevance to MOST Actual Heal has not yet been reviewed.",
-        ),
-        ExtremeHealingClassPassiveCoverageEntry(
-            "warden",
-            "Animal Companions",
-            UNREVIEWED,
-            None,
-            UNREVIEWED,
-            "No completed Extreme healer class-passive review recorded",
-            "Class-passive relevance to MOST Actual Heal has not yet been reviewed.",
-        ),
+        ExtremeHealingClassPassiveCoverageEntry("sorcerer", "Daedric Summoning", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
+        ExtremeHealingClassPassiveCoverageEntry("sorcerer", "Dark Magic", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
+        ExtremeHealingClassPassiveCoverageEntry("sorcerer", "Storm Calling", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
+        ExtremeHealingClassPassiveCoverageEntry("templar", "Aedric Spear", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
+        ExtremeHealingClassPassiveCoverageEntry("templar", "Dawn's Wrath", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
+        ExtremeHealingClassPassiveCoverageEntry("templar", "Restoring Light", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
+        ExtremeHealingClassPassiveCoverageEntry("warden", "Animal Companions", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
         ExtremeHealingClassPassiveCoverageEntry(
             "warden",
             "Green Balance",
-            REVIEWED,
+            PARTIAL,
             True,
-            IMPLEMENTED,
+            UNREVIEWED,
+            True,
             "ExtremeWardenGreenBalanceHealingService",
-            "Reviewed Green Balance healing-passive behavior is modeled from active-bar and passive-rank evidence.",
+            "Emerald Moss has an implemented Extreme healing hook, but the full Green Balance passive family has not yet been exhaustively reviewed.",
         ),
-        ExtremeHealingClassPassiveCoverageEntry(
-            "warden",
-            "Winter's Embrace",
-            UNREVIEWED,
-            None,
-            UNREVIEWED,
-            "No completed Extreme healer class-passive review recorded",
-            "Class-passive relevance to MOST Actual Heal has not yet been reviewed.",
-        ),
+        ExtremeHealingClassPassiveCoverageEntry("warden", "Winter's Embrace", UNREVIEWED, None, UNREVIEWED, False, _NO_REVIEW_EVIDENCE, _NO_REVIEW_DETAIL),
     )
 
     @staticmethod
@@ -268,19 +137,23 @@ class ExtremeHealingClassPassiveCoverageInventory:
     def summary(self) -> ExtremeHealingClassPassiveCoverageSummary:
         rows = self.items()
         reviewed = tuple(row for row in rows if row.review_status == REVIEWED)
-        relevant = tuple(row for row in reviewed if row.healing_relevant is True)
+        partial = tuple(row for row in rows if row.review_status == PARTIAL)
+        known_relevant = tuple(row for row in rows if row.healing_relevant is True)
+        reviewed_relevant = tuple(row for row in reviewed if row.healing_relevant is True)
         return ExtremeHealingClassPassiveCoverageSummary(
             total_families=len(rows),
             reviewed_families=len(reviewed),
+            partially_reviewed_families=len(partial),
             unreviewed_families=sum(row.review_status == UNREVIEWED for row in rows),
-            healing_relevant_families=len(relevant),
-            implemented=sum(row.coverage_status == IMPLEMENTED for row in relevant),
+            healing_relevant_families=len(known_relevant),
+            implemented=sum(row.coverage_status == IMPLEMENTED for row in reviewed_relevant),
             explicitly_unsupported=sum(
-                row.coverage_status == EXPLICITLY_UNSUPPORTED for row in relevant
+                row.coverage_status == EXPLICITLY_UNSUPPORTED for row in reviewed_relevant
             ),
             healing_relevant_unreviewed=sum(
-                row.coverage_status == UNREVIEWED for row in relevant
+                row.coverage_status == UNREVIEWED for row in known_relevant
             ),
+            implemented_hooks=sum(row.implemented_hook for row in rows),
         )
 
     def _validate(
@@ -301,7 +174,7 @@ class ExtremeHealingClassPassiveCoverageInventory:
             )
 
         for row in rows:
-            if row.review_status not in {REVIEWED, UNREVIEWED}:
+            if row.review_status not in {REVIEWED, PARTIAL, UNREVIEWED}:
                 raise ValueError(
                     f"Invalid class-passive review status for {row.family_id}: {row.review_status}"
                 )
@@ -310,11 +183,21 @@ class ExtremeHealingClassPassiveCoverageInventory:
                     raise ValueError(
                         f"Unreviewed class-passive family must remain unresolved: {row.family_id}"
                     )
+                if row.implemented_hook:
+                    raise ValueError(
+                        f"Implemented hook requires at least partial family review: {row.family_id}"
+                    )
                 continue
             if row.healing_relevant is None:
                 raise ValueError(
-                    f"Reviewed class-passive family must declare healing relevance: {row.family_id}"
+                    f"Reviewed or partial class-passive family must declare healing relevance: {row.family_id}"
                 )
+            if row.review_status == PARTIAL:
+                if row.healing_relevant is not True or row.coverage_status != UNREVIEWED:
+                    raise ValueError(
+                        f"Partial family review must remain healing-relevant and unresolved: {row.family_id}"
+                    )
+                continue
             if row.healing_relevant is False:
                 if row.coverage_status != NOT_APPLICABLE:
                     raise ValueError(
