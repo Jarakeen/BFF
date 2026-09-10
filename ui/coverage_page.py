@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import re
-
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -155,23 +153,33 @@ class CoveragePage(FoundryPage):
         intake_row = QHBoxLayout()
         self.raid_review_report_input = QLineEdit()
         self.raid_review_report_input.setPlaceholderText("ESO Logs report code or report URL")
-        self.raid_review_fights_input = QLineEdit()
-        self.raid_review_fights_input.setPlaceholderText("Lokkestiiz fight IDs, e.g. 4, 7, 9, 12")
+        self.raid_review_load_fights_button = QPushButton("Load Fights")
+        self.raid_review_load_fights_button.clicked.connect(self._load_raid_review_fights)
         self.raid_review_run_button = QPushButton("Run Raid Review")
         self.raid_review_run_button.setProperty("primary", True)
+        self.raid_review_run_button.setEnabled(False)
         self.raid_review_run_button.setToolTip(
-            "Query the selected fights directly from ESO Logs and compare them as one Lokkestiiz Raid Review."
+            "Query the checked Lokkestiiz fights directly from ESO Logs and compare them as one Raid Review."
         )
         self.raid_review_run_button.clicked.connect(self._run_raid_review)
         intake_row.addWidget(QLabel("REPORT"))
-        intake_row.addWidget(self.raid_review_report_input, 3)
-        intake_row.addWidget(QLabel("FIGHTS"))
-        intake_row.addWidget(self.raid_review_fights_input, 2)
+        intake_row.addWidget(self.raid_review_report_input, 1)
+        intake_row.addWidget(self.raid_review_load_fights_button)
         intake_row.addWidget(self.raid_review_run_button)
         intake.addLayout(intake_row)
+
+        self.raid_review_fights_table = QTableWidget(0, 5)
+        self.raid_review_fights_table.setHorizontalHeaderLabels([
+            "Use", "Fight", "Result", "Boss %", "Duration",
+        ])
+        self.raid_review_fights_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.raid_review_fights_table.verticalHeader().setVisible(False)
+        self.raid_review_fights_table.horizontalHeader().setStretchLastSection(True)
+        self.raid_review_fights_table.setMinimumHeight(135)
+        intake.addWidget(self.raid_review_fights_table)
         intake.addWidget(QLabel(
-            "Selected fights are queried through the ESO Logs API. Raw research JSON is not required. "
-            "Current intake supports multiple Lokkestiiz pulls from one report; cross-report identity mapping stays explicit."
+            "Load the report, check the Lokkestiiz pulls you want compared, then run the review. "
+            "Fight discovery and analysis both use the ESO Logs API; raw research JSON is not required."
         ))
         root.addWidget(intake)
 
@@ -208,20 +216,59 @@ class CoveragePage(FoundryPage):
         root.addWidget(self.raid_review_evidence_card)
         return page
 
-    @staticmethod
-    def _parse_raid_review_fight_ids(value: str) -> tuple[int, ...]:
-        tokens = [token for token in re.split(r"[\s,;]+", str(value or "").strip()) if token]
-        fight_ids: list[int] = []
-        for token in tokens:
-            try:
-                fight_id = int(token)
-            except ValueError as exc:
-                raise ValueError(f"Fight ID {token!r} is not an integer.") from exc
-            if fight_id <= 0:
-                raise ValueError("Fight IDs must be positive integers.")
-            if fight_id not in fight_ids:
-                fight_ids.append(fight_id)
-        return tuple(fight_ids)
+    def _load_raid_review_fights(self) -> None:
+        report_code = self.raid_review_report_input.text().strip()
+        if not report_code:
+            self.status.warning("Enter an ESO Logs report code or report URL first.")
+            return
+
+        self.raid_review_load_fights_button.setEnabled(False)
+        self.raid_review_run_button.setEnabled(False)
+        self.raid_review_fights_table.setRowCount(0)
+        self.status.info("Loading Lokkestiiz pulls from ESO Logs...")
+        try:
+            choices = self.raid_review_runner.list_lokkestiiz_fights(report_code)
+        except Exception as exc:
+            self.status.error(f"Could not load Raid Review fights: {exc}")
+            return
+        finally:
+            self.raid_review_load_fights_button.setEnabled(True)
+
+        for choice in choices:
+            row = self.raid_review_fights_table.rowCount()
+            self.raid_review_fights_table.insertRow(row)
+
+            select_item = QTableWidgetItem()
+            select_item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable)
+            select_item.setCheckState(Qt.CheckState.Checked)
+            select_item.setData(Qt.ItemDataRole.UserRole, int(choice.fight_id))
+            self.raid_review_fights_table.setItem(row, 0, select_item)
+
+            result_text = "Kill" if choice.kill else "Wipe"
+            boss_text = "—" if choice.boss_percentage is None else f"{choice.boss_percentage / 100:.1f}%"
+            duration_text = f"{choice.duration_seconds:.1f}s"
+            for column, value in enumerate(
+                (str(choice.fight_id), result_text, boss_text, duration_text),
+                start=1,
+            ):
+                self.raid_review_fights_table.setItem(row, column, QTableWidgetItem(value))
+
+        self.raid_review_run_button.setEnabled(bool(choices))
+        if choices:
+            self.status.success(f"Loaded {len(choices)} Lokkestiiz pull(s). Uncheck any pulls you do not want compared.")
+        else:
+            self.status.warning("No Lokkestiiz pulls were found in that report.")
+
+    def _selected_raid_review_fight_ids(self) -> tuple[int, ...]:
+        selected: list[int] = []
+        for row in range(self.raid_review_fights_table.rowCount()):
+            item = self.raid_review_fights_table.item(row, 0)
+            if item is None or item.checkState() != Qt.CheckState.Checked:
+                continue
+            fight_id = item.data(Qt.ItemDataRole.UserRole)
+            if fight_id is not None and int(fight_id) > 0:
+                selected.append(int(fight_id))
+        return tuple(selected)
 
     def _run_raid_review(self) -> None:
         report_code = self.raid_review_report_input.text().strip()
@@ -229,15 +276,12 @@ class CoveragePage(FoundryPage):
             self.status.warning("Enter an ESO Logs report code or report URL first.")
             return
 
-        try:
-            fight_ids = self._parse_raid_review_fight_ids(self.raid_review_fights_input.text())
-        except ValueError as exc:
-            self.status.warning(str(exc))
-            return
+        fight_ids = self._selected_raid_review_fight_ids()
         if not fight_ids:
-            self.status.warning("Enter at least one Lokkestiiz fight ID.")
+            self.status.warning("Check at least one Lokkestiiz pull before running Raid Review.")
             return
 
+        self.raid_review_load_fights_button.setEnabled(False)
         self.raid_review_run_button.setEnabled(False)
         self.status.info(
             f"Running Raid Review for {len(fight_ids)} selected Lokkestiiz pull(s) from ESO Logs..."
@@ -249,7 +293,8 @@ class CoveragePage(FoundryPage):
             self.status.error(f"Raid Review failed: {exc}")
             return
         finally:
-            self.raid_review_run_button.setEnabled(True)
+            self.raid_review_load_fights_button.setEnabled(True)
+            self.raid_review_run_button.setEnabled(self.raid_review_fights_table.rowCount() > 0)
 
         review = getattr(api_result, "review", None)
         unresolved = tuple(getattr(api_result, "unresolved", ()) or ())
