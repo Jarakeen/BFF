@@ -24,7 +24,10 @@ class ReferenceDataPage(FoundryPage):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._entries = {entry.name: entry for entry in build_reference_entries()}
+        self._entries = {
+            entry.name: entry
+            for entry in build_reference_entries(include_encounters=True)
+        }
         self._build_ui()
         self._load_list()
         if self.results.count():
@@ -148,7 +151,7 @@ class ReferenceDataPage(FoundryPage):
         self.status = FoundryStatusBar()
         self.set_status(self.status)
         self.status.info(
-            f"Combat Reference ready • {len(self._entries)} entries loaded from shared gameplay-practice data."
+            f"Combat Reference ready • {len(self._entries)} entries loaded from canonical encounter and shared gameplay-practice data."
         )
 
     @staticmethod
