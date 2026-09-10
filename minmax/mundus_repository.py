@@ -89,9 +89,10 @@ class MundusRepository:
     """DB-backed, update-versioned Mundus Stone reference data.
 
     ``initialize=False`` is for calculation/audit paths that consume an already
-    imported canonical database.  It prevents a read-only calculation from
-    rewriting the database merely because a repository object was constructed.
-    Import/bootstrap callers retain the historical seed-on-construction default.
+    imported canonical database. It prevents a read-only calculation from
+    rewriting the database merely because a repository object was constructed,
+    and those repository connections are opened by SQLite in explicit read-only
+    mode.
     """
 
     def __init__(
@@ -103,11 +104,17 @@ class MundusRepository:
     ) -> None:
         self.database_path = str(database_path)
         self.game_update = int(game_update)
+        self.read_only = not bool(initialize)
         if initialize:
             self.ensure_schema_and_seed()
 
     def _connect(self) -> sqlite3.Connection:
-        connection = sqlite3.connect(self.database_path)
+        if self.read_only:
+            database_uri = Path(self.database_path).resolve().as_uri() + "?mode=ro"
+            connection = sqlite3.connect(database_uri, uri=True)
+            connection.execute("PRAGMA query_only = ON")
+        else:
+            connection = sqlite3.connect(self.database_path)
         connection.row_factory = sqlite3.Row
         return connection
 
