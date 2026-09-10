@@ -35,7 +35,7 @@ def test_rank_two_soul_ablaze_enters_canonical_healing_taken() -> None:
 
     trace = context.core_state.derived[StatId.HEALING_TAKEN]
     assert trace.final_value == pytest.approx(0.08)
-    assert any(step.label == "Dragonknight: A Soul Ablaze" for step in trace.steps)
+    assert any(step[0] == "Dragonknight: A Soul Ablaze" for step in trace.steps)
     assert context.unresolved_gear_effects == ()
 
 
