@@ -5,7 +5,6 @@ from dataclasses import dataclass
 
 IMPLEMENTED = "implemented"
 IRRELEVANT = "irrelevant"
-INTEGRATION_PENDING = "integration_pending"
 
 
 @dataclass(frozen=True)
@@ -27,10 +26,11 @@ class ExtremeNightbladeShadowPassiveReview:
     passive belongs in the shared canonical stat pipeline rather than in a
     Nightblade-heal-only multiplier.
 
-    ``NightbladePassiveInputResolver`` already owns the verified active-bar slot
-    counting and Max Health percentage contribution. Production context-factory
-    progression wiring remains the final integration step, so the family fails
-    closed as incomplete until that bridge is present.
+    ``NightbladePassiveInputResolver`` owns the verified active-bar slot counting
+    and Max Health percentage contribution. ``BuildCalculationContextFactory``
+    now requests explicit Dark Vigor ownership from character progression and
+    forwards it into that resolver, so downstream healing coefficients consume
+    one canonical Max Health value.
     """
 
     PASSIVE_NAMES = (
@@ -58,9 +58,9 @@ class ExtremeNightbladeShadowPassiveReview:
         ExtremeNightbladeShadowPassiveReviewEntry(
             "Dark Vigor",
             True,
-            INTEGRATION_PENDING,
-            "NightbladePassiveInputResolver",
-            "Verified max-rank math grants 5% Max Health per Shadow ability slotted on the active bar. Resolver support exists, but BuildCalculationContextFactory must still request explicit Dark Vigor ownership from character progression before this family can be counted complete.",
+            IMPLEMENTED,
+            "NightbladePassiveInputResolver + BuildCalculationContextFactory",
+            "At max rank grants 5% Max Health per Shadow ability slotted on the active bar. Explicit passive ownership and Shadow-line legality are resolved in the canonical context pipeline before any Max-Health-scaled heal is evaluated.",
         ),
         ExtremeNightbladeShadowPassiveReviewEntry(
             "Dark Veil",
@@ -83,8 +83,8 @@ class ExtremeNightbladeShadowPassiveReview:
         relevant = tuple(row for row in rows if row.objective_relevant)
         if len(relevant) != 1 or relevant[0].passive_name != "Dark Vigor":
             raise ValueError("Shadow healing review must identify only Dark Vigor as objective-relevant")
-        if relevant[0].coverage_status != INTEGRATION_PENDING:
-            raise ValueError("Dark Vigor must remain integration_pending until canonical context wiring exists")
+        if relevant[0].coverage_status != IMPLEMENTED:
+            raise ValueError("Dark Vigor must remain implemented through the canonical context pipeline")
         if any(
             row.coverage_status != IRRELEVANT
             for row in rows
@@ -95,5 +95,8 @@ class ExtremeNightbladeShadowPassiveReview:
 
     @property
     def complete(self) -> bool:
-        self.items()
-        return False
+        rows = self.items()
+        return all(
+            row.coverage_status in {IMPLEMENTED, IRRELEVANT}
+            for row in rows
+        )
