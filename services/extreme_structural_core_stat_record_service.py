@@ -68,13 +68,13 @@ class ExtremeCanonicalStructuralStatEvaluator:
         candidate: ExtremeStructuralCandidate,
         *,
         mundus: str = "",
+        food: str = "",
     ) -> tuple[float, dict[str, Any], tuple[str, ...]]:
-        """Score one candidate, optionally with one explicit Mundus selection.
+        """Score one candidate with optional explicit Mundus and food choices.
 
-        Mundus is an input to the ordinary canonical ``PlayerBuild``/context path,
-        not a parallel formula.  Keeping the mutation here lets later exhaustive
-        search layers add the finite Mundus axis without copying route/progression
-        materialization or stat extraction logic.
+        Mundus and food are ordinary canonical ``PlayerBuild`` inputs, not parallel
+        formulas.  Keeping those mutations here lets finite exhaustive-search axes
+        compose around one route/progression/materialization path.
         """
         objective = self.optimizer.objective(objective_key)
 
@@ -88,6 +88,7 @@ class ExtremeCanonicalStructuralStatEvaluator:
         build = ExtremeHealClassRouteService.materialize_build(base, candidate.class_route)
         build.Race = candidate.race
         build.Mundus = str(mundus or "").strip()
+        build.Food = str(food or "").strip()
         build.AttributeHealth = int(candidate.attributes.health)
         build.AttributeMagicka = int(candidate.attributes.magicka)
         build.AttributeStamina = int(candidate.attributes.stamina)
@@ -108,6 +109,7 @@ class ExtremeCanonicalStructuralStatEvaluator:
                 f"h{identity[3]}m{identity[4]}s{identity[5]}",
                 str(identity[6]),
                 f"mundus:{build.Mundus or 'none'}",
+                f"food:{build.Food or 'none'}",
             )
         )
         value, unresolved = self.optimizer._evaluate(
@@ -130,6 +132,7 @@ class ExtremeCanonicalStructuralStatEvaluator:
             },
             "active_bar": candidate.active_bar,
             "mundus": build.Mundus,
+            "food": build.Food,
         }
         return float(value), payload, tuple(unresolved)
 
