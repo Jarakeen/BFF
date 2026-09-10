@@ -41,6 +41,11 @@ from services.performance_raid_review_lokkestiiz_pull_service import (
     PerformanceRaidReviewLokkestiizPullService,
 )
 from services.performance_raid_review_observation_service import RaidReviewSource
+from services.performance_raid_review_tank_effect_continuity_service import (
+    PerformanceRaidReviewTankEffectContinuityService,
+    RaidReviewTankEffectContinuityObservation,
+    RaidReviewTankEffectRequirement,
+)
 from services.performance_raid_review_tank_recovery_service import (
     PerformanceRaidReviewTankRecoveryService,
 )
@@ -63,6 +68,7 @@ class LokkestiizRaidReviewSessionResult:
     landing_recovery_opportunities: tuple[RaidReviewRecoveryOpportunity, ...] = ()
     dd_ground_continuity: tuple[RaidReviewDDGroundContinuityObservation, ...] = ()
     tank_recovery_observations: tuple[RaidReviewLandingRecoveryObservation, ...] = ()
+    tank_effect_continuity: tuple[RaidReviewTankEffectContinuityObservation, ...] = ()
     unresolved: tuple[str, ...] = ()
 
 
@@ -80,6 +86,7 @@ class PerformanceRaidReviewLokkestiizSessionService:
         healer_effect_coverage_service: PerformanceRaidReviewHealerEffectCoverageService | None = None,
         dd_ground_continuity_service: PerformanceRaidReviewDDGroundContinuityService | None = None,
         tank_recovery_service: PerformanceRaidReviewTankRecoveryService | None = None,
+        tank_effect_continuity_service: PerformanceRaidReviewTankEffectContinuityService | None = None,
     ) -> None:
         self.performance_service = performance_service
         self.event_provider = event_provider or PerformanceRaidReviewEsoLogsEventProvider(
@@ -98,6 +105,9 @@ class PerformanceRaidReviewLokkestiizSessionService:
             dd_ground_continuity_service or PerformanceRaidReviewDDGroundContinuityService()
         )
         self.tank_recovery_service = tank_recovery_service or PerformanceRaidReviewTankRecoveryService()
+        self.tank_effect_continuity_service = (
+            tank_effect_continuity_service or PerformanceRaidReviewTankEffectContinuityService()
+        )
 
     def review(
         self,
@@ -105,6 +115,7 @@ class PerformanceRaidReviewLokkestiizSessionService:
         *,
         healer_effect_requirements: Iterable[RaidReviewHealerEffectRequirement] = (),
         tank_recovery_signals: Iterable[RaidReviewRecoverySignal] = (),
+        tank_effect_requirements: Iterable[RaidReviewTankEffectRequirement] = (),
         dd_inactivity_threshold_seconds: float = 3.0,
         tank_max_recovery_delay_seconds: float = 15.0,
     ) -> LokkestiizRaidReviewSessionResult:
@@ -115,10 +126,11 @@ class PerformanceRaidReviewLokkestiizSessionService:
             for signal in tank_recovery_signals
             if signal.reviewed and self._is_tank(signal.role)
         )
+        reviewed_tank_effects = tuple(item for item in tank_effect_requirements if item.reviewed)
         reviewed_effect_names = tuple(
             dict.fromkeys(
                 name
-                for requirement in coverage_requirements
+                for requirement in (*coverage_requirements, *reviewed_tank_effects)
                 for raw_name in requirement.effect_names
                 if (name := str(raw_name or "").strip())
             )
@@ -132,6 +144,7 @@ class PerformanceRaidReviewLokkestiizSessionService:
                 landing_recovery_opportunities=(),
                 dd_ground_continuity=(),
                 tank_recovery_observations=(),
+                tank_effect_continuity=(),
                 unresolved=("No Lokkestiiz pulls were supplied for Raid Review.",),
             )
 
@@ -142,6 +155,7 @@ class PerformanceRaidReviewLokkestiizSessionService:
         healer_effect_coverage: list[RaidReviewHealerEffectCoverageObservation] = []
         dd_ground_continuity: list[RaidReviewDDGroundContinuityObservation] = []
         tank_recovery_observations: list[RaidReviewLandingRecoveryObservation] = []
+        tank_effect_continuity: list[RaidReviewTankEffectContinuityObservation] = []
         pull_evidence: list[LokkestiizPullRaidReviewEvidence] = []
         unresolved: list[str] = []
 
@@ -286,7 +300,8 @@ class PerformanceRaidReviewLokkestiizSessionService:
                     if "No Tank actors were supplied" not in message
                 )
 
-            if coverage_requirements:
+            runtime_windows = None
+            if reviewed_effect_names:
                 runtime_windows = self.effect_window_service.build(
                     events,
                     fight_start_time_ms=start,
@@ -296,6 +311,8 @@ class PerformanceRaidReviewLokkestiizSessionService:
                     f"{report_code} #{fight_id}: {message}"
                     for message in runtime_windows.unresolved
                 )
+
+            if coverage_requirements and runtime_windows is not None:
                 coverage_result = self.healer_effect_coverage_service.evaluate(
                     effect_windows=runtime_windows.windows,
                     mechanic_windows=evidence.mechanic_windows,
@@ -307,6 +324,22 @@ class PerformanceRaidReviewLokkestiizSessionService:
                     for message in coverage_result.unresolved
                 )
 
+            if reviewed_tank_effects and runtime_windows is not None:
+                tank_continuity_result = self.tank_effect_continuity_service.measure(
+                    report_code=report_code,
+                    fight_id=fight_id,
+                    fight_duration_seconds=(end - start) / 1000.0,
+                    effect_windows=runtime_windows.windows,
+                    actors=actors,
+                    requirements=reviewed_tank_effects,
+                    excluded_mechanic_windows=evidence.mechanic_windows,
+                )
+                tank_effect_continuity.extend(tank_continuity_result.observations)
+                unresolved.extend(
+                    f"{report_code} #{fight_id}: {message}"
+                    for message in tank_continuity_result.unresolved
+                )
+
         review = self.coordinator_service.review(
             tuple(all_sources),
             encounter_name="Lokkestiiz",
@@ -315,6 +348,7 @@ class PerformanceRaidReviewLokkestiizSessionService:
             landing_recovery_opportunities=tuple(recovery_opportunities),
             healer_effect_coverage_observations=tuple(healer_effect_coverage),
             dd_ground_continuity_observations=tuple(dd_ground_continuity),
+            tank_effect_continuity_observations=tuple(tank_effect_continuity),
         )
         unresolved.extend(review.unresolved)
 
@@ -325,6 +359,7 @@ class PerformanceRaidReviewLokkestiizSessionService:
             landing_recovery_opportunities=tuple(recovery_opportunities),
             dd_ground_continuity=tuple(dd_ground_continuity),
             tank_recovery_observations=tuple(tank_recovery_observations),
+            tank_effect_continuity=tuple(tank_effect_continuity),
             unresolved=tuple(dict.fromkeys(unresolved)),
         )
 
