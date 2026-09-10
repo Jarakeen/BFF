@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from collections import Counter
 
+# Import the canonical catalog first. Its bootstrap owns descriptor-family loading;
+# importing an extension descriptor module first would invert that dependency.
+from services.service_catalog import SERVICE_CATALOG
 from services.application_catalog_descriptors import APPLICATION_SERVICE_DESCRIPTORS
 from services.comp_maker_catalog_descriptors import COMP_MAKER_SERVICE_DESCRIPTORS
-from services.service_catalog import SERVICE_CATALOG
 from services.team_prescription_catalog_descriptors import (
     TEAM_PRESCRIPTION_SERVICE_DESCRIPTORS,
 )
