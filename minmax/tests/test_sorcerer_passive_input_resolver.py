@@ -112,7 +112,9 @@ def test_expert_summoner_joins_existing_resource_percent_buckets_additively():
         stamina=result.stamina,
     )
     assert state.max_magicka == 13560
-    assert state.max_stamina == 13321
+    # 6% + 5% are one additive 11% bucket: 12,000 * 1.11 = exactly 13,320.
+    # The calculator deliberately suppresses binary-float dust before ESO ceil.
+    assert state.max_stamina == 13320
 
 
 def test_expert_mage_adds_108_weapon_and_spell_damage_per_active_sorcerer_slot():
