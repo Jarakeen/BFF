@@ -9,6 +9,7 @@ from minmax.dd_mitigation import calculate_dd_mitigation
 from minmax.dd_stat_evaluation import evaluate_dd_stats
 from minmax.evaluation_context import EvaluationContext
 from minmax.formulas.heavy_attack import (
+    calculate_ha_dual_wield,
     calculate_ha_flame_spell_damage,
     calculate_ha_flame_staff,
     calculate_ha_flame_weapon_damage,
@@ -17,12 +18,16 @@ from minmax.formulas.heavy_attack import (
     calculate_ha_frost_weapon_damage,
     calculate_ha_magic_spell_damage,
     calculate_ha_magic_weapon_damage,
+    calculate_ha_one_hand,
+    calculate_ha_physical_spell_damage,
+    calculate_ha_physical_weapon_damage,
     calculate_ha_restoration,
     calculate_ha_restoration_final,
     calculate_ha_shock_spell_damage,
     calculate_ha_shock_staff,
     calculate_ha_shock_staff_final,
     calculate_ha_shock_weapon_damage,
+    calculate_ha_two_hand,
 )
 from minmax.heavy_attack_restoration import HeavyAttackWeaponType
 from minmax.rotation_plan import RotationAction, RotationActionKind
@@ -47,7 +52,7 @@ def _sum_contributions(evaluation: BuildEvaluation, *effect_types: str) -> float
 
 
 class RotationCandidateHeavyAttackDamageEvidenceService:
-    """Resolve fully charged staff heavy attacks through canonical HA formulas.
+    """Resolve fully charged heavy attacks through canonical UESP-translated math.
 
     Weapon identity and active-bar reconstruction remain owned by
     ``RotationHeavyAttackWeaponProjectionService``. Full-charge/completion proof is
@@ -56,9 +61,10 @@ class RotationCandidateHeavyAttackDamageEvidenceService:
     formulas own the attacker-side HA/typed/direct/single-target/Damage Done math;
     the existing DD pipeline adds expected crit, mitigation, and target Damage Taken.
 
-    This first executable slice supports flame, frost, shock, and restoration staff
-    heavies. Martial weapon families remain unresolved until their bar-specific HA
-    damage inputs are wired with the same canonical completeness.
+    Flame, frost, shock, restoration staff, two-handed, dual-wield, and one-hand-and-
+    shield heavies are routed here. Bow remains unresolved because the canonical
+    heavy-attack formula module does not currently expose a reviewed bow damage
+    formula. Unarmed/Werewolf/Overload remain transformation-specific concerns.
     """
 
     _EPSILON = 1e-9
@@ -137,7 +143,7 @@ class RotationCandidateHeavyAttackDamageEvidenceService:
                 "scheduled heavy attack has no resolved active-bar weapon identity",
             )
 
-        formula_damage = self._staff_formula_damage(resolution.weapon)
+        formula_damage = self._formula_damage(resolution.weapon)
         if formula_damage is None:
             return self._unresolved(
                 action,
@@ -149,6 +155,9 @@ class RotationCandidateHeavyAttackDamageEvidenceService:
             HeavyAttackWeaponType.FROST_STAFF: "frost",
             HeavyAttackWeaponType.SHOCK_STAFF: "shock",
             HeavyAttackWeaponType.RESTORATION_STAFF: "magical",
+            HeavyAttackWeaponType.TWO_HANDED: "physical",
+            HeavyAttackWeaponType.DUAL_WIELD: "physical",
+            HeavyAttackWeaponType.ONE_HAND_AND_SHIELD: "physical",
         }[resolution.weapon]
 
         dd_stats = evaluate_dd_stats(self.evaluation.stats, self.evaluation_context)
@@ -189,7 +198,7 @@ class RotationCandidateHeavyAttackDamageEvidenceService:
             damage_value=float(resolved.final_damage),
         )
 
-    def _staff_formula_damage(self, weapon: HeavyAttackWeaponType) -> float | None:
+    def _formula_damage(self, weapon: HeavyAttackWeaponType) -> float | None:
         stats = self.evaluation.stats
         magicka = stats.value(StatId.MAX_MAGICKA)
         stamina = stats.value(StatId.MAX_STAMINA)
@@ -324,6 +333,41 @@ class RotationCandidateHeavyAttackDamageEvidenceService:
                 la_magic_weapon_damage=ha_weapon,
                 magic_damage_done=typed,
                 ha_restoration_final=final,
+            )
+
+        if weapon in {
+            HeavyAttackWeaponType.TWO_HANDED,
+            HeavyAttackWeaponType.DUAL_WIELD,
+            HeavyAttackWeaponType.ONE_HAND_AND_SHIELD,
+        }:
+            ha_weapon = calculate_ha_physical_weapon_damage(
+                weapon_damage=weapon_damage,
+                skill_bonus_weapon_damage_physical=_sum_contributions(self.evaluation, "skill_bonus_weapon_damage_physical"),
+                skill2_ha_weapon_damage=_sum_contributions(self.evaluation, "skill2_ha_weapon_damage"),
+            )
+            ha_spell = calculate_ha_physical_spell_damage(
+                spell_damage=spell_damage,
+                skill_bonus_spell_damage_physical=_sum_contributions(self.evaluation, "skill_bonus_spell_damage_physical"),
+                skill2_ha_spell_damage=_sum_contributions(self.evaluation, "skill2_ha_spell_damage"),
+                buff_spell_damage=_sum_contributions(self.evaluation, "buff_spell_damage"),
+                skill_spell_damage=_sum_contributions(self.evaluation, "skill_spell_damage"),
+            )
+            physical = dict(
+                **common,
+                ha_physical_weapon_damage=ha_weapon,
+                ha_physical_spell_damage=ha_spell,
+                physical_damage_done=_sum_contributions(self.evaluation, "physical_damage_done"),
+            )
+            if weapon is HeavyAttackWeaponType.TWO_HANDED:
+                return calculate_ha_two_hand(**physical)
+            if weapon is HeavyAttackWeaponType.ONE_HAND_AND_SHIELD:
+                return calculate_ha_one_hand(**physical)
+            return calculate_ha_dual_wield(
+                **physical,
+                skill_line_damage_dual_wield=_sum_contributions(
+                    self.evaluation,
+                    "skill_line_damage_dual_wield",
+                ),
             )
 
         return None
