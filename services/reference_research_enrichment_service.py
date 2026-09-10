@@ -20,6 +20,7 @@ class ReviewedReferenceFact:
     confidence: str
     source_tier: str
     source: str
+    replaces_label: str | None = None
 
 
 _STATUS_EFFECT_FACTS: tuple[ReviewedReferenceFact, ...] = (
@@ -70,7 +71,18 @@ _NAMED_EFFECT_FACTS: tuple[ReviewedReferenceFact, ...] = (
     ReviewedReferenceFact("Major Defile", "Standard effect", "Reduces healing received and damage shield strength by 12%.", "U41+", "high", "official + corroboration", "ESO Update 41 patch notes; ESO-Hub Major Defile"),
 )
 
-_ALL_FACTS = (*_STATUS_EFFECT_FACTS, *_COMBAT_EFFECT_FACTS, *_NAMED_EFFECT_FACTS)
+_XALVAKKA_FACTS: tuple[ReviewedReferenceFact, ...] = (
+    ReviewedReferenceFact("Deadstar — Xalvakka", "Movement requirement", "Yes. Deadstar places large red-circle meteor impacts that should be moved out of rather than intentionally eaten.", "U30+", "medium-high", "canonical corpus + guide corroboration", "BFF Xalvakka canonical source record; Xynode Rockgrove guide", "Requires movement"),
+    ReviewedReferenceFact("Deadstar — Xalvakka", "Target pattern", "Three sequential meteors are placed at player locations; treat this as repeated ground targeting rather than one fixed target-count event.", "U30+", "medium-high", "canonical corpus + guide corroboration", "BFF Xalvakka canonical source record; Xynode Rockgrove guide"),
+    ReviewedReferenceFact("Summon Wraiths — Xalvakka", "Failure severity", "Potential group wipe. Wraiths that reach Xalvakka add shield strength; enough absorbed wraiths can make the shield unbreakable and wipe the group.", "U30+", "high", "canonical corpus", "BFF Xalvakka canonical source record", "Failure is fatal"),
+    ReviewedReferenceFact("Soul Resonance — Xalvakka", "Persistent hazard", "Yes. Using Soul Purge leaves Corrupted Azureplasm at the purge location; the pool heavily slows players and later explodes.", "U30+", "high", "canonical corpus", "BFF Xalvakka canonical source record", "Persistent hazard"),
+    ReviewedReferenceFact("Soul Resonance — Xalvakka", "Handling", "Cleanse with the Soul Purge synergy and place the resulting Azureplasm deliberately away from movement paths and group stack locations.", "U30+", "medium-high", "canonical corpus + guide context", "BFF Xalvakka canonical source record; Xynode Rockgrove guide"),
+    ReviewedReferenceFact("Split — Xalvakka", "Persistent hazard", "Yes. During the split the arena floor is engulfed in continuous flame damage except for limited safe ground around the copies.", "U30+", "high", "canonical corpus + guide corroboration", "BFF Xalvakka canonical source record; Xynode Rockgrove guide", "Persistent hazard"),
+    ReviewedReferenceFact("Split — Xalvakka", "Movement requirement", "Yes. The group must relocate through the limited safe areas while identifying and attacking the real Xalvakka copy.", "U30+", "medium-high", "canonical corpus + guide corroboration", "BFF Xalvakka canonical source record; Xynode Rockgrove guide", "Requires movement"),
+    ReviewedReferenceFact("Corrupted Blast — Xalvakka", "Scaling", "Damage increases with the number of wraiths Xalvakka has absorbed while her shield is active.", "U30+", "high", "canonical corpus", "BFF Xalvakka canonical source record"),
+)
+
+_ALL_FACTS = (*_STATUS_EFFECT_FACTS, *_COMBAT_EFFECT_FACTS, *_NAMED_EFFECT_FACTS, *_XALVAKKA_FACTS)
 
 
 class ReferenceResearchEnrichmentService:
