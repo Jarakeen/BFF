@@ -139,6 +139,11 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Canonical encounter-mechanic entries sourced through the shared encounter repository / projection
 - Canonical combat-effect entries sourced read-only from `combat_effect`, `combat_effect_trigger`, and `combat_effect_interaction`
 - Status effects expose duration, tick interval, stack limit, immunity duration, triggers, and effect interactions when present
+- Reviewed research enrichment adds provenance-bearing values from official patch notes and corroborating sources without silently promoting them into combat-math authority
+- Core U41+ status-effect entries now include useful delivery and secondary-effect details for Burning, Chilled, Concussion, Diseased, Hemorrhaging, Overcharged, Poisoned, and Sundered
+- Off Balance exposes official player-source duration, reapplication lockout, and non-consumption behavior
+- Dreadsail Reef Hindered, Rattled, and Devitalized entries expose reviewed encounter context and debuff behavior with explicit confidence/provenance
+- Bare `Not modeled` values are replaced in the normal Reference loading path by specific evidence-state language describing exactly what remains unknown or unreviewed
 - Related effects are derived from explicit effect-interaction rows rather than inferred from prose
 - Canonical Major / Minor named-effect entries sourced from `minmax.named_combat_buffs`
 - Named-effect entries expose U50 standing semantics and explicit U51 semantic differences without mutating the U50 default
@@ -151,7 +156,6 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Named-effect entries explicitly mark passive-provider coverage unresolved until one shared reviewed passive-provider authority exists
 - Provider relationships are shown only when explicit source-backed mappings exist; missing provider mappings remain absent rather than being inferred from tooltip prose
 - Encounter entries expose only structured known fields such as mechanic type, damage type, target count, movement / positioning / cleanse requirements, hazard state, fatal-failure state, interruptibility, phases, and provenance
-- Unknown encounter and effect properties remain explicitly **Not modeled** rather than being inferred from prose
 - Structured role, content, default-behavior, confidence, exception, and modeling-requirement details
 - Related-concept links and cross-reference text
 - Evidence / provenance display per reference entry
@@ -541,7 +545,7 @@ These are easy to lose in the size of the project because they are not necessari
 - Combat math keeps unsupported mechanics explicit instead of quietly converting uncertainty into zero.
 - ESO numeric ability IDs are not treated as stable canonical skill identity when context-dependent IDs would make the data unreliable.
 - The app contains both player-facing tools and research / audit surfaces used to verify the underlying ESO model.
-- Combat Reference exposes gameplay-practice rules, canonical encounter mechanics, canonical combat effects, versioned Major / Minor named-effect semantics, reviewed ability / gear / potion providers, explicit passive-provider gaps, provenance, death-review guidance, and downstream FoundryDock consumers in one human-readable surface.
+- Combat Reference exposes gameplay-practice rules, canonical encounter mechanics, canonical combat effects, versioned Major / Minor named-effect semantics, reviewed ability / gear / potion providers, reviewed research enrichment, explicit passive-provider gaps, provenance, death-review guidance, and downstream FoundryDock consumers in one human-readable surface.
 
 ---
 
