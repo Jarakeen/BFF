@@ -105,9 +105,12 @@ class RotationCandidateCanonicalPlanEvidenceService:
     service never calculates the restoration amount itself.
 
     Role output stays unknown until an authoritative provider supplies resolved
-    evidence for this exact candidate. Assigned-support value remains unresolved
-    until its own authoritative provider exists. Primary-role displacement is
-    accepted only from a viable canonical provider-workload result.
+    evidence for this exact candidate. Provider workload may supply two separate
+    support-role measurements: primary-role displacement and, only when the canonical
+    recipient and temporal coverage result objects are both present and satisfied,
+    assigned-support temporal coverage ratio. The adapter never derives support from
+    hand-copied booleans and never combines unlike coverage/burden dimensions into a
+    weighted score.
     """
 
     def __init__(
@@ -191,6 +194,7 @@ class RotationCandidateCanonicalPlanEvidenceService:
                 )
             role_output_value = role_output.resolved_value
 
+        assigned_support_value: float | None = None
         primary_role_displacement_seconds: float | None = None
         if self.provider_workload_evidence_provider is not None:
             workload = self.provider_workload_evidence_provider.evaluate_plan(candidate)
@@ -203,11 +207,26 @@ class RotationCandidateCanonicalPlanEvidenceService:
                 primary_role_displacement_seconds = float(
                     workload.primary_role_displacement_seconds
                 )
+                recipient = workload.recipient_coverage_result
+                temporal = workload.temporal_coverage_result
+                if (
+                    recipient is not None
+                    and temporal is not None
+                    and recipient.fully_covered
+                    and temporal.full_requirement_met
+                ):
+                    coverage_ratio = float(temporal.coverage_ratio)
+                    if not isfinite(coverage_ratio) or not 0.0 <= coverage_ratio <= 1.0:
+                        raise ValueError(
+                            "canonical provider temporal coverage ratio must be finite between 0 and 1"
+                        )
+                    assigned_support_value = coverage_ratio
 
         return RotationCandidatePlanEvidence(
             sustain=sustain,
             duration=duration,
             role_output_value=role_output_value,
+            assigned_support_value=assigned_support_value,
             sustain_margin=sustain_margin,
             primary_role_displacement_seconds=primary_role_displacement_seconds,
         )
