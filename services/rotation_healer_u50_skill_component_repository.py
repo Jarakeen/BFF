@@ -24,6 +24,9 @@ class RotationHealerU50SkillComponentRepository:
     Synergy-owned healing components are intentionally excluded from this
     repository. They require a separate activation-owner/runtime contract and
     must not be scheduled as if the healer's cast automatically emitted them.
+    ``is_intentionally_excluded_caster_healing_component`` exposes those exact
+    reviewed exclusions so downstream caster-healing projection can distinguish
+    them from genuinely missing classification evidence.
 
     Crit eligibility is left unresolved here unless separately proven. This
     repository owns healer identity and temporal scope, not critical-heal rules.
@@ -35,6 +38,17 @@ class RotationHealerU50SkillComponentRepository:
     ILLUSTRIOUS_HEALING_RANK_ID = 5110
     ENERGY_ORB_RANK_ID = 6328
     ECHOING_VIGOR_RANK_ID = 6640
+
+    _INTENTIONALLY_EXCLUDED_CASTER_HEALING_COMPONENTS = frozenset(
+        {
+            # Harvest synergy is activated/owned by the synergy user, not emitted
+            # automatically by the healer's Budding Seeds cast.
+            (BUDDING_SEEDS_RANK_ID, 3),
+            # Healing Combustion is the Energy Orb synergy consequence and likewise
+            # requires separate activation-owner/runtime evidence.
+            (ENERGY_ORB_RANK_ID, 2),
+        }
+    )
 
     _REVIEWED: dict[tuple[int, int], SkillComponentClassification] = {
         (BUDDING_SEEDS_RANK_ID, 1): SkillComponentClassification(
@@ -145,6 +159,19 @@ class RotationHealerU50SkillComponentRepository:
     ) -> None:
         self.database_path = Path(database_path)
         self.base_repository = base_repository or SkillComponentRepository(database_path)
+
+    @classmethod
+    def is_intentionally_excluded_caster_healing_component(
+        cls,
+        *,
+        skill_rank_id: int,
+        coefficient_number: int,
+    ) -> bool:
+        """Return whether reviewed U50 evidence places this heal outside caster output."""
+        return (
+            int(skill_rank_id),
+            int(coefficient_number),
+        ) in cls._INTENTIONALLY_EXCLUDED_CASTER_HEALING_COMPONENTS
 
     @staticmethod
     def _merge(
