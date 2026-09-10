@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
-from math import ceil
+from math import ceil, isclose
 
 from .character_progression import AttributeAllocation
 from .stat_ids import StatId
@@ -100,6 +100,9 @@ class BaseCharacterCalculator:
 
     @staticmethod
     def eso_round(value: float) -> int:
+        nearest_integer = round(value)
+        if isclose(value, nearest_integer, rel_tol=0.0, abs_tol=1e-9):
+            return int(nearest_integer)
         return int(ceil(value))
 
     @staticmethod
