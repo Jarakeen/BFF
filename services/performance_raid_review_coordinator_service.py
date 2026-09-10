@@ -5,8 +5,9 @@ from __future__ import annotations
 The coordinator is intentionally thin: collect fresh per-source observations,
 optionally enrich them from raw ESO Logs events, run cross-pull analysis, and then
 add findings from explicitly supplied reviewed mechanic windows, landing-recovery,
-landing-recovery completion, healer pre-coverage, DD boss-contact continuity, and
-DD output-context evidence. It does not persist computed review state.
+landing-recovery completion, healer pre-coverage, DD boss-contact continuity,
+DD output-context, and tank effect-continuity evidence. It does not persist computed
+review state.
 """
 
 from dataclasses import dataclass
@@ -58,6 +59,12 @@ from services.performance_raid_review_service import (
     PerformanceRaidReviewService,
     RaidReviewReport,
 )
+from services.performance_raid_review_tank_effect_continuity_analysis_service import (
+    PerformanceRaidReviewTankEffectContinuityAnalysisService,
+)
+from services.performance_raid_review_tank_effect_continuity_service import (
+    RaidReviewTankEffectContinuityObservation,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -87,6 +94,7 @@ class PerformanceRaidReviewCoordinatorService:
         healer_effect_coverage_analysis_service: PerformanceRaidReviewHealerEffectCoverageAnalysisService | None = None,
         dd_ground_continuity_analysis_service: PerformanceRaidReviewDDGroundContinuityAnalysisService | None = None,
         dd_output_context_service: PerformanceRaidReviewDDOutputContextService | None = None,
+        tank_effect_continuity_analysis_service: PerformanceRaidReviewTankEffectContinuityAnalysisService | None = None,
         priority_service: PerformanceRaidReviewPriorityService | None = None,
     ) -> None:
         self.performance_service = performance_service
@@ -119,6 +127,10 @@ class PerformanceRaidReviewCoordinatorService:
         self.dd_output_context_service = (
             dd_output_context_service or PerformanceRaidReviewDDOutputContextService()
         )
+        self.tank_effect_continuity_analysis_service = (
+            tank_effect_continuity_analysis_service
+            or PerformanceRaidReviewTankEffectContinuityAnalysisService()
+        )
         self.priority_service = priority_service or PerformanceRaidReviewPriorityService()
 
     def review(
@@ -134,6 +146,9 @@ class PerformanceRaidReviewCoordinatorService:
         ] = (),
         dd_ground_continuity_observations: Iterable[
             RaidReviewDDGroundContinuityObservation
+        ] = (),
+        tank_effect_continuity_observations: Iterable[
+            RaidReviewTankEffectContinuityObservation
         ] = (),
     ) -> PerformanceRaidReviewResult:
         collection = self.observation_service.collect(tuple(sources))
@@ -152,7 +167,10 @@ class PerformanceRaidReviewCoordinatorService:
         recovery_rows = tuple(landing_recovery_observations)
         opportunity_rows = tuple(landing_recovery_opportunities)
         continuity_rows = tuple(dd_ground_continuity_observations)
-        if recovery_rows or opportunity_rows or continuity_rows:
+        tank_continuity_rows = tuple(tank_effect_continuity_observations)
+        needs_outcomes = bool(recovery_rows or opportunity_rows or continuity_rows or tank_continuity_rows)
+        outcomes: tuple[RaidReviewPullOutcome, ...] = ()
+        if needs_outcomes:
             outcomes_by_pull: dict[tuple[str, int], RaidReviewPullOutcome] = {}
             for row in collection.observations:
                 key = (str(row.report_code), int(row.fight_id))
@@ -162,6 +180,7 @@ class PerformanceRaidReviewCoordinatorService:
                     kill=bool(row.kill),
                 )
             outcomes = tuple(outcomes_by_pull.values())
+
             if recovery_rows:
                 extra_findings.extend(
                     self.landing_recovery_analysis_service.findings(
@@ -181,6 +200,13 @@ class PerformanceRaidReviewCoordinatorService:
                 extra_findings.extend(
                     self.dd_ground_continuity_analysis_service.findings(
                         continuity_rows,
+                        outcomes,
+                    )
+                )
+            if tank_continuity_rows:
+                extra_findings.extend(
+                    self.tank_effect_continuity_analysis_service.findings(
+                        tank_continuity_rows,
                         outcomes,
                     )
                 )
