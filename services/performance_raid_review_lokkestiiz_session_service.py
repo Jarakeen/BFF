@@ -32,13 +32,18 @@ from services.performance_raid_review_landing_recovery_completion_analysis_servi
     RaidReviewRecoveryOpportunity,
 )
 from services.performance_raid_review_landing_recovery_service import (
+    RaidReviewLandingRecoveryObservation,
     RaidReviewRecoveryActor,
+    RaidReviewRecoverySignal,
 )
 from services.performance_raid_review_lokkestiiz_pull_service import (
     LokkestiizPullRaidReviewEvidence,
     PerformanceRaidReviewLokkestiizPullService,
 )
 from services.performance_raid_review_observation_service import RaidReviewSource
+from services.performance_raid_review_tank_recovery_service import (
+    PerformanceRaidReviewTankRecoveryService,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -57,6 +62,7 @@ class LokkestiizRaidReviewSessionResult:
     healer_effect_coverage: tuple[RaidReviewHealerEffectCoverageObservation, ...] = ()
     landing_recovery_opportunities: tuple[RaidReviewRecoveryOpportunity, ...] = ()
     dd_ground_continuity: tuple[RaidReviewDDGroundContinuityObservation, ...] = ()
+    tank_recovery_observations: tuple[RaidReviewLandingRecoveryObservation, ...] = ()
     unresolved: tuple[str, ...] = ()
 
 
@@ -73,6 +79,7 @@ class PerformanceRaidReviewLokkestiizSessionService:
         effect_window_service: EsoLogsRuntimeEffectWindowService | None = None,
         healer_effect_coverage_service: PerformanceRaidReviewHealerEffectCoverageService | None = None,
         dd_ground_continuity_service: PerformanceRaidReviewDDGroundContinuityService | None = None,
+        tank_recovery_service: PerformanceRaidReviewTankRecoveryService | None = None,
     ) -> None:
         self.performance_service = performance_service
         self.event_provider = event_provider or PerformanceRaidReviewEsoLogsEventProvider(
@@ -90,16 +97,24 @@ class PerformanceRaidReviewLokkestiizSessionService:
         self.dd_ground_continuity_service = (
             dd_ground_continuity_service or PerformanceRaidReviewDDGroundContinuityService()
         )
+        self.tank_recovery_service = tank_recovery_service or PerformanceRaidReviewTankRecoveryService()
 
     def review(
         self,
         pulls: Iterable[LokkestiizRaidReviewPullRequest],
         *,
         healer_effect_requirements: Iterable[RaidReviewHealerEffectRequirement] = (),
+        tank_recovery_signals: Iterable[RaidReviewRecoverySignal] = (),
         dd_inactivity_threshold_seconds: float = 3.0,
+        tank_max_recovery_delay_seconds: float = 15.0,
     ) -> LokkestiizRaidReviewSessionResult:
         requests = tuple(pulls)
         coverage_requirements = tuple(item for item in healer_effect_requirements if item.reviewed)
+        reviewed_tank_signals = tuple(
+            signal
+            for signal in tank_recovery_signals
+            if signal.reviewed and self._is_tank(signal.role)
+        )
         reviewed_effect_names = tuple(
             dict.fromkeys(
                 name
@@ -116,6 +131,7 @@ class PerformanceRaidReviewLokkestiizSessionService:
                 healer_effect_coverage=(),
                 landing_recovery_opportunities=(),
                 dd_ground_continuity=(),
+                tank_recovery_observations=(),
                 unresolved=("No Lokkestiiz pulls were supplied for Raid Review.",),
             )
 
@@ -125,6 +141,7 @@ class PerformanceRaidReviewLokkestiizSessionService:
         recovery_opportunities: list[RaidReviewRecoveryOpportunity] = []
         healer_effect_coverage: list[RaidReviewHealerEffectCoverageObservation] = []
         dd_ground_continuity: list[RaidReviewDDGroundContinuityObservation] = []
+        tank_recovery_observations: list[RaidReviewLandingRecoveryObservation] = []
         pull_evidence: list[LokkestiizPullRaidReviewEvidence] = []
         unresolved: list[str] = []
 
@@ -223,11 +240,12 @@ class PerformanceRaidReviewLokkestiizSessionService:
                 if "No DPS actors were supplied" not in message
             )
 
-            landing_occurrences = tuple(
-                int(boundary.occurrence)
+            landing_boundaries = tuple(
+                boundary
                 for boundary in evidence.boundaries
                 if boundary.fact_key == "aerial_onslaught_flight" and boundary.boundary == "end"
             )
+            landing_occurrences = tuple(int(boundary.occurrence) for boundary in landing_boundaries)
             if landing_occurrences:
                 for actor in actors:
                     if not self._is_dps(actor.role):
@@ -246,6 +264,27 @@ class PerformanceRaidReviewLokkestiizSessionService:
                                 signal_label="Boss Damage Reacquisition",
                             )
                         )
+
+            if reviewed_tank_signals and landing_boundaries:
+                tank_result = self.tank_recovery_service.measure(
+                    report_code=report_code,
+                    fight_id=fight_id,
+                    fight_start_time_ms=start,
+                    events=events,
+                    landing_boundaries=landing_boundaries,
+                    actors=actors,
+                    signals=reviewed_tank_signals,
+                    boss_actor_id=int(request.boss_actor_id),
+                    max_delay_seconds=float(tank_max_recovery_delay_seconds),
+                )
+                recovery_observations.extend(tank_result.observations)
+                tank_recovery_observations.extend(tank_result.observations)
+                recovery_opportunities.extend(tank_result.opportunities)
+                unresolved.extend(
+                    f"{report_code} #{fight_id}: {message}"
+                    for message in tank_result.unresolved
+                    if "No Tank actors were supplied" not in message
+                )
 
             if coverage_requirements:
                 runtime_windows = self.effect_window_service.build(
@@ -285,6 +324,7 @@ class PerformanceRaidReviewLokkestiizSessionService:
             healer_effect_coverage=tuple(healer_effect_coverage),
             landing_recovery_opportunities=tuple(recovery_opportunities),
             dd_ground_continuity=tuple(dd_ground_continuity),
+            tank_recovery_observations=tuple(tank_recovery_observations),
             unresolved=tuple(dict.fromkeys(unresolved)),
         )
 
@@ -297,6 +337,10 @@ class PerformanceRaidReviewLokkestiizSessionService:
             "damage dealer",
             "damage_dealer",
         }
+
+    @staticmethod
+    def _is_tank(role: str) -> bool:
+        return str(role or "").strip().casefold() in {"tank", "tanking"}
 
 
 __all__ = [
