@@ -83,13 +83,14 @@ def test_h1_audit_distinguishes_supported_conditionals_from_real_blockers() -> N
 
     assert rows["runtime_stat_buff_windows"].status == "conditional"
     assert rows["explicit_target_health_conditionals"].status == "conditional"
+    assert rows["external_group_buff_provenance"].status == "conditional"
     assert rows["runtime_stat_buff_windows"].is_supported
     assert rows["explicit_target_health_conditionals"].is_supported
+    assert rows["external_group_buff_provenance"].is_supported
 
     assert rows["reviewed_class_passive_families"].status == "implemented"
-    assert rows["external_group_buff_provenance"].status == "unresolved"
-    assert summary.blocker_ids == ("external_group_buff_provenance",)
-    assert not summary.complete
+    assert summary.blocker_ids == ()
+    assert summary.complete
 
 
 def test_h1_audit_promotes_dragon_blood_after_exact_recipient_selection_is_implemented() -> None:
@@ -150,7 +151,7 @@ def test_h1_audit_reflects_existing_optimizer_scope_boundaries() -> None:
     assert "verified healing cp" in search_scope
     assert rows["verified_healing_champion_points"].status == "implemented"
     assert "group-only buffs" in omitted_scope
-    assert rows["external_group_buff_provenance"].status == "unresolved"
+    assert rows["external_group_buff_provenance"].status == "conditional"
     assert "runtime conditional stacks/procs" in omitted_scope
     assert rows["runtime_stat_buff_windows"].status == "conditional"
     assert "unreviewed skill-bar passive/proc families" in omitted_scope
