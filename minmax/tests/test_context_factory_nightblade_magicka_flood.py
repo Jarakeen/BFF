@@ -43,7 +43,8 @@ def test_factory_applies_magicka_flood_before_resource_state_is_built():
         active_bar="front",
     )
 
-    assert context.character_state.max_magicka == 12960
+    # Reviewed U50 Magicka Flood rank 2 is +6% Max Magicka/Stamina.
+    assert context.character_state.max_magicka == 12720
     labels = [step.label for step in context.character_state.traces[next(
         stat for stat in context.character_state.traces if stat.value == "max_magicka"
     )].steps]
@@ -75,7 +76,7 @@ def test_factory_keeps_magicka_flood_active_bar_only():
     )
 
     assert front.character_state.max_magicka == 12000
-    assert back.character_state.max_magicka == 12960
+    assert back.character_state.max_magicka == 12720
 
 
 def test_factory_does_not_apply_partial_magicka_flood_rank():
