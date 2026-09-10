@@ -54,6 +54,35 @@ class RotationCandidateRoleOutputEvidence:
 
 
 @dataclass(frozen=True)
+class RotationCandidateRoleHardObligationEvidence:
+    """Role-specific hard-gate evidence for one exact candidate.
+
+    ``satisfied`` is True for a resolved pass, False for a resolved failure, and
+    None when the hard-gate state is unresolved. Reasons are explanation evidence,
+    not a substitute for the explicit tri-state.
+    """
+
+    candidate_id: str
+    satisfied: bool | None
+    reasons: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        candidate_id = str(self.candidate_id or "").strip()
+        if not candidate_id:
+            raise ValueError("rotation role hard-obligation candidate_id is required")
+        object.__setattr__(self, "candidate_id", candidate_id)
+        object.__setattr__(
+            self,
+            "reasons",
+            tuple(
+                dict.fromkeys(
+                    str(item).strip() for item in self.reasons if str(item).strip()
+                )
+            ),
+        )
+
+
+@dataclass(frozen=True)
 class RotationCandidateRestorationEvidence:
     """Candidate-specific runtime restoration events with fail-closed diagnostics."""
 
@@ -81,6 +110,13 @@ class RotationCandidateRoleOutputEvidenceProvider(Protocol):
     ) -> RotationCandidateRoleOutputEvidence: ...
 
 
+class RotationCandidateRoleHardObligationEvidenceProvider(Protocol):
+    def evaluate_plan(
+        self,
+        candidate: GeneratedRotationCandidate,
+    ) -> RotationCandidateRoleHardObligationEvidence: ...
+
+
 class RotationCandidateRestorationEvidenceProvider(Protocol):
     def evaluate_plan(
         self,
@@ -105,12 +141,11 @@ class RotationCandidateCanonicalPlanEvidenceService:
     service never calculates the restoration amount itself.
 
     Role output stays unknown until an authoritative provider supplies resolved
-    evidence for this exact candidate. Provider workload may supply two separate
-    support-role measurements: primary-role displacement and, only when the canonical
-    recipient and temporal coverage result objects are both present and satisfied,
-    assigned-support temporal coverage ratio. The adapter never derives support from
-    hand-copied booleans and never combines unlike coverage/burden dimensions into a
-    weighted score.
+    evidence for this exact candidate. Role-specific hard obligations are also
+    supplied by a dedicated provider and travel separately from the generic
+    scorecard. Provider workload may supply primary-role displacement and canonical
+    assigned-support temporal coverage. The adapter never derives support from
+    copied booleans and never combines unlike dimensions into a weighted score.
     """
 
     def __init__(
@@ -120,6 +155,9 @@ class RotationCandidateCanonicalPlanEvidenceService:
         sustain_service: RotationSustainService | None = None,
         duration_service: RotationDurationAnalysisService | None = None,
         role_output_evidence_provider: RotationCandidateRoleOutputEvidenceProvider | None = None,
+        role_hard_obligation_evidence_provider: (
+            RotationCandidateRoleHardObligationEvidenceProvider | None
+        ) = None,
         restoration_evidence_provider: RotationCandidateRestorationEvidenceProvider | None = None,
         provider_workload_evidence_provider: (
             RotationCandidateProviderWorkloadEvidenceProvider | None
@@ -135,6 +173,7 @@ class RotationCandidateCanonicalPlanEvidenceService:
         self.sustain_service = sustain_service or RotationSustainService()
         self.duration_service = duration_service or RotationDurationAnalysisService()
         self.role_output_evidence_provider = role_output_evidence_provider
+        self.role_hard_obligation_evidence_provider = role_hard_obligation_evidence_provider
         self.restoration_evidence_provider = restoration_evidence_provider
         self.provider_workload_evidence_provider = provider_workload_evidence_provider
         self.resource = resource
@@ -194,6 +233,18 @@ class RotationCandidateCanonicalPlanEvidenceService:
                 )
             role_output_value = role_output.resolved_value
 
+        role_hard_obligation_satisfied: bool | None = True
+        role_hard_obligation_reasons: tuple[str, ...] = ()
+        if self.role_hard_obligation_evidence_provider is not None:
+            hard_obligation = self.role_hard_obligation_evidence_provider.evaluate_plan(candidate)
+            if hard_obligation.candidate_id.casefold() != candidate.candidate_id.casefold():
+                raise ValueError(
+                    "rotation role hard-obligation evidence candidate mismatch: "
+                    f"expected {candidate.candidate_id!r}, got {hard_obligation.candidate_id!r}"
+                )
+            role_hard_obligation_satisfied = hard_obligation.satisfied
+            role_hard_obligation_reasons = tuple(hard_obligation.reasons)
+
         assigned_support_value: float | None = None
         primary_role_displacement_seconds: float | None = None
         if self.provider_workload_evidence_provider is not None:
@@ -229,6 +280,8 @@ class RotationCandidateCanonicalPlanEvidenceService:
             assigned_support_value=assigned_support_value,
             sustain_margin=sustain_margin,
             primary_role_displacement_seconds=primary_role_displacement_seconds,
+            role_hard_obligation_satisfied=role_hard_obligation_satisfied,
+            role_hard_obligation_reasons=role_hard_obligation_reasons,
         )
 
     @staticmethod
@@ -252,6 +305,8 @@ __all__ = [
     "RotationCandidateProviderWorkloadEvidenceProvider",
     "RotationCandidateRestorationEvidence",
     "RotationCandidateRestorationEvidenceProvider",
+    "RotationCandidateRoleHardObligationEvidence",
+    "RotationCandidateRoleHardObligationEvidenceProvider",
     "RotationCandidateRoleOutputEvidence",
     "RotationCandidateRoleOutputEvidenceProvider",
 ]
