@@ -236,7 +236,11 @@ def test_rojo_heavy_timing_flows_through_real_coverage_workload_and_healer_ranki
     assert result.recommended.candidate.candidate_id == "correct-rojo-timing"
 
     entries = {entry.candidate.candidate_id: entry for entry in result.entries}
-    assert entries["correct-rojo-timing"].evidence.assigned_support_value == pytest.approx(0.84)
+    # The 44s application is clipped by the 60s requirement window, so only
+    # 16.0s of its 16.8s duration contributes: (16.8 + 16.8 + 16.0) / 60.
+    assert entries["correct-rojo-timing"].evidence.assigned_support_value == pytest.approx(
+        49.6 / 60.0
+    )
     assert entries["delayed-rojo-timing"].evidence.assigned_support_value == pytest.approx(0.56)
     assert entries["correct-rojo-timing"].evidence.primary_role_displacement_seconds == pytest.approx(5.4)
     assert entries["delayed-rojo-timing"].evidence.primary_role_displacement_seconds == pytest.approx(3.6)
