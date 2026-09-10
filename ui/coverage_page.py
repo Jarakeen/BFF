@@ -138,18 +138,17 @@ class CoveragePage(FoundryPage):
         return page
 
     def _raid_review_tab(self) -> QWidget:
-        """Observed-performance workspace; backend result binding lands separately."""
         page = QWidget()
         root = QVBoxLayout(page)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(8)
 
-        overview = FoundryCard("Raid Review", "◈").set_watermark("compass", 0.045)
-        overview.addWidget(QLabel(
+        self.raid_review_overview_card = FoundryCard("Raid Review", "◈").set_watermark("compass", 0.045)
+        self.raid_review_overview_card.addWidget(QLabel(
             "Compare pulls for the selected encounter and surface evidence-backed patterns.\n"
             "Review focuses on what worked, what changed on wipes, and the highest-value next adjustments."
         ))
-        root.addWidget(overview)
+        root.addWidget(self.raid_review_overview_card)
 
         upper = QHBoxLayout()
         upper.setSpacing(8)
@@ -176,6 +175,104 @@ class CoveragePage(FoundryPage):
         ))
         root.addWidget(self.raid_review_evidence_card)
         return page
+
+    @staticmethod
+    def _review_label(text: str) -> QLabel:
+        label = QLabel(text)
+        label.setWordWrap(True)
+        label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        return label
+
+    def apply_raid_review_result(self, result) -> None:
+        """Render one completed Raid Review result without owning analysis or fetching."""
+        synthesis = getattr(result, "synthesis", None)
+        player_summaries = tuple(getattr(result, "player_summaries", ()) or ())
+        unresolved = tuple(getattr(result, "unresolved", ()) or ())
+
+        for card in (
+            self.raid_review_overview_card,
+            self.raid_review_priorities_card,
+            self.raid_review_working_card,
+            self.raid_review_role_focus_card,
+            self.raid_review_players_card,
+            self.raid_review_evidence_card,
+        ):
+            card.clear()
+
+        if synthesis is None:
+            self.raid_review_overview_card.addWidget(self._review_label("No completed Raid Review result is available."))
+            self.raid_review_priorities_card.addWidget(self._review_label("No priorities available."))
+            self.raid_review_working_card.addWidget(self._review_label("No successful-pull patterns available."))
+            self.raid_review_role_focus_card.addWidget(self._review_label("No role-focus summary available."))
+            self.raid_review_players_card.addWidget(self._review_label("No player summaries available."))
+            self.raid_review_evidence_card.addWidget(self._review_label("No review evidence available."))
+            self.status.warning("Raid Review result was unavailable.")
+            return
+
+        self.raid_review_overview_card.addWidget(self._review_label(
+            f"{synthesis.encounter_name or 'Encounter'}\n"
+            f"Pulls {synthesis.pull_count}  •  Kills {synthesis.kill_count}  •  Wipes {synthesis.wipe_count}"
+        ))
+
+        priorities = tuple(getattr(synthesis, "top_priorities", ()) or ())
+        if priorities:
+            for item in priorities:
+                self.raid_review_priorities_card.addWidget(self._review_label(
+                    f"{item.rank}. {item.title}\n"
+                    f"{item.subject} • {str(item.priority).upper()} • {item.evidence}\n"
+                    f"Next: {item.recommendation}"
+                ))
+        else:
+            self.raid_review_priorities_card.addWidget(self._review_label("No actionable priorities met the reviewed evidence threshold."))
+
+        working = tuple(getattr(synthesis, "what_is_working", ()) or ())
+        if working:
+            for finding in working:
+                self.raid_review_working_card.addWidget(self._review_label(
+                    f"✓ {finding.title}\n{finding.subject} • {finding.evidence}"
+                ))
+        else:
+            self.raid_review_working_card.addWidget(self._review_label("No reviewed positive pattern has enough evidence yet."))
+
+        role_focus = tuple(getattr(synthesis, "role_focus", ()) or ())
+        if role_focus:
+            for row in role_focus:
+                categories = ", ".join(row.categories) if row.categories else "none"
+                self.raid_review_role_focus_card.addWidget(self._review_label(
+                    f"{row.role}: {row.actionable_count} actionable • {row.note_count} notes\n"
+                    f"Evidence: {categories}"
+                ))
+        else:
+            self.raid_review_role_focus_card.addWidget(self._review_label("No role-level concentration is available yet."))
+
+        if player_summaries:
+            for summary in player_summaries:
+                lines = [
+                    f"{summary.actor_label} • {summary.role} • {summary.kill_count}/{summary.pull_count} kills",
+                ]
+                if summary.improvements:
+                    lines.append("Work on: " + " | ".join(item.title for item in summary.improvements))
+                if summary.strengths:
+                    lines.append("Working: " + " | ".join(item.title for item in summary.strengths))
+                if not summary.improvements and not summary.strengths:
+                    lines.append("No player-specific reviewed finding met the current evidence threshold.")
+                self.raid_review_players_card.addWidget(self._review_label("\n".join(lines)))
+        else:
+            self.raid_review_players_card.addWidget(self._review_label("No stable player summaries are available for this review."))
+
+        if unresolved:
+            for item in unresolved[:12]:
+                self.raid_review_evidence_card.addWidget(self._review_label(f"• {item}"))
+            if len(unresolved) > 12:
+                self.raid_review_evidence_card.addWidget(self._review_label(
+                    f"• {len(unresolved) - 12} additional unresolved observations are not shown here."
+                ))
+        else:
+            self.raid_review_evidence_card.addWidget(self._review_label("No unresolved evidence was reported for this review."))
+
+        self.status.info(
+            f"Raid Review ready • {synthesis.pull_count} pulls • {len(priorities)} prioritized finding(s)."
+        )
 
     def _placeholder(self, title: str, text: str) -> QWidget:
         page = QWidget()
