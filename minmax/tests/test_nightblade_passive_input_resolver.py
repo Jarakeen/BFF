@@ -168,3 +168,98 @@ def test_magicka_flood_joins_existing_percent_buckets_additively():
     )
     assert state.max_magicka == 13320
     assert state.max_stamina == 12960
+
+
+def test_dark_vigor_adds_five_percent_max_health_per_active_shadow_slot():
+    resolver = _resolver(
+        {
+            "Refreshing Path": "Shadow",
+            "Dark Cloak": "Shadow",
+            "Healthy Offering": "Siphoning",
+        }
+    )
+    result = resolver.apply(
+        GearCalculationInputs(),
+        PlayerBuild(
+            EsoClass="Nightblade",
+            FrontBarSkills=["Refreshing Path", "Dark Cloak", "Healthy Offering"],
+        ),
+        dark_vigor_owned=True,
+    )
+
+    assert result.health.skill_percent_contributions == (
+        PercentContribution("Nightblade: Dark Vigor", 0.10),
+    )
+    state = BaseCharacterCalculator().calculate(health=result.health)
+    assert state.max_health == 17600
+
+
+def test_dark_vigor_is_active_bar_only():
+    resolver = _resolver({"Refreshing Path": "Shadow"})
+    build = PlayerBuild(
+        EsoClass="Nightblade",
+        FrontBarSkills=["Combat Prayer"],
+        BackBarSkills=["Refreshing Path"],
+    )
+
+    front = resolver.apply(
+        GearCalculationInputs(),
+        build,
+        active_bar="front",
+        dark_vigor_owned=True,
+    )
+    back = resolver.apply(
+        GearCalculationInputs(),
+        build,
+        active_bar="back",
+        dark_vigor_owned=True,
+    )
+
+    assert front.health.skill_percent_contributions == ()
+    assert back.health.skill_percent_contributions[-1].value == pytest.approx(0.05)
+
+
+def test_explicit_class_route_can_remove_native_shadow_access():
+    resolver = _resolver({"Refreshing Path": "Shadow"})
+    result = resolver.apply(
+        GearCalculationInputs(),
+        PlayerBuild(
+            EsoClass="Nightblade",
+            ClassSkillLines=["Assassination", "Siphoning", "Green Balance"],
+            FrontBarSkills=["Refreshing Path"],
+        ),
+        dark_vigor_owned=True,
+    )
+
+    assert result.health.skill_percent_contributions == ()
+    assert result.unresolved == ()
+
+
+def test_foreign_base_class_can_use_explicit_shadow_route():
+    resolver = _resolver({"Refreshing Path": "Shadow"})
+    result = resolver.apply(
+        GearCalculationInputs(),
+        PlayerBuild(
+            EsoClass="Templar",
+            ClassSkillLines=["Restoring Light", "Shadow", "Green Balance"],
+            FrontBarSkills=["Refreshing Path"],
+        ),
+        dark_vigor_owned=True,
+    )
+
+    assert result.health.skill_percent_contributions[-1].value == pytest.approx(0.05)
+
+
+def test_dark_vigor_preserves_unknown_slot_as_exactness_blocker():
+    resolver = _resolver({"Refreshing Path": "Shadow"})
+    result = resolver.apply(
+        GearCalculationInputs(),
+        PlayerBuild(
+            EsoClass="Nightblade",
+            FrontBarSkills=["Refreshing Path", "Unknown Skill"],
+        ),
+        dark_vigor_owned=True,
+    )
+
+    assert result.health.skill_percent_contributions[-1].value == pytest.approx(0.05)
+    assert any("Dark Vigor slot count is unresolved" in message for message in result.unresolved)
