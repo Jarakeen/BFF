@@ -18,6 +18,7 @@ from services.rotation_recovery_heavy_candidate_generation_bridge_service import
     RotationRecoveryHeavyCandidateGenerationBridgeService,
 )
 from services.rotation_recovery_heavy_candidate_orchestration_service import (
+    RecoveryRuntimeCombatStateResolverFactory,
     RotationRecoveryHeavyCandidateOrchestrationResult,
 )
 from services.rotation_recovery_heavy_candidate_workflow_service import (
@@ -40,9 +41,9 @@ class RotationRecoveryHeavyCandidatePipelineService:
     """Compose candidate-policy generation with the recovery-aware family workflow.
 
     Canonical callers may carry an already-resolved static calculation context plus
-    per-plan resource-maximum and displayed-recovery resolvers through the complete
-    candidate pipeline. Those inputs remain explicit and optional so legacy callers
-    do not acquire invented static mechanics.
+    per-plan resource-maximum, displayed-recovery, and time-varying combat-state
+    resolvers through the complete candidate pipeline. Those inputs remain explicit
+    and optional so legacy callers do not acquire invented mechanics.
     """
 
     def __init__(
@@ -77,6 +78,7 @@ class RotationRecoveryHeavyCandidatePipelineService:
         calculation_context: BuildCalculationContext | None = None,
         maximum_event_resolver: RecoveryMaximumEventResolver | None = None,
         displayed_recovery_resolver_factory: RecoveryDisplayedRecoveryResolverFactory | None = None,
+        runtime_combat_state_resolver_factory: RecoveryRuntimeCombatStateResolverFactory | None = None,
     ) -> RotationRecoveryHeavyCandidateOrchestrationResult:
         demand_tuple = tuple(demands)
         option_tuple = tuple(options)
@@ -102,6 +104,7 @@ class RotationRecoveryHeavyCandidatePipelineService:
             calculation_context=calculation_context,
             maximum_event_resolver=maximum_event_resolver,
             displayed_recovery_resolver_factory=displayed_recovery_resolver_factory,
+            runtime_combat_state_resolver_factory=runtime_combat_state_resolver_factory,
         )
 
     def run_effects(
@@ -128,6 +131,7 @@ class RotationRecoveryHeavyCandidatePipelineService:
         calculation_context: BuildCalculationContext | None = None,
         maximum_event_resolver: RecoveryMaximumEventResolver | None = None,
         displayed_recovery_resolver_factory: RecoveryDisplayedRecoveryResolverFactory | None = None,
+        runtime_combat_state_resolver_factory: RecoveryRuntimeCombatStateResolverFactory | None = None,
     ) -> RotationRecoveryHeavyCandidateOrchestrationResult:
         demand_tuple = tuple(demands)
         option_tuple = tuple(options)
@@ -158,6 +162,7 @@ class RotationRecoveryHeavyCandidatePipelineService:
             calculation_context=calculation_context,
             maximum_event_resolver=maximum_event_resolver,
             displayed_recovery_resolver_factory=displayed_recovery_resolver_factory,
+            runtime_combat_state_resolver_factory=runtime_combat_state_resolver_factory,
         )
 
 
