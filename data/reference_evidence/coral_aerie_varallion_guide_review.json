@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "content_id": "coral_aerie",
+  "encounter_id": "varallion",
+  "encounter_name": "Varallion",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main Phase","threshold":"Pull onward","description":"Handle Varallion while gryphons join the fight and wave/orb pressure repeatedly crosses the arena."},"source_type":"guide","source_name":"Alcast Coral Aerie Dungeon Guide","source_locator":"Varallion","game_update":"U33+","confidence":"high"},
+    {"fact_type":"phase","fact_key":"gryphon_overlap","value":{"order":2,"label":"Gryphon Overlap","threshold":"Mid-fight","description":"Iliata and Mafremare add lightning storms, tornadoes, and bleed pressure; Hard Mode increases overlap and tank burden."},"source_type":"guide","source_name":"Alcast Coral Aerie Dungeon Guide","source_locator":"Varallion > Gryphons / Hardmode","game_update":"U33+","confidence":"high"},
+    {"fact_type":"phase","fact_key":"hard_mode_execute","value":{"order":3,"label":"Hard Mode Kargaeda Execute","threshold":"~30%","description":"Kargaeda enters while a central water/lightning hazard divides the arena, stacking with existing boss and gryphon mechanics."},"source_type":"guide","source_name":"Alcast Coral Aerie Dungeon Guide","source_locator":"Varallion > Hardmode","game_update":"U33+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"crashing_waves","value":{"name":"Crashing Waves / Sea Orbs","response":"watch_wave_origin_and_move_between_crossing_paths","hard_mode":"waves_can_overlap_from_multiple_sides"},"source_type":"guide","source_name":"Alcast Coral Aerie Dungeon Guide","source_locator":"Varallion > Sea Orb / Hardmode","game_update":"U33+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"gryphon_priority","value":{"name":"Gryphon Priority","response":"tank_and_focus_gryphons_before_overlap_snowballs","adds":"iliata_lightning_storm_and_mafremare_tornadoes"},"source_type":"guide","source_name":"Alcast Coral Aerie Dungeon Guide","source_locator":"Varallion > Gryphons","game_update":"U33+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"tether_hm","value":{"name":"Hard Mode Tether","response":"paired_players_stay_close_and_healer_supports_damage_over_time","failure":"separation_increases_handling_difficulty"},"source_type":"guide","source_name":"Alcast Coral Aerie Dungeon Guide","source_locator":"Varallion > Hardmode > Tether","game_update":"U33+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"mental_wound","value":{"name":"Mental Wound","response":"heal_through_dot_while_preserving_attention_for_waves_and_adds"},"source_type":"guide","source_name":"Alcast Coral Aerie Dungeon Guide","source_locator":"Varallion > Mental Wound","game_update":"U33+","confidence":"high"}
+  ]
+}
