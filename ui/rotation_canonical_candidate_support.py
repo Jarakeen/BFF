@@ -34,10 +34,17 @@ from minmax.rotation_active_bar_legality import RotationActiveBarAssessor
 from minmax.rotation_demand_window import RotationDemandWindow
 from minmax.rotation_plan import RotationActionKind, RotationPlan
 from minmax.rotation_potion_cadence import RotationPotionCadenceRequirement
+from minmax.saved_build_skill_tooltip_service import SavedBuildSkillTooltipService
 from models.build_model import PlayerBuild
 from services.canonical_knowledge_gap import CanonicalKnowledgeGap
 from services.canonical_mechanics_coverage_audit import CanonicalMechanicsCoverageReport
+from services.rotation_candidate_gameplay_policy_context_service import (
+    RotationCandidateGameplayPolicyContextService,
+)
 from services.rotation_candidate_generation_service import RotationRefreshLeadCandidateOption
+from services.rotation_candidate_recommendation_evidence_service import (
+    RotationCandidatePlanEvidenceProvider,
+)
 from services.rotation_effect_uptime_service import RotationEffectUptimeRequirement
 from services.rotation_mechanics_dependency_service import (
     RotationMechanicsDependency,
@@ -45,6 +52,10 @@ from services.rotation_mechanics_dependency_service import (
 )
 from services.rotation_potion_cadence_cooldown_bridge_service import (
     RotationPotionCadenceCooldownBridgeService,
+)
+from services.rotation_recovery_final_role_evidence_service import (
+    RotationRecoveryFinalRoleEvidenceConfiguration,
+    RotationRecoveryFinalRoleEvidenceService,
 )
 from services.rotation_recovery_heavy_candidate_generation_bridge_service import (
     RecoveryCandidateEvaluatorResolver,
@@ -58,6 +69,7 @@ from services.rotation_recovery_heavy_candidate_pipeline_service import (
     RotationRecoveryHeavyCandidatePipelineService,
 )
 from services.rotation_recovery_heavy_final_family_evaluation_service import (
+    RecoveryFinalRoleAwareInputResolver,
     RecoveryFinalScorecardResolver,
 )
 from services.rotation_recovery_heavy_replay_service import (
@@ -85,6 +97,54 @@ from ui.rotation_recovery_validation_support import (
     RotationRecoveryValidationScope,
     RotationRecoveryValidationSupport,
 )
+
+
+_DAMAGE_ROLE_KEYS = {"damage", "damage_dealer", "dd", "dps"}
+
+
+def _canonical_role(value: object) -> str:
+    return "_".join(str(value or "").strip().casefold().replace("-", " ").split())
+
+
+@dataclass(frozen=True)
+class RotationCanonicalRoleEvidence:
+    """Explicit application evidence needed to compose final role-aware ranking.
+
+    The plan-evidence provider owns canonical role output/support/workload facts.
+    Encounter/team context remains explicit because a saved build cannot prove that
+    it is currently in a trial, that group healing is reliable, or that the player
+    has a portal/kite/split assignment. ``role_key`` may be omitted when the saved
+    build's explicit Role field is authoritative for this evaluation.
+    """
+
+    plan_evidence_provider: RotationCandidatePlanEvidenceProvider
+    role_output_label: str
+    assigned_support_label: str
+    content_type: str = ""
+    reliable_group_healing: bool | None = None
+    exception_contexts: tuple[str, ...] = ()
+    role_key: str | None = None
+
+    def __post_init__(self) -> None:
+        for field_name in ("role_output_label", "assigned_support_label"):
+            value = str(getattr(self, field_name) or "").strip()
+            if not value:
+                raise ValueError(f"{field_name} must be non-empty")
+            object.__setattr__(self, field_name, value)
+        object.__setattr__(self, "content_type", str(self.content_type or "").strip())
+        object.__setattr__(
+            self,
+            "exception_contexts",
+            tuple(
+                dict.fromkeys(
+                    str(item).strip()
+                    for item in self.exception_contexts
+                    if str(item).strip()
+                )
+            ),
+        )
+        if self.role_key is not None:
+            object.__setattr__(self, "role_key", str(self.role_key).strip() or None)
 
 
 @dataclass(frozen=True)
@@ -143,6 +203,12 @@ class RotationCanonicalCandidateSupport:
     resolver factory is supplied, it is forwarded untouched so recovery orchestration
     can bind that resolver only after each candidate reaches its final stabilized plan.
 
+    Optional ``role_evidence`` composes final stabilized role evidence automatically.
+    Saved-bar personal-heal classification is derived from canonical component data;
+    content type, healer reliability, and assignment exceptions stay explicit caller
+    facts. The application bridge therefore constructs the role-aware resolver without
+    inventing encounter/team context from build names or roles.
+
     Ambiguous saved-build slot identity is structural unresolved evidence and blocks
     candidate evaluation rather than silently omitting legality for that action.
     Timing/range evidence is narrower: unresolved evidence becomes candidate-specific
@@ -168,8 +234,10 @@ class RotationCanonicalCandidateSupport:
         slot_assessor: RotationActionSlotAssessor | None = None,
         active_bar_assessor: RotationActiveBarAssessor | None = None,
         potion_cadence_bridge: RotationPotionCadenceCooldownBridgeService | None = None,
+        skill_tooltip_service: SavedBuildSkillTooltipService | None = None,
     ) -> None:
         database = Path(database_path) if database_path is not None else get_data_dir() / "eso.db"
+        self.database = database
         self.build_adapter = build_adapter or SavedBuildCharacterAdapter(database)
         self.pipeline = pipeline or RotationRecoveryHeavyCandidatePipelineService()
         self.validation_support = validation_support or RotationRecoveryValidationSupport()
@@ -190,6 +258,7 @@ class RotationCanonicalCandidateSupport:
         self.potion_cadence_bridge = (
             potion_cadence_bridge or RotationPotionCadenceCooldownBridgeService()
         )
+        self.skill_tooltip_service = skill_tooltip_service
 
     def run_effects(
         self,
@@ -213,6 +282,7 @@ class RotationCanonicalCandidateSupport:
         potion_cadence_requirement: RotationPotionCadenceRequirement | None = None,
         reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None,
         runtime_combat_state_resolver_factory: RecoveryRuntimeCombatStateResolverFactory | None = None,
+        role_evidence: RotationCanonicalRoleEvidence | None = None,
         initial_bar: str = "front",
         max_iterations: int = 6,
         baseline_id: str = "baseline",
@@ -371,6 +441,11 @@ class RotationCanonicalCandidateSupport:
                     action_slot_evidence=action_slot_evidence,
                 )
 
+        role_aware_input_resolver = self._role_aware_input_resolver(
+            player_build=player_build,
+            scorecard_resolver=legality_scorecard_resolver,
+            evidence=role_evidence,
+        )
         result = self.pipeline.run_effects(
             player_build=player_build,
             character_build=adaptation.build,
@@ -378,6 +453,7 @@ class RotationCanonicalCandidateSupport:
             priorities=priorities,
             evaluator_resolver=evaluator_resolver,
             scorecard_resolver=legality_scorecard_resolver,
+            role_aware_input_resolver=role_aware_input_resolver,
             resource=resource,
             maximum_amount=effective_maximum_amount,
             trigger_fraction=trigger_fraction,
@@ -407,6 +483,57 @@ class RotationCanonicalCandidateSupport:
             action_range_evidence=action_range_evidence,
             action_slot_evidence=action_slot_evidence,
         )
+
+    def _role_aware_input_resolver(
+        self,
+        *,
+        player_build: PlayerBuild,
+        scorecard_resolver: RecoveryFinalScorecardResolver,
+        evidence: RotationCanonicalRoleEvidence | None,
+    ) -> RecoveryFinalRoleAwareInputResolver | None:
+        if evidence is None:
+            return None
+
+        role_key = str(
+            evidence.role_key
+            or getattr(player_build, "Role", "")
+            or ""
+        ).strip()
+        if not role_key:
+            raise ValueError(
+                "canonical role-aware rotation evaluation requires explicit role evidence"
+            )
+
+        gameplay_policy_context = None
+        if _canonical_role(role_key) in _DAMAGE_ROLE_KEYS:
+            if not evidence.content_type:
+                raise ValueError(
+                    "DD gameplay-policy evaluation requires explicit content_type evidence"
+                )
+            tooltip_service = self.skill_tooltip_service
+            if tooltip_service is None:
+                tooltip_service = SavedBuildSkillTooltipService(self.database)
+                self.skill_tooltip_service = tooltip_service
+            gameplay_policy_context = RotationCandidateGameplayPolicyContextService(
+                build=player_build,
+                tooltip_service=tooltip_service,
+                role=role_key,
+                content_type=evidence.content_type,
+                reliable_group_healing=evidence.reliable_group_healing,
+                exception_contexts=evidence.exception_contexts,
+            )
+
+        final_role_evidence = RotationRecoveryFinalRoleEvidenceService(
+            plan_evidence_provider=evidence.plan_evidence_provider,
+            scorecard_resolver=scorecard_resolver,
+            configuration=RotationRecoveryFinalRoleEvidenceConfiguration(
+                role_key=role_key,
+                role_output_label=evidence.role_output_label,
+                assigned_support_label=evidence.assigned_support_label,
+            ),
+            gameplay_policy_context_provider=gameplay_policy_context,
+        )
+        return final_role_evidence.resolver()
 
     def _with_action_legality(
         self,
@@ -581,4 +708,5 @@ class RotationCanonicalCandidateSupport:
 __all__ = [
     "RotationCanonicalCandidateApplicationResult",
     "RotationCanonicalCandidateSupport",
+    "RotationCanonicalRoleEvidence",
 ]
