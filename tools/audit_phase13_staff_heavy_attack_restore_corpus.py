@@ -21,6 +21,16 @@ STAFF_HEAVY_ALIASES = {
     16261: "frost_staff_heavy",
 }
 
+CHANNELLED_STAFF_HEAVIES = {
+    "restoration_staff_heavy",
+    "shock_staff_heavy",
+}
+
+CHARGE_RELEASE_STAFF_HEAVIES = {
+    "flame_staff_heavy",
+    "frost_staff_heavy",
+}
+
 
 def _normalize_player_details(player_details):
     if isinstance(player_details, dict):
@@ -112,6 +122,87 @@ def _heavy_event_shape_key(label: str, event):
     )
 
 
+def _latest_pending_start(pending, key, completion_time: float, *, max_gap_ms: float):
+    starts = pending.get(key) or []
+    for index in range(len(starts) - 1, -1, -1):
+        start = starts[index]
+        gap = float(completion_time) - float(start.timestamp)
+        if gap < 0.0:
+            continue
+        if gap <= max_gap_ms:
+            starts.pop(index)
+            return start
+        if gap > max_gap_ms:
+            break
+    return None
+
+
+def _completed_staff_heavies(events, *, max_pair_gap_ms: float = 5000.0):
+    """Collapse raw heavy-attack rows into one observational completion per attack.
+
+    Restoration/Shock use cast -> channel rows -> removedebuff in the reviewed
+    corpus.  Frost/Flame use begincast -> cast charge/release rows.  Numeric
+    aliases remain observational and are not promoted into canonical identity.
+    """
+
+    if max_pair_gap_ms <= 0:
+        raise ValueError("max_pair_gap_ms must be positive")
+
+    ordered = sorted(events, key=lambda event: (float(event.timestamp), int(event.event_index)))
+    pending_channel_casts = defaultdict(list)
+    pending_charge_starts = defaultdict(list)
+    completions = []
+
+    for event in ordered:
+        label = STAFF_HEAVY_ALIASES.get(event.ability_game_id)
+        if label is None or event.source_id is None:
+            continue
+
+        raw_type = str(event.raw_event_type or "").strip().lower()
+        key = (int(event.source_id), label)
+
+        if label in CHANNELLED_STAFF_HEAVIES:
+            if raw_type == "cast":
+                pending_channel_casts[key].append(event)
+                continue
+            if raw_type != "removedebuff":
+                continue
+
+            start = _latest_pending_start(
+                pending_channel_casts,
+                key,
+                float(event.timestamp),
+                max_gap_ms=max_pair_gap_ms,
+            )
+            if start is None:
+                continue
+
+            completions.append((label, event, start, start.cast_track_id))
+            continue
+
+        if label in CHARGE_RELEASE_STAFF_HEAVIES:
+            if raw_type == "begincast":
+                pending_charge_starts[key].append(event)
+                continue
+            if raw_type != "cast":
+                continue
+
+            start = _latest_pending_start(
+                pending_charge_starts,
+                key,
+                float(event.timestamp),
+                max_gap_ms=max_pair_gap_ms,
+            )
+            effective_track = (
+                start.cast_track_id
+                if start is not None and start.cast_track_id is not None
+                else event.cast_track_id
+            )
+            completions.append((label, event, start, effective_track))
+
+    return tuple(completions)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
@@ -121,6 +212,7 @@ def main() -> int:
     )
     parser.add_argument("--path", type=Path, default=Path("research/raw/lokkestiiz_corpus.json"))
     parser.add_argument("--forward-ms", type=float, default=500.0)
+    parser.add_argument("--completion-pair-ms", type=float, default=5000.0)
     parser.add_argument("--report-code", default=None)
     parser.add_argument("--limit", type=int, default=120)
     args = parser.parse_args()
@@ -129,17 +221,21 @@ def main() -> int:
         raise FileNotFoundError(args.path)
     if args.forward_ms < 0:
         raise ValueError("--forward-ms cannot be negative")
+    if args.completion_pair_ms <= 0:
+        raise ValueError("--completion-pair-ms must be positive")
     if args.limit <= 0:
         raise ValueError("--limit must be positive")
 
     observations = []
-    heavy_counts = Counter()
+    completion_counts = Counter()
     heavy_event_shapes = Counter()
     cast_track_ids = defaultdict(set)
+    raw_heavy_rows = 0
 
     for fight, roster_by_id, events in _iter_corpus(args.path):
         if args.report_code and fight.report_code != args.report_code:
             continue
+
         for action in events:
             label = STAFF_HEAVY_ALIASES.get(action.ability_game_id)
             if label is None or action.source_id is None:
@@ -147,30 +243,53 @@ def main() -> int:
             actor = roster_by_id.get(int(action.source_id))
             if actor is None:
                 continue
-            name, role = actor
-            heavy_counts[(label, fight.report_code, fight.fight_id, int(action.source_id), name, role)] += 1
+            raw_heavy_rows += 1
             heavy_event_shapes[_heavy_event_shape_key(label, action)] += 1
             if action.cast_track_id is not None:
                 cast_track_ids[label].add(
                     (fight.report_code, fight.fight_id, int(action.source_id), int(action.cast_track_id))
                 )
+
+        for label, completion, start, effective_track in _completed_staff_heavies(
+            events,
+            max_pair_gap_ms=float(args.completion_pair_ms),
+        ):
+            if completion.source_id is None:
+                continue
+            actor = roster_by_id.get(int(completion.source_id))
+            if actor is None:
+                continue
+            name, role = actor
+            completion_counts[(
+                label,
+                fight.report_code,
+                fight.fight_id,
+                int(completion.source_id),
+                name,
+                role,
+            )] += 1
+
             for restore, delta in _following_restores(
                 events,
-                source_id=int(action.source_id),
-                timestamp=float(action.timestamp),
+                source_id=int(completion.source_id),
+                timestamp=float(completion.timestamp),
                 forward_ms=float(args.forward_ms),
             ):
-                observations.append((fight, action, restore, delta, name, role, label))
+                observations.append(
+                    (fight, completion, start, effective_track, restore, delta, name, role, label)
+                )
 
     print("=" * 112)
     print(" PHASE 13 STAFF HEAVY-ATTACK SELF-RESTORE CORPUS AUDIT")
     print("=" * 112)
     print("Evidence status: OBSERVATIONAL LOG ALIASES ONLY")
-    print(f"Raw corpus:            {args.path}")
-    print(f"Report filter:         {args.report_code or 'all reports'}")
-    print(f"Restore window:        {args.forward_ms:g} ms")
-    print(f"Roster actors with HA: {len({row[1:6] for row in heavy_counts})}")
-    print(f"Staff heavy log rows:  {sum(heavy_counts.values())}")
+    print(f"Raw corpus:              {args.path}")
+    print(f"Report filter:           {args.report_code or 'all reports'}")
+    print(f"Restore window:          {args.forward_ms:g} ms")
+    print(f"Completion pair window:  {args.completion_pair_ms:g} ms")
+    print(f"Roster actors with HA:   {len({row[1:6] for row in completion_counts})}")
+    print(f"Raw staff-heavy rows:    {raw_heavy_rows}")
+    print(f"Completed staff heavies: {sum(completion_counts.values())}")
     print(f"Following self restores: {len(observations)}")
 
     print()
@@ -186,9 +305,9 @@ def main() -> int:
             print(f"      | {label:24} | distinct_cast_tracks={len(cast_track_ids[label])}")
 
     print()
-    print("STAFF HEAVY COUNTS BY PLAYER")
-    print("----------------------------")
-    for (label, report_code, fight_id, source_id, name, role), count in heavy_counts.most_common(args.limit):
+    print("COMPLETED STAFF HEAVIES BY PLAYER")
+    print("---------------------------------")
+    for (label, report_code, fight_id, source_id, name, role), count in completion_counts.most_common(args.limit):
         print(
             f"{count:4d} | {label:24} | {name} ({role}) | "
             f"report={report_code} fight={fight_id} source={source_id}"
@@ -202,11 +321,11 @@ def main() -> int:
             restore.ability_game_id,
             restore.ability_name,
         )
-        for _fight, _action, restore, _delta, _name, _role, label in observations
+        for _fight, _completion, _start, _track, restore, _delta, _name, _role, label in observations
     )
     print()
-    print("SELF-RESTORE DISTRIBUTION BY STAFF HEAVY")
-    print("----------------------------------------")
+    print("SELF-RESTORE DISTRIBUTION BY COMPLETED STAFF HEAVY")
+    print("--------------------------------------------------")
     for (label, amount, resource_type, restore_id, restore_name), count in by_restore.most_common(args.limit):
         print(
             f"{count:5d} | {label:24} | restore={amount:g} | "
@@ -215,14 +334,14 @@ def main() -> int:
         )
 
     per_actor = defaultdict(list)
-    for fight, action, restore, delta, name, role, label in observations:
-        per_actor[(fight.report_code, fight.fight_id, int(action.source_id), name, role, label)].append(
+    for fight, completion, _start, _track, restore, delta, name, role, label in observations:
+        per_actor[(fight.report_code, fight.fight_id, int(completion.source_id), name, role, label)].append(
             (float(restore.resource_change), restore.resource_change_type, restore.ability_game_id, delta)
         )
 
     print()
-    print("PER-PLAYER SELF-RESTORE SUMMARY")
-    print("-------------------------------")
+    print("PER-PLAYER COMPLETED-HA SELF-RESTORE SUMMARY")
+    print("--------------------------------------------")
     for key, rows in sorted(per_actor.items())[: args.limit]:
         report_code, fight_id, source_id, name, role, label = key
         common = Counter(value[0] for value in rows).most_common(5)
@@ -233,13 +352,18 @@ def main() -> int:
         )
 
     print()
-    print("EVENT PROVENANCE")
-    print("----------------")
-    for fight, action, restore, delta, name, role, label in observations[: args.limit]:
+    print("COMPLETION EVENT PROVENANCE")
+    print("---------------------------")
+    for fight, completion, start, effective_track, restore, delta, name, role, label in observations[: args.limit]:
+        start_text = (
+            f"start_event={start.event_index} start_type={start.raw_event_type}"
+            if start is not None
+            else "start_event=none start_type=none"
+        )
         print(
             f"{name} ({role}) | {label} | report={fight.report_code} fight={fight.fight_id} "
-            f"source={action.source_id} action_event={action.event_index} "
-            f"action_type={action.raw_event_type} cast_track={action.cast_track_id} tick={action.tick} "
+            f"source={completion.source_id} {start_text} cast_track={effective_track} "
+            f"completion_event={completion.event_index} completion_type={completion.raw_event_type} "
             f"restore_event={restore.event_index} +{delta:g}ms "
             f"restore={float(restore.resource_change):g} resource_type={restore.resource_change_type} "
             f"restore_id={restore.ability_game_id} restore_name={restore.ability_name or 'unknown'} "
@@ -251,8 +375,9 @@ def main() -> int:
     print("--------")
     print("- Staff-heavy numeric ids are reviewed ESO Logs aliases, not canonical BFF skill identities.")
     print("- Only actors present in each fight's player_details roster are included.")
+    print("- Restoration/Shock completion requires a recent paired cast then removedebuff channel end.")
+    print("- Frost/Flame completion uses the release cast; begincast is charge-start provenance when present.")
     print("- Resource events must be self-targeted (source_id == target_id) to count as HA restore candidates.")
-    print("- Raw heavy-event shapes are diagnostic only; this audit does not yet choose a completion event.")
     print("- Positive self-resource events inside the time window remain observational until reviewed.")
     print("- This audit reads raw research JSON and writes nothing.")
     return 0
