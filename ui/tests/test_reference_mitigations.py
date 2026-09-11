@@ -46,6 +46,33 @@ def test_reviewed_mitigation_is_attached_and_searchable(tmp_path: Path):
     assert any("Reviewed Encounter Evidence" in item for item in entry.evidence)
 
 
+def test_split_mitigation_files_are_loaded(tmp_path: Path):
+    (tmp_path / "reference_mitigations.json").write_text(
+        json.dumps({"schema_version": 1, "entries": []}),
+        encoding="utf-8",
+    )
+    (tmp_path / "reference_mitigations_sanitys_edge.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "entries": [
+                    {
+                        "entry_name": "Rapid Deluge — Tideborn Taleria",
+                        "mitigation": "Supplemental mitigation loaded.",
+                        "source": "reviewed_guide_evidence",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    entry = enrich_reference_entries_with_mitigations((_entry(),), tmp_path)[0]
+
+    assert entry.mitigation_note == "Supplemental mitigation loaded."
+    assert any("Reviewed Guide Evidence" in item for item in entry.evidence)
+
+
 def test_missing_mitigation_does_not_invent_guidance(tmp_path: Path):
     (tmp_path / "reference_mitigations.json").write_text(
         json.dumps({"schema_version": 1, "entries": []}),
