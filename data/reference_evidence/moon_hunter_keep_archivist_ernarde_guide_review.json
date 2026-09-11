@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "moon_hunter_keep",
+  "encounter_id": "archivist_ernarde",
+  "encounter_name": "Archivist Ernarde",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Control transformed adds, free bubbled players, and resolve Ernarde's rune-selection mechanic."},"source_type":"guide","source_name":"Moon Hunter Keep community guide","source_locator":"Archivist Ernarde","game_update":"U19","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"bubbles","value":{"name":"Player Bubbles","response":"destroy_bubbles_quickly_to_free_trapped_players"},"source_type":"guide","source_name":"Retro Rebellion Moon Hunter Keep Boss Mechanics","source_locator":"Archivist Ernarde","game_update":"U19","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"symbols_of_xarxes","value":{"name":"Symbols of Xarxes","response":"wait_for_final_selected_symbol_then_each_player_stands_on_matching_rune"},"source_type":"achievement","source_name":"Book Smarts","source_locator":"Moon Hunter Keep achievement","game_update":"U19","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"transformed_adds","value":{"name":"Transformed Adds","response":"tank_and_burn_transformed_werewolf_adds_away_from_group"},"source_type":"guide","source_name":"Moon Hunter Keep community guide","source_locator":"Archivist Ernarde","game_update":"U19","confidence":"high"}
+  ]
+}
