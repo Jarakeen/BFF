@@ -666,23 +666,25 @@ cooldown, or caster-credit rule is promoted until those observations are reviewe
 
 ---
 
-## 2026-09-11 — A triggered heal may be credited to someone other than its trigger
+## 2026-09-11 — A triggered heal can be credited to someone other than its trigger
 
-Candidate ESO Logs evidence for Minor Lifesteal exposed two different kinds of
-ownership. Across the reviewed Lokkestiiz corpus, observed heal alias **86304** was
-logged under a provider-like source while the heal targets varied across the raid.
-The same-source damage lookup therefore often found nothing even though the
-per-target heal streams clustered near one-second spacing.
+Reviewed Minor Lifesteal evidence exposes two different kinds of ownership. In the
+focused Lokkestiiz runtime review, observed heal alias **86304** was logged under an
+effect-provider source while the heal targets varied across the raid. Each displayed
+recipient heal correlated with that recipient's immediately preceding damage, while
+the provider did not need a matching damage event. Per-recipient streams clustered
+near the tooltip's one-second limit.
 
 **Layman's version:** the player whose name owns the heal in the log may not be the
 player whose attack caused it. The combat log can hand the healer the receipt while
 a damage dealer pressed the button that made the heal happen.
 
-**What it means in actual play:** Minor Lifesteal may be triggered independently by
-each affected attacker while ESO Logs credits the resulting healing to the effect
-provider. This remains candidate evidence until recipient-owned damage correlation
-and effect-application windows are reviewed.
+**What it means in actual play:** Minor Lifesteal is triggered independently by each
+attacker damaging the affected enemy; that attacker receives the heal, while ESO Logs
+may credit the resulting healing to the player who supplied the effect.
 
-**For BFF:** externally triggered healing evidence must retain provider, recipient,
-and triggering-actor identities separately. A missing damage event from the logged
-heal source must not be treated as proof that no trigger occurred.
+**For BFF:** provider, recipient, and triggering actor remain separate identities.
+The rotation builder may project 600 Health per active attacker per covered second
+only when strategy input explicitly supplies the number of continuously active
+attackers. It does not assume all raid members attack and does not create fake
+automatic HoT ticks.
