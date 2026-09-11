@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "content_id": "bal_sunnar",
+  "encounter_id": "kovan_giryon",
+  "encounter_name": "Kovan Giryon",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main Phase / Teleport Pressure","threshold":"Pull to first shadow cycle","description":"Kovan teleports around the arena, laying long rectangular AOEs and leaving clone pressure that constrains safe space."},"source_type":"guide","source_name":"ESO-Hub Bal Sunnar Dungeon Guide","source_locator":"Boss 1 - Kovan Giryon","game_update":"U37+","confidence":"high"},
+    {"fact_type":"phase","fact_key":"shadow_cycles","value":{"order":2,"label":"Shadow Add Cycles","threshold":"65%, 45%, 20%","description":"Kovan becomes untargetable in the center while temporal adds spawn; stabilize adds before resuming boss damage."},"source_type":"guide","source_name":"ESO-Hub Bal Sunnar Dungeon Guide","source_locator":"Kovan Giryon > Shadow Phase","game_update":"U37+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"teleport_rectangles","value":{"name":"Teleport Rectangles","response":"move_out_of_full_width_rectangular_aoes_and_track_clone_lanes","failure":"persistent_clone_lanes_shrink_safe_space"},"source_type":"guide","source_name":"ESO-Hub Bal Sunnar Dungeon Guide","source_locator":"Kovan Giryon > Teleport Mechanic","game_update":"U37+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"poison_phase","value":{"name":"Poison Phase","response":"soft_stack_for_healing_without_overlapping_personal_poison_aoes","hard_mode":"all_players_receive_unpurgeable_personal_poison_pressure"},"source_type":"guide","source_name":"ESO-Hub Bal Sunnar Dungeon Guide","source_locator":"Kovan Giryon > Hardmode Poison Phase","game_update":"U37+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"shadow_adds","value":{"name":"Temporal Adds","response":"tank_collects_adds_and_group_cleaves_them_during_boss_immunity","failure":"overlap_with_clone_aoes_increases_room_pressure"},"source_type":"guide","source_name":"The Tank Club Bal Sunnar Guide","source_locator":"Kovan Giryon","game_update":"U37+","confidence":"medium"}
+  ]
+}
