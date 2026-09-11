@@ -102,6 +102,13 @@ _REVIEWED_CRAFT_IRRELEVANT: tuple[tuple[str, str, str], ...] = (
     ("Provisioning", "Gourmand", "food effect duration only"),
 )
 
+_REVIEWED_WEAPON_IRRELEVANT: tuple[tuple[str, str, str], ...] = (
+    ("Bow", "Hasty Retreat", "Major Expedition / movement speed after Roll Dodge only"),
+    ("Bow", "Hawk Eye", "Bow ability damage stacking after Light or Heavy Attacks only"),
+    ("Two Handed", "Follow Up", "Two Handed damage-done bonus after fully charged Heavy Attack only"),
+    ("Two Handed", "Heavy Weapons", "Weapon/Spell Damage, Critical Damage, or Offensive Penetration by equipped weapon type only"),
+)
+
 
 def _reviewed_guild_rows() -> tuple[ExtremeResourceSharedPassiveOwnership, ...]:
     return tuple(
@@ -170,6 +177,20 @@ def _reviewed_craft_rows() -> tuple[ExtremeResourceSharedPassiveOwnership, ...]:
             effect_family=effect_family,
         )
         for skill_line, passive_name, effect_family in _REVIEWED_CRAFT_IRRELEVANT
+    )
+
+
+def _reviewed_weapon_rows() -> tuple[ExtremeResourceSharedPassiveOwnership, ...]:
+    return tuple(
+        ExtremeResourceSharedPassiveOwnership(
+            domain=ExtremeSkillDomain.WEAPON,
+            skill_line=skill_line,
+            passive_name=passive_name,
+            status=ExtremeResourceSharedPassiveOwnershipStatus.PROVEN_IRRELEVANT,
+            source=f"Canonical U50 {skill_line} passive tooltip review",
+            effect_family=effect_family,
+        )
+        for skill_line, passive_name, effect_family in _REVIEWED_WEAPON_IRRELEVANT
     )
 
 
@@ -243,7 +264,7 @@ class ExtremeResourceSharedPassiveOwnershipService:
             source="OneHandShieldPassiveInputResolver",
             effect_family="block mitigation only",
         ),
-    ) + _reviewed_guild_rows() + _reviewed_world_rows() + _reviewed_other_rows() + _reviewed_alliance_rows() + _reviewed_craft_rows()
+    ) + _reviewed_guild_rows() + _reviewed_world_rows() + _reviewed_other_rows() + _reviewed_alliance_rows() + _reviewed_craft_rows() + _reviewed_weapon_rows()
 
     @staticmethod
     def _normalized(value: object) -> str:
