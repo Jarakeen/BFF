@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "content_id": "cloudrest",
+  "encounter_id": "z_maja",
+  "encounter_name": "Z'Maja",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"base_phase","value":{"order":1,"label":"Z'Maja Base Fight","threshold":"Pull","description":"Tank keeps Z'Maja faced away from group while the raid handles teleporting, portals/shadow-world mechanics, orbs, healing checks, and execute pressure."},"source_type":"guide","source_name":"Xynode Cloudrest Trial Guide","source_locator":"Z'Maja & Shade of Z'Maja","confidence":"medium"},
+    {"fact_type":"phase","fact_key":"plus_one_spawn","value":{"order":2,"label":"+1 Shade Spawn","threshold":"50%","description":"If one miniboss is left alive, that shade joins Z'Maja at 50%. Its unique mechanic remains active throughout the fight."},"source_type":"guide","source_name":"Xynode Cloudrest Trial Guide","source_locator":"Cloudrest +1","confidence":"medium"},
+    {"fact_type":"phase","fact_key":"plus_two_spawn_one","value":{"order":2,"label":"+2 First Shade Spawn","threshold":"65%","description":"If two minibosses are left alive, the first selected shade joins at 65%."},"source_type":"guide","source_name":"Xynode Cloudrest Trial Guide","source_locator":"Cloudrest +2","confidence":"medium"},
+    {"fact_type":"phase","fact_key":"plus_two_spawn_two","value":{"order":3,"label":"+2 Second Shade Spawn","threshold":"35%","description":"The second selected shade joins at 35%."},"source_type":"guide","source_name":"Xynode Cloudrest Trial Guide","source_locator":"Cloudrest +2","confidence":"medium"},
+    {"fact_type":"phase","fact_key":"plus_three_siroria","value":{"order":2,"label":"+3 Siroria Spawn","threshold":"75%","description":"In +3, Siroria joins at 75%."},"source_type":"guide","source_name":"Xynode Cloudrest Trial Guide","source_locator":"Cloudrest +3","confidence":"medium"},
+    {"fact_type":"phase","fact_key":"plus_three_relequen","value":{"order":3,"label":"+3 Relequen Spawn","threshold":"50%","description":"In +3, Relequen joins at 50%."},"source_type":"guide","source_name":"Xynode Cloudrest Trial Guide","source_locator":"Cloudrest +3","confidence":"medium"},
+    {"fact_type":"phase","fact_key":"plus_three_galenwe","value":{"order":4,"label":"+3 Galenwe Spawn","threshold":"25%","description":"In +3, Galenwe joins at 25%."},"source_type":"guide","source_name":"Xynode Cloudrest Trial Guide","source_locator":"Cloudrest +3","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"shade_mechanics_persist","value":{"plus_one":true,"plus_two":true,"plus_three":true,"note":"Unique miniboss mechanics remain active throughout the Z'Maja fight whether or not the shade is currently alive."},"source_type":"guide","source_name":"Xynode Cloudrest Trial Guide","source_locator":"Cloudrest hardmode variants","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"teleport_and_facing","value":{"name":"Teleport / Facing","response":"maintain_taunt_and_face_zmaja_away_from_group"},"source_type":"guide","source_name":"Xynode Cloudrest Trial Guide","source_locator":"Z'Maja positioning","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"orb_blast","value":{"name":"Orb Blast","target":"aggro_target","response":"block_or_use_ranged_mitigation"},"source_type":"guide","source_name":"Xynode Cloudrest Trial Guide","source_locator":"Z'Maja Orb Blast","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"shifting_shadows_blockable","value":{"name":"Shifting Shadows","blockable":true},"source_type":"official_patch_notes","source_name":"ESO Update 26 patch notes","source_locator":"Cloudrest > Z'Maja","game_update":"U26","confidence":"high"}
+  ]
+}
