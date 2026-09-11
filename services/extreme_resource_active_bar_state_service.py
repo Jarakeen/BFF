@@ -2,7 +2,7 @@ from __future__ import annotations
 
 """Proof-reduced active-bar witnesses for Extreme max-resource objectives.
 
-This service owns no ESO stat arithmetic.  It inventories canonical active skills
+This service owns no ESO stat arithmetic. It inventories canonical active skills
 and builds the smallest legal bar witnesses needed by the reviewed resource
 passives:
 
@@ -83,6 +83,11 @@ class ExtremeResourceActiveBarStateService:
         self.skill_universe_service = skill_universe_service or ExtremeSkillUniverseService(
             self.database_path  # type: ignore[arg-type]
         )
+        self._actives_cache: tuple[ExtremePlayerSkillRecord, ...] | None = None
+        self._catalog_cache: dict[
+            tuple[str, tuple[str, ...]],
+            ExtremeResourceActiveBarStateCatalog,
+        ] = {}
 
     @staticmethod
     def _line_key(value: object) -> str:
@@ -161,6 +166,11 @@ class ExtremeResourceActiveBarStateService:
             skills=tuple("" for _ in range(BAR_SKILL_COUNT + 1)),
         )
 
+    def _actives(self) -> tuple[ExtremePlayerSkillRecord, ...]:
+        if self._actives_cache is None:
+            self._actives_cache = tuple(self.skill_universe_service.actives())
+        return self._actives_cache
+
     def build(
         self,
         objective_key: str,
@@ -170,17 +180,24 @@ class ExtremeResourceActiveBarStateService:
         if key not in self.SUPPORTED_OBJECTIVES:
             raise KeyError(f"unreviewed Extreme resource active-bar objective: {objective_key!r}")
 
-        actives = tuple(self.skill_universe_service.actives())
+        route_lines = self._route_lines(route)
+        cache_key = (key, tuple(sorted(route_lines)))
+        cached = self._catalog_cache.get(cache_key)
+        if cached is not None:
+            return cached
+
+        actives = self._actives()
         if not actives:
-            return ExtremeResourceActiveBarStateCatalog(
+            catalog = ExtremeResourceActiveBarStateCatalog(
                 objective_key=key,
                 states=(self._empty_state(key),),
                 active_skills_reviewed=0,
                 denominator_proven=False,
                 unresolved=("Canonical active-skill universe is empty for Extreme resource bar search",),
             )
+            self._catalog_cache[cache_key] = catalog
+            return catalog
 
-        route_lines = self._route_lines(route)
         shadow_rows = self._line_rows(actives, self.SHADOW) if self.SHADOW in route_lines else ()
         siphoning_rows = self._line_rows(actives, self.SIPHONING) if self.SIPHONING in route_lines else ()
         mages_rows = self._line_rows(actives, self.MAGES_GUILD)
@@ -233,8 +250,6 @@ class ExtremeResourceActiveBarStateService:
         elif key == "max_magicka":
             candidates: list[ExtremeResourceActiveBarState] = []
 
-            # Mages-only candidate.  Every Mages Guild slot is positive for
-            # Magicka Controller, so all distinct legal slots are filled.
             m_normals = mages_normal[:BAR_SKILL_COUNT]
             m_ultimate = mages_ultimate[0] if mages_ultimate else None
             m_count = len(m_normals) + int(m_ultimate is not None)
@@ -290,13 +305,15 @@ class ExtremeResourceActiveBarStateService:
                 key=lambda row: (row.reviewed_percent_bonus, row.skills),
             )
 
-        return ExtremeResourceActiveBarStateCatalog(
+        catalog = ExtremeResourceActiveBarStateCatalog(
             objective_key=key,
             states=(state,),
             active_skills_reviewed=len(actives),
             denominator_proven=not unresolved,
             unresolved=tuple(dict.fromkeys(unresolved)),
         )
+        self._catalog_cache[cache_key] = catalog
+        return catalog
 
     @staticmethod
     def materialize(
