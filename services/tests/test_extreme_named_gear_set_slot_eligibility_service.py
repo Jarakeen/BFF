@@ -32,7 +32,7 @@ def _database(path):
             );
             CREATE TABLE content_sets (
                 content_id INTEGER NOT NULL,
-                set_id INTEGER NOT NULL
+                set_id TEXT NOT NULL
             );
 
             INSERT INTO gear_set(id, name, category, max_equip_count) VALUES
@@ -62,7 +62,10 @@ def _database(path):
                 (3, 'mythic', 'Antiquities', ''),
                 (4, 'arena', 'Arena', '');
             INSERT INTO content_sets(content_id, set_id) VALUES
-                (1, 100), (2, 200), (3, 300), (4, 400);
+                (1, 'ordinary_trial_set'),
+                (2, '200'),
+                (3, 'mythic_ring'),
+                (4, 'arena_staff');
             """
         )
 
@@ -108,6 +111,21 @@ def test_standard_five_piece_set_recovers_reviewed_missing_weapon_shape(tmp_path
     assert "Shield" in ordinary.weapon_types
 
 
+def test_semantic_and_legacy_numeric_content_set_ids_both_resolve(tmp_path):
+    path = tmp_path / "eso.db"
+    _database(path)
+    with sqlite3.connect(path) as connection:
+        source_map, unresolved = ExtremeNamedGearSetSlotEligibilityService._source_by_set(
+            connection
+        )
+
+    assert unresolved == ()
+    assert source_map[100] == ("trial", "Trial")
+    assert source_map[200] == ("dungeon", "Dungeon")
+    assert source_map[300] == ("mythic", "Antiquities")
+    assert source_map[400] == ("arena", "Arena")
+
+
 def test_special_sets_do_not_receive_standard_weapon_synthesis(tmp_path):
     path = tmp_path / "eso.db"
     _database(path)
@@ -125,6 +143,24 @@ def test_complete_fixture_proves_named_set_slot_eligibility(tmp_path):
 
     assert catalog.unresolved == ()
     assert catalog.named_set_slot_eligibility_proven is True
+
+
+def test_unknown_semantic_content_set_id_fails_closed(tmp_path):
+    path = tmp_path / "eso.db"
+    _database(path)
+    with sqlite3.connect(path) as connection:
+        connection.execute(
+            "INSERT INTO content_sets(content_id, set_id) VALUES (1, 'not_a_real_set')"
+        )
+        connection.commit()
+
+    catalog = ExtremeNamedGearSetSlotEligibilityService(path).build()
+
+    assert catalog.named_set_slot_eligibility_proven is False
+    assert any(
+        "not_a_real_set" in item and "no canonical gear_set name match" in item
+        for item in catalog.unresolved
+    )
 
 
 def test_set_without_piece_rows_fails_closed(tmp_path):
