@@ -102,9 +102,16 @@ def test_checked_in_registry_keeps_newest_first_release_slices_and_main_encounte
     assert len(by_content["lep_seclusa"]) == 3
     assert len(by_content["oathsworn_pit"]) == 3
     assert len(by_content["bedlam_veil"]) == 3
-    assert {row.release_key for row in rows} == {(2025, 47), (2025, 45), (2024, 41)}
+    assert len(by_content["bal_sunnar"]) == 3
+    assert len(by_content["scrivener_s_hall"]) == 3
+    assert {row.release_key for row in rows} == {
+        (2025, 47),
+        (2025, 45),
+        (2024, 41),
+        (2023, 37),
+    }
     assert rows[0].release_key == (2025, 47)
-    assert rows[-1].release_key == (2024, 41)
+    assert rows[-1].release_key == (2023, 37)
 
     naj = {row.encounter_id: row for row in by_content["naj_caldeesh"]}
     assert naj["talen_lah"].member_ids == ("talen_lah", "bar_sakka")
@@ -126,3 +133,19 @@ def test_checked_in_registry_keeps_newest_first_release_slices_and_main_encounte
     assert bedlam_ids == {"shattered_champion", "darkshard", "the_blind"}
     assert "crystal_atronach" not in {row.encounter_id for row in rows}
     assert "mind_terror" not in {row.encounter_id for row in rows}
+
+    bal_sunnar_ids = {row.encounter_id for row in by_content["bal_sunnar"]}
+    assert bal_sunnar_ids == {
+        "kovan_giryon",
+        "roksa_the_warped",
+        "matriarch_lladi_telvanni",
+    }
+    assert "urvel_drath" not in {row.encounter_id for row in rows}
+    assert "house_telvanni" not in {row.encounter_id for row in rows}
+
+    scriveners = {row.encounter_id: row for row in by_content["scrivener_s_hall"]}
+    assert set(scriveners) == {"riftmaster_naqri", "ozezan_the_inferno", "valinna"}
+    assert scriveners["valinna"].member_ids == ("valinna", "lamikhai")
+    assert "lamikhai" not in {row.encounter_id for row in rows}
+    assert "infernium" not in {row.encounter_id for row in rows}
+    assert "cartoqueen" not in {row.encounter_id for row in rows}
