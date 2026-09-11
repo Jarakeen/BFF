@@ -14,7 +14,7 @@ import sqlite3
 
 from services.esologs_event_interpreter import (
     EsoLogsEventInterpreter,
-    SemanticEventKind,
+    SemanticCombatEvent,
 )
 
 
@@ -298,7 +298,7 @@ class RotationHealerMinorLifestealEsoLogsEvidenceService:
         aliases: set[int],
         report_code: str | None,
         fight_id: int | None,
-    ) -> tuple[object, ...]:
+    ) -> tuple[SemanticCombatEvent, ...]:
         query = (
             f"SELECT {cls._EVENT_COLUMNS} FROM log_event "
             "WHERE lower(event_type) IN ('heal', 'hot')"
@@ -326,8 +326,8 @@ class RotationHealerMinorLifestealEsoLogsEvidenceService:
         connection: sqlite3.Connection,
         *,
         interpreter: EsoLogsEventInterpreter,
-        event: object,
-    ) -> object | None:
+        event: SemanticCombatEvent,
+    ) -> SemanticCombatEvent | None:
         if event.source_id is None:
             return None
         row = connection.execute(
