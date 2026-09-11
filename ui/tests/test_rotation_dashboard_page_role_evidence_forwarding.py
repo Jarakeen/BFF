@@ -3,6 +3,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from minmax.resource_costs import ResourceType
+from ui.rotation_canonical_candidate_support import RotationCanonicalRoleEvidence
 from ui.rotation_dashboard_canonical_page import CanonicalRotationDashboardPage
 
 
@@ -61,6 +62,7 @@ def _bundle():
         resource=ResourceType.MAGICKA,
         maximum_amount=32000,
         trigger_fraction=0.35,
+        content_type="trial",
         restoration_resolver=None,
         demands=("demand",),
         options=("option",),
@@ -114,6 +116,37 @@ def test_page_evidence_bundle_forwards_role_evidence_into_direct_evaluation() ->
     assert result == "bundle-result"
     assert page.calls[0]["role_evidence"] is role_evidence
     assert page.calls[0]["character_id"] == "magrat-id"
+
+
+def test_page_evidence_bundle_fills_blank_role_content_type_from_encounter() -> None:
+    role_evidence = RotationCanonicalRoleEvidence(
+        plan_evidence_provider=object(),  # type: ignore[arg-type]
+        role_output_label="effective damage",
+        assigned_support_label="assigned support coverage",
+        reliable_group_healing=True,
+    )
+
+    class _BundlePage:
+        def __init__(self) -> None:
+            self.calls = []
+
+        def evaluate_canonical_candidates(self, **kwargs):
+            self.calls.append(kwargs)
+            return "bundle-result"
+
+    page = _BundlePage()
+    result = CanonicalRotationDashboardPage.evaluate_canonical_evidence_bundle(
+        page,
+        _bundle(),
+        role_evidence=role_evidence,
+    )
+
+    assert result == "bundle-result"
+    forwarded = page.calls[0]["role_evidence"]
+    assert forwarded is not role_evidence
+    assert forwarded.content_type == "trial"
+    assert forwarded.reliable_group_healing is True
+    assert role_evidence.content_type == ""
 
 
 def test_page_cadence_orchestration_forwards_role_evidence() -> None:
