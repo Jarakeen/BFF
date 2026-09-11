@@ -6,8 +6,10 @@ from services.extreme_structural_named_gear_mundus_food_potion_core_stat_record_
     _GEAR_DEFERRED_AXIS,
     _PASSIVE_DEFERRED_AXIS,
     _RESOURCE_ARMOR_SCOPE,
+    _RESOURCE_JEWELRY_GLYPH_IRRELEVANCE_SCOPE,
+    _RESOURCE_JEWELRY_STATIC_TRAIT_SCOPE,
     _RESOURCE_REMAINING_EQUIPMENT_TRAIT_AXIS,
-    _RESOURCE_REMAINING_GLYPH_AXIS,
+    _RESOURCE_REMAINING_GLYPH_AFTER_JEWELRY_AXIS,
     _RESOURCE_REMAINING_PASSIVE_AXIS,
     _RESOURCE_UNDAUNTED_SCOPE,
 )
@@ -76,6 +78,47 @@ class _CombinedResourceArmorStateService:
         return _ResourceArmorCatalog()
 
 
+_JEWELRY_STATE = SimpleNamespace(
+    objective_key="max_health",
+    identity=(("Necklace", "Healthy"), ("Ring1", "Healthy"), ("Ring2", "Healthy")),
+    direct_delta=2895.0,
+)
+
+
+class _JewelryTraitCatalog:
+    objective_key = "max_health"
+    denominator_proven = True
+    unresolved = ()
+    states = (_JEWELRY_STATE,)
+    raw_loadouts_reviewed = 216
+
+
+class _JewelryTraitService:
+    def __init__(self, path):
+        self.path = path
+
+    def build(self, key):
+        assert key == "max_health"
+        return _JewelryTraitCatalog()
+
+
+class _JewelryGlyphAudit:
+    denominator_proven = True
+    objective_irrelevance_proven = True
+    glyphs_reviewed = 17
+    relevant_glyphs = ()
+    unresolved = ()
+
+
+class _JewelryGlyphService:
+    def __init__(self, path):
+        self.path = path
+
+    def build(self, key):
+        assert key == "max_health"
+        return _JewelryGlyphAudit()
+
+
 class _ResourceOuterEvaluator:
     def __init__(self, *, gear_realization, armor_catalog, evaluator_factory):
         self.gear_realization = gear_realization
@@ -95,6 +138,7 @@ class _ResourceOuterEvaluator:
             "potion": "alchemy_formula:test",
             "active_buffs": ("Major Fortitude",),
             "resource_armor_states_scored": 24,
+            "jewelry_resource_static_trait_state": _JEWELRY_STATE.identity,
         }, ()
 
 
@@ -109,8 +153,10 @@ class _Probe:
 
 
 class _ResourceFactory:
+    captured_jewelry_state = None
+
     def __init__(self, **kwargs):
-        pass
+        type(self).captured_jewelry_state = kwargs.get("jewelry_state")
 
     def __call__(self, realization, armor_state):
         return _Probe()
@@ -149,12 +195,13 @@ class _SearchService:
                     "potion": "alchemy_formula:test",
                     "active_buffs": ("Major Fortitude",),
                     "resource_armor_states_scored": 24,
+                    "jewelry_resource_static_trait_state": _JEWELRY_STATE.identity,
                 },
             ),
         )
 
 
-def test_resource_armor_weight_trait_glyph_and_mettle_are_searched_with_residuals(monkeypatch):
+def test_resource_armor_jewelry_mettle_and_glyph_irrelevance_are_recorded(monkeypatch):
     undaunted_progression = object()
     captured = {}
 
@@ -178,6 +225,8 @@ def test_resource_armor_weight_trait_glyph_and_mettle_are_searched_with_residual
         "ExtremeArmorResourceWeightTraitGlyphStateService",
         _CombinedResourceArmorStateService,
     )
+    monkeypatch.setattr(module, "ExtremeJewelryResourceStaticTraitStateService", _JewelryTraitService)
+    monkeypatch.setattr(module, "ExtremeJewelryResourceGlyphRelevanceService", _JewelryGlyphService)
     monkeypatch.setattr(module, "ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory", _ResourceFactory)
     monkeypatch.setattr(
         module,
@@ -197,19 +246,24 @@ def test_resource_armor_weight_trait_glyph_and_mettle_are_searched_with_residual
     ).record("max_health")
 
     assert captured["progression_service"] is undaunted_progression
+    assert _ResourceFactory.captured_jewelry_state is _JEWELRY_STATE
     assert _RESOURCE_ARMOR_SCOPE in record.search_coverage.searched
     assert _RESOURCE_UNDAUNTED_SCOPE in record.search_coverage.searched
+    assert _RESOURCE_JEWELRY_STATIC_TRAIT_SCOPE in record.search_coverage.searched
+    assert _RESOURCE_JEWELRY_GLYPH_IRRELEVANCE_SCOPE in record.search_coverage.searched
     assert _GEAR_DEFERRED_AXIS not in record.search_coverage.omitted
     assert "armor, jewelry, and weapon traits" not in record.search_coverage.omitted
     assert "glyphs/enchants" not in record.search_coverage.omitted
     assert _PASSIVE_DEFERRED_AXIS not in record.search_coverage.omitted
     assert _RESOURCE_REMAINING_EQUIPMENT_TRAIT_AXIS in record.search_coverage.omitted
-    assert _RESOURCE_REMAINING_GLYPH_AXIS in record.search_coverage.omitted
+    assert _RESOURCE_REMAINING_GLYPH_AFTER_JEWELRY_AXIS in record.search_coverage.omitted
     assert _RESOURCE_REMAINING_PASSIVE_AXIS in record.search_coverage.omitted
-    assert "armor weight/passive interactions" not in " ".join(record.search_coverage.omitted)
+    assert "jewelry and weapon glyphs/enchants" not in record.search_coverage.omitted
     assert record.search_coverage.candidates_screened == 10 * 2 * 24 * 4 * 2 * 2
     assert record.search_coverage.candidates_optimized == 10 * 2 * 24 * 4 * 2 * 2
     assert record.search_coverage.denominator_proven is False
     assert record.self_provided_conditions == ("Major Fortitude",)
     assert any("2,187" in row for row in record.explanation)
+    assert any("216" in row for row in record.explanation)
+    assert any("17" in row and "jewelry glyph" in row for row in record.explanation)
     assert any("Undaunted Mettle" in row for row in record.explanation)
