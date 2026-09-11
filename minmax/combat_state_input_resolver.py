@@ -9,6 +9,7 @@ from .champion_point_static_repository import ChampionPointStaticRepository
 from .combat_effect_semantics import GameUpdate
 from .combat_state import CombatState
 from .derived_stats import StatContribution
+from .emperor_passive_input_resolver import EmperorPassiveInputResolver
 from .gear_stat_inputs import CORE_FIELDS, GearCalculationInputs, GearStatInputResolver
 from .named_combat_buffs import effects_for_buff, is_component_layer_buff
 from .stat_ids import StatId
@@ -172,4 +173,5 @@ class CombatStateInputResolver:
         combat_state: CombatState = CombatState(),
     ) -> GearCalculationInputs:
         result = self._apply_named_buffs(result, combat_state)
+        result = EmperorPassiveInputResolver.apply(result, combat_state=combat_state)
         return self._apply_bracing_anchor(result, build, combat_state)
