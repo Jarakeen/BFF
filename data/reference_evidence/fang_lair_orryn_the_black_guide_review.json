@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "fang_lair",
+  "encounter_id": "orryn_the_black",
+  "encounter_name": "Orryn the Black and Thurvokun",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Dragon and Necromancer","threshold":"100% to 0%","description":"Control Thurvokun while tracking Orryn's teleports, interrupts, crystal mechanics, poison placement, and execute hazards."},"source_type":"guide","source_name":"Xynode Fang Lair Guide","source_locator":"Thurvokun and Orryn the Black","game_update":"U17","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"orryn_channel","value":{"name":"Orryn Channel","response":"interrupt_orryn_immediately_whenever_he_teleports_to_ground_and_channels"},"source_type":"guide","source_name":"Xynode Fang Lair Guide","source_locator":"Thurvokun and Orryn the Black","game_update":"U17","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"plague_breath","value":{"name":"Plague Breath","response":"use_yisareh_life_ward_and_stack_correctly_when_breath_targets_group"},"source_type":"achievement","source_name":"Horrific Halitosis","source_locator":"Fang Lair achievement","game_update":"U17","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"animus_crystals","value":{"name":"Animus Crystals","response":"assign_players_to_crystal_positions_and_control_crystal_destruction_before_orryn_merges"},"source_type":"achievement","source_name":"Minimal Animosity","source_locator":"Fang Lair achievement","game_update":"U17","confidence":"high"}
+  ]
+}
