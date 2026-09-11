@@ -74,11 +74,12 @@ def test_checked_in_registry_keeps_newest_first_release_slices_and_main_encounte
     ):
         assert len(by_content[content_id]) == 3
     assert len(by_content["the_cauldron"]) == 4
+    assert len(by_content["ruins_of_mazzatun"]) == 4
     for content_id in (
         "castle_thorn", "icereach", "unhallowed_grave", "moongrave_fane",
         "lair_of_maarselok", "depths_of_malatar", "frostvault",
         "moon_hunter_keep", "march_of_sacrifices", "fang_lair", "scalecaller_peak",
-        "falkreath_hold",
+        "falkreath_hold", "cradle_of_shadows",
     ):
         assert len(by_content[content_id]) == 5
     assert len(by_content["bloodroot_forge"]) == 6
@@ -86,10 +87,10 @@ def test_checked_in_registry_keeps_newest_first_release_slices_and_main_encounte
     assert {row.release_key for row in rows} == {
         (2025, 47), (2025, 45), (2024, 41), (2023, 37), (2022, 35), (2022, 33),
         (2021, 31), (2021, 29), (2020, 27), (2020, 25), (2019, 23), (2019, 21),
-        (2018, 19), (2018, 17), (2017, 15),
+        (2018, 19), (2018, 17), (2017, 15), (2016, 11),
     }
     assert rows[0].release_key == (2025, 47)
-    assert rows[-1].release_key == (2017, 15)
+    assert rows[-1].release_key == (2016, 11)
 
     all_ids = {row.encounter_id for row in rows}
 
@@ -210,3 +211,14 @@ def test_checked_in_registry_keeps_newest_first_release_slices_and_main_encounte
     assert not (data_root / "eso_info" / "bosses" / "morrigh_bullblood.json").exists()
     assert not (data_root / "eso_info" / "bosses" / "deathlord_bjarfrud_skjoralmor.json").exists()
     assert "mammoth" not in all_ids and "bone_colossus" not in all_ids and "minotaur" not in all_ids
+
+    cradle = {row.encounter_id: row for row in by_content["cradle_of_shadows"]}
+    assert set(cradle) == {"sithera", "khephidaen", "votary_of_velidreth", "dranos_velador", "velidreth"}
+    assert not (data_root / "eso_info" / "bosses" / "sithera.json").exists()
+    assert not (data_root / "eso_info" / "bosses" / "votary_of_velidreth.json").exists()
+    assert "dark_elf" not in all_ids and "silken_ring" not in all_ids and "mephala" not in all_ids and "hoarvor_daedra" not in all_ids
+
+    mazzatun = {row.encounter_id: row for row in by_content["ruins_of_mazzatun"]}
+    assert set(mazzatun) == {"zatzu_the_spine_breaker", "mighty_chudan", "xal_nur_the_slaver", "tree_minder_na_kesh"}
+    assert not (data_root / "eso_info" / "bosses" / "zatzu_the_spine_breaker.json").exists()
+    assert "haj_mota" not in all_ids and "argonian_behemoth" not in all_ids
