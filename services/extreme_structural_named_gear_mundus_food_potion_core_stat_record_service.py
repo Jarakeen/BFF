@@ -64,6 +64,9 @@ from services.extreme_record_result import (
     ExtremeRecordResult,
     ExtremeRecordSearchCoverage,
 )
+from services.extreme_resource_passive_coverage_audit_service import (
+    ExtremeResourcePassiveCoverageAuditService,
+)
 from services.extreme_structural_core_stat_record_service import (
     ExtremeCanonicalStructuralStatEvaluator,
     ExtremeStructuralCoreStatRecordService,
@@ -156,6 +159,10 @@ _RESOURCE_ACTIVE_BAR_SCOPE = (
 _RESOURCE_MAX_HEALTH_RUNTIME_SCOPE = (
     "reviewed legal Max Health passive runtime witnesses: permanent-pet Expert Summoner on Daedric Summoning routes and 10-stack Nothing Wasted on pure Necromancer Class Mastery routes"
 )
+_RESOURCE_PASSIVE_COVERAGE_SCOPE = (
+    "all canonical player passives reviewed for the requested max resource, with every "
+    "resource-relevant passive canonically applied and every non-resource passive classified"
+)
 
 
 class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
@@ -229,6 +236,7 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
         jewelry_trait_catalog = None
         jewelry_glyph_audit = None
         weapon_audit = None
+        passive_audit = None
         jewelry_state = None
 
         if resource_armor:
@@ -244,6 +252,9 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
                 self.database_path
             ).build(key)
             weapon_audit = ExtremeWeaponResourceRelevanceService(
+                self.database_path
+            ).build(key)
+            passive_audit = ExtremeResourcePassiveCoverageAuditService(
                 self.database_path
             ).build(key)
             if jewelry_trait_catalog.states:
@@ -322,11 +333,19 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
             if callable(mundus_choices):
                 mundus_count = len(tuple(mundus_choices()))
 
+        passive_projection_complete = bool(
+            resource_armor
+            and passive_audit is not None
+            and passive_audit.projection_complete
+        )
+
         searched_parts = [*result.structural_scope, _GEAR_SCOPE]
         if resource_armor:
             searched_parts.extend(
                 (_RESOURCE_ARMOR_SCOPE, _RESOURCE_UNDAUNTED_SCOPE, _RESOURCE_ACTIVE_BAR_SCOPE)
             )
+            if passive_projection_complete:
+                searched_parts.append(_RESOURCE_PASSIVE_COVERAGE_SCOPE)
             if key == "max_health":
                 searched_parts.extend((_RESOURCE_JUGGERNAUT_SCOPE, _RESOURCE_MAX_HEALTH_RUNTIME_SCOPE))
             if jewelry_state is not None:
@@ -343,6 +362,8 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
         closed_axes = {_MUNDUS_DEFERRED_AXIS, _FOOD_DEFERRED_AXIS, _POTION_DEFERRED_AXIS}
         if evaluator.gear_denominator_proven:
             closed_axes.add(_GEAR_DEFERRED_AXIS)
+        if passive_projection_complete:
+            closed_axes.add(_PASSIVE_DEFERRED_AXIS)
 
         omitted_rows: list[str] = []
         jewelry_glyph_irrelevant = bool(
@@ -428,6 +449,9 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
                 and weapon_audit.denominator_proven
             )
         )
+        passive_denominator_proven = bool(
+            not resource_armor or passive_projection_complete
+        )
         denominator_proven = bool(
             result.structural_denominator_proven
             and evaluator.gear_denominator_proven
@@ -436,6 +460,7 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
             and jewelry_trait_denominator_proven
             and jewelry_glyph_denominator_proven
             and weapon_denominator_proven
+            and passive_denominator_proven
             and gear_candidates
             and armor_count
             and mundus_count
@@ -468,6 +493,19 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
             if weapon_audit is not None
             else ()
         )
+        passive_unresolved = ()
+        if passive_audit is not None and not passive_audit.projection_complete:
+            passive_unresolved = tuple(
+                dict.fromkeys(
+                    str(item)
+                    for item in (
+                        *passive_audit.static_relevant,
+                        *passive_audit.context_required,
+                        *passive_audit.unresolved,
+                    )
+                    if str(item)
+                )
+            )
         aggregate_unresolved = tuple(
             dict.fromkeys(
                 str(item)
@@ -477,6 +515,7 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
                     *jewelry_trait_unresolved,
                     *jewelry_glyph_unresolved,
                     *weapon_unresolved,
+                    *passive_unresolved,
                     *result.unresolved,
                 )
                 if str(item)
@@ -523,6 +562,10 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
             explanation_rows.append(
                 f"Armor-weight legality reviewed all {weight_catalog.raw_loadouts_reviewed:,} seven-slot Light/Medium/Heavy loadouts and preserved one continuation witness for each 1/2/3 armor-type count. Reviewed max-rank Undaunted Mettle is applied canonically to those witnesses; other passive ranks remain separate."
             )
+            if passive_projection_complete:
+                explanation_rows.append(
+                    f"Passive coverage reviewed all {passive_audit.passives_reviewed:,} canonical player passives for {key}; every resource-relevant passive is canonically applied or accounted for and the passive projection denominator is complete."
+                )
             if key == "max_health":
                 explanation_rows.append(
                     "Reviewed max-rank Juggernaut is applied canonically through the shared Heavy Armor piece-count resolver for every searched max-Health armor witness."
@@ -580,10 +623,16 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
             explanation_rows.append(
                 f"Scored {len(gear_candidates):,} distinct gear witnesses per structural candidate; this objective has no reviewed armor search yet."
             )
+        residual_boundary = (
+            "Residual equipment traits/enchants, unreviewed skill-bar/morph interactions, "
+            "Champion Points, and unreviewed runtime axes remain separate unless coverage says otherwise."
+            if passive_projection_complete
+            else "Residual equipment traits/enchants, unreviewed skill-bar/morph interactions, Champion Points, remaining passives, and unreviewed runtime axes remain separate unless coverage says otherwise."
+        )
         explanation_rows.extend(
             (
                 f"Finite axes include {mundus_count:,} Mundus, {food_count:,} food, and {potion_count:,} potion states.",
-                "Residual equipment traits/enchants, unreviewed skill-bar/morph interactions, Champion Points, remaining passives, and unreviewed runtime axes remain separate unless coverage says otherwise.",
+                residual_boundary,
             )
         )
 
