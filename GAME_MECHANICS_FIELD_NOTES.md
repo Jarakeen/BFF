@@ -617,3 +617,27 @@ Extreme role objectives should not maintain separate temporal truth for skill tr
 ## 2026-09-09 — Extreme runtime snapshots need one role-neutral CombatState projector
 
 The unified `ExtremeRuntimeSnapshot` contract is projected through one shared `ExtremeRuntimeSnapshotCombatStateService` before a role objective evaluates its own healing, tanking, or damage semantics. The projector owns ordered skill-history named buffs, gear-proc history, and explicit potion-window activation, deduplicates the resulting named buffs, and preserves runtime blockers. Healer-specific states such as Restoration Staff heavy completion or Sacred Ground still layer afterward until those mechanics are represented as role-neutral canonical runtime evidence. Tank and Damage Dealer Extreme objectives should consume this projector rather than recreate runtime truth.
+
+---
+
+## 2026-09-11 — An unresolved effect still has a time window
+
+Overflowing Altar exposed a difference between an unresolved mechanic and a global
+blocker. Its Minor Lifesteal trigger behavior is still unresolved, but the reviewed
+30-second effect duration is enough to determine which encounter windows it could
+possibly affect. A cast at 44 seconds cannot block a healing demand that ended at
+34.13 seconds.
+
+**Layman's version:** not knowing exactly how an effect works does not make it a
+time traveler. An unresolved later cast cannot reach backward and spoil an earlier
+healing window.
+
+**What it means in actual play:** the 10-second Altar may matter during Xalvakka's
+29.13–34.13-second healing-prep window because its effect is still active. The
+44-second Altar cannot matter to that window. Neither cast contributes invented
+healing until Minor Lifesteal's actual trigger behavior is proven.
+
+**For BFF:** externally triggered healing is retained as structured, time-anchored
+evidence. Demand evaluation scopes the unresolved trigger only to overlapping active
+intervals, while numeric healing remains fail-closed.
+
