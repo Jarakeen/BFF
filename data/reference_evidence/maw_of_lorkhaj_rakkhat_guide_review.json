@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "content_id": "maw_of_lorkhaj",
+  "encounter_id": "rakkhat",
+  "encounter_name": "Rakkhat",
+  "evidence": [
+    {
+      "fact_type": "phase",
+      "fact_key": "pad_cycle",
+      "value": {"order": 1, "label": "Gold Pad Cycle", "threshold": "Pull", "description": "Main tank keeps Rakkhat on the active gold pad. When Rakkhat corrupts it blue, the tank rotates clockwise to the next gold pad."},
+      "source_type": "guide",
+      "source_name": "Xynode Maw of Lorkhaj Guide",
+      "source_locator": "Rakkhat gold pads",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "phase",
+      "fact_key": "runner_phase",
+      "value": {"order": 2, "label": "Backyard Runner Phase", "threshold": "Pads 3, 5, 7", "description": "Six Void Caller shadows appear on the center pad and an assigned runner team enters the backyard to kill the corresponding Void Callers."},
+      "source_type": "guide + achievement",
+      "source_name": "Xynode Maw of Lorkhaj Guide; ESO achievement data",
+      "source_locator": "Rakkhat runners / Shadow Slayer",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "phase",
+      "fact_key": "lunar_phase",
+      "value": {"order": 3, "label": "Lunar Phase", "threshold": "End of pad lap", "description": "After the pad cycle the arena resets for another lap; later cycles add additional pressure such as Dreadstalkers."},
+      "source_type": "guide",
+      "source_name": "Xynode Maw of Lorkhaj Guide",
+      "source_locator": "Rakkhat lunar phase",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "transition",
+      "fact_key": "final_phase_requirement",
+      "value": {"label": "Final Phase", "threshold": "Within two lunar cycles", "description": "The Two-Moons Dance achievement explicitly requires forcing Rakkhat into his final phase within two lunar cycles."},
+      "source_type": "achievement",
+      "source_name": "ESO-Hub Maw of Lorkhaj achievements",
+      "source_locator": "Two-Moons Dance",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "machine_gun",
+      "value": {"name": "Machine Gun", "handling": "Main tank blocks with focused healing and keeps Rakkhat faced away from the group."},
+      "source_type": "guide",
+      "source_name": "Xynode Maw of Lorkhaj Guide",
+      "source_locator": "Rakkhat machine gun",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "jump_knockback",
+      "value": {"name": "Jump Knockback", "handling": "Group blocks the jump to avoid being launched into blue pads or cleanse pads."},
+      "source_type": "guide",
+      "source_name": "Xynode Maw of Lorkhaj Guide",
+      "source_locator": "Rakkhat jump",
+      "confidence": "medium"
+    }
+  ]
+}
