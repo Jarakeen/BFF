@@ -1,21 +1,23 @@
 from __future__ import annotations
 
-"""Canonical scoring with named gear, resource armor, reviewed jewelry, and bars.
+"""Canonical scoring with named gear, resource armor, reviewed jewelry, bars, and runtime.
 
 This layer composes a proven named-set realization with one proof-reduced
 Light/Medium/Heavy + Divines/Infused + armor-glyph state for max
 Health/Magicka/Stamina and, when supplied, one reviewed static resource-jewelry
 trait state. It owns no stat arithmetic: the completed ``PlayerBuild`` is re-scored
 through the canonical calculation stack so armor, jewelry, Mundus, set effects,
-food, potions, class/race state, active-bar state, and reviewed passive progression
-meet in one context.
+food, potions, class/race state, active-bar state, reviewed runtime state, and
+passive progression meet in one context.
 
 For the max-resource path, reviewed max-rank Undaunted Mettle progression,
 resource-relevant armor passive progression, reviewed active-bar passive
 progression, and the hypothetical race's canonical max-rank racial progression are
-applied when a canonical database path is available. Stat math remains owned by
-shared canonical resolvers; this evaluator only supplies legal build/progression
-evidence.
+applied when a canonical database path is available. Max Health additionally
+selects the strongest reviewed legal runtime continuation for Expert Summoner's
+permanent-pet branch or Nothing Wasted's 10-stack state. Stat math remains owned
+by shared canonical resolvers/services; this evaluator only supplies legal
+build/progression/runtime evidence.
 """
 
 from typing import Any
@@ -25,6 +27,7 @@ from minmax.combat_effect_semantics import GameUpdate
 from minmax.combat_state import CombatState
 from minmax.phase5_context_factory import Phase5BuildCalculationContextFactory
 from models.build_model import PlayerBuild
+from services.class_mastery_repository import ClassMasteryRepository
 from services.extreme_armor_resource_weight_trait_glyph_state_service import (
     ExtremeArmorResourceWeightTraitGlyphState,
     ExtremeArmorResourceWeightTraitGlyphStateService,
@@ -51,11 +54,17 @@ from services.extreme_named_gear_canonical_stat_evaluator import (
 from services.extreme_resource_active_bar_state_service import (
     ExtremeResourceActiveBarStateService,
 )
+from services.extreme_resource_max_health_runtime_context_service import (
+    ExtremeResourceMaxHealthRuntimeContextService,
+)
+from services.extreme_resource_max_health_runtime_state_service import (
+    ExtremeResourceMaxHealthRuntimeStateService,
+)
 from services.extreme_structural_global_search_service import ExtremeStructuralCandidate
 
 
 class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
-    """Add resource armor, reviewed passives/bar, jewelry, Mettle, and race progression."""
+    """Add resource armor, reviewed passives/bar/runtime, jewelry, Mettle, and race."""
 
     def __init__(
         self,
@@ -67,6 +76,8 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
         resource_armor_progression_service: ExtremeHypotheticalResourceArmorPassiveProgressionService | None = None,
         active_bar_progression_service: ExtremeHypotheticalResourceActiveBarPassiveProgressionService | None = None,
         active_bar_state_service: ExtremeResourceActiveBarStateService | None = None,
+        max_health_runtime_state_service: ExtremeResourceMaxHealthRuntimeStateService | None = None,
+        max_health_runtime_context_service: ExtremeResourceMaxHealthRuntimeContextService | None = None,
         racial_progression_service: ExtremeHypotheticalRacialProgressionService | None = None,
         context_factory: Phase5BuildCalculationContextFactory | None = None,
     ) -> None:
@@ -115,6 +126,26 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
         if active_bar_state_service is None and database_path is not None:
             active_bar_state_service = ExtremeResourceActiveBarStateService(database_path)
         self.active_bar_state_service = active_bar_state_service
+
+        if (
+            armor_state.objective_key == "max_health"
+            and max_health_runtime_state_service is None
+            and database_path is not None
+        ):
+            max_health_runtime_state_service = ExtremeResourceMaxHealthRuntimeStateService(
+                database_path
+            )
+        self.max_health_runtime_state_service = max_health_runtime_state_service
+
+        if (
+            armor_state.objective_key == "max_health"
+            and max_health_runtime_context_service is None
+            and database_path is not None
+        ):
+            max_health_runtime_context_service = ExtremeResourceMaxHealthRuntimeContextService(
+                mastery_repository=ClassMasteryRepository(database_path)
+            )
+        self.max_health_runtime_context_service = max_health_runtime_context_service
 
         if racial_progression_service is None and database_path is not None:
             racial_progression_service = ExtremeHypotheticalRacialProgressionService(database_path)
@@ -186,6 +217,15 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
                 active_bar=candidate.active_bar,
             )
 
+        runtime_catalog = None
+        runtime_state = None
+        if key == "max_health" and self.max_health_runtime_state_service is not None:
+            runtime_catalog = self.max_health_runtime_state_service.build(candidate.class_route)
+            if not runtime_catalog.states:
+                raise ValueError("Extreme Max Health runtime search produced no witness state")
+            runtime_state = runtime_catalog.states[0]
+            build = self.max_health_runtime_state_service.materialize(build, runtime_state)
+
         progression = CharacterProgression(
             attributes=candidate.attributes,
             passive_ranks={},
@@ -205,24 +245,48 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
                 if str(value or "").strip()
             )
         )
+        combat_state = (
+            CombatState(active_buffs=normalized_buffs, game_update=GameUpdate.U50)
+            if normalized_buffs
+            else None
+        )
         objective = self.optimizer.objective(key)
         armor_identity = repr(self.armor_state.identity)
         jewelry_identity = repr(self.jewelry_state.identity) if self.jewelry_state is not None else "none"
         bar_identity = repr(bar_state.identity) if bar_state is not None else "none"
+        runtime_identity = repr(runtime_state.identity) if runtime_state is not None else "none"
         build_id = (
-            f"extreme-named-gear-resource-armor-jewelry-bar:{candidate.identity}:"
-            f"{armor_identity}:{jewelry_identity}:{bar_identity}:{mundus}:{food}:{potion}"
+            f"extreme-named-gear-resource-armor-jewelry-bar-runtime:{candidate.identity}:"
+            f"{armor_identity}:{jewelry_identity}:{bar_identity}:{runtime_identity}:"
+            f"{mundus}:{food}:{potion}"
         )
+        character_id = "extreme-named-gear-resource-armor-jewelry-bar-runtime"
 
-        if self.context_factory is not None:
+        runtime_factory = self.context_factory or getattr(self.optimizer, "context_factory", None)
+        if (
+            key == "max_health"
+            and runtime_state is not None
+            and self.max_health_runtime_context_service is not None
+            and runtime_factory is not None
+        ):
+            context = self.max_health_runtime_context_service.resolve(
+                factory=runtime_factory,
+                build=build,
+                progression=progression,
+                state=runtime_state,
+                character_id=character_id,
+                build_id=build_id,
+                active_bar=candidate.active_bar,
+                combat_state=combat_state,
+            )
+            value = self.optimizer._objective_value(context, objective)
+            gear_unresolved = tuple(context.unresolved_gear_effects)
+        elif self.context_factory is not None:
             kwargs: dict[str, Any] = {}
-            if normalized_buffs:
-                kwargs["combat_state"] = CombatState(
-                    active_buffs=normalized_buffs,
-                    game_update=GameUpdate.U50,
-                )
+            if combat_state is not None:
+                kwargs["combat_state"] = combat_state
             context = self.context_factory.build(
-                character_id="extreme-named-gear-resource-armor-jewelry-bar",
+                character_id=character_id,
                 build_id=build_id,
                 build=build,
                 progression=progression,
@@ -231,17 +295,14 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
             )
             value = self.optimizer._objective_value(context, objective)
             gear_unresolved = tuple(context.unresolved_gear_effects)
-        elif normalized_buffs:
+        elif combat_state is not None:
             context = self.optimizer.context_factory.build(
-                character_id="extreme-named-gear-resource-armor-jewelry-bar",
+                character_id=character_id,
                 build_id=build_id,
                 build=build,
                 progression=progression,
                 active_bar=candidate.active_bar,
-                combat_state=CombatState(
-                    active_buffs=normalized_buffs,
-                    game_update=GameUpdate.U50,
-                ),
+                combat_state=combat_state,
             )
             value = self.optimizer._objective_value(context, objective)
             gear_unresolved = tuple(context.unresolved_gear_effects)
@@ -249,7 +310,7 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
             value, gear_unresolved = self.optimizer._evaluate(
                 build,
                 progression=progression,
-                character_id="extreme-named-gear-resource-armor-jewelry-bar",
+                character_id=character_id,
                 build_id=build_id,
                 objective=objective,
                 active_bar=candidate.active_bar,
@@ -279,6 +340,17 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
             output["resource_active_skills_reviewed"] = (
                 bar_catalog.active_skills_reviewed if bar_catalog is not None else 0
             )
+        if runtime_state is not None:
+            output["resource_max_health_runtime_state"] = runtime_state.identity
+            output["resource_max_health_runtime_label"] = runtime_state.label
+            output["resource_max_health_runtime_permanent_pet_active"] = runtime_state.permanent_pet_active
+            output["resource_max_health_runtime_nothing_wasted_stacks"] = runtime_state.nothing_wasted_stacks
+            output["resource_max_health_runtime_class_mastery_ability_ids"] = runtime_state.class_mastery_ability_ids
+            output["resource_max_health_runtime_reviewed_percent_bonus"] = runtime_state.reviewed_percent_bonus
+            output["resource_max_health_runtime_conditions"] = runtime_state.conditions
+            output["resource_max_health_runtime_denominator_proven"] = bool(
+                runtime_catalog is not None and runtime_catalog.denominator_proven
+            )
         output["undaunted_mettle_rank"] = progression.passive_rank("Undaunted Mettle")
         output["undaunted_mettle_progression_applied"] = bool(
             progression.owns_skill_line("Undaunted")
@@ -299,10 +371,16 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
         )
 
         bar_unresolved = tuple(bar_catalog.unresolved) if bar_catalog is not None else ()
+        runtime_unresolved = tuple(runtime_catalog.unresolved) if runtime_catalog is not None else ()
         unresolved = tuple(
             dict.fromkeys(
                 str(item)
-                for item in (*base_unresolved, *bar_unresolved, *gear_unresolved)
+                for item in (
+                    *base_unresolved,
+                    *bar_unresolved,
+                    *runtime_unresolved,
+                    *gear_unresolved,
+                )
                 if str(item)
             )
         )
