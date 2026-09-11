@@ -11,6 +11,11 @@ The resource active-bar evidence service is shared across every gear/armor score
 created by one factory so canonical skill inventory and proof-reduced route bars
 are cached once rather than rediscovered under every equipment witness.
 
+Static snapshot objectives score only the active-bar realization, but that snapshot
+must now participate in at least one complete legal front/back gear state. This
+closes the two-bar legality denominator without multiplying snapshot scoring by
+inactive-bar permutations that cannot affect the requested active snapshot.
+
 For max-resource records, the Emperor passive has a monotonic Home Keep table.
 The global maximum therefore needs only the legal six-Home-Keep active-Emperor
 witness. The fixed snapshot marker is consumed by ``CombatState`` and projected
@@ -27,6 +32,10 @@ from minmax.provisioning_static_repository import ProvisioningStaticRepository
 from services.extreme_armor_resource_weight_trait_glyph_state_service import (
     ExtremeArmorResourceWeightTraitGlyphState,
     ExtremeArmorResourceWeightTraitGlyphStateCatalog,
+)
+from services.extreme_dual_bar_gear_state_catalog_service import (
+    ExtremeDualBarGearStateCatalog,
+    ExtremeDualBarGearStateCatalogService,
 )
 from services.extreme_jewelry_resource_static_trait_state_service import (
     ExtremeJewelryResourceStaticTraitState,
@@ -140,7 +149,7 @@ class ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory:
 
 
 class ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator:
-    """Score every named-gear × combined resource-armor state per structural candidate."""
+    """Score every dual-bar-admissible named-gear × resource-armor state."""
 
     def __init__(
         self,
@@ -153,6 +162,7 @@ class ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator:
         self.armor_catalog = armor_catalog
         self.evaluator_factory = evaluator_factory
         self._evaluators: dict[tuple[Any, ...], _FiniteAxisScorer] = {}
+        self._dual_bar_catalog: ExtremeDualBarGearStateCatalog | None = None
 
     @staticmethod
     def _gear_identity(realization: ExtremeNamedGearSetRealization) -> tuple[Any, ...]:
@@ -167,23 +177,43 @@ class ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator:
     def _armor_identity(state: ExtremeArmorResourceWeightTraitGlyphState) -> tuple[Any, ...]:
         return tuple(state.identity)
 
-    def gear_realizations(self) -> tuple[ExtremeNamedGearSetRealization, ...]:
+    def _raw_gear_realizations(self) -> tuple[ExtremeNamedGearSetRealization, ...]:
         unique: dict[tuple[Any, ...], ExtremeNamedGearSetRealization] = {}
         for topology in self.gear_realization.realization.topologies:
             for realization in topology.realizations:
                 unique.setdefault(self._gear_identity(realization), realization)
         return tuple(unique[key] for key in sorted(unique))
 
+    def dual_bar_catalog(self) -> ExtremeDualBarGearStateCatalog:
+        if self._dual_bar_catalog is None:
+            self._dual_bar_catalog = ExtremeDualBarGearStateCatalogService.build(
+                self._raw_gear_realizations(),
+                source_denominator_proven=bool(self.gear_realization.denominator_proven),
+                unresolved=tuple(self.gear_realization.unresolved),
+            )
+        return self._dual_bar_catalog
+
+    def gear_realizations(self, *, active_bar: str = "front") -> tuple[ExtremeNamedGearSetRealization, ...]:
+        return self.dual_bar_catalog().admissible_realizations(active_bar=active_bar)
+
     def armor_states(self) -> tuple[ExtremeArmorResourceWeightTraitGlyphState, ...]:
         return tuple(sorted(self.armor_catalog.states, key=self._armor_identity))
 
     @property
     def unresolved(self) -> tuple[str, ...]:
-        return tuple(dict.fromkeys((*self.gear_realization.unresolved, *self.armor_catalog.unresolved)))
+        return tuple(
+            dict.fromkeys(
+                (
+                    *self.gear_realization.unresolved,
+                    *self.dual_bar_catalog().unresolved,
+                    *self.armor_catalog.unresolved,
+                )
+            )
+        )
 
     @property
     def gear_denominator_proven(self) -> bool:
-        return bool(self.gear_realization.denominator_proven)
+        return bool(self.dual_bar_catalog().denominator_proven)
 
     @property
     def reviewed_resource_armor_denominator_proven(self) -> bool:
@@ -213,10 +243,11 @@ class ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator:
                 f"catalog={self.armor_catalog.objective_key!r}, requested={key!r}"
             )
 
-        gear_rows = self.gear_realizations()
+        active_bar = str(getattr(candidate, "active_bar", "front") or "front").strip().casefold()
+        gear_rows = self.gear_realizations(active_bar=active_bar)
         armor_rows = self.armor_states()
         if not gear_rows:
-            raise ValueError("Extreme named gear search produced no physically realized gear candidate")
+            raise ValueError("Extreme named gear search produced no dual-bar-admissible gear candidate")
         if not armor_rows:
             raise ValueError("Extreme resource armor search produced no combined weight/trait/glyph state")
 
@@ -250,9 +281,14 @@ class ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator:
 
         trait_glyph = self.armor_catalog.trait_glyph_catalog
         weight = self.armor_catalog.weight_catalog
+        dual_catalog = self.dual_bar_catalog()
         best_payload["gear_candidates_scored"] = len(gear_rows)
         best_payload["resource_armor_states_scored"] = len(armor_rows)
         best_payload["gear_resource_armor_candidates_scored"] = len(gear_rows) * len(armor_rows)
+        best_payload["dual_bar_gear_states_reviewed"] = len(dual_catalog.states)
+        best_payload["dual_bar_compatible_pairs_reviewed"] = dual_catalog.compatible_pairs_reviewed
+        best_payload["active_snapshot_gear_candidates_reviewed"] = dual_catalog.active_snapshots_reviewed
+        best_payload["dual_bar_gear_denominator_proven"] = dual_catalog.denominator_proven
         best_payload["gear_denominator_proven"] = self.gear_denominator_proven
         best_payload["reviewed_resource_armor_denominator_proven"] = (
             self.reviewed_resource_armor_denominator_proven
