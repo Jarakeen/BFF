@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {"entry_name":"Boss Separation — Hunter-Killer Negatrix and Positrox","mitigation":"Keep the Hunter-Killers split on opposite sides. Only bring them together briefly when you need their electrical link to break a sphere shield."},
+    {"entry_name":"Sphere Shield Break — Hunter-Killer Negatrix and Positrox","mitigation":"Bring the bosses together just long enough to pass their link through the shielded sphere, then separate them again before the link pressure overwhelms the group."},
+    {"entry_name":"Take Aim — Hunter-Killer Negatrix and Positrox","mitigation":"Interrupt Take Aim immediately. Do not let the cast finish on its target."},
+    {"entry_name":"Poison Injection — Hunter-Killer Negatrix and Positrox","mitigation":"Cleanse or purge Poison Injection quickly and stay in healing while it is active."},
+
+    {"entry_name":"Charging Up — Pinnacle Factotum","mitigation":"Interrupt Pinnacle before the four expanding AoEs finish. Letting the channel complete turns a manageable mechanic into a group problem."},
+    {"entry_name":"Centurion Steam — Pinnacle Factotum","mitigation":"Get ranged from the steaming Centurion and avoid standing in the steam. Off-tank or kill the add cleanly rather than dragging it through group."},
+    {"entry_name":"Upper Platform Timeout — Pinnacle Factotum","mitigation":"The upstairs team must kill the spheres, activate the four consoles, and return before the roughly 60-second timeout becomes a wipe."},
+
+    {"entry_name":"Shock Pylon — Archcustodian","mitigation":"Move the raid in front of Archcustodian and trigger the Shock Pylon when the boss reaches it. Burn only while it is stunned and the shield is down."},
+    {"entry_name":"Fabricant Adds — Archcustodian","mitigation":"Tanks pull the two adds away from the shielded boss and face them away from group. Do not fire projectiles into a shielded two-hander."},
+    {"entry_name":"Spinning Blades — Archcustodian","mitigation":"Step out or dodge-roll through the blades. Blocking reduces the hit but does not prevent the bleed."},
+    {"entry_name":"Long-Range Meteors — Archcustodian","mitigation":"Stay in front of the boss and do not fall too far behind during the walk phase or the raid gets punished by lethal long-range attacks."},
+
+    {"entry_name":"Tank Boss Swap — Refabrication Committee","mitigation":"Swap Reactor and Reducer quickly when the bubble stacks appear. Ten stacks is lethal, so do not try to out-tank the mechanic."},
+    {"entry_name":"Bombers — Refabrication Committee","mitigation":"Hard-priority the bombers before they reach the Reclaimer shield and become empowered."},
+    {"entry_name":"Exploding Ruined Fabricants — Refabrication Committee","mitigation":"Expect exploding adds once a boss reaches 20%. Kill them before they reach or empower around the Reclaimer."},
+    {"entry_name":"Grasping Limbs — Refabrication Committee","mitigation":"Stay out of the claw zones. If caught, break free immediately."},
+    {"entry_name":"Melting Point — Refabrication Committee","mitigation":"Respect the ramping damage. Keep the boss assignment stable, maintain healing, and do not overlap unnecessary pressure during the burn phases."},
+
+    {"entry_name":"Stomp — Assembly General","mitigation":"Main tank returns to melee range immediately after the knockback. Do not trigger repeated double-stomps; three becomes a raid wipe."},
+    {"entry_name":"Add Waves — Assembly General","mitigation":"Off-tank and clear the scheduled add waves before pushing into recharge or execute if the raid is not ready for an overlap."},
+    {"entry_name":"Terminal Feedback — Assembly General","mitigation":"Destroy assigned terminals during recharge. Every terminal left active makes the ending hit worse."},
+    {"entry_name":"Bombardment — Assembly General","mitigation":"Use the center transition as a survival phase, not a damage window. Stay stacked for healing and avoid unnecessary exposure while the boss repositions."},
+    {"entry_name":"Terminals — Assembly General","mitigation":"Stop hitting Assembly General during recharge and kill the assigned terminals before the phase ends; the boss reflects damage during the recharge."}
+  ]
+}
