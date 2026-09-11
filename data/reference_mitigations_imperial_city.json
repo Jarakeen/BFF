@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {"entry_name":"Flurry — Overfiend","mitigation":"Tank blocks the frontal flurry and keeps Overfiend faced away from the group."},
+    {"entry_name":"Health-Triggered Adds — Overfiend","mitigation":"Stop pushing boss health and clear each add wave before triggering the next one."},
+    {"entry_name":"Flesh Atronachs — Ibomez the Flesh Sculptor","mitigation":"Prioritize Flesh Atronachs so their pressure does not accumulate around the boss."},
+    {"entry_name":"Spin Knockback — Gravelight Sentry","mitigation":"Move out of the large spin AoE so the group is not knocked into the poisonous water."},
+    {"entry_name":"Necromancer Adds — Gravelight Sentry","mitigation":"Kill the surrounding Necromancers before committing to boss burn so skeleton pressure does not snowball."},
+    {"entry_name":"Arena Pressure — Flesh Abomination","mitigation":"Tank the Abomination near the arena edge and preserve the center for group movement."},
+    {"entry_name":"Healer Bodyguard — Lord Warden's Council","mitigation":"Keep repeated interrupts on the healer bodyguard while the other Council members are killed."},
+    {"entry_name":"Council Stack — Lord Warden's Council","mitigation":"Tank and stack all four bodyguards while keeping melee frontals away from the group."},
+    {"entry_name":"Darklight Burst — Lord Warden Dusk","mitigation":"Avoid every Darklight Burst and keep clean access to portal positions."},
+    {"entry_name":"Portal Synergy — Lord Warden Dusk","mitigation":"Enter the assigned portal and use the synergy during the fall to survive the lethal transition."},
+    {"entry_name":"Zombie Adds — The Adjudicator","mitigation":"Clear zombies with AoE before they accumulate and crowd the group's assigned spacing."},
+    {"entry_name":"Targeted Mechanics Spacing — The Adjudicator","mitigation":"Use separate positions behind the boss so targeted mechanics are obvious and do not overlap."},
+    {"entry_name":"Healer Guard — Elite Guard","mitigation":"Interrupt the healer guard repeatedly while the other two guards are focused down."},
+    {"entry_name":"Guard Kill Order — Elite Guard","mitigation":"Focus the tank guard first, then the damage guard, then the healer while all three remain controlled."},
+    {"entry_name":"Portal Duty — The Planar Inhibitor","mitigation":"Players whose screens turn greyscale immediately destroy the portals before reinforcements enter."},
+    {"entry_name":"Flame Bursts — The Planar Inhibitor","mitigation":"Spread around the boss and step clear of personal fire bursts rather than stacking them together."},
+    {"entry_name":"Lightning Spin — Molag Kena","mitigation":"Stay near the middle of the room and rotate with the lightning wall; Hard Mode makes the wall substantially faster."},
+    {"entry_name":"Shielding Adds — Molag Kena","mitigation":"Kill the shielding adds to remove Kena's immunity, but move clear of each add's lethal death explosion before re-engaging."}
+  ]
+}
