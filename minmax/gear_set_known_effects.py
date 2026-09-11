@@ -15,6 +15,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .character_build.effect_layer import EffectLayer
+from .effect_source_persistence import EffectSourcePersistence
 from .support_effect_category import SupportEffectCategory
 from .support_stacking import StackingBehavior
 from .support_target_type import SupportTargetType
@@ -42,6 +43,7 @@ class GearSetKnownEffect:
     category: SupportEffectCategory | None = None
     stacking: StackingBehavior | None = None
     exclusivity_group: str | None = None
+    source_persistence: EffectSourcePersistence | None = None
 
 
 MASTER_ARCHITECT_SET_ID = 332
@@ -71,6 +73,7 @@ _KNOWN_EFFECTS: dict[int, tuple[GearSetKnownEffect, ...]] = {
             category=SupportEffectCategory.BUFF,
             stacking=StackingBehavior.UNIQUE,
             exclusivity_group="major_slayer",
+            source_persistence=EffectSourcePersistence.PERSISTS_AFTER_ACTIVATION,
         ),
     ),
     MAGMA_INCARNATE_TWO_PIECE_BONUS_ID: (
@@ -90,6 +93,7 @@ _KNOWN_EFFECTS: dict[int, tuple[GearSetKnownEffect, ...]] = {
             category=SupportEffectCategory.BUFF,
             stacking=StackingBehavior.UNIQUE,
             exclusivity_group="minor_courage",
+            source_persistence=EffectSourcePersistence.PERSISTS_AFTER_ACTIVATION,
         ),
         GearSetKnownEffect(
             bonus_id=MAGMA_INCARNATE_TWO_PIECE_BONUS_ID,
@@ -107,6 +111,7 @@ _KNOWN_EFFECTS: dict[int, tuple[GearSetKnownEffect, ...]] = {
             category=SupportEffectCategory.BUFF,
             stacking=StackingBehavior.UNIQUE,
             exclusivity_group="minor_resolve",
+            source_persistence=EffectSourcePersistence.PERSISTS_AFTER_ACTIVATION,
         ),
     ),
     SPAULDER_OF_RUIN_ONE_PIECE_BONUS_ID: (
@@ -124,6 +129,7 @@ _KNOWN_EFFECTS: dict[int, tuple[GearSetKnownEffect, ...]] = {
             category=SupportEffectCategory.BUFF,
             stacking=StackingBehavior.UNIQUE,
             exclusivity_group="spaulder_of_ruin_aura_of_pride",
+            source_persistence=EffectSourcePersistence.REQUIRES_SOURCE_ACTIVE_AT_SNAPSHOT,
         ),
     ),
     SERPENTS_DISDAIN_FIVE_PIECE_BONUS_ID: (
@@ -139,6 +145,7 @@ _KNOWN_EFFECTS: dict[int, tuple[GearSetKnownEffect, ...]] = {
             category=SupportEffectCategory.OTHER,
             stacking=StackingBehavior.UNIQUE,
             exclusivity_group="serpents_disdain_status_duration",
+            source_persistence=EffectSourcePersistence.REQUIRES_SOURCE_ACTIVE_AT_SNAPSHOT,
         ),
     ),
 }
@@ -164,6 +171,7 @@ _KNOWN_EFFECTS_BY_SET: tuple[GearSetKnownEffect, ...] = (
         category=SupportEffectCategory.OTHER,
         stacking=StackingBehavior.UNIQUE,
         exclusivity_group="jorvulds_guidance_duration",
+        source_persistence=EffectSourcePersistence.REQUIRES_SOURCE_ACTIVE_AT_SNAPSHOT,
     ),
     GearSetKnownEffect(
         bonus_id=None,
@@ -179,6 +187,7 @@ _KNOWN_EFFECTS_BY_SET: tuple[GearSetKnownEffect, ...] = (
         category=SupportEffectCategory.BUFF,
         stacking=StackingBehavior.UNIQUE,
         exclusivity_group="major_courage",
+        source_persistence=EffectSourcePersistence.PERSISTS_AFTER_ACTIVATION,
     ),
     GearSetKnownEffect(
         bonus_id=None,
@@ -194,6 +203,7 @@ _KNOWN_EFFECTS_BY_SET: tuple[GearSetKnownEffect, ...] = (
         category=SupportEffectCategory.DEBUFF,
         stacking=StackingBehavior.UNIQUE,
         exclusivity_group="minor_breach",
+        source_persistence=EffectSourcePersistence.PERSISTS_AFTER_ACTIVATION,
     ),
     GearSetKnownEffect(
         bonus_id=None,
@@ -210,6 +220,7 @@ _KNOWN_EFFECTS_BY_SET: tuple[GearSetKnownEffect, ...] = (
         category=SupportEffectCategory.DEBUFF,
         stacking=StackingBehavior.UNIQUE,
         exclusivity_group="roar_of_alkosh",
+        source_persistence=EffectSourcePersistence.PERSISTS_AFTER_ACTIVATION,
     ),
 )
 
