@@ -91,13 +91,23 @@ def test_audit_scope_flags_are_mutually_distinct():
     assert all_args.all_content is True
 
 
-def test_checked_in_dungeon_scope_starts_with_update_47_feast_of_shadows():
+def test_checked_in_dungeon_scope_is_newest_first_through_fallen_banners():
     data_root = Path(__file__).resolve().parents[2] / "data"
     rows = build_coverage_rows(data_root, scope="dungeon")
 
-    assert len(rows) == 6
-    assert {(row.release_year, row.release_update) for row in rows} == {(2025, 47)}
-    assert {row.content_name for row in rows} == {"Black Gem Foundry", "Naj-Caldeesh"}
+    assert len(rows) == 12
+    assert {(row.release_year, row.release_update) for row in rows} == {
+        (2025, 47),
+        (2025, 45),
+    }
+    assert (rows[0].release_year, rows[0].release_update) == (2025, 47)
+    assert (rows[-1].release_year, rows[-1].release_update) == (2025, 45)
+    assert {row.content_name for row in rows} == {
+        "Black Gem Foundry",
+        "Naj-Caldeesh",
+        "Exiled Redoubt",
+        "Lep Seclusa",
+    }
     assert {row.encounter_id for row in rows} == {
         "poxito",
         "voskrona_stonehulk_poxito",
@@ -105,4 +115,10 @@ def test_checked_in_dungeon_scope_starts_with_update_47_feast_of_shadows():
         "quarrymaster_saldezaar",
         "black_gem_monstrosity",
         "high_soulbinder_vykand",
+        "executioner_jerensi",
+        "prime_sorcerer_vandorallen",
+        "squall_of_retribution",
+        "garvin_the_tracker",
+        "noriwen",
+        "orpheon_the_tactician",
     }
