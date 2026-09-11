@@ -115,19 +115,20 @@ def test_audit_scope_flags_are_mutually_distinct():
     assert all_args.all_content is True
 
 
-def test_checked_in_dungeon_scope_is_newest_first_through_scribes_of_fate():
+def test_checked_in_dungeon_scope_is_newest_first_through_lost_depths():
     data_root = Path(__file__).resolve().parents[2] / "data"
     rows = build_coverage_rows(data_root, scope="dungeon")
 
-    assert len(rows) == 24
+    assert len(rows) == 30
     assert {(row.release_year, row.release_update) for row in rows} == {
         (2025, 47),
         (2025, 45),
         (2024, 41),
         (2023, 37),
+        (2022, 35),
     }
     assert (rows[0].release_year, rows[0].release_update) == (2025, 47)
-    assert (rows[-1].release_year, rows[-1].release_update) == (2023, 37)
+    assert (rows[-1].release_year, rows[-1].release_update) == (2022, 35)
     assert {row.content_name for row in rows} == {
         "Black Gem Foundry",
         "Naj-Caldeesh",
@@ -137,6 +138,8 @@ def test_checked_in_dungeon_scope_is_newest_first_through_scribes_of_fate():
         "Bedlam Veil",
         "Bal Sunnar",
         "Scrivener's Hall",
+        "Earthen Root Enclave",
+        "Graven Deep",
     }
     assert {row.encounter_id for row in rows} == {
         "poxito",
@@ -163,4 +166,10 @@ def test_checked_in_dungeon_scope_is_newest_first_through_scribes_of_fate():
         "riftmaster_naqri",
         "ozezan_the_inferno",
         "valinna",
+        "corruption_of_stone",
+        "corruption_of_root",
+        "archdruid_devyric",
+        "the_euphotic_gatekeeper",
+        "varzunon",
+        "zelvraak_the_unbreathing",
     }
