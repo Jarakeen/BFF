@@ -43,9 +43,9 @@ _SKILL_CONDITIONS = frozenset(
     }
 )
 _ARMOR_LINE_BY_WEIGHT = {
-    "light": "light armor",
-    "medium": "medium armor",
-    "heavy": "heavy armor",
+    "light": "light_armor",
+    "medium": "medium_armor",
+    "heavy": "heavy_armor",
 }
 
 
@@ -225,7 +225,7 @@ class ExtremeResourceRuntimeSkillWitnessMaterializationService:
         reserved_normal_slots: set[int] = set()
 
         def place(condition: str, witness: ExtremeResourceRuntimeSkillWitness) -> bool:
-            if self._is_ultimate(witness):
+            if condition == "transformed" or self._is_ultimate(witness):
                 old = str(skills[BAR_SKILL_COUNT] or "").strip()
                 if old and old.casefold() != witness.name.casefold():
                     displaced.append((BAR_SKILL_COUNT, old))
