@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "content_id": "crypt_of_hearts_ii",
+  "encounter_id": "ilambris_amalgam",
+  "encounter_name": "Brothers Ilambris and Ilambris Amalgam",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"brothers","value":{"order":1,"label":"Brothers Ilambris","threshold":"opening sequence","description":"Engage Athor and Zaven; defeating one brother advances the encounter into the Amalgam phase."},"source_type":"achievement","source_name":"Crypt of Hearts II Conqueror","source_locator":"Brothers Ilambris and Ilambris Amalgam","game_update":"U2","confidence":"high"},
+    {"fact_type":"phase","fact_key":"amalgam","value":{"order":2,"label":"Ilambris Amalgam","threshold":"after brother defeat","description":"Hold the Amalgam near the center, control skeleton waves, and respect stomp and low-health fire pressure."},"source_type":"guide","source_name":"Xynode Crypt of Hearts II Guide","source_locator":"Ilambris Amalgam","game_update":"U2","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"skeleton_waves","value":{"name":"Skeleton Waves","response":"tank_controls_adds_and_group_cleaves_them_without_kiting_around_room"},"source_type":"guide","source_name":"Xynode Crypt of Hearts II Guide","source_locator":"Ilambris Amalgam","game_update":"U2","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"stomp","value":{"name":"Stomp","response":"block_or_step_out_of_stomp_area"},"source_type":"guide","source_name":"Xynode Crypt of Hearts II Guide","source_locator":"Ilambris Amalgam","game_update":"U2","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"rain_of_fire","value":{"name":"Rain of Fire","response":"keep_moving_between_impacts_during_low_health_enrage"},"source_type":"guide","source_name":"Xynode Crypt of Hearts II Guide","source_locator":"Ilambris Amalgam","game_update":"U2","confidence":"high"}
+  ]
+}
