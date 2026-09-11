@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {"entry_name":"Teleport Rectangles — Kovan Giryon","mitigation":"Move out of each full-width rectangle immediately and keep tracking the clone positions that can repeat those lanes later. Preserve a clean central route instead of reacting from one trapped corner to another."},
+    {"entry_name":"Poison Phase — Kovan Giryon","mitigation":"Soft stack close enough for efficient group healing but far enough that personal poison circles never overlap. The mechanic punishes a literal stack."},
+    {"entry_name":"Temporal Adds — Kovan Giryon","mitigation":"During Kovan's immunity cycles, tank and stack the temporal adds and clear them cleanly before boss pressure resumes. Do not chase damage on an immune boss while adds and clone lanes accumulate."},
+
+    {"entry_name":"Darklight Orbs — Roksa the Warped","mitigation":"Assign interrupts and break every tethering orb before its countdown completes. Ranged interrupts reduce travel and make it much easier to cover opposite sides of the room."},
+    {"entry_name":"Darkness / Light Zones — Roksa the Warped","mitigation":"Stay inside an active light zone and be ready to transfer when Roksa's ground pressure makes the current safe area unusable. Darkness is not ordinary chip damage; lingering outside the light is lethal."},
+    {"entry_name":"Post-Darkness Tank Beam — Roksa the Warped","mitigation":"Tank uses active mitigation and healer shifts to focused single-target support after each darkness cycle. Hard Mode triples the beam pressure, so plan resources before the transition rather than after the health bar starts disappearing."},
+
+    {"entry_name":"Infectious Vomit Cone — Matriarch Lladi Telvanni","mitigation":"Tank points the tracking cone away from the group and avoids sweeping it through teammates. Everyone else stays behind or to the side of Lladi."},
+    {"entry_name":"Choking Pestilence / Poison Storm — Matriarch Lladi Telvanni","mitigation":"Group for reliable healing through the arena-wide poison, then trigger the time-stop synergy and burn the stunned adds. In Hard Mode those adds are invulnerable until the stun window, so save burst for when damage actually works."},
+    {"entry_name":"Hard Mode Skeevers — Matriarch Lladi Telvanni","mitigation":"The marked player kites while the group burns or crowd-controls the Skeever. Taunts do not solve this mechanic, but snares and immobilizes can buy the target time."},
+    {"entry_name":"Challenge Banner Tuning — Matriarch Lladi Telvanni","mitigation":"Treat Choking Pestilence as a planned healing check with HoTs and burst resources already running. Challenge-banner tuning changed its damage during U37 testing, so use reviewed current behavior rather than assuming an old numerical value."},
+
+    {"entry_name":"Hidden Codex — Riftmaster Naqri","mitigation":"Assign a runner to follow each projectile into the shelves and destroy both hidden codices before returning. Stop pushing health if a new codex cycle would overlap unresolved book pressure."},
+    {"entry_name":"Codex Color Attacks — Riftmaster Naqri","mitigation":"Red: interrupt the spawned attacker. Green: mitigate the tracking ground resolution. White: block the ghost heavy because dodge is not the answer. Resolve the hidden books so these attacks stop repeating."},
+    {"entry_name":"Unstable Literature — Riftmaster Naqri","mitigation":"Designate the tank to soak the green circle on Veteran. Hard Mode creates two simultaneous soaks, so preassign a second durable player, commonly the healer, instead of deciding after the circles appear."},
+
+    {"entry_name":"Persistent Lava Pools — Ozezan the Inferno","mitigation":"Tank at the perimeter and overlap new burrow pools with the wall or existing lava whenever possible. Leave at least one clean outer route for the later suction mechanic."},
+    {"entry_name":"Tracking Lasers — Ozezan the Inferno","mitigation":"Kite or dodge your beam without crossing another player's route. Hard Mode targets everyone, so spread deliberately rather than improvising four conflicting kite paths."},
+    {"entry_name":"Broodlings / Green Bugs — Ozezan the Inferno","mitigation":"Interrupt dangerous broodling channels and control add count. In Hard Mode, squash green bugs before they mature when practical, but do not destroy boss uptime or positioning to chase one across lethal lava."},
+
+    {"entry_name":"Fire Meteor / Rain of Fire Placement — Valinna and Lamikhai","mitigation":"Place persistent fire at the outside edge and keep doors, bridges, and planned travel lanes clean. The room transitions make bad early placement a later wipe mechanic."},
+    {"entry_name":"Lamikhai Enrage / Frost Trap — Valinna and Lamikhai","mitigation":"When Lamikhai enrages, tank drags the spider through Mazandi's Frost Trap. The freeze removes the immediate enrage problem and, under reviewed U37 behavior, also creates a damage opportunity."},
+    {"entry_name":"Immolation Trap — Valinna and Lamikhai","mitigation":"Affected players settle their circles in safe positions and stay inside until resolution. Do not cross another player's trap or use a doorway as the placement zone; movement mistakes can kill multiple people."},
+    {"entry_name":"Ensnaring Spiders — Valinna and Lamikhai","mitigation":"Swap immediately to an Ensnaring Spider and kill it before the cocooned player reaches the spider. Treat the grab as a priority rescue, not background add damage."},
+    {"entry_name":"Challenge Banner Finale — Valinna and Lamikhai","mitigation":"Keep the final room mobile and uncluttered while handling Valinna's fire pressure, meteors, and challenge-banner boulders. Preserve room edges for placements and block knockback threats when appropriate."}
+  ]
+}
