@@ -59,7 +59,7 @@ class _StaticContextService:
         self.resolution = resolution
         self.calls = []
 
-    def resolve(self, build):
+    def resolve(self, build, **kwargs):
         self.calls.append(build)
         return self.resolution
 
