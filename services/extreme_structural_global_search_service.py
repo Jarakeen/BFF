@@ -10,7 +10,8 @@ what a candidate actually scores.
 
 The result is still *structural* evidence only.  Deferred dynamic axes such as
 gear topology, skill choices, CP, consumables, and runtime state remain explicit
-and therefore prevent a false global-record claim.
+unless the injected scorer supplies proof-owned closure metadata for an axis it
+actually executes.
 """
 
 from dataclasses import dataclass
@@ -85,6 +86,10 @@ class ExtremeStructuralGlobalSearchService(Generic[ScorePayload]):
     Candidate ordering is deterministic and ties retain the lexicographically
     smallest structural identity.  This makes repeated audits reproducible while
     still exposing how many structurally distinct candidates share the best value.
+
+    Scorers may optionally expose ``closed_dynamic_axes(objective_key)`` and
+    ``additional_search_scope(objective_key)``.  These hooks carry proof metadata
+    only; the generic structural search does not interpret ESO mechanics itself.
     """
 
     def __init__(
@@ -103,6 +108,19 @@ class ExtremeStructuralGlobalSearchService(Generic[ScorePayload]):
             * len(universe.class_routes)
             * len(universe.attribute_allocations)
             * len(universe.active_bars)
+        )
+
+    def _scorer_metadata(self, name: str, objective_key: str) -> tuple[str, ...]:
+        resolver = getattr(self.scorer, name, None)
+        if not callable(resolver):
+            return ()
+        values = resolver(objective_key)
+        return tuple(
+            dict.fromkeys(
+                str(value).strip()
+                for value in tuple(values or ())
+                if str(value).strip()
+            )
         )
 
     def search(self, objective_key: str) -> ExtremeStructuralGlobalSearchResult[ScorePayload]:
@@ -153,13 +171,19 @@ class ExtremeStructuralGlobalSearchService(Generic[ScorePayload]):
             and expected > 0
             and scored == expected
         )
+        closed_axes = frozenset(self._scorer_metadata("closed_dynamic_axes", key))
+        additional_scope = self._scorer_metadata("additional_search_scope", key)
         return ExtremeStructuralGlobalSearchResult(
             objective_key=key,
             best=best,
             candidates_scored=scored,
             ties_at_best=ties,
-            structural_scope=tuple(universe.structural_scope),
-            deferred_dynamic_axes=tuple(universe.deferred_dynamic_axes),
+            structural_scope=tuple(
+                dict.fromkeys((*universe.structural_scope, *additional_scope))
+            ),
+            deferred_dynamic_axes=tuple(
+                axis for axis in universe.deferred_dynamic_axes if axis not in closed_axes
+            ),
             structural_denominator_proven=structural_proven,
             unresolved=tuple(dict.fromkeys(message for message in unresolved if message)),
         )
