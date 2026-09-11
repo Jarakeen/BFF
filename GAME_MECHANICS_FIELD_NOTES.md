@@ -662,3 +662,27 @@ That must be demonstrated from current runtime evidence before BFF counts it.
 damage, numeric aliases, and observed intervals as candidate evidence. No cadence,
 cooldown, or caster-credit rule is promoted until those observations are reviewed.
 
+
+
+---
+
+## 2026-09-11 — A triggered heal may be credited to someone other than its trigger
+
+Candidate ESO Logs evidence for Minor Lifesteal exposed two different kinds of
+ownership. Across the reviewed Lokkestiiz corpus, observed heal alias **86304** was
+logged under a provider-like source while the heal targets varied across the raid.
+The same-source damage lookup therefore often found nothing even though the
+per-target heal streams clustered near one-second spacing.
+
+**Layman's version:** the player whose name owns the heal in the log may not be the
+player whose attack caused it. The combat log can hand the healer the receipt while
+a damage dealer pressed the button that made the heal happen.
+
+**What it means in actual play:** Minor Lifesteal may be triggered independently by
+each affected attacker while ESO Logs credits the resulting healing to the effect
+provider. This remains candidate evidence until recipient-owned damage correlation
+and effect-application windows are reviewed.
+
+**For BFF:** externally triggered healing evidence must retain provider, recipient,
+and triggering-actor identities separately. A missing damage event from the logged
+heal source must not be treated as proof that no trigger occurred.
