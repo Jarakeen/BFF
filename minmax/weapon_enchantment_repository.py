@@ -32,6 +32,27 @@ class WeaponEnchantmentRepository:
             ).fetchall()
         return tuple((int(item_id), str(name)) for item_id, name in rows)
 
+    def get_description(self, item_id: int) -> str:
+        """Return stored canonical description for one weapon-enchantment row.
+
+        The numeric item id is only a storage lookup handle. Callers must not treat
+        it as mechanic identity; the returned canonical prose/effect semantics own
+        classification.
+        """
+        with sqlite3.connect(self.database_path) as connection:
+            row = connection.execute(
+                """
+                SELECT enchant_description
+                FROM weapon_enchantment
+                WHERE item_id = ?
+                LIMIT 1
+                """,
+                (item_id,),
+            ).fetchone()
+        if row is None:
+            return ""
+        return str(row[0] or "").strip()
+
     def find_item_ids_by_label(self, label: str) -> tuple[int, ...]:
         """Return exact or semantically verified matches for one saved label.
 
