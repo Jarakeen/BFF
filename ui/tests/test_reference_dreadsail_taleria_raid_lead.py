@@ -33,7 +33,7 @@ def test_taleria_siren_and_behemoth_have_raid_lead_mitigation():
 
     siren = entries["Summon Siren — Tideborn Taleria"]
     assert "break free" in siren.mitigation_note.casefold()
-    assert "Lure Of The Sea" in siren.detail_text()
+    assert "Lure of the Sea" in siren.detail_text()
 
     behemoth = entries["Summon Behemoth — Tideborn Taleria"]
     assert "off-tank" in behemoth.mitigation_note.casefold()
