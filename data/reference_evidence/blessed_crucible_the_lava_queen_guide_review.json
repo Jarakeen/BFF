@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "blessed_crucible",
+  "encounter_id": "the_lava_queen",
+  "encounter_name": "The Lava Queen",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"fight start","description":"Avoid persistent fire and lava hazards, kill atronachs when their beams make the Lava Queen immune, and block her heavy attack."},"source_type":"guide","source_name":"Xynode Blessed Crucible Guide","source_locator":"The Lava Queen","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"atronach_immunity","value":{"name":"Atronach Immunity","response":"kill_the_atronachs_when_their_beams_make_the_lava_queen_immune_then_resume_boss_damage"},"source_type":"guide","source_name":"Xynode Blessed Crucible Guide","source_locator":"The Lava Queen","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"heavy_attack","value":{"name":"Lava Queen Heavy Attack","response":"block_the_heavy_attack_promptly_to_avoid_the_large_hit_and_knockback"},"source_type":"guide","source_name":"Xynode Blessed Crucible Guide","source_locator":"The Lava Queen","game_update":"Launch","confidence":"high"}
+  ]
+}
