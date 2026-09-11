@@ -5,15 +5,18 @@ from __future__ import annotations
 Ordinary builds keep the established one-Mundus evaluator. This adapter exists
 only for a named gear witness whose active snapshot proves Twice-Born Star at five
 pieces, and delegates every candidate back through canonical build evaluation.
+
+The default path passes ``second_mundus`` directly to the wrapped evaluator. A
+deeper composed evaluator may instead provide ``second_mundus_setter`` so the
+secondary boon can be forwarded through an inner canonical named-gear evaluator
+without duplicating the outer armor/runtime scoring stack.
 """
 
+from collections.abc import Callable
 from itertools import combinations
 from typing import Any
 
 from minmax.mundus_repository import MundusRepository
-from services.extreme_named_gear_canonical_stat_evaluator import (
-    ExtremeNamedGearCanonicalStatEvaluator,
-)
 from services.extreme_structural_global_search_service import ExtremeStructuralCandidate
 
 
@@ -23,11 +26,13 @@ class ExtremeTwiceBornMundusStructuralStatEvaluator:
     def __init__(
         self,
         *,
-        evaluator: ExtremeNamedGearCanonicalStatEvaluator,
+        evaluator: Any,
         mundus_repository: MundusRepository,
+        second_mundus_setter: Callable[[str], None] | None = None,
     ) -> None:
         self.evaluator = evaluator
         self.mundus_repository = mundus_repository
+        self.second_mundus_setter = second_mundus_setter
 
     def mundus_choices(self) -> tuple[str, ...]:
         values: list[str] = []
@@ -69,10 +74,9 @@ class ExtremeTwiceBornMundusStructuralStatEvaluator:
         best_state: tuple[str, str] | None = None
 
         for primary, secondary in self.mundus_states():
-            kwargs: dict[str, Any] = {
-                "mundus": primary,
-                "second_mundus": secondary,
-            }
+            kwargs: dict[str, Any] = {"mundus": primary}
+            if self.second_mundus_setter is None:
+                kwargs["second_mundus"] = secondary
             if str(food or "").strip():
                 kwargs["food"] = food
             if str(potion or "").strip():
@@ -80,11 +84,18 @@ class ExtremeTwiceBornMundusStructuralStatEvaluator:
             if tuple(active_buffs or ()):
                 kwargs["active_buffs"] = tuple(active_buffs)
 
-            value, payload, unresolved = self.evaluator.evaluate_candidate(
-                objective_key,
-                candidate,
-                **kwargs,
-            )
+            if self.second_mundus_setter is not None:
+                self.second_mundus_setter(secondary)
+            try:
+                value, payload, unresolved = self.evaluator.evaluate_candidate(
+                    objective_key,
+                    candidate,
+                    **kwargs,
+                )
+            finally:
+                if self.second_mundus_setter is not None:
+                    self.second_mundus_setter("")
+
             score = float(value)
             state_key = (primary.casefold(), secondary.casefold())
             if (
