@@ -146,6 +146,61 @@ class ExtremeRuntimeSnapshot:
 
         return tuple(sorted(self.runtime_history, key=self._entry_order))
 
+    def snapshot_at(
+        self,
+        time_seconds: float,
+        *,
+        sequence: int | None = None,
+    ) -> ExtremeRuntimeSnapshot:
+        """Project authoritative unified history through one exact ordered instant.
+
+        Unified ``runtime_history`` contains enough event provenance to move the
+        observation point forward or backward without inventing state. Legacy
+        ``attempts`` / ``potion_elapsed_seconds`` snapshots do not: they describe one
+        already-resolved instant and therefore cannot be time-shifted.
+
+        When ``sequence`` is supplied, same-timestamp history entries after that
+        sequence are excluded. Without it, all entries at the timestamp are included.
+        """
+
+        instant = float(time_seconds)
+        if not math.isfinite(instant) or instant < 0.0:
+            raise ValueError("runtime snapshot lookup time must be finite and non-negative")
+        boundary_sequence = None if sequence is None else int(sequence)
+        if boundary_sequence is not None and boundary_sequence < 0:
+            raise ValueError("runtime snapshot lookup sequence cannot be negative")
+
+        if not self.runtime_history:
+            if (
+                abs(instant - self.snapshot_time_seconds) <= 1e-12
+                and boundary_sequence is None
+            ):
+                return self
+            raise ValueError(
+                "legacy runtime snapshot evidence cannot be projected to another ordered instant"
+            )
+
+        epsilon = 1e-12
+        history: list[ExtremeRuntimeHistoryEntry] = []
+        for entry in self.ordered_runtime_history:
+            entry_time, entry_sequence = self._entry_order(entry)
+            if entry_time > instant + epsilon:
+                break
+            if (
+                boundary_sequence is not None
+                and abs(entry_time - instant) <= epsilon
+                and entry_sequence > boundary_sequence
+            ):
+                break
+            history.append(entry)
+
+        return ExtremeRuntimeSnapshot(
+            runtime_history=tuple(history),
+            snapshot_time_seconds=instant,
+            recipient_actor_id=self.recipient_actor_id,
+            group_member_ids=self.group_member_ids,
+        )
+
     @property
     def effect_attempts(self) -> tuple[RuntimeEffectEventAttempt, ...]:
         """Return effect attempts for existing Phase 7 history consumers."""
