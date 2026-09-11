@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "imperial_city_prison",
+  "encounter_id": "overfiend",
+  "encounter_name": "Overfiend",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Hold Overfiend steady, face its frontal attacks away from the group, and clear health-triggered add waves before pushing further."},"source_type":"guide","source_name":"Xynode Imperial City Prison Guide","source_locator":"Overfiend","game_update":"U7","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"flurry","value":{"name":"Flurry","response":"tank_blocks_and_faces_frontal_flurry_away_from_group"},"source_type":"guide","source_name":"Xynode Imperial City Prison Guide","source_locator":"Overfiend","game_update":"U7","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"add_waves","value":{"name":"Health-Triggered Adds","response":"stop_boss_push_and_clear_adds_before_the_next_health_trigger"},"source_type":"guide","source_name":"Xynode Imperial City Prison Guide","source_locator":"Overfiend","game_update":"U7","confidence":"high"}
+  ]
+}
