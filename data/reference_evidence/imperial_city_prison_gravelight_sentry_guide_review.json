@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "imperial_city_prison",
+  "encounter_id": "gravelight_sentry",
+  "encounter_name": "Gravelight Sentry",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Island Phase","threshold":"100% to 0%","description":"Keep the group on the island, kill the surrounding necromancers, and avoid being knocked into poisonous water."},"source_type":"guide","source_name":"Alcast Imperial City Prison Guide","source_locator":"Gravelight Sentry","game_update":"U7","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"knockback","value":{"name":"Spin Knockback","response":"move_out_of_large_spin_aoe_to_avoid_poison_water_knockback"},"source_type":"guide","source_name":"Alcast Imperial City Prison Guide","source_locator":"Gravelight Sentry","game_update":"U7","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"necromancers","value":{"name":"Necromancer Adds","response":"kill_necromancers_before_boss_burn_to_stop_skeleton_pressure"},"source_type":"guide","source_name":"Alcast Imperial City Prison Guide","source_locator":"Gravelight Sentry","game_update":"U7","confidence":"high"}
+  ]
+}
