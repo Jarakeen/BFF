@@ -11,6 +11,21 @@ class RuleRepository:
     def __init__(self, database_path: str | Path):
         self.database_path = str(database_path)
 
+    def list_weapon_trait_names(self) -> tuple[str, ...]:
+        """Return every canonical weapon trait material name."""
+        with sqlite3.connect(self.database_path) as connection:
+            rows = connection.execute(
+                """
+                SELECT DISTINCT material_name
+                FROM gear_trait_material
+                WHERE gear_type = 'Weapon'
+                  AND material_name IS NOT NULL
+                  AND TRIM(material_name) <> ''
+                ORDER BY LOWER(TRIM(material_name))
+                """
+            ).fetchall()
+        return tuple(str(row[0]) for row in rows)
+
     def get_infused_effect(
         self,
         *,
@@ -53,7 +68,6 @@ class RuleRepository:
             quality=quality,
         )
 
-        
     def get_weapon_trait_rules(
         self,
         trait_name: str,
