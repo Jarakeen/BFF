@@ -57,7 +57,14 @@ def _database(tmp_path: Path) -> Path:
         )
         connection.execute(
             "INSERT INTO ability(ability_id,name,index_name,duration,channeled,coef_description) VALUES (?,?,?,?,?,?)",
-            (61505, "Echoing Vigor", "echoing vigor", 16000, 0, "Heals every 2 seconds for 16 seconds."),
+            (
+                61505,
+                "Echoing Vigor",
+                "echoing vigor",
+                16000,
+                0,
+                "Heals you for $1 Health every 2 seconds for 16 seconds.",
+            ),
         )
         connection.execute(
             "INSERT INTO skill_rank(id,skill_id,ability_id,raw_name,rank,morph) VALUES (?,?,?,?,?,?)",
