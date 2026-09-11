@@ -11,6 +11,22 @@ from services.extreme_skill_universe_service import (
 )
 
 
+_DESCRIPTIONS = {
+    "Blood Magic": (
+        "When you hit an enemy with a directly applied Dark Magic ability that has a cost, "
+        "the reviewed full-Health branch can temporarily increase the higher of your Max Magicka "
+        "or Max Stamina."
+    ),
+    "Maturation": (
+        "When you heal yourself or an ally with a Green Balance ability, grant the healed target "
+        "Minor Toughness, increasing their Max Health for the reviewed duration."
+    ),
+    "Dark Vigor": (
+        "For each Shadow ability slotted on the active bar, the reviewed passive increases Max Health."
+    ),
+}
+
+
 def _passive(name: str, line: str) -> ExtremePlayerSkillRecord:
     return ExtremePlayerSkillRecord(
         skill_id=1,
@@ -24,7 +40,7 @@ def _passive(name: str, line: str) -> ExtremePlayerSkillRecord:
         base_ability_id=None,
         max_rank=2,
         max_rank_ability_id=None,
-        description="Reviewed objective-specific resource mechanic.",
+        description=_DESCRIPTIONS[name],
         domain=ExtremeSkillDomain.CLASS,
     )
 
@@ -83,6 +99,7 @@ def test_audit_preserves_one_real_runtime_blocker_per_resource_objective():
     assert "[class] Dark Magic :: Blood Magic" in health.static_irrelevant
     assert "[class] Green Balance :: Maturation" in health.context_required
     assert "[class] Shadow :: Dark Vigor" not in health.context_required
+    assert health.unresolved == ()
 
     for objective in ("max_magicka", "max_stamina"):
         audit = audits[objective]
