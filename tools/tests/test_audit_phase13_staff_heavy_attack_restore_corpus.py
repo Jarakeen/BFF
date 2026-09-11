@@ -2,6 +2,7 @@ from types import SimpleNamespace
 
 from tools.audit_phase13_staff_heavy_attack_restore_corpus import (
     _following_restores,
+    _heavy_event_shape_key,
     _normalize_player_details,
 )
 from services.esologs_event_interpreter import SemanticEventKind
@@ -68,3 +69,18 @@ def test_following_restores_filters_self_target_source_positive_amount_and_windo
     assert rows[0][0].resource_change == 2400.0
     assert rows[0][0].target_id == 7
     assert rows[0][1] == 100.0
+
+
+def test_heavy_event_shape_key_preserves_raw_type_tick_and_cast_tracking():
+    event = SimpleNamespace(
+        raw_event_type="damage",
+        tick=False,
+        cast_track_id=91234,
+    )
+
+    assert _heavy_event_shape_key("frost_staff_heavy", event) == (
+        "frost_staff_heavy",
+        "damage",
+        False,
+        True,
+    )
