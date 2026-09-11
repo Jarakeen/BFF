@@ -2,8 +2,10 @@ from types import SimpleNamespace
 
 from tools.audit_phase13_staff_heavy_attack_restore_corpus import (
     _completed_staff_heavies,
+    _completion_duration_ms,
     _following_restores,
     _heavy_event_shape_key,
+    _is_weapon_restore_candidate,
     _normalize_player_details,
 )
 from services.esologs_event_interpreter import SemanticEventKind
@@ -183,3 +185,24 @@ def test_completed_staff_heavies_uses_charge_release_cast_and_preserves_begin_tr
     assert rows[1][1].event_index == 3
     assert rows[1][2] is None
     assert rows[1][3] is None
+
+
+def test_weapon_restore_candidate_is_staff_family_specific():
+    resto = SimpleNamespace(ability_game_id=32760)
+    frost = SimpleNamespace(ability_game_id=60762)
+    shock = SimpleNamespace(ability_game_id=60764)
+    noise = SimpleNamespace(ability_game_id=93072)
+
+    assert _is_weapon_restore_candidate("restoration_staff_heavy", resto)
+    assert not _is_weapon_restore_candidate("restoration_staff_heavy", frost)
+    assert _is_weapon_restore_candidate("frost_staff_heavy", frost)
+    assert _is_weapon_restore_candidate("shock_staff_heavy", shock)
+    assert not _is_weapon_restore_candidate("shock_staff_heavy", noise)
+
+
+def test_completion_duration_ms_uses_paired_start_and_fails_closed_without_one():
+    start = SimpleNamespace(timestamp=1000.0)
+    completion = SimpleNamespace(timestamp=2500.0)
+
+    assert _completion_duration_ms(start, completion) == 1500.0
+    assert _completion_duration_ms(None, completion) is None
