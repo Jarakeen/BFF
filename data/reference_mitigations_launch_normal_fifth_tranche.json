@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {"entry_name":"Heavy Attack — Guardian of the Flame","mitigation":"Block the telegraphed heavy attack; an unblocked hit can knock the target away and create unnecessary recovery pressure."},
+    {"entry_name":"Frontal Clobber — Iceheart","mitigation":"Keep Iceheart faced away from the group and block or step out of the frontal cone."},
+    {"entry_name":"Arctic Awakening — Iceheart","mitigation":"Move out of the frost circles under players, then clear the ice skeletons created when the eruptions resolve."},
+    {"entry_name":"Life Drain — Drodda of Icereach","mitigation":"Break free immediately when Drodda begins draining you; the channel heals her, so preserve enough stamina to escape it."},
+    {"entry_name":"Frost Atronachs — Drodda of Icereach","mitigation":"Control and clear the low-health frost atronachs before add pressure accumulates around the group."},
+    {"entry_name":"Spirit Panthers — Longclaw","mitigation":"Tank or control the returning spirit panthers rather than repeatedly chasing them for kills while Longclaw remains active."},
+    {"entry_name":"Volley and Poison — Longclaw","mitigation":"Step out of the small ground attacks and poison clouds while maintaining pressure on Longclaw."},
+    {"entry_name":"Interruptible Cast — Foulhide","mitigation":"Bash Foulhide as soon as the red interrupt telegraph appears."},
+    {"entry_name":"Webs and Ravens — Selene","mitigation":"After the group is pulled toward center, move out of the large damage circle as soon as the web releases you."},
+    {"entry_name":"Bear Attack — Selene","mitigation":"Keep Selene faced away from the group; the tank blocks or sidesteps the large frontal spirit attack without turning it through allies."},
+    {"entry_name":"Snagg Uppercut — The Pack","mitigation":"Block Snagg gro-Mashul's heavy uppercut and step outside his short whirlwind when it begins."},
+    {"entry_name":"Nusana Fire Line — The Pack","mitigation":"Move sideways out of Nusana's line of fire rather than remaining in its path."},
+    {"entry_name":"Dynus Channel — The Pack","mitigation":"Interrupt Dynus Aralas when he begins an interruptible elemental channel."},
+    {"entry_name":"Beetle Fire — The Beast Master","mitigation":"Move out of the Incineration Beetles' pulsing fire and ground effects while clearing the wave."},
+    {"entry_name":"Troll King Slam — The Beast Master","mitigation":"Stay reasonably close to limit long jumps, then block or step out of the Troll King's slam."},
+    {"entry_name":"Atronach Immunity — The Lava Queen","mitigation":"Kill the atronachs when their beams make the Lava Queen immune, then return damage to the boss."},
+    {"entry_name":"Lava Queen Heavy Attack — The Lava Queen","mitigation":"Block the heavy attack promptly to avoid the large hit and knockback."}
+  ]
+}
