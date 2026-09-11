@@ -81,11 +81,11 @@ def test_audit_scope_flags_are_mutually_distinct():
     assert all_args.all_content is True
 
 
-def test_checked_in_dungeon_scope_is_newest_first_through_launch_veteran_slice():
+def test_checked_in_dungeon_scope_is_newest_first_through_launch_starter_slice():
     data_root = Path(__file__).resolve().parents[2] / "data"
     rows = build_coverage_rows(data_root, scope="dungeon")
 
-    assert len(rows) == 161
+    assert len(rows) == 167
     assert {(row.release_year, row.release_update) for row in rows} == {
         (2025, 47), (2025, 45), (2024, 41), (2023, 37),
         (2022, 35), (2022, 33), (2021, 31), (2021, 29),
@@ -108,6 +108,7 @@ def test_checked_in_dungeon_scope_is_newest_first_through_launch_veteran_slice()
         "Imperial City Prison", "White-Gold Tower", "City of Ash II", "Crypt of Hearts II",
         "Fungal Grotto II", "Spindleclutch II", "The Banished Cells II",
         "Darkshade Caverns II", "Elden Hollow II", "Wayrest Sewers II",
+        "Fungal Grotto I", "Spindleclutch I", "The Banished Cells I",
     }
 
     assert {row.encounter_id for row in rows} == {
@@ -153,4 +154,7 @@ def test_checked_in_dungeon_scope_is_newest_first_through_launch_veteran_slice()
         "transmuted_hive_lord", "grobull_the_transmuted", "the_engine_guardian",
         "dark_root", "murklight", "bogdan_the_nightflame",
         "malubeth_the_scourger", "garron_the_returned", "allene_pellingare",
+        "war_chief_ozozai", "kra_gh_the_dreugh_king",
+        "swarm_mother", "the_whisperer",
+        "shadowrend", "high_kinlord_rilis_banished_cells_i",
     }
