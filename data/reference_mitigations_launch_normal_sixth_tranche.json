@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {"entry_name":"Wave Attack — Ulguna Soul-Reaver","mitigation":"Block the frontal wave or step to the side before it lands; keep Ulguna faced away from the group when possible."},
+    {"entry_name":"Levitation / Stifle — Ulguna Soul-Reaver","mitigation":"Destroy all four Feast orbs before they reach Ulguna. Clearing them releases the trapped player and prevents the boss from healing."},
+    {"entry_name":"Slam — Grothdarr","mitigation":"Block the heavy slam to prevent the knockdown, and keep Grothdarr faced away from non-tanks."},
+    {"entry_name":"Lava Trails — Grothdarr","mitigation":"Stay out of the moving lava trails. Following behind a trail rather than crossing its leading edge can preserve safer space."},
+    {"entry_name":"Breath — Iskra the Omen","mitigation":"Sidestep the targeted flame line and do not stand in the lingering fire it leaves behind."},
+    {"entry_name":"Jump / Slam — Iskra the Omen","mitigation":"Move or dodge out of the large impact area, then return close enough to keep Iskra from stretching the fight across the room."},
+    {"entry_name":"Leap — Iskra the Omen","mitigation":"Stay reasonably close to the group; Iskra targets the furthest player with the leap, so excessive range creates unnecessary movement and splash pressure."},
+    {"entry_name":"Undead Minions — Mad Architect","mitigation":"Pull the summoned undead into the group and kill them quickly so add pressure does not overlap later arena mechanics."},
+    {"entry_name":"Runes — Mad Architect","mitigation":"Move out of the dark ground runes; they damage and snare players even though they lack the usual red telegraph."},
+    {"entry_name":"Undead Legion — Mad Architect","mitigation":"Move out of the central spirit-filled area until the effect ends, then return to the boss."},
+    {"entry_name":"Obliterate — Mad Architect","mitigation":"Stay inside the protective dome. Players outside it when the room-breaking blast resolves take extreme damage."}
+  ]
+}
