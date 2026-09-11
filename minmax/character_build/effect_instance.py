@@ -72,13 +72,6 @@ class EffectVariant:
     exclusivity_group: str | None = None
     """Named group this effect competes with (mirrors Major/Minor exclusivity)."""
 
-    source_persistence: EffectSourcePersistence | None = None
-    """
-    Whether an already-activated effect remains valid after its source becomes
-    inactive. None means the persistence semantics have not been canonically
-    classified and runtime systems that need that proof must fail closed.
-    """
-
     eligible: bool = True
     """
     Whether this instance's own condition and any REQUIRES relationships
@@ -93,6 +86,13 @@ class EffectVariant:
     callers that want to know *why* something isn't contributing, rather
     than only that it silently isn't there. See
     `effect_relationship.apply_relationships`.
+    """
+
+    source_persistence: EffectSourcePersistence | None = None
+    """
+    Whether an already-activated effect remains valid after its source becomes
+    inactive. None means the persistence semantics have not been canonically
+    classified and runtime systems that need that proof must fail closed.
     """
 
     def __post_init__(self) -> None:
