@@ -1,4 +1,5 @@
 from services.extreme_resource_runtime_skill_witness_catalog_service import (
+    ExtremeResourceRuntimeSkillWitness,
     ExtremeResourceRuntimeSkillWitnessCatalogService,
 )
 from services.extreme_skill_universe_service import (
@@ -75,9 +76,9 @@ def test_catalog_resolves_armor_pet_and_transformation_witness_families():
 
     assert catalog.denominator_proven is True
     assert catalog.active_skills_reviewed == 3
-    assert [row.name for row in catalog.armor_abilities] == ["Harness Magicka"]
-    assert [row.name for row in catalog.pet_abilities] == ["Summon Twilight Matriarch"]
-    assert [row.name for row in catalog.transformation_ultimates] == ["Werewolf Transformation"]
+    assert [row.canonical_id for row in catalog.armor_abilities] == ["harness_magicka"]
+    assert [row.canonical_id for row in catalog.pet_abilities] == ["summon_twilight_matriarch"]
+    assert [row.canonical_id for row in catalog.transformation_ultimates] == ["werewolf_transformation"]
     assert catalog.unresolved == ()
 
 
@@ -85,12 +86,7 @@ def test_pet_witness_accepts_persistent_companion_grammar_without_literal_summon
     service = ExtremeResourceRuntimeSkillWitnessCatalogService(
         skill_universe_service=_Skills(
             (
-                _row(
-                    skill_id=1,
-                    name="Annulment",
-                    line="Light Armor",
-                    domain=ExtremeSkillDomain.ARMOR,
-                ),
+                _row(skill_id=1, name="Annulment", line="Light Armor", domain=ExtremeSkillDomain.ARMOR),
                 _row(
                     skill_id=2,
                     name="Summon Unstable Familiar",
@@ -124,9 +120,9 @@ def test_pet_witness_accepts_persistent_companion_grammar_without_literal_summon
 
     catalog = service.build()
 
-    assert [row.name for row in catalog.pet_abilities] == [
-        "Feral Guardian",
-        "Summon Unstable Familiar",
+    assert [row.canonical_id for row in catalog.pet_abilities] == [
+        "feral_guardian",
+        "summon_unstable_familiar",
     ]
     assert catalog.denominator_proven is True
 
@@ -135,12 +131,7 @@ def test_pet_witness_requires_a_summoned_creature_not_environmental_construct():
     service = ExtremeResourceRuntimeSkillWitnessCatalogService(
         skill_universe_service=_Skills(
             (
-                _row(
-                    skill_id=1,
-                    name="Harness Magicka",
-                    line="Light Armor",
-                    domain=ExtremeSkillDomain.ARMOR,
-                ),
+                _row(skill_id=1, name="Harness Magicka", line="Light Armor", domain=ExtremeSkillDomain.ARMOR),
                 _row(
                     skill_id=2,
                     name="Grave Grasp",
@@ -165,16 +156,11 @@ def test_pet_witness_requires_a_summoned_creature_not_environmental_construct():
     assert any("pet_active" in item for item in catalog.unresolved)
 
 
-def test_sparse_canonical_transformation_row_uses_fallback_identity():
+def test_sparse_canonical_transformation_row_keeps_semantic_identity():
     service = ExtremeResourceRuntimeSkillWitnessCatalogService(
         skill_universe_service=_Skills(
             (
-                _row(
-                    skill_id=1,
-                    name="Annulment",
-                    line="Light Armor",
-                    domain=ExtremeSkillDomain.ARMOR,
-                ),
+                _row(skill_id=1, name="Annulment", line="Light Armor", domain=ExtremeSkillDomain.ARMOR),
                 _row(
                     skill_id=2,
                     name="Summon Familiar",
@@ -197,20 +183,42 @@ def test_sparse_canonical_transformation_row_uses_fallback_identity():
     catalog = service.build()
 
     assert catalog.denominator_proven is True
-    assert [row.name for row in catalog.transformation_ultimates] == ["Werewolf Transformation"]
-    assert catalog.transformation_ultimates[0].ability_id == 30
+    witness = catalog.transformation_ultimates[0]
+    assert witness.canonical_id == "werewolf_transformation"
+    assert witness.canonical_skill_line_id == "werewolf"
+
+
+def test_numeric_alias_changes_do_not_change_canonical_witness_identity():
+    left = ExtremeResourceRuntimeSkillWitness(
+        condition="pet_active",
+        skill_id=100,
+        base_ability_id=200,
+        ability_id=300,
+        name="Summon Unstable Familiar",
+        skill_line="Daedric Summoning",
+        skill_type="Active",
+        description="reviewed",
+    )
+    right = ExtremeResourceRuntimeSkillWitness(
+        condition="pet_active",
+        skill_id=101,
+        base_ability_id=201,
+        ability_id=999999,
+        name="Summon Unstable Familiar",
+        skill_line="Daedric Summoning",
+        skill_type="Active",
+        description="same semantic skill, different observed ids",
+    )
+
+    assert left.identity == right.identity
+    assert left.identity == ("pet_active", "summon_unstable_familiar", "daedric_summoning")
 
 
 def test_transformation_witness_rejects_unreviewed_nonultimate_world_skill():
     service = ExtremeResourceRuntimeSkillWitnessCatalogService(
         skill_universe_service=_Skills(
             (
-                _row(
-                    skill_id=1,
-                    name="Harness Magicka",
-                    line="Light Armor",
-                    domain=ExtremeSkillDomain.ARMOR,
-                ),
+                _row(skill_id=1, name="Harness Magicka", line="Light Armor", domain=ExtremeSkillDomain.ARMOR),
                 _row(
                     skill_id=2,
                     name="Summon Familiar",
