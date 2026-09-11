@@ -73,7 +73,7 @@ def _service(
         build=SimpleNamespace(FrontBarSkills=front, BackBarSkills=back),
         tooltip_service=_TooltipService(by_name or {}, by_rank or {}),
         role="dd",
-        content_type="organized_endgame_pve",
+        content_type="trial",
         reliable_group_healing=reliable_group_healing,
         exception_contexts=exception_contexts,
     )
@@ -248,7 +248,7 @@ def test_saved_slot_classification_is_cached_across_candidate_family() -> None:
         ),
         tooltip_service=tooltip,
         role="dd",
-        content_type="organized_endgame_pve",
+        content_type="trial",
         reliable_group_healing=True,
     )
 
