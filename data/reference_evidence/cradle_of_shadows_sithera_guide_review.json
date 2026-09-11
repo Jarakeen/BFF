@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "cradle_of_shadows",
+  "encounter_id": "sithera",
+  "encounter_name": "Sithera",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"light_one","value":{"order":1,"label":"Outer Light","threshold":"100% to about 50%","description":"Keep Sithera and spider adds inside the active light so the boss takes normal damage."},"source_type":"guide","source_name":"Xynode Cradle of Shadows Guide","source_locator":"Sithera","game_update":"U11","confidence":"high"},
+    {"fact_type":"phase","fact_key":"light_two","value":{"order":2,"label":"Middle Brazier","threshold":"about 50%","description":"Relight the middle brazier and move Sithera into the new safe light."},"source_type":"guide","source_name":"Xynode Cradle of Shadows Guide","source_locator":"Sithera","game_update":"U11","confidence":"high"},
+    {"fact_type":"phase","fact_key":"light_three","value":{"order":3,"label":"Final Brazier","threshold":"about 30%","description":"Relight the final brazier and finish the fight inside its light."},"source_type":"guide","source_name":"Xynode Cradle of Shadows Guide","source_locator":"Sithera","game_update":"U11","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"power_up","value":{"name":"Power Up Channel","response":"interrupt_sithera_immediately_when_she_channels"},"source_type":"guide","source_name":"Xynode Cradle of Shadows Guide","source_locator":"Sithera","game_update":"U11","confidence":"high"}
+  ]
+}
