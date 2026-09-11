@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "darkshade_caverns_ii",
+  "encounter_id": "transmuted_hive_lord",
+  "encounter_name": "Transmuted Hive Lord",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Hive Lord Main Phase","threshold":"100% to 0%","description":"Handle Cave In by burning the temporary shield while surviving room-wide damage and avoiding overlapping melee pressure."},"source_type":"boss_record","source_name":"BFF UESP boss import","source_locator":"Transmuted Hive Lord abilities","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"cave_in","value":{"name":"Cave In","response":"burn_the_hive_lords_damage_shield_to_end_the_roomwide_smash_sequence"},"source_type":"boss_record","source_name":"BFF UESP boss import","source_locator":"Transmuted Hive Lord Cave In","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"quaking_smash","value":{"name":"Quaking Smash","response":"non_tanks_keep_clear_of_the_boss_center_and_tank_blocks_close_range_pressure"},"source_type":"boss_record","source_name":"BFF UESP boss import","source_locator":"Transmuted Hive Lord Quaking Smash","game_update":"Launch","confidence":"high"}
+  ]
+}
