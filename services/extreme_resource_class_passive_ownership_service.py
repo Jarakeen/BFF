@@ -52,14 +52,20 @@ class ExtremeResourceClassPassiveOwnership:
 
 
 _REVIEWED_TOOLTIP_IRRELEVANT: tuple[tuple[str, str, str], ...] = (
+    ("Aedric Spear", "Burning Light", "damage proc only"),
     ("Aedric Spear", "Spear Wall", "Minor Berserk and Minor Protection only"),
     ("Animal Companions", "Bond with Nature", "flat self-heal when an Animal Companions skill ends only"),
     ("Animal Companions", "Savage Beast", "Ultimate generation after casting an Animal Companions ability only"),
+    ("Ardent Flame", "Combustion", "current Magicka/Stamina restoration when Burning or Poisoned is applied only"),
     ("Ardent Flame", "Fan the Flames", "Burning application chance and Burning damage only"),
     ("Ardent Flame", "Traumatic Burns", "enemy Flame Damage Taken and movement-speed modification only"),
+    ("Assassination", "Executioner", "current Magicka/Stamina restoration after a recently damaged enemy dies only"),
+    ("Assassination", "Master Assassin", "conditional Critical Chance rating only"),
+    ("Assassination", "Pressure Points", "Critical Chance rating per slotted Nightblade ability only"),
+    ("Bone Tyrant", "Death Gleaning", "current Magicka/Stamina restoration when a nearby combat enemy dies only"),
+    ("Bone Tyrant", "Disdain Harm", "damage-over-time mitigation only"),
     ("Curative Runeforms", "Erudition", "Magicka and Stamina Recovery only"),
     ("Curative Runeforms", "Intricate Runeforms", "Curative Runeforms ability cost reduction and damage-shield strength only"),
-    ("Assassination", "Master Assassin", "conditional Critical Chance rating only"),
     ("Shadow", "Refreshing Shadows", "Health, Magicka, and Stamina Recovery only"),
     ("Shadow", "Dark Veil", "Shadow ability duration only"),
     ("Soldier of Apocrypha", "Circumvented Fate", "Minor Evasion / area-damage mitigation only"),
