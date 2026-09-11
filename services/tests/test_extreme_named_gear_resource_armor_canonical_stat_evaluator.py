@@ -15,6 +15,9 @@ from services.extreme_armor_resource_weight_trait_glyph_state_service import (
 from services.extreme_named_gear_resource_armor_canonical_stat_evaluator import (
     ExtremeNamedGearResourceArmorCanonicalStatEvaluator,
 )
+from services.extreme_resource_active_bar_state_service import (
+    ExtremeResourceActiveBarState,
+)
 
 
 class _ProgressionService:
@@ -31,6 +34,52 @@ class _ResourceArmorProgressionService:
             owned_skill_lines=tuple(dict.fromkeys((*progression.owned_skill_lines, "Heavy Armor"))),
             passive_ranks=ranks,
         )
+
+
+class _ActiveBarProgressionService:
+    def normalize(self, progression, route):
+        ranks = dict(progression.passive_ranks or {})
+        ranks["Magicka Controller"] = 2
+        return replace(
+            progression,
+            owned_skill_lines=tuple(dict.fromkeys((*progression.owned_skill_lines, "Mages Guild"))),
+            passive_ranks=ranks,
+        )
+
+
+class _ActiveBarStateService:
+    state = ExtremeResourceActiveBarState(
+        objective_key="max_magicka",
+        skills=(
+            "Siphoning Skill",
+            "Mages 1",
+            "Mages 2",
+            "Mages 3",
+            "Mages 4",
+            "Mages Ultimate",
+        ),
+        siphoning_slots=1,
+        mages_guild_slots=5,
+        reviewed_percent_bonus=0.16,
+    )
+
+    def build(self, objective_key, route):
+        assert objective_key == "max_magicka"
+        return SimpleNamespace(
+            states=(self.state,),
+            denominator_proven=True,
+            active_skills_reviewed=42,
+            unresolved=(),
+        )
+
+    @staticmethod
+    def materialize(build, state, *, active_bar):
+        result = PlayerBuild.from_dict(build.to_dict())
+        if active_bar == "back":
+            result.BackBarSkills = list(state.skills)
+        else:
+            result.FrontBarSkills = list(state.skills)
+        return result
 
 
 class _RacialProgressionService:
@@ -193,6 +242,31 @@ def test_resource_evaluator_applies_juggernaut_progression_to_canonical_context(
     assert context_factory.last_progression.passive_rank("Juggernaut") == 2
     assert payload["juggernaut_rank"] == 2
     assert payload["juggernaut_progression_applied"] is True
+
+
+def test_resource_evaluator_materializes_reviewed_bar_and_progression_into_same_context():
+    named = _NamedGearEvaluator()
+    context_factory = _ContextFactory()
+    evaluator = ExtremeNamedGearResourceArmorCanonicalStatEvaluator(
+        evaluator=named,
+        armor_state=_state("max_magicka"),
+        active_bar_progression_service=_ActiveBarProgressionService(),
+        active_bar_state_service=_ActiveBarStateService(),
+        context_factory=context_factory,
+    )
+
+    value, payload, unresolved = evaluator.evaluate_candidate("max_magicka", _candidate())
+
+    assert value == 4321.0
+    assert unresolved == ()
+    assert tuple(context_factory.last_build.FrontBarSkills) == _ActiveBarStateService.state.skills
+    assert context_factory.last_progression.owns_skill_line("Mages Guild") is True
+    assert context_factory.last_progression.passive_rank("Magicka Controller") == 2
+    assert payload["resource_active_bar_siphoning_slots"] == 1
+    assert payload["resource_active_bar_mages_guild_slots"] == 5
+    assert payload["resource_active_bar_reviewed_percent_bonus"] == 0.16
+    assert payload["resource_active_bar_denominator_proven"] is True
+    assert payload["magicka_controller_progression_applied"] is True
 
 
 def test_objective_mismatch_fails_closed():
