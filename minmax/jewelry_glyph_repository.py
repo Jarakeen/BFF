@@ -49,6 +49,28 @@ class JewelryGlyphEffectRepository:
             ).fetchall()
         return tuple(str(row[0]) for row in rows)
 
+    def get_jewelry_glyph_descriptions_by_name(self, glyph_name: str) -> tuple[str, ...]:
+        """Return stored canonical descriptions for one named jewelry glyph.
+
+        Descriptions are source evidence, not mechanic identity. They are exposed
+        so proof/audit layers can conservatively classify a legacy corpus row whose
+        semantic effect table is sparse without mutating the database or inventing
+        an engine stat mapping.
+        """
+        with sqlite3.connect(self.database_path) as connection:
+            rows = connection.execute(
+                """
+                SELECT DISTINCT enchant_description
+                FROM jewelry_glyph
+                WHERE LOWER(TRIM(name)) = LOWER(TRIM(?))
+                  AND enchant_description IS NOT NULL
+                  AND TRIM(enchant_description) <> ''
+                ORDER BY enchant_description
+                """,
+                (glyph_name,),
+            ).fetchall()
+        return tuple(str(row[0]).strip() for row in rows if str(row[0] or "").strip())
+
     def get_jewelry_glyph_effect(
         self,
         item_id: int,
