@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {"entry_name":"Tornadoes — Ra Kotu","mitigation":"Stay out of the tornado paths and keep Ra Kotu faced away from the group."},
+    {"entry_name":"Heavy Cleave — Ra Kotu","mitigation":"Main tank blocks and keeps the frontal cleave pointed away from the raid."},
+    {"entry_name":"Split — Yokeda Kai and Yokeda Rok'dun","mitigation":"Assign one player to each Kai copy, identify the real boss, and interrupt every flame channel immediately."},
+    {"entry_name":"Welwa Adds — Yokeda Kai and Yokeda Rok'dun","mitigation":"Keep the welwas controlled on the tank; kill enraged or excess welwas before they overwhelm the tank."},
+    {"entry_name":"Side Wipe Enrage — Yokeda Kai and Yokeda Rok'dun","mitigation":"Both split groups must stay alive. A wipe on one side can enrage the boss on the surviving side."},
+    {"entry_name":"Shehai Storm — The Warrior","mitigation":"Spread enough to read the projectiles, dodge their paths, and keep the boss controlled in one direction."},
+    {"entry_name":"Stone Form — The Warrior","mitigation":"In Hard Mode, free Stone Formed players immediately with Destructive Outbreak."}
+  ]
+}
