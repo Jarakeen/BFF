@@ -81,20 +81,20 @@ def test_audit_scope_flags_are_mutually_distinct():
     assert all_args.all_content is True
 
 
-def test_checked_in_dungeon_scope_is_newest_first_through_early_veteran_updates():
+def test_checked_in_dungeon_scope_is_newest_first_through_launch_veteran_slice():
     data_root = Path(__file__).resolve().parents[2] / "data"
     rows = build_coverage_rows(data_root, scope="dungeon")
 
-    assert len(rows) == 143
+    assert len(rows) == 161
     assert {(row.release_year, row.release_update) for row in rows} == {
         (2025, 47), (2025, 45), (2024, 41), (2023, 37),
         (2022, 35), (2022, 33), (2021, 31), (2021, 29),
         (2020, 27), (2020, 25), (2019, 23), (2019, 21),
         (2018, 19), (2018, 17), (2017, 15), (2016, 11), (2015, 7),
-        (2014, 5), (2014, 2),
+        (2014, 5), (2014, 2), (2014, 0),
     }
     assert (rows[0].release_year, rows[0].release_update) == (2025, 47)
-    assert (rows[-1].release_year, rows[-1].release_update) == (2014, 2)
+    assert (rows[-1].release_year, rows[-1].release_update) == (2014, 0)
 
     assert {row.content_name for row in rows} == {
         "Black Gem Foundry", "Naj-Caldeesh", "Exiled Redoubt", "Lep Seclusa",
@@ -106,6 +106,8 @@ def test_checked_in_dungeon_scope_is_newest_first_through_early_veteran_updates(
         "Moon Hunter Keep", "March of Sacrifices", "Fang Lair", "Scalecaller Peak",
         "Bloodroot Forge", "Falkreath Hold", "Cradle of Shadows", "Ruins of Mazzatun",
         "Imperial City Prison", "White-Gold Tower", "City of Ash II", "Crypt of Hearts II",
+        "Fungal Grotto II", "Spindleclutch II", "The Banished Cells II",
+        "Darkshade Caverns II", "Elden Hollow II", "Wayrest Sewers II",
     }
 
     assert {row.encounter_id for row in rows} == {
@@ -145,4 +147,10 @@ def test_checked_in_dungeon_scope_is_newest_first_through_early_veteran_updates(
         "the_adjudicator", "elite_guard", "the_planar_inhibitor", "molag_kena",
         "horvantud_the_fire_maw", "ash_titan_city_of_ash_ii", "valkyn_skoria_person",
         "ruzozuzalpamaz", "ilambris_amalgam", "nerien_eth",
+        "gamyne_bandu", "spawn_of_mephala", "vila_theran",
+        "bloodspawn_creature", "praxin_douare", "vorenor_winterbourne",
+        "maw_of_the_infernal", "keeper_imiril", "high_kinlord_rilis_banished_cells_ii",
+        "transmuted_hive_lord", "grobull_the_transmuted", "the_engine_guardian",
+        "dark_root", "murklight", "bogdan_the_nightflame",
+        "malubeth_the_scourger", "garron_the_returned", "allene_pellingare",
     }
