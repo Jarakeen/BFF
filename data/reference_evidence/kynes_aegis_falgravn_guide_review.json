@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "content_id": "kynes_aegis",
+  "encounter_id": "lord_falgravn",
+  "encounter_name": "Lord Falgravn",
+  "evidence": [
+    {
+      "fact_type": "phase",
+      "fact_key": "stage_1",
+      "value": {"order": 1, "label": "Upper Deck / Njordal", "threshold": "100-70%", "description": "Lieutenant Njordal is active while Falgravn uses Instability and Proximity Lightning; HM resurrection sends the reviver downstairs."},
+      "source_type": "guide",
+      "source_name": "AlcastHQ Kyne's Aegis Trial Guide",
+      "source_locator": "Lord Falgravn Stage 1",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "transition",
+      "fact_key": "proximity_lightning_thresholds",
+      "value": {"thresholds": ["90%", "80%"], "label": "Proximity Lightning", "description": "Players chain lightning to the walls in four directions."},
+      "source_type": "guide",
+      "source_name": "AlcastHQ Kyne's Aegis Trial Guide",
+      "source_locator": "Lord Falgravn Proximity Lightning",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "phase",
+      "fact_key": "stage_2",
+      "value": {"order": 2, "label": "Middle Deck / Coagulants", "threshold": "70-35%", "description": "The floor collapses; three vampire knights spawn, followed by repeating Ichor Eruption/coagulant handling."},
+      "source_type": "guide",
+      "source_name": "AlcastHQ Kyne's Aegis Trial Guide",
+      "source_locator": "Lord Falgravn Stage 2",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "sanguine_prison",
+      "value": {"name": "Sanguine Prison", "failure_seconds": 8, "failure_result": "target_dies"},
+      "source_type": "guide",
+      "source_name": "AlcastHQ Kyne's Aegis Trial Guide",
+      "source_locator": "Lord Falgravn Sanguine Prison",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "ichor_eruption",
+      "value": {"name": "Ichor Eruption", "detonation_seconds": 30, "damage_scales_with_coagulants_reaching_center": true, "movement_damages_nearby_group": true},
+      "source_type": "guide",
+      "source_name": "AlcastHQ Kyne's Aegis Trial Guide",
+      "source_locator": "Lord Falgravn Ichor Eruption",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "phase",
+      "fact_key": "stage_3",
+      "value": {"order": 3, "label": "Cellar Execute", "threshold": "35%", "description": "The second floor collapses; Falgravn heals to about 40%, torturer/prisoner mechanics begin on roughly a 50-second timer, and execute pressure ramps."},
+      "source_type": "guide",
+      "source_name": "AlcastHQ Kyne's Aegis Trial Guide",
+      "source_locator": "Lord Falgravn Stage 3",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "torturer_prisoner_cycle",
+      "value": {"name": "Torturer / Prisoner Cycle", "cadence_seconds_approx": 50, "hardmode_assigned_dds": 4, "veteran_assigned_dds": 2},
+      "source_type": "guide",
+      "source_name": "AlcastHQ Kyne's Aegis Trial Guide",
+      "source_locator": "Lord Falgravn execute prisoners",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "grievous_pulse_damage_reduction",
+      "value": {"boss_takes_reduced_damage_during_grievous_pulse": true},
+      "source_type": "official_patch_notes",
+      "source_name": "PC/Mac Patch Notes v6.0.6",
+      "source_locator": "Kyne's Aegis > Lord Falgravn",
+      "confidence": "high"
+    }
+  ]
+}
