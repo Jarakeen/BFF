@@ -1,18 +1,19 @@
 from __future__ import annotations
 
-"""Canonical scoring with one named gear witness and one full resource armor state.
+"""Canonical scoring with named gear, resource armor, and reviewed jewelry state.
 
 This layer composes a proven named-set realization with one proof-reduced
 Light/Medium/Heavy + Divines/Infused + armor-glyph state for max
-Health/Magicka/Stamina. It owns no stat arithmetic: the completed ``PlayerBuild``
-is re-scored through the existing ``ExtremeOptimizationService`` so armor weight,
-glyph slot scaling, Infused, Divines/Mundus, set effects, food, potions, class/race
-state, and reviewed passive progression meet in one canonical context.
+Health/Magicka/Stamina and, when supplied, one reviewed static resource-jewelry
+trait state. It owns no stat arithmetic: the completed ``PlayerBuild`` is re-scored
+through the existing ``ExtremeOptimizationService`` so armor, jewelry, Mundus,
+set effects, food, potions, class/race state, and reviewed passive progression meet
+in one canonical context.
 
 For the max-resource path, reviewed max-rank Undaunted Mettle progression is
 applied through ``ExtremeHypotheticalUndauntedProgressionService`` when a canonical
-database path is available. The +2/+4/+6% resource effect remains owned entirely by
-the shared ``UndauntedPassiveInputResolver``.
+database path is available. Resource and jewelry trait math remain owned by the
+shared canonical resolver/repositories.
 """
 
 from typing import Any
@@ -28,6 +29,10 @@ from services.extreme_armor_resource_weight_trait_glyph_state_service import (
 from services.extreme_hypothetical_undaunted_progression_service import (
     ExtremeHypotheticalUndauntedProgressionService,
 )
+from services.extreme_jewelry_resource_static_trait_state_service import (
+    ExtremeJewelryResourceStaticTraitState,
+    ExtremeJewelryResourceStaticTraitStateService,
+)
 from services.extreme_named_gear_canonical_stat_evaluator import (
     ExtremeNamedGearCanonicalStatEvaluator,
 )
@@ -35,19 +40,27 @@ from services.extreme_structural_global_search_service import ExtremeStructuralC
 
 
 class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
-    """Add one combined resource armor state plus reviewed Mettle progression."""
+    """Add combined resource armor, reviewed jewelry, and Mettle progression."""
 
     def __init__(
         self,
         *,
         evaluator: ExtremeNamedGearCanonicalStatEvaluator,
         armor_state: ExtremeArmorResourceWeightTraitGlyphState,
+        jewelry_state: ExtremeJewelryResourceStaticTraitState | None = None,
         undaunted_progression_service: ExtremeHypotheticalUndauntedProgressionService | None = None,
     ) -> None:
         self.evaluator = evaluator
         self.armor_state = armor_state
+        self.jewelry_state = jewelry_state
         self.optimizer = evaluator.optimizer
         self.class_progression_service = evaluator.progression_service
+
+        if jewelry_state is not None and jewelry_state.objective_key != armor_state.objective_key:
+            raise ValueError(
+                "Extreme jewelry/armor objective mismatch: "
+                f"jewelry={jewelry_state.objective_key!r}, armor={armor_state.objective_key!r}"
+            )
 
         if undaunted_progression_service is None:
             database_path = getattr(self.optimizer, "database_path", None)
@@ -77,6 +90,11 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
                 "Extreme resource armor state objective mismatch: "
                 f"state={self.armor_state.objective_key!r}, requested={key!r}"
             )
+        if self.jewelry_state is not None and key != self.jewelry_state.objective_key:
+            raise ValueError(
+                "Extreme resource jewelry state objective mismatch: "
+                f"state={self.jewelry_state.objective_key!r}, requested={key!r}"
+            )
 
         _, payload, base_unresolved = self.evaluator.evaluate_candidate(
             key,
@@ -91,6 +109,11 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
             build,
             self.armor_state,
         )
+        if self.jewelry_state is not None:
+            build = ExtremeJewelryResourceStaticTraitStateService.materialize(
+                build,
+                self.jewelry_state,
+            )
 
         progression = CharacterProgression(
             attributes=candidate.attributes,
@@ -107,14 +130,15 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
         )
         objective = self.optimizer.objective(key)
         armor_identity = repr(self.armor_state.identity)
+        jewelry_identity = repr(self.jewelry_state.identity) if self.jewelry_state is not None else "none"
         build_id = (
-            f"extreme-named-gear-resource-armor:{candidate.identity}:"
-            f"{armor_identity}:{mundus}:{food}:{potion}"
+            f"extreme-named-gear-resource-armor-jewelry:{candidate.identity}:"
+            f"{armor_identity}:{jewelry_identity}:{mundus}:{food}:{potion}"
         )
 
         if normalized_buffs:
             context = self.optimizer.context_factory.build(
-                character_id="extreme-named-gear-resource-armor",
+                character_id="extreme-named-gear-resource-armor-jewelry",
                 build_id=build_id,
                 build=build,
                 progression=progression,
@@ -125,12 +149,12 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
                 ),
             )
             value = self.optimizer._objective_value(context, objective)
-            armor_unresolved = tuple(context.unresolved_gear_effects)
+            gear_unresolved = tuple(context.unresolved_gear_effects)
         else:
-            value, armor_unresolved = self.optimizer._evaluate(
+            value, gear_unresolved = self.optimizer._evaluate(
                 build,
                 progression=progression,
-                character_id="extreme-named-gear-resource-armor",
+                character_id="extreme-named-gear-resource-armor-jewelry",
                 build_id=build_id,
                 objective=objective,
                 active_bar=candidate.active_bar,
@@ -146,6 +170,9 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
             self.armor_state.trait_glyph_state.direct_glyph_delta
         )
         output["armor_weights"] = self.armor_state.weight_state.identity
+        if self.jewelry_state is not None:
+            output["jewelry_resource_static_trait_state"] = self.jewelry_state.identity
+            output["jewelry_reviewed_static_trait_delta"] = self.jewelry_state.direct_delta
         output["undaunted_mettle_rank"] = progression.passive_rank("Undaunted Mettle")
         output["undaunted_mettle_progression_applied"] = bool(
             progression.owns_skill_line("Undaunted")
@@ -155,7 +182,7 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
         unresolved = tuple(
             dict.fromkeys(
                 str(item)
-                for item in (*base_unresolved, *armor_unresolved)
+                for item in (*base_unresolved, *gear_unresolved)
                 if str(item)
             )
         )
