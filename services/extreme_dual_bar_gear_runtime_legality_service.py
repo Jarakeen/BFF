@@ -3,11 +3,13 @@ from __future__ import annotations
 """Gate gear-proc runtime attempts by proven bar-local set activation.
 
 A legal two-bar build can carry set bonuses that exist only on one weapon bar.
-Proc attempts therefore need two separate proofs:
+Proc attempts therefore need separate proofs:
 
 * the required set breakpoint was active on the bar where the trigger occurred;
-* once legally triggered, the ordinary shared runtime window/cooldown machinery
-  decides whether the effect is still active at the requested snapshot.
+* the canonical effect explicitly defines what happens if that source becomes
+  inactive after activation;
+* the ordinary shared runtime window/cooldown machinery decides whether the
+  effect is still inside its timed window at the requested snapshot.
 
 This service owns no set-count math and no proc math. Bar-local breakpoint truth
 comes from ``ExtremeDualBarSetActivationEvidenceCatalog`` and runtime transitions
@@ -19,6 +21,7 @@ from dataclasses import dataclass
 import re
 
 from minmax.character_build.effect_layer import EffectLayer
+from minmax.effect_source_persistence import EffectSourcePersistence
 from minmax.gear_set_effect_variant_resolver import GearSetEffectVariantResolver
 from minmax.named_combat_buffs import canonical_buff_name, effects_for_buff
 from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
@@ -86,8 +89,13 @@ class ExtremeDualBarGearRuntimeLegalityService:
         *,
         attempts: tuple[ExtremeRuntimeBarEffectAttempt, ...],
         snapshot_time_seconds: float,
+        snapshot_active_bar: str | None = None,
     ) -> ExtremeDualBarGearRuntimeLegalityResult:
         snapshot = float(snapshot_time_seconds)
+        snapshot_bar = str(snapshot_active_bar or "").strip().casefold() or None
+        if snapshot_bar not in {None, "front", "back"}:
+            raise ValueError(f"unsupported Extreme gear snapshot bar: {snapshot_active_bar!r}")
+
         unresolved: list[str] = list(activation.unresolved)
         active: list[str] = []
         rejected = 0
@@ -125,6 +133,13 @@ class ExtremeDualBarGearRuntimeLegalityService:
                     )
                     continue
 
+                persistence = effect.source_persistence
+                if persistence is None:
+                    unresolved.append(
+                        f"{set_evidence.set_name} {buff} proc persistence after source deactivation is unclassified"
+                    )
+                    continue
+
                 relevant: list[RuntimeEffectEventAttempt] = []
                 for row in ordered_attempts:
                     if row.attempt.event.time_seconds > snapshot + 1e-12:
@@ -149,8 +164,31 @@ class ExtremeDualBarGearRuntimeLegalityService:
                     stream.final_state.windows,
                     at_time_seconds=snapshot,
                 )
-                if any(window.effect_name == effect.name for window in partition.active):
+                if not any(window.effect_name == effect.name for window in partition.active):
+                    continue
+
+                if persistence is EffectSourcePersistence.PERSISTS_AFTER_ACTIVATION:
                     active.append(buff)
+                    continue
+
+                if persistence is EffectSourcePersistence.REQUIRES_SOURCE_ACTIVE_AT_SNAPSHOT:
+                    if snapshot_bar is None:
+                        unresolved.append(
+                            f"{set_evidence.set_name} {buff} requires the source breakpoint active at the snapshot, but snapshot bar provenance is missing"
+                        )
+                    elif required in self._breakpoints_for_bar(set_evidence, snapshot_bar):
+                        active.append(buff)
+                    continue
+
+                if persistence is EffectSourcePersistence.ENDS_WHEN_SOURCE_INACTIVE:
+                    unresolved.append(
+                        f"{set_evidence.set_name} {buff} ends when its source becomes inactive; continuous bar-transition evidence is required"
+                    )
+                    continue
+
+                unresolved.append(
+                    f"{set_evidence.set_name} {buff} has unsupported source persistence: {persistence!r}"
+                )
 
         return ExtremeDualBarGearRuntimeLegalityResult(
             active_buffs=tuple(dict.fromkeys(active)),
