@@ -3,9 +3,9 @@ from __future__ import annotations
 """Choose the best proven named gear witness beneath the finite consumable axes.
 
 For one structural candidate this layer evaluates every objective-surviving named
-gear realization.  Each gear witness is materialized below the existing
+gear realization. Each gear witness is materialized below the existing
 Mundus -> food -> potion search and is scored through the canonical Extreme stat
-pipeline.  No set bonus is added numerically here.
+pipeline. No set bonus is added numerically here.
 
 The objective-aware gear realization result remains the denominator authority.
 If that result is truncated or unresolved, this scorer may still return a useful
@@ -40,6 +40,9 @@ from services.extreme_structural_mundus_food_core_stat_record_service import (
 from services.extreme_structural_mundus_food_potion_core_stat_record_service import (
     ExtremeBestMundusFoodPotionStructuralStatEvaluator,
 )
+from services.extreme_twice_born_mundus_structural_stat_evaluator import (
+    ExtremeTwiceBornMundusStructuralStatEvaluator,
+)
 
 
 class _FiniteAxisScorer(Protocol):
@@ -56,6 +59,8 @@ GearEvaluatorFactory = Callable[[ExtremeNamedGearSetRealization], _FiniteAxisSco
 class ExtremeNamedGearFiniteAxisEvaluatorFactory:
     """Build the established Mundus/food/potion stack around one gear witness."""
 
+    _TWICE_BORN_STAR = "Twice-Born Star"
+
     def __init__(
         self,
         *,
@@ -69,6 +74,16 @@ class ExtremeNamedGearFiniteAxisEvaluatorFactory:
         self.provisioning_repository = provisioning_repository
         self.potion_repository = potion_repository
 
+    @classmethod
+    def _has_active_twice_born_star(
+        cls,
+        realization: ExtremeNamedGearSetRealization,
+    ) -> bool:
+        return any(
+            str(name) == cls._TWICE_BORN_STAR and int(count) >= 5
+            for name, count in zip(realization.set_names, realization.counts)
+        )
+
     def __call__(
         self,
         realization: ExtremeNamedGearSetRealization,
@@ -77,10 +92,16 @@ class ExtremeNamedGearFiniteAxisEvaluatorFactory:
             evaluator=self.canonical_evaluator,
             realization=realization,
         )
-        mundus = ExtremeBestMundusStructuralStatEvaluator(
-            evaluator=gear,
-            mundus_repository=self.mundus_repository,
-        )
+        if self._has_active_twice_born_star(realization):
+            mundus = ExtremeTwiceBornMundusStructuralStatEvaluator(
+                evaluator=gear,
+                mundus_repository=self.mundus_repository,
+            )
+        else:
+            mundus = ExtremeBestMundusStructuralStatEvaluator(
+                evaluator=gear,
+                mundus_repository=self.mundus_repository,
+            )
         food = ExtremeBestMundusFoodStructuralStatEvaluator(
             mundus_evaluator=mundus,
             provisioning_repository=self.provisioning_repository,
