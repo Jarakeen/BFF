@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "content_id": "dreadsail_reef",
+  "encounter_id": "lylanar_turlassil",
+  "encounter_name": "Lylanar and Turlassil",
+  "evidence": [
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "dome_retake_lockout",
+      "value": {
+        "drop_delay_seconds": 3,
+        "veteran_retake_lockout_seconds": 15,
+        "hardmode_retake_lockout_seconds": 20
+      },
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 1 Lylanar and Turlassil",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Dome Mechanics - take, steal and drop domes",
+      "confidence": "high",
+      "notes": "Current guide documents the player-facing dome lockout timing used for raid assignments."
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "dome_hardmode_interrupt_constraint",
+      "value": {
+        "dome_carrier_cannot_bash": true,
+        "recommended_pairing": "one_carrier_one_basher",
+        "ranged_interrupt_alternative": true
+      },
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 1 Lylanar and Turlassil",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Hardmode Interrupts (MultiLoc)",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "brand_hardmode_pairing",
+      "value": {
+        "veteran_firebrand_targets": 1,
+        "veteran_frostbrand_targets": 1,
+        "hardmode_firebrand_targets": 2,
+        "hardmode_frostbrand_targets": 2,
+        "pair_one_fire_with_one_frost": true,
+        "detonate_outside_domes": true,
+        "aim_followup_lines_away_from_group": true
+      },
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 1 Lylanar and Turlassil",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Rune Stacking (Firebrand/Frostbrand) / Crisp Flurry / Pyretic Wake",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "synchronized_kill_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 1 Lylanar and Turlassil",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Execute - Killing the Bosses",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "failure_condition",
+      "fact_key": "synchronized_kill_window",
+      "value": {
+        "veteran_seconds_after_first_death": 15,
+        "hardmode_seconds_after_first_death": 7.5,
+        "failure_result": "group_wipe"
+      },
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 1 Lylanar and Turlassil",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Execute - Killing the Bosses",
+      "confidence": "high"
+    }
+  ]
+}
