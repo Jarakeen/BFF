@@ -6,6 +6,7 @@ from minmax.heavy_attack_restoration import (
     calculate_heavy_attack_restoration,
     create_heavy_attack_restoration_event,
     resource_for_heavy_attack_weapon,
+    verified_heavy_attack_base_restore,
 )
 from minmax.resource_costs import ResourceType
 
@@ -17,6 +18,17 @@ def test_heavy_attack_weapon_resource_mapping_is_explicit() -> None:
     assert resource_for_heavy_attack_weapon(HeavyAttackWeaponType.ONE_HAND_AND_SHIELD) is ResourceType.STAMINA
     assert resource_for_heavy_attack_weapon(HeavyAttackWeaponType.RESTORATION_STAFF) is ResourceType.MAGICKA
     assert resource_for_heavy_attack_weapon(HeavyAttackWeaponType.FIRE_STAFF) is ResourceType.MAGICKA
+
+
+def test_live_verified_staff_heavy_attack_bases_are_explicit() -> None:
+    assert verified_heavy_attack_base_restore(HeavyAttackWeaponType.RESTORATION_STAFF) == 3267.0
+    assert verified_heavy_attack_base_restore(HeavyAttackWeaponType.FROST_STAFF) == 2425.0
+    assert verified_heavy_attack_base_restore(HeavyAttackWeaponType.SHOCK_STAFF) == 2970.0
+
+
+def test_unreviewed_heavy_attack_base_restore_fails_closed() -> None:
+    assert verified_heavy_attack_base_restore(HeavyAttackWeaponType.FIRE_STAFF) is None
+    assert verified_heavy_attack_base_restore(HeavyAttackWeaponType.BOW) is None
 
 
 def test_unverified_heavy_attack_base_restore_is_rejected() -> None:
@@ -58,6 +70,22 @@ def test_cycle_of_life_is_restoration_staff_only() -> None:
             verified_base_restore=3000,
             modifiers=modifiers,
         )
+
+
+def test_verified_resto_base_with_cycle_of_life_matches_reviewed_log_return() -> None:
+    value = calculate_heavy_attack_restoration(
+        weapon=HeavyAttackWeaponType.RESTORATION_STAFF,
+        verified_base_restore=verified_heavy_attack_base_restore(
+            HeavyAttackWeaponType.RESTORATION_STAFF
+        ),
+        modifiers=HeavyAttackRestorationModifiers(
+            restoration_staff_cycle_of_life_percent=0.30,
+        ),
+    )
+
+    # ESO Logs records the accepted integer return as 4247; canonical math keeps
+    # the pre-log-quantization value explicit rather than silently flooring it.
+    assert value == pytest.approx(4247.1)
 
 
 def test_heavy_attack_restore_emits_generic_restoration_event() -> None:
