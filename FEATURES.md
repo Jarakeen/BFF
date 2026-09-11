@@ -140,6 +140,11 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Human-readable gameplay-practice entries sourced from the shared gameplay-policy registry
 - Canonical encounter-mechanic entries sourced through the shared encounter repository / projection
 - Canonical combat-effect entries sourced read-only from `combat_effect`, `combat_effect_trigger`, and `combat_effect_interaction`
+- Canonical gear sets, active skills, passives, and Champion Points are exposed as searchable Reference Data entries
+- Skill and passive entries include their skill line in the display identity so same-name abilities do not silently collide
+- Related boss / encounter names include their parent dungeon or trial when known, including reviewed dungeon identities whose raw boss import is missing
+- Reviewed gear / skill / passive / Champion Point version history can be shown as a **History / Legacy** flavor section with source provenance
+- Reference history is presentation-only trivia and is never consumed by combat math, rotation, optimization, provider resolution, or canonical mechanics runtime
 - Status effects expose duration, tick interval, stack limit, immunity duration, triggers, and effect interactions when present
 - Reviewed research enrichment adds provenance-bearing values from official patch notes and corroborating sources without silently promoting them into combat-math authority
 - Core U41+ status-effect entries now include useful delivery and secondary-effect details for Burning, Chilled, Concussion, Diseased, Hemorrhaging, Overcharged, Poisoned, and Sundered
