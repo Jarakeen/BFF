@@ -10,9 +10,9 @@ transformation witness before a conditional gear bonus may be activated:
 * ``pet_active`` -> an active whose canonical identity/description proves a combat pet;
 * ``transformed`` -> a canonical transformation Ultimate/form witness.
 
-It performs no stat arithmetic and does not choose a winning candidate. Candidate
-legality/materialization remains a separate layer so the global denominator cannot
-silently grant a skill the selected build cannot actually slot.
+Canonical witness identity is semantic lower_snake_case. Numeric ESO identifiers are
+retained only as observational metadata and never participate in identity, ordering,
+or witness selection.
 """
 
 from dataclasses import dataclass
@@ -24,6 +24,11 @@ from services.extreme_skill_universe_service import (
     ExtremeSkillDomain,
     ExtremeSkillUniverseService,
 )
+
+
+def canonical_runtime_skill_id(value: object) -> str:
+    text = str(value or "").strip().casefold().replace("'", "")
+    return re.sub(r"[^a-z0-9]+", "_", text).strip("_")
 
 
 @dataclass(frozen=True)
@@ -38,14 +43,19 @@ class ExtremeResourceRuntimeSkillWitness:
     description: str
 
     @property
+    def canonical_id(self) -> str:
+        return canonical_runtime_skill_id(self.name)
+
+    @property
+    def canonical_skill_line_id(self) -> str:
+        return canonical_runtime_skill_id(self.skill_line)
+
+    @property
     def identity(self) -> tuple[object, ...]:
         return (
             self.condition,
-            self.skill_id,
-            self.base_ability_id,
-            self.ability_id,
-            self.name,
-            self.skill_line,
+            self.canonical_id,
+            self.canonical_skill_line_id,
         )
 
 
@@ -66,16 +76,13 @@ class ExtremeResourceRuntimeSkillWitnessCatalogService:
     PET_ACTIVE = "pet_active"
     TRANSFORMED = "transformed"
 
-    # Reviewed semantic identities from the canonical 216-active denominator.
-    # These are names, not volatile numeric ability ids.  Each creates a combat pet
-    # that can satisfy ESO's "while you have a pet active" condition at a snapshot.
-    _REVIEWED_PET_SKILL_NAMES = frozenset(
+    _REVIEWED_PET_SKILL_IDS = frozenset(
         {
-            "feral guardian",
-            "summon storm atronach",
-            "summon unstable familiar",
-            "summon winged twilight",
-            "summon shade",
+            "feral_guardian",
+            "summon_storm_atronach",
+            "summon_unstable_familiar",
+            "summon_winged_twilight",
+            "summon_shade",
         }
     )
     _PET_CREATURE = r"(?:familiar|clannfear|twilight|(?:storm\s+)?atronach|grizzly|bear|guardian|shade)"
@@ -94,7 +101,7 @@ class ExtremeResourceRuntimeSkillWitnessCatalogService:
         "remain until killed or unsummoned",
         "once summoned",
     )
-    _TRANSFORMATION_LINES = frozenset({"werewolf", "bone tyrant", "vampire"})
+    _TRANSFORMATION_LINES = frozenset({"werewolf", "bone_tyrant", "vampire"})
 
     def __init__(
         self,
@@ -124,16 +131,13 @@ class ExtremeResourceRuntimeSkillWitnessCatalogService:
     def _is_pet_witness(cls, row: ExtremePlayerSkillRecord) -> bool:
         if not cls._concrete(row):
             return False
-        name = " ".join(str(row.name or "").casefold().split())
-        if name in cls._REVIEWED_PET_SKILL_NAMES:
+        canonical_id = canonical_runtime_skill_id(row.name)
+        if canonical_id in cls._REVIEWED_PET_SKILL_IDS:
             return True
 
         text = " ".join(str(row.description or "").casefold().split())
         if not text or cls._PET_COMPANION_RE.search(text) is None:
             return False
-        # Fallback for future canonical rows whose identity has not yet joined the
-        # reviewed name set. Environmental constructs such as Grave Grasp's
-        # patches/claws contain no reviewed creature marker and remain excluded.
         if cls._PET_DIRECT_SUMMON_RE.search(text) is not None:
             return True
         return any(marker in text for marker in cls._PET_PERSISTENCE_MARKERS)
@@ -144,26 +148,22 @@ class ExtremeResourceRuntimeSkillWitnessCatalogService:
             return False
         name = " ".join(str(row.name or "").casefold().split())
         text = " ".join(str(row.description or "").casefold().split())
-        line = " ".join(str(row.skill_line or "").casefold().split())
+        line_id = canonical_runtime_skill_id(row.skill_line)
         has_transform_evidence = bool(
             "transformation" in name
             or "transform into" in text
             or "transform yourself" in text
-            or (line == "werewolf" and "transform" in text)
+            or (line_id == "werewolf" and "transform" in text)
         )
         if not has_transform_evidence:
             return False
-        # Normal rows must identify themselves as Ultimates. Some canonical
-        # transformation rows are sparse in skill_rank/skill_type; for the known
-        # transformation skill lines, explicit transformation identity is enough
-        # to preserve the witness while downstream bar legality still owns slot 5.
-        return cls._is_ultimate(row) or line in cls._TRANSFORMATION_LINES
+        return cls._is_ultimate(row) or line_id in cls._TRANSFORMATION_LINES
 
     @staticmethod
     def _witness(condition: str, row: ExtremePlayerSkillRecord) -> ExtremeResourceRuntimeSkillWitness:
         observational_id = row.max_rank_ability_id or row.base_ability_id or row.skill_id
         if observational_id is None:
-            raise ValueError(f"runtime skill witness lacks any ability identity: {row.name}")
+            raise ValueError(f"runtime skill witness lacks observational source metadata: {row.name}")
         return ExtremeResourceRuntimeSkillWitness(
             condition=condition,
             skill_id=int(row.skill_id),
@@ -181,7 +181,7 @@ class ExtremeResourceRuntimeSkillWitnessCatalogService:
         return tuple(
             sorted(
                 unique.values(),
-                key=lambda row: (row.skill_line.casefold(), row.name.casefold(), row.ability_id),
+                key=lambda row: (row.canonical_skill_line_id, row.canonical_id),
             )
         )
 
@@ -224,6 +224,7 @@ class ExtremeResourceRuntimeSkillWitnessCatalogService:
 
 
 __all__ = [
+    "canonical_runtime_skill_id",
     "ExtremeResourceRuntimeSkillWitness",
     "ExtremeResourceRuntimeSkillWitnessCatalog",
     "ExtremeResourceRuntimeSkillWitnessCatalogService",
