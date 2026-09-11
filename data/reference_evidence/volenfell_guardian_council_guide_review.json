@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "volenfell",
+  "encounter_id": "guardian_council",
+  "encounter_name": "Guardian Council",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Three-Construct Phase","threshold":"100% to 0%","description":"Fight all three Guardian constructs at once; watch the blue construct's lightning, face the yellow construct's frontal away from the group, and kite the red construct during its spin."},"source_type":"guide","source_name":"Xynode Volenfell Guide","source_locator":"Guardian Council","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"spark_barrage","value":{"name":"Spark Barrage","response":"move_out_of_the_incoming_lightning_impact_circles_from_the_blue_construct"},"source_type":"guide","source_name":"Xynode Volenfell Guide","source_locator":"Guardian Council","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"soul_decapitation","value":{"name":"Soul Decapitation","response":"keep_the_yellow_construct_faced_away_and_block_or_dodge_the_heavy_frontal_attack"},"source_type":"guide","source_name":"Xynode Volenfell Guide","source_locator":"Guardian Council","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"strength_whirlwind","value":{"name":"Strength Whirlwind","response":"kite_the_red_construct_away_from_the_group_until_its_spinning_chase_ends"},"source_type":"guide","source_name":"Xynode Volenfell Guide","source_locator":"Guardian Council","game_update":"Launch","confidence":"high"}
+  ]
+}
