@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "content_id": "scrivener_s_hall",
+  "encounter_id": "riftmaster_naqri",
+  "encounter_name": "Riftmaster Naqri",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main Phase / Codex Pressure","threshold":"Pull","description":"Naqri maintains Freezing Codex pressure while the group handles recurring Hidden Codex searches and Unstable Literature soaks."},"source_type":"guide","source_name":"ESO-Hub Scrivener's Hall Dungeon Guide","source_locator":"Boss 1 - Riftmaster Naqri","game_update":"U37+","confidence":"high"},
+    {"fact_type":"phase","fact_key":"hidden_codex_cycles","value":{"order":2,"label":"Hidden Codex Cycles","threshold":"80%, 55%, 35%","description":"A colored central codex repeatedly attacks the group until players follow its projectiles to find and destroy two hidden books in the shelves."},"source_type":"guide","source_name":"ESO-Hub Scrivener's Hall Dungeon Guide","source_locator":"Riftmaster Naqri > Hidden Codex","game_update":"U37+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"hidden_codex","value":{"name":"Hidden Codex","response":"assign_runner_to_follow_book_projectiles_and_destroy_two_hidden_codices_each_cycle","failure":"colored_book_effects_repeat_and_ramp_until_resolved"},"source_type":"guide","source_name":"ESO-Hub Scrivener's Hall Dungeon Guide","source_locator":"Riftmaster Naqri > Hidden Codex","game_update":"U37+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"codex_colors","value":{"name":"Codex Color Attacks","response":"interrupt_red_add_block_green_resolution_and_block_white_ghost_heavy","failure":"mechanic_overlap_increases_group_pressure"},"source_type":"guide","source_name":"ESO-Hub Scrivener's Hall Dungeon Guide","source_locator":"Riftmaster Naqri > Hidden Codex","game_update":"U37+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"unstable_literature","value":{"name":"Unstable Literature","response":"designated_player_soaks_the_green_circle_before_it_explodes","hard_mode":"two_soaks_spawn_and_both_must_be_covered"},"source_type":"guide","source_name":"ESO-Hub Scrivener's Hall Dungeon Guide","source_locator":"Riftmaster Naqri > Unstable Literature / Hardmode","game_update":"U37+","confidence":"high"}
+  ]
+}
