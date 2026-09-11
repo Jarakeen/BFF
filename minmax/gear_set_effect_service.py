@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from .effects import Effect
+from .gear_set_activation_rules import active_item_set_bonus_counts
 from .gear_set_effect_resolver import GearSetEffectResolver
 from .gear_set_repository import GearSetRepository
 
@@ -66,10 +67,15 @@ class GearSetEffectService:
         Unknown set names contribute no effects. This keeps the gear input layer
         tolerant of incomplete or synthetic build data while centralizing the
         name-to-ID lookup inside the set service.
+
+        Canonical activation rules are applied before effect resolution. In
+        particular, Torc of the Last Ayleid King suppresses every other item-set
+        bonus while leaving the physical equipped-set counts unchanged elsewhere.
         """
 
         effects: list[Effect] = []
-        for set_name, equipped_piece_count in equipped_sets.items():
+        active_sets = active_item_set_bonus_counts(equipped_sets)
+        for set_name, equipped_piece_count in active_sets.items():
             if equipped_piece_count <= 0:
                 continue
 
