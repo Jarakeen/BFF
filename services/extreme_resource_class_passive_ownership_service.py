@@ -97,6 +97,28 @@ _REVIEWED_TOOLTIP_IRRELEVANT: tuple[tuple[str, str, str], ...] = (
     ("Class Mastery", "Steadfast Candescence", "Sacred Ground activation and block amount only"),
     ("Class Mastery", "Tundra's Maw", "Chilled-triggered Major Brittle only"),
     ("Class Mastery", "Unbound Potential", "damage-done bonus only"),
+    ("Class Mastery", "Bastion of Light", "healing scaled from Max Health and Ultimate generation only; does not modify Max Health"),
+    ("Class Mastery", "Booming Voice", "Health, Magicka, and Stamina Recovery only"),
+    ("Class Mastery", "Calculated Defense", "damage shield scaled from Max Health and Weapon/Spell Damage only; does not modify Max Health"),
+    ("Class Mastery", "Conservation of Energy", "current Magicka/Stamina restoration only"),
+    ("Class Mastery", "Cutthroat's Focus", "combat-effect behavior only"),
+    ("Class Mastery", "Cycle Unending", "current-Health-relative damage potency only"),
+    ("Class Mastery", "Devout Guardian", "damage shield scaled from Max Health, recovery, and Ultimate generation only"),
+    ("Class Mastery", "Erudite's Rigor", "Minor Cowardice, Major Vitality, and Ultimate generation only"),
+    ("Class Mastery", "Fate Realigned", "Crux generation and Weapon/Spell Damage only"),
+    ("Class Mastery", "Font of Power", "Weapon/Spell Damage scaled from the higher Max Magicka/Stamina value; does not modify either maximum"),
+    ("Class Mastery", "Green-Keeper's Hide", "damage-taken reduction only"),
+    ("Class Mastery", "Inexorable Descent", "damage/healing/shield potency only"),
+    ("Class Mastery", "Ink-Scribe's Verve", "Crux generation and Major Force only"),
+    ("Class Mastery", "Judgment's Brand", "Templar ability damage only"),
+    ("Class Mastery", "Lead from the Front", "Major Berserk and Major Protection only"),
+    ("Class Mastery", "Nocturnal Inspiration", "Ultimate generation based on Weapon Critical only"),
+    ("Class Mastery", "Pound of Flesh", "current Health and missing-Stamina restoration only"),
+    ("Class Mastery", "Resolute Defense", "block amount and current Stamina restoration only"),
+    ("Class Mastery", "Static Reverberation", "conditional Shock Damage only"),
+    ("Class Mastery", "Veil's Forfeit", "corpse-consumption access and Major Vulnerability duration only"),
+    ("Class Mastery", "Wild Adaptation", "status-count-scaled Weapon/Spell Damage only"),
+    ("Class Mastery", "Wildfire Embers", "damage scaled from Weapon/Spell Damage and Max Magicka/Stamina; does not modify maxima"),
 )
 
 
@@ -173,6 +195,13 @@ class ExtremeResourceClassPassiveOwnershipService:
             source="NightbladePassiveInputResolver + active-bar resource search",
             effect_family="active-bar Max Magicka and Max Stamina percentage only",
             affected_objectives=("max_magicka", "max_stamina"),
+        ),
+        ExtremeResourceClassPassiveOwnership(
+            skill_line="Class Mastery",
+            passive_name="Nothing Wasted",
+            source="ClassMasteryExtremeEffectService",
+            effect_family="runtime-stacked Max Health and Weapon/Spell Damage only",
+            affected_objectives=("max_health",),
         ),
     ) + _reviewed_tooltip_rows()
 
