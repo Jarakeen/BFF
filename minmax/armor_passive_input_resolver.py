@@ -9,6 +9,7 @@ from .block_stats import BlockCostModifier
 from .derived_stats import StatContribution
 from .gear_stat_inputs import GearCalculationInputs, GearStatInputResolver
 from .passive_math import (
+    heavy_armor_juggernaut_max_health_percent,
     light_armor_critical_rating,
     light_armor_magicka_recovery_percent,
     light_armor_penetration,
@@ -56,6 +57,7 @@ class ArmorPassiveInputResolver:
         wind_walker_owned: bool | None = None,
         agility_owned: bool | None = None,
         dexterity_owned: bool | None = None,
+        juggernaut_owned: bool | None = None,
     ) -> GearCalculationInputs:
         light_count, medium_count, heavy_count = self._armor_counts(build)
         applied = result.applied_effect_count
@@ -94,6 +96,7 @@ class ArmorPassiveInputResolver:
         wind_walker = medium_armor_passives_owned if wind_walker_owned is None else wind_walker_owned
         agility = medium_armor_passives_owned if agility_owned is None else agility_owned
         dexterity = medium_armor_passives_owned if dexterity_owned is None else dexterity_owned
+        juggernaut = heavy_armor_passives_owned if juggernaut_owned is None else juggernaut_owned
 
         if evocation and light_count:
             magicka_recovery = light_armor_magicka_recovery_percent(light_count)
@@ -216,5 +219,18 @@ class ArmorPassiveInputResolver:
                     ),
                 )
                 applied += 2
+
+        if juggernaut and heavy_count:
+            max_health = heavy_armor_juggernaut_max_health_percent(heavy_count)
+            if max_health:
+                source = PercentContribution("Heavy Armor: Juggernaut", max_health)
+                result = replace(
+                    result,
+                    health=replace(
+                        result.health,
+                        skill_percent_contributions=result.health.skill_percent_contributions + (source,),
+                    ),
+                )
+                applied += 1
 
         return replace(result, applied_effect_count=applied)
