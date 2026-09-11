@@ -39,6 +39,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Observational ESO Logs heal alias; repeat for multiple ids.",
     )
     parser.add_argument(
+        "--max-streams",
+        type=int,
+        default=50,
+        help="Maximum cadence streams printed in text mode; collection remains complete.",
+    )
+    parser.add_argument(
         "--max-observations",
         type=int,
         default=50,
@@ -50,6 +56,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if args.max_streams < 0:
+        raise SystemExit("--max-streams must be non-negative")
     if args.max_observations < 0:
         raise SystemExit("--max-observations must be non-negative")
 
@@ -79,7 +87,8 @@ def main(argv: list[str] | None = None) -> int:
     print("-" * 104)
     if not report.cadence_streams:
         print("(none)")
-    for stream in report.cadence_streams:
+    displayed_streams = report.cadence_streams[: args.max_streams]
+    for stream in displayed_streams:
         intervals = ", ".join(
             f"{value:g}s" for value in stream.observed_intervals_seconds
         )
@@ -89,6 +98,12 @@ def main(argv: list[str] | None = None) -> int:
             f"relation={stream.source_target_relation} | "
             f"heals={stream.heal_event_count} | "
             f"intervals={intervals or '(single observation)'}"
+        )
+    omitted_streams = len(report.cadence_streams) - len(displayed_streams)
+    if omitted_streams:
+        print(
+            f"... {omitted_streams} additional cadence streams omitted; "
+            "use --json or report/fight filters for complete detail"
         )
 
     print("\nHEAL OBSERVATIONS")
@@ -102,14 +117,23 @@ def main(argv: list[str] | None = None) -> int:
             if item.previous_same_source_damage_delta_seconds is not None
             else "(none)"
         )
+        recipient_delta = (
+            f"{item.previous_recipient_damage_delta_seconds:g}s"
+            if item.previous_recipient_damage_delta_seconds is not None
+            else "(none)"
+        )
         print(
             f"{item.report_code} fight {item.fight_id} event {item.event_index} | "
             f"t={item.timestamp_seconds:g}s ability={item.ability_game_id} "
             f"source={item.source_id} target={item.target_id} "
             f"relation={item.source_target_relation} amount={item.amount} "
-            f"overheal={item.overheal} | prior same-source damage "
+            f"overheal={item.overheal} | prior source damage "
             f"event={item.previous_same_source_damage_event_index} "
-            f"target={item.previous_same_source_damage_target_id} delta={delta}"
+            f"target={item.previous_same_source_damage_target_id} delta={delta} | "
+            f"prior recipient damage "
+            f"event={item.previous_recipient_damage_event_index} "
+            f"target={item.previous_recipient_damage_target_id} "
+            f"delta={recipient_delta}"
         )
     omitted = len(report.observations) - len(displayed)
     if omitted:
@@ -130,7 +154,7 @@ def main(argv: list[str] | None = None) -> int:
     print("-" * 104)
     print("- Numeric ability ids remain observational aliases, not semantic identity.")
     print("- Observed intervals are evidence samples, not an inferred cooldown.")
-    print("- A preceding damage event is correlation evidence, not automatic trigger proof.")
+    print("- Source- and recipient-owned preceding damage are correlation evidence, not automatic trigger proof.")
     print("- This command opens the database read-only and performs no imports or writes.")
     return 0
 
