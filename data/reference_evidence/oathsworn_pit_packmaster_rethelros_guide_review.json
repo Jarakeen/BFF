@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "content_id": "oathsworn_pit",
+  "encounter_id": "packmaster_rethelros",
+  "encounter_name": "Packmaster Rethelros and Malthil",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Split-Boss Main Phase","threshold":"Pull","description":"Rethelros remains ranged while Malthil is controlled separately. Keep the pair apart to prevent their proximity enrage while handling traps, volleys, Cinder Shot, and Malthil's chase."},"source_type":"guide","source_name":"Alcast Oathsworn Pit Dungeon Guide","source_locator":"Boss 1 - Packmaster Rethelros & Malthil","game_update":"U41+","confidence":"high"},
+    {"fact_type":"phase","fact_key":"protective_totem_cycle","value":{"order":2,"label":"Protective Totem Cycles","threshold":"Repeating","description":"A Protective Totem periodically makes both bosses immune. The group swaps immediately to the totem, then resumes the split-boss burn."},"source_type":"guide","source_name":"Alcast Oathsworn Pit Dungeon Guide","source_locator":"Boss 1 > Protective Totem","game_update":"U41+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"proximity_enrage","value":{"name":"Proximity Enrage","response":"tank_malthil_away_from_rethelros","failure":"bosses_enrage_and_damage_increases"},"source_type":"guide","source_name":"Alcast Oathsworn Pit Dungeon Guide","source_locator":"Boss 1 > Enrage","game_update":"U41+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"protective_totem","value":{"name":"Protective Totem","response":"hard_swap_and_destroy_totem","failure":"both_bosses_remain_damage_immune"},"source_type":"guide","source_name":"Alcast Oathsworn Pit Dungeon Guide","source_locator":"Boss 1 > Protective Totem","game_update":"U41+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"cinder_shot","value":{"name":"Cinder Shot","response":"spread_lines_block_or_roll_and_move_off_bonfire","hard_mode":"targets_all_four_players"},"source_type":"guide","source_name":"Alcast Oathsworn Pit Dungeon Guide","source_locator":"Boss 1 > Cinder Shot / Hard Mode","game_update":"U41+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"malthil_chase","value":{"name":"Malthil Chase","response":"designate_furthest_player_or_group_tightly_then_tank_steps_out_to_catch_fixate","behavior":"temporarily_ignores_taunt"},"source_type":"guide","source_name":"ESO Forum Supplemental Oathsworn Pit Guide","source_locator":"First Boss > wolf de-aggro chase","game_update":"U41+","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"bear_traps_and_volley","value":{"name":"Bear Traps and Directed Volley","response":"keep_floor_clear_and_kite_volley_away_from_group","failure":"trap_root_plus_ground_pressure_can_chain_into_death"},"source_type":"guide","source_name":"Alcast Oathsworn Pit Dungeon Guide","source_locator":"Boss 1 > Directed Volley / Bear Trap","game_update":"U41+","confidence":"high"}
+  ]
+}
