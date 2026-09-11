@@ -47,6 +47,114 @@
       "notes": "This is an evidence-state marker, not a mechanic value."
     },
     {
+      "fact_type": "mechanic_detail",
+      "fact_key": "crashing_wave_current_guide_behavior",
+      "value": {
+        "fixed_waves": 3,
+        "veteran_tracking_target": "main_tank",
+        "hardmode_additional_tracking_target": "off_tank",
+        "blockable": true,
+        "dodgeable": true
+      },
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 3 Tideborn Taleria",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Crashing Wave",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "summon_behemoth_current_guide_behavior",
+      "value": {
+        "veteran_interval_seconds": 60,
+        "hardmode_interval_seconds": 45,
+        "spawn_target": "main_tank",
+        "areas_clear_when_behemoth_dies": true
+      },
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 3 Tideborn Taleria",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Sea Behemoth",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "summon_siren_current_guide_behavior",
+      "value": {
+        "count": 2,
+        "casts": "Lure of the Sea",
+        "control_effect": "fear",
+        "pulls_target_to_center_water": true,
+        "response": "break_free",
+        "stamina_required": true
+      },
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 3 Tideborn Taleria",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Sirens",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "transition",
+      "fact_key": "bridge_thresholds_current_guide",
+      "value": {
+        "thresholds": ["50%", "35%", "20%"]
+      },
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 3 Tideborn Taleria",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Portal thresholds",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "failure_condition",
+      "fact_key": "bridge_channeler_timeout_current_guide",
+      "value": {
+        "timeout_seconds": 60,
+        "channeler_health_target": "50%",
+        "result": "group_wipe",
+        "ability": "Dreadsail Ascension"
+      },
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 3 Tideborn Taleria",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Portal / Channeler timeout",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "arcing_slash_current_guide_behavior",
+      "value": {
+        "frontal_cone": true,
+        "hits": 2,
+        "damage_types": ["physical", "cold"],
+        "applies_dot": "Soaked Wound",
+        "refreshes_dot_on_hit": true
+      },
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 3 Tideborn Taleria",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Arcing Slash",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "coral_slam_current_guide_behavior",
+      "value": {
+        "guide_name": "Coral Slash",
+        "heavy_attack": true,
+        "hits": 2,
+        "damage_types": ["cold", "physical"],
+        "roll_dodge_creates_water_spout": true
+      },
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 3 Tideborn Taleria",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Coral Slash",
+      "confidence": "medium",
+      "notes": "Current guide labels the heavy attack Coral Slash; FoundryDock's reviewed mechanic family is Coral Slam. Retain as source-specific naming evidence rather than changing canonical identity."
+    },
+    {
       "fact_type": "mechanic_state",
       "fact_key": "nematocyst_cloud_exists",
       "value": true,
