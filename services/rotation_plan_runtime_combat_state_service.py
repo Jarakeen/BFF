@@ -38,7 +38,9 @@ class RotationPlanRuntimeCombatStateService:
     Bar identity comes from ``RotationActiveBarAssessor`` so runtime state and
     active-bar legality share one ordered BAR_SWAP authority. Unified runtime effect
     attempts are first bound to that same bar progression by
-    ``RotationRuntimeBarProvenanceService``. Skill/gear/potion/group buff truth
+    ``RotationRuntimeBarProvenanceService``. Saved-build gear restrictions such as
+    Oakensoul are applied at that build-aware boundary rather than teaching the
+    generic rotation assessor ESO item semantics. Skill/gear/potion/group buff truth
     remains owned by ``ExtremeRuntimeSnapshotCombatStateService``; its legacy name is
     retained for compatibility, but the projector is role-neutral.
 
@@ -113,6 +115,7 @@ class RotationPlanRuntimeCombatStateService:
             plan,
             runtime_snapshot_source,
             initial_bar=initial_bar,
+            player_build=build,
         )
         if not bound.resolved or bound.snapshot is None:
             return RotationPlanRuntimeCombatStateResult(
