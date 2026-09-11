@@ -1,0 +1,230 @@
+from __future__ import annotations
+
+import argparse
+from collections import Counter, defaultdict
+import json
+from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from services.esologs_event_interpreter import SemanticEventKind
+from services.esologs_json_adapter import EsoLogsJsonEventInterpreter, EsoLogsJsonFight
+
+
+STAFF_HEAVY_ALIASES = {
+    15383: "flame_staff_heavy",
+    18396: "shock_staff_heavy",
+    16212: "restoration_staff_heavy",
+    16261: "frost_staff_heavy",
+}
+
+
+def _normalize_player_details(player_details):
+    if isinstance(player_details, dict):
+        nested = player_details.get("data") or player_details
+        if isinstance(nested, dict):
+            nested = nested.get("playerDetails") or nested
+        player_details = nested
+
+    rows = []
+    if isinstance(player_details, dict):
+        for role_key, role_name in (("healers", "healer"), ("tanks", "tank"), ("dps", "dps")):
+            actors = player_details.get(role_key) or []
+            if isinstance(actors, dict):
+                actors = list(actors.values())
+            if not isinstance(actors, list):
+                continue
+            for actor in actors:
+                if not isinstance(actor, dict):
+                    continue
+                actor_id = actor.get("id")
+                if actor_id is None:
+                    continue
+                rows.append(
+                    (
+                        int(actor_id),
+                        str(actor.get("name") or actor.get("displayName") or f"source {actor_id}"),
+                        role_name,
+                    )
+                )
+    return tuple(rows)
+
+
+def _iter_corpus(path: Path):
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    reports = payload.get("reports")
+    if not isinstance(reports, dict):
+        raise ValueError(f"{path}: expected payload['reports'] object")
+
+    for report_code, report_row in reports.items():
+        if not isinstance(report_row, dict):
+            continue
+        fights = report_row.get("fights")
+        if not isinstance(fights, dict):
+            continue
+        for fight_key, fight_row in fights.items():
+            if not isinstance(fight_row, dict):
+                continue
+            fight_id = int(fight_key)
+            single_payload = {
+                "report_code": str(report_code),
+                "fights": {str(fight_id): fight_row},
+            }
+            fight = EsoLogsJsonFight.from_payload(
+                single_payload,
+                fight_id=fight_id,
+                report_code=str(report_code),
+                source_name=str(path),
+            )
+            roster = _normalize_player_details(fight_row.get("player_details") or {})
+            roster_by_id = {actor_id: (name, role) for actor_id, name, role in roster}
+            events = tuple(EsoLogsJsonEventInterpreter(fight).iter_events())
+            yield fight, roster_by_id, events
+
+
+def _following_restores(events, *, source_id: int, timestamp: float, forward_ms: float):
+    rows = []
+    for event in events:
+        if event.event_kind != SemanticEventKind.RESOURCE_CHANGE:
+            continue
+        if event.source_id != source_id:
+            continue
+        delta = float(event.timestamp) - float(timestamp)
+        if delta < 0.0 or delta > forward_ms:
+            continue
+        if event.resource_change is None or float(event.resource_change) <= 0.0:
+            continue
+        rows.append((event, delta))
+    return tuple(rows)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Scan raw ESO Logs Lokkestiiz corpus roster players for reviewed staff-heavy "
+            "log aliases and report following positive resource changes. Observational only."
+        )
+    )
+    parser.add_argument("--path", type=Path, default=Path("research/raw/lokkestiiz_corpus.json"))
+    parser.add_argument("--forward-ms", type=float, default=500.0)
+    parser.add_argument("--report-code", default=None)
+    parser.add_argument("--limit", type=int, default=120)
+    args = parser.parse_args()
+
+    if not args.path.exists():
+        raise FileNotFoundError(args.path)
+    if args.forward_ms < 0:
+        raise ValueError("--forward-ms cannot be negative")
+    if args.limit <= 0:
+        raise ValueError("--limit must be positive")
+
+    observations = []
+    heavy_counts = Counter()
+    roster_actor_keys = set()
+
+    for fight, roster_by_id, events in _iter_corpus(args.path):
+        if args.report_code and fight.report_code != args.report_code:
+            continue
+        for action in events:
+            label = STAFF_HEAVY_ALIASES.get(action.ability_game_id)
+            if label is None or action.source_id is None:
+                continue
+            actor = roster_by_id.get(int(action.source_id))
+            if actor is None:
+                continue
+            name, role = actor
+            key = (fight.report_code, fight.fight_id, int(action.source_id), name, role, label)
+            roster_actor_keys.add(key[:-1])
+            heavy_counts[(label, fight.report_code, fight.fight_id, int(action.source_id), name, role)] += 1
+            for restore, delta in _following_restores(
+                events,
+                source_id=int(action.source_id),
+                timestamp=float(action.timestamp),
+                forward_ms=float(args.forward_ms),
+            ):
+                observations.append((fight, action, restore, delta, name, role, label))
+
+    print("=" * 112)
+    print(" PHASE 13 STAFF HEAVY-ATTACK RESTORE CORPUS AUDIT")
+    print("=" * 112)
+    print("Evidence status: OBSERVATIONAL LOG ALIASES ONLY")
+    print(f"Raw corpus:            {args.path}")
+    print(f"Report filter:         {args.report_code or 'all reports'}")
+    print(f"Restore window:        {args.forward_ms:g} ms")
+    print(f"Roster actors with HA: {len({row[:5] for row in heavy_counts})}")
+    print(f"Staff heavy actions:   {sum(heavy_counts.values())}")
+    print(f"Following restores:    {len(observations)}")
+
+    print()
+    print("STAFF HEAVY COUNTS BY PLAYER")
+    print("----------------------------")
+    for (label, report_code, fight_id, source_id, name, role), count in heavy_counts.most_common(args.limit):
+        print(
+            f"{count:4d} | {label:24} | {name} ({role}) | "
+            f"report={report_code} fight={fight_id} source={source_id}"
+        )
+
+    by_restore = Counter(
+        (
+            label,
+            float(restore.resource_change),
+            restore.resource_change_type,
+            restore.ability_game_id,
+        )
+        for _fight, _action, restore, _delta, _name, _role, label in observations
+    )
+    print()
+    print("RESTORE DISTRIBUTION BY STAFF HEAVY")
+    print("-----------------------------------")
+    for (label, amount, resource_type, restore_id), count in by_restore.most_common(args.limit):
+        print(
+            f"{count:5d} | {label:24} | restore={amount:g} | "
+            f"resource_type={resource_type} | restore_id={restore_id}"
+        )
+
+    per_actor = defaultdict(list)
+    for fight, action, restore, delta, name, role, label in observations:
+        per_actor[(fight.report_code, fight.fight_id, int(action.source_id), name, role, label)].append(
+            (float(restore.resource_change), restore.resource_change_type, restore.ability_game_id, delta)
+        )
+
+    print()
+    print("PER-PLAYER RESTORE SUMMARY")
+    print("--------------------------")
+    for key, rows in sorted(per_actor.items())[: args.limit]:
+        report_code, fight_id, source_id, name, role, label = key
+        common = Counter(value[0] for value in rows).most_common(5)
+        common_text = ", ".join(f"{amount:g}x{count}" for amount, count in common)
+        print(
+            f"{name} ({role}) | {label} | report={report_code} fight={fight_id} "
+            f"source={source_id} | restore_events={len(rows)} | common=[{common_text}]"
+        )
+
+    print()
+    print("EVENT PROVENANCE")
+    print("----------------")
+    for fight, action, restore, delta, name, role, label in observations[: args.limit]:
+        print(
+            f"{name} ({role}) | {label} | report={fight.report_code} fight={fight.fight_id} "
+            f"source={action.source_id} action_event={action.event_index} "
+            f"restore_event={restore.event_index} +{delta:g}ms "
+            f"restore={float(restore.resource_change):g} resource_type={restore.resource_change_type} "
+            f"restore_id={restore.ability_game_id} waste={restore.waste} "
+            f"max_resource={restore.max_resource_amount}"
+        )
+
+    print()
+    print("BOUNDARY")
+    print("--------")
+    print("- Staff-heavy numeric ids are reviewed ESO Logs aliases, not canonical BFF skill identities.")
+    print("- Only actors present in each fight's player_details roster are included.")
+    print("- Positive resource events inside the time window remain observational until reviewed.")
+    print("- This audit reads raw research JSON and writes nothing.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
