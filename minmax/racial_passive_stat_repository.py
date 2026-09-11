@@ -95,7 +95,7 @@ class RacialPassiveStatRepository:
                 ("max_magicka", "max_stamina"),
             ),
             (
-                rf"Increases? your (?:Max|Maximum) Health, (?:Max|Maximum )?Magicka, and (?:Max|Maximum )?Stamina by {_NUMBER}",
+                rf"Increases? your (?:Max|Maximum) Health, (?:(?:Max|Maximum) )?Magicka, and (?:(?:Max|Maximum) )?Stamina by {_NUMBER}",
                 ("max_health", "max_magicka", "max_stamina"),
             ),
             (
@@ -111,7 +111,7 @@ class RacialPassiveStatRepository:
             (rf"Increases? your Healing Done by {_NUMBER}%", ("healing_done_percent",)),
             (rf"Increases? your Flame Resistance by {_NUMBER}", ("flame_resistance",)),
             (
-                rf"Increases? your Physical and Spell Penetration by {_NUMBER}",
+                rf"(?:Increases? your|and your) Physical and Spell Penetration by {_NUMBER}",
                 ("physical_penetration", "spell_penetration"),
             ),
             (rf"Increases? your Weapon and Spell Damage by {_NUMBER}", ("weapon_damage", "spell_damage")),
