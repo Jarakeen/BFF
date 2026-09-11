@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "content_id": "volenfell",
+  "encounter_id": "quintus_verres",
+  "encounter_name": "Quintus Verres",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"warrior","value":{"order":1,"label":"Warrior Phase","threshold":"phase 1","description":"Block Quintus's two-handed heavy attack and step out of the close-range whirlwind."},"source_type":"guide","source_name":"Xynode Volenfell Guide","source_locator":"Quintus Verres","game_update":"Launch","confidence":"high"},
+    {"fact_type":"phase","fact_key":"mage","value":{"order":2,"label":"Mage Phase","threshold":"phase 2","description":"Quintus switches to flame magic; keep taunt controlled, stay out of the large fire ground effect, and break free from the fear."},"source_type":"guide","source_name":"Xynode Volenfell Guide","source_locator":"Quintus Verres","game_update":"Launch","confidence":"high"},
+    {"fact_type":"phase","fact_key":"gargoyle","value":{"order":3,"label":"Gargoyle Phase","threshold":"final phase","description":"A Monstrous Gargoyle takes over; block its flurry, break free from petrification, and leave the repeated ground slam."},"source_type":"guide","source_name":"Xynode Volenfell Guide","source_locator":"Quintus Verres","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"fire_ground","value":{"name":"Fire Ground","response":"move_out_of_the_large_fire_aoe_immediately_during_the_mage_phase"},"source_type":"guide","source_name":"Xynode Volenfell Guide","source_locator":"Quintus Verres","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"gargoyle_slam","value":{"name":"Gargoyle Slam","response":"step_out_of_the_repeated_ground_slam_until_the_sequence_finishes"},"source_type":"guide","source_name":"Xynode Volenfell Guide","source_locator":"Quintus Verres","game_update":"Launch","confidence":"high"}
+  ]
+}
