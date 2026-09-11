@@ -69,6 +69,12 @@ class RotationRecoveryHeavyCandidatePipelineService:
     plan through ``RotationHeavySustainProjectionService`` so callers provide reviewed
     evidence rather than reimplementing weapon, progression, or restore math.
 
+    When no explicit restoration source is supplied, effect-aware evaluation uses the
+    same duration-aware scheduler provenance already carried by each regenerated plan.
+    Only reviewed 1.8-second Heavy Attack reservations become completion evidence;
+    an unreserved/manual heavy therefore still fails closed rather than receiving an
+    invented restore.
+
     Final scorecards are additionally decorated with saved-build bar-access rules.
     This keeps ESO gear mechanics such as Oakensoul outside generic plan semantics
     while ensuring both generic and effect-aware candidate workflows reject an
@@ -213,7 +219,18 @@ class RotationRecoveryHeavyCandidatePipelineService:
 
         active_restoration_resolver = restoration_resolver
         active_restoration_factory = restoration_resolver_factory
-        if completion_evidence_factory is not None:
+        active_completion_factory = completion_evidence_factory
+        if (
+            active_completion_factory is None
+            and restoration_resolver is None
+            and restoration_resolver_factory is None
+        ):
+            active_completion_factory = (
+                self.heavy_sustain_service
+                .completion_evidence_from_verified_reservations
+            )
+
+        if active_completion_factory is not None:
             if restoration_resolver is not None or restoration_resolver_factory is not None:
                 raise ValueError(
                     "completion_evidence_factory cannot be combined with an explicit "
@@ -223,7 +240,7 @@ class RotationRecoveryHeavyCandidatePipelineService:
             def canonical_restoration_factory(
                 plan: RotationPlan,
             ) -> VerifiedRecoveryHeavyRestorationResolver:
-                completion_evidence = tuple(completion_evidence_factory(plan))
+                completion_evidence = tuple(active_completion_factory(plan))
                 return self.heavy_sustain_service.restoration_resolver_for_plan(
                     character_build=character_build,
                     sustain_build=player_build,
