@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {
+      "entry_name": "Frost Bomb — Exarchanic Yaseyla",
+      "mitigation": "Keep the bomb targets together on the assigned side and heal each one to full before the 8-second timer expires. After 50% on veteran, expect two targets at once.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Guide evidence records an 8-second heal-to-full window and two veteran targets after 50%; Update 42 confirms Frost Bomb reduces healing taken."
+    },
+    {
+      "entry_name": "Fire Bomb Toss — Exarchanic Yaseyla",
+      "mitigation": "Kite the fire bomb away from the group and drop it in the assigned safe area. Do not drag Ignite through the stack.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Fire bombs leave persistent ground danger and apply Ignite; execute cadence accelerates around 25%."
+    },
+    {
+      "entry_name": "Wamasu Charge — Exarchanic Yaseyla",
+      "mitigation": "Call the charge target and clear the lane. Do not stand between the Wamasu and its target; the path can be lethal on Hard Mode.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Official patch history confirms random-player targeting; guide evidence records path damage and knockback."
+    },
+    {
+      "entry_name": "True Shot — Exarchanic Yaseyla",
+      "mitigation": "Interrupt the Archer immediately. Assign ranged interrupts so True Shot never finishes.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Guide evidence says the channel can kill even tanks on veteran and Hard Mode if not interrupted."
+    },
+    {
+      "entry_name": "Radiance — Archwizard Twelvane",
+      "mitigation": "Check the constellation over your head and enter the matching Control Pathway within 15 seconds or you die.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Radiance lasts 15 seconds and assigns Lion, Gryphon, or Wamasu pathways."
+    },
+    {
+      "entry_name": "Crystal Sequence — Archwizard Twelvane",
+      "mitigation": "Watch the crystal activation order, then destroy them in that same order with ranged light attacks. If you miss it, stop and read the new pattern after the reset.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Veteran uses four crystals and Hard Mode five; a failed sequence resets with a new pattern."
+    },
+    {
+      "entry_name": "Chain Circuit — Archwizard Twelvane",
+      "mitigation": "Veteran/HM: form the assigned six-player chain. In HM, alternate stacks so nobody with the 30-second Circuit Charge takes the next circuit.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Chain Circuit hits six players on veteran/HM; a repeat hit during Circuit Charge can be fatal."
+    },
+    {
+      "entry_name": "Arctic Blast — Archwizard Twelvane",
+      "mitigation": "Tank drops the ice pool in the planned spot and moves out immediately. Avoid standing in Arctic Shred unless you enjoy receiving significantly more damage for 10 seconds.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Arctic Blast targets the tank and leaves a 10-second Arctic Shred debuff zone."
+    },
+    {
+      "entry_name": "Inferno — Archwizard Twelvane",
+      "mitigation": "Spread to your assigned crater spots, then block or dodge the Sunburst impact and move out of the Sizzling Crater immediately.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Inferno targets every player; Sunburst can be blocked or dodged and leaves ramping Sizzling Crater damage."
+    },
+    {
+      "entry_name": "Manic Phobia — Ansuul the Tormentor",
+      "mitigation": "Have the assigned off-tank or healer take the taunt at the threshold. The isolated player stays away from Ansuul while the group kills the Essence Manifestation to clear the lethal aura.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Manic Phobia targets the taunting player; touching Ansuul's Avulse aura before the Essence dies is fatal."
+    },
+    {
+      "entry_name": "The Ritual — Ansuul the Tormentor",
+      "mitigation": "Run out of the red zone, complete the maze, attune, and send the portal team immediately. If nobody enters Vanton's side encounter, Ritual Blast wipes the raid.",
+      "source": "reviewed_guide_evidence",
+      "notes": "The Ritual occurs at 80/60/40%; Hard Mode requires the whole group to run the maze."
+    },
+    {
+      "entry_name": "Vanton Torment Timeout — Ansuul the Tormentor",
+      "mitigation": "Finish the active Torment side encounter within 3 minutes. If it is still alive when the timer expires, Neural Takeover wipes the group.",
+      "source": "official_patch_notes",
+      "notes": "Update 46 explicitly sets a three-minute Torment completion timer."
+    },
+    {
+      "entry_name": "Poisoned Mind — Ansuul the Tormentor",
+      "mitigation": "Stay mostly still in healing. In HM, the two Poisoned Mind targets separate from each other while remaining inside group healing coverage.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Poisoned Mind grows for 10 seconds; HM can apply two at once."
+    },
+    {
+      "entry_name": "Sunburst — Ansuul the Tormentor",
+      "mitigation": "Take Sunburst away from the group and place the Afterburn crater at the edge. Do not rely on a roll dodge to avoid Ansuul's impact.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Guide evidence distinguishes Ansuul's Sunburst from Chimera's: it leaves Afterburn and is not avoided by roll dodge."
+    },
+    {
+      "entry_name": "Wrathstorm — Ansuul the Tormentor",
+      "mitigation": "Avoid the ring of fire mines and roll-dodge the central explosion. Do not let Wrack stun you into the blast.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Wrathstorm mines apply Ignite and the explosion can be roll-dodged."
+    }
+  ]
+}
