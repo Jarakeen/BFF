@@ -85,7 +85,7 @@ def test_checked_in_dungeon_scope_is_newest_first_through_launch_normal_slice():
     data_root = Path(__file__).resolve().parents[2] / "data"
     rows = build_coverage_rows(data_root, scope="dungeon")
 
-    assert len(rows) == 203
+    assert len(rows) == 207
     assert {(row.release_year, row.release_update) for row in rows} == {
         (2025, 47), (2025, 45), (2024, 41), (2023, 37),
         (2022, 35), (2022, 33), (2021, 31), (2021, 29),
@@ -112,7 +112,7 @@ def test_checked_in_dungeon_scope_is_newest_first_through_launch_normal_slice():
         "Darkshade Caverns I", "Elden Hollow I", "Wayrest Sewers I",
         "Arx Corinium", "City of Ash I", "Crypt of Hearts I",
         "Volenfell", "Tempest Island", "Blackheart Haven",
-        "Direfrost Keep", "Selene's Web", "Blessed Crucible",
+        "Direfrost Keep", "Selene's Web", "Blessed Crucible", "Vaults of Madness",
     }
 
     assert {row.encounter_id for row in rows} == {
@@ -173,4 +173,5 @@ def test_checked_in_dungeon_scope_is_newest_first_through_launch_normal_slice():
         "guardian_of_the_flame", "iceheart", "drodda_of_icereach",
         "longclaw", "foulhide", "selene_s_web",
         "the_pack", "the_beast_master", "the_lava_queen",
+        "ulguna_soul_reaver", "grothdarr", "iskra_the_omen", "mad_architect",
     }
