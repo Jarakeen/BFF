@@ -41,6 +41,31 @@ ROTATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="rotation.runtime.build_context_projection",
+        domain="rotation",
+        purpose=(
+            "Rebuild the canonical active-bar BuildCalculationContext from exact-time "
+            "rotation runtime CombatState so derived sheet/core stats match that instant."
+        ),
+        implementation_path="services.rotation_plan_runtime_build_context_service",
+        inputs=(
+            "PlayerBuild",
+            "RotationPlanRuntimeCombatStateResult",
+            "RotationStaticBuildContextService",
+        ),
+        outputs=("RotationPlanRuntimeBuildContextResult",),
+        dependencies=("rotation.runtime.combat_state_projection",),
+        responsibilities=("rotation_time_resolved_runtime_build_context_projection",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Rebuilds through the existing static context factory instead of replacing "
+            "CombatState on a stale context, because transient buffs can alter derived "
+            "character/core stats used by healer and damage coefficient math."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="rotation.healer.canonical_demand_evidence",
         domain="rotation",
         purpose=(
