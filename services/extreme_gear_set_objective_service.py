@@ -68,6 +68,20 @@ class ExtremeGearSetObjectiveService:
         "sneak_cost_reduction",
     )
     _MAX_RESOURCE_OBJECTIVES = frozenset({"max_health", "max_magicka", "max_stamina"})
+    # These conditions are explicit legal states.  For objective *relevance* we
+    # only need to know that a positive resource bonus can exist under the state;
+    # the later structural/runtime scorer still owns proving the state is active
+    # for any winning candidate.
+    _MAX_RESOURCE_RELEVANCE_CONDITIONS = frozenset(
+        {
+            "armor_ability_slotted",
+            "destruction_staff_equipped",
+            "drink_buff_active",
+            "food_buff_active",
+            "pet_active",
+            "transformed",
+        }
+    )
 
     _STAT_BY_OBJECTIVE = {
         "critical_damage": StatId.CRITICAL_DAMAGE,
@@ -122,7 +136,12 @@ class ExtremeGearSetObjectiveService:
         objective = str(objective_key).strip().casefold()
 
         if effect.condition:
-            return None, f"{effect.source}: relevant set effect requires condition {effect.condition}"
+            condition = str(effect.condition).strip()
+            if not (
+                objective in cls._MAX_RESOURCE_OBJECTIVES
+                and condition in cls._MAX_RESOURCE_RELEVANCE_CONDITIONS
+            ):
+                return None, f"{effect.source}: relevant set effect requires condition {effect.condition}"
 
         if effect.operation is EffectOperation.ADD:
             value = float(effect.value)
