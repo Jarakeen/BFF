@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "content_id": "imperial_city_prison",
+  "encounter_id": "ibomez_the_flesh_sculptor",
+  "encounter_name": "Ibomez the Flesh Sculptor",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Hold Ibomez steady while managing Flesh Atronach pressure and preventing add accumulation."},"source_type":"guide","source_name":"Xynode Imperial City Prison Guide","source_locator":"Ibomez the Flesh Sculptor","game_update":"U7","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"flesh_atronachs","value":{"name":"Flesh Atronachs","response":"prioritize_atronachs_before_they_overwhelm_the_group"},"source_type":"guide","source_name":"Imperial City Prison guide","source_locator":"Ibomez the Flesh Sculptor","game_update":"U7","confidence":"high"}
+  ]
+}
