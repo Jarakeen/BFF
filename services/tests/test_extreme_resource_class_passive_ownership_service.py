@@ -33,15 +33,37 @@ _CLASS_MASTERY_RESOURCE_IRRELEVANT = {
     ("Class Mastery", "Above and Beyond"),
     ("Class Mastery", "Abyssal Emergence"),
     ("Class Mastery", "An Eye for Exploitation"),
+    ("Class Mastery", "Bastion of Light"),
+    ("Class Mastery", "Booming Voice"),
     ("Class Mastery", "Bountiful Harvest"),
     ("Class Mastery", "Bright Harbinger"),
+    ("Class Mastery", "Calculated Defense"),
+    ("Class Mastery", "Conservation of Energy"),
+    ("Class Mastery", "Cutthroat's Focus"),
+    ("Class Mastery", "Cycle Unending"),
+    ("Class Mastery", "Devout Guardian"),
+    ("Class Mastery", "Erudite's Rigor"),
+    ("Class Mastery", "Fate Realigned"),
+    ("Class Mastery", "Font of Power"),
     ("Class Mastery", "Glacial Obstinance"),
+    ("Class Mastery", "Green-Keeper's Hide"),
+    ("Class Mastery", "Inexorable Descent"),
+    ("Class Mastery", "Ink-Scribe's Verve"),
+    ("Class Mastery", "Judgment's Brand"),
+    ("Class Mastery", "Lead from the Front"),
     ("Class Mastery", "Malevolent Promise"),
+    ("Class Mastery", "Nocturnal Inspiration"),
+    ("Class Mastery", "Pound of Flesh"),
+    ("Class Mastery", "Resolute Defense"),
     ("Class Mastery", "Share the Spoils"),
     ("Class Mastery", "Sphere of Influence"),
+    ("Class Mastery", "Static Reverberation"),
     ("Class Mastery", "Steadfast Candescence"),
     ("Class Mastery", "Tundra's Maw"),
     ("Class Mastery", "Unbound Potential"),
+    ("Class Mastery", "Veil's Forfeit"),
+    ("Class Mastery", "Wild Adaptation"),
+    ("Class Mastery", "Wildfire Embers"),
 }
 
 _EXPECTED_IDENTITIES = {
@@ -57,6 +79,7 @@ _EXPECTED_IDENTITIES = {
     ("Assassination", "Master Assassin"),
     ("Bone Tyrant", "Health Avarice"),
     ("Bone Tyrant", "Last Gasp"),
+    ("Class Mastery", "Nothing Wasted"),
     ("Curative Runeforms", "Erudition"),
     ("Curative Runeforms", "Intricate Runeforms"),
     ("Daedric Summoning", "Power Stone"),
@@ -117,7 +140,10 @@ def test_reviewed_class_rows_have_objective_specific_resource_status():
     assert identities == _EXPECTED_IDENTITIES
 
     expected_accounted = {
-        "max_health": {("Bone Tyrant", "Last Gasp")},
+        "max_health": {
+            ("Bone Tyrant", "Last Gasp"),
+            ("Class Mastery", "Nothing Wasted"),
+        },
         "max_magicka": {("Siphoning", "Magicka Flood")},
         "max_stamina": {("Siphoning", "Magicka Flood")},
     }
@@ -150,6 +176,25 @@ def test_class_mastery_resource_rows_are_irrelevant_to_all_maximum_resource_obje
             row, status = resolution
             assert row.identity == (line, name)
             assert status is ExtremeResourceClassPassiveOwnershipStatus.PROVEN_IRRELEVANT
+
+
+def test_nothing_wasted_is_max_health_only():
+    health_resolution = ExtremeResourceClassPassiveOwnershipService.resolve(
+        _passive("Nothing Wasted", "Class Mastery"),
+        "max_health",
+    )
+    assert health_resolution is not None
+    _, health_status = health_resolution
+    assert health_status is ExtremeResourceClassPassiveOwnershipStatus.CANONICALLY_ACCOUNTED
+
+    for objective in ("max_magicka", "max_stamina"):
+        resolution = ExtremeResourceClassPassiveOwnershipService.resolve(
+            _passive("Nothing Wasted", "Class Mastery"),
+            objective,
+        )
+        assert resolution is not None
+        _, status = resolution
+        assert status is ExtremeResourceClassPassiveOwnershipStatus.PROVEN_IRRELEVANT
 
 
 def test_class_passive_ownership_requires_exact_skill_line_and_class_domain():
