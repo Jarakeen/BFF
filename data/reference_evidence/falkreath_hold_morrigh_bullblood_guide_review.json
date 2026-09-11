@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "falkreath_hold",
+  "encounter_id": "morrigh_bullblood",
+  "encounter_name": "Morrigh Bullblood",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 50%","description":"Tank Morrigh centrally, control the Minotaur, and avoid ground AoEs."},"source_type":"guide","source_name":"Xynode Falkreath Hold Guide","source_locator":"Morrigh Bullblood","game_update":"U15","confidence":"high"},
+    {"fact_type":"phase","fact_key":"siege","value":{"order":2,"label":"Siege Shelter","threshold":"50%","description":"Morrigh creates a protective siege shield while trebuchet fire hits the room; stack inside the shield."},"source_type":"guide","source_name":"Xynode Falkreath Hold Guide","source_locator":"Morrigh Bullblood","game_update":"U15","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"siege_shield","value":{"name":"Siege Shield","response":"stack_inside_the_protective_shield_during_trebuchet_barrage"},"source_type":"guide","source_name":"Xynode Falkreath Hold Guide","source_locator":"Morrigh Bullblood","game_update":"U15","confidence":"high"}
+  ]
+}
