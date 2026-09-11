@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "encounters": [
+    {"content_id":"vaults_of_madness","content_name":"Vaults of Madness","release_year":2014,"release_update":0,"release_pack":"Base Game Launch","encounter_id":"ulguna_soul_reaver","display_name":"Ulguna Soul-Reaver","member_ids":["ulguna_soul_reaver"]},
+    {"content_id":"vaults_of_madness","content_name":"Vaults of Madness","release_year":2014,"release_update":0,"release_pack":"Base Game Launch","encounter_id":"grothdarr","display_name":"Grothdarr","member_ids":["grothdarr"]},
+    {"content_id":"vaults_of_madness","content_name":"Vaults of Madness","release_year":2014,"release_update":0,"release_pack":"Base Game Launch","encounter_id":"iskra_the_omen","display_name":"Iskra the Omen","member_ids":["iskra_the_omen"]},
+    {"content_id":"vaults_of_madness","content_name":"Vaults of Madness","release_year":2014,"release_update":0,"release_pack":"Base Game Launch","encounter_id":"mad_architect","display_name":"Mad Architect","member_ids":["mad_architect"]}
+  ]
+}
