@@ -4,6 +4,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from minmax.combat_state import CombatState
 from minmax.resource_costs import ResourceType
 from minmax.rotation_ability_priority import AbilityPriorityEntry
 from minmax.rotation_plan import RotationPlan
@@ -93,6 +94,10 @@ def test_dashboard_path_generates_unstabilized_seed_then_runs_canonical_candidat
     restoration_resolver = object()
     wait_factory = object()
     reserve_resolver = object()
+    combat_state = CombatState(
+        in_combat=True,
+        active_buffs=("Major Sorcery",),
+    )
 
     result = support.run_effects(
         player_build=player_build,
@@ -103,6 +108,7 @@ def test_dashboard_path_generates_unstabilized_seed_then_runs_canonical_candidat
         maximum_amount=32000,
         trigger_fraction=0.35,
         restoration_resolver=restoration_resolver,
+        combat_state=combat_state,
         demands=(item for item in ("demand-a", "demand-b")),
         options=(item for item in ("option-a",)),
         wait_decision_factory=wait_factory,
@@ -136,6 +142,7 @@ def test_dashboard_path_generates_unstabilized_seed_then_runs_canonical_candidat
     assert call["maximum_amount"] == 32000
     assert call["trigger_fraction"] == 0.35
     assert call["restoration_resolver"] is restoration_resolver
+    assert call["combat_state"] is combat_state
     assert call["demands"] == ("demand-a", "demand-b")
     assert call["options"] == ("option-a",)
     assert call["requirements"] == ("major-brittle",)
