@@ -30,7 +30,7 @@ Registry consultation is a required architectural discovery step, not an optiona
 
 ## Project knowledge capture
 
-BFF keeps durable project knowledge in three shared indexes. Development work should update them when the corresponding kind of knowledge is discovered or created.
+BFF keeps durable project knowledge in shared indexes. Development work should update them when the corresponding kind of knowledge is discovered or created.
 
 ### Game mechanics field notes
 
@@ -49,6 +49,16 @@ Keep the index descriptive rather than sales-oriented. Internal correctness work
 Whenever research uncovers a useful external source for ESO mechanics, data, logs, calibration, validation, or implementation reference, add it to `useful_resources.md`.
 
 `useful_resources.md` is a working source registry for BFF / FoundryDock research and combat-math validation. It is not merely a link collection. Each source entry should say what the source is useful for and how much confidence should be placed in it before turning information into hardcoded game math. Record version, date, provenance, or limitations when those materially affect interpretation.
+
+### ESO numeric ID registry
+
+Whenever development, log analysis, historical research, data reconciliation, or external-source review identifies a reusable ESO numeric ID, alias, display ID, effect ID, source ability ID, raw ESO Logs ID, or other numeric handle, consult and update `ESO_ID_REFERENCE.md`.
+
+The registry is deliberately evidence-oriented. Stable BFF skill/effect identity remains semantic `lower_snake_case`; numeric ESO IDs are aliases, source handles, or observations and may vary by component, morph, caster, target, event type, bundle, update, or source system.
+
+When adding an ID, preserve its exact role/context, provenance, confidence, and update/year when version-sensitive. If a second numeric ID appears for the same semantic identity, add it rather than silently replacing the earlier observation. Unknown or contradictory IDs stay explicit until reviewed.
+
+The bulk Major/Minor effect alias corpus remains in `docs/major_minor_effect_ids.md`, and detailed raw ESO Logs event-tag research remains in `ESO_LOGS_RAW_TAG_REFERENCE.md`; `ESO_ID_REFERENCE.md` is the shared cross-system index and rule-of-use document.
 
 ## Gameplay-practice policy is a separate layer
 
