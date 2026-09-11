@@ -157,6 +157,11 @@ def test_checked_in_history_seeds_gear_skill_passive_and_cp_examples():
     entries = (
         _entry("Serpent's Disdain", "Gear Set"),
         _entry("Pillager's Profit", "Gear Set"),
+        _entry("Roaring Opportunist", "Gear Set"),
+        _entry("Saxhleel Champion", "Gear Set"),
+        _entry("Pearlescent Ward", "Gear Set"),
+        _entry("Spell Power Cure", "Gear Set"),
+        _entry("Powerful Assault", "Gear Set"),
         _entry(
             "Combat Prayer — Restoration Staff",
             "Skill",
@@ -176,10 +181,31 @@ def test_checked_in_history_seeds_gear_skill_passive_and_cp_examples():
     by_name = {entry.name: entry for entry in result}
 
     assert "U34 • 2022 • Released" in dict(by_name["Serpent's Disdain"].details)["History / Legacy"]
+
     pillager = dict(by_name["Pillager's Profit"].details)["History / Legacy"]
     assert "U34 • 2022 • Released" in pillager
     assert "U39 • 2023 • Bug Fix" in pillager
     assert "U46 • 2025 • Nerf" in pillager
+
+    roaring = dict(by_name["Roaring Opportunist"].details)["History / Legacy"]
+    assert "U26 • 2020 • Released" in roaring
+    assert "U27 • 2020 • Rework" in roaring
+    assert "U47 • 2025 • Stat Line" in roaring
+    assert "12 to 6" in roaring
+
+    assert "U30 • 2021 • Released" in dict(by_name["Saxhleel Champion"].details)["History / Legacy"]
+    assert "U34 • 2022 • Released" in dict(by_name["Pearlescent Ward"].details)["History / Legacy"]
+
+    spell_power_cure = dict(by_name["Spell Power Cure"].details)["History / Legacy"]
+    assert "U7 • 2015 • Launch-Era Balance" in spell_power_cure
+    assert "U27 • 2020 • Rework" in spell_power_cure
+    assert "6-person target cap" in spell_power_cure
+
+    powerful_assault = dict(by_name["Powerful Assault"].details)["History / Legacy"]
+    assert "U7 • 2015 • Launch-Era Buff" in powerful_assault
+    assert "U27 • 2020 • Rework" in powerful_assault
+    assert "307 Weapon and Spell Damage" in powerful_assault
+
     assert "U23 • 2019 • Balance" in dict(by_name["Combat Prayer — Restoration Staff"].details)["History / Legacy"]
     assert "U31 • 2021 • Buff" in dict(by_name["Essence Drain — Restoration Staff"].details)["History / Legacy"]
     assert "U34 • 2022 • Rework" in dict(by_name["Fighting Finesse"].details)["History / Legacy"]
