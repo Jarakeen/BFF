@@ -47,6 +47,9 @@ from services.extreme_gear_set_objective_relevance_service import ExtremeGearSet
 from services.extreme_gear_set_topology_catalog_service import ExtremeGearSetTopologyCatalogService
 from services.extreme_global_search_universe_service import ExtremeGlobalSearchUniverseService
 from services.extreme_hypothetical_class_progression_service import ExtremeHypotheticalClassProgressionService
+from services.extreme_hypothetical_undaunted_progression_service import (
+    ExtremeHypotheticalUndauntedProgressionService,
+)
 from services.extreme_named_gear_set_slot_eligibility_service import ExtremeNamedGearSetSlotEligibilityService
 from services.extreme_objective_named_gear_set_catalog_realization_service import (
     ExtremeObjectiveNamedGearSetCatalogRealizationResult,
@@ -83,6 +86,7 @@ from services.extreme_structural_mundus_food_potion_core_stat_record_service imp
 _GEAR_DEFERRED_AXIS = "gear and legal set/package topology"
 _EQUIPMENT_TRAIT_DEFERRED_AXIS = "armor, jewelry, and weapon traits"
 _GLYPH_DEFERRED_AXIS = "glyphs/enchants"
+_PASSIVE_DEFERRED_AXIS = "class/skill/armor/weapon/guild passive ranks"
 _REMAINING_EQUIPMENT_TRAIT_AXIS = (
     "glyph-dependent/runtime armor traits plus jewelry and weapon traits"
 )
@@ -90,6 +94,9 @@ _RESOURCE_REMAINING_EQUIPMENT_TRAIT_AXIS = (
     "non-resource/runtime armor traits plus jewelry and weapon traits"
 )
 _RESOURCE_REMAINING_GLYPH_AXIS = "jewelry and weapon glyphs/enchants"
+_RESOURCE_REMAINING_PASSIVE_AXIS = (
+    "remaining class/skill/armor/weapon/guild passive ranks excluding reviewed max-rank Undaunted Mettle"
+)
 _GEAR_SCOPE = (
     "all objective-surviving canonical named gear-set breakpoint assignments "
     "with proven active-snapshot physical slot witnesses"
@@ -102,6 +109,9 @@ _RESOURCE_ARMOR_SCOPE = (
     "all legal seven-piece Light/Medium/Heavy armor-weight continuations, proof-reduced "
     "by distinct armor-type count, crossed with proof-reduced Divines/Infused plus "
     "objective-relevant CP160 Truly Superb armor-glyph states"
+)
+_RESOURCE_UNDAUNTED_SCOPE = (
+    "reviewed canonical max-rank Undaunted Mettle applied through shared passive mechanics"
 )
 
 
@@ -148,10 +158,17 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
                 f"does not support objective: {objective_key!r}"
             )
 
+        resource_armor = key in ExtremeArmorResourceWeightTraitGlyphStateService.SUPPORTED_OBJECTIVES
+        reviewed_armor = key in ExtremeArmorWeightTraitStateService.REVIEWED_OBJECTIVES
         gear_realization = self._gear_realization(key)
+        progression_service = (
+            ExtremeHypotheticalUndauntedProgressionService(self.database_path)
+            if resource_armor
+            else ExtremeHypotheticalClassProgressionService(self.database_path)
+        )
         canonical = ExtremeCanonicalStructuralStatEvaluator(
             optimizer=self.optimizer,
-            progression_service=ExtremeHypotheticalClassProgressionService(self.database_path),
+            progression_service=progression_service,
         )
         mundus_repository = MundusRepository(
             self.database_path,
@@ -166,8 +183,6 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
 
         armor_catalog = None
         armor_count = 1
-        resource_armor = key in ExtremeArmorResourceWeightTraitGlyphStateService.SUPPORTED_OBJECTIVES
-        reviewed_armor = key in ExtremeArmorWeightTraitStateService.REVIEWED_OBJECTIVES
 
         if resource_armor:
             trait_glyph_service = ExtremeArmorResourceTraitGlyphStateService(self.database_path)
@@ -250,7 +265,7 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
 
         searched_parts = [*result.structural_scope, _GEAR_SCOPE]
         if resource_armor:
-            searched_parts.append(_RESOURCE_ARMOR_SCOPE)
+            searched_parts.extend((_RESOURCE_ARMOR_SCOPE, _RESOURCE_UNDAUNTED_SCOPE))
         elif reviewed_armor:
             searched_parts.append(_REVIEWED_ARMOR_SCOPE)
         searched_parts.extend((_MUNDUS_SCOPE, _FOOD_SCOPE, _POTION_SCOPE))
@@ -273,6 +288,9 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
                     continue
             if axis == _GLYPH_DEFERRED_AXIS and resource_armor:
                 omitted_rows.append(_RESOURCE_REMAINING_GLYPH_AXIS)
+                continue
+            if axis == _PASSIVE_DEFERRED_AXIS and resource_armor:
+                omitted_rows.append(_RESOURCE_REMAINING_PASSIVE_AXIS)
                 continue
             omitted_rows.append(axis)
         omitted = tuple(omitted_rows)
@@ -359,7 +377,7 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
                 f"Scored {armor_count:,} proof-reduced resource armor weight/trait/glyph states for each of {len(gear_candidates):,} distinct gear witnesses before Mundus/food/potion selection."
             )
             explanation_rows.append(
-                f"Armor-weight legality reviewed all {weight_catalog.raw_loadouts_reviewed:,} seven-slot Light/Medium/Heavy loadouts and preserved one continuation witness for each 1/2/3 armor-type count. Undaunted Mettle ownership/effect remains in the separate passive axis."
+                f"Armor-weight legality reviewed all {weight_catalog.raw_loadouts_reviewed:,} seven-slot Light/Medium/Heavy loadouts and preserved one continuation witness for each 1/2/3 armor-type count. Reviewed max-rank Undaunted Mettle is applied canonically to those witnesses; other passive ranks remain separate."
             )
         elif reviewed_armor:
             explanation_rows.append(
