@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "falkreath_hold",
+  "encounter_id": "deathlord_bjarfrud_skjoralmor",
+  "encounter_name": "Deathlord Bjarfrud Skjoralmor",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Corpse Management","threshold":"100% to 0%","description":"Kill incoming undead close to the boss, collect the urn cleanse, and remove corpses before the detonation check."},"source_type":"guide","source_name":"Xynode Falkreath Hold Guide","source_locator":"Deathlord Bjarfrud Skjoralmor","game_update":"U15","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"corpse_cleanse","value":{"name":"Corpse Cleanse","response":"keep_add_corpses_grouped_near_boss_and_use_urn_synergy_to_cleanse_them_quickly"},"source_type":"achievement","source_name":"Epic Undertaking","source_locator":"Falkreath Hold achievement","game_update":"U15","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"big_boom","value":{"name":"Corpse Detonation","response":"spread_for_personal_aoes_and_ensure_corpses_are_cleansed_before_channel_finishes"},"source_type":"guide","source_name":"Xynode Falkreath Hold Guide","source_locator":"Deathlord Bjarfrud Skjoralmor","game_update":"U15","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"breath","value":{"name":"Frontal Breath","response":"tank_faces_boss_away_and_non_tanks_avoid_the_frontal_cone"},"source_type":"guide","source_name":"Xynode Falkreath Hold Guide","source_locator":"Deathlord Bjarfrud Skjoralmor","game_update":"U15","confidence":"high"}
+  ]
+}
