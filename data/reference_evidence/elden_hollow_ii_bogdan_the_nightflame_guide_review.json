@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "elden_hollow_ii",
+  "encounter_id": "bogdan_the_nightflame",
+  "encounter_name": "Bogdan the Nightflame",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Nightflame Main Phase","threshold":"100% to 0%","description":"Control shadow and healer adds, avoid fire zones, and block Bogdan's jump reset without falling from the platform."},"source_type":"guide","source_name":"Xynode Elden Hollow II Guide","source_locator":"Bogdan the Nightflame","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"shadows","value":{"name":"Shadow Adds","response":"kill_shadow_adds_before_they_fear_or_mind_control_players_into_fire_or_off_the_platform"},"source_type":"guide","source_name":"Xynode Elden Hollow II Guide","source_locator":"Bogdan the Nightflame","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"healer_adds","value":{"name":"Healer Adds","response":"interrupt_heals_then_focus_healer_adds_before_bogdan_recovers_significant_health"},"source_type":"guide","source_name":"Xynode Elden Hollow II Guide","source_locator":"Bogdan the Nightflame","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"jump","value":{"name":"Nightflame Jump","response":"get_out_of_fire_and_block_the_jump_to_survive_the_room_reset"},"source_type":"guide","source_name":"Xynode Elden Hollow II Guide","source_locator":"Bogdan the Nightflame","game_update":"Launch","confidence":"high"}
+  ]
+}
