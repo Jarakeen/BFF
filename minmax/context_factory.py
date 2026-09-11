@@ -488,6 +488,7 @@ class BuildCalculationContextFactory:
 
         light_line = progression.owns_skill_line("Light Armor")
         medium_line = progression.owns_skill_line("Medium Armor")
+        heavy_line = progression.owns_skill_line("Heavy Armor")
         evocation, message = self._maxed_passive(progression, "Evocation", relevant=light_line)
         if message:
             unresolved.append(message)
@@ -509,13 +510,16 @@ class BuildCalculationContextFactory:
         dexterity, message = self._maxed_passive(progression, "Dexterity", relevant=medium_line)
         if message:
             unresolved.append(message)
+        juggernaut, message = self._maxed_passive(progression, "Juggernaut", relevant=heavy_line)
+        if message:
+            unresolved.append(message)
 
         gear = self.armor_passive_resolver.apply(
             gear,
             build,
             light_armor_passives_owned=light_line if progression.passive_ranks is None else False,
             medium_armor_passives_owned=medium_line if progression.passive_ranks is None else False,
-            heavy_armor_passives_owned=progression.owns_skill_line("Heavy Armor") if progression.passive_ranks is None else False,
+            heavy_armor_passives_owned=heavy_line if progression.passive_ranks is None else False,
             evocation_owned=evocation,
             concentration_owned=concentration,
             spell_warding_owned=spell_warding,
@@ -523,6 +527,7 @@ class BuildCalculationContextFactory:
             wind_walker_owned=wind_walker,
             agility_owned=agility,
             dexterity_owned=dexterity,
+            juggernaut_owned=juggernaut,
         )
 
         one_hand_line = progression.owns_skill_line("One Hand and Shield")
