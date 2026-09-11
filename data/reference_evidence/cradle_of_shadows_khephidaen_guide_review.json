@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "cradle_of_shadows",
+  "encounter_id": "khephidaen",
+  "encounter_name": "Khephidaen the Spiderkith",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Light-Control Phase","threshold":"100% to 0%","description":"Keep Khephidaen in active brazier light and manage the arena without relighting extinguished braziers when pursuing Shadowplay."},"source_type":"guide","source_name":"Xynode Cradle of Shadows Guide","source_locator":"Khephidaen the Spiderkith","game_update":"U11","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"heavy_attack","value":{"name":"Devastating Heavy Attack","response":"tank_blocks_heavy_attack_and_keeps_boss_faced_away_from_group"},"source_type":"guide","source_name":"Xynode Cradle of Shadows Guide","source_locator":"Khephidaen the Spiderkith","game_update":"U11","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"brazier_control","value":{"name":"Brazier Light","response":"keep_boss_inside_active_light_and_plan_position_before_braziers_go_dark"},"source_type":"achievement","source_name":"Shadowplay","source_locator":"Cradle of Shadows achievement","game_update":"U11","confidence":"high"}
+  ]
+}
