@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "crypt_of_hearts_i",
+  "encounter_id": "death_s_leviathan",
+  "encounter_name": "Death's Leviathan",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Tank Death's Leviathan toward a wall to control Charge, then block or dodge the expanding Burst after each charge."},"source_type":"guide","source_name":"Xynode Crypt of Hearts I Guide","source_locator":"Death's Leviathan","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"charge","value":{"name":"Charge","response":"face_the_boss_toward_a_nearby_wall_so_the_charge_travels_a_short_controlled_distance"},"source_type":"guide","source_name":"Xynode Crypt of Hearts I Guide","source_locator":"Death's Leviathan","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"burst","value":{"name":"Burst","response":"block_or_dodge_roll_the_fast_expanding_aoe_after_the_charge"},"source_type":"guide","source_name":"Xynode Crypt of Hearts I Guide","source_locator":"Death's Leviathan","game_update":"Launch","confidence":"high"}
+  ]
+}
