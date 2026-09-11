@@ -17,13 +17,16 @@ from ui.reference_data_model import ReferenceEntry
 
 
 def _load_rows(data_root: Path) -> tuple[dict, ...]:
-    path = Path(data_root) / "reference_mitigations.json"
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return ()
-    rows = payload.get("entries", []) if isinstance(payload, dict) else []
-    return tuple(row for row in rows if isinstance(row, dict))
+    root = Path(data_root)
+    rows: list[dict] = []
+    for path in sorted(root.glob("reference_mitigations*.json"), key=lambda item: item.name.casefold()):
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        entries = payload.get("entries", []) if isinstance(payload, dict) else []
+        rows.extend(row for row in entries if isinstance(row, dict))
+    return tuple(rows)
 
 
 def enrich_reference_entries_with_mitigations(
