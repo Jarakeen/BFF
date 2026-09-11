@@ -146,6 +146,74 @@ def test_orchestration_selects_recovery_valid_candidate_over_better_soft_rank() 
     )
 
 
+def test_orchestration_binds_runtime_state_to_each_final_stabilized_plan() -> None:
+    service = RotationRecoveryHeavyCandidateOrchestrationService(
+        stabilization_service=_FakeCandidateStabilizer()
+    )
+    factory_calls = []
+    resolver_calls = []
+
+    def runtime_factory(plan):
+        factory_calls.append(plan)
+
+        def resolve(time_seconds, sequence=None):
+            resolver_calls.append((plan, time_seconds, sequence))
+            return (plan.build_name, time_seconds, sequence)
+
+        return resolve
+
+    observed = []
+
+    def evaluate_final_family(snapshots):
+        observed.extend(snapshots)
+        first, second = snapshots
+        assert first.runtime_combat_state_resolver is not None
+        assert second.runtime_combat_state_resolver is not None
+        assert first.runtime_combat_state_resolver(7.0, 2) == (
+            "better-soft-rank-but-invalid-recovery",
+            7.0,
+            2,
+        )
+        assert second.runtime_combat_state_resolver(11.0, None) == (
+            "legal-lower-soft-rank",
+            11.0,
+            None,
+        )
+        return (
+            _family_result("better-soft-rank-but-invalid-recovery", rank=1),
+            _family_result("legal-lower-soft-rank", rank=2),
+        )
+
+    result = service.orchestrate(
+        build=PlayerBuild(Name="Rotation Test", BuildName="Role Neutral"),
+        candidates=(
+            _candidate("better-soft-rank-but-invalid-recovery"),
+            _candidate("legal-lower-soft-rank"),
+        ),
+        evaluate_final_family=evaluate_final_family,
+        resource=ResourceType.MAGICKA,
+        maximum_amount=30000,
+        trigger_fraction=0.30,
+        restoration_resolver=lambda _heavy: None,
+        runtime_combat_state_resolver_factory=runtime_factory,
+    )
+
+    assert [plan.build_name for plan in factory_calls] == [
+        "better-soft-rank-but-invalid-recovery",
+        "legal-lower-soft-rank",
+    ]
+    assert [item.candidate_id for item in observed] == [
+        "better-soft-rank-but-invalid-recovery",
+        "legal-lower-soft-rank",
+    ]
+    assert resolver_calls == [
+        (factory_calls[0], 7.0, 2),
+        (factory_calls[1], 11.0, None),
+    ]
+    assert result.stabilized_candidates[0].runtime_combat_state_resolver is not None
+    assert result.stabilized_candidates[1].runtime_combat_state_resolver is not None
+
+
 def test_orchestration_rejects_iteration_evaluation_candidate_identity_drift() -> None:
     service = RotationRecoveryHeavyCandidateOrchestrationService(
         stabilization_service=_FakeCandidateStabilizer()
