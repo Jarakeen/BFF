@@ -13,9 +13,40 @@ def test_unrelated_damage_proc_is_proven_irrelevant_to_max_magicka():
     assert result.blockers == ()
 
 
-def test_target_max_resource_reference_stays_open_even_when_only_used_for_scaling():
+def test_scaling_from_target_max_resource_does_not_modify_the_resource():
     result = ExtremeGearSetResourceObjectiveScreeningService.review(
         "(2 items) The heal scales off the higher of your Max Magicka or Stamina.",
+        "max_magicka",
+    )
+
+    assert result.proven_irrelevant is True
+    assert result.target_resource_mentioned is False
+    assert result.blockers == ()
+
+
+def test_target_max_health_damage_scaling_is_irrelevant_to_max_health():
+    result = ExtremeGearSetResourceObjectiveScreeningService.review(
+        "(5 items) Deal 717 Physical damage to the attacker. This effect scales off your Max Health.",
+        "max_health",
+    )
+
+    assert result.proven_irrelevant is True
+    assert result.target_resource_mentioned is False
+
+
+def test_restore_based_on_higher_maximum_does_not_modify_maximum():
+    result = ExtremeGearSetResourceObjectiveScreeningService.review(
+        "(2 items) Restore 700 Magicka or Stamina, whichever maximum is higher.",
+        "max_magicka",
+    )
+
+    assert result.proven_irrelevant is True
+    assert result.target_resource_mentioned is False
+
+
+def test_list_wording_catches_shapeshifter_style_maximum_resource_modifier():
+    result = ExtremeGearSetResourceObjectiveScreeningService.review(
+        "(1 item) While transformed, increase your Maximum Health, Stamina, and Magicka by 1707.",
         "max_magicka",
     )
 
@@ -23,10 +54,20 @@ def test_target_max_resource_reference_stays_open_even_when_only_used_for_scalin
     assert result.target_resource_mentioned is True
 
 
-def test_list_wording_catches_shapeshifter_style_maximum_resource_modifier():
+def test_inverse_wording_catches_necropotence_style_modifier():
     result = ExtremeGearSetResourceObjectiveScreeningService.review(
-        "(1 item) While transformed, increase your Maximum Health, Stamina, and Magicka by 1707.",
+        "(5 items) While you have a pet active, your Max Magicka is increased by 3132.",
         "max_magicka",
+    )
+
+    assert result.proven_irrelevant is False
+    assert result.target_resource_mentioned is True
+
+
+def test_reduction_catches_thrassian_style_modifier():
+    result = ExtremeGearSetResourceObjectiveScreeningService.review(
+        "(1 item) Each stack reduces your Maximum Health by 120.",
+        "max_health",
     )
 
     assert result.proven_irrelevant is False
