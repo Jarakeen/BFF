@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "the_banished_cells_i",
+  "encounter_id": "shadowrend",
+  "encounter_name": "Shadowrend",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Shadowrend Phase","threshold":"100% to 0%","description":"Hold Shadowrend centrally, kill its clone quickly, and avoid triggering long-range charge-and-devour behavior."},"source_type":"guide","source_name":"Xynode Banished Cells I Guide","source_locator":"Shadowrend","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"shadow_clone","value":{"name":"Shadow Clone","response":"kill_the_low_health_clone_immediately_before_duplicate_pressure_builds"},"source_type":"guide","source_name":"Xynode Banished Cells I Guide","source_locator":"Shadowrend","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"charge_and_devour","value":{"name":"Charge and Devour","response":"stay_close_to_the_boss_and_interrupt_devour_immediately_if_it_triggers"},"source_type":"guide","source_name":"Xynode Banished Cells I Guide","source_locator":"Shadowrend","game_update":"Launch","confidence":"high"}
+  ]
+}
