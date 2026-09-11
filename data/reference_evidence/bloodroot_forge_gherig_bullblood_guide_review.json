@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "content_id": "bloodroot_forge",
+  "encounter_id": "gherig_bullblood",
+  "encounter_name": "Gherig Bullblood and His Attendants",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Bullblood Trio","threshold":"100% to 0%","description":"Tank Gherig and both attendants together where practical while the group handles roots and AoE pressure."},"source_type":"guide","source_name":"Alcast Bloodroot Forge Guide","source_locator":"Fifth Boss - Bullblood Trio","game_update":"U15","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"chain_root","value":{"name":"Chain Root","response":"free_rooted_players_by_interrupting_the_attendant_channel_immediately"},"source_type":"guide","source_name":"Alcast Bloodroot Forge Guide","source_locator":"Bullblood Trio","game_update":"U15","confidence":"high"}
+  ]
+}
