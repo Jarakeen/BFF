@@ -6,11 +6,13 @@ This layer composes a proven named-set realization with one proof-reduced
 Light/Medium/Heavy + Divines/Infused + armor-glyph state for max
 Health/Magicka/Stamina. It owns no stat arithmetic: the completed ``PlayerBuild``
 is re-scored through the existing ``ExtremeOptimizationService`` so armor weight,
-glyph slot scaling, Infused, Divines/Mundus, set effects, food, potions, and
-class/race state meet in one canonical context.
+glyph slot scaling, Infused, Divines/Mundus, set effects, food, potions, class/race
+state, and reviewed passive progression meet in one canonical context.
 
-Armor-weight legality is searched here. This layer deliberately does not grant
-Undaunted Mettle or any other deferred passive.
+For the max-resource path, reviewed max-rank Undaunted Mettle progression is
+applied through ``ExtremeHypotheticalUndauntedProgressionService`` when a canonical
+database path is available. The +2/+4/+6% resource effect remains owned entirely by
+the shared ``UndauntedPassiveInputResolver``.
 """
 
 from typing import Any
@@ -23,6 +25,9 @@ from services.extreme_armor_resource_weight_trait_glyph_state_service import (
     ExtremeArmorResourceWeightTraitGlyphState,
     ExtremeArmorResourceWeightTraitGlyphStateService,
 )
+from services.extreme_hypothetical_undaunted_progression_service import (
+    ExtremeHypotheticalUndauntedProgressionService,
+)
 from services.extreme_named_gear_canonical_stat_evaluator import (
     ExtremeNamedGearCanonicalStatEvaluator,
 )
@@ -30,18 +35,31 @@ from services.extreme_structural_global_search_service import ExtremeStructuralC
 
 
 class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
-    """Add one combined resource armor weight/trait/glyph state beneath finite axes."""
+    """Add one combined resource armor state plus reviewed Mettle progression."""
 
     def __init__(
         self,
         *,
         evaluator: ExtremeNamedGearCanonicalStatEvaluator,
         armor_state: ExtremeArmorResourceWeightTraitGlyphState,
+        undaunted_progression_service: ExtremeHypotheticalUndauntedProgressionService | None = None,
     ) -> None:
         self.evaluator = evaluator
         self.armor_state = armor_state
         self.optimizer = evaluator.optimizer
-        self.progression_service = evaluator.progression_service
+        self.class_progression_service = evaluator.progression_service
+
+        if undaunted_progression_service is None:
+            database_path = getattr(self.optimizer, "database_path", None)
+            if database_path is not None:
+                undaunted_progression_service = ExtremeHypotheticalUndauntedProgressionService(
+                    database_path,
+                    class_progression_service=self.class_progression_service,
+                )
+        self.undaunted_progression_service = undaunted_progression_service
+        self.progression_service = (
+            undaunted_progression_service or self.class_progression_service
+        )
 
     def evaluate_candidate(
         self,
@@ -128,6 +146,11 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
             self.armor_state.trait_glyph_state.direct_glyph_delta
         )
         output["armor_weights"] = self.armor_state.weight_state.identity
+        output["undaunted_mettle_rank"] = progression.passive_rank("Undaunted Mettle")
+        output["undaunted_mettle_progression_applied"] = bool(
+            progression.owns_skill_line("Undaunted")
+            and progression.passive_rank("Undaunted Mettle")
+        )
 
         unresolved = tuple(
             dict.fromkeys(
