@@ -53,6 +53,20 @@ def test_recipient_shape_flags_both_distinguishable_timing_phases_on_same_target
     assert old_delta == 0.0
 
 
+def test_recipient_shape_does_not_count_one_tick_as_both_phases():
+    shape, restart_delta, old_delta = _recipient_shape(
+        post_ticks=(100.092,),
+        restart_first=100.021,
+        old_next=100.127,
+        cadence=2.0,
+        tolerance=0.1,
+    )
+
+    assert shape == "phase-ambiguous"
+    assert restart_delta == pytest.approx(0.071)
+    assert old_delta == pytest.approx(0.035)
+
+
 def test_recipient_shape_old_phase_only_is_not_treated_as_failed_restart():
     shape, restart_delta, old_delta = _recipient_shape(
         post_ticks=(13.05, 14.05),
