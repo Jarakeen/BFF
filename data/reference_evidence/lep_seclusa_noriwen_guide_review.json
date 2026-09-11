@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "content_id": "lep_seclusa",
+  "encounter_id": "noriwen",
+  "encounter_name": "Noriwen",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main / Chain Pull","threshold":"Pull","description":"Tank follows Noriwen closely enough to avoid unnecessary Chain Pull punishment while the group avoids Blast Powder and Gryphon Bomber lanes."},"source_type":"guide","source_name":"Hyperioxes Lep Seclusa Dungeon Guide","source_locator":"Noriwen","game_update":"U50","confidence":"high"},
+    {"fact_type":"phase","fact_key":"alcunar_phase_one","value":{"order":2,"label":"Alcunar Phase I","threshold":"70% to 50%","description":"Noriwen moves to Alcunar. Block Alcunar's pecks/swipes and maintain tank proximity; at 50% transition into the first Flame Gryphon phase."},"source_type":"guide","source_name":"Hyperioxes Lep Seclusa Dungeon Guide","source_locator":"Noriwen > Alcunar","game_update":"U50","confidence":"high"},
+    {"fact_type":"phase","fact_key":"flame_gryphon_phase","value":{"order":3,"label":"Flame Gryphon Intermission","threshold":"50%","description":"Noriwen leaves while two Flame Gryphons spawn. Kill both within the intermission window and keep their dangerous cones/cyclones away from non-tanks."},"source_type":"guide","source_name":"Hyperioxes Lep Seclusa Dungeon Guide","source_locator":"Noriwen > Flame Gryphons","game_update":"U50","confidence":"high"},
+    {"fact_type":"phase","fact_key":"combined_gryphon_phase","value":{"order":4,"label":"Noriwen + Flame Gryphons","threshold":"40%","description":"Two Flame Gryphons spawn while Noriwen remains active. Prioritize controlled add handling over over-pushing boss damage."},"source_type":"guide","source_name":"Hyperioxes Lep Seclusa Dungeon Guide","source_locator":"Noriwen > Flame Gryphons","game_update":"U50","confidence":"high"},
+    {"fact_type":"phase","fact_key":"alcunar_execute","value":{"order":5,"label":"Alcunar Execute","threshold":"20% to death","description":"Noriwen returns to Alcunar and remains there through execute while prior arena hazards continue."},"source_type":"guide","source_name":"Hyperioxes Lep Seclusa Dungeon Guide","source_locator":"Noriwen > Alcunar","game_update":"U50","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"chain_pull","value":{"name":"Chain Pull","response":"tank_stays_in_melee_range_or_purges_outheals_massive_dot_if_chained","positioning":"walk_boss_toward_center_before_thresholds_if_needed"},"source_type":"guide","source_name":"Hyperioxes Lep Seclusa Dungeon Guide","source_locator":"Noriwen > Chain Pull","game_update":"U50","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"wing_gust","value":{"name":"Wing Gust","response":"avoid_three_travelling_lightning_aoes","hard_mode":"dot_also_deals_aoe_damage_around_affected_player"},"source_type":"guide","source_name":"Hyperioxes Lep Seclusa Dungeon Guide","source_locator":"Noriwen > Wing Gust","game_update":"U50","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"brand","value":{"name":"Brand","response":"tank_blocks_heavy","warning":"dodge_rolling_enrages_noriwen"},"source_type":"guide","source_name":"Hyperioxes Lep Seclusa Dungeon Guide","source_locator":"Noriwen > Brand","game_update":"U50","confidence":"high"}
+  ]
+}
