@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "content_id": "red_petal_bastion",
+  "encounter_id": "rogerain_the_sly",
+  "encounter_name": "Rogerain the Sly",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_cycle","value":{"order":1,"label":"Main / Chaos Cycle","threshold":"Pull to death","description":"Rogerain cycles heavy attacks, Unspeakable Void, Chaos Rain, Chaos Gates and repeated Goatification while portal adds pressure the group."},"source_type":"guide","source_name":"ESO-Hub Red Petal Bastion Dungeon Guide","source_locator":"Rogerain the Sly","game_update":"U31","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"unspeakable_void","value":{"name":"Unspeakable Void","response":"leave_large_void_circle_immediately_and_avoid_belly_buster_eruptions"},"source_type":"guide","source_name":"ESO-Hub Red Petal Bastion Dungeon Guide","source_locator":"Rogerain the Sly > Unspeakable Void / Belly Buster","game_update":"U31","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"chaos_rain","value":{"name":"Chaos Rain","response":"group_heals_through_poison_pressure"},"source_type":"guide","source_name":"ESO-Hub Red Petal Bastion Dungeon Guide","source_locator":"Rogerain the Sly > Chaos Rains","game_update":"U31","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"chaos_gate","value":{"name":"Chaos Gate","response":"control_portal_adds_and_damage_gate_during_goat_windows"},"source_type":"guide","source_name":"ESO-Hub Red Petal Bastion Dungeon Guide","source_locator":"Rogerain the Sly > Chaos Gate","game_update":"U31","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"goatification","value":{"name":"Goatification","response":"goat_eats_sweetrolls_for_stacks_and_charges_gate_to_enable_portal_burn","notes":"Buck Wild stacks support gate damage and group utility."},"source_type":"guide","source_name":"ESO-Hub Red Petal Bastion Dungeon Guide","source_locator":"Rogerain the Sly > Goatification","game_update":"U31","confidence":"high"}
+  ]
+}
