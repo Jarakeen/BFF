@@ -12,6 +12,9 @@ from services.extreme_runtime_snapshot import ExtremeRuntimeSnapshot
 from services.extreme_runtime_snapshot_combat_state_service import (
     ExtremeRuntimeSnapshotCombatStateService,
 )
+from services.rotation_runtime_bar_provenance_service import (
+    RotationRuntimeBarProvenanceService,
+)
 
 
 @dataclass(frozen=True)
@@ -33,9 +36,11 @@ class RotationPlanRuntimeCombatStateService:
     """Project authoritative runtime history at exact ordered points in a plan.
 
     Bar identity comes from ``RotationActiveBarAssessor`` so runtime state and
-    active-bar legality share one ordered BAR_SWAP authority. Skill/gear/potion/group
-    buff truth remains owned by ``ExtremeRuntimeSnapshotCombatStateService``; its
-    legacy name is retained for compatibility, but the projector is role-neutral.
+    active-bar legality share one ordered BAR_SWAP authority. Unified runtime effect
+    attempts are first bound to that same bar progression by
+    ``RotationRuntimeBarProvenanceService``. Skill/gear/potion/group buff truth
+    remains owned by ``ExtremeRuntimeSnapshotCombatStateService``; its legacy name is
+    retained for compatibility, but the projector is role-neutral.
 
     The source snapshot must carry unified ``runtime_history``. Legacy one-instant
     ``attempts`` or ``potion_elapsed_seconds`` evidence cannot be stretched across a
@@ -48,10 +53,14 @@ class RotationPlanRuntimeCombatStateService:
         *,
         active_bar_assessor: RotationActiveBarAssessor | None = None,
         runtime_snapshot_state: ExtremeRuntimeSnapshotCombatStateService | None = None,
+        runtime_bar_provenance: RotationRuntimeBarProvenanceService | None = None,
     ) -> None:
         self.active_bar_assessor = active_bar_assessor or RotationActiveBarAssessor()
         self.runtime_snapshot_state = (
             runtime_snapshot_state or ExtremeRuntimeSnapshotCombatStateService()
+        )
+        self.runtime_bar_provenance = runtime_bar_provenance or RotationRuntimeBarProvenanceService(
+            active_bar_assessor=self.active_bar_assessor
         )
 
     def resolve(
@@ -100,7 +109,21 @@ class RotationPlanRuntimeCombatStateService:
                 ),
             )
 
-        snapshot = runtime_snapshot_source.snapshot_at(
+        bound = self.runtime_bar_provenance.bind(
+            plan,
+            runtime_snapshot_source,
+            initial_bar=initial_bar,
+        )
+        if not bound.resolved or bound.snapshot is None:
+            return RotationPlanRuntimeCombatStateResult(
+                time_seconds=instant,
+                sequence=boundary_sequence,
+                active_bar=active_bar,
+                combat_state=None,
+                unresolved=bound.unresolved,
+            )
+
+        snapshot = bound.snapshot.snapshot_at(
             instant,
             sequence=boundary_sequence,
         )
