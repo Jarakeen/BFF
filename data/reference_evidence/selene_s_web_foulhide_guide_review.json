@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "content_id": "selene_s_web",
+  "encounter_id": "foulhide",
+  "encounter_name": "Foulhide",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"fight start","description":"Keep Foulhide controlled and stay together so the group can react immediately to its interruptible cast."},"source_type":"guide","source_name":"Xynode Selene's Web Guide","source_locator":"Foulhide","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"interruptible_cast","value":{"name":"Interruptible Cast","response":"bash_foulhide_as_soon_as_the_red_interrupt_telegraph_appears"},"source_type":"guide","source_name":"Xynode Selene's Web Guide","source_locator":"Foulhide","game_update":"Launch","confidence":"high"}
+  ]
+}
