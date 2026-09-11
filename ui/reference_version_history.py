@@ -21,13 +21,18 @@ def _normalize(value: str) -> str:
 
 
 def _load_rows(data_root: Path) -> tuple[dict, ...]:
-    path = data_root / "reference_version_history.json"
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return ()
-    rows = payload.get("events", []) if isinstance(payload, dict) else []
-    return tuple(row for row in rows if isinstance(row, dict))
+    rows: list[dict] = []
+    for path in sorted(
+        data_root.glob("reference_version_history*.json"),
+        key=lambda item: item.name.casefold(),
+    ):
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        events = payload.get("events", []) if isinstance(payload, dict) else []
+        rows.extend(row for row in events if isinstance(row, dict))
+    return tuple(rows)
 
 
 def _event_line(row: dict) -> str:
