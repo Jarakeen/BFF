@@ -37,6 +37,8 @@ _EXPECTED_IDENTITIES = {
     ("Animal Companions", "Flourish"),
     ("Animal Companions", "Savage Beast"),
     ("Ardent Flame", "A Soul Ablaze"),
+    ("Ardent Flame", "Fan the Flames"),
+    ("Ardent Flame", "Traumatic Burns"),
     ("Assassination", "Master Assassin"),
     ("Bone Tyrant", "Health Avarice"),
     ("Curative Runeforms", "Erudition"),
