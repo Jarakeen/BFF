@@ -23,7 +23,7 @@ def _row(
     skill_type="Active",
     description="",
     domain=ExtremeSkillDomain.CLASS,
-    ability_id=None,
+    ability_id=...,
 ):
     return ExtremePlayerSkillRecord(
         skill_id=skill_id,
@@ -36,7 +36,7 @@ def _row(
         is_crafted=False,
         base_ability_id=skill_id * 10,
         max_rank=4,
-        max_rank_ability_id=ability_id if ability_id is not None else skill_id * 100,
+        max_rank_ability_id=(skill_id * 100 if ability_id is ... else ability_id),
         description=description,
         domain=domain,
     )
@@ -81,7 +81,7 @@ def test_catalog_resolves_armor_pet_and_transformation_witness_families():
     assert catalog.unresolved == ()
 
 
-def test_pet_witness_requires_explicit_summon_evidence_not_merely_a_class_line():
+def test_pet_witness_requires_a_summoned_creature_not_environmental_construct():
     service = ExtremeResourceRuntimeSkillWitnessCatalogService(
         skill_universe_service=_Skills(
             (
@@ -93,9 +93,9 @@ def test_pet_witness_requires_explicit_summon_evidence_not_merely_a_class_line()
                 ),
                 _row(
                     skill_id=2,
-                    name="Daedric Curse",
-                    line="Daedric Summoning",
-                    description="Curse an enemy with a destructive rune.",
+                    name="Grave Grasp",
+                    line="Bone Tyrant",
+                    description="Summon three patches of skeletal claws from the ground.",
                 ),
                 _row(
                     skill_id=3,
@@ -115,7 +115,43 @@ def test_pet_witness_requires_explicit_summon_evidence_not_merely_a_class_line()
     assert any("pet_active" in item for item in catalog.unresolved)
 
 
-def test_transformation_witness_must_be_an_ultimate():
+def test_sparse_canonical_transformation_row_uses_fallback_identity():
+    service = ExtremeResourceRuntimeSkillWitnessCatalogService(
+        skill_universe_service=_Skills(
+            (
+                _row(
+                    skill_id=1,
+                    name="Annulment",
+                    line="Light Armor",
+                    domain=ExtremeSkillDomain.ARMOR,
+                ),
+                _row(
+                    skill_id=2,
+                    name="Summon Familiar",
+                    line="Daedric Summoning",
+                    description="Summon a familiar to fight for you.",
+                ),
+                _row(
+                    skill_id=3,
+                    name="Werewolf Transformation",
+                    line="Werewolf",
+                    skill_type="",
+                    description="Transform into a beast.",
+                    domain=ExtremeSkillDomain.WORLD,
+                    ability_id=None,
+                ),
+            )
+        )
+    )
+
+    catalog = service.build()
+
+    assert catalog.denominator_proven is True
+    assert [row.name for row in catalog.transformation_ultimates] == ["Werewolf Transformation"]
+    assert catalog.transformation_ultimates[0].ability_id == 30
+
+
+def test_transformation_witness_rejects_unreviewed_nonultimate_world_skill():
     service = ExtremeResourceRuntimeSkillWitnessCatalogService(
         skill_universe_service=_Skills(
             (
@@ -129,7 +165,7 @@ def test_transformation_witness_must_be_an_ultimate():
                     skill_id=2,
                     name="Summon Familiar",
                     line="Daedric Summoning",
-                    description="Summon a familiar pet to fight for you.",
+                    description="Summon a familiar to fight for you.",
                 ),
                 _row(
                     skill_id=3,
