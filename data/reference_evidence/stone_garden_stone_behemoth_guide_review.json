@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "stone_garden",
+  "encounter_id": "stone_behemoth",
+  "encounter_name": "Stone Behemoth",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Elemental Mixture Main Phase","threshold":"Pull to death","description":"React to Arkasis's elemental mixtures, manage spawned Stone Husks, and avoid overlapping player-targeted ground pressure."},"source_type":"guide","source_name":"Alcast Stone Garden Guide","source_locator":"Stone Behemoth","game_update":"U27","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"essence_explosion","value":{"name":"Essence Explosion","response":"prepare_group_mitigation_and_burn_husks_before_pressure_compounds"},"source_type":"guide","source_name":"Alcast Stone Garden Guide","source_locator":"Stone Behemoth > Essence Explosion","game_update":"U27","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"lightning","value":{"name":"Player Lightning AoEs","response":"spread_and_block_when_behemoth_punches_ground"},"source_type":"guide","source_name":"Xynode Stone Garden Mechanics Guide","source_locator":"Stone Behemoth > Lightning","game_update":"U27","confidence":"high"}
+  ]
+}
