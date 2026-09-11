@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "content_id": "exiled_redoubt",
+  "encounter_id": "prime_sorcerer_vandorallen",
+  "encounter_name": "Prime Sorcerer Vandorallen",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main / Kite Phase","threshold":"Pull","description":"Assign a ranged player or healer to bait Storm Bolt away from the group while the tank controls frontal pressure and the group handles Blackspine Curse."},"source_type":"guide","source_name":"Hyperioxes Exiled Redoubt Dungeon Guide","source_locator":"Prime Sorcerer Vandorallen","game_update":"U50","confidence":"high"},
+    {"fact_type":"phase","fact_key":"iron_charge","value":{"order":2,"label":"Iron Charge / Icy Dome","threshold":"90%, 66%, 45%","description":"Vandorallen mounts and becomes mobile while Iron Atronach Spiders spawn. Group into Lucilla's Icy Dome and pull spiders into it so they can be killed safely before Combust."},"source_type":"guide","source_name":"Hyperioxes Exiled Redoubt Dungeon Guide","source_locator":"Prime Sorcerer Vandorallen > Iron Charge","game_update":"U50","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"storm_bolt","value":{"name":"Storm Bolt","response":"dedicated_ranged_kiter_baits_furthest_player_aoes_to_outer_edges","failure":"standing_in_aoe_causes_group_chain_lightning"},"source_type":"guide","source_name":"Hyperioxes Exiled Redoubt Dungeon Guide","source_locator":"Prime Sorcerer Vandorallen > Storm Bolt","game_update":"U50","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"blackspine_curse","value":{"name":"Blackspine Curse","response":"healer_outheals_twenty_second_dot_and_healing_absorb","purge":"not_primary_solution"},"source_type":"guide","source_name":"Hyperioxes Exiled Redoubt Dungeon Guide","source_locator":"Prime Sorcerer Vandorallen > Blackspine Curse","game_update":"U50","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"iron_atronach_spiders","value":{"name":"Iron Atronach Spiders","response":"tank_or_group_chains_spiders_into_icy_dome_then_focuses_them","failure":"spiders_combust_for_oblivion_damage_on_contact"},"source_type":"guide","source_name":"Hyperioxes Exiled Redoubt Dungeon Guide","source_locator":"Prime Sorcerer Vandorallen > Iron Charge","game_update":"U50","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"simulacrums","value":{"name":"Simulacrums","response":"hard_mode_focus_three_squishy_inferno_channelers_immediately","starts_below":"40%"},"source_type":"guide","source_name":"Hyperioxes Exiled Redoubt Dungeon Guide","source_locator":"Prime Sorcerer Vandorallen > Simulacrums","game_update":"U50","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"coruscating_orb","value":{"name":"Coruscating Orb","response":"kite_orbs_away_or_intentionally_transfer_chase_to_ranged_player","mode":"Hard Mode"},"source_type":"guide","source_name":"Hyperioxes Exiled Redoubt Dungeon Guide","source_locator":"Prime Sorcerer Vandorallen > Coruscating Orb","game_update":"U50","confidence":"high"}
+  ]
+}
