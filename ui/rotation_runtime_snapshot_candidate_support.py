@@ -25,7 +25,13 @@ class RotationRuntimeSnapshotCandidateSupport:
     though its compatibility class name is still Extreme-prefixed. This adapter owns
     no proc, potion, named-buff, or external-group-buff mechanics. It only resolves
     that shared runtime evidence into ``CombatState`` and forwards the result into
-    the canonical Rotation candidate path.
+    the already-decorated Rotation candidate path.
+
+    ``canonical_candidates`` is the execution chain after weapon, target, potion,
+    Ultimate, or other candidate decorators have been installed. ``base_canonical``
+    is the underlying canonical candidate bridge that owns saved-build adaptation and
+    static progression evidence. Keeping those references explicit avoids making a
+    decorator pretend it owns canonical build identity.
 
     ``runtime_snapshot_active_bar`` is deliberately explicit. A snapshot may occur
     after any number of bar swaps, and candidate generation can later move actions,
@@ -40,12 +46,19 @@ class RotationRuntimeSnapshotCandidateSupport:
     def __init__(
         self,
         *,
-        canonical_candidates: RotationCanonicalCandidateSupport,
+        canonical_candidates,
+        base_canonical: RotationCanonicalCandidateSupport | None = None,
         database_path: str | Path | None = None,
         runtime_snapshot_state: ExtremeRuntimeSnapshotCombatStateService | None = None,
     ) -> None:
         database = Path(database_path) if database_path is not None else get_data_dir() / "eso.db"
         self.canonical_candidates = canonical_candidates
+        self.base_canonical = base_canonical or canonical_candidates
+        if not isinstance(self.base_canonical, RotationCanonicalCandidateSupport):
+            raise TypeError(
+                "rotation runtime snapshot support requires an explicit "
+                "RotationCanonicalCandidateSupport evidence owner"
+            )
         self.runtime_snapshot_state = (
             runtime_snapshot_state
             or ExtremeRuntimeSnapshotCombatStateService(database)
@@ -53,11 +66,11 @@ class RotationRuntimeSnapshotCandidateSupport:
 
     @property
     def static_context_service(self):
-        return self.canonical_candidates.static_context_service
+        return self.base_canonical.static_context_service
 
     @property
     def build_adapter(self):
-        return self.canonical_candidates.build_adapter
+        return self.base_canonical.build_adapter
 
     def run_effects(
         self,
