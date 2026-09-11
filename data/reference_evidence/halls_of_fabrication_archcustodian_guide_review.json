@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "content_id": "halls_of_fabrication",
+  "encounter_id": "archcustodian",
+  "encounter_name": "Archcustodian",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"walk_phase","value":{"order":1,"label":"Shielded Walk","threshold":"Pull / after each stun","description":"Archcustodian walks with an active damage shield; touching the boss is lethal. Group stays in front, handles blades and adds, and moves toward the next Shock Pylon."},"source_type":"guide","source_name":"Xynode Halls of Fabrication Trial Guide","source_locator":"Archcustodian","confidence":"medium"},
+    {"fact_type":"phase","fact_key":"stun_phase","value":{"order":2,"label":"Shock Pylon Stun","threshold":"Pylon activation","description":"Activate the Shock Pylon when Archcustodian reaches it. The stun removes the shield and creates the only normal damage window."},"source_type":"guide","source_name":"Xynode Halls of Fabrication Trial Guide","source_locator":"Archcustodian > Shock Pylons","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"shock_pylon","value":{"name":"Shock Pylon","shield_removed_while_stunned":true,"damage_window":"stun_only","achievement_limit":"six_or_fewer_pylons_in_veteran_without_missing_an_opportunity"},"source_type":"guide + achievement","source_name":"Xynode Halls of Fabrication Trial Guide","source_locator":"Archcustodian / Arc-Custodian achievement","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"adds","value":{"name":"Fabricant Adds","count_per_walk_phase":2,"tank_response":"taunt_and_face_away_from_group","warning":"projectile_damage_can_reflect_from_shielded_two_hander"},"source_type":"guide","source_name":"Xynode Halls of Fabrication Trial Guide","source_locator":"Archcustodian > Adds","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"spinning_blades","value":{"name":"Spinning Blades","blockable_damage":true,"bleed_still_applies_if_blocked":true,"response":"step_out_or_dodge_roll_through"},"source_type":"guide","source_name":"Xynode Halls of Fabrication Trial Guide","source_locator":"Archcustodian > Spinning Blades","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"long_range_meteors","value":{"name":"Long-Range Meteors","trigger":"group_too_far_from_boss","failure_risk":"rapid_group_death","response":"stay_in_front_and_not_too_far_away"},"source_type":"guide","source_name":"Xynode Halls of Fabrication Trial Guide","source_locator":"Archcustodian > Meteors","confidence":"medium"}
+  ]
+}
