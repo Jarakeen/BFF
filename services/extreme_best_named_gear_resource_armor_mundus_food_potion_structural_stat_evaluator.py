@@ -53,6 +53,9 @@ from services.extreme_objective_named_gear_set_catalog_realization_service impor
 from services.extreme_resource_active_bar_state_service import (
     ExtremeResourceActiveBarStateService,
 )
+from services.extreme_resource_active_skill_coverage_audit_service import (
+    ExtremeResourceActiveSkillCoverageAuditService,
+)
 from services.extreme_resource_blood_magic_canonical_stat_evaluator import (
     ExtremeResourceBloodMagicCanonicalStatEvaluator,
 )
@@ -85,6 +88,11 @@ _RESOURCE_CHAMPION_POINT_SCOPE = (
     "resource-relevant non-slottable stars are maxed and the strongest legal up-to-four "
     "resource-relevant slottable stars are materialized into the Champion Bar"
 )
+_RESOURCE_ACTIVE_SKILL_SCOPE = (
+    "all canonical active skills and morphs reviewed for direct max-resource mutation; "
+    "none directly modifies the requested max resource, while separate proof-reduced "
+    "bar witnesses cover resource-relevant passive slot conditions"
+)
 
 
 class _FiniteAxisScorer(Protocol):
@@ -116,6 +124,7 @@ class ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory:
         jewelry_state: ExtremeJewelryResourceStaticTraitState | None = None,
         active_bar_state_service: ExtremeResourceActiveBarStateService | None = None,
         champion_point_state_service: ExtremeResourceChampionPointStateService | None = None,
+        active_skill_coverage_audit_service: ExtremeResourceActiveSkillCoverageAuditService | None = None,
     ) -> None:
         self.canonical_evaluator = canonical_evaluator
         self.mundus_repository = mundus_repository
@@ -132,6 +141,12 @@ class ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory:
             champion_point_state_service = ExtremeResourceChampionPointStateService(database_path)
         self.champion_point_state_service = champion_point_state_service
 
+        if active_skill_coverage_audit_service is None and database_path is not None:
+            active_skill_coverage_audit_service = ExtremeResourceActiveSkillCoverageAuditService(
+                database_path
+            )
+        self.active_skill_coverage_audit_service = active_skill_coverage_audit_service
+
     @classmethod
     def _has_active_twice_born_star(
         cls,
@@ -146,6 +161,11 @@ class ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory:
         if self.champion_point_state_service is None:
             return None
         return self.champion_point_state_service.build(objective_key)
+
+    def active_skill_audit(self, objective_key: str):
+        if self.active_skill_coverage_audit_service is None:
+            return None
+        return self.active_skill_coverage_audit_service.build(objective_key)
 
     def __call__(
         self,
@@ -274,17 +294,31 @@ class ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator:
             return None
         return resolver(objective_key)
 
+    def _active_skill_audit(self, objective_key: str):
+        resolver = getattr(self.evaluator_factory, "active_skill_audit", None)
+        if not callable(resolver):
+            return None
+        return resolver(objective_key)
+
     def closed_dynamic_axes(self, objective_key: str) -> tuple[str, ...]:
-        state = self._champion_point_state(objective_key)
-        if state is not None and state.denominator_proven and not state.unresolved:
-            return ("Champion Points",)
-        return ()
+        closed: list[str] = []
+        cp_state = self._champion_point_state(objective_key)
+        if cp_state is not None and cp_state.denominator_proven and not cp_state.unresolved:
+            closed.append("Champion Points")
+        skill_audit = self._active_skill_audit(objective_key)
+        if skill_audit is not None and skill_audit.projection_complete:
+            closed.append("skill-bar choices and morphs")
+        return tuple(closed)
 
     def additional_search_scope(self, objective_key: str) -> tuple[str, ...]:
-        state = self._champion_point_state(objective_key)
-        if state is not None and state.denominator_proven and not state.unresolved:
-            return (_RESOURCE_CHAMPION_POINT_SCOPE,)
-        return ()
+        scope: list[str] = []
+        cp_state = self._champion_point_state(objective_key)
+        if cp_state is not None and cp_state.denominator_proven and not cp_state.unresolved:
+            scope.append(_RESOURCE_CHAMPION_POINT_SCOPE)
+        skill_audit = self._active_skill_audit(objective_key)
+        if skill_audit is not None and skill_audit.projection_complete:
+            scope.append(_RESOURCE_ACTIVE_SKILL_SCOPE)
+        return tuple(scope)
 
     def _evaluator_for(
         self,
