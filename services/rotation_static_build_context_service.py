@@ -6,6 +6,7 @@ from typing import Callable
 
 from engine.config import get_data_dir
 from minmax.build_calculation_context import BuildCalculationContext
+from minmax.combat_state import CombatState
 from minmax.context_factory import BuildCalculationContextFactory
 from minmax.gear_set_repository import GearSetRepository
 from minmax.race_repository import RaceRepository
@@ -227,6 +228,7 @@ class RotationStaticBuildContextService:
         player_build: PlayerBuild,
         *,
         bars: tuple[str, ...] = ("front", "back"),
+        combat_state: CombatState = CombatState(),
     ) -> RotationStaticBuildContextResolution:
         requested = self._normalize_bars(bars)
         progression = self.progression_adapter.resolve(player_build)
@@ -251,6 +253,7 @@ class RotationStaticBuildContextService:
                 build=player_build,
                 progression=progression.progression,
                 active_bar=bar,
+                combat_state=combat_state,
             )
             contexts.append(context)
             unresolved.extend(
