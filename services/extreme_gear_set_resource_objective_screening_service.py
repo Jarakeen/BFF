@@ -10,17 +10,14 @@ Max Magicka, or Max Stamina.
 
 This service owns no stat math.  It only decides whether an *unmapped* bonus is
 safe to prune for one reviewed max-resource objective.  Screening is deliberately
-conservative but observes one important mechanics rule: scaling *from* a maximum
-resource is not the same thing as modifying that resource.
+conservative but observes two important mechanics/language rules:
 
-* direct increase/decrease/reduction language for the target maximum resource
-  remains a blocker;
-* scaling, restore, comparison, or target-Max-Health reference language alone does
-  not make a bonus relevant to the resource maximum;
-* reviewed global equipment-state mechanics remain blockers even when they do not
-  name the target resource directly;
-* Max Health also treats Toughness references as potential resource modifiers;
-* only bonuses with none of those hazards are proven irrelevant.
+* scaling *from* a maximum resource is not the same thing as modifying it;
+* the ordinary English word ``maximum`` in phrases such as ``up to a maximum`` or
+  ``reaching the maximum at 50% Magicka`` is not a ``Maximum Magicka`` stat
+  reference.
+
+Direct resource mutation and reviewed equipment-state mechanics remain blockers.
 """
 
 from dataclasses import dataclass
@@ -41,11 +38,8 @@ _GLOBAL_EQUIPMENT_HAZARDS = (
     "two mundus stone boons",
 )
 
-_DIRECT_CHANGE_VERB = re.compile(
-    r"\b(?:increase(?:s|d|ing)?|reduce(?:s|d|ing)?|decrease(?:s|d|ing)?|adds?)\b",
-    re.IGNORECASE,
-)
-_MAXIMUM_WORD = re.compile(r"\bmax(?:imum)?\b", re.IGNORECASE)
+_CHANGE_VERB = r"(?:increase(?:s|d|ing)?|reduce(?:s|d|ing)?|decrease(?:s|d|ing)?|adds?)"
+_EXPLICIT_MAX_RESOURCE = r"max(?:imum)?\s+{resource}"
 
 
 @dataclass(frozen=True)
@@ -83,20 +77,43 @@ class ExtremeGearSetResourceObjectiveScreeningService:
         if not text:
             return False
 
-        for sentence in re.split(r"(?<=[.!?])\s+|\n+", text):
-            if resource_word not in sentence:
-                continue
-            if not _MAXIMUM_WORD.search(sentence):
-                continue
+        explicit_resource = _EXPLICIT_MAX_RESOURCE.format(resource=re.escape(resource_word))
+        direct_before = re.compile(
+            rf"\b{_CHANGE_VERB}\b(?P<body>[^.;]{{0,80}}?)\b{explicit_resource}\b",
+            re.IGNORECASE,
+        )
+        inverse = re.compile(
+            rf"\b(?:your\s+)?{explicit_resource}\b[^.;]{{0,24}}?\b(?:is\s+)?"
+            rf"{_CHANGE_VERB}\b",
+            re.IGNORECASE,
+        )
 
-            # Direct mutation uses a change verb in the same sentence as the
-            # maximum-resource reference.  This catches list wording such as
-            # "increase your Maximum Health, Stamina, and Magicka by 1707" and
-            # inverse wording such as "your Max Magicka is increased by 3132".
-            # Pure scaling/reference wording has no such change verb and is safe
-            # to prune for a maximum-resource objective.
-            if _DIRECT_CHANGE_VERB.search(sentence):
+        for sentence in re.split(r"(?<=[.!?])\s+|\n+", text):
+            # Direct forms: "increase your Max Magicka" / "reduces Maximum Health".
+            match = direct_before.search(sentence)
+            if match is not None:
+                between = match.group("body")
+                if "scal" not in between and "based on" not in between:
+                    return True
+
+            # Inverse forms: "your Max Magicka is increased by ...".
+            if inverse.search(sentence):
                 return True
+
+            # ESO also writes shared-list mutations such as:
+            #   "increase your Maximum Health, Stamina, and Magicka by 1707"
+            # Only treat the list as a stat mutation when Maximum starts the
+            # resource list and a direct change verb governs that list.
+            list_match = re.search(
+                rf"\b{_CHANGE_VERB}\b[^.;]{{0,40}}?\bmaximum\s+"
+                rf"(?P<resources>[^.;]{{0,70}}?)\s+by\s+[-+]?\d",
+                sentence,
+                re.IGNORECASE,
+            )
+            if list_match is not None:
+                resources = list_match.group("resources")
+                if re.search(rf"\b{re.escape(resource_word)}\b", resources):
+                    return True
 
         return False
 
