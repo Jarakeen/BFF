@@ -75,6 +75,32 @@ ROTATION_OBSERVATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="rotation.healer.refresh_evidence_window_discovery",
+        domain="rotation",
+        purpose=(
+            "Search an ESO Logs research corpus for the strongest same-recipient healer HoT recast "
+            "windows to prioritize targeted human review of unresolved refresh semantics."
+        ),
+        implementation_path="tools.discover_phase13_healer_refresh_evidence_windows",
+        inputs=(
+            "EsoLogsResearchCorpus",
+            "ReviewedObservationFixture",
+            "CanonicalPeriodicTiming",
+            "ReviewedPeriodicEffectAliases",
+        ),
+        outputs=("RankedRefreshEvidenceWindows",),
+        responsibilities=("rotation_healer_refresh_evidence_window_discovery",),
+        roles=("Healer",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.OBSERVATIONAL,
+        notes=(
+            "Read-only discovery only. Windows are ranked by recipient-level timing shape and "
+            "phase separability so ambiguous recasts do not dominate review. Discovery output "
+            "is candidate evidence and cannot promote a refresh policy."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="rotation.healer.periodic_refresh_policy_review",
         domain="rotation",
         purpose=(
