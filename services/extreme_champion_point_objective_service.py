@@ -54,6 +54,9 @@ class ExtremeChampionPointObjectiveService:
     """Adapt reviewed CP effects to the current Extreme objective matrix."""
 
     REVIEWED_OBJECTIVES = (
+        "max_health",
+        "max_magicka",
+        "max_stamina",
         "critical_damage",
         "magicka_recovery",
         "stamina_recovery",
@@ -66,6 +69,9 @@ class ExtremeChampionPointObjectiveService:
     )
 
     _STAT_BY_OBJECTIVE = {
+        "max_health": StatId.MAX_HEALTH,
+        "max_magicka": StatId.MAX_MAGICKA,
+        "max_stamina": StatId.MAX_STAMINA,
         "critical_damage": StatId.CRITICAL_DAMAGE,
         "magicka_recovery": StatId.MAGICKA_RECOVERY,
         "stamina_recovery": StatId.STAMINA_RECOVERY,
