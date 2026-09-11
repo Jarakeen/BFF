@@ -67,10 +67,7 @@ def test_only_external_conditional_effects_overlapping_demand_remain_blockers():
             _seed(10.0),
             _seed(44.0),
         ),
-        unresolved=(
-            "Overflowing Altar at 10s: reviewed healing consequence is externally triggered and is not modeled by caster action healing projection",
-            "Overflowing Altar at 44s: reviewed healing consequence is externally triggered and is not modeled by caster action healing projection",
-        ),
+        unresolved=(),
     )
 
     result = RotationHealerDemandHealingEvidenceService().assess(
@@ -93,9 +90,7 @@ def test_expired_external_conditional_effect_does_not_block_later_demand():
             periodic_seeds=(),
             delayed_seeds=(),
             external_conditional_seeds=(_seed(-5.0),),
-            unresolved=(
-                "Overflowing Altar at -5s: reviewed healing consequence is externally triggered and is not modeled by caster action healing projection",
-            ),
+            unresolved=(),
         ),
     )
 
