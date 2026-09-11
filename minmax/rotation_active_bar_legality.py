@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 
 from .rotation_plan import RotationActionKind, RotationPlan
@@ -35,13 +36,13 @@ class RotationActiveBarAssessment:
 
 
 class RotationActiveBarAssessor:
-    """Audit bar-bound actions against the plan's own BAR_SWAP progression.
+    """Audit and query the plan's canonical BAR_SWAP progression.
 
     BAR_SWAP actions set the destination bar immediately in deterministic plan order.
     This layer does not decide whether a skill belongs on a bar or which weapon family
     is equipped there; saved-build slot and weapon projections own those separate
-    questions. It only verifies that a bar-labelled skill, Ultimate, light attack, or
-    heavy attack matches the bar that is actually active at that instant.
+    questions. It verifies bar-labelled actions and also exposes the same ordered bar
+    progression for runtime consumers that need the active bar at an exact instant.
     """
 
     def assess(
@@ -93,6 +94,46 @@ class RotationActiveBarAssessor:
             final_bar=active_bar,
             violations=tuple(violations),
         )
+
+    def active_bar_at(
+        self,
+        plan: RotationPlan,
+        *,
+        time_seconds: float,
+        sequence: int | None = None,
+        initial_bar: str = "front",
+    ) -> str:
+        """Return the active bar at one deterministic point in plan order.
+
+        When ``sequence`` is supplied, only actions at the requested timestamp whose
+        sequence is less than or equal to that value have occurred. When it is omitted,
+        the query represents the state after all actions scheduled at that timestamp.
+        This distinction matters for same-timestamp LA/skill/swap ordering and lets
+        runtime evidence use the exact same bar progression as legality checks.
+        """
+
+        instant = float(time_seconds)
+        if not math.isfinite(instant) or instant < 0.0:
+            raise ValueError("rotation active-bar lookup time must be finite and non-negative")
+        boundary_sequence = None if sequence is None else int(sequence)
+        if boundary_sequence is not None and boundary_sequence < 0:
+            raise ValueError("rotation active-bar lookup sequence cannot be negative")
+
+        active_bar = self._normalize_bar(initial_bar)
+        epsilon = 1e-12
+        for action in plan.actions:
+            action_time = float(action.time_seconds)
+            if action_time > instant + epsilon:
+                break
+            if (
+                boundary_sequence is not None
+                and abs(action_time - instant) <= epsilon
+                and int(action.sequence) > boundary_sequence
+            ):
+                break
+            if action.kind is RotationActionKind.BAR_SWAP:
+                active_bar = str(action.bar)
+        return active_bar
 
     @staticmethod
     def _normalize_bar(value: str) -> str:
