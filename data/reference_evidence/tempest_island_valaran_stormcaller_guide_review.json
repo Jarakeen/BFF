@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "tempest_island",
+  "encounter_id": "valaran_stormcaller",
+  "encounter_name": "Valaran Stormcaller",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Keep Valaran faced away, avoid the large lightning ground effects, and interrupt or break the levitate control effect."},"source_type":"guide","source_name":"Alcast Tempest Island Guide","source_locator":"Valaran Stormcaller","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"lightning_storm","value":{"name":"Lightning Storm","response":"stay_out_of_the_large_lightning_aoe_while_continuing_damage_from_safe_space"},"source_type":"guide","source_name":"Alcast Tempest Island Guide","source_locator":"Valaran Stormcaller","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"quick_shot","value":{"name":"Quick Shot","response":"move_out_of_or_block_the_close_range_whirlwind_attack"},"source_type":"guide","source_name":"Alcast Tempest Island Guide","source_locator":"Valaran Stormcaller","game_update":"Launch","confidence":"high"}
+  ]
+}
