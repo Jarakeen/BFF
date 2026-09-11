@@ -48,8 +48,8 @@ from services.rotation_healer_encounter_demand_bundle_service import (
 from services.rotation_healer_output_context_relevance_service import (
     RotationHealerOutputContextRelevanceService,
 )
-from services.rotation_healer_periodic_observation_fixture_service import (
-    RotationHealerPeriodicObservationFixtureService,
+from services.rotation_healer_reviewed_runtime_evidence_loader import (
+    RotationHealerReviewedRuntimeEvidenceLoader,
 )
 from services.rotation_static_build_context_service import RotationStaticBuildContextService
 from tools.audit_phase13_healer_priority_comparison import _BASE_PRIORITIES, _audit_policy_set
@@ -221,11 +221,13 @@ def _load_guide_for_audit(
 def _load_reviewed_runtime_observations(
     database_path: Path | None,
     fixture_path: Path | None,
+    refresh_fixture_path: Path | None = None,
 ):
-    if fixture_path is None:
-        return (), ()
-    report = RotationHealerPeriodicObservationFixtureService(database_path).load(fixture_path)
-    return tuple(report.reviewed_observations), tuple(report.unresolved)
+    report = RotationHealerReviewedRuntimeEvidenceLoader(database_path).load(
+        fixture_path,
+        refresh_fixture_path=refresh_fixture_path,
+    )
+    return tuple(report.observations), tuple(report.unresolved)
 
 
 def _with_static_context_blockers(
@@ -333,7 +335,13 @@ def main() -> int:
         "--runtime-observations",
         type=Path,
         default=None,
-        help="optional reviewed healer periodic-runtime observation fixture",
+        help="optional reviewed healer periodic-runtime timing observation fixture",
+    )
+    parser.add_argument(
+        "--refresh-policies",
+        type=Path,
+        default=None,
+        help="optional reviewed healer periodic refresh/recast policy fixture",
     )
     parser.add_argument(
         "--reviewed-criterion-fact-id",
@@ -430,6 +438,7 @@ def main() -> int:
     runtime_observations, runtime_fixture_unresolved = _load_reviewed_runtime_observations(
         database_path,
         args.runtime_observations,
+        args.refresh_policies,
     )
 
     policy_set = _audit_policy_set(build, database_path=database_path)
@@ -532,7 +541,7 @@ def main() -> int:
         print("Static healer-output context blockers: none")
 
     if runtime_fixture_unresolved:
-        print("Reviewed periodic-runtime fixture unresolved evidence:")
+        print("Reviewed runtime evidence unresolved:")
         for item in runtime_fixture_unresolved:
             print(f"  - {item}")
 
@@ -575,7 +584,7 @@ def main() -> int:
     print("- Healer demand priority is strategy/audit policy, not canonical encounter truth.")
     print("- Static context diagnostics irrelevant to healer output are reported but do not block this objective.")
     print("- Unknown or healing-relevant static diagnostics remain aggregate blockers and keep weakest-window output unresolved.")
-    print("- No numeric healer survival threshold is inferred from prose such as 'continuous high flame damage'.")
+    print("- Reviewed refresh/recast policy is composed only when exact skill/component/version evidence matches.")
     print("- Missing periodic/delayed runtime evidence remains unresolved instead of becoming fake ticks.")
     return 0
 
