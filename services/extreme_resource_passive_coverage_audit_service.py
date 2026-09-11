@@ -15,9 +15,10 @@ not the primary proof source for production audits.
 
 Reviewed contextual resource passives are reconciled only when their exact
 (objective, skill line, passive name) identity is marked CANONICALLY_APPLIED by
-``ExtremeResourceContextualPassiveReviewService``. Reviewed shared class-resolver
-ownership is then consulted before generic tooltip projection so passives with
-already-proven non-resource effect families do not remain false contextual debt.
+``ExtremeResourceContextualPassiveReviewService``. Reviewed shared class- and
+armor-resolver ownership is then consulted before generic tooltip projection so
+passives with already-proven non-resource effect families do not remain false
+contextual debt.
 
 A complete inventory denominator is not the same as complete mechanic coverage.
 The audit never assigns zero value to contextual or unresolved passives.
@@ -32,6 +33,10 @@ from minmax.racial_passive_stat_repository import RacialPassiveStatRepository
 from services.extreme_passive_projection_service import (
     ExtremePassiveProjectionService,
     ExtremePassiveProjectionStatus,
+)
+from services.extreme_resource_armor_passive_ownership_service import (
+    ExtremeResourceArmorPassiveOwnershipService,
+    ExtremeResourceArmorPassiveOwnershipStatus,
 )
 from services.extreme_resource_class_passive_ownership_service import (
     ExtremeResourceClassPassiveOwnershipService,
@@ -254,6 +259,19 @@ class ExtremeResourcePassiveCoverageAuditService:
                 else:
                     raise AssertionError(
                         f"Unhandled Extreme resource class-passive ownership status: {class_ownership.status!r}"
+                    )
+                continue
+
+            armor_ownership = ExtremeResourceArmorPassiveOwnershipService.resolve(passive, key)
+            if armor_ownership is not None:
+                _armor_row, armor_status = armor_ownership
+                if armor_status is ExtremeResourceArmorPassiveOwnershipStatus.CANONICALLY_ACCOUNTED:
+                    accounted_elsewhere.append(identity)
+                elif armor_status is ExtremeResourceArmorPassiveOwnershipStatus.PROVEN_IRRELEVANT:
+                    static_irrelevant.append(identity)
+                else:
+                    raise AssertionError(
+                        f"Unhandled Extreme resource armor-passive ownership status: {armor_status!r}"
                     )
                 continue
 
