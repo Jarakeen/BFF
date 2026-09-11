@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "fungal_grotto_i",
+  "encounter_id": "kra_gh_the_dreugh_king",
+  "encounter_name": "Kra'gh the Dreugh King",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Dreugh King Phase","threshold":"100% to 0%","description":"Block Kra'gh's heavy and flurry pressure, clear mudcrabs in cleave, and step out of the lightning field."},"source_type":"guide","source_name":"Alcast Fungal Grotto I Guide","source_locator":"Kra'gh the Dreugh King","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"storm_flurry","value":{"name":"Storm Flurry","response":"block_or_mitigate_the_multi_hit_flurry_instead_of_eating_the_full_sequence"},"source_type":"guide","source_name":"Alcast Fungal Grotto I Guide","source_locator":"Kra'gh the Dreugh King","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"lightning_field","value":{"name":"Lightning Field","response":"move_out_of_the_lightning_field_immediately_then_return_after_it_resolves"},"source_type":"guide","source_name":"Alcast Fungal Grotto I Guide","source_locator":"Kra'gh the Dreugh King","game_update":"Launch","confidence":"high"}
+  ]
+}
