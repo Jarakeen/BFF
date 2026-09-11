@@ -216,3 +216,25 @@ def test_alias_filter_does_not_stream_the_entire_fight(tmp_path, monkeypatch):
     )
 
     assert [item.event_index for item in report.observations] == [1, 3, 5]
+
+
+def test_correlates_provider_credited_heal_with_recipient_damage(tmp_path):
+    path = _database(tmp_path)
+    with sqlite3.connect(path) as db:
+        db.execute(
+            "UPDATE log_event SET source_id = 9, raw_json = "
+            "json_set(raw_json, '$.sourceID', 9) WHERE event_index = 2"
+        )
+
+    report = RotationHealerMinorLifestealEsoLogsEvidenceService().inspect(path)
+
+    observation = next(
+        item for item in report.observations if item.event_index == 3
+    )
+    assert observation.source_id == 8
+    assert observation.target_id == 9
+    assert observation.previous_same_source_damage_event_index is None
+    assert observation.previous_recipient_damage_event_index == 2
+    assert observation.previous_recipient_damage_target_id == 99
+    assert observation.previous_recipient_damage_delta_seconds == 0.001
+    assert not any("event 3:" in message for message in report.unresolved)
