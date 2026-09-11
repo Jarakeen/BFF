@@ -33,8 +33,15 @@ def enrich_reference_entries_with_mitigations(
     entries: Iterable[ReferenceEntry],
     data_root: Path | None = None,
 ) -> tuple[ReferenceEntry, ...]:
-    """Attach short reviewed mitigation guidance to matching entries."""
+    """Attach short reviewed mitigation guidance to matching entries.
 
+    The Combat Reference page calls this as its final default-data stage. In that
+    specific default-data path, the presentation-only catalog/history assembly is
+    applied after mitigations. Explicit ``data_root`` callers (including focused
+    tests and tools) receive mitigation enrichment only.
+    """
+
+    using_default_data = data_root is None
     root = Path(data_root or get_data_dir())
     mitigations: dict[str, str] = {}
     provenance: dict[str, tuple[str, ...]] = {}
@@ -71,7 +78,15 @@ def enrich_reference_entries_with_mitigations(
             )
         )
 
-    return tuple(result)
+    enriched = tuple(result)
+    if not using_default_data:
+        return enriched
+
+    # Keep catalog/history trivia at the UI boundary. Import lazily so focused
+    # mitigation helpers remain independent of the larger Reference-page catalog.
+    from ui.reference_page_assembly import finalize_reference_entries
+
+    return finalize_reference_entries(enriched, data_root=root)
 
 
 __all__ = ["enrich_reference_entries_with_mitigations"]
