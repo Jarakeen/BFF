@@ -18,7 +18,7 @@ def test_mathgamain_projection_has_frontal_and_add_plan():
     p = EncounterGuideEvidenceProjectionService(DATA_ROOT).get("mathgamain", "Mathgamain")
     s = _strategy(p)
     assert "Frontal Cone" in s
-    assert "faced" in s["Frontal Cone"].mitigation.casefold()
+    assert "faces mathgamain away" in s["Frontal Cone"].mitigation.casefold()
     assert "Add Waves" in s
 
 
