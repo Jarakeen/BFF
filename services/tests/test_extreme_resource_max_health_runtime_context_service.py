@@ -67,6 +67,30 @@ def test_nothing_wasted_adds_twenty_percent_before_resource_rounding():
     )
 
 
+def test_maturation_routes_minor_toughness_through_canonical_named_buff_layer():
+    context = _service().resolve(
+        factory=BuildCalculationContextFactory(),
+        build=PlayerBuild(
+            EsoClass="Warden",
+            ClassSkillLines=["animal_companions", "green_balance", "winters_embrace"],
+        ),
+        progression=CharacterProgression(
+            owned_skill_lines=("green_balance",),
+            passive_ranks={"Maturation": 2},
+        ),
+        state=ExtremeResourceMaxHealthRuntimeState(
+            label="Maturation Minor Toughness",
+            maturation_minor_toughness_active=True,
+            reviewed_percent_bonus=0.10,
+        ),
+        character_id="char",
+        build_id="maturation",
+    )
+
+    assert context.combat_state.has_buff("Minor Toughness") is True
+    assert context.character_state.max_health == 17600
+
+
 def test_zero_runtime_state_delegates_to_normal_canonical_context():
     context = _service().resolve(
         factory=BuildCalculationContextFactory(),
