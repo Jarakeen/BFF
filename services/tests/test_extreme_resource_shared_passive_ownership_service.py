@@ -61,6 +61,10 @@ _EXPECTED_IDENTITIES = {
     (ExtremeSkillDomain.GUILD, "Thieves Guild", "Timely Escape"),
     (ExtremeSkillDomain.GUILD, "Thieves Guild", "Veil of Shadows"),
     (ExtremeSkillDomain.GUILD, "Undaunted", "Undaunted Command"),
+    (ExtremeSkillDomain.OTHER, "Emperor", "Authority"),
+    (ExtremeSkillDomain.OTHER, "Emperor", "Domination"),
+    (ExtremeSkillDomain.OTHER, "Emperor", "Monarch"),
+    (ExtremeSkillDomain.OTHER, "Emperor", "Tactician"),
     (ExtremeSkillDomain.WEAPON, "One Hand and Shield", "Deflect Bolts"),
     (ExtremeSkillDomain.WEAPON, "One Hand and Shield", "Fortress"),
     (ExtremeSkillDomain.WORLD, "Soul Magic", "Soul Lock"),
@@ -92,6 +96,7 @@ class _Universe:
         return reviewed + (
             _passive("Fortress", "Not One Hand and Shield", ExtremeSkillDomain.WEAPON),
             _passive("Undeath", "Not Vampire", ExtremeSkillDomain.WORLD),
+            _passive("Emperor", "Emperor", ExtremeSkillDomain.OTHER),
             _passive("Magicka Controller", "Mages Guild", ExtremeSkillDomain.GUILD),
         )
 
@@ -137,6 +142,11 @@ def test_shared_ownership_requires_exact_domain_line_and_name():
     wrong_world_domain = _passive("Undeath", "Vampire", ExtremeSkillDomain.GUILD)
     assert ExtremeResourceSharedPassiveOwnershipService.resolve(wrong_world_domain, "max_health") is None
 
+    max_resource_emperor_passive = _passive("Emperor", "Emperor", ExtremeSkillDomain.OTHER)
+    assert ExtremeResourceSharedPassiveOwnershipService.resolve(max_resource_emperor_passive, "max_health") is None
+    assert ExtremeResourceSharedPassiveOwnershipService.resolve(max_resource_emperor_passive, "max_magicka") is None
+    assert ExtremeResourceSharedPassiveOwnershipService.resolve(max_resource_emperor_passive, "max_stamina") is None
+
     max_resource_guild_passive = _passive("Magicka Controller", "Mages Guild", ExtremeSkillDomain.GUILD)
     assert ExtremeResourceSharedPassiveOwnershipService.resolve(max_resource_guild_passive, "max_magicka") is None
 
@@ -159,6 +169,7 @@ def test_passive_denominator_moves_reviewed_shared_rows_to_static_irrelevant():
             assert identity not in audit.unresolved
         assert "[weapon] Not One Hand and Shield :: Fortress" in audit.unresolved
         assert "[world] Not Vampire :: Undeath" in audit.unresolved
+        assert "[other] Emperor :: Emperor" in audit.unresolved
 
         # Magicka Controller is intentionally not in the shared irrelevance ledger.
         # Its real Max Magicka ownership is reviewed by the contextual active-bar path.
