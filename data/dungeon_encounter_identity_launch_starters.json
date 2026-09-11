@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "encounters": [
+    {"content_id":"fungal_grotto_i","content_name":"Fungal Grotto I","release_year":2014,"release_update":0,"release_pack":"Base Game Launch","encounter_id":"war_chief_ozozai","display_name":"War Chief Ozozai","member_ids":["war_chief_ozozai"]},
+    {"content_id":"fungal_grotto_i","content_name":"Fungal Grotto I","release_year":2014,"release_update":0,"release_pack":"Base Game Launch","encounter_id":"kra_gh_the_dreugh_king","display_name":"Kra'gh the Dreugh King","member_ids":["kra_gh_the_dreugh_king"]},
+    {"content_id":"spindleclutch_i","content_name":"Spindleclutch I","release_year":2014,"release_update":0,"release_pack":"Base Game Launch","encounter_id":"swarm_mother","display_name":"Swarm Mother","member_ids":["swarm_mother"]},
+    {"content_id":"spindleclutch_i","content_name":"Spindleclutch I","release_year":2014,"release_update":0,"release_pack":"Base Game Launch","encounter_id":"the_whisperer","display_name":"The Whisperer","member_ids":["the_whisperer"]},
+    {"content_id":"the_banished_cells_i","content_name":"The Banished Cells I","release_year":2014,"release_update":0,"release_pack":"Base Game Launch","encounter_id":"shadowrend","display_name":"Shadowrend","member_ids":["shadowrend"]},
+    {"content_id":"the_banished_cells_i","content_name":"The Banished Cells I","release_year":2014,"release_update":0,"release_pack":"Base Game Launch","encounter_id":"high_kinlord_rilis_banished_cells_i","display_name":"High Kinlord Rilis","member_ids":["high_kinlord_rilis_banished_cells_i"]}
+  ]
+}
