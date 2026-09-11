@@ -124,7 +124,7 @@ def test_orchestration_threads_plan_aware_restore_factory_to_each_candidate() ->
         build=PlayerBuild(Name="Magrat", BuildName="DF Healer"),
         candidates=(candidate,),
         evaluate_final_family=lambda _snapshots: (
-            SimpleNamespace(candidate_id="candidate"),
+            SimpleNamespace(candidate_id="candidate", rank=1),
         ),
         resource=ResourceType.MAGICKA,
         maximum_amount=30000,
@@ -133,7 +133,7 @@ def test_orchestration_threads_plan_aware_restore_factory_to_each_candidate() ->
     )
 
     assert len(result.stabilized_candidates) == 1
-    assert downstream.calls[0]["restoration_resolver"] is None
+    assert "restoration_resolver" not in downstream.calls[0]
     assert downstream.calls[0]["restoration_resolver_factory"] is _factory
 
 
