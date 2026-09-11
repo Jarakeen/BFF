@@ -4,8 +4,15 @@ from __future__ import annotations
 
 This adapter is intentionally stricter than the tolerant saved-build gear layer.
 Every active canonical bonus row is inspected. If the shared gear-set resolver
-cannot interpret an active bonus, the bonus remains an explicit blocker rather
-than silently contributing zero.
+cannot interpret an active bonus, the bonus normally remains an explicit blocker
+rather than silently contributing zero.
+
+For Max Health/Magicka/Stamina only, an additional conservative screening layer
+may prove an *unmapped* bonus irrelevant when its description cannot modify the
+requested maximum resource and does not alter the legal equipment search. That
+narrow exception avoids requiring the entire unrelated proc corpus to be mechanic-
+mapped before a max-resource denominator can close while preserving fail-closed
+behavior for resource references and global equipment-state mechanics.
 """
 
 from dataclasses import dataclass
@@ -17,6 +24,9 @@ from minmax.gear_set_repository import GearSetRepository
 from minmax.gear_sets import GearSet, GearSetBonus
 from minmax.gear_stat_inputs import GearStatInputResolver
 from minmax.stat_ids import StatId
+from services.extreme_gear_set_resource_objective_screening_service import (
+    ExtremeGearSetResourceObjectiveScreeningService,
+)
 
 
 @dataclass(frozen=True)
@@ -57,6 +67,7 @@ class ExtremeGearSetObjectiveService:
         "detection_radius_reduction",
         "sneak_cost_reduction",
     )
+    _MAX_RESOURCE_OBJECTIVES = frozenset({"max_health", "max_magicka", "max_stamina"})
 
     _STAT_BY_OBJECTIVE = {
         "critical_damage": StatId.CRITICAL_DAMAGE,
@@ -147,7 +158,8 @@ class ExtremeGearSetObjectiveService:
         equipped_piece_count: int | None = None,
         resolver: GearSetEffectResolver | None = None,
     ) -> ExtremeGearSetObjectiveCandidate:
-        target_stats = cls._target_stats(objective_key)
+        objective = str(objective_key).strip().casefold()
+        target_stats = cls._target_stats(objective)
         gear_set = repository.get_set(set_name)
         if gear_set is None:
             raise KeyError(f"gear set not found: {set_name!r}")
@@ -187,6 +199,13 @@ class ExtremeGearSetObjectiveService:
                 raw_description = str(bonus.description or "").strip()
                 description = normalize_eso_markup(raw_description).text.strip()
                 if description:
+                    if objective in cls._MAX_RESOURCE_OBJECTIVES:
+                        screening = ExtremeGearSetResourceObjectiveScreeningService.review(
+                            description,
+                            objective,
+                        )
+                        if screening.proven_irrelevant:
+                            continue
                     unresolved.append(
                         f"{source}: active set bonus is not yet mechanic-mapped: {description}"
                     )
@@ -195,7 +214,7 @@ class ExtremeGearSetObjectiveService:
             for effect in effects:
                 if effect.stat not in target_stats:
                     continue
-                contribution, blocker = cls._project_relevant_effect(effect, objective_key)
+                contribution, blocker = cls._project_relevant_effect(effect, objective)
                 if blocker:
                     unresolved.append(blocker)
                 elif contribution is not None:
@@ -206,7 +225,7 @@ class ExtremeGearSetObjectiveService:
             set_name=gear_set.name,
             category=gear_set.category,
             equipped_piece_count=piece_count,
-            objective_key=str(objective_key).strip().casefold(),
+            objective_key=objective,
             reviewed_delta=float(reviewed_delta),
             source_bonuses=active_bonuses,
             source_effects=tuple(all_effects),
