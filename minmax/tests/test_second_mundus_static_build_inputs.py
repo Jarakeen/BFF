@@ -14,6 +14,20 @@ def test_player_build_round_trips_second_mundus():
     assert restored.validate() == []
 
 
+def test_ordinary_build_serialization_does_not_emit_empty_second_mundus():
+    payload = PlayerBuild(Mundus="The Mage").to_dict()
+
+    assert "SecondMundus" not in payload
+    assert PlayerBuild.from_dict(payload).SecondMundus == ""
+
+
+def test_second_mundus_is_appended_after_legacy_positional_fields():
+    build = PlayerBuild("Name", "Tag", "Build", "Image", "Race", "Class", "Role", "Alliance", "The Mage")
+
+    assert build.Mundus == "The Mage"
+    assert build.SecondMundus == ""
+
+
 def test_duplicate_second_mundus_fails_model_validation():
     build = PlayerBuild(Mundus="The Mage", SecondMundus="The Mage")
 
