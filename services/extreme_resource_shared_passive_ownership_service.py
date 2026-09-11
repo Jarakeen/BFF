@@ -85,6 +85,23 @@ _REVIEWED_OTHER_IRRELEVANT: tuple[tuple[str, str, str], ...] = (
     ("Emperor", "Tactician", "Siege Weapon damage only"),
 )
 
+_REVIEWED_ALLIANCE_IRRELEVANT: tuple[tuple[str, str, str], ...] = (
+    ("Support", "Battle Resurrection", "resurrection speed and resurrection-state utility only"),
+    ("Support", "Combat Medic", "healing done to nearby allies only"),
+)
+
+_REVIEWED_CRAFT_IRRELEVANT: tuple[tuple[str, str, str], ...] = (
+    ("Alchemy", "Chemistry", "potion/poison crafting quantity and material efficiency only"),
+    ("Alchemy", "Laboratory Use", "alchemy reagent-slot permission only"),
+    ("Alchemy", "Medicinal Use", "potion effect duration only"),
+    ("Alchemy", "Snakeblood", "negative potion effect reduction only"),
+    ("Alchemy", "Solvent Proficiency", "potion/poison crafting tier access only"),
+    ("Provisioning", "Brewer", "drink crafting quantity only"),
+    ("Provisioning", "Chef", "food crafting quantity only"),
+    ("Provisioning", "Connoisseur", "drink effect duration only"),
+    ("Provisioning", "Gourmand", "food effect duration only"),
+)
+
 
 def _reviewed_guild_rows() -> tuple[ExtremeResourceSharedPassiveOwnership, ...]:
     return tuple(
@@ -125,6 +142,34 @@ def _reviewed_other_rows() -> tuple[ExtremeResourceSharedPassiveOwnership, ...]:
             effect_family=effect_family,
         )
         for skill_line, passive_name, effect_family in _REVIEWED_OTHER_IRRELEVANT
+    )
+
+
+def _reviewed_alliance_rows() -> tuple[ExtremeResourceSharedPassiveOwnership, ...]:
+    return tuple(
+        ExtremeResourceSharedPassiveOwnership(
+            domain=ExtremeSkillDomain.ALLIANCE_WAR,
+            skill_line=skill_line,
+            passive_name=passive_name,
+            status=ExtremeResourceSharedPassiveOwnershipStatus.PROVEN_IRRELEVANT,
+            source=f"Canonical {skill_line} passive tooltip review",
+            effect_family=effect_family,
+        )
+        for skill_line, passive_name, effect_family in _REVIEWED_ALLIANCE_IRRELEVANT
+    )
+
+
+def _reviewed_craft_rows() -> tuple[ExtremeResourceSharedPassiveOwnership, ...]:
+    return tuple(
+        ExtremeResourceSharedPassiveOwnership(
+            domain=ExtremeSkillDomain.CRAFT,
+            skill_line=skill_line,
+            passive_name=passive_name,
+            status=ExtremeResourceSharedPassiveOwnershipStatus.PROVEN_IRRELEVANT,
+            source=f"Canonical {skill_line} passive tooltip review",
+            effect_family=effect_family,
+        )
+        for skill_line, passive_name, effect_family in _REVIEWED_CRAFT_IRRELEVANT
     )
 
 
@@ -198,7 +243,7 @@ class ExtremeResourceSharedPassiveOwnershipService:
             source="OneHandShieldPassiveInputResolver",
             effect_family="block mitigation only",
         ),
-    ) + _reviewed_guild_rows() + _reviewed_world_rows() + _reviewed_other_rows()
+    ) + _reviewed_guild_rows() + _reviewed_world_rows() + _reviewed_other_rows() + _reviewed_alliance_rows() + _reviewed_craft_rows()
 
     @staticmethod
     def _normalized(value: object) -> str:
