@@ -13,8 +13,9 @@ class RotationGenerateActionSupport:
     deterministic generator remains active until a caller supplies a
     ``RotationGenerateCanonicalContext``. Once configured, Generate resolves evidence
     for the exact selected encounter and either runs the canonical/cadence orchestration
-    path or reports the blocking evidence. It never silently falls back to the plain
-    generator for a configured encounter-aware request.
+    path or reports the blocking evidence. Explicit role evidence is forwarded
+    unchanged; this router never derives role policy from display state. It never
+    silently falls back to the plain generator for a configured encounter-aware request.
     """
 
     def install(self, page) -> None:
@@ -57,6 +58,7 @@ class RotationGenerateActionSupport:
             bundle = page.selected_encounter_evidence_bundle(context.evidence_inputs)
             result = page.run_canonical_cadence_orchestration(
                 bundle,
+                role_evidence=context.role_evidence,
                 cadence_obligations=context.cadence_obligations,
                 cadence_priorities=context.cadence_priorities,
                 cadence_evaluation_context=context.cadence_evaluation_context,
