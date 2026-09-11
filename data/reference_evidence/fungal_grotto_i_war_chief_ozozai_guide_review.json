@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "fungal_grotto_i",
+  "encounter_id": "war_chief_ozozai",
+  "encounter_name": "War Chief Ozozai",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Control Ozozai's two guards, block the heavy attack, and spread targeted blast pressure away from the group."},"source_type":"guide","source_name":"Alcast Fungal Grotto I Guide","source_locator":"War Chief Ozozai","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"daedric_blast","value":{"name":"Daedric Blast","response":"targeted_player_moves_away_until_the_growing_aoe_no_longer_overlaps_teammates"},"source_type":"guide","source_name":"Alcast Fungal Grotto I Guide","source_locator":"War Chief Ozozai","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"haymaker","value":{"name":"Haymaker","response":"block_the_heavy_attack_to_avoid_heavy_damage_and_knockdown"},"source_type":"guide","source_name":"Alcast Fungal Grotto I Guide","source_locator":"War Chief Ozozai","game_update":"Launch","confidence":"high"}
+  ]
+}
