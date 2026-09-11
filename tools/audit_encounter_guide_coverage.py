@@ -9,6 +9,14 @@ reviewed strategy rows. It does not promote evidence or mutate encounter data.
 
 from dataclasses import dataclass
 from pathlib import Path
+import sys
+
+
+# Support both ``python -m tools.audit_encounter_guide_coverage`` and direct
+# ``python tools/audit_encounter_guide_coverage.py`` execution from the repo.
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
 
 from engine.config import get_data_dir
 from services.encounter_boss_guide import EncounterBossGuideService
