@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "bloodroot_forge",
+  "encounter_id": "stoneheart",
+  "encounter_name": "Stoneheart",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 25%","description":"Avoid fire AoEs and kill resurrected stone adds before their repeated ground pressure accumulates."},"source_type":"guide","source_name":"Alcast Bloodroot Forge Guide","source_locator":"Third Boss - Stoneheart","game_update":"U15","confidence":"high"},
+    {"fact_type":"phase","fact_key":"execute","value":{"order":2,"label":"Stone Add Execute","threshold":"25%","description":"Stoneheart accelerates stone-add spawns; finish the boss while maintaining enough add control to survive."},"source_type":"guide","source_name":"Alcast Bloodroot Forge Guide","source_locator":"Stoneheart","game_update":"U15","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"stone_adds","value":{"name":"Resurrected Stone Adds","response":"kill_stone_adds_before_repeated_ground_aoes_stack"},"source_type":"guide","source_name":"Alcast Bloodroot Forge Guide","source_locator":"Stoneheart","game_update":"U15","confidence":"high"}
+  ]
+}
