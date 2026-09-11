@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "content_id": "red_petal_bastion",
+  "encounter_id": "artifact_bearers",
+  "encounter_name": "Artifact Bearers",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"eliam_open","value":{"order":1,"label":"Eliam Opening","threshold":"Pull to ~80%","description":"Eliam opens alone while the group manages Aftershock, Stonesplitter Plunge, Blowback and Rockslide Rush."},"source_type":"guide","source_name":"ESO-Hub Red Petal Bastion Dungeon Guide","source_locator":"Eliam Merick, Ihudir and Liramindrel","game_update":"U31","confidence":"high"},
+    {"fact_type":"phase","fact_key":"liramindrel_join","value":{"order":2,"label":"Liramindrel Joins","threshold":"~80%","description":"Liramindrel enters and adds ranged pressure plus arrow traps that stun players who step into them."},"source_type":"guide","source_name":"ESO-Hub Red Petal Bastion Dungeon Guide","source_locator":"Artifact Bearers > ~80%","game_update":"U31","confidence":"high"},
+    {"fact_type":"phase","fact_key":"ihudir_join","value":{"order":3,"label":"Ihudir Joins","threshold":"~50%","description":"Ihudir enters as a melee threat with an interruptible high-damage cast."},"source_type":"guide","source_name":"ESO-Hub Red Petal Bastion Dungeon Guide","source_locator":"Artifact Bearers > ~50%","game_update":"U31","confidence":"high"},
+    {"fact_type":"phase","fact_key":"allies_return","value":{"order":4,"label":"Both Allies Return","threshold":"~30%","description":"Liramindrel and Ihudir return together if previously disabled, creating the highest overlap before Eliam dies."},"source_type":"guide","source_name":"ESO-Hub Red Petal Bastion Dungeon Guide","source_locator":"Artifact Bearers > ~30%","game_update":"U31","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"aftershock","value":{"name":"Aftershock","response":"leave_electrified_ground_immediately"},"source_type":"guide","source_name":"ESO-Hub Red Petal Bastion Dungeon Guide","source_locator":"Artifact Bearers > Aftershock","game_update":"U31","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"stonesplitter_plunge","value":{"name":"Stonesplitter Plunge","response":"avoid_being_far_target_or_block_recover_from_jump"},"source_type":"guide","source_name":"ESO-Hub Red Petal Bastion Dungeon Guide","source_locator":"Artifact Bearers > Stonesplitter Plunge","game_update":"U31","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"arrow_traps","value":{"name":"Liramindrel Arrow Traps","response":"keep_movement_lanes_clear_and_do_not_step_in_stun_traps"},"source_type":"guide","source_name":"ESO-Hub Red Petal Bastion Dungeon Guide","source_locator":"Artifact Bearers > Liramindrel","game_update":"U31","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"ihudir_interrupt","value":{"name":"Ihudir Interrupt","response":"interrupt_high_damage_cast_immediately"},"source_type":"guide","source_name":"ESO-Hub Red Petal Bastion Dungeon Guide","source_locator":"Artifact Bearers > Ihudir","game_update":"U31","confidence":"high"}
+  ]
+}
