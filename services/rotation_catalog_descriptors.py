@@ -91,6 +91,33 @@ ROTATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="rotation.healer.channel_runtime_evidence",
+        domain="rotation",
+        purpose=(
+            "Join canonical ESO channel duration to separately reviewed healer tick cadence "
+            "without allowing reviewed metadata to override imported channel time."
+        ),
+        implementation_path=(
+            "services.rotation_healer_channel_runtime_evidence_service"
+        ),
+        inputs=(
+            "RotationSkillTimingEvidence",
+            "RotationHealerReviewedChannelObservation",
+        ),
+        outputs=("RotationHealerChannelRuntimeEvidence",),
+        dependencies=(),
+        responsibilities=("rotation_healer_channel_runtime_evidence_join",),
+        roles=("Healer",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Canonical channel_time owns channel duration. Reviewed evidence owns tick "
+            "interval, first-tick placement, end-boundary behavior, and magnitude policy. "
+            "Missing evidence on either side remains unresolved."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="rotation.healer.canonical_demand_evidence",
         domain="rotation",
         purpose=(
@@ -108,12 +135,15 @@ ROTATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "RotationHealerReviewedRuntimeObservation",
             "RotationHealerDelayedRuntimeEvidence",
             "RotationHealerChannelRuntimeEvidence",
+            "RotationHealerReviewedChannelObservation",
+            "RotationSkillTimingEvidenceService",
             "RotationHealerExternalConditionalDemandAssumption",
         ),
         outputs=("RotationHealerDemandHealingEvidence",),
         dependencies=(
             "rotation.candidate_generation",
             "rotation.healer.channel_runtime",
+            "rotation.healer.channel_runtime_evidence",
         ),
         responsibilities=("rotation_healer_canonical_demand_evidence",),
         roles=("Healer",),
@@ -123,7 +153,8 @@ ROTATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         notes=(
             "Composition only: missing first-tick, expiry, refresh, delay, channel cadence, "
             "special activation, or explicitly requested bar-specific static context remains "
-            "unresolved rather than being inferred."
+            "unresolved rather than being inferred. Canonical channel duration is resolved "
+            "from skill timing evidence rather than copied from reviewed cadence metadata."
         ),
     ),
     ServiceDescriptor(
