@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {"entry_name":"Tracking Ice Tornado — Kjarg the Tuskscraper","mitigation":"Marked player kites the slow tornado away from the group and stays out of Kjarg's frontal lane."},
+    {"entry_name":"Frost Atronachs — Kjarg the Tuskscraper","mitigation":"Kill Frost Atronachs before they settle into stationary ranged pressure and start filling the group with ice bolts."},
+    {"entry_name":"Enrage — Kjarg the Tuskscraper","mitigation":"Tank kites Kjarg while he is enraged and keeps the hammer-cone direction away from the group."},
+    {"entry_name":"Player Fire AoE — Sister Skelga","mitigation":"Marked player separates from teammates and brings the fire circle to frozen Stranglers to remove their protection, then the group kills them."},
+    {"entry_name":"Dark Drain Beams — Sister Skelga","mitigation":"Heal through the tank drain and do not cleanse the effect, because cleansing adds extra damage."},
+    {"entry_name":"Draining Skeleton Tethers — Vearogh the Shambler","mitigation":"Kill tethering skeletons promptly so their blue-beam drain does not remain on players."},
+    {"entry_name":"Wraith Adds — Vearogh the Shambler","mitigation":"Focus Wraiths quickly before they keep summoning more skeletons and turn add pressure into a snowball."},
+    {"entry_name":"Storm Atronachs — Stormborn Revenant","mitigation":"Kill edge-spawned Storm Atronachs quickly before they empower the boss."},
+    {"entry_name":"Ice Storm AoE — Stormborn Revenant","mitigation":"Group tightly enough for efficient healing during the arena-wide storm while continuing to avoid local ground effects."},
+    {"entry_name":"Active Sister Enrage — Icereach Coven","mitigation":"Tank keeps the currently vulnerable enraged sister taunted at all times while the group resolves her associated add mechanic before pushing onward."},
+    {"entry_name":"Storm Surge — Icereach Coven","mitigation":"Interrupt all four sisters immediately during the shared channel. Treat a missed interrupt as a wipe condition, not recoverable background damage."},
+    {"entry_name":"Mother Ciannait Burn — Icereach Coven","mitigation":"Regroup for concentrated healing and burn Ciannait before escalating pulse damage overwhelms the group, while still respecting lingering arena mechanics."},
+    {"entry_name":"Damage Totem — Hakgrym the Howler","mitigation":"Destroy the totem immediately before its repeated magical bolts ramp into group-wide lethal pressure."},
+    {"entry_name":"Flesh Abominations — Hakgrym the Howler","mitigation":"Kill each Flesh Abomination as it appears instead of over-burning Hakgrym and allowing multiple slam adds to overlap."},
+    {"entry_name":"Kiln Rune Identification — Keeper of the Kiln","mitigation":"Assigned players grapple up, identify the correct symbol, and activate it so the tank can move the Keeper to the matching ground rune."},
+    {"entry_name":"Boss Shield Break — Keeper of the Kiln","mitigation":"Once the correct rune is revealed, place the Keeper on it and break the boss shield before the room-wide fire finishes its lethal cycle."},
+    {"entry_name":"Ring of Blades — Eternal Aegis","mitigation":"Stand in the safe center of the spin or fully outside it; avoid sitting in overlapping rings from the boss and reflections."},
+    {"entry_name":"Lesser Aegis Reflections — Eternal Aegis","mitigation":"Control or kill reflections during their spawn cycles so simultaneous spin pressure does not overwhelm positioning and healing."},
+    {"entry_name":"Bone Colossus — Ondagore the Mad","mitigation":"Tank grabs the Bone Colossus immediately and the group prioritizes it before another add cycle or phase transition overlaps."},
+    {"entry_name":"Toxic Gas Escape — Ondagore the Mad","mitigation":"When the center fills with toxic gas, grapple to the outer platforms, kill the required ghosts, and return only after the gas clears."},
+    {"entry_name":"Menders — Ondagore the Mad","mitigation":"Kill the four menders while using the glowing safe positions behind pillars to survive Ondagore's lethal pulse explosions."},
+    {"entry_name":"Grave Dust — Kjalnar Tombskald","mitigation":"Block or move out of the fast magic waves and keep healing ready for anyone clipped by the burst."},
+    {"entry_name":"Imbued Skeleton Empowerment — Kjalnar Tombskald","mitigation":"Prioritize the two-hander and Blastbones before they reach empowering runes; crowd control the two-hander when useful."},
+    {"entry_name":"Kjalnar's Skull Totem — Kjalnar Tombskald","mitigation":"For the Hard Mode challenge, destroy the Skull Totem, then immediately resume normal priority handling rather than losing control of skeleton and ground pressure."}
+  ]
+}
