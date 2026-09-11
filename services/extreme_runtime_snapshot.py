@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 from minmax.external_group_buff_provenance import ExternalGroupBuffApplication
 from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
+from services.extreme_runtime_bar_effect_attempt import ExtremeRuntimeBarEffectAttempt
 
 
 @dataclass(frozen=True)
@@ -25,7 +26,10 @@ class ExtremeRuntimePotionUse:
 
 
 ExtremeRuntimeHistoryEntry = (
-    RuntimeEffectEventAttempt | ExtremeRuntimePotionUse | ExternalGroupBuffApplication
+    RuntimeEffectEventAttempt
+    | ExtremeRuntimeBarEffectAttempt
+    | ExtremeRuntimePotionUse
+    | ExternalGroupBuffApplication
 )
 
 
@@ -34,12 +38,18 @@ class ExtremeRuntimeSnapshot:
     """One deterministic runtime history evaluated at one exact snapshot.
 
     ``runtime_history`` is the authoritative E1 input when supplied. It carries
-    ordinary effect attempts, explicit potion activations, and explicitly
-    evidenced external group-buff applications on one ordered timeline. The
-    older positional fields remain in their original order as a compatibility
-    bridge for existing callers, but they cannot be supplied alongside
-    ``runtime_history`` so two competing versions of runtime truth cannot enter
-    one evaluation.
+    ordinary effect attempts, optional bar-provenance effect attempts, explicit
+    potion activations, and explicitly evidenced external group-buff applications
+    on one ordered timeline. The older positional fields remain in their original
+    order as a compatibility bridge for existing callers, but they cannot be
+    supplied alongside ``runtime_history`` so two competing versions of runtime
+    truth cannot enter one evaluation.
+
+    Bar provenance is deliberately carried by ``ExtremeRuntimeBarEffectAttempt``
+    rather than added to the generic Phase 7 ``RuntimeEvent`` contract. Existing
+    effect-history consumers continue to receive ordinary attempts through
+    ``effect_attempts`` while dual-bar gear legality can use
+    ``bar_effect_attempts`` without reconstructing a bar from guesswork.
 
     ``recipient_actor_id`` and ``group_member_ids`` provide the roster identity
     evidence required to project external applications. They are ignored when
@@ -90,19 +100,27 @@ class ExtremeRuntimeSnapshot:
         for entry in history:
             if not isinstance(
                 entry,
-                (RuntimeEffectEventAttempt, ExtremeRuntimePotionUse, ExternalGroupBuffApplication),
+                (
+                    RuntimeEffectEventAttempt,
+                    ExtremeRuntimeBarEffectAttempt,
+                    ExtremeRuntimePotionUse,
+                    ExternalGroupBuffApplication,
+                ),
             ):
                 raise TypeError(
                     "runtime_history entries must be RuntimeEffectEventAttempt, "
-                    "ExtremeRuntimePotionUse, or ExternalGroupBuffApplication"
+                    "ExtremeRuntimeBarEffectAttempt, ExtremeRuntimePotionUse, or "
+                    "ExternalGroupBuffApplication"
                 )
 
         if history:
             ordered = tuple(sorted(history, key=self._entry_order))
             projected_attempts = tuple(
-                entry
+                entry.attempt
+                if isinstance(entry, ExtremeRuntimeBarEffectAttempt)
+                else entry
                 for entry in ordered
-                if isinstance(entry, RuntimeEffectEventAttempt)
+                if isinstance(entry, (RuntimeEffectEventAttempt, ExtremeRuntimeBarEffectAttempt))
             )
             potion_uses = tuple(
                 entry
@@ -136,6 +154,8 @@ class ExtremeRuntimeSnapshot:
     def _entry_order(entry: ExtremeRuntimeHistoryEntry) -> tuple[float, int]:
         if isinstance(entry, RuntimeEffectEventAttempt):
             return (float(entry.event.time_seconds), int(entry.event.sequence))
+        if isinstance(entry, ExtremeRuntimeBarEffectAttempt):
+            return (entry.time_seconds, entry.sequence)
         if isinstance(entry, ExtremeRuntimePotionUse):
             return (float(entry.time_seconds), int(entry.sequence))
         return (float(entry.applied_at_seconds), int(entry.sequence))
@@ -203,7 +223,33 @@ class ExtremeRuntimeSnapshot:
 
     @property
     def effect_attempts(self) -> tuple[RuntimeEffectEventAttempt, ...]:
-        """Return effect attempts for existing Phase 7 history consumers."""
+        """Return ordinary effect attempts for existing Phase 7 history consumers."""
+
+        if not self.runtime_history:
+            return self.attempts
+        return tuple(
+            entry.attempt
+            if isinstance(entry, ExtremeRuntimeBarEffectAttempt)
+            else entry
+            for entry in self.ordered_runtime_history
+            if isinstance(entry, (RuntimeEffectEventAttempt, ExtremeRuntimeBarEffectAttempt))
+        )
+
+    @property
+    def bar_effect_attempts(self) -> tuple[ExtremeRuntimeBarEffectAttempt, ...]:
+        """Return effect attempts whose active-bar provenance is explicitly proven."""
+
+        if not self.runtime_history:
+            return ()
+        return tuple(
+            entry
+            for entry in self.ordered_runtime_history
+            if isinstance(entry, ExtremeRuntimeBarEffectAttempt)
+        )
+
+    @property
+    def unbarred_effect_attempts(self) -> tuple[RuntimeEffectEventAttempt, ...]:
+        """Return unified-history attempts that still lack active-bar provenance."""
 
         if not self.runtime_history:
             return self.attempts
