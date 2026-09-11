@@ -22,6 +22,12 @@ from services.rotation_healer_budding_seeds_activation_service import (
 from services.rotation_healer_canonical_delayed_timing_service import (
     RotationHealerCanonicalDelayedTimingService,
 )
+from services.rotation_healer_channel_runtime_service import (
+    RotationHealerChannelMagnitudeResolution,
+    RotationHealerChannelRuntimeEvidence,
+    RotationHealerChannelRuntimeProjection,
+    RotationHealerChannelRuntimeService,
+)
 from services.rotation_healer_delayed_runtime_service import (
     RotationHealerDelayedMagnitudeResolution,
     RotationHealerDelayedRuntimeEvidence,
@@ -84,6 +90,7 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
             RotationHealerCanonicalDelayedTimingService | object | None
         ) = None,
         delayed_runtime_service: RotationHealerDelayedRuntimeService | object | None = None,
+        channel_runtime_service: RotationHealerChannelRuntimeService | object | None = None,
         demand_healing_service: (
             RotationHealerDemandHealingEvidenceService | object | None
         ) = None,
@@ -92,6 +99,7 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
         ) = None,
         reviewed_runtime_observations: tuple[RotationHealerReviewedRuntimeObservation, ...] = (),
         delayed_runtime_evidence: tuple[RotationHealerDelayedRuntimeEvidence, ...] = (),
+        channel_runtime_evidence: tuple[RotationHealerChannelRuntimeEvidence, ...] = (),
         external_conditional_assumptions: tuple[
             RotationHealerExternalConditionalDemandAssumption, ...
         ] = (),
@@ -110,12 +118,14 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
             canonical_delayed_timing_service or RotationHealerCanonicalDelayedTimingService(path)
         )
         self.delayed_runtime_service = delayed_runtime_service or RotationHealerDelayedRuntimeService()
+        self.channel_runtime_service = channel_runtime_service or RotationHealerChannelRuntimeService()
         self.demand_healing_service = demand_healing_service or RotationHealerDemandHealingEvidenceService()
         self.budding_seeds_activation_service = (
             budding_seeds_activation_service or RotationHealerBuddingSeedsActivationService()
         )
         self.reviewed_runtime_observations = tuple(reviewed_runtime_observations)
         self.delayed_runtime_evidence = tuple(delayed_runtime_evidence)
+        self.channel_runtime_evidence = tuple(channel_runtime_evidence)
         self.external_conditional_assumptions = tuple(
             external_conditional_assumptions
         )
@@ -192,11 +202,27 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
                 )
             delayed_projection = self.delayed_runtime_service.project(**delayed_kwargs)
 
+        channel_projection = RotationHealerChannelRuntimeProjection(events=(), unresolved=())
+        if projection.channel_seeds:
+            channel_kwargs = {
+                "seeds": projection.channel_seeds,
+                "evidence": self.channel_runtime_evidence,
+                "horizon_seconds": candidate.plan.duration_seconds,
+            }
+            if runtime_build_context_resolver is not None:
+                channel_kwargs["runtime_magnitude_resolver"] = (
+                    self._runtime_channel_magnitude_resolver(
+                        runtime_build_context_resolver
+                    )
+                )
+            channel_projection = self.channel_runtime_service.project(**channel_kwargs)
+
         result = self.demand_healing_service.assess(
             demand=demand,
             projection=projection,
             periodic_projection=periodic_projection,
             delayed_projection=delayed_projection,
+            channel_projection=channel_projection,
             external_conditional_assumptions=self.external_conditional_assumptions,
         )
         unresolved = self._dedupe(tuple(bridge_unresolved) + tuple(result.unresolved))
@@ -214,63 +240,50 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
             modeled_external_conditional_healing=(
                 result.modeled_external_conditional_healing
             ),
+            channel_events=result.channel_events,
+            modeled_channel_healing=result.modeled_channel_healing,
         )
 
     def _runtime_periodic_magnitude_resolver(
         self,
         runtime_build_context_resolver: RotationRuntimeBuildContextResolver,
     ):
-        def resolve(seed, time_seconds: float, sequence: int):
-            runtime_context = runtime_build_context_resolver(
-                float(time_seconds),
-                int(sequence),
-            )
-            if not runtime_context.resolved or runtime_context.context is None:
-                messages = runtime_context.unresolved or (
-                    "exact runtime build context is unresolved",
-                )
-                return RotationHealerPeriodicMagnitudeResolution(
-                    modeled_heal=None,
-                    unresolved=tuple(messages),
-                )
-
-            component_resolver = getattr(
-                self.action_healing_service,
-                "resolve_component_magnitude",
-                None,
-            )
-            if not callable(component_resolver):
-                return RotationHealerPeriodicMagnitudeResolution(
-                    modeled_heal=None,
-                    unresolved=(
-                        "canonical healer action service cannot resolve periodic component magnitude",
-                    ),
-                )
-
-            component = component_resolver(
-                build=self.build,
-                context=runtime_context.context,
-                source_name=seed.source_name,
-                coefficient_number=seed.coefficient_number,
-                expected_temporal_scope=HealTemporalScope.PERIODIC,
-            )
-            if not component.resolved or component.modeled_heal is None:
-                messages = component.unresolved or (
-                    "periodic healing component magnitude is unresolved",
-                )
-                return RotationHealerPeriodicMagnitudeResolution(
-                    modeled_heal=None,
-                    unresolved=tuple(messages),
-                )
-            return RotationHealerPeriodicMagnitudeResolution(
-                modeled_heal=float(component.modeled_heal),
-            )
-
-        return resolve
+        return self._runtime_component_magnitude_resolver(
+            runtime_build_context_resolver,
+            temporal_scope=HealTemporalScope.PERIODIC,
+            resolution_type=RotationHealerPeriodicMagnitudeResolution,
+            label="periodic",
+        )
 
     def _runtime_delayed_magnitude_resolver(
         self,
         runtime_build_context_resolver: RotationRuntimeBuildContextResolver,
+    ):
+        return self._runtime_component_magnitude_resolver(
+            runtime_build_context_resolver,
+            temporal_scope=HealTemporalScope.DELAYED,
+            resolution_type=RotationHealerDelayedMagnitudeResolution,
+            label="delayed",
+        )
+
+    def _runtime_channel_magnitude_resolver(
+        self,
+        runtime_build_context_resolver: RotationRuntimeBuildContextResolver,
+    ):
+        return self._runtime_component_magnitude_resolver(
+            runtime_build_context_resolver,
+            temporal_scope=HealTemporalScope.CHANNEL_TICK,
+            resolution_type=RotationHealerChannelMagnitudeResolution,
+            label="channel",
+        )
+
+    def _runtime_component_magnitude_resolver(
+        self,
+        runtime_build_context_resolver: RotationRuntimeBuildContextResolver,
+        *,
+        temporal_scope: HealTemporalScope,
+        resolution_type,
+        label: str,
     ):
         def resolve(seed, time_seconds: float, sequence: int):
             runtime_context = runtime_build_context_resolver(
@@ -281,7 +294,7 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
                 messages = runtime_context.unresolved or (
                     "exact runtime build context is unresolved",
                 )
-                return RotationHealerDelayedMagnitudeResolution(
+                return resolution_type(
                     modeled_heal=None,
                     unresolved=tuple(messages),
                 )
@@ -292,10 +305,10 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
                 None,
             )
             if not callable(component_resolver):
-                return RotationHealerDelayedMagnitudeResolution(
+                return resolution_type(
                     modeled_heal=None,
                     unresolved=(
-                        "canonical healer action service cannot resolve delayed component magnitude",
+                        f"canonical healer action service cannot resolve {label} component magnitude",
                     ),
                 )
 
@@ -304,17 +317,17 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
                 context=runtime_context.context,
                 source_name=seed.source_name,
                 coefficient_number=seed.coefficient_number,
-                expected_temporal_scope=HealTemporalScope.DELAYED,
+                expected_temporal_scope=temporal_scope,
             )
             if not component.resolved or component.modeled_heal is None:
                 messages = component.unresolved or (
-                    "delayed healing component magnitude is unresolved",
+                    f"{label} healing component magnitude is unresolved",
                 )
-                return RotationHealerDelayedMagnitudeResolution(
+                return resolution_type(
                     modeled_heal=None,
                     unresolved=tuple(messages),
                 )
-            return RotationHealerDelayedMagnitudeResolution(
+            return resolution_type(
                 modeled_heal=float(component.modeled_heal),
             )
 
@@ -436,6 +449,7 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
             direct_events=tuple(projection.direct_events) + tuple(activation.special_events),
             periodic_seeds=activation.periodic_seeds,
             delayed_seeds=activation.delayed_seeds,
+            channel_seeds=projection.channel_seeds,
             unresolved=self._dedupe(tuple(projection.unresolved) + tuple(activation.unresolved)),
             external_conditional_seeds=projection.external_conditional_seeds,
         )
