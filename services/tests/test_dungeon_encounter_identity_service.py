@@ -75,6 +75,7 @@ def test_checked_in_registry_keeps_newest_first_release_slices_and_main_encounte
         assert len(by_content[content_id]) == 3
     assert len(by_content["the_cauldron"]) == 4
     assert len(by_content["ruins_of_mazzatun"]) == 4
+    assert len(by_content["white_gold_tower"]) == 4
     for content_id in (
         "castle_thorn", "icereach", "unhallowed_grave", "moongrave_fane",
         "lair_of_maarselok", "depths_of_malatar", "frostvault",
@@ -83,14 +84,15 @@ def test_checked_in_registry_keeps_newest_first_release_slices_and_main_encounte
     ):
         assert len(by_content[content_id]) == 5
     assert len(by_content["bloodroot_forge"]) == 6
+    assert len(by_content["imperial_city_prison"]) == 6
 
     assert {row.release_key for row in rows} == {
         (2025, 47), (2025, 45), (2024, 41), (2023, 37), (2022, 35), (2022, 33),
         (2021, 31), (2021, 29), (2020, 27), (2020, 25), (2019, 23), (2019, 21),
-        (2018, 19), (2018, 17), (2017, 15), (2016, 11),
+        (2018, 19), (2018, 17), (2017, 15), (2016, 11), (2015, 7),
     }
     assert rows[0].release_key == (2025, 47)
-    assert rows[-1].release_key == (2016, 11)
+    assert rows[-1].release_key == (2015, 7)
 
     all_ids = {row.encounter_id for row in rows}
 
@@ -222,3 +224,18 @@ def test_checked_in_registry_keeps_newest_first_release_slices_and_main_encounte
     assert set(mazzatun) == {"zatzu_the_spine_breaker", "mighty_chudan", "xal_nur_the_slaver", "tree_minder_na_kesh"}
     assert not (data_root / "eso_info" / "bosses" / "zatzu_the_spine_breaker.json").exists()
     assert "haj_mota" not in all_ids and "argonian_behemoth" not in all_ids
+
+    prison = {row.encounter_id: row for row in by_content["imperial_city_prison"]}
+    assert set(prison) == {
+        "overfiend", "ibomez_the_flesh_sculptor", "gravelight_sentry",
+        "flesh_abomination_imperial_city_prison", "lord_wardens_council", "lord_warden_dusk",
+    }
+    assert not (data_root / "eso_info" / "bosses" / "overfiend.json").exists()
+    assert not (data_root / "eso_info" / "bosses" / "gravelight_sentry.json").exists()
+    assert not (data_root / "eso_info" / "bosses" / "lord_wardens_council.json").exists()
+    assert "xivilai" not in all_ids and "flesh_colossus" not in all_ids and "grievous_twilight" not in all_ids
+
+    tower = {row.encounter_id: row for row in by_content["white_gold_tower"]}
+    assert set(tower) == {"the_adjudicator", "elite_guard", "the_planar_inhibitor", "molag_kena"}
+    assert not (data_root / "eso_info" / "bosses" / "elite_guard.json").exists()
+    assert "harvester" not in all_ids and "cold_flame_atronach" not in all_ids and "flame_atronach" not in all_ids and "xivkyn" not in all_ids
