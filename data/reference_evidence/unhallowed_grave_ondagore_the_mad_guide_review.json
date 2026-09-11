@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "unhallowed_grave",
+  "encounter_id": "ondagore_the_mad",
+  "encounter_name": "Ondagore the Mad",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"gas_escape","value":{"order":1,"label":"Toxic Gas Escape","threshold":"About 80% and 40%","description":"Ondagore becomes immune and toxic gas fills the room; the group grapples out, kills the ghosts on the outer platforms, then returns after the gas clears."},"source_type":"guide","source_name":"Xynode Unhallowed Grave Guide","source_locator":"Ondagore > GET OUT","game_update":"U25","confidence":"high"},
+    {"fact_type":"phase","fact_key":"mender_hide","value":{"order":2,"label":"Mender / Shelter Phase","threshold":"About 60% and 20%","description":"Four menders channel Ondagore while lethal pulse explosions force players to use the glowing shelter positions behind pillars."},"source_type":"guide","source_name":"Xynode Unhallowed Grave Guide","source_locator":"Ondagore > HIDE","game_update":"U25","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"bone_colossus","value":{"name":"Bone Colossus","response":"tank_taunts_and_group_focuses_colossus_before_add_pressure_stacks"},"source_type":"guide","source_name":"Xynode Unhallowed Grave Guide","source_locator":"Ondagore > Bone Colossus/Ghosts","game_update":"U25","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"menders","value":{"name":"Menders","response":"kill_menders_while_using_glowing_pillar_shelter_for_explosions"},"source_type":"achievement","source_name":"ESO Hub Unhallowed Grave Achievements","source_locator":"Mender Wrender","game_update":"U25","confidence":"high"}
+  ]
+}
