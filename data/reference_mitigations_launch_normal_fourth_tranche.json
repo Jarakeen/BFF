@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {"entry_name":"Fire Ground — Quintus Verres","mitigation":"Leave the large fire ground effect immediately during the mage phase."},
+    {"entry_name":"Gargoyle Slam — Quintus Verres","mitigation":"Step out of the repeated ground slams until the sequence finishes, then return to position."},
+    {"entry_name":"Tail Whip — Tremorscale","mitigation":"Block or sidestep the conal tail attack to avoid the knockdown."},
+    {"entry_name":"Burrow — Tremorscale","mitigation":"Move or dodge roll out of the erupting ground marker, then restack once Tremorscale emerges."},
+    {"entry_name":"Spark Barrage — Guardian Council","mitigation":"Watch your feet and move out of the incoming lightning impact circles from the blue construct."},
+    {"entry_name":"Soul Decapitation — Guardian Council","mitigation":"Keep the yellow construct faced away from the group and block or dodge its heavy frontal attack."},
+    {"entry_name":"Strength Whirlwind — Guardian Council","mitigation":"If the red construct targets you, kite its spinning chase away from the group until it stops."},
+    {"entry_name":"Lightning Storm — Valaran Stormcaller","mitigation":"Stay out of the large lightning ground effect while continuing damage from safe space."},
+    {"entry_name":"Quick Shot — Valaran Stormcaller","mitigation":"Move out of or block the close-range whirlwind attack."},
+    {"entry_name":"Ground Fist — Stormfist","mitigation":"Move out of the crushing-hand AoE; if caught, block and break free promptly."},
+    {"entry_name":"Lightning Burst — Stormfist","mitigation":"Move out of the scattered lightning pools before overlapping damage builds."},
+    {"entry_name":"Sparking Strike — Stormreeve Neidir","mitigation":"Leave the large AoE immediately and do not let the moving wind push you back into it."},
+    {"entry_name":"Charge — Stormreeve Neidir","mitigation":"Stay at moderate range so Neidir does not punish distant players with a long charge."},
+    {"entry_name":"Gust of Winds — Stormreeve Neidir","mitigation":"Track the moving wind and recover quickly from knockdown before another dangerous AoE overlaps."},
+    {"entry_name":"Acid Puke — Atarus","mitigation":"Stay out of the poison cone; the tank can hold position and block if necessary."},
+    {"entry_name":"Charge — Atarus","mitigation":"Sidestep the long charge lane and reposition once Atarus stops."},
+    {"entry_name":"Flame Breath — Roost Mother","mitigation":"Keep non-tanks behind the boss and out of the large frontal fire cone."},
+    {"entry_name":"Raining Fire — Roost Mother","mitigation":"Hold position while landing spots are chosen, then move when the fireballs begin to fall so the room is not carpeted in AoEs."},
+    {"entry_name":"Skeletons — Captain Blackheart","mitigation":"Pull ranged skeletons into the boss and clear them with AoE before they accumulate."},
+    {"entry_name":"Spin — Captain Blackheart","mitigation":"Non-tanks step out of the small spin AoE and return after it finishes."},
+    {"entry_name":"Skeleton Curse — Captain Blackheart","mitigation":"The transformed player stays with the group and uses skeleton attacks until the transformation expires; the group compensates for the temporarily missing role."}
+  ]
+}
