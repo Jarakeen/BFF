@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "fang_lair",
+  "encounter_id": "lizabet_charnis",
+  "encounter_name": "Lizabet Charnis",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"waves","value":{"order":1,"label":"Summoned Waves","threshold":"100% to 0%","description":"Lizabet remains secondary while the group clears successive summoned undead waves."},"source_type":"guide","source_name":"Alcast Fang Lair Guide","source_locator":"Lizabet Charnis","game_update":"U17","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"colossus","value":{"name":"Bone Colossus Adds","response":"tank_colossi_immediately_and_focus_them_before_wave_pressure_stacks"},"source_type":"guide","source_name":"Alcast Fang Lair Guide","source_locator":"Lizabet Charnis","game_update":"U17","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"skulls","value":{"name":"Flying Skulls","response":"avoid_skull_paths_to_prevent_heavy_damage_and_knockdown"},"source_type":"guide","source_name":"Alcast Fang Lair Guide","source_locator":"Lizabet Charnis","game_update":"U17","confidence":"high"}
+  ]
+}
