@@ -10,7 +10,8 @@ positive amount to the requested maximize objective.
 
 For Extreme max-resource work the default resolver is the reviewed resource
 adapter, which delegates to the shared resolver first and adds only explicit
-resource patterns. Unknown mechanics remain proof blockers.
+resource patterns. Other objectives continue to use the shared canonical resolver.
+Unknown mechanics remain proof blockers.
 
 Relevance and executable projection are deliberately separate contracts. A
 reviewed target-stat effect can be classified as positive, non-positive, or
@@ -24,6 +25,7 @@ from enum import Enum
 from typing import Any
 
 from minmax.effects import EffectOperation
+from minmax.gear_set_effect_resolver import GearSetEffectResolver
 from minmax.gear_set_repository import GearSetRepository
 from services.extreme_gear_set_bonus_breakpoint_service import (
     ExtremeGearSetBonusBreakpointCatalog,
@@ -116,7 +118,7 @@ class ExtremeGearSetObjectiveRelevanceService:
         resolver: Any | None = None,
     ) -> None:
         self.repository = repository
-        self.resolver = resolver or ExtremeGearSetResourceEffectResolver()
+        self.resolver = resolver
 
     @classmethod
     def _reviewed_target_effect_sign(
@@ -164,6 +166,13 @@ class ExtremeGearSetObjectiveRelevanceService:
     ) -> ExtremeGearSetObjectiveRelevanceCatalog:
         key = str(objective_key or "").strip().casefold()
         ExtremeGearSetObjectiveService._target_stats(key)
+        resolver = self.resolver
+        if resolver is None:
+            resolver = (
+                ExtremeGearSetResourceEffectResolver()
+                if key in ExtremeGearSetObjectiveService._MAX_RESOURCE_OBJECTIVES
+                else GearSetEffectResolver()
+            )
 
         evidence: list[ExtremeGearSetObjectiveBreakpointEvidence] = []
         unresolved: list[str] = list(breakpoint_catalog.unresolved)
@@ -182,7 +191,7 @@ class ExtremeGearSetObjectiveRelevanceService:
                     gear_set.name,
                     key,
                     equipped_piece_count=piece_count,
-                    resolver=self.resolver,
+                    resolver=resolver,
                 )
                 if candidate.unresolved:
                     reviewed_sign = self._reviewed_target_effect_sign(candidate, key)
