@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "depths_of_malatar",
+  "encounter_id": "king_narilmor",
+  "encounter_name": "King Narilmor",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"reflection_cycles","value":{"order":1,"label":"Reflection Cycles","threshold":"Repeating","description":"Narilmor repeatedly splits into four copies, only one of which is the real boss."},"source_type":"guide","source_name":"Xynode Depths of Malatar Guide","source_locator":"King Narilmor The Split","game_update":"U21","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"reflections","value":{"name":"Narilmor Reflections","response":"tank_control_all_copies_and_group_test_targets_until_real_boss_is_found"},"source_type":"guide","source_name":"Xynode Depths of Malatar Guide","source_locator":"King Narilmor The Split","game_update":"U21","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"soul_mates","value":{"name":"Tharayya Deadlock","response":"protect_tharayya_and_prevent_quintus_from_winning_the_deadlock"},"source_type":"achievement","source_name":"ESO-Hub Depths of Malatar Achievements","source_locator":"Soul Mates","game_update":"U21","confidence":"high"}
+  ]
+}
