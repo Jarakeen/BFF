@@ -16,19 +16,56 @@ def _database(tmp_path: Path) -> Path:
     path = tmp_path / "eso.db"
     connection = sqlite3.connect(path)
     try:
-        connection.execute(
-            "CREATE TABLE ability (name TEXT, index_name TEXT, duration INTEGER, channeled INTEGER)"
+        connection.executescript(
+            """
+            CREATE TABLE skill (
+                id INTEGER PRIMARY KEY,
+                base_ability_id INTEGER NOT NULL,
+                name TEXT
+            );
+            CREATE TABLE ability (
+                ability_id INTEGER PRIMARY KEY,
+                name TEXT,
+                index_name TEXT,
+                duration INTEGER,
+                channeled INTEGER,
+                coef_description TEXT
+            );
+            CREATE TABLE skill_rank (
+                id INTEGER PRIMARY KEY,
+                skill_id INTEGER NOT NULL,
+                ability_id INTEGER NOT NULL,
+                raw_name TEXT,
+                rank INTEGER,
+                morph INTEGER
+            );
+            CREATE TABLE skill_coefficient (
+                skill_rank_id INTEGER NOT NULL,
+                coefficient_number INTEGER NOT NULL,
+                type TEXT,
+                a REAL,
+                b REAL,
+                c REAL,
+                r REAL,
+                avg REAL
+            );
+            """
         )
         connection.execute(
-            "INSERT INTO ability(name,index_name,duration,channeled) VALUES (?,?,?,?)",
-            ("Echoing Vigor", "echoing vigor", 16000, 0),
+            "INSERT INTO skill(id,base_ability_id,name) VALUES (?,?,?)",
+            (1, 61505, "Echoing Vigor"),
         )
         connection.execute(
-            "CREATE TABLE skill_coefficient (skill_name TEXT, coefficient_number INTEGER, raw_description TEXT)"
+            "INSERT INTO ability(ability_id,name,index_name,duration,channeled,coef_description) VALUES (?,?,?,?,?,?)",
+            (61505, "Echoing Vigor", "echoing vigor", 16000, 0, "Heals every 2 seconds for 16 seconds."),
         )
         connection.execute(
-            "INSERT INTO skill_coefficient(skill_name,coefficient_number,raw_description) VALUES (?,?,?)",
-            ("Echoing Vigor", 1, "Heals every 2 seconds for 16 seconds."),
+            "INSERT INTO skill_rank(id,skill_id,ability_id,raw_name,rank,morph) VALUES (?,?,?,?,?,?)",
+            (1, 1, 61505, "Echoing Vigor", 4, 1),
+        )
+        connection.execute(
+            "INSERT INTO skill_coefficient(skill_rank_id,coefficient_number,type,a,b,c,r,avg) VALUES (?,?,?,?,?,?,?,?)",
+            (1, 1, "heal", 0.0, 0.0, 0.0, 1.0, None),
         )
         connection.commit()
     finally:
