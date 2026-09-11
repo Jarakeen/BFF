@@ -226,11 +226,10 @@ class PlayerBuild:
     def to_dict(self) -> dict:
         recipes = [recipe for recipe in self.ScribedSkillRecipes if recipe.ResultName.strip()]
         scribed_names = [recipe.ResultName.strip() for recipe in recipes] or list(self.ScribedSkills)
-        return {
+        payload = {
             "Name": self.Name, "Gamertag": self.Gamertag, "BuildName": self.BuildName,
             "ImagePath": self.ImagePath, "Race": self.Race, "EsoClass": self.EsoClass,
             "Role": self.Role, "Alliance": self.Alliance, "Mundus": self.Mundus,
-            "SecondMundus": self.SecondMundus,
             "Vampire": self.Vampire, "Werewolf": self.Werewolf,
             "AttributeHealth": self.AttributeHealth, "AttributeMagicka": self.AttributeMagicka,
             "AttributeStamina": self.AttributeStamina,
@@ -247,6 +246,9 @@ class PlayerBuild:
             "BossLoadouts": [b.to_dict() for b in self.BossLoadouts],
             "ScribedSkillRecipes": [recipe.to_dict() for recipe in recipes],
         }
+        if str(self.SecondMundus or "").strip():
+            payload["SecondMundus"] = self.SecondMundus
+        return payload
 
     @classmethod
     def from_dict(cls, data: dict | None) -> "PlayerBuild":
