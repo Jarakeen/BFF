@@ -2,14 +2,14 @@ from __future__ import annotations
 
 """Build the finite full two-bar legality denominator for Extreme named gear.
 
-The named gear catalog currently enumerates active-snapshot realizations.  Static
+The named gear catalog currently enumerates active-snapshot realizations. Static
 snapshot objectives do not need to rescore every compatible inactive-bar weapon
 permutation, but an active snapshot is admissible only when at least one complete
 front/back build can contain it.
 
 This service groups realizations by their shared body/jewelry assignment and pairs
-only snapshots that agree on that shared equipment.  The resulting pair catalog is
-therefore a legality denominator, not another gear-stat implementation.  Bar-local
+only snapshots that agree on that shared equipment. The resulting pair catalog is
+therefore a legality denominator, not another gear-stat implementation. Bar-local
 set activation remains owned by ``GearStatInputResolver`` through
 ``ExtremeDualBarGearStateService``.
 """
@@ -59,18 +59,14 @@ class ExtremeDualBarGearStateCatalogService:
             tuple(realization.counts),
             realization.weapon_shape.value,
             tuple(
-                (str(row.slot), int(row.set_id), str(row.set_name), str(row.weapon_type))
+                (
+                    str(row.slot),
+                    int(row.set_id),
+                    str(row.set_name),
+                    str(getattr(row, "weapon_type", "") or ""),
+                )
                 for row in realization.assignments
             ),
-        )
-
-    @staticmethod
-    def _shared_key(realization: ExtremeNamedGearSetRealization) -> tuple[tuple[str, int, str], ...]:
-        return tuple(
-            sorted(
-                (str(row.slot), int(row.set_id), str(row.set_name))
-                for row in realization.body_jewelry_assignments
-            )
         )
 
     @classmethod
@@ -88,7 +84,9 @@ class ExtremeDualBarGearStateCatalogService:
 
         grouped: dict[tuple[tuple[str, int, str], ...], list[ExtremeNamedGearSetRealization]] = {}
         for realization in rows:
-            grouped.setdefault(cls._shared_key(realization), []).append(realization)
+            grouped.setdefault(
+                ExtremeDualBarGearStateService.shared_assignment_key(realization), []
+            ).append(realization)
 
         states: list[ExtremeDualBarGearState] = []
         pairs_reviewed = 0
