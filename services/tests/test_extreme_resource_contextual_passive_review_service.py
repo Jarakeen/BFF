@@ -11,18 +11,20 @@ def _by_name(objective: str):
     }
 
 
-def test_max_health_review_separates_applied_bar_runtime_and_missing_mechanics():
+def test_max_health_review_separates_applied_bar_and_runtime_boundaries():
     rows = _by_name("max_health")
 
     assert rows["Last Gasp"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
+    assert rows["Juggernaut"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
     assert rows["Dark Vigor"].status is ExtremeResourceContextualPassiveStatus.ACTIVE_BAR_SEARCH_REQUIRED
     assert rows["Expert Summoner"].status is ExtremeResourceContextualPassiveStatus.RUNTIME_STATE_REQUIRED
     assert rows["Nothing Wasted"].status is ExtremeResourceContextualPassiveStatus.RUNTIME_STATE_REQUIRED
-    assert rows["Juggernaut"].status is ExtremeResourceContextualPassiveStatus.MECHANIC_IMPLEMENTATION_REQUIRED
     assert rows["Last Gasp"].source == "NecromancerPassiveInputResolver"
+    assert rows["Juggernaut"].source == "ArmorPassiveInputResolver"
     assert "permanent pet" in rows["Expert Summoner"].condition.casefold()
     assert "10-stack" in rows["Nothing Wasted"].condition.casefold()
     assert "heavy armor" in rows["Juggernaut"].condition.casefold()
+    assert "max-health" in rows["Juggernaut"].condition.casefold()
 
 
 def test_max_magicka_review_keeps_standing_summoner_separate_from_bar_search():
@@ -57,6 +59,19 @@ def test_status_filter_is_deterministic_and_does_not_claim_global_denominator():
     assert first == second
     assert [row.passive_name for row in first] == ["Expert Summoner", "Nothing Wasted"]
     assert not hasattr(first, "denominator_proven")
+
+
+def test_no_reviewed_high_impact_resource_passive_still_lacks_mechanic_implementation():
+    rows = (
+        *ExtremeResourceContextualPassiveReviewService.build("max_health"),
+        *ExtremeResourceContextualPassiveReviewService.build("max_magicka"),
+        *ExtremeResourceContextualPassiveReviewService.build("max_stamina"),
+    )
+
+    assert not any(
+        row.status is ExtremeResourceContextualPassiveStatus.MECHANIC_IMPLEMENTATION_REQUIRED
+        for row in rows
+    )
 
 
 def test_unreviewed_objective_fails_closed():
