@@ -130,6 +130,15 @@ class RotationHealerMinorLifestealEsoLogsEvidenceService:
         "seconds": 1.0,
     }
 
+    _EVENT_COLUMNS = """
+        report_code, fight_id, event_index, timestamp, event_type,
+        source_id, source_is_friendly, target_id, target_instance,
+        target_is_friendly, ability_game_id, extra_ability_game_id,
+        amount, hit_type, tick, cast_track_id, resource_change,
+        resource_change_type, other_resource_change, max_resource_amount,
+        waste, overheal, absorbed, stack, raw_json
+    """
+
     def inspect(
         self,
         database_path: str | Path,
@@ -192,69 +201,63 @@ class RotationHealerMinorLifestealEsoLogsEvidenceService:
                     ),
                 )
 
-            fights = self._fight_keys(
+            interpreter = EsoLogsEventInterpreter(connection)
+            events = self._candidate_heal_events(
                 connection,
+                interpreter=interpreter,
+                aliases=aliases,
                 report_code=report_code,
                 fight_id=fight_id,
             )
-            interpreter = EsoLogsEventInterpreter(connection)
-            for current_report, current_fight in fights:
-                last_damage_by_source: dict[int, object] = {}
-                for event in interpreter.iter_fight(current_report, current_fight):
-                    if event.event_kind == SemanticEventKind.DAMAGE:
-                        if event.source_id is not None:
-                            last_damage_by_source[int(event.source_id)] = event
-                        continue
-                    if event.event_kind != SemanticEventKind.HEAL:
-                        continue
-                    if not self._is_minor_lifesteal_heal(event, aliases=aliases):
-                        continue
+            for event in events:
+                if not self._is_minor_lifesteal_heal(event, aliases=aliases):
+                    continue
 
-                    previous_damage = (
-                        last_damage_by_source.get(int(event.source_id))
-                        if event.source_id is not None
-                        else None
+                previous_damage = self._previous_same_source_damage(
+                    connection,
+                    interpreter=interpreter,
+                    event=event,
+                )
+                delta = None
+                if previous_damage is not None:
+                    delta = round(
+                        (float(event.timestamp) - float(previous_damage.timestamp))
+                        * scale,
+                        6,
                     )
-                    delta = None
-                    if previous_damage is not None:
-                        delta = round(
-                            (float(event.timestamp) - float(previous_damage.timestamp))
-                            * scale,
-                            6,
-                        )
-                        if delta < 0 or not math.isfinite(delta):
-                            delta = None
+                    if delta < 0 or not math.isfinite(delta):
+                        delta = None
 
-                    relation = self._source_target_relation(
-                        event.source_id,
-                        event.target_id,
+                relation = self._source_target_relation(
+                    event.source_id,
+                    event.target_id,
+                )
+                observations.append(
+                    RotationHealerMinorLifestealHealObservation(
+                        report_code=event.report_code,
+                        fight_id=event.fight_id,
+                        event_index=int(event.event_index),
+                        timestamp_seconds=round(float(event.timestamp) * scale, 6),
+                        ability_game_id=event.ability_game_id,
+                        ability_name=event.ability_name,
+                        source_id=event.source_id,
+                        target_id=event.target_id,
+                        amount=event.amount,
+                        overheal=event.overheal,
+                        source_target_relation=relation,
+                        previous_same_source_damage_event_index=(
+                            int(previous_damage.event_index)
+                            if previous_damage is not None
+                            else None
+                        ),
+                        previous_same_source_damage_target_id=(
+                            previous_damage.target_id
+                            if previous_damage is not None
+                            else None
+                        ),
+                        previous_same_source_damage_delta_seconds=delta,
                     )
-                    observations.append(
-                        RotationHealerMinorLifestealHealObservation(
-                            report_code=current_report,
-                            fight_id=current_fight,
-                            event_index=int(event.event_index),
-                            timestamp_seconds=round(float(event.timestamp) * scale, 6),
-                            ability_game_id=event.ability_game_id,
-                            ability_name=event.ability_name,
-                            source_id=event.source_id,
-                            target_id=event.target_id,
-                            amount=event.amount,
-                            overheal=event.overheal,
-                            source_target_relation=relation,
-                            previous_same_source_damage_event_index=(
-                                int(previous_damage.event_index)
-                                if previous_damage is not None
-                                else None
-                            ),
-                            previous_same_source_damage_target_id=(
-                                previous_damage.target_id
-                                if previous_damage is not None
-                                else None
-                            ),
-                            previous_same_source_damage_delta_seconds=delta,
-                        )
-                    )
+                )
 
         if not observations:
             unresolved.append(
@@ -285,6 +288,73 @@ class RotationHealerMinorLifestealEsoLogsEvidenceService:
             observed_heal_ability_aliases=tuple(sorted(observed_aliases)),
             unresolved=tuple(dict.fromkeys(unresolved)),
         )
+
+    @classmethod
+    def _candidate_heal_events(
+        cls,
+        connection: sqlite3.Connection,
+        *,
+        interpreter: EsoLogsEventInterpreter,
+        aliases: set[int],
+        report_code: str | None,
+        fight_id: int | None,
+    ) -> tuple[object, ...]:
+        query = (
+            f"SELECT {cls._EVENT_COLUMNS} FROM log_event "
+            "WHERE lower(event_type) IN ('heal', 'hot')"
+        )
+        params: list[object] = []
+        if report_code is not None:
+            query += " AND report_code = ?"
+            params.append(str(report_code))
+        if fight_id is not None:
+            query += " AND fight_id = ?"
+            params.append(int(fight_id))
+        if aliases:
+            placeholders = ",".join("?" for _ in aliases)
+            query += f" AND ability_game_id IN ({placeholders})"
+            params.extend(sorted(aliases))
+        query += " ORDER BY report_code, fight_id, timestamp, event_index"
+        return tuple(
+            interpreter.interpret_row(row)
+            for row in connection.execute(query, params)
+        )
+
+    @classmethod
+    def _previous_same_source_damage(
+        cls,
+        connection: sqlite3.Connection,
+        *,
+        interpreter: EsoLogsEventInterpreter,
+        event: object,
+    ) -> object | None:
+        if event.source_id is None:
+            return None
+        row = connection.execute(
+            f"""
+            SELECT {cls._EVENT_COLUMNS}
+            FROM log_event
+            WHERE report_code = ?
+              AND fight_id = ?
+              AND source_id = ?
+              AND lower(event_type) = 'damage'
+              AND (
+                    timestamp < ?
+                    OR (timestamp = ? AND event_index < ?)
+              )
+            ORDER BY timestamp DESC, event_index DESC
+            LIMIT 1
+            """,
+            (
+                event.report_code,
+                int(event.fight_id),
+                int(event.source_id),
+                float(event.timestamp),
+                float(event.timestamp),
+                int(event.event_index),
+            ),
+        ).fetchone()
+        return interpreter.interpret_row(row) if row is not None else None
 
     @staticmethod
     def _fight_keys(
