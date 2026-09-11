@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
 
 from engine.config import get_data_dir
 from services.encounter_boss_guide import EncounterBossGuideService
+from services.encounter_runtime_guide_projection_service import EncounterRuntimeGuideProjectionService
 from services.eso_achievement_database_service import EsoAchievementDatabaseService
 from services.expedition_service import ExpeditionService
 from services.optional_modules import broadcast_enabled
@@ -38,7 +39,7 @@ from ui.encounters_page import EncountersPage
 from ui.foundry_page import FoundryPage
 from ui.gear_lookup_page import GearLookupPage
 from ui.incident_page import IncidentPage
-from ui.mechanics_page import MechanicsPage
+from ui.mechanics_runtime_page import RuntimeMechanicsPage
 from ui.operations_console import OperationsConsole
 from ui.optimization_page import OptimizationPage
 from ui.reference_data_page import ReferenceDataPage
@@ -56,6 +57,7 @@ class MainWindow(QMainWindow):
         data_dir = get_data_dir()
         self.eso_data_service = EsoAchievementDatabaseService(data_dir / "eso.db")
         self.encounter_boss_guide_service = EncounterBossGuideService(data_dir / "eso.db")
+        self.encounter_runtime_guide_service = EncounterRuntimeGuideProjectionService(data_dir)
         self.expedition_service = expedition if expedition is not None else ExpeditionService()
         self.broadcast_enabled = broadcast_enabled()
         self.setWindowTitle("Black Feather Foundry Field Office")
@@ -116,9 +118,10 @@ class MainWindow(QMainWindow):
             "console:2": BuildsPage(),
             "rotations": CanonicalRotationDashboardPage(),
             "console:3": CapabilitiesPage(),
-            "console:4": MechanicsPage(
+            "console:4": RuntimeMechanicsPage(
                 expedition=self.expedition_service,
                 guide_service=self.encounter_boss_guide_service,
+                runtime_guide_service=self.encounter_runtime_guide_service,
             ),
             "console:6": optimization_page,
             "console:7": CoveragePage(),
