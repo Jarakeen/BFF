@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "content_id": "earthen_root_enclave",
+  "encounter_id": "corruption_of_stone",
+  "encounter_name": "Corruption of Stone",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main Phase","threshold":"Pull to 75%","description":"Control earthquakes and Stone Atronachs while keeping the boss centrally positioned for the first shelter slam."},"source_type":"guide","source_name":"ESO-Hub Earthen Root Enclave Dungeon Guide","source_locator":"Corruption of Stone","game_update":"U35+","confidence":"high"},
+    {"fact_type":"phase_transition","fact_key":"ground_slam_cycles","value":{"label":"Ground Slam Shelter Cycles","thresholds":["75%","50%","25%"],"description":"Corruption of Stone rises, then slams twice. Players must shelter behind an intact stone pillar for each lethal slam before returning to the fight."},"source_type":"guide","source_name":"ESO-Hub Earthen Root Enclave Dungeon Guide","source_locator":"Corruption of Stone > Ground Slam","game_update":"U35+","confidence":"high"},
+    {"fact_type":"phase","fact_key":"hardmode_execute","value":{"order":3,"label":"Hard Mode Stone Aura Execute","threshold":"After final 25% shelter cycle","description":"Hard Mode adds sustained group pressure from the boss's flying-stone aura after the final shelter sequence."},"source_type":"guide","source_name":"ESO-Hub Earthen Root Enclave Dungeon Guide","source_locator":"Corruption of Stone > Hardmode","game_update":"U35+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"earthquakes","value":{"name":"Earthquakes","response":"spread_personal_ground_aoes_and_keep_movement_lanes_clear","failure":"overlapping_ground_aoes_compound_group_damage"},"source_type":"guide","source_name":"ESO-Hub Earthen Root Enclave Dungeon Guide","source_locator":"Corruption of Stone > Earthquakes","game_update":"U35+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"ground_slam","value":{"name":"Ground Slam Shelter","response":"hide_behind_intact_stone_pillar_for_each_slam","failure":"unsheltered_players_die"},"source_type":"guide","source_name":"ESO-Hub Earthen Root Enclave Dungeon Guide","source_locator":"Corruption of Stone > Ground Slam","game_update":"U35+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"stone_atronachs","value":{"name":"Stone Atronachs","response":"focus_active_atronachs_and_interrupt_petrify","failure":"uncontrolled_adds_add_damage_and_can_turn_players_to_stone"},"source_type":"guide","source_name":"ESO-Hub Earthen Root Enclave Dungeon Guide","source_locator":"Corruption of Stone > Stone Atronachs","game_update":"U35+","confidence":"high"}
+  ]
+}
