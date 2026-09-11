@@ -11,14 +11,16 @@ ROTATION_OBSERVATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         domain="rotation",
         purpose=(
             "Surface positive ESO Logs resource-change events for explicitly reviewed "
-            "heavy-attack ability aliases without promoting observed values to game constants."
+            "heavy-attack ability aliases from one fight or the imported corpus without "
+            "promoting observed values to game constants."
         ),
         implementation_path="services.rotation_heavy_attack_restore_esologs_evidence_service",
         inputs=(
             "EsoLogsSqlitePath",
-            "ReportCode",
-            "FightId",
             "ReviewedHeavyAttackAbilityAlias",
+            "OptionalReportCode",
+            "OptionalFightId",
+            "OptionalSourceActorId",
         ),
         outputs=("RotationHeavyAttackRestoreObservationReport",),
         responsibilities=("rotation_heavy_attack_restore_observation_discovery",),
@@ -28,7 +30,8 @@ ROTATION_OBSERVATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         notes=(
             "Read-only observation discovery. Numeric ability ids and resource type enums stay raw "
             "log evidence; callers must explicitly review identity/resource semantics before any "
-            "restore amount can be promoted into canonical sustain math."
+            "restore amount can be promoted into canonical sustain math. Corpus frequency is useful "
+            "review evidence but is not itself canonical proof."
         ),
     ),
     ServiceDescriptor(
