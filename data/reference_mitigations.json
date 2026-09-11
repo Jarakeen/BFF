@@ -96,6 +96,78 @@
       "mitigation": "Kill the Reef Heart before the 60-second timeout or Empowered Rockfall wipes the group.",
       "source": "reviewed_encounter_evidence",
       "notes": "Reviewed evidence records a 60-second Reef Heart timeout ending in a group wipe from Empowered Rockfall."
+    },
+    {
+      "entry_name": "Icy Winds — Lokkestiiz",
+      "mitigation": "Send the assigned wind player immediately and heal them to full within 8 seconds. Do not reuse a player while their 60-second wind debuff is active; HM needs two players per wind set.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Reviewed Xynode guide evidence records an 8-second heal window, a roughly one-minute reuse lockout, three assigned players on veteran, and six on HM because two winds occur at once."
+    },
+    {
+      "entry_name": "Storm Breath — Lokkestiiz",
+      "mitigation": "Move out of the fly-by line. Do not stand in the lingering lightning path; roll through it only if you must cross.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Reviewed guide evidence describes the flight-phase lightning breath as a straight line that persists briefly on the floor."
+    },
+    {
+      "entry_name": "Ice Laser Beam — Lokkestiiz",
+      "mitigation": "Block the room-wide beam. It cannot be avoided by positioning.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Reviewed guide evidence says the flight-phase ice beam crosses the whole room and an unblocked hit is fatal."
+    },
+    {
+      "entry_name": "Ice Ball — Lokkestiiz",
+      "mitigation": "Step away from the stack and block your explosion. Do not overlap it with other players.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Reviewed guide evidence records a single targeted spreading AOE that damages nearby players when it resolves."
+    },
+    {
+      "entry_name": "Fire Geyser / Explosion — Yolnahkriin",
+      "mitigation": "Stay in your assigned stack so the damage is shared. Block the final hit, especially while learning the fight.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Reviewed guide evidence records two simultaneous targets, five ticks, shared stack damage, and a blockable heavy final tick."
+    },
+    {
+      "entry_name": "Flame Atronach — Yolnahkriin",
+      "mitigation": "Keep Flame Atronachs out of the group and kill them quickly. Their death leaves lava; in HM they enrage, charge the group, and explode if left alive.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Reviewed guide evidence records lethal lava on death and an HM enrage/explosion failure state."
+    },
+    {
+      "entry_name": "Iron Atronach — Yolnahkriin",
+      "mitigation": "Back tank holds the Iron Atronachs and blocks their heavies. Burn them when the fire-flight phase makes them molten and vulnerable.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Reviewed guide evidence assigns Iron Atronachs to the back tank and says the fire-flight breath makes them temporarily much easier to kill."
+    },
+    {
+      "entry_name": "Time Stop — Yolnahkriin",
+      "mitigation": "Step out of the Time Stop circles before the stun. If caught, Break Free quickly and reform the two stacks.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Reviewed HM guide evidence says Time Stop areas appear near the group and stun players who remain inside."
+    },
+    {
+      "entry_name": "Eternal Servant — Nahviintaas",
+      "mitigation": "Send three portal players and kill the Eternal Servant before the 90-second timeout. If it survives, it comes upstairs immortal and wipes the group.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Reviewed guide evidence records three portal players, a 90-second timeout, about 3.5-3.6M health on veteran, and about 11.3M on HM."
+    },
+    {
+      "entry_name": "Marked for Death — Nahviintaas",
+      "mitigation": "Tank swap when the mark lands. Do not take the next mark while the debuff is active; experienced tanks can dodge the application instead.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Reviewed guide evidence records the tank mark and a fatal repeat hit on veteran while the debuff remains active."
+    },
+    {
+      "entry_name": "Hide / Fire Phase — Nahviintaas",
+      "mitigation": "Spread for the targeted fire pops, then stack behind a statue for the final room-wide burst. Kill Flame Atronachs immediately.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Reviewed guide evidence records several targeted fire bursts followed by a room-wide final burst that is avoided behind a statue."
+    },
+    {
+      "entry_name": "Time Stop Portal Buff — Nahviintaas",
+      "mitigation": "During portal, assign one upstairs player to trigger Time Stop intentionally so the downstairs team can collect the green damage buff.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Reviewed guide evidence says an upstairs Time Stop trigger creates a green damage-increase circle for the portal group."
     }
   ]
 }
