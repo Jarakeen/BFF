@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "castle_thorn",
+  "encounter_id": "dread_tindulra",
+  "encounter_name": "Dread Tindulra",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"Pull to death","description":"Control Dread Tindulra and her broodlings while keeping cone and fire pressure away from the group."},"source_type":"guide","source_name":"Xynode Castle Thorn Mechanics Guide","source_locator":"Dread Tindulra","game_update":"U27","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"death_breath","value":{"name":"Death Breath","response":"tank_faces_cone_away_from_group"},"source_type":"guide","source_name":"Alcast Castle Thorn Guide","source_locator":"Dread Tindulra > Death Breath","game_update":"U27","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"broodlings","value":{"name":"Death Hound Broodlings","response":"separate_or_control_broodlings_and_kill_cleanly"},"source_type":"guide","source_name":"Castle Thorn Hound Pound achievement / guide review","source_locator":"Dread Tindulra","game_update":"U27","confidence":"high"}
+  ]
+}
