@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "content_id": "aetherian_archive",
+  "encounter_id": "varlariel",
+  "encounter_name": "Varlariel",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main Phase","threshold":"Pull","description":"Group spreads around the room while the tank keeps Varlariel controlled and away from unnecessary cleave risk."},"source_type":"guide","source_name":"Xynode Aetherian Archive Mechanics Guide","source_locator":"Varlariel","confidence":"medium"},
+    {"fact_type":"phase","fact_key":"split_cycle","value":{"order":2,"label":"Clone Split Cycle","threshold":"~30s cycle","description":"Varlariel splits into three clones around the room; kill as many clones as possible before the following explosion, then the next phase begins."},"source_type":"guide","source_name":"Xynode Aetherian Archive Mechanics Guide","source_locator":"Split!","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"clone_split","value":{"name":"Clone Split"},"source_type":"guide","source_name":"Xynode Aetherian Archive Mechanics Guide","source_locator":"Split!","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"clone_split_behavior","value":{"clone_count":3,"phase_duration_seconds":30,"failure_scaling":"the more clones left alive, the stronger the explosion"},"source_type":"guide","source_name":"Xynode Aetherian Archive Mechanics Guide","source_locator":"Split!","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"magic_bolt","value":{"name":"Magic Bolt"},"source_type":"guide","source_name":"Xynode Aetherian Archive Mechanics Guide","source_locator":"Magic Bolt","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"clone_type_history","value":{"water_elemental_type":true},"source_type":"official_patch_notes","source_name":"ESO Patch Notes v1.4.3","source_locator":"Aetherian Archive > Valariel clones","confidence":"high"}
+  ]
+}
