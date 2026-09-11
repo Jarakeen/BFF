@@ -141,9 +141,11 @@ def test_proven_gear_axis_moves_from_omitted_to_searched_and_counts_full_product
     )
     _SearchService.current_result = _result(omitted=_UniverseService.DEFERRED)
 
+    # Physical penetration intentionally remains on the gear-only branch. The
+    # max-resource objectives now exercise the joint resource armor/glyph branch.
     record = ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService(
         optimizer=_Optimizer()
-    ).record("max_health")
+    ).record("physical_penetration")
 
     assert _GEAR_DEFERRED_AXIS not in record.search_coverage.omitted
     assert "armor, jewelry, and weapon traits" in record.search_coverage.omitted
@@ -167,7 +169,7 @@ def test_unproven_gear_axis_remains_omitted_and_propagates_unresolved(monkeypatc
 
     record = ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService(
         optimizer=_Optimizer()
-    ).record("max_health")
+    ).record("physical_penetration")
 
     assert _GEAR_DEFERRED_AXIS in record.search_coverage.omitted
     assert record.search_coverage.denominator_proven is False
@@ -189,7 +191,7 @@ def test_no_scored_candidate_returns_unresolved_record(monkeypatch):
 
     record = ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService(
         optimizer=_Optimizer()
-    ).record("max_health")
+    ).record("physical_penetration")
 
     assert record.raw_value is None
     assert record.proof_status is ExtremeRecordProofStatus.UNRESOLVED
