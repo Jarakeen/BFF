@@ -38,9 +38,10 @@ class _Page:
         return "sunspire_lokkestiiz"
 
 
-def _context() -> RotationGenerateCanonicalContext:
+def _context(*, role_evidence="role-evidence") -> RotationGenerateCanonicalContext:
     return RotationGenerateCanonicalContext(
         evidence_inputs=object(),  # type: ignore[arg-type]
+        role_evidence=role_evidence,  # type: ignore[arg-type]
         cadence_obligations=("obligation",),  # type: ignore[arg-type]
         cadence_priorities="priorities",  # type: ignore[arg-type]
         cadence_evaluation_context="evaluation",  # type: ignore[arg-type]
@@ -79,6 +80,7 @@ def test_generate_with_context_resolves_selected_encounter_and_runs_full_orchest
     bundle, kwargs = page.run_calls[0]
     assert bundle is page.bundle
     assert kwargs == {
+        "role_evidence": "role-evidence",
         "cadence_obligations": ("obligation",),
         "cadence_priorities": "priorities",
         "cadence_evaluation_context": "evaluation",
@@ -89,6 +91,17 @@ def test_generate_with_context_resolves_selected_encounter_and_runs_full_orchest
     assert page.status.infos == [
         "Canonical rotation generated for sunspire_lokkestiiz."
     ]
+
+
+def test_generate_context_without_role_evidence_preserves_none_explicitly() -> None:
+    support = RotationGenerateActionSupport()
+    context = _context(role_evidence=None)
+    page = _Page(context=context)
+
+    support.generate(page)
+
+    _, kwargs = page.run_calls[0]
+    assert kwargs["role_evidence"] is None
 
 
 def test_configured_encounter_failure_is_reported_without_plain_fallback(monkeypatch) -> None:
