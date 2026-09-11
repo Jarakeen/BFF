@@ -11,6 +11,7 @@ from services.extreme_structural_named_gear_mundus_food_potion_core_stat_record_
     _RESOURCE_JEWELRY_STATIC_TRAIT_SCOPE,
     _RESOURCE_JUGGERNAUT_SCOPE,
     _RESOURCE_MAX_HEALTH_RUNTIME_SCOPE,
+    _RESOURCE_PASSIVE_COVERAGE_SCOPE,
     _RESOURCE_REMAINING_EQUIPMENT_TRAIT_AFTER_WEAPON_AXIS,
     _RESOURCE_REMAINING_PASSIVE_AFTER_REVIEWED_RESOURCE_AXIS,
     _RESOURCE_REMAINING_RUNTIME_STATE_AXIS,
@@ -142,6 +143,26 @@ class _WeaponService:
     def build(self, key):
         assert key == "max_health"
         return _WeaponAudit()
+
+
+class _PassiveAudit:
+    passives_reviewed = 325
+    denominator_proven = True
+    projection_complete = True
+    static_relevant = ()
+    accounted_elsewhere = ()
+    static_irrelevant = ()
+    context_required = ()
+    unresolved = ()
+
+
+class _PassiveAuditService:
+    def __init__(self, path):
+        self.path = path
+
+    def build(self, key):
+        assert key == "max_health"
+        return _PassiveAudit()
 
 
 _WINNER_PAYLOAD = {
@@ -281,6 +302,7 @@ def test_resource_armor_jewelry_weapon_mettle_juggernaut_bar_runtime_and_glyph_i
     monkeypatch.setattr(module, "ExtremeJewelryResourceStaticTraitStateService", _JewelryTraitService)
     monkeypatch.setattr(module, "ExtremeJewelryResourceGlyphRelevanceService", _JewelryGlyphService)
     monkeypatch.setattr(module, "ExtremeWeaponResourceRelevanceService", _WeaponService)
+    monkeypatch.setattr(module, "ExtremeResourcePassiveCoverageAuditService", _PassiveAuditService)
     monkeypatch.setattr(module, "ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory", _ResourceFactory)
     monkeypatch.setattr(
         module,
@@ -306,6 +328,7 @@ def test_resource_armor_jewelry_weapon_mettle_juggernaut_bar_runtime_and_glyph_i
     assert _RESOURCE_JUGGERNAUT_SCOPE in record.search_coverage.searched
     assert _RESOURCE_ACTIVE_BAR_SCOPE in record.search_coverage.searched
     assert _RESOURCE_MAX_HEALTH_RUNTIME_SCOPE in record.search_coverage.searched
+    assert _RESOURCE_PASSIVE_COVERAGE_SCOPE in record.search_coverage.searched
     assert _RESOURCE_JEWELRY_STATIC_TRAIT_SCOPE in record.search_coverage.searched
     assert _RESOURCE_JEWELRY_GLYPH_IRRELEVANCE_SCOPE in record.search_coverage.searched
     assert _RESOURCE_WEAPON_IRRELEVANCE_SCOPE in record.search_coverage.searched
@@ -316,12 +339,13 @@ def test_resource_armor_jewelry_weapon_mettle_juggernaut_bar_runtime_and_glyph_i
     assert "skill-bar choices and morphs" not in record.search_coverage.omitted
     assert _RUNTIME_STATE_DEFERRED_AXIS not in record.search_coverage.omitted
     assert _RESOURCE_REMAINING_EQUIPMENT_TRAIT_AFTER_WEAPON_AXIS in record.search_coverage.omitted
-    assert _RESOURCE_REMAINING_PASSIVE_AFTER_REVIEWED_RESOURCE_AXIS in record.search_coverage.omitted
+    assert _RESOURCE_REMAINING_PASSIVE_AFTER_REVIEWED_RESOURCE_AXIS not in record.search_coverage.omitted
     assert _RESOURCE_REMAINING_SKILL_BAR_AXIS in record.search_coverage.omitted
     assert _RESOURCE_REMAINING_RUNTIME_STATE_AXIS in record.search_coverage.omitted
     assert not any("weapon trait" in row for row in record.search_coverage.omitted)
     assert not any("weapon glyph" in row for row in record.search_coverage.omitted)
     assert not any("jewelry and weapon glyphs/enchants" in row for row in record.search_coverage.omitted)
+    assert not any("passive ranks" in row for row in record.search_coverage.omitted)
     assert record.search_coverage.candidates_screened == 10 * 2 * 24 * 4 * 2 * 2
     assert record.search_coverage.candidates_optimized == 10 * 2 * 24 * 4 * 2 * 2
     assert record.search_coverage.denominator_proven is False
@@ -332,6 +356,8 @@ def test_resource_armor_jewelry_weapon_mettle_juggernaut_bar_runtime_and_glyph_i
     assert any("216" in row for row in record.explanation)
     assert any("17" in row and "jewelry glyph" in row for row in record.explanation)
     assert any("9" in row and "21" in row and "weapon" in row for row in record.explanation)
+    assert any("325" in row and "passive" in row.casefold() for row in record.explanation)
+    assert not any("remaining passives" in row for row in record.explanation)
     assert any("Undaunted Mettle" in row for row in record.explanation)
     assert any("Juggernaut" in row and "Heavy Armor" in row for row in record.explanation)
     assert any("88" in row and "active" in row.casefold() and "Dark Vigor" in row for row in record.explanation)
