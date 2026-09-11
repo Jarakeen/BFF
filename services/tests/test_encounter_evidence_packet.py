@@ -96,10 +96,34 @@ def test_load_encounter_evidence_packet_rejects_non_list_evidence(tmp_path: Path
 
 
 def test_real_encounter_evidence_packets_are_schema_valid() -> None:
-    """Every checked-in evidence packet must satisfy the shared evidence schema."""
+    """Every checked-in canonical encounter evidence packet must satisfy the shared schema."""
 
     paths = sorted((ROOT / "data" / "encounter_evidence").glob("*.json"))
     assert paths, "expected checked-in encounter evidence packets"
 
+    for path in paths:
+        load_encounter_evidence_packet(path)
+
+
+def test_canonical_encounter_evidence_ids_are_unique() -> None:
+    """EncounterRepository indexes one canonical packet per encounter id."""
+
+    paths = sorted((ROOT / "data" / "encounter_evidence").glob("*.json"))
+    seen: dict[str, Path] = {}
+    for path in paths:
+        packet = load_encounter_evidence_packet(path)
+        previous = seen.get(packet.encounter_id)
+        assert previous is None, (
+            f"duplicate canonical encounter_id {packet.encounter_id!r}: "
+            f"{previous} and {path}"
+        )
+        seen[packet.encounter_id] = path
+
+
+def test_supplemental_reference_evidence_packets_are_schema_valid() -> None:
+    """Reference-only evidence may share encounter ids but must still parse cleanly."""
+
+    paths = sorted((ROOT / "data" / "reference_evidence").glob("*.json"))
+    assert paths, "expected supplemental Reference evidence packets"
     for path in paths:
         load_encounter_evidence_packet(path)
