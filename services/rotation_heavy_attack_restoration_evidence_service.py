@@ -7,6 +7,7 @@ from minmax.heavy_attack_restoration import (
     HeavyAttackRestorationModifiers,
     HeavyAttackWeaponType,
     create_heavy_attack_restoration_event,
+    verified_heavy_attack_base_restore,
 )
 from minmax.restoration_events import ResourceRestorationEvent
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
@@ -24,6 +25,10 @@ class RotationHeavyAttackCompletionEvidence:
     as a fully charged attack and therefore produces no heavy-attack restoration.
     Missing evidence is not treated as an interrupted/partial heavy; it remains
     unresolved.
+
+    ``verified_base_restore`` is an optional evidence override. When omitted, the
+    restoration service may use the shared canonical live-verified weapon base.
+    Unknown weapon families still fail closed.
     """
 
     action_time_seconds: float
@@ -73,12 +78,13 @@ class RotationHeavyAttackRestorationProjection:
 
 
 class RotationHeavyAttackRestorationEvidenceService:
-    """Turn scheduled heavies into restoration events only from explicit evidence.
+    """Turn scheduled heavies into restoration events from reviewed evidence.
 
     Weapon/resource identity comes from the actual build and reconstructed active
-    bar. Completion/full-charge state, completion time, base restore, and resolved
-    modifiers remain explicit caller evidence. This service never guesses a heavy
-    duration, restore amount, passive value, or whether a channel completed.
+    bar. Completion/full-charge state, completion time, and resolved modifiers
+    remain explicit caller evidence. A caller may supply a reviewed base-restore
+    override; otherwise the service reuses the shared canonical live-verified
+    weapon base. Unknown weapon bases remain unresolved rather than guessed.
     """
 
     _EPSILON = 1e-9
@@ -166,7 +172,10 @@ class RotationHeavyAttackRestorationEvidenceService:
                 )
                 continue
 
-            if evidence.verified_base_restore is None:
+            base_restore = evidence.verified_base_restore
+            if base_restore is None:
+                base_restore = verified_heavy_attack_base_restore(weapon_resolution.weapon)
+            if base_restore is None:
                 unresolved.append(
                     f"fully charged {weapon_resolution.weapon.value} heavy at "
                     f"{action.time_seconds:.3f}s lacks verified base restore evidence"
@@ -176,7 +185,7 @@ class RotationHeavyAttackRestorationEvidenceService:
             event = create_heavy_attack_restoration_event(
                 time_seconds=evidence.completion_time_seconds,
                 weapon=weapon_resolution.weapon,
-                verified_base_restore=evidence.verified_base_restore,
+                verified_base_restore=base_restore,
                 modifiers=evidence.modifiers,
                 source=evidence.source,
             )
