@@ -25,7 +25,13 @@ import argparse
 from collections import Counter, defaultdict
 import json
 from pathlib import Path
+import sys
 from typing import Any
+
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from tools.audit_lokkestiiz_strategy_corpus import (
     DEFAULT_PATH,
