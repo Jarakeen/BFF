@@ -137,6 +137,12 @@
     {"content_id":"white_gold_tower","content_name":"White-Gold Tower","release_year":2015,"release_update":7,"release_pack":"Imperial City","encounter_id":"the_adjudicator","display_name":"The Adjudicator","member_ids":["the_adjudicator"]},
     {"content_id":"white_gold_tower","content_name":"White-Gold Tower","release_year":2015,"release_update":7,"release_pack":"Imperial City","encounter_id":"elite_guard","display_name":"Elite Guard","member_ids":["elite_guard"]},
     {"content_id":"white_gold_tower","content_name":"White-Gold Tower","release_year":2015,"release_update":7,"release_pack":"Imperial City","encounter_id":"the_planar_inhibitor","display_name":"The Planar Inhibitor","member_ids":["the_planar_inhibitor"]},
-    {"content_id":"white_gold_tower","content_name":"White-Gold Tower","release_year":2015,"release_update":7,"release_pack":"Imperial City","encounter_id":"molag_kena","display_name":"Molag Kena","member_ids":["molag_kena"]}
+    {"content_id":"white_gold_tower","content_name":"White-Gold Tower","release_year":2015,"release_update":7,"release_pack":"Imperial City","encounter_id":"molag_kena","display_name":"Molag Kena","member_ids":["molag_kena"]},
+    {"content_id":"city_of_ash_ii","content_name":"City of Ash II","release_year":2014,"release_update":5,"release_pack":"Update 5","encounter_id":"horvantud_the_fire_maw","display_name":"Horvantud the Fire Maw","member_ids":["horvantud_the_fire_maw"]},
+    {"content_id":"city_of_ash_ii","content_name":"City of Ash II","release_year":2014,"release_update":5,"release_pack":"Update 5","encounter_id":"ash_titan_city_of_ash_ii","display_name":"Ash Titan","member_ids":["ash_titan_city_of_ash_ii"]},
+    {"content_id":"city_of_ash_ii","content_name":"City of Ash II","release_year":2014,"release_update":5,"release_pack":"Update 5","encounter_id":"valkyn_skoria_person","display_name":"Valkyn Skoria","member_ids":["valkyn_skoria_person"]},
+    {"content_id":"crypt_of_hearts_ii","content_name":"Crypt of Hearts II","release_year":2014,"release_update":2,"release_pack":"Update 2","encounter_id":"ruzozuzalpamaz","display_name":"Ruzozuzalpamaz","member_ids":["ruzozuzalpamaz"]},
+    {"content_id":"crypt_of_hearts_ii","content_name":"Crypt of Hearts II","release_year":2014,"release_update":2,"release_pack":"Update 2","encounter_id":"ilambris_amalgam","display_name":"Brothers Ilambris and Ilambris Amalgam","member_ids":["ilambris_athor","ilambris_zaven","ilambris_amalgam"]},
+    {"content_id":"crypt_of_hearts_ii","content_name":"Crypt of Hearts II","release_year":2014,"release_update":2,"release_pack":"Update 2","encounter_id":"nerien_eth","display_name":"Nerien'eth","member_ids":["nerien_eth"]}
   ]
 }
