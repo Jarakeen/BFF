@@ -38,8 +38,16 @@ class _Universe:
             _passive("Ancient Knowledge", "Destruction Staff", "Staff element changes ability and block effects."),
             _passive("Tri Focus", "Destruction Staff", "Heavy Attack and Ice Staff block effects."),
             _passive("Destruction Expert", "Destruction Staff", "Restore resources after a kill or shield event."),
+            _passive("Ranger", "Bow", "Reduces Stamina cost of Bow abilities."),
+            _passive("Ambidextrous", "Dual Wield", "Increases Weapon and Spell Damage."),
+            _passive("Controlled Fury", "Dual Wield", "Reduces Stamina cost of Dual Wield abilities."),
+            _passive("Focused Killer", "Dual Wield", "Increases damage against injured enemies."),
+            _passive("Ruffian", "Dual Wield", "Increases damage against disabled enemies."),
+            _passive("Battlefield Mobility", "One Hand and Shield", "Reduces movement speed penalty while bracing."),
             _passive("Deadly Bash", "One Hand and Shield", "Bash deals more damage and costs less Stamina."),
-            _passive("Battlefield Mobility", "One Hand and Shield", "Unreviewed movement mechanic."),
+            _passive("Balanced Blade", "Two Handed", "Reduces Stamina cost of Two Handed abilities."),
+            _passive("Forceful", "Two Handed", "Light and Heavy Attacks splash damage to nearby enemies."),
+            _passive("Ranger", "Not Bow", "Wrong-line control fixture."),
         )
 
 
@@ -50,18 +58,26 @@ class _RaceRepository:
 
 
 def test_weapon_review_moves_only_exact_proven_rows_to_static_irrelevant():
-    reviewed_names = {
-        "Restoration Master",
-        "Restoration Expert",
-        "Essence Drain",
-        "Cycle of Life",
-        "Absorb",
-        "Penetrating Magic",
-        "Elemental Force",
-        "Ancient Knowledge",
-        "Tri Focus",
-        "Destruction Expert",
-        "Deadly Bash",
+    reviewed_identities = {
+        ("Restoration Staff", "Restoration Master"),
+        ("Restoration Staff", "Restoration Expert"),
+        ("Restoration Staff", "Essence Drain"),
+        ("Restoration Staff", "Cycle of Life"),
+        ("Restoration Staff", "Absorb"),
+        ("Destruction Staff", "Penetrating Magic"),
+        ("Destruction Staff", "Elemental Force"),
+        ("Destruction Staff", "Ancient Knowledge"),
+        ("Destruction Staff", "Tri Focus"),
+        ("Destruction Staff", "Destruction Expert"),
+        ("Bow", "Ranger"),
+        ("Dual Wield", "Ambidextrous"),
+        ("Dual Wield", "Controlled Fury"),
+        ("Dual Wield", "Focused Killer"),
+        ("Dual Wield", "Ruffian"),
+        ("One Hand and Shield", "Battlefield Mobility"),
+        ("One Hand and Shield", "Deadly Bash"),
+        ("Two Handed", "Balanced Blade"),
+        ("Two Handed", "Forceful"),
     }
 
     for objective in ("max_health", "max_magicka", "max_stamina"):
@@ -71,9 +87,10 @@ def test_weapon_review_moves_only_exact_proven_rows_to_static_irrelevant():
         ).build(objective)
 
         assert audit.denominator_proven is True
-        for passive_name in reviewed_names:
-            assert any(passive_name in row for row in audit.static_irrelevant)
-            assert not any(passive_name in row for row in audit.context_required)
-            assert not any(passive_name in row for row in audit.unresolved)
+        for skill_line, passive_name in reviewed_identities:
+            identity = f"[weapon] {skill_line} :: {passive_name}"
+            assert any(identity in row for row in audit.static_irrelevant)
+            assert not any(identity in row for row in audit.context_required)
+            assert not any(identity in row for row in audit.unresolved)
 
-        assert any("Battlefield Mobility" in row for row in audit.unresolved)
+        assert any("[weapon] Not Bow :: Ranger" in row for row in audit.unresolved)
