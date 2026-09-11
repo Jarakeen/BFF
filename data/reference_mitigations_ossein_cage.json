@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {
+      "entry_name": "Fleshspawn Merge — Shapers of Flesh",
+      "mitigation": "Kill and control Fleshspawn before they combine into a Flesh Abomination. Do not let small adds sit unattended during the portal cycle.",
+      "source": "reviewed_guide_evidence",
+      "notes": "ESO-Hub's Flesh Swarmed achievement confirms Fleshspawn can form a Flesh Abomination; raid guides treat preventing merges as the normal handling goal."
+    },
+    {
+      "entry_name": "Carrion Portal — Shapers of Flesh",
+      "mitigation": "Send the assigned portal team, kill the Channeler, use Carrion Shields to reset Caustic Carrion pressure, and be ready for Harvester/Abomination pressure on return.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Reviewed achievement and raid-guide evidence support Channeler priority, Caustic Carrion management, and post-portal add pressure."
+    },
+    {
+      "entry_name": "Heat Ray — Jynorah and Skorkhif",
+      "mitigation": "Treat Sparking and Blazing Heat Rays as unblockable. Follow your color/assignment and do not rely on block to save the hit.",
+      "source": "official_patch_notes",
+      "notes": "PTS v11.0.4 explicitly states Sparking and Blazing Heat Ray are unblockable."
+    },
+    {
+      "entry_name": "Sparking Blazing Enfeeblement — Jynorah and Skorkhif",
+      "mitigation": "Keep your assigned elemental side and portal responsibility straight through deaths and clash phases; HM strategy depends on maintaining the correct color assignment.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Reviewed achievement and addon documentation support color-based Enfeeblement assignments in HM."
+    },
+    {
+      "entry_name": "Seeking Surges — Jynorah and Skorkhif",
+      "mitigation": "Kite the Surge away from the stack when targeted and return once the mechanic resolves.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Current Ossein Cage helper documentation identifies Seeking Surges as a kite mechanic."
+    },
+    {
+      "entry_name": "Synchronized Kill — Jynorah and Skorkhif",
+      "mitigation": "Kill Jynorah and Skorkhif together. Once the first boss dies, finish the other within 15 seconds or the survivor wipes the group.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Wondernuts' veteran/HM guide documents the 15-second kill window."
+    },
+    {
+      "entry_name": "Agonizer Bomb — Overfiend Kazpian",
+      "mitigation": "Take the bomb away from the group. The achievement condition is explicit: only the initial target should be hit by the explosion.",
+      "source": "achievement",
+      "notes": "ESO-Hub Avoiding Agony achievement directly states the initial target should be the only player hit."
+    },
+    {
+      "entry_name": "Torturous Chains — Overfiend Kazpian",
+      "mitigation": "The two tethered players create safe distance, then use the Giant Sword to break the chain without clipping teammates with the tether line.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Reviewed raid-guide and addon evidence support two-player tether handling, distance states, and using the sword to sever the chain."
+    },
+    {
+      "entry_name": "Biting Blaze — Overfiend Kazpian",
+      "mitigation": "Respect the active Biting Blaze areas and do not assume a new cast can overlap indefinitely; the current rule prevents Kazpian from recasting before the previous Biting Blaze expires.",
+      "source": "official_patch_notes",
+      "notes": "Update 48 Incremental 1 fixed Biting Blaze so a new cast does not occur before the prior cast expires."
+    },
+    {
+      "entry_name": "Kazpian Ally Proximity Enrage — Overfiend Kazpian",
+      "mitigation": "Keep Kazpian separated from elite allies and side bosses. Do not stack him on them for cleave.",
+      "source": "official_patch_notes",
+      "notes": "PTS v11.0.3 states Kazpian reacts aggressively when fighting near allies; current raid practice keeps them separated."
+    }
+  ]
+}
