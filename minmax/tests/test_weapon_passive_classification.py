@@ -27,3 +27,23 @@ def test_heavy_attack_block_status_and_event_passives_stay_out_of_shared_sheet()
     assert by_name["Elemental Force"].layer is WeaponPassiveLayer.STATUS_STATE
     assert by_name["Tri Focus"].layer is WeaponPassiveLayer.BLOCK_STATE
     assert by_name["Destruction Expert"].layer is WeaponPassiveLayer.COMBAT_STATE
+
+
+def test_remaining_reviewed_weapon_passives_are_classified_by_effect_layer():
+    by_identity = {
+        (rule.skill_line, rule.passive): rule.layer
+        for rule in VERIFIED_WEAPON_PASSIVE_RULES
+    }
+    assert by_identity[("Bow", "Ranger")] is WeaponPassiveLayer.ABILITY_FAMILY
+    assert by_identity[("Dual Wield", "Ambidextrous")] is WeaponPassiveLayer.SHARED_STANDING
+    assert by_identity[("Dual Wield", "Controlled Fury")] is WeaponPassiveLayer.ABILITY_FAMILY
+    assert by_identity[("Dual Wield", "Focused Killer")] is WeaponPassiveLayer.COMBAT_STATE
+    assert by_identity[("Dual Wield", "Ruffian")] is WeaponPassiveLayer.COMBAT_STATE
+    assert by_identity[("One Hand and Shield", "Battlefield Mobility")] is WeaponPassiveLayer.BLOCK_STATE
+    assert by_identity[("Two Handed", "Balanced Blade")] is WeaponPassiveLayer.ABILITY_FAMILY
+    assert by_identity[("Two Handed", "Forceful")] is WeaponPassiveLayer.COMBAT_STATE
+
+
+def test_ambidextrous_is_the_only_reviewed_new_shared_standing_weapon_passive():
+    rows = shared_standing_weapon_passives("Dual Wield")
+    assert [(row.skill_line, row.passive) for row in rows] == [("Dual Wield", "Ambidextrous")]
