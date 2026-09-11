@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "darkshade_caverns_i",
+  "encounter_id": "foreman_llothan",
+  "encounter_name": "Foreman Llothan",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Keep Llothan controlled at range, step out of poison, and clear the Kwama waves before they accumulate."},"source_type":"guide","source_name":"Alcast Darkshade Caverns I Guide","source_locator":"Foreman Llothan","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"extracted_poison","value":{"name":"Extracted Poison","response":"move_out_of_the_poison_ground_effect_immediately"},"source_type":"guide","source_name":"Alcast Darkshade Caverns I Guide","source_locator":"Foreman Llothan","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"kwama_summon","value":{"name":"Kwama Summon","response":"burn_the_kwama_adds_spawned_near_75_50_and_25_percent_before_they_accumulate"},"source_type":"guide","source_name":"Alcast Darkshade Caverns I Guide","source_locator":"Foreman Llothan","game_update":"Launch","confidence":"high"}
+  ]
+}
