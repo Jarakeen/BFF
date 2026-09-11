@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "elden_hollow_ii",
+  "encounter_id": "dark_root",
+  "encounter_name": "Dark Root",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Dark Root Main Phase","threshold":"100% to 0%","description":"Spread enough to avoid overlapping Radiated Beam splash, then use Hoarvor death zones for resource bonuses."},"source_type":"guide","source_name":"Xynode Elden Hollow II Guide","source_locator":"Dark Root","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"radiated_beam","value":{"name":"Radiated Beam","response":"spread_roughly_three_to_five_meters_to_avoid_splash_overlap"},"source_type":"guide","source_name":"Xynode Elden Hollow II Guide","source_locator":"Dark Root","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"hoarvor_buffs","value":{"name":"Hoarvor Resource Buffs","response":"kill_blue_and_green_hoarvors_then_use_their_matching_resource_zones"},"source_type":"guide","source_name":"Xynode Elden Hollow II Guide","source_locator":"Dark Root","game_update":"Launch","confidence":"high"}
+  ]
+}
