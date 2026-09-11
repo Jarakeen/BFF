@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {"entry_name":"Voltaic Overload — Relequen","mitigation":"Swap bars immediately and stay on the new bar until Voltaic Overload ends. Do not stand in other players while charged.","source":"reviewed_encounter_evidence"},
+    {"entry_name":"Lightning Channel — Relequen","mitigation":"Interrupt Relequen immediately to stop the raidwide lightning AoEs.","source":"reviewed_encounter_evidence"},
+    {"entry_name":"Hoarfrost — Galenwe","mitigation":"Pick up the Hoarfrost, hold it until the drop synergy appears, then place it away from the group for the next carrier.","source":"reviewed_encounter_evidence"},
+    {"entry_name":"Ice Comet — Galenwe","mitigation":"The three targets spread into empty space and block the impacts before returning to stack.","source":"reviewed_encounter_evidence"},
+    {"entry_name":"Roaring Flare — Siroria","mitigation":"Stack on the flare target and share the hit. Do not run the circle away from the group.","source":"reviewed_encounter_evidence"},
+    {"entry_name":"Dragonknight Standard — Siroria","mitigation":"Move Siroria out of her Standard and keep the group out of the ground effect.","source":"reviewed_encounter_evidence"},
+    {"entry_name":"Teleport / Facing — Z'Maja","mitigation":"Maintain taunt through every teleport and keep Z'Maja faced away from the group before the raid re-stacks behind her.","source":"reviewed_encounter_evidence"},
+    {"entry_name":"Orb Blast — Z'Maja","mitigation":"The aggro target blocks or uses appropriate ranged mitigation while healers cover the hit.","source":"reviewed_encounter_evidence"},
+    {"entry_name":"Shade Mechanics Persist — Z'Maja","mitigation":"Plan +1/+2/+3 assignments before pull. The selected miniboss mechanics remain active throughout the Z'Maja encounter, so keep their handling groups and spacing even after a shade dies.","source":"reviewed_encounter_evidence"}
+  ]
+}
