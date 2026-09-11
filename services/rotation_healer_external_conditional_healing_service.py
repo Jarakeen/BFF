@@ -19,6 +19,10 @@ class RotationHealerExternalConditionalHealingEvidence:
     reviewed_magnitude: float
     magnitude_unit: str
     trigger_condition: str
+    trigger_actor: str
+    heal_recipient: str
+    logged_heal_owner: str
+    maximum_trigger_rate_per_actor_per_second: float
     provenance: tuple[str, ...]
     game_version: str
 
@@ -32,11 +36,16 @@ class RotationHealerExternalConditionalHealingService:
             effect_name="minor_lifesteal",
             duration_seconds=30.0,
             reviewed_magnitude=600.0,
-            magnitude_unit="health_per_second",
+            magnitude_unit="health_per_trigger",
             trigger_condition="damage_affected_enemy",
+            trigger_actor="damaging_actor",
+            heal_recipient="trigger_actor",
+            logged_heal_owner="effect_provider",
+            maximum_trigger_rate_per_actor_per_second=1.0,
             provenance=(
                 "reviewed U50 Overflowing Altar effect: Minor Lifesteal for 30 seconds",
-                "reviewed U50 Minor Lifesteal magnitude: 600 Health per second when the affected enemy is damaged",
+                "reviewed U50 Minor Lifesteal magnitude: attacking the affected enemy restores 600 Health every 1 second",
+                "reviewed Lokkestiiz runtime evidence: the heal recipient's damage triggers the heal while the effect provider may own the logged heal",
                 "Blood Feast synergy healing remains ally-synergy-owned and is not caster action healing",
             ),
             game_version="U50",
