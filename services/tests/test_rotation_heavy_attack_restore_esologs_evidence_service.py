@@ -56,6 +56,8 @@ def _insert(
     resource_type=1,
     event_type="resourcechange",
     waste=0.0,
+    report_code="REPORT",
+    fight_id=7,
 ):
     with sqlite3.connect(path) as db:
         db.execute(
@@ -70,7 +72,7 @@ def _insert(
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
-                "REPORT", 7, event_index, float(event_index), event_type,
+                report_code, fight_id, event_index, float(event_index), event_type,
                 source_id, 1, source_id, 1, 1, ability_id, None,
                 None, None, None, None, resource_change,
                 resource_type, 0.0, 31109.0, waste, None, None, None,
@@ -183,3 +185,83 @@ def test_requires_reviewed_alias_boundary(tmp_path):
             report_code="REPORT",
             fight_id=7,
         )
+
+
+def test_corpus_discovery_preserves_report_fight_and_source_provenance(tmp_path):
+    path = _database(tmp_path)
+    _insert(
+        path,
+        report_code="REPORT_A",
+        fight_id=1,
+        event_index=1,
+        ability_id=101,
+        ability_name="Frost Staff Heavy Attack",
+        resource_change=2823.0,
+        source_id=42,
+    )
+    _insert(
+        path,
+        report_code="REPORT_B",
+        fight_id=9,
+        event_index=2,
+        ability_id=101,
+        ability_name="Frost Staff Heavy Attack",
+        resource_change=2900.0,
+        source_id=42,
+    )
+    _insert(
+        path,
+        report_code="REPORT_B",
+        fight_id=10,
+        event_index=3,
+        ability_id=101,
+        ability_name="Frost Staff Heavy Attack",
+        resource_change=9999.0,
+        source_id=99,
+    )
+
+    report = RotationHeavyAttackRestoreEsoLogsEvidenceService().discover_corpus(
+        path,
+        ability_names=("Frost Staff Heavy Attack",),
+        source_id=42,
+    )
+
+    assert report.unresolved == ()
+    assert [
+        (item.report_code, item.fight_id, item.resource_change)
+        for item in report.observations
+    ] == [
+        ("REPORT_A", 1, 2823.0),
+        ("REPORT_B", 9, 2900.0),
+    ]
+
+
+def test_corpus_discovery_can_scope_to_one_report(tmp_path):
+    path = _database(tmp_path)
+    _insert(
+        path,
+        report_code="REPORT_A",
+        fight_id=1,
+        event_index=1,
+        ability_id=101,
+        ability_name="Frost Staff Heavy Attack",
+        resource_change=2823.0,
+    )
+    _insert(
+        path,
+        report_code="REPORT_B",
+        fight_id=2,
+        event_index=2,
+        ability_id=101,
+        ability_name="Frost Staff Heavy Attack",
+        resource_change=2900.0,
+    )
+
+    report = RotationHeavyAttackRestoreEsoLogsEvidenceService().discover_corpus(
+        path,
+        ability_names=("Frost Staff Heavy Attack",),
+        report_code="REPORT_B",
+    )
+
+    assert [item.report_code for item in report.observations] == ["REPORT_B"]
+    assert [item.resource_change for item in report.observations] == [2900.0]
