@@ -2,15 +2,15 @@ from __future__ import annotations
 
 """Audit canonical jewelry glyphs for Extreme max-resource relevance.
 
-This service does not duplicate jewelry-glyph math.  It asks the canonical
-``JewelryGlyphEffectRepository`` to resolve every known jewelry glyph and proves
-objective irrelevance only when every glyph has mapped effects with known stat
-identity and none can modify the requested max resource.
+This service owns no jewelry arithmetic. It reviews the canonical semantic effect
+identities recorded for every jewelry glyph and asks only whether any effect can
+directly modify the requested maximum resource. Legitimate non-core-stat mechanics
+such as block-cost reduction or potion duration therefore remain valid catalog
+evidence without being forced through ``EffectMapper``.
 
-Unknown, empty, or stat-less glyph effects fail closed because they could hide a
-resource-relevant mechanic.  Infused remains a separate trait interaction; this
-service answers only whether the canonical glyph universe contains a direct
-max-resource effect worth amplifying.
+Unknown or empty semantic identities fail closed. Infused remains a separate trait
+interaction; this service answers only whether the canonical glyph universe contains
+a direct max-resource effect worth amplifying.
 """
 
 from dataclasses import dataclass
@@ -24,6 +24,11 @@ _OBJECTIVE_STATS = {
     "max_health": StatId.MAX_HEALTH,
     "max_magicka": StatId.MAX_MAGICKA,
     "max_stamina": StatId.MAX_STAMINA,
+}
+_OBJECTIVE_EFFECT_TYPES = {
+    "max_health": frozenset(("max_health", "maximum_health")),
+    "max_magicka": frozenset(("max_magicka", "maximum_magicka")),
+    "max_stamina": frozenset(("max_stamina", "maximum_stamina")),
 }
 
 
@@ -59,10 +64,23 @@ class ExtremeJewelryResourceGlyphRelevanceService:
             raise ValueError("database_path is required when no jewelry glyph repository is supplied")
         self.repository = repository or JewelryGlyphEffectRepository(database_path)  # type: ignore[arg-type]
 
+    def _effect_types(self, name: str) -> tuple[str, ...] | None:
+        resolver = getattr(self.repository, "get_jewelry_glyph_effect_types_by_name", None)
+        if not callable(resolver):
+            return None
+        return tuple(
+            dict.fromkeys(
+                str(value or "").strip().casefold()
+                for value in resolver(name)
+                if str(value or "").strip()
+            )
+        )
+
     def build(self, objective_key: str) -> ExtremeJewelryResourceGlyphAudit:
         key = str(objective_key or "").strip().casefold()
         target = _OBJECTIVE_STATS.get(key)
-        if target is None:
+        target_effect_types = _OBJECTIVE_EFFECT_TYPES.get(key)
+        if target is None or target_effect_types is None:
             raise KeyError(f"unreviewed Extreme jewelry resource glyph objective: {objective_key!r}")
 
         names = tuple(
@@ -80,6 +98,19 @@ class ExtremeJewelryResourceGlyphRelevanceService:
             unresolved.append("Canonical jewelry glyph catalog is empty")
 
         for name in names:
+            semantic_effects = self._effect_types(name)
+            if semantic_effects is not None:
+                if not semantic_effects:
+                    unresolved.append(f"Canonical jewelry glyph has no semantic effects: {name}")
+                    continue
+                if any(effect_type in target_effect_types for effect_type in semantic_effects):
+                    relevant.append(name)
+                else:
+                    irrelevant.append(name)
+                continue
+
+            # Compatibility fallback for injected/legacy repositories that expose
+            # only mapped engine effects. Production uses semantic source identity.
             effects = tuple(
                 self.repository.get_jewelry_glyph_effect_by_name(
                     name,
