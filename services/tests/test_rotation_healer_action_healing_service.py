@@ -249,7 +249,7 @@ def test_reviewed_external_conditional_healing_becomes_structured_runtime_seed()
     assert seed.effect_name == "minor_lifesteal"
     assert seed.duration_seconds == 30.0
     assert seed.reviewed_magnitude == 600.0
-    assert seed.magnitude_unit == "health_per_second"
+    assert seed.magnitude_unit == "health_per_trigger"
     assert seed.trigger_condition == "damage_affected_enemy"
     assert seed.game_version == "U50"
     assert service.tooltip_service.calls == []
