@@ -9,9 +9,15 @@ static contributors, while bar/equipment/runtime-dependent and unparsed mechanic
 remain explicit blockers.
 
 Racial resource passives are reconciled against the same Phase 5 tooltip resolver
-used by canonical Extreme resource scoring.  The historical aggregate ``race_stat``
+used by canonical Extreme resource scoring. The historical aggregate ``race_stat``
 repository remains a compatibility fallback for injected/legacy callers, but it is
 not the primary proof source for production audits.
+
+Reviewed contextual resource passives are reconciled only when their exact
+(objective, skill line, passive name) identity is marked CANONICALLY_APPLIED by
+``ExtremeResourceContextualPassiveReviewService``. This lets the denominator audit
+credit mechanics already searched/applied by canonical Extreme layers without
+turning unrelated contextual or unresolved passives into zero-value assumptions.
 
 A complete inventory denominator is not the same as complete mechanic coverage.
 The audit never assigns zero value to contextual or unresolved passives.
@@ -26,6 +32,10 @@ from minmax.racial_passive_stat_repository import RacialPassiveStatRepository
 from services.extreme_passive_projection_service import (
     ExtremePassiveProjectionService,
     ExtremePassiveProjectionStatus,
+)
+from services.extreme_resource_contextual_passive_review_service import (
+    ExtremeResourceContextualPassiveReviewService,
+    ExtremeResourceContextualPassiveStatus,
 )
 from services.extreme_skill_universe_service import (
     ExtremePlayerSkillRecord,
@@ -105,6 +115,32 @@ class ExtremeResourcePassiveCoverageAuditService:
         if line.casefold().endswith(suffix):
             return line[: -len(suffix)].strip()
         return ""
+
+    @staticmethod
+    def _reviewed_contextual_identity(passive: ExtremePlayerSkillRecord) -> tuple[str, str]:
+        return (
+            str(passive.skill_line or "").strip().casefold(),
+            str(passive.name or "").strip().casefold(),
+        )
+
+    @classmethod
+    def _reviewed_contextual_accounted(
+        cls,
+        passive: ExtremePlayerSkillRecord,
+        objective_key: str,
+    ) -> bool:
+        target = cls._reviewed_contextual_identity(passive)
+        for row in ExtremeResourceContextualPassiveReviewService.status_rows(
+            objective_key,
+            ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED,
+        ):
+            row_identity = (
+                str(row.skill_line or "").strip().casefold(),
+                str(row.passive_name or "").strip().casefold(),
+            )
+            if row_identity == target:
+                return True
+        return False
 
     def _phase5_racial_resource_accounted(
         self,
@@ -194,6 +230,11 @@ class ExtremeResourcePassiveCoverageAuditService:
         for passive in passives:
             projection = ExtremePassiveProjectionService.project(passive)
             identity = self._identity(passive)
+
+            if self._reviewed_contextual_accounted(passive, key):
+                accounted_elsewhere.append(identity)
+                continue
+
             if projection.status is ExtremePassiveProjectionStatus.REVIEWED_STATIC:
                 relevant = any(row.objective_key == key for row in projection.contributions)
                 if relevant and self._racial_resource_already_accounted(passive, key, passives):
