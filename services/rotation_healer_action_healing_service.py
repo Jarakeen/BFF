@@ -13,6 +13,9 @@ from services.rotation_healer_caster_healing_relevance_service import (
     RotationHealerCasterHealingRelevance,
     RotationHealerCasterHealingRelevanceService,
 )
+from services.rotation_healer_external_conditional_healing_service import (
+    RotationHealerExternalConditionalHealingService,
+)
 from services.rotation_healer_u50_skill_component_repository import (
     RotationHealerU50SkillComponentRepository,
 )
@@ -20,13 +23,7 @@ from services.rotation_healer_u50_skill_component_repository import (
 
 @dataclass(frozen=True)
 class RotationHealerResolvedHealEvent:
-    """One verified direct healing component at a scheduled event time.
-
-    ``modeled_heal`` is the canonical modeled actual-effect value for the
-    component before target-specific received-heal consequences such as missing
-    Health, overheal, recipient count, encounter demand, or runtime critical
-    outcomes are applied.
-    """
+    """One verified direct healing component at a scheduled event time."""
 
     time_seconds: float
     sequence: int
@@ -48,13 +45,7 @@ class RotationHealerPeriodicHealSeed:
 
 @dataclass(frozen=True)
 class RotationHealerDelayedHealSeed:
-    """Verified delayed-heal component awaiting a source-backed delay.
-
-    The action timestamp is the activation time, not the heal time. A separate
-    delayed-runtime resolver must prove the offset before the component may become
-    a timed healing event. This prevents delayed blooms from being counted as
-    direct cast-time healing.
-    """
+    """Verified delayed-heal component awaiting a source-backed delay."""
 
     time_seconds: float
     sequence: int
@@ -64,40 +55,38 @@ class RotationHealerDelayedHealSeed:
 
 
 @dataclass(frozen=True)
+class RotationHealerExternalConditionalHealSeed:
+    """Reviewed externally-triggered healing evidence anchored to an action time.
+
+    The seed carries source-backed effect duration and magnitude semantics but is
+    not itself a timed heal event. Runtime trigger cadence/ownership must be
+    separately modeled before this evidence may contribute numeric healing.
+    """
+
+    time_seconds: float
+    sequence: int
+    source_name: str
+    skill_id: str
+    effect_name: str
+    duration_seconds: float
+    reviewed_magnitude: float
+    magnitude_unit: str
+    trigger_condition: str
+    provenance: tuple[str, ...]
+    game_version: str
+
+
+@dataclass(frozen=True)
 class RotationHealerActionHealingProjection:
     direct_events: tuple[RotationHealerResolvedHealEvent, ...]
     periodic_seeds: tuple[RotationHealerPeriodicHealSeed, ...]
     unresolved: tuple[str, ...]
     delayed_seeds: tuple[RotationHealerDelayedHealSeed, ...] = ()
+    external_conditional_seeds: tuple[RotationHealerExternalConditionalHealSeed, ...] = ()
 
 
 class RotationHealerActionHealingService:
-    """Project scheduled healer skill actions into canonical healing consequences.
-
-    Direct heals may attach to cast time. Periodic heals become recurring-runtime
-    seeds. Delayed heals become delayed-runtime seeds. Channel-tick healing remains
-    an explicit blocker until its distinct event timing is modeled.
-
-    A legacy single ``context`` remains the default for backward compatibility.
-    Callers evaluating a real dual-bar build may additionally supply
-    ``contexts_by_bar``. When supplied, skill/Ultimate actions with an explicit
-    front/back bar are evaluated against that exact bar's static context. Missing
-    mapped bar state fails closed for that action rather than borrowing the default
-    context and silently applying the wrong bar stats.
-
-    Reviewed skill-level relevance is consulted after canonical name resolution.
-    Skills proven to have no caster-owned healing consequence do not enter tooltip
-    healing projection merely because they appear on a healer bar. Reviewed
-    externally triggered healing remains unresolved here until its own trigger path
-    is modeled. Unknown skill identities continue through the normal fail-closed
-    component path.
-
-    Reviewed synergy/external healing components may also be intentionally absent
-    from caster-owned healer classification. When the component repository explicitly
-    identifies such an exclusion, the projector skips it rather than converting the
-    intentional ownership boundary back into a false unresolved diagnostic. Any
-    other missing component classification remains fail-closed.
-    """
+    """Project scheduled healer skill actions into canonical healing consequences."""
 
     def __init__(
         self,
@@ -105,6 +94,8 @@ class RotationHealerActionHealingService:
         *,
         tooltip_service: SavedBuildSkillTooltipService | None = None,
         caster_healing_relevance_service: RotationHealerCasterHealingRelevanceService
+        | None = None,
+        external_conditional_healing_service: RotationHealerExternalConditionalHealingService
         | None = None,
     ) -> None:
         self.database_path = Path(database_path)
@@ -118,6 +109,10 @@ class RotationHealerActionHealingService:
             caster_healing_relevance_service
             or RotationHealerCasterHealingRelevanceService()
         )
+        self.external_conditional_healing_service = (
+            external_conditional_healing_service
+            or RotationHealerExternalConditionalHealingService()
+        )
 
     def project(
         self,
@@ -130,6 +125,7 @@ class RotationHealerActionHealingService:
         direct_events: list[RotationHealerResolvedHealEvent] = []
         periodic_seeds: list[RotationHealerPeriodicHealSeed] = []
         delayed_seeds: list[RotationHealerDelayedHealSeed] = []
+        external_conditional_seeds: list[RotationHealerExternalConditionalHealSeed] = []
         unresolved: list[str] = []
         bar_contexts = self._normalize_bar_contexts(contexts_by_bar)
 
@@ -163,9 +159,8 @@ class RotationHealerActionHealingService:
                 )
                 continue
 
-            skill_relevance = self.caster_healing_relevance_service.resolve(
-                resolution.rank.entity_id
-            )
+            skill_id = str(resolution.rank.entity_id or "").strip().casefold()
+            skill_relevance = self.caster_healing_relevance_service.resolve(skill_id)
             if skill_relevance is not None:
                 if (
                     skill_relevance.relevance
@@ -176,11 +171,28 @@ class RotationHealerActionHealingService:
                     skill_relevance.relevance
                     is RotationHealerCasterHealingRelevance.EXTERNAL_CONDITIONAL_HEALING
                 ):
-                    unresolved.append(
-                        f"{action.name} at {action.time_seconds:g}s: "
-                        "reviewed healing consequence is externally triggered and is not "
-                        "modeled by caster action healing projection"
-                    )
+                    evidence = self.external_conditional_healing_service.resolve(skill_id)
+                    if evidence is None:
+                        unresolved.append(
+                            f"{action.name} at {action.time_seconds:g}s: "
+                            "reviewed external-conditional healing evidence is unavailable"
+                        )
+                    else:
+                        external_conditional_seeds.append(
+                            RotationHealerExternalConditionalHealSeed(
+                                time_seconds=float(action.time_seconds),
+                                sequence=int(action.sequence),
+                                source_name=action.name,
+                                skill_id=evidence.skill_id,
+                                effect_name=evidence.effect_name,
+                                duration_seconds=float(evidence.duration_seconds),
+                                reviewed_magnitude=float(evidence.reviewed_magnitude),
+                                magnitude_unit=evidence.magnitude_unit,
+                                trigger_condition=evidence.trigger_condition,
+                                provenance=tuple(evidence.provenance),
+                                game_version=evidence.game_version,
+                            )
+                        )
                     continue
 
             result = self.tooltip_service.evaluate_entity_id(
@@ -298,13 +310,16 @@ class RotationHealerActionHealingService:
             item.time_seconds,
             item.sequence,
             item.source_name.casefold(),
-            item.coefficient_number,
         )
+        component_sort_key = lambda item: sort_key(item) + (item.coefficient_number,)
         return RotationHealerActionHealingProjection(
-            direct_events=tuple(sorted(direct_events, key=sort_key)),
-            periodic_seeds=tuple(sorted(periodic_seeds, key=sort_key)),
+            direct_events=tuple(sorted(direct_events, key=component_sort_key)),
+            periodic_seeds=tuple(sorted(periodic_seeds, key=component_sort_key)),
             unresolved=self._dedupe(tuple(unresolved)),
-            delayed_seeds=tuple(sorted(delayed_seeds, key=sort_key)),
+            delayed_seeds=tuple(sorted(delayed_seeds, key=component_sort_key)),
+            external_conditional_seeds=tuple(
+                sorted(external_conditional_seeds, key=sort_key)
+            ),
         )
 
     @staticmethod
