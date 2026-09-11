@@ -87,7 +87,7 @@ def test_loads_authoritative_runtime_history_without_inference(tmp_path):
     )
     assert external.source_actor_id == "support"
     assert external.recipient_actor_id == "healer"
-    assert external.buff_name == "major courage"
+    assert external.buff_name == "Major Courage"
     assert external.applied_at_seconds == 8.0
     assert external.duration_seconds == 10.0
 
