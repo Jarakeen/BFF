@@ -160,20 +160,28 @@ class RotationRecoveryHeavyCandidateOrchestrationService:
                     )
                 return result
 
-            stabilization = self.stabilization_service.stabilize(
+            stabilization_kwargs = dict(
                 build=build,
                 generate=candidate.generate,
                 evaluate_candidate=evaluate_current,
                 resource=resource,
                 maximum_amount=maximum_amount,
                 trigger_fraction=trigger_fraction,
-                restoration_resolver=restoration_resolver,
-                restoration_resolver_factory=restoration_resolver_factory,
                 reserve_assessment_resolver=reserve_assessment_resolver,
                 max_iterations=max_iterations,
                 calculation_context=calculation_context,
                 maximum_event_resolver=maximum_event_resolver,
                 displayed_recovery_resolver_factory=displayed_recovery_resolver_factory,
+            )
+            if restoration_resolver_factory is not None:
+                stabilization_kwargs["restoration_resolver_factory"] = (
+                    restoration_resolver_factory
+                )
+            if restoration_resolver is not None:
+                stabilization_kwargs["restoration_resolver"] = restoration_resolver
+
+            stabilization = self.stabilization_service.stabilize(
+                **stabilization_kwargs,
             )
             runtime_resolver = (
                 None
