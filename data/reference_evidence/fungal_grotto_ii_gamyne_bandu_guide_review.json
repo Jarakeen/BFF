@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "fungal_grotto_ii",
+  "encounter_id": "gamyne_bandu",
+  "encounter_name": "Gamyne Bandu",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Resolve Gamyne's shadow execution, paired tether, and aspect summons while keeping the boss controlled."},"source_type":"guide","source_name":"Alcast Fungal Grotto II Guide","source_locator":"Gamyne Bandu","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"shadow_execution","value":{"name":"Shadow Execution","response":"focus_one_shade_immediately_to_free_the_pinned_player_before_the_blade_lands"},"source_type":"guide","source_name":"Alcast Fungal Grotto II Guide","source_locator":"Gamyne Bandu","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"shadow_chains","value":{"name":"Shadow Chains","response":"tethered_players_move_apart_to_break_the_chain_without_dragging_the_tank"},"source_type":"guide","source_name":"Alcast Fungal Grotto II Guide","source_locator":"Gamyne Bandu","game_update":"Launch","confidence":"high"}
+  ]
+}
