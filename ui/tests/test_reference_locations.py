@@ -41,6 +41,36 @@ def test_related_boss_name_gets_content_context(tmp_path: Path):
     assert result.related == ("Garvin the Tracker — Lep Seclusa",)
 
 
+def test_reviewed_identity_fills_location_when_raw_boss_file_is_missing(tmp_path: Path):
+    (tmp_path / "dungeon_encounter_identity.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "encounters": [
+                    {
+                        "content_id": "frostvault",
+                        "content_name": "Frostvault",
+                        "release_year": 2019,
+                        "release_update": 21,
+                        "release_pack": "Wrathstone",
+                        "encounter_id": "icestalker",
+                        "display_name": "Icestalker",
+                        "member_ids": ["icestalker"],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = enrich_reference_entries_with_locations(
+        (_entry("Icestalker"),),
+        tmp_path,
+    )[0]
+
+    assert result.related == ("Icestalker — Frostvault",)
+
+
 def test_already_qualified_related_name_is_left_alone(tmp_path: Path):
     result = enrich_reference_entries_with_locations(
         (_entry("Garvin the Tracker — Lep Seclusa"),),
