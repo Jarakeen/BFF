@@ -22,7 +22,6 @@ from services.extreme_named_gear_build_materializer_service import (
 )
 from services.extreme_named_gear_set_realization_service import (
     ExtremeNamedGearSetRealization,
-    ExtremeNamedGearSlotAssignment,
 )
 
 
@@ -49,9 +48,16 @@ class ExtremeDualBarGearStateService:
     """Validate and materialize a paired front/back named-gear state."""
 
     @staticmethod
-    def _shared_assignment_key(
+    def shared_assignment_key(
         realization: ExtremeNamedGearSetRealization,
     ) -> tuple[tuple[str, int, str], ...]:
+        body_rows = getattr(realization, "body_jewelry_assignments", None)
+        if body_rows is None:
+            body_rows = tuple(
+                row
+                for row in getattr(realization, "assignments", ())
+                if not str(getattr(row, "weapon_type", "") or "").strip()
+            )
         return tuple(
             sorted(
                 (
@@ -59,14 +65,14 @@ class ExtremeDualBarGearStateService:
                     int(row.set_id),
                     str(row.set_name),
                 )
-                for row in realization.body_jewelry_assignments
+                for row in body_rows
             )
         )
 
     @classmethod
     def validate(cls, state: ExtremeDualBarGearState) -> tuple[str, ...]:
         unresolved: list[str] = []
-        if cls._shared_assignment_key(state.front) != cls._shared_assignment_key(state.back):
+        if cls.shared_assignment_key(state.front) != cls.shared_assignment_key(state.back):
             unresolved.append(
                 "Front/back Extreme named-gear witnesses disagree on shared body/jewelry assignments"
             )
@@ -79,9 +85,6 @@ class ExtremeDualBarGearStateService:
         *,
         active_bar: str,
     ) -> PlayerBuild:
-        # Reuse the existing materializer, but preserve the already-established
-        # shared body/jewelry state by applying only the selected realization and
-        # relying on pair validation to prove both snapshots agree there.
         return ExtremeNamedGearBuildMaterializerService.materialize(
             build,
             realization,
@@ -98,10 +101,6 @@ class ExtremeDualBarGearStateService:
         if unresolved:
             raise ValueError(unresolved[0])
 
-        # Materialize front first, then back. Because both witnesses have already
-        # been proven to share identical body/jewelry assignments, the second pass
-        # rewrites those shared slots to the same values while preserving the
-        # front-bar weapons written by the first pass.
         candidate = cls._apply_weapon_assignments(build, state.front, active_bar="front")
         candidate = cls._apply_weapon_assignments(candidate, state.back, active_bar="back")
         return candidate
