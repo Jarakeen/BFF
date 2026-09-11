@@ -41,6 +41,16 @@ class RacialPassiveStatRepository:
         "ashlander",
     })
 
+    RESOURCE_SUSTAIN_PASSIVE_NAMES = frozenset({
+        "adrenaline rush",
+        "spell recharge",
+    })
+
+    CONSUMABLE_DURATION_PASSIVE_NAMES = frozenset({
+        "reveler",
+        "wayfarer",
+    })
+
     def __init__(self, database_path: str | Path) -> None:
         self.database_path = Path(database_path)
 
@@ -97,6 +107,16 @@ class RacialPassiveStatRepository:
         if passive_key in self.MITIGATION_PASSIVE_NAMES:
             boundaries.append(
                 f"Racial environmental-damage mitigation requires mitigation model: {passive_name}"
+            )
+            return stats, boundaries, unresolved
+        if passive_key in self.RESOURCE_SUSTAIN_PASSIVE_NAMES:
+            boundaries.append(
+                f"Racial passive restores current resources or alters mitigation without changing maximum resources: {passive_name}"
+            )
+            return stats, boundaries, unresolved
+        if passive_key in self.CONSUMABLE_DURATION_PASSIVE_NAMES:
+            boundaries.append(
+                f"Racial passive changes consumable duration or skill-line experience without changing maximum resources: {passive_name}"
             )
             return stats, boundaries, unresolved
 
