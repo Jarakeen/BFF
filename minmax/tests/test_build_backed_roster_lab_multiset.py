@@ -5,6 +5,7 @@ from pathlib import Path
 
 from minmax.build_backed_roster_lab import BuildBackedRosterLab
 from minmax.character_build.character_class import CharacterClass
+from minmax.effect_source_persistence import EffectSourcePersistence
 from minmax.gear_set_effect_variant_resolver import GearSetEffectVariantResolver
 from minmax.gear_set_repository import GearSetRepository
 from minmax.role import Role
@@ -46,9 +47,16 @@ def _db(path: Path) -> Path:
 def test_verified_set_name_mappings_resolve(tmp_path: Path) -> None:
     resolver = GearSetEffectVariantResolver(GearSetRepository(_db(tmp_path / "sets.db")))
 
-    assert resolver.resolve(SPELL_POWER_CURE_ID, 5)[0].name == "major_courage"
-    assert resolver.resolve(CORPSEBURSTER_ID, 5)[0].name == "minor_breach"
-    assert resolver.resolve(ALKOSH_ID, 5)[0].name == "roar_of_alkosh"
+    spc = resolver.resolve(SPELL_POWER_CURE_ID, 5)[0]
+    corpseburster = resolver.resolve(CORPSEBURSTER_ID, 5)[0]
+    alkosh = resolver.resolve(ALKOSH_ID, 5)[0]
+
+    assert spc.name == "major_courage"
+    assert corpseburster.name == "minor_breach"
+    assert alkosh.name == "roar_of_alkosh"
+    assert spc.source_persistence is EffectSourcePersistence.PERSISTS_AFTER_ACTIVATION
+    assert corpseburster.source_persistence is EffectSourcePersistence.PERSISTS_AFTER_ACTIVATION
+    assert alkosh.source_persistence is EffectSourcePersistence.PERSISTS_AFTER_ACTIVATION
 
 
 def test_multi_set_build_produces_both_support_effects(tmp_path: Path) -> None:
