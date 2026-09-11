@@ -22,6 +22,10 @@ from services.rotation_healer_budding_seeds_activation_service import (
 from services.rotation_healer_canonical_delayed_timing_service import (
     RotationHealerCanonicalDelayedTimingService,
 )
+from services.rotation_healer_channel_runtime_evidence_service import (
+    RotationHealerChannelRuntimeEvidenceService,
+    RotationHealerReviewedChannelObservation,
+)
 from services.rotation_healer_channel_runtime_service import (
     RotationHealerChannelMagnitudeResolution,
     RotationHealerChannelRuntimeEvidence,
@@ -53,6 +57,9 @@ from services.rotation_healer_saved_build_periodic_timing_service import (
 )
 from services.rotation_plan_runtime_build_context_service import (
     RotationRuntimeBuildContextResolver,
+)
+from services.rotation_skill_timing_evidence_service import (
+    RotationSkillTimingEvidenceService,
 )
 
 
@@ -91,6 +98,10 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
         ) = None,
         delayed_runtime_service: RotationHealerDelayedRuntimeService | object | None = None,
         channel_runtime_service: RotationHealerChannelRuntimeService | object | None = None,
+        channel_runtime_evidence_service: (
+            RotationHealerChannelRuntimeEvidenceService | object | None
+        ) = None,
+        skill_timing_service: RotationSkillTimingEvidenceService | object | None = None,
         demand_healing_service: (
             RotationHealerDemandHealingEvidenceService | object | None
         ) = None,
@@ -100,6 +111,7 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
         reviewed_runtime_observations: tuple[RotationHealerReviewedRuntimeObservation, ...] = (),
         delayed_runtime_evidence: tuple[RotationHealerDelayedRuntimeEvidence, ...] = (),
         channel_runtime_evidence: tuple[RotationHealerChannelRuntimeEvidence, ...] = (),
+        reviewed_channel_observations: tuple[RotationHealerReviewedChannelObservation, ...] = (),
         external_conditional_assumptions: tuple[
             RotationHealerExternalConditionalDemandAssumption, ...
         ] = (),
@@ -119,6 +131,11 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
         )
         self.delayed_runtime_service = delayed_runtime_service or RotationHealerDelayedRuntimeService()
         self.channel_runtime_service = channel_runtime_service or RotationHealerChannelRuntimeService()
+        self.channel_runtime_evidence_service = (
+            channel_runtime_evidence_service
+            or RotationHealerChannelRuntimeEvidenceService()
+        )
+        self.skill_timing_service = skill_timing_service or RotationSkillTimingEvidenceService(path)
         self.demand_healing_service = demand_healing_service or RotationHealerDemandHealingEvidenceService()
         self.budding_seeds_activation_service = (
             budding_seeds_activation_service or RotationHealerBuddingSeedsActivationService()
@@ -126,9 +143,8 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
         self.reviewed_runtime_observations = tuple(reviewed_runtime_observations)
         self.delayed_runtime_evidence = tuple(delayed_runtime_evidence)
         self.channel_runtime_evidence = tuple(channel_runtime_evidence)
-        self.external_conditional_assumptions = tuple(
-            external_conditional_assumptions
-        )
+        self.reviewed_channel_observations = tuple(reviewed_channel_observations)
+        self.external_conditional_assumptions = tuple(external_conditional_assumptions)
 
     def evaluate_demand(
         self,
@@ -172,6 +188,13 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
             )
             bridge_unresolved.extend(timing_unresolved)
 
+        channel_runtime_evidence = tuple(self.channel_runtime_evidence)
+        if projection.channel_seeds:
+            channel_runtime_evidence, channel_unresolved = self._channel_runtime_evidence(
+                projection
+            )
+            bridge_unresolved.extend(channel_unresolved)
+
         periodic_projection = RotationHealerPeriodicRuntimeProjection(events=(), unresolved=())
         if projection.periodic_seeds:
             periodic_kwargs = {
@@ -206,7 +229,7 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
         if projection.channel_seeds:
             channel_kwargs = {
                 "seeds": projection.channel_seeds,
-                "evidence": self.channel_runtime_evidence,
+                "evidence": channel_runtime_evidence,
                 "horizon_seconds": candidate.plan.duration_seconds,
             }
             if runtime_build_context_resolver is not None:
@@ -406,6 +429,54 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
             seen_keys.add(key)
 
             resolution = self.canonical_delayed_timing_service.resolve(
+                source_name=seed.source_name,
+                coefficient_number=seed.coefficient_number,
+            )
+            unresolved.extend(tuple(getattr(resolution, "unresolved", ())))
+            runtime_evidence = getattr(resolution, "runtime_evidence", None)
+            if runtime_evidence is not None:
+                resolved[key] = runtime_evidence
+
+        return tuple(resolved.values()), self._dedupe(tuple(unresolved))
+
+    def _channel_runtime_evidence(
+        self,
+        projection: RotationHealerActionHealingProjection,
+    ) -> tuple[tuple[RotationHealerChannelRuntimeEvidence, ...], tuple[str, ...]]:
+        explicit = {
+            (item.source_name.casefold(), int(item.coefficient_number)): item
+            for item in self.channel_runtime_evidence
+        }
+        observations = {
+            (item.source_name.casefold(), int(item.coefficient_number)): item
+            for item in self.reviewed_channel_observations
+        }
+        resolved = dict(explicit)
+        unresolved: list[str] = []
+        seen_keys: set[tuple[str, int]] = set()
+
+        for seed in projection.channel_seeds:
+            key = (seed.source_name.casefold(), int(seed.coefficient_number))
+            if key in seen_keys or key in resolved:
+                seen_keys.add(key)
+                continue
+            seen_keys.add(key)
+
+            timing_resolution = self.skill_timing_service.resolve_skill(seed.source_name)
+            timing = getattr(timing_resolution, "evidence", None)
+            if timing is None:
+                messages = tuple(getattr(timing_resolution, "unresolved", ())) or (
+                    "canonical channel timing evidence unavailable",
+                )
+                unresolved.extend(
+                    f"{seed.source_name} coefficient {seed.coefficient_number}: {message}"
+                    for message in messages
+                )
+                continue
+
+            resolution = self.channel_runtime_evidence_service.resolve(
+                timing=timing,
+                observation=observations.get(key),
                 source_name=seed.source_name,
                 coefficient_number=seed.coefficient_number,
             )
