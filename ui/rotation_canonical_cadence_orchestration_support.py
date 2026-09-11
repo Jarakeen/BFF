@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Protocol
 
 from minmax.rotation_ability_priority import AbilityPriorityList
@@ -76,10 +76,12 @@ class RotationCanonicalCadenceOrchestrationSupport:
     The caller must supply a ready canonical evidence bundle. This service never
     invents encounter demands, uptime requirements, restoration evidence, role facts,
     or cadence obligations. Canonical evaluation always runs first. Optional
-    ``role_evidence`` is forwarded unchanged to the dashboard candidate bridge so the
-    lower canonical layer remains the sole owner of role/gameplay-policy composition.
-    Cadence progression begins only from the selected final stabilized canonical plan
-    and sustain projection, and only when explicit cadence obligations are supplied.
+    ``role_evidence`` is forwarded to the dashboard candidate bridge; when its
+    ``content_type`` is blank, the persisted content type already carried by the
+    selected encounter bundle fills that one fact. No healer reliability or assignment
+    exception is inferred here. Cadence progression begins only from the selected final
+    stabilized canonical plan and sustain projection, and only when explicit cadence
+    obligations are supplied.
     """
 
     def __init__(
@@ -109,6 +111,10 @@ class RotationCanonicalCadenceOrchestrationSupport:
         character_id: str | None = None,
     ) -> RotationCanonicalCadenceOrchestrationResult:
         self._require_ready_bundle(evidence_bundle)
+        effective_role_evidence = self._role_evidence_for_bundle(
+            role_evidence,
+            evidence_bundle,
+        )
 
         canonical_result = self.canonical_candidates.run_effects(
             player_build=player_build,
@@ -119,7 +125,7 @@ class RotationCanonicalCadenceOrchestrationSupport:
             maximum_amount=evidence_bundle.maximum_amount,
             trigger_fraction=evidence_bundle.trigger_fraction,
             restoration_resolver=evidence_bundle.restoration_resolver,
-            role_evidence=role_evidence,
+            role_evidence=effective_role_evidence,
             demands=evidence_bundle.demands,
             options=evidence_bundle.options,
             wait_decision_factory=evidence_bundle.wait_decision_factory,
@@ -158,6 +164,20 @@ class RotationCanonicalCadenceOrchestrationSupport:
             cadence_run=cadence_run,
             cadence_evidence=cadence_evidence,
         )
+
+    @staticmethod
+    def _role_evidence_for_bundle(
+        role_evidence: RotationCanonicalRoleEvidence | None,
+        bundle: RotationCanonicalEvidenceBundle,
+    ) -> RotationCanonicalRoleEvidence | None:
+        if role_evidence is None:
+            return None
+        if str(role_evidence.content_type or "").strip():
+            return role_evidence
+        content_type = str(getattr(bundle, "content_type", "") or "").strip()
+        if not content_type:
+            return role_evidence
+        return replace(role_evidence, content_type=content_type)
 
     @staticmethod
     def _require_ready_bundle(bundle: RotationCanonicalEvidenceBundle) -> None:
