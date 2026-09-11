@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "content_id": "red_petal_bastion",
+  "encounter_id": "prior_thierric_sarazen",
+  "encounter_name": "Prior Thierric Sarazen",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main / Duplicate Pressure","threshold":"Pull to death","description":"Prior Thierric layers tank heavies, Aftershocks, interrupt pressure, adds and repeated duplicate-wall movement checks throughout the fight."},"source_type":"guide","source_name":"ESO-Hub Red Petal Bastion Dungeon Guide","source_locator":"Prior Thierric Sarazen","game_update":"U31","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"heinous_highkick_wide_slice","value":{"name":"Heinous Highkick / Wide Slice","response":"tank_blocks_or_rolls_kick_and_keeps_followup_frontal_away_from_group"},"source_type":"guide","source_name":"ESO-Hub Red Petal Bastion Dungeon Guide","source_locator":"Prior Thierric > Heinous Highkick / Wide Slice","game_update":"U31","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"opalescent_impale","value":{"name":"Opalescent Impale","response":"interrupt_immediately_or_target_dies"},"source_type":"guide","source_name":"ESO-Hub Red Petal Bastion Dungeon Guide","source_locator":"Prior Thierric > Opalescent Impale","game_update":"U31","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"duplicate_wall","value":{"name":"Duplicate Wall","response":"move_through_safe_gap_and_avoid_duplicate_rockslide_rush"},"source_type":"guide","source_name":"ESO-Hub Red Petal Bastion Dungeon Guide","source_locator":"Prior Thierric > Duplicate Wall","game_update":"U31","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"realmshapers","value":{"name":"Realmshapers","response":"focus_and_interrupt_healers_before_they_restore_boss_health"},"source_type":"guide","source_name":"ESO-Hub Red Petal Bastion Dungeon Guide","source_locator":"Prior Thierric > Adds","game_update":"U31","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"blade_tempest_duplicates","value":{"name":"Blade Tempest Duplicates","response":"stay_out_of_duplicate_whirlwinds_and_preserve_escape_space"},"source_type":"guide","source_name":"ESO-Hub Red Petal Bastion Dungeon Guide","source_locator":"Prior Thierric > Blade Tempest","game_update":"U31","confidence":"high"}
+  ]
+}
