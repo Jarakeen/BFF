@@ -1,5 +1,6 @@
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_build.effect_layer import EffectLayer
+from minmax.effect_source_persistence import EffectSourcePersistence
 from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
 from minmax.runtime_event import RuntimeEvent
 from minmax.support_stacking import StackingBehavior
@@ -27,7 +28,13 @@ class _Resolver:
         ]
 
 
-def _proc(source: str, *, name="major_courage", trigger="overheal_self_or_ally"):
+def _proc(
+    source: str,
+    *,
+    name="major_courage",
+    trigger="overheal_self_or_ally",
+    persistence=EffectSourcePersistence.PERSISTS_AFTER_ACTIVATION,
+):
     return EffectVariant(
         name=name,
         layer=EffectLayer.PROC,
@@ -37,6 +44,7 @@ def _proc(source: str, *, name="major_courage", trigger="overheal_self_or_ally")
         trigger=trigger,
         target_type=SupportTargetType.SELF,
         stacking=StackingBehavior.UNIQUE,
+        source_persistence=persistence,
     )
 
 
@@ -108,6 +116,7 @@ def test_front_only_five_piece_can_trigger_on_front_and_persist_after_swap():
         activation,
         attempts=(_attempt(1.0, bar="front"),),
         snapshot_time_seconds=3.0,
+        snapshot_active_bar="back",
     )
 
     assert result.active_buffs == ("Major Courage",)
@@ -136,6 +145,7 @@ def test_front_only_five_piece_cannot_proc_from_back_bar_trigger():
         activation,
         attempts=(_attempt(1.0, bar="back"),),
         snapshot_time_seconds=2.0,
+        snapshot_active_bar="back",
     )
 
     assert result.active_buffs == ()
@@ -168,6 +178,7 @@ def test_back_bar_weapon_only_package_can_proc_only_on_back_bar():
             _attempt(2.0, bar="back", sequence=1),
         ),
         snapshot_time_seconds=3.0,
+        snapshot_active_bar="front",
     )
 
     assert result.active_buffs == ("Major Courage",)
@@ -196,10 +207,110 @@ def test_missing_breakpoint_provenance_fails_closed():
         activation,
         attempts=(_attempt(1.0, bar="front"),),
         snapshot_time_seconds=2.0,
+        snapshot_active_bar="front",
     )
 
     assert result.active_buffs == ()
     assert any("no canonical set-breakpoint provenance" in row for row in result.unresolved)
+
+
+def test_unclassified_proc_persistence_fails_closed():
+    activation = ExtremeDualBarSetActivationEvidenceCatalog(
+        evidence=(
+            _evidence(
+                set_id=40,
+                name="Unknown Persistence",
+                front_count=5,
+                back_count=3,
+                front_breakpoints=(5,),
+                back_breakpoints=(),
+            ),
+        )
+    )
+    service = ExtremeDualBarGearRuntimeLegalityService(
+        resolver=_Resolver({40: ((5, _proc("Unknown Persistence (5)", persistence=None)),)}),
+    )
+
+    result = service.resolve_history(
+        activation,
+        attempts=(_attempt(1.0, bar="front"),),
+        snapshot_time_seconds=2.0,
+        snapshot_active_bar="back",
+    )
+
+    assert result.active_buffs == ()
+    assert any("persistence after source deactivation is unclassified" in row for row in result.unresolved)
+
+
+def test_source_active_at_snapshot_effect_drops_when_breakpoint_is_off_bar():
+    activation = ExtremeDualBarSetActivationEvidenceCatalog(
+        evidence=(
+            _evidence(
+                set_id=50,
+                name="Source Bound",
+                front_count=5,
+                back_count=3,
+                front_breakpoints=(5,),
+                back_breakpoints=(),
+            ),
+        )
+    )
+    effect = _proc(
+        "Source Bound (5)",
+        persistence=EffectSourcePersistence.REQUIRES_SOURCE_ACTIVE_AT_SNAPSHOT,
+    )
+    service = ExtremeDualBarGearRuntimeLegalityService(
+        resolver=_Resolver({50: ((5, effect),)}),
+    )
+
+    off_bar = service.resolve_history(
+        activation,
+        attempts=(_attempt(1.0, bar="front"),),
+        snapshot_time_seconds=2.0,
+        snapshot_active_bar="back",
+    )
+    on_bar = service.resolve_history(
+        activation,
+        attempts=(_attempt(1.0, bar="front"),),
+        snapshot_time_seconds=2.0,
+        snapshot_active_bar="front",
+    )
+
+    assert off_bar.active_buffs == ()
+    assert off_bar.unresolved == ()
+    assert on_bar.active_buffs == ("Major Courage",)
+
+
+def test_ends_when_source_inactive_requires_continuous_bar_transition_evidence():
+    activation = ExtremeDualBarSetActivationEvidenceCatalog(
+        evidence=(
+            _evidence(
+                set_id=60,
+                name="Continuous Source",
+                front_count=5,
+                back_count=3,
+                front_breakpoints=(5,),
+                back_breakpoints=(),
+            ),
+        )
+    )
+    effect = _proc(
+        "Continuous Source (5)",
+        persistence=EffectSourcePersistence.ENDS_WHEN_SOURCE_INACTIVE,
+    )
+    service = ExtremeDualBarGearRuntimeLegalityService(
+        resolver=_Resolver({60: ((5, effect),)}),
+    )
+
+    result = service.resolve_history(
+        activation,
+        attempts=(_attempt(1.0, bar="front"),),
+        snapshot_time_seconds=2.0,
+        snapshot_active_bar="front",
+    )
+
+    assert result.active_buffs == ()
+    assert any("continuous bar-transition evidence is required" in row for row in result.unresolved)
 
 
 def test_invalid_runtime_bar_fails_closed_immediately():
