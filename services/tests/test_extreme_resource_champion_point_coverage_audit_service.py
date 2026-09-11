@@ -12,7 +12,12 @@ from services.extreme_resource_champion_point_coverage_audit_service import (
 )
 
 
-def _record(name: str, *, slottable: bool = False) -> ChampionPointRecord:
+def _record(
+    name: str,
+    *,
+    slottable: bool = False,
+    description: str = "fixture",
+) -> ChampionPointRecord:
     return ChampionPointRecord(
         name=name,
         skill_type=(
@@ -22,7 +27,7 @@ def _record(name: str, *, slottable: bool = False) -> ChampionPointRecord:
         ),
         max_points=50,
         jump_points=(),
-        description="fixture",
+        description=description,
     )
 
 
@@ -101,8 +106,36 @@ def test_audit_closes_when_only_non_slottable_resource_cp_is_relevant():
     assert audit.projection_complete is True
 
 
-def test_unmapped_cp_stays_explicit_and_blocks_mechanic_completion():
-    mystery = _record("Mystery Star", slottable=True)
+def test_unmapped_irrelevant_cp_is_pruned_by_objective_screening():
+    movement = _record(
+        "Fleet Phantom",
+        slottable=True,
+        description="Reduces the Movement Speed penalty of Sneak by 5% per stage.",
+    )
+    repo = _Repository(
+        slottable=(movement,),
+        resolved={
+            "Fleet Phantom": (
+                [],
+                ["Champion Point is dynamic or not yet stat-mapped: Fleet Phantom"],
+            )
+        },
+    )
+
+    audit = ExtremeResourceChampionPointCoverageAuditService(repository=repo).build("max_health")
+
+    assert audit.proven_irrelevant == ("Fleet Phantom",)
+    assert audit.unresolved == ()
+    assert audit.mechanic_complete is True
+    assert audit.projection_complete is True
+
+
+def test_unmapped_resource_relevant_cp_stays_explicit_and_blocks_completion():
+    mystery = _record(
+        "Mystery Star",
+        slottable=True,
+        description="Increases your Maximum Stamina by 1000 while bracing.",
+    )
     repo = _Repository(
         slottable=(mystery,),
         resolved={
