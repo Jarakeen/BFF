@@ -19,28 +19,33 @@ def test_max_health_review_marks_bar_and_runtime_passives_applied():
     assert rows["Dark Vigor"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
     assert rows["Expert Summoner"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
     assert rows["Nothing Wasted"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
+    assert rows["Undaunted Mettle"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
     assert rows["Last Gasp"].source == "NecromancerPassiveInputResolver"
     assert rows["Juggernaut"].source == "ArmorPassiveInputResolver"
     assert rows["Dark Vigor"].source == "NightbladePassiveInputResolver"
     assert rows["Expert Summoner"].source == "ExtremeSorcererExpertSummonerPetContextService"
     assert rows["Nothing Wasted"].source == "ClassMasteryExtremeEffectService"
+    assert rows["Undaunted Mettle"].source == "ExtremeHypotheticalUndauntedProgressionService"
     assert "six-slot" in rows["Dark Vigor"].condition.casefold()
     assert "permanent-pet" in rows["Expert Summoner"].condition.casefold()
     assert "10-stack" in rows["Nothing Wasted"].condition.casefold()
     assert "pure necromancer" in rows["Nothing Wasted"].condition.casefold()
     assert "heavy armor" in rows["Juggernaut"].condition.casefold()
     assert "max-health" in rows["Juggernaut"].condition.casefold()
+    assert "distinct-armor-weight" in rows["Undaunted Mettle"].condition.casefold()
 
 
 def test_max_magicka_review_marks_joint_bar_passives_applied():
     rows = _by_name("max_magicka")
 
-    assert set(rows) == {"Expert Summoner", "Magicka Flood", "Magicka Controller"}
+    assert set(rows) == {"Expert Summoner", "Magicka Flood", "Magicka Controller", "Undaunted Mettle"}
     assert rows["Expert Summoner"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
     assert rows["Magicka Flood"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
     assert rows["Magicka Controller"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
+    assert rows["Undaunted Mettle"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
     assert rows["Magicka Flood"].source == "NightbladePassiveInputResolver"
     assert rows["Magicka Controller"].source == "GuildPassiveInputResolver"
+    assert rows["Undaunted Mettle"].source == "ExtremeHypotheticalUndauntedProgressionService"
     assert "jointly" in rows["Magicka Flood"].condition.casefold()
     assert "jointly" in rows["Magicka Controller"].condition.casefold()
 
@@ -48,9 +53,10 @@ def test_max_magicka_review_marks_joint_bar_passives_applied():
 def test_max_stamina_review_marks_siphoning_bar_trigger_applied():
     rows = _by_name("max_stamina")
 
-    assert set(rows) == {"Expert Summoner", "Magicka Flood"}
+    assert set(rows) == {"Expert Summoner", "Magicka Flood", "Undaunted Mettle"}
     assert rows["Expert Summoner"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
     assert rows["Magicka Flood"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
+    assert rows["Undaunted Mettle"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
     assert "one legal siphoning" in rows["Magicka Flood"].condition.casefold()
 
 
