@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "content_id": "lucent_citadel",
+  "encounter_id": "ryelaz_zilyesset",
+  "encounter_name": "Count Ryelaz and Zilyesset",
+  "evidence": [
+    {
+      "fact_type": "phase",
+      "fact_key": "split_room_opening",
+      "value": {"order": 1, "starts_at": "Pull", "label": "Split Rooms", "description": "The raid splits across the mirror: Ryelaz on the dark side, Zilyesset on the light side. Buffs do not cross the divider."},
+      "source_type": "guide",
+      "source_name": "AlcastHQ Lucent Citadel Trial Guide",
+      "source_locator": "Boss 1 - Count Ryelaz and Zilyesset",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "phase",
+      "fact_key": "annihilation_cycle",
+      "value": {"order": 2, "starts_at": "~60s", "label": "Annihilation / Side Swap", "description": "Both bosses cast their side-wipe Annihilation roughly every 60 seconds. Players identify the glowing mirror platform and teleport to the opposite side before the cast completes."},
+      "source_type": "guide",
+      "source_name": "AlcastHQ Lucent Citadel Trial Guide",
+      "source_locator": "Bleak Annihilation / Brilliant Annihilation",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "phase",
+      "fact_key": "synchronized_kill_window",
+      "value": {"order": 3, "starts_at": "First boss death", "label": "Synchronized Kill", "description": "After one boss dies, kill the other before the dead boss rejuvenates. Veteran and Hard Mode use a 10-second window; normal uses 20 seconds."},
+      "source_type": "guide",
+      "source_name": "AlcastHQ Lucent Citadel Trial Guide",
+      "source_locator": "Bleak Rejuvenation / Brilliant Rejuvenation",
+      "confidence": "high"
+    },
+    {"fact_type": "mechanic_state", "fact_key": "annihilation_exists", "value": true, "source_type": "guide", "source_name": "AlcastHQ Lucent Citadel Trial Guide", "source_locator": "Annihilation", "confidence": "high"},
+    {"fact_type": "mechanic_detail", "fact_key": "annihilation_behavior", "value": {"approx_cadence_seconds": 60, "failure": "section_wipe", "response": "use_correct_glowing_mirror_platform_to_swap_sides"}, "source_type": "guide", "source_name": "AlcastHQ Lucent Citadel Trial Guide", "source_locator": "Annihilation", "confidence": "medium"},
+    {"fact_type": "mechanic_state", "fact_key": "rejuvenation_exists", "value": true, "source_type": "guide", "source_name": "AlcastHQ Lucent Citadel Trial Guide", "source_locator": "Rejuvenation", "confidence": "high"},
+    {"fact_type": "mechanic_detail", "fact_key": "rejuvenation_behavior", "value": {"normal_seconds": 20, "veteran_hardmode_seconds": 10, "revive_health_percent": 30}, "source_type": "guide", "source_name": "AlcastHQ Lucent Citadel Trial Guide", "source_locator": "Rejuvenation", "confidence": "high"},
+    {"fact_type": "mechanic_state", "fact_key": "gloomy_impact_exists", "value": true, "source_type": "guide", "source_name": "AlcastHQ Lucent Citadel Trial Guide", "source_locator": "Ryelaz - Shear / Gloomy Impact", "confidence": "medium"},
+    {"fact_type": "mechanic_detail", "fact_key": "gloomy_impact_behavior", "value": {"trigger": "Ryelaz heavy attack", "targets": "every player on Ryelaz side", "overlap_danger": true}, "source_type": "guide", "source_name": "AlcastHQ Lucent Citadel Trial Guide", "source_locator": "Ryelaz - Shear / Gloomy Impact", "confidence": "medium"}
+  ]
+}
