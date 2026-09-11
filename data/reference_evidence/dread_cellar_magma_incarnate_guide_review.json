@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "content_id": "the_dread_cellar",
+  "encounter_id": "magma_incarnate",
+  "encounter_name": "Magma Incarnate",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main / Portal Cycle","threshold":"Pull to death","description":"Magma Incarnate alternates direct fire pressure with repeated portal intermissions around each 20% health band; the boss is invulnerable during portal handling."},"source_type":"guide","source_name":"ESO-Hub Dread Cellar Dungeon Guide","source_locator":"Magma Incarnate","game_update":"U31","confidence":"high"},
+    {"fact_type":"phase","fact_key":"hardmode_scorion_one","value":{"order":2,"label":"Hard Mode Scorion I","threshold":"~60%","description":"A Scorion joins while lightning lines begin leaving persistent ground pressure."},"source_type":"guide","source_name":"ESO-Hub Dread Cellar Dungeon Guide","source_locator":"Magma Incarnate > Hardmode Mechanics","game_update":"U31","confidence":"high"},
+    {"fact_type":"phase","fact_key":"hardmode_scorion_two","value":{"order":3,"label":"Hard Mode Scorion II","threshold":"~30%","description":"A second Scorion joins, increasing overlap with persistent lightning and late-fight fire movement."},"source_type":"guide","source_name":"ESO-Hub Dread Cellar Dungeon Guide","source_locator":"Magma Incarnate > Hardmode Mechanics","game_update":"U31","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"portal_agonymium","value":{"name":"Portal / Agonymium Stone","response":"enter_portal_burn_stone_before_scorion_consumes_it_then_resume_boss","failure":"scorion_absorbs_stone_and_returns_empowered"},"source_type":"guide","source_name":"ESO-Hub Dread Cellar Dungeon Guide","source_locator":"Magma Incarnate > Portal","game_update":"U31","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"path_of_fire","value":{"name":"Path of Fire","response":"block_or_roll_line_and_in_hardmode_place_persistent_fire_away_from_group"},"source_type":"guide","source_name":"ESO-Hub Dread Cellar Dungeon Guide","source_locator":"Magma Incarnate > Path of Fire","game_update":"U31","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"incarnate_outburst","value":{"name":"Incarnate Outburst","response":"tank_stands_in_and_blocks_required_soak_to_prevent_group_wipe"},"source_type":"guide","source_name":"ESO-Hub Dread Cellar Dungeon Guide","source_locator":"Magma Incarnate > Incarnate Outburst","game_update":"U31","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"tornado_wall","value":{"name":"Tornado Wall","response":"identify_gap_and_move_with_wall_without_clipping_tornadoes"},"source_type":"guide","source_name":"ESO-Hub Dread Cellar Dungeon Guide","source_locator":"Magma Incarnate > Tornado Wall","game_update":"U31","confidence":"high"}
+  ]
+}
