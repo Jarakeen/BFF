@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "imperial_city_prison",
+  "encounter_id": "lord_warden_dusk",
+  "encounter_name": "Lord Warden Dusk",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"active combat","description":"Handle Darklight Burst and shadow pressure while keeping the arena organized for portal transitions."},"source_type":"guide","source_name":"Imperial City Prison community guide","source_locator":"Lord Warden Dusk","game_update":"U7","confidence":"high"},
+    {"fact_type":"phase","fact_key":"portal","value":{"order":2,"label":"Portal Survival","threshold":"ultimate transition","description":"Each player enters a portal and uses the synergy during the fall to survive the lethal blast."},"source_type":"guide","source_name":"Imperial City Prison community guide","source_locator":"Lord Warden Dusk","game_update":"U7","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"darklight_burst","value":{"name":"Darklight Burst","response":"avoid_burst_zones_and_preserve_clean_portal_access"},"source_type":"achievement","source_name":"Darklight Dancer","source_locator":"Imperial City Prison achievement","game_update":"U7","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"portal_synergy","value":{"name":"Portal Synergy","response":"enter_assigned_portal_and_use_synergy_during_fall_to_survive"},"source_type":"guide","source_name":"Imperial City Prison community guide","source_locator":"Lord Warden Dusk","game_update":"U7","confidence":"high"}
+  ]
+}
