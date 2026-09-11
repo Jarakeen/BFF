@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "direfrost_keep",
+  "encounter_id": "drodda_of_icereach",
+  "encounter_name": "Drodda of Icereach",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"fight start","description":"Keep the group compact, preserve stamina for break free, and clear frost atronach pressure while maintaining damage on Drodda."},"source_type":"guide","source_name":"Xynode Direfrost Keep Guide","source_locator":"Drodda of Icereach","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"life_drain","value":{"name":"Life Drain","response":"break_free_immediately_when_drodda_drains_you_because_the_channel_heals_her"},"source_type":"guide","source_name":"Xynode Direfrost Keep Guide","source_locator":"Drodda of Icereach","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"frost_atronachs","value":{"name":"Frost Atronachs","response":"control_and_clear_the_low_health_frost_atronachs_before_add_pressure_accumulates"},"source_type":"guide","source_name":"Xynode Direfrost Keep Guide","source_locator":"Drodda of Icereach","game_update":"Launch","confidence":"high"}
+  ]
+}
