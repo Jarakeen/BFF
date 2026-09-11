@@ -2,7 +2,7 @@ from __future__ import annotations
 
 """Extreme-only bridge from proven runtime conditions into canonical gear math.
 
-Normal saved-build calculations remain unchanged.  Extreme callers may provide an
+Normal saved-build calculations remain unchanged. Extreme callers may provide an
 explicit, proof-owned set of canonical condition markers; the shared gear resolver
 then suppresses conditional set effects whose marker is absent and activates only
 those whose marker is present.
@@ -125,6 +125,21 @@ class ExtremeResourceConditionedPhase5ContextFactory(Phase5BuildCalculationConte
             return super().build(**kwargs)
         finally:
             self._extreme_gear_condition_context = None
+
+    def resolved_gear_inputs_with_condition(
+        self,
+        build: PlayerBuild,
+        *,
+        active_bar: str,
+        condition_context: frozenset[str] | None,
+    ) -> GearCalculationInputs:
+        """Resolve canonical gear inputs for a reviewed Extreme condition snapshot."""
+        previous = self._extreme_gear_condition_context
+        self._extreme_gear_condition_context = condition_context
+        try:
+            return self._resolved_gear_inputs(build, active_bar=active_bar)
+        finally:
+            self._extreme_gear_condition_context = previous
 
     def _resolved_gear_inputs(
         self,
