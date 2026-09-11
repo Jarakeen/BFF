@@ -29,6 +29,10 @@ from services.rotation_candidate_scorecard_service import (
     RotationDemandActionRequirement,
 )
 from services.rotation_duration_analysis_service import RotationDurationProjection
+from services.rotation_gameplay_policy_assessment_service import (
+    RotationGameplayPolicyAssessmentService,
+    RotationGameplayPolicyContext,
+)
 from services.rotation_runtime_uptime_service import (
     RotationRuntimeUptimeObjective,
     RotationRuntimeUptimeRequirement,
@@ -81,6 +85,20 @@ class RotationCandidatePlanEvidenceProvider(Protocol):
     ) -> RotationCandidatePlanEvidence: ...
 
 
+class RotationCandidateGameplayPolicyContextProvider(Protocol):
+    """Provide already-resolved play-practice facts for one generated candidate.
+
+    Implementations may bridge canonical slot classification, encounter assignments,
+    and group-coverage evidence. They must not ask this adapter to infer a personal
+    heal from a skill name or tooltip.
+    """
+
+    def context_for(
+        self,
+        candidate: GeneratedRotationCandidate,
+    ) -> RotationGameplayPolicyContext | None: ...
+
+
 @dataclass(frozen=True)
 class RotationCandidateSharedEvaluationContext:
     """Caller-proven hard obligations shared by every candidate in one family."""
@@ -111,6 +129,11 @@ class RotationCandidateRecommendationEvidenceService:
     feeds the plans and shared obligations through ``RotationCandidateScorecardService``,
     then returns the exact evidence object consumed by the recommendation composer.
 
+    Optional gameplay-practice context is resolved separately from mechanics. When a
+    context provider is supplied, this adapter invokes the shared gameplay-policy
+    assessor and carries its assessment into recommendation ranking. The context
+    provider owns the facts; this adapter never identifies personal heals itself.
+
     Baseline evidence is cached by candidate identity because the recommendation
     composer evaluates every sibling against the same baseline. No candidate may
     silently substitute a different baseline plan.
@@ -122,10 +145,16 @@ class RotationCandidateRecommendationEvidenceService:
         plan_evidence_provider: RotationCandidatePlanEvidenceProvider,
         context: RotationCandidateSharedEvaluationContext | None = None,
         scorecard_service: RotationCandidateScorecardService | None = None,
+        gameplay_policy_context_provider: RotationCandidateGameplayPolicyContextProvider | None = None,
+        gameplay_policy_assessment_service: RotationGameplayPolicyAssessmentService | None = None,
     ) -> None:
         self.plan_evidence_provider = plan_evidence_provider
         self.context = context or RotationCandidateSharedEvaluationContext()
         self.scorecard_service = scorecard_service or RotationCandidateScorecardService()
+        self.gameplay_policy_context_provider = gameplay_policy_context_provider
+        self.gameplay_policy_assessment_service = (
+            gameplay_policy_assessment_service or RotationGameplayPolicyAssessmentService()
+        )
         self._baseline_key: str | None = None
         self._baseline_evidence: RotationCandidatePlanEvidence | None = None
 
@@ -175,6 +204,7 @@ class RotationCandidateRecommendationEvidenceService:
             runtime_uptime_requirements=context.runtime_uptime_requirements,
             runtime_uptime_objective=context.runtime_uptime_objective,
         )
+        gameplay_policy_assessment = self._gameplay_policy_assessment(candidate)
         return RotationCandidateRecommendationEvidence(
             candidate_id=candidate.candidate_id,
             scorecard=scorecard,
@@ -190,10 +220,26 @@ class RotationCandidateRecommendationEvidenceService:
             role_hard_obligation_reasons=(
                 candidate_evidence.role_hard_obligation_reasons
             ),
+            gameplay_policy_assessment=gameplay_policy_assessment,
         )
+
+    def _gameplay_policy_assessment(self, candidate: GeneratedRotationCandidate):
+        provider = self.gameplay_policy_context_provider
+        if provider is None:
+            return None
+        context = provider.context_for(candidate)
+        if context is None:
+            return None
+        if context.candidate_id.casefold() != candidate.candidate_id.casefold():
+            raise ValueError(
+                "rotation gameplay-policy context candidate mismatch: "
+                f"expected {candidate.candidate_id!r}, got {context.candidate_id!r}"
+            )
+        return self.gameplay_policy_assessment_service.assess_dd_personal_heal(context)
 
 
 __all__ = [
+    "RotationCandidateGameplayPolicyContextProvider",
     "RotationCandidatePlanEvidence",
     "RotationCandidatePlanEvidenceProvider",
     "RotationCandidateRecommendationEvidenceService",
