@@ -11,6 +11,9 @@ from services.extreme_gear_set_topology_catalog_service import (
 from services.extreme_named_gear_set_catalog_realization_service import (
     ExtremeNamedGearSetCatalogRealizationService,
 )
+from services.extreme_named_gear_set_realization_service import (
+    ExtremeNamedGearSetRealizationService,
+)
 from services.extreme_named_gear_set_slot_eligibility_service import (
     ExtremeNamedGearSetSlotEligibility,
     ExtremeNamedGearSetSlotEligibilityCatalog,
@@ -109,6 +112,47 @@ def test_equal_count_parts_are_symmetry_reduced_by_set_identity():
         (10, 30),
         (20, 30),
     }
+
+
+def test_identical_legality_shapes_reuse_slot_solver(monkeypatch):
+    rows = tuple(_ordinary(set_id, f"Set {set_id}", breakpoints=(2,)) for set_id in (10, 20, 30))
+    service = _service(rows)
+    topology = ExtremeGearSetCountTopology(counts=(2, 2), unused_units=8)
+    original = ExtremeNamedGearSetRealizationService.find_witness
+    calls = []
+
+    def counting_find_witness(cls, topology_arg, selected_arg):
+        calls.append(tuple(row.set_id for row in selected_arg))
+        return original(topology_arg, selected_arg)
+
+    monkeypatch.setattr(
+        ExtremeNamedGearSetRealizationService,
+        "find_witness",
+        classmethod(counting_find_witness),
+    )
+
+    result = service.realize_topology(topology)
+
+    assert result.assignments_considered == 3
+    assert result.assignments_realized == 3
+    assert len(calls) == 1
+
+
+def test_cached_slot_template_rematerializes_current_set_identity():
+    rows = tuple(_ordinary(set_id, f"Set {set_id}", breakpoints=(2,)) for set_id in (10, 20, 30))
+    service = _service(rows)
+    topology = ExtremeGearSetCountTopology(counts=(2, 2), unused_units=8)
+
+    result = service.realize_topology(topology)
+
+    by_ids = {row.set_ids: row for row in result.realizations}
+    assert set(by_ids) == {(10, 20), (10, 30), (20, 30)}
+    for set_ids, witness in by_ids.items():
+        assert witness.set_names == tuple(f"Set {set_id}" for set_id in set_ids)
+        assert {assignment.set_id for assignment in witness.assignments} == set(set_ids)
+        assert {
+            assignment.set_name for assignment in witness.assignments
+        } == {f"Set {set_id}" for set_id in set_ids}
 
 
 def test_slot_collisions_are_counted_as_rejected_named_assignments():
