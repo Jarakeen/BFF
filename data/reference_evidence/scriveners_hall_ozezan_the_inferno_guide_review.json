@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "content_id": "scrivener_s_hall",
+  "encounter_id": "ozezan_the_inferno",
+  "encounter_name": "Ozezan the Inferno",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main Phase / Lava Placement","threshold":"Pull to suction","description":"Ozezan relocates by burrowing and leaves persistent lava pools, so the tank must preserve future movement space while the group manages lasers, cone pressure, and broodlings."},"source_type":"guide","source_name":"ESO-Hub Scrivener's Hall Dungeon Guide","source_locator":"Boss 2 - Ozezan the Inferno","game_update":"U37+","confidence":"high"},
+    {"fact_type":"phase","fact_key":"suction_phase","value":{"order":2,"label":"Central Suction Check","threshold":"Mid-fight recurring check","description":"Ozezan burrows to the center, expands a near-room-wide lethal AOE, then pulls players inward; survive by reaching the outer safe edge without a lava pool between you and the boss."},"source_type":"guide","source_name":"ESO-Hub Scrivener's Hall Dungeon Guide","source_locator":"Ozezan the Inferno > Suction","game_update":"U37+","confidence":"high"},
+    {"fact_type":"phase","fact_key":"hard_mode_atronachs","value":{"order":3,"label":"Hard Mode Iron Atronachs","threshold":"40%, 20%","description":"Iron Atronachs enter at the listed health thresholds and must be taunted immediately; groups may kill or carry them depending on survivability and burn."},"source_type":"guide","source_name":"ESO-Hub Scrivener's Hall Dungeon Guide","source_locator":"Ozezan the Inferno > Hardmode Iron Atronachs","game_update":"U37+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"lava_pools","value":{"name":"Persistent Lava Pools","response":"tank_places_burrow_pools_at_edges_and_overlaps_them_when_possible","failure":"bad_placement_can_make_the_suction_path_lethal"},"source_type":"guide","source_name":"ESO-Hub Scrivener's Hall Dungeon Guide","source_locator":"Ozezan the Inferno > Lava Pools","game_update":"U37+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"lasers","value":{"name":"Tracking Lasers","response":"kite_or_dodge_the_tracking_beams_without_crossing_other_players","hard_mode":"all_four_players_are_targeted"},"source_type":"guide","source_name":"ESO-Hub Scrivener's Hall Dungeon Guide","source_locator":"Ozezan the Inferno > Lasers / Hardmode","game_update":"U37+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"broodlings","value":{"name":"Broodlings / Green Bugs","response":"interrupt_dangerous_broodling_channels_and_control_add_count","hard_mode":"green_bugs_can_transform_into_adds_if_not_squashed"},"source_type":"guide","source_name":"ESO-Hub Scrivener's Hall Dungeon Guide","source_locator":"Ozezan the Inferno > Evolved Broodlings / Green Bugs","game_update":"U37+","confidence":"high"}
+  ]
+}
