@@ -5,9 +5,10 @@ from __future__ import annotations
 This layer closes named gear and selected reviewed equipment families only when
 their canonical denominator is proven. Max-resource objectives additionally search
 proof-reduced resource armor, reviewed static jewelry traits, reviewed passive
-progression, and reviewed max-resource active-bar witnesses. Canonical jewelry
-glyphs and weapon trait/enchantment families may be proven irrelevant to a max
-resource, but unknown or relevant evidence stays explicit and fails closed.
+progression, reviewed max-resource active-bar witnesses, and the reviewed Max
+Health passive runtime witnesses where applicable. Canonical jewelry glyphs and
+weapon trait/enchantment families may be proven irrelevant to a max resource, but
+unknown or relevant evidence stays explicit and fails closed.
 """
 
 from pathlib import Path
@@ -93,6 +94,7 @@ _EQUIPMENT_TRAIT_DEFERRED_AXIS = "armor, jewelry, and weapon traits"
 _GLYPH_DEFERRED_AXIS = "glyphs/enchants"
 _PASSIVE_DEFERRED_AXIS = "class/skill/armor/weapon/guild passive ranks"
 _SKILL_BAR_DEFERRED_AXIS = "skill-bar choices and morphs"
+_RUNTIME_STATE_DEFERRED_AXIS = "legal self-provided named buffs and proc states"
 _REMAINING_EQUIPMENT_TRAIT_AXIS = (
     "glyph-dependent/runtime armor traits plus jewelry and weapon traits"
 )
@@ -110,11 +112,14 @@ _RESOURCE_REMAINING_PASSIVE_AXIS = (
 _RESOURCE_REMAINING_PASSIVE_AFTER_JUGGERNAUT_AXIS = (
     "remaining class/skill/armor/weapon/guild passive ranks excluding reviewed max-rank Undaunted Mettle and Juggernaut"
 )
-_RESOURCE_REMAINING_PASSIVE_AFTER_REVIEWED_BAR_AXIS = (
+_RESOURCE_REMAINING_PASSIVE_AFTER_REVIEWED_RESOURCE_AXIS = (
     "remaining class/skill/armor/weapon/guild passive ranks excluding reviewed max-rank Undaunted Mettle and the objective's canonically applied reviewed resource passives"
 )
 _RESOURCE_REMAINING_SKILL_BAR_AXIS = (
     "remaining skill-bar choices and morphs excluding reviewed max-resource passive witness bars"
+)
+_RESOURCE_REMAINING_RUNTIME_STATE_AXIS = (
+    "remaining legal self-provided named buffs and proc states excluding reviewed Max Health passive runtime witnesses"
 )
 _GEAR_SCOPE = (
     "all objective-surviving canonical named gear-set breakpoint assignments "
@@ -147,6 +152,9 @@ _RESOURCE_JUGGERNAUT_SCOPE = (
 )
 _RESOURCE_ACTIVE_BAR_SCOPE = (
     "reviewed six-slot active-bar witness reduction for Dark Vigor, Magicka Flood, and Magicka Controller using the canonical active-skill inventory and legal selected class route"
+)
+_RESOURCE_MAX_HEALTH_RUNTIME_SCOPE = (
+    "reviewed legal Max Health passive runtime witnesses: permanent-pet Expert Summoner on Daedric Summoning routes and 10-stack Nothing Wasted on pure Necromancer Class Mastery routes"
 )
 
 
@@ -320,7 +328,7 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
                 (_RESOURCE_ARMOR_SCOPE, _RESOURCE_UNDAUNTED_SCOPE, _RESOURCE_ACTIVE_BAR_SCOPE)
             )
             if key == "max_health":
-                searched_parts.append(_RESOURCE_JUGGERNAUT_SCOPE)
+                searched_parts.extend((_RESOURCE_JUGGERNAUT_SCOPE, _RESOURCE_MAX_HEALTH_RUNTIME_SCOPE))
             if jewelry_state is not None:
                 searched_parts.append(_RESOURCE_JEWELRY_STATIC_TRAIT_SCOPE)
             if jewelry_glyph_audit and jewelry_glyph_audit.objective_irrelevance_proven:
@@ -371,10 +379,13 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
                 )
                 continue
             if axis == _PASSIVE_DEFERRED_AXIS and resource_armor:
-                omitted_rows.append(_RESOURCE_REMAINING_PASSIVE_AFTER_REVIEWED_BAR_AXIS)
+                omitted_rows.append(_RESOURCE_REMAINING_PASSIVE_AFTER_REVIEWED_RESOURCE_AXIS)
                 continue
             if axis == _SKILL_BAR_DEFERRED_AXIS and resource_armor:
                 omitted_rows.append(_RESOURCE_REMAINING_SKILL_BAR_AXIS)
+                continue
+            if axis == _RUNTIME_STATE_DEFERRED_AXIS and resource_armor and key == "max_health":
+                omitted_rows.append(_RESOURCE_REMAINING_RUNTIME_STATE_AXIS)
                 continue
             omitted_rows.append(axis)
         omitted = tuple(omitted_rows)
@@ -521,6 +532,11 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
                 explanation_rows.append(
                     f"Reviewed {active_skills_reviewed:,} canonical active skills and proof-reduced the legal six-slot bar to the strongest Dark Vigor witness ({int(payload.get('resource_active_bar_shadow_slots') or 0)} Shadow slots); shared Nightblade passive math applies the scored bonus."
                 )
+                runtime_label = str(payload.get("resource_max_health_runtime_label") or "No reviewed Max Health runtime bonus")
+                runtime_percent = float(payload.get("resource_max_health_runtime_reviewed_percent_bonus") or 0.0)
+                explanation_rows.append(
+                    f"Reviewed legal Max Health passive runtime witnesses by class route; the winning runtime witness is {runtime_label} ({runtime_percent:.0%} reviewed Max Health bonus), with canonical context math applied before resource rounding."
+                )
             elif key == "max_magicka":
                 explanation_rows.append(
                     f"Reviewed {active_skills_reviewed:,} canonical active skills and jointly reduced the legal six-slot bar for Magicka Flood plus Magicka Controller ({int(payload.get('resource_active_bar_siphoning_slots') or 0)} Siphoning, {int(payload.get('resource_active_bar_mages_guild_slots') or 0)} Mages Guild slots); shared passive resolvers apply the scored bonus."
@@ -567,14 +583,23 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
         explanation_rows.extend(
             (
                 f"Finite axes include {mundus_count:,} Mundus, {food_count:,} food, and {potion_count:,} potion states.",
-                "Residual equipment traits/enchants, unreviewed skill-bar/morph interactions, Champion Points, remaining passives, and runtime-only axes remain separate unless coverage says otherwise.",
+                "Residual equipment traits/enchants, unreviewed skill-bar/morph interactions, Champion Points, remaining passives, and unreviewed runtime axes remain separate unless coverage says otherwise.",
             )
         )
 
-        runtime_prerequisites = ()
+        runtime_prerequisites: tuple[str, ...] = ()
         if str(payload.get("potion") or ""):
             runtime_prerequisites = (
                 "Winning potion formula must be activated and its mapped effects active at the scored snapshot.",
+            )
+        if key == "max_health":
+            runtime_conditions = tuple(
+                str(value).strip()
+                for value in tuple(payload.get("resource_max_health_runtime_conditions") or ())
+                if str(value).strip()
+            )
+            runtime_prerequisites = tuple(
+                dict.fromkeys((*runtime_prerequisites, *runtime_conditions))
             )
 
         return ExtremeRecordResult.for_objective(
