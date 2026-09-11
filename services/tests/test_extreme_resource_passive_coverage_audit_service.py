@@ -156,7 +156,7 @@ def test_noncombat_craft_and_utility_passives_are_not_reported_as_unknown_mechan
     assert medicinal_use.status is ExtremePassiveProjectionStatus.CONTEXT_REQUIRED
 
 
-def test_resource_passive_audit_classifies_complete_inventory_without_zeroing_unknowns():
+def test_resource_passive_audit_reconciles_exact_reviewed_contextual_identity():
     audit = ExtremeResourcePassiveCoverageAuditService(
         universe_service=_Universe(),
         race_repository=_RaceRepository(),
@@ -167,10 +167,56 @@ def test_resource_passive_audit_classifies_complete_inventory_without_zeroing_un
     assert audit.projection_complete is False
     assert any("Last Gasp" in row for row in audit.static_relevant)
     assert any("Tough" in row for row in audit.accounted_elsewhere)
+    assert any("Juggernaut" in row for row in audit.accounted_elsewhere)
     assert any("Deep Reserves" in row for row in audit.static_irrelevant)
-    assert any("Juggernaut" in row for row in audit.context_required)
+    assert not any("Juggernaut" in row for row in audit.context_required)
     assert any("Magicka Controller" in row for row in audit.context_required)
     assert any("Mystery" in row for row in audit.unresolved)
+
+
+def test_reviewed_contextual_reconciliation_requires_matching_skill_line():
+    class _WrongLineUniverse:
+        def passives(self):
+            return (
+                _passive(
+                    "Nothing Wasted",
+                    "Increases your Max Health by 2% per stack, up to 10 stacks.",
+                    line="Not Class Mastery",
+                ),
+            )
+
+    audit = ExtremeResourcePassiveCoverageAuditService(
+        universe_service=_WrongLineUniverse(),
+        race_repository=_RaceRepository(),
+    ).build("max_health")
+
+    assert audit.accounted_elsewhere == ()
+    assert any("Nothing Wasted" in row for row in audit.context_required)
+
+
+def test_reviewed_contextual_reconciliation_is_objective_specific():
+    class _ControllerUniverse:
+        def passives(self):
+            return (
+                _passive(
+                    "Magicka Controller",
+                    "Increases your Max Magicka and Magicka Recovery for each Mages Guild ability slotted.",
+                    line="Mages Guild",
+                    domain=ExtremeSkillDomain.GUILD,
+                ),
+            )
+
+    magicka = ExtremeResourcePassiveCoverageAuditService(
+        universe_service=_ControllerUniverse(),
+        race_repository=_RaceRepository(),
+    ).build("max_magicka")
+    health = ExtremeResourcePassiveCoverageAuditService(
+        universe_service=_ControllerUniverse(),
+        race_repository=_RaceRepository(),
+    ).build("max_health")
+
+    assert any("Magicka Controller" in row for row in magicka.accounted_elsewhere)
+    assert any("Magicka Controller" in row for row in health.context_required)
 
 
 def test_racial_static_resource_requires_matching_canonical_race_stat():
