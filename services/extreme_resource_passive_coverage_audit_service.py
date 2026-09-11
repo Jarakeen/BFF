@@ -266,19 +266,14 @@ class ExtremeResourcePassiveCoverageAuditService:
 
             class_ownership = ExtremeResourceClassPassiveOwnershipService.resolve(passive, key)
             if class_ownership is not None:
-                if (
-                    class_ownership.status
-                    is ExtremeResourceClassPassiveOwnershipStatus.CANONICALLY_ACCOUNTED
-                ):
+                _class_row, class_status = class_ownership
+                if class_status is ExtremeResourceClassPassiveOwnershipStatus.CANONICALLY_ACCOUNTED:
                     accounted_elsewhere.append(identity)
-                elif (
-                    class_ownership.status
-                    is ExtremeResourceClassPassiveOwnershipStatus.PROVEN_IRRELEVANT
-                ):
+                elif class_status is ExtremeResourceClassPassiveOwnershipStatus.PROVEN_IRRELEVANT:
                     static_irrelevant.append(identity)
                 else:
                     raise AssertionError(
-                        f"Unhandled Extreme resource class-passive ownership status: {class_ownership.status!r}"
+                        f"Unhandled Extreme resource class-passive ownership status: {class_status!r}"
                     )
                 continue
 
