@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "content_id": "ossein_cage",
+  "encounter_id": "jynorah_skorkhif",
+  "encounter_name": "Jynorah and Skorkhif",
+  "evidence": [
+    {
+      "fact_type": "phase",
+      "fact_key": "opening_phase",
+      "value": {
+        "order": 1,
+        "label": "Split Boss Phase",
+        "starts_at": "Pull",
+        "description": "Jynorah and Skorkhif are handled on separate sides while the group manages elemental curses, Seeking Surges, adds, and boss positioning."
+      },
+      "source_type": "guide",
+      "source_name": "Wondernuts Jynorah & Skorkhif Vet HM Complete Guide",
+      "source_locator": "Boss positioning / curses / surges",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "phase",
+      "fact_key": "first_titanic_clash",
+      "value": {
+        "order": 2,
+        "label": "Titanic Clash I",
+        "starts_at": "First clash trigger",
+        "description": "Lower platform becomes Superheated; titans and Heat Rays become the central mechanic until the clash ends."
+      },
+      "source_type": "achievement",
+      "source_name": "ESO-Hub Ossein Cage achievements",
+      "source_locator": "Burnt to a Crisp / Heating Up",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "phase",
+      "fact_key": "second_titanic_clash",
+      "value": {
+        "order": 3,
+        "label": "Titanic Clash II",
+        "starts_at": "Second clash trigger",
+        "description": "Second Superheated lower-platform phase. Update 47 moved the Heating Up achievement grant to the start of this second clash, confirming it as a distinct phase boundary."
+      },
+      "source_type": "official_patch_notes",
+      "source_name": "ESO Update 47 patch notes",
+      "source_locator": "Ossein Cage > Jynorah and Skorkhif > Heating Up",
+      "game_update": "U47",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "transition",
+      "fact_key": "synchronized_kill_window",
+      "value": {
+        "thresholds": ["First boss death"],
+        "label": "Synchronized Kill",
+        "description": "Defeat the remaining boss within 15 seconds or the survivor wipes the group."
+      },
+      "source_type": "guide",
+      "source_name": "Wondernuts Jynorah & Skorkhif Vet HM Complete Guide",
+      "source_locator": "Guide description - synchronized kill",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "heat_ray_exists",
+      "value": true,
+      "source_type": "official_patch_notes",
+      "source_name": "ESO PTS Patch Notes v11.0.4",
+      "source_locator": "Ossein Cage > Jynorah and Skorkhif > Heat Ray",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "heat_ray_defense",
+      "value": {
+        "sparking_heat_ray_unblockable": true,
+        "blazing_heat_ray_unblockable": true,
+        "blocking_does_not_drain_stamina": true
+      },
+      "source_type": "official_patch_notes",
+      "source_name": "ESO PTS Patch Notes v11.0.4",
+      "source_locator": "Ossein Cage > Jynorah and Skorkhif",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "sparking_blazing_enfeeblement_exists",
+      "value": true,
+      "source_type": "achievement",
+      "source_name": "ESO-Hub Ossein Cage achievements",
+      "source_locator": "Burnt to a Crisp",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "enfeeblement_behavior",
+      "value": {
+        "sparking_enfeeblement": true,
+        "blazing_enfeeblement": true,
+        "hardmode_color_assignment": true
+      },
+      "source_type": "addon_documentation",
+      "source_name": "Asquart's Ossein Cage Helper",
+      "source_locator": "Jynorah & Skorkhif boss settings",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "seeking_surges_exists",
+      "value": true,
+      "source_type": "addon_documentation",
+      "source_name": "Asquart's Ossein Cage Helper",
+      "source_locator": "Surge kite mechanic alert",
+      "confidence": "medium"
+    }
+  ]
+}
