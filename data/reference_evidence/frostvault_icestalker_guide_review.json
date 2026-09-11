@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "frostvault",
+  "encounter_id": "icestalker",
+  "encounter_name": "Icestalker",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Troll Phase","threshold":"Full fight","description":"Icestalker combines frontal stone-wave pressure with a random-player knock-up into a lethal follow-up if not interrupted."},"source_type":"guide","source_name":"Alcast Frostvault Guide","source_locator":"Icestalker Troll Boss","game_update":"U21","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"stonewave","value":{"name":"Stonewave","response":"tank_face_boss_away_and_keep_group_out_of_frontal_cone"},"source_type":"guide","source_name":"Alcast Frostvault Guide","source_locator":"Icestalker Troll Boss","game_update":"U21","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"knockup_interrupt","value":{"name":"Knock-up Follow-up","response":"interrupt_boss_immediately_after_random_player_is_knocked_up"},"source_type":"guide","source_name":"Alcast Frostvault Guide","source_locator":"Icestalker Troll Boss","game_update":"U21","confidence":"high"}
+  ]
+}
