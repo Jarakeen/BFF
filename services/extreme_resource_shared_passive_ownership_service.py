@@ -109,6 +109,17 @@ _REVIEWED_WEAPON_IRRELEVANT: tuple[tuple[str, str, str], ...] = (
     ("Two Handed", "Heavy Weapons", "Weapon/Spell Damage, Critical Damage, or Offensive Penetration by equipped weapon type only"),
 )
 
+_REVIEWED_ARMOR_IRRELEVANT: tuple[tuple[str, str, str], ...] = (
+    ("Heavy Armor", "Constitution", "Health Recovery plus current Magicka/Stamina restoration after taking damage only"),
+    ("Heavy Armor", "Rapid Mending", "healing received only"),
+    ("Heavy Armor", "Resolve", "Physical and Spell Resistance only"),
+    ("Heavy Armor", "Revitalize", "Heavy Attack Magicka/Stamina restoration only"),
+    ("Light Armor", "Grace", "snare effectiveness and Sprint cost only"),
+    ("Medium Armor", "Athletics", "Sprint movement speed and Roll Dodge cost only"),
+    ("Medium Armor", "Improved Sneak", "Sneak cost and detection radius only"),
+    ("Medium Armor", "Medium Armor Bonuses", "Sprint/Sneak/Block cost, roll-dodge mitigation, and crowd-control movement speed only"),
+)
+
 
 def _reviewed_guild_rows() -> tuple[ExtremeResourceSharedPassiveOwnership, ...]:
     return tuple(
@@ -194,6 +205,20 @@ def _reviewed_weapon_rows() -> tuple[ExtremeResourceSharedPassiveOwnership, ...]
     )
 
 
+def _reviewed_armor_rows() -> tuple[ExtremeResourceSharedPassiveOwnership, ...]:
+    return tuple(
+        ExtremeResourceSharedPassiveOwnership(
+            domain=ExtremeSkillDomain.ARMOR,
+            skill_line=skill_line,
+            passive_name=passive_name,
+            status=ExtremeResourceSharedPassiveOwnershipStatus.PROVEN_IRRELEVANT,
+            source=f"Canonical U50 {skill_line} passive tooltip review",
+            effect_family=effect_family,
+        )
+        for skill_line, passive_name, effect_family in _REVIEWED_ARMOR_IRRELEVANT
+    )
+
+
 class ExtremeResourceSharedPassiveOwnershipService:
     """Resolve exact reviewed shared passive ownership outside class/racial paths."""
 
@@ -264,7 +289,7 @@ class ExtremeResourceSharedPassiveOwnershipService:
             source="OneHandShieldPassiveInputResolver",
             effect_family="block mitigation only",
         ),
-    ) + _reviewed_guild_rows() + _reviewed_world_rows() + _reviewed_other_rows() + _reviewed_alliance_rows() + _reviewed_craft_rows() + _reviewed_weapon_rows()
+    ) + _reviewed_guild_rows() + _reviewed_world_rows() + _reviewed_other_rows() + _reviewed_alliance_rows() + _reviewed_craft_rows() + _reviewed_weapon_rows() + _reviewed_armor_rows()
 
     @staticmethod
     def _normalized(value: object) -> str:
