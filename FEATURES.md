@@ -266,6 +266,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Provider primary-role displacement evidence retained without inventing missing workload values
 - Rotation candidate explanations
 - Encounter-specific rotation construction
+- Selected encounter content type automatically feeds role-aware gameplay policy when no explicit override is supplied
 - Canonical workload evaluation
 - Workload frontier comparison
 
