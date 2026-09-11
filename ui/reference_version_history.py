@@ -42,28 +42,49 @@ def _event_line(row: dict) -> str:
     return heading or summary
 
 
+def _detail_value(entry: ReferenceEntry, label: str) -> str:
+    wanted = _normalize(label)
+    for current_label, value in entry.details:
+        if _normalize(current_label) == wanted:
+            return str(value or "").strip()
+    return ""
+
+
+def _row_matches_entry(row: dict, entry: ReferenceEntry) -> bool:
+    if _normalize(row.get("entity_type")) != _normalize(entry.entry_type):
+        return False
+
+    row_name = _normalize(row.get("name"))
+    display_name = _normalize(entry.name)
+    current_name = _normalize(_detail_value(entry, "Current name"))
+    if not row_name or row_name not in {display_name, current_name}:
+        return False
+
+    context = _normalize(row.get("context"))
+    if not context:
+        return True
+    skill_line = _normalize(_detail_value(entry, "Skill line"))
+    return context == skill_line
+
+
 def enrich_reference_entries_with_version_history(
     entries: Iterable[ReferenceEntry],
     data_root: Path | None = None,
 ) -> tuple[ReferenceEntry, ...]:
     """Append reviewed trivia/history to matching Reference entries.
 
-    Matching is deliberately display-oriented: entity type + current display name.
+    Matching is deliberately presentation-oriented. Gear/CP rows can match by
+    display name. Skills/passives can use their current ability name plus optional
+    ``context`` (normally the skill line) so common names do not collide.
     Historical rows are never promoted into canonical mechanics data.
     """
 
     root = Path(data_root or get_data_dir())
-    by_identity: dict[tuple[str, str], list[dict]] = {}
-    for row in _load_rows(root):
-        entity_type = _normalize(row.get("entity_type"))
-        name = _normalize(row.get("name"))
-        if not entity_type or not name:
-            continue
-        by_identity.setdefault((entity_type, name), []).append(row)
+    history_rows = _load_rows(root)
 
     result: list[ReferenceEntry] = []
     for entry in entries:
-        rows = by_identity.get((_normalize(entry.entry_type), _normalize(entry.name)), ())
+        rows = tuple(row for row in history_rows if _row_matches_entry(row, entry))
         if not rows:
             result.append(entry)
             continue
