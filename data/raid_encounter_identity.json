@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "notes": "Reviewed raid-planning encounter identities. These group raw encounter records into the fight units raid leads actually plan. This file is presentation/identity metadata and does not replace canonical mechanic truth.",
+  "encounters": [
+    {"content_id":"aetherian_archive","content_name":"Aetherian Archive","encounter_id":"lightning_storm_atronach","display_name":"Lightning Storm Atronach","member_ids":["lightning_storm_atronach"]},
+    {"content_id":"aetherian_archive","content_name":"Aetherian Archive","encounter_id":"foundation_stone_atronach","display_name":"Foundation Stone Atronach","member_ids":["foundation_stone_atronach"]},
+    {"content_id":"aetherian_archive","content_name":"Aetherian Archive","encounter_id":"varlariel","display_name":"Varlariel","member_ids":["varlariel"]},
+    {"content_id":"aetherian_archive","content_name":"Aetherian Archive","encounter_id":"the_mage_celestial","display_name":"The Mage","member_ids":["the_mage_celestial"]},
+
+    {"content_id":"hel_ra_citadel","content_name":"Hel Ra Citadel","encounter_id":"ra_kotu","display_name":"Ra Kotu","member_ids":["ra_kotu"]},
+    {"content_id":"hel_ra_citadel","content_name":"Hel Ra Citadel","encounter_id":"yokeda_split","display_name":"Yokeda Kai and Yokeda Rok'dun","member_ids":["yokeda_kai","yokeda_rok_dun"]},
+    {"content_id":"hel_ra_citadel","content_name":"Hel Ra Citadel","encounter_id":"the_warrior_celestial","display_name":"The Warrior","member_ids":["the_warrior_celestial"]},
+
+    {"content_id":"sanctum_ophidia","content_name":"Sanctum Ophidia","encounter_id":"possessed_mantikora","display_name":"Possessed Mantikora","member_ids":["possessed_mantikora"]},
+    {"content_id":"sanctum_ophidia","content_name":"Sanctum Ophidia","encounter_id":"stonebreaker","display_name":"Stonebreaker","member_ids":["stonebreaker"]},
+    {"content_id":"sanctum_ophidia","content_name":"Sanctum Ophidia","encounter_id":"ozara","display_name":"Ozara","member_ids":["ozara"]},
+    {"content_id":"sanctum_ophidia","content_name":"Sanctum Ophidia","encounter_id":"the_serpent_celestial","display_name":"The Serpent","member_ids":["the_serpent_celestial"]},
+
+    {"content_id":"maw_of_lorkhaj","content_name":"Maw of Lorkhaj","encounter_id":"zhaj_hassa_the_forgotten","display_name":"Zhaj'hassa the Forgotten","member_ids":["zhaj_hassa_the_forgotten"]},
+    {"content_id":"maw_of_lorkhaj","content_name":"Maw of Lorkhaj","encounter_id":"s_kinrai_vashai","display_name":"S'kinrai and Vashai","member_ids":["s_kinrai","vashai"]},
+    {"content_id":"maw_of_lorkhaj","content_name":"Maw of Lorkhaj","encounter_id":"rakkhat","display_name":"Rakkhat","member_ids":["rakkhat"]},
+
+    {"content_id":"halls_of_fabrication","content_name":"Halls of Fabrication","encounter_id":"hunter_killers","display_name":"Hunter-Killer Negatrix and Positrox","member_ids":["hunter_killer_negatrix","hunter_killer_positrox"]},
+    {"content_id":"halls_of_fabrication","content_name":"Halls of Fabrication","encounter_id":"pinnacle_factotum","display_name":"Pinnacle Factotum","member_ids":["pinnacle_factotum"]},
+    {"content_id":"halls_of_fabrication","content_name":"Halls of Fabrication","encounter_id":"archcustodian","display_name":"Archcustodian","member_ids":["archcustodian"]},
+    {"content_id":"halls_of_fabrication","content_name":"Halls of Fabrication","encounter_id":"refabrication_committee","display_name":"Refabrication Committee","member_ids":["reclaimer","reducer","reactor"]},
+    {"content_id":"halls_of_fabrication","content_name":"Halls of Fabrication","encounter_id":"assembly_general","display_name":"Assembly General","member_ids":["assembly_general"]},
+
+    {"content_id":"asylum_sanctorium","content_name":"Asylum Sanctorium","encounter_id":"saint_olms_encounter","display_name":"Saint Olms the Just","member_ids":["saint_olms_the_just","saint_felms_the_bold","saint_llothis_the_pious"]},
+
+    {"content_id":"cloudrest","content_name":"Cloudrest","encounter_id":"relequen","display_name":"Relequen","member_ids":["relequen"]},
+    {"content_id":"cloudrest","content_name":"Cloudrest","encounter_id":"galenwe","display_name":"Galenwe","member_ids":["galenwe"]},
+    {"content_id":"cloudrest","content_name":"Cloudrest","encounter_id":"siroria","display_name":"Siroria","member_ids":["siroria"]},
+    {"content_id":"cloudrest","content_name":"Cloudrest","encounter_id":"z_maja","display_name":"Z'Maja","member_ids":["z_maja"]},
+
+    {"content_id":"sunspire","content_name":"Sunspire","encounter_id":"lokkestiiz","display_name":"Lokkestiiz","member_ids":["lokkestiiz"]},
+    {"content_id":"sunspire","content_name":"Sunspire","encounter_id":"yolnahkriin","display_name":"Yolnahkriin","member_ids":["yolnahkriin"]},
+    {"content_id":"sunspire","content_name":"Sunspire","encounter_id":"nahviintaas","display_name":"Nahviintaas","member_ids":["nahviintaas"]},
+
+    {"content_id":"kynes_aegis","content_name":"Kyne's Aegis","encounter_id":"yandir_the_butcher","display_name":"Yandir the Butcher","member_ids":["yandir_the_butcher"]},
+    {"content_id":"kynes_aegis","content_name":"Kyne's Aegis","encounter_id":"captain_vrol","display_name":"Captain Vrol","member_ids":["captain_vrol"]},
+    {"content_id":"kynes_aegis","content_name":"Kyne's Aegis","encounter_id":"lord_falgravn","display_name":"Lord Falgravn","member_ids":["lord_falgravn"]},
+
+    {"content_id":"rockgrove","content_name":"Rockgrove","encounter_id":"oaxiltso","display_name":"Oaxiltso","member_ids":["oaxiltso"]},
+    {"content_id":"rockgrove","content_name":"Rockgrove","encounter_id":"flame_herald_bahsei","display_name":"Flame-Herald Bahsei","member_ids":["flame_herald_bahsei"]},
+    {"content_id":"rockgrove","content_name":"Rockgrove","encounter_id":"xalvakka","display_name":"Xalvakka","member_ids":["xalvakka"]},
+
+    {"content_id":"dreadsail_reef","content_name":"Dreadsail Reef","encounter_id":"lylanar_turlassil","display_name":"Lylanar and Turlassil","member_ids":["lylanar","turlassil"]},
+    {"content_id":"dreadsail_reef","content_name":"Dreadsail Reef","encounter_id":"reef_guardian","display_name":"Reef Guardian","member_ids":["reef_guardian"]},
+    {"content_id":"dreadsail_reef","content_name":"Dreadsail Reef","encounter_id":"tideborn_taleria","display_name":"Tideborn Taleria","member_ids":["tideborn_taleria"]},
+
+    {"content_id":"sanitys_edge","content_name":"Sanity's Edge","encounter_id":"exarchanic_yaseyla","display_name":"Exarchanic Yaseyla","member_ids":["exarchanic_yaseyla"]},
+    {"content_id":"sanitys_edge","content_name":"Sanity's Edge","encounter_id":"archwizard_twelvane","display_name":"Archwizard Twelvane","member_ids":["archwizard_twelvane"]},
+    {"content_id":"sanitys_edge","content_name":"Sanity's Edge","encounter_id":"ansuul_the_tormentor","display_name":"Ansuul the Tormentor","member_ids":["ansuul_the_tormentor"]},
+
+    {"content_id":"lucent_citadel","content_name":"Lucent Citadel","encounter_id":"ryelaz_zilyesset","display_name":"Count Ryelaz and Zilyesset","member_ids":["count_ryelaz","zilyesset"]},
+    {"content_id":"lucent_citadel","content_name":"Lucent Citadel","encounter_id":"orphic_shattered_shard","display_name":"Orphic Shattered Shard","member_ids":["orphic_shattered_shard"]},
+    {"content_id":"lucent_citadel","content_name":"Lucent Citadel","encounter_id":"xoryn","display_name":"Xoryn","member_ids":["xoryn"]},
+
+    {"content_id":"ossein_cage","content_name":"Ossein Cage","encounter_id":"shaper_of_flesh","display_name":"Shapers of Flesh","member_ids":["shaper_of_flesh"]},
+    {"content_id":"ossein_cage","content_name":"Ossein Cage","encounter_id":"jynorah_skorkhif","display_name":"Jynorah and Skorkhif","member_ids":["jynorah","skorkhif"]},
+    {"content_id":"ossein_cage","content_name":"Ossein Cage","encounter_id":"overfiend_kazpian","display_name":"Overfiend Kazpian","member_ids":["overfiend_kazpian"]}
+  ]
+}
