@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "content_id": "asylum_sanctorium",
+  "encounter_id": "saint_olms_encounter",
+  "encounter_name": "Saint Olms the Just",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"base_olms","value":{"order":1,"label":"Olms Base Fight","threshold":"Pull","description":"Tank keeps Saint Olms faced away while the group manages Steam Breath, lightning circles, protector adds, jump phases, and Gusts of Steam."},"source_type":"guide","source_name":"Xynode Asylum Sanctorium Trial Guide","source_locator":"Saint Olms the Just","confidence":"medium"},
+    {"fact_type":"phase","fact_key":"llothis_enters","value":{"order":2,"label":"Llothis Joins","threshold":"90-91%","description":"In +1/+2 configurations with Llothis alive, Saint Llothis joins after the first Olms jump and brings poison cone, Noxious Gas, and interruptible channel pressure."},"source_type":"guide","source_name":"Xynode Asylum Sanctorium Trial Guide","source_locator":"Saint Olms hardmode / Llothis","confidence":"medium"},
+    {"fact_type":"phase","fact_key":"felms_enters","value":{"order":3,"label":"Felms Joins","threshold":"75-76%","description":"In +1/+2 configurations with Felms alive, Saint Felms joins after the second Olms jump and adds teleport strikes, Shrapnel Storm, and targeted burst pressure."},"source_type":"guide","source_name":"Xynode Asylum Sanctorium Trial Guide","source_locator":"Saint Olms hardmode / Felms","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"steam_breath","value":{"name":"Steam Breath","response":"tank_sidesteps_cone_then_repositions"},"source_type":"guide","source_name":"Xynode Asylum Sanctorium Trial Guide","source_locator":"Saint Olms Steam Breath","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"lightning_circle","value":{"name":"Lightning Circle","cadence_seconds":"30-32","target":"farthest_player"},"source_type":"guide","source_name":"Xynode Asylum Sanctorium Trial Guide","source_locator":"Saint Olms Lightning Circle","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"protectors","value":{"name":"Protectors","priority":"kill_first","immunity_rule":"additional protectors can make Olms and/or minis immune"},"source_type":"guide","source_name":"Xynode Asylum Sanctorium Trial Guide","source_locator":"Saint Olms hardmode protectors","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"side_saint_enrage","value":{"name":"Side Saint Enrage","enrage_after_seconds":180,"dormant_after_defeat_seconds":45},"source_type":"guide + official_patch_notes","source_name":"Xynode Asylum Sanctorium Trial Guide; ESO PTS Patch Notes v3.2.2/v3.2.4","source_locator":"Asylum Sanctorium side Saint enrage/dormancy","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"llothis_interrupt","value":{"name":"Llothis Interrupt","response":"interrupt_oppressive_bolts_and_defiling_blast"},"source_type":"official_patch_notes","source_name":"ESO Deadlands-era Asylum Sanctorium fixes","source_locator":"Saint Llothis Oppressive Bolts interruptible telegraph","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"felms_shrapnel_storm_scaling","value":{"name":"Shrapnel Storm","veteran_damage_increases_with_exposure":true},"source_type":"official_patch_notes","source_name":"ESO PTS Patch Notes v3.2.2","source_locator":"Saint Felms Shrapnel Storm","confidence":"high"}
+  ]
+}
