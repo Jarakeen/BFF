@@ -84,23 +84,22 @@ def _mechanic_name(fact: ReconciledEncounterFact) -> str:
     return ""
 
 
-def _stem(value: str) -> str:
-    return "_".join(
-        token
-        for token in str(value or "").casefold().replace("-", " ").replace("/", " ").split()
-        if token
-    )
+def _stem_tokens(value: str) -> tuple[str, ...]:
+    normalized = str(value or "").casefold().replace("-", " ").replace("/", " ")
+    return tuple(token for token in normalized.split() if token)
 
 
 def _related_detail(name: str, facts: tuple[ReconciledEncounterFact, ...]) -> str:
-    stem = _stem(name)
-    tokens = tuple(token for token in stem.split("_") if token)
+    tokens = _stem_tokens(name)
     candidates: list[str] = []
     for fact in facts:
         if not fact.safe_for_review:
             continue
         key = str(fact.fact_key or "").casefold()
-        if tokens and not all(token in key for token in tokens[:1]):
+        # Evidence keys often shorten the visible mechanic name, e.g.
+        # Rapid Deluge -> deluge_veteran_behavior. Matching any mechanic-name
+        # token is presentation grouping only; source values stay unchanged.
+        if tokens and not any(token in key for token in tokens):
             continue
         rendered = _render_value(fact.value)
         if rendered and rendered not in {"Yes", "No"} and rendered not in candidates:
