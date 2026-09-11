@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "city_of_ash_ii",
+  "encounter_id": "horvantud_the_fire_maw",
+  "encounter_name": "Horvantud the Fire Maw",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Fire Maw Phase","threshold":"100% to 0%","description":"Hold Horvantud steady while the group handles cone breath, ground eruptions, and incoming Dremora pressure."},"source_type":"guide","source_name":"Xynode City of Ash II Guide","source_locator":"Horvantud the Fire Maw","game_update":"U5","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"flame_breath","value":{"name":"Flame Breath","response":"tank_faces_horvantud_away_and_non_tanks_stay_out_of_frontal_cone"},"source_type":"guide","source_name":"Xynode City of Ash II Guide","source_locator":"Horvantud the Fire Maw","game_update":"U5","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"ground_eruptions","value":{"name":"Ground Eruptions","response":"move_out_of_fire_eruptions_without_dragging_boss_through_group"},"source_type":"guide","source_name":"Xynode City of Ash II Guide","source_locator":"Horvantud the Fire Maw","game_update":"U5","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"dremora_waves","value":{"name":"Dremora Waves","response":"control_and_burn_adds_before_pressure_compounds"},"source_type":"guide","source_name":"Xynode City of Ash II Guide","source_locator":"Horvantud the Fire Maw","game_update":"U5","confidence":"high"}
+  ]
+}
