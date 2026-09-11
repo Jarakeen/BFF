@@ -63,61 +63,91 @@ def _positive_int(value: object, field: str) -> int:
     return number
 
 
-def load_dungeon_encounter_identities(
-    data_root: Path,
-) -> tuple[DungeonEncounterIdentity, ...]:
-    path = Path(data_root) / "dungeon_encounter_identity.json"
-    if not path.exists():
-        return ()
+def _nonnegative_int(value: object, field: str) -> int:
+    try:
+        number = int(value)
+    except (TypeError, ValueError) as exc:
+        raise DungeonEncounterIdentityError(
+            f"dungeon encounter identity field {field!r} must be an integer"
+        ) from exc
+    if number < 0:
+        raise DungeonEncounterIdentityError(
+            f"dungeon encounter identity field {field!r} must be non-negative"
+        )
+    return number
+
+
+def _identity_paths(data_root: Path) -> tuple[Path, ...]:
+    root = Path(data_root)
+    primary = root / "dungeon_encounter_identity.json"
+    shards = sorted(root.glob("dungeon_encounter_identity_*.json"))
+    paths = ([primary] if primary.exists() else []) + shards
+    return tuple(paths)
+
+
+def _load_payload(path: Path) -> list[object]:
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise DungeonEncounterIdentityError(f"Could not load {path}: {exc}") from exc
     if not isinstance(payload, dict) or payload.get("schema_version") != 1:
         raise DungeonEncounterIdentityError(
-            "dungeon_encounter_identity.json must use schema_version 1"
+            f"{path.name} must use schema_version 1"
         )
     rows = payload.get("encounters")
     if not isinstance(rows, list):
         raise DungeonEncounterIdentityError(
-            "dungeon_encounter_identity.json encounters must be a list"
+            f"{path.name} encounters must be a list"
         )
+    return rows
+
+
+def load_dungeon_encounter_identities(
+    data_root: Path,
+) -> tuple[DungeonEncounterIdentity, ...]:
+    paths = _identity_paths(Path(data_root))
+    if not paths:
+        return ()
 
     result: list[DungeonEncounterIdentity] = []
     seen: set[str] = set()
-    for index, row in enumerate(rows):
-        if not isinstance(row, dict):
-            raise DungeonEncounterIdentityError(f"encounters[{index}] must be an object")
-        encounter_id = _text(row.get("encounter_id"), "encounter_id")
-        if encounter_id in seen:
-            raise DungeonEncounterIdentityError(
-                f"duplicate dungeon encounter id {encounter_id!r}"
+    for path in paths:
+        rows = _load_payload(path)
+        for index, row in enumerate(rows):
+            if not isinstance(row, dict):
+                raise DungeonEncounterIdentityError(
+                    f"{path.name}: encounters[{index}] must be an object"
+                )
+            encounter_id = _text(row.get("encounter_id"), "encounter_id")
+            if encounter_id in seen:
+                raise DungeonEncounterIdentityError(
+                    f"duplicate dungeon encounter id {encounter_id!r}"
+                )
+            raw_members = row.get("member_ids")
+            if not isinstance(raw_members, list) or not raw_members:
+                raise DungeonEncounterIdentityError(
+                    f"{encounter_id}: member_ids must be a non-empty list"
+                )
+            member_ids = tuple(_text(value, "member_ids") for value in raw_members)
+            if len(set(member_ids)) != len(member_ids):
+                raise DungeonEncounterIdentityError(
+                    f"{encounter_id}: member_ids must be unique"
+                )
+            seen.add(encounter_id)
+            result.append(
+                DungeonEncounterIdentity(
+                    content_id=_text(row.get("content_id"), "content_id"),
+                    content_name=_text(row.get("content_name"), "content_name"),
+                    release_year=_positive_int(row.get("release_year"), "release_year"),
+                    release_update=_nonnegative_int(
+                        row.get("release_update"), "release_update"
+                    ),
+                    release_pack=_text(row.get("release_pack"), "release_pack"),
+                    encounter_id=encounter_id,
+                    display_name=_text(row.get("display_name"), "display_name"),
+                    member_ids=member_ids,
+                )
             )
-        raw_members = row.get("member_ids")
-        if not isinstance(raw_members, list) or not raw_members:
-            raise DungeonEncounterIdentityError(
-                f"{encounter_id}: member_ids must be a non-empty list"
-            )
-        member_ids = tuple(_text(value, "member_ids") for value in raw_members)
-        if len(set(member_ids)) != len(member_ids):
-            raise DungeonEncounterIdentityError(
-                f"{encounter_id}: member_ids must be unique"
-            )
-        seen.add(encounter_id)
-        result.append(
-            DungeonEncounterIdentity(
-                content_id=_text(row.get("content_id"), "content_id"),
-                content_name=_text(row.get("content_name"), "content_name"),
-                release_year=_positive_int(row.get("release_year"), "release_year"),
-                release_update=_positive_int(
-                    row.get("release_update"), "release_update"
-                ),
-                release_pack=_text(row.get("release_pack"), "release_pack"),
-                encounter_id=encounter_id,
-                display_name=_text(row.get("display_name"), "display_name"),
-                member_ids=member_ids,
-            )
-        )
 
     return tuple(
         sorted(
