@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "spindleclutch_i",
+  "encounter_id": "the_whisperer",
+  "encounter_name": "The Whisperer",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Whisperer Phase","threshold":"100% to 0%","description":"Keep personal spacing around the boss, recover from the center pull, and avoid the follow-up burst sequence."},"source_type":"guide","source_name":"Xynode Spindleclutch I Guide","source_locator":"The Whisperer","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"web_pull","value":{"name":"Web Pull","response":"recover_from_the_center_pull_and_prepare_to_move_or_block_the_immediate_follow_up"},"source_type":"guide","source_name":"Xynode Spindleclutch I Guide","source_locator":"The Whisperer","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"daedric_explosion","value":{"name":"Daedric Explosion","response":"maintain_personal_spacing_and_move_out_of_the_boss_center_after_the_pull"},"source_type":"guide","source_name":"Xynode Spindleclutch I Guide","source_locator":"The Whisperer","game_update":"Launch","confidence":"high"}
+  ]
+}
