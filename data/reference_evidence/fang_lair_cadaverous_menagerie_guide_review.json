@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "fang_lair",
+  "encounter_id": "cadaverous_menagerie",
+  "encounter_name": "Cadaverous Menagerie",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Menagerie Main Phase","threshold":"100% to 0%","description":"Fight the Cadaverous Bear, Guar, and Senche-Tiger together while controlling explosive wolves."},"source_type":"guide","source_name":"Xynode Fang Lair Guide","source_locator":"Cadaverous Menagerie","game_update":"U17","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"senche_death_grip","value":{"name":"Senche Death Grip","response":"focus_senche_and_free_pinned_player_immediately"},"source_type":"achievement","source_name":"Obedience Maiming","source_locator":"Fang Lair achievement","game_update":"U17","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"volatile_fungi","value":{"name":"Volatile Fungi","response":"avoid_fungal_ground_pressure_and_preserve_safe_space"},"source_type":"achievement","source_name":"Fungi Free","source_locator":"Fang Lair achievement","game_update":"U17","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"exploding_wolves","value":{"name":"Exploding Wolves","response":"keep_wolves_away_from_group_and_do_not_panic_when_targeted"},"source_type":"guide","source_name":"Alcast Fang Lair Guide","source_locator":"Cadaverous Bear","game_update":"U17","confidence":"high"}
+  ]
+}
