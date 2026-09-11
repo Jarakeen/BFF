@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "bloodroot_forge",
+  "encounter_id": "mathgamain",
+  "encounter_name": "Mathgamain",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Keep Mathgamain faced away, control the add waves, and prioritize Stranglers when they appear."},"source_type":"guide","source_name":"Alcast Bloodroot Forge Guide","source_locator":"First Boss - Mathgamain","game_update":"U15","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"frontal_cone","value":{"name":"Frontal Cone","response":"tank_faces_boss_away_from_group_and_non_tanks_avoid_front"},"source_type":"guide","source_name":"Alcast Bloodroot Forge Guide","source_locator":"Mathgamain","game_update":"U15","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"add_waves","value":{"name":"Add Waves","response":"taunt_large_adds_and_prioritize_stranglers_before_pressure_stacks"},"source_type":"guide","source_name":"Alcast Bloodroot Forge Guide","source_locator":"Mathgamain","game_update":"U15","confidence":"high"}
+  ]
+}
