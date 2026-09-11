@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "content_id": "stone_garden",
+  "encounter_id": "arkasis_the_mad_alchemist",
+  "encounter_name": "Arkasis the Mad Alchemist",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"human_one","value":{"order":1,"label":"Human Arkasis I","threshold":"100% to 60%","description":"Handle Arkasis, adds, fire bottles, and tank pressure before the first transformation."},"source_type":"guide","source_name":"Alcast Stone Garden Guide","source_locator":"Arkasis > Human Arkasis Phase","game_update":"U27","confidence":"high"},
+    {"fact_type":"phase","fact_key":"behemoth_one","value":{"order":2,"label":"Werewolf Behemoth Intermission I","threshold":"60%","description":"Players transform into Werewolf Behemoths and use the transformation kit to control and interrupt Stone Husks."},"source_type":"guide","source_name":"Alcast Stone Garden Guide","source_locator":"Arkasis > phases","game_update":"U27","confidence":"high"},
+    {"fact_type":"phase","fact_key":"human_two","value":{"order":3,"label":"Human Arkasis II","threshold":"60% to 20%","description":"Human phase resumes with poison-bottle pressure added to the existing mechanics."},"source_type":"guide","source_name":"Alcast Stone Garden Guide","source_locator":"Arkasis > Poison Bottles","game_update":"U27","confidence":"high"},
+    {"fact_type":"phase","fact_key":"behemoth_two","value":{"order":4,"label":"Werewolf Behemoth Intermission II","threshold":"20%","description":"A second transformation phase repeats the Stone Husk control problem with additional pressure."},"source_type":"guide","source_name":"Alcast Stone Garden Guide","source_locator":"Arkasis > phases","game_update":"U27","confidence":"high"},
+    {"fact_type":"phase","fact_key":"evolved","value":{"order":5,"label":"Evolved Arkasis Execute","threshold":"Final phase","description":"Arkasis adds mobile lightning hazards, pins, and interruptible lightning pressure to his earlier kit."},"source_type":"guide","source_name":"Alcast Stone Garden Guide","source_locator":"Arkasis > Evolved Arkasis Phase","game_update":"U27","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"stone_husks","value":{"name":"Stone Husk Control","response":"use_behemoth_bonecrusher_to_interrupt_and_stomp_orbs"},"source_type":"guide","source_name":"Alcast Stone Garden Guide","source_locator":"Werewolf Behemoth Skills","game_update":"U27","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"lightning_aoe","value":{"name":"Lightning AoE","response":"kite_mobile_shock_fields_and_free_pinned_players_with_synergy"},"source_type":"guide","source_name":"Alcast Stone Garden Guide","source_locator":"Evolved Arkasis > Lightning AoE","game_update":"U27","confidence":"high"}
+  ]
+}
