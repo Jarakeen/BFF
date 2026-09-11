@@ -11,7 +11,7 @@ from services.extreme_skill_universe_service import (
 )
 
 
-def _passive(name: str, line: str, description: str = "Conditional reviewed mechanic."):
+def _passive(name: str, line: str, description: str = "Reviewed class mechanic."):
     return ExtremePlayerSkillRecord(
         skill_id=1,
         name=name,
@@ -29,49 +29,50 @@ def _passive(name: str, line: str, description: str = "Conditional reviewed mech
     )
 
 
+_EXPECTED_IDENTITIES = {
+    ("Aedric Spear", "Balanced Warrior"),
+    ("Aedric Spear", "Spear Wall"),
+    ("Animal Companions", "Advanced Species"),
+    ("Animal Companions", "Bond with Nature"),
+    ("Animal Companions", "Flourish"),
+    ("Animal Companions", "Savage Beast"),
+    ("Ardent Flame", "A Soul Ablaze"),
+    ("Assassination", "Master Assassin"),
+    ("Bone Tyrant", "Health Avarice"),
+    ("Curative Runeforms", "Erudition"),
+    ("Curative Runeforms", "Intricate Runeforms"),
+    ("Daedric Summoning", "Rebate"),
+    ("Dark Magic", "Unholy Knowledge"),
+    ("Dawn's Wrath", "Enduring Rays"),
+    ("Dawn's Wrath", "Illuminate"),
+    ("Dawn's Wrath", "Prism"),
+    ("Dawn's Wrath", "Restoring Spirit"),
+    ("Draconic Power", "Burnished Scales"),
+    ("Draconic Power", "Elder Dragon"),
+    ("Draconic Power", "World in Ruin"),
+    ("Grave Lord", "Death Knell"),
+    ("Grave Lord", "Rapid Rot"),
+    ("Herald of the Tome", "Psychic Lesion"),
+    ("Shadow", "Dark Veil"),
+    ("Shadow", "Refreshing Shadows"),
+    ("Soldier of Apocrypha", "Circumvented Fate"),
+    ("Storm Calling", "Expert Mage"),
+    ("Winter's Embrace", "Frozen Armor"),
+}
+
+
 class _Universe:
     def passives(self):
-        return (
-            _passive(
-                "Flourish",
-                "Animal Companions",
-                "Increases your Magicka and Stamina Recovery for each Animal Companions ability slotted.",
-            ),
-            _passive(
-                "Advanced Species",
-                "Animal Companions",
-                "Increases your Critical Damage for each Animal Companions ability slotted.",
-            ),
-            _passive(
-                "Frozen Armor",
-                "Winter's Embrace",
-                "Increases your Physical and Spell Resistance for each Winter's Embrace ability slotted.",
-            ),
-            _passive(
-                "A Soul Ablaze",
-                "Ardent Flame",
-                "Increases your Healing Taken while Ardent Flame is equipped.",
-            ),
-            _passive(
-                "Expert Mage",
-                "Storm Calling",
-                "Increases your Weapon and Spell Damage for each Sorcerer ability slotted.",
-            ),
-            _passive(
-                "Balanced Warrior",
-                "Aedric Spear",
-                "Increases Weapon and Spell Damage and Armor.",
-            ),
-            _passive(
-                "Health Avarice",
-                "Bone Tyrant",
-                "Increases Healing Received for each Bone Tyrant ability slotted.",
-            ),
-            _passive(
-                "Flourish",
-                "Not Animal Companions",
-                "Increases your Magicka and Stamina Recovery for each ability slotted.",
-            ),
+        reviewed = tuple(
+            _passive(name, line)
+            for line, name in sorted(
+                _EXPECTED_IDENTITIES,
+                key=lambda row: (row[0].casefold(), row[1].casefold()),
+            )
+        )
+        return reviewed + (
+            _passive("Flourish", "Not Animal Companions"),
+            _passive("Elder Dragon", "Not Draconic Power"),
         )
 
 
@@ -81,32 +82,31 @@ class _RaceRepository:
         return {}
 
 
-def test_shared_class_resolver_rows_are_proven_irrelevant_to_all_max_resources():
+def test_reviewed_class_rows_are_proven_irrelevant_to_all_max_resources():
     rows = ExtremeResourceClassPassiveOwnershipService.reviewed()
-    assert [(row.skill_line, row.passive_name) for row in rows] == [
-        ("Aedric Spear", "Balanced Warrior"),
-        ("Animal Companions", "Advanced Species"),
-        ("Animal Companions", "Flourish"),
-        ("Ardent Flame", "A Soul Ablaze"),
-        ("Bone Tyrant", "Health Avarice"),
-        ("Storm Calling", "Expert Mage"),
-        ("Winter's Embrace", "Frozen Armor"),
-    ]
+    identities = {(row.skill_line, row.passive_name) for row in rows}
+    assert identities == _EXPECTED_IDENTITIES
     assert all(
         row.status is ExtremeResourceClassPassiveOwnershipStatus.PROVEN_IRRELEVANT
         for row in rows
     )
 
     for objective in ("max_health", "max_magicka", "max_stamina"):
-        for passive in _Universe().passives()[:7]:
-            row = ExtremeResourceClassPassiveOwnershipService.resolve(passive, objective)
+        for line, name in _EXPECTED_IDENTITIES:
+            row = ExtremeResourceClassPassiveOwnershipService.resolve(
+                _passive(name, line),
+                objective,
+            )
             assert row is not None
             assert row.status is ExtremeResourceClassPassiveOwnershipStatus.PROVEN_IRRELEVANT
 
 
 def test_class_passive_ownership_requires_exact_skill_line_and_class_domain():
-    wrong_line = _Universe().passives()[7]
+    wrong_line = _passive("Flourish", "Not Animal Companions")
     assert ExtremeResourceClassPassiveOwnershipService.resolve(wrong_line, "max_health") is None
+
+    wrong_draconic_line = _passive("Elder Dragon", "Not Draconic Power")
+    assert ExtremeResourceClassPassiveOwnershipService.resolve(wrong_draconic_line, "max_health") is None
 
     guild_copy = ExtremePlayerSkillRecord(
         skill_id=2,
@@ -127,6 +127,10 @@ def test_class_passive_ownership_requires_exact_skill_line_and_class_domain():
 
 
 def test_passive_denominator_moves_reviewed_class_rows_to_static_irrelevant():
+    expected_identities = tuple(
+        f"[class] {line} :: {name}"
+        for line, name in _EXPECTED_IDENTITIES
+    )
     for objective in ("max_health", "max_magicka", "max_stamina"):
         audit = ExtremeResourcePassiveCoverageAuditService(
             universe_service=_Universe(),
@@ -134,21 +138,10 @@ def test_passive_denominator_moves_reviewed_class_rows_to_static_irrelevant():
         ).build(objective)
 
         assert audit.denominator_proven is True
-        for passive_name in (
-            "Flourish",
-            "Advanced Species",
-            "Frozen Armor",
-            "A Soul Ablaze",
-            "Expert Mage",
-            "Balanced Warrior",
-            "Health Avarice",
-        ):
-            assert any(
-                passive_name in row and "Not Animal Companions" not in row
-                for row in audit.static_irrelevant
-            )
-        assert not any("Frozen Armor" in row for row in audit.context_required)
-        assert not any("Advanced Species" in row for row in audit.context_required)
-        assert not any("A Soul Ablaze" in row for row in audit.unresolved)
-        assert not any("Balanced Warrior" in row for row in audit.unresolved)
-        assert any("Not Animal Companions :: Flourish" in row for row in audit.context_required)
+        for identity in expected_identities:
+            assert identity in audit.static_irrelevant
+            assert identity not in audit.context_required
+            assert identity not in audit.unresolved
+
+        assert "[class] Not Animal Companions :: Flourish" in audit.context_required
+        assert "[class] Not Draconic Power :: Elder Dragon" in audit.unresolved
