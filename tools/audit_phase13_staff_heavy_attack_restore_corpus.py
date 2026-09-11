@@ -4,6 +4,7 @@ import argparse
 from collections import Counter, defaultdict
 import json
 from pathlib import Path
+import statistics
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -19,6 +20,14 @@ STAFF_HEAVY_ALIASES = {
     18396: "shock_staff_heavy",
     16212: "restoration_staff_heavy",
     16261: "frost_staff_heavy",
+}
+
+# Reviewed observational resource-change aliases from the current raw Lokke corpus.
+# These are log-side evidence handles only, not canonical BFF mechanic identities.
+STAFF_HEAVY_RESTORE_ALIASES = {
+    "restoration_staff_heavy": frozenset({32760}),
+    "frost_staff_heavy": frozenset({60762}),
+    "shock_staff_heavy": frozenset({60764}),
 }
 
 CHANNELLED_STAFF_HEAVIES = {
@@ -122,6 +131,20 @@ def _heavy_event_shape_key(label: str, event):
     )
 
 
+def _is_weapon_restore_candidate(label: str, restore) -> bool:
+    aliases = STAFF_HEAVY_RESTORE_ALIASES.get(label)
+    if not aliases or restore.ability_game_id is None:
+        return False
+    return int(restore.ability_game_id) in aliases
+
+
+def _completion_duration_ms(start, completion) -> float | None:
+    if start is None:
+        return None
+    duration = float(completion.timestamp) - float(start.timestamp)
+    return duration if duration >= 0.0 else None
+
+
 def _latest_pending_start(pending, key, completion_time: float, *, max_gap_ms: float):
     starts = pending.get(key) or []
     for index in range(len(starts) - 1, -1, -1):
@@ -141,7 +164,7 @@ def _completed_staff_heavies(events, *, max_pair_gap_ms: float = 5000.0):
     """Collapse raw heavy-attack rows into one observational completion per attack.
 
     Restoration/Shock use cast -> channel rows -> removedebuff in the reviewed
-    corpus.  Frost/Flame use begincast -> cast charge/release rows.  Numeric
+    corpus. Frost/Flame use begincast -> cast charge/release rows. Numeric
     aliases remain observational and are not promoted into canonical identity.
     """
 
@@ -279,6 +302,10 @@ def main() -> int:
                     (fight, completion, start, effective_track, restore, delta, name, role, label)
                 )
 
+    weapon_restore_observations = tuple(
+        row for row in observations if _is_weapon_restore_candidate(row[-1], row[4])
+    )
+
     print("=" * 112)
     print(" PHASE 13 STAFF HEAVY-ATTACK SELF-RESTORE CORPUS AUDIT")
     print("=" * 112)
@@ -291,6 +318,7 @@ def main() -> int:
     print(f"Raw staff-heavy rows:    {raw_heavy_rows}")
     print(f"Completed staff heavies: {sum(completion_counts.values())}")
     print(f"Following self restores: {len(observations)}")
+    print(f"Weapon-specific restores:{len(weapon_restore_observations):5d}")
 
     print()
     print("STAFF HEAVY LOG SHAPES")
@@ -333,6 +361,45 @@ def main() -> int:
             f"restore_name={restore_name or 'unknown'}"
         )
 
+    focused = defaultdict(list)
+    for fight, completion, start, _track, restore, delta, name, role, label in weapon_restore_observations:
+        duration = _completion_duration_ms(start, completion)
+        focused[(label, float(restore.resource_change), restore.ability_game_id)].append(
+            (duration, fight, completion, start, restore, delta, name, role)
+        )
+
+    print()
+    print("WEAPON-SPECIFIC HEAVY RESTORE EVIDENCE")
+    print("--------------------------------------")
+    if not focused:
+        print("none")
+    else:
+        for (label, amount, restore_id), rows in sorted(focused.items()):
+            durations = [row[0] for row in rows if row[0] is not None]
+            duration_text = "unknown"
+            if durations:
+                duration_text = (
+                    f"min={min(durations):g}ms median={statistics.median(durations):g}ms "
+                    f"max={max(durations):g}ms"
+                )
+            print(
+                f"{len(rows):4d} | {label:24} | restore={amount:g} | restore_id={restore_id} | "
+                f"duration[{duration_text}]"
+            )
+
+    print()
+    print("WEAPON-SPECIFIC RESTORE PROVENANCE")
+    print("----------------------------------")
+    for fight, completion, start, effective_track, restore, delta, name, role, label in weapon_restore_observations[: args.limit]:
+        duration = _completion_duration_ms(start, completion)
+        duration_text = "unknown" if duration is None else f"{duration:g}ms"
+        print(
+            f"{name} ({role}) | {label} | report={fight.report_code} fight={fight.fight_id} "
+            f"source={completion.source_id} cast_track={effective_track} duration={duration_text} "
+            f"restore={float(restore.resource_change):g} restore_id={restore.ability_game_id} "
+            f"+{delta:g}ms waste={restore.waste} max_resource={restore.max_resource_amount}"
+        )
+
     per_actor = defaultdict(list)
     for fight, completion, _start, _track, restore, delta, name, role, label in observations:
         per_actor[(fight.report_code, fight.fight_id, int(completion.source_id), name, role, label)].append(
@@ -360,11 +427,13 @@ def main() -> int:
             if start is not None
             else "start_event=none start_type=none"
         )
+        duration = _completion_duration_ms(start, completion)
+        duration_text = "unknown" if duration is None else f"{duration:g}ms"
         print(
             f"{name} ({role}) | {label} | report={fight.report_code} fight={fight.fight_id} "
             f"source={completion.source_id} {start_text} cast_track={effective_track} "
-            f"completion_event={completion.event_index} completion_type={completion.raw_event_type} "
-            f"restore_event={restore.event_index} +{delta:g}ms "
+            f"duration={duration_text} completion_event={completion.event_index} "
+            f"completion_type={completion.raw_event_type} restore_event={restore.event_index} +{delta:g}ms "
             f"restore={float(restore.resource_change):g} resource_type={restore.resource_change_type} "
             f"restore_id={restore.ability_game_id} restore_name={restore.ability_name or 'unknown'} "
             f"waste={restore.waste} max_resource={restore.max_resource_amount}"
@@ -374,6 +443,7 @@ def main() -> int:
     print("BOUNDARY")
     print("--------")
     print("- Staff-heavy numeric ids are reviewed ESO Logs aliases, not canonical BFF skill identities.")
+    print("- Weapon-specific restore ids are observational corpus aliases, not promoted mechanics constants.")
     print("- Only actors present in each fight's player_details roster are included.")
     print("- Restoration/Shock completion requires a recent paired cast then removedebuff channel end.")
     print("- Frost/Flame completion uses the release cast; begincast is charge-start provenance when present.")
