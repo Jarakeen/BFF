@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "icereach",
+  "encounter_id": "vearogh_the_shambler",
+  "encounter_name": "Vearogh the Shambler",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Vearogh combines frontal pressure with draining skeleton tethers, bouncing fire lanes, and recurring Wraith spawns."},"source_type":"guide","source_name":"Alcast Icereach Guide","source_locator":"Vearogh the Shambler","game_update":"U25","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"drain_skeletons","value":{"name":"Draining Skeleton Tethers","response":"kill_tethering_skeletons_quickly"},"source_type":"guide","source_name":"Alcast Icereach Guide","source_locator":"Vearogh > skeleton blue beam","game_update":"U25","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"wraiths","value":{"name":"Wraith Adds","response":"focus_wraiths_before_they_multiply_skeleton_pressure"},"source_type":"guide","source_name":"Alcast Icereach Guide","source_locator":"Vearogh > Wraith","game_update":"U25","confidence":"high"}
+  ]
+}
