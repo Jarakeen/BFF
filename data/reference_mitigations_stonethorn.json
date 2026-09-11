@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {"entry_name":"Death Breath — Dread Tindulra","mitigation":"Tank faces the cone away from the group; everyone else stays behind or well outside the breath lane."},
+    {"entry_name":"Death Hound Broodlings — Dread Tindulra","mitigation":"Control and separate broodlings cleanly. Do not let add movement drag the group through fire patches or the boss cone."},
+    {"entry_name":"Group Beam — Blood Twilight","mitigation":"Spread in different directions and kite personal beams away from one another until they expire, then regroup."},
+    {"entry_name":"Thrown Sickle — Vaduroth","mitigation":"Respect sickle travel paths and use the corpse-burst interaction deliberately instead of letting bodies and projectiles clutter the arena."},
+    {"entry_name":"Reanimated Adds — Vaduroth","mitigation":"Chain or stack adds where possible and burn them before add pressure overlaps the next sickle cycle."},
+    {"entry_name":"Frozen Gargoyles — Talfyg","mitigation":"Avoid waking or killing extra gargoyles when the group does not need to. Preserve the room instead of turning every statue into another enemy."},
+    {"entry_name":"Tank Pressure — Talfyg","mitigation":"Block heavy hits and keep Talfyg faced away from the group so basic tank pressure does not become raid damage."},
+    {"entry_name":"Blood Guardian — Lady Thorn","mitigation":"Control the Blood Guardian without letting it destabilize boss positioning. If pursuing Guardian Preserved, manage it rather than killing it."},
+    {"entry_name":"Bat Swarm — Lady Thorn","mitigation":"Use the Blood Scavenger synergy during the swarm transition, complete the mechanic, then regroup promptly on Lady Thorn."},
+    {"entry_name":"Blood Rage — Exarch Kraglen","mitigation":"Interrupt immediately. Missing the short interrupt window causes severe resource drain and resource reduction."},
+    {"entry_name":"Charge — Exarch Kraglen","mitigation":"Block the targeted charge instead of trying to outrun it at the last second."},
+    {"entry_name":"Essence Explosion — Stone Behemoth","mitigation":"Prepare mitigation and healing for the burst, then remove Stone Husk pressure quickly before the next elemental cycle compounds it."},
+    {"entry_name":"Player Lightning AoEs — Stone Behemoth","mitigation":"Spread so personal lightning circles do not overlap and block as the Behemoth punches the floor."},
+    {"entry_name":"Stone Husk Control — Arkasis the Mad Alchemist","mitigation":"During Werewolf Behemoth phases, use Bonecrusher to interrupt Stone Husks and use the transformation kit rather than ordinary human rotation habits."},
+    {"entry_name":"Lightning AoE — Arkasis the Mad Alchemist","mitigation":"Kite the mobile shock field, free pinned players with the synergy, and do not drag the field through teammates."}
+  ]
+}
