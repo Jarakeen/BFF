@@ -52,6 +52,27 @@
       "summary": "Healing was increased as part of the Restoration Staff healing pass; rank progression changed from added healing efficiency to reduced cost, and Minor Berserk stopped applying to pets because pets already inherit their owner's Minor Berserk.",
       "source": "ZOS PC/Mac Patch Notes v5.1.5 - Scalebreaker & Update 23",
       "source_url": "https://forums.elderscrollsonline.com/en/discussion/488626/pc-mac-patch-notes-v5-1-5-scalebreaker-update-23"
+    },
+    {
+      "entity_type": "Passive",
+      "name": "Essence Drain",
+      "context": "Restoration Staff",
+      "update": "U31",
+      "year": 2021,
+      "change_type": "buff",
+      "summary": "Major Mending duration increased to 2/4 seconds from 1.5/3; the friendly-heal search range increased to 12 meters from 6; healing increased to 25/50% of Heavy Attack damage from 15/30%; a double-critical-strike issue was also fixed.",
+      "source": "ZOS PC/Mac Patch Notes v7.1.5 - Waking Flame & Update 31",
+      "source_url": "https://forums.elderscrollsonline.com/en/discussion/584299/pc-mac-patch-notes-v7-1-5-waking-flame-update-31"
+    },
+    {
+      "entity_type": "Champion Point",
+      "name": "Fighting Finesse",
+      "update": "U34",
+      "year": 2022,
+      "change_type": "rework",
+      "summary": "Changed to 4% Critical Damage and Critical Healing per stage with two 25-point stages, replacing the previous 2% per stage with five 10-point stages.",
+      "source": "ZOS High Isle & Update 34 patch notes",
+      "source_url": "https://forums.elderscrollsonline.com/en/discussion/608715/xbox-patch-notes-v1-28-0-0-high-isle-update-34"
     }
   ]
 }
