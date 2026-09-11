@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "content_id": "city_of_ash_i",
+  "encounter_id": "infernal_guardian",
+  "encounter_name": "Infernal Guardian",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Keep Infernal Guardian controlled on the tank and block its telegraphed double slam."},"source_type":"guide","source_name":"Alcast City of Ash I Guide","source_locator":"Infernal Guardian","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"double_slam","value":{"name":"Double Slam","response":"block_the_telegraphed_physical_slam_to_reduce_the_incoming_burst"},"source_type":"guide","source_name":"Alcast City of Ash I Guide","source_locator":"Infernal Guardian","game_update":"Launch","confidence":"high"}
+  ]
+}
