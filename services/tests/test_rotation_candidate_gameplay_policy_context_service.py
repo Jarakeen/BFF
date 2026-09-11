@@ -8,6 +8,10 @@ from minmax.skill_component_classification import (
 from services.rotation_candidate_gameplay_policy_context_service import (
     RotationCandidateGameplayPolicyContextService,
 )
+from services.rotation_candidate_recommendation_evidence_service import (
+    RotationCandidatePlanEvidence,
+    RotationCandidateRecommendationEvidenceService,
+)
 from services.rotation_gameplay_policy_assessment_service import (
     RotationGameplayPolicyAssessmentService,
     RotationGameplayPolicyStatus,
@@ -45,6 +49,22 @@ class _TooltipService:
         self.components = _Components(by_rank)
 
 
+class _PlanEvidenceProvider:
+    def evaluate_plan(self, candidate):
+        return RotationCandidatePlanEvidence(
+            sustain=object(),
+            role_output_value=100_000.0,
+            assigned_support_value=0.0,
+            sustain_margin=1_000.0,
+            primary_role_displacement_seconds=0.0,
+        )
+
+
+class _ScorecardService:
+    def compare(self, **kwargs):
+        return object()
+
+
 def _component(
     rank_id: int,
     *,
@@ -80,7 +100,7 @@ def _service(
 
 
 def _candidate(candidate_id="candidate"):
-    return SimpleNamespace(candidate_id=candidate_id)
+    return SimpleNamespace(candidate_id=candidate_id, plan=SimpleNamespace())
 
 
 def test_self_heal_component_marks_exact_saved_slot_as_personal_heal() -> None:
@@ -257,3 +277,33 @@ def test_saved_slot_classification_is_cached_across_candidate_family() -> None:
 
     assert first.personal_heal_skill_slots == second.personal_heal_skill_slots
     assert calls["count"] == 1
+
+
+def test_context_service_plugs_directly_into_recommendation_evidence_provider_contract() -> None:
+    context_provider = _service(
+        front=("Personal Heal",),
+        by_name={"Personal Heal": 18},
+        by_rank={
+            18: (
+                _component(
+                    18,
+                    kind=SkillEffectKind.HEAL,
+                    scope=HealRecipientScope.SELF,
+                ),
+            )
+        },
+    )
+    candidate = _candidate("wired-dd")
+    evidence_service = RotationCandidateRecommendationEvidenceService(
+        plan_evidence_provider=_PlanEvidenceProvider(),
+        scorecard_service=_ScorecardService(),
+        gameplay_policy_context_provider=context_provider,
+    )
+
+    evidence = evidence_service.evaluate(baseline=candidate, candidate=candidate)
+
+    assert evidence.gameplay_policy_assessment is not None
+    assert evidence.gameplay_policy_assessment.status is RotationGameplayPolicyStatus.DISFAVORED
+    assert evidence.gameplay_policy_assessment.personal_heal_skill_slots == (
+        "front:Personal Heal",
+    )
