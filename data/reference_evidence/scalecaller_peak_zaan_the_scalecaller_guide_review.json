@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "scalecaller_peak",
+  "encounter_id": "zaan_the_scalecaller",
+  "encounter_name": "Zaan the Scalecaller",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Zaan Main Phase","threshold":"100% to 0%","description":"Zaan cycles fire pressure with add and poison-wave survival checks at major health intervals."},"source_type":"guide","source_name":"Alcast Scalecaller Peak Guide","source_locator":"Zaan the Scalecaller","game_update":"U17","confidence":"high"},
+    {"fact_type":"phase","fact_key":"add_cycles","value":{"order":2,"label":"Atronach Cycles","threshold":"80%, 60%, 40%, 20%","description":"Kill the large ice adds quickly, then use the resulting safe-state mechanic for the poison wave."},"source_type":"guide","source_name":"Alcast Scalecaller Peak Guide","source_locator":"Zaan the Scalecaller","game_update":"U17","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"fire_cage","value":{"name":"Fire Cage Beam","response":"rotate_players_through_beam_to_protect_caged_target_without_one_player_taking_too_many_hits"},"source_type":"guide","source_name":"Alcast Scalecaller Peak Guide","source_locator":"Zaan the Scalecaller","game_update":"U17","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"poison_wave","value":{"name":"Poison Wave","response":"use_shield_safe_area_in_normal_veteran_and_assigned_four_safe_states_in_hard_mode"},"source_type":"guide","source_name":"Alcast Scalecaller Peak Guide","source_locator":"Zaan Hard Mode","game_update":"U17","confidence":"high"}
+  ]
+}
