@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "content_id": "naj_caldeesh",
+  "encounter_id": "poxito",
+  "encounter_name": "Poxito",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main Phase","threshold":"Pull","description":"Tank controls Poxito on a saw-blade track while the group kills Bone Effigy totems immediately, stacks ordinary adds for cleave, and avoids pressure-plate traps."},"source_type":"guide","source_name":"AlcastHQ Naj-Caldeesh Dungeon Guide","source_locator":"Poxito: Core Mechanics & Flow","game_update":"U47","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"bone_armor","value":{"name":"Bone Armor","effect":"boss_invulnerable","response":"tank_positions_boss_in_moving_saw_blade_path_to_strip_armor"},"source_type":"guide","source_name":"AlcastHQ Naj-Caldeesh Dungeon Guide","source_locator":"Poxito > Bone Armor Invulnerability","game_update":"U47","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"soul_storm","value":{"name":"Soul Storm","response":"kill_bone_effigy_totems_before_roomwide_growth_reaches_arena","failure":"living_totems_turn_finished_storm_into_group_wipe"},"source_type":"guide","source_name":"AlcastHQ Naj-Caldeesh Dungeon Guide","source_locator":"Poxito > Totems and the Soul Storm Wipe Mechanic","game_update":"U47","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"bone_effigy","value":{"name":"Bone Effigy","priority":"highest","response":"focus_immediately_to_stop_specters_and_prevent_soul_storm_failure"},"source_type":"guide","source_name":"ESOAZ Naj-Caldeesh Guide","source_locator":"Poxito > Effigie d'os","game_update":"U49","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"skeletal_berserker","value":{"name":"Skeletal Berserker","priority":"high","tank_response":"taunt_quickly","group_response":"kill_or_cleave_fast","danger":"blood_frenzy_cone"},"source_type":"guide","source_name":"AlcastHQ Naj-Caldeesh Dungeon Guide","source_locator":"Poxito > Add Management","game_update":"U47","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"pressure_plate_traps","value":{"name":"Pressure Plate Traps","response":"avoid_plates_and_saw_paths_unless_intentionally_triggering_saw_for_bone_armor","hard_mode_note":"saw_blade_is_lethal"},"source_type":"guide","source_name":"AlcastHQ Naj-Caldeesh Dungeon Guide","source_locator":"Poxito > Arena Traps","game_update":"U47","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"community_tank_track_practice","value":{"name":"Saw Track Tanking","practice":"tank_holds_poxito_on_track_with_saw_travel_so_immunity_can_be_removed_reliably"},"source_type":"community_practice","source_name":"r/elderscrollsonline Naj-Caldeesh dungeon discussion","source_locator":"2026-04-11 practical strategy comment","game_update":"U49","confidence":"low"}
+  ]
+}
