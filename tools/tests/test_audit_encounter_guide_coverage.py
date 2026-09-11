@@ -91,22 +91,25 @@ def test_audit_scope_flags_are_mutually_distinct():
     assert all_args.all_content is True
 
 
-def test_checked_in_dungeon_scope_is_newest_first_through_fallen_banners():
+def test_checked_in_dungeon_scope_is_newest_first_through_scions_of_ithelia():
     data_root = Path(__file__).resolve().parents[2] / "data"
     rows = build_coverage_rows(data_root, scope="dungeon")
 
-    assert len(rows) == 12
+    assert len(rows) == 18
     assert {(row.release_year, row.release_update) for row in rows} == {
         (2025, 47),
         (2025, 45),
+        (2024, 41),
     }
     assert (rows[0].release_year, rows[0].release_update) == (2025, 47)
-    assert (rows[-1].release_year, rows[-1].release_update) == (2025, 45)
+    assert (rows[-1].release_year, rows[-1].release_update) == (2024, 41)
     assert {row.content_name for row in rows} == {
         "Black Gem Foundry",
         "Naj-Caldeesh",
         "Exiled Redoubt",
         "Lep Seclusa",
+        "Oathsworn Pit",
+        "Bedlam Veil",
     }
     assert {row.encounter_id for row in rows} == {
         "poxito",
@@ -121,4 +124,10 @@ def test_checked_in_dungeon_scope_is_newest_first_through_fallen_banners():
         "garvin_the_tracker",
         "noriwen",
         "orpheon_the_tactician",
+        "packmaster_rethelros",
+        "anthelmir_s_construct",
+        "aradros_the_awakened",
+        "shattered_champion",
+        "darkshard",
+        "the_blind",
     }
