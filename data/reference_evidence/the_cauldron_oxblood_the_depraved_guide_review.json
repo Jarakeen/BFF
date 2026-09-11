@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "the_cauldron",
+  "encounter_id": "oxblood_the_depraved",
+  "encounter_name": "Oxblood the Depraved",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main Phase / Glob Cycles","threshold":"Pull to death","description":"Oxblood repeatedly summons Gore and Bile Globs while maintaining heavy frontal pressure on the tank."},"source_type":"guide","source_name":"Xynode The Cauldron Mechanics Guide","source_locator":"Oxblood the Depraved","game_update":"U50","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"gore_and_bile_globs","value":{"name":"Gore and Bile Globs","response":"control_globs_and_prevent_bile_globs_from_reaching_oxblood","failure":"glob management can empower or complicate the fight"},"source_type":"guide","source_name":"ESO-Hub The Cauldron Achievements","source_locator":"Glob Security","game_update":"U50","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"noxious_release","value":{"name":"Noxious Release","response":"move_out_of_the_slow_gas_aoes"},"source_type":"guide","source_name":"Alcast The Cauldron Guide","source_locator":"Oxblood the Depraved","game_update":"U50","confidence":"medium"}
+  ]
+}
