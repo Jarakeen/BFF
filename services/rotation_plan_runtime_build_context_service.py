@@ -34,6 +34,14 @@ class RotationPlanRuntimeBuildContextResult:
         return self.context is not None and not self.unresolved
 
 
+class RotationRuntimeBuildContextResolver(Protocol):
+    def __call__(
+        self,
+        time_seconds: float,
+        sequence: int | None = None,
+    ) -> RotationPlanRuntimeBuildContextResult: ...
+
+
 class RotationPlanRuntimeBuildContextService:
     """Rebuild canonical active-bar calculation state at an exact runtime instant.
 
@@ -111,5 +119,6 @@ class RotationPlanRuntimeBuildContextService:
 __all__ = [
     "RotationPlanRuntimeBuildContextResult",
     "RotationPlanRuntimeBuildContextService",
+    "RotationRuntimeBuildContextResolver",
     "RotationRuntimeCombatStateResolver",
 ]
