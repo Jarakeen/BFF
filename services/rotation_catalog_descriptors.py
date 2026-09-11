@@ -254,6 +254,34 @@ ROTATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="rotation.healer.minor_lifesteal_esologs_evidence",
+        domain="rotation",
+        purpose=(
+            "Extract candidate Minor Lifesteal heal aliases, actor ownership, preceding "
+            "same-source damage, and per-actor cadence from read-only ESO Logs events."
+        ),
+        implementation_path=(
+            "services.rotation_healer_minor_lifesteal_esologs_evidence_service"
+        ),
+        inputs=(
+            "EsoLogsSqlitePath",
+            "OptionalReportFightFilter",
+            "ObservationalHealAbilityAliases",
+        ),
+        outputs=("RotationHealerMinorLifestealEsoLogsEvidenceReport",),
+        dependencies=("rotation.healer.external_conditional_healing_evidence",),
+        responsibilities=("rotation_healer_minor_lifesteal_runtime_evidence_discovery",),
+        roles=("Healer",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.OBSERVATIONAL,
+        notes=(
+            "Output remains candidate evidence. Numeric ids are observational aliases; "
+            "observed intervals and preceding damage are not promoted to cooldown or "
+            "trigger rules without explicit human review."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="rotation.healer.output_context_relevance",
         domain="rotation",
         purpose=(
