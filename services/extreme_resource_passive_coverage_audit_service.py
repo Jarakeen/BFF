@@ -18,7 +18,8 @@ Reviewed contextual resource passives are reconciled only when their exact
 ``ExtremeResourceContextualPassiveReviewService``. Reviewed shared class-, armor-,
 guild-, Alliance-, and weapon-resolver ownership is then consulted before generic
 tooltip projection so passives with already-proven non-resource effect families do
-not remain false contextual debt.
+not remain false contextual debt. Canonical weapon-passive classification and
+reviewed Deadly Bash evidence are reconciled separately for the same reason.
 
 A complete inventory denominator is not the same as complete mechanic coverage.
 The audit never assigns zero value to contextual or unresolved passives.
@@ -49,6 +50,10 @@ from services.extreme_resource_contextual_passive_review_service import (
 from services.extreme_resource_shared_passive_ownership_service import (
     ExtremeResourceSharedPassiveOwnershipService,
     ExtremeResourceSharedPassiveOwnershipStatus,
+)
+from services.extreme_resource_weapon_passive_ownership_service import (
+    ExtremeResourceWeaponPassiveOwnershipService,
+    ExtremeResourceWeaponPassiveOwnershipStatus,
 )
 from services.extreme_skill_universe_service import (
     ExtremePlayerSkillRecord,
@@ -289,6 +294,19 @@ class ExtremeResourcePassiveCoverageAuditService:
                 else:
                     raise AssertionError(
                         f"Unhandled Extreme resource shared-passive ownership status: {shared_ownership.status!r}"
+                    )
+                continue
+
+            weapon_ownership = ExtremeResourceWeaponPassiveOwnershipService.resolve(passive, key)
+            if weapon_ownership is not None:
+                if (
+                    weapon_ownership.status
+                    is ExtremeResourceWeaponPassiveOwnershipStatus.PROVEN_IRRELEVANT
+                ):
+                    static_irrelevant.append(identity)
+                else:
+                    raise AssertionError(
+                        f"Unhandled Extreme resource weapon-passive ownership status: {weapon_ownership.status!r}"
                     )
                 continue
 
