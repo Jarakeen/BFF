@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "content_id": "blessed_crucible",
+  "encounter_id": "the_beast_master",
+  "encounter_name": "The Beast Master",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"beetles","value":{"order":1,"label":"Incineration Beetles","threshold":"first beast wave","description":"Clear the Incineration Beetles while avoiding their pulsing fire and ground damage."},"source_type":"guide","source_name":"Xynode Blessed Crucible Guide","source_locator":"The Beast Master","game_update":"Launch","confidence":"high"},
+    {"fact_type":"phase","fact_key":"stinger","value":{"order":2,"label":"The Stinger","threshold":"after beetles","description":"Control the Stinger, block its heavy attacks, and move away from poison placed beneath players."},"source_type":"guide","source_name":"Xynode Blessed Crucible Guide","source_locator":"The Beast Master","game_update":"Launch","confidence":"high"},
+    {"fact_type":"phase","fact_key":"troll_king","value":{"order":3,"label":"The Troll King","threshold":"after Stinger","description":"Stay close enough to prevent repeated long jumps and block or step out of the Troll King's slam."},"source_type":"guide","source_name":"Xynode Blessed Crucible Guide","source_locator":"The Beast Master","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"beetle_fire","value":{"name":"Beetle Fire","response":"move_out_of_the_beetles_pulsing_fire_and_ground_aoes_while_clearing_the_wave"},"source_type":"guide","source_name":"Xynode Blessed Crucible Guide","source_locator":"The Beast Master","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"troll_king_slam","value":{"name":"Troll King Slam","response":"stay_close_then_block_or_step_out_of_the_troll_king_slam"},"source_type":"guide","source_name":"Xynode Blessed Crucible Guide","source_locator":"The Beast Master","game_update":"Launch","confidence":"high"}
+  ]
+}
