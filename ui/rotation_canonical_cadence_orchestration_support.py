@@ -20,6 +20,7 @@ from ui.rotation_canonical_candidate_render_support import (
     RotationCanonicalCandidateRenderEvidence,
     RotationCanonicalCandidateRenderSupport,
 )
+from ui.rotation_canonical_candidate_support import RotationCanonicalRoleEvidence
 from ui.rotation_canonical_evidence_bundle_support import RotationCanonicalEvidenceBundle
 from ui.rotation_dashboard_canonical_candidate_support import (
     RotationDashboardCanonicalCandidateResult,
@@ -73,10 +74,12 @@ class RotationCanonicalCadenceOrchestrationSupport:
     """Compose canonical generation with optional support-cadence progression.
 
     The caller must supply a ready canonical evidence bundle. This service never
-    invents encounter demands, uptime requirements, restoration evidence, or cadence
-    obligations. Canonical evaluation always runs first. Cadence progression begins
-    only from the selected final stabilized canonical plan and sustain projection,
-    and only when explicit cadence obligations are supplied.
+    invents encounter demands, uptime requirements, restoration evidence, role facts,
+    or cadence obligations. Canonical evaluation always runs first. Optional
+    ``role_evidence`` is forwarded unchanged to the dashboard candidate bridge so the
+    lower canonical layer remains the sole owner of role/gameplay-policy composition.
+    Cadence progression begins only from the selected final stabilized canonical plan
+    and sustain projection, and only when explicit cadence obligations are supplied.
     """
 
     def __init__(
@@ -98,6 +101,7 @@ class RotationCanonicalCadenceOrchestrationSupport:
         player_build: PlayerBuild,
         generation_request: RotationGenerationRequest,
         evidence_bundle: RotationCanonicalEvidenceBundle,
+        role_evidence: RotationCanonicalRoleEvidence | None = None,
         cadence_obligations: tuple[RotationSupportCadenceNeighborhoodObligation, ...] = (),
         cadence_priorities: AbilityPriorityList | None = None,
         cadence_evaluation_context: RotationSupportCadenceEvaluationContext | None = None,
@@ -115,6 +119,7 @@ class RotationCanonicalCadenceOrchestrationSupport:
             maximum_amount=evidence_bundle.maximum_amount,
             trigger_fraction=evidence_bundle.trigger_fraction,
             restoration_resolver=evidence_bundle.restoration_resolver,
+            role_evidence=role_evidence,
             demands=evidence_bundle.demands,
             options=evidence_bundle.options,
             wait_decision_factory=evidence_bundle.wait_decision_factory,
