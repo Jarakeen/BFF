@@ -41,8 +41,10 @@ _EXPECTED_IDENTITIES = {
     ("Ardent Flame", "Traumatic Burns"),
     ("Assassination", "Master Assassin"),
     ("Bone Tyrant", "Health Avarice"),
+    ("Bone Tyrant", "Last Gasp"),
     ("Curative Runeforms", "Erudition"),
     ("Curative Runeforms", "Intricate Runeforms"),
+    ("Daedric Summoning", "Power Stone"),
     ("Daedric Summoning", "Rebate"),
     ("Dark Magic", "Unholy Knowledge"),
     ("Dawn's Wrath", "Enduring Rays"),
@@ -52,14 +54,24 @@ _EXPECTED_IDENTITIES = {
     ("Draconic Power", "Burnished Scales"),
     ("Draconic Power", "Elder Dragon"),
     ("Draconic Power", "World in Ruin"),
+    ("Earthen Heart", "Heart of Stone"),
+    ("Earthen Heart", "Mountain Giant"),
     ("Grave Lord", "Death Knell"),
     ("Grave Lord", "Rapid Rot"),
     ("Herald of the Tome", "Psychic Lesion"),
+    ("Restoring Light", "Master Ritualist"),
+    ("Restoring Light", "Mending"),
     ("Shadow", "Dark Veil"),
     ("Shadow", "Refreshing Shadows"),
+    ("Siphoning", "Magicka Flood"),
+    ("Siphoning", "Transfer"),
     ("Soldier of Apocrypha", "Circumvented Fate"),
+    ("Storm Calling", "Capacitor"),
+    ("Storm Calling", "Energized"),
     ("Storm Calling", "Expert Mage"),
     ("Winter's Embrace", "Frozen Armor"),
+    ("Winter's Embrace", "Glacial Presence"),
+    ("Winter's Embrace", "Piercing Cold"),
 }
 
 
@@ -84,23 +96,32 @@ class _RaceRepository:
         return {}
 
 
-def test_reviewed_class_rows_are_proven_irrelevant_to_all_max_resources():
+def test_reviewed_class_rows_have_objective_specific_resource_status():
     rows = ExtremeResourceClassPassiveOwnershipService.reviewed()
     identities = {(row.skill_line, row.passive_name) for row in rows}
     assert identities == _EXPECTED_IDENTITIES
-    assert all(
-        row.status is ExtremeResourceClassPassiveOwnershipStatus.PROVEN_IRRELEVANT
-        for row in rows
-    )
+
+    expected_accounted = {
+        "max_health": {("Bone Tyrant", "Last Gasp")},
+        "max_magicka": {("Siphoning", "Magicka Flood")},
+        "max_stamina": {("Siphoning", "Magicka Flood")},
+    }
 
     for objective in ("max_health", "max_magicka", "max_stamina"):
         for line, name in _EXPECTED_IDENTITIES:
-            row = ExtremeResourceClassPassiveOwnershipService.resolve(
+            resolution = ExtremeResourceClassPassiveOwnershipService.resolve(
                 _passive(name, line),
                 objective,
             )
-            assert row is not None
-            assert row.status is ExtremeResourceClassPassiveOwnershipStatus.PROVEN_IRRELEVANT
+            assert resolution is not None
+            row, status = resolution
+            assert row.identity == (line, name)
+            expected_status = (
+                ExtremeResourceClassPassiveOwnershipStatus.CANONICALLY_ACCOUNTED
+                if (line, name) in expected_accounted[objective]
+                else ExtremeResourceClassPassiveOwnershipStatus.PROVEN_IRRELEVANT
+            )
+            assert status is expected_status
 
 
 def test_class_passive_ownership_requires_exact_skill_line_and_class_domain():
@@ -128,11 +149,8 @@ def test_class_passive_ownership_requires_exact_skill_line_and_class_domain():
     assert ExtremeResourceClassPassiveOwnershipService.resolve(guild_copy, "max_health") is None
 
 
-def test_passive_denominator_moves_reviewed_class_rows_to_static_irrelevant():
-    expected_identities = tuple(
-        f"[class] {line} :: {name}"
-        for line, name in _EXPECTED_IDENTITIES
-    )
+def test_passive_denominator_routes_reviewed_class_rows_by_objective():
+    rows = ExtremeResourceClassPassiveOwnershipService.reviewed()
     for objective in ("max_health", "max_magicka", "max_stamina"):
         audit = ExtremeResourcePassiveCoverageAuditService(
             universe_service=_Universe(),
@@ -140,8 +158,15 @@ def test_passive_denominator_moves_reviewed_class_rows_to_static_irrelevant():
         ).build(objective)
 
         assert audit.denominator_proven is True
-        for identity in expected_identities:
-            assert identity in audit.static_irrelevant
+        for row in rows:
+            identity = f"[class] {row.skill_line} :: {row.passive_name}"
+            status = row.status_for(objective)
+            if status is ExtremeResourceClassPassiveOwnershipStatus.CANONICALLY_ACCOUNTED:
+                assert identity in audit.accounted_elsewhere
+                assert identity not in audit.static_irrelevant
+            else:
+                assert identity in audit.static_irrelevant
+                assert identity not in audit.accounted_elsewhere
             assert identity not in audit.context_required
             assert identity not in audit.unresolved
 
