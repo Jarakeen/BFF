@@ -8,6 +8,9 @@ from services.extreme_runtime_snapshot import ExtremeRuntimeSnapshot
 from services.extreme_runtime_snapshot_combat_state_service import (
     ExtremeRuntimeSnapshotCombatStateService,
 )
+from services.rotation_plan_runtime_combat_state_service import (
+    RotationPlanRuntimeCombatStateService,
+)
 from ui.rotation_canonical_candidate_support import (
     RotationCanonicalCandidateApplicationResult,
     RotationCanonicalCandidateSupport,
@@ -33,10 +36,12 @@ class RotationRuntimeSnapshotCandidateSupport:
     static progression evidence. Keeping those references explicit avoids making a
     decorator pretend it owns canonical build identity.
 
-    ``runtime_snapshot_active_bar`` is deliberately explicit. A snapshot may occur
-    after any number of bar swaps, and candidate generation can later move actions,
-    so this layer does not guess front/back state from role, skill identity, or the
-    seed plan. Missing bar evidence blocks runtime projection.
+    ``runtime_snapshot_active_bar`` remains deliberately explicit for the supplied
+    one-instant snapshot. A snapshot may occur after any number of bar swaps, and the
+    seed schedule is not authoritative for a later stabilized candidate. When the
+    snapshot also carries unified ``runtime_history``, this adapter separately binds
+    a final-plan resolver that derives active bar from each stabilized plan at the
+    exact queried time/sequence.
 
     Explicit ``combat_state`` remains useful as base snapshot context for facts not
     owned by runtime history, including game-update and Emperor state. Runtime-proven
@@ -50,6 +55,7 @@ class RotationRuntimeSnapshotCandidateSupport:
         base_canonical: RotationCanonicalCandidateSupport | None = None,
         database_path: str | Path | None = None,
         runtime_snapshot_state: ExtremeRuntimeSnapshotCombatStateService | None = None,
+        plan_runtime_state: RotationPlanRuntimeCombatStateService | None = None,
     ) -> None:
         database = Path(database_path) if database_path is not None else get_data_dir() / "eso.db"
         self.canonical_candidates = canonical_candidates
@@ -62,6 +68,9 @@ class RotationRuntimeSnapshotCandidateSupport:
         self.runtime_snapshot_state = (
             runtime_snapshot_state
             or ExtremeRuntimeSnapshotCombatStateService(database)
+        )
+        self.plan_runtime_state = plan_runtime_state or RotationPlanRuntimeCombatStateService(
+            runtime_snapshot_state=self.runtime_snapshot_state,
         )
 
     @property
@@ -135,6 +144,27 @@ class RotationRuntimeSnapshotCandidateSupport:
 
         forwarded = dict(kwargs)
         forwarded["combat_state"] = runtime_state.combat_state
+        if runtime_snapshot.runtime_history:
+            initial_bar = str(kwargs.get("initial_bar", "front") or "front")
+
+            def runtime_combat_state_resolver_factory(plan):
+                def resolve(time_seconds: float, sequence: int | None = None):
+                    return self.plan_runtime_state.resolve(
+                        player_build,
+                        progression=progression.progression,
+                        plan=plan,
+                        runtime_snapshot_source=runtime_snapshot,
+                        time_seconds=time_seconds,
+                        sequence=sequence,
+                        initial_bar=initial_bar,
+                        base_combat_state=base_state,
+                    )
+
+                return resolve
+
+            forwarded["runtime_combat_state_resolver_factory"] = (
+                runtime_combat_state_resolver_factory
+            )
         return self.canonical_candidates.run_effects(**forwarded)
 
     def _blocked_result(
