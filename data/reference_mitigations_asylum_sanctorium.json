@@ -1,0 +1,9 @@
+{
+  "entries": [
+    {"entry_name":"Steam Breath — Saint Olms the Just","mitigation":"Main tank sidesteps the steam cone instead of eating it, then immediately restores Olms' facing away from the raid."},
+    {"entry_name":"Lightning Circle — Saint Olms the Just","mitigation":"Keep designated front/back kiters as the farthest targets; move promptly out of each circle and preserve space for the next one."},
+    {"entry_name":"Protectors — Saint Olms the Just","mitigation":"Protectors are first priority. Kill them immediately before they stack immunity onto Olms or the active side Saints."},
+    {"entry_name":"Side Saint Enrage — Saint Olms the Just","mitigation":"Burn active side Saints before their 3-minute enrage. When defeated they stay dormant for about 45 seconds, so coordinate kills to create a shared breathing window."},
+    {"entry_name":"Llothis Interrupt — Saint Olms the Just","mitigation":"Interrupt Llothis' dangerous channels immediately and keep his poison cone isolated from the group."}
+  ]
+}
