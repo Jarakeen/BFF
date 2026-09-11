@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "city_of_ash_ii",
+  "encounter_id": "ash_titan_city_of_ash_ii",
+  "encounter_name": "Ash Titan",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Ash Titan Main Phase","threshold":"100% to 0%","description":"Manage heavy cleaves, meteors, flame walls, and burning atronach pressure while keeping the Titan controlled."},"source_type":"guide","source_name":"Xynode City of Ash II Guide","source_locator":"Ash Titan","game_update":"U5","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"cleave","value":{"name":"Heavy Cleave","response":"tank_blocks_and_faces_titan_away_from_group"},"source_type":"guide","source_name":"Xynode City of Ash II Guide","source_locator":"Ash Titan","game_update":"U5","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"meteors","value":{"name":"Meteor Strikes","response":"dodge_or_step_out_of_meteor_impacts_and_keep_spread"},"source_type":"guide","source_name":"Xynode City of Ash II Guide","source_locator":"Ash Titan","game_update":"U5","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"burning_atronachs","value":{"name":"Burning Atronachs","response":"control_and_kill_atronachs_before_flame_pressure_overlaps"},"source_type":"guide","source_name":"Xynode City of Ash II Guide","source_locator":"Ash Titan","game_update":"U5","confidence":"high"}
+  ]
+}
