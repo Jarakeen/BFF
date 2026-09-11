@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "ruins_of_mazzatun",
+  "encounter_id": "mighty_chudan",
+  "encounter_name": "The Mighty Chudan",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Charge-Control Phase","threshold":"100% to 0%","description":"Block Chudan's spit, control adds, and deliberately aim his charge through the shielded target."},"source_type":"guide","source_name":"Kattatonia Ruins of Mazzatun Boss Mechanics","source_locator":"The Mighty Chudan","game_update":"U11","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"mighty_charge","value":{"name":"Mighty Charge","response":"targeted_player_lines_up_chudan_with_the_electricity_dome_and_lets_the_charge_break_it"},"source_type":"guide","source_name":"Kattatonia Ruins of Mazzatun Boss Mechanics","source_locator":"The Mighty Chudan","game_update":"U11","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"spit","value":{"name":"Spit","response":"block_the_projectile_and_do_not_leave_the_charge_alignment_to_avoid_it"},"source_type":"guide","source_name":"Kattatonia Ruins of Mazzatun Boss Mechanics","source_locator":"The Mighty Chudan","game_update":"U11","confidence":"high"}
+  ]
+}
