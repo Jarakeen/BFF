@@ -50,6 +50,7 @@ def test_generic_pipeline_bridges_generation_into_recovery_workflow() -> None:
     calculation_context = object()
     maximum_event_resolver = object()
     displayed_recovery_factory = object()
+    runtime_state_factory = object()
     demands = (item for item in ("demand-a", "demand-b"))
     options = (item for item in ("option-a", "option-b"))
 
@@ -72,6 +73,7 @@ def test_generic_pipeline_bridges_generation_into_recovery_workflow() -> None:
         calculation_context=calculation_context,
         maximum_event_resolver=maximum_event_resolver,
         displayed_recovery_resolver_factory=displayed_recovery_factory,
+        runtime_combat_state_resolver_factory=runtime_state_factory,
     )
 
     assert result == "generic-result"
@@ -100,6 +102,7 @@ def test_generic_pipeline_bridges_generation_into_recovery_workflow() -> None:
             "calculation_context": calculation_context,
             "maximum_event_resolver": maximum_event_resolver,
             "displayed_recovery_resolver_factory": displayed_recovery_factory,
+            "runtime_combat_state_resolver_factory": runtime_state_factory,
         }
     ]
 
@@ -122,6 +125,7 @@ def test_effect_pipeline_preserves_build_boundary_and_materializes_effect_eviden
     calculation_context = object()
     maximum_event_resolver = object()
     displayed_recovery_factory = object()
+    runtime_state_factory = object()
     requirements = (item for item in ("major-brittle", "minor-vulnerability"))
     passives = (item for item in ("class-passive", "armor-passive"))
 
@@ -143,6 +147,7 @@ def test_effect_pipeline_preserves_build_boundary_and_materializes_effect_eviden
         calculation_context=calculation_context,
         maximum_event_resolver=maximum_event_resolver,
         displayed_recovery_resolver_factory=displayed_recovery_factory,
+        runtime_combat_state_resolver_factory=runtime_state_factory,
     )
 
     assert result == "effect-result"
@@ -165,6 +170,7 @@ def test_effect_pipeline_preserves_build_boundary_and_materializes_effect_eviden
             "calculation_context": calculation_context,
             "maximum_event_resolver": maximum_event_resolver,
             "displayed_recovery_resolver_factory": displayed_recovery_factory,
+            "runtime_combat_state_resolver_factory": runtime_state_factory,
         }
     ]
     assert workflow.effect_calls[0]["player_build"] is player_build
