@@ -98,6 +98,22 @@ class WeaponEnchantmentParser:
         effects = []
 
         # --------------------------------------------------
+        # Decrease Health scaling statement.
+        #
+        # This statement contains no numeric range. It is metadata for the
+        # following Oblivion-damage line and must not itself become a damage
+        # event merely because it contains the words "Oblivion Damage".
+        # --------------------------------------------------
+
+        oblivion_scaling_marker = bool(
+            re.search(
+                r"Oblivion Damage based on a portion of the enemy's Max Health",
+                line,
+                re.IGNORECASE,
+            )
+        )
+
+        # --------------------------------------------------
         # Damage + restoration effects
         # --------------------------------------------------
 
@@ -112,22 +128,23 @@ class WeaponEnchantmentParser:
             ("Oblivion Damage", "oblivion"),
         ]
 
-        for phrase, damage_type in damage_patterns:
+        if not oblivion_scaling_marker:
+            for phrase, damage_type in damage_patterns:
 
-            if re.search(
-                phrase,
-                line,
-                re.IGNORECASE,
-            ):
-                effects.append(
-                    cls._effect(
-                        "damage",
-                        line,
-                        damage_type=damage_type,
+                if re.search(
+                    phrase,
+                    line,
+                    re.IGNORECASE,
+                ):
+                    effects.append(
+                        cls._effect(
+                            "damage",
+                            line,
+                            damage_type=damage_type,
+                        )
                     )
-                )
 
-                break
+                    break
 
         # --------------------------------------------------
         # Restoration can occur on the SAME line as damage.
@@ -298,18 +315,7 @@ class WeaponEnchantmentParser:
                 )
             )
 
-        # --------------------------------------------------
-        # Decrease Health scaling statement.
-        #
-        # This statement contains no numeric range. It is
-        # metadata for the following Oblivion damage line.
-        # --------------------------------------------------
-
-        if re.search(
-            r"Oblivion Damage based on a portion of the enemy's Max Health",
-            line,
-            re.IGNORECASE,
-        ):
+        if oblivion_scaling_marker:
             effects.append(
                 {
                     "effect_type": "scaling_marker",
@@ -445,15 +451,13 @@ class WeaponEnchantmentParser:
                     ),
                     "enchant_description": description,
                     "glyph_min_level": record.get(
-                        "glyphMinLevel",
-                        ""
+                        "glyphMinLevel", ""
                     ),
                     "craft_skill_rank": (
                         int(record["craftSkillRank"])
                         if str(
                             record.get(
-                                "craftSkillRank",
-                                ""
+                                "craftSkillRank", ""
                             )
                         ).isdigit()
                         else None
@@ -462,8 +466,7 @@ class WeaponEnchantmentParser:
                         int(record["defaultEnchantId"])
                         if str(
                             record.get(
-                                "defaultEnchantId",
-                                ""
+                                "defaultEnchantId", ""
                             )
                         ).isdigit()
                         else None
@@ -472,8 +475,7 @@ class WeaponEnchantmentParser:
                         int(record["craftType"])
                         if str(
                             record.get(
-                                "craftType",
-                                ""
+                                "craftType", ""
                             )
                         ).isdigit()
                         else None
