@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "content_id": "the_dread_cellar",
+  "encounter_id": "scorion_broodlord",
+  "encounter_name": "Scorion Broodlord",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"add_stone_cycle","value":{"order":1,"label":"Add / Agonymium Cycle","threshold":"Pull to death","description":"The Broodlord repeatedly spawns adds while Agonymium Stones must be burned before the boss can consume them and heal; Hard Mode increases add frequency and pressure."},"source_type":"guide","source_name":"ESO-Hub Dread Cellar Dungeon Guide","source_locator":"Scorion Broodlord","game_update":"U31","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"agonymium_stone","value":{"name":"Agonymium Stone","response":"burn_stones_quickly_and_stack_adds_near_them_for_cleave","failure":"boss_consumes_stones_and_heals"},"source_type":"guide","source_name":"ESO-Hub Dread Cellar Dungeon Guide","source_locator":"Scorion Broodlord > Agonymium Stone","game_update":"U31","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"excruciating_expectoration","value":{"name":"Excruciating Expectoration","response":"heal_through_unavoidable_dot_and_plan_healer_attention"},"source_type":"guide","source_name":"ESO-Hub Dread Cellar Dungeon Guide","source_locator":"Scorion Broodlord > Excruciating Expectoration","game_update":"U31","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"turmoil","value":{"name":"Turmoil","response":"tank_faces_cone_away_and_blocks"},"source_type":"guide","source_name":"ESO-Hub Dread Cellar Dungeon Guide","source_locator":"Scorion Broodlord > Turmoil","game_update":"U31","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"pull_explode","value":{"name":"Pull & Explode","response":"keep_tank_in_working_range_and_roll_out_after_pull"},"source_type":"guide","source_name":"ESO-Hub Dread Cellar Dungeon Guide","source_locator":"Scorion Broodlord > Pull & Explode","game_update":"U31","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"hardmode_add_priority","value":{"name":"Hard Mode Add Priority","response":"interrupt_xivilai_shockslayers_and_control_bone_atronach_pressure_while_cleaving_stones"},"source_type":"guide","source_name":"ESO-Hub Dread Cellar Dungeon Guide","source_locator":"Scorion Broodlord > Hardmode Mechanics","game_update":"U31","confidence":"high"}
+  ]
+}
