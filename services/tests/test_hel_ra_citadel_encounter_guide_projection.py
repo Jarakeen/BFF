@@ -26,7 +26,7 @@ def test_ra_kotu_projection_has_main_phase_and_tank_tornado_handling():
     assert "Tornadoes" in strategy
     assert "tornado" in strategy["Tornadoes"].mitigation.casefold()
     assert "Heavy Cleave" in strategy
-    assert "faced away" in strategy["Heavy Cleave"].mitigation
+    assert "away from the raid" in strategy["Heavy Cleave"].mitigation.casefold()
 
 
 def test_yokeda_split_projection_has_four_copy_interrupt_and_welwa_control():
