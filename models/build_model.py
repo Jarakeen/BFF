@@ -159,6 +159,10 @@ class PlayerBuild:
     Role: str = ""
     Alliance: str = ""
     Mundus: str = ""
+    # Normally empty. Twice-Born Star can make a second distinct Mundus boon
+    # legal; canonical static evaluation verifies the equipped-set requirement
+    # before applying this field.
+    SecondMundus: str = ""
     Vampire: bool = False
     Werewolf: bool = False
     AttributeHealth: int = 0
@@ -213,6 +217,10 @@ class PlayerBuild:
             errors.append("Attribute points cannot be negative.")
         if self.attribute_points_total > MAX_ATTRIBUTE_POINTS:
             errors.append(f"Attribute points cannot exceed {MAX_ATTRIBUTE_POINTS}.")
+        first_mundus = str(self.Mundus or "").strip().casefold()
+        second_mundus = str(self.SecondMundus or "").strip().casefold()
+        if second_mundus and second_mundus == first_mundus:
+            errors.append("Primary and secondary Mundus boons must be distinct.")
         return errors
 
     def to_dict(self) -> dict:
@@ -222,6 +230,7 @@ class PlayerBuild:
             "Name": self.Name, "Gamertag": self.Gamertag, "BuildName": self.BuildName,
             "ImagePath": self.ImagePath, "Race": self.Race, "EsoClass": self.EsoClass,
             "Role": self.Role, "Alliance": self.Alliance, "Mundus": self.Mundus,
+            "SecondMundus": self.SecondMundus,
             "Vampire": self.Vampire, "Werewolf": self.Werewolf,
             "AttributeHealth": self.AttributeHealth, "AttributeMagicka": self.AttributeMagicka,
             "AttributeStamina": self.AttributeStamina,
@@ -262,6 +271,7 @@ class PlayerBuild:
             Race=str(data.get("Race", "") or ""), EsoClass=str(data.get("EsoClass", "") or ""),
             Role=str(data.get("Role", "") or ""), Alliance=str(data.get("Alliance", "") or ""),
             Mundus=str(data.get("Mundus", "") or ""),
+            SecondMundus=str(data.get("SecondMundus", "") or ""),
             Vampire=bool(data.get("Vampire", False)), Werewolf=bool(data.get("Werewolf", False)),
             AttributeHealth=_int_value(data.get("AttributeHealth", 0)),
             AttributeMagicka=_int_value(data.get("AttributeMagicka", 0)),
