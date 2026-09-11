@@ -5,7 +5,8 @@ from types import SimpleNamespace
 from minmax.character_build.saved_build_adapter import SavedBuildAdaptation
 from minmax.character_progression import CharacterProgression
 from minmax.combat_state import CombatState
-from services.extreme_runtime_snapshot import ExtremeRuntimeSnapshot
+from minmax.rotation_plan import RotationPlan
+from services.extreme_runtime_snapshot import ExtremeRuntimePotionUse, ExtremeRuntimeSnapshot
 from services.minmax_character_progression_adapter import SavedBuildProgressionResolution
 from ui.rotation_canonical_candidate_support import RotationCanonicalCandidateSupport
 from ui.rotation_recovery_validation_support import RotationRecoveryValidationScope
@@ -70,7 +71,17 @@ class _RuntimeStateService:
         )
 
 
-def _support(*, runtime_state=None):
+class _PlanRuntimeStateService:
+    def __init__(self) -> None:
+        self.calls = []
+        self.result = object()
+
+    def resolve(self, build, **kwargs):
+        self.calls.append((build, kwargs))
+        return self.result
+
+
+def _support(*, runtime_state=None, plan_runtime_state=None):
     build_adapter = _BuildAdapter()
     progression_adapter = _ProgressionAdapter()
     canonical = RotationCanonicalCandidateSupport(
@@ -79,16 +90,25 @@ def _support(*, runtime_state=None):
     )
     execution = _ExecutionChain()
     runtime = runtime_state or _RuntimeStateService()
+    plan_runtime = plan_runtime_state or _PlanRuntimeStateService()
     support = RotationRuntimeSnapshotCandidateSupport(
         canonical_candidates=execution,
         base_canonical=canonical,
         runtime_snapshot_state=runtime,
+        plan_runtime_state=plan_runtime,
     )
-    return support, execution, runtime, build_adapter, progression_adapter
+    return (
+        support,
+        execution,
+        runtime,
+        plan_runtime,
+        build_adapter,
+        progression_adapter,
+    )
 
 
 def test_without_runtime_snapshot_delegates_without_projection() -> None:
-    support, execution, runtime, _, progression = _support()
+    support, execution, runtime, plan_runtime, _, progression = _support()
     build = object()
 
     result = support.run_effects(player_build=build, marker="plain")
@@ -96,11 +116,12 @@ def test_without_runtime_snapshot_delegates_without_projection() -> None:
     assert result is execution.result
     assert execution.calls == [{"player_build": build, "marker": "plain"}]
     assert runtime.calls == []
+    assert plan_runtime.calls == []
     assert progression.calls == []
 
 
 def test_runtime_snapshot_requires_explicit_active_bar() -> None:
-    support, execution, runtime, _, _ = _support()
+    support, execution, runtime, plan_runtime, _, _ = _support()
     build = object()
 
     result = support.run_effects(
@@ -110,6 +131,7 @@ def test_runtime_snapshot_requires_explicit_active_bar() -> None:
 
     assert execution.calls == []
     assert runtime.calls == []
+    assert plan_runtime.calls == []
     assert result.pipeline_result is None
     assert result.validation.scope is RotationRecoveryValidationScope.NOT_EVALUATED
     assert result.validation.selectable is None
@@ -126,7 +148,9 @@ def test_runtime_snapshot_projects_shared_combat_state_into_execution_chain() ->
         emperor_home_keeps=3,
     )
     runtime_state = _RuntimeStateService(combat_state=projected_state)
-    support, execution, runtime, _, progression = _support(runtime_state=runtime_state)
+    support, execution, runtime, plan_runtime, _, progression = _support(
+        runtime_state=runtime_state
+    )
     build = object()
     base_state = CombatState(game_update="U51", is_emperor=True, in_home_campaign=True)
     snapshot = ExtremeRuntimeSnapshot(snapshot_time_seconds=12.0)
@@ -152,13 +176,59 @@ def test_runtime_snapshot_projects_shared_combat_state_into_execution_chain() ->
     assert execution.calls[0]["marker"] == "projected"
     assert "runtime_snapshot" not in execution.calls[0]
     assert "runtime_snapshot_active_bar" not in execution.calls[0]
+    assert "runtime_combat_state_resolver_factory" not in execution.calls[0]
+    assert plan_runtime.calls == []
+
+
+def test_unified_runtime_history_binds_final_plan_state_resolver() -> None:
+    plan_runtime = _PlanRuntimeStateService()
+    support, execution, _, _, _, progression = _support(
+        plan_runtime_state=plan_runtime
+    )
+    build = object()
+    base_state = CombatState(game_update="U51", is_emperor=True)
+    snapshot = ExtremeRuntimeSnapshot(
+        runtime_history=(ExtremeRuntimePotionUse(time_seconds=3.0, sequence=1),),
+        snapshot_time_seconds=8.0,
+    )
+
+    result = support.run_effects(
+        player_build=build,
+        combat_state=base_state,
+        runtime_snapshot=snapshot,
+        runtime_snapshot_active_bar="front",
+        initial_bar="BACK",
+    )
+
+    assert result is execution.result
+    factory = execution.calls[0]["runtime_combat_state_resolver_factory"]
+    plan = RotationPlan(
+        character_name="Magrat",
+        build_name="DF Healer",
+        duration_seconds=30.0,
+        actions=(),
+    )
+    resolver = factory(plan)
+    resolved = resolver(12.0, 4)
+
+    assert resolved is plan_runtime.result
+    assert len(plan_runtime.calls) == 1
+    projected_build, call = plan_runtime.calls[0]
+    assert projected_build is build
+    assert call["progression"] is progression.resolution.progression
+    assert call["plan"] is plan
+    assert call["runtime_snapshot_source"] is snapshot
+    assert call["time_seconds"] == 12.0
+    assert call["sequence"] == 4
+    assert call["initial_bar"] == "BACK"
+    assert call["base_combat_state"] is base_state
 
 
 def test_unresolved_runtime_projection_blocks_candidate_execution() -> None:
     runtime_state = _RuntimeStateService(
         unresolved=("gear proc target applicability unresolved",),
     )
-    support, execution, runtime, _, _ = _support(runtime_state=runtime_state)
+    support, execution, runtime, plan_runtime, _, _ = _support(runtime_state=runtime_state)
 
     result = support.run_effects(
         player_build=object(),
@@ -168,6 +238,7 @@ def test_unresolved_runtime_projection_blocks_candidate_execution() -> None:
 
     assert len(runtime.calls) == 1
     assert execution.calls == []
+    assert plan_runtime.calls == []
     assert result.pipeline_result is None
     assert result.validation.scope is RotationRecoveryValidationScope.NOT_EVALUATED
     assert result.validation.selectable is None
