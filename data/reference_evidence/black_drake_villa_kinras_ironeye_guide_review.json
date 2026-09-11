@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "black_drake_villa",
+  "encounter_id": "kinras_ironeye",
+  "encounter_name": "Kinras Ironeye",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main Phase","threshold":"Pull to death","description":"Kinras alternates melee and ranged pressure while Blazing Salamanders enter the arena."},"source_type":"guide","source_name":"Xynode Black Drake Villa Mechanics Guide","source_locator":"Kinras Ironeye","game_update":"U50","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"blazing_salamanders","value":{"name":"Blazing Salamanders","response":"focus_salamanders_before_they_empower_kinras","failure":"Fiery Favor can strengthen the boss"},"source_type":"guide","source_name":"ESO-Hub Black Drake Villa Achievements","source_locator":"Amphibians Arrested","game_update":"U50","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"volcanic_smash","value":{"name":"Volcanic Smash","response":"tank_blocks_and_controls_the_volcano_in_hard_mode","hard_mode":"creates extra tank pressure"},"source_type":"guide","source_name":"Alcast Black Drake Villa Guide","source_locator":"Kinras Ironeye > Hardmode","game_update":"U50","confidence":"medium"}
+  ]
+}
