@@ -162,6 +162,9 @@ def test_checked_in_registry_keeps_reviewed_progression_counts_and_chronology():
         "darkshade_caverns_ii": 3,
         "elden_hollow_ii": 3,
         "wayrest_sewers_ii": 3,
+        "fungal_grotto_i": 2,
+        "spindleclutch_i": 2,
+        "the_banished_cells_i": 2,
     }
     assert {key: len(value) for key, value in by_content.items()} == expected_counts
 
@@ -189,7 +192,7 @@ def test_checked_in_registry_keeps_reviewed_progression_counts_and_chronology():
     }
     assert rows[0].release_key == (2025, 47)
     assert rows[-1].release_key == (2014, 0)
-    assert len(rows) == 161
+    assert len(rows) == 167
 
 
 def test_checked_in_registry_preserves_grouped_encounter_identities():
@@ -289,6 +292,27 @@ def test_launch_veteran_slice_contains_only_conqueror_progression_encounters():
         "investigator_garron",
         "varaine_pellingare",
     } & all_ids
+
+
+def test_launch_starter_slice_contains_only_vanquisher_progression_encounters():
+    data_root = Path(__file__).resolve().parents[2] / "data"
+    rows = load_dungeon_encounter_identities(data_root)
+    by_content: dict[str, set[str]] = {}
+    for row in rows:
+        by_content.setdefault(row.content_id, set()).add(row.encounter_id)
+
+    assert by_content["fungal_grotto_i"] == {
+        "war_chief_ozozai",
+        "kra_gh_the_dreugh_king",
+    }
+    assert by_content["spindleclutch_i"] == {
+        "swarm_mother",
+        "the_whisperer",
+    }
+    assert by_content["the_banished_cells_i"] == {
+        "shadowrend",
+        "high_kinlord_rilis_banished_cells_i",
+    }
 
 
 def test_known_reviewed_semantic_import_gaps_stay_explicit():
