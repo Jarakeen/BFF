@@ -134,6 +134,7 @@ class ExtremeRuntimeSnapshotCombatStateService:
                         gear_activation,
                         attempts=snapshot.bar_effect_attempts,
                         snapshot_time_seconds=snapshot.snapshot_time_seconds,
+                        snapshot_active_bar=active_bar,
                     )
                     active_buffs.extend(gear_result.active_buffs)
                     unresolved.extend(gear_result.unresolved)
