@@ -6,13 +6,13 @@ from minmax.support_stacking import StackingBehavior
 from minmax.support_target_type import SupportTargetType
 from services.extreme_dual_bar_gear_runtime_legality_service import (
     ExtremeDualBarGearRuntimeLegalityService,
-    ExtremeGearRuntimeBarAttempt,
 )
 from services.extreme_dual_bar_set_activation_evidence_service import (
     ExtremeDualBarSetActivationEvidence,
     ExtremeDualBarSetActivationEvidenceCatalog,
     ExtremeDualBarSetActivationScope,
 )
+from services.extreme_runtime_bar_effect_attempt import ExtremeRuntimeBarEffectAttempt
 
 
 class _Resolver:
@@ -74,7 +74,7 @@ def _evidence(
 
 
 def _attempt(time_seconds: float, *, bar: str, trigger="overheal_self_or_ally", sequence=0):
-    return ExtremeGearRuntimeBarAttempt(
+    return ExtremeRuntimeBarEffectAttempt(
         RuntimeEffectEventAttempt(
             RuntimeEvent(
                 time_seconds=time_seconds,
@@ -206,6 +206,6 @@ def test_invalid_runtime_bar_fails_closed_immediately():
     try:
         _attempt(1.0, bar="middle")
     except ValueError as exc:
-        assert "unsupported Extreme gear runtime bar" in str(exc)
+        assert "unsupported Extreme runtime effect bar" in str(exc)
     else:
         raise AssertionError("expected invalid runtime bar to fail closed")
