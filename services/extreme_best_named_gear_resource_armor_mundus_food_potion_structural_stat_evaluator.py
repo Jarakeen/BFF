@@ -56,6 +56,9 @@ from services.extreme_resource_active_bar_state_service import (
 from services.extreme_resource_blood_magic_canonical_stat_evaluator import (
     ExtremeResourceBloodMagicCanonicalStatEvaluator,
 )
+from services.extreme_resource_champion_point_state_service import (
+    ExtremeResourceChampionPointStateService,
+)
 from services.extreme_second_mundus_forwarding_evaluator import (
     ExtremeSecondMundusForwardingEvaluator,
 )
@@ -76,6 +79,11 @@ from services.extreme_twice_born_mundus_structural_stat_evaluator import (
 _EXTREME_EMPEROR_HOME_KEEPS = 6
 _EXTREME_EMPEROR_STATE_MARKER = (
     f"{EMPEROR_STATE_MARKER_PREFIX}{_EXTREME_EMPEROR_HOME_KEEPS}",
+)
+_RESOURCE_CHAMPION_POINT_SCOPE = (
+    "all canonical Champion Point stars reviewed for the requested max resource; "
+    "resource-relevant non-slottable stars are maxed and the strongest legal up-to-four "
+    "resource-relevant slottable stars are materialized into the Champion Bar"
 )
 
 
@@ -107,6 +115,7 @@ class ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory:
         potion_repository: PotionAvailabilityRepository,
         jewelry_state: ExtremeJewelryResourceStaticTraitState | None = None,
         active_bar_state_service: ExtremeResourceActiveBarStateService | None = None,
+        champion_point_state_service: ExtremeResourceChampionPointStateService | None = None,
     ) -> None:
         self.canonical_evaluator = canonical_evaluator
         self.mundus_repository = mundus_repository
@@ -114,11 +123,14 @@ class ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory:
         self.potion_repository = potion_repository
         self.jewelry_state = jewelry_state
 
-        if active_bar_state_service is None:
-            database_path = getattr(canonical_evaluator.optimizer, "database_path", None)
-            if database_path is not None:
-                active_bar_state_service = ExtremeResourceActiveBarStateService(database_path)
+        database_path = getattr(canonical_evaluator.optimizer, "database_path", None)
+        if active_bar_state_service is None and database_path is not None:
+            active_bar_state_service = ExtremeResourceActiveBarStateService(database_path)
         self.active_bar_state_service = active_bar_state_service
+
+        if champion_point_state_service is None and database_path is not None:
+            champion_point_state_service = ExtremeResourceChampionPointStateService(database_path)
+        self.champion_point_state_service = champion_point_state_service
 
     @classmethod
     def _has_active_twice_born_star(
@@ -129,6 +141,11 @@ class ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory:
             str(name) == cls._TWICE_BORN_STAR and int(count) >= 5
             for name, count in zip(realization.set_names, realization.counts)
         )
+
+    def champion_point_state(self, objective_key: str):
+        if self.champion_point_state_service is None:
+            return None
+        return self.champion_point_state_service.build(objective_key)
 
     def __call__(
         self,
@@ -150,6 +167,7 @@ class ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory:
             armor_state=armor_state,
             jewelry_state=self.jewelry_state,
             active_bar_state_service=self.active_bar_state_service,
+            champion_point_state_service=self.champion_point_state_service,
         )
         if self.active_bar_state_service is not None:
             armor = ExtremeResourceBloodMagicCanonicalStatEvaluator(
@@ -249,6 +267,24 @@ class ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator:
     @property
     def reviewed_resource_armor_denominator_proven(self) -> bool:
         return bool(self.armor_catalog.denominator_proven)
+
+    def _champion_point_state(self, objective_key: str):
+        resolver = getattr(self.evaluator_factory, "champion_point_state", None)
+        if not callable(resolver):
+            return None
+        return resolver(objective_key)
+
+    def closed_dynamic_axes(self, objective_key: str) -> tuple[str, ...]:
+        state = self._champion_point_state(objective_key)
+        if state is not None and state.denominator_proven and not state.unresolved:
+            return ("Champion Points",)
+        return ()
+
+    def additional_search_scope(self, objective_key: str) -> tuple[str, ...]:
+        state = self._champion_point_state(objective_key)
+        if state is not None and state.denominator_proven and not state.unresolved:
+            return (_RESOURCE_CHAMPION_POINT_SCOPE,)
+        return ()
 
     def _evaluator_for(
         self,
