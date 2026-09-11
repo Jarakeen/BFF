@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "castle_thorn",
+  "encounter_id": "blood_twilight",
+  "encounter_name": "Blood Twilight",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Gargoyle Awakening Cycles","threshold":"Pull to low health","description":"Kill spawned adds and awakened gargoyles while maintaining safe boss positioning."},"source_type":"guide","source_name":"Xynode Castle Thorn Mechanics Guide","source_locator":"Blood Twilight","game_update":"U27","confidence":"high"},
+    {"fact_type":"phase","fact_key":"execute","value":{"order":2,"label":"Group Beam Execute","threshold":"Low health to death","description":"Repeated group beam forces players to spread and kite in separate directions until each beam ends."},"source_type":"guide","source_name":"Xynode Castle Thorn Mechanics Guide","source_locator":"Blood Twilight > GROUP BEAM","game_update":"U27","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"group_beam","value":{"name":"Group Beam","response":"spread_and_kite_beams_in_separate_directions"},"source_type":"guide","source_name":"Xynode Castle Thorn Mechanics Guide","source_locator":"Blood Twilight > GROUP BEAM","game_update":"U27","confidence":"high"}
+  ]
+}
