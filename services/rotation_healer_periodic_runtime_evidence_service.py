@@ -7,6 +7,7 @@ from services.rotation_healer_canonical_periodic_timing_service import (
     RotationHealerCanonicalPeriodicTimingResolution,
 )
 from services.rotation_healer_periodic_runtime_service import (
+    RotationHealerPeriodicMagnitudePolicy,
     RotationHealerPeriodicRefreshPolicy,
     RotationHealerPeriodicRuntimeEvidence,
 )
@@ -17,10 +18,10 @@ class RotationHealerReviewedRuntimeObservation:
     """Reviewed runtime facts that canonical cadence/duration text does not prove.
 
     This overlay is intentionally narrow. It may supply the concrete first-tick
-    placement, expiry-boundary rule, and repeated-application refresh behavior,
-    but it does not replace canonical component identity, cadence, or duration.
-    Provenance is required so a manually reviewed observation cannot silently
-    become an unexplained combat rule.
+    placement, expiry-boundary rule, repeated-application refresh behavior, and
+    periodic magnitude timing policy, but it does not replace canonical component
+    identity, cadence, or duration. Provenance is required so a manually reviewed
+    observation cannot silently become an unexplained combat rule.
     """
 
     source_name: str
@@ -28,6 +29,7 @@ class RotationHealerReviewedRuntimeObservation:
     first_tick_offset_seconds: float | None = None
     tick_on_expiry_boundary: bool | None = None
     refresh_policy: RotationHealerPeriodicRefreshPolicy | None = None
+    magnitude_policy: RotationHealerPeriodicMagnitudePolicy | None = None
     provenance: tuple[str, ...] = ()
     game_version: str | None = None
 
@@ -54,6 +56,14 @@ class RotationHealerReviewedRuntimeObservation:
                 "refresh_policy",
                 RotationHealerPeriodicRefreshPolicy(str(self.refresh_policy)),
             )
+        if self.magnitude_policy is not None and not isinstance(
+            self.magnitude_policy, RotationHealerPeriodicMagnitudePolicy
+        ):
+            object.__setattr__(
+                self,
+                "magnitude_policy",
+                RotationHealerPeriodicMagnitudePolicy(str(self.magnitude_policy)),
+            )
 
         provenance = tuple(
             dict.fromkeys(
@@ -67,6 +77,7 @@ class RotationHealerReviewedRuntimeObservation:
                 self.first_tick_offset_seconds,
                 self.tick_on_expiry_boundary,
                 self.refresh_policy,
+                self.magnitude_policy,
             )
         ) and not provenance:
             raise ValueError(
@@ -95,9 +106,11 @@ class RotationHealerPeriodicRuntimeEvidenceService:
 
     Canonical skill text remains authoritative for component identity, cadence,
     and duration. Reviewed observations are allowed to fill only the runtime facts
-    that those sources deliberately leave open. If any required fact is absent,
-    the service fails closed rather than converting a plausible player assumption
-    into authoritative healer coverage.
+    that those sources deliberately leave open. Magnitude timing is carried when
+    reviewed but is not required for ordinary cast-resolved timing projection; it
+    becomes required only when a caller asks for exact-time tick magnitude evaluation.
+    If any required timing fact is absent, the service fails closed rather than
+    converting a plausible player assumption into authoritative healer coverage.
     """
 
     def resolve(
@@ -164,6 +177,11 @@ class RotationHealerPeriodicRuntimeEvidenceService:
             evidence.append(f"reviewed runtime observation: {item}")
         if observation.game_version:
             evidence.append(f"reviewed runtime game version: {observation.game_version}")
+        if observation.magnitude_policy is not None:
+            evidence.append(
+                "reviewed periodic magnitude policy: "
+                + observation.magnitude_policy.value
+            )
 
         if unresolved or cadence is None or duration is None:
             return self._result(canonical, None, evidence, unresolved)
@@ -180,6 +198,7 @@ class RotationHealerPeriodicRuntimeEvidenceService:
             refresh_policy=(
                 observation.refresh_policy if repeated_applications else None
             ),
+            magnitude_policy=observation.magnitude_policy,
         )
         return self._result(canonical, runtime, evidence, unresolved)
 
