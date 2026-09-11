@@ -8,6 +8,7 @@ from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPla
 from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
 from minmax.runtime_event import RuntimeEvent
 from models.build_model import PlayerBuild
+from services.extreme_runtime_bar_transition import ExtremeRuntimeBarTransition
 from services.extreme_runtime_snapshot import (
     ExtremeRuntimePotionUse,
     ExtremeRuntimeSnapshot,
@@ -93,8 +94,17 @@ def test_runtime_projection_uses_same_timestamp_plan_bar_and_history_sequence() 
     assert len(projector.calls) == 1
     call = projector.calls[0][1]
     assert call["active_bar"] == "back"
-    assert call["snapshot"].snapshot_time_seconds == 10.0
-    assert [item.sequence for item in call["snapshot"].runtime_history] == [0, 0]
+    snapshot = call["snapshot"]
+    assert snapshot.snapshot_time_seconds == 10.0
+    assert [item.sequence for item in snapshot.runtime_history] == [0, 0, 1]
+    assert snapshot.bar_transitions == (
+        ExtremeRuntimeBarTransition(
+            time_seconds=10.0,
+            sequence=1,
+            from_bar="front",
+            to_bar="back",
+        ),
+    )
 
 
 def test_runtime_projection_binds_unbarred_attempts_before_shared_projection() -> None:
@@ -145,7 +155,15 @@ def test_runtime_projection_without_sequence_uses_state_after_all_same_timestamp
     assert result.resolved
     assert result.active_bar == "back"
     snapshot = projector.calls[0][1]["snapshot"]
-    assert [item.sequence for item in snapshot.runtime_history] == [0, 2]
+    assert [item.sequence for item in snapshot.runtime_history] == [0, 1, 2]
+    assert snapshot.bar_transitions == (
+        ExtremeRuntimeBarTransition(
+            time_seconds=10.0,
+            sequence=1,
+            from_bar="front",
+            to_bar="back",
+        ),
+    )
 
 
 def test_legacy_one_snapshot_evidence_fails_closed_for_time_varying_projection() -> None:
