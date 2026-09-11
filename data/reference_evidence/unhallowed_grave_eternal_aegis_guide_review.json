@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "unhallowed_grave",
+  "encounter_id": "eternal_aegis",
+  "encounter_name": "Eternal Aegis",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"reflection_cycles","value":{"order":1,"label":"Reflection Cycles","threshold":"90%, 70%, 50%, and 30%","description":"Four Lesser Aegis reflections spawn and overlap spinning ring pressure with the boss's own spin."},"source_type":"guide","source_name":"Xynode Unhallowed Grave Guide","source_locator":"Eternal Aegis > Adds/Reflections","game_update":"U25","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"ring_of_blades","value":{"name":"Ring of Blades","response":"stand_in_safe_center_or_outside_spin_and_avoid_overlapping_rings"},"source_type":"guide","source_name":"Xynode Unhallowed Grave Guide","source_locator":"Eternal Aegis > SPIN","game_update":"U25","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"lesser_aegis","value":{"name":"Lesser Aegis Reflections","response":"kill_or_control_reflections_before_spin_pressure_overlaps"},"source_type":"achievement","source_name":"ESO Hub Unhallowed Grave Achievements","source_locator":"Last-Second Sundering / Shattered Shields","game_update":"U25","confidence":"high"}
+  ]
+}
