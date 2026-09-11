@@ -55,24 +55,7 @@ class RotationCandidateHealerDemandEvidenceProvider(Protocol):
 
 
 class RotationCandidateHealerCanonicalDemandEvidenceProvider:
-    """Compose existing healer mechanics into candidate-specific demand evidence.
-
-    This is orchestration only. Action healing, periodic cadence/duration, reviewed
-    runtime facts, delayed timing, Budding Seeds activation topology, and demand
-    filtering remain owned by their existing services. The provider never invents
-    a tick cadence, refresh rule, delayed offset, target multiplier, or survival
-    threshold. Missing runtime facts remain explicit unresolved evidence.
-
-    Canonical coefficient-local delayed timing is bound automatically when it is
-    available. Explicit ``delayed_runtime_evidence`` remains a supported override
-    for reviewed evidence that is not derivable from canonical wording.
-
-    ``context`` remains the backward-compatible default static calculation context.
-    Real dual-bar evaluations may additionally provide ``contexts_by_bar`` so
-    scheduled front/back skill actions use the exact static context for the bar on
-    which they are cast. Missing mapped bar state then fails closed in the action
-    healing layer instead of borrowing the default context.
-    """
+    """Compose existing healer mechanics into candidate-specific demand evidence."""
 
     def __init__(
         self,
@@ -315,6 +298,7 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
             periodic_seeds=activation.periodic_seeds,
             delayed_seeds=activation.delayed_seeds,
             unresolved=self._dedupe(tuple(projection.unresolved) + tuple(activation.unresolved)),
+            external_conditional_seeds=projection.external_conditional_seeds,
         )
 
     @staticmethod
@@ -341,19 +325,7 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
 
 
 class RotationCandidateHealerRoleOutputService:
-    """Aggregate canonical demand-window healing into modeled healer output.
-
-    This service owns no ESO healing math. Direct, periodic, delayed, crit, build,
-    and runtime consequences remain owned by the canonical healer projection
-    services supplying ``RotationHealerDemandHealingEvidence``. This adapter only
-    turns one explicit encounter healing window into a comparable whole-candidate
-    role-output measurement.
-
-    The result is *modeled healing per demand-second*, not observed/received HPS.
-    Existing healing evidence is intentionally pre-recipient and pre-overheal, so
-    this service must not multiply by target count or claim that the value proves
-    survival. Any unresolved upstream healing evidence keeps role output unknown.
-    """
+    """Aggregate canonical demand-window healing into modeled healer output."""
 
     def __init__(
         self,
