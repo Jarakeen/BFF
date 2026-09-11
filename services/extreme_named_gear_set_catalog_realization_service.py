@@ -3,12 +3,17 @@ from __future__ import annotations
 """Enumerate concrete named-set assignments for Extreme gear topologies.
 
 This layer composes canonical set-bonus breakpoints, named physical-slot
-eligibility, and exact slot-witness realization.  Equal-count topology parts are
+eligibility, and exact slot-witness realization. Equal-count topology parts are
 symmetry-reduced by set id, so ``5(A)+5(B)`` and ``5(B)+5(A)`` are one named
 assignment rather than two copies of the same equipment state.
 
-A caller may cap assignments for exploratory/runtime use.  Any such truncation is
-explicit and prevents denominator proof.  Exhaustive means exhaustive; a progress
+Physical realizability depends on topology plus slot-eligibility shape, not set
+identity. Exhaustive production searches therefore memoize exact witness templates
+by that semantic legality shape and rematerialize the current set ids/names. This
+removes repeated slot-packing backtracking without pruning any named assignment.
+
+A caller may cap assignments for exploratory/runtime use. Any such truncation is
+explicit and prevents denominator proof. Exhaustive means exhaustive; a progress
 bar is not a proof theorem.
 """
 
@@ -24,6 +29,7 @@ from services.extreme_gear_set_topology_catalog_service import (
 from services.extreme_named_gear_set_realization_service import (
     ExtremeNamedGearSetRealization,
     ExtremeNamedGearSetRealizationService,
+    ExtremeNamedGearSlotAssignment,
 )
 from services.extreme_named_gear_set_slot_eligibility_service import (
     ExtremeNamedGearSetSlotEligibility,
@@ -77,6 +83,31 @@ class ExtremeNamedGearSetCatalogRealizationResult:
         )
 
 
+@dataclass(frozen=True)
+class _EligibilityShape:
+    """Identity-free physical legality inputs consumed by the witness solver."""
+
+    mythic: bool
+    max_equip_count: int
+    armor_slots: tuple[str, ...]
+    jewelry_slots: tuple[str, ...]
+    weapon_types: tuple[str, ...]
+    other_equip_types: tuple[int, ...]
+
+
+@dataclass(frozen=True)
+class _WitnessTemplateAssignment:
+    set_position: int
+    slot: str
+    weapon_type: str
+
+
+@dataclass(frozen=True)
+class _WitnessTemplate:
+    weapon_shape: object
+    assignments: tuple[_WitnessTemplateAssignment, ...]
+
+
 class ExtremeNamedGearSetCatalogRealizationService:
     """Enumerate breakpoint-relevant named assignments and exact slot witnesses."""
 
@@ -90,6 +121,89 @@ class ExtremeNamedGearSetCatalogRealizationService:
         self.eligibility = eligibility
         self._breakpoint_by_id = {row.set_id: row for row in breakpoints.sets}
         self._eligibility_by_id = {row.set_id: row for row in eligibility.sets}
+        self._witness_template_cache: dict[
+            tuple[str, tuple[_EligibilityShape, ...]],
+            _WitnessTemplate | None,
+        ] = {}
+
+    @staticmethod
+    def _eligibility_shape(row: ExtremeNamedGearSetSlotEligibility) -> _EligibilityShape:
+        return _EligibilityShape(
+            mythic=row.category.strip().casefold()
+            == ExtremeNamedGearSetRealizationService.MYTHIC_CATEGORY,
+            max_equip_count=int(row.max_equip_count),
+            armor_slots=tuple(row.armor_slots),
+            jewelry_slots=tuple(row.jewelry_slots),
+            weapon_types=tuple(row.weapon_types),
+            other_equip_types=tuple(row.other_equip_types),
+        )
+
+    @classmethod
+    def _template_from_witness(
+        cls,
+        witness: ExtremeNamedGearSetRealization,
+        selected: tuple[ExtremeNamedGearSetSlotEligibility, ...],
+    ) -> _WitnessTemplate:
+        position_by_set_id = {
+            int(row.set_id): position for position, row in enumerate(selected)
+        }
+        return _WitnessTemplate(
+            weapon_shape=witness.weapon_shape,
+            assignments=tuple(
+                _WitnessTemplateAssignment(
+                    set_position=position_by_set_id[int(assignment.set_id)],
+                    slot=assignment.slot,
+                    weapon_type=assignment.weapon_type,
+                )
+                for assignment in witness.assignments
+            ),
+        )
+
+    @staticmethod
+    def _materialize_template(
+        topology: ExtremeGearSetCountTopology,
+        selected: tuple[ExtremeNamedGearSetSlotEligibility, ...],
+        template: _WitnessTemplate,
+    ) -> ExtremeNamedGearSetRealization:
+        assignments = tuple(
+            ExtremeNamedGearSlotAssignment(
+                slot=item.slot,
+                set_id=int(selected[item.set_position].set_id),
+                set_name=selected[item.set_position].name,
+                weapon_type=item.weapon_type,
+            )
+            for item in template.assignments
+        )
+        return ExtremeNamedGearSetRealization(
+            topology_signature=topology.signature,
+            set_ids=tuple(int(row.set_id) for row in selected),
+            set_names=tuple(row.name for row in selected),
+            counts=tuple(int(value) for value in topology.counts),
+            weapon_shape=template.weapon_shape,
+            assignments=assignments,
+        )
+
+    def _find_witness_cached(
+        self,
+        topology: ExtremeGearSetCountTopology,
+        selected: tuple[ExtremeNamedGearSetSlotEligibility, ...],
+    ) -> ExtremeNamedGearSetRealization | None:
+        key = (
+            topology.signature,
+            tuple(self._eligibility_shape(row) for row in selected),
+        )
+        if key not in self._witness_template_cache:
+            witness = ExtremeNamedGearSetRealizationService.find_witness(
+                topology,
+                selected,
+            )
+            self._witness_template_cache[key] = (
+                None if witness is None else self._template_from_witness(witness, selected)
+            )
+        template = self._witness_template_cache[key]
+        if template is None:
+            return None
+        return self._materialize_template(topology, selected, template)
 
     def _candidates_for_count(self, count: int) -> tuple[ExtremeNamedGearSetSlotEligibility, ...]:
         rows: list[ExtremeNamedGearSetSlotEligibility] = []
@@ -122,7 +236,7 @@ class ExtremeNamedGearSetCatalogRealizationService:
 
         # The no-set baseline has exactly one named assignment: the empty tuple.
         if not counts:
-            witness = ExtremeNamedGearSetRealizationService.find_witness(topology, ())
+            witness = self._find_witness_cached(topology, ())
             return ExtremeNamedGearSetTopologyRealizationResult(
                 topology=topology,
                 realizations=(() if witness is None else (witness,)),
@@ -154,7 +268,7 @@ class ExtremeNamedGearSetCatalogRealizationService:
                     truncated = True
                     return False
                 considered += 1
-                witness = ExtremeNamedGearSetRealizationService.find_witness(
+                witness = self._find_witness_cached(
                     topology,
                     tuple(selected),
                 )
@@ -173,7 +287,7 @@ class ExtremeNamedGearSetCatalogRealizationService:
                 set_id = int(row.set_id)
                 if set_id in used_ids:
                     continue
-                # Equal-count topology parts are indistinguishable.  Canonical
+                # Equal-count topology parts are indistinguishable. Canonical
                 # ascending set ids remove permutation duplicates without removing
                 # any unique named equipment state.
                 if previous_equal_id is not None and set_id <= previous_equal_id:
