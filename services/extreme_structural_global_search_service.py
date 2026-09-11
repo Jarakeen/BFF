@@ -88,8 +88,12 @@ class ExtremeStructuralGlobalSearchService(Generic[ScorePayload]):
     still exposing how many structurally distinct candidates share the best value.
 
     Scorers may optionally expose ``closed_dynamic_axes(objective_key)`` and
-    ``additional_search_scope(objective_key)``.  These hooks carry proof metadata
-    only; the generic structural search does not interpret ESO mechanics itself.
+    ``additional_search_scope(objective_key)``.  They may also expose
+    ``structural_attribute_projection(objective_key, source_allocations)``.  The
+    latter is honored only when the returned object reports ``projection_complete``;
+    otherwise the full canonical attribute simplex is searched.  This lets an
+    objective-specific scorer own a proof reduction without teaching this generic
+    structural layer any ESO formula.
     """
 
     def __init__(
@@ -123,12 +127,40 @@ class ExtremeStructuralGlobalSearchService(Generic[ScorePayload]):
             )
         )
 
+    def _projected_attributes(
+        self,
+        objective_key: str,
+        universe: ExtremeGlobalSearchUniverse,
+    ) -> tuple[tuple[AttributeAllocation, ...], tuple[str, ...]]:
+        resolver = getattr(self.scorer, "structural_attribute_projection", None)
+        if not callable(resolver):
+            return tuple(universe.attribute_allocations), ()
+
+        projection = resolver(objective_key, tuple(universe.attribute_allocations))
+        if projection is None or not bool(getattr(projection, "projection_complete", False)):
+            # Fail safe: an unavailable or incomplete proof means ordinary exhaustive
+            # enumeration, never a partial structural search.
+            return tuple(universe.attribute_allocations), ()
+
+        allocations = tuple(getattr(projection, "allocations", ()) or ())
+        if not allocations:
+            return tuple(universe.attribute_allocations), ()
+        scope = tuple(
+            dict.fromkeys(
+                str(value).strip()
+                for value in tuple(getattr(projection, "scope", ()) or ())
+                if str(value).strip()
+            )
+        )
+        return allocations, scope
+
     def search(self, objective_key: str) -> ExtremeStructuralGlobalSearchResult[ScorePayload]:
         key = str(objective_key or "").strip().casefold()
         if not key:
             raise ValueError("Extreme structural search objective_key is required")
 
         universe = self.universe_service.build()
+        attributes_to_score, projection_scope = self._projected_attributes(key, universe)
         best: ExtremeStructuralScore[ScorePayload] | None = None
         best_value: float | None = None
         ties = 0
@@ -137,7 +169,7 @@ class ExtremeStructuralGlobalSearchService(Generic[ScorePayload]):
 
         for race in universe.races:
             for route in universe.class_routes:
-                for attributes in universe.attribute_allocations:
+                for attributes in attributes_to_score:
                     for active_bar in universe.active_bars:
                         candidate = ExtremeStructuralCandidate(
                             race=race,
@@ -165,7 +197,12 @@ class ExtremeStructuralGlobalSearchService(Generic[ScorePayload]):
                             if best is None or score.candidate.identity < best.candidate.identity:
                                 best = score
 
-        expected = self.candidate_count(universe)
+        expected = (
+            len(universe.races)
+            * len(universe.class_routes)
+            * len(attributes_to_score)
+            * len(universe.active_bars)
+        )
         structural_proven = bool(
             universe.structural_denominator_proven
             and expected > 0
@@ -179,7 +216,9 @@ class ExtremeStructuralGlobalSearchService(Generic[ScorePayload]):
             candidates_scored=scored,
             ties_at_best=ties,
             structural_scope=tuple(
-                dict.fromkeys((*universe.structural_scope, *additional_scope))
+                dict.fromkeys(
+                    (*universe.structural_scope, *projection_scope, *additional_scope)
+                )
             ),
             deferred_dynamic_axes=tuple(
                 axis for axis in universe.deferred_dynamic_axes if axis not in closed_axes
