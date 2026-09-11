@@ -98,6 +98,14 @@ class ExtremeResourceContextualPassiveReviewService:
             condition="Extreme canonical resource scoring grants reviewed max-rank Undaunted Mettle and applies its shared distinct-armor-weight max-resource bonus.",
         ),
         ExtremeResourceContextualPassiveReview(
+            objective_key="max_health",
+            passive_name="Emperor",
+            skill_line="Emperor",
+            status=ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED,
+            source="ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory + EmperorPassiveInputResolver",
+            condition="The reviewed Extreme max-resource continuation uses the legal active-Emperor six-Home-Keep ceiling; CombatState carries campaign legality and the shared Emperor resolver applies the canonical U50 75% maximum-resource bonus.",
+        ),
+        ExtremeResourceContextualPassiveReview(
             objective_key="max_magicka",
             passive_name="Expert Summoner",
             skill_line="Daedric Summoning",
@@ -130,6 +138,14 @@ class ExtremeResourceContextualPassiveReviewService:
             condition="Extreme canonical resource scoring grants reviewed max-rank Undaunted Mettle and applies its shared distinct-armor-weight max-resource bonus.",
         ),
         ExtremeResourceContextualPassiveReview(
+            objective_key="max_magicka",
+            passive_name="Emperor",
+            skill_line="Emperor",
+            status=ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED,
+            source="ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory + EmperorPassiveInputResolver",
+            condition="The reviewed Extreme max-resource continuation uses the legal active-Emperor six-Home-Keep ceiling; CombatState carries campaign legality and the shared Emperor resolver applies the canonical U50 75% maximum-resource bonus.",
+        ),
+        ExtremeResourceContextualPassiveReview(
             objective_key="max_stamina",
             passive_name="Expert Summoner",
             skill_line="Daedric Summoning",
@@ -152,6 +168,14 @@ class ExtremeResourceContextualPassiveReviewService:
             status=ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED,
             source="ExtremeHypotheticalUndauntedProgressionService",
             condition="Extreme canonical resource scoring grants reviewed max-rank Undaunted Mettle and applies its shared distinct-armor-weight max-resource bonus.",
+        ),
+        ExtremeResourceContextualPassiveReview(
+            objective_key="max_stamina",
+            passive_name="Emperor",
+            skill_line="Emperor",
+            status=ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED,
+            source="ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory + EmperorPassiveInputResolver",
+            condition="The reviewed Extreme max-resource continuation uses the legal active-Emperor six-Home-Keep ceiling; CombatState carries campaign legality and the shared Emperor resolver applies the canonical U50 75% maximum-resource bonus.",
         ),
     )
 
