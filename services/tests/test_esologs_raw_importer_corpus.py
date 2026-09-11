@@ -93,16 +93,24 @@ def test_imports_lokkestiiz_multi_report_corpus_envelope(tmp_path) -> None:
             "observed_windows": 2,
             "skipped": 0,
         }
-        assert connection.execute(
+        fight_rows = connection.execute(
             "SELECT report_code, fight_id FROM log_fight ORDER BY report_code"
-        ).fetchall() == [("REPORT_A", 6), ("REPORT_B", 12)]
+        ).fetchall()
+        assert [tuple(row) for row in fight_rows] == [
+            ("REPORT_A", 6),
+            ("REPORT_B", 12),
+        ]
         assert connection.execute(
             "SELECT COUNT(*) FROM log_event"
         ).fetchone()[0] == 4
-        assert connection.execute(
+        manifest_rows = connection.execute(
             "SELECT report_code, record_count FROM log_import_manifest "
             "WHERE export_type = 'raw_probe_json' ORDER BY report_code"
-        ).fetchall() == [("REPORT_A", 1), ("REPORT_B", 1)]
+        ).fetchall()
+        assert [tuple(row) for row in manifest_rows] == [
+            ("REPORT_A", 1),
+            ("REPORT_B", 1),
+        ]
     finally:
         connection.close()
 
@@ -123,8 +131,9 @@ def test_legacy_single_report_envelope_remains_supported(tmp_path) -> None:
         assert result["files"] == 1
         assert result["fights"] == 1
         assert result["events"] == 2
-        assert connection.execute(
+        row = connection.execute(
             "SELECT report_code, fight_id FROM log_fight"
-        ).fetchone() == ("LEGACY", 4)
+        ).fetchone()
+        assert tuple(row) == ("LEGACY", 4)
     finally:
         connection.close()
