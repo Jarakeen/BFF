@@ -10,11 +10,14 @@ from services.extreme_structural_named_gear_mundus_food_potion_core_stat_record_
     _RESOURCE_JEWELRY_GLYPH_IRRELEVANCE_SCOPE,
     _RESOURCE_JEWELRY_STATIC_TRAIT_SCOPE,
     _RESOURCE_JUGGERNAUT_SCOPE,
+    _RESOURCE_MAX_HEALTH_RUNTIME_SCOPE,
     _RESOURCE_REMAINING_EQUIPMENT_TRAIT_AFTER_WEAPON_AXIS,
-    _RESOURCE_REMAINING_PASSIVE_AFTER_REVIEWED_BAR_AXIS,
+    _RESOURCE_REMAINING_PASSIVE_AFTER_REVIEWED_RESOURCE_AXIS,
+    _RESOURCE_REMAINING_RUNTIME_STATE_AXIS,
     _RESOURCE_REMAINING_SKILL_BAR_AXIS,
     _RESOURCE_UNDAUNTED_SCOPE,
     _RESOURCE_WEAPON_IRRELEVANCE_SCOPE,
+    _RUNTIME_STATE_DEFERRED_AXIS,
 )
 
 
@@ -160,6 +163,21 @@ _WINNER_PAYLOAD = {
     "resource_active_bar_reviewed_percent_bonus": 0.30,
     "resource_active_bar_denominator_proven": True,
     "resource_active_skills_reviewed": 88,
+    "resource_max_health_runtime_state": (
+        "nothing_wasted_10_stack",
+        False,
+        10,
+        (123456,),
+    ),
+    "resource_max_health_runtime_label": "Nothing Wasted 10 stacks",
+    "resource_max_health_runtime_permanent_pet_active": False,
+    "resource_max_health_runtime_nothing_wasted_stacks": 10,
+    "resource_max_health_runtime_class_mastery_ability_ids": (123456,),
+    "resource_max_health_runtime_reviewed_percent_bonus": 0.20,
+    "resource_max_health_runtime_conditions": (
+        "Maximum 10-stack Nothing Wasted state; stacks require Corpse Consumption activity.",
+    ),
+    "resource_max_health_runtime_denominator_proven": True,
 }
 
 
@@ -211,6 +229,7 @@ class _UniverseService:
         "potions",
         _PASSIVE_DEFERRED_AXIS,
         "skill-bar choices and morphs",
+        _RUNTIME_STATE_DEFERRED_AXIS,
     )
 
     def __init__(self, path):
@@ -235,7 +254,7 @@ class _SearchService:
         )
 
 
-def test_resource_armor_jewelry_weapon_mettle_juggernaut_bar_and_glyph_irrelevance_are_recorded(monkeypatch):
+def test_resource_armor_jewelry_weapon_mettle_juggernaut_bar_runtime_and_glyph_irrelevance_are_recorded(monkeypatch):
     undaunted_progression = object()
     captured = {}
 
@@ -286,6 +305,7 @@ def test_resource_armor_jewelry_weapon_mettle_juggernaut_bar_and_glyph_irrelevan
     assert _RESOURCE_UNDAUNTED_SCOPE in record.search_coverage.searched
     assert _RESOURCE_JUGGERNAUT_SCOPE in record.search_coverage.searched
     assert _RESOURCE_ACTIVE_BAR_SCOPE in record.search_coverage.searched
+    assert _RESOURCE_MAX_HEALTH_RUNTIME_SCOPE in record.search_coverage.searched
     assert _RESOURCE_JEWELRY_STATIC_TRAIT_SCOPE in record.search_coverage.searched
     assert _RESOURCE_JEWELRY_GLYPH_IRRELEVANCE_SCOPE in record.search_coverage.searched
     assert _RESOURCE_WEAPON_IRRELEVANCE_SCOPE in record.search_coverage.searched
@@ -294,9 +314,11 @@ def test_resource_armor_jewelry_weapon_mettle_juggernaut_bar_and_glyph_irrelevan
     assert "glyphs/enchants" not in record.search_coverage.omitted
     assert _PASSIVE_DEFERRED_AXIS not in record.search_coverage.omitted
     assert "skill-bar choices and morphs" not in record.search_coverage.omitted
+    assert _RUNTIME_STATE_DEFERRED_AXIS not in record.search_coverage.omitted
     assert _RESOURCE_REMAINING_EQUIPMENT_TRAIT_AFTER_WEAPON_AXIS in record.search_coverage.omitted
-    assert _RESOURCE_REMAINING_PASSIVE_AFTER_REVIEWED_BAR_AXIS in record.search_coverage.omitted
+    assert _RESOURCE_REMAINING_PASSIVE_AFTER_REVIEWED_RESOURCE_AXIS in record.search_coverage.omitted
     assert _RESOURCE_REMAINING_SKILL_BAR_AXIS in record.search_coverage.omitted
+    assert _RESOURCE_REMAINING_RUNTIME_STATE_AXIS in record.search_coverage.omitted
     assert not any("weapon trait" in row for row in record.search_coverage.omitted)
     assert not any("weapon glyph" in row for row in record.search_coverage.omitted)
     assert not any("jewelry and weapon glyphs/enchants" in row for row in record.search_coverage.omitted)
@@ -304,6 +326,8 @@ def test_resource_armor_jewelry_weapon_mettle_juggernaut_bar_and_glyph_irrelevan
     assert record.search_coverage.candidates_optimized == 10 * 2 * 24 * 4 * 2 * 2
     assert record.search_coverage.denominator_proven is False
     assert record.self_provided_conditions == ("Major Fortitude",)
+    assert "Nothing Wasted" in " ".join(record.runtime_prerequisites)
+    assert "10-stack" in " ".join(record.runtime_prerequisites)
     assert any("2,187" in row for row in record.explanation)
     assert any("216" in row for row in record.explanation)
     assert any("17" in row and "jewelry glyph" in row for row in record.explanation)
@@ -311,3 +335,4 @@ def test_resource_armor_jewelry_weapon_mettle_juggernaut_bar_and_glyph_irrelevan
     assert any("Undaunted Mettle" in row for row in record.explanation)
     assert any("Juggernaut" in row and "Heavy Armor" in row for row in record.explanation)
     assert any("88" in row and "active" in row.casefold() and "Dark Vigor" in row for row in record.explanation)
+    assert any("Nothing Wasted 10 stacks" in row and "20%" in row for row in record.explanation)
