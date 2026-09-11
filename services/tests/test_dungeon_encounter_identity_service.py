@@ -141,6 +141,7 @@ def test_checked_in_registry_keeps_reviewed_progression_counts_and_chronology():
         "arx_corinium": 3, "city_of_ash_i": 3, "crypt_of_hearts_i": 3,
         "volenfell": 3, "tempest_island": 3, "blackheart_haven": 3,
         "direfrost_keep": 3, "selene_s_web": 3, "blessed_crucible": 3,
+        "vaults_of_madness": 4,
     }
     assert {key: len(value) for key, value in by_content.items()} == expected_counts
 
@@ -153,7 +154,7 @@ def test_checked_in_registry_keeps_reviewed_progression_counts_and_chronology():
     }
     assert rows[0].release_key == (2025, 47)
     assert rows[-1].release_key == (2014, 0)
-    assert len(rows) == 203
+    assert len(rows) == 207
 
 
 def test_checked_in_registry_preserves_grouped_encounter_identities():
@@ -272,6 +273,9 @@ def test_launch_starter_slice_contains_only_vanquisher_progression_encounters():
     assert by_content["blessed_crucible"] == {
         "the_pack", "the_beast_master", "the_lava_queen"
     }
+    assert by_content["vaults_of_madness"] == {
+        "ulguna_soul_reaver", "grothdarr", "iskra_the_omen", "mad_architect"
+    }
 
     all_ids = {row.encounter_id for row in rows}
     assert not {
@@ -279,6 +283,7 @@ def test_launch_starter_slice_contains_only_vanquisher_progression_encounters():
         "altmer", "mummy", "xivilai", "monstrous_gargoyle", "ogrim", "hagraven", "skeleton",
         "khajiit", "senche", "heartstalker", "nighteyes", "shadowhiskers", "silentpaw",
         "bear", "changeling", "werewolf_npc", "shalk", "giant_scorpion", "troll",
+        "harvester", "flesh_atronach", "daedric_titan", "lich",
     } & all_ids
 
 
