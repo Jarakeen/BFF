@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "content_id": "ossein_cage",
+  "encounter_id": "shaper_of_flesh",
+  "encounter_name": "Shapers of Flesh",
+  "evidence": [
+    {
+      "fact_type": "phase",
+      "fact_key": "main_arena_cycle",
+      "value": {
+        "order": 1,
+        "label": "Main Arena",
+        "starts_at": "Pull",
+        "description": "Group burns the active Shaper while controlling Fleshspawn and preventing them from combining into a Flesh Abomination."
+      },
+      "source_type": "guide",
+      "source_name": "Enter the Dominion Ossein Cage raid guide",
+      "source_locator": "Shapers of Flesh - main arena",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "phase",
+      "fact_key": "carrion_portal_cycle",
+      "value": {
+        "order": 2,
+        "label": "Carrion Portal",
+        "starts_at": "Portal pad active",
+        "description": "Assigned portal team enters the Carrion portal, kills the Channeler, manages Caustic Carrion stacks, then returns to an unshielded Shaper."
+      },
+      "source_type": "guide",
+      "source_name": "Enter the Dominion Ossein Cage raid guide",
+      "source_locator": "Shapers of Flesh - Portal",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "phase",
+      "fact_key": "post_portal_add_cycle",
+      "value": {
+        "order": 3,
+        "label": "Post-Portal Adds",
+        "starts_at": "Channeler defeated",
+        "description": "Harvester and Flesh Abomination pressure follows the portal return while the next Shaper becomes vulnerable."
+      },
+      "source_type": "guide",
+      "source_name": "Enter the Dominion Ossein Cage raid guide",
+      "source_locator": "Shapers of Flesh - post portal",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "fleshspawn_merge_exists",
+      "value": true,
+      "source_type": "achievement",
+      "source_name": "ESO-Hub Ossein Cage achievements",
+      "source_locator": "Flesh Swarmed",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "fleshspawn_merge_behavior",
+      "value": {
+        "fleshspawn_can_form_flesh_abomination": true,
+        "raid_goal": "prevent_merge"
+      },
+      "source_type": "achievement",
+      "source_name": "ESO-Hub Ossein Cage achievements",
+      "source_locator": "Flesh Swarmed",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "carrion_portal_exists",
+      "value": true,
+      "source_type": "achievement",
+      "source_name": "ESO-Hub Ossein Cage achievements",
+      "source_locator": "Portal Party / Group Patience / Successful Strike",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "carrion_portal_behavior",
+      "value": {
+        "channeler_priority": true,
+        "caustic_carrion_stacks": true,
+        "carrion_shield_resets_damage": true
+      },
+      "source_type": "achievement",
+      "source_name": "ESO-Hub Ossein Cage achievements",
+      "source_locator": "Group Patience / Successful Strike",
+      "confidence": "high"
+    }
+  ]
+}
