@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "content_id": "dreadsail_reef",
+  "encounter_id": "tideborn_taleria",
+  "encounter_name": "Tideborn Taleria",
+  "evidence": [
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "rapid_deluge_exists",
+      "value": true,
+      "source_type": "official_patch_notes",
+      "source_name": "ESO PTS Patch Notes v8.0.2",
+      "source_locator": "Dreadsail Reef > Tideborn Taleria > Rapid Deluge",
+      "game_update": "U34",
+      "confidence": "high",
+      "notes": "Official ZOS patch history confirms the mechanic and changed its defensive handling."
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "rapid_deluge_blockable",
+      "value": false,
+      "source_type": "official_patch_notes",
+      "source_name": "ESO PTS Patch Notes v8.0.2",
+      "source_locator": "Dreadsail Reef > Tideborn Taleria: Rapid Deluge can no longer be blocked",
+      "game_update": "U34",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "rapid_deluge_hardmode_target_count_current_guide",
+      "value": 8,
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 3 Tideborn Taleria",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Rapid Deluge: Hardmode target count",
+      "confidence": "medium",
+      "notes": "Current guide says 8 HM targets. Existing BFF UESP-derived evidence records 6; do not promote either as canonical until the version/provenance discrepancy is resolved."
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "rapid_deluge_hardmode_target_count_evidence_state",
+      "value": "unresolved_conflict_uesp_6_vs_current_guide_8",
+      "source_type": "review_note",
+      "source_name": "FoundryDock Reference evidence review",
+      "source_locator": "Cross-source reconciliation: stored UESP-derived evidence vs current ESO-Hub guide",
+      "confidence": "high",
+      "notes": "This is an evidence-state marker, not a mechanic value."
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "nematocyst_cloud_exists",
+      "value": true,
+      "source_type": "official_patch_notes",
+      "source_name": "ESO PTS Patch Notes v8.0.2",
+      "source_locator": "Dreadsail Reef > Tideborn Taleria > Nematocyst Cloud",
+      "game_update": "U34",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "nematocyst_cloud_cleanseable",
+      "value": false,
+      "source_type": "official_patch_notes",
+      "source_name": "ESO PTS Patch Notes v8.0.2",
+      "source_locator": "Dreadsail Reef > Tideborn Taleria: Nematocyst Cloud can no longer be cleansed",
+      "game_update": "U34",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "cave_in_exists",
+      "value": true,
+      "source_type": "official_patch_notes",
+      "source_name": "ESO PTS Patch Notes v8.0.2",
+      "source_locator": "Dreadsail Reef > Tideborn Taleria > Cave In",
+      "game_update": "U34",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "cave_in_dodgeable",
+      "value": true,
+      "source_type": "official_patch_notes",
+      "source_name": "ESO PTS Patch Notes v8.0.2",
+      "source_locator": "Dreadsail Reef > Tideborn Taleria: Cave In can now be dodged",
+      "game_update": "U34",
+      "confidence": "high"
+    }
+  ]
+}
