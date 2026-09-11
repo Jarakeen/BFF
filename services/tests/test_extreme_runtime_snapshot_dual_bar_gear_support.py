@@ -24,8 +24,17 @@ class _DualGear:
     def __init__(self):
         self.calls = []
 
-    def resolve_history(self, activation, *, attempts, snapshot_time_seconds):
-        self.calls.append((activation, attempts, snapshot_time_seconds))
+    def resolve_history(
+        self,
+        activation,
+        *,
+        attempts,
+        snapshot_time_seconds,
+        snapshot_active_bar=None,
+    ):
+        self.calls.append(
+            (activation, attempts, snapshot_time_seconds, snapshot_active_bar)
+        )
         return SimpleNamespace(active_buffs=("Major Courage",), unresolved=())
 
 
@@ -70,7 +79,7 @@ def test_dual_bar_activation_uses_bar_aware_runtime_path_without_legacy_double_p
 
     assert result.combat_state.active_buffs == ("Major Courage",)
     assert result.unresolved == ()
-    assert dual.calls == [(activation, (tagged,), 2.0)]
+    assert dual.calls == [(activation, (tagged,), 2.0, "front")]
     assert legacy.calls == []
 
 
