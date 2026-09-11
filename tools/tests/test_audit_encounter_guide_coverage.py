@@ -81,18 +81,18 @@ def test_audit_scope_flags_are_mutually_distinct():
     assert all_args.all_content is True
 
 
-def test_checked_in_dungeon_scope_is_newest_first_through_scalebreaker():
+def test_checked_in_dungeon_scope_is_newest_first_through_wrathstone():
     data_root = Path(__file__).resolve().parents[2] / "data"
     rows = build_coverage_rows(data_root, scope="dungeon")
 
-    assert len(rows) == 77
+    assert len(rows) == 87
     assert {(row.release_year, row.release_update) for row in rows} == {
         (2025, 47), (2025, 45), (2024, 41), (2023, 37),
         (2022, 35), (2022, 33), (2021, 31), (2021, 29),
-        (2020, 27), (2020, 25), (2019, 23),
+        (2020, 27), (2020, 25), (2019, 23), (2019, 21),
     }
     assert (rows[0].release_year, rows[0].release_update) == (2025, 47)
-    assert (rows[-1].release_year, rows[-1].release_update) == (2019, 23)
+    assert (rows[-1].release_year, rows[-1].release_update) == (2019, 21)
 
     assert {row.content_name for row in rows} == {
         "Black Gem Foundry", "Naj-Caldeesh", "Exiled Redoubt", "Lep Seclusa",
@@ -100,7 +100,7 @@ def test_checked_in_dungeon_scope_is_newest_first_through_scalebreaker():
         "Earthen Root Enclave", "Graven Deep", "Coral Aerie", "Shipwright's Regret",
         "Red Petal Bastion", "The Dread Cellar", "Black Drake Villa", "The Cauldron",
         "Castle Thorn", "Stone Garden", "Icereach", "Unhallowed Grave",
-        "Moongrave Fane", "Lair of Maarselok",
+        "Moongrave Fane", "Lair of Maarselok", "Depths of Malatar", "Frostvault",
     }
 
     assert {row.encounter_id for row in rows} == {
@@ -126,4 +126,6 @@ def test_checked_in_dungeon_scope_is_newest_first_through_scalebreaker():
         "hakgrym_the_howler", "keeper_of_the_kiln", "eternal_aegis", "ondagore_the_mad", "kjalnar_tombskald",
         "risen_ruins", "dro_zakar", "kujo_kethba", "nisaazda", "grundwulf",
         "selene", "maarselok_in_flight", "azureblight_cancroid", "maarselok_on_his_perch", "maarselok_in_his_roost",
+        "the_scavenging_maw", "the_weeping_woman", "dark_orb", "king_narilmor", "symphony_of_blades",
+        "icestalker", "warlord_tzogvin", "vault_protector", "rizzuk_bonechill", "the_stonekeeper",
     }
