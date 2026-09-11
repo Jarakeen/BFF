@@ -68,14 +68,15 @@ def test_unmapped_target_resource_reference_remains_blocker():
     assert any("Max Magicka" in item for item in row.unresolved)
 
 
-def test_unmapped_resource_scaling_reference_remains_conservative_blocker():
+def test_unmapped_resource_scaling_reference_is_proven_irrelevant_to_resource_maximum():
     row = _candidate(
         "(5 items) The heal scales off the higher of your Max Magicka or Stamina.",
         "max_magicka",
     )
 
-    assert row.mechanic_complete is False
-    assert row.unresolved
+    assert row.reviewed_delta == 0.0
+    assert row.mechanic_complete is True
+    assert row.unresolved == ()
 
 
 def test_global_equipment_rule_remains_blocker_without_target_resource_text():
