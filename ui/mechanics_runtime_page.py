@@ -11,6 +11,7 @@ separate from canonical mechanics and persisted encounter_strategy rows.
 from PySide6.QtWidgets import (
     QHeaderView,
     QLabel,
+    QLayout,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
@@ -37,6 +38,23 @@ _CALLOUT_PLACEHOLDER = (
 _REMINDER_PLACEHOLDER = (
     "Player reminders stay unresolved until reviewed encounter handling is available."
 )
+_RUNTIME_EVIDENCE_PLACEHOLDER = "No reviewed runtime observations are available for this encounter."
+
+_RUNTIME_NOTE_PRIORITY = {
+    "flight_2_primary_sustained_pressure": 0,
+    "later_flights_interrupt_activity": 1,
+    "flight_3_higher_death_incidence": 2,
+    "flight_1_lighter_pressure": 3,
+    "flight_windows_remain_active_combat": 4,
+}
+
+_RUNTIME_NOTE_GLANCE = {
+    "flight_1_lighter_pressure": "Flight 1: lighter pressure",
+    "flight_2_primary_sustained_pressure": "Flight 2: highest sustained pressure",
+    "flight_3_higher_death_incidence": "Flight 3: highest observed death incidence",
+    "later_flights_interrupt_activity": "Flights 2–3: interrupts matter",
+    "flight_windows_remain_active_combat": "Flights: active add combat, not raid downtime",
+}
 
 
 class RuntimeMechanicsPage(MechanicsPage):
@@ -53,6 +71,7 @@ class RuntimeMechanicsPage(MechanicsPage):
         self._runtime_strategy_ready = False
         super().__init__(expedition=expedition, guide_service=guide_service, parent=parent)
         self._capture_runtime_glance_labels()
+        self._reshape_right_rail()
         self._install_runtime_strategy_tab()
         self._runtime_strategy_ready = True
 
@@ -108,22 +127,47 @@ class RuntimeMechanicsPage(MechanicsPage):
         except RuntimeError:
             setattr(self, attribute, None)
 
+    def _reshape_right_rail(self) -> None:
+        """Remove duplicate My Notes and place reviewed runtime evidence at rail bottom."""
+        cards: dict[str, FoundryCard] = {}
+        for card in self.findChildren(FoundryCard):
+            try:
+                cards[card.title_label.text()] = card
+            except RuntimeError:
+                continue
+
+        history = cards.get("Historical Notes")
+        if history is None:
+            return
+        rail = _layout_containing_widget(self.workspace_layout, history)
+        if rail is None:
+            return
+
+        duplicate_notes = cards.get("My Notes")
+        if duplicate_notes is not None:
+            rail.removeWidget(duplicate_notes)
+            duplicate_notes.setParent(None)
+            duplicate_notes.deleteLater()
+
+        runtime = FoundryCard("Reviewed Runtime Evidence", "⌁").make_parchment().set_watermark(
+            "feather", 0.08
+        )
+        self.runtime_strategy_summary = QLabel(_RUNTIME_EVIDENCE_PLACEHOLDER)
+        self.runtime_strategy_summary.setWordWrap(True)
+        runtime.addWidget(self.runtime_strategy_summary)
+
+        self.runtime_evidence_source_label = QLabel("No reviewed runtime source.")
+        self.runtime_evidence_source_label.setWordWrap(True)
+        self.runtime_evidence_source_label.setProperty("muted", True)
+        runtime.addWidget(self.runtime_evidence_source_label)
+        self.runtime_evidence_card = runtime
+        rail.addWidget(runtime)
+
     def _install_runtime_strategy_tab(self) -> None:
         tab = QWidget()
         layout = QVBoxLayout(tab)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(8)
-
-        provenance = FoundryCard("Reviewed Runtime Evidence", "⌁").make_parchment().set_watermark(
-            "feather", 0.08
-        )
-        self.runtime_strategy_summary = QLabel(
-            "No reviewed runtime observations are available for this encounter."
-        )
-        self.runtime_strategy_summary.setWordWrap(True)
-        self.runtime_strategy_summary.setProperty("muted", True)
-        provenance.addWidget(self.runtime_strategy_summary)
-        layout.addWidget(provenance)
 
         notes = FoundryCard("Real-run Notes", "✎").set_watermark("compass", 0.04)
         self.runtime_notes_table = QTableWidget(0, 2)
@@ -176,19 +220,28 @@ class RuntimeMechanicsPage(MechanicsPage):
 
         projection = self.runtime_guide_service.get(encounter_id)
         if not projection.has_runtime_evidence:
-            self._clear_runtime_strategy(
-                "No reviewed runtime observations are available for this encounter."
-            )
+            self._clear_runtime_strategy(_RUNTIME_EVIDENCE_PLACEHOLDER)
             return
 
         self._populate_runtime_projection(projection)
 
     def _populate_runtime_projection(self, projection: EncounterGuideRuntimeProjection) -> None:
-        source_text = ", ".join(projection.source_labels) or "Reviewed runtime evidence"
+        operational_notes = sorted(
+            projection.notes,
+            key=lambda note: (
+                _RUNTIME_NOTE_PRIORITY.get(note.key, 99),
+                note.key.casefold(),
+            ),
+        )[:3]
         self.runtime_strategy_summary.setText(
-            f"Reviewed real-run evidence: {projection.successful_kills} successful clear(s), "
-            f"{projection.reviewed_windows} reviewed mechanic window(s). Source: {source_text}. "
-            "These observations inform strategy only; they are not canonical encounter mechanics."
+            "\n".join(f"• {_operational_note(note)}" for note in operational_notes)
+            if operational_notes
+            else _RUNTIME_EVIDENCE_PLACEHOLDER
+        )
+        source_text = ", ".join(_compact_source_label(label) for label in projection.source_labels)
+        source_text = source_text or "reviewed runtime corpus"
+        self.runtime_evidence_source_label.setText(
+            f"{projection.successful_kills} reviewed clear(s) • {source_text}"
         )
 
         self.runtime_notes_table.setRowCount(len(projection.notes))
@@ -259,14 +312,10 @@ class RuntimeMechanicsPage(MechanicsPage):
         ][:3]
         reminders = high_priority or list(guidance_rows[:2])
         if reminders:
-            rendered = [
+            reminder_text = "\n".join(
                 f"• {row.role.replace('_', ' ').title()}: {row.guidance}"
                 for row in reminders
-            ]
-            rendered.append(
-                f"• Reviewed runtime sample: {projection.successful_kills} successful clear(s)."
             )
-            reminder_text = "\n".join(rendered)
         else:
             reminder_text = _REMINDER_PLACEHOLDER
         self._set_glance_text(
@@ -278,9 +327,8 @@ class RuntimeMechanicsPage(MechanicsPage):
     def _clear_runtime_strategy(self, message: str | None = None) -> None:
         if not hasattr(self, "runtime_strategy_summary"):
             return
-        self.runtime_strategy_summary.setText(
-            message or "No reviewed runtime observations are available for this encounter."
-        )
+        self.runtime_strategy_summary.setText(message or _RUNTIME_EVIDENCE_PLACEHOLDER)
+        self.runtime_evidence_source_label.setText("No reviewed runtime source.")
         self.runtime_notes_table.setRowCount(0)
         self.runtime_guidance_table.setRowCount(0)
         self._set_glance_text(
@@ -298,6 +346,49 @@ class RuntimeMechanicsPage(MechanicsPage):
             _REMINDER_PLACEHOLDER,
             _REMINDER_PLACEHOLDER,
         )
+
+
+def _layout_containing_widget(layout: QLayout, target: QWidget, seen: set[int] | None = None):
+    seen = set() if seen is None else seen
+    identity = id(layout)
+    if identity in seen:
+        return None
+    seen.add(identity)
+
+    for index in range(layout.count()):
+        item = layout.itemAt(index)
+        if item.widget() is target:
+            return layout
+
+        nested = item.layout()
+        if nested is not None:
+            found = _layout_containing_widget(nested, target, seen)
+            if found is not None:
+                return found
+
+        widget = item.widget()
+        if widget is not None and widget.layout() is not None:
+            found = _layout_containing_widget(widget.layout(), target, seen)
+            if found is not None:
+                return found
+    return None
+
+
+def _operational_note(note) -> str:
+    canned = _RUNTIME_NOTE_GLANCE.get(note.key)
+    if canned:
+        return canned
+    text = str(note.text or "").strip()
+    if len(text) <= 110:
+        return text
+    return text[:107].rstrip() + "..."
+
+
+def _compact_source_label(value: str) -> str:
+    text = str(value or "").strip()
+    if "eso logs" in text.casefold():
+        return "ESO Logs corpus"
+    return text
 
 
 def _priority_rank(value: str) -> int:
