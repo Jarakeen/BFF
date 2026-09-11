@@ -71,6 +71,7 @@ def test_checked_in_registry_keeps_newest_first_release_slices_and_main_encounte
         "oathsworn_pit", "bedlam_veil", "bal_sunnar", "scrivener_s_hall",
         "earthen_root_enclave", "graven_deep", "coral_aerie", "shipwright_s_regret",
         "red_petal_bastion", "the_dread_cellar", "black_drake_villa", "stone_garden",
+        "city_of_ash_ii", "crypt_of_hearts_ii",
     ):
         assert len(by_content[content_id]) == 3
     assert len(by_content["the_cauldron"]) == 4
@@ -90,9 +91,10 @@ def test_checked_in_registry_keeps_newest_first_release_slices_and_main_encounte
         (2025, 47), (2025, 45), (2024, 41), (2023, 37), (2022, 35), (2022, 33),
         (2021, 31), (2021, 29), (2020, 27), (2020, 25), (2019, 23), (2019, 21),
         (2018, 19), (2018, 17), (2017, 15), (2016, 11), (2015, 7),
+        (2014, 5), (2014, 2),
     }
     assert rows[0].release_key == (2025, 47)
-    assert rows[-1].release_key == (2015, 7)
+    assert rows[-1].release_key == (2014, 2)
 
     all_ids = {row.encounter_id for row in rows}
 
@@ -239,3 +241,13 @@ def test_checked_in_registry_keeps_newest_first_release_slices_and_main_encounte
     assert set(tower) == {"the_adjudicator", "elite_guard", "the_planar_inhibitor", "molag_kena"}
     assert not (data_root / "eso_info" / "bosses" / "elite_guard.json").exists()
     assert "harvester" not in all_ids and "cold_flame_atronach" not in all_ids and "flame_atronach" not in all_ids and "xivkyn" not in all_ids
+
+    city_two = {row.encounter_id: row for row in by_content["city_of_ash_ii"]}
+    assert set(city_two) == {"horvantud_the_fire_maw", "ash_titan_city_of_ash_ii", "valkyn_skoria_person"}
+    assert "daedroth" not in all_ids and "daedric_titan" not in all_ids
+
+    crypt_two = {row.encounter_id: row for row in by_content["crypt_of_hearts_ii"]}
+    assert set(crypt_two) == {"ruzozuzalpamaz", "ilambris_amalgam", "nerien_eth"}
+    assert crypt_two["ilambris_amalgam"].member_ids == ("ilambris_athor", "ilambris_zaven", "ilambris_amalgam")
+    assert "spider_daedra" not in all_ids and "bone_colossus" not in all_ids and "ebony_blade" not in all_ids
+    assert "ilambris_athor" not in all_ids and "ilambris_zaven" not in all_ids
