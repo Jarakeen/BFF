@@ -15,6 +15,11 @@ class CombatState:
     deliberately. Named buffs are canonicalized and deduplicated at the state
     boundary so downstream resolvers do not need to guess aliases.
 
+    Emperor status is also explicit runtime state. The Emperor max-resource
+    passive only applies while the character is the active Emperor, is inside
+    that home campaign, and supplies the current Home Keep count used by the
+    canonical passive table.
+
     ``game_update`` versions the meaning of those named effects. U50 remains the
     default until Update 51 is live; callers may explicitly evaluate U51/PTS
     semantics without rewriting historical source data.
@@ -23,9 +28,17 @@ class CombatState:
     in_combat: bool = False
     active_buffs: tuple[str, ...] = ()
     game_update: GameUpdate | str = GameUpdate.U50
+    is_emperor: bool = False
+    in_home_campaign: bool = False
+    emperor_home_keeps: int = 0
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "game_update", normalize_game_update(self.game_update))
+        keeps = int(self.emperor_home_keeps)
+        if keeps < 0 or keeps > 6:
+            raise ValueError("emperor_home_keeps must be between 0 and 6")
+        object.__setattr__(self, "emperor_home_keeps", keeps)
+
         seen: set[str] = set()
         normalized: list[str] = []
         for value in self.active_buffs:
@@ -45,6 +58,10 @@ class CombatState:
     def has_buff(self, name: str) -> bool:
         requested = " ".join(str(name or "").strip().casefold().split())
         return bool(requested) and any(buff.casefold() == requested for buff in self.active_buffs)
+
+    @property
+    def emperor_passive_active(self) -> bool:
+        return bool(self.is_emperor and self.in_home_campaign)
 
 
 @dataclass(frozen=True)
