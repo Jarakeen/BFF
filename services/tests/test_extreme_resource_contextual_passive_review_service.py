@@ -11,20 +11,23 @@ def _by_name(objective: str):
     }
 
 
-def test_max_health_review_separates_applied_and_runtime_boundaries():
+def test_max_health_review_marks_bar_and_runtime_passives_applied():
     rows = _by_name("max_health")
 
     assert rows["Last Gasp"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
     assert rows["Juggernaut"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
     assert rows["Dark Vigor"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
-    assert rows["Expert Summoner"].status is ExtremeResourceContextualPassiveStatus.RUNTIME_STATE_REQUIRED
-    assert rows["Nothing Wasted"].status is ExtremeResourceContextualPassiveStatus.RUNTIME_STATE_REQUIRED
+    assert rows["Expert Summoner"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
+    assert rows["Nothing Wasted"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
     assert rows["Last Gasp"].source == "NecromancerPassiveInputResolver"
     assert rows["Juggernaut"].source == "ArmorPassiveInputResolver"
     assert rows["Dark Vigor"].source == "NightbladePassiveInputResolver"
+    assert rows["Expert Summoner"].source == "ExtremeSorcererExpertSummonerPetContextService"
+    assert rows["Nothing Wasted"].source == "ClassMasteryExtremeEffectService"
     assert "six-slot" in rows["Dark Vigor"].condition.casefold()
-    assert "permanent pet" in rows["Expert Summoner"].condition.casefold()
+    assert "permanent-pet" in rows["Expert Summoner"].condition.casefold()
     assert "10-stack" in rows["Nothing Wasted"].condition.casefold()
+    assert "pure necromancer" in rows["Nothing Wasted"].condition.casefold()
     assert "heavy armor" in rows["Juggernaut"].condition.casefold()
     assert "max-health" in rows["Juggernaut"].condition.casefold()
 
@@ -51,7 +54,7 @@ def test_max_stamina_review_marks_siphoning_bar_trigger_applied():
     assert "one legal siphoning" in rows["Magicka Flood"].condition.casefold()
 
 
-def test_status_filter_is_deterministic_and_does_not_claim_global_denominator():
+def test_status_filter_is_deterministic_and_reviewed_runtime_bucket_is_empty():
     first = ExtremeResourceContextualPassiveReviewService.status_rows(
         "max_health",
         ExtremeResourceContextualPassiveStatus.RUNTIME_STATE_REQUIRED,
@@ -61,23 +64,20 @@ def test_status_filter_is_deterministic_and_does_not_claim_global_denominator():
         ExtremeResourceContextualPassiveStatus.RUNTIME_STATE_REQUIRED,
     )
 
-    assert first == second
-    assert [row.passive_name for row in first] == ["Expert Summoner", "Nothing Wasted"]
+    assert first == second == ()
     assert not hasattr(first, "denominator_proven")
 
 
-def test_no_reviewed_high_impact_resource_passive_still_needs_bar_or_mechanic_implementation():
+def test_no_reviewed_high_impact_resource_passive_still_needs_engineering_boundary():
     rows = (
         *ExtremeResourceContextualPassiveReviewService.build("max_health"),
         *ExtremeResourceContextualPassiveReviewService.build("max_magicka"),
         *ExtremeResourceContextualPassiveReviewService.build("max_stamina"),
     )
 
-    assert not any(
-        row.status in {
-            ExtremeResourceContextualPassiveStatus.ACTIVE_BAR_SEARCH_REQUIRED,
-            ExtremeResourceContextualPassiveStatus.MECHANIC_IMPLEMENTATION_REQUIRED,
-        }
+    assert rows
+    assert all(
+        row.status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
         for row in rows
     )
 
