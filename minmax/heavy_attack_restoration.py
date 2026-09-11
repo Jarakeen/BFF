@@ -36,15 +36,25 @@ _MAGICKA_WEAPONS = {
     HeavyAttackWeaponType.RESTORATION_STAFF,
 }
 
+# Official Update 35 fully-charged staff-heavy base restores, independently
+# corroborated by the current reviewed ESO Logs corpus for these three weapon
+# families. Fire Staff remains fail-closed here because the current corpus has
+# no reviewed live observation for its restore value yet.
+#
+# Official source: ESO Update 35 patch notes (2022 Lost Depths update)
+# - Restoration Staff: 3267 Magicka
+# - Ice Staff: 2425 Magicka
+# - Lightning Staff: 2970 Magicka
+_VERIFIED_BASE_RESTORE_BY_WEAPON: dict[HeavyAttackWeaponType, float] = {
+    HeavyAttackWeaponType.FROST_STAFF: 2425.0,
+    HeavyAttackWeaponType.SHOCK_STAFF: 2970.0,
+    HeavyAttackWeaponType.RESTORATION_STAFF: 3267.0,
+}
+
 
 @dataclass(frozen=True)
 class HeavyAttackRestorationModifiers:
-    """Verified multiplicative modifiers to a fully charged heavy restore.
-
-    The underlying weapon-specific base restore is deliberately supplied by the
-    caller until current live values are verified. This prevents historical
-    UESP-translated constants from silently becoming Phase 4 canonical inputs.
-    """
+    """Verified multiplicative modifiers to a fully charged heavy restore."""
 
     champion_point_percent: float = 0.0
     skill_set_buff_percent: float = 0.0
@@ -60,6 +70,17 @@ class HeavyAttackRestorationModifiers:
         ):
             if value < 0:
                 raise ValueError(f"Heavy attack restoration modifier cannot be negative: {name}={value}")
+
+
+def verified_heavy_attack_base_restore(weapon: HeavyAttackWeaponType) -> float | None:
+    """Return a live-verified fully charged base restore when one is known.
+
+    Unknown weapon families remain explicit ``None`` rather than inheriting a
+    historical value. Callers may still supply separately reviewed evidence to
+    ``calculate_heavy_attack_restoration`` when appropriate.
+    """
+
+    return _VERIFIED_BASE_RESTORE_BY_WEAPON.get(weapon)
 
 
 def resource_for_heavy_attack_weapon(weapon: HeavyAttackWeaponType) -> ResourceType:
@@ -83,7 +104,9 @@ def calculate_heavy_attack_restoration(
         base * (1 + CP) * (1 + skill/set/buff + Revitalize) * weapon-specific
 
     Restoration Staff Cycle of Life is a weapon-specific multiplicative term.
-    The base restore itself remains required and explicit until live-verified.
+    The base restore must still be explicit at the call boundary; callers may use
+    ``verified_heavy_attack_base_restore`` for weapon families promoted from
+    reviewed live evidence.
     """
 
     if verified_base_restore is None:
