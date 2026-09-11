@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "stone_garden",
+  "encounter_id": "exarch_kraglen",
+  "encounter_name": "Exarch Kraglen",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Blood Rage Main Phase","threshold":"Pull to death","description":"Stay close enough to react to Kraglen, block tank attacks, and prioritize the short Blood Rage interrupt."},"source_type":"guide","source_name":"Alcast Stone Garden Guide","source_locator":"Exarch Kraglen","game_update":"U27","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"blood_rage","value":{"name":"Blood Rage","response":"interrupt_immediately_to_prevent_resource_drain_and_reduction"},"source_type":"guide","source_name":"Alcast Stone Garden Guide","source_locator":"Exarch Kraglen > Blood Rage","game_update":"U27","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"charge","value":{"name":"Charge","response":"block_the_targeted_charge"},"source_type":"guide","source_name":"Alcast Stone Garden Guide","source_locator":"Exarch Kraglen > Charge","game_update":"U27","confidence":"high"}
+  ]
+}
