@@ -46,7 +46,7 @@ These ids appear as self-targeted positive `resourcechange` events associated wi
 
 | Raw id | Working meaning | Confidence | Observed evidence |
 |---:|---|---|---|
-| `32760` | Restoration Staff heavy-attack resource return | STRONG OBSERVATION | Repeated at HA completion, usually `+0ms`; common values `4247` and exact double `8494`, plus smaller clipped/conditional-looking values. |
+| `32760` | Restoration Staff heavy-attack resource return | STRONG OBSERVATION | Repeated at HA completion, usually `+0ms`; common values `4247` and exact double `8494`, plus smaller cap-clipped effective gains. |
 | `60762` | Frost Staff heavy-attack resource return | STRONG OBSERVATION | Observed `2425` after a completed Frost HA in reviewed corpus. Small sample. |
 | `60764` | Shock Staff heavy-attack resource return | STRONG OBSERVATION | Observed `2970` after a completed Shock HA in reviewed corpus. Small sample. |
 
@@ -56,7 +56,24 @@ Current reviewed corpus has included:
 
 - `4247` — common full-looking return.
 - `8494` — exactly `2 x 4247`; consistent with an Off Balance double-resource case, but keep this as an evidence interpretation until the exact target state is verified per event.
-- `3138`, `1967`, `1799`, `974`, `727`, `646` — occur at normal-looking full channel durations too, so **do not classify these as partial channels merely from duration**. Current investigation is checking whether ESO Logs reports an effective/capped resource gain rather than the attempted full return.
+- `3138`, `1967`, `1799`, `974`, `727`, `646` — **reviewed as cap-clipped effective gains**, not shorter channels. In each reviewed row, raw `sourceResources` shows the relevant post-event Magicka pool exactly at its reported maximum after the resource event.
+
+### Cap-clipping behavior seen in raw ESO Logs
+
+**STRONG OBSERVATION:** for the reviewed weapon-specific staff-heavy resource rows, raw `sourceResources` behaves like a post-event resource snapshot.
+
+Examples from `32760`:
+
+- restore `1967` -> post-event Magicka `37975 / 37975`
+- restore `974` -> post-event Magicka `37975 / 37975`
+- restore `1799` -> post-event Magicka `34643 / 34643`
+- restore `3138` -> post-event Magicka `36356 / 36356`
+- restore `727` -> post-event Magicka `34643 / 34643`
+- restore `646` -> post-event Magicka `34643 / 34643`
+
+By contrast, ordinary `4247` and doubled `8494` observations generally end below the reported resource cap when the full amount can be accepted.
+
+This supports treating the smaller `32760` values as **effective accepted gains clipped by the resource cap**, not as different Heavy Attack base values. It still does **not** reveal the hidden attempted restore for an individual clipped event when multiple multiplier states are possible.
 
 Important: `4247` is an **observed final return**, not a verified base restore. `minmax/heavy_attack_restoration.py` expects a pre-modifier `verified_base_restore` and applies modifiers itself. Feeding `4247` directly into that base field could double-apply Cycle of Life / CP / Revitalize / other modifiers.
 
@@ -122,7 +139,11 @@ The semantic ESO Logs adapter preserves these resource-relevant raw fields:
 - `otherResourceChange`
 - `maxResourceAmount`
 - `waste`
+- `sourceResources`
+- `targetResources`
 - full original `raw_event`
+
+For the reviewed staff-heavy events, `sourceResources` appears to be the **post-event** resource snapshot and is therefore useful for identifying cap clipping.
 
 When a restore amount looks clipped or inconsistent, inspect these raw fields before deciding that the mechanic itself changed.
 
@@ -130,11 +151,11 @@ When a restore amount looks clipped or inconsistent, inspect these raw fields be
 
 # Current open questions
 
-1. Does ESO Logs `resourceChange` represent accepted/effective resource gain when the player is near cap, while `otherResourceChange`, `waste`, or another raw field preserves the attempted amount?
-2. Is `4247` the fully modified ordinary Restoration Staff return for the reviewed healer configurations, with `8494` representing Off Balance doubling?
-3. What exact pre-modifier base produces the observed Resto/Frost/Shock returns after current live passives/CP/gear are accounted for?
-4. Verify the exact ESO Logs mapping for `resourceChangeType` values `0`, `1`, and `2`.
-5. Identify the small nearby resource aliases listed above so future timing audits can reject them by meaning, not merely by exclusion.
+1. Is `4247` the fully modified ordinary Restoration Staff return for the reviewed healer configurations, with `8494` representing Off Balance doubling?
+2. What exact pre-modifier base produces the observed Resto/Frost/Shock returns after current live passives/CP/gear are accounted for?
+3. Verify the exact ESO Logs mapping for `resourceChangeType` values `0`, `1`, and `2`.
+4. Identify the small nearby resource aliases listed above so future timing audits can reject them by meaning, not merely by exclusion.
+5. Can target-state evidence in the raw corpus directly verify which `8494` Resto returns occurred against Off Balance targets?
 
 ---
 
@@ -146,6 +167,7 @@ Current research tools:
 - `tools/audit_phase13_cross_player_heavy_attack_candidates.py`
 - `tools/audit_phase13_staff_heavy_attack_restore_corpus.py`
 - `tools/audit_phase13_staff_heavy_restore_raw_resource_fields.py`
+- `tools/audit_phase13_staff_heavy_restore_cap_clipping.py`
 
 Primary raw corpus currently used:
 
