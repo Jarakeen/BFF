@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "purpose": "Presentation-only ESO gear, skill, passive, and Champion Point history. Never used by mechanics/runtime calculations.",
+  "events": []
+}
