@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "selene_s_web",
+  "encounter_id": "longclaw",
+  "encounter_name": "Longclaw",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"fight start","description":"Manage Longclaw and his senche pack together; spirit panthers return after death, so repeated add killing is usually less useful than controlled tanking."},"source_type":"guide","source_name":"Xynode Selene's Web Guide","source_locator":"Longclaw","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"spirit_panthers","value":{"name":"Spirit Panthers","response":"tank_or_control_the_reappearing_spirit_panthers_instead_of_repeatedly_chasing_them_for_kills"},"source_type":"guide","source_name":"Xynode Selene's Web Guide","source_locator":"Longclaw","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"volley_and_poison","value":{"name":"Volley and Poison","response":"step_out_of_the_small_ground_aoes_and_poison_clouds_while_maintaining_boss_pressure"},"source_type":"guide","source_name":"Xynode Selene's Web Guide","source_locator":"Longclaw","game_update":"Launch","confidence":"high"}
+  ]
+}
