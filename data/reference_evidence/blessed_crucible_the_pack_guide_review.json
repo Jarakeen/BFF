@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "blessed_crucible",
+  "encounter_id": "the_pack",
+  "encounter_name": "The Pack",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"pack_phase","value":{"order":1,"label":"Pack Phase","threshold":"after arena waves","description":"The named Pack members enter together after the arena waves; keep them controlled and react to each member's short-range and elemental pressure."},"source_type":"guide","source_name":"Xynode Blessed Crucible Guide","source_locator":"The Pack","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"snagg_uppercut","value":{"name":"Snagg Uppercut","response":"block_snagg_gro_mashul_s_heavy_uppercut_and_step_out_of_his_short_whirlwind"},"source_type":"guide","source_name":"Xynode Blessed Crucible Guide","source_locator":"The Pack","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"nusana_fire_line","value":{"name":"Nusana Fire Line","response":"move_sideways_out_of_nusana_s_line_of_fire_instead_of_standing_in_the_path"},"source_type":"guide","source_name":"Xynode Blessed Crucible Guide","source_locator":"The Pack","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"dynus_channel","value":{"name":"Dynus Channel","response":"interrupt_dynus_aralas_when_he_begins_an_interruptible_elemental_channel"},"source_type":"guide","source_name":"Xynode Blessed Crucible Guide","source_locator":"The Pack","game_update":"Launch","confidence":"high"}
+  ]
+}
