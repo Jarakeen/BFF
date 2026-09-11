@@ -235,6 +235,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Role-aware rotation construction
 - Healer rotation construction
 - Demand-window scoping for externally triggered healer effects
+- Explicit-attacker Minor Lifesteal demand projection
 - Read-only Minor Lifesteal runtime evidence discovery from ESO Logs
 - Tank rotation support
 - Damage Dealer rotation support
