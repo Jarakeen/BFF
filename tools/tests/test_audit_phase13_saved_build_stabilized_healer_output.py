@@ -1,3 +1,4 @@
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -6,6 +7,7 @@ from minmax.rotation_demand_window import RotationDemandKind, RotationDemandPatt
 from tools.audit_phase13_saved_build_stabilized_healer_output import (
     _full_fight_demand,
     _print_healing_evidence,
+    _runtime_mode_label,
 )
 
 
@@ -23,6 +25,13 @@ def test_full_fight_demand_covers_entire_stabilized_plan_window():
 def test_full_fight_demand_rejects_nonpositive_duration():
     with pytest.raises(ValueError, match="duration must be positive"):
         _full_fight_demand(0.0)
+
+
+def test_runtime_mode_label_distinguishes_static_fallback_from_explicit_history():
+    assert _runtime_mode_label(None).startswith("STATIC FALLBACK")
+    assert _runtime_mode_label(Path("runtime.json")).startswith(
+        "EXACT-TIME RUNTIME HISTORY"
+    )
 
 
 def test_print_healing_evidence_reports_all_temporal_classes(capsys):
