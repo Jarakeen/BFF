@@ -34,6 +34,13 @@
     {"content_id":"earthen_root_enclave","content_name":"Earthen Root Enclave","release_year":2022,"release_update":35,"release_pack":"Lost Depths","encounter_id":"archdruid_devyric","display_name":"Archdruid Devyric","member_ids":["archdruid_devyric"]},
     {"content_id":"graven_deep","content_name":"Graven Deep","release_year":2022,"release_update":35,"release_pack":"Lost Depths","encounter_id":"the_euphotic_gatekeeper","display_name":"The Euphotic Gatekeeper","member_ids":["the_euphotic_gatekeeper"]},
     {"content_id":"graven_deep","content_name":"Graven Deep","release_year":2022,"release_update":35,"release_pack":"Lost Depths","encounter_id":"varzunon","display_name":"Varzunon","member_ids":["varzunon"]},
-    {"content_id":"graven_deep","content_name":"Graven Deep","release_year":2022,"release_update":35,"release_pack":"Lost Depths","encounter_id":"zelvraak_the_unbreathing","display_name":"Zelvraak the Unbreathing","member_ids":["zelvraak_the_unbreathing"]}
+    {"content_id":"graven_deep","content_name":"Graven Deep","release_year":2022,"release_update":35,"release_pack":"Lost Depths","encounter_id":"zelvraak_the_unbreathing","display_name":"Zelvraak the Unbreathing","member_ids":["zelvraak_the_unbreathing"]},
+
+    {"content_id":"coral_aerie","content_name":"Coral Aerie","release_year":2022,"release_update":33,"release_pack":"Ascending Tide","encounter_id":"maligalig","display_name":"Maligalig","member_ids":["maligalig"]},
+    {"content_id":"coral_aerie","content_name":"Coral Aerie","release_year":2022,"release_update":33,"release_pack":"Ascending Tide","encounter_id":"sarydil","display_name":"Sarydil","member_ids":["sarydil"]},
+    {"content_id":"coral_aerie","content_name":"Coral Aerie","release_year":2022,"release_update":33,"release_pack":"Ascending Tide","encounter_id":"varallion","display_name":"Varallion","member_ids":["varallion"]},
+    {"content_id":"shipwright_s_regret","content_name":"Shipwright's Regret","release_year":2022,"release_update":33,"release_pack":"Ascending Tide","encounter_id":"foreman_bradiggan","display_name":"Foreman Bradiggan","member_ids":["foreman_bradiggan"]},
+    {"content_id":"shipwright_s_regret","content_name":"Shipwright's Regret","release_year":2022,"release_update":33,"release_pack":"Ascending Tide","encounter_id":"nazaray","display_name":"Nazaray","member_ids":["nazaray"]},
+    {"content_id":"shipwright_s_regret","content_name":"Shipwright's Regret","release_year":2022,"release_update":33,"release_pack":"Ascending Tide","encounter_id":"captain_numirril","display_name":"Captain Numirril","member_ids":["captain_numirril"]}
   ]
 }
