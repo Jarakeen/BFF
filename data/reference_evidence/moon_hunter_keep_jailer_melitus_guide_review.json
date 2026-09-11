@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "moon_hunter_keep",
+  "encounter_id": "jailer_melitus",
+  "encounter_name": "Jailer Melitus",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Handle werewolf adds, moving ground pressure, and Melitus's lethal pin channel."},"source_type":"guide","source_name":"Moon Hunter Keep community guide","source_locator":"Jailer Melitus","game_update":"U19","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"pin_channel","value":{"name":"Pin / Charged Execution","response":"interrupt_immediately_when_melitus_pins_a_player"},"source_type":"guide","source_name":"Moon Hunter Keep community guide","source_locator":"Jailer Melitus","game_update":"U19","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"bloody_geysers","value":{"name":"Bloody Geysers","response":"keep_moving_and_avoid_persistent_ground_geysers"},"source_type":"achievement","source_name":"Bloody Mess","source_locator":"Moon Hunter Keep achievement","game_update":"U19","confidence":"high"}
+  ]
+}
