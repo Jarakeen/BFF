@@ -43,15 +43,8 @@ class ExtremeRuntimeSnapshotCombatStateService:
 
     When ``gear_activation`` is supplied, gear proc projection uses the full
     two-bar legality path and therefore requires bar provenance on runtime effect
-    attempts. Without that evidence, the older active-snapshot gear path remains
-    available for compatibility. The two paths are mutually exclusive for one
-    projection so gear buffs cannot be double-counted.
-
-    ``base_combat_state`` preserves explicit snapshot facts that the runtime history
-    does not own, including game-update semantics and Emperor state. Runtime-proven
-    named buffs are merged into that base state rather than replacing it. The older
-    ``base_active_buffs`` parameter remains a compatibility view and is merged after
-    the base state's own active buffs.
+    attempts. Exact bar transitions are also forwarded when available so strict
+    source-bound effects can prove whether their source remained active.
     """
 
     def __init__(
@@ -135,6 +128,8 @@ class ExtremeRuntimeSnapshotCombatStateService:
                         attempts=snapshot.bar_effect_attempts,
                         snapshot_time_seconds=snapshot.snapshot_time_seconds,
                         snapshot_active_bar=active_bar,
+                        bar_transitions=snapshot.bar_transitions,
+                        bar_transition_history_complete=snapshot.bar_transition_history_complete,
                     )
                     active_buffs.extend(gear_result.active_buffs)
                     unresolved.extend(gear_result.unresolved)
