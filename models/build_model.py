@@ -159,10 +159,6 @@ class PlayerBuild:
     Role: str = ""
     Alliance: str = ""
     Mundus: str = ""
-    # Normally empty. Twice-Born Star can make a second distinct Mundus boon
-    # legal; canonical static evaluation verifies the equipped-set requirement
-    # before applying this field.
-    SecondMundus: str = ""
     Vampire: bool = False
     Werewolf: bool = False
     AttributeHealth: int = 0
@@ -199,6 +195,10 @@ class PlayerBuild:
     Potion: str = ""
     Notes: str = ""
     BossLoadouts: list[BossLoadout] = field(default_factory=list)
+    # Appended for positional-constructor compatibility. Normally empty;
+    # Twice-Born Star can make a second distinct Mundus boon legal, and the
+    # canonical static resolver verifies that 5-piece requirement before use.
+    SecondMundus: str = ""
 
     @property
     def attribute_points_total(self) -> int:
@@ -271,7 +271,6 @@ class PlayerBuild:
             Race=str(data.get("Race", "") or ""), EsoClass=str(data.get("EsoClass", "") or ""),
             Role=str(data.get("Role", "") or ""), Alliance=str(data.get("Alliance", "") or ""),
             Mundus=str(data.get("Mundus", "") or ""),
-            SecondMundus=str(data.get("SecondMundus", "") or ""),
             Vampire=bool(data.get("Vampire", False)), Werewolf=bool(data.get("Werewolf", False)),
             AttributeHealth=_int_value(data.get("AttributeHealth", 0)),
             AttributeMagicka=_int_value(data.get("AttributeMagicka", 0)),
@@ -299,6 +298,7 @@ class PlayerBuild:
             ScribedSkillRecipes=recipes,
             Food=str(data.get("Food", "") or ""), Potion=str(data.get("Potion", "") or ""), Notes=str(data.get("Notes", "") or ""),
             BossLoadouts=[BossLoadout.from_dict(b) for b in data.get("BossLoadouts", [])],
+            SecondMundus=str(data.get("SecondMundus", "") or ""),
         )
 
     def display_label(self, fallback: str) -> str:
