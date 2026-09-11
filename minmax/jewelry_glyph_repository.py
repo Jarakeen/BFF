@@ -24,6 +24,31 @@ class JewelryGlyphEffectRepository:
             ).fetchall()
         return tuple(str(row[0]) for row in rows)
 
+    def get_jewelry_glyph_effect_types_by_name(self, glyph_name: str) -> tuple[str, ...]:
+        """Return canonical semantic effect identities for one named jewelry glyph.
+
+        This is intentionally narrower than mapped engine ``Effect`` resolution.
+        Some legitimate jewelry mechanics, such as block-cost reduction or potion
+        duration, are not core-stat identities. Coverage/audit callers can inspect
+        the semantic source identity without forcing every ESO mechanic through
+        ``EffectMapper`` merely to prove it is unrelated to their objective.
+        """
+        with sqlite3.connect(self.database_path) as connection:
+            rows = connection.execute(
+                """
+                SELECT DISTINCT LOWER(TRIM(e.effect_type))
+                FROM jewelry_glyph g
+                JOIN jewelry_glyph_effect e
+                    ON e.glyph_item_id = g.item_id
+                WHERE LOWER(TRIM(g.name)) = LOWER(TRIM(?))
+                  AND e.effect_type IS NOT NULL
+                  AND TRIM(e.effect_type) <> ''
+                ORDER BY LOWER(TRIM(e.effect_type))
+                """,
+                (glyph_name,),
+            ).fetchall()
+        return tuple(str(row[0]) for row in rows)
+
     def get_jewelry_glyph_effect(
         self,
         item_id: int,
