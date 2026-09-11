@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {"entry_name":"Frontal Cone — Mathgamain","mitigation":"Tank faces Mathgamain away from the group; non-tanks stay out of the frontal cone."},
+    {"entry_name":"Add Waves — Mathgamain","mitigation":"Taunt the large adds and prioritize Stranglers before their poison pressure compounds."},
+    {"entry_name":"Icy Root — Caillaoife","mitigation":"Purge or avoid the targeted ice attack so the root does not trap a player during forest phases."},
+    {"entry_name":"Resurrected Stone Adds — Stoneheart","mitigation":"Kill resurrected stone adds quickly so repeated ground AoEs do not stack through the room."},
+    {"entry_name":"Fire Vents — Galchobhar","mitigation":"The tank plugs active fire holes immediately to prevent escalating group damage."},
+    {"entry_name":"Weapon Throw — Galchobhar","mitigation":"Each player uses a separate outer platform when Galchobhar throws his weapon into the center."},
+    {"entry_name":"Fire Shalk Lava Ball — Galchobhar","mitigation":"Take the targeted lava ball toward an outer platform and avoid lingering until the platform collapses."},
+    {"entry_name":"Chain Root — Gherig Bullblood and His Attendants","mitigation":"Interrupt the attendant channel immediately to free the two rooted players."},
+    {"entry_name":"Lava AoE — Earthgore Amalgam","mitigation":"Aim targeted lava toward the wall and shift position slightly so the arena center stays usable."},
+    {"entry_name":"Stonefall — Earthgore Amalgam","mitigation":"Use the Stonefire Crucible to interrupt Stonefall outside Hard Mode; in Hard Mode survive it without brazier help."},
+    {"entry_name":"Amalgam Copies — Earthgore Amalgam","mitigation":"Tank the copies and burn the newest lower-health copy quickly to reduce pressure."},
+    {"entry_name":"Siege Shield — Morrigh Bullblood","mitigation":"Stack inside Morrigh's protective shield during the trebuchet barrage."},
+    {"entry_name":"Stomp — Siege Mammoth","mitigation":"Every player blocks the stomp immediately; missing the block is lethal."},
+    {"entry_name":"Trample — Siege Mammoth","mitigation":"Tank blocks the charge toward the gate, or the group clears the charge line if it turns."},
+    {"entry_name":"Ice Comet — Cernunnon","mitigation":"Spread personal circles and block when the comets land so players do not overlap damage."},
+    {"entry_name":"Oath-Bound Souls — Cernunnon","mitigation":"Collect each green soul and deposit it into a separate light to progress the phase."},
+    {"entry_name":"Corpse Cleanse — Deathlord Bjarfrud Skjoralmor","mitigation":"Kill adds near the boss and use the urn synergy to cleanse their corpses quickly."},
+    {"entry_name":"Corpse Detonation — Deathlord Bjarfrud Skjoralmor","mitigation":"Spread and finish corpse cleanses before the detonation channel resolves."},
+    {"entry_name":"Frontal Breath — Deathlord Bjarfrud Skjoralmor","mitigation":"Tank faces the boss away from the group; non-tanks stay out of the frontal breath."},
+    {"entry_name":"Domihaus Shout — Domihaus the Bloody-Horned","mitigation":"All four players hide behind the same assigned pillar for each shout so only one pillar is consumed."},
+    {"entry_name":"Suck In and Melt — Domihaus the Bloody-Horned","mitigation":"Spread to four corners, then backpedal together to place personal AoEs without overlapping."}
+  ]
+}
