@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "purpose": "Presentation-only Champion Point history for Reference Data. Never used by mechanics/runtime calculations.",
+  "events": [
+    {
+      "entity_type": "Champion Point",
+      "name": "Backstabber",
+      "update": "U34",
+      "year": 2022,
+      "change_type": "nerf",
+      "summary": "Critical Damage per stage was reduced to 2%, down from 3%.",
+      "source": "ZOS PC/Mac Patch Notes v8.0.5 - High Isle & Update 34",
+      "source_url": "https://forums.elderscrollsonline.com/en/discussion/comment/7612709/"
+    },
+    {
+      "entity_type": "Champion Point",
+      "name": "Biting Aura",
+      "update": "U34",
+      "year": 2022,
+      "change_type": "rework",
+      "summary": "Progression changed to 3% Area of Effect damage per stage with 2 stages at 25 points each, replacing 2% per stage with 5 stages at 10 points each.",
+      "source": "ZOS PC/Mac Patch Notes v8.0.5 - High Isle & Update 34",
+      "source_url": "https://forums.elderscrollsonline.com/en/discussion/comment/7612709/"
+    },
+    {
+      "entity_type": "Champion Point",
+      "name": "Deadly Aim",
+      "update": "U34",
+      "year": 2022,
+      "change_type": "rework",
+      "summary": "Progression changed to 3% single-target damage per stage with 2 stages at 25 points each, replacing 2% per stage with 5 stages at 10 points each.",
+      "source": "ZOS PC/Mac Patch Notes v8.0.5 - High Isle & Update 34",
+      "source_url": "https://forums.elderscrollsonline.com/en/discussion/comment/7612709/"
+    },
+    {
+      "entity_type": "Champion Point",
+      "name": "Master-at-Arms",
+      "update": "U34",
+      "year": 2022,
+      "change_type": "rework",
+      "summary": "Progression changed to 3% direct damage per stage with 2 stages at 25 points each, replacing 2% per stage with 5 stages at 10 points each.",
+      "source": "ZOS PC/Mac Patch Notes v8.0.5 - High Isle & Update 34",
+      "source_url": "https://forums.elderscrollsonline.com/en/discussion/comment/7612709/"
+    },
+    {
+      "entity_type": "Champion Point",
+      "name": "Thaumaturge",
+      "update": "U34",
+      "year": 2022,
+      "change_type": "rework",
+      "summary": "Progression changed to 3% damage-over-time damage per stage with 2 stages at 25 points each, replacing 2% per stage with 5 stages at 10 points each.",
+      "source": "ZOS PC/Mac Patch Notes v8.0.5 - High Isle & Update 34",
+      "source_url": "https://forums.elderscrollsonline.com/en/discussion/comment/7612709/"
+    },
+    {
+      "entity_type": "Champion Point",
+      "name": "Occult Overload",
+      "update": "U34",
+      "year": 2022,
+      "change_type": "rework",
+      "summary": "Changed to 2560 Oblivion Damage per stage with 5 stages at 10 points each, replacing 2000 damage per stage with 2 stages at 25 points each.",
+      "source": "ZOS PC/Mac Patch Notes v8.0.5 - High Isle & Update 34",
+      "source_url": "https://forums.elderscrollsonline.com/en/discussion/comment/7612709/"
+    },
+    {
+      "entity_type": "Champion Point",
+      "name": "Wrathful Strikes",
+      "update": "U34",
+      "year": 2022,
+      "change_type": "buff",
+      "summary": "Weapon and Spell Damage granted by the star increased to 41 per stage, up from 33.",
+      "source": "ZOS PC/Mac Patch Notes v8.0.5 - High Isle & Update 34",
+      "source_url": "https://forums.elderscrollsonline.com/en/discussion/comment/7612709/"
+    },
+    {
+      "entity_type": "Champion Point",
+      "name": "Rejuvenator",
+      "update": "U34",
+      "year": 2022,
+      "change_type": "buff",
+      "summary": "Weapon and Spell Damage granted to healing effects increased to 41 per stage, up from 33.",
+      "source": "ZOS PC/Mac Patch Notes v8.0.5 - High Isle & Update 34",
+      "source_url": "https://forums.elderscrollsonline.com/en/discussion/comment/7612709/"
+    },
+    {
+      "entity_type": "Champion Point",
+      "name": "Exploiter",
+      "update": "U34",
+      "year": 2022,
+      "change_type": "returned",
+      "summary": "Returned to the Extended Might constellation, granting 2% increased damage against Off Balance enemies per stage with 5 stages at 10 points each.",
+      "source": "ZOS PC/Mac Patch Notes v8.0.5 - High Isle & Update 34",
+      "source_url": "https://forums.elderscrollsonline.com/en/discussion/comment/7612709/"
+    },
+    {
+      "entity_type": "Champion Point",
+      "name": "Force of Nature",
+      "update": "U34",
+      "year": 2022,
+      "change_type": "introduced",
+      "summary": "Added to the Extended Might constellation as a new 50-point star granting 900 Offensive Penetration for each status effect on the target.",
+      "source": "ZOS PC/Mac Patch Notes v8.0.5 - High Isle & Update 34",
+      "source_url": "https://forums.elderscrollsonline.com/en/discussion/comment/7612709/"
+    }
+  ]
+}
