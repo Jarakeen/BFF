@@ -6,6 +6,7 @@ from types import SimpleNamespace
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtWidgets import QApplication
+from shiboken6 import delete
 
 from services.encounter_runtime_guide_projection_service import (
     EncounterGuideRuntimeNote,
@@ -70,13 +71,17 @@ class _RuntimeGuideService:
         )
 
 
-def test_runtime_mechanics_page_replaces_strategy_placeholder_with_reviewed_runtime_projection():
-    app = QApplication.instance() or QApplication([])
-    page = RuntimeMechanicsPage(
+def _page() -> RuntimeMechanicsPage:
+    return RuntimeMechanicsPage(
         expedition=ExpeditionService(),
         guide_service=_GuideService(),
         runtime_guide_service=_RuntimeGuideService(),
     )
+
+
+def test_runtime_mechanics_page_replaces_strategy_placeholder_with_reviewed_runtime_projection():
+    app = QApplication.instance() or QApplication([])
+    page = _page()
 
     strategy_index = next(
         index for index in range(page.tabs.count()) if page.tabs.tabText(index) == "STRATEGY"
@@ -105,6 +110,25 @@ def test_runtime_mechanics_page_replaces_strategy_placeholder_with_reviewed_runt
     assert "Reviewed runtime sample: 10 successful clear(s)." in (
         page.runtime_reminders_label.text()
     )
+
+    page.close()
+    app.processEvents()
+
+
+def test_runtime_mechanics_page_tolerates_deleted_glance_label():
+    app = QApplication.instance() or QApplication([])
+    page = _page()
+
+    assert page.runtime_callouts_label is not None
+    delete(page.runtime_callouts_label)
+
+    # Regression: support layers may rebuild/delete the base-page placeholder
+    # labels. Clearing runtime state must fail closed instead of raising the
+    # libshiboken "Internal C++ object already deleted" RuntimeError.
+    page._clear_runtime_strategy()
+
+    assert page.runtime_notes_table.rowCount() == 0
+    assert page.runtime_guidance_table.rowCount() == 0
 
     page.close()
     app.processEvents()
