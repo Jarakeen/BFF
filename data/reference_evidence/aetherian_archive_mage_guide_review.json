@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "content_id": "aetherian_archive",
+  "encounter_id": "the_mage_celestial",
+  "encounter_name": "The Mage",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main Phase","threshold":"Pull","description":"Tank maintains taunt at short range while the group stacks behind the boss with enough spacing to avoid chaining lightning through adjacent players."},"source_type":"guide","source_name":"Xynode Aetherian Archive Mechanics Guide","source_locator":"The Mage","confidence":"medium"},
+    {"fact_type":"phase","fact_key":"execute_phase","value":{"order":2,"label":"Execute","threshold":"~15%","description":"The Mage repeatedly knocks the group down, axes leave the encounter, and escalating raid-wide damage begins under the descending nova. Burn while healers and tanks layer survival support."},"source_type":"guide","source_name":"Xynode Aetherian Archive Mechanics Guide","source_locator":"Execute!!","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"chain_lightning","value":{"name":"Chain Lightning"},"source_type":"guide","source_name":"Xynode Aetherian Archive Mechanics Guide","source_locator":"CHAIN LIGHTNING!!","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"chain_lightning_behavior","value":{"trigger":"players standing too close","scaling":"chain grows stronger through additional nearby players","response":"maintain spacing while preserving the group stack shape"},"source_type":"guide","source_name":"Xynode Aetherian Archive Mechanics Guide","source_locator":"CHAIN LIGHTNING!!","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"axes","value":{"name":"Axes"},"source_type":"guide","source_name":"The Tank Club Aetherian Archive Trial Tank Guide","source_locator":"Celestial Mage","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"axes_behavior","value":{"tank_role":"control axe adds throughout the main fight","execute":"axes are removed at execute"},"source_type":"guide","source_name":"The Tank Club Aetherian Archive Trial Tank Guide; Xynode Aetherian Archive Mechanics Guide","source_locator":"Celestial Mage / Execute","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"meteors_hard_mode","value":{"name":"Meteors"},"source_type":"guide","source_name":"Xynode Aetherian Archive Mechanics Guide","source_locator":"Meteors Hard Mode Only","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"meteors_hard_mode_behavior","value":{"hard_mode_only":true,"response":"block the meteor impact to avoid the stun"},"source_type":"guide","source_name":"Xynode Aetherian Archive Mechanics Guide","source_locator":"Meteors Hard Mode Only","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"storm_atronachs_hard_mode","value":{"name":"Storm Atronachs"},"source_type":"guide","source_name":"Xynode Aetherian Archive Mechanics Guide","source_locator":"Atronachs Hard Mode Only","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"storm_atronachs_hard_mode_behavior","value":{"hard_mode_only":true,"low_health_behavior":"continuous lightning AOE until killed","response":"execute quickly at low health"},"source_type":"guide","source_name":"Xynode Aetherian Archive Mechanics Guide","source_locator":"Atronachs Hard Mode Only","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"hard_mode_history","value":{"optional_final_boss_difficulty_added":true},"source_type":"official_patch_notes","source_name":"ESO PTS Patch Notes v1.3.0","source_locator":"Trials > Aetherian Archive","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"final_phase_position_history","value":{"boss_remains_centered":true},"source_type":"official_patch_notes","source_name":"ESO Patch Notes v1.4.3","source_locator":"Aetherian Archive > Mage Celestial","confidence":"high"}
+  ]
+}
