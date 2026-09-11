@@ -9,6 +9,7 @@ from tools.audit_phase13_healer_recast_observation_candidates import (
     _next_recipient_tick,
     _phase_distance,
     _recipient_shape,
+    _selected_targets,
 )
 
 
@@ -92,6 +93,20 @@ def test_recipient_shape_is_ambiguous_when_phases_collide_modulo_cadence():
     assert old_delta == pytest.approx(0.065)
 
 
+def test_selected_targets_filters_by_semantic_skill_name_and_deduplicates():
+    targets = _selected_targets(["Budding Seeds", "budding seeds", "Radiating Regeneration"])
+
+    assert [(target.source_name, target.coefficient_number) for target in targets] == [
+        ("Budding Seeds", 2),
+        ("Radiating Regeneration", 1),
+    ]
+
+
+def test_selected_targets_rejects_unknown_skill():
+    with pytest.raises(ValueError, match="unknown tracked healer skill"):
+        _selected_targets(["Definitely Not A Skill"])
+
+
 def test_cli_can_be_executed_directly_from_tools_path():
     repo_root = Path(__file__).resolve().parents[2]
     script = repo_root / "tools" / "audit_phase13_healer_recast_observation_candidates.py"
@@ -107,4 +122,5 @@ def test_cli_can_be_executed_directly_from_tools_path():
     assert result.returncode == 0
     assert "--reviewed-observations" in result.stdout
     assert "--fight-id" in result.stdout
+    assert "--skill" in result.stdout
     assert "ModuleNotFoundError" not in result.stderr
