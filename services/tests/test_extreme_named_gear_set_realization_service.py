@@ -36,10 +36,10 @@ def _monster() -> ExtremeNamedGearSetSlotEligibility:
     )
 
 
-def _mythic_ring() -> ExtremeNamedGearSetSlotEligibility:
+def _mythic_ring(set_id: int = 40, name: str = "Mythic Ring") -> ExtremeNamedGearSetSlotEligibility:
     return ExtremeNamedGearSetSlotEligibility(
-        set_id=40,
-        name="Mythic Ring",
+        set_id=set_id,
+        name=name,
         category="Mythic",
         max_equip_count=1,
         jewelry_slots=("Ring",),
@@ -89,6 +89,44 @@ def test_mythic_ring_is_forced_to_one_of_the_two_physical_ring_slots():
     mythic = next(row for row in witness.assignments if row.set_id == 40)
     assert mythic.slot in {"Ring1", "Ring2"}
     assert mythic.weapon_type == ""
+
+
+def test_two_distinct_mythics_cannot_be_equipped_together():
+    topology = ExtremeGearSetCountTopology(counts=(1, 1), unused_units=10)
+
+    assert ExtremeNamedGearSetRealizationService.find_witness(
+        topology,
+        (_mythic_ring(40, "Mythic One"), _mythic_ring(41, "Mythic Two")),
+    ) is None
+
+
+def test_zero_count_mythic_does_not_block_one_equipped_mythic():
+    topology = ExtremeGearSetCountTopology(counts=(1, 0), unused_units=11)
+
+    witness = ExtremeNamedGearSetRealizationService.find_witness(
+        topology,
+        (_mythic_ring(40, "Equipped Mythic"), _mythic_ring(41, "Unequipped Mythic")),
+    )
+
+    assert witness is not None
+    assert {row.set_id for row in witness.assignments} == {40}
+
+
+def test_mythic_category_matching_is_case_and_whitespace_insensitive():
+    topology = ExtremeGearSetCountTopology(counts=(1, 1), unused_units=10)
+    first = _mythic_ring(40, "Mythic One")
+    second = ExtremeNamedGearSetSlotEligibility(
+        set_id=41,
+        name="Mythic Two",
+        category="  MYTHIC  ",
+        max_equip_count=1,
+        jewelry_slots=("Ring",),
+    )
+
+    assert ExtremeNamedGearSetRealizationService.find_witness(
+        topology,
+        (first, second),
+    ) is None
 
 
 def test_arena_staff_requires_two_handed_weapon_shape_and_exact_weapon_type():
