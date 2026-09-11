@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "wayrest_sewers_ii",
+  "encounter_id": "garron_the_returned",
+  "encounter_name": "Garron the Returned",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Returned Lich Phase","threshold":"100% to 0%","description":"Kill Escaped Souls promptly, avoid Necrotic Barrage circles, and stack healing through Consume Life."},"source_type":"boss_record","source_name":"BFF UESP boss import","source_locator":"Garron the Returned abilities","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"escaped_souls","value":{"name":"Escaped Souls","response":"kill_summoned_souls_immediately_after_the_lich_crystals_explode"},"source_type":"boss_record","source_name":"BFF UESP boss import","source_locator":"Summon Escaped Souls","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"consume_life","value":{"name":"Consume Life","response":"stack_for_healing_when_garron_teleports_center_and_beams_all_players"},"source_type":"boss_record","source_name":"BFF UESP boss import","source_locator":"Consume Life","game_update":"Launch","confidence":"high"}
+  ]
+}
