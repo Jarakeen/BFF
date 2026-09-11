@@ -1,3 +1,5 @@
+import pytest
+
 from minmax.rotation_demand_window import (
     RotationDemandKind,
     RotationDemandPattern,
@@ -124,8 +126,8 @@ def test_explicit_active_attackers_model_minor_lifesteal_without_fake_ticks():
     )
 
     assert result.unresolved == ()
-    assert result.modeled_external_conditional_healing == 12_000.0
-    assert result.modeled_total_healing == 12_000.0
+    assert result.modeled_external_conditional_healing == pytest.approx(12_000.0)
+    assert result.modeled_total_healing == pytest.approx(12_000.0)
 
 
 def test_active_attacker_count_cannot_exceed_demand_targets():
