@@ -58,6 +58,7 @@ def main() -> int:
         print(f"Inventory denominator proven: {'yes' if audit.denominator_proven else 'no'}")
         print(f"Static projection complete: {'yes' if audit.projection_complete else 'no'}")
         _print_rows("Static relevant", audit.static_relevant)
+        _print_rows("Accounted elsewhere", audit.accounted_elsewhere)
         _print_rows("Context required", audit.context_required)
         _print_rows("Unresolved", audit.unresolved)
         print(f"Static irrelevant: {len(audit.static_irrelevant)}")
