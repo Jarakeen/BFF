@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from dataclasses import replace
 
 from minmax.build_calculation_context import BuildCalculationContext
 from minmax.character_build.character_build import CharacterBuild
 from minmax.character_build.passive_grant import PassiveGrant
 from minmax.resource_costs import ResourceType
 from minmax.rotation_ability_priority import AbilityPriorityList
+from minmax.rotation_active_bar_legality import RotationActiveBarAssessor
 from minmax.rotation_demand_window import RotationDemandWindow
 from minmax.rotation_plan import RotationPlan
 from models.build_model import PlayerBuild
@@ -35,6 +37,9 @@ from services.rotation_recovery_heavy_stabilization_service import (
     RecoveryDisplayedRecoveryResolverFactory,
     RecoveryMaximumEventResolver,
 )
+from services.rotation_saved_build_bar_access_service import (
+    RotationSavedBuildBarAccessService,
+)
 
 
 class RotationRecoveryHeavyCandidatePipelineService:
@@ -44,6 +49,11 @@ class RotationRecoveryHeavyCandidatePipelineService:
     per-plan resource-maximum, displayed-recovery, and time-varying combat-state
     resolvers through the complete candidate pipeline. Those inputs remain explicit
     and optional so legacy callers do not acquire invented mechanics.
+
+    Final scorecards are additionally decorated with saved-build bar-access rules.
+    This keeps ESO gear mechanics such as Oakensoul outside generic plan semantics
+    while ensuring both generic and effect-aware candidate workflows reject an
+    otherwise well-formed plan that the equipped build cannot execute.
     """
 
     def __init__(
@@ -51,11 +61,34 @@ class RotationRecoveryHeavyCandidatePipelineService:
         *,
         generation_bridge: RotationRecoveryHeavyCandidateGenerationBridgeService | None = None,
         workflow: RotationRecoveryHeavyCandidateWorkflowService | None = None,
+        active_bar_assessor: RotationActiveBarAssessor | None = None,
     ) -> None:
         self.generation_bridge = (
             generation_bridge or RotationRecoveryHeavyCandidateGenerationBridgeService()
         )
         self.workflow = workflow or RotationRecoveryHeavyCandidateWorkflowService()
+        self.active_bar_assessor = active_bar_assessor or RotationActiveBarAssessor()
+
+    def _with_saved_build_bar_access(
+        self,
+        player_build: PlayerBuild,
+        resolver: RecoveryFinalScorecardResolver,
+    ) -> RecoveryFinalScorecardResolver:
+        def resolve(snapshot):
+            scorecard = resolver(snapshot)
+            base = scorecard.active_bar_assessment
+            if base is None:
+                base = self.active_bar_assessor.assess(snapshot.plan, initial_bar="front")
+            restricted = RotationSavedBuildBarAccessService.restrict(
+                player_build,
+                snapshot.plan,
+                base,
+            )
+            if restricted == scorecard.active_bar_assessment:
+                return scorecard
+            return replace(scorecard, active_bar_assessment=restricted)
+
+        return resolve
 
     def run_generic(
         self,
@@ -94,7 +127,10 @@ class RotationRecoveryHeavyCandidatePipelineService:
         return self.workflow.run_generic(
             player_build=player_build,
             candidates=bridged.candidates,
-            scorecard_resolver=scorecard_resolver,
+            scorecard_resolver=self._with_saved_build_bar_access(
+                player_build,
+                scorecard_resolver,
+            ),
             resource=resource,
             maximum_amount=maximum_amount,
             trigger_fraction=trigger_fraction,
@@ -150,7 +186,10 @@ class RotationRecoveryHeavyCandidatePipelineService:
             player_build=player_build,
             character_build=character_build,
             candidates=bridged.candidates,
-            scorecard_resolver=scorecard_resolver,
+            scorecard_resolver=self._with_saved_build_bar_access(
+                player_build,
+                scorecard_resolver,
+            ),
             requirements=requirement_tuple,
             passives=passive_tuple,
             resource=resource,
