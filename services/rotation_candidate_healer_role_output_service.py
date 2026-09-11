@@ -6,6 +6,7 @@ from typing import Protocol
 
 from minmax.build_calculation_context import BuildCalculationContext
 from minmax.rotation_demand_window import RotationDemandKind, RotationDemandWindow
+from minmax.skill_component_classification import HealTemporalScope
 from models.build_model import PlayerBuild
 from services.rotation_candidate_canonical_plan_evidence_service import (
     RotationCandidateRoleOutputEvidence,
@@ -251,6 +252,7 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
                 context=runtime_context.context,
                 source_name=seed.source_name,
                 coefficient_number=seed.coefficient_number,
+                expected_temporal_scope=HealTemporalScope.PERIODIC,
             )
             if not component.resolved or component.modeled_heal is None:
                 messages = component.unresolved or (
@@ -302,6 +304,7 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
                 context=runtime_context.context,
                 source_name=seed.source_name,
                 coefficient_number=seed.coefficient_number,
+                expected_temporal_scope=HealTemporalScope.DELAYED,
             )
             if not component.resolved or component.modeled_heal is None:
                 messages = component.unresolved or (
