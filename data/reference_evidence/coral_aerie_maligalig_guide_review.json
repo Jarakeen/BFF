@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "content_id": "coral_aerie",
+  "encounter_id": "maligalig",
+  "encounter_name": "Maligalig",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase_one","value":{"order":1,"label":"Main Phase I","threshold":"Pull to ~70%","description":"Handle Barbed Lance, larva pressure, and Storm Cell while preserving space for the first flood transition."},"source_type":"guide","source_name":"ESO-Hub Coral Aerie Dungeon Guide","source_locator":"Maligalig","game_update":"U33+","confidence":"high"},
+    {"fact_type":"phase","fact_key":"surging_waters_one","value":{"order":2,"label":"Surging Waters I","threshold":"~70%","description":"The arena floods; use water synergies to reach upper platforms and kill Ripples of Maligalig before returning to the boss."},"source_type":"guide","source_name":"ESO-Hub Coral Aerie Dungeon Guide","source_locator":"Maligalig > Surging Waters","game_update":"U33+","confidence":"high"},
+    {"fact_type":"phase","fact_key":"main_phase_two","value":{"order":3,"label":"Main Phase II","threshold":"~70% to ~35%","description":"Boss pressure resumes with the same core mechanics before a second flood transition."},"source_type":"guide","source_name":"ESO-Hub Coral Aerie Dungeon Guide","source_locator":"Maligalig","game_update":"U33+","confidence":"high"},
+    {"fact_type":"phase","fact_key":"surging_waters_two","value":{"order":4,"label":"Surging Waters II","threshold":"~35%","description":"Repeat the flooded-platform add phase, then return for execute."},"source_type":"guide","source_name":"ESO-Hub Coral Aerie Dungeon Guide","source_locator":"Maligalig > Surging Waters","game_update":"U33+","confidence":"high"},
+    {"fact_type":"phase","fact_key":"execute","value":{"order":5,"label":"Execute","threshold":"After second flood to death","description":"Finish Maligalig while continuing to manage larva and Storm Cell pressure."},"source_type":"guide","source_name":"ESO-Hub Coral Aerie Dungeon Guide","source_locator":"Maligalig","game_update":"U33+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"storm_cell","value":{"name":"Storm Cell","response":"move_personal_storm_into_roaming_storm_to_disperse","failure":"persistent_group_damage_if_left_unresolved"},"source_type":"guide","source_name":"ESO-Hub Coral Aerie Dungeon Guide","source_locator":"Maligalig > Storm Cell","game_update":"U33+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"toxic_burst_larvae","value":{"name":"Yaghra Larva / Toxic Burst","response":"watch_fixate_and_dodge_explosion","failure":"burst_damage_on_target"},"source_type":"guide","source_name":"ESO-Hub Coral Aerie Dungeon Guide","source_locator":"Maligalig > Yaghra Larva","game_update":"U33+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"building_static_hm","value":{"name":"Building Static","response":"hard_mode_balance_time_on_platforms_with_brief_water_resets","hard_mode":"static_builds_while_out_of_water_and_water_itself_deals_damage"},"source_type":"guide","source_name":"ESO-Hub Coral Aerie Dungeon Guide","source_locator":"Maligalig > Hardmode > Building Static","game_update":"U33+","confidence":"high"}
+  ]
+}
