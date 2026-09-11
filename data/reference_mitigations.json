@@ -30,6 +30,18 @@
       "mitigation": "Use the opposite-element dome on the enemy and keep the fire and ice domes from touching.",
       "source": "reviewed_encounter_evidence",
       "notes": "Reviewed dome evidence requires opposite-element protection and records an overload when opposing domes touch."
+    },
+    {
+      "entry_name": "Acid Reflux — Reef Guardian",
+      "mitigation": "Keep the taunt target away from the group while the acid pools drop. Do not stack extra players into it.",
+      "source": "reviewed_encounter_evidence",
+      "notes": "Reviewed evidence records the taunt target as the primary target, persistent acid pools, stacking acid vulnerability, and extra pools when additional players are caught."
+    },
+    {
+      "entry_name": "Heartburn — Reef Guardian",
+      "mitigation": "Kill the Reef Heart before the 60-second timeout or Empowered Rockfall wipes the group.",
+      "source": "reviewed_encounter_evidence",
+      "notes": "Reviewed evidence records a 60-second Reef Heart timeout ending in a group wipe from Empowered Rockfall."
     }
   ]
 }
