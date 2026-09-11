@@ -5,10 +5,10 @@ from __future__ import annotations
 This layer closes named gear and selected reviewed equipment families only when
 their canonical denominator is proven. Max-resource objectives additionally search
 proof-reduced resource armor, reviewed static jewelry traits, reviewed passive
-progression, reviewed max-resource active-bar witnesses, and the reviewed Max
-Health passive runtime witnesses where applicable. Canonical jewelry glyphs and
-weapon trait/enchantment families may be proven irrelevant to a max resource, but
-unknown or relevant evidence stays explicit and fails closed.
+progression, reviewed max-resource active-bar witnesses, and proof-owned runtime
+condition continuations. Canonical jewelry glyphs and weapon trait/enchantment
+families may be proven irrelevant to a max resource, but unknown or relevant
+evidence stays explicit and fails closed.
 """
 
 from pathlib import Path
@@ -624,10 +624,9 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
                 f"Scored {len(gear_candidates):,} distinct gear witnesses per structural candidate; this objective has no reviewed armor search yet."
             )
         residual_boundary = (
-            "Residual equipment traits/enchants, unreviewed skill-bar/morph interactions, "
-            "Champion Points, and unreviewed runtime axes remain separate unless coverage says otherwise."
-            if passive_projection_complete
-            else "Residual equipment traits/enchants, unreviewed skill-bar/morph interactions, Champion Points, remaining passives, and unreviewed runtime axes remain separate unless coverage says otherwise."
+            "Residual unproven search axes: " + "; ".join(omitted) + "."
+            if omitted
+            else "All dynamic axes in this record's declared search universe are covered by searched or proof-owned denominator evidence."
         )
         explanation_rows.extend(
             (
