@@ -624,8 +624,11 @@ def main() -> int:
     print("- Static context diagnostics irrelevant to healer output are reported but do not block this objective.")
     print("- Unknown or healing-relevant static diagnostics remain aggregate blockers and keep weakest-window output unresolved.")
     print("- Reviewed refresh/recast policy is composed only when exact skill/component/version evidence matches.")
-    print("- Missing periodic/delayed runtime evidence remains unresolved instead of becoming fake ticks.
-- Minor Lifesteal is modeled as a per-attacker damage-trigger rate only when the caller supplies an active-attacker count; it is not an automatic caster HoT.")
+    print("- Missing periodic/delayed runtime evidence remains unresolved instead of becoming fake ticks.")
+    print(
+        "- Minor Lifesteal is modeled as a per-attacker damage-trigger rate only "
+        "when the caller supplies an active-attacker count; it is not an automatic caster HoT."
+    )
     return 0
 
 
