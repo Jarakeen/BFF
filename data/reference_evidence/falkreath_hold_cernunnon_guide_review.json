@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "content_id": "falkreath_hold",
+  "encounter_id": "cernunnon",
+  "encounter_name": "Cernunnon",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"oathbound_one","value":{"order":1,"label":"Oath-Bound I","threshold":"pull","description":"Knock down the three oath-bound, collect their green essences, and deposit them into the three lights."},"source_type":"guide","source_name":"Xynode Falkreath Hold Guide","source_locator":"Cernunnon","game_update":"U15","confidence":"high"},
+    {"fact_type":"phase","fact_key":"cernunnon_one","value":{"order":2,"label":"Cernunnon I","threshold":"after first three souls","description":"Fight Cernunnon, spread for Ice Comets, kill skeletons, and avoid roaming ghosts."},"source_type":"guide","source_name":"Xynode Falkreath Hold Guide","source_locator":"Cernunnon","game_update":"U15","confidence":"high"},
+    {"fact_type":"phase","fact_key":"oathbound_two","value":{"order":3,"label":"Oath-Bound II","threshold":"51%","description":"Cernunnon despawns and the three oath-bound return; repeat the soul-deposit sequence."},"source_type":"guide","source_name":"Xynode Falkreath Hold Guide","source_locator":"Cernunnon","game_update":"U15","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"ice_comet","value":{"name":"Ice Comet","response":"spread_personal_aoes_and_block_when_the_comets_land"},"source_type":"guide","source_name":"Xynode Falkreath Hold Guide","source_locator":"Cernunnon","game_update":"U15","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"souls","value":{"name":"Oath-Bound Souls","response":"collect_each_green_soul_and_deposit_it_into_a_separate_light"},"source_type":"achievement","source_name":"Oathbreaker","source_locator":"Falkreath Hold achievement","game_update":"U15","confidence":"high"}
+  ]
+}
