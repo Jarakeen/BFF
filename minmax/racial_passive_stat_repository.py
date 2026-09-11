@@ -36,6 +36,11 @@ class RacialPassiveStatRepository:
         "opportunist",
     })
 
+    MITIGATION_PASSIVE_NAMES = frozenset({
+        "acrobat",
+        "ashlander",
+    })
+
     def __init__(self, database_path: str | Path) -> None:
         self.database_path = Path(database_path)
 
@@ -85,8 +90,14 @@ class RacialPassiveStatRepository:
         boundaries: list[str] = []
         unresolved: list[str] = []
 
-        if passive_name.casefold() in self.NONCOMBAT_PASSIVE_NAMES:
+        passive_key = passive_name.casefold()
+        if passive_key in self.NONCOMBAT_PASSIVE_NAMES:
             boundaries.append(f"Non-combat racial passive outside combat capability audit: {passive_name}")
+            return stats, boundaries, unresolved
+        if passive_key in self.MITIGATION_PASSIVE_NAMES:
+            boundaries.append(
+                f"Racial environmental-damage mitigation requires mitigation model: {passive_name}"
+            )
             return stats, boundaries, unresolved
 
         patterns: tuple[tuple[str, tuple[str, ...]], ...] = (
