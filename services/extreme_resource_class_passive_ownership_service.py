@@ -3,13 +3,13 @@ from __future__ import annotations
 """Reviewed ownership boundaries for class passives in Extreme max-resource audits.
 
 This service is deliberately not a passive calculator. It records exact class
-passives whose shared canonical resolver already defines their effect family well
-enough to prove whether they can alter Max Health, Max Magicka, or Max Stamina.
+passives whose shared canonical resolver or reviewed U50 tooltip defines their
+effect family well enough to prove whether they can alter Max Health, Max Magicka,
+or Max Stamina.
 
 Rows are conservative and explicit. A passive is never treated as irrelevant just
-because its tooltip fails to mention the requested resource; the owning canonical
-resolver must prove the effect family. Additional class families can be added as
-their shared resolvers are reviewed.
+because its tooltip fails to mention the requested resource; its effect family must
+be reviewed first. Additional class families can be added as that review expands.
 """
 
 from dataclasses import dataclass
@@ -42,15 +42,49 @@ class ExtremeResourceClassPassiveOwnership:
         return (self.skill_line, self.passive_name)
 
 
+_REVIEWED_TOOLTIP_IRRELEVANT: tuple[tuple[str, str, str], ...] = (
+    ("Aedric Spear", "Spear Wall", "Minor Berserk and Minor Protection only"),
+    ("Animal Companions", "Bond with Nature", "flat self-heal when an Animal Companions skill ends only"),
+    ("Animal Companions", "Savage Beast", "Ultimate generation after casting an Animal Companions ability only"),
+    ("Curative Runeforms", "Erudition", "Magicka and Stamina Recovery only"),
+    ("Curative Runeforms", "Intricate Runeforms", "Curative Runeforms ability cost reduction and damage-shield strength only"),
+    ("Assassination", "Master Assassin", "conditional Critical Chance rating only"),
+    ("Shadow", "Refreshing Shadows", "Health, Magicka, and Stamina Recovery only"),
+    ("Shadow", "Dark Veil", "Shadow ability duration only"),
+    ("Soldier of Apocrypha", "Circumvented Fate", "Minor Evasion / area-damage mitigation only"),
+    ("Herald of the Tome", "Psychic Lesion", "Status Effect damage and application chance only"),
+    ("Grave Lord", "Death Knell", "conditional Critical Strike Chance only"),
+    ("Grave Lord", "Rapid Rot", "damage-over-time damage only"),
+    ("Dawn's Wrath", "Enduring Rays", "selected Dawn's Wrath ability duration only"),
+    ("Dawn's Wrath", "Prism", "Ultimate generation only"),
+    ("Dawn's Wrath", "Illuminate", "Minor Sorcery / Spell Damage only"),
+    ("Dawn's Wrath", "Restoring Spirit", "Health, Magicka, Stamina, and Ultimate ability-cost reduction only"),
+    ("Daedric Summoning", "Rebate", "current Magicka or Stamina restoration when a summon ends only"),
+    ("Dark Magic", "Unholy Knowledge", "Health, Magicka, and Stamina ability-cost reduction only"),
+    ("Draconic Power", "Burnished Scales", "block mitigation only"),
+    ("Draconic Power", "World in Ruin", "area and damage-over-time damage only"),
+    ("Draconic Power", "Elder Dragon", "Minor Brutality plus missing-Health-scaled Health Recovery only"),
+)
+
+
+def _reviewed_tooltip_rows() -> tuple[ExtremeResourceClassPassiveOwnership, ...]:
+    return tuple(
+        ExtremeResourceClassPassiveOwnership(
+            skill_line=skill_line,
+            passive_name=passive_name,
+            status=ExtremeResourceClassPassiveOwnershipStatus.PROVEN_IRRELEVANT,
+            source=f"Canonical U50 {skill_line} passive tooltip review",
+            effect_family=effect_family,
+        )
+        for skill_line, passive_name, effect_family in _REVIEWED_TOOLTIP_IRRELEVANT
+    )
+
+
 class ExtremeResourceClassPassiveOwnershipService:
-    """Resolve reviewed shared-resolver ownership for one class passive."""
+    """Resolve reviewed class-passive ownership for one max-resource objective."""
 
     SUPPORTED_OBJECTIVES = _SUPPORTED_OBJECTIVES
 
-    # Each row below is backed by an explicit shared resolver implementation.
-    # These effects live outside Max Health/Magicka/Stamina, so they can be
-    # removed from max-resource denominator debt without pretending the passive
-    # is globally irrelevant to other Extreme objectives.
     _ROWS = (
         ExtremeResourceClassPassiveOwnership(
             skill_line="Animal Companions",
@@ -101,7 +135,7 @@ class ExtremeResourceClassPassiveOwnershipService:
             source="NecromancerPassiveInputResolver",
             effect_family="healing received only",
         ),
-    )
+    ) + _reviewed_tooltip_rows()
 
     @staticmethod
     def _normalized(value: object) -> str:
