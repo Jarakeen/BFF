@@ -7,6 +7,31 @@ from services.service_catalog import EvidenceClass, ServiceBehavior, ServiceDesc
 
 ROTATION_OBSERVATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
     ServiceDescriptor(
+        service_id="rotation.heavy_restore.esologs_observation",
+        domain="rotation",
+        purpose=(
+            "Surface positive ESO Logs resource-change events for explicitly reviewed "
+            "heavy-attack ability aliases without promoting observed values to game constants."
+        ),
+        implementation_path="services.rotation_heavy_attack_restore_esologs_evidence_service",
+        inputs=(
+            "EsoLogsSqlitePath",
+            "ReportCode",
+            "FightId",
+            "ReviewedHeavyAttackAbilityAlias",
+        ),
+        outputs=("RotationHeavyAttackRestoreObservationReport",),
+        responsibilities=("rotation_heavy_attack_restore_observation_discovery",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.OBSERVATIONAL,
+        notes=(
+            "Read-only observation discovery. Numeric ability ids and resource type enums stay raw "
+            "log evidence; callers must explicitly review identity/resource semantics before any "
+            "restore amount can be promoted into canonical sustain math."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="rotation.healer.periodic_observation_review",
         domain="rotation",
         purpose=(
