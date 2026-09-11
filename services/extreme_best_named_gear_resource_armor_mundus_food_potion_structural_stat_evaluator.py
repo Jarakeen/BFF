@@ -6,6 +6,10 @@ A reviewed static jewelry-resource trait state may be injected into the factory 
 is then materialized inside each canonical gear+armor scorer. The outer search does
 not multiply by jewelry because the static jewelry reducer already proves one
 strongest continuation witness per max-resource objective.
+
+The resource active-bar evidence service is shared across every gear/armor scorer
+created by one factory so canonical skill inventory and proof-reduced route bars
+are cached once rather than rediscovered under every equipment witness.
 """
 
 from collections.abc import Callable
@@ -30,6 +34,9 @@ from services.extreme_named_gear_resource_armor_canonical_stat_evaluator import 
 from services.extreme_named_gear_set_realization_service import ExtremeNamedGearSetRealization
 from services.extreme_objective_named_gear_set_catalog_realization_service import (
     ExtremeObjectiveNamedGearSetCatalogRealizationResult,
+)
+from services.extreme_resource_active_bar_state_service import (
+    ExtremeResourceActiveBarStateService,
 )
 from services.extreme_structural_core_stat_record_service import ExtremeCanonicalStructuralStatEvaluator
 from services.extreme_structural_global_search_service import ExtremeStructuralCandidate
@@ -67,12 +74,19 @@ class ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory:
         provisioning_repository: ProvisioningStaticRepository,
         potion_repository: PotionAvailabilityRepository,
         jewelry_state: ExtremeJewelryResourceStaticTraitState | None = None,
+        active_bar_state_service: ExtremeResourceActiveBarStateService | None = None,
     ) -> None:
         self.canonical_evaluator = canonical_evaluator
         self.mundus_repository = mundus_repository
         self.provisioning_repository = provisioning_repository
         self.potion_repository = potion_repository
         self.jewelry_state = jewelry_state
+
+        if active_bar_state_service is None:
+            database_path = getattr(canonical_evaluator.optimizer, "database_path", None)
+            if database_path is not None:
+                active_bar_state_service = ExtremeResourceActiveBarStateService(database_path)
+        self.active_bar_state_service = active_bar_state_service
 
     def __call__(
         self,
@@ -87,6 +101,7 @@ class ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory:
             evaluator=gear,
             armor_state=armor_state,
             jewelry_state=self.jewelry_state,
+            active_bar_state_service=self.active_bar_state_service,
         )
         mundus = ExtremeBestMundusStructuralStatEvaluator(
             evaluator=armor,
