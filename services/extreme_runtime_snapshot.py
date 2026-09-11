@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from minmax.external_group_buff_provenance import ExternalGroupBuffApplication
 from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
 from services.extreme_runtime_bar_effect_attempt import ExtremeRuntimeBarEffectAttempt
+from services.extreme_runtime_bar_transition import ExtremeRuntimeBarTransition
 
 
 @dataclass(frozen=True)
@@ -28,6 +29,7 @@ class ExtremeRuntimePotionUse:
 ExtremeRuntimeHistoryEntry = (
     RuntimeEffectEventAttempt
     | ExtremeRuntimeBarEffectAttempt
+    | ExtremeRuntimeBarTransition
     | ExtremeRuntimePotionUse
     | ExternalGroupBuffApplication
 )
@@ -39,17 +41,17 @@ class ExtremeRuntimeSnapshot:
 
     ``runtime_history`` is the authoritative E1 input when supplied. It carries
     ordinary effect attempts, optional bar-provenance effect attempts, explicit
-    potion activations, and explicitly evidenced external group-buff applications
-    on one ordered timeline. The older positional fields remain in their original
-    order as a compatibility bridge for existing callers, but they cannot be
-    supplied alongside ``runtime_history`` so two competing versions of runtime
-    truth cannot enter one evaluation.
+    bar transitions, potion activations, and explicitly evidenced external group-
+    buff applications on one ordered timeline. The older positional fields remain
+    in their original order as a compatibility bridge for existing callers, but
+    they cannot be supplied alongside ``runtime_history`` so two competing versions
+    of runtime truth cannot enter one evaluation.
 
     Bar provenance is deliberately carried by ``ExtremeRuntimeBarEffectAttempt``
-    rather than added to the generic Phase 7 ``RuntimeEvent`` contract. Existing
-    effect-history consumers continue to receive ordinary attempts through
-    ``effect_attempts`` while dual-bar gear legality can use
-    ``bar_effect_attempts`` without reconstructing a bar from guesswork.
+    and ``ExtremeRuntimeBarTransition`` rather than added to the generic Phase 7
+    ``RuntimeEvent`` contract. Existing effect-history consumers continue to receive
+    ordinary attempts through ``effect_attempts`` while dual-bar gear legality can
+    consume exact transition evidence without reconstructing a bar from guesswork.
 
     ``recipient_actor_id`` and ``group_member_ids`` provide the roster identity
     evidence required to project external applications. They are ignored when
@@ -103,14 +105,15 @@ class ExtremeRuntimeSnapshot:
                 (
                     RuntimeEffectEventAttempt,
                     ExtremeRuntimeBarEffectAttempt,
+                    ExtremeRuntimeBarTransition,
                     ExtremeRuntimePotionUse,
                     ExternalGroupBuffApplication,
                 ),
             ):
                 raise TypeError(
                     "runtime_history entries must be RuntimeEffectEventAttempt, "
-                    "ExtremeRuntimeBarEffectAttempt, ExtremeRuntimePotionUse, or "
-                    "ExternalGroupBuffApplication"
+                    "ExtremeRuntimeBarEffectAttempt, ExtremeRuntimeBarTransition, "
+                    "ExtremeRuntimePotionUse, or ExternalGroupBuffApplication"
                 )
 
         if history:
@@ -155,6 +158,8 @@ class ExtremeRuntimeSnapshot:
         if isinstance(entry, RuntimeEffectEventAttempt):
             return (float(entry.event.time_seconds), int(entry.event.sequence))
         if isinstance(entry, ExtremeRuntimeBarEffectAttempt):
+            return (entry.time_seconds, entry.sequence)
+        if isinstance(entry, ExtremeRuntimeBarTransition):
             return (entry.time_seconds, entry.sequence)
         if isinstance(entry, ExtremeRuntimePotionUse):
             return (float(entry.time_seconds), int(entry.sequence))
@@ -245,6 +250,18 @@ class ExtremeRuntimeSnapshot:
             entry
             for entry in self.ordered_runtime_history
             if isinstance(entry, ExtremeRuntimeBarEffectAttempt)
+        )
+
+    @property
+    def bar_transitions(self) -> tuple[ExtremeRuntimeBarTransition, ...]:
+        """Return explicit active-bar transitions through this snapshot boundary."""
+
+        if not self.runtime_history:
+            return ()
+        return tuple(
+            entry
+            for entry in self.ordered_runtime_history
+            if isinstance(entry, ExtremeRuntimeBarTransition)
         )
 
     @property
