@@ -37,7 +37,7 @@ class _GuideService:
             name="Lokkestiiz",
             summary="Dragon encounter.",
             location="Sunspire",
-            health=("veteran", "1"),
+            health=(("veteran", "1"),),
             source_revision_id="test",
             abilities=(),
             phases=(),
