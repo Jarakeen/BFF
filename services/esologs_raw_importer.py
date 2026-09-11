@@ -38,6 +38,25 @@ class EsoLogsRawImporter(EsoLogsCombatImporter):
         return []
 
     @staticmethod
+    def _report_items(payload: dict[str, Any]) -> list[tuple[str, Any]]:
+        """Normalize legacy single-report exports and multi-report corpora."""
+        report_code = str(payload.get("report_code") or "").strip()
+        if report_code:
+            return [(report_code, payload.get("fights"))]
+
+        reports = payload.get("reports")
+        if not isinstance(reports, dict):
+            return []
+
+        items: list[tuple[str, Any]] = []
+        for raw_code, report in reports.items():
+            code = str(raw_code or "").strip()
+            if not code or not isinstance(report, dict):
+                continue
+            items.append((code, report.get("fights")))
+        return items
+
+    @staticmethod
     def _metadata(fight: dict[str, Any]) -> dict[str, Any]:
         metadata = fight.get("metadata")
         return metadata if isinstance(metadata, dict) else fight
@@ -192,34 +211,42 @@ class EsoLogsRawImporter(EsoLogsCombatImporter):
                 totals["skipped"] += 1
                 continue
 
-            report_code = str(payload.get("report_code") or "").strip()
-            if not report_code:
+            report_items = self._report_items(payload)
+            if not report_items:
                 totals["skipped"] += 1
                 continue
 
-            fight_items = self._fight_items(payload.get("fights"))
             imported_from_file = 0
-            for fight_key, fight in fight_items:
-                metadata = self._metadata(fight)
-                fight_id = int(metadata.get("id", fight_key))
-                key = (report_code, fight_id)
-                if key in seen:
-                    continue
-                result = self._import_fight_raw(report_code=report_code, fight=fight, source_path=path, gap_threshold_ms=gap_threshold_ms)
-                seen.add(key)
-                imported_from_file += 1
-                totals["fights"] += 1
-                totals["actors"] += result["actors"]
-                totals["events"] += result["events"]
-                totals["observed_windows"] += result["observed_windows"]
+            for report_code, fights in report_items:
+                imported_for_report = 0
+                for fight_key, fight in self._fight_items(fights):
+                    metadata = self._metadata(fight)
+                    fight_id = int(metadata.get("id", fight_key))
+                    key = (report_code, fight_id)
+                    if key in seen:
+                        continue
+                    result = self._import_fight_raw(report_code=report_code, fight=fight, source_path=path, gap_threshold_ms=gap_threshold_ms)
+                    seen.add(key)
+                    imported_for_report += 1
+                    imported_from_file += 1
+                    totals["fights"] += 1
+                    totals["actors"] += result["actors"]
+                    totals["events"] += result["events"]
+                    totals["observed_windows"] += result["observed_windows"]
+
+                if imported_for_report:
+                    manifest_id = self.manifest._manifest_start(
+                        export_name=path.name, export_type="raw_probe_json", report_code=report_code,
+                        request={"source_file": str(path)},
+                        destination_tables=["log_report", "log_fight", "log_actor", "log_event", "log_observed_target", "log_observed_damage_window"],
+                    )
+                    self.manifest._manifest_finish(
+                        manifest_id,
+                        status="imported",
+                        record_count=imported_for_report,
+                    )
 
             if imported_from_file:
                 totals["files"] += 1
-                manifest_id = self.manifest._manifest_start(
-                    export_name=path.name, export_type="raw_probe_json", report_code=report_code,
-                    request={"source_file": str(path)},
-                    destination_tables=["log_report", "log_fight", "log_actor", "log_event", "log_observed_target", "log_observed_damage_window"],
-                )
-                self.manifest._manifest_finish(manifest_id, status="imported", record_count=imported_from_file)
 
         return totals
