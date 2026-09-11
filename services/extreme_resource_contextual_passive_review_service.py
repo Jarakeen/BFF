@@ -90,6 +90,14 @@ class ExtremeResourceContextualPassiveReviewService:
             condition="The reviewed Max Health runtime reducer selects canonical Nothing Wasted Class Mastery only on a legal pure Necromancer route and applies the reviewed 10-stack Corpse Consumption maximum as +20% Max Health before resource rounding.",
         ),
         ExtremeResourceContextualPassiveReview(
+            objective_key="max_health",
+            passive_name="Undaunted Mettle",
+            skill_line="Undaunted",
+            status=ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED,
+            source="ExtremeHypotheticalUndauntedProgressionService",
+            condition="Extreme canonical resource scoring grants reviewed max-rank Undaunted Mettle and applies its shared distinct-armor-weight max-resource bonus.",
+        ),
+        ExtremeResourceContextualPassiveReview(
             objective_key="max_magicka",
             passive_name="Expert Summoner",
             skill_line="Daedric Summoning",
@@ -114,6 +122,14 @@ class ExtremeResourceContextualPassiveReviewService:
             condition="The reviewed Extreme active-bar reducer maximizes legal Mages Guild slots jointly with Magicka Flood and supplies canonical max-rank Magicka Controller progression.",
         ),
         ExtremeResourceContextualPassiveReview(
+            objective_key="max_magicka",
+            passive_name="Undaunted Mettle",
+            skill_line="Undaunted",
+            status=ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED,
+            source="ExtremeHypotheticalUndauntedProgressionService",
+            condition="Extreme canonical resource scoring grants reviewed max-rank Undaunted Mettle and applies its shared distinct-armor-weight max-resource bonus.",
+        ),
+        ExtremeResourceContextualPassiveReview(
             objective_key="max_stamina",
             passive_name="Expert Summoner",
             skill_line="Daedric Summoning",
@@ -128,6 +144,14 @@ class ExtremeResourceContextualPassiveReviewService:
             status=ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED,
             source="NightbladePassiveInputResolver",
             condition="The reviewed Extreme active-bar reducer searches one legal Siphoning trigger because additional Siphoning slots cannot increase Magicka Flood; shared Nightblade passive math applies the 6% Max Stamina bonus.",
+        ),
+        ExtremeResourceContextualPassiveReview(
+            objective_key="max_stamina",
+            passive_name="Undaunted Mettle",
+            skill_line="Undaunted",
+            status=ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED,
+            source="ExtremeHypotheticalUndauntedProgressionService",
+            condition="Extreme canonical resource scoring grants reviewed max-rank Undaunted Mettle and applies its shared distinct-armor-weight max-resource bonus.",
         ),
     )
 
