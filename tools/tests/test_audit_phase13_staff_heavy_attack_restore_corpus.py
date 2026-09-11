@@ -23,29 +23,40 @@ def test_normalize_player_details_keeps_role_name_and_actor_id():
     )
 
 
-def test_following_restores_filters_source_positive_amount_and_window():
+def test_following_restores_filters_self_target_source_positive_amount_and_window():
     events = (
         SimpleNamespace(
             event_kind=SemanticEventKind.RESOURCE_CHANGE,
             source_id=7,
+            target_id=7,
             timestamp=1100.0,
             resource_change=2400.0,
         ),
         SimpleNamespace(
             event_kind=SemanticEventKind.RESOURCE_CHANGE,
+            source_id=7,
+            target_id=8,
+            timestamp=1100.0,
+            resource_change=125.0,
+        ),
+        SimpleNamespace(
+            event_kind=SemanticEventKind.RESOURCE_CHANGE,
             source_id=8,
+            target_id=8,
             timestamp=1100.0,
             resource_change=9999.0,
         ),
         SimpleNamespace(
             event_kind=SemanticEventKind.RESOURCE_CHANGE,
             source_id=7,
+            target_id=7,
             timestamp=1700.0,
             resource_change=3000.0,
         ),
         SimpleNamespace(
             event_kind=SemanticEventKind.RESOURCE_CHANGE,
             source_id=7,
+            target_id=7,
             timestamp=1200.0,
             resource_change=-20.0,
         ),
@@ -55,4 +66,5 @@ def test_following_restores_filters_source_positive_amount_and_window():
 
     assert len(rows) == 1
     assert rows[0][0].resource_change == 2400.0
+    assert rows[0][0].target_id == 7
     assert rows[0][1] == 100.0
