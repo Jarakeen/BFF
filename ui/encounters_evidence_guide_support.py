@@ -10,7 +10,9 @@ phases remain authoritative; reviewed evidence fills only missing timeline struc
 
 from pathlib import Path
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QComboBox,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -38,6 +40,17 @@ def _projection_service(self) -> EncounterGuideEvidenceProjectionService:
     return service
 
 
+def _sync_event_lists(self, row: int, *, source: str) -> None:
+    if row < 0:
+        return
+    other = self.encounter_timeline_list if source == "phase" else self.encounter_phase_list
+    if other.currentRow() != row:
+        other.blockSignals(True)
+        other.setCurrentRow(row)
+        other.blockSignals(False)
+    _render_selected_event(self, row)
+
+
 def _assignments_tab_with_evidence(self) -> QWidget:
     tab = QWidget()
     root = QVBoxLayout(tab)
@@ -52,7 +65,7 @@ def _assignments_tab_with_evidence(self) -> QWidget:
 
     controls = FoundryCard("Select Boss", "boss")
     boss_row = QHBoxLayout()
-    self.boss_combo = __import__("PySide6.QtWidgets", fromlist=["QComboBox"]).QComboBox()
+    self.boss_combo = QComboBox()
     boss_row.addWidget(self.boss_combo, 1)
     self.previous_boss_button = QPushButton("‹")
     self.next_boss_button = QPushButton("›")
@@ -67,7 +80,7 @@ def _assignments_tab_with_evidence(self) -> QWidget:
 
     self.positioning_card = FoundryCard("Positioning", "treasure-map").set_watermark("compass", 0.035)
     self.positioning_preview = QLabel()
-    self.positioning_preview.setAlignment(__import__("PySide6.QtCore", fromlist=["Qt"]).Qt.AlignmentFlag.AlignCenter)
+    self.positioning_preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
     self.positioning_preview.setMinimumHeight(300)
     self.positioning_preview.setProperty("positioningMap", True)
     self.positioning_preview.setText(
@@ -113,8 +126,12 @@ def _assignments_tab_with_evidence(self) -> QWidget:
     event = FoundryCard("Event Details", "mechanics")
     self.encounter_event_detail = QLabel("Select a timeline event to inspect its reviewed details.")
     self.encounter_event_detail.setWordWrap(True)
-    self.encounter_phase_list.currentRowChanged.connect(lambda _row: _render_selected_event(self))
-    self.encounter_timeline_list.currentRowChanged.connect(lambda _row: _render_selected_event(self))
+    self.encounter_phase_list.currentRowChanged.connect(
+        lambda row: _sync_event_lists(self, row, source="phase")
+    )
+    self.encounter_timeline_list.currentRowChanged.connect(
+        lambda row: _sync_event_lists(self, row, source="timeline")
+    )
     event.addWidget(self.encounter_event_detail)
     event.addWidget(QPushButton("Add Custom Event"))
     middle.addWidget(event, 2)
@@ -160,11 +177,10 @@ def _timeline_rows(self, guide, projection):
     return tuple((row.marker, row.label, row.detail) for row in projection.timeline)
 
 
-def _render_selected_event(self) -> None:
+def _render_selected_event(self, row_index: int | None = None) -> None:
     rows = getattr(self, "_encounter_display_timeline", ())
-    row_index = self.encounter_timeline_list.currentRow() if hasattr(self, "encounter_timeline_list") else -1
-    if row_index < 0 or row_index >= len(rows):
-        row_index = self.encounter_phase_list.currentRow() if hasattr(self, "encounter_phase_list") else -1
+    if row_index is None:
+        row_index = self.encounter_timeline_list.currentRow() if hasattr(self, "encounter_timeline_list") else -1
     if row_index < 0 or row_index >= len(rows):
         self.encounter_event_detail.setText("Select a timeline event to inspect its reviewed details.")
         return
@@ -219,7 +235,7 @@ def _render_encounter_evidence(self, encounter_id: str, encounter_name: str) -> 
     self.encounter_timeline_list.blockSignals(True)
     self.encounter_phase_list.clear()
     self.encounter_timeline_list.clear()
-    for marker, label, detail in timeline_rows:
+    for marker, label, _detail in timeline_rows:
         self.encounter_phase_list.addItem(f"{marker}  {label}")
         self.encounter_timeline_list.addItem(f"{marker}   {label}")
     self.encounter_phase_list.blockSignals(False)
@@ -227,7 +243,7 @@ def _render_encounter_evidence(self, encounter_id: str, encounter_name: str) -> 
     if timeline_rows:
         self.encounter_phase_list.setCurrentRow(0)
         self.encounter_timeline_list.setCurrentRow(0)
-        _render_selected_event(self)
+        _render_selected_event(self, 0)
     else:
         self.encounter_phase_list.addItem("No reviewed timeline yet")
         self.encounter_timeline_list.addItem("No reviewed timeline yet")
