@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "scalecaller_peak",
+  "encounter_id": "plague_concocter_mortieu",
+  "encounter_name": "Plague Concocter Mortieu",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Plague Cycle","threshold":"100% to 0%","description":"The group accumulates plague pressure until Jorvuld creates an antidote from requested add types."},"source_type":"guide","source_name":"Alcast Scalecaller Peak Guide","source_locator":"Plague Concocter Mortieu","game_update":"U17","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"antidote","value":{"name":"Jorvuld Antidote","response":"kill_the_requested_add_type_immediately_so_jorvuld_can_prepare_antidote"},"source_type":"guide","source_name":"Scalecaller Peak community guide","source_locator":"Plague Concocter Mortieu","game_update":"U17","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"poison_grates","value":{"name":"Poison Grates","response":"tank_soaks_grate_poison_waves_so_they_do_not_hit_group"},"source_type":"guide","source_name":"Alcast Scalecaller Peak Guide","source_locator":"Plague Concocter Mortieu","game_update":"U17","confidence":"high"}
+  ]
+}
