@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "content_id": "sanity_s_edge",
+  "encounter_id": "exarchanic_yaseyla",
+  "encounter_name": "Exarchanic Yaseyla",
+  "evidence": [
+    {
+      "fact_type": "transition",
+      "fact_key": "wamasu_spawn_thresholds_veteran",
+      "value": {
+        "label": "Wamasu + Archers",
+        "thresholds": ["90%", "70%", "50%", "30%", "20%", "10%"],
+        "detail": "Veteran baseline: a Contramagis Wamasu and five Archers enter. Hard Mode adds Wamasu thresholds at 60% and 35%."
+      },
+      "source_type": "guide",
+      "source_name": "AlcastHQ Sanity's Edge Trial Guide by SGTsanttu",
+      "source_locator": "Exarchanic Yaseyla - Health Threshold Mechanics",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "transition",
+      "fact_key": "horror_thresholds",
+      "value": {
+        "label": "Horrors / Vanton's Clarity",
+        "thresholds": ["60%", "35%"],
+        "detail": "Stop boss damage, activate Vanton's Clarity, and kill the invisible Horrors protecting the Archers."
+      },
+      "source_type": "guide",
+      "source_name": "AlcastHQ Sanity's Edge Trial Guide by SGTsanttu",
+      "source_locator": "Exarchanic Yaseyla - Horrors",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "frost_bomb_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "AlcastHQ Sanity's Edge Trial Guide by SGTsanttu",
+      "source_locator": "Exarchanic Yaseyla - Frostbomb",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "frost_bomb_behavior",
+      "value": {
+        "cadence_seconds_approx": 30,
+        "first_cast_seconds_approx": 17,
+        "health_loss_percent": 75,
+        "heal_to_full_window_seconds": 8,
+        "veteran_targets_after_50_percent": 2,
+        "reduces_healing_taken": true
+      },
+      "source_type": "guide_plus_official_patch",
+      "source_name": "AlcastHQ Sanity's Edge guide; ESO Update 42 patch notes",
+      "source_locator": "Yaseyla Frostbomb / Sanity's Edge Trial",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "fire_bomb_toss_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "AlcastHQ Sanity's Edge Trial Guide by SGTsanttu",
+      "source_locator": "Exarchanic Yaseyla - Fire Bomb Toss",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "fire_bomb_toss_behavior",
+      "value": {
+        "cadence_seconds_approx": 24,
+        "execute_cadence_seconds_approx": 12,
+        "execute_threshold": "25%",
+        "leaves_ground_aoe": true,
+        "applies": "Ignite"
+      },
+      "source_type": "guide",
+      "source_name": "AlcastHQ Sanity's Edge Trial Guide by SGTsanttu",
+      "source_locator": "Exarchanic Yaseyla - Fire Bomb Toss",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "wamasu_charge_exists",
+      "value": true,
+      "source_type": "official_patch_plus_guide",
+      "source_name": "ESO v9.0.3 patch notes; AlcastHQ Sanity's Edge guide",
+      "source_locator": "Exarchanic Yaseyla / Wamasu Charge",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "wamasu_charge_behavior",
+      "value": {
+        "targets_random_player": true,
+        "path_hits_players": true,
+        "knockback": true,
+        "hardmode_can_be_fatal": true
+      },
+      "source_type": "official_patch_plus_guide",
+      "source_name": "ESO v9.0.3 patch notes; AlcastHQ Sanity's Edge guide",
+      "source_locator": "Exarchanic Yaseyla / Wamasu Charge",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "true_shot_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "AlcastHQ Sanity's Edge Trial Guide by SGTsanttu",
+      "source_locator": "Contramagis Archer - True Shot",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "true_shot_behavior",
+      "value": {
+        "interruptible": true,
+        "veteran_failure_can_be_fatal": true,
+        "recommended_response": "interrupt"
+      },
+      "source_type": "guide",
+      "source_name": "AlcastHQ Sanity's Edge Trial Guide by SGTsanttu",
+      "source_locator": "Contramagis Archer - True Shot",
+      "confidence": "high"
+    }
+  ]
+}
