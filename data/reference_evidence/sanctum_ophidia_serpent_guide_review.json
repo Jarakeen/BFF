@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "content_id": "sanctum_ophidia",
+  "encounter_id": "the_serpent_celestial",
+  "encounter_name": "The Serpent",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main Phase","threshold":"Pull","description":"Main tank faces the Serpent away while the group stacks behind, handles poison/totem pressure, and the off-tank controls Lamias and Mantikoras."},"source_type":"guide","source_name":"Xynode Sanctum Ophidia Trial Guide","source_locator":"The Serpent","confidence":"medium"},
+    {"fact_type":"phase","fact_key":"poison_phase","value":{"order":2,"label":"Poison Phase","threshold":"Recurring","description":"The Serpent teleports to center and fills the room with heavy ticking poison for about 10 seconds; group stacks tightly for healing."},"source_type":"guide","source_name":"Xynode Sanctum Ophidia Trial Guide","source_locator":"The Serpent > Poison Phase","confidence":"medium"},
+    {"fact_type":"phase","fact_key":"bubble_phase","value":{"order":3,"label":"Orb / Bubble Phase","threshold":"After every 5th poison phase and at execute","description":"Each player takes one pink shard to gain a protective bubble before the room-wide explosion; missing a bubble is lethal."},"source_type":"guide","source_name":"Xynode Sanctum Ophidia Trial Guide","source_locator":"The Serpent > Orbs/Bubbles","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"world_shaper","value":{"name":"World Shaper","difficulty":"hard_mode","response":"stay_stacked_until_projectile_leaves_boss_hand_then_run_out_and_return"},"source_type":"guide","source_name":"Xynode Sanctum Ophidia Trial Guide","source_locator":"The Serpent > World Shaper","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"mantikora_adds","value":{"name":"Mantikora Adds","first_spawn":"after_2nd_poison_phase","second_spawn":"after_4th_poison_phase","response":"offtank_holds_away_or_group_kills"},"source_type":"guide","source_name":"Xynode Sanctum Ophidia Trial Guide","source_locator":"The Serpent > Mantikora","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"magicka_bomb","value":{"name":"Magicka Bomb","response":"spend_magicka_down_to_roughly_0_to_10_percent_before_detonation"},"source_type":"guide","source_name":"Xynode Sanctum Ophidia Trial Guide","source_locator":"The Serpent > Magicka Bomb","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"pull_totem","value":{"name":"Pull Totem","response":"dodge_mid_pull_or_roll_away_to_break_snare"},"source_type":"guide","source_name":"Xynode Sanctum Ophidia Trial Guide","source_locator":"The Serpent > Pull Totems","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"poison_totem","value":{"name":"Poison Totem","response":"destroy_to_reduce_poison_phase_pressure","buffs_boss_poison_damage":true},"source_type":"guide","source_name":"Xynode Sanctum Ophidia Trial Guide","source_locator":"The Serpent > Poison Totems","confidence":"medium"}
+  ]
+}
