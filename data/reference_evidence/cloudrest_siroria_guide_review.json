@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "cloudrest",
+  "encounter_id": "siroria",
+  "encounter_name": "Siroria",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main Phase","threshold":"Pull","description":"Keep Siroria and her gryphon separated; prioritize the gryphon while grounded and swap to Siroria when it is airborne."},"source_type":"guide","source_name":"Xynode Cloudrest Trial Guide","source_locator":"Shade of Siroria","confidence":"medium"},
+    {"fact_type":"phase","fact_key":"leap_phase","value":{"order":2,"label":"Leap / Fire Tornado","threshold":"~50%","description":"Siroria begins leap behavior and fire-tornado pressure around half health."},"source_type":"guide","source_name":"Xynode Cloudrest Trial Guide","source_locator":"Siroria leap behavior","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"roaring_flare","value":{"name":"Roaring Flare","minimum_stack_players":3,"response":"stack_to_share_damage","execute_behavior":"two_simultaneous_in_zmaja_execute"},"source_type":"guide","source_name":"Xynode Cloudrest Trial Guide","source_locator":"Siroria Hug / Roaring Flare","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"dragonknight_standard","value":{"name":"Dragonknight Standard","response":"move_boss_out_and_avoid_area","boss_empowered_inside":true},"source_type":"guide","source_name":"Xynode Cloudrest Trial Guide","source_locator":"Siroria Dragonknight Standard","confidence":"medium"}
+  ]
+}
