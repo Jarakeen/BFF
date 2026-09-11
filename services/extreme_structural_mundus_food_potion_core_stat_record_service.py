@@ -7,6 +7,11 @@ PotionAvailabilityRepository proves which U50 formulas/traits are available.
 Only source-backed traits with an existing named-buff mapping are projected into
 an explicit CombatState for the scored snapshot.  No selected potion is silently
 assumed active by the lower calculation layers.
+
+Callers may additionally supply fixed transient-state markers that apply to every
+potion state. This lets higher finite-axis searches compose an explicitly reviewed
+runtime condition, such as the Extreme Emperor ceiling, without duplicating the
+potion search or stat math.
 """
 
 from dataclasses import dataclass
@@ -68,9 +73,17 @@ class ExtremeBestMundusFoodPotionStructuralStatEvaluator:
         *,
         food_evaluator: ExtremeBestMundusFoodStructuralStatEvaluator,
         potion_repository: PotionAvailabilityRepository,
+        base_active_buffs: tuple[str, ...] = (),
     ) -> None:
         self.food_evaluator = food_evaluator
         self.potion_repository = potion_repository
+        self.base_active_buffs = tuple(
+            dict.fromkeys(
+                str(value or "").strip()
+                for value in base_active_buffs
+                if str(value or "").strip()
+            )
+        )
         self._states_cache: tuple[ExtremePotionSnapshotState, ...] | None = None
         self._unresolved_cache: tuple[str, ...] | None = None
         self._denominator_proven_cache: bool | None = None
@@ -130,11 +143,14 @@ class ExtremeBestMundusFoodPotionStructuralStatEvaluator:
         unresolved: list[str] = list(self.unresolved)
 
         for state in self.potion_states():
+            snapshot_buffs = tuple(
+                dict.fromkeys((*self.base_active_buffs, *state.active_buffs))
+            )
             value, payload, candidate_unresolved = self.food_evaluator.evaluate_candidate(
                 objective_key,
                 candidate,
                 potion=state.selection,
-                active_buffs=state.active_buffs,
+                active_buffs=snapshot_buffs,
             )
             unresolved.extend(str(item) for item in candidate_unresolved if item)
             score = float(value)
