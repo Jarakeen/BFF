@@ -24,6 +24,7 @@ from services.rotation_heavy_attack_restoration_evidence_service import (
 from services.rotation_recovery_heavy_replay_service import (
     RotationRecoveryHeavyReplay,
     RotationRecoveryHeavyReplayService,
+    VerifiedRecoveryHeavyRestorationResolver,
 )
 
 
@@ -65,6 +66,11 @@ class RotationHeavySustainProjectionService:
     event is created. Explicit caller modifier evidence remains a reviewed override:
     it may fill an unknown progression value or agree with a known value, but a
     contradictory known character fact fails closed instead of double-applying.
+
+    The same canonical restoration projection may also be exposed as a plan-specific
+    replay resolver. Recovery-heavy stabilization can therefore rebuild restoration
+    evidence for each regenerated plan without replaying sustain twice or creating a
+    second Heavy Attack math path.
     """
 
     _EPSILON = 1e-9
@@ -95,6 +101,51 @@ class RotationHeavySustainProjectionService:
             progression_modifier_service or HeavyAttackProgressionModifierService()
         )
 
+    def restoration_resolver_for_plan(
+        self,
+        *,
+        character_build: CharacterBuild,
+        sustain_build: PlayerBuild,
+        plan: RotationPlan,
+        resource: ResourceType,
+        initial_bar: str,
+        completion_evidence: tuple[RotationHeavyAttackCompletionEvidence, ...],
+    ) -> VerifiedRecoveryHeavyRestorationResolver:
+        """Build a canonical replay resolver for one exact generated plan.
+
+        This method performs weapon/bar resolution, canonical saved-character passive
+        resolution, reviewed modifier composition, and verified base-restore math,
+        but deliberately does not replay sustain. Any unresolved restoration evidence
+        raises before replay so a recovery-heavy caller cannot silently convert an
+        unknown restore into zero.
+        """
+
+        restoration = self._restoration_projection(
+            character_build=character_build,
+            sustain_build=sustain_build,
+            plan=plan,
+            initial_bar=initial_bar,
+            completion_evidence=completion_evidence,
+        )
+        unresolved = self._restoration_unresolved(restoration)
+        if unresolved:
+            raise ValueError(
+                "canonical heavy restoration unresolved for generated plan: "
+                + "; ".join(unresolved)
+            )
+
+        event_by_action = {
+            (float(item.action.time_seconds), int(item.action.sequence)): item.restoration_event
+            for item in restoration.resolutions
+            if item.restoration_event is not None
+            and item.restoration_event.resource is resource
+        }
+
+        def resolve(action: RotationAction):
+            return event_by_action.get((float(action.time_seconds), int(action.sequence)))
+
+        return resolve
+
     def project(
         self,
         *,
@@ -105,6 +156,51 @@ class RotationHeavySustainProjectionService:
         initial_bar: str,
         completion_evidence: tuple[RotationHeavyAttackCompletionEvidence, ...],
     ) -> RotationHeavySustainProjection:
+        restoration = self._restoration_projection(
+            character_build=character_build,
+            sustain_build=sustain_build,
+            plan=plan,
+            initial_bar=initial_bar,
+            completion_evidence=completion_evidence,
+        )
+
+        unresolved = self._restoration_unresolved(restoration)
+        if unresolved:
+            return RotationHeavySustainProjection(
+                restoration_projection=restoration,
+                replay=None,
+                unresolved=unresolved,
+            )
+
+        resolve = self.restoration_resolver_for_plan(
+            character_build=character_build,
+            sustain_build=sustain_build,
+            plan=plan,
+            resource=resource,
+            initial_bar=initial_bar,
+            completion_evidence=completion_evidence,
+        )
+        replay = self.replay_service.replay(
+            build=sustain_build,
+            plan=plan,
+            resource=resource,
+            restoration_resolver=resolve,
+        )
+        return RotationHeavySustainProjection(
+            restoration_projection=restoration,
+            replay=replay,
+            unresolved=(),
+        )
+
+    def _restoration_projection(
+        self,
+        *,
+        character_build: CharacterBuild,
+        sustain_build: PlayerBuild,
+        plan: RotationPlan,
+        initial_bar: str,
+        completion_evidence: tuple[RotationHeavyAttackCompletionEvidence, ...],
+    ) -> RotationHeavyAttackRestorationProjection:
         progression_resolution = self.progression_adapter.resolve(sustain_build)
         progression = progression_resolution.progression
 
@@ -119,7 +215,7 @@ class RotationHeavySustainProjectionService:
                 progression_resolution=progression_modifiers,
             )
 
-        restoration = self.restoration_service.project(
+        return self.restoration_service.project(
             build=character_build,
             plan=plan,
             initial_bar=initial_bar,
@@ -127,40 +223,18 @@ class RotationHeavySustainProjectionService:
             modifier_resolver=resolve_modifiers,
         )
 
+    @classmethod
+    def _restoration_unresolved(
+        cls,
+        restoration: RotationHeavyAttackRestorationProjection,
+    ) -> tuple[str, ...]:
         unresolved = list(restoration.unresolved)
         unresolved.extend(
             f"heavy-attack weapon projection violation at "
             f"{item.action.time_seconds:.3f}s sequence {item.action.sequence}: {item.reason}"
             for item in restoration.weapon_projection.violations
         )
-        if unresolved:
-            return RotationHeavySustainProjection(
-                restoration_projection=restoration,
-                replay=None,
-                unresolved=self._dedupe(tuple(unresolved)),
-            )
-
-        event_by_action = {
-            (float(item.action.time_seconds), int(item.action.sequence)): item.restoration_event
-            for item in restoration.resolutions
-            if item.restoration_event is not None
-            and item.restoration_event.resource is resource
-        }
-
-        def resolve(action: RotationAction):
-            return event_by_action.get((float(action.time_seconds), int(action.sequence)))
-
-        replay = self.replay_service.replay(
-            build=sustain_build,
-            plan=plan,
-            resource=resource,
-            restoration_resolver=resolve,
-        )
-        return RotationHeavySustainProjection(
-            restoration_projection=restoration,
-            replay=replay,
-            unresolved=(),
-        )
+        return cls._dedupe(tuple(unresolved))
 
     @classmethod
     def _compose_modifiers(
