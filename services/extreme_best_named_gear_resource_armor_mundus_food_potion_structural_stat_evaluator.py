@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Choose the best named gear + joint resource armor state beneath finite axes."""
+"""Choose the best named gear + combined resource armor state beneath finite axes."""
 
 from collections.abc import Callable
 from typing import Any, Protocol
@@ -8,9 +8,9 @@ from typing import Any, Protocol
 from minmax.mundus_repository import MundusRepository
 from minmax.potion_availability_repository import PotionAvailabilityRepository
 from minmax.provisioning_static_repository import ProvisioningStaticRepository
-from services.extreme_armor_resource_trait_glyph_state_service import (
-    ExtremeArmorResourceTraitGlyphState,
-    ExtremeArmorResourceTraitGlyphStateCatalog,
+from services.extreme_armor_resource_weight_trait_glyph_state_service import (
+    ExtremeArmorResourceWeightTraitGlyphState,
+    ExtremeArmorResourceWeightTraitGlyphStateCatalog,
 )
 from services.extreme_named_gear_canonical_stat_evaluator import (
     ExtremeNamedGearCanonicalStatEvaluator,
@@ -42,13 +42,13 @@ class _FiniteAxisScorer(Protocol):
 
 
 GearResourceArmorEvaluatorFactory = Callable[
-    [ExtremeNamedGearSetRealization, ExtremeArmorResourceTraitGlyphState],
+    [ExtremeNamedGearSetRealization, ExtremeArmorResourceWeightTraitGlyphState],
     _FiniteAxisScorer,
 ]
 
 
 class ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory:
-    """Build Mundus/food/potion around one named-gear + resource-armor pair."""
+    """Build Mundus/food/potion around one named-gear + full resource-armor pair."""
 
     def __init__(
         self,
@@ -66,7 +66,7 @@ class ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory:
     def __call__(
         self,
         realization: ExtremeNamedGearSetRealization,
-        armor_state: ExtremeArmorResourceTraitGlyphState,
+        armor_state: ExtremeArmorResourceWeightTraitGlyphState,
     ) -> ExtremeBestMundusFoodPotionStructuralStatEvaluator:
         gear = ExtremeNamedGearCanonicalStatEvaluator(
             evaluator=self.canonical_evaluator,
@@ -91,13 +91,13 @@ class ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory:
 
 
 class ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator:
-    """Score every named-gear × joint resource-armor state for one structural candidate."""
+    """Score every named-gear × combined resource-armor state per structural candidate."""
 
     def __init__(
         self,
         *,
         gear_realization: ExtremeObjectiveNamedGearSetCatalogRealizationResult,
-        armor_catalog: ExtremeArmorResourceTraitGlyphStateCatalog,
+        armor_catalog: ExtremeArmorResourceWeightTraitGlyphStateCatalog,
         evaluator_factory: GearResourceArmorEvaluatorFactory,
     ) -> None:
         self.gear_realization = gear_realization
@@ -115,7 +115,7 @@ class ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator:
         )
 
     @staticmethod
-    def _armor_identity(state: ExtremeArmorResourceTraitGlyphState) -> tuple[Any, ...]:
+    def _armor_identity(state: ExtremeArmorResourceWeightTraitGlyphState) -> tuple[Any, ...]:
         return tuple(state.identity)
 
     def gear_realizations(self) -> tuple[ExtremeNamedGearSetRealization, ...]:
@@ -125,7 +125,7 @@ class ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator:
                 unique.setdefault(self._gear_identity(realization), realization)
         return tuple(unique[key] for key in sorted(unique))
 
-    def armor_states(self) -> tuple[ExtremeArmorResourceTraitGlyphState, ...]:
+    def armor_states(self) -> tuple[ExtremeArmorResourceWeightTraitGlyphState, ...]:
         return tuple(sorted(self.armor_catalog.states, key=self._armor_identity))
 
     @property
@@ -143,7 +143,7 @@ class ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator:
     def _evaluator_for(
         self,
         realization: ExtremeNamedGearSetRealization,
-        armor_state: ExtremeArmorResourceTraitGlyphState,
+        armor_state: ExtremeArmorResourceWeightTraitGlyphState,
     ) -> _FiniteAxisScorer:
         identity = (self._gear_identity(realization), self._armor_identity(armor_state))
         evaluator = self._evaluators.get(identity)
@@ -169,7 +169,7 @@ class ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator:
         if not gear_rows:
             raise ValueError("Extreme named gear search produced no physically realized gear candidate")
         if not armor_rows:
-            raise ValueError("Extreme resource armor search produced no joint trait/glyph state")
+            raise ValueError("Extreme resource armor search produced no combined weight/trait/glyph state")
 
         best_value: float | None = None
         best_payload: dict[str, Any] | None = None
@@ -199,6 +199,8 @@ class ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator:
         if best_value is None or best_payload is None:
             raise ValueError("Extreme named gear + resource armor search produced no scored candidate")
 
+        trait_glyph = self.armor_catalog.trait_glyph_catalog
+        weight = self.armor_catalog.weight_catalog
         best_payload["gear_candidates_scored"] = len(gear_rows)
         best_payload["resource_armor_states_scored"] = len(armor_rows)
         best_payload["gear_resource_armor_candidates_scored"] = len(gear_rows) * len(armor_rows)
@@ -206,6 +208,9 @@ class ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator:
         best_payload["reviewed_resource_armor_denominator_proven"] = (
             self.reviewed_resource_armor_denominator_proven
         )
-        best_payload["armor_glyph_choices_reviewed"] = self.armor_catalog.glyph_choices_reviewed
-        best_payload["armor_trait_glyph_dominated_states_pruned"] = self.armor_catalog.dominated_states_pruned
+        best_payload["armor_weight_states_reviewed"] = len(weight.states)
+        best_payload["armor_weight_raw_loadouts_reviewed"] = weight.raw_loadouts_reviewed
+        best_payload["armor_weight_dominated_loadouts_pruned"] = weight.dominated_loadouts_pruned
+        best_payload["armor_glyph_choices_reviewed"] = trait_glyph.glyph_choices_reviewed
+        best_payload["armor_trait_glyph_dominated_states_pruned"] = trait_glyph.dominated_states_pruned
         return best_value, best_payload, tuple(dict.fromkeys(unresolved))
