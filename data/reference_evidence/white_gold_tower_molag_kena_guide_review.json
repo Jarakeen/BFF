@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "content_id": "white_gold_tower",
+  "encounter_id": "molag_kena",
+  "encounter_name": "Molag Kena",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_one","value":{"order":1,"label":"Main Combat I","threshold":"opening to first shield","description":"Keep Kena centered and avoid wind, lightning calls, and the rotating lightning wall."},"source_type":"guide","source_name":"Xynode White-Gold Tower Guide","source_locator":"Molag Kena","game_update":"U7","confidence":"high"},
+    {"fact_type":"phase","fact_key":"shield_one","value":{"order":2,"label":"Shield Adds I","threshold":"first immunity cycle","description":"Kill the four shielding adds while avoiding their lethal death explosions and Kena's lightning waves."},"source_type":"guide","source_name":"Xynode White-Gold Tower Guide","source_locator":"Molag Kena","game_update":"U7","confidence":"high"},
+    {"fact_type":"phase","fact_key":"shield_two","value":{"order":3,"label":"Shield Adds II","threshold":"about 25-30%","description":"Repeat the add-shield cycle before the final execute."},"source_type":"guide","source_name":"Xynode White-Gold Tower Guide","source_locator":"Molag Kena","game_update":"U7","confidence":"high"},
+    {"fact_type":"phase","fact_key":"execute","value":{"order":4,"label":"Double-Wall Execute","threshold":"after second shield","description":"Kena overlaps the fight mechanics with two rotating lightning walls; stay central and dodge through a wall only when necessary."},"source_type":"guide","source_name":"Xynode White-Gold Tower Guide","source_locator":"Molag Kena","game_update":"U7","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"lightning_spin","value":{"name":"Lightning Spin","response":"stay_near_center_and_rotate_with_the_lightning_wall"},"source_type":"guide","source_name":"Xynode White-Gold Tower Guide","source_locator":"Molag Kena","game_update":"U7","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"shield_adds","value":{"name":"Shielding Adds","response":"kill_shield_adds_but_leave_their_lethal_death_aoes_before_reengaging_kena"},"source_type":"guide","source_name":"Xynode White-Gold Tower Guide","source_locator":"Molag Kena","game_update":"U7","confidence":"high"}
+  ]
+}
