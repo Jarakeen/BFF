@@ -34,6 +34,9 @@ class RotationHealerMinorLifestealHealObservation:
     previous_same_source_damage_event_index: int | None
     previous_same_source_damage_target_id: int | None
     previous_same_source_damage_delta_seconds: float | None
+    previous_recipient_damage_event_index: int | None
+    previous_recipient_damage_target_id: int | None
+    previous_recipient_damage_delta_seconds: float | None
 
 
 @dataclass(frozen=True)
@@ -91,6 +94,15 @@ class RotationHealerMinorLifestealEsoLogsEvidenceReport:
                     ),
                     "previous_same_source_damage_delta_seconds": (
                         item.previous_same_source_damage_delta_seconds
+                    ),
+                    "previous_recipient_damage_event_index": (
+                        item.previous_recipient_damage_event_index
+                    ),
+                    "previous_recipient_damage_target_id": (
+                        item.previous_recipient_damage_target_id
+                    ),
+                    "previous_recipient_damage_delta_seconds": (
+                        item.previous_recipient_damage_delta_seconds
                     ),
                 }
                 for item in self.observations
@@ -213,20 +225,28 @@ class RotationHealerMinorLifestealEsoLogsEvidenceService:
                 if not self._is_minor_lifesteal_heal(event, aliases=aliases):
                     continue
 
-                previous_damage = self._previous_same_source_damage(
+                previous_damage = self._previous_damage_by_actor(
                     connection,
                     interpreter=interpreter,
                     event=event,
+                    actor_id=event.source_id,
                 )
-                delta = None
-                if previous_damage is not None:
-                    delta = round(
-                        (float(event.timestamp) - float(previous_damage.timestamp))
-                        * scale,
-                        6,
-                    )
-                    if delta < 0 or not math.isfinite(delta):
-                        delta = None
+                previous_recipient_damage = self._previous_damage_by_actor(
+                    connection,
+                    interpreter=interpreter,
+                    event=event,
+                    actor_id=event.target_id,
+                )
+                delta = self._event_delta_seconds(
+                    event,
+                    previous_damage,
+                    scale=scale,
+                )
+                recipient_delta = self._event_delta_seconds(
+                    event,
+                    previous_recipient_damage,
+                    scale=scale,
+                )
 
                 relation = self._source_target_relation(
                     event.source_id,
@@ -256,6 +276,17 @@ class RotationHealerMinorLifestealEsoLogsEvidenceService:
                             else None
                         ),
                         previous_same_source_damage_delta_seconds=delta,
+                        previous_recipient_damage_event_index=(
+                            int(previous_recipient_damage.event_index)
+                            if previous_recipient_damage is not None
+                            else None
+                        ),
+                        previous_recipient_damage_target_id=(
+                            previous_recipient_damage.target_id
+                            if previous_recipient_damage is not None
+                            else None
+                        ),
+                        previous_recipient_damage_delta_seconds=recipient_delta,
                     )
                 )
 
@@ -269,10 +300,14 @@ class RotationHealerMinorLifestealEsoLogsEvidenceService:
                     f"{item.report_code} fight {item.fight_id} event {item.event_index}: "
                     "source/target ownership is unavailable"
                 )
-            if item.previous_same_source_damage_event_index is None:
+            if (
+                item.previous_same_source_damage_event_index is None
+                and item.previous_recipient_damage_event_index is None
+            ):
                 unresolved.append(
                     f"{item.report_code} fight {item.fight_id} event {item.event_index}: "
-                    "no preceding same-source damage event was observed"
+                    "no preceding damage event was observed for either the logged "
+                    "heal source or the heal recipient"
                 )
 
         observed_aliases = aliases | {
@@ -321,14 +356,15 @@ class RotationHealerMinorLifestealEsoLogsEvidenceService:
         )
 
     @classmethod
-    def _previous_same_source_damage(
+    def _previous_damage_by_actor(
         cls,
         connection: sqlite3.Connection,
         *,
         interpreter: EsoLogsEventInterpreter,
         event: SemanticCombatEvent,
+        actor_id: int | None,
     ) -> SemanticCombatEvent | None:
-        if event.source_id is None:
+        if actor_id is None:
             return None
         row = connection.execute(
             f"""
@@ -348,13 +384,30 @@ class RotationHealerMinorLifestealEsoLogsEvidenceService:
             (
                 event.report_code,
                 int(event.fight_id),
-                int(event.source_id),
+                int(actor_id),
                 float(event.timestamp),
                 float(event.timestamp),
                 int(event.event_index),
             ),
         ).fetchone()
         return interpreter.interpret_row(row) if row is not None else None
+
+    @staticmethod
+    def _event_delta_seconds(
+        event: SemanticCombatEvent,
+        previous_damage: SemanticCombatEvent | None,
+        *,
+        scale: float,
+    ) -> float | None:
+        if previous_damage is None:
+            return None
+        delta = round(
+            (float(event.timestamp) - float(previous_damage.timestamp)) * scale,
+            6,
+        )
+        if delta < 0 or not math.isfinite(delta):
+            return None
+        return delta
 
     @staticmethod
     def _fight_keys(
