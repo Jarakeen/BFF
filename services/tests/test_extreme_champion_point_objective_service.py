@@ -75,6 +75,81 @@ def test_flat_static_cp_projects_directly_into_extreme_objective():
     assert row.unresolved == ()
 
 
+@pytest.mark.parametrize(
+    ("objective_key", "stat", "amount"),
+    (
+        ("max_health", StatId.MAX_HEALTH, 1400.0),
+        ("max_magicka", StatId.MAX_MAGICKA, 1300.0),
+        ("max_stamina", StatId.MAX_STAMINA, 1250.0),
+    ),
+)
+def test_max_resource_static_cp_projects_directly(objective_key, stat, amount):
+    record = _record("Resource Star")
+    repo = _Repository(
+        non_slottable=(record,),
+        resolved={
+            "Resource Star": (
+                [
+                    Effect(
+                        source="Champion Point: Resource Star",
+                        stat=stat,
+                        operation=EffectOperation.ADD,
+                        value=amount,
+                        unit=EffectUnit.FLAT,
+                    )
+                ],
+                [],
+            )
+        },
+    )
+
+    row = ExtremeChampionPointObjectiveService.candidate_for_record(
+        repo,
+        record,
+        objective_key,
+    )
+
+    assert row.reviewed_delta == pytest.approx(amount)
+    assert row.unresolved == ()
+
+
+def test_resource_objective_ignores_other_resource_effects_without_guessing():
+    record = _record("Mixed Resources")
+    repo = _Repository(
+        non_slottable=(record,),
+        resolved={
+            "Mixed Resources": (
+                [
+                    Effect(
+                        source="Champion Point: Mixed Resources",
+                        stat=StatId.MAX_HEALTH,
+                        operation=EffectOperation.ADD,
+                        value=1400.0,
+                        unit=EffectUnit.FLAT,
+                    ),
+                    Effect(
+                        source="Champion Point: Mixed Resources",
+                        stat=StatId.MAX_MAGICKA,
+                        operation=EffectOperation.ADD,
+                        value=1300.0,
+                        unit=EffectUnit.FLAT,
+                    ),
+                ],
+                [],
+            )
+        },
+    )
+
+    row = ExtremeChampionPointObjectiveService.candidate_for_record(
+        repo,
+        record,
+        "max_magicka",
+    )
+
+    assert row.reviewed_delta == pytest.approx(1300.0)
+    assert row.unresolved == ()
+
+
 def test_critical_damage_percent_is_converted_to_ratio():
     record = _record("Fighting Finesse", slottable=True)
     repo = _Repository(
@@ -295,5 +370,5 @@ def test_unreviewed_objective_is_rejected():
     with pytest.raises(KeyError, match="unreviewed Extreme Champion Point objective"):
         ExtremeChampionPointObjectiveService.non_slottable_baseline_for_objective(
             _Repository(),
-            "max_health",
+            "max_ultimate",
         )
