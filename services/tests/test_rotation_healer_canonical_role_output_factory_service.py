@@ -179,7 +179,7 @@ def test_missing_bar_context_fails_closed_before_provider_construction() -> None
     assert result.role_output_provider is None
     assert result.demand_evidence_provider is None
     assert result.unresolved == ("back canonical static context is unavailable",)
-    assert demand_factory.calls == ()
+    assert demand_factory.calls == []
     with pytest.raises(ValueError, match="back canonical static context"):
         result.evaluate_windows(_candidate())
 
