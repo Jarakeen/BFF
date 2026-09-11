@@ -69,8 +69,29 @@ ROTATION_OBSERVATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=False,
         evidence_class=EvidenceClass.OBSERVATIONAL,
         notes=(
-            "Read-only evidence inspection only. Restart-shaped timing is not promotion. "
-            "Refresh/recast policy must remain unresolved until cross-fight evidence is explicitly reviewed."
+            "Read-only recipient-aware evidence inspection only. Restart-shaped timing is not "
+            "promotion. Periodic phase comparisons are cadence-aware and ambiguous phase collisions "
+            "remain unresolved rather than being mistaken for coexistence."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="rotation.healer.periodic_refresh_policy_review",
+        domain="rotation",
+        purpose=(
+            "Load explicitly human-reviewed healer periodic refresh/recast policies from a "
+            "separate fixture and compose exact identity/version matches into reviewed timing evidence."
+        ),
+        implementation_path="services.rotation_healer_periodic_refresh_policy_fixture_service",
+        inputs=("ReviewedRuntimeObservation", "ReviewedRefreshPolicyFixture"),
+        outputs=("ReviewedRuntimeObservationWithRefreshPolicy",),
+        responsibilities=("rotation_healer_periodic_refresh_policy_review",),
+        roles=("Healer",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.OBSERVATIONAL,
+        notes=(
+            "No policy is inferred from logs. Refresh-policy review remains separate from isolated "
+            "timing review; candidate audit output cannot be consumed as reviewed policy evidence."
         ),
     ),
 )
