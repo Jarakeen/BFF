@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "bloodroot_forge",
+  "encounter_id": "earthgore_amalgam",
+  "encounter_name": "Earthgore Amalgam",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Place lava toward the arena edge, survive Stonefall, and control copies as they spawn."},"source_type":"guide","source_name":"Alcast Bloodroot Forge Guide","source_locator":"Final Boss - Earthgore Amalgam","game_update":"U15","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"lava_placement","value":{"name":"Lava AoE","response":"face_targeted_lava_toward_the_wall_and_shift_slightly_to_avoid_stun_pressure"},"source_type":"guide","source_name":"Alcast Bloodroot Forge Guide","source_locator":"Earthgore Amalgam","game_update":"U15","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"stonefall","value":{"name":"Stonefall","response":"use_stonefire_crucible_to_interrupt_in_non_hard_mode_or_survive_without_it_in_hard_mode"},"source_type":"guide","source_name":"Alcast Bloodroot Forge Guide","source_locator":"Earthgore Amalgam","game_update":"U15","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"copies","value":{"name":"Amalgam Copies","response":"tank_all_copies_and_burn_the_newest_low_health_copy_quickly"},"source_type":"guide","source_name":"Alcast Bloodroot Forge Guide","source_locator":"Earthgore Amalgam","game_update":"U15","confidence":"high"}
+  ]
+}
