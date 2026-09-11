@@ -96,39 +96,26 @@ def test_checked_in_registry_keeps_newest_first_release_slices_and_main_encounte
     for row in rows:
         by_content.setdefault(row.content_id, []).append(row)
 
-    assert len(by_content["naj_caldeesh"]) == 3
-    assert len(by_content["black_gem_foundry"]) == 3
-    assert len(by_content["exiled_redoubt"]) == 3
-    assert len(by_content["lep_seclusa"]) == 3
-    assert len(by_content["oathsworn_pit"]) == 3
-    assert len(by_content["bedlam_veil"]) == 3
-    assert len(by_content["bal_sunnar"]) == 3
-    assert len(by_content["scrivener_s_hall"]) == 3
-    assert len(by_content["earthen_root_enclave"]) == 3
-    assert len(by_content["graven_deep"]) == 3
+    for content_id in (
+        "naj_caldeesh", "black_gem_foundry", "exiled_redoubt", "lep_seclusa",
+        "oathsworn_pit", "bedlam_veil", "bal_sunnar", "scrivener_s_hall",
+        "earthen_root_enclave", "graven_deep", "coral_aerie", "shipwright_s_regret",
+    ):
+        assert len(by_content[content_id]) == 3
+
     assert {row.release_key for row in rows} == {
-        (2025, 47),
-        (2025, 45),
-        (2024, 41),
-        (2023, 37),
-        (2022, 35),
+        (2025, 47), (2025, 45), (2024, 41), (2023, 37), (2022, 35), (2022, 33)
     }
     assert rows[0].release_key == (2025, 47)
-    assert rows[-1].release_key == (2022, 35)
+    assert rows[-1].release_key == (2022, 33)
 
     naj = {row.encounter_id: row for row in by_content["naj_caldeesh"]}
     assert naj["talen_lah"].member_ids == ("talen_lah", "bar_sakka")
     assert "bar_sakka" not in {row.encounter_id for row in rows}
 
     oathsworn = {row.encounter_id: row for row in by_content["oathsworn_pit"]}
-    assert oathsworn["packmaster_rethelros"].member_ids == (
-        "packmaster_rethelros",
-        "malthil",
-    )
-    assert oathsworn["anthelmir_s_construct"].member_ids == (
-        "anthelmir_s_construct",
-        "anthelmir",
-    )
+    assert oathsworn["packmaster_rethelros"].member_ids == ("packmaster_rethelros", "malthil")
+    assert oathsworn["anthelmir_s_construct"].member_ids == ("anthelmir_s_construct", "anthelmir")
     assert "malthil" not in {row.encounter_id for row in rows}
     assert "anthelmir" not in {row.encounter_id for row in rows}
 
@@ -138,11 +125,7 @@ def test_checked_in_registry_keeps_newest_first_release_slices_and_main_encounte
     assert "mind_terror" not in {row.encounter_id for row in rows}
 
     bal_sunnar_ids = {row.encounter_id for row in by_content["bal_sunnar"]}
-    assert bal_sunnar_ids == {
-        "kovan_giryon",
-        "roksa_the_warped",
-        "matriarch_lladi_telvanni",
-    }
+    assert bal_sunnar_ids == {"kovan_giryon", "roksa_the_warped", "matriarch_lladi_telvanni"}
     assert "urvel_drath" not in {row.encounter_id for row in rows}
     assert "house_telvanni" not in {row.encounter_id for row in rows}
 
@@ -153,16 +136,24 @@ def test_checked_in_registry_keeps_newest_first_release_slices_and_main_encounte
     assert "infernium" not in {row.encounter_id for row in rows}
     assert "cartoqueen" not in {row.encounter_id for row in rows}
 
-    earthen_root_ids = {row.encounter_id for row in by_content["earthen_root_enclave"]}
-    assert earthen_root_ids == {
-        "corruption_of_stone",
-        "corruption_of_root",
-        "archdruid_devyric",
+    assert {row.encounter_id for row in by_content["earthen_root_enclave"]} == {
+        "corruption_of_stone", "corruption_of_root", "archdruid_devyric"
+    }
+    assert {row.encounter_id for row in by_content["graven_deep"]} == {
+        "the_euphotic_gatekeeper", "varzunon", "zelvraak_the_unbreathing"
     }
 
-    graven_deep_ids = {row.encounter_id for row in by_content["graven_deep"]}
-    assert graven_deep_ids == {
-        "the_euphotic_gatekeeper",
-        "varzunon",
-        "zelvraak_the_unbreathing",
+    assert {row.encounter_id for row in by_content["coral_aerie"]} == {
+        "maligalig", "sarydil", "varallion"
     }
+    assert "iliata" not in {row.encounter_id for row in rows}
+    assert "mafremare" not in {row.encounter_id for row in rows}
+    assert "ofallo" not in {row.encounter_id for row in rows}
+    assert "kargaeda" not in {row.encounter_id for row in rows}
+
+    assert {row.encounter_id for row in by_content["shipwright_s_regret"]} == {
+        "foreman_bradiggan", "nazaray", "captain_numirril"
+    }
+    assert "wraith" not in {row.encounter_id for row in rows}
+    assert "spriggan" not in {row.encounter_id for row in rows}
+    assert "maormer" not in {row.encounter_id for row in rows}
