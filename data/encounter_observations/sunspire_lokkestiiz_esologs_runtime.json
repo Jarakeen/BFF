@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "encounter_id": "lokkestiiz",
+  "content_id": "sunspire",
+  "observation_key": "aerial_onslaught_runtime_pressure_pattern",
+  "observation_type": "runtime_strategy_evidence",
+  "status": "reviewed",
+  "source_type": "esologs_runtime_corpus",
+  "source_name": "ESO Logs reviewed Lokkestiiz successful-clear corpus",
+  "source_reports": [
+    "v16hzgGWTV7BZ48f",
+    "btZpy9j6KzYXkRL3",
+    "FPy6Tc9BzwQNbfVK",
+    "PCBxhWranVctf8Q2"
+  ],
+  "sample": {
+    "successful_kills": 10,
+    "reviewed_flight_windows": 30,
+    "difficulty": 122,
+    "selection": "successful Lokkestiiz kills with all three reviewed Aerial Onslaught windows resolved"
+  },
+  "semantic_mechanic_key": "aerial_onslaught_flight",
+  "findings": {
+    "flight_1": {
+      "duration_seconds": {
+        "mean": 52.74,
+        "median": 52.67,
+        "min": 52.29,
+        "max": 53.33
+      },
+      "observed_start_seconds": {
+        "mean": 21.09,
+        "median": 20.64,
+        "min": 16.61,
+        "max": 28.46
+      },
+      "incoming_pressure_per_second_mean": {
+        "tank": 1972,
+        "healer": 3107,
+        "dps": 11466
+      },
+      "healer_output_per_second_mean": 12589,
+      "non_boss_hostile_damage_per_second_mean": 283454,
+      "kills_with_player_death": 1,
+      "kills_with_interrupt": 4
+    },
+    "flight_2": {
+      "duration_seconds": {
+        "mean": 64.66,
+        "median": 64.61,
+        "min": 64.26,
+        "max": 65.08
+      },
+      "observed_start_seconds": {
+        "mean": 100.13,
+        "median": 98.66,
+        "min": 97.05,
+        "max": 112.78
+      },
+      "incoming_pressure_per_second_mean": {
+        "tank": 3489,
+        "healer": 4197,
+        "dps": 15713
+      },
+      "healer_output_per_second_mean": 17558,
+      "non_boss_hostile_damage_per_second_mean": 303016,
+      "kills_with_player_death": 2,
+      "kills_with_interrupt": 9
+    },
+    "flight_3": {
+      "duration_seconds": {
+        "mean": 63.76,
+        "median": 63.69,
+        "min": 63.32,
+        "max": 64.38
+      },
+      "observed_start_seconds": {
+        "mean": 187.14,
+        "median": 185.31,
+        "min": 179.62,
+        "max": 197.29
+      },
+      "incoming_pressure_per_second_mean": {
+        "tank": 3217,
+        "healer": 3803,
+        "dps": 13006
+      },
+      "healer_output_per_second_mean": 14841,
+      "non_boss_hostile_damage_per_second_mean": 277523,
+      "kills_with_player_death": 4,
+      "kills_with_interrupt": 9
+    },
+    "within_kill_recurrence": {
+      "complete_three_flight_kills": 10,
+      "highest_combined_incoming_pressure": {
+        "flight_1": 0,
+        "flight_2": 9,
+        "flight_3": 1
+      },
+      "highest_healer_output": {
+        "flight_1": 0,
+        "flight_2": 9,
+        "flight_3": 1
+      }
+    }
+  },
+  "reviewed_conclusions": [
+    {
+      "key": "flight_1_lighter_pressure",
+      "statement": "Across the reviewed successful-clear corpus, Aerial Onslaught Flight 1 was consistently lighter than Flights 2 and 3 in combined incoming pressure and healer output demand.",
+      "confidence": "repeated_observation"
+    },
+    {
+      "key": "flight_2_primary_sustained_pressure",
+      "statement": "Aerial Onslaught Flight 2 was the highest combined incoming-pressure window in 9 of 10 reviewed successful kills and also required the highest healer output in 9 of 10.",
+      "confidence": "repeated_observation"
+    },
+    {
+      "key": "flight_3_higher_death_incidence",
+      "statement": "Aerial Onslaught Flight 3 had player deaths in 4 of 10 reviewed successful kills, the highest death-window incidence of the three flights in this corpus.",
+      "confidence": "repeated_observation"
+    },
+    {
+      "key": "later_flights_interrupt_activity",
+      "statement": "Flights 2 and 3 each contained player interrupt activity in 9 of 10 reviewed successful kills, compared with 4 of 10 for Flight 1.",
+      "confidence": "repeated_observation"
+    },
+    {
+      "key": "flight_windows_remain_active_combat",
+      "statement": "All three reviewed Aerial Onslaught windows retained substantial non-boss hostile damage, supporting treatment as boss-unavailable, add-active combat rather than global raid downtime.",
+      "confidence": "repeated_observation"
+    }
+  ],
+  "strategy_implications": [
+    {
+      "role": "group",
+      "priority": "medium",
+      "guidance": "Treat Aerial Onslaught as active add-combat time rather than raid downtime; boss-only uptime denominators should exclude the airborne interval without excluding the raid's ongoing combat work."
+    },
+    {
+      "role": "healer",
+      "priority": "high",
+      "guidance": "Prepare strongest sustained healing coverage for Flight 2; it was the highest-pressure and highest-healer-output flight in 9 of 10 reviewed successful kills."
+    },
+    {
+      "role": "group",
+      "priority": "high",
+      "guidance": "Expect more execution and recovery risk in Flight 3; it showed the highest player-death incidence in the reviewed successful-clear corpus."
+    },
+    {
+      "role": "damage_dealer",
+      "priority": "high",
+      "guidance": "Preserve interrupt awareness during Flights 2 and 3; interrupt activity appeared in 9 of 10 reviewed successful kills for each later flight."
+    }
+  ],
+  "limitations": [
+    "Observed timings and pressure values are corpus measurements, not universal fixed encounter constants.",
+    "The corpus contains successful clears from four ESO Logs reports and should not be treated as a population-wide performance benchmark.",
+    "Raw ESO actor and ability IDs remain evidence signatures only and are not canonical semantic identity.",
+    "Strategy implications are reviewed conclusions from repeated runtime observation and remain separate from canonical mechanics truth."
+  ]
+}
