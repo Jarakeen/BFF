@@ -8,13 +8,9 @@ Proc attempts therefore need separate proofs:
 * the required set breakpoint was active on the bar where the trigger occurred;
 * the canonical effect explicitly defines what happens if that source becomes
   inactive after activation;
+* strict source-bound persistence uses the complete ordered BAR_SWAP history;
 * the ordinary shared runtime window/cooldown machinery decides whether the
   effect is still inside its timed window at the requested snapshot.
-
-This service owns no set-count math and no proc math. Bar-local breakpoint truth
-comes from ``ExtremeDualBarSetActivationEvidenceCatalog`` and runtime transitions
-remain owned by the existing shared effect stream helpers. Active-bar provenance
-comes from the unified Extreme runtime-history wrapper rather than a local type.
 """
 
 from dataclasses import dataclass
@@ -34,6 +30,7 @@ from services.extreme_dual_bar_set_activation_evidence_service import (
     ExtremeDualBarSetActivationEvidenceCatalog,
 )
 from services.extreme_runtime_bar_effect_attempt import ExtremeRuntimeBarEffectAttempt
+from services.extreme_runtime_bar_transition import ExtremeRuntimeBarTransition
 
 
 _SOURCE_BREAKPOINT_RE = re.compile(r"\((\d+)\)\s*$")
@@ -83,6 +80,38 @@ class ExtremeDualBarGearRuntimeLegalityService:
             else evidence.back_active_breakpoints
         )
 
+    @classmethod
+    def _breakpoint_active_on_both_bars(
+        cls,
+        evidence: ExtremeDualBarSetActivationEvidence,
+        required: int,
+    ) -> bool:
+        return (
+            required in cls._breakpoints_for_bar(evidence, "front")
+            and required in cls._breakpoints_for_bar(evidence, "back")
+        )
+
+    @classmethod
+    def _window_loses_source(
+        cls,
+        evidence: ExtremeDualBarSetActivationEvidence,
+        required: int,
+        window,
+        transitions: tuple[ExtremeRuntimeBarTransition, ...],
+        *,
+        snapshot_time_seconds: float,
+    ) -> bool:
+        start_key = (float(window.start_time_seconds), int(window.sequence))
+        for transition in transitions:
+            transition_key = (float(transition.time_seconds), int(transition.sequence))
+            if transition_key <= start_key:
+                continue
+            if float(transition.time_seconds) > float(snapshot_time_seconds) + 1e-12:
+                break
+            if required not in cls._breakpoints_for_bar(evidence, transition.to_bar):
+                return True
+        return False
+
     def resolve_history(
         self,
         activation: ExtremeDualBarSetActivationEvidenceCatalog,
@@ -90,6 +119,8 @@ class ExtremeDualBarGearRuntimeLegalityService:
         attempts: tuple[ExtremeRuntimeBarEffectAttempt, ...],
         snapshot_time_seconds: float,
         snapshot_active_bar: str | None = None,
+        bar_transitions: tuple[ExtremeRuntimeBarTransition, ...] = (),
+        bar_transition_history_complete: bool = False,
     ) -> ExtremeDualBarGearRuntimeLegalityResult:
         snapshot = float(snapshot_time_seconds)
         snapshot_bar = str(snapshot_active_bar or "").strip().casefold() or None
@@ -107,6 +138,12 @@ class ExtremeDualBarGearRuntimeLegalityService:
                     row.attempt.event.time_seconds,
                     row.attempt.event.sequence,
                 ),
+            )
+        )
+        ordered_transitions = tuple(
+            sorted(
+                bar_transitions,
+                key=lambda row: (row.time_seconds, row.sequence),
             )
         )
 
@@ -164,7 +201,10 @@ class ExtremeDualBarGearRuntimeLegalityService:
                     stream.final_state.windows,
                     at_time_seconds=snapshot,
                 )
-                if not any(window.effect_name == effect.name for window in partition.active):
+                active_windows = tuple(
+                    window for window in partition.active if window.effect_name == effect.name
+                )
+                if not active_windows:
                     continue
 
                 if persistence is EffectSourcePersistence.PERSISTS_AFTER_ACTIVATION:
@@ -181,9 +221,25 @@ class ExtremeDualBarGearRuntimeLegalityService:
                     continue
 
                 if persistence is EffectSourcePersistence.ENDS_WHEN_SOURCE_INACTIVE:
-                    unresolved.append(
-                        f"{set_evidence.set_name} {buff} ends when its source becomes inactive; continuous bar-transition evidence is required"
-                    )
+                    if self._breakpoint_active_on_both_bars(set_evidence, required):
+                        active.append(buff)
+                        continue
+                    if not bar_transition_history_complete:
+                        unresolved.append(
+                            f"{set_evidence.set_name} {buff} ends when its source becomes inactive; complete bar-transition history is required"
+                        )
+                        continue
+                    if any(
+                        not self._window_loses_source(
+                            set_evidence,
+                            required,
+                            window,
+                            ordered_transitions,
+                            snapshot_time_seconds=snapshot,
+                        )
+                        for window in active_windows
+                    ):
+                        active.append(buff)
                     continue
 
                 unresolved.append(
