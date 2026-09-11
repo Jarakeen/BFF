@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {"entry_name":"Blazing Salamanders — Kinras Ironeye","mitigation":"Swap quickly to Blazing Salamanders and kill them before they reach or empower Kinras. Preserve boss control while the group changes targets."},
+    {"entry_name":"Volcanic Smash — Kinras Ironeye","mitigation":"Tank blocks and handles the Hard Mode volcano deliberately while healer supports the resulting pressure; do not let the mechanic pulse freely through the group."},
+
+    {"entry_name":"Seismic Tremor — Captain Geminus","mitigation":"Read the expanding tremor pattern early and move into clean space rather than trying to cross it late. The related achievement requires nobody to be struck."},
+    {"entry_name":"Incapacitating Trap — Captain Geminus","mitigation":"Avoid traps and free or support a trapped player immediately so the immobilization does not overlap the next boss or add mechanic."},
+
+    {"entry_name":"Fire Storm — Pyroturge Encratis","mitigation":"Move into the safe eye immediately. In the inner library, use the geyser to launch toward the safe area when needed; outside the safe eye the room-wide fire is lethal."},
+    {"entry_name":"Fire Behemoth — Pyroturge Encratis","mitigation":"Tank the Behemoth away from the group and burn it as a priority during Fire Storm so its heavy attacks and meteor pressure do not compound the movement check."},
+
+    {"entry_name":"Gore and Bile Globs — Oxblood the Depraved","mitigation":"Control the glob wave. Keep Bile Globs from reaching Oxblood and manage Gore Glob ranged pressure without dragging the boss through the group."},
+    {"entry_name":"Noxious Release — Oxblood the Depraved","mitigation":"Step out of the slow gas circles early and keep Oxblood facing away from the group while repositioning."},
+
+    {"entry_name":"Electric Traps — Taskmaster Viccia","mitigation":"Preserve clear movement lanes and do not trigger traps. Blocking can prevent the stun from some trap interactions, but avoidance is the safer plan."},
+    {"entry_name":"Execution Beam — Taskmaster Viccia","mitigation":"Interrupt Viccia immediately when she channels the lethal beam on a player. Treat the interrupt as a group responsibility rather than waiting for one specific role."},
+
+    {"entry_name":"Magmatic Eruption — Molten Guardian","mitigation":"Keep the boss controlled in melee and interrupt sustained group-damage channels when required. Do not drift so far away that eruption pressure becomes unnecessary raid damage."},
+    {"entry_name":"Molten Fiends — Molten Guardian","mitigation":"Focus summoned Molten Fiends before their ranged fire pressure stacks up, while the tank keeps the Guardian stable."},
+
+    {"entry_name":"Ash Vent — Baron Zaudrus","mitigation":"Move with open arena space and avoid the sweeping Ash Vent fire lines. Hard Mode increases late-fight density, so preserve room and keep the group rotating together."},
+    {"entry_name":"Molten Pillars — Baron Zaudrus","mitigation":"Destroy Molten Pillars before they consume the room. Use Lyranth's Cold-Flame Infusion efficiently when available to accelerate pillar and add control."}
+  ]
+}
