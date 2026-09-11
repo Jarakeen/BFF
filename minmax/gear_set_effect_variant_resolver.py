@@ -75,4 +75,5 @@ class GearSetEffectVariantResolver:
             category=known.category,
             stacking=known.stacking,
             exclusivity_group=known.exclusivity_group,
+            source_persistence=known.source_persistence,
         )
