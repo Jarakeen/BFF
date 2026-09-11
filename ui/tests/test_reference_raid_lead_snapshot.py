@@ -23,12 +23,36 @@ def _rapid_deluge() -> ReferenceEntry:
 def test_raid_lead_snapshot_prioritizes_mechanic_behavior_over_provenance():
     rows = dict(_raid_lead_snapshot_rows(_rapid_deluge()))
 
-    assert "Target Count: 5" in rows["What it does"]
+    assert "affects 5 players" in rows["What it does"]
+    assert "detonates after about 6s" in rows["What it does"]
+    assert "19m radius" in rows["What it does"]
+    assert "swimming avoids the blast" in rows["What it does"]
     assert "Detonation Seconds Approx: 6" in rows["Duration / timing"]
     assert "Radius Meters: 19" in rows["Size / radius"]
-    assert "Target Count: 5" in rows["Targets / kill risk"]
+    assert "Target Count: 5" in rows["Targets"]
+    assert "No reviewed failure-severity value yet." == rows["Failure risk"]
     assert rows["Comes from"] == "Tideborn Taleria"
     assert rows["How to mitigate"].startswith("Get in the water")
+
+
+def test_raid_lead_snapshot_separates_targets_from_failure_risk():
+    dangerous = ReferenceEntry(
+        name="Example — Boss",
+        entry_type="Mechanic Evidence",
+        source_scope="Trial",
+        tags=("ENCOUNTER",),
+        summary="Example mechanic.",
+        details=(
+            ("Encounter", "Boss"),
+            ("Evidence • Behavior", "Target Count: 2; Unblocked Can Be Fatal: Yes"),
+        ),
+    )
+
+    rows = dict(_raid_lead_snapshot_rows(dangerous))
+
+    assert rows["Targets"] == "Target Count: 2"
+    assert rows["Failure risk"] == "Unblocked Can Be Fatal: Yes"
+    assert "unblocked hit can be fatal" in rows["What it does"]
 
 
 def test_raid_lead_snapshot_html_uses_scan_friendly_labels():
@@ -38,7 +62,8 @@ def test_raid_lead_snapshot_html_uses_scan_friendly_labels():
     assert "<b>What it does:</b>" in rendered
     assert "<b>Duration / timing:</b>" in rendered
     assert "<b>Size / radius:</b>" in rendered
-    assert "<b>Targets / kill risk:</b>" in rendered
+    assert "<b>Targets:</b>" in rendered
+    assert "<b>Failure risk:</b>" in rendered
     assert "<b>Comes from:</b> Tideborn Taleria" in rendered
     assert "<b>How to mitigate:</b>" in rendered
 
