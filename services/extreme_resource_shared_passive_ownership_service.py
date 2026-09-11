@@ -48,6 +48,14 @@ class ExtremeResourceSharedPassiveOwnershipService:
             effect_family="weapon/spell damage only",
         ),
         ExtremeResourceSharedPassiveOwnership(
+            domain=ExtremeSkillDomain.GUILD,
+            skill_line="Undaunted",
+            passive_name="Undaunted Command",
+            status=ExtremeResourceSharedPassiveOwnershipStatus.PROVEN_IRRELEVANT,
+            source="skill_component_resource_restore_display",
+            effect_family="current Health/Magicka/Stamina restoration after synergy, scaled from maxima but does not modify maxima",
+        ),
+        ExtremeResourceSharedPassiveOwnership(
             domain=ExtremeSkillDomain.ALLIANCE_WAR,
             skill_line="Support",
             passive_name="Magicka Aid",
