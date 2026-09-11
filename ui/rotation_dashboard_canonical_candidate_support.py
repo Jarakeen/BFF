@@ -80,6 +80,9 @@ class RotationDashboardCanonicalCandidateSupport:
     existing role-neutral runtime-state service before static candidate evaluation.
     Runtime snapshot bar ownership remains explicit rather than guessed.
 
+    Heavy restoration defaults to the canonical generated-plan evidence path. Callers
+    may still provide an explicit reviewed resolver for compatibility or research.
+
     Production defaults compose final-candidate evidence adapters for weapon attacks,
     saved-build targets, automatic potion cadence, Ultimate affordability, and shared
     runtime snapshot state. Weapon attack evidence projects final light/heavy attacks
@@ -139,7 +142,7 @@ class RotationDashboardCanonicalCandidateSupport:
         resource: ResourceType,
         maximum_amount: int,
         trigger_fraction: float,
-        restoration_resolver: VerifiedRecoveryHeavyRestorationResolver,
+        restoration_resolver: VerifiedRecoveryHeavyRestorationResolver | None = None,
         combat_state: CombatState = CombatState(),
         runtime_snapshot: ExtremeRuntimeSnapshot | None = None,
         runtime_snapshot_active_bar: str | None = None,
