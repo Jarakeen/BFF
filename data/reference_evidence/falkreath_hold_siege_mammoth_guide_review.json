@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "falkreath_hold",
+  "encounter_id": "siege_mammoth",
+  "encounter_name": "Siege Mammoth",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to about 50%","description":"Tank the mammoth toward the gate, avoid trample lines and incoming flame lanes, and block its heavy headbutt."},"source_type":"guide","source_name":"Xynode Falkreath Hold Guide","source_locator":"Siege Mammoth","game_update":"U15","confidence":"high"},
+    {"fact_type":"phase","fact_key":"stomp","value":{"order":2,"label":"Stomp Pressure","threshold":"below about 50%","description":"The mammoth gains a lethal stomp that every player must block."},"source_type":"guide","source_name":"Xynode Falkreath Hold Guide","source_locator":"Siege Mammoth","game_update":"U15","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"stomp","value":{"name":"Stomp","response":"all_players_block_the_stomp_immediately"},"source_type":"guide","source_name":"Xynode Falkreath Hold Guide","source_locator":"Siege Mammoth","game_update":"U15","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"trample","value":{"name":"Trample","response":"tank_blocks_or_group_avoids_the_charge_line"},"source_type":"guide","source_name":"Xynode Falkreath Hold Guide","source_locator":"Siege Mammoth","game_update":"U15","confidence":"high"}
+  ]
+}
