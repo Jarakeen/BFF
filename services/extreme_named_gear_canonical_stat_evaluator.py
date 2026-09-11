@@ -57,7 +57,13 @@ class ExtremeNamedGearCanonicalStatEvaluator:
             active_buffs=active_buffs,
         )
         build = PlayerBuild.from_dict(payload["build"])
+        # Preserve the explicit finite-axis selections on the concrete build even
+        # when a lightweight wrapped evaluator reports them only in its payload.
+        # The named-gear rescore must see the same state the outer search selected.
+        build.Mundus = str(mundus or "").strip()
         build.SecondMundus = str(second_mundus or "").strip()
+        build.Food = str(food or "").strip()
+        build.Potion = str(potion or "").strip()
         build = ExtremeNamedGearBuildMaterializerService.materialize(
             build,
             self.realization,
@@ -115,6 +121,8 @@ class ExtremeNamedGearCanonicalStatEvaluator:
         output["build"] = build.to_dict()
         output["mundus"] = build.Mundus
         output["second_mundus"] = build.SecondMundus
+        output["food"] = build.Food
+        output["potion"] = build.Potion
         output["gear_topology"] = self.realization.topology_signature
         output["gear_set_ids"] = tuple(self.realization.set_ids)
         output["gear_set_names"] = tuple(self.realization.set_names)
