@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "blackheart_haven",
+  "encounter_id": "roost_mother",
+  "encounter_name": "Roost Mother",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Maintain formation as Roost Mother teleports, keep her faced away from the group, and control the placement of incoming fire."},"source_type":"guide","source_name":"Xynode Blackheart Haven Guide","source_locator":"Roost Mother","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"flame_breath","value":{"name":"Flame Breath","response":"stay_out_of_the_large_frontal_fire_cone_and_keep_non_tanks_behind_the_boss"},"source_type":"guide","source_name":"Xynode Blackheart Haven Guide","source_locator":"Roost Mother","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"raining_fire","value":{"name":"Raining Fire","response":"hold_position_while_target_locations_are_set_then_move_when_the_fireballs_begin_to_land"},"source_type":"guide","source_name":"Xynode Blackheart Haven Guide","source_locator":"Roost Mother","game_update":"Launch","confidence":"high"}
+  ]
+}
