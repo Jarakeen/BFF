@@ -11,9 +11,35 @@ from engine.config import get_data_dir
 from ui.reference_data_model import ReferenceEntry
 
 
-def _boss_content_lookup(data_root: Path) -> dict[str, str]:
-    root = data_root / "eso_info" / "bosses"
+def _reviewed_dungeon_content_lookup(data_root: Path) -> dict[str, str]:
+    path = data_root / "dungeon_encounter_identity.json"
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+    rows = payload.get("encounters", []) if isinstance(payload, dict) else []
     lookup: dict[str, str] = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        content_name = str(row.get("content_name") or "").strip()
+        display_name = str(row.get("display_name") or "").strip()
+        if display_name and content_name:
+            lookup.setdefault(display_name.casefold(), content_name)
+    return lookup
+
+
+def _boss_content_lookup(data_root: Path) -> dict[str, str]:
+    """Map visible boss/encounter names to parent content names.
+
+    Raw boss files are useful when available. Reviewed dungeon identities provide
+    a fallback for legitimate progression encounters whose raw boss import is
+    missing or incomplete. This remains display metadata only.
+    """
+
+    lookup = _reviewed_dungeon_content_lookup(data_root)
+    root = data_root / "eso_info" / "bosses"
     for path in sorted(root.glob("*.json"), key=lambda item: item.name.casefold()):
         try:
             payload = json.loads(path.read_text(encoding="utf-8"))
