@@ -89,7 +89,7 @@ def test_duplicate_reviewed_encounter_ids_fail_closed(tmp_path):
         raise AssertionError("duplicate reviewed dungeon encounter ids must fail closed")
 
 
-def test_checked_in_registry_starts_with_feast_of_shadows_main_encounters():
+def test_checked_in_registry_keeps_newest_first_release_slices_and_main_encounters():
     data_root = Path(__file__).resolve().parents[2] / "data"
     rows = load_dungeon_encounter_identities(data_root)
     by_content = {}
@@ -98,7 +98,11 @@ def test_checked_in_registry_starts_with_feast_of_shadows_main_encounters():
 
     assert len(by_content["naj_caldeesh"]) == 3
     assert len(by_content["black_gem_foundry"]) == 3
-    assert {row.release_key for row in rows} == {(2025, 47)}
+    assert len(by_content["exiled_redoubt"]) == 3
+    assert len(by_content["lep_seclusa"]) == 3
+    assert {row.release_key for row in rows} == {(2025, 47), (2025, 45)}
+    assert rows[0].release_key == (2025, 47)
+    assert rows[-1].release_key == (2025, 45)
 
     naj = {row.encounter_id: row for row in by_content["naj_caldeesh"]}
     assert naj["talen_lah"].member_ids == ("talen_lah", "bar_sakka")
