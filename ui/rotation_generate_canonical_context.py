@@ -119,7 +119,7 @@ class RotationGenerateCanonicalContext:
         content_type: object = "",
     ) -> RotationCanonicalRoleEvidence | None:
         if self.role_evidence is not None:
-            return self.role_evidence.with_content_type_if_missing(content_type)
+            return self.role_evidence
         if self.role_evidence_inputs is None:
             return None
         return self.role_evidence_inputs.compose(
