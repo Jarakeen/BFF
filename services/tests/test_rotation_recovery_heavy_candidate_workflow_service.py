@@ -61,6 +61,7 @@ def test_workflow_composes_generic_final_family_evaluator() -> None:
     calculation_context = object()
     maximum_event_resolver = object()
     displayed_recovery_factory = object()
+    runtime_state_factory = object()
 
     result = service.run_generic(
         player_build=player_build,
@@ -75,6 +76,7 @@ def test_workflow_composes_generic_final_family_evaluator() -> None:
         calculation_context=calculation_context,
         maximum_event_resolver=maximum_event_resolver,
         displayed_recovery_resolver_factory=displayed_recovery_factory,
+        runtime_combat_state_resolver_factory=runtime_state_factory,
     )
 
     assert result is orchestration.result
@@ -95,6 +97,7 @@ def test_workflow_composes_generic_final_family_evaluator() -> None:
     assert call["calculation_context"] is calculation_context
     assert call["maximum_event_resolver"] is maximum_event_resolver
     assert call["displayed_recovery_resolver_factory"] is displayed_recovery_factory
+    assert call["runtime_combat_state_resolver_factory"] is runtime_state_factory
 
 
 def test_workflow_keeps_player_and_character_build_boundaries_explicit() -> None:
@@ -111,6 +114,7 @@ def test_workflow_keeps_player_and_character_build_boundaries_explicit() -> None
     passive_a = object()
     passive_b = object()
     displayed_recovery_factory = object()
+    runtime_state_factory = object()
 
     result = service.run_effects(
         player_build=player_build,
@@ -124,6 +128,7 @@ def test_workflow_keeps_player_and_character_build_boundaries_explicit() -> None
         trigger_fraction=0.25,
         restoration_resolver=lambda heavy: heavy,
         displayed_recovery_resolver_factory=displayed_recovery_factory,
+        runtime_combat_state_resolver_factory=runtime_state_factory,
     )
 
     assert result is orchestration.result
@@ -142,6 +147,7 @@ def test_workflow_keeps_player_and_character_build_boundaries_explicit() -> None
     assert orchestration_call["evaluate_final_family"] is final_family.effect_callback
     assert orchestration_call["resource"] is ResourceType.STAMINA
     assert orchestration_call["displayed_recovery_resolver_factory"] is displayed_recovery_factory
+    assert orchestration_call["runtime_combat_state_resolver_factory"] is runtime_state_factory
 
 
 def test_workflow_materializes_effect_evidence_before_callback_capture() -> None:
@@ -173,3 +179,4 @@ def test_workflow_materializes_effect_evidence_before_callback_capture() -> None
     assert effect_call["requirements"] == (requirement_a, requirement_b)
     assert effect_call["passives"] == (passive_a, passive_b)
     assert orchestration.calls[0]["displayed_recovery_resolver_factory"] is None
+    assert orchestration.calls[0]["runtime_combat_state_resolver_factory"] is None
