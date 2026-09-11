@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "white_gold_tower",
+  "encounter_id": "the_planar_inhibitor",
+  "encounter_name": "The Planar Inhibitor",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"pinion","value":{"order":1,"label":"Pinion Control","threshold":"opening and normal cycles","description":"The Pinion holder controls boss aggro while the group spaces around the arena and closes portals when assigned."},"source_type":"guide","source_name":"Xynode White-Gold Tower Guide","source_locator":"The Planar Inhibitor","game_update":"U7","confidence":"high"},
+    {"fact_type":"phase","fact_key":"blue_flame","value":{"order":2,"label":"Blue-Flame Kite","threshold":"second dive transition","description":"When the Inhibitor emerges in blue flames, transfer the Pinion across the room so the boss is kited through a long safe path."},"source_type":"guide","source_name":"Xynode White-Gold Tower Guide","source_locator":"The Planar Inhibitor","game_update":"U7","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"portals","value":{"name":"Portal Duty","response":"players_with_greyscale_screen_destroy_portals_before_reinforcements_spawn"},"source_type":"achievement","source_name":"Entry Denied","source_locator":"White-Gold Tower achievement","game_update":"U7","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"flame_bursts","value":{"name":"Flame Bursts","response":"spread_out_and_step_clear_of_personal_fire_bursts"},"source_type":"guide","source_name":"Xynode White-Gold Tower Guide","source_locator":"The Planar Inhibitor","game_update":"U7","confidence":"high"}
+  ]
+}
