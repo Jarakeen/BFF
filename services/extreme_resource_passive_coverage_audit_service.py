@@ -20,6 +20,8 @@ guild-, Alliance-, and weapon-resolver ownership is then consulted before generi
 tooltip projection so passives with already-proven non-resource effect families do
 not remain false contextual debt. Canonical weapon-passive classification and
 reviewed Deadly Bash evidence are reconciled separately for the same reason.
+Canonical racial-passive parsing is likewise consulted before tooltip fallback so
+clean non-resource racial rows do not remain false unresolved debt.
 
 A complete inventory denominator is not the same as complete mechanic coverage.
 The audit never assigns zero value to contextual or unresolved passives.
@@ -46,6 +48,10 @@ from services.extreme_resource_class_passive_ownership_service import (
 from services.extreme_resource_contextual_passive_review_service import (
     ExtremeResourceContextualPassiveReviewService,
     ExtremeResourceContextualPassiveStatus,
+)
+from services.extreme_resource_racial_passive_ownership_service import (
+    ExtremeResourceRacialPassiveOwnershipService,
+    ExtremeResourceRacialPassiveOwnershipStatus,
 )
 from services.extreme_resource_shared_passive_ownership_service import (
     ExtremeResourceSharedPassiveOwnershipService,
@@ -118,6 +124,11 @@ class ExtremeResourcePassiveCoverageAuditService:
         )
         self.racial_passive_repository = racial_passive_repository or (
             RacialPassiveStatRepository(database_path) if database_path is not None else None
+        )
+        self.racial_ownership_service = (
+            ExtremeResourceRacialPassiveOwnershipService(self.racial_passive_repository)
+            if self.racial_passive_repository is not None
+            else None
         )
 
     @staticmethod
@@ -309,6 +320,26 @@ class ExtremeResourcePassiveCoverageAuditService:
                         f"Unhandled Extreme resource weapon-passive ownership status: {weapon_ownership.status!r}"
                     )
                 continue
+
+            if self.racial_ownership_service is not None:
+                racial_ownership = self.racial_ownership_service.resolve(passive, key, passives)
+                if racial_ownership is not None:
+                    if (
+                        racial_ownership.status
+                        is ExtremeResourceRacialPassiveOwnershipStatus.CANONICALLY_ACCOUNTED
+                    ):
+                        accounted_elsewhere.append(identity)
+                    elif (
+                        racial_ownership.status
+                        is ExtremeResourceRacialPassiveOwnershipStatus.PROVEN_IRRELEVANT
+                    ):
+                        static_irrelevant.append(identity)
+                    else:
+                        raise AssertionError(
+                            "Unhandled Extreme resource racial-passive ownership status: "
+                            f"{racial_ownership.status!r}"
+                        )
+                    continue
 
             if projection.status is ExtremePassiveProjectionStatus.REVIEWED_STATIC:
                 relevant = any(row.objective_key == key for row in projection.contributions)
