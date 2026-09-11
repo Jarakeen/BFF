@@ -267,6 +267,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Rotation candidate explanations
 - Encounter-specific rotation construction
 - Selected encounter content type automatically feeds role-aware gameplay policy when no explicit override is supplied
+- Configured authoritative plan evidence composes Generate-action role evidence without inferring healer reliability or assignment exceptions
 - Canonical workload evaluation
 - Workload frontier comparison
 
