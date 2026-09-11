@@ -88,6 +88,18 @@ class RotationHealerActionHealingProjection:
     external_conditional_seeds: tuple[RotationHealerExternalConditionalHealSeed, ...] = ()
 
 
+@dataclass(frozen=True)
+class RotationHealerComponentHealingResolution:
+    """Canonical magnitude for one exact healing component in one build context."""
+
+    modeled_heal: float | None
+    unresolved: tuple[str, ...] = ()
+
+    @property
+    def resolved(self) -> bool:
+        return self.modeled_heal is not None and not self.unresolved
+
+
 class RotationHealerActionHealingService:
     """Project scheduled healer skill actions into canonical healing consequences.
 
@@ -122,6 +134,114 @@ class RotationHealerActionHealingService:
             external_conditional_healing_service
             or RotationHealerExternalConditionalHealingService()
         )
+
+    def resolve_component_magnitude(
+        self,
+        *,
+        build: PlayerBuild,
+        context: BuildCalculationContext,
+        source_name: str,
+        coefficient_number: int,
+    ) -> RotationHealerComponentHealingResolution:
+        """Re-evaluate one periodic heal component in an already-resolved context.
+
+        This method deliberately owns no snapshot-vs-tick policy. Callers may use it
+        only after separate runtime evidence says the component should be recalculated
+        at the queried instant. The same saved-build tooltip path used at cast time is
+        reused so CP, Healing Done, transient power, and component modifiers do not
+        grow a second formula implementation.
+        """
+        name = str(source_name or "").strip()
+        number = int(coefficient_number)
+        resolution = self.tooltip_service.coefficients.resolve_name(name)
+        if resolution.rank is None:
+            messages = resolution.unresolved or ("skill rank unresolved",)
+            return RotationHealerComponentHealingResolution(
+                modeled_heal=None,
+                unresolved=tuple(
+                    f"{name} coefficient {number}: {message}" for message in messages
+                ),
+            )
+
+        result = self.tooltip_service.evaluate_entity_id(
+            build=build,
+            context=context,
+            entity_id=resolution.rank.entity_id,
+        )
+        unresolved = [
+            f"{name} coefficient {number}: {message}"
+            for message in result.unresolved
+        ]
+        if result.skill is None:
+            if not unresolved:
+                unresolved.append(
+                    f"{name} coefficient {number}: canonical heal evaluation returned no resolved skill"
+                )
+            return RotationHealerComponentHealingResolution(
+                modeled_heal=None,
+                unresolved=self._dedupe(tuple(unresolved)),
+            )
+
+        classifications = {
+            int(component.coefficient_number): component
+            for component in self.tooltip_service.components.get_for_skill_rank(
+                result.skill.skill_rank_id
+            )
+        }
+        classification = classifications.get(number)
+        if classification is None:
+            unresolved.append(
+                f"{name} coefficient {number}: canonical component classification unavailable"
+            )
+        elif classification.effect_kind is SkillEffectKind.UNKNOWN:
+            unresolved.append(f"{name} coefficient {number}: effect kind unresolved")
+        elif classification.effect_kind is not SkillEffectKind.HEAL:
+            unresolved.append(
+                f"{name} coefficient {number}: component is not canonical healing"
+            )
+        else:
+            temporal = classification.heal_temporal_scope
+            is_periodic = temporal is HealTemporalScope.PERIODIC or (
+                temporal is None and classification.is_dot is True
+            )
+            if not is_periodic:
+                unresolved.append(
+                    f"{name} coefficient {number}: component is not canonical periodic healing"
+                )
+
+        trace = next(
+            (
+                item
+                for item in result.components
+                if int(item.coefficient_number) == number
+            ),
+            None,
+        )
+        if trace is None:
+            unresolved.append(
+                f"{name} coefficient {number}: canonical tooltip component unavailable"
+            )
+
+        if unresolved or trace is None:
+            return RotationHealerComponentHealingResolution(
+                modeled_heal=None,
+                unresolved=self._dedupe(tuple(unresolved)),
+            )
+
+        actual = next(
+            (
+                item
+                for item in result.component_actual_effect_trace
+                if int(item.coefficient_number) == number
+            ),
+            None,
+        )
+        value = (
+            float(actual.output_value)
+            if actual is not None
+            else float(trace.final_value)
+        )
+        return RotationHealerComponentHealingResolution(modeled_heal=value)
 
     def project(
         self,
@@ -375,3 +495,14 @@ class RotationHealerActionHealingService:
         return tuple(
             dict.fromkeys(str(value).strip() for value in values if str(value).strip())
         )
+
+
+__all__ = [
+    "RotationHealerActionHealingProjection",
+    "RotationHealerActionHealingService",
+    "RotationHealerComponentHealingResolution",
+    "RotationHealerDelayedHealSeed",
+    "RotationHealerExternalConditionalHealSeed",
+    "RotationHealerPeriodicHealSeed",
+    "RotationHealerResolvedHealEvent",
+]
