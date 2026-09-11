@@ -202,7 +202,7 @@ class RotationCanonicalCandidateSupport:
         resource: ResourceType,
         maximum_amount: int,
         trigger_fraction: float,
-        restoration_resolver: VerifiedRecoveryHeavyRestorationResolver,
+        restoration_resolver: VerifiedRecoveryHeavyRestorationResolver | None = None,
         combat_state: CombatState = CombatState(),
         demands: Iterable[RotationDemandWindow] = (),
         options: Iterable[RotationRefreshLeadCandidateOption] = (),
