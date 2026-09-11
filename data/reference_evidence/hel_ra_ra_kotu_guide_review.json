@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "hel_ra_citadel",
+  "encounter_id": "ra_kotu",
+  "encounter_name": "Ra Kotu",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main Phase","threshold":"Pull","description":"Tank Ra Kotu near the center while the group handles cleaves, tornado pressure, and spreading ground effects."},"source_type":"guide","source_name":"Xynode Hel Ra Citadel Trial Guide","source_locator":"Ra Kotu","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"tornado_pressure","value":{"name":"Tornadoes","response":"avoid_tornado_paths_and_keep_boss_faced_away_from_group"},"source_type":"guide","source_name":"Xynode Hel Ra Citadel Trial Guide","source_locator":"Ra Kotu tornadoes","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"cleave_handling","value":{"name":"Heavy Cleave","target":"aggro_target_and_front_cone","response":"tank_faces_boss_away_and_blocks"},"source_type":"guide","source_name":"Xynode Hel Ra Citadel Trial Guide","source_locator":"Ra Kotu tank handling","confidence":"medium"}
+  ]
+}
