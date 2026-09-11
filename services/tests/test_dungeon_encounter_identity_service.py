@@ -82,16 +82,18 @@ def test_checked_in_registry_keeps_newest_first_release_slices_and_main_encounte
         "oathsworn_pit", "bedlam_veil", "bal_sunnar", "scrivener_s_hall",
         "earthen_root_enclave", "graven_deep", "coral_aerie", "shipwright_s_regret",
         "red_petal_bastion", "the_dread_cellar", "black_drake_villa",
+        "stone_garden",
     ):
         assert len(by_content[content_id]) == 3
     assert len(by_content["the_cauldron"]) == 4
+    assert len(by_content["castle_thorn"]) == 5
 
     assert {row.release_key for row in rows} == {
         (2025, 47), (2025, 45), (2024, 41), (2023, 37), (2022, 35), (2022, 33),
-        (2021, 31), (2021, 29),
+        (2021, 31), (2021, 29), (2020, 27),
     }
     assert rows[0].release_key == (2025, 47)
-    assert rows[-1].release_key == (2021, 29)
+    assert rows[-1].release_key == (2020, 27)
 
     all_ids = {row.encounter_id for row in rows}
 
@@ -171,3 +173,14 @@ def test_checked_in_registry_keeps_newest_first_release_slices_and_main_encounte
     }
     assert "ogrim" not in all_ids
     assert "havocrel" not in all_ids
+
+    assert {row.encounter_id for row in by_content["castle_thorn"]} == {
+        "dread_tindulra", "blood_twilight", "vaduroth", "talfyg", "lady_thorn"
+    }
+    assert "grievous_twilight" not in all_ids
+    assert "wraith_of_crows" not in all_ids
+
+    assert {row.encounter_id for row in by_content["stone_garden"]} == {
+        "exarch_kraglen", "stone_behemoth", "arkasis_the_mad_alchemist"
+    }
+    assert "werewolf_behemoth" not in all_ids
