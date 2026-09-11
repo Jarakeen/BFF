@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from typing import Protocol
 
 from minmax.rotation_ability_priority import AbilityPriorityList
@@ -174,12 +174,9 @@ class RotationCanonicalCadenceOrchestrationSupport:
             return None
         if not isinstance(role_evidence, RotationCanonicalRoleEvidence):
             return role_evidence
-        if str(role_evidence.content_type or "").strip():
-            return role_evidence
-        content_type = str(getattr(bundle, "content_type", "") or "").strip()
-        if not content_type:
-            return role_evidence
-        return replace(role_evidence, content_type=content_type)
+        return role_evidence.with_content_type_if_missing(
+            getattr(bundle, "content_type", "")
+        )
 
     @staticmethod
     def _require_ready_bundle(bundle: RotationCanonicalEvidenceBundle) -> None:
