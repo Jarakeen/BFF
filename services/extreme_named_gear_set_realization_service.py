@@ -83,6 +83,21 @@ class ExtremeNamedGearSetRealization:
 class ExtremeNamedGearSetRealizationService:
     """Prove one concrete slot witness for an exact named-set topology."""
 
+    MYTHIC_CATEGORY = "mythic"
+
+    @classmethod
+    def _violates_global_set_legality(
+        cls,
+        counts: tuple[int, ...],
+        named_sets: tuple[ExtremeNamedGearSetSlotEligibility, ...],
+    ) -> bool:
+        equipped_mythics = sum(
+            1
+            for count, item in zip(counts, named_sets)
+            if count > 0 and item.category.strip().casefold() == cls.MYTHIC_CATEGORY
+        )
+        return equipped_mythics > 1
+
     @staticmethod
     def _slot_allowed(
         eligibility: ExtremeNamedGearSetSlotEligibility,
@@ -249,6 +264,8 @@ class ExtremeNamedGearSetRealizationService:
         if any(count < 0 or count > int(item.max_equip_count) for count, item in zip(counts, named_sets)):
             return None
         if any(count > 0 and not item.has_physical_slot_evidence for count, item in zip(counts, named_sets)):
+            return None
+        if cls._violates_global_set_legality(counts, named_sets):
             return None
 
         physical_rows = ExtremeGearPhysicalSlotRealizationService._witnesses_for_topology(topology)
