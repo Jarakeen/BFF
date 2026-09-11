@@ -45,7 +45,7 @@ def test_orphic_projection_has_color_change_thresholds_and_fate_pillar_handling(
     assert "Shockwave" in strategy
     assert "Fate Pillar" in strategy["Shockwave"].mitigation
     assert "Shard Volley" in strategy
-    assert "Magic damage" in strategy["Shard Volley"].summary
+    assert "damage type: magic" in strategy["Shard Volley"].summary.casefold()
 
 
 def test_xoryn_projection_is_timer_driven_and_has_tank_current_mirror_handling():
