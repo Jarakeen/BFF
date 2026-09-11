@@ -48,6 +48,14 @@
     {"content_id":"red_petal_bastion","content_name":"Red Petal Bastion","release_year":2021,"release_update":31,"release_pack":"Waking Flame","encounter_id":"prior_thierric_sarazen","display_name":"Prior Thierric Sarazen","member_ids":["prior_thierric_sarazen"]},
     {"content_id":"the_dread_cellar","content_name":"The Dread Cellar","release_year":2021,"release_update":31,"release_pack":"Waking Flame","encounter_id":"scorion_broodlord","display_name":"Scorion Broodlord","member_ids":["scorion_broodlord"]},
     {"content_id":"the_dread_cellar","content_name":"The Dread Cellar","release_year":2021,"release_update":31,"release_pack":"Waking Flame","encounter_id":"cyronin_artellian","display_name":"Cyronin Artellian","member_ids":["cyronin_artellian"]},
-    {"content_id":"the_dread_cellar","content_name":"The Dread Cellar","release_year":2021,"release_update":31,"release_pack":"Waking Flame","encounter_id":"magma_incarnate","display_name":"Magma Incarnate","member_ids":["magma_incarnate"]}
+    {"content_id":"the_dread_cellar","content_name":"The Dread Cellar","release_year":2021,"release_update":31,"release_pack":"Waking Flame","encounter_id":"magma_incarnate","display_name":"Magma Incarnate","member_ids":["magma_incarnate"]},
+
+    {"content_id":"black_drake_villa","content_name":"Black Drake Villa","release_year":2021,"release_update":29,"release_pack":"Flames of Ambition","encounter_id":"kinras_ironeye","display_name":"Kinras Ironeye","member_ids":["kinras_ironeye"]},
+    {"content_id":"black_drake_villa","content_name":"Black Drake Villa","release_year":2021,"release_update":29,"release_pack":"Flames of Ambition","encounter_id":"captain_geminus","display_name":"Captain Geminus","member_ids":["captain_geminus"]},
+    {"content_id":"black_drake_villa","content_name":"Black Drake Villa","release_year":2021,"release_update":29,"release_pack":"Flames of Ambition","encounter_id":"pyroturge_encratis","display_name":"Pyroturge Encratis","member_ids":["pyroturge_encratis"]},
+    {"content_id":"the_cauldron","content_name":"The Cauldron","release_year":2021,"release_update":29,"release_pack":"Flames of Ambition","encounter_id":"oxblood_the_depraved","display_name":"Oxblood the Depraved","member_ids":["oxblood_the_depraved"]},
+    {"content_id":"the_cauldron","content_name":"The Cauldron","release_year":2021,"release_update":29,"release_pack":"Flames of Ambition","encounter_id":"taskmaster_viccia","display_name":"Taskmaster Viccia","member_ids":["taskmaster_viccia"]},
+    {"content_id":"the_cauldron","content_name":"The Cauldron","release_year":2021,"release_update":29,"release_pack":"Flames of Ambition","encounter_id":"molten_guardian","display_name":"Molten Guardian","member_ids":["molten_guardian"]},
+    {"content_id":"the_cauldron","content_name":"The Cauldron","release_year":2021,"release_update":29,"release_pack":"Flames of Ambition","encounter_id":"baron_zaudrus","display_name":"Baron Zaudrus","member_ids":["baron_zaudrus"]}
   ]
 }
