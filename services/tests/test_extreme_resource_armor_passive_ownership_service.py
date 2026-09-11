@@ -29,18 +29,39 @@ def _passive(name: str, line: str, description: str = "Reviewed armor mechanic."
     )
 
 
+_REVIEWED_NON_RESOURCE = (
+    ("Light Armor Bonuses", "Light Armor"),
+    ("Light Armor Penalties", "Light Armor"),
+    ("Evocation", "Light Armor"),
+    ("Concentration", "Light Armor"),
+    ("Spell Warding", "Light Armor"),
+    ("Prodigy", "Light Armor"),
+    ("Wind Walker", "Medium Armor"),
+    ("Agility", "Medium Armor"),
+    ("Dexterity", "Medium Armor"),
+    ("Heavy Armor Bonuses", "Heavy Armor"),
+    ("Heavy Armor Penalties", "Heavy Armor"),
+)
+
+
 class _Universe:
     def passives(self):
-        return (
-            _passive("Evocation", "Light Armor", "Increases your Magicka Recovery while wearing Light Armor."),
-            _passive("Concentration", "Light Armor", "Increases your Physical and Spell Penetration for each piece of Light Armor equipped."),
-            _passive("Spell Warding", "Light Armor", "Increases your Spell Resistance for each piece of Light Armor equipped."),
-            _passive("Prodigy", "Light Armor", "Increases your Critical Chance for each piece of Light Armor equipped."),
-            _passive("Wind Walker", "Medium Armor", "Increases your Stamina Recovery for each piece of Medium Armor equipped."),
-            _passive("Agility", "Medium Armor", "Increases your Weapon and Spell Damage for each piece of Medium Armor equipped."),
-            _passive("Dexterity", "Medium Armor", "Increases your Critical Damage and Critical Healing for each piece of Medium Armor equipped."),
-            _passive("Juggernaut", "Heavy Armor", "Increases your Max Health by 2% for each piece of Heavy Armor equipped."),
-            _passive("Evocation", "Not Light Armor", "Increases your Magicka Recovery while wearing armor."),
+        return tuple(_passive(name, line) for name, line in _REVIEWED_NON_RESOURCE) + (
+            _passive(
+                "Juggernaut",
+                "Heavy Armor",
+                "Increases your Max Health by 2% for each piece of Heavy Armor equipped.",
+            ),
+            _passive(
+                "Evocation",
+                "Not Light Armor",
+                "Increases your Magicka Recovery while wearing armor.",
+            ),
+            _passive(
+                "Heavy Armor Bonuses",
+                "Not Heavy Armor",
+                "Same name, wrong armor line.",
+            ),
         )
 
 
@@ -50,18 +71,19 @@ class _RaceRepository:
         return {}
 
 
-def test_shared_armor_resolver_rows_are_exact_and_objective_specific():
+def test_reviewed_armor_rows_are_exact_and_objective_specific():
     rows = ExtremeResourceArmorPassiveOwnershipService.reviewed()
-    assert len(rows) == 8
+    assert len(rows) == 12
 
-    for passive in _Universe().passives()[:7]:
+    for passive_name, skill_line in _REVIEWED_NON_RESOURCE:
+        passive = _passive(passive_name, skill_line)
         for objective in ("max_health", "max_magicka", "max_stamina"):
             resolved = ExtremeResourceArmorPassiveOwnershipService.resolve(passive, objective)
             assert resolved is not None
             _row, status = resolved
             assert status is ExtremeResourceArmorPassiveOwnershipStatus.PROVEN_IRRELEVANT
 
-    juggernaut = _Universe().passives()[7]
+    juggernaut = _passive("Juggernaut", "Heavy Armor")
     health = ExtremeResourceArmorPassiveOwnershipService.resolve(juggernaut, "max_health")
     magicka = ExtremeResourceArmorPassiveOwnershipService.resolve(juggernaut, "max_magicka")
     stamina = ExtremeResourceArmorPassiveOwnershipService.resolve(juggernaut, "max_stamina")
@@ -71,12 +93,15 @@ def test_shared_armor_resolver_rows_are_exact_and_objective_specific():
 
 
 def test_armor_passive_ownership_requires_exact_line_and_armor_domain():
-    wrong_line = _Universe().passives()[8]
+    wrong_line = _passive("Evocation", "Not Light Armor")
     assert ExtremeResourceArmorPassiveOwnershipService.resolve(wrong_line, "max_health") is None
+
+    wrong_summary_line = _passive("Heavy Armor Bonuses", "Not Heavy Armor")
+    assert ExtremeResourceArmorPassiveOwnershipService.resolve(wrong_summary_line, "max_health") is None
 
     class_copy = ExtremePlayerSkillRecord(
         skill_id=2,
-        name="Evocation",
+        name="Light Armor Bonuses",
         class_type="Test Class",
         skill_line="Light Armor",
         skill_type="Passive",
@@ -93,6 +118,10 @@ def test_armor_passive_ownership_requires_exact_line_and_armor_domain():
 
 
 def test_passive_denominator_reconciles_reviewed_armor_effect_families():
+    reviewed_identities = tuple(
+        f"[armor] {line} :: {name}"
+        for name, line in _REVIEWED_NON_RESOURCE
+    )
     for objective in ("max_health", "max_magicka", "max_stamina"):
         audit = ExtremeResourcePassiveCoverageAuditService(
             universe_service=_Universe(),
@@ -100,23 +129,15 @@ def test_passive_denominator_reconciles_reviewed_armor_effect_families():
         ).build(objective)
 
         assert audit.denominator_proven is True
-        for passive_name in (
-            "Evocation",
-            "Concentration",
-            "Spell Warding",
-            "Prodigy",
-            "Wind Walker",
-            "Agility",
-            "Dexterity",
-        ):
-            assert any(
-                passive_name in row and "Not Light Armor" not in row
-                for row in audit.static_irrelevant
-            )
+        for identity in reviewed_identities:
+            assert identity in audit.static_irrelevant
+            assert identity not in audit.context_required
+            assert identity not in audit.unresolved
 
         if objective == "max_health":
-            assert any("Juggernaut" in row for row in audit.accounted_elsewhere)
+            assert "[armor] Heavy Armor :: Juggernaut" in audit.accounted_elsewhere
         else:
-            assert any("Juggernaut" in row for row in audit.static_irrelevant)
+            assert "[armor] Heavy Armor :: Juggernaut" in audit.static_irrelevant
 
-        assert any("Not Light Armor :: Evocation" in row for row in audit.context_required)
+        assert "[armor] Not Light Armor :: Evocation" in audit.context_required
+        assert "[armor] Not Heavy Armor :: Heavy Armor Bonuses" in audit.unresolved
