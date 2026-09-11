@@ -641,3 +641,24 @@ healing until Minor Lifesteal's actual trigger behavior is proven.
 evidence. Demand evaluation scopes the unresolved trigger only to overlapping active
 intervals, while numeric healing remains fail-closed.
 
+---
+
+## 2026-09-11 — “Every one second” may be a limit, not a timer
+
+Minor Lifesteal's readable wording says that damaging an affected enemy heals an
+attacker every one second. That wording alone does not prove whether the game runs
+an automatic periodic tick or reacts to damage events with a per-actor lockout. It
+also does not prove whether the Altar caster or each attacker owns the resulting
+heal event.
+
+**Layman's version:** “once a second” can mean a metronome or a speed limit. Those
+look similar on a tooltip but produce different combat events.
+
+**What it means in actual play:** twelve attackers hitting the same debuffed boss
+may generate independently owned healing streams rather than one healer-owned HoT.
+That must be demonstrated from current runtime evidence before BFF counts it.
+
+**For BFF:** ESO Logs discovery now preserves heal ownership, preceding same-actor
+damage, numeric aliases, and observed intervals as candidate evidence. No cadence,
+cooldown, or caster-credit rule is promoted until those observations are reviewed.
+
