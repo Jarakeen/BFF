@@ -3,6 +3,7 @@ from tools.audit_encounter_guide_coverage import (
     _content_key,
     _include_content,
     _line,
+    _parse_args,
 )
 
 
@@ -62,3 +63,19 @@ def test_trial_scope_reuses_known_trial_names_and_normalizes_leading_the():
 
 def test_all_content_scope_keeps_non_trial_content():
     assert _include_content("Arx Corinium", trials_only=False) is True
+
+
+def test_audit_defaults_to_reviewed_raid_scope():
+    args = _parse_args([])
+    assert args.raw_trial_records is False
+    assert args.all_content is False
+
+
+def test_audit_raw_scope_flags_are_mutually_distinct():
+    trial_args = _parse_args(["--raw-trial-records"])
+    all_args = _parse_args(["--all-content"])
+
+    assert trial_args.raw_trial_records is True
+    assert trial_args.all_content is False
+    assert all_args.raw_trial_records is False
+    assert all_args.all_content is True
