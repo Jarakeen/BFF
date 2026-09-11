@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "black_drake_villa",
+  "encounter_id": "pyroturge_encratis",
+  "encounter_name": "Pyroturge Encratis",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"outer_library","value":{"order":1,"label":"Outer Library","threshold":"Pull to ~65%","description":"Encratis uses frontal flame pressure, Racing Inferno, and room-control mechanics before retreating deeper into the library."},"source_type":"guide","source_name":"Alcast Black Drake Villa Guide","source_locator":"Pyroturge Encratis","game_update":"U50","confidence":"high"},
+    {"fact_type":"phase","fact_key":"inner_library","value":{"order":2,"label":"Inner Library","threshold":"~65% to death","description":"The fight moves into the inner library where Fire Storm safe zones, geyser travel, Fire Behemoths, and additional fire hazards dominate movement."},"source_type":"guide","source_name":"Alcast Black Drake Villa Guide","source_locator":"Pyroturge Encratis > Phase 2","game_update":"U50","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"fire_storm","value":{"name":"Fire Storm","response":"stay_in_the_safe_eye_and_use_geysers_to_reach_it_when_required","failure":"standing_outside_the_eye_is_lethal"},"source_type":"guide","source_name":"Xynode Black Drake Villa Mechanics Guide","source_locator":"Pyroturge Encratis > Fire Storm","game_update":"U50","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"fire_behemoth","value":{"name":"Fire Behemoth","response":"tank_faces_it_away_and_group_focuses_it_during_fire_storm"},"source_type":"guide","source_name":"Xynode Black Drake Villa Mechanics Guide","source_locator":"Pyroturge Encratis > Behemoth","game_update":"U50","confidence":"high"}
+  ]
+}
