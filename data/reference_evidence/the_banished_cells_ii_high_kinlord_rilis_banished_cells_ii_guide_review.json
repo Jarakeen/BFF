@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "the_banished_cells_ii",
+  "encounter_id": "high_kinlord_rilis_banished_cells_ii",
+  "encounter_name": "High Kinlord Rilis",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Rilis Main Phase","threshold":"100% to 0%","description":"Control recurring Daedroths, kill Feasts before they heal Rilis, and resolve the colored bubble curse after teleport drops."},"source_type":"guide","source_name":"Xynode High Kinlord Rilis Guide","source_locator":"High Kinlord Rilis","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"feasts","value":{"name":"Feasts","response":"kill_feasts_before_they_reach_rilis_and_restore_his_health"},"source_type":"guide","source_name":"Xynode High Kinlord Rilis Guide","source_locator":"High Kinlord Rilis","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"bubble_curse","value":{"name":"Colored Bubble Curse","response":"after_landing_move_to_the_matching_rune_to_remove_the_curse"},"source_type":"guide","source_name":"Xynode High Kinlord Rilis Guide","source_locator":"High Kinlord Rilis","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"hard_mode_daedroths","value":{"name":"Hard Mode Daedroths","response":"finish_rilis_with_three_or_more_daedroths_alive_while_the_tank_controls_them"},"source_type":"achievement","source_name":"Cursed Hero","source_locator":"Banished Cells II achievement","game_update":"Launch","confidence":"high"}
+  ]
+}
