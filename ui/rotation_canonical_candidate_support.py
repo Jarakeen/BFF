@@ -10,6 +10,7 @@ from minmax.character_build.saved_build_adapter import (
     SavedBuildAdaptation,
     SavedBuildCharacterAdapter,
 )
+from minmax.combat_state import CombatState
 from minmax.resource_costs import ResourceType
 from minmax.rotation_ability_priority import AbilityPriorityList
 from minmax.rotation_action_cooldown import (
@@ -116,6 +117,12 @@ class RotationCanonicalCandidateSupport:
     the Phase 4 sustain timeline. Different front/back values therefore remain
     modeled rather than forcing a false global static resource state.
 
+    An explicit combat state may be supplied for the static build snapshot. Runtime
+    buffs and other transient conditions are therefore caller-owned evidence rather
+    than being inferred from the selected build. The same state is used for both bar
+    contexts so a single candidate evaluation cannot accidentally compare different
+    transient worlds across a bar swap.
+
     Canonical saved-skill timing, range, and exact slot ownership are resolved once
     from the selected build and applied to each *final stabilized* candidate
     scorecard. Final-plan BAR_SWAP progression is also audited so every bar-bound
@@ -191,6 +198,7 @@ class RotationCanonicalCandidateSupport:
         maximum_amount: int,
         trigger_fraction: float,
         restoration_resolver: VerifiedRecoveryHeavyRestorationResolver,
+        combat_state: CombatState = CombatState(),
         demands: Iterable[RotationDemandWindow] = (),
         options: Iterable[RotationRefreshLeadCandidateOption] = (),
         wait_decision_factory: RecoveryPressureWaitDecisionFactory | None = None,
@@ -272,7 +280,10 @@ class RotationCanonicalCandidateSupport:
         displayed_recovery_resolver_factory = None
 
         if self.static_context_service is not None:
-            static_context = self.static_context_service.resolve(player_build)
+            static_context = self.static_context_service.resolve(
+                player_build,
+                combat_state=combat_state,
+            )
             if not static_context.resolved:
                 reasons = [
                     "canonical candidate evaluation was not run because static build calculation evidence is unresolved"
