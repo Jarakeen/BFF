@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "the_banished_cells_ii",
+  "encounter_id": "maw_of_the_infernal",
+  "encounter_name": "Maw of the Infernal",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Daedroth Main Phase","threshold":"100% to 0%","description":"Tank the Maw facing away from the group and preserve space around its frontal fire and heavy attacks."},"source_type":"guide","source_name":"Banished Cells II community guide","source_locator":"Maw of the Infernal","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"fire_breath","value":{"name":"Fire Breath","response":"tank_faces_maw_away_and_non_tanks_stay_out_of_the_frontal_cone"},"source_type":"guide","source_name":"Banished Cells II community guide","source_locator":"Maw of the Infernal","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"heavy_attack","value":{"name":"Heavy Attack","response":"block_the_maws_heavy_attack_and_do_not_drag_the_boss_through_the_group"},"source_type":"guide","source_name":"Banished Cells II community guide","source_locator":"Maw of the Infernal","game_update":"Launch","confidence":"high"}
+  ]
+}
