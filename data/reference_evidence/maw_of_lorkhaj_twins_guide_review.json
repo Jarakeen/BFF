@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "content_id": "maw_of_lorkhaj",
+  "encounter_id": "s_kinrai_vashai",
+  "encounter_name": "S'kinrai and Vashai",
+  "evidence": [
+    {
+      "fact_type": "phase",
+      "fact_key": "split_phase",
+      "value": {"order": 1, "label": "Split Groups", "threshold": "Pull", "description": "Split into two six-player groups, one tank and healer per side, and keep same-color players together."},
+      "source_type": "guide",
+      "source_name": "Xynode Maw of Lorkhaj Guide",
+      "source_locator": "Vashai & S'kinrai",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "phase",
+      "fact_key": "conversion_phase",
+      "value": {"order": 2, "label": "Conversions", "threshold": "Recurring", "description": "Three non-tank players from each side are converted and must cross to the opposite-color team without touching incompatible players."},
+      "source_type": "guide",
+      "source_name": "Xynode Maw of Lorkhaj Guide",
+      "source_locator": "Twins conversions",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "color_rule",
+      "value": {"name": "Color Rule", "same_color_player_contact": "explosion", "same_color_boss_damage": "approximately 10 percent", "correct_target": "opposite-color boss"},
+      "source_type": "guide",
+      "source_name": "Xynode Maw of Lorkhaj Guide",
+      "source_locator": "Twins color rules",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "boss_swap",
+      "value": {"name": "Tank Boss Swap", "handling": "Tanks swap bosses so each group attacks the opposite-color boss."},
+      "source_type": "guide",
+      "source_name": "Xynode Maw of Lorkhaj Guide",
+      "source_locator": "Twins tank swap",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "s_kinrai_interrupt",
+      "value": {"name": "Radiant Oppression", "handling": "Interrupt immediately when S'kinrai pins the tank."},
+      "source_type": "guide",
+      "source_name": "Xynode Maw of Lorkhaj Guide",
+      "source_locator": "S'kinrai interrupt",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "vashai_negate",
+      "value": {"name": "Negate Bubble", "handling": "Tank baits bubbles along the wall and slow-kites Vashai out of each placed negate."},
+      "source_type": "guide",
+      "source_name": "Xynode Maw of Lorkhaj Guide",
+      "source_locator": "Vashai negate bubbles",
+      "confidence": "medium"
+    }
+  ]
+}
