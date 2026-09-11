@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "castle_thorn",
+  "encounter_id": "talfyg",
+  "encounter_name": "Talfyg",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Frozen Gargoyle Main Phase","threshold":"Pull to death","description":"Fight Talfyg while controlling awakenings and avoiding unnecessary Frozen Gargoyle kills."},"source_type":"guide","source_name":"Xynode Castle Thorn Mechanics Guide","source_locator":"Talfyg","game_update":"U27","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"gargoyles","value":{"name":"Frozen Gargoyles","response":"avoid_waking_or_killing_extra_gargoyles_when_possible"},"source_type":"guide","source_name":"Castle Thorn Let Sleeping Gargoyles Lie achievement / guide review","source_locator":"Talfyg","game_update":"U27","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"heavy_pressure","value":{"name":"Tank Pressure","response":"block_heavies_and_keep_boss_faced_away_from_group"},"source_type":"guide","source_name":"Alcast Castle Thorn Guide","source_locator":"Talfyg","game_update":"U27","confidence":"medium"}
+  ]
+}
