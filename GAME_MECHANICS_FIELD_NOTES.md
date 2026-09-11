@@ -688,3 +688,21 @@ The rotation builder may project 600 Health per active attacker per covered seco
 only when strategy input explicitly supplies the number of continuously active
 attackers. It does not assume all raid members attack and does not create fake
 automatic HoT ticks.
+
+---
+
+## 2026-09-11 — A weapon trait can matter to the rotation without changing its healing number
+
+The **Charged** weapon trait increases status-effect application. That can be very
+important for damage, debuffs, and support effects, but it does not directly change
+the raw magnitude of the direct, periodic, delayed, or Minor Lifesteal healing being
+measured by the healer demand-output objective.
+
+**Layman's version:** Charged can help the healer do more support work without making
+the green healing numbers themselves larger.
+
+**For BFF:** an unresolved Charged status-chance calculation remains visible as an
+ambient diagnostic in healer-output audits, while support and damage objectives may
+still treat it as a required blocker. Role relevance does not rewrite the shared
+weapon mechanic.
+
