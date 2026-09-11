@@ -8,9 +8,14 @@ directly modify the requested maximum resource. Legitimate non-core-stat mechani
 such as block-cost reduction or potion duration therefore remain valid catalog
 evidence without being forced through ``EffectMapper``.
 
-Unknown or empty semantic identities fail closed. Infused remains a separate trait
-interaction; this service answers only whether the canonical glyph universe contains
-a direct max-resource effect worth amplifying.
+Legacy corpus rows with a sparse semantic-effect table may fall back to their
+stored canonical description. That fallback is proof-only: it can prove a row
+irrelevant to the requested max resource or keep it relevant/unresolved, but it
+never invents engine arithmetic or mutates the database.
+
+Unknown or empty semantic identities and descriptions fail closed. Infused remains
+a separate trait interaction; this service answers only whether the canonical glyph
+universe contains a direct max-resource effect worth amplifying.
 """
 
 from dataclasses import dataclass
@@ -18,6 +23,9 @@ from pathlib import Path
 
 from minmax.jewelry_glyph_repository import JewelryGlyphEffectRepository
 from minmax.stat_ids import StatId
+from services.extreme_gear_set_resource_objective_screening_service import (
+    ExtremeGearSetResourceObjectiveScreeningService,
+)
 
 
 _OBJECTIVE_STATS = {
@@ -76,6 +84,39 @@ class ExtremeJewelryResourceGlyphRelevanceService:
             )
         )
 
+    def _descriptions(self, name: str) -> tuple[str, ...]:
+        resolver = getattr(self.repository, "get_jewelry_glyph_descriptions_by_name", None)
+        if not callable(resolver):
+            return ()
+        return tuple(
+            dict.fromkeys(
+                str(value or "").strip()
+                for value in resolver(name)
+                if str(value or "").strip()
+            )
+        )
+
+    @staticmethod
+    def _description_classification(
+        descriptions: tuple[str, ...],
+        objective_key: str,
+    ) -> str:
+        """Return irrelevant/relevant/unresolved for sparse semantic rows."""
+        if not descriptions:
+            return "unresolved"
+        saw_relevant = False
+        for description in descriptions:
+            screening = ExtremeGearSetResourceObjectiveScreeningService.review(
+                description,
+                objective_key,
+            )
+            if screening.target_resource_mentioned:
+                saw_relevant = True
+                continue
+            if not screening.proven_irrelevant:
+                return "unresolved"
+        return "relevant" if saw_relevant else "irrelevant"
+
     def build(self, objective_key: str) -> ExtremeJewelryResourceGlyphAudit:
         key = str(objective_key or "").strip().casefold()
         target = _OBJECTIVE_STATS.get(key)
@@ -101,7 +142,18 @@ class ExtremeJewelryResourceGlyphRelevanceService:
             semantic_effects = self._effect_types(name)
             if semantic_effects is not None:
                 if not semantic_effects:
-                    unresolved.append(f"Canonical jewelry glyph has no semantic effects: {name}")
+                    classification = self._description_classification(
+                        self._descriptions(name),
+                        key,
+                    )
+                    if classification == "irrelevant":
+                        irrelevant.append(name)
+                    elif classification == "relevant":
+                        relevant.append(name)
+                    else:
+                        unresolved.append(
+                            f"Canonical jewelry glyph has no semantic effects or proof-safe description classification: {name}"
+                        )
                     continue
                 if any(effect_type in target_effect_types for effect_type in semantic_effects):
                     relevant.append(name)
