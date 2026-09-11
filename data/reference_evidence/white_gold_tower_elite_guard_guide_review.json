@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "white_gold_tower",
+  "encounter_id": "elite_guard",
+  "encounter_name": "Elite Guard",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Three-Guard Phase","threshold":"100% to 0%","description":"Stack Micella Carlinus, Otho Numida, and Cordius Pontifio under tank control, kill the tank guard first, and keep the healer interrupted."},"source_type":"guide","source_name":"Xynode White-Gold Tower Guide","source_locator":"Elite Guard","game_update":"U7","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"healer_interrupt","value":{"name":"Healer Guard","response":"interrupt_healer_guard_repeatedly_while_other_guards_are_burned"},"source_type":"guide","source_name":"Xynode White-Gold Tower Guide","source_locator":"Elite Guard","game_update":"U7","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"kill_order","value":{"name":"Guard Kill Order","response":"focus_tank_guard_then_damage_guard_then_healer"},"source_type":"guide","source_name":"Xynode White-Gold Tower Guide","source_locator":"Elite Guard","game_update":"U7","confidence":"high"}
+  ]
+}
