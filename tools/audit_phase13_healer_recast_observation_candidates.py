@@ -79,6 +79,32 @@ def _recipient_shape(
     return "timing-unresolved", restart_delta, old_delta
 
 
+def _selected_targets(skill_names) -> tuple:
+    requested = tuple(str(value).strip() for value in skill_names if str(value).strip())
+    if not requested:
+        return DF_HEALER_U50_OBSERVATION_TARGETS
+
+    by_name = {
+        target.source_name.casefold(): target
+        for target in DF_HEALER_U50_OBSERVATION_TARGETS
+    }
+    selected = []
+    unknown = []
+    for name in requested:
+        target = by_name.get(name.casefold())
+        if target is None:
+            unknown.append(name)
+            continue
+        if target not in selected:
+            selected.append(target)
+    if unknown:
+        available = ", ".join(sorted(target.source_name for target in by_name.values()))
+        raise ValueError(
+            f"unknown tracked healer skill(s): {', '.join(unknown)}; available: {available}"
+        )
+    return tuple(selected)
+
+
 def _fmt(value: float | None) -> str:
     return "n/a" if value is None else f"{value:+.3f}s"
 
@@ -95,6 +121,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--report-code", required=True)
     parser.add_argument("--fight-id", type=int, action="append", required=True)
     parser.add_argument("--caster-id", type=int, required=True)
+    parser.add_argument(
+        "--skill",
+        action="append",
+        default=[],
+        help="tracked healer skill to inspect; repeat for multiple skills; default is all tracked skills",
+    )
     parser.add_argument("--reviewed-observations", type=Path, required=True)
     parser.add_argument("--db", type=Path, default=DEFAULT_DATABASE)
     parser.add_argument("--game-version", default="U50")
@@ -124,6 +156,7 @@ def main(argv: list[str] | None = None) -> int:
     merge_tolerance = float(args.recipient_merge_tolerance)
     if tolerance < 0 or merge_tolerance < 0:
         raise ValueError("timing tolerances must be non-negative")
+    targets = _selected_targets(args.skill)
 
     extractor = RotationHealerEsoLogsObservationExtractor(args.db)
     fixture = RotationHealerPeriodicObservationFixtureService(args.db).load(
@@ -148,6 +181,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Report:              {args.report_code}")
     print(f"Fight ids:           {', '.join(str(value) for value in args.fight_id)}")
     print(f"Caster sourceID:     {args.caster_id}")
+    print(f"Skills:              {', '.join(target.source_name for target in targets)}")
     print(f"Reviewed timing:     {args.reviewed_observations}")
     print(f"Timing tolerance:    {tolerance:g}s")
     print("Boundary:            read-only recipient-level evidence; no refresh policy is promoted")
@@ -155,7 +189,7 @@ def main(argv: list[str] | None = None) -> int:
     total_overlap_pairs = 0
     total_clean_pairs = 0
     total_recipient_rows = 0
-    for target in DF_HEALER_U50_OBSERVATION_TARGETS:
+    for target in targets:
         canonical = extractor.canonical_timing.resolve(
             source_name=target.source_name,
             coefficient_number=target.coefficient_number,
