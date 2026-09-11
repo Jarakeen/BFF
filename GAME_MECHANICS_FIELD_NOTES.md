@@ -706,3 +706,21 @@ ambient diagnostic in healer-output audits, while support and damage objectives 
 still treat it as a required blocker. Role relevance does not rewrite the shared
 weapon mechanic.
 
+---
+
+## 2026-09-11 — A rotation snapshot must carry the transient state it is claiming to evaluate
+
+The static build calculator can represent temporary combat facts such as active named
+buffs, Emperor state, and update-version semantics through `CombatState`. The
+Rotation Builder's canonical candidate bridge previously resolved front/back static
+contexts without a way for its caller to supply that state, so any transient combat
+scenario silently collapsed back to the empty default state.
+
+**Layman's version:** if we ask "what does this rotation look like while this buff is
+actually active?", the buff has to make it all the way into the calculator. Owning a
+skill or wearing a set that *can* create the buff is not the same thing as proving it
+is active at that moment.
+
+**For BFF:** canonical rotation candidate evaluation now accepts explicit
+`CombatState` and sends the exact same state through both bar snapshots. Runtime
+conditions remain caller-owned evidence and are never inferred merely from the build.
