@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "march_of_sacrifices",
+  "encounter_id": "dagrund_the_bulky",
+  "encounter_name": "Dagrund the Bulky",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Elemental Main Phase","threshold":"100% to 0%","description":"Dagrund cycles elemental pressure and periodic add waves while maintaining heavy tank pressure."},"source_type":"guide","source_name":"March of Sacrifices community guide","source_locator":"Dagrund the Bulky","game_update":"U19","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"upheaval","value":{"name":"Upheaval","response":"block_or_dodge_the_homing_elemental_attack_after_dagrund_leaps"},"source_type":"achievement","source_name":"Light On Your Feet","source_locator":"March of Sacrifices achievement","game_update":"U19","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"elemental_adds","value":{"name":"Elemental Adds","response":"prioritize_elemental_adds_before_their_ground_effects_and_snares_stack"},"source_type":"guide","source_name":"March of Sacrifices community guide","source_locator":"Dagrund the Bulky","game_update":"U19","confidence":"high"}
+  ]
+}
