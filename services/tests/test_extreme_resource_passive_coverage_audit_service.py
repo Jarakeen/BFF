@@ -170,7 +170,8 @@ def test_resource_passive_audit_reconciles_exact_reviewed_contextual_identity():
     assert any("Juggernaut" in row for row in audit.accounted_elsewhere)
     assert any("Deep Reserves" in row for row in audit.static_irrelevant)
     assert not any("Juggernaut" in row for row in audit.context_required)
-    assert any("Magicka Controller" in row for row in audit.context_required)
+    assert any("Magicka Controller" in row for row in audit.static_irrelevant)
+    assert not any("Magicka Controller" in row for row in audit.context_required)
     assert any("Mystery" in row for row in audit.unresolved)
 
 
@@ -214,9 +215,16 @@ def test_reviewed_contextual_reconciliation_is_objective_specific():
         universe_service=_ControllerUniverse(),
         race_repository=_RaceRepository(),
     ).build("max_health")
+    stamina = ExtremeResourcePassiveCoverageAuditService(
+        universe_service=_ControllerUniverse(),
+        race_repository=_RaceRepository(),
+    ).build("max_stamina")
 
     assert any("Magicka Controller" in row for row in magicka.accounted_elsewhere)
-    assert any("Magicka Controller" in row for row in health.context_required)
+    assert any("Magicka Controller" in row for row in health.static_irrelevant)
+    assert any("Magicka Controller" in row for row in stamina.static_irrelevant)
+    assert not any("Magicka Controller" in row for row in health.context_required)
+    assert not any("Magicka Controller" in row for row in stamina.context_required)
 
 
 def test_racial_static_resource_requires_matching_canonical_race_stat():
