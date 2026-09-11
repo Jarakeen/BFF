@@ -65,12 +65,36 @@ class ExtremeResourceContextualPassiveReviewService:
             condition="Max-rank Last Gasp is applied when the selected class route owns Bone Tyrant.",
         ),
         ExtremeResourceContextualPassiveReview(
+            objective_key="max_health",
+            passive_name="Dark Vigor",
+            skill_line="Shadow",
+            status=ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED,
+            source="NightbladePassiveInputResolver",
+            condition="The reviewed Extreme active-bar reducer searches the legal six-slot bar and maximizes distinct Shadow abilities; shared Nightblade passive math applies the resulting Max Health bonus.",
+        ),
+        ExtremeResourceContextualPassiveReview(
             objective_key="max_magicka",
             passive_name="Expert Summoner",
             skill_line="Daedric Summoning",
             status=ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED,
             source="SorcererPassiveInputResolver",
             condition="Standing U50 Max Magicka branch is applied when the selected route owns Daedric Summoning.",
+        ),
+        ExtremeResourceContextualPassiveReview(
+            objective_key="max_magicka",
+            passive_name="Magicka Flood",
+            skill_line="Siphoning",
+            status=ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED,
+            source="NightbladePassiveInputResolver",
+            condition="The reviewed Extreme active-bar reducer searches a legal Siphoning trigger jointly with Mages Guild slot competition; shared Nightblade passive math applies the 6% Max Magicka trigger.",
+        ),
+        ExtremeResourceContextualPassiveReview(
+            objective_key="max_magicka",
+            passive_name="Magicka Controller",
+            skill_line="Mages Guild",
+            status=ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED,
+            source="GuildPassiveInputResolver",
+            condition="The reviewed Extreme active-bar reducer maximizes legal Mages Guild slots jointly with Magicka Flood and supplies canonical max-rank Magicka Controller progression.",
         ),
         ExtremeResourceContextualPassiveReview(
             objective_key="max_stamina",
@@ -80,40 +104,13 @@ class ExtremeResourceContextualPassiveReviewService:
             source="SorcererPassiveInputResolver",
             condition="Standing U50 Max Stamina branch is applied when the selected route owns Daedric Summoning.",
         ),
-
-        # Shared math exists, but the current max-resource record does not yet
-        # search the active-bar compositions needed to realize these maxima.
-        ExtremeResourceContextualPassiveReview(
-            objective_key="max_health",
-            passive_name="Dark Vigor",
-            skill_line="Shadow",
-            status=ExtremeResourceContextualPassiveStatus.ACTIVE_BAR_SEARCH_REQUIRED,
-            source="NightbladePassiveInputResolver",
-            condition="Max Health scales with the number of Shadow abilities slotted on the active bar.",
-        ),
-        ExtremeResourceContextualPassiveReview(
-            objective_key="max_magicka",
-            passive_name="Magicka Flood",
-            skill_line="Siphoning",
-            status=ExtremeResourceContextualPassiveStatus.ACTIVE_BAR_SEARCH_REQUIRED,
-            source="NightbladePassiveInputResolver",
-            condition="Requires at least one Siphoning ability on the active bar.",
-        ),
         ExtremeResourceContextualPassiveReview(
             objective_key="max_stamina",
             passive_name="Magicka Flood",
             skill_line="Siphoning",
-            status=ExtremeResourceContextualPassiveStatus.ACTIVE_BAR_SEARCH_REQUIRED,
+            status=ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED,
             source="NightbladePassiveInputResolver",
-            condition="Requires at least one Siphoning ability on the active bar.",
-        ),
-        ExtremeResourceContextualPassiveReview(
-            objective_key="max_magicka",
-            passive_name="Magicka Controller",
-            skill_line="Mages Guild",
-            status=ExtremeResourceContextualPassiveStatus.ACTIVE_BAR_SEARCH_REQUIRED,
-            source="GuildPassiveInputResolver",
-            condition="Max Magicka scales with the number of Mages Guild abilities slotted on the active bar.",
+            condition="The reviewed Extreme active-bar reducer searches one legal Siphoning trigger because additional Siphoning slots cannot increase Magicka Flood; shared Nightblade passive math applies the 6% Max Stamina bonus.",
         ),
 
         # Reviewed mechanics exist, but the global record does not yet search
