@@ -16,6 +16,9 @@ from services.rotation_candidate_generation_service import (
 )
 from services.rotation_candidate_ranking_service import RotationCandidateTier
 from services.rotation_candidate_scorecard_service import RotationCandidateScorecard
+from services.rotation_gameplay_policy_assessment_service import (
+    RotationGameplayPolicyAssessment,
+)
 from services.rotation_role_aware_ranking_service import (
     RotationRoleAwareRankingInput,
     RotationRoleAwareRankingResult,
@@ -32,6 +35,7 @@ class RotationCandidateRoleEvidence:
     assigned_support_value: float
     sustain_margin: float
     primary_role_displacement_seconds: float
+    gameplay_policy_assessment: RotationGameplayPolicyAssessment | None = None
 
 
 RotationCandidateEvidenceEvaluator = Callable[
@@ -127,6 +131,12 @@ class RotationCandidateFamilyRecommendationService:
                 raise TypeError(
                     "rotation candidate evaluator must return RotationCandidateRoleEvidence"
                 )
+            assessment = evidence.gameplay_policy_assessment
+            if assessment is not None and assessment.candidate_id.casefold() != candidate.candidate_id.casefold():
+                raise ValueError(
+                    "rotation candidate gameplay-policy candidate mismatch: "
+                    f"expected {candidate.candidate_id!r}, got {assessment.candidate_id!r}"
+                )
             key = candidate.candidate_id.casefold()
             evidence_by_id[key] = evidence
             candidate_by_id[key] = candidate
@@ -142,6 +152,9 @@ class RotationCandidateFamilyRecommendationService:
                     sustain_margin=evidence.sustain_margin,
                     primary_role_displacement_seconds=(
                         evidence.primary_role_displacement_seconds
+                    ),
+                    gameplay_policy_assessment=(
+                        evidence.gameplay_policy_assessment
                     ),
                 )
             )
