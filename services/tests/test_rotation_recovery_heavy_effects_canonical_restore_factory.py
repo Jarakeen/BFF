@@ -38,7 +38,13 @@ class _Workflow:
 class _HeavySustain:
     def __init__(self) -> None:
         self.calls = []
+        self.completion_calls = []
         self.resolver = lambda _heavy: None
+        self.default_evidence = (object(),)
+
+    def completion_evidence_from_verified_reservations(self, plan):
+        self.completion_calls.append(plan)
+        return self.default_evidence
 
     def restoration_resolver_for_plan(self, **kwargs):
         self.calls.append(kwargs)
@@ -104,6 +110,7 @@ def test_effects_pipeline_builds_canonical_restore_factory_from_completion_evide
 
     assert resolver is heavy.resolver
     assert evidence_calls == [generated_plan]
+    assert heavy.completion_calls == []
     assert len(heavy.calls) == 1
     assert heavy.calls[0]["character_build"] is character_build
     assert heavy.calls[0]["sustain_build"] is player_build
@@ -111,6 +118,25 @@ def test_effects_pipeline_builds_canonical_restore_factory_from_completion_evide
     assert heavy.calls[0]["resource"] is ResourceType.MAGICKA
     assert heavy.calls[0]["initial_bar"] == "back"
     assert heavy.calls[0]["completion_evidence"] == (evidence,)
+
+
+def test_effects_pipeline_uses_verified_plan_reservations_when_no_restore_source_is_supplied() -> None:
+    service, workflow, heavy = _service()
+
+    result = _run(service)
+
+    assert result == "result"
+    assert workflow.calls[0]["restoration_resolver"] is None
+    factory = workflow.calls[0]["restoration_resolver_factory"]
+    assert callable(factory)
+    assert heavy.completion_calls == []
+
+    generated_plan = _plan("regenerated")
+    resolver = factory(generated_plan)
+
+    assert resolver is heavy.resolver
+    assert heavy.completion_calls == [generated_plan]
+    assert heavy.calls[0]["completion_evidence"] == heavy.default_evidence
 
 
 def test_completion_evidence_factory_cannot_double_source_restoration() -> None:
@@ -141,3 +167,4 @@ def test_explicit_legacy_restore_source_remains_untouched_without_completion_fac
     assert workflow.calls[0]["restoration_resolver"] is explicit
     assert workflow.calls[0]["restoration_resolver_factory"] is None
     assert heavy.calls == []
+    assert heavy.completion_calls == []
