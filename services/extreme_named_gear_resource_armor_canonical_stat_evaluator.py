@@ -6,14 +6,14 @@ This layer composes a proven named-set realization with one proof-reduced
 Light/Medium/Heavy + Divines/Infused + armor-glyph state for max
 Health/Magicka/Stamina and, when supplied, one reviewed static resource-jewelry
 trait state. It owns no stat arithmetic: the completed ``PlayerBuild`` is re-scored
-through the existing ``ExtremeOptimizationService`` so armor, jewelry, Mundus,
-set effects, food, potions, class/race state, and reviewed passive progression meet
-in one canonical context.
+through the canonical calculation stack so armor, jewelry, Mundus, set effects,
+food, potions, class/race state, and reviewed passive progression meet in one
+context.
 
-For the max-resource path, reviewed max-rank Undaunted Mettle progression is
-applied through ``ExtremeHypotheticalUndauntedProgressionService`` when a canonical
-database path is available. Resource and jewelry trait math remain owned by the
-shared canonical resolver/repositories.
+For the max-resource path, reviewed max-rank Undaunted Mettle progression and the
+hypothetical race's canonical max-rank racial progression are applied when a
+canonical database path is available. Racial stat math remains owned by the Phase 5
+racial tooltip resolver; this evaluator only supplies legal progression evidence.
 """
 
 from typing import Any
@@ -21,10 +21,14 @@ from typing import Any
 from minmax.character_progression import CharacterProgression
 from minmax.combat_effect_semantics import GameUpdate
 from minmax.combat_state import CombatState
+from minmax.phase5_context_factory import Phase5BuildCalculationContextFactory
 from models.build_model import PlayerBuild
 from services.extreme_armor_resource_weight_trait_glyph_state_service import (
     ExtremeArmorResourceWeightTraitGlyphState,
     ExtremeArmorResourceWeightTraitGlyphStateService,
+)
+from services.extreme_hypothetical_racial_progression_service import (
+    ExtremeHypotheticalRacialProgressionService,
 )
 from services.extreme_hypothetical_undaunted_progression_service import (
     ExtremeHypotheticalUndauntedProgressionService,
@@ -40,7 +44,7 @@ from services.extreme_structural_global_search_service import ExtremeStructuralC
 
 
 class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
-    """Add combined resource armor, reviewed jewelry, and Mettle progression."""
+    """Add combined resource armor, reviewed jewelry, Mettle, and racial progression."""
 
     def __init__(
         self,
@@ -49,6 +53,8 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
         armor_state: ExtremeArmorResourceWeightTraitGlyphState,
         jewelry_state: ExtremeJewelryResourceStaticTraitState | None = None,
         undaunted_progression_service: ExtremeHypotheticalUndauntedProgressionService | None = None,
+        racial_progression_service: ExtremeHypotheticalRacialProgressionService | None = None,
+        context_factory: Phase5BuildCalculationContextFactory | None = None,
     ) -> None:
         self.evaluator = evaluator
         self.armor_state = armor_state
@@ -62,17 +68,30 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
                 f"jewelry={jewelry_state.objective_key!r}, armor={armor_state.objective_key!r}"
             )
 
-        if undaunted_progression_service is None:
-            database_path = getattr(self.optimizer, "database_path", None)
-            if database_path is not None:
-                undaunted_progression_service = ExtremeHypotheticalUndauntedProgressionService(
-                    database_path,
-                    class_progression_service=self.class_progression_service,
-                )
+        database_path = getattr(self.optimizer, "database_path", None)
+        if undaunted_progression_service is None and database_path is not None:
+            undaunted_progression_service = ExtremeHypotheticalUndauntedProgressionService(
+                database_path,
+                class_progression_service=self.class_progression_service,
+            )
         self.undaunted_progression_service = undaunted_progression_service
-        self.progression_service = (
-            undaunted_progression_service or self.class_progression_service
-        )
+        self.progression_service = undaunted_progression_service or self.class_progression_service
+
+        if racial_progression_service is None and database_path is not None:
+            racial_progression_service = ExtremeHypotheticalRacialProgressionService(database_path)
+        self.racial_progression_service = racial_progression_service
+
+        if context_factory is None:
+            race_repository = getattr(self.optimizer, "race_repository", None)
+            gear_set_repository = getattr(self.optimizer, "gear_set_repository", None)
+            if race_repository is not None and gear_set_repository is not None:
+                context_factory = Phase5BuildCalculationContextFactory(
+                    race_repository=race_repository,
+                    gear_set_repository=gear_set_repository,
+                    mundus_repository=getattr(self.optimizer, "mundus_repository", None),
+                    provisioning_repository=getattr(self.optimizer, "provisioning_repository", None),
+                )
+        self.context_factory = context_factory
 
     def evaluate_candidate(
         self,
@@ -121,6 +140,12 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
             passive_cp_points={},
         )
         progression = self.progression_service.normalize(progression, candidate.class_route)
+        if self.racial_progression_service is not None:
+            progression = self.racial_progression_service.normalize(
+                progression,
+                candidate.race,
+            )
+
         normalized_buffs = tuple(
             dict.fromkeys(
                 str(value or "").strip()
@@ -136,7 +161,24 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
             f"{armor_identity}:{jewelry_identity}:{mundus}:{food}:{potion}"
         )
 
-        if normalized_buffs:
+        if self.context_factory is not None:
+            kwargs: dict[str, Any] = {}
+            if normalized_buffs:
+                kwargs["combat_state"] = CombatState(
+                    active_buffs=normalized_buffs,
+                    game_update=GameUpdate.U50,
+                )
+            context = self.context_factory.build(
+                character_id="extreme-named-gear-resource-armor-jewelry",
+                build_id=build_id,
+                build=build,
+                progression=progression,
+                active_bar=candidate.active_bar,
+                **kwargs,
+            )
+            value = self.optimizer._objective_value(context, objective)
+            gear_unresolved = tuple(context.unresolved_gear_effects)
+        elif normalized_buffs:
             context = self.optimizer.context_factory.build(
                 character_id="extreme-named-gear-resource-armor-jewelry",
                 build_id=build_id,
@@ -166,9 +208,7 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
         output["armor_type_count"] = self.armor_state.armor_type_count
         output["armor_divines_count"] = self.armor_state.divines_count
         output["armor_infused_count"] = self.armor_state.infused_count
-        output["armor_reviewed_glyph_delta"] = (
-            self.armor_state.trait_glyph_state.direct_glyph_delta
-        )
+        output["armor_reviewed_glyph_delta"] = self.armor_state.trait_glyph_state.direct_glyph_delta
         output["armor_weights"] = self.armor_state.weight_state.identity
         if self.jewelry_state is not None:
             output["jewelry_resource_static_trait_state"] = self.jewelry_state.identity
@@ -177,6 +217,9 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
         output["undaunted_mettle_progression_applied"] = bool(
             progression.owns_skill_line("Undaunted")
             and progression.passive_rank("Undaunted Mettle")
+        )
+        output["racial_progression_applied"] = bool(
+            self.racial_progression_service is not None
         )
 
         unresolved = tuple(
