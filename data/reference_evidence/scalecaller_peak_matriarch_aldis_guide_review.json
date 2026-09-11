@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "scalecaller_peak",
+  "encounter_id": "matriarch_aldis",
+  "encounter_name": "Matriarch Aldis",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Leimenid Cycle","threshold":"100% to 0%","description":"Corrupted Leimenids spawn repeatedly as Aldis loses health while the tank handles ice vents and the group avoids the surrounding water."},"source_type":"guide","source_name":"Alcast Scalecaller Peak Guide","source_locator":"Matriarch Aldis","game_update":"U17","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"ice_vent","value":{"name":"Ice Vent","response":"tank_stands_on_vent_to_plug_the_ice_spike_channel"},"source_type":"guide","source_name":"Alcast Scalecaller Peak Guide","source_locator":"Matriarch Aldis","game_update":"U17","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"ice_water","value":{"name":"Ice Water","response":"keep_all_players_out_of_surrounding_water"},"source_type":"achievement","source_name":"Watch Your Step","source_locator":"Scalecaller Peak achievement","game_update":"U17","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"leimenids","value":{"name":"Corrupted Leimenids","response":"kill_leimenids_promptly_before_disease_geysers_overlap_other_pressure"},"source_type":"guide","source_name":"Alcast Scalecaller Peak Guide","source_locator":"Matriarch Aldis","game_update":"U17","confidence":"high"}
+  ]
+}
