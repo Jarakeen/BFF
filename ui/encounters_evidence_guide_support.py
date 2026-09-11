@@ -4,11 +4,14 @@ from __future__ import annotations
 
 The Encounters page originally displayed illustrative phase/mechanic placeholders.
 This support layer keeps the planning/positioning UI intact while replacing those
-examples with selected-boss timeline and strategy projections. Canonical boss-guide
-phases remain authoritative; reviewed evidence fills only missing timeline structure.
+examples with selected-fight timeline and strategy projections. Reviewed raid
+identity metadata also groups raw NPC records into the fight units raid leads plan.
+Canonical boss-guide phases remain authoritative; reviewed evidence fills only
+missing timeline structure.
 """
 
 from pathlib import Path
+from types import SimpleNamespace
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -23,8 +26,16 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from services.encounter_boss_guide import (
+    BossGuideEncounterSummary,
+    EncounterBossGuideNotFound,
+)
 from services.encounter_guide_evidence_projection_service import (
     EncounterGuideEvidenceProjectionService,
+)
+from services.raid_encounter_identity_service import (
+    load_raid_encounter_identities,
+    raid_encounters_for_content,
 )
 from ui.components.foundry_card import FoundryCard
 
@@ -32,12 +43,65 @@ from ui.components.foundry_card import FoundryCard
 _INSTALLED = False
 
 
+def _data_root(self) -> Path:
+    return Path(self.guide_service.database).parent
+
+
 def _projection_service(self) -> EncounterGuideEvidenceProjectionService:
     service = getattr(self, "_encounter_guide_projection_service", None)
     if service is None:
-        service = EncounterGuideEvidenceProjectionService(Path(self.guide_service.database).parent)
+        service = EncounterGuideEvidenceProjectionService(_data_root(self))
         self._encounter_guide_projection_service = service
     return service
+
+
+def _raid_identity_map(self):
+    mapping = getattr(self, "_raid_encounter_identity_by_id", None)
+    if mapping is None:
+        mapping = {
+            row.encounter_id: row
+            for row in load_raid_encounter_identities(_data_root(self))
+        }
+        self._raid_encounter_identity_by_id = mapping
+    return mapping
+
+
+def _reviewed_boss_rows(self, current_trial: str) -> tuple[BossGuideEncounterSummary, ...]:
+    identities = (
+        raid_encounters_for_content(_data_root(self), current_trial)
+        if current_trial
+        else load_raid_encounter_identities(_data_root(self))
+    )
+    return tuple(
+        BossGuideEncounterSummary(
+            encounter_id=row.encounter_id,
+            content_id=row.content_id,
+            content_name=row.content_name,
+            name=row.display_name,
+            location="",
+        )
+        for row in identities
+    )
+
+
+def _display_guide(self, encounter_id: str):
+    """Return a phase-bearing guide view for single or grouped raid encounters."""
+    try:
+        return self.guide_service.get(encounter_id)
+    except EncounterBossGuideNotFound:
+        pass
+
+    identity = _raid_identity_map(self).get(encounter_id)
+    if identity is None:
+        return SimpleNamespace(phases=())
+
+    phases = []
+    for member_id in identity.member_ids:
+        try:
+            phases.extend(self.guide_service.get(member_id).phases)
+        except EncounterBossGuideNotFound:
+            continue
+    return SimpleNamespace(phases=tuple(phases))
 
 
 def _sync_event_lists(self, row: int, *, source: str) -> None:
@@ -225,9 +289,8 @@ def _render_selected_mechanic(self) -> None:
 
 
 def _render_encounter_evidence(self, encounter_id: str, encounter_name: str) -> None:
-    service = _projection_service(self)
-    projection = service.get(encounter_id, encounter_name)
-    guide = self.guide_service.get(encounter_id)
+    projection = _projection_service(self).get(encounter_id, encounter_name)
+    guide = _display_guide(self, encounter_id)
     timeline_rows = _timeline_rows(self, guide, projection)
     self._encounter_display_timeline = timeline_rows
 
@@ -248,7 +311,7 @@ def _render_encounter_evidence(self, encounter_id: str, encounter_name: str) -> 
         self.encounter_phase_list.addItem("No reviewed timeline yet")
         self.encounter_timeline_list.addItem("No reviewed timeline yet")
         self.encounter_event_detail.setText(
-            "No canonical phase timeline or reviewed evidence fallback is available for this boss yet."
+            "No canonical phase timeline or reviewed evidence fallback is available for this encounter yet."
         )
 
     self._encounter_strategy_rows = projection.strategy
@@ -262,7 +325,7 @@ def _render_encounter_evidence(self, encounter_id: str, encounter_name: str) -> 
     if hasattr(self, "status"):
         timeline_source = "canonical" if guide.phases else "reviewed evidence fallback"
         self.status.success(
-            f"Selected boss: {encounter_name}. Timeline {len(timeline_rows)} row(s) from {timeline_source}; "
+            f"Selected encounter: {encounter_name}. Timeline {len(timeline_rows)} row(s) from {timeline_source}; "
             f"{len(projection.strategy)} reviewed mechanic strategy row(s)."
         )
 
@@ -274,9 +337,15 @@ def install() -> None:
 
     from ui.encounters_page import EncountersPage
 
+    original_boss_rows_for_active_trial = EncountersPage._boss_rows_for_active_trial
     original_load_boss_index = EncountersPage._load_boss_index
     original_boss_changed = EncountersPage._boss_changed
     EncountersPage._assignments_tab = _assignments_tab_with_evidence
+
+    def boss_rows_for_active_trial_with_reviewed_identity(self):
+        current_trial = str(self.expedition.expedition.Expedition or "").strip()
+        reviewed = _reviewed_boss_rows(self, current_trial)
+        return reviewed or original_boss_rows_for_active_trial(self)
 
     def boss_changed_with_evidence(self, index: int) -> None:
         original_boss_changed(self, index)
@@ -290,6 +359,7 @@ def install() -> None:
         if self.boss_combo.count() > 0 and self.boss_combo.currentIndex() >= 0:
             boss_changed_with_evidence(self, self.boss_combo.currentIndex())
 
+    EncountersPage._boss_rows_for_active_trial = boss_rows_for_active_trial_with_reviewed_identity
     EncountersPage._load_boss_index = load_boss_index_with_evidence
     EncountersPage._boss_changed = boss_changed_with_evidence
     _INSTALLED = True
