@@ -153,8 +153,8 @@ class ExtremeResourceContextualPassiveReviewService:
                 rows,
                 key=lambda row: (
                     row.status.value,
-                    row.skill_line.casefold(),
                     row.passive_name.casefold(),
+                    row.skill_line.casefold(),
                 ),
             )
         )
