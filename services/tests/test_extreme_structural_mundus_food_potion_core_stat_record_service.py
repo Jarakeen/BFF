@@ -112,10 +112,11 @@ def _candidate():
     )
 
 
-def _evaluator(*, catalog_unresolved=()):
+def _evaluator(*, catalog_unresolved=(), base_active_buffs=()):
     return ExtremeBestMundusFoodPotionStructuralStatEvaluator(
         food_evaluator=_FoodEvaluator(),
         potion_repository=_PotionRepository(catalog_unresolved=catalog_unresolved),
+        base_active_buffs=base_active_buffs,
     )
 
 
@@ -143,6 +144,18 @@ def test_potion_evaluator_selects_best_active_formula_and_preserves_runtime_payl
     assert payload["potion"] == "alchemy_formula:u50:spell:increase_spell_power+spell_critical"
     assert payload["active_buffs"] == ("Major Sorcery", "Major Prophecy")
     assert unresolved == ()
+
+
+def test_fixed_transient_state_is_composed_with_every_potion_snapshot():
+    marker = "__emperor_home_keeps__:6"
+    evaluator = _evaluator(base_active_buffs=(marker,))
+
+    _, payload, unresolved = evaluator("max_health", _candidate())
+
+    assert unresolved == ()
+    assert payload["active_buffs"] == (marker, "Major Sorcery", "Major Prophecy")
+    assert evaluator.food_evaluator.calls[0][1] == (marker,)
+    assert all(marker in buffs for _, buffs in evaluator.food_evaluator.calls)
 
 
 def test_catalog_unresolved_evidence_prevents_potion_denominator_proof():
