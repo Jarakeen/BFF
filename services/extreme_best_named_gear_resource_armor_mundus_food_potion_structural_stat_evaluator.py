@@ -44,6 +44,9 @@ from services.extreme_objective_named_gear_set_catalog_realization_service impor
 from services.extreme_resource_active_bar_state_service import (
     ExtremeResourceActiveBarStateService,
 )
+from services.extreme_resource_blood_magic_canonical_stat_evaluator import (
+    ExtremeResourceBloodMagicCanonicalStatEvaluator,
+)
 from services.extreme_structural_core_stat_record_service import ExtremeCanonicalStructuralStatEvaluator
 from services.extreme_structural_global_search_service import ExtremeStructuralCandidate
 from services.extreme_structural_mundus_core_stat_record_service import ExtremeBestMundusStructuralStatEvaluator
@@ -115,6 +118,12 @@ class ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory:
             jewelry_state=self.jewelry_state,
             active_bar_state_service=self.active_bar_state_service,
         )
+        if self.active_bar_state_service is not None:
+            armor = ExtremeResourceBloodMagicCanonicalStatEvaluator(
+                evaluator=armor,
+                active_bar_state_service=self.active_bar_state_service,
+                database_path=getattr(self.canonical_evaluator.optimizer, "database_path", None),
+            )
         mundus = ExtremeBestMundusStructuralStatEvaluator(
             evaluator=armor,
             mundus_repository=self.mundus_repository,
