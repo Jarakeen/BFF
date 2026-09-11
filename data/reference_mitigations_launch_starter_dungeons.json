@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {"entry_name":"Daedric Blast — War Chief Ozozai","mitigation":"The targeted player moves away until the growing blast circle no longer overlaps teammates."},
+    {"entry_name":"Haymaker — War Chief Ozozai","mitigation":"Block the heavy attack to avoid the knockdown and large burst of damage."},
+    {"entry_name":"Storm Flurry — Kra'gh the Dreugh King","mitigation":"Block or strongly mitigate the multi-hit flurry instead of taking the full sequence."},
+    {"entry_name":"Lightning Field — Kra'gh the Dreugh King","mitigation":"Move out of the lightning field immediately, then return once the field resolves."},
+    {"entry_name":"Summon Spiders — Swarm Mother","mitigation":"Tank or chain spiders into the boss for cleave and interrupt spiders that attempt to feed."},
+    {"entry_name":"Leap — Swarm Mother","mitigation":"Stay close to limit long leaps; block or dodge the leap and restack immediately."},
+    {"entry_name":"Web Pull — The Whisperer","mitigation":"Recover from the center pull and immediately prepare for the boss's follow-up burst."},
+    {"entry_name":"Daedric Explosion — The Whisperer","mitigation":"Maintain personal spacing and move out from the boss center after the pull so the explosion does not punish the group."},
+    {"entry_name":"Shadow Clone — Shadowrend","mitigation":"Kill the low-health clone immediately before duplicate boss pressure builds."},
+    {"entry_name":"Charge and Devour — Shadowrend","mitigation":"Stay close to Shadowrend; if Devour triggers, interrupt it immediately to free the targeted player."},
+    {"entry_name":"Feasts — High Kinlord Rilis","mitigation":"Kill healing orbs before they reach Rilis and restore his health."},
+    {"entry_name":"Ghost Fire — High Kinlord Rilis","mitigation":"Step out of each ground-fire pool without dragging the boss around the room."},
+    {"entry_name":"Heavy Blow — High Kinlord Rilis","mitigation":"Block the heavy attack; unblocked hits can be lethal to non-tanks."}
+  ]
+}
