@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "vaults_of_madness",
+  "encounter_id": "iskra_the_omen",
+  "encounter_name": "Iskra the Omen",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"fight start","description":"Keep the group reasonably close to Iskra while leaving enough personal space to identify targeted line attacks and leap pressure."},"source_type":"guide","source_name":"Xynode Vaults of Madness Guide","source_locator":"Iskra the Omen","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"breath","value":{"name":"Breath","response":"sidestep_the_targeted_flame_line_and_do_not_stand_in_the_lingering_fire"},"source_type":"guide","source_name":"Xynode Vaults of Madness Guide","source_locator":"Iskra the Omen","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"jump_slam","value":{"name":"Jump / Slam","response":"move_or_dodge_out_of_the_large_impact_area_then_return_close_to_the_boss"},"source_type":"guide","source_name":"Xynode Vaults of Madness Guide","source_locator":"Iskra the Omen","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"leap","value":{"name":"Leap","response":"avoid_being_far_from_the_group_because_iskra_targets_the_furthest_player_with_the_leap"},"source_type":"guide","source_name":"Xynode Vaults of Madness Guide","source_locator":"Iskra the Omen","game_update":"Launch","confidence":"high"}
+  ]
+}
