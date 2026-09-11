@@ -116,6 +116,15 @@ class RotationHealerMinorLifestealEsoLogsEvidenceReport:
 class RotationHealerMinorLifestealEsoLogsEvidenceService:
     """Inspect observed Minor Lifesteal heals without inferring runtime rules."""
 
+    _REQUIRED_LOG_EVENT_COLUMNS = {
+        "report_code", "fight_id", "event_index", "timestamp", "event_type",
+        "source_id", "source_is_friendly", "target_id", "target_instance",
+        "target_is_friendly", "ability_game_id", "extra_ability_game_id",
+        "amount", "hit_type", "tick", "cast_track_id", "resource_change",
+        "resource_change_type", "other_resource_change", "max_resource_amount",
+        "waste", "overheal", "absorbed", "stack", "raw_json",
+    }
+
     _TIMESTAMP_SCALES = {
         "milliseconds": 0.001,
         "seconds": 1.0,
@@ -161,6 +170,26 @@ class RotationHealerMinorLifestealEsoLogsEvidenceService:
                     cadence_streams=(),
                     observed_heal_ability_aliases=tuple(sorted(aliases)),
                     unresolved=("log_event table is unavailable",),
+                )
+
+            columns = {
+                str(row["name"])
+                for row in connection.execute("PRAGMA table_info(log_event)")
+            }
+            missing_columns = tuple(
+                sorted(self._REQUIRED_LOG_EVENT_COLUMNS - columns)
+            )
+            if missing_columns:
+                return RotationHealerMinorLifestealEsoLogsEvidenceReport(
+                    source_path=str(path),
+                    timestamp_unit=unit,
+                    observations=(),
+                    cadence_streams=(),
+                    observed_heal_ability_aliases=tuple(sorted(aliases)),
+                    unresolved=(
+                        "log_event schema is missing required columns: "
+                        + ", ".join(missing_columns),
+                    ),
                 )
 
             fights = self._fight_keys(
