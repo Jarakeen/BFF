@@ -10,11 +10,17 @@ strongest continuation witness per max-resource objective.
 The resource active-bar evidence service is shared across every gear/armor scorer
 created by one factory so canonical skill inventory and proof-reduced route bars
 are cached once rather than rediscovered under every equipment witness.
+
+For max-resource records, the Emperor passive has a monotonic Home Keep table.
+The global maximum therefore needs only the legal six-Home-Keep active-Emperor
+witness. The fixed snapshot marker is consumed by ``CombatState`` and projected
+through the shared ``EmperorPassiveInputResolver``; no Emperor math lives here.
 """
 
 from collections.abc import Callable
 from typing import Any, Protocol
 
+from minmax.combat_state import EMPEROR_STATE_MARKER_PREFIX
 from minmax.mundus_repository import MundusRepository
 from minmax.potion_availability_repository import PotionAvailabilityRepository
 from minmax.provisioning_static_repository import ProvisioningStaticRepository
@@ -46,6 +52,12 @@ from services.extreme_structural_mundus_food_core_stat_record_service import (
 )
 from services.extreme_structural_mundus_food_potion_core_stat_record_service import (
     ExtremeBestMundusFoodPotionStructuralStatEvaluator,
+)
+
+
+_EXTREME_EMPEROR_HOME_KEEPS = 6
+_EXTREME_EMPEROR_STATE_MARKER = (
+    f"{EMPEROR_STATE_MARKER_PREFIX}{_EXTREME_EMPEROR_HOME_KEEPS}",
 )
 
 
@@ -114,6 +126,7 @@ class ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory:
         return ExtremeBestMundusFoodPotionStructuralStatEvaluator(
             food_evaluator=food,
             potion_repository=self.potion_repository,
+            base_active_buffs=_EXTREME_EMPEROR_STATE_MARKER,
         )
 
 
@@ -240,4 +253,10 @@ class ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator:
         best_payload["armor_weight_dominated_loadouts_pruned"] = weight.dominated_loadouts_pruned
         best_payload["armor_glyph_choices_reviewed"] = trait_glyph.glyph_choices_reviewed
         best_payload["armor_trait_glyph_dominated_states_pruned"] = trait_glyph.dominated_states_pruned
+        best_payload["emperor_state"] = {
+            "is_emperor": True,
+            "in_home_campaign": True,
+            "home_keeps": _EXTREME_EMPEROR_HOME_KEEPS,
+            "max_resource_percent": 0.75,
+        }
         return best_value, best_payload, tuple(dict.fromkeys(unresolved))
