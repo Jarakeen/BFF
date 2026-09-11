@@ -30,6 +30,7 @@ from services.rotation_recovery_heavy_stabilization_service import (
     RecoveryAwareRotationGenerator,
     RecoveryDisplayedRecoveryResolverFactory,
     RecoveryMaximumEventResolver,
+    RecoveryRestorationResolverFactory,
     RotationRecoveryHeavyStabilizationResult,
 )
 
@@ -114,7 +115,8 @@ class RotationRecoveryHeavyCandidateOrchestrationService:
         resource: ResourceType,
         maximum_amount: int,
         trigger_fraction: float,
-        restoration_resolver: VerifiedRecoveryHeavyRestorationResolver,
+        restoration_resolver: VerifiedRecoveryHeavyRestorationResolver | None = None,
+        restoration_resolver_factory: RecoveryRestorationResolverFactory | None = None,
         reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None,
         max_iterations: int = 6,
         calculation_context: BuildCalculationContext | None = None,
@@ -166,6 +168,7 @@ class RotationRecoveryHeavyCandidateOrchestrationService:
                 maximum_amount=maximum_amount,
                 trigger_fraction=trigger_fraction,
                 restoration_resolver=restoration_resolver,
+                restoration_resolver_factory=restoration_resolver_factory,
                 reserve_assessment_resolver=reserve_assessment_resolver,
                 max_iterations=max_iterations,
                 calculation_context=calculation_context,
