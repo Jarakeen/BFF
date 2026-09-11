@@ -61,6 +61,23 @@ _REVIEWED_GUILD_IRRELEVANT: tuple[tuple[str, str, str], ...] = (
     ("Thieves Guild", "Veil of Shadows", "witness/guard detection range only"),
 )
 
+_REVIEWED_WORLD_IRRELEVANT: tuple[tuple[str, str, str], ...] = (
+    ("Soul Magic", "Soul Lock", "Soul Gem/event trigger only; no maximum-resource modification"),
+    ("Soul Magic", "Soul Shatter", "death-triggered damage only"),
+    ("Soul Magic", "Soul Summons", "resurrection/Soul Gem utility only"),
+    ("Vampire", "Blood Ritual", "Vampire infection interaction only"),
+    ("Vampire", "Dark Stalker", "Sneak movement and entry timing only"),
+    ("Vampire", "Feed", "feeding and Vampire-stage interaction only"),
+    ("Vampire", "Strike from the Shadows", "Weapon/Spell Damage after stealth, invisibility, or Mist Form only"),
+    ("Vampire", "Undeath", "damage-taken mitigation scaling with missing Health only"),
+    ("Vampire", "Unnatural Movement", "sprint cost and invisibility movement state only"),
+    ("Werewolf", "Blood Rage", "Werewolf-form duration extension on damage only"),
+    ("Werewolf", "Call of the Hunt", "Werewolf-form, Ultimate, and form-maintenance runtime mechanics only"),
+    ("Werewolf", "Insatiable Hunger", "healing/current-resource sustain runtime effect; may scale from Max Health but does not modify maxima"),
+    ("Werewolf", "Master of the Chase", "movement/chase utility only"),
+    ("Werewolf", "Shadow of the Bloodmoon", "Werewolf infection interaction only"),
+)
+
 
 def _reviewed_guild_rows() -> tuple[ExtremeResourceSharedPassiveOwnership, ...]:
     return tuple(
@@ -76,8 +93,22 @@ def _reviewed_guild_rows() -> tuple[ExtremeResourceSharedPassiveOwnership, ...]:
     )
 
 
+def _reviewed_world_rows() -> tuple[ExtremeResourceSharedPassiveOwnership, ...]:
+    return tuple(
+        ExtremeResourceSharedPassiveOwnership(
+            domain=ExtremeSkillDomain.WORLD,
+            skill_line=skill_line,
+            passive_name=passive_name,
+            status=ExtremeResourceSharedPassiveOwnershipStatus.PROVEN_IRRELEVANT,
+            source=f"Canonical {skill_line} passive tooltip review",
+            effect_family=effect_family,
+        )
+        for skill_line, passive_name, effect_family in _REVIEWED_WORLD_IRRELEVANT
+    )
+
+
 class ExtremeResourceSharedPassiveOwnershipService:
-    """Resolve exact reviewed guild/alliance/weapon passive ownership."""
+    """Resolve exact reviewed guild/alliance/weapon/world passive ownership."""
 
     SUPPORTED_OBJECTIVES = _SUPPORTED_OBJECTIVES
 
@@ -146,7 +177,7 @@ class ExtremeResourceSharedPassiveOwnershipService:
             source="OneHandShieldPassiveInputResolver",
             effect_family="block mitigation only",
         ),
-    ) + _reviewed_guild_rows()
+    ) + _reviewed_guild_rows() + _reviewed_world_rows()
 
     @staticmethod
     def _normalized(value: object) -> str:
