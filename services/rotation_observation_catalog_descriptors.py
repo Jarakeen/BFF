@@ -94,6 +94,26 @@ ROTATION_OBSERVATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "timing review; candidate audit output cannot be consumed as reviewed policy evidence."
         ),
     ),
+    ServiceDescriptor(
+        service_id="rotation.healer.reviewed_runtime_evidence_composition",
+        domain="rotation",
+        purpose=(
+            "Compose reviewed healer periodic timing consensus with separately reviewed refresh/recast "
+            "policy evidence into consumer-ready runtime observations."
+        ),
+        implementation_path="services.rotation_healer_reviewed_runtime_evidence_loader",
+        inputs=("ReviewedObservationFixture", "ReviewedRefreshPolicyFixture"),
+        outputs=("ReviewedRuntimeObservation",),
+        responsibilities=("rotation_healer_reviewed_runtime_evidence_composition",),
+        roles=("Healer",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.OBSERVATIONAL,
+        notes=(
+            "Composition requires exact skill/component/version matches. Missing or unmatched reviewed "
+            "evidence remains unresolved; the loader does not infer timing or refresh policy."
+        ),
+    ),
 )
 
 
