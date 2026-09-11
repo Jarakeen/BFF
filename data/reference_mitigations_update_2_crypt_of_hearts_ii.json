@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {"entry_name":"Web Cocoon — Ruzozuzalpamaz","mitigation":"Use the synergy immediately to free a cocooned player before role pressure collapses the group."},
+    {"entry_name":"Chasing AoE — Ruzozuzalpamaz","mitigation":"Maintain spacing and do not drag chasing pressure through the group or around the room."},
+    {"entry_name":"Heavy Attack — Ruzozuzalpamaz","mitigation":"Block the heavy attack to avoid the knockback and keep the boss controlled."},
+    {"entry_name":"Skeleton Waves — Brothers Ilambris and Ilambris Amalgam","mitigation":"Tank controls the skeleton waves and the group cleaves them without kiting the encounter around the room."},
+    {"entry_name":"Stomp — Brothers Ilambris and Ilambris Amalgam","mitigation":"Block or step out of the Amalgam's stomp area."},
+    {"entry_name":"Rain of Fire — Brothers Ilambris and Ilambris Amalgam","mitigation":"Keep moving between fire impacts during the low-health enrage while maintaining boss control."},
+    {"entry_name":"Students / Hard Mode — Nerien'eth","mitigation":"Keep four Students alive until Nerien'eth takes the Ebony Blade, then kill them after the hard-mode condition is satisfied."},
+    {"entry_name":"Flying Skull — Nerien'eth","mitigation":"Identify the targeted player and dodge roll the skull projectile rather than stacking into another player."},
+    {"entry_name":"Drain Shield — Nerien'eth","mitigation":"The targeted player uses the resist synergy while the group burns Nerien'eth's damage shield to release them."}
+  ]
+}
