@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "icereach",
+  "encounter_id": "kjarg_the_tuskscraper",
+  "encounter_name": "Kjarg the Tuskscraper",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Kjarg cycles frontal ice pressure, a player-tracking ice tornado, Frost Atronachs, and periodic enrage windows."},"source_type":"guide","source_name":"Alcast Icereach Guide","source_locator":"Kjarg the Tuskscraper","game_update":"U25","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"ice_tornado","value":{"name":"Tracking Ice Tornado","response":"kite_tornado_away_from_boss_front_and_group"},"source_type":"guide","source_name":"Alcast Icereach Guide","source_locator":"Kjarg > ice tornado","game_update":"U25","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"frost_atronachs","value":{"name":"Frost Atronachs","response":"kill_before_stationary_ranged_barrage"},"source_type":"guide","source_name":"Alcast Icereach Guide","source_locator":"Kjarg > Ice Atronachs","game_update":"U25","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"enrage","value":{"name":"Enrage","response":"tank_kites_enraged_kjarg_and_group_avoids_hammer_cones"},"source_type":"guide","source_name":"Alcast Icereach Guide","source_locator":"Kjarg > Enrage","game_update":"U25","confidence":"high"}
+  ]
+}
