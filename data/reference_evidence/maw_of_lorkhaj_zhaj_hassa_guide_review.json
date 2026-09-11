@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "content_id": "maw_of_lorkhaj",
+  "encounter_id": "zhaj_hassa_the_forgotten",
+  "encounter_name": "Zhaj'hassa the Forgotten",
+  "evidence": [
+    {
+      "fact_type": "phase",
+      "fact_key": "main_phase",
+      "value": {"order": 1, "label": "Main Phase", "threshold": "Pull", "description": "The group manages curse placement, pillar placement, and six shared cleanse pads while keeping the boss controlled near center."},
+      "source_type": "guide",
+      "source_name": "Xynode Maw of Lorkhaj Guide",
+      "source_locator": "Zhaj'hassa the Forgotten",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "phase",
+      "fact_key": "escalation_phase",
+      "value": {"order": 2, "label": "Escalating Curse / Pillar Pressure", "threshold": "Fight progression", "description": "Misplaced pillars, wasted cleanse pads, and spreading curses progressively reduce safe space and can turn the encounter into a group wipe."},
+      "source_type": "guide",
+      "source_name": "Xynode Maw of Lorkhaj Guide",
+      "source_locator": "Zhaj'hassa cleanse pads and pillars",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "cleanse_pads",
+      "value": {"name": "Cleanse Pads", "count": 6, "recommended_assignment": "two players per pad"},
+      "source_type": "guide",
+      "source_name": "Xynode Maw of Lorkhaj Guide",
+      "source_locator": "Zhaj'hassa cleanse pads",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "pillar_placement",
+      "value": {"name": "Pillar Placement", "handling": "Hold assigned positions; avoid unnecessary movement that scatters pillars and curses."},
+      "source_type": "guide",
+      "source_name": "Xynode Maw of Lorkhaj Guide",
+      "source_locator": "Zhaj'hassa positioning",
+      "confidence": "medium"
+    }
+  ]
+}
