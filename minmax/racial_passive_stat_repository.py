@@ -28,6 +28,11 @@ class RacialPassiveStatRepository:
     """
 
     NONCOMBAT_PASSIVE_NAMES = frozenset({
+        "amphibian",
+        "craftsman",
+        "cutpurse",
+        "diplomat",
+        "highborn",
         "opportunist",
     })
 
@@ -85,17 +90,35 @@ class RacialPassiveStatRepository:
             return stats, boundaries, unresolved
 
         patterns: tuple[tuple[str, tuple[str, ...]], ...] = (
-            (rf"Increases your Max Health by {_NUMBER}", ("max_health",)),
-            (rf"Increases your Max Magicka by {_NUMBER}", ("max_magicka",)),
-            (rf"Increases your Max Stamina by {_NUMBER}", ("max_stamina",)),
-            (rf"Increases your Health Recovery by {_NUMBER}", ("health_recovery",)),
-            (rf"Increases your Magicka Recovery by {_NUMBER}", ("magicka_recovery",)),
-            (rf"Increases your Stamina Recovery by {_NUMBER}", ("stamina_recovery",)),
-            (rf"Increases your Weapon and Spell Damage by {_NUMBER}", ("weapon_damage", "spell_damage")),
-            (rf"Increases your Spell Damage by {_NUMBER}", ("spell_damage",)),
-            (rf"Increases your Weapon Damage by {_NUMBER}", ("weapon_damage",)),
-            (rf"Increases your Spell Resistance by {_NUMBER}", ("spell_resistance",)),
-            (rf"Increases your Physical Resistance by {_NUMBER}", ("physical_resistance",)),
+            (
+                rf"Increases? your Max Magicka and Max Stamina by {_NUMBER}",
+                ("max_magicka", "max_stamina"),
+            ),
+            (
+                rf"Increases? your (?:Max|Maximum) Health, (?:Max|Maximum )?Magicka, and (?:Max|Maximum )?Stamina by {_NUMBER}",
+                ("max_health", "max_magicka", "max_stamina"),
+            ),
+            (
+                rf"Increases? your Health, Magicka, and Stamina Recovery by {_NUMBER}",
+                ("health_recovery", "magicka_recovery", "stamina_recovery"),
+            ),
+            (rf"Increases? your Max Health by {_NUMBER}", ("max_health",)),
+            (rf"Increases? your Max Magicka by {_NUMBER}", ("max_magicka",)),
+            (rf"Increases? your Max Stamina by {_NUMBER}", ("max_stamina",)),
+            (rf"Increases? your Health Recovery by {_NUMBER}", ("health_recovery",)),
+            (rf"Increases? your Magicka Recovery by {_NUMBER}", ("magicka_recovery",)),
+            (rf"Increases? your Stamina Recovery by {_NUMBER}", ("stamina_recovery",)),
+            (rf"Increases? your Healing Done by {_NUMBER}%", ("healing_done_percent",)),
+            (rf"Increases? your Flame Resistance by {_NUMBER}", ("flame_resistance",)),
+            (
+                rf"Increases? your Physical and Spell Penetration by {_NUMBER}",
+                ("physical_penetration", "spell_penetration"),
+            ),
+            (rf"Increases? your Weapon and Spell Damage by {_NUMBER}", ("weapon_damage", "spell_damage")),
+            (rf"Increases? your Spell Damage by {_NUMBER}", ("spell_damage",)),
+            (rf"Increases? your Weapon Damage by {_NUMBER}", ("weapon_damage",)),
+            (rf"Increases? your Spell Resistance by {_NUMBER}", ("spell_resistance",)),
+            (rf"Increases? your Physical Resistance by {_NUMBER}", ("physical_resistance",)),
         )
 
         matched_any = False
