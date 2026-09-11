@@ -74,20 +74,20 @@ def test_checked_in_registry_keeps_newest_first_release_slices_and_main_encounte
     ):
         assert len(by_content[content_id]) == 3
     assert len(by_content["the_cauldron"]) == 4
-    assert len(by_content["castle_thorn"]) == 5
-    assert len(by_content["icereach"]) == 5
-    assert len(by_content["unhallowed_grave"]) == 5
-    assert len(by_content["moongrave_fane"]) == 5
-    assert len(by_content["lair_of_maarselok"]) == 5
-    assert len(by_content["depths_of_malatar"]) == 5
-    assert len(by_content["frostvault"]) == 5
+    for content_id in (
+        "castle_thorn", "icereach", "unhallowed_grave", "moongrave_fane",
+        "lair_of_maarselok", "depths_of_malatar", "frostvault",
+        "moon_hunter_keep", "march_of_sacrifices",
+    ):
+        assert len(by_content[content_id]) == 5
 
     assert {row.release_key for row in rows} == {
         (2025, 47), (2025, 45), (2024, 41), (2023, 37), (2022, 35), (2022, 33),
         (2021, 31), (2021, 29), (2020, 27), (2020, 25), (2019, 23), (2019, 21),
+        (2018, 19),
     }
     assert rows[0].release_key == (2025, 47)
-    assert rows[-1].release_key == (2019, 21)
+    assert rows[-1].release_key == (2018, 19)
 
     all_ids = {row.encounter_id for row in rows}
 
@@ -167,3 +167,16 @@ def test_checked_in_registry_keeps_newest_first_release_slices_and_main_encounte
     assert frostvault["icestalker"].member_ids == ("icestalker",)
     assert not (data_root / "eso_info" / "bosses" / "icestalker.json").exists()
     assert "riekling" not in all_ids and "avalanche" not in all_ids and "dwarven_colossus" not in all_ids and "wrathstone" not in all_ids
+
+    assert {row.encounter_id for row in by_content["moon_hunter_keep"]} == {
+        "jailer_melitus", "hedge_maze_guardian", "mylenne_moon_caller", "archivist_ernarde", "vykosa_the_ascendant"
+    }
+    assert "imperial" not in all_ids and "man_beast" not in all_ids and "lurcher" not in all_ids
+    assert "khajiit" not in all_ids and "werewolf_lord" not in all_ids
+
+    march = {row.encounter_id: row for row in by_content["march_of_sacrifices"]}
+    assert set(march) == {"wyrd_sisters", "aghaedh_of_the_solstice", "dagrund_the_bulky", "tarcyr", "balorgh"}
+    assert march["wyrd_sisters"].member_ids == ("wyress_rangifer", "wyress_strigidae", "wyress_ursus")
+    assert "wyress_rangifer" not in all_ids and "wyress_strigidae" not in all_ids and "wyress_ursus" not in all_ids
+    assert "glenmoril_wyrd" not in all_ids and "spriggan" not in all_ids and "werebear" not in all_ids
+    assert "indrik" not in all_ids and "werewolf_behemoth" not in all_ids
