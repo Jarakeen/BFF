@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "fungal_grotto_ii",
+  "encounter_id": "vila_theran",
+  "encounter_name": "Vila Theran",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Shadow Main Phase","threshold":"100% to 0%","description":"Group corruption zones deliberately and resolve Channeled Shadow either through coordinated healing or the Obsidian Husk shelter."},"source_type":"guide","source_name":"Alcast Fungal Grotto II Guide","source_locator":"Vila Theran","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"growing_corruption","value":{"name":"Growing Corruption","response":"stack_for_placement_then_move_together_to_preserve_safe_room_space"},"source_type":"guide","source_name":"Alcast Fungal Grotto II Guide","source_locator":"Vila Theran","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"channeled_shadow","value":{"name":"Channeled Shadow","response":"use_obsidian_husk_shelter_or_stack_for_healing_and_survive_the_beam_channel"},"source_type":"achievement","source_name":"Fearless Assaulter","source_locator":"Fungal Grotto II achievement","game_update":"Launch","confidence":"high"}
+  ]
+}
