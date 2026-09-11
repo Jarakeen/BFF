@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {"entry_name":"Pin / Charged Execution — Jailer Melitus","mitigation":"Interrupt Melitus immediately when he pins a player; do not let the charged execution complete."},
+    {"entry_name":"Bloody Geysers — Jailer Melitus","mitigation":"Keep moving during the ground sequence and avoid persistent geysers rather than stacking them under the group."},
+    {"entry_name":"Strangler Snare — Hedge Maze Guardian","mitigation":"Move through the maze together enough to interrupt a snared player immediately while the group searches for healing Spriggans."},
+    {"entry_name":"Lurcher Roots — Hedge Maze Guardian","mitigation":"Watch the root attack and preserve movement lanes instead of letting multiple players get immobilized during the maze phases."},
+    {"entry_name":"Pounce Pin — Mylenne Moon-Caller","mitigation":"Interrupt Mylenne immediately when she pins a player; burn werewolf adds between pin windows."},
+    {"entry_name":"Shock Warden Lightning — Mylenne Moon-Caller","mitigation":"Stay out of lightning pools and spread personal lightning strikes so they do not overlap teammates."},
+    {"entry_name":"Symbols of Xarxes — Archivist Ernarde","mitigation":"Wait for Ernarde to settle on the final symbol, then each player moves to a matching rune before the check resolves."},
+    {"entry_name":"Werewolf Add Waves — Vykosa the Ascendant","mitigation":"Stop forcing boss damage when add waves land. Kill dangerous werewolves and stabilize before pushing the next health threshold."},
+    {"entry_name":"Restrained Wolves — Vykosa the Ascendant","mitigation":"Tank and control wolf pressure away from the group, especially when Hard Mode overlaps release them with other mechanics."},
+    {"entry_name":"Sister Auras — Wyrd Sisters","mitigation":"Keep the sisters separated so their colored auras do not augment one another; focus one target at a time."},
+    {"entry_name":"Seasonal Colors — Aghaedh of the Solstice","mitigation":"Collect the seasonal color from the small Spriggans and stand in the matching safe circle when Aghaedh channels."},
+    {"entry_name":"Lurcher Adds — Aghaedh of the Solstice","mitigation":"Tank and cleave Lurchers promptly so add pressure does not overlap the next seasonal shelter check."},
+    {"entry_name":"Upheaval — Dagrund the Bulky","mitigation":"After Dagrund leaps, block or dodge the homing elemental attack. Do not try to simply outrun it."},
+    {"entry_name":"Elemental Adds — Dagrund the Bulky","mitigation":"Prioritize elemental adds before their persistent fire zones and snares accumulate around the group."},
+    {"entry_name":"Shrouding Mist — Tarcyr","mitigation":"Enter stealth for the hunt, spread through the room, preserve stamina, and use the friendly wisp without being detected."},
+    {"entry_name":"Lightning Prance — Tarcyr","mitigation":"Interrupt immediately. Allowing Lightning Prance to finish can wipe the group."},
+    {"entry_name":"Lightning Water — Balorgh","mitigation":"Move onto a safe island when the water becomes electrified."},
+    {"entry_name":"Poison Plants — Balorgh","mitigation":"Respect poison-plant zones and use the water when required by the spore cycle instead of standing in the contaminated ground."},
+    {"entry_name":"Fire Remnant — Balorgh","mitigation":"Keep clear of Fire Remnant pathing during Hard Mode; avoiding it is required for Perfect Hunt."}
+  ]
+}
