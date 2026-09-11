@@ -310,6 +310,23 @@ class ExtremeResourceSharedPassiveOwnershipService:
             cls._normalized(passive.skill_line),
             cls._normalized(passive.name),
         )
+        magicka_controller = (
+            ExtremeSkillDomain.GUILD,
+            "mages guild",
+            "magicka controller",
+        )
+        if target == magicka_controller:
+            if key == "max_magicka":
+                return None
+            return ExtremeResourceSharedPassiveOwnership(
+                domain=ExtremeSkillDomain.GUILD,
+                skill_line="Mages Guild",
+                passive_name="Magicka Controller",
+                status=ExtremeResourceSharedPassiveOwnershipStatus.PROVEN_IRRELEVANT,
+                source="GuildPassiveInputResolver",
+                effect_family="active-bar Max Magicka and Magicka Recovery percentage only",
+            )
+
         for row in cls._ROWS:
             identity = (
                 row.domain,
