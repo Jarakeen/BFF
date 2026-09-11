@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "fungal_grotto_ii",
+  "encounter_id": "spawn_of_mephala",
+  "encounter_name": "Spawn of Mephala",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Portal Main Phase","threshold":"100% to 0%","description":"Control who is closest to the cave portal, handle the below-ground spider room, and kite surface beam pressure."},"source_type":"guide","source_name":"Alcast Fungal Grotto II Guide","source_locator":"Spawn of Mephala","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"portal_pull","value":{"name":"Portal Pull","response":"assign_or_control_the_player_nearest_the_portal_then_clear_or_survive_the_spider_room_until_release"},"source_type":"guide","source_name":"Alcast Fungal Grotto II Guide","source_locator":"Spawn of Mephala","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"tracking_beam","value":{"name":"Tracking Beam","response":"kite_the_surface_beam_away_from_teammates_and_avoid_its_explosion"},"source_type":"guide","source_name":"Alcast Fungal Grotto II Guide","source_locator":"Spawn of Mephala","game_update":"Launch","confidence":"high"}
+  ]
+}
