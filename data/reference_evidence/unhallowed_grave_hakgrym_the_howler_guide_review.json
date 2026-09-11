@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "unhallowed_grave",
+  "encounter_id": "hakgrym_the_howler",
+  "encounter_name": "Hakgrym the Howler",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"human","value":{"order":1,"label":"Human Phase","threshold":"Opening to apparent defeat","description":"Hakgrym uses heavy attacks, Lich Crystals, damage totems, wolves, and Flesh Abominations before transforming."},"source_type":"guide","source_name":"Xynode Unhallowed Grave Guide","source_locator":"Hakgrym the Howler","game_update":"U25","confidence":"high"},
+    {"fact_type":"phase","fact_key":"werewolf","value":{"order":2,"label":"Werewolf Transformation","threshold":"After first health bar","description":"Hakgrym transforms into a Hulking Werewolf and adds stomps and charge pressure while earlier mechanics persist."},"source_type":"guide","source_name":"Xynode Unhallowed Grave Guide","source_locator":"Hakgrym > Transformation","game_update":"U25","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"totem","value":{"name":"Damage Totem","response":"focus_destroy_totem_before_group_damage_ramps"},"source_type":"guide","source_name":"Xynode Unhallowed Grave Guide","source_locator":"Hakgrym > Totem","game_update":"U25","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"flesh_abominations","value":{"name":"Flesh Abominations","response":"kill_spawned_abominations_before_overlapping_multiple_slams"},"source_type":"guide","source_name":"Xynode Unhallowed Grave Guide","source_locator":"Hakgrym > Flesh Abominations","game_update":"U25","confidence":"high"}
+  ]
+}
