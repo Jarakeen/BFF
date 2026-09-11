@@ -1,5 +1,7 @@
 from types import SimpleNamespace
 
+import pytest
+
 from minmax.character_build.character_class import CharacterClass
 from models.build_model import PlayerBuild
 from services.class_mastery_repository import ClassMasteryPassive
@@ -33,7 +35,7 @@ def _route(*, base_class, lines, mastery_allowed, subclassed=False):
     )
 
 
-def test_daedric_summoning_route_selects_permanent_pet_health_witness():
+def test_daedric_summoning_and_green_balance_stack_reviewed_health_witnesses():
     service = ExtremeResourceMaxHealthRuntimeStateService(
         mastery_repository=_MasteryRepository()
     )
@@ -50,9 +52,33 @@ def test_daedric_summoning_route_selects_permanent_pet_health_witness():
     assert catalog.unresolved == ()
     state = catalog.states[0]
     assert state.permanent_pet_active is True
-    assert state.reviewed_percent_bonus == 0.05
+    assert state.maturation_minor_toughness_active is True
+    assert state.reviewed_percent_bonus == pytest.approx(0.15)
     assert state.nothing_wasted_stacks == 0
     assert state.class_mastery_ability_ids == ()
+    assert "Maturation" in state.label
+    assert any("Green Balance" in condition for condition in state.conditions)
+
+
+def test_green_balance_route_selects_maturation_minor_toughness_witness():
+    service = ExtremeResourceMaxHealthRuntimeStateService(
+        mastery_repository=_MasteryRepository()
+    )
+    route = _route(
+        base_class=CharacterClass.WARDEN,
+        lines=("animal_companions", "green_balance", "winters_embrace"),
+        mastery_allowed=True,
+    )
+
+    catalog = service.build(route)
+
+    assert catalog.denominator_proven is True
+    assert catalog.unresolved == ()
+    state = catalog.states[0]
+    assert state.permanent_pet_active is False
+    assert state.maturation_minor_toughness_active is True
+    assert state.reviewed_percent_bonus == pytest.approx(0.10)
+    assert state.label == "Maturation Minor Toughness"
 
 
 def test_pure_necromancer_selects_nothing_wasted_ten_stack_witness():
@@ -70,6 +96,7 @@ def test_pure_necromancer_selects_nothing_wasted_ten_stack_witness():
     assert catalog.denominator_proven is True
     state = catalog.states[0]
     assert state.permanent_pet_active is False
+    assert state.maturation_minor_toughness_active is False
     assert state.nothing_wasted_stacks == 10
     assert state.class_mastery_ability_ids == (987654,)
     assert state.reviewed_percent_bonus == 0.20
@@ -77,13 +104,13 @@ def test_pure_necromancer_selects_nothing_wasted_ten_stack_witness():
     assert build.ClassMasteryAbilityIds == [987654]
 
 
-def test_unrelated_route_keeps_zero_runtime_witness():
+def test_route_without_reviewed_health_runtime_effect_keeps_zero_witness():
     service = ExtremeResourceMaxHealthRuntimeStateService(
         mastery_repository=_MasteryRepository()
     )
     route = _route(
-        base_class=CharacterClass.WARDEN,
-        lines=("animal_companions", "green_balance", "winters_embrace"),
+        base_class=CharacterClass.TEMPLAR,
+        lines=("aedric_spear", "dawns_wrath", "restoring_light"),
         mastery_allowed=True,
     )
 
@@ -93,6 +120,7 @@ def test_unrelated_route_keeps_zero_runtime_witness():
     state = catalog.states[0]
     assert state.reviewed_percent_bonus == 0.0
     assert state.permanent_pet_active is False
+    assert state.maturation_minor_toughness_active is False
     assert state.nothing_wasted_stacks == 0
 
 
