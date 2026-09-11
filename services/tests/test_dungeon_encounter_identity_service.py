@@ -100,10 +100,29 @@ def test_checked_in_registry_keeps_newest_first_release_slices_and_main_encounte
     assert len(by_content["black_gem_foundry"]) == 3
     assert len(by_content["exiled_redoubt"]) == 3
     assert len(by_content["lep_seclusa"]) == 3
-    assert {row.release_key for row in rows} == {(2025, 47), (2025, 45)}
+    assert len(by_content["oathsworn_pit"]) == 3
+    assert len(by_content["bedlam_veil"]) == 3
+    assert {row.release_key for row in rows} == {(2025, 47), (2025, 45), (2024, 41)}
     assert rows[0].release_key == (2025, 47)
-    assert rows[-1].release_key == (2025, 45)
+    assert rows[-1].release_key == (2024, 41)
 
     naj = {row.encounter_id: row for row in by_content["naj_caldeesh"]}
     assert naj["talen_lah"].member_ids == ("talen_lah", "bar_sakka")
     assert "bar_sakka" not in {row.encounter_id for row in rows}
+
+    oathsworn = {row.encounter_id: row for row in by_content["oathsworn_pit"]}
+    assert oathsworn["packmaster_rethelros"].member_ids == (
+        "packmaster_rethelros",
+        "malthil",
+    )
+    assert oathsworn["anthelmir_s_construct"].member_ids == (
+        "anthelmir_s_construct",
+        "anthelmir",
+    )
+    assert "malthil" not in {row.encounter_id for row in rows}
+    assert "anthelmir" not in {row.encounter_id for row in rows}
+
+    bedlam_ids = {row.encounter_id for row in by_content["bedlam_veil"]}
+    assert bedlam_ids == {"shattered_champion", "darkshard", "the_blind"}
+    assert "crystal_atronach" not in {row.encounter_id for row in rows}
+    assert "mind_terror" not in {row.encounter_id for row in rows}
