@@ -11,12 +11,19 @@ positive amount to the requested maximize objective.
 For Extreme max-resource work the default resolver is the reviewed resource
 adapter, which delegates to the shared resolver first and adds only explicit
 resource patterns.  Unknown mechanics remain proof blockers.
+
+Relevance and executable projection are deliberately separate contracts.  A
+reviewed positive target-stat effect can be known to belong in the denominator
+even when its condition or percentage stacking still prevents exact scoring.
+Those execution blockers remain on the candidate, but they do not make the
+*relevance* denominator unknown.
 """
 
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
+from minmax.effects import EffectOperation
 from minmax.gear_set_repository import GearSetRepository
 from services.extreme_gear_set_bonus_breakpoint_service import (
     ExtremeGearSetBonusBreakpointCatalog,
@@ -97,6 +104,11 @@ class ExtremeGearSetObjectiveRelevanceCatalog:
 class ExtremeGearSetObjectiveRelevanceService:
     """Build proof-safe objective relevance evidence at every set-bonus breakpoint."""
 
+    _RELEVANCE_ONLY_BLOCKER_FRAGMENTS = (
+        "relevant set effect requires condition",
+        "relevant percentage set effect requires objective-specific stacking/reference review",
+    )
+
     def __init__(
         self,
         repository: GearSetRepository,
@@ -105,6 +117,38 @@ class ExtremeGearSetObjectiveRelevanceService:
     ) -> None:
         self.repository = repository
         self.resolver = resolver or ExtremeGearSetResourceEffectResolver()
+
+    @classmethod
+    def _positive_target_effect_is_reviewed(
+        cls,
+        candidate: ExtremeGearSetObjectiveCandidate,
+        objective_key: str,
+    ) -> bool:
+        """Prove denominator relevance without pretending exact scoring is done.
+
+        This applies only when every candidate blocker is a known projection-only
+        blocker (condition or percentage reference semantics), and a resolved
+        target-stat effect is explicitly positive. Unknown active bonuses still
+        fail closed.
+        """
+
+        if not candidate.unresolved:
+            return False
+        if any(
+            not any(fragment in message for fragment in cls._RELEVANCE_ONLY_BLOCKER_FRAGMENTS)
+            for message in candidate.unresolved
+        ):
+            return False
+
+        target_stats = ExtremeGearSetObjectiveService._target_stats(objective_key)
+        for effect in candidate.source_effects:
+            if effect.stat not in target_stats:
+                continue
+            if effect.operation not in {EffectOperation.ADD, EffectOperation.ADD_PERCENT}:
+                continue
+            if float(effect.value) > 0.0:
+                return True
+        return False
 
     def build(
         self,
@@ -134,8 +178,11 @@ class ExtremeGearSetObjectiveRelevanceService:
                     resolver=self.resolver,
                 )
                 if candidate.unresolved:
-                    status = ExtremeGearSetObjectiveRelevance.UNRESOLVED
-                    unresolved.extend(candidate.unresolved)
+                    if self._positive_target_effect_is_reviewed(candidate, key):
+                        status = ExtremeGearSetObjectiveRelevance.RELEVANT
+                    else:
+                        status = ExtremeGearSetObjectiveRelevance.UNRESOLVED
+                        unresolved.extend(candidate.unresolved)
                 elif candidate.reviewed_delta > 1e-12:
                     status = ExtremeGearSetObjectiveRelevance.RELEVANT
                 else:
