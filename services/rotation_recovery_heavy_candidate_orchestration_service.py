@@ -7,6 +7,9 @@ from minmax.build_calculation_context import BuildCalculationContext
 from minmax.resource_costs import ResourceType
 from minmax.rotation_plan import RotationPlan
 from models.build_model import PlayerBuild
+from services.rotation_plan_runtime_combat_state_service import (
+    RotationPlanRuntimeCombatStateResult,
+)
 from services.rotation_recovery_heavy_candidate_selection_service import (
     RecoveryFinalCandidateEvaluation,
     RecoveryStabilizedCandidateInput,
@@ -31,6 +34,16 @@ from services.rotation_recovery_heavy_stabilization_service import (
 )
 
 
+RecoveryRuntimeCombatStateResolver = Callable[
+    [float, int | None],
+    RotationPlanRuntimeCombatStateResult,
+]
+RecoveryRuntimeCombatStateResolverFactory = Callable[
+    [RotationPlan],
+    RecoveryRuntimeCombatStateResolver,
+]
+
+
 @dataclass(frozen=True)
 class RecoveryHeavyCandidateOrchestrationInput:
     """One candidate policy that can regenerate under recovery pressure."""
@@ -48,12 +61,19 @@ class RecoveryHeavyCandidateOrchestrationInput:
 
 @dataclass(frozen=True)
 class RecoveryHeavyStabilizedCandidateSnapshot:
-    """Final stabilized execution evidence supplied to family-level ranking."""
+    """Final stabilized execution evidence supplied to family-level ranking.
+
+    ``runtime_combat_state_resolver`` is bound only after the candidate plan reaches
+    its final stabilized form. Family-level scorecards and role-output evaluators may
+    therefore ask for exact time/sequence state without accidentally consulting the
+    seed schedule or rebuilding bar/runtime history independently.
+    """
 
     candidate_id: str
     plan: RotationPlan
     replay: RotationRecoveryHeavyReplay
     stabilization: RotationRecoveryHeavyStabilizationResult
+    runtime_combat_state_resolver: RecoveryRuntimeCombatStateResolver | None = None
 
 
 RecoveryFinalFamilyEvaluator = Callable[
@@ -100,6 +120,7 @@ class RotationRecoveryHeavyCandidateOrchestrationService:
         calculation_context: BuildCalculationContext | None = None,
         maximum_event_resolver: RecoveryMaximumEventResolver | None = None,
         displayed_recovery_resolver_factory: RecoveryDisplayedRecoveryResolverFactory | None = None,
+        runtime_combat_state_resolver_factory: RecoveryRuntimeCombatStateResolverFactory | None = None,
     ) -> RotationRecoveryHeavyCandidateOrchestrationResult:
         if not candidates:
             return RotationRecoveryHeavyCandidateOrchestrationResult(
@@ -151,12 +172,18 @@ class RotationRecoveryHeavyCandidateOrchestrationService:
                 maximum_event_resolver=maximum_event_resolver,
                 displayed_recovery_resolver_factory=displayed_recovery_resolver_factory,
             )
+            runtime_resolver = (
+                None
+                if runtime_combat_state_resolver_factory is None
+                else runtime_combat_state_resolver_factory(stabilization.plan)
+            )
             stabilized.append(
                 RecoveryHeavyStabilizedCandidateSnapshot(
                     candidate_id=candidate.candidate_id,
                     plan=stabilization.plan,
                     replay=stabilization.replay,
                     stabilization=stabilization,
+                    runtime_combat_state_resolver=runtime_resolver,
                 )
             )
 
@@ -220,6 +247,8 @@ __all__ = [
     "RecoveryFinalFamilyEvaluator",
     "RecoveryHeavyCandidateOrchestrationInput",
     "RecoveryHeavyStabilizedCandidateSnapshot",
+    "RecoveryRuntimeCombatStateResolver",
+    "RecoveryRuntimeCombatStateResolverFactory",
     "RotationRecoveryHeavyCandidateOrchestrationResult",
     "RotationRecoveryHeavyCandidateOrchestrationService",
 ]
