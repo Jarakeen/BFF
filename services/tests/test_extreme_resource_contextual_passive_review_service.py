@@ -43,38 +43,43 @@ def test_max_health_review_marks_bar_and_runtime_passives_applied():
     assert "75%" in rows["Emperor"].condition
 
 
-def test_max_magicka_review_marks_joint_bar_passives_applied():
+def test_max_magicka_review_marks_joint_bar_and_blood_magic_runtime_applied():
     rows = _by_name("max_magicka")
 
     assert set(rows) == {
+        "Blood Magic",
         "Emperor",
         "Expert Summoner",
         "Magicka Flood",
         "Magicka Controller",
         "Undaunted Mettle",
     }
-    assert rows["Expert Summoner"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
-    assert rows["Magicka Flood"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
-    assert rows["Magicka Controller"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
-    assert rows["Undaunted Mettle"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
-    assert rows["Emperor"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
+    assert all(
+        row.status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
+        for row in rows.values()
+    )
     assert rows["Magicka Flood"].source == "NightbladePassiveInputResolver"
     assert rows["Magicka Controller"].source == "GuildPassiveInputResolver"
+    assert "BloodMagic" in rows["Blood Magic"].source
     assert rows["Undaunted Mettle"].source == "ExtremeHypotheticalUndauntedProgressionService"
     assert "EmperorPassiveInputResolver" in rows["Emperor"].source
     assert "jointly" in rows["Magicka Flood"].condition.casefold()
     assert "jointly" in rows["Magicka Controller"].condition.casefold()
+    assert "positive-cost" in rows["Blood Magic"].condition.casefold()
+    assert "pre-window" in rows["Blood Magic"].condition.casefold()
 
 
-def test_max_stamina_review_marks_siphoning_bar_trigger_applied():
+def test_max_stamina_review_marks_siphoning_and_blood_magic_runtime_applied():
     rows = _by_name("max_stamina")
 
-    assert set(rows) == {"Emperor", "Expert Summoner", "Magicka Flood", "Undaunted Mettle"}
-    assert rows["Expert Summoner"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
-    assert rows["Magicka Flood"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
-    assert rows["Undaunted Mettle"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
-    assert rows["Emperor"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
+    assert set(rows) == {"Blood Magic", "Emperor", "Expert Summoner", "Magicka Flood", "Undaunted Mettle"}
+    assert all(
+        row.status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
+        for row in rows.values()
+    )
     assert "one legal siphoning" in rows["Magicka Flood"].condition.casefold()
+    assert "positive-cost" in rows["Blood Magic"].condition.casefold()
+    assert "pre-window" in rows["Blood Magic"].condition.casefold()
     assert "six-home-keep" in rows["Emperor"].condition.casefold()
 
 
