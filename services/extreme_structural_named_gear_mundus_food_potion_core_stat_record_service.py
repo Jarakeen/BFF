@@ -106,6 +106,9 @@ _RESOURCE_REMAINING_GLYPH_AFTER_JEWELRY_AXIS = "weapon glyphs/enchants"
 _RESOURCE_REMAINING_PASSIVE_AXIS = (
     "remaining class/skill/armor/weapon/guild passive ranks excluding reviewed max-rank Undaunted Mettle"
 )
+_RESOURCE_REMAINING_PASSIVE_AFTER_JUGGERNAUT_AXIS = (
+    "remaining class/skill/armor/weapon/guild passive ranks excluding reviewed max-rank Undaunted Mettle and Juggernaut"
+)
 _GEAR_SCOPE = (
     "all objective-surviving canonical named gear-set breakpoint assignments "
     "with proven active-snapshot physical slot witnesses"
@@ -131,6 +134,9 @@ _RESOURCE_WEAPON_IRRELEVANCE_SCOPE = (
 )
 _RESOURCE_UNDAUNTED_SCOPE = (
     "reviewed canonical max-rank Undaunted Mettle applied through shared passive mechanics"
+)
+_RESOURCE_JUGGERNAUT_SCOPE = (
+    "reviewed canonical max-rank Juggernaut applied through shared Heavy Armor piece-count mechanics"
 )
 
 
@@ -301,6 +307,8 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
         searched_parts = [*result.structural_scope, _GEAR_SCOPE]
         if resource_armor:
             searched_parts.extend((_RESOURCE_ARMOR_SCOPE, _RESOURCE_UNDAUNTED_SCOPE))
+            if key == "max_health":
+                searched_parts.append(_RESOURCE_JUGGERNAUT_SCOPE)
             if jewelry_state is not None:
                 searched_parts.append(_RESOURCE_JEWELRY_STATIC_TRAIT_SCOPE)
             if jewelry_glyph_audit and jewelry_glyph_audit.objective_irrelevance_proven:
@@ -351,7 +359,11 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
                 )
                 continue
             if axis == _PASSIVE_DEFERRED_AXIS and resource_armor:
-                omitted_rows.append(_RESOURCE_REMAINING_PASSIVE_AXIS)
+                omitted_rows.append(
+                    _RESOURCE_REMAINING_PASSIVE_AFTER_JUGGERNAUT_AXIS
+                    if key == "max_health"
+                    else _RESOURCE_REMAINING_PASSIVE_AXIS
+                )
                 continue
             omitted_rows.append(axis)
         omitted = tuple(omitted_rows)
@@ -489,6 +501,10 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
             explanation_rows.append(
                 f"Armor-weight legality reviewed all {weight_catalog.raw_loadouts_reviewed:,} seven-slot Light/Medium/Heavy loadouts and preserved one continuation witness for each 1/2/3 armor-type count. Reviewed max-rank Undaunted Mettle is applied canonically to those witnesses; other passive ranks remain separate."
             )
+            if key == "max_health":
+                explanation_rows.append(
+                    "Reviewed max-rank Juggernaut is applied canonically through the shared Heavy Armor piece-count resolver for every searched max-Health armor witness."
+                )
             if jewelry_trait_catalog is not None:
                 explanation_rows.append(
                     f"Jewelry static-trait review covered {jewelry_trait_catalog.raw_loadouts_reviewed:,} CP160 Gold Necklace/Ring/Ring loadouts and retained the strongest resource continuation at {jewelry_state.direct_delta if jewelry_state is not None else 0:g} flat resource. Glyph-dependent/unreviewed jewelry traits remain separate."
