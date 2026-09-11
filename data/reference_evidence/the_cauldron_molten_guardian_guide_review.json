@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "the_cauldron",
+  "encounter_id": "molten_guardian",
+  "encounter_name": "Molten Guardian",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main Phase / Fiend Cycles","threshold":"Pull to death","description":"The Guardian remains a melee-positioning fight while Molten Fiends and repeated eruption pressure accumulate."},"source_type":"guide","source_name":"Alcast The Cauldron Guide","source_locator":"Molten Guardian","game_update":"U50","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"magmatic_eruption","value":{"name":"Magmatic Eruption","response":"tank_stays_in_melee_range_or_interrupts_as_required_to_prevent_group_pressure","achievement":"Curtain of Fire tracks consecutive eruption ticks"},"source_type":"guide","source_name":"ESO-Hub The Cauldron Achievements","source_locator":"Curtain of Fire","game_update":"U50","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"molten_fiends","value":{"name":"Molten Fiends","response":"focus_summoned_fiends_before_their_ranged_pressure_overwhelms_the_group"},"source_type":"guide","source_name":"Alcast The Cauldron Guide","source_locator":"Molten Guardian","game_update":"U50","confidence":"medium"}
+  ]
+}
