@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "content_id": "sanity_s_edge",
+  "encounter_id": "archwizard_twelvane",
+  "encounter_name": "Archwizard Twelvane",
+  "evidence": [
+    {
+      "fact_type": "phase",
+      "fact_key": "twelvane_phase",
+      "value": {
+        "order": 1,
+        "starts_at": "Start",
+        "label": "Archwizard Twelvane",
+        "description": "Timer-based opening phase. Coruscating Fields begin within the opening seconds; avoid stacking her floor hazards."
+      },
+      "source_type": "guide",
+      "source_name": "AlcastHQ Sanity's Edge Trial Guide by SGTsanttu",
+      "source_locator": "Boss 2 - Archwizard Twelvane",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "phase",
+      "fact_key": "control_pathways_phase",
+      "value": {
+        "order": 2,
+        "starts_at": "After Twelvane",
+        "label": "Control Pathways",
+        "description": "Radiance assigns Lion, Gryphon, or Wamasu. Players have 15 seconds to enter the matching pathway and reproduce the crystal sequence."
+      },
+      "source_type": "guide",
+      "source_name": "AlcastHQ Sanity's Edge Trial Guide by SGTsanttu",
+      "source_locator": "Boss 2 - Control Pathways",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "phase",
+      "fact_key": "chimera_phase",
+      "value": {
+        "order": 3,
+        "starts_at": "Asterisms aligned",
+        "label": "Chimera",
+        "description": "Chimera becomes active for up to 90 seconds. Main sequence: Chain Circuit, Arctic Blast, Lightning Bolt, Arctic Blast, Inferno."
+      },
+      "source_type": "guide",
+      "source_name": "AlcastHQ Sanity's Edge Trial Guide by SGTsanttu",
+      "source_locator": "Boss 2 - Chimera",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "radiance_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "AlcastHQ Sanity's Edge Trial Guide by SGTsanttu",
+      "source_locator": "Control Pathways - Radiance",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "radiance_behavior",
+      "value": {
+        "duration_seconds": 15,
+        "requires_matching_pathway": true,
+        "failure_result": "death"
+      },
+      "source_type": "guide",
+      "source_name": "AlcastHQ Sanity's Edge Trial Guide by SGTsanttu",
+      "source_locator": "Control Pathways - Radiance",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "crystal_sequence_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "AlcastHQ Sanity's Edge Trial Guide by SGTsanttu",
+      "source_locator": "Control Pathways - Crystal",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "crystal_sequence_behavior",
+      "value": {
+        "normal_crystals": 3,
+        "veteran_crystals": 4,
+        "hardmode_crystals": 5,
+        "must_repeat_activation_order": true,
+        "recommended_attack": "ranged_light_attack"
+      },
+      "source_type": "guide",
+      "source_name": "AlcastHQ Sanity's Edge Trial Guide by SGTsanttu",
+      "source_locator": "Control Pathways - Crystal",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "chain_circuit_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "AlcastHQ Sanity's Edge Trial Guide by SGTsanttu",
+      "source_locator": "Chimera - Chain Circuit",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "chain_circuit_behavior",
+      "value": {
+        "normal_targets": 3,
+        "veteran_targets": 6,
+        "hardmode_targets": 6,
+        "hardmode_circuit_charge_seconds": 30,
+        "repeat_hit_with_charge_can_be_fatal": true
+      },
+      "source_type": "guide",
+      "source_name": "AlcastHQ Sanity's Edge Trial Guide by SGTsanttu",
+      "source_locator": "Chimera - Chain Circuit",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "arctic_blast_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "AlcastHQ Sanity's Edge Trial Guide by SGTsanttu",
+      "source_locator": "Chimera - Arctic Blast",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "arctic_blast_behavior",
+      "value": {
+        "targets_tank": true,
+        "leaves_ice_pool": true,
+        "applies": "Arctic Shred",
+        "debuff_seconds": 10
+      },
+      "source_type": "guide",
+      "source_name": "AlcastHQ Sanity's Edge Trial Guide by SGTsanttu",
+      "source_locator": "Chimera - Arctic Blast",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "inferno_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "AlcastHQ Sanity's Edge Trial Guide by SGTsanttu",
+      "source_locator": "Chimera - Inferno",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "inferno_behavior",
+      "value": {
+        "targets_every_player": true,
+        "sunburst_blockable": true,
+        "sunburst_dodgeable": true,
+        "leaves_sizzling_crater": true,
+        "crater_damage_ramps": true
+      },
+      "source_type": "guide",
+      "source_name": "AlcastHQ Sanity's Edge Trial Guide by SGTsanttu",
+      "source_locator": "Chimera - Inferno",
+      "confidence": "high"
+    }
+  ]
+}
