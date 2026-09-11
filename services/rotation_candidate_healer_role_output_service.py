@@ -22,6 +22,7 @@ from services.rotation_healer_canonical_delayed_timing_service import (
     RotationHealerCanonicalDelayedTimingService,
 )
 from services.rotation_healer_delayed_runtime_service import (
+    RotationHealerDelayedMagnitudeResolution,
     RotationHealerDelayedRuntimeEvidence,
     RotationHealerDelayedRuntimeProjection,
     RotationHealerDelayedRuntimeService,
@@ -177,11 +178,18 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
 
         delayed_projection = RotationHealerDelayedRuntimeProjection(events=(), unresolved=())
         if projection.delayed_seeds:
-            delayed_projection = self.delayed_runtime_service.project(
-                seeds=projection.delayed_seeds,
-                evidence=delayed_runtime_evidence,
-                horizon_seconds=candidate.plan.duration_seconds,
-            )
+            delayed_kwargs = {
+                "seeds": projection.delayed_seeds,
+                "evidence": delayed_runtime_evidence,
+                "horizon_seconds": candidate.plan.duration_seconds,
+            }
+            if runtime_build_context_resolver is not None:
+                delayed_kwargs["runtime_magnitude_resolver"] = (
+                    self._runtime_delayed_magnitude_resolver(
+                        runtime_build_context_resolver
+                    )
+                )
+            delayed_projection = self.delayed_runtime_service.project(**delayed_kwargs)
 
         result = self.demand_healing_service.assess(
             demand=demand,
@@ -253,6 +261,57 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
                     unresolved=tuple(messages),
                 )
             return RotationHealerPeriodicMagnitudeResolution(
+                modeled_heal=float(component.modeled_heal),
+            )
+
+        return resolve
+
+    def _runtime_delayed_magnitude_resolver(
+        self,
+        runtime_build_context_resolver: RotationRuntimeBuildContextResolver,
+    ):
+        def resolve(seed, time_seconds: float, sequence: int):
+            runtime_context = runtime_build_context_resolver(
+                float(time_seconds),
+                int(sequence),
+            )
+            if not runtime_context.resolved or runtime_context.context is None:
+                messages = runtime_context.unresolved or (
+                    "exact runtime build context is unresolved",
+                )
+                return RotationHealerDelayedMagnitudeResolution(
+                    modeled_heal=None,
+                    unresolved=tuple(messages),
+                )
+
+            component_resolver = getattr(
+                self.action_healing_service,
+                "resolve_component_magnitude",
+                None,
+            )
+            if not callable(component_resolver):
+                return RotationHealerDelayedMagnitudeResolution(
+                    modeled_heal=None,
+                    unresolved=(
+                        "canonical healer action service cannot resolve delayed component magnitude",
+                    ),
+                )
+
+            component = component_resolver(
+                build=self.build,
+                context=runtime_context.context,
+                source_name=seed.source_name,
+                coefficient_number=seed.coefficient_number,
+            )
+            if not component.resolved or component.modeled_heal is None:
+                messages = component.unresolved or (
+                    "delayed healing component magnitude is unresolved",
+                )
+                return RotationHealerDelayedMagnitudeResolution(
+                    modeled_heal=None,
+                    unresolved=tuple(messages),
+                )
+            return RotationHealerDelayedMagnitudeResolution(
                 modeled_heal=float(component.modeled_heal),
             )
 
