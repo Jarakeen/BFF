@@ -172,6 +172,8 @@ class RotationCanonicalCadenceOrchestrationSupport:
     ) -> RotationCanonicalRoleEvidence | None:
         if role_evidence is None:
             return None
+        if not isinstance(role_evidence, RotationCanonicalRoleEvidence):
+            return role_evidence
         if str(role_evidence.content_type or "").strip():
             return role_evidence
         content_type = str(getattr(bundle, "content_type", "") or "").strip()
