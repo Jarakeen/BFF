@@ -81,6 +81,56 @@ def test_catalog_resolves_armor_pet_and_transformation_witness_families():
     assert catalog.unresolved == ()
 
 
+def test_pet_witness_accepts_persistent_companion_grammar_without_literal_summon_prefix():
+    service = ExtremeResourceRuntimeSkillWitnessCatalogService(
+        skill_universe_service=_Skills(
+            (
+                _row(
+                    skill_id=1,
+                    name="Annulment",
+                    line="Light Armor",
+                    domain=ExtremeSkillDomain.ARMOR,
+                ),
+                _row(
+                    skill_id=2,
+                    name="Summon Unstable Familiar",
+                    line="Daedric Summoning",
+                    description=(
+                        "Command the powers of Oblivion to send a Daedric familiar to fight at your side. "
+                        "The familiar remains until killed or unsummoned."
+                    ),
+                ),
+                _row(
+                    skill_id=3,
+                    name="Feral Guardian",
+                    line="Animal Companions",
+                    skill_type="Ultimate",
+                    description=(
+                        "Rouse a grizzly to fight by your side. Once summoned you can activate "
+                        "Guardian's Wrath."
+                    ),
+                ),
+                _row(
+                    skill_id=4,
+                    name="Werewolf Transformation",
+                    line="Werewolf",
+                    skill_type="Ultimate",
+                    description="Transform into a beast.",
+                    domain=ExtremeSkillDomain.WORLD,
+                ),
+            )
+        )
+    )
+
+    catalog = service.build()
+
+    assert [row.name for row in catalog.pet_abilities] == [
+        "Feral Guardian",
+        "Summon Unstable Familiar",
+    ]
+    assert catalog.denominator_proven is True
+
+
 def test_pet_witness_requires_a_summoned_creature_not_environmental_construct():
     service = ExtremeResourceRuntimeSkillWitnessCatalogService(
         skill_universe_service=_Skills(
