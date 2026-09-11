@@ -31,6 +31,7 @@ from ui.capabilities_page import CapabilitiesPage
 from ui.collectibles_dashboard_page import CollectiblesDashboardPage
 from ui.collectibles_page import CollectiblesPage
 from ui.comp_builder_page import CompBuilderPage
+from ui.community_news_page import CommunityNewsPage
 from ui.components.foundry_sidebar import FoundrySidebar
 from ui.coverage_page import CoveragePage
 from ui.encounters_page import EncountersPage
@@ -124,6 +125,7 @@ class MainWindow(QMainWindow):
             "console:8": ReferenceDataPage(),
             "gear_lookup": GearLookupPage(),
             "timers": AsylumPerfectaTimerPage(),
+            "community_news": CommunityNewsPage(),
             "settings": SettingsPage(),
             "incident": IncidentPage(),
         }

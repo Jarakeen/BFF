@@ -294,6 +294,20 @@ local function set_image(name,file)
  obs.obs_source_release(s)
 end
 
+local function format_coffee_level(value)
+    local text = tostring(value or "")
+    if text == "" then return "" end
+    if string.sub(text, -1) == "%" then return text end
+    return text .. "%"
+end
+
+local function update_weather_icon(weather_name)
+    local filename = WEATHER_FILES[weather_name]
+    if filename then
+        set_image("TOP_Weather_Icon", WEATHER_FOLDER .. filename)
+    end
+end
+
 ----------------------------------------------------------
 -- Tamriel Calendar
 ----------------------------------------------------------
@@ -545,6 +559,8 @@ local function update()
             set_text(source, get_tamriel_date())
         elseif key == "FieldNoteNumber" then
             set_text(source, tostring(get_field_note_number()))
+        elseif key == "CoffeeLevel" then
+            set_text(source, format_coffee_level(extract(key, json)))
         else
             set_text(source, extract(key, json))
         end
@@ -560,10 +576,7 @@ local function update()
     -- set_text("FN_Difficulty", extract("Difficulty", json))
 
     local w = extract("Weather", json)
-    local f = WEATHER_FILES[w]
-    if f then
-        set_image("TOP_Weather_Icon", WEATHER_FOLDER .. f)
-    end
+    update_weather_icon(w)
 
     local status = json:match('"Status"%s*:%s*{(.-)}')
     if status then
@@ -783,10 +796,12 @@ local function update_broadcast()
         extract("Location", json)
     )
     
+    local broadcast_weather = extract("Weather", json)
     set_text(
         "TOP_Weather",
-        extract("Weather", json)
+        broadcast_weather
     )
+    update_weather_icon(broadcast_weather)
 
     set_text(
         "TOP_Objective",
@@ -800,7 +815,7 @@ local function update_broadcast()
 
     set_text(
         "TOP_CoffeeLevel",
-        extract("CoffeeLevel", json)
+        format_coffee_level(extract("CoffeeLevel", json))
     )
 
     set_text(

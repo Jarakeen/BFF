@@ -83,6 +83,7 @@ CORE_NAV_SECTIONS = [
         ("Reference Data", "tools:reference_data"),
         ("vAS2 Timer", "timers"),
     ]},
+    ("Community News", "community_news"),
     ("Settings", "settings"),
 ]
 
