@@ -39,13 +39,17 @@ def _bar(bar_id: BarId, weapon: WeaponType) -> Bar:
     )
 
 
-def _build() -> CharacterBuild:
+def _build(
+    *,
+    front_weapon: WeaponType = WeaponType.FROST_STAFF,
+    back_weapon: WeaponType = WeaponType.RESTORATION_STAFF,
+) -> CharacterBuild:
     return CharacterBuild(
         name="Heavy Evidence Build",
         character_class=CharacterClass.WARDEN,
         role=Role.HEALER,
-        front_bar=_bar(BarId.FRONT, WeaponType.FROST_STAFF),
-        back_bar=_bar(BarId.BACK, WeaponType.RESTORATION_STAFF),
+        front_bar=_bar(BarId.FRONT, front_weapon),
+        back_bar=_bar(BarId.BACK, back_weapon),
     )
 
 
@@ -68,7 +72,7 @@ def _evidence(
     sequence: int = 0,
     completion: float,
     fully_charged: bool = True,
-    base_restore: float | None = 3000.0,
+    base_restore: float | None = None,
     modifiers: HeavyAttackRestorationModifiers = HeavyAttackRestorationModifiers(),
 ) -> RotationHeavyAttackCompletionEvidence:
     return RotationHeavyAttackCompletionEvidence(
@@ -82,7 +86,7 @@ def _evidence(
     )
 
 
-def test_fully_charged_resto_heavy_creates_magicka_event_at_completion() -> None:
+def test_fully_charged_resto_heavy_uses_canonical_base_at_completion() -> None:
     plan = _plan(
         RotationAction(5.0, 0, RotationActionKind.BAR_SWAP, bar="back"),
         _heavy(6.0, 0),
@@ -100,11 +104,11 @@ def test_fully_charged_resto_heavy_creates_magicka_event_at_completion() -> None
     event = projection.restoration_events[0]
     assert event.time_seconds == 8.5
     assert event.resource is ResourceType.MAGICKA
-    assert event.amount == 3000.0
+    assert event.amount == 3267.0
     assert event.source == "verified test heavy"
 
 
-def test_weapon_specific_modifiers_apply_only_after_weapon_projection() -> None:
+def test_explicit_reviewed_base_override_still_wins_before_modifiers() -> None:
     plan = _plan(
         RotationAction(5.0, 0, RotationActionKind.BAR_SWAP, bar="back"),
         _heavy(6.0, 0),
@@ -129,6 +133,29 @@ def test_weapon_specific_modifiers_apply_only_after_weapon_projection() -> None:
     assert projection.restoration_events[0].amount == pytest.approx(3900.0)
 
 
+def test_canonical_resto_base_then_cycle_of_life_matches_reviewed_log_return() -> None:
+    plan = _plan(
+        RotationAction(5.0, 0, RotationActionKind.BAR_SWAP, bar="back"),
+        _heavy(6.0, 0),
+    )
+    projection = RotationHeavyAttackRestorationEvidenceService().project(
+        build=_build(),
+        plan=plan,
+        initial_bar="front",
+        completion_evidence=(
+            _evidence(
+                start=6.0,
+                completion=8.0,
+                modifiers=HeavyAttackRestorationModifiers(
+                    restoration_staff_cycle_of_life_percent=0.30,
+                ),
+            ),
+        ),
+    )
+
+    assert projection.restoration_events[0].amount == pytest.approx(4247.1)
+
+
 def test_explicit_not_fully_charged_is_known_zero_restore() -> None:
     plan = _plan(_heavy(2.0))
     projection = RotationHeavyAttackRestorationEvidenceService().project(
@@ -140,7 +167,6 @@ def test_explicit_not_fully_charged_is_known_zero_restore() -> None:
                 start=2.0,
                 completion=2.7,
                 fully_charged=False,
-                base_restore=None,
             ),
         ),
     )
@@ -165,13 +191,13 @@ def test_missing_completion_evidence_is_unresolved_not_zero_restore() -> None:
     assert "lacks completion/full-charge evidence" in projection.unresolved[0]
 
 
-def test_fully_charged_heavy_without_verified_base_restore_is_unresolved() -> None:
+def test_fully_charged_heavy_without_any_verified_base_restore_is_unresolved() -> None:
     projection = RotationHeavyAttackRestorationEvidenceService().project(
-        build=_build(),
+        build=_build(front_weapon=WeaponType.FLAME_STAFF),
         plan=_plan(_heavy(2.0)),
         initial_bar="front",
         completion_evidence=(
-            _evidence(start=2.0, completion=4.0, base_restore=None),
+            _evidence(start=2.0, completion=4.0),
         ),
     )
 
@@ -230,7 +256,6 @@ def test_replay_resolver_returns_event_for_exact_scheduled_heavy_only() -> None:
                 sequence=1,
                 completion=9.0,
                 fully_charged=False,
-                base_restore=None,
             ),
         ),
     )
