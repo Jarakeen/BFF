@@ -33,6 +33,24 @@
     {"entry_name":"Frontal AOE — Varaine Pellingare","mitigation":"Sidestep the long frontal attack and keep healers and ranged damage dealers out of its line."},
     {"entry_name":"Jumping Spin — Varaine Pellingare","mitigation":"When Varaine jumps, move or dodge roll out of melee range before the spinning sword attack lands."},
     {"entry_name":"Power Attack — Allene Pellingare","mitigation":"Block Allene's heavy attack; letting it land unblocked can cause a large burst even on the tank."},
-    {"entry_name":"Fiendish Hallucinations — Allene Pellingare","mitigation":"When Allene vanishes, immediately switch to the hallucinations and kill them quickly before she returns."}
+    {"entry_name":"Fiendish Hallucinations — Allene Pellingare","mitigation":"When Allene vanishes, immediately switch to the hallucinations and kill them quickly before she returns."},
+    {"entry_name":"Shocking Breath — Ganakton the Tempest","mitigation":"Keep Ganakton faced away from the group and stay out of the large frontal shock cone."},
+    {"entry_name":"Lightning Spit — Ganakton the Tempest","mitigation":"Sidestep the targeted lightning projectile when possible and break free promptly if it stuns you."},
+    {"entry_name":"Cacophony — Sliklenia the Songstress","mitigation":"Keep the pet snake alive and move into its protective bubble until the room-wide scream ends."},
+    {"entry_name":"Venomous Bite — Sliklenia the Songstress","mitigation":"Block the heavy attack to avoid the large hit and knockback."},
+    {"entry_name":"Piercing Shriek — Sellistrix the Lamia Queen","mitigation":"Block the conal scream and keep non-tanks out of Sellistrix's frontal arc."},
+    {"entry_name":"Bolt Discharge — Sellistrix the Lamia Queen","mitigation":"Move off the islands and into the water when the falling debris pattern begins."},
+    {"entry_name":"Double Slam — Infernal Guardian","mitigation":"Block the telegraphed double slam to reduce the physical burst."},
+    {"entry_name":"Berserker Frenzy — Warden of the Shrine","mitigation":"Step outside the close-range 360-degree attack when the warning circle appears."},
+    {"entry_name":"Burning Field and Clones — Warden of the Shrine","mitigation":"Leave the fire pools and kill the summoned clones before returning full damage to the Warden."},
+    {"entry_name":"Lava Pitch — Razor Master Erthas","mitigation":"Step out of the four spreading fire lines instead of crossing them repeatedly."},
+    {"entry_name":"Blazing Arrow — Razor Master Erthas","mitigation":"If the burning damage-over-time is applied, move through one of the small rivers to cleanse it."},
+    {"entry_name":"Summon Flame Atronach — Razor Master Erthas","mitigation":"Kill or cleave the Flame Atronachs before multiple waves accumulate."},
+    {"entry_name":"Ground AoE — Archmaster Siniel","mitigation":"Move out of Siniel's ground damage immediately and keep clear space around the group."},
+    {"entry_name":"Damage Shield and Zombies — Archmaster Siniel","mitigation":"Control the summoned zombies and break Siniel's damage shield so boss pressure can resume."},
+    {"entry_name":"Charge — Death's Leviathan","mitigation":"Tank the Leviathan facing a nearby wall so each charge travels only a short, controlled distance."},
+    {"entry_name":"Burst — Death's Leviathan","mitigation":"Block or dodge roll the rapidly expanding AoE that follows the charge."},
+    {"entry_name":"Athor Heavy Attack — Ilambris Twins","mitigation":"Block as soon as Athor's heavy-attack telegraph appears; the hit is large and can knock the target down."},
+    {"entry_name":"Survivor Enrage — Ilambris Twins","mitigation":"Keep the twins at reasonably similar health or be ready to burn the surviving enraged brother immediately."}
   ]
 }
