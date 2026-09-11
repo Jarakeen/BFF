@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "content_id": "ruins_of_mazzatun",
+  "encounter_id": "tree_minder_na_kesh",
+  "encounter_name": "Tree-Minder Na-Kesh",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Combat","threshold":"100% to 0%","description":"Kill priority totems, control add waves, and communicate statue/amber mechanics instead of attempting a pure burn."},"source_type":"guide","source_name":"Ruins of Mazzatun reviewed guide evidence","source_locator":"Tree-Minder Na-Kesh","game_update":"U11","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"totems","value":{"name":"Totems","response":"destroy_totems_immediately_before_their_effects_compound_the_fight"},"source_type":"guide","source_name":"Dr Coker Ruins of Mazzatun","source_locator":"Tree-Minder Ka-Nesh","game_update":"U11","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"blind_luck","value":{"name":"Hist Sap / Statue Reveal","response":"unaffected_players_reveal_the_correct_statue_so_the_blinded_player_can_hit_it_with_the_replaced_skill_bar"},"source_type":"achievement","source_name":"Blind Luck","source_locator":"Ruins of Mazzatun achievement","game_update":"U11","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"amber","value":{"name":"Amber Plasm","response":"pick_up_or_control_amber_before_an_add_claims_it_and_gains_empowerment"},"source_type":"guide","source_name":"Kattatonia Ruins of Mazzatun Boss Mechanics","source_locator":"Tree-Minder Na-Kesh","game_update":"U11","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"blistering_amber","value":{"name":"Blistering Amber","response":"avoid_amber_impacts_and_keep_players_spread_enough_to_preserve_safe_space"},"source_type":"achievement","source_name":"Sticky Situation Savvy","source_locator":"Ruins of Mazzatun achievement","game_update":"U11","confidence":"high"}
+  ]
+}
