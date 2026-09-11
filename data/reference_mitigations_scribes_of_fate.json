@@ -14,7 +14,7 @@
     {"entry_name":"Hard Mode Skeevers — Matriarch Lladi Telvanni","mitigation":"The marked player kites while the group burns or crowd-controls the Skeever. Taunts do not solve this mechanic, but snares and immobilizes can buy the target time."},
     {"entry_name":"Challenge Banner Tuning — Matriarch Lladi Telvanni","mitigation":"Treat Choking Pestilence as a planned healing check with HoTs and burst resources already running. Challenge-banner tuning changed its damage during U37 testing, so use reviewed current behavior rather than assuming an old numerical value."},
 
-    {"entry_name":"Hidden Codex — Riftmaster Naqri","mitigation":"Assign a runner to follow each projectile into the shelves and destroy both hidden codices before returning. Stop pushing health if a new codex cycle would overlap unresolved book pressure."},
+    {"entry_name":"Hidden Codex — Riftmaster Naqri","mitigation":"Assign a runner to follow each projectile into the shelves and destroy the two hidden codices before returning. Stop pushing health if a new codex cycle would overlap unresolved book pressure."},
     {"entry_name":"Codex Color Attacks — Riftmaster Naqri","mitigation":"Red: interrupt the spawned attacker. Green: mitigate the tracking ground resolution. White: block the ghost heavy because dodge is not the answer. Resolve the hidden books so these attacks stop repeating."},
     {"entry_name":"Unstable Literature — Riftmaster Naqri","mitigation":"Designate the tank to soak the green circle on Veteran. Hard Mode creates two simultaneous soaks, so preassign a second durable player, commonly the healer, instead of deciding after the circles appear."},
 
