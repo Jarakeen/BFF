@@ -133,3 +133,49 @@ def test_final_assembly_adds_catalog_history_and_related_content(tmp_path: Path)
 
     assert by_name["Example"].related == ("Garvin the Tracker — Lep Seclusa",)
     assert "History / Legacy" in dict(by_name["History Test Set"].details)
+
+
+def test_final_assembly_removes_eso_color_markup_from_display_text(tmp_path: Path):
+    database = tmp_path / "eso.db"
+    _seed_database(database)
+
+    starting = ReferenceEntry(
+        name="|cFFAA00Colored Name|r",
+        entry_type="Mechanic Evidence",
+        source_scope="Trial",
+        tags=("|cFFFFFFREFERENCE|r",),
+        summary="Avoid |cFF0000the red circle|r.",
+        details=(("|c00FF00Handling|r", "Use |c12345678the safe area|r."),),
+        related=("|cABCDEFRelated Boss|r",),
+        death_note="Do not stand in |cFF0000bad|r.",
+        field_note="Source text may contain |cffffffmarkup|r.",
+        used_by=("|cffffffEncounter Guide|r",),
+        evidence=("|cffffffReviewed source|r",),
+        mitigation_note="Move to |c00ff00safety|r.",
+    )
+
+    entries = finalize_reference_entries(
+        (starting,),
+        data_root=tmp_path,
+        database_path=database,
+    )
+    cleaned = next(entry for entry in entries if entry.name == "Colored Name")
+
+    rendered_fields = " ".join(
+        (
+            cleaned.name,
+            *cleaned.tags,
+            cleaned.summary,
+            *(part for detail in cleaned.details for part in detail),
+            *cleaned.related,
+            cleaned.death_note,
+            cleaned.field_note,
+            *cleaned.used_by,
+            *cleaned.evidence,
+            cleaned.mitigation_note,
+        )
+    )
+    assert "|c" not in rendered_fields
+    assert "|r" not in rendered_fields
+    assert "the red circle" in cleaned.summary
+    assert dict(cleaned.details)["Handling"] == "Use the safe area."
