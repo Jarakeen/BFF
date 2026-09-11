@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "depths_of_malatar",
+  "encounter_id": "dark_orb",
+  "encounter_name": "Dark Orb",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"orb_cycles","value":{"order":1,"label":"Colored Orb Cycles","threshold":"Repeating","description":"Outer colored orbs and Auroran adds repeatedly interrupt damage on the central Dark Orb."},"source_type":"guide","source_name":"Xynode Depths of Malatar Guide","source_locator":"Dark Orb","game_update":"U21","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"colored_orbs","value":{"name":"Colored Orbs","response":"switch_off_boss_kill_active_orb_then_clean_up_adds"},"source_type":"guide","source_name":"Xynode Depths of Malatar Guide","source_locator":"Dark Orb ORBS","game_update":"U21","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"aurorans","value":{"name":"Auroran Adds","response":"tank_stack_and_face_aurorans_away_then_burn_them"},"source_type":"guide","source_name":"Xynode Depths of Malatar Guide","source_locator":"Dark Orb Aurorans","game_update":"U21","confidence":"high"}
+  ]
+}
