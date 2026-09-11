@@ -36,6 +36,7 @@ from services.rotation_recovery_heavy_replay_service import (
 from services.rotation_recovery_heavy_stabilization_service import (
     RecoveryDisplayedRecoveryResolverFactory,
     RecoveryMaximumEventResolver,
+    RecoveryRestorationResolverFactory,
 )
 from services.rotation_saved_build_bar_access_service import (
     RotationSavedBuildBarAccessService,
@@ -46,9 +47,9 @@ class RotationRecoveryHeavyCandidatePipelineService:
     """Compose candidate-policy generation with the recovery-aware family workflow.
 
     Canonical callers may carry an already-resolved static calculation context plus
-    per-plan resource-maximum, displayed-recovery, and time-varying combat-state
-    resolvers through the complete candidate pipeline. Those inputs remain explicit
-    and optional so legacy callers do not acquire invented mechanics.
+    per-plan resource-maximum, displayed-recovery, heavy-restoration, and time-varying
+    combat-state resolvers through the complete candidate pipeline. Those inputs stay
+    explicit so legacy callers do not acquire invented mechanics.
 
     Final scorecards are additionally decorated with saved-build bar-access rules.
     This keeps ESO gear mechanics such as Oakensoul outside generic plan semantics
@@ -101,7 +102,8 @@ class RotationRecoveryHeavyCandidatePipelineService:
         resource: ResourceType,
         maximum_amount: int,
         trigger_fraction: float,
-        restoration_resolver: VerifiedRecoveryHeavyRestorationResolver,
+        restoration_resolver: VerifiedRecoveryHeavyRestorationResolver | None = None,
+        restoration_resolver_factory: RecoveryRestorationResolverFactory | None = None,
         demands: Iterable[RotationDemandWindow] = (),
         options: Iterable[RotationRefreshLeadCandidateOption] = (),
         wait_decision_factory: RecoveryPressureWaitDecisionFactory | None = None,
@@ -135,6 +137,7 @@ class RotationRecoveryHeavyCandidatePipelineService:
             maximum_amount=maximum_amount,
             trigger_fraction=trigger_fraction,
             restoration_resolver=restoration_resolver,
+            restoration_resolver_factory=restoration_resolver_factory,
             reserve_assessment_resolver=reserve_assessment_resolver,
             max_iterations=max_iterations,
             calculation_context=calculation_context,
@@ -155,7 +158,8 @@ class RotationRecoveryHeavyCandidatePipelineService:
         resource: ResourceType,
         maximum_amount: int,
         trigger_fraction: float,
-        restoration_resolver: VerifiedRecoveryHeavyRestorationResolver,
+        restoration_resolver: VerifiedRecoveryHeavyRestorationResolver | None = None,
+        restoration_resolver_factory: RecoveryRestorationResolverFactory | None = None,
         demands: Iterable[RotationDemandWindow] = (),
         options: Iterable[RotationRefreshLeadCandidateOption] = (),
         wait_decision_factory: RecoveryPressureWaitDecisionFactory | None = None,
@@ -196,6 +200,7 @@ class RotationRecoveryHeavyCandidatePipelineService:
             maximum_amount=maximum_amount,
             trigger_fraction=trigger_fraction,
             restoration_resolver=restoration_resolver,
+            restoration_resolver_factory=restoration_resolver_factory,
             reserve_assessment_resolver=reserve_assessment_resolver,
             max_iterations=max_iterations,
             calculation_context=calculation_context,
