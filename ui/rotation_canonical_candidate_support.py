@@ -51,6 +51,7 @@ from services.rotation_recovery_heavy_candidate_generation_bridge_service import
     RecoveryPressureWaitDecisionFactory,
 )
 from services.rotation_recovery_heavy_candidate_orchestration_service import (
+    RecoveryRuntimeCombatStateResolverFactory,
     RotationRecoveryHeavyCandidateOrchestrationResult,
 )
 from services.rotation_recovery_heavy_candidate_pipeline_service import (
@@ -138,6 +139,10 @@ class RotationCanonicalCandidateSupport:
     This bridge does not assume the base 45-second potion cooldown is correct for a
     build with unmodeled cooldown-reduction mechanics.
 
+    Optional time-varying runtime state remains caller-owned evidence too. When a
+    resolver factory is supplied, it is forwarded untouched so recovery orchestration
+    can bind that resolver only after each candidate reaches its final stabilized plan.
+
     Ambiguous saved-build slot identity is structural unresolved evidence and blocks
     candidate evaluation rather than silently omitting legality for that action.
     Timing/range evidence is narrower: unresolved evidence becomes candidate-specific
@@ -207,6 +212,7 @@ class RotationCanonicalCandidateSupport:
         target_distance_windows: Iterable[RotationTargetDistanceWindow] = (),
         potion_cadence_requirement: RotationPotionCadenceRequirement | None = None,
         reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None,
+        runtime_combat_state_resolver_factory: RecoveryRuntimeCombatStateResolverFactory | None = None,
         initial_bar: str = "front",
         max_iterations: int = 6,
         baseline_id: str = "baseline",
@@ -387,6 +393,7 @@ class RotationCanonicalCandidateSupport:
             calculation_context=calculation_context,
             maximum_event_resolver=maximum_event_resolver,
             displayed_recovery_resolver_factory=displayed_recovery_resolver_factory,
+            runtime_combat_state_resolver_factory=runtime_combat_state_resolver_factory,
         )
         return RotationCanonicalCandidateApplicationResult(
             build_adaptation=adaptation,
