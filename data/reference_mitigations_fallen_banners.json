@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {"entry_name":"Execute — Executioner Jerensi","mitigation":"Hard Mode: all four players stack inside the yellow Execute circle. After 30%, expect Execute to recur periodically, so do not scatter immediately after the last add phase."},
+    {"entry_name":"Death Knell — Executioner Jerensi","mitigation":"Top the group before the hit, then purge or outheal Condemn. Use the Death Knell clear to reset Swirling Darkblade ground pressure."},
+    {"entry_name":"Jailer and Torturer Adds — Executioner Jerensi","mitigation":"Interrupt the Jailer channel immediately. CC or block late in the Torturer's Blood Frenzy channel while burning the add wave to end immunity."},
+
+    {"entry_name":"Storm Bolt — Prime Sorcerer Vandorallen","mitigation":"Assign the healer or a ranged DD as the dedicated farthest-player kite. Drop Storm Bolts at the arena edge and never leave a player standing in them, or Chain Lightning punishes the whole group."},
+    {"entry_name":"Iron Atronach Spiders — Prime Sorcerer Vandorallen","mitigation":"During each mount phase, group in Lucilla's Icy Dome and chain the spiders into it before killing them so they cannot reach players and Combust."},
+    {"entry_name":"Coruscating Orb — Prime Sorcerer Vandorallen","mitigation":"Hard Mode: kite the chasing orbs away from the stack. A ranged player can deliberately step closer to take over the chase if the current target needs relief."},
+
+    {"entry_name":"Elemental Orbs — Squall of Retribution","mitigation":"Slow the burn. Kill one atronach at a time and collect every dropped orb before pushing another boss threshold; uncontrolled add/orb overlap is the real enrage."},
+    {"entry_name":"Coordinated Slash — Squall of Retribution","mitigation":"Tank blocks the heavy and healers cover the resulting absorb. Avoid reflex-dodge rolling on Veteran/HM because it enrages the boss."},
+    {"entry_name":"Vortex — Squall of Retribution","mitigation":"Tank controls the moving boss while the group handles the current infusion's secondary hazards. Preserve clean ground rather than dragging Vortex through the stack."},
+
+    {"entry_name":"Noxious Boulder — Garvin the Tracker","mitigation":"Tank lines Garvin up with an unaggroed Duneripper and aims Noxious Boulder through it. Everyone else stays out of the line or blocks if crossing it."},
+    {"entry_name":"Monstrous Dunerippers — Garvin the Tracker","mitigation":"Do not taunt, cleave, or otherwise aggro Dunerippers before the boulder hit. Slow damage after 40% so the last Duneripper is bowled before Garvin's 30% scream enrages anything still alive."},
+    {"entry_name":"Venom Eruption — Garvin the Tracker","mitigation":"Break line of sight behind the arena rocks for the full channel. Re-enter only after the lethal line-of-sight damage ends."},
+    {"entry_name":"Piercing Dervish — Garvin the Tracker","mitigation":"Tank holds Garvin on a stable front/back axis; DDs and healer stand on the sides. Do not rotate the boss to chase the cone because that swings the opposite hit through the group."},
+
+    {"entry_name":"Chain Pull — Noriwen","mitigation":"Tank stays in melee range after Noriwen moves. If chained, purge or outheal the heavy DoT; walk her toward center before thresholds if that makes later movement safer."},
+    {"entry_name":"Wing Gust — Noriwen","mitigation":"Avoid the three traveling lightning lanes. In Hard Mode, give affected players extra room because the DoT also damages nearby allies."},
+    {"entry_name":"Brand — Noriwen","mitigation":"Tank blocks Brand. Do not dodge roll it, since that enrages Noriwen."},
+
+    {"entry_name":"Arcane Planemeld — Orpheon the Tactician","mitigation":"Tank drags Orpheon with the moving safe zone while remaining separated from the group. Never let him stand inside Planemeld, where he becomes untargetable and can cast Forbidden Knowledge."},
+    {"entry_name":"Reality Fracture — Orpheon the Tactician","mitigation":"Tank blocks the non-dodgeable heavy; DDs and healer stay outside the tank's splash radius."},
+    {"entry_name":"Add Phase — Orpheon the Tactician","mitigation":"At 80%, 50%, and 30%, tank chains the small adds onto the large add and controls its heavy/AOE pressure while the group clears the wave before Planemeld movement resumes."},
+    {"entry_name":"Forbidden Knowledge — Orpheon the Tactician","mitigation":"Prevent the cast by keeping Orpheon out of Planemeld. If it happens, time a dodge roll through the unblockable runeblade volley."}
+  ]
+}
