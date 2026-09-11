@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "content_id": "exiled_redoubt",
+  "encounter_id": "squall_of_retribution",
+  "encounter_name": "Squall of Retribution",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"fire_phase","value":{"order":1,"label":"Fire Infusion","threshold":"95%","description":"Fire Atronachs begin spawning. Kill them deliberately and collect every elemental orb they leave rather than over-pushing the boss."},"source_type":"guide","source_name":"Hyperioxes Exiled Redoubt Dungeon Guide","source_locator":"Squall of Retribution > Fire Infusion","game_update":"U50","confidence":"high"},
+    {"fact_type":"phase","fact_key":"ice_phase","value":{"order":2,"label":"Ice Infusion","threshold":"65%","description":"Frost mechanics join the existing fire pressure. Continue add-first pacing and orb collection while blocking Icy Flash."},"source_type":"guide","source_name":"Hyperioxes Exiled Redoubt Dungeon Guide","source_locator":"Squall of Retribution > Elemental Infusion","game_update":"U50","confidence":"high"},
+    {"fact_type":"phase","fact_key":"lightning_phase","value":{"order":3,"label":"Lightning Infusion","threshold":"32%","description":"Storm Atronachs and lightning pressure join the existing elemental mechanics. Avoid rushing execute if uncollected orbs or adds are still active."},"source_type":"guide","source_name":"Hyperioxes Exiled Redoubt Dungeon Guide","source_locator":"Squall of Retribution > Elemental Infusion","game_update":"U50","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"elemental_orbs","value":{"name":"Elemental Orbs","response":"focus_one_atronach_at_a_time_then_collect_each_orb_immediately","strategy":"slow_burn_to_prevent_add_and_orb_overlap"},"source_type":"guide","source_name":"Cujokills Exiled Redoubt Hardmode Walkthrough","source_locator":"Squall of Retribution written walkthrough","game_update":"U45","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"coordinated_slash","value":{"name":"Coordinated Slash","response":"tank_blocks_heavy_and_healer_covers_healing_absorb","warning":"dodge_rolling_enrages_boss_on_veteran_and_above"},"source_type":"guide","source_name":"Hyperioxes Exiled Redoubt Dungeon Guide","source_locator":"Squall of Retribution > Coordinated Slash","game_update":"U50","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"vortex","value":{"name":"Vortex","response":"tank_controls_boss_while_group_handles_element_specific_secondary_effects_and_ground_aoes","duration_seconds":7},"source_type":"guide","source_name":"Hyperioxes Exiled Redoubt Dungeon Guide","source_locator":"Squall of Retribution > Vortex","game_update":"U50","confidence":"high"}
+  ]
+}
