@@ -78,6 +78,13 @@ _REVIEWED_WORLD_IRRELEVANT: tuple[tuple[str, str, str], ...] = (
     ("Werewolf", "Shadow of the Bloodmoon", "Werewolf infection interaction only"),
 )
 
+_REVIEWED_OTHER_IRRELEVANT: tuple[tuple[str, str, str], ...] = (
+    ("Emperor", "Authority", "Ultimate generation only"),
+    ("Emperor", "Domination", "Health/Magicka/Stamina Recovery only; does not modify maximum resources"),
+    ("Emperor", "Monarch", "healing received / healing-effect magnitude only"),
+    ("Emperor", "Tactician", "Siege Weapon damage only"),
+)
+
 
 def _reviewed_guild_rows() -> tuple[ExtremeResourceSharedPassiveOwnership, ...]:
     return tuple(
@@ -107,8 +114,22 @@ def _reviewed_world_rows() -> tuple[ExtremeResourceSharedPassiveOwnership, ...]:
     )
 
 
+def _reviewed_other_rows() -> tuple[ExtremeResourceSharedPassiveOwnership, ...]:
+    return tuple(
+        ExtremeResourceSharedPassiveOwnership(
+            domain=ExtremeSkillDomain.OTHER,
+            skill_line=skill_line,
+            passive_name=passive_name,
+            status=ExtremeResourceSharedPassiveOwnershipStatus.PROVEN_IRRELEVANT,
+            source=f"Canonical {skill_line} passive tooltip review",
+            effect_family=effect_family,
+        )
+        for skill_line, passive_name, effect_family in _REVIEWED_OTHER_IRRELEVANT
+    )
+
+
 class ExtremeResourceSharedPassiveOwnershipService:
-    """Resolve exact reviewed guild/alliance/weapon/world passive ownership."""
+    """Resolve exact reviewed shared passive ownership outside class/racial paths."""
 
     SUPPORTED_OBJECTIVES = _SUPPORTED_OBJECTIVES
 
@@ -177,7 +198,7 @@ class ExtremeResourceSharedPassiveOwnershipService:
             source="OneHandShieldPassiveInputResolver",
             effect_family="block mitigation only",
         ),
-    ) + _reviewed_guild_rows() + _reviewed_world_rows()
+    ) + _reviewed_guild_rows() + _reviewed_world_rows() + _reviewed_other_rows()
 
     @staticmethod
     def _normalized(value: object) -> str:
