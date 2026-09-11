@@ -118,7 +118,6 @@ class RotationRuntimeBarProvenanceService:
 
         for entry in snapshot.ordered_runtime_history:
             if isinstance(entry, ExtremeRuntimeBarTransition):
-                # Canonical transitions are appended once below after verification.
                 continue
 
             if isinstance(entry, ExtremeRuntimeBarEffectAttempt):
@@ -187,6 +186,7 @@ class RotationRuntimeBarProvenanceService:
                 snapshot_time_seconds=snapshot.snapshot_time_seconds,
                 recipient_actor_id=snapshot.recipient_actor_id,
                 group_member_ids=snapshot.group_member_ids,
+                bar_transition_history_complete=True,
             ),
             attempts_tagged=tagged,
             attempts_verified=verified,
