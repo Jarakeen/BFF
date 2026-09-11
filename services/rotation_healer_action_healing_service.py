@@ -58,6 +58,17 @@ class RotationHealerDelayedHealSeed:
 
 
 @dataclass(frozen=True)
+class RotationHealerChannelHealSeed:
+    """Verified channel-tick heal component awaiting reviewed runtime cadence."""
+
+    time_seconds: float
+    sequence: int
+    source_name: str
+    coefficient_number: int
+    modeled_heal: float
+
+
+@dataclass(frozen=True)
 class RotationHealerExternalConditionalHealSeed:
     """Reviewed externally-triggered healing evidence anchored to an action time.
 
@@ -85,6 +96,7 @@ class RotationHealerActionHealingProjection:
     periodic_seeds: tuple[RotationHealerPeriodicHealSeed, ...]
     unresolved: tuple[str, ...]
     delayed_seeds: tuple[RotationHealerDelayedHealSeed, ...] = ()
+    channel_seeds: tuple[RotationHealerChannelHealSeed, ...] = ()
     external_conditional_seeds: tuple[RotationHealerExternalConditionalHealSeed, ...] = ()
 
 
@@ -258,6 +270,7 @@ class RotationHealerActionHealingService:
         direct_events: list[RotationHealerResolvedHealEvent] = []
         periodic_seeds: list[RotationHealerPeriodicHealSeed] = []
         delayed_seeds: list[RotationHealerDelayedHealSeed] = []
+        channel_seeds: list[RotationHealerChannelHealSeed] = []
         external_conditional_seeds: list[RotationHealerExternalConditionalHealSeed] = []
         unresolved: list[str] = []
         bar_contexts = self._normalize_bar_contexts(contexts_by_bar)
@@ -408,14 +421,20 @@ class RotationHealerActionHealingService:
                     continue
 
                 temporal = classification.heal_temporal_scope
+                value = actual_by_number.get(number, float(trace.final_value))
+
                 if temporal is HealTemporalScope.CHANNEL_TICK:
-                    unresolved.append(
-                        f"{action.name} coefficient {number} at {action.time_seconds:g}s: "
-                        "channel-tick heal runtime timing is not yet modeled"
+                    channel_seeds.append(
+                        RotationHealerChannelHealSeed(
+                            time_seconds=float(action.time_seconds),
+                            sequence=int(action.sequence),
+                            source_name=action.name,
+                            coefficient_number=number,
+                            modeled_heal=value,
+                        )
                     )
                     continue
 
-                value = actual_by_number.get(number, float(trace.final_value))
                 if temporal is HealTemporalScope.DELAYED:
                     delayed_seeds.append(
                         RotationHealerDelayedHealSeed(
@@ -472,6 +491,7 @@ class RotationHealerActionHealingService:
             periodic_seeds=tuple(sorted(periodic_seeds, key=component_sort_key)),
             unresolved=self._dedupe(tuple(unresolved)),
             delayed_seeds=tuple(sorted(delayed_seeds, key=component_sort_key)),
+            channel_seeds=tuple(sorted(channel_seeds, key=component_sort_key)),
             external_conditional_seeds=tuple(
                 sorted(external_conditional_seeds, key=sort_key)
             ),
@@ -520,6 +540,7 @@ class RotationHealerActionHealingService:
 __all__ = [
     "RotationHealerActionHealingProjection",
     "RotationHealerActionHealingService",
+    "RotationHealerChannelHealSeed",
     "RotationHealerComponentHealingResolution",
     "RotationHealerDelayedHealSeed",
     "RotationHealerExternalConditionalHealSeed",
