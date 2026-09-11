@@ -37,6 +37,16 @@ def _reference_details_html(details) -> str:
     return "<br>".join(rows)
 
 
+def _detail_segments(entry: ReferenceEntry) -> tuple[str, ...]:
+    segments = []
+    for _label, value in entry.details:
+        value_text = str(value or "").strip()
+        if not value_text:
+            continue
+        segments.extend(part.strip() for part in value_text.split(";") if part.strip())
+    return tuple(segments)
+
+
 def _first_detail(entry: ReferenceEntry, *needles: str) -> str:
     """Return the first useful detail matching requested concepts.
 
@@ -66,6 +76,72 @@ def _first_detail(entry: ReferenceEntry, *needles: str) -> str:
     return ""
 
 
+def _segment_value(entry: ReferenceEntry, *labels: str) -> str:
+    wanted = tuple(label.casefold() for label in labels)
+    for segment in _detail_segments(entry):
+        if ":" not in segment:
+            continue
+        key, value = (part.strip() for part in segment.split(":", 1))
+        if any(label in key.casefold() for label in wanted) and value:
+            return value
+    return ""
+
+
+def _yes_segment(entry: ReferenceEntry, *labels: str) -> bool:
+    return _segment_value(entry, *labels).casefold() == "yes"
+
+
+def _human_mechanic_summary(entry: ReferenceEntry) -> str:
+    """Build a compact raid-facing sentence from reviewed structured facts."""
+
+    parts = []
+    targets = _segment_value(entry, "target count")
+    detonation = _segment_value(entry, "detonation seconds")
+    duration = _segment_value(entry, "duration seconds")
+    radius = _segment_value(entry, "radius meters", "radius m")
+
+    if targets:
+        parts.append(f"affects {targets} player{'s' if targets != '1' else ''}")
+    if detonation:
+        parts.append(f"detonates after about {detonation}s")
+    elif duration:
+        parts.append(f"lasts about {duration}s")
+    if radius:
+        parts.append(f"covers about a {radius}m radius")
+    if _yes_segment(entry, "swimming mitigates blast"):
+        parts.append("swimming avoids the blast")
+    if _yes_segment(entry, "leaves acid pools"):
+        parts.append("leaves acid pools")
+    if _yes_segment(entry, "applies stacking acid vulnerability"):
+        parts.append("applies stacking acid vulnerability")
+    if _yes_segment(entry, "damage ramps"):
+        parts.append("damage ramps over time")
+    if _yes_segment(entry, "heal check"):
+        parts.append("requires sustained healing")
+    if _yes_segment(entry, "one tracks taunt target"):
+        parts.append("one attack tracks the taunt target")
+    if _yes_segment(entry, "unblocked can be fatal"):
+        parts.append("an unblocked hit can be fatal")
+
+    responses = _segment_value(entry, "responses")
+    if responses:
+        parts.append(f"valid responses: {responses}")
+
+    if parts:
+        return "; ".join(parts) + "."
+
+    what = _first_detail(
+        entry,
+        "core behavior",
+        "veteran behavior",
+        "behavior",
+        "damage pattern",
+        "handling",
+        "reviewed details",
+    )
+    return what or entry.summary
+
+
 def _encounter_name(entry: ReferenceEntry) -> str:
     for label, value in entry.details:
         if str(label).casefold() == "encounter" and str(value).strip():
@@ -85,26 +161,18 @@ def _raid_lead_snapshot_rows(entry: ReferenceEntry) -> tuple[tuple[str, str], ..
     if entry.entry_type not in {"Mechanic", "Mechanic Evidence"}:
         return ()
 
-    what = _first_detail(
-        entry,
-        "core behavior",
-        "veteran behavior",
-        "behavior",
-        "damage pattern",
-        "handling",
-        "reviewed details",
-    )
-    timing = _first_detail(entry, "duration", "detonation", "timing", "window", "cadence")
+    timing = _first_detail(entry, "duration", "detonation", "timing", "window", "cadence", "cooldown")
     size = _first_detail(entry, "radius", "range", "size", "distance", "meters", "metres")
     targets = _first_detail(entry, "target count", "targeting", "target pattern", "targets")
-    kill_risk = _first_detail(entry, "failure severity", "fatal", "wipe", "kill")
+    kill_risk = _first_detail(entry, "failure severity", "fatal", "wipe", "kill", "timeout")
     source = _encounter_name(entry)
 
     rows = [
-        ("What it does", what or entry.summary),
+        ("What it does", _human_mechanic_summary(entry)),
         ("Duration / timing", timing or "No reviewed timing value yet."),
         ("Size / radius", size or "No reviewed size or radius yet."),
-        ("Targets / kill risk", targets or kill_risk or "No reviewed target or kill-risk value yet."),
+        ("Targets", targets or "No reviewed target-count or targeting value yet."),
+        ("Failure risk", kill_risk or "No reviewed failure-severity value yet."),
         ("Comes from", source or "Source encounter not recorded."),
     ]
     if entry.mitigation_note:
