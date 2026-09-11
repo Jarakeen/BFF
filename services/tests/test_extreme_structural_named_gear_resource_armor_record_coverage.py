@@ -27,16 +27,10 @@ class _GearRealization:
             SimpleNamespace(
                 realizations=(
                     SimpleNamespace(
-                        set_ids=(10,),
-                        counts=(5,),
-                        weapon_shape=SimpleNamespace(value="none"),
-                        assignments=(),
+                        set_ids=(10,), counts=(5,), weapon_shape=SimpleNamespace(value="none"), assignments=()
                     ),
                     SimpleNamespace(
-                        set_ids=(20,),
-                        counts=(5,),
-                        weapon_shape=SimpleNamespace(value="none"),
-                        assignments=(),
+                        set_ids=(20,), counts=(5,), weapon_shape=SimpleNamespace(value="none"), assignments=()
                     ),
                 )
             ),
@@ -48,19 +42,31 @@ class _ResourceArmorCatalog:
     objective_key = "max_health"
     denominator_proven = True
     unresolved = ()
-    glyph_choices_reviewed = 2
-    dominated_states_pruned = 100
-    states = (
-        SimpleNamespace(identity=(("Head", "Infused", "Max Health"),)),
-        SimpleNamespace(identity=(("Head", "Divines", "Max Health"),)),
+    states = tuple(SimpleNamespace(identity=(("weights", i), ("traits", i))) for i in range(24))
+    weight_catalog = SimpleNamespace(
+        states=(1, 2, 3),
+        raw_loadouts_reviewed=2187,
+        dominated_loadouts_pruned=2184,
+    )
+    trait_glyph_catalog = SimpleNamespace(
+        glyph_choices_reviewed=2,
+        dominated_states_pruned=100,
     )
 
 
-class _ResourceArmorStateService:
-    SUPPORTED_OBJECTIVES = ("max_health", "max_magicka", "max_stamina")
-
+class _TraitGlyphService:
     def __init__(self, path):
         self.path = path
+
+
+class _CombinedResourceArmorStateService:
+    SUPPORTED_OBJECTIVES = ("max_health", "max_magicka", "max_stamina")
+
+    @classmethod
+    def from_services(cls, key, *, trait_glyph_service):
+        assert key == "max_health"
+        assert isinstance(trait_glyph_service, _TraitGlyphService)
+        return cls()
 
     def build(self, key):
         assert key == "max_health"
@@ -85,7 +91,7 @@ class _ResourceOuterEvaluator:
         return 50000.0, {
             "potion": "alchemy_formula:test",
             "active_buffs": ("Major Fortitude",),
-            "resource_armor_states_scored": 2,
+            "resource_armor_states_scored": 24,
         }, ()
 
 
@@ -95,9 +101,7 @@ class _Probe:
 
     food_evaluator = SimpleNamespace(
         food_choices=lambda: ("", "Food A"),
-        mundus_evaluator=SimpleNamespace(
-            mundus_choices=lambda: ("", "Lord", "Mage", "Tower")
-        ),
+        mundus_evaluator=SimpleNamespace(mundus_choices=lambda: ("", "Lord", "Mage", "Tower")),
     )
 
 
@@ -117,6 +121,7 @@ class _UniverseService:
         "Mundus",
         "food/drink",
         "potions",
+        "class/skill/armor/weapon/guild passive ranks",
         "skill-bar choices and morphs",
     )
 
@@ -140,19 +145,24 @@ class _SearchService:
                 payload={
                     "potion": "alchemy_formula:test",
                     "active_buffs": ("Major Fortitude",),
-                    "resource_armor_states_scored": 2,
+                    "resource_armor_states_scored": 24,
                 },
             ),
         )
 
 
-def test_resource_armor_trait_glyph_axis_is_searched_and_residuals_remain_omitted(monkeypatch):
+def test_resource_armor_weight_trait_glyph_axis_is_searched_and_residuals_remain_omitted(monkeypatch):
     monkeypatch.setattr(module, "ExtremeCanonicalStructuralStatEvaluator", lambda **kwargs: object())
     monkeypatch.setattr(module, "ExtremeHypotheticalClassProgressionService", lambda path: object())
     monkeypatch.setattr(module, "MundusRepository", lambda *args, **kwargs: object())
     monkeypatch.setattr(module, "ProvisioningStaticRepository", lambda *args, **kwargs: object())
     monkeypatch.setattr(module, "PotionAvailabilityRepository", lambda *args, **kwargs: object())
-    monkeypatch.setattr(module, "ExtremeArmorResourceTraitGlyphStateService", _ResourceArmorStateService)
+    monkeypatch.setattr(module, "ExtremeArmorResourceTraitGlyphStateService", _TraitGlyphService)
+    monkeypatch.setattr(
+        module,
+        "ExtremeArmorResourceWeightTraitGlyphStateService",
+        _CombinedResourceArmorStateService,
+    )
     monkeypatch.setattr(module, "ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory", _ResourceFactory)
     monkeypatch.setattr(
         module,
@@ -177,7 +187,11 @@ def test_resource_armor_trait_glyph_axis_is_searched_and_residuals_remain_omitte
     assert "glyphs/enchants" not in record.search_coverage.omitted
     assert _RESOURCE_REMAINING_EQUIPMENT_TRAIT_AXIS in record.search_coverage.omitted
     assert _RESOURCE_REMAINING_GLYPH_AXIS in record.search_coverage.omitted
-    assert record.search_coverage.candidates_screened == 10 * 2 * 2 * 4 * 2 * 2
-    assert record.search_coverage.candidates_optimized == 10 * 2 * 2 * 4 * 2 * 2
+    assert "armor weight/passive interactions" not in " ".join(record.search_coverage.omitted)
+    assert "class/skill/armor/weapon/guild passive ranks" in record.search_coverage.omitted
+    assert record.search_coverage.candidates_screened == 10 * 2 * 24 * 4 * 2 * 2
+    assert record.search_coverage.candidates_optimized == 10 * 2 * 24 * 4 * 2 * 2
     assert record.search_coverage.denominator_proven is False
     assert record.self_provided_conditions == ("Major Fortitude",)
+    assert any("2,187" in row for row in record.explanation)
+    assert any("Undaunted Mettle" in row for row in record.explanation)
