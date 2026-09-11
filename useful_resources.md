@@ -158,6 +158,15 @@ https://xynodegaming.com/
 
 **Notes:** Useful for Encounter-page strategy, Field Notes, and practice corroboration, not as sole authority for canonical combat math. Search results may be less indexable than ESO-Hub or official sources, so use targeted page retrieval when a specific mechanic or encounter is under review.
 
+### The Tank Club
+https://thetankclub.com/game/the-elder-scrolls-online/
+
+**Use for:** Tank-specific trial and dungeon strategy, main-tank/off-tank role division, boss positioning and facing, add ownership, taunt swaps, mitigation choices, survivability, support-set context, and practical organized-group tank play.
+
+**Confidence:** Validation / gameplay-practice corroboration.
+
+**Notes:** Particularly useful when Encounter-page research needs to answer who tanks what, where an enemy should be positioned, when tanks swap, or how experienced tanks handle a mechanic in Veteran/Hard Mode. The site is actively maintained and includes current 2026 tank builds plus dedicated trial tank guides. Treat tank strategy and role practice as corroboration rather than canonical mechanic math; reconcile exact timings, target counts, damage types, and patch-sensitive mechanic properties against official notes, UESP/client data, or logs before promoting them to shared mechanics truth.
+
 ### Game-Maps.com ESO maps and walkthroughs
 https://game-maps.com/ESO/The-Elder-Scrolls-Online.asp
 
