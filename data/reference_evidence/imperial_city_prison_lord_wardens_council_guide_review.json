@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "imperial_city_prison",
+  "encounter_id": "lord_wardens_council",
+  "encounter_name": "Lord Warden's Council",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"council","value":{"order":1,"label":"Council Phase","threshold":"100% to 0%","description":"Stack the four bodyguards under tank control and maintain interrupts on the healer while focusing dangerous targets."},"source_type":"guide","source_name":"Xynode Imperial City Prison Guide","source_locator":"Lord-Warden's Council","game_update":"U7","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"healer_interrupt","value":{"name":"Healer Bodyguard","response":"interrupt_healer_repeatedly_while_group_burns_other_bodyguards"},"source_type":"guide","source_name":"Xynode Imperial City Prison Guide","source_locator":"Lord-Warden's Council","game_update":"U7","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"stack_control","value":{"name":"Council Stack","response":"tank_stacks_four_bodyguards_and_faces_melee_away_from_group"},"source_type":"guide","source_name":"Xynode Imperial City Prison Guide","source_locator":"Lord-Warden's Council","game_update":"U7","confidence":"high"}
+  ]
+}
