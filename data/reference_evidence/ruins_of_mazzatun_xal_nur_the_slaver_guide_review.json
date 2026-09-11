@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "content_id": "ruins_of_mazzatun",
+  "encounter_id": "xal_nur_the_slaver",
+  "encounter_name": "Xal-Nur the Slaver",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Combat","threshold":"100% to 0%","description":"Control Xal-Nur and ranged pressure while resolving Swamp Spice immunity cycles instead of burning into invulnerability."},"source_type":"guide","source_name":"Kattatonia Ruins of Mazzatun Boss Mechanics","source_locator":"Xal-Nur the Slaver","game_update":"U11","confidence":"high"},
+    {"fact_type":"phase","fact_key":"spice","value":{"order":2,"label":"Swamp Spice Cycle","threshold":"up to about 75% / 50% / 25%","description":"Carry the green spice to a geyser to remove Xal-Nur's immunity/enrage and reopen the damage window."},"source_type":"guide","source_name":"Ruins of Mazzatun reviewed guide evidence","source_locator":"Xal-Nur Swamp Spice","game_update":"U11","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"swamp_spice","value":{"name":"Swamp Spice","response":"assigned_player_carries_green_spice_to_a_geyser_to_cleanse_and_break_boss_immunity"},"source_type":"guide","source_name":"Ruins of Mazzatun reviewed guide evidence","source_locator":"Xal-Nur Swamp Spice","game_update":"U11","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"wamasu","value":{"name":"Chained Wamasu","response":"release_wamasu_to_help_remove_archer_pressure_when_needed"},"source_type":"guide","source_name":"Official Ruins of Mazzatun feedback","source_locator":"Xal-Nur","game_update":"U11","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"charge","value":{"name":"Boss Charge","response":"dodge_the_charge_and_keep_its_path_clear_of_group_members"},"source_type":"guide","source_name":"Kattatonia Ruins of Mazzatun Boss Mechanics","source_locator":"Xal-Nur the Slaver","game_update":"U11","confidence":"high"}
+  ]
+}
