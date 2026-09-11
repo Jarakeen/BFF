@@ -142,17 +142,21 @@ class RotationHealerActionHealingService:
         context: BuildCalculationContext,
         source_name: str,
         coefficient_number: int,
+        expected_temporal_scope: HealTemporalScope = HealTemporalScope.PERIODIC,
     ) -> RotationHealerComponentHealingResolution:
-        """Re-evaluate one periodic heal component in an already-resolved context.
+        """Re-evaluate one healing component in an already-resolved build context.
 
-        This method deliberately owns no snapshot-vs-tick policy. Callers may use it
-        only after separate runtime evidence says the component should be recalculated
-        at the queried instant. The same saved-build tooltip path used at cast time is
-        reused so CP, Healing Done, transient power, and component modifiers do not
-        grow a second formula implementation.
+        Runtime policy stays outside this method. The caller must already know whether
+        the component should be recalculated at the queried instant and supplies the
+        canonical temporal scope it expects. The same saved-build tooltip path used at
+        cast time is reused so CP, Healing Done, transient power, and component
+        modifiers do not grow a second formula implementation.
         """
         name = str(source_name or "").strip()
         number = int(coefficient_number)
+        if not isinstance(expected_temporal_scope, HealTemporalScope):
+            expected_temporal_scope = HealTemporalScope(str(expected_temporal_scope))
+
         resolution = self.tooltip_service.coefficients.resolve_name(name)
         if resolution.rank is None:
             messages = resolution.unresolved or ("skill rank unresolved",)
@@ -199,15 +203,14 @@ class RotationHealerActionHealingService:
             unresolved.append(
                 f"{name} coefficient {number}: component is not canonical healing"
             )
-        else:
-            temporal = classification.heal_temporal_scope
-            is_periodic = temporal is HealTemporalScope.PERIODIC or (
-                temporal is None and classification.is_dot is True
+        elif not self._matches_temporal_scope(
+            classification,
+            expected_temporal_scope=expected_temporal_scope,
+        ):
+            label = expected_temporal_scope.value.replace("_", "-")
+            unresolved.append(
+                f"{name} coefficient {number}: component is not canonical {label} healing"
             )
-            if not is_periodic:
-                unresolved.append(
-                    f"{name} coefficient {number}: component is not canonical periodic healing"
-                )
 
         trace = next(
             (
@@ -473,6 +476,23 @@ class RotationHealerActionHealingService:
                 sorted(external_conditional_seeds, key=sort_key)
             ),
         )
+
+    @staticmethod
+    def _matches_temporal_scope(
+        classification,
+        *,
+        expected_temporal_scope: HealTemporalScope,
+    ) -> bool:
+        temporal = classification.heal_temporal_scope
+        if expected_temporal_scope is HealTemporalScope.PERIODIC:
+            return temporal is HealTemporalScope.PERIODIC or (
+                temporal is None and classification.is_dot is True
+            )
+        if expected_temporal_scope is HealTemporalScope.DIRECT:
+            return temporal is HealTemporalScope.DIRECT or (
+                temporal is None and classification.is_dot is False
+            )
+        return temporal is expected_temporal_scope
 
     @staticmethod
     def _normalize_bar_contexts(
