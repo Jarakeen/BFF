@@ -165,12 +165,7 @@ def _related_facts(
     seed: ReconciledEncounterFact,
     facts: Iterable[ReconciledEncounterFact],
 ) -> tuple[ReconciledEncounterFact, ...]:
-    """Find split reviewed evidence that belongs with one visible mechanic.
-
-    Literal mechanic stems are the default. A small presentation-only token map
-    joins source-schema families such as DSR dome, Reef Heart, and Deluge facts
-    whose reviewed evidence intentionally uses a different fact-key noun.
-    """
+    """Find split reviewed evidence that belongs with one visible mechanic."""
 
     stem = _mechanic_stem(seed)
     if not stem:
@@ -257,6 +252,17 @@ def _merge_entries(existing: ReferenceEntry, entry: ReferenceEntry) -> Reference
     )
 
 
+def _evidence_paths(data_root: Path) -> tuple[Path, ...]:
+    """Return canonical encounter packets plus supplemental Reference-only packets."""
+
+    roots = (data_root / "encounter_evidence", data_root / "reference_evidence")
+    paths: list[Path] = []
+    for root in roots:
+        if root.exists():
+            paths.extend(root.glob("*.json"))
+    return tuple(sorted(paths, key=lambda item: (item.parent.name.casefold(), item.name.casefold())))
+
+
 def _load_evidence_entries(
     data_root: Path,
     *,
@@ -265,14 +271,24 @@ def _load_evidence_entries(
 ) -> tuple[ReferenceEntry, ...]:
     backed_ids = _boss_ids(data_root) if skip_backed_encounters else frozenset()
     represented = _canonical_mechanic_entry_names(data_root) if suppress_canonical_mechanics else frozenset()
-    evidence_root = data_root / "encounter_evidence"
     entries: dict[str, ReferenceEntry] = {}
 
-    for path in sorted(evidence_root.glob("*.json"), key=lambda item: item.name.casefold()):
+    packets: dict[str, list] = {}
+    for path in _evidence_paths(data_root):
         packet = load_encounter_evidence_packet(path)
-        if packet.encounter_id in backed_ids:
+        packets.setdefault(packet.encounter_id, []).append(packet)
+
+    for packet_group in packets.values():
+        encounter_id = packet_group[0].encounter_id
+        if encounter_id in backed_ids:
             continue
-        facts = tuple(reconcile_encounter_evidence(packet.evidence))
+        combined_evidence = tuple(
+            row
+            for packet in packet_group
+            for row in packet.evidence
+        )
+        facts = tuple(reconcile_encounter_evidence(combined_evidence))
+        packet = packet_group[0]
         for fact in facts:
             entry = _entry_from_fact(packet, fact, facts)
             if entry is None:
@@ -302,13 +318,7 @@ def enrich_reference_entries_with_encounter_evidence(
     entries: Iterable[ReferenceEntry],
     data_root: Path | None = None,
 ) -> tuple[ReferenceEntry, ...]:
-    """Augment canonical Reference entries and append only unmatched evidence entries.
-
-    Canonical entries keep their authority, summary, structured mechanic fields, and
-    death guidance. Reviewed evidence contributes additional timing/response/HM facts
-    and provenance. Evidence-only entries are retained only when no canonical entry
-    with the same human-readable mechanic identity exists.
-    """
+    """Augment canonical Reference entries and append only unmatched evidence entries."""
 
     root = data_root or get_data_dir()
     evidence_entries = _load_evidence_entries(
