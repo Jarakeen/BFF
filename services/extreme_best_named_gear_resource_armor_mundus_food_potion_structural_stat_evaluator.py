@@ -62,6 +62,9 @@ from services.extreme_resource_blood_magic_canonical_stat_evaluator import (
 from services.extreme_resource_champion_point_state_service import (
     ExtremeResourceChampionPointStateService,
 )
+from services.extreme_resource_equipment_trait_projection_coverage_service import (
+    ExtremeResourceEquipmentTraitProjectionCoverageService,
+)
 from services.extreme_second_mundus_forwarding_evaluator import (
     ExtremeSecondMundusForwardingEvaluator,
 )
@@ -92,6 +95,12 @@ _RESOURCE_ACTIVE_SKILL_SCOPE = (
     "all canonical active skills and morphs reviewed for direct max-resource mutation; "
     "none directly modifies the requested max resource, while separate proof-reduced "
     "bar witnesses cover resource-relevant passive slot conditions"
+)
+_RESOURCE_EQUIPMENT_TRAIT_SCOPE = (
+    "all canonical armor and jewelry trait domains reviewed for the requested max resource; "
+    "Divines/Infused armor and static resource jewelry traits are searched while all other "
+    "armor/jewelry traits plus weapon traits are proven irrelevant or glyph-dependent on a "
+    "proven-irrelevant enchantment family"
 )
 
 
@@ -125,6 +134,7 @@ class ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory:
         active_bar_state_service: ExtremeResourceActiveBarStateService | None = None,
         champion_point_state_service: ExtremeResourceChampionPointStateService | None = None,
         active_skill_coverage_audit_service: ExtremeResourceActiveSkillCoverageAuditService | None = None,
+        equipment_trait_projection_coverage_service: ExtremeResourceEquipmentTraitProjectionCoverageService | None = None,
     ) -> None:
         self.canonical_evaluator = canonical_evaluator
         self.mundus_repository = mundus_repository
@@ -147,6 +157,14 @@ class ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory:
             )
         self.active_skill_coverage_audit_service = active_skill_coverage_audit_service
 
+        if equipment_trait_projection_coverage_service is None and database_path is not None:
+            equipment_trait_projection_coverage_service = (
+                ExtremeResourceEquipmentTraitProjectionCoverageService(database_path)
+            )
+        self.equipment_trait_projection_coverage_service = (
+            equipment_trait_projection_coverage_service
+        )
+
     @classmethod
     def _has_active_twice_born_star(
         cls,
@@ -166,6 +184,11 @@ class ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory:
         if self.active_skill_coverage_audit_service is None:
             return None
         return self.active_skill_coverage_audit_service.build(objective_key)
+
+    def equipment_trait_projection(self, objective_key: str):
+        if self.equipment_trait_projection_coverage_service is None:
+            return None
+        return self.equipment_trait_projection_coverage_service.build(objective_key)
 
     def __call__(
         self,
@@ -300,6 +323,20 @@ class ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator:
             return None
         return resolver(objective_key)
 
+    def _equipment_trait_projection(self, objective_key: str):
+        resolver = getattr(self.evaluator_factory, "equipment_trait_projection", None)
+        if not callable(resolver):
+            return None
+        return resolver(objective_key)
+
+    def _equipment_trait_projection_complete(self, objective_key: str) -> bool:
+        projection = self._equipment_trait_projection(objective_key)
+        return bool(
+            self.reviewed_resource_armor_denominator_proven
+            and projection is not None
+            and projection.projection_complete
+        )
+
     def closed_dynamic_axes(self, objective_key: str) -> tuple[str, ...]:
         closed: list[str] = []
         cp_state = self._champion_point_state(objective_key)
@@ -308,6 +345,8 @@ class ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator:
         skill_audit = self._active_skill_audit(objective_key)
         if skill_audit is not None and skill_audit.projection_complete:
             closed.append("skill-bar choices and morphs")
+        if self._equipment_trait_projection_complete(objective_key):
+            closed.append("armor, jewelry, and weapon traits")
         return tuple(closed)
 
     def additional_search_scope(self, objective_key: str) -> tuple[str, ...]:
@@ -318,6 +357,8 @@ class ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator:
         skill_audit = self._active_skill_audit(objective_key)
         if skill_audit is not None and skill_audit.projection_complete:
             scope.append(_RESOURCE_ACTIVE_SKILL_SCOPE)
+        if self._equipment_trait_projection_complete(objective_key):
+            scope.append(_RESOURCE_EQUIPMENT_TRAIT_SCOPE)
         return tuple(scope)
 
     def _evaluator_for(
