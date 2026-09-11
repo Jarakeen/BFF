@@ -13,6 +13,7 @@ import sqlite3
 from PySide6.QtWidgets import QLineEdit
 
 from ui.mechanics_boss_map_support import PAIR_ID, PAIR_MEMBERS
+from ui.mechanics_evidence_guide_support import install as install_evidence_guide_support
 
 
 _INSTALLED = False
@@ -125,11 +126,15 @@ def _summary_matches(row, query: str) -> bool:
 
 
 def install() -> None:
-    """Add a global boss/mechanic search box to Mechanics before page creation."""
+    """Add reviewed guide fallback and global mechanic search before page creation."""
 
     global _INSTALLED
     if _INSTALLED:
         return
+
+    # Pair/map support is installed before this module by app.py. Install the
+    # evidence-guide layer now so search wraps the fully enriched Mechanics page.
+    install_evidence_guide_support()
 
     from ui.mechanics_page import MechanicsPage
 
