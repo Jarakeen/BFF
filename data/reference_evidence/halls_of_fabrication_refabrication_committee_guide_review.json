@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "content_id": "halls_of_fabrication",
+  "encounter_id": "refabrication_committee",
+  "encounter_name": "Refabrication Committee",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"split_phase","value":{"order":1,"label":"Split Bosses","threshold":"Pull","description":"Two tanks hold Reactor and Reducer apart while Reclaimer remains center. Keep bosses separated to avoid dangerous electrical linking."},"source_type":"guide","source_name":"Xynode Halls of Fabrication Trial Guide","source_locator":"Refabrication Committee","confidence":"medium"},
+    {"fact_type":"phase","fact_key":"stun_phase_one","value":{"order":2,"label":"Beam-Stun Burn","threshold":"69%","description":"Balance all three bosses near the threshold, stack them together, and use their links to stun them during invulnerability for a coordinated burn."},"source_type":"guide","source_name":"Xynode Halls of Fabrication Trial Guide","source_locator":"Committee 69% phase","confidence":"medium"},
+    {"fact_type":"phase","fact_key":"stun_phase_two","value":{"order":3,"label":"Beam-Stun Burn","threshold":"39%","description":"Repeat the coordinated stack-and-stun burn."},"source_type":"guide","source_name":"Xynode Halls of Fabrication Trial Guide","source_locator":"Committee 39% phase","confidence":"medium"},
+    {"fact_type":"phase","fact_key":"stun_phase_three","value":{"order":4,"label":"Beam-Stun Burn","threshold":"25%","description":"Final coordinated stun phase; afterward split bosses again and finish Reclaimer first, then the others."},"source_type":"guide + official_patch_notes","source_name":"Xynode Halls of Fabrication Trial Guide; ESO PC/Mac Patch Notes v3.0.12","source_locator":"Committee 25% phase / exploding adds threshold","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"tank_swap","value":{"name":"Tank Boss Swap","trigger":"bubble_stacks","lethal_stacks":10,"response":"swap_reactor_and_reducer_quickly"},"source_type":"guide","source_name":"Xynode Halls of Fabrication Trial Guide","source_locator":"Committee > Aggro Swap","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"bombers","value":{"name":"Bombers","source":"Reclaimer","response":"kill_before_they_reach_reclaimer_shield","failure_risk":"empowered_charge_and_explosion"},"source_type":"guide","source_name":"Xynode Halls of Fabrication Trial Guide","source_locator":"Committee > Bombers","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"exploding_ruined_fabricants","value":{"name":"Exploding Ruined Fabricants","starts_at_percent":20},"source_type":"official_patch_notes","source_name":"ESO PC/Mac Patch Notes v3.0.12","source_locator":"Refabrication Committee","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"grasping_limbs","value":{"name":"Grasping Limbs","break_free_supported":true},"source_type":"official_patch_notes","source_name":"ESO PC/Mac Patch Notes v3.0.12","source_locator":"Refabrication Committee","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"melting_point","value":{"name":"Melting Point","later_tuned_damage":true},"source_type":"official_patch_notes","source_name":"ESO PTS Patch Notes v5.3.0","source_locator":"Refabrication Committee","confidence":"high"}
+  ]
+}
