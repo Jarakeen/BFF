@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {
+      "entry_name": "Cleanse Pads — Zhaj'hassa the Forgotten",
+      "mitigation": "Assign two players per cleanse pad and do not waste pads by cleansing early or wandering across other assignments.",
+      "source": "reviewed_encounter_evidence"
+    },
+    {
+      "entry_name": "Pillar Placement — Zhaj'hassa the Forgotten",
+      "mitigation": "Hold your assigned position and place pillars cleanly; unnecessary movement spreads curses and consumes safe room space.",
+      "source": "reviewed_encounter_evidence"
+    },
+    {
+      "entry_name": "Color Rule — S'kinrai and Vashai",
+      "mitigation": "Stay with your same-color team, never touch opposite-color players, and attack the opposite-color boss for full damage.",
+      "source": "reviewed_encounter_evidence"
+    },
+    {
+      "entry_name": "Tank Boss Swap — S'kinrai and Vashai",
+      "mitigation": "Tanks swap bosses on the color cycle so each team continues attacking the opposite-color target.",
+      "source": "reviewed_encounter_evidence"
+    },
+    {
+      "entry_name": "Radiant Oppression — S'kinrai and Vashai",
+      "mitigation": "Interrupt S'kinrai immediately when the beam pins the tank.",
+      "source": "reviewed_encounter_evidence"
+    },
+    {
+      "entry_name": "Negate Bubble — S'kinrai and Vashai",
+      "mitigation": "Vashai tank baits negates along the wall and moves the boss out of each bubble without dragging it through the team.",
+      "source": "reviewed_encounter_evidence"
+    },
+    {
+      "entry_name": "Machine Gun — Rakkhat",
+      "mitigation": "Main tank blocks with focused healing and keeps Rakkhat faced away from the group.",
+      "source": "reviewed_encounter_evidence"
+    },
+    {
+      "entry_name": "Jump Knockback — Rakkhat",
+      "mitigation": "Block the jump. Getting launched into a blue pad or a cleanse pad is the expensive version of learning this mechanic.",
+      "source": "reviewed_encounter_evidence"
+    }
+  ]
+}
