@@ -8,6 +8,9 @@ from typing import Callable
 
 from minmax.rotation_demand_window import RotationDemandKind, RotationDemandWindow
 from models.build_model import PlayerBuild
+from services.rotation_candidate_canonical_plan_evidence_service import (
+    RotationCandidateRoleOutputEvidence,
+)
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 from services.rotation_candidate_healer_multi_demand_role_output_service import (
     RotationCandidateHealerMultiDemandOutput,
@@ -58,6 +61,19 @@ class RotationHealerCanonicalRoleOutputFactoryResult:
     @property
     def ready(self) -> bool:
         return self.role_output_provider is not None and not self.unresolved
+
+    def evaluate_plan(
+        self,
+        candidate: GeneratedRotationCandidate,
+    ) -> RotationCandidateRoleOutputEvidence:
+        """Expose fail-closed aggregate output to canonical plan evidence."""
+
+        output = self.evaluate_windows(candidate)
+        return RotationCandidateRoleOutputEvidence(
+            candidate_id=output.candidate_id,
+            value=output.weakest_window_value,
+            unresolved=output.unresolved,
+        )
 
     def evaluate_windows(
         self,
