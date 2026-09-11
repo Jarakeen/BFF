@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "the_banished_cells_ii",
+  "encounter_id": "keeper_imiril",
+  "encounter_name": "Keeper Imiril",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"banekin","value":{"order":1,"label":"Banekin Portal","threshold":"portal cycle","description":"Kill Banekin before Imiril returns from the portal."},"source_type":"guide","source_name":"Xynode Keeper Imiril Guide","source_locator":"Keeper Imiril","game_update":"Launch","confidence":"high"},
+    {"fact_type":"phase","fact_key":"twilight","value":{"order":2,"label":"Twilight Portal","threshold":"portal cycle","description":"Clear Twilightlings before the next boss return."},"source_type":"guide","source_name":"Xynode Keeper Imiril Guide","source_locator":"Keeper Imiril","game_update":"Launch","confidence":"high"},
+    {"fact_type":"phase","fact_key":"clannfear","value":{"order":3,"label":"Clannfear Portal","threshold":"portal cycle","description":"Prioritize the Clannfear wave and prevent add carryover into the next cycle."},"source_type":"guide","source_name":"Xynode Keeper Imiril Guide","source_locator":"Keeper Imiril","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"return_burst","value":{"name":"Portal Return Burst","response":"step_out_or_block_the_large_burst_when_imiril_exits_the_portal"},"source_type":"guide","source_name":"Xynode Keeper Imiril Guide","source_locator":"Keeper Imiril","game_update":"Launch","confidence":"high"}
+  ]
+}
