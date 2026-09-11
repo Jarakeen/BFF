@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "content_id": "coral_aerie",
+  "encounter_id": "sarydil",
+  "encounter_name": "Sarydil",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase_one","value":{"order":1,"label":"Main Phase I","threshold":"Pull to ~70%","description":"Sarydil pressures the tank with Assault/Brand while the group manages Blast Powder and target-mark trap placement."},"source_type":"guide","source_name":"ESO-Hub Coral Aerie Dungeon Guide","source_locator":"Sarydil","game_update":"U33+","confidence":"high"},
+    {"fact_type":"phase","fact_key":"add_phase_one","value":{"order":2,"label":"Archer / Trap Phase I","threshold":"~70%","description":"Sarydil retreats upward, archers focus players, and trap explosions force the group to find safe space while dealing with adds."},"source_type":"guide","source_name":"ESO-Hub Coral Aerie Dungeon Guide","source_locator":"Sarydil > Adds / Trap Explosion","game_update":"U33+","confidence":"high"},
+    {"fact_type":"phase","fact_key":"main_phase_two","value":{"order":3,"label":"Main Phase II","threshold":"~70% to ~35%","description":"Return to boss pressure while continuing deliberate trap placement and add control."},"source_type":"guide","source_name":"ESO-Hub Coral Aerie Dungeon Guide","source_locator":"Sarydil","game_update":"U33+","confidence":"high"},
+    {"fact_type":"phase","fact_key":"add_phase_two","value":{"order":4,"label":"Reinforced Add Phase","threshold":"~35%","description":"The add phase repeats with heavier support, including a larger add, increasing tank and interrupt pressure."},"source_type":"guide","source_name":"ESO-Hub Coral Aerie Dungeon Guide","source_locator":"Sarydil > Adds","game_update":"U33+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"assault_brand","value":{"name":"Assault / Brand","response":"tank_stays_ready_for_teleport_heavy_and_fire_dot","warning":"do_not_leave_boss_uncontrolled_at_range"},"source_type":"guide","source_name":"ESO-Hub Coral Aerie Dungeon Guide","source_locator":"Sarydil > Assault","game_update":"U33+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"target_mark","value":{"name":"Target Mark","response":"marked_player_walks_traps_to_outer_edge","failure":"bad_placement_reduces_safe_space"},"source_type":"guide","source_name":"ESO-Hub Coral Aerie Dungeon Guide","source_locator":"Sarydil > Target Mark","game_update":"U33+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"pinpoint","value":{"name":"Pinpoint","response":"interrupt_shadowy_assassins_focusing_target","failure":"continued_archer_focus_can_kill_target"},"source_type":"guide","source_name":"ESO-Hub Coral Aerie Dungeon Guide","source_locator":"Sarydil > Pinpoint","game_update":"U33+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"trap_explosion","value":{"name":"Trap Explosion","response":"identify_safe_gap_before_arena_traps_detonate","failure":"standing_in_trap_field_is_lethal"},"source_type":"guide","source_name":"ESO-Hub Coral Aerie Dungeon Guide","source_locator":"Sarydil > Trap Explosion","game_update":"U33+","confidence":"high"}
+  ]
+}
