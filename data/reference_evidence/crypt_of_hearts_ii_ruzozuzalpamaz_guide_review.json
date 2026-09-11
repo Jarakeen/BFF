@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "crypt_of_hearts_ii",
+  "encounter_id": "ruzozuzalpamaz",
+  "encounter_name": "Ruzozuzalpamaz",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Spider Daedra Main Phase","threshold":"100% to 0%","description":"Keep the boss centered, maintain spacing, and react immediately to cocoon and chasing-area pressure."},"source_type":"guide","source_name":"Xynode Crypt of Hearts II Guide","source_locator":"Ruzozuzalpamaz","game_update":"U2","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"cocoon","value":{"name":"Web Cocoon","response":"use_synergy_immediately_to_free_cocooned_player"},"source_type":"guide","source_name":"Xynode Crypt of Hearts II Guide","source_locator":"Ruzozuzalpamaz","game_update":"U2","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"chasing_aoe","value":{"name":"Chasing AoE","response":"maintain_spacing_and_do_not_drag_pressure_through_group"},"source_type":"guide","source_name":"Xynode Crypt of Hearts II Guide","source_locator":"Ruzozuzalpamaz","game_update":"U2","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"heavy_attack","value":{"name":"Heavy Attack","response":"block_the_heavy_attack_to_avoid_knockback"},"source_type":"guide","source_name":"Xynode Crypt of Hearts II Guide","source_locator":"Ruzozuzalpamaz","game_update":"U2","confidence":"high"}
+  ]
+}
