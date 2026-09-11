@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "vaults_of_madness",
+  "encounter_id": "ulguna_soul_reaver",
+  "encounter_name": "Ulguna Soul-Reaver",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"fight start","description":"Keep Ulguna controlled and quickly free any player caught by her soul-stifling mechanic."},"source_type":"guide","source_name":"Xynode Vaults of Madness Guide","source_locator":"Ulguna Soul Reaver","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"wave_attack","value":{"name":"Wave Attack","response":"block_or_step_out_of_the_frontal_wave"},"source_type":"guide","source_name":"Xynode Vaults of Madness Guide","source_locator":"Ulguna Soul Reaver","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"levitation_stifle","value":{"name":"Levitation / Stifle","response":"destroy_all_four_feast_orbs_before_they_reach_ulguna_to_release_the_trapped_player"},"source_type":"guide","source_name":"Xynode Vaults of Madness Guide","source_locator":"Ulguna Soul Reaver","game_update":"Launch","confidence":"high"}
+  ]
+}
