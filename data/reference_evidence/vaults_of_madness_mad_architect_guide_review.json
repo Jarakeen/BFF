@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "content_id": "vaults_of_madness",
+  "encounter_id": "mad_architect",
+  "encounter_name": "Mad Architect",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"fight start","description":"Keep the Mad Architect faced away, clear summoned undead quickly, and react correctly to the opposite inside/outside arena checks."},"source_type":"guide","source_name":"Xynode Vaults of Madness Guide","source_locator":"Mad Architect","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"undead_minions","value":{"name":"Undead Minions","response":"pull_in_and_kill_the_summoned_adds_quickly"},"source_type":"guide","source_name":"Xynode Vaults of Madness Guide","source_locator":"Mad Architect","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"runes","value":{"name":"Runes","response":"step_out_of_the_dark_runes_to_avoid_damage_and_snare_pressure"},"source_type":"guide","source_name":"Xynode Vaults of Madness Guide","source_locator":"Mad Architect","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"undead_legion","value":{"name":"Undead Legion","response":"move_out_of_the_central_spirit_area_until_the_effect_ends"},"source_type":"guide","source_name":"Xynode Vaults of Madness Guide","source_locator":"Mad Architect","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"obliterate","value":{"name":"Obliterate","response":"stay_inside_the_protective_dome_until_the_room_breaking_blast_finishes"},"source_type":"guide","source_name":"Xynode Vaults of Madness Guide","source_locator":"Mad Architect","game_update":"Launch","confidence":"high"}
+  ]
+}
