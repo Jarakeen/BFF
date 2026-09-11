@@ -6,6 +6,9 @@ from .combat_effect_semantics import GameUpdate, normalize_game_update
 from .named_combat_buffs import canonical_buff_name
 
 
+EMPEROR_STATE_MARKER_PREFIX = "__emperor_home_keeps__:"
+
+
 @dataclass(frozen=True)
 class CombatState:
     """Explicit transient combat conditions for one calculation snapshot.
@@ -19,6 +22,12 @@ class CombatState:
     passive only applies while the character is the active Emperor, is inside
     that home campaign, and supplies the current Home Keep count used by the
     canonical passive table.
+
+    The private ``__emperor_home_keeps__:N`` snapshot marker exists only to let
+    older finite-axis evaluators that currently transport transient state through
+    ``active_buffs`` carry this explicit state without treating it as a named
+    combat buff. It is consumed at this boundary and never survives in
+    ``active_buffs``.
 
     ``game_update`` versions the meaning of those named effects. U50 remains the
     default until Update 51 is live; callers may explicitly evaluate U51/PTS
@@ -34,14 +43,35 @@ class CombatState:
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "game_update", normalize_game_update(self.game_update))
-        keeps = int(self.emperor_home_keeps)
+
+        marker_keeps: int | None = None
+        filtered_buffs: list[str] = []
+        for raw in self.active_buffs:
+            text = str(raw or "").strip()
+            if text.casefold().startswith(EMPEROR_STATE_MARKER_PREFIX):
+                if marker_keeps is not None:
+                    raise ValueError("multiple Emperor state markers are not allowed")
+                value = text[len(EMPEROR_STATE_MARKER_PREFIX) :].strip()
+                try:
+                    marker_keeps = int(value)
+                except ValueError as exc:
+                    raise ValueError("Emperor state marker must end with an integer Home Keep count") from exc
+                continue
+            filtered_buffs.append(text)
+
+        keeps = marker_keeps if marker_keeps is not None else int(self.emperor_home_keeps)
         if keeps < 0 or keeps > 6:
             raise ValueError("emperor_home_keeps must be between 0 and 6")
+        if marker_keeps is not None:
+            if self.is_emperor or self.in_home_campaign or self.emperor_home_keeps:
+                raise ValueError("Emperor state marker cannot be combined with explicit Emperor fields")
+            object.__setattr__(self, "is_emperor", True)
+            object.__setattr__(self, "in_home_campaign", True)
         object.__setattr__(self, "emperor_home_keeps", keeps)
 
         seen: set[str] = set()
         normalized: list[str] = []
-        for value in self.active_buffs:
+        for value in filtered_buffs:
             canonical = canonical_buff_name(value)
             if canonical is None:
                 name = " ".join(str(value or "").strip().split())
