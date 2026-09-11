@@ -40,6 +40,9 @@ class RotationCandidateGameplayPolicyContextService:
     family because rotation candidates alter the plan, not the saved skill loadout.
     Encounter assignment exceptions and healer reliability remain explicit caller
     evidence and are never invented from mechanics.
+
+    ``context_for`` is the recommendation-evidence provider contract. ``evaluate`` is
+    retained as a compatibility alias for focused audits and older callers.
     """
 
     def __init__(
@@ -60,7 +63,7 @@ class RotationCandidateGameplayPolicyContextService:
         self.exception_contexts = tuple(exception_contexts)
         self._slot_evidence: RotationCandidatePersonalHealSlotEvidence | None = None
 
-    def evaluate(
+    def context_for(
         self,
         candidate: GeneratedRotationCandidate,
     ) -> RotationGameplayPolicyContext:
@@ -78,6 +81,14 @@ class RotationCandidateGameplayPolicyContextService:
             personal_heal_slot_evidence_resolved=evidence.resolved,
             personal_heal_slot_unresolved=evidence.unresolved,
         )
+
+    def evaluate(
+        self,
+        candidate: GeneratedRotationCandidate,
+    ) -> RotationGameplayPolicyContext:
+        """Compatibility alias for ``context_for``."""
+
+        return self.context_for(candidate)
 
     def _evaluate_saved_build_slots(self) -> RotationCandidatePersonalHealSlotEvidence:
         selected: list[str] = []
