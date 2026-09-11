@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "content_id": "bloodroot_forge",
+  "encounter_id": "caillaoife",
+  "encounter_name": "Caillaoife",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_one","value":{"order":1,"label":"Main Phase I","threshold":"100% to 75%","description":"Face Caillaoife away and prepare for the first protected forest/add phase."},"source_type":"guide","source_name":"Alcast Bloodroot Forge Guide","source_locator":"Second Boss - Caillaoife","game_update":"U15","confidence":"high"},
+    {"fact_type":"phase","fact_key":"forest_75","value":{"order":2,"label":"Forest I","threshold":"75%","description":"Caillaoife becomes immune while adds spawn; move away from the boss, kill the adds, and clear the protection field."},"source_type":"guide","source_name":"Alcast Bloodroot Forge Guide","source_locator":"Caillaoife","game_update":"U15","confidence":"high"},
+    {"fact_type":"phase","fact_key":"forest_50","value":{"order":3,"label":"Forest II","threshold":"50%","description":"Repeat the forest immunity/add clear."},"source_type":"guide","source_name":"Alcast Bloodroot Forge Guide","source_locator":"Caillaoife","game_update":"U15","confidence":"high"},
+    {"fact_type":"phase","fact_key":"forest_25","value":{"order":4,"label":"Forest III","threshold":"25%","description":"Repeat the forest immunity/add clear before execute."},"source_type":"guide","source_name":"Alcast Bloodroot Forge Guide","source_locator":"Caillaoife","game_update":"U15","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"ice_root","value":{"name":"Icy Root","response":"purge_or_avoid_the_targeted_ice_attack_to_prevent_root"},"source_type":"guide","source_name":"Alcast Bloodroot Forge Guide","source_locator":"Caillaoife","game_update":"U15","confidence":"high"}
+  ]
+}
