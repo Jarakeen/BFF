@@ -83,6 +83,48 @@ class ExtremeSorcererExpertSummonerPetContextService:
             )
         return True, ()
 
+    @staticmethod
+    def _base_context(
+        factory,
+        *,
+        build_kwargs: dict,
+        gear_condition_context: frozenset[str] | None,
+    ) -> BuildCalculationContext:
+        if (
+            gear_condition_context is not None
+            and hasattr(factory, "gear_inputs_with_condition")
+        ):
+            build_kwargs = dict(build_kwargs)
+            build_kwargs["gear_condition_context"] = gear_condition_context
+        return factory.build(**build_kwargs)
+
+    @staticmethod
+    def _gear_inputs(
+        factory,
+        *,
+        build: PlayerBuild,
+        progression: CharacterProgression,
+        active_bar: str,
+        base_context: BuildCalculationContext,
+        gear_condition_context: frozenset[str] | None,
+    ):
+        if hasattr(factory, "gear_inputs_with_condition"):
+            return factory.gear_inputs_with_condition(
+                build,
+                progression=progression,
+                active_bar=active_bar,
+                combat_state=base_context.combat_state,
+                incoming_attack=base_context.incoming_attack,
+                condition_context=gear_condition_context,
+            )
+        return factory._gear_inputs(
+            build,
+            progression=progression,
+            active_bar=active_bar,
+            combat_state=base_context.combat_state,
+            incoming_attack=base_context.incoming_attack,
+        )
+
     def resolve(
         self,
         *,
@@ -94,6 +136,7 @@ class ExtremeSorcererExpertSummonerPetContextService:
         active_bar: str = "front",
         combat_state=None,
         permanent_pet_active: bool,
+        gear_condition_context: frozenset[str] | None = None,
     ) -> ExtremeSorcererExpertSummonerPetContextResult:
         build_kwargs = dict(
             character_id=character_id,
@@ -104,7 +147,11 @@ class ExtremeSorcererExpertSummonerPetContextService:
         )
         if combat_state is not None:
             build_kwargs["combat_state"] = combat_state
-        base_context = factory.build(**build_kwargs)
+        base_context = self._base_context(
+            factory,
+            build_kwargs=build_kwargs,
+            gear_condition_context=gear_condition_context,
+        )
 
         if not permanent_pet_active:
             return ExtremeSorcererExpertSummonerPetContextResult(
@@ -125,12 +172,13 @@ class ExtremeSorcererExpertSummonerPetContextService:
                 unresolved=self._dedupe(eligibility_unresolved),
             )
 
-        gear = factory._gear_inputs(
-            build,
+        gear = self._gear_inputs(
+            factory,
+            build=build,
             progression=progression,
             active_bar=active_bar,
-            combat_state=base_context.combat_state,
-            incoming_attack=base_context.incoming_attack,
+            base_context=base_context,
+            gear_condition_context=gear_condition_context,
         )
         pet_health = PercentContribution(self.SOURCE, self.MAX_HEALTH_PERCENT)
         gear = replace(
