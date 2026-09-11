@@ -113,6 +113,15 @@ https://eso-hub.com/en/skills
 
 **Notes:** Useful for confirming the current visible passive roster and effect wording. Versioned numerical changes should still be reconciled against official patch notes or canonical game data before hardcoding combat math.
 
+### UESP Lifesteal mechanics page
+https://en.uesp.net/wiki/Online:Lifesteal
+
+**Use for:** Readable Minor Lifesteal provider history, tooltip wording, affected-target semantics, and candidate cadence/ownership claims that can be tested against ESO Logs or live combat events.
+
+**Confidence:** Validation / historical corroboration.
+
+**Notes:** The page currently describes attackers receiving 600 Health every 1 second while damaging an affected enemy, but its revision and provider history cross multiple game updates. Use it to frame runtime-evidence questions, not to promote a cooldown, event owner, or numeric heal rule without current-version log/client validation.
+
 ### ESO-Hub Buffs & Debuffs
 https://eso-hub.com/en/buffs-debuffs
 
