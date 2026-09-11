@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "frostvault",
+  "encounter_id": "rizzuk_bonechill",
+  "encounter_name": "Rizzuk Bonechill",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Rizzuk and Avalanche","threshold":"Full fight","description":"Rizzuk's frost curse and interrupt checks overlap Avalanche's tank-focused arena pressure."},"source_type":"guide","source_name":"Alcast Frostvault Guide","source_locator":"Rizzuk Bonechill","game_update":"U21","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"frost_curse","value":{"name":"Glacial Prison Curse","response":"spread_before_freeze_explosions_so_personal_aoes_do_not_overlap"},"source_type":"guide","source_name":"Alcast Frostvault Guide","source_locator":"Rizzuk frost blast","game_update":"U21","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"frost_bolts","value":{"name":"Frost Bolt Channel","response":"interrupt_rizzuk_channel_immediately"},"source_type":"guide","source_name":"Alcast Frostvault Guide","source_locator":"Rizzuk frost bolts","game_update":"U21","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"avalanche_ring","value":{"name":"Avalanche Ice Ring","response":"tank_stay_inside_ice_spike_ring_and_hold_avalanche_pressure"},"source_type":"guide","source_name":"Alcast Frostvault Guide","source_locator":"Avalanche","game_update":"U21","confidence":"high"}
+  ]
+}
