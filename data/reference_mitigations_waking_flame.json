@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {"entry_name":"Unspeakable Void — Rogerain the Sly","mitigation":"Leave the large void circle immediately, then keep moving for the smaller Belly Buster eruptions from its center. Do not treat the first step out as the end of the mechanic."},
+    {"entry_name":"Chaos Rain — Rogerain the Sly","mitigation":"Stack loosely enough for efficient group healing while the poison pressure is active. Healer should expect sustained rather than one-shot damage."},
+    {"entry_name":"Chaos Gate — Rogerain the Sly","mitigation":"Control the portal adds, then burn the gate during the goat-enabled damage window instead of tunneling Rogerain while the portal keeps spawning pressure."},
+    {"entry_name":"Goatification — Rogerain the Sly","mitigation":"The transformed player eats Sweetrolls to build Buck Wild stacks, then charges the Chaos Gate so the group can damage it efficiently. Keep the goat route clear instead of body-blocking the mechanic."},
+
+    {"entry_name":"Aftershock — Artifact Bearers","mitigation":"Move out of the electrified field immediately. The area is large enough that late reactions compound badly with ally and trap pressure."},
+    {"entry_name":"Stonesplitter Plunge — Artifact Bearers","mitigation":"Avoid becoming the isolated furthest target when practical. If targeted, be ready for the jump and knockback instead of assuming the tank owns every boss attack."},
+    {"entry_name":"Liramindrel Arrow Traps — Artifact Bearers","mitigation":"Place and path around the arrow traps so they do not consume the central movement lanes. Stepping into one stuns you at exactly the wrong time during overlapping add pressure."},
+    {"entry_name":"Ihudir Interrupt — Artifact Bearers","mitigation":"Interrupt Ihudir's dangerous cast immediately whenever he is active. At low boss health both allies can overlap, so assign interrupt awareness rather than hoping someone notices."},
+
+    {"entry_name":"Heinous Highkick / Wide Slice — Prior Thierric Sarazen","mitigation":"Tank blocks or rolls the kick and keeps the follow-up frontal away from the group. Non-tanks should stay out of the boss-facing lane."},
+    {"entry_name":"Opalescent Impale — Prior Thierric Sarazen","mitigation":"Interrupt this cast immediately. It is a lethal targeted mechanic, not optional add-control housekeeping."},
+    {"entry_name":"Duplicate Wall — Prior Thierric Sarazen","mitigation":"Read the incoming duplicate formation early and move through a safe gap. Getting clipped by the rushing copies causes damage and knockdown and can chain into other floor pressure."},
+    {"entry_name":"Realmshapers — Prior Thierric Sarazen","mitigation":"Focus and interrupt Realmshapers before they can heal Prior Thierric. Relic Fiends are secondary unless their number begins overwhelming the group."},
+    {"entry_name":"Blade Tempest Duplicates — Prior Thierric Sarazen","mitigation":"Stay outside the duplicate whirlwinds and preserve an escape lane instead of allowing Aftershocks and adds to box the group into the spinning copies."},
+
+    {"entry_name":"Agonymium Stone — Scorion Broodlord","mitigation":"Burn Agonymium Stones quickly and stack dangerous adds close enough to cleave them with the stone. If the Broodlord consumes a stone it heals, undoing the group's work."},
+    {"entry_name":"Excruciating Expectoration — Scorion Broodlord","mitigation":"Healer prepares for the unavoidable damage-over-time component rather than wasting movement trying to cleanse what the reviewed guide treats as non-removable."},
+    {"entry_name":"Turmoil — Scorion Broodlord","mitigation":"Tank points the cone away from the group and blocks it. Everyone else stays behind or to the side of the boss."},
+    {"entry_name":"Pull & Explode — Scorion Broodlord","mitigation":"Keep the tank in a sensible working range so the pull is not triggered casually. If pulled, immediately roll or move out of the explosion zone."},
+    {"entry_name":"Hard Mode Add Priority — Scorion Broodlord","mitigation":"Treat Hard Mode as an add-control fight: interrupt Xivilai Shockslayers, control Bone Atronach pressure, and cleave adds into Agonymium Stones instead of greed-burning the boss."},
+
+    {"entry_name":"Storm Atronachs — Cyronin Artellian","mitigation":"Kill or control Storm Atronachs before Heart of the Storm becomes group-threatening, and remember Cyronin can bring them back later."},
+    {"entry_name":"Boltwyrm — Cyronin Artellian","mitigation":"Control the Boltwyrm and respect its Arresting Bolt slow/damage so movement mechanics do not become harder than they need to be."},
+    {"entry_name":"Soulstorm — Cyronin Artellian","mitigation":"Dodge roll the targeted skull attack. Blocking is not the reviewed solution, so save enough Stamina to execute the roll reliably."},
+    {"entry_name":"Dread Surge — Cyronin Artellian","mitigation":"Keep moving around the Crystal Cathode waves or dodge through them cleanly. Standing still and trying to heal through repeated red waves is the wrong plan."},
+    {"entry_name":"Hard Mode Lightning Orbs — Cyronin Artellian","mitigation":"The two targeted players place their lightning orbs away from the group, then leave the resulting ground danger immediately so later movement lanes remain usable."},
+
+    {"entry_name":"Portal / Agonymium Stone — Magma Incarnate","mitigation":"During each portal cycle, kill the Agonymium Stone before the Scorion can absorb it. Boss damage is irrelevant while Magma Incarnate is invulnerable, so the portal job takes priority."},
+    {"entry_name":"Path of Fire — Magma Incarnate","mitigation":"Block or roll the incoming line. In Hard Mode, place the persistent fire away from the stack and planned movement routes rather than painting the useful arena red."},
+    {"entry_name":"Incarnate Outburst — Magma Incarnate","mitigation":"The tank must stand in and block the required soak. Missing it turns a personal tank mechanic into a group wipe."},
+    {"entry_name":"Tornado Wall — Magma Incarnate","mitigation":"Find the safe gap early and move with the wall. Do not wait until the tornadoes are already on top of the group."}
+  ]
+}
