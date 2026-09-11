@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
 
 from engine.config import DEFAULT_DATABASE
 from minmax.character_build.character_build import CharacterBuild
 from minmax.heavy_attack_restoration import HeavyAttackRestorationModifiers
 from minmax.resource_costs import ResourceType
-from minmax.rotation_plan import RotationAction, RotationPlan
+from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from models.build_model import PlayerBuild
 from services.build_catalog_service import BuildCatalogService
 from services.heavy_attack_progression_modifier_service import (
@@ -71,9 +72,22 @@ class RotationHeavySustainProjectionService:
     replay resolver. Recovery-heavy stabilization can therefore rebuild restoration
     evidence for each regenerated plan without replaying sustain twice or creating a
     second Heavy Attack math path.
+
+    Duration-aware recovery generation currently records a verified Heavy Attack
+    reservation in the plan's provenance text. BFF's reviewed gameplay scheduling
+    window for a fully charged heavy is 1.8 seconds. Only an exact heavy reservation
+    matching that reviewed window is promoted to completion evidence here; merely
+    seeing a HEAVY_ATTACK action in a plan is never enough.
     """
 
     _EPSILON = 1e-9
+    _REVIEWED_FULLY_CHARGED_HEAVY_WINDOW_SECONDS = 1.8
+    _RESERVED_HEAVY_PATTERN = re.compile(
+        r"^caller-proven heavy_attack at "
+        r"(?P<start>[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)s reserved "
+        r"the (?P<bar>front|back)-bar timeline through "
+        r"(?P<end>[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)s$"
+    )
 
     def __init__(
         self,
@@ -99,6 +113,79 @@ class RotationHeavySustainProjectionService:
         )
         self.progression_modifier_service = (
             progression_modifier_service or HeavyAttackProgressionModifierService()
+        )
+
+    @classmethod
+    def completion_evidence_from_verified_reservations(
+        cls,
+        plan: RotationPlan,
+    ) -> tuple[RotationHeavyAttackCompletionEvidence, ...]:
+        """Promote reviewed 1.8s scheduler reservations to full-charge evidence.
+
+        The duration-aware scheduler records reservation provenance only after the
+        caller-proven decision passed channel-boundary validation. This adapter is
+        deliberately narrow: the reservation must name ``heavy_attack``, match one
+        scheduled heavy on the same bar and start timestamp, and reserve exactly the
+        reviewed 1.8-second full-charge gameplay window. Any other duration remains
+        unpromoted so older/reference animation timings cannot silently redefine the
+        Rotation Builder's reviewed completion boundary.
+        """
+
+        heavies = tuple(
+            action
+            for action in plan.actions
+            if action.kind is RotationActionKind.HEAVY_ATTACK
+        )
+        evidence: list[RotationHeavyAttackCompletionEvidence] = []
+        seen: set[tuple[float, int]] = set()
+
+        for raw in plan.unresolved:
+            match = cls._RESERVED_HEAVY_PATTERN.fullmatch(str(raw).strip())
+            if match is None:
+                continue
+            start = float(match.group("start"))
+            end = float(match.group("end"))
+            bar = match.group("bar")
+            reservation = end - start
+            if abs(
+                reservation - cls._REVIEWED_FULLY_CHARGED_HEAVY_WINDOW_SECONDS
+            ) > cls._EPSILON:
+                continue
+
+            matching = tuple(
+                action
+                for action in heavies
+                if abs(float(action.time_seconds) - start) <= cls._EPSILON
+                and action.bar == bar
+            )
+            if len(matching) != 1:
+                continue
+            action = matching[0]
+            key = (float(action.time_seconds), int(action.sequence))
+            if key in seen:
+                continue
+            seen.add(key)
+            evidence.append(
+                RotationHeavyAttackCompletionEvidence(
+                    action_time_seconds=action.time_seconds,
+                    action_sequence=action.sequence,
+                    completion_time_seconds=end,
+                    fully_charged=True,
+                    verified_base_restore=None,
+                    source=(
+                        "duration-aware verified 1.8s heavy-attack channel reservation"
+                    ),
+                )
+            )
+
+        return tuple(
+            sorted(
+                evidence,
+                key=lambda item: (
+                    item.action_time_seconds,
+                    item.action_sequence,
+                ),
+            )
         )
 
     def restoration_resolver_for_plan(
