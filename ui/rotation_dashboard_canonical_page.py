@@ -180,7 +180,7 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
         resource: ResourceType,
         maximum_amount: int,
         trigger_fraction: float,
-        restoration_resolver: VerifiedRecoveryHeavyRestorationResolver,
+        restoration_resolver: VerifiedRecoveryHeavyRestorationResolver | None = None,
         demands: Iterable[RotationDemandWindow] = (),
         options: Iterable[RotationRefreshLeadCandidateOption] = (),
         wait_decision_factory: RecoveryPressureWaitDecisionFactory | None = None,
