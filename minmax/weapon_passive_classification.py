@@ -81,6 +81,54 @@ VERIFIED_WEAPON_PASSIVE_RULES: tuple[WeaponPassiveRule, ...] = (
         WeaponPassiveLayer.COMBAT_STATE,
         "Resource restoration requires a kill or Destruction Staff damage-shield absorption event.",
     ),
+    WeaponPassiveRule(
+        "Bow",
+        "Ranger",
+        WeaponPassiveLayer.ABILITY_FAMILY,
+        "Reduces the Stamina cost of Bow abilities; does not modify Max Stamina.",
+    ),
+    WeaponPassiveRule(
+        "Dual Wield",
+        "Ambidextrous",
+        WeaponPassiveLayer.SHARED_STANDING,
+        "Increases Weapon and Spell Damage from the off-hand weapon; does not modify maximum resources.",
+    ),
+    WeaponPassiveRule(
+        "Dual Wield",
+        "Controlled Fury",
+        WeaponPassiveLayer.ABILITY_FAMILY,
+        "Reduces the Stamina cost of Dual Wield abilities; does not modify Max Stamina.",
+    ),
+    WeaponPassiveRule(
+        "Dual Wield",
+        "Focused Killer",
+        WeaponPassiveLayer.COMBAT_STATE,
+        "Increases Dual Wield ability damage against low-Health enemies; does not modify maximum resources.",
+    ),
+    WeaponPassiveRule(
+        "Dual Wield",
+        "Ruffian",
+        WeaponPassiveLayer.COMBAT_STATE,
+        "Increases Dual Wield attack damage against controlled enemies; does not modify maximum resources.",
+    ),
+    WeaponPassiveRule(
+        "One Hand and Shield",
+        "Battlefield Mobility",
+        WeaponPassiveLayer.BLOCK_STATE,
+        "Reduces the Movement Speed penalty while bracing; does not modify maximum resources.",
+    ),
+    WeaponPassiveRule(
+        "Two Handed",
+        "Balanced Blade",
+        WeaponPassiveLayer.ABILITY_FAMILY,
+        "Reduces the Stamina cost of Two-Handed abilities; does not modify Max Stamina.",
+    ),
+    WeaponPassiveRule(
+        "Two Handed",
+        "Forceful",
+        WeaponPassiveLayer.COMBAT_STATE,
+        "Causes Light and Heavy Attacks to cleave nearby enemies; does not modify maximum resources.",
+    ),
 )
 
 
