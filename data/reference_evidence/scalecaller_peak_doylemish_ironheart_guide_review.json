@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "scalecaller_peak",
+  "encounter_id": "doylemish_ironheart",
+  "encounter_name": "Doylemish Ironheart",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Stone Orb Cycle","threshold":"100% to 0%","description":"Doylemish adds stone-orb pressure roughly every 10% health while maintaining heavy tank damage."},"source_type":"guide","source_name":"Alcast Scalecaller Peak Guide","source_locator":"Doylemish Ironheart","game_update":"U17","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"stony_gaze","value":{"name":"Stony Gaze","response":"free_petrified_player_with_synergy_before_doylemish_finishes_laser_execution"},"source_type":"achievement","source_name":"Stony Situation","source_locator":"Scalecaller Peak achievement","game_update":"U17","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"orb_escalation","value":{"name":"Stone Orbs","response":"spread_and_control_orbs_then_save_burst_for_later_health_cycles"},"source_type":"guide","source_name":"Alcast Scalecaller Peak Guide","source_locator":"Doylemish Ironheart","game_update":"U17","confidence":"high"}
+  ]
+}
