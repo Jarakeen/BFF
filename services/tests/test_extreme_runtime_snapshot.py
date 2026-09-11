@@ -6,6 +6,7 @@ from minmax.external_group_buff_provenance import ExternalGroupBuffApplication
 from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
 from minmax.runtime_event import RuntimeEvent
 from minmax.support_target_type import SupportTargetType
+from services.extreme_runtime_bar_effect_attempt import ExtremeRuntimeBarEffectAttempt
 from services.extreme_runtime_snapshot import (
     ExtremeRuntimePotionUse,
     ExtremeRuntimeSnapshot,
@@ -20,6 +21,18 @@ def _attempt(*, time_seconds: float, sequence: int = 0) -> RuntimeEffectEventAtt
             source="unified runtime snapshot test",
             sequence=sequence,
         )
+    )
+
+
+def _bar_attempt(
+    *,
+    time_seconds: float,
+    active_bar: str,
+    sequence: int = 0,
+) -> ExtremeRuntimeBarEffectAttempt:
+    return ExtremeRuntimeBarEffectAttempt(
+        attempt=_attempt(time_seconds=time_seconds, sequence=sequence),
+        active_bar=active_bar,
     )
 
 
@@ -61,6 +74,44 @@ def test_unified_runtime_history_orders_effects_potions_and_external_buffs_toget
     assert snapshot.recipient_actor_id == "healer_1"
     assert snapshot.group_member_ids == ("healer_1", "healer_2")
     assert snapshot.has_runtime_history_at_snapshot
+
+
+def test_bar_annotated_effect_attempt_preserves_provenance_and_compatibility_view():
+    front = _bar_attempt(time_seconds=2.0, active_bar="front", sequence=2)
+    unbarred = _attempt(time_seconds=3.0, sequence=0)
+    back = _bar_attempt(time_seconds=4.0, active_bar="back", sequence=1)
+
+    snapshot = ExtremeRuntimeSnapshot(
+        runtime_history=(back, unbarred, front),
+        snapshot_time_seconds=5.0,
+    )
+
+    assert snapshot.ordered_runtime_history == (front, unbarred, back)
+    assert snapshot.bar_effect_attempts == (front, back)
+    assert snapshot.unbarred_effect_attempts == (unbarred,)
+    assert snapshot.effect_attempts == (front.attempt, unbarred, back.attempt)
+    assert snapshot.attempts == snapshot.effect_attempts
+
+
+def test_snapshot_at_preserves_bar_provenance_and_sequence_boundary():
+    front = _bar_attempt(time_seconds=5.0, active_bar="front", sequence=0)
+    back_before = _bar_attempt(time_seconds=10.0, active_bar="back", sequence=1)
+    back_after = _bar_attempt(time_seconds=10.0, active_bar="back", sequence=3)
+    source = ExtremeRuntimeSnapshot(
+        runtime_history=(back_after, front, back_before),
+        snapshot_time_seconds=20.0,
+    )
+
+    sliced = source.snapshot_at(10.0, sequence=2)
+
+    assert sliced.runtime_history == (front, back_before)
+    assert sliced.bar_effect_attempts == (front, back_before)
+    assert sliced.effect_attempts == (front.attempt, back_before.attempt)
+
+
+def test_invalid_bar_provenance_fails_closed():
+    with pytest.raises(ValueError, match="unsupported Extreme runtime effect bar"):
+        _bar_attempt(time_seconds=1.0, active_bar="middle")
 
 
 def test_unified_runtime_history_uses_latest_potion_activation_before_snapshot():
@@ -107,6 +158,8 @@ def test_legacy_runtime_inputs_remain_supported_during_migration():
     )
 
     assert snapshot.effect_attempts == (attempt,)
+    assert snapshot.bar_effect_attempts == ()
+    assert snapshot.unbarred_effect_attempts == (attempt,)
     assert snapshot.external_group_buff_applications == ()
     assert snapshot.effective_potion_elapsed_seconds == pytest.approx(3.0)
     assert snapshot.has_runtime_history_at_snapshot
