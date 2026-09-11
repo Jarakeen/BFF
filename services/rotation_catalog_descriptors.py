@@ -123,6 +123,36 @@ ROTATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="rotation.healer.stabilized_runtime_role_output",
+        domain="rotation",
+        purpose=(
+            "Bind final stabilized recovery candidates to exact-time runtime build-context "
+            "projection before canonical healer role-output evaluation."
+        ),
+        implementation_path="services.rotation_recovery_healer_role_output_service",
+        inputs=(
+            "RecoveryHeavyStabilizedCandidateSnapshot",
+            "PlayerBuild",
+            "RotationCandidateHealerRoleOutputService",
+            "RotationPlanRuntimeBuildContextService",
+        ),
+        outputs=("RotationCandidateRoleOutputEvidence",),
+        dependencies=(
+            "rotation.runtime.build_context_projection",
+            "rotation.healer.role_output",
+        ),
+        responsibilities=("rotation_healer_final_stabilized_runtime_role_output",),
+        roles=("Healer",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Runtime context is bound only after recovery stabilization so moved casts and "
+            "bar swaps are evaluated on the plan actually ranked. Snapshots without "
+            "authoritative runtime history retain the static healer-output path."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="rotation.healer.multi_demand_role_output",
         domain="rotation",
         purpose=(
