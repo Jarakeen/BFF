@@ -79,13 +79,15 @@ def test_checked_in_registry_keeps_newest_first_release_slices_and_main_encounte
     assert len(by_content["unhallowed_grave"]) == 5
     assert len(by_content["moongrave_fane"]) == 5
     assert len(by_content["lair_of_maarselok"]) == 5
+    assert len(by_content["depths_of_malatar"]) == 5
+    assert len(by_content["frostvault"]) == 5
 
     assert {row.release_key for row in rows} == {
         (2025, 47), (2025, 45), (2024, 41), (2023, 37), (2022, 35), (2022, 33),
-        (2021, 31), (2021, 29), (2020, 27), (2020, 25), (2019, 23),
+        (2021, 31), (2021, 29), (2020, 27), (2020, 25), (2019, 23), (2019, 21),
     }
     assert rows[0].release_key == (2025, 47)
-    assert rows[-1].release_key == (2019, 23)
+    assert rows[-1].release_key == (2019, 21)
 
     all_ids = {row.encounter_id for row in rows}
 
@@ -154,3 +156,14 @@ def test_checked_in_registry_keeps_newest_first_release_slices_and_main_encounte
     assert maarselok["maarselok_in_flight"].member_ids == ("maarselok",)
     assert maarselok["maarselok_on_his_perch"].member_ids == ("maarselok",)
     assert maarselok["maarselok_in_his_roost"].member_ids == ("maarselok", "selene")
+
+    assert {row.encounter_id for row in by_content["depths_of_malatar"]} == {
+        "the_scavenging_maw", "the_weeping_woman", "dark_orb", "king_narilmor", "symphony_of_blades"
+    }
+    assert "hunger" not in all_ids and "frozen" not in all_ids and "nereid" not in all_ids and "blessed_sentinel" not in all_ids
+
+    frostvault = {row.encounter_id: row for row in by_content["frostvault"]}
+    assert set(frostvault) == {"icestalker", "warlord_tzogvin", "vault_protector", "rizzuk_bonechill", "the_stonekeeper"}
+    assert frostvault["icestalker"].member_ids == ("icestalker",)
+    assert not (data_root / "eso_info" / "bosses" / "icestalker.json").exists()
+    assert "riekling" not in all_ids and "avalanche" not in all_ids and "dwarven_colossus" not in all_ids and "wrathstone" not in all_ids
