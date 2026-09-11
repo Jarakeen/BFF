@@ -22,6 +22,8 @@ class RotationGameplayPolicyContext:
     personal_heal_skill_slots: tuple[str, ...] = ()
     reliable_group_healing: bool | None = None
     exception_contexts: tuple[str, ...] = ()
+    personal_heal_slot_evidence_resolved: bool = True
+    personal_heal_slot_unresolved: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         candidate_id = str(self.candidate_id or "").strip()
@@ -39,6 +41,11 @@ class RotationGameplayPolicyContext:
             self,
             "exception_contexts",
             _normalized_unique(self.exception_contexts),
+        )
+        object.__setattr__(
+            self,
+            "personal_heal_slot_unresolved",
+            _normalized_unique(self.personal_heal_slot_unresolved),
         )
 
 
@@ -90,6 +97,16 @@ class RotationGameplayPolicyAssessmentService:
                 policy,
                 RotationGameplayPolicyStatus.NOT_APPLICABLE,
                 ("policy does not apply to this role/content context",),
+            )
+
+        if not context.personal_heal_slot_evidence_resolved:
+            reasons = ["personal-heal slot classification is unresolved"]
+            reasons.extend(context.personal_heal_slot_unresolved)
+            return self._assessment(
+                context,
+                policy,
+                RotationGameplayPolicyStatus.UNRESOLVED,
+                tuple(reasons),
             )
 
         if not context.personal_heal_skill_slots:
