@@ -61,8 +61,9 @@ class GearSetEffectService:
         equipped_sets: Mapping[str, int],
         *,
         use_max_value: bool = True,
+        condition_context: frozenset[str] | None = None,
     ) -> list[Effect]:
-        """Resolve active static effects for set-name -> equipped-piece counts.
+        """Resolve active effects for set-name -> equipped-piece counts.
 
         Unknown set names contribute no effects. This keeps the gear input layer
         tolerant of incomplete or synthetic build data while centralizing the
@@ -71,6 +72,11 @@ class GearSetEffectService:
         Canonical activation rules are applied before effect resolution. In
         particular, Torc of the Last Ayleid King suppresses every other item-set
         bonus while leaving the physical equipped-set counts unchanged elsewhere.
+
+        ``condition_context`` is opt-in so legacy static callers retain their
+        existing behavior. When supplied, conditional effects are returned only
+        when their exact canonical condition marker is present. An explicit empty
+        context therefore means that no conditional set effect is active.
         """
 
         effects: list[Effect] = []
@@ -83,12 +89,17 @@ class GearSetEffectService:
             if gear_set is None:
                 continue
 
-            effects.extend(
-                self.resolve_effects(
-                    gear_set.id,
-                    equipped_piece_count,
-                    use_max_value=use_max_value,
-                )
+            resolved = self.resolve_effects(
+                gear_set.id,
+                equipped_piece_count,
+                use_max_value=use_max_value,
             )
+            if condition_context is not None:
+                resolved = [
+                    effect
+                    for effect in resolved
+                    if not effect.condition or str(effect.condition).strip() in condition_context
+                ]
+            effects.extend(resolved)
 
         return effects
