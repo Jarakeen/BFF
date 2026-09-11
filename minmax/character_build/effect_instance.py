@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from ..effect_source_persistence import EffectSourcePersistence
 from ..support_effect_category import SupportEffectCategory
 from ..support_stacking import StackingBehavior
 from ..support_target_type import SupportTargetType
@@ -70,6 +71,13 @@ class EffectVariant:
 
     exclusivity_group: str | None = None
     """Named group this effect competes with (mirrors Major/Minor exclusivity)."""
+
+    source_persistence: EffectSourcePersistence | None = None
+    """
+    Whether an already-activated effect remains valid after its source becomes
+    inactive. None means the persistence semantics have not been canonically
+    classified and runtime systems that need that proof must fail closed.
+    """
 
     eligible: bool = True
     """
