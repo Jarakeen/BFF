@@ -9,6 +9,7 @@ from services.rotation_support_cadence_evaluation_service import (
 from services.rotation_support_cadence_neighborhood_service import (
     RotationSupportCadenceNeighborhoodObligation,
 )
+from ui.rotation_canonical_candidate_support import RotationCanonicalRoleEvidence
 from ui.rotation_selected_encounter_evidence_support import (
     RotationSelectedEncounterEvidenceInputs,
 )
@@ -20,11 +21,13 @@ class RotationGenerateCanonicalContext:
 
     Presence of this object opts Generate Rotation into canonical encounter-aware
     orchestration. Absence preserves the legacy/plain generation path. The context
-    contains policy/runtime inputs only; it does not infer them from role, class,
-    encounter display names, or UI labels.
+    contains explicit evidence/runtime inputs only; it does not infer them from role,
+    class, encounter display names, or UI labels. Optional ``role_evidence`` carries
+    already-resolved application facts into the canonical role-aware ranking path.
     """
 
     evidence_inputs: RotationSelectedEncounterEvidenceInputs
+    role_evidence: RotationCanonicalRoleEvidence | None = None
     cadence_obligations: tuple[RotationSupportCadenceNeighborhoodObligation, ...] = ()
     cadence_priorities: AbilityPriorityList | None = None
     cadence_evaluation_context: RotationSupportCadenceEvaluationContext | None = None
