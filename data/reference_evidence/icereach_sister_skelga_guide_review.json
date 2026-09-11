@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "icereach",
+  "encounter_id": "sister_skelga",
+  "encounter_name": "Sister Skelga",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Skelga teleports around the arena while applying player fire circles, frontal ice cones, drain beams, and frozen Stranglers."},"source_type":"guide","source_name":"Alcast Icereach Guide","source_locator":"Sister Skelga","game_update":"U25","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"fire_aoe","value":{"name":"Player Fire AoE","response":"marked_player_separates_from_group_and_uses_fire_to_unfreeze_stranglers"},"source_type":"guide","source_name":"Alcast Icereach Guide","source_locator":"Skelga > fire AoE / Stranglers","game_update":"U25","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"drain_beams","value":{"name":"Dark Drain Beams","response":"heal_through_tank_drain_do_not_cleanse"},"source_type":"guide","source_name":"Alcast Icereach Guide","source_locator":"Skelga > dark beams","game_update":"U25","confidence":"high"}
+  ]
+}
