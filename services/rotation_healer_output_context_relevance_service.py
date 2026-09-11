@@ -41,6 +41,7 @@ class RotationHealerOutputContextRelevanceService:
         "champion point is dynamic or not yet stat-mapped: master gatherer",
         "champion point is dynamic or not yet stat-mapped: celerity",
         "movement_speed unresolved",
+        "charged: requires status-effect chance model",
     )
 
     _STATIC_CONTEXT_PREFIXES = (
