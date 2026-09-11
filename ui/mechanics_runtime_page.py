@@ -3,7 +3,7 @@ from __future__ import annotations
 """Boss Guide page variant that renders reviewed runtime strategy observations.
 
 The base MechanicsPage remains responsible for canonical/structural encounter data.
-This subclass adds a presentation-only Strategy tab fed by
+This subclass adds presentation-only runtime strategy surfaces fed by
 EncounterRuntimeGuideProjectionService. Runtime observations remain explicitly
 separate from canonical mechanics and persisted encounter_strategy rows.
 """
@@ -27,8 +27,20 @@ from ui.components.foundry_card import FoundryCard
 from ui.mechanics_page import MechanicsPage
 
 
+_STRATEGY_PLACEHOLDER = (
+    "Strategy remains separate from structural boss data. Reviewed handling will appear here "
+    "when canonical strategy evidence is available."
+)
+_CALLOUT_PLACEHOLDER = (
+    "Reviewed callouts will appear here when encounter handling data is explicitly available."
+)
+_REMINDER_PLACEHOLDER = (
+    "Player reminders stay unresolved until reviewed encounter handling is available."
+)
+
+
 class RuntimeMechanicsPage(MechanicsPage):
-    """Mechanics page with reviewed real-run notes layered onto the Strategy tab."""
+    """Mechanics page with reviewed real-run notes layered onto guide presentation."""
 
     def __init__(
         self,
@@ -40,6 +52,7 @@ class RuntimeMechanicsPage(MechanicsPage):
         self.runtime_guide_service = runtime_guide_service
         self._runtime_strategy_ready = False
         super().__init__(expedition=expedition, guide_service=guide_service, parent=parent)
+        self._capture_runtime_glance_labels()
         self._install_runtime_strategy_tab()
         self._runtime_strategy_ready = True
 
@@ -48,6 +61,13 @@ class RuntimeMechanicsPage(MechanicsPage):
             self._render_runtime_strategy(str(encounter_id))
         else:
             self._clear_runtime_strategy()
+
+    def _capture_runtime_glance_labels(self) -> None:
+        """Capture the base page's presentation placeholders without changing base ownership."""
+        labels = {label.text(): label for label in self.findChildren(QLabel)}
+        self.runtime_strategy_overview_label = labels.get(_STRATEGY_PLACEHOLDER)
+        self.runtime_callouts_label = labels.get(_CALLOUT_PLACEHOLDER)
+        self.runtime_reminders_label = labels.get(_REMINDER_PLACEHOLDER)
 
     def _install_runtime_strategy_tab(self) -> None:
         tab = QWidget()
@@ -160,6 +180,51 @@ class RuntimeMechanicsPage(MechanicsPage):
                     QTableWidgetItem(str(value)),
                 )
         self.runtime_guidance_table.resizeRowsToContents()
+        self._populate_runtime_glance_cards(projection, guidance_rows)
+
+    def _populate_runtime_glance_cards(
+        self,
+        projection: EncounterGuideRuntimeProjection,
+        guidance_rows,
+    ) -> None:
+        """Project a compact subset of reviewed runtime evidence onto overview cards."""
+        if self.runtime_strategy_overview_label is not None:
+            overview = guidance_rows[:2]
+            if overview:
+                self.runtime_strategy_overview_label.setText(
+                    "\n".join(
+                        f"• {row.role.replace('_', ' ').title()}: {row.guidance}"
+                        for row in overview
+                    )
+                )
+            else:
+                self.runtime_strategy_overview_label.setText(_STRATEGY_PLACEHOLDER)
+
+        if self.runtime_callouts_label is not None:
+            callouts = projection.notes[:3]
+            if callouts:
+                self.runtime_callouts_label.setText(
+                    "\n".join(f"• {note.text}" for note in callouts)
+                )
+            else:
+                self.runtime_callouts_label.setText(_CALLOUT_PLACEHOLDER)
+
+        if self.runtime_reminders_label is not None:
+            high_priority = [
+                row for row in guidance_rows if str(row.priority or "").casefold() == "high"
+            ][:3]
+            reminders = high_priority or list(guidance_rows[:2])
+            if reminders:
+                rendered = [
+                    f"• {row.role.replace('_', ' ').title()}: {row.guidance}"
+                    for row in reminders
+                ]
+                rendered.append(
+                    f"• Reviewed runtime sample: {projection.successful_kills} successful clear(s)."
+                )
+                self.runtime_reminders_label.setText("\n".join(rendered))
+            else:
+                self.runtime_reminders_label.setText(_REMINDER_PLACEHOLDER)
 
     def _clear_runtime_strategy(self, message: str | None = None) -> None:
         if not hasattr(self, "runtime_strategy_summary"):
@@ -169,6 +234,12 @@ class RuntimeMechanicsPage(MechanicsPage):
         )
         self.runtime_notes_table.setRowCount(0)
         self.runtime_guidance_table.setRowCount(0)
+        if self.runtime_strategy_overview_label is not None:
+            self.runtime_strategy_overview_label.setText(_STRATEGY_PLACEHOLDER)
+        if self.runtime_callouts_label is not None:
+            self.runtime_callouts_label.setText(_CALLOUT_PLACEHOLDER)
+        if self.runtime_reminders_label is not None:
+            self.runtime_reminders_label.setText(_REMINDER_PLACEHOLDER)
 
 
 def _priority_rank(value: str) -> int:
