@@ -55,6 +55,7 @@ class ExtremeResourceMaxHealthRuntimeContextService:
         build_id: str,
         active_bar: str,
         combat_state,
+        gear_condition_context: frozenset[str] | None = None,
     ) -> BuildCalculationContext:
         kwargs = dict(
             character_id=character_id,
@@ -65,7 +66,39 @@ class ExtremeResourceMaxHealthRuntimeContextService:
         )
         if combat_state is not None:
             kwargs["combat_state"] = combat_state
+        if (
+            gear_condition_context is not None
+            and hasattr(factory, "gear_inputs_with_condition")
+        ):
+            kwargs["gear_condition_context"] = gear_condition_context
         return factory.build(**kwargs)
+
+    @staticmethod
+    def _gear_inputs(
+        *,
+        factory,
+        build: PlayerBuild,
+        progression: CharacterProgression,
+        active_bar: str,
+        base_context: BuildCalculationContext,
+        gear_condition_context: frozenset[str] | None,
+    ):
+        if hasattr(factory, "gear_inputs_with_condition"):
+            return factory.gear_inputs_with_condition(
+                build,
+                progression=progression,
+                active_bar=active_bar,
+                combat_state=base_context.combat_state,
+                incoming_attack=base_context.incoming_attack,
+                condition_context=gear_condition_context,
+            )
+        return factory._gear_inputs(
+            build,
+            progression=progression,
+            active_bar=active_bar,
+            combat_state=base_context.combat_state,
+            incoming_attack=base_context.incoming_attack,
+        )
 
     @classmethod
     def _runtime_combat_state(
@@ -120,6 +153,7 @@ class ExtremeResourceMaxHealthRuntimeContextService:
         build_id: str,
         active_bar: str = "front",
         combat_state=None,
+        gear_condition_context: frozenset[str] | None = None,
     ) -> BuildCalculationContext:
         effective_combat_state = self._runtime_combat_state(state, combat_state)
 
@@ -133,6 +167,7 @@ class ExtremeResourceMaxHealthRuntimeContextService:
                 active_bar=active_bar,
                 combat_state=effective_combat_state,
                 permanent_pet_active=True,
+                gear_condition_context=gear_condition_context,
             )
             if result.unresolved:
                 raise ValueError("; ".join(result.unresolved))
@@ -148,6 +183,7 @@ class ExtremeResourceMaxHealthRuntimeContextService:
                 build_id=build_id,
                 active_bar=active_bar,
                 combat_state=effective_combat_state,
+                gear_condition_context=gear_condition_context,
             )
 
         base_context = self._base_context(
@@ -158,13 +194,15 @@ class ExtremeResourceMaxHealthRuntimeContextService:
             build_id=build_id,
             active_bar=active_bar,
             combat_state=effective_combat_state,
+            gear_condition_context=gear_condition_context,
         )
-        gear = factory._gear_inputs(
-            build,
+        gear = self._gear_inputs(
+            factory=factory,
+            build=build,
             progression=progression,
             active_bar=active_bar,
-            combat_state=base_context.combat_state,
-            incoming_attack=base_context.incoming_attack,
+            base_context=base_context,
+            gear_condition_context=gear_condition_context,
         )
         source = PercentContribution(self.NOTHING_WASTED_SOURCE, percent)
         gear = replace(
