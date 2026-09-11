@@ -16,8 +16,9 @@ Unknown mechanics remain proof blockers.
 Relevance and executable projection are deliberately separate contracts. A
 reviewed target-stat effect can be classified as positive, non-positive, or
 unknown even when its condition or percentage stacking still prevents exact
-scoring. Those execution blockers remain on the candidate, but they do not make
-the *relevance* denominator unknown when the sign is already proven.
+scoring. Reviewed search-state mutations are likewise classified here only for
+whether they must remain in the max-resource named-gear denominator; their actual
+execution belongs to the later structural/global search layer.
 """
 
 from dataclasses import dataclass
@@ -27,6 +28,10 @@ from typing import Any
 from minmax.effects import EffectOperation
 from minmax.gear_set_effect_resolver import GearSetEffectResolver
 from minmax.gear_set_repository import GearSetRepository
+from services.extreme_gear_search_state_rule_service import (
+    ExtremeGearSearchStateRule,
+    ExtremeGearSearchStateRuleService,
+)
 from services.extreme_gear_set_bonus_breakpoint_service import (
     ExtremeGearSetBonusBreakpointCatalog,
 )
@@ -54,6 +59,7 @@ class ExtremeGearSetObjectiveBreakpointEvidence:
     status: ExtremeGearSetObjectiveRelevance
     reviewed_delta: float
     candidate: ExtremeGearSetObjectiveCandidate
+    search_state_rule: ExtremeGearSearchStateRule | None = None
 
     @property
     def safe_to_prune(self) -> bool:
@@ -126,13 +132,7 @@ class ExtremeGearSetObjectiveRelevanceService:
         candidate: ExtremeGearSetObjectiveCandidate,
         objective_key: str,
     ) -> int | None:
-        """Return +1 for positive potential, 0 for reviewed non-positive, else None.
-
-        Sign-only classification is allowed only when every candidate blocker is a
-        known projection-only blocker (condition or percentage reference semantics)
-        and every target-stat effect uses a reviewed additive operation. Unknown
-        active bonuses or unsupported operations still fail closed.
-        """
+        """Return +1 for positive potential, 0 for reviewed non-positive, else None."""
 
         if not candidate.unresolved:
             return None
@@ -193,7 +193,23 @@ class ExtremeGearSetObjectiveRelevanceService:
                     equipped_piece_count=piece_count,
                     resolver=resolver,
                 )
-                if candidate.unresolved:
+                search_state = None
+                if (
+                    candidate.unresolved
+                    and key in ExtremeGearSetObjectiveService._MAX_RESOURCE_OBJECTIVES
+                ):
+                    search_state = ExtremeGearSearchStateRuleService.review(
+                        gear_set.name,
+                        candidate.source_bonuses,
+                    )
+
+                if search_state is not None:
+                    status = (
+                        ExtremeGearSetObjectiveRelevance.RELEVANT
+                        if search_state.retains_max_resource_candidate
+                        else ExtremeGearSetObjectiveRelevance.PROVEN_IRRELEVANT
+                    )
+                elif candidate.unresolved:
                     reviewed_sign = self._reviewed_target_effect_sign(candidate, key)
                     if reviewed_sign == 1:
                         status = ExtremeGearSetObjectiveRelevance.RELEVANT
@@ -216,6 +232,7 @@ class ExtremeGearSetObjectiveRelevanceService:
                         status=status,
                         reviewed_delta=float(candidate.reviewed_delta),
                         candidate=candidate,
+                        search_state_rule=(search_state.rule if search_state is not None else None),
                     )
                 )
 
