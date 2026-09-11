@@ -17,6 +17,7 @@ def test_max_health_review_marks_bar_and_runtime_passives_applied():
     assert rows["Last Gasp"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
     assert rows["Juggernaut"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
     assert rows["Dark Vigor"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
+    assert rows["Maturation"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
     assert rows["Expert Summoner"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
     assert rows["Nothing Wasted"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
     assert rows["Undaunted Mettle"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
@@ -24,11 +25,14 @@ def test_max_health_review_marks_bar_and_runtime_passives_applied():
     assert rows["Last Gasp"].source == "NecromancerPassiveInputResolver"
     assert rows["Juggernaut"].source == "ArmorPassiveInputResolver"
     assert rows["Dark Vigor"].source == "NightbladePassiveInputResolver"
+    assert "Minor Toughness" in rows["Maturation"].source
     assert rows["Expert Summoner"].source == "ExtremeSorcererExpertSummonerPetContextService"
     assert rows["Nothing Wasted"].source == "ClassMasteryExtremeEffectService"
     assert rows["Undaunted Mettle"].source == "ExtremeHypotheticalUndauntedProgressionService"
     assert "EmperorPassiveInputResolver" in rows["Emperor"].source
     assert "six-slot" in rows["Dark Vigor"].condition.casefold()
+    assert "green balance" in rows["Maturation"].condition.casefold()
+    assert "stack" in rows["Maturation"].condition.casefold()
     assert "permanent-pet" in rows["Expert Summoner"].condition.casefold()
     assert "10-stack" in rows["Nothing Wasted"].condition.casefold()
     assert "pure necromancer" in rows["Nothing Wasted"].condition.casefold()
