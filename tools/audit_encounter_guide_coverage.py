@@ -2,12 +2,10 @@ from __future__ import annotations
 
 """Audit Encounters / Boss Guide timeline and strategy coverage.
 
-This tool is intentionally read-only. It reports whether each selectable encounter
-has canonical boss-guide phases, reviewed evidence fallback timeline rows, and
-reviewed strategy rows. It does not promote evidence or mutate encounter data.
-
-Raid Engine work defaults to known trial content. Pass ``--all-content`` to audit
-the broader dungeon/arena/source corpus as well.
+This tool is intentionally read-only. The default scope is the reviewed raid-planning
+encounter registry, where raw NPC/source records are grouped into the fight units a
+raid lead actually plans. ``--raw-trial-records`` audits all raw records under known
+trial content; ``--all-content`` audits the full dungeon/arena/source corpus.
 """
 
 import argparse
@@ -16,19 +14,21 @@ from pathlib import Path
 import sys
 
 
-# Support both ``python -m tools.audit_encounter_guide_coverage`` and direct
-# ``python tools/audit_encounter_guide_coverage.py`` execution from the repo.
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 from engine.config import get_data_dir
-from services.encounter_boss_guide import EncounterBossGuideService
+from services.encounter_boss_guide import (
+    EncounterBossGuideNotFound,
+    EncounterBossGuideService,
+)
 from services.encounter_guide_evidence_projection_service import (
     EncounterGuideEvidenceProjectionService,
 )
 from services.encounter_identity_corrections import encounter_identity_is_excluded
 from services.esologs_client import KNOWN_TRIAL_ZONE_NAMES
+from services.raid_encounter_identity_service import load_raid_encounter_identities
 
 
 @dataclass(frozen=True)
@@ -74,15 +74,50 @@ def _include_content(content_name: str, *, trials_only: bool) -> bool:
     return _content_key(content_name) in _known_trial_content_names()
 
 
-def build_coverage_rows(
+def _canonical_phase_count(
+    guide_service: EncounterBossGuideService,
+    member_ids: tuple[str, ...],
+) -> int:
+    total = 0
+    for member_id in member_ids:
+        try:
+            total += len(guide_service.get(member_id).phases)
+        except EncounterBossGuideNotFound:
+            continue
+    return total
+
+
+def _reviewed_raid_rows(data_root: Path) -> tuple[EncounterGuideCoverageRow, ...]:
+    root = Path(data_root)
+    guide_service = EncounterBossGuideService(root / "eso.db")
+    projection_service = EncounterGuideEvidenceProjectionService(root)
+    rows: list[EncounterGuideCoverageRow] = []
+
+    for identity in load_raid_encounter_identities(root):
+        projection = projection_service.get(identity.encounter_id, identity.display_name)
+        rows.append(
+            EncounterGuideCoverageRow(
+                encounter_id=identity.encounter_id,
+                content_name=identity.content_name,
+                encounter_name=identity.display_name,
+                canonical_timeline_rows=_canonical_phase_count(
+                    guide_service, identity.member_ids
+                ),
+                reviewed_timeline_rows=len(projection.timeline),
+                strategy_rows=len(projection.strategy),
+            )
+        )
+    return tuple(rows)
+
+
+def _raw_rows(
     data_root: Path,
     *,
-    trials_only: bool = True,
+    trials_only: bool,
 ) -> tuple[EncounterGuideCoverageRow, ...]:
     root = Path(data_root)
     guide_service = EncounterBossGuideService(root / "eso.db")
     projection_service = EncounterGuideEvidenceProjectionService(root)
-
     rows: list[EncounterGuideCoverageRow] = []
     for summary in guide_service.encounter_summaries():
         if encounter_identity_is_excluded(summary.content_id, summary.encounter_id):
@@ -102,6 +137,23 @@ def build_coverage_rows(
                 strategy_rows=len(projection.strategy),
             )
         )
+    return tuple(rows)
+
+
+def build_coverage_rows(
+    data_root: Path,
+    *,
+    scope: str = "raid",
+) -> tuple[EncounterGuideCoverageRow, ...]:
+    if scope == "raid":
+        rows = _reviewed_raid_rows(data_root)
+    elif scope == "raw_trials":
+        rows = _raw_rows(data_root, trials_only=True)
+    elif scope == "all":
+        rows = _raw_rows(data_root, trials_only=False)
+    else:
+        raise ValueError(f"unsupported encounter guide audit scope {scope!r}")
+
     return tuple(
         sorted(
             rows,
@@ -133,23 +185,34 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Audit Encounter Guide timeline and strategy coverage."
     )
-    parser.add_argument(
+    scope = parser.add_mutually_exclusive_group()
+    scope.add_argument(
+        "--raw-trial-records",
+        action="store_true",
+        help="Audit every raw source record under known trial content.",
+    )
+    scope.add_argument(
         "--all-content",
         action="store_true",
-        help="Include dungeons, arenas, and other source content. Default is known trials only.",
+        help="Audit dungeons, arenas, trials, and all other persisted source records.",
     )
     return parser.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
-    trials_only = not args.all_content
-    rows = build_coverage_rows(get_data_dir(), trials_only=trials_only)
+    scope = "all" if args.all_content else "raw_trials" if args.raw_trial_records else "raid"
+    rows = build_coverage_rows(get_data_dir(), scope=scope)
     missing = tuple(row for row in rows if row.timeline_missing or row.strategy_missing)
 
+    scope_label = {
+        "raid": "reviewed raid encounters",
+        "raw_trials": "raw known-trial records",
+        "all": "all content",
+    }[scope]
     print("Encounter Guide Coverage Audit")
     print("==============================")
-    print(f"Scope: {'known trials' if trials_only else 'all content'}")
+    print(f"Scope: {scope_label}")
     print(f"Encounter rows checked: {len(rows)}")
     print(f"Rows with timeline or strategy gaps: {len(missing)}")
     print()
