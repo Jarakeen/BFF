@@ -16,6 +16,7 @@ import re
 from minmax.gear_stat_inputs import GearStatInputResolver
 from services.extreme_skill_universe_service import (
     ExtremePlayerSkillRecord,
+    ExtremeSkillDomain,
 )
 
 
@@ -87,6 +88,9 @@ _CONDITION_PHRASES = (
     " while wearing ",
     " for every ",
     " for each ",
+    " per ",
+    " stack",
+    " stacks",
 )
 
 # These passives already have reviewed purpose-built formulas. Their actual
@@ -318,6 +322,28 @@ class ExtremePassiveProjectionService:
             raise ValueError(f"not a passive skill: {passive.name}")
 
         name_key = cls._clean(passive.name).casefold()
+        description_key = cls._clean(passive.description).casefold()
+        consumable_context = any(term in description_key for term in _CONSUMABLE_CONTEXT_TERMS)
+
+        # Utility skill lines are account/world interaction systems rather than
+        # character-sheet combat stat sources. Crafting passives are likewise
+        # noncombat unless they explicitly affect consumables, which remain a
+        # runtime/static-consumable dependency handled elsewhere.
+        if passive.domain is ExtremeSkillDomain.UTILITY:
+            return ExtremePassiveProjection(
+                passive=passive,
+                status=ExtremePassiveProjectionStatus.KNOWN_NONCOMBAT,
+            )
+        if (
+            passive.domain is ExtremeSkillDomain.CRAFT
+            and name_key not in _CONTEXTUAL_KNOWN_PASSIVES
+            and not consumable_context
+        ):
+            return ExtremePassiveProjection(
+                passive=passive,
+                status=ExtremePassiveProjectionStatus.KNOWN_NONCOMBAT,
+            )
+
         clauses = cls._clauses(passive.description)
         conditions = tuple(clause for clause in clauses if cls._conditional_clause(clause))
 
@@ -334,8 +360,6 @@ class ExtremePassiveProjectionService:
                 conditions=conditions,
             )
 
-        description_key = cls._clean(passive.description).casefold()
-        consumable_context = any(term in description_key for term in _CONSUMABLE_CONTEXT_TERMS)
         if name_key in _CONTEXTUAL_KNOWN_PASSIVES or conditions or consumable_context:
             reason = (
                 f"Reviewed contextual passive requires build/runtime inputs: {passive.name}"
