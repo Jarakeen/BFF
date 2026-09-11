@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "arx_corinium",
+  "encounter_id": "ganakton_the_tempest",
+  "encounter_name": "Ganakton the Tempest",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Keep Ganakton faced away from the group, avoid the frontal shock cone, and sidestep targeted lightning pressure."},"source_type":"guide","source_name":"Alcast Arx Corinium Guide","source_locator":"Ganakton the Tempest","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"shocking_breath","value":{"name":"Shocking Breath","response":"stay_out_of_the_large_frontal_cone_and_keep_the_boss_faced_away_from_the_group"},"source_type":"guide","source_name":"Alcast Arx Corinium Guide","source_locator":"Ganakton the Tempest","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"lightning_spit","value":{"name":"Lightning Spit","response":"sidestep_the_fast_targeted_lightning_projectile_when_possible_and_break_free_if_stunned"},"source_type":"guide","source_name":"Alcast Arx Corinium Guide","source_locator":"Ganakton the Tempest","game_update":"Launch","confidence":"high"}
+  ]
+}
