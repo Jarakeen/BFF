@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 import sys
+from time import perf_counter
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -69,6 +70,12 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--database", default="data/eso.db")
     parser.add_argument(
+        "--objective",
+        choices=_OBJECTIVES,
+        action="append",
+        help="Limit preflight/full audit to one or more resource objectives. Defaults to all three.",
+    )
+    parser.add_argument(
         "--full",
         action="store_true",
         help="Run the exhaustive published-record search after the fast proof preflight.",
@@ -76,7 +83,7 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _fast_preflight(database: Path) -> bool:
+def _fast_preflight(database: Path, objectives: tuple[str, ...]) -> bool:
     print("EXTREME RESOURCE RECORD CLOSURE PREFLIGHT")
     print(f"Database: {database}")
     print("Mode: FAST PROOF PREFLIGHT")
@@ -91,7 +98,7 @@ def _fast_preflight(database: Path) -> bool:
     eligibility = ExtremeNamedGearSetSlotEligibilityService(database).build()
 
     complete = structural_complete
-    for objective in _OBJECTIVES:
+    for objective in objectives:
         print(f"\n{objective.upper()}")
 
         relevance = ExtremeGearSetObjectiveRelevanceService(repository).build(
@@ -185,7 +192,7 @@ def _fast_preflight(database: Path) -> bool:
     return complete
 
 
-def _full_record_audit(database: Path) -> bool:
+def _full_record_audit(database: Path, objectives: tuple[str, ...]) -> bool:
     print("\nEXTREME RESOURCE RECORD CLOSURE")
     print("Mode: FULL EXHAUSTIVE RECORD SEARCH")
     print("This intentionally executes the complete combinatorial record search.")
@@ -195,9 +202,11 @@ def _full_record_audit(database: Path) -> bool:
     )
     complete = True
 
-    for objective in _OBJECTIVES:
+    for objective in objectives:
         print(f"\n{objective.upper()}: starting exhaustive record search...", flush=True)
+        started = perf_counter()
         record = service.record(objective)
+        elapsed = perf_counter() - started
         boundary = next(
             (
                 row
@@ -216,6 +225,7 @@ def _full_record_audit(database: Path) -> bool:
             and boundary == _COMPLETE_BOUNDARY
         )
 
+        print(f"elapsed_seconds={elapsed:.3f}")
         print(f"raw_value={record.raw_value}")
         print(f"proof_status={record.proof_status.value}")
         print(f"coverage_denominator_proven={record.search_coverage.denominator_proven}")
@@ -233,15 +243,16 @@ def _full_record_audit(database: Path) -> bool:
 def main() -> int:
     args = _parser().parse_args()
     database = Path(args.database)
+    objectives = tuple(args.objective or _OBJECTIVES)
 
-    preflight_complete = _fast_preflight(database)
+    preflight_complete = _fast_preflight(database, objectives)
     if not preflight_complete:
         return 2
 
     if not args.full:
         return 0
 
-    return 0 if _full_record_audit(database) else 2
+    return 0 if _full_record_audit(database, objectives) else 2
 
 
 if __name__ == "__main__":
