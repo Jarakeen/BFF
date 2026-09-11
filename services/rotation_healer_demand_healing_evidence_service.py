@@ -15,11 +15,6 @@ from services.rotation_healer_periodic_runtime_service import (
 )
 
 
-_EXTERNAL_TRIGGER_UNRESOLVED_SUFFIX = (
-    "reviewed healing consequence is externally triggered and is not "
-    "modeled by caster action healing projection"
-)
-
 
 @dataclass(frozen=True)
 class RotationHealerDemandHealingEvidence:
@@ -76,14 +71,7 @@ class RotationHealerDemandHealingEvidenceService:
             for event in projection.direct_events
             if demand.start_seconds <= event.time_seconds <= demand.end_seconds
         )
-        unresolved = [
-            message
-            for message in projection.unresolved
-            if not (
-                projection.external_conditional_seeds
-                and str(message).endswith(_EXTERNAL_TRIGGER_UNRESOLVED_SUFFIX)
-            )
-        ]
+        unresolved = list(projection.unresolved)
 
         for seed in projection.external_conditional_seeds:
             effect_start = float(seed.time_seconds)
