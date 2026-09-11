@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "content_id": "aetherian_archive",
+  "encounter_id": "lightning_storm_atronach",
+  "encounter_name": "Lightning Storm Atronach",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main Phase","threshold":"Pull","description":"Tank holds the boss in the center facing away from the group while the raid reacts to repeating Storm safe-zone calls and post-Storm Shockwaves."},"source_type":"guide","source_name":"Xynode Aetherian Archive Mechanics Guide","source_locator":"Lightning Storm Atronach","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"storm_safe_zone","value":{"name":"Storm Safe Zone"},"source_type":"guide","source_name":"Xynode Aetherian Archive Mechanics Guide","source_locator":"Storm!","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"storm_safe_zone_behavior","value":{"cadence_seconds":"10-15","safe_zone_count":1,"safe_zone_indicator":"yellow light beam","response":"move immediately to the lit outer pad and remain until the storm ends"},"source_type":"guide","source_name":"Xynode Aetherian Archive Mechanics Guide","source_locator":"Storm!","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"shockwave","value":{"name":"Shockwave"},"source_type":"guide","source_name":"Xynode Aetherian Archive Mechanics Guide","source_locator":"Shockwave","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"shockwave_behavior","value":{"timing":"after each Storm phase","response":"return to center and block or shield the expanding burst and follow-up ground AOEs"},"source_type":"guide","source_name":"Xynode Aetherian Archive Mechanics Guide","source_locator":"Shockwave","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"teleport_pad_unlock","value":{"after_boss_death":true},"source_type":"official_patch_notes","source_name":"ESO Patch Notes v1.2.3","source_locator":"Aetherian Archive","confidence":"high"}
+  ]
+}
