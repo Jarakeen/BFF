@@ -8,8 +8,10 @@ math. It answers only whether any reviewed weapon source can change Max Health,
 Max Magicka, or Max Stamina.
 
 Current-resource restores are intentionally irrelevant to max-resource objectives.
-Unknown trait rule types, unknown enchantment effect types, empty canonical rows,
-or missing effects fail closed.
+Legacy weapon-enchantment rows with sparse mapped effects may fall back to their
+stored canonical description for proof-only resource screening. That fallback can
+prove irrelevance or preserve a relevant/unresolved blocker; it does not invent
+combat arithmetic. Unknown trait rules/effects and empty evidence fail closed.
 """
 
 from dataclasses import dataclass
@@ -17,6 +19,9 @@ from pathlib import Path
 
 from minmax.rule_repository import RuleRepository
 from minmax.weapon_enchantment_repository import WeaponEnchantmentRepository
+from services.extreme_gear_set_resource_objective_screening_service import (
+    ExtremeGearSetResourceObjectiveScreeningService,
+)
 
 
 _SUPPORTED_OBJECTIVES = ("max_health", "max_magicka", "max_stamina")
@@ -108,6 +113,12 @@ class ExtremeWeaponResourceRelevanceService:
             database_path  # type: ignore[arg-type]
         )
 
+    def _description(self, item_id: int) -> str:
+        resolver = getattr(self.enchantment_repository, "get_description", None)
+        if not callable(resolver):
+            return ""
+        return str(resolver(item_id) or "").strip()
+
     def build(self, objective_key: str) -> ExtremeWeaponResourceRelevanceAudit:
         key = str(objective_key or "").strip().casefold()
         target_effect = _TARGET_EFFECT_TYPES.get(key)
@@ -132,15 +143,32 @@ class ExtremeWeaponResourceRelevanceService:
                 )
             )
             if not effects:
+                description = self._description(int(item_id))
+                if not description:
+                    unresolved.append(
+                        f"Canonical weapon enchantment has no mapped effects or canonical description: {name}"
+                    )
+                    continue
+                screening = ExtremeGearSetResourceObjectiveScreeningService.review(
+                    description,
+                    key,
+                )
+                if screening.target_resource_mentioned:
+                    relevant_enchants.append(str(name))
+                    continue
+                if screening.proven_irrelevant:
+                    continue
+                detail = "; ".join(screening.blockers) or "unclassified canonical description"
                 unresolved.append(
-                    f"Canonical weapon enchantment has no mapped effects: {name} ({item_id})"
+                    f"Canonical weapon enchantment description is not proof-safe for {key}: {name}: {detail}"
                 )
                 continue
+
             for effect in effects:
                 effect_type = str(effect.effect_type or "").strip().casefold()
                 if not effect_type:
                     unresolved.append(
-                        f"Canonical weapon enchantment has effect without type: {name} ({item_id})"
+                        f"Canonical weapon enchantment has effect without type: {name}"
                     )
                     continue
                 enchant_effect_types.add(effect_type)
