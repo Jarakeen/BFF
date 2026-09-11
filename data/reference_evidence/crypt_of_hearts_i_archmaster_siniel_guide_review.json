@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "crypt_of_hearts_i",
+  "encounter_id": "archmaster_siniel",
+  "encounter_name": "Archmaster Siniel",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Avoid Siniel's ground AoEs, control the summoned zombies, and break his damage shield so the group can keep pressure on the boss."},"source_type":"guide","source_name":"Xynode Crypt of Hearts I Guide","source_locator":"Archmaster Siniel","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"ground_aoe","value":{"name":"Ground AoE","response":"move_out_of_the_ground_aoe_instead_of_standing_in_the_damage"},"source_type":"guide","source_name":"Xynode Crypt of Hearts I Guide","source_locator":"Archmaster Siniel","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"damage_shield_and_zombies","value":{"name":"Damage Shield and Zombies","response":"control_the_zombies_and_break_the_boss_damage_shield_before_returning_full_pressure"},"source_type":"guide","source_name":"Xynode Crypt of Hearts I Guide","source_locator":"Archmaster Siniel","game_update":"Launch","confidence":"high"}
+  ]
+}
