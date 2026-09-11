@@ -9,7 +9,9 @@ or Max Stamina.
 
 Rows are conservative and explicit. A passive is never treated as irrelevant just
 because its tooltip fails to mention the requested resource; its effect family must
-be reviewed first. Additional class families can be added as that review expands.
+be reviewed first. Objective-specific canonical ownership is recorded explicitly so
+a passive can be accounted for one maximum resource and proven irrelevant to the
+others without duplicating mechanic math here.
 """
 
 from dataclasses import dataclass
@@ -33,13 +35,20 @@ class ExtremeResourceClassPassiveOwnershipStatus(str, Enum):
 class ExtremeResourceClassPassiveOwnership:
     skill_line: str
     passive_name: str
-    status: ExtremeResourceClassPassiveOwnershipStatus
     source: str
     effect_family: str
+    affected_objectives: tuple[str, ...] = ()
 
     @property
     def identity(self) -> tuple[str, str]:
         return (self.skill_line, self.passive_name)
+
+    def status_for(self, objective_key: str) -> ExtremeResourceClassPassiveOwnershipStatus:
+        return (
+            ExtremeResourceClassPassiveOwnershipStatus.CANONICALLY_ACCOUNTED
+            if objective_key in self.affected_objectives
+            else ExtremeResourceClassPassiveOwnershipStatus.PROVEN_IRRELEVANT
+        )
 
 
 _REVIEWED_TOOLTIP_IRRELEVANT: tuple[tuple[str, str, str], ...] = (
@@ -62,10 +71,20 @@ _REVIEWED_TOOLTIP_IRRELEVANT: tuple[tuple[str, str, str], ...] = (
     ("Dawn's Wrath", "Illuminate", "Minor Sorcery / Spell Damage only"),
     ("Dawn's Wrath", "Restoring Spirit", "Health, Magicka, Stamina, and Ultimate ability-cost reduction only"),
     ("Daedric Summoning", "Rebate", "current Magicka or Stamina restoration when a summon ends only"),
+    ("Daedric Summoning", "Power Stone", "Ultimate cost reduction only"),
     ("Dark Magic", "Unholy Knowledge", "Health, Magicka, and Stamina ability-cost reduction only"),
     ("Draconic Power", "Burnished Scales", "block mitigation only"),
     ("Draconic Power", "World in Ruin", "area and damage-over-time damage only"),
     ("Draconic Power", "Elder Dragon", "Minor Brutality plus missing-Health-scaled Health Recovery only"),
+    ("Earthen Heart", "Heart of Stone", "Armor only"),
+    ("Earthen Heart", "Mountain Giant", "fully charged Heavy Attack Off Balance and current Stamina restoration only"),
+    ("Restoring Light", "Master Ritualist", "resurrection speed, resurrected ally Health, and Soul Gem behavior only"),
+    ("Restoring Light", "Mending", "missing-target-Health-scaled Healing Done only"),
+    ("Siphoning", "Transfer", "Ultimate generation after casting a Siphoning ability only"),
+    ("Storm Calling", "Capacitor", "Magicka Recovery only"),
+    ("Storm Calling", "Energized", "Shock and Physical damage only"),
+    ("Winter's Embrace", "Glacial Presence", "Chilled application and Chilled damage only"),
+    ("Winter's Embrace", "Piercing Cold", "block amount and Frost Damage only"),
 )
 
 
@@ -74,7 +93,6 @@ def _reviewed_tooltip_rows() -> tuple[ExtremeResourceClassPassiveOwnership, ...]
         ExtremeResourceClassPassiveOwnership(
             skill_line=skill_line,
             passive_name=passive_name,
-            status=ExtremeResourceClassPassiveOwnershipStatus.PROVEN_IRRELEVANT,
             source=f"Canonical U50 {skill_line} passive tooltip review",
             effect_family=effect_family,
         )
@@ -91,51 +109,58 @@ class ExtremeResourceClassPassiveOwnershipService:
         ExtremeResourceClassPassiveOwnership(
             skill_line="Animal Companions",
             passive_name="Flourish",
-            status=ExtremeResourceClassPassiveOwnershipStatus.PROVEN_IRRELEVANT,
             source="WardenPassiveInputResolver",
             effect_family="magicka/stamina recovery only",
         ),
         ExtremeResourceClassPassiveOwnership(
             skill_line="Animal Companions",
             passive_name="Advanced Species",
-            status=ExtremeResourceClassPassiveOwnershipStatus.PROVEN_IRRELEVANT,
             source="WardenPassiveInputResolver",
             effect_family="critical damage only",
         ),
         ExtremeResourceClassPassiveOwnership(
             skill_line="Winter's Embrace",
             passive_name="Frozen Armor",
-            status=ExtremeResourceClassPassiveOwnershipStatus.PROVEN_IRRELEVANT,
             source="WardenPassiveInputResolver",
             effect_family="physical/spell resistance only",
         ),
         ExtremeResourceClassPassiveOwnership(
             skill_line="Ardent Flame",
             passive_name="A Soul Ablaze",
-            status=ExtremeResourceClassPassiveOwnershipStatus.PROVEN_IRRELEVANT,
             source="DragonknightPassiveInputResolver",
             effect_family="healing taken only",
         ),
         ExtremeResourceClassPassiveOwnership(
             skill_line="Storm Calling",
             passive_name="Expert Mage",
-            status=ExtremeResourceClassPassiveOwnershipStatus.PROVEN_IRRELEVANT,
             source="SorcererPassiveInputResolver",
             effect_family="weapon/spell damage only",
         ),
         ExtremeResourceClassPassiveOwnership(
             skill_line="Aedric Spear",
             passive_name="Balanced Warrior",
-            status=ExtremeResourceClassPassiveOwnershipStatus.PROVEN_IRRELEVANT,
             source="TemplarPassiveInputResolver",
             effect_family="weapon/spell damage and armor only",
         ),
         ExtremeResourceClassPassiveOwnership(
             skill_line="Bone Tyrant",
             passive_name="Health Avarice",
-            status=ExtremeResourceClassPassiveOwnershipStatus.PROVEN_IRRELEVANT,
             source="NecromancerPassiveInputResolver",
             effect_family="healing received only",
+        ),
+        ExtremeResourceClassPassiveOwnership(
+            skill_line="Bone Tyrant",
+            passive_name="Last Gasp",
+            source="NecromancerPassiveInputResolver",
+            effect_family="flat Max Health only",
+            affected_objectives=("max_health",),
+        ),
+        ExtremeResourceClassPassiveOwnership(
+            skill_line="Siphoning",
+            passive_name="Magicka Flood",
+            source="NightbladePassiveInputResolver + active-bar resource search",
+            effect_family="active-bar Max Magicka and Max Stamina percentage only",
+            affected_objectives=("max_magicka", "max_stamina"),
         ),
     ) + _reviewed_tooltip_rows()
 
@@ -148,7 +173,10 @@ class ExtremeResourceClassPassiveOwnershipService:
         cls,
         passive: ExtremePlayerSkillRecord,
         objective_key: str,
-    ) -> ExtremeResourceClassPassiveOwnership | None:
+    ) -> tuple[
+        ExtremeResourceClassPassiveOwnership,
+        ExtremeResourceClassPassiveOwnershipStatus,
+    ] | None:
         key = str(objective_key or "").strip().casefold()
         if key not in _SUPPORTED_OBJECTIVES:
             raise KeyError(f"unreviewed Extreme resource class-passive objective: {objective_key!r}")
@@ -165,7 +193,7 @@ class ExtremeResourceClassPassiveOwnershipService:
                 cls._normalized(row.passive_name),
             )
             if identity == target:
-                return row
+                return row, row.status_for(key)
         return None
 
     @classmethod
