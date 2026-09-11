@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "wayrest_sewers_i",
+  "encounter_id": "varaine_pellingare",
+  "encounter_name": "Varaine Pellingare",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Read Varaine's attack animations, avoid the long frontal sweep, and step or roll away from the jumping spin."},"source_type":"guide","source_name":"Prima Wayrest Sewers Boss Guide","source_locator":"Varaine Pellingare","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"frontal_aoe","value":{"name":"Frontal AOE","response":"sidestep_the_long_frontal_attack_and_keep_ranged_players_out_of_its_line"},"source_type":"guide","source_name":"Prima Wayrest Sewers Boss Guide","source_locator":"Varaine Pellingare","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"jumping_spin","value":{"name":"Jumping Spin","response":"move_or_dodge_roll_out_when_varaine_jumps_before_the_close_range_spin"},"source_type":"guide","source_name":"Prima Wayrest Sewers Boss Guide","source_locator":"Varaine Pellingare","game_update":"Launch","confidence":"high"}
+  ]
+}
