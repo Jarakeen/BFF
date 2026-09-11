@@ -162,6 +162,11 @@ def test_checked_in_history_seeds_gear_skill_passive_and_cp_examples():
         _entry("Pearlescent Ward", "Gear Set"),
         _entry("Spell Power Cure", "Gear Set"),
         _entry("Powerful Assault", "Gear Set"),
+        _entry("Turning Tide", "Gear Set"),
+        _entry("Nazaray", "Gear Set"),
+        _entry("Spaulder of Ruin", "Gear Set"),
+        _entry("Elemental Catalyst", "Gear Set"),
+        _entry("Z'en's Redress", "Gear Set"),
         _entry(
             "Combat Prayer — Restoration Staff",
             "Skill",
@@ -205,6 +210,28 @@ def test_checked_in_history_seeds_gear_skill_passive_and_cp_examples():
     assert "U7 • 2015 • Launch-Era Buff" in powerful_assault
     assert "U27 • 2020 • Rework" in powerful_assault
     assert "307 Weapon and Spell Damage" in powerful_assault
+
+    turning_tide = dict(by_name["Turning Tide"].details)["History / Legacy"]
+    assert "U33 • 2022 • Released" in turning_tide
+    assert "U33 • 2022 • Bug Fix" in turning_tide
+    assert "Major Vulnerability" in turning_tide
+
+    nazaray = dict(by_name["Nazaray"].details)["History / Legacy"]
+    assert "U33 • 2022 • Released" in nazaray
+    assert "1 second per 20 Ultimate" in nazaray
+
+    spaulder = dict(by_name["Spaulder of Ruin"].details)["History / Legacy"]
+    assert "U32 • 2021 • Released" in spaulder
+    assert "260 Weapon and Spell Damage" in spaulder
+
+    elemental_catalyst = dict(by_name["Elemental Catalyst"].details)["History / Legacy"]
+    assert "U27 • 2020 • Released" in elemental_catalyst
+    assert "U34 • 2022 • Visual Cleanup" in elemental_catalyst
+    assert "3%" in elemental_catalyst
+
+    zens = dict(by_name["Z'en's Redress"].details)["History / Legacy"]
+    assert "U23 • 2019 • Released" in zens
+    assert "up to 5%" in zens
 
     assert "U23 • 2019 • Balance" in dict(by_name["Combat Prayer — Restoration Staff"].details)["History / Legacy"]
     assert "U31 • 2021 • Buff" in dict(by_name["Essence Drain — Restoration Staff"].details)["History / Legacy"]
