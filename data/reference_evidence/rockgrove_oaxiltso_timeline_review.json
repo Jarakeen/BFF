@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "content_id": "rockgrove",
+  "encounter_id": "oaxiltso",
+  "encounter_name": "Oaxiltso",
+  "evidence": [
+    {
+      "fact_type": "transition",
+      "fact_key": "havocrel_annihilator_reviewed_guide_thresholds",
+      "value": {
+        "label": "Havocrel Annihilator Spawn",
+        "thresholds": ["95%", "75%", "50%", "25%"],
+        "description": "Reviewed Xynode guide fallback. Stored UESP-derived evidence disagrees only on the first spawn, recording 90% instead of 95%; 75%, 50%, and 25% agree across both sources."
+      },
+      "source_type": "guide",
+      "source_name": "Xynode Gaming Rockgrove Mechanics Guide",
+      "source_family": "xynode",
+      "source_locator": "Oaxiltso - Annihilator Mini",
+      "confidence": "medium",
+      "notes": "Presentation-only reviewed timeline fallback. Do not promote the first threshold to canonical truth until the 90% vs 95% source conflict is resolved."
+    }
+  ]
+}
