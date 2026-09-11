@@ -49,7 +49,7 @@ class _GearResult:
 
 
 class _Candidate:
-    pass
+    active_bar = "front"
 
 
 def _factory(scores, unresolved=()):
@@ -68,7 +68,7 @@ def _factory(scores, unresolved=()):
     return factory
 
 
-def test_scores_full_gear_by_resource_armor_cross_product_and_reports_counts():
+def test_scores_only_dual_bar_admissible_gear_by_resource_armor_cross_product_and_reports_counts():
     gear = _GearResult((_Gear(10), _Gear(20)))
     armor = _ArmorCatalog((_ArmorState("A"), _ArmorState("B"), _ArmorState("C")))
     scores = {
@@ -89,6 +89,10 @@ def test_scores_full_gear_by_resource_armor_cross_product_and_reports_counts():
     assert payload["gear_candidates_scored"] == 2
     assert payload["resource_armor_states_scored"] == 3
     assert payload["gear_resource_armor_candidates_scored"] == 6
+    assert payload["active_snapshot_gear_candidates_reviewed"] == 2
+    assert payload["dual_bar_gear_states_reviewed"] == 4
+    assert payload["dual_bar_compatible_pairs_reviewed"] == 4
+    assert payload["dual_bar_gear_denominator_proven"] is True
     assert payload["gear_denominator_proven"] is True
     assert payload["reviewed_resource_armor_denominator_proven"] is True
     assert payload["armor_weight_states_reviewed"] == 3
@@ -128,6 +132,7 @@ def test_unresolved_and_denominator_flags_are_preserved():
 
     assert evaluator.gear_denominator_proven is False
     assert evaluator.reviewed_resource_armor_denominator_proven is False
+    assert payload["dual_bar_gear_denominator_proven"] is False
     assert payload["gear_denominator_proven"] is False
     assert payload["reviewed_resource_armor_denominator_proven"] is False
     assert unresolved == ("gear gap", "armor gap", "candidate gap")
@@ -141,7 +146,7 @@ def test_objective_mismatch_and_empty_denominators_fail_closed():
             evaluator_factory=_factory({(10, "A"): 1.0}),
         )("max_health", _Candidate())
 
-    with pytest.raises(ValueError, match="no physically realized gear candidate"):
+    with pytest.raises(ValueError, match="no dual-bar-admissible gear candidate"):
         ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator(
             gear_realization=_GearResult(()),
             armor_catalog=_ArmorCatalog((_ArmorState("A"),)),
