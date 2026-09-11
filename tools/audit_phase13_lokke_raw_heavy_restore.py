@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter, defaultdict
+import json
 from pathlib import Path
 import sys
 
@@ -10,7 +11,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from services.esologs_event_interpreter import SemanticEventKind
-from services.esologs_json_adapter import load_semantic_events_from_json
+from services.esologs_json_adapter import EsoLogsJsonEventInterpreter, EsoLogsJsonFight
 
 
 def _resource_rows(events, *, source_id: int):
@@ -24,18 +25,52 @@ def _resource_rows(events, *, source_id: int):
     )
 
 
+def _load_corpus_fights(path: Path, *, fight_id: int):
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    reports = payload.get("reports")
+    if not isinstance(reports, dict):
+        raise ValueError(
+            f"{path}: expected multi-report corpus payload['reports'] to be an object"
+        )
+
+    fights = []
+    key = str(int(fight_id))
+    for report_code, report in reports.items():
+        if not isinstance(report, dict):
+            continue
+        report_fights = report.get("fights")
+        if not isinstance(report_fights, dict):
+            continue
+        fight_payload = report_fights.get(key)
+        if not isinstance(fight_payload, dict):
+            continue
+        wrapped = {
+            "report_code": str(report_code),
+            "fights": {key: fight_payload},
+        }
+        fights.append(
+            EsoLogsJsonFight.from_payload(
+                wrapped,
+                fight_id=int(fight_id),
+                report_code=str(report_code),
+                source_name=str(path),
+            )
+        )
+    return tuple(fights)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
             "Inspect positive resource-change events for one raw ESO Logs actor directly from "
-            "the Lokkestiiz research JSON export. Candidate evidence only."
+            "the multi-report Lokkestiiz research corpus. Candidate evidence only."
         )
     )
     parser.add_argument(
         "--path",
         type=Path,
         default=Path("research/raw/lokkestiiz_corpus.json"),
-        help="raw ESO Logs JSON export",
+        help="raw multi-report Lokkestiiz ESO Logs corpus",
     )
     parser.add_argument("--fight-id", type=int, default=6)
     parser.add_argument("--source-id", type=int, default=7)
@@ -44,11 +79,11 @@ def main() -> int:
 
     if int(args.limit) <= 0:
         raise ValueError("--limit must be positive")
-    if not Path(args.path).exists():
-        raise FileNotFoundError(args.path)
+    path = Path(args.path)
+    if not path.exists():
+        raise FileNotFoundError(path)
 
-    events = load_semantic_events_from_json(Path(args.path), int(args.fight_id))
-    rows = _resource_rows(events, source_id=int(args.source_id))
+    fights = _load_corpus_fights(path, fight_id=int(args.fight_id))
 
     print("=" * 112)
     print(" PHASE 13 LOKKE RAW ESO LOGS RESOURCE-RESTORE AUDIT")
@@ -57,30 +92,61 @@ def main() -> int:
     print(f"Raw file:          {args.path}")
     print(f"Fight id:          {int(args.fight_id)}")
     print(f"Source id:         {int(args.source_id)}")
+    print(f"Matching reports:  {len(fights)}")
+
+    if not fights:
+        print()
+        print("No report in the raw corpus contains that fight id.")
+        print("Fight ids are report-local, so rerun with a reviewed fight id from the intended report.")
+        return 3
+
+    rows = []
+    for fight in fights:
+        interpreter = EsoLogsJsonEventInterpreter(fight)
+        rows.extend(
+            _resource_rows(
+                tuple(interpreter.iter_events()),
+                source_id=int(args.source_id),
+            )
+        )
+
     print(f"Positive restores: {len(rows)}")
     print()
 
     if not rows:
-        print("No positive resource-change events matched this raw actor/fight.")
-        print("This means the raw export itself lacks resource restores for that source/fight,")
+        print("No positive resource-change events matched this raw actor/fight across the matching reports.")
+        print("This means the raw corpus itself lacks positive resource restores for source 7 at this fight id,")
         print("not merely that the SQLite import omitted them.")
+        print()
+        print("Matching report/fight rows:")
+        for fight in fights:
+            print(
+                f"  report={fight.report_code} fight={fight.fight_id} "
+                f"name={fight.name!r} events={fight.event_count}"
+            )
         return 3
 
     grouped = defaultdict(list)
     for event in rows:
-        grouped[(event.ability_name, event.ability_game_id, event.resource_change_type)].append(
-            float(event.resource_change)
-        )
+        grouped[
+            (
+                event.report_code,
+                event.ability_name,
+                event.ability_game_id,
+                event.resource_change_type,
+            )
+        ].append(float(event.resource_change))
 
     print("POSITIVE RESOURCE-CHANGE ABILITY ALIASES")
     print("----------------------------------------")
     ranked = sorted(
         grouped.items(),
-        key=lambda item: (-len(item[1]), str(item[0][0] or ""), item[0][1] or -1),
+        key=lambda item: (-len(item[1]), item[0][0], str(item[0][1] or ""), item[0][2] or -1),
     )
-    for (name, ability_id, resource_type), amounts in ranked[: int(args.limit)]:
+    for (report_code, name, ability_id, resource_type), amounts in ranked[: int(args.limit)]:
         print(
-            f"{len(amounts):5d} events | ability={name or '(unnamed)'} [{ability_id}] | "
+            f"{len(amounts):5d} events | report={report_code} | "
+            f"ability={name or '(unnamed)'} [{ability_id}] | "
             f"resource_type={resource_type} | restore_range={min(amounts):g}..{max(amounts):g}"
         )
 
@@ -96,16 +162,18 @@ def main() -> int:
     print("----------------")
     for event in rows[: int(args.limit)]:
         print(
-            f"{float(event.resource_change):10g} | event={event.event_index} "
-            f"time={event.timestamp:g} ability={event.ability_name or '(unnamed)'} "
-            f"[{event.ability_game_id}] resource_type={event.resource_change_type} "
-            f"waste={event.waste} max_resource={event.max_resource_amount}"
+            f"{float(event.resource_change):10g} | report={event.report_code} "
+            f"fight={event.fight_id} event={event.event_index} time={event.timestamp:g} "
+            f"ability={event.ability_name or '(unnamed)'} [{event.ability_game_id}] "
+            f"resource_type={event.resource_change_type} waste={event.waste} "
+            f"max_resource={event.max_resource_amount}"
         )
 
     print()
     print("BOUNDARY")
     print("--------")
-    print("- Source id 7 is scoped to this reviewed Lokke raw log only.")
+    print("- Source id 7 is scoped to the reviewed Lokke raw log/report where that identity was established.")
+    print("- Fight ids are report-local; identical fight ids across reports remain separate provenance.")
     print("- Numeric ability ids and resource type values remain raw ESO Logs evidence.")
     print("- Repeated amounts are candidate evidence, not automatic canonical constants.")
     print("- This tool reads raw JSON only and writes nothing.")
