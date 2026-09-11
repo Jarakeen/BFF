@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "direfrost_keep",
+  "encounter_id": "iceheart",
+  "encounter_name": "Iceheart",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"fight start","description":"Keep Iceheart faced away from the group, leave expanding frost danger, and clear the skeletons created by its frost eruptions."},"source_type":"guide","source_name":"Xynode Direfrost Keep Guide","source_locator":"Iceheart","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"frontal_clobber","value":{"name":"Frontal Clobber","response":"tank_faces_iceheart_away_and_blocks_or_steps_out_of_the_frontal_cone"},"source_type":"guide","source_name":"Xynode Direfrost Keep Guide","source_locator":"Iceheart","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"arctic_awakening","value":{"name":"Arctic Awakening","response":"move_out_of_player_targeted_frost_circles_then_clear_the_ice_skeletons_created_by_the_eruptions"},"source_type":"guide","source_name":"Xynode Direfrost Keep Guide","source_locator":"Iceheart","game_update":"Launch","confidence":"high"}
+  ]
+}
