@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "spindleclutch_ii",
+  "encounter_id": "vorenor_winterbourne",
+  "encounter_name": "Vorenor Winterbourne",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Blood Drain Main Phase","threshold":"100% to 0%","description":"Avoid blood pools, block Vorenor's teleport strikes, and manage his captive sacrifices according to the group's damage plan."},"source_type":"guide","source_name":"Alcast Spindleclutch II Guide","source_locator":"Vorenor Winterbourne","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"blood_strike","value":{"name":"Blood Strike","response":"block_the_sequential_teleport_strikes_as_vorenor_hits_each_player"},"source_type":"guide","source_name":"Alcast Spindleclutch II Guide","source_locator":"Vorenor Winterbourne","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"sacrifices","value":{"name":"Sacrifices","response":"kill_sacrifices_to_limit_healing_or_leave_them_alive_deliberately_for_hard_mode"},"source_type":"achievement","source_name":"Compassionate Hero / Hard Mode","source_locator":"Spindleclutch II achievements","game_update":"Launch","confidence":"high"}
+  ]
+}
