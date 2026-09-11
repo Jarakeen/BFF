@@ -5,6 +5,12 @@ from services.extreme_armor_resource_trait_glyph_state_service import (
     ExtremeArmorResourceTraitGlyphPieceChoice,
     ExtremeArmorResourceTraitGlyphState,
 )
+from services.extreme_armor_resource_weight_state_service import (
+    ExtremeArmorResourceWeightState,
+)
+from services.extreme_armor_resource_weight_trait_glyph_state_service import (
+    ExtremeArmorResourceWeightTraitGlyphState,
+)
 from services.extreme_named_gear_resource_armor_canonical_stat_evaluator import (
     ExtremeNamedGearResourceArmorCanonicalStatEvaluator,
 )
@@ -59,10 +65,23 @@ def _state(objective="max_health"):
         )
         for slot in slots
     )
-    return ExtremeArmorResourceTraitGlyphState(
+    trait_glyph = ExtremeArmorResourceTraitGlyphState(
         objective_key=objective,
         pieces=pieces,
         direct_glyph_delta=700.0,
+    )
+    weights = tuple(
+        (slot, "Heavy" if slot == "Chest" else ("Medium" if slot == "Hands" else "Light"))
+        for slot in slots
+    )
+    weight = ExtremeArmorResourceWeightState(
+        objective_key=objective,
+        weights=weights,
+    )
+    return ExtremeArmorResourceWeightTraitGlyphState(
+        objective_key=objective,
+        weight_state=weight,
+        trait_glyph_state=trait_glyph,
     )
 
 
@@ -80,11 +99,15 @@ def test_combined_evaluator_preserves_sets_and_scores_materialized_resource_armo
     build = named.optimizer.last_build
     assert build.Armor["Head"]["Set"] == "Set A"
     assert build.Armor["Chest"]["Set"] == "Set B"
+    assert build.Armor["Chest"]["Weight"] == "Heavy"
+    assert build.Armor["Hands"]["Weight"] == "Medium"
+    assert build.Armor["Head"]["Weight"] == "Light"
     assert build.Armor["Chest"]["Trait"] == "Infused"
     assert build.Armor["Chest"]["Enchant"] == "Max Health"
     assert build.Armor["Chest"]["Quality"] == "Gold"
     assert build.Armor["Chest"]["Level"] == "CP160"
     assert build.Armor["Chest"]["EnchantTier"] == "Truly Superb"
+    assert payload["armor_type_count"] == 3
     assert payload["armor_infused_count"] == 1
     assert payload["armor_divines_count"] == 6
     assert payload["armor_reviewed_glyph_delta"] == 700.0
