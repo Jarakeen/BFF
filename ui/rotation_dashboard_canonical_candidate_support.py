@@ -125,10 +125,9 @@ class RotationDashboardCanonicalCandidateSupport:
                 canonical_candidates=potion_aware,
             )
             self.canonical_candidates = RotationRuntimeSnapshotCandidateSupport(
-                canonical_candidates=canonical,
+                canonical_candidates=ultimate_aware,
+                base_canonical=canonical,
             )
-            self.canonical_candidates.canonical_candidates = ultimate_aware
-            self.canonical_candidates._base_canonical = canonical
 
     def run_effects(
         self,
