@@ -1,7 +1,14 @@
+from pathlib import Path
 from types import SimpleNamespace
 
+from services.encounter_boss_guide import EncounterBossGuideNotFound
 from services.encounter_guide_evidence_projection_service import EncounterGuideTimelineRow
-from ui.encounters_evidence_guide_support import _sync_event_lists, _timeline_rows
+from ui.encounters_evidence_guide_support import (
+    _display_guide,
+    _reviewed_boss_rows,
+    _sync_event_lists,
+    _timeline_rows,
+)
 
 
 class _ListStub:
@@ -25,6 +32,32 @@ class _LabelStub:
 
     def setText(self, value):
         self.text = value
+
+
+class _GuideStub:
+    def __init__(self, data_root: Path):
+        self.database = data_root / "eso.db"
+
+    def get(self, encounter_id: str):
+        if encounter_id == "lylanar_turlassil":
+            raise EncounterBossGuideNotFound(encounter_id)
+        if encounter_id == "lylanar":
+            return SimpleNamespace(
+                phases=(
+                    SimpleNamespace(
+                        threshold="65%",
+                        label="Lylanar transition",
+                        description="Reviewed member phase.",
+                    ),
+                )
+            )
+        if encounter_id == "turlassil":
+            return SimpleNamespace(phases=())
+        raise EncounterBossGuideNotFound(encounter_id)
+
+
+def _repo_data_root() -> Path:
+    return Path(__file__).resolve().parents[2] / "data"
 
 
 def test_encounters_timeline_prefers_canonical_phases_over_reviewed_fallback():
@@ -79,3 +112,25 @@ def test_encounters_timeline_lists_stay_synchronized_and_render_same_event():
     assert page.encounter_timeline_list.currentRow() == 1
     assert "50% • Transition" in page.encounter_event_detail.text
     assert "Transition details." in page.encounter_event_detail.text
+
+
+def test_reviewed_dreadsail_selector_groups_twins_and_excludes_raw_members():
+    page = SimpleNamespace(guide_service=SimpleNamespace(database=_repo_data_root() / "eso.db"))
+
+    rows = _reviewed_boss_rows(page, "Dreadsail Reef")
+    ids = [row.encounter_id for row in rows]
+
+    assert ids == ["lylanar_turlassil", "reef_guardian", "tideborn_taleria"]
+    assert "lylanar" not in ids
+    assert "turlassil" not in ids
+    assert rows[0].name == "Lylanar and Turlassil"
+
+
+def test_grouped_encounter_can_collect_canonical_member_phases_without_fake_db_row():
+    data_root = _repo_data_root()
+    page = SimpleNamespace(guide_service=_GuideStub(data_root))
+
+    guide = _display_guide(page, "lylanar_turlassil")
+
+    assert len(guide.phases) == 1
+    assert guide.phases[0].label == "Lylanar transition"
