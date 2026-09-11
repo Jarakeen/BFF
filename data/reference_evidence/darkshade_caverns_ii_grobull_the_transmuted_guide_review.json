@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "darkshade_caverns_ii",
+  "encounter_id": "grobull_the_transmuted",
+  "encounter_name": "Grobull the Transmuted",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"shielded","value":{"order":1,"label":"Shielded Netch Phase","threshold":"shield active","description":"Ignore Grobull's reflective shield, kill the Netchling waves, and use their deaths to strip the shield."},"source_type":"guide","source_name":"ArzyeL Darkshade Caverns II Guide","source_locator":"Grobull the Transmuted","game_update":"Launch","confidence":"high"},
+    {"fact_type":"phase","fact_key":"vulnerable","value":{"order":2,"label":"Vulnerability Window","threshold":"shield broken","description":"Burn Grobull during the short vulnerability window before the shield returns."},"source_type":"guide","source_name":"ArzyeL Darkshade Caverns II Guide","source_locator":"Grobull the Transmuted","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"netchlings","value":{"name":"Netchling Waves","response":"group_and_aoe_netchlings_to_break_grobulls_shield_then_swap_to_boss"},"source_type":"guide","source_name":"ArzyeL Darkshade Caverns II Guide","source_locator":"Grobull the Transmuted","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"lightning_aoe","value":{"name":"Lightning AoE","response":"block_or_move_out_of_grobulls_large_shock_field_when_he_teleports"},"source_type":"guide","source_name":"ArzyeL Darkshade Caverns II Guide","source_locator":"Grobull the Transmuted","game_update":"Launch","confidence":"high"}
+  ]
+}
