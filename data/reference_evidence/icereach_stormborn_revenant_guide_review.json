@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "icereach",
+  "encounter_id": "stormborn_revenant",
+  "encounter_name": "Stormborn Revenant",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"The Revenant layers ice and shock ground pressure, Storm Atronachs, heavy attacks, and recurring arena-wide ice-storm healing checks."},"source_type":"guide","source_name":"Alcast Icereach Guide","source_locator":"Stormborn Revenant","game_update":"U25","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"storm_atronachs","value":{"name":"Storm Atronachs","response":"kill_quickly_before_they_empower_boss"},"source_type":"guide","source_name":"Alcast Icereach Guide","source_locator":"Stormborn Revenant > Storm Atronachs","game_update":"U25","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"ice_storm","value":{"name":"Ice Storm AoE","response":"group_for_concentrated_healing_during_storm"},"source_type":"guide","source_name":"Alcast Icereach Guide","source_locator":"Stormborn Revenant > Ice Storm AoE Phase","game_update":"U25","confidence":"high"}
+  ]
+}
