@@ -25,6 +25,16 @@ _OBJECTIVE_STATS = {
     "max_stamina": StatId.MAX_STAMINA,
 }
 
+# ``ARMOR_ENCHANT_TO_GLYPH`` intentionally uses normalized lowercase keys for
+# canonical lookup.  Extreme build state and UI-facing evidence keep the build
+# model's canonical display labels instead of leaking those lookup keys.
+_ENCHANT_DISPLAY_LABELS = {
+    "max health": "Max Health",
+    "max magicka": "Max Magicka",
+    "max stamina": "Max Stamina",
+    "prismatic defense": "Prismatic Defense",
+}
+
 
 @dataclass(frozen=True)
 class ExtremeArmorGlyphChoice:
@@ -99,7 +109,15 @@ class ExtremeArmorGlyphStateService:
                     f"Canonical armor glyph is not covered by Extreme armor-glyph mapping: {name}"
                 )
 
-        for enchant_label, glyph_name in ARMOR_ENCHANT_TO_GLYPH.items():
+        for enchant_key, glyph_name in ARMOR_ENCHANT_TO_GLYPH.items():
+            normalized_enchant_key = str(enchant_key or "").strip().casefold()
+            enchant_label = _ENCHANT_DISPLAY_LABELS.get(normalized_enchant_key)
+            if enchant_label is None:
+                unresolved.append(
+                    f"Armor enchant lookup key has no canonical display label: {enchant_key}"
+                )
+                continue
+
             try:
                 effects = tuple(
                     self.repository.get_armor_glyph_effect_by_name(
@@ -129,7 +147,7 @@ class ExtremeArmorGlyphStateService:
                 continue
 
             choice = ExtremeArmorGlyphChoice(
-                enchant_label=str(enchant_label),
+                enchant_label=enchant_label,
                 glyph_name=str(glyph_name),
                 affected_stats=stats,
             )
