@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Callable
 
 from minmax.character_build.character_build import CharacterBuild
 from minmax.heavy_attack_restoration import (
@@ -58,6 +59,22 @@ class RotationHeavyAttackCompletionEvidence:
 
 
 @dataclass(frozen=True)
+class RotationHeavyAttackResolvedModifiers:
+    modifiers: HeavyAttackRestorationModifiers
+    unresolved: tuple[str, ...] = ()
+
+    @property
+    def is_resolved(self) -> bool:
+        return not self.unresolved
+
+
+HeavyAttackRestorationModifierResolver = Callable[
+    [RotationAction, HeavyAttackWeaponType, RotationHeavyAttackCompletionEvidence],
+    RotationHeavyAttackResolvedModifiers,
+]
+
+
+@dataclass(frozen=True)
 class RotationHeavyAttackRestorationResolution:
     action: RotationAction
     weapon: HeavyAttackWeaponType
@@ -81,10 +98,11 @@ class RotationHeavyAttackRestorationEvidenceService:
     """Turn scheduled heavies into restoration events from reviewed evidence.
 
     Weapon/resource identity comes from the actual build and reconstructed active
-    bar. Completion/full-charge state, completion time, and resolved modifiers
-    remain explicit caller evidence. A caller may supply a reviewed base-restore
-    override; otherwise the service reuses the shared canonical live-verified
-    weapon base. Unknown weapon bases remain unresolved rather than guessed.
+    bar. Completion/full-charge state and completion time remain explicit caller
+    evidence. A caller may supply a reviewed base-restore override; otherwise the
+    service reuses the shared canonical live-verified weapon base. Resolved modifier
+    composition may be supplied by a canonical upstream resolver once the weapon is
+    known. Unknown bases or modifiers remain unresolved rather than guessed.
     """
 
     _EPSILON = 1e-9
@@ -102,6 +120,7 @@ class RotationHeavyAttackRestorationEvidenceService:
         plan: RotationPlan,
         initial_bar: str,
         completion_evidence: tuple[RotationHeavyAttackCompletionEvidence, ...],
+        modifier_resolver: HeavyAttackRestorationModifierResolver | None = None,
     ) -> RotationHeavyAttackRestorationProjection:
         weapon_projection = self.weapon_service.project(
             build=build,
@@ -182,11 +201,27 @@ class RotationHeavyAttackRestorationEvidenceService:
                 )
                 continue
 
+            modifiers = evidence.modifiers
+            if modifier_resolver is not None:
+                modifier_resolution = modifier_resolver(
+                    action,
+                    weapon_resolution.weapon,
+                    evidence,
+                )
+                if modifier_resolution.unresolved:
+                    unresolved.extend(
+                        f"fully charged {weapon_resolution.weapon.value} heavy at "
+                        f"{action.time_seconds:.3f}s modifier resolution: {detail}"
+                        for detail in modifier_resolution.unresolved
+                    )
+                    continue
+                modifiers = modifier_resolution.modifiers
+
             event = create_heavy_attack_restoration_event(
                 time_seconds=evidence.completion_time_seconds,
                 weapon=weapon_resolution.weapon,
                 verified_base_restore=base_restore,
-                modifiers=evidence.modifiers,
+                modifiers=modifiers,
                 source=evidence.source,
             )
             resolutions.append(
@@ -236,7 +271,9 @@ class RotationHeavyAttackRestorationEvidenceService:
 
 
 __all__ = [
+    "HeavyAttackRestorationModifierResolver",
     "RotationHeavyAttackCompletionEvidence",
+    "RotationHeavyAttackResolvedModifiers",
     "RotationHeavyAttackRestorationEvidenceService",
     "RotationHeavyAttackRestorationProjection",
     "RotationHeavyAttackRestorationResolution",
