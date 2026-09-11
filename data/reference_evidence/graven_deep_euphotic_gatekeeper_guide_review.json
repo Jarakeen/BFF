@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "content_id": "graven_deep",
+  "encounter_id": "the_euphotic_gatekeeper",
+  "encounter_name": "The Euphotic Gatekeeper",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_burrow_cycle","value":{"order":1,"label":"Main / Pangrit Burrow Cycle","threshold":"Pull","description":"Control the Gatekeeper while Pangrits and poison synergies repeatedly force the group to close active burrows."},"source_type":"guide","source_name":"ESO-Hub Graven Deep Dungeon Guide","source_locator":"The Euphotic Gatekeeper","game_update":"U35+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"pangrit_pits","value":{"name":"Pangrit Pits / Poison Synergy","response":"drop_the_poison_synergy_on_active_pangrit_holes_to_close_them","failure":"unclosed_pits_continue_spawning_pangrits"},"source_type":"guide","source_name":"ESO-Hub Graven Deep Dungeon Guide","source_locator":"The Euphotic Gatekeeper > Pangrits","game_update":"U35+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"charge","value":{"name":"Charge","response":"move_out_of_charge_lane_and_followup_aoes","failure":"direct_contact_knocks_players_back"},"source_type":"guide","source_name":"ESO-Hub Graven Deep Dungeon Guide","source_locator":"The Euphotic Gatekeeper > Charge","game_update":"U35+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"teleport","value":{"name":"Teleport Burst","response":"back_away_from_expanding_aoe_then_reestablish_position_and_taunt","failure":"standing_in_arrival_or_departure_burst_causes_avoidable_damage"},"source_type":"guide","source_name":"ESO-Hub Graven Deep Dungeon Guide","source_locator":"The Euphotic Gatekeeper > Teleport","game_update":"U35+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"molting_targetability","value":{"name":"Molting / Untargetable Window","response":"stop_wasting_attacks_during_molt_and_prepare_for_reengage","property":"official_U35_PTS_fix_confirms_boss_vanishes_from_targeting_during_molting"},"source_type":"patch_notes","source_name":"ESO PTS Patch Notes v8.1.3","source_locator":"Graven Deep > Euphotic Gatekeeper","game_update":"U35","confidence":"high"}
+  ]
+}
