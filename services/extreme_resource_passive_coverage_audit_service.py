@@ -15,9 +15,9 @@ not the primary proof source for production audits.
 
 Reviewed contextual resource passives are reconciled only when their exact
 (objective, skill line, passive name) identity is marked CANONICALLY_APPLIED by
-``ExtremeResourceContextualPassiveReviewService``. This lets the denominator audit
-credit mechanics already searched/applied by canonical Extreme layers without
-turning unrelated contextual or unresolved passives into zero-value assumptions.
+``ExtremeResourceContextualPassiveReviewService``. Reviewed shared class-resolver
+ownership is then consulted before generic tooltip projection so passives with
+already-proven non-resource effect families do not remain false contextual debt.
 
 A complete inventory denominator is not the same as complete mechanic coverage.
 The audit never assigns zero value to contextual or unresolved passives.
@@ -32,6 +32,10 @@ from minmax.racial_passive_stat_repository import RacialPassiveStatRepository
 from services.extreme_passive_projection_service import (
     ExtremePassiveProjectionService,
     ExtremePassiveProjectionStatus,
+)
+from services.extreme_resource_class_passive_ownership_service import (
+    ExtremeResourceClassPassiveOwnershipService,
+    ExtremeResourceClassPassiveOwnershipStatus,
 )
 from services.extreme_resource_contextual_passive_review_service import (
     ExtremeResourceContextualPassiveReviewService,
@@ -233,6 +237,24 @@ class ExtremeResourcePassiveCoverageAuditService:
 
             if self._reviewed_contextual_accounted(passive, key):
                 accounted_elsewhere.append(identity)
+                continue
+
+            class_ownership = ExtremeResourceClassPassiveOwnershipService.resolve(passive, key)
+            if class_ownership is not None:
+                if (
+                    class_ownership.status
+                    is ExtremeResourceClassPassiveOwnershipStatus.CANONICALLY_ACCOUNTED
+                ):
+                    accounted_elsewhere.append(identity)
+                elif (
+                    class_ownership.status
+                    is ExtremeResourceClassPassiveOwnershipStatus.PROVEN_IRRELEVANT
+                ):
+                    static_irrelevant.append(identity)
+                else:
+                    raise AssertionError(
+                        f"Unhandled Extreme resource class-passive ownership status: {class_ownership.status!r}"
+                    )
                 continue
 
             if projection.status is ExtremePassiveProjectionStatus.REVIEWED_STATIC:
