@@ -1,6 +1,12 @@
 from __future__ import annotations
 
-"""Choose the best named gear + combined resource armor state beneath finite axes."""
+"""Choose the best named gear + resource armor beneath finite axes.
+
+A reviewed static jewelry-resource trait state may be injected into the factory and
+is then materialized inside each canonical gear+armor scorer. The outer search does
+not multiply by jewelry because the static jewelry reducer already proves one
+strongest continuation witness per max-resource objective.
+"""
 
 from collections.abc import Callable
 from typing import Any, Protocol
@@ -11,6 +17,9 @@ from minmax.provisioning_static_repository import ProvisioningStaticRepository
 from services.extreme_armor_resource_weight_trait_glyph_state_service import (
     ExtremeArmorResourceWeightTraitGlyphState,
     ExtremeArmorResourceWeightTraitGlyphStateCatalog,
+)
+from services.extreme_jewelry_resource_static_trait_state_service import (
+    ExtremeJewelryResourceStaticTraitState,
 )
 from services.extreme_named_gear_canonical_stat_evaluator import (
     ExtremeNamedGearCanonicalStatEvaluator,
@@ -48,7 +57,7 @@ GearResourceArmorEvaluatorFactory = Callable[
 
 
 class ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory:
-    """Build Mundus/food/potion around one named-gear + full resource-armor pair."""
+    """Build Mundus/food/potion around one named-gear + resource-armor pair."""
 
     def __init__(
         self,
@@ -57,11 +66,13 @@ class ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory:
         mundus_repository: MundusRepository,
         provisioning_repository: ProvisioningStaticRepository,
         potion_repository: PotionAvailabilityRepository,
+        jewelry_state: ExtremeJewelryResourceStaticTraitState | None = None,
     ) -> None:
         self.canonical_evaluator = canonical_evaluator
         self.mundus_repository = mundus_repository
         self.provisioning_repository = provisioning_repository
         self.potion_repository = potion_repository
+        self.jewelry_state = jewelry_state
 
     def __call__(
         self,
@@ -75,6 +86,7 @@ class ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory:
         armor = ExtremeNamedGearResourceArmorCanonicalStatEvaluator(
             evaluator=gear,
             armor_state=armor_state,
+            jewelry_state=self.jewelry_state,
         )
         mundus = ExtremeBestMundusStructuralStatEvaluator(
             evaluator=armor,
