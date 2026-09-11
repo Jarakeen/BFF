@@ -109,6 +109,29 @@ When an Extreme rule is validated and is not inherently role-specific, prefer ma
 
 Do not copy the result into those engines as hard-coded conclusions. Reuse the canonical mechanic or shared service that produced the result.
 
+## Shared candidate-plan boundary
+
+Comp Maker, Team Optimization, Extreme Builder, and Rotation Builder must converge on one shared candidate-plan boundary rather than exchange feature-local conclusions.
+
+The intended ownership is:
+
+`canonical Character / Build -> Extreme candidate evidence -> Rotation execution evidence -> complete candidate plan -> Comp Maker selection -> Team Optimization improvement`
+
+A **complete candidate plan** represents one exact proposed player/chair configuration and preserves the structured evidence needed by downstream consumers. At minimum, where applicable, that includes canonical character/build identity, exact build changes, candidate/source identity, role and class, gear and skills, runtime assumptions, rotation/execution evidence, support/provider effects, recipient and temporal coverage, sustain/resource evidence, encounter scope, unresolved/unsupported evidence, and provenance/confidence.
+
+The boundary follows these rules:
+
+1. **Upstream engines resolve mechanics once.** Extreme Builder and Rotation Builder may discover or evaluate mechanics through canonical shared services. Their downstream output must retain the evidence/result needed by consumers rather than requiring Comp Maker or Team Optimization to rediscover the mechanic independently.
+2. **Comp Maker chooses complete plans.** Comp Maker may compare suitability, composition fit, role/assignment constraints, provider coverage, workload, and encounter relevance, but it must not rebuild Extreme math or Rotation mechanics from display text, heuristics, or duplicate formulas.
+3. **Team Optimization improves the same plans.** Optimization starts from the exact selected candidate plan and proposes explicit changes while preserving its canonical identities and evidence boundaries. It may call the authoritative upstream/shared evaluator again for a changed candidate, but it must not substitute a local approximation for an already-owned mechanic.
+4. **No prose reconstruction.** Human-readable explanations, score reasons, UI labels, and report text are presentation outputs. Application state must travel through structured typed fields/contracts, not by parsing those strings back into mechanics, gear, skills, assignments, or assumptions.
+5. **No silent evidence loss.** Unknown, unsupported, conflicting, partial, or assumption-bound evidence remains attached when a candidate crosses Extreme -> Rotation -> Comp Maker -> Optimization -> Roster. A downstream consumer may reject or defer the candidate, but it may not erase the boundary and treat it as proven.
+6. **Identity is stable across the round trip.** Character, baseline Build, candidate Build, team, chair/slot, source/template, rotation plan, and encounter identity must remain distinguishable. Generated-plan persistence may be an implementation detail, but it must not create a second competing user-facing team/build identity.
+7. **Results are reusable, not frozen conclusions.** A downstream change to gear, skills, assignment, encounter, runtime assumptions, or rotation invalidates only the evidence that depends on that change. The appropriate authoritative service should recompute that evidence; unaffected canonical evidence should be preserved rather than rediscovered wholesale.
+8. **Ranking is consumer-owned; mechanics are not.** Extreme Builder may optimize an Extreme objective, Rotation Builder may optimize execution, Comp Maker may optimize composition, and Team Optimization may optimize the assigned team. Those rankings can differ. They must still consume the same underlying mechanic/evidence truth.
+
+Tests for this boundary should prove that an exact candidate can move between engines without silent identity mutation, evidence loss, favorable UNKNOWN coercion, or mechanics being reconstructed from presentation strings.
+
 ## Fail closed
 
 Unknown, unsupported, or mechanically ambiguous ESO behavior stays explicit. No BFF engine may turn missing evidence into a favorable optimization assumption.
