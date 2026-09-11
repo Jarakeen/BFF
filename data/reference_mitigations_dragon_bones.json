@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {"entry_name":"Bone Colossus Adds — Lizabet Charnis","mitigation":"Tank each Colossus immediately and clear the summoned wave before the next one compounds the room pressure."},
+    {"entry_name":"Flying Skulls — Lizabet Charnis","mitigation":"Step out of skull paths; being struck causes heavy damage and knockdown."},
+    {"entry_name":"Senche Death Grip — Cadaverous Menagerie","mitigation":"Focus the Senche and free a pinned player immediately rather than continuing the general cleave."},
+    {"entry_name":"Volatile Fungi — Cadaverous Menagerie","mitigation":"Preserve clean floor space and avoid the fungal ground effects entirely."},
+    {"entry_name":"Elemental Relics — Caluurion","mitigation":"Move together to the active relic and kill the appropriate Bonefiends on it so their explosions deactivate the relic."},
+    {"entry_name":"Lich Crystals — Caluurion","mitigation":"Hold in safe gaps between expanding crystal circles instead of running through the room and creating extra movement errors."},
+    {"entry_name":"Haunting Spectre — Ulfnor and Sabina Cedus","mitigation":"Locate and burn Sabina immediately when a player is chained. The trapped player cannot free themselves before Ulfnor reaches them."},
+    {"entry_name":"Orryn Channel — Orryn the Black and Thurvokun","mitigation":"Track Orryn's teleports and interrupt every ground channel immediately; assign ranged interrupt coverage if needed."},
+    {"entry_name":"Plague Breath — Orryn the Black and Thurvokun","mitigation":"Use Yisareh's Life Ward and execute the assigned stack position when Thurvokun's breath resolves."},
+    {"entry_name":"Terrorizing Tremor — Orzun and Rinaerus","mitigation":"Preserve the spawned ice spikes and use them as shelter for the lethal snowstorm/tremor sequence."},
+    {"entry_name":"Skeever Summon Channel — Orzun and Rinaerus","mitigation":"Interrupt Rinaerus when he channels to prevent unnecessary Skeever spawns."},
+    {"entry_name":"Stony Gaze — Doylemish Ironheart","mitigation":"Use the synergy to free a petrified player immediately, before Doylemish finishes the lethal eye beam."},
+    {"entry_name":"Ice Vent — Matriarch Aldis","mitigation":"The tank plugs the active ice vent while the group kills Corrupted Leimenids and stays out of the water."},
+    {"entry_name":"Jorvuld Antidote — Plague Concocter Mortieu","mitigation":"Kill the add type Jorvuld requests immediately so he can prepare the antidote before plague stacks become unmanageable."},
+    {"entry_name":"Poison Grates — Plague Concocter Mortieu","mitigation":"The tank deliberately soaks grate poison waves so they do not transfer lethal damage to the group."},
+    {"entry_name":"Fire Cage Beam — Zaan the Scalecaller","mitigation":"Rotate players through the beam protecting the caged target; one player should not absorb repeated hits alone."},
+    {"entry_name":"Poison Wave — Zaan the Scalecaller","mitigation":"Use the shield safe zone in normal Veteran. In Hard Mode, preserve and assign the four distinct safe-state mechanics for each poison wave."}
+  ]
+}
