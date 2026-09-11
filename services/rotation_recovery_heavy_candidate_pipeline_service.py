@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import replace
+from typing import Callable
 
 from minmax.build_calculation_context import BuildCalculationContext
 from minmax.character_build.character_build import CharacterBuild
@@ -14,6 +15,12 @@ from minmax.rotation_plan import RotationPlan
 from models.build_model import PlayerBuild
 from services.rotation_candidate_generation_service import RotationRefreshLeadCandidateOption
 from services.rotation_effect_uptime_service import RotationEffectUptimeRequirement
+from services.rotation_heavy_attack_restoration_evidence_service import (
+    RotationHeavyAttackCompletionEvidence,
+)
+from services.rotation_heavy_sustain_projection_service import (
+    RotationHeavySustainProjectionService,
+)
 from services.rotation_recovery_heavy_candidate_generation_bridge_service import (
     RecoveryCandidateEvaluatorResolver,
     RecoveryPressureWaitDecisionFactory,
@@ -43,6 +50,12 @@ from services.rotation_saved_build_bar_access_service import (
 )
 
 
+RecoveryHeavyCompletionEvidenceFactory = Callable[
+    [RotationPlan],
+    tuple[RotationHeavyAttackCompletionEvidence, ...],
+]
+
+
 class RotationRecoveryHeavyCandidatePipelineService:
     """Compose candidate-policy generation with the recovery-aware family workflow.
 
@@ -50,6 +63,11 @@ class RotationRecoveryHeavyCandidatePipelineService:
     per-plan resource-maximum, displayed-recovery, heavy-restoration, and time-varying
     combat-state resolvers through the complete candidate pipeline. Those inputs stay
     explicit so legacy callers do not acquire invented mechanics.
+
+    Effect-aware callers may instead supply plan-specific Heavy Attack completion
+    evidence. The pipeline then builds the restoration resolver for each regenerated
+    plan through ``RotationHeavySustainProjectionService`` so callers provide reviewed
+    evidence rather than reimplementing weapon, progression, or restore math.
 
     Final scorecards are additionally decorated with saved-build bar-access rules.
     This keeps ESO gear mechanics such as Oakensoul outside generic plan semantics
@@ -63,12 +81,16 @@ class RotationRecoveryHeavyCandidatePipelineService:
         generation_bridge: RotationRecoveryHeavyCandidateGenerationBridgeService | None = None,
         workflow: RotationRecoveryHeavyCandidateWorkflowService | None = None,
         active_bar_assessor: RotationActiveBarAssessor | None = None,
+        heavy_sustain_service: RotationHeavySustainProjectionService | None = None,
     ) -> None:
         self.generation_bridge = (
             generation_bridge or RotationRecoveryHeavyCandidateGenerationBridgeService()
         )
         self.workflow = workflow or RotationRecoveryHeavyCandidateWorkflowService()
         self.active_bar_assessor = active_bar_assessor or RotationActiveBarAssessor()
+        self.heavy_sustain_service = (
+            heavy_sustain_service or RotationHeavySustainProjectionService()
+        )
 
     def _with_saved_build_bar_access(
         self,
@@ -160,6 +182,8 @@ class RotationRecoveryHeavyCandidatePipelineService:
         trigger_fraction: float,
         restoration_resolver: VerifiedRecoveryHeavyRestorationResolver | None = None,
         restoration_resolver_factory: RecoveryRestorationResolverFactory | None = None,
+        completion_evidence_factory: RecoveryHeavyCompletionEvidenceFactory | None = None,
+        initial_bar: str = "front",
         demands: Iterable[RotationDemandWindow] = (),
         options: Iterable[RotationRefreshLeadCandidateOption] = (),
         wait_decision_factory: RecoveryPressureWaitDecisionFactory | None = None,
@@ -186,6 +210,31 @@ class RotationRecoveryHeavyCandidatePipelineService:
             wait_decision_factory=wait_decision_factory,
             baseline_id=baseline_id,
         )
+
+        active_restoration_resolver = restoration_resolver
+        active_restoration_factory = restoration_resolver_factory
+        if completion_evidence_factory is not None:
+            if restoration_resolver is not None or restoration_resolver_factory is not None:
+                raise ValueError(
+                    "completion_evidence_factory cannot be combined with an explicit "
+                    "heavy restoration resolver or resolver factory"
+                )
+
+            def canonical_restoration_factory(
+                plan: RotationPlan,
+            ) -> VerifiedRecoveryHeavyRestorationResolver:
+                completion_evidence = tuple(completion_evidence_factory(plan))
+                return self.heavy_sustain_service.restoration_resolver_for_plan(
+                    character_build=character_build,
+                    sustain_build=player_build,
+                    plan=plan,
+                    resource=resource,
+                    initial_bar=initial_bar,
+                    completion_evidence=completion_evidence,
+                )
+
+            active_restoration_factory = canonical_restoration_factory
+
         return self.workflow.run_effects(
             player_build=player_build,
             character_build=character_build,
@@ -199,8 +248,8 @@ class RotationRecoveryHeavyCandidatePipelineService:
             resource=resource,
             maximum_amount=maximum_amount,
             trigger_fraction=trigger_fraction,
-            restoration_resolver=restoration_resolver,
-            restoration_resolver_factory=restoration_resolver_factory,
+            restoration_resolver=active_restoration_resolver,
+            restoration_resolver_factory=active_restoration_factory,
             reserve_assessment_resolver=reserve_assessment_resolver,
             max_iterations=max_iterations,
             calculation_context=calculation_context,
@@ -210,4 +259,7 @@ class RotationRecoveryHeavyCandidatePipelineService:
         )
 
 
-__all__ = ["RotationRecoveryHeavyCandidatePipelineService"]
+__all__ = [
+    "RecoveryHeavyCompletionEvidenceFactory",
+    "RotationRecoveryHeavyCandidatePipelineService",
+]
