@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "content_id": "halls_of_fabrication",
+  "encounter_id": "hunter_killers",
+  "encounter_name": "Hunter-Killer Negatrix and Positrox",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"split_tank_phase","value":{"order":1,"label":"Split-Tank Main Phase","threshold":"Pull","description":"Each tank controls one Hunter-Killer on opposite sides of the room. Keep the bosses separated except during deliberate sphere-shield breaks."},"source_type":"guide","source_name":"Xynode Halls of Fabrication Trial Guide","source_locator":"Hunter-Killer Positrox & Hunter-Killer Negatrix","confidence":"medium"},
+    {"fact_type":"phase","fact_key":"scarab_wave_one","value":{"order":2,"label":"Scarabs","threshold":"75%","description":"Scarabs spawn from the combined boss health bar and should be burned quickly with area damage and ultimates."},"source_type":"guide","source_name":"Xynode Halls of Fabrication Trial Guide","source_locator":"Hunter-Killers > Scarabs","confidence":"medium"},
+    {"fact_type":"phase","fact_key":"scarab_wave_two","value":{"order":3,"label":"Scarabs","threshold":"50%","description":"Second scarab wave from combined boss health."},"source_type":"guide","source_name":"Xynode Halls of Fabrication Trial Guide","source_locator":"Hunter-Killers > Scarabs","confidence":"medium"},
+    {"fact_type":"phase","fact_key":"scarab_wave_three","value":{"order":4,"label":"Scarabs","threshold":"25%","description":"Third scarab wave from combined boss health."},"source_type":"guide","source_name":"Xynode Halls of Fabrication Trial Guide","source_locator":"Hunter-Killers > Scarabs","confidence":"medium"},
+    {"fact_type":"phase","fact_key":"paired_execute","value":{"order":5,"label":"Paired Execute","threshold":"~20% each","description":"Balance both bosses low before killing either. When one dies, the remaining boss and room enrage, so finish the second quickly."},"source_type":"guide","source_name":"Xynode Halls of Fabrication Trial Guide","source_locator":"Hunter-Killers > Execute","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"boss_separation","value":{"name":"Boss Separation","response":"one_tank_per_boss_keep_beam_broken_except_for_sphere_shields"},"source_type":"guide","source_name":"Xynode Halls of Fabrication Trial Guide","source_locator":"Hunter-Killers positioning","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"sphere_shield_break","value":{"name":"Sphere Shield Break","method":"bring_bosses_together_briefly_and_pass_their_electrical_beam_through_shielded_sphere","failure_risk":"boss_link_damage_and_enrage_if_held_together_too_long"},"source_type":"guide","source_name":"Xynode Halls of Fabrication Trial Guide","source_locator":"Hunter-Killers > Sphere Damage Shields","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"take_aim","value":{"name":"Take Aim","interruptible":true,"failure_result":"one_shot_target"},"source_type":"guide","source_name":"Xynode Halls of Fabrication Trial Guide","source_locator":"Hunter-Killers > Take Aim","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"poison_injection","value":{"name":"Poison Injection","response":"cleanse_or_purge_quickly"},"source_type":"guide","source_name":"Xynode Halls of Fabrication Trial Guide","source_locator":"Hunter-Killers > Poison Injection","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"proximity_static_beam_width_fix","value":{"name":"Proximity Static","beam_matches_visual_width":true},"source_type":"official_patch_notes","source_name":"ESO PC/Mac Patch Notes v3.0.8","source_locator":"Halls of Fabrication Trial > Hunter-Killer Fabricants","confidence":"high"}
+  ]
+}
