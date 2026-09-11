@@ -109,6 +109,7 @@ class WeaponEnchantmentParser:
             ("Flame Damage", "flame"),
             ("Magic Damage", "magic"),
             ("Physical Damage", "physical"),
+            ("Oblivion Damage", "oblivion"),
         ]
 
         for phrase, damage_type in damage_patterns:
