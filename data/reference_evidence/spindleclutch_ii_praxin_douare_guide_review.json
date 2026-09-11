@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "spindleclutch_ii",
+  "encounter_id": "praxin_douare",
+  "encounter_name": "Praxin Douare",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"add_waves","value":{"order":1,"label":"Ghost Add Waves","threshold":"opening sequence","description":"Clear the timed ghost-boss waves before Praxin becomes attackable; unfinished waves can overlap the boss."},"source_type":"guide","source_name":"Alcast Spindleclutch II Guide","source_locator":"Praxin Douare","game_update":"Launch","confidence":"high"},
+    {"fact_type":"phase","fact_key":"wraith","value":{"order":2,"label":"Praxin Wraith Phase","threshold":"after add sequence","description":"Praxin becomes stationary and uses Harrowing Ring, Despair, and resource drain."},"source_type":"guide","source_name":"Alcast Spindleclutch II Guide","source_locator":"Praxin Douare","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"harrowing_ring","value":{"name":"Harrowing Ring","response":"targeted_player_moves_with_the_ring_and_everyone_avoids_crossing_its_boundary"},"source_type":"guide","source_name":"Alcast Spindleclutch II Guide","source_locator":"Praxin Douare","game_update":"Launch","confidence":"high"}
+  ]
+}
