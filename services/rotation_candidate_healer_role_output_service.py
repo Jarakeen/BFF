@@ -42,6 +42,9 @@ from services.rotation_healer_periodic_runtime_service import (
 from services.rotation_healer_saved_build_periodic_timing_service import (
     RotationHealerSavedBuildPeriodicTimingService,
 )
+from services.rotation_plan_runtime_build_context_service import (
+    RotationRuntimeBuildContextResolver,
+)
 
 
 class RotationCandidateHealerDemandEvidenceProvider(Protocol):
@@ -52,6 +55,7 @@ class RotationCandidateHealerDemandEvidenceProvider(Protocol):
         *,
         candidate: GeneratedRotationCandidate,
         demand: RotationDemandWindow,
+        runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
     ) -> RotationHealerDemandHealingEvidence: ...
 
 
@@ -118,6 +122,7 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
         *,
         candidate: GeneratedRotationCandidate,
         demand: RotationDemandWindow,
+        runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
     ) -> RotationHealerDemandHealingEvidence:
         if demand.kind is not RotationDemandKind.HEALING:
             raise ValueError("canonical healer demand evidence requires a healing demand window")
@@ -129,6 +134,8 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
         }
         if self.contexts_by_bar is not None:
             action_kwargs["contexts_by_bar"] = self.contexts_by_bar
+        if runtime_build_context_resolver is not None:
+            action_kwargs["runtime_build_context_resolver"] = runtime_build_context_resolver
         projection = self.action_healing_service.project(**action_kwargs)
 
         bridge_unresolved: list[str] = []
@@ -352,11 +359,16 @@ class RotationCandidateHealerRoleOutputService:
     def evaluate_plan(
         self,
         candidate: GeneratedRotationCandidate,
+        *,
+        runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
     ) -> RotationCandidateRoleOutputEvidence:
-        evidence = self.demand_evidence_provider.evaluate_demand(
-            candidate=candidate,
-            demand=self.demand,
-        )
+        kwargs = {
+            "candidate": candidate,
+            "demand": self.demand,
+        }
+        if runtime_build_context_resolver is not None:
+            kwargs["runtime_build_context_resolver"] = runtime_build_context_resolver
+        evidence = self.demand_evidence_provider.evaluate_demand(**kwargs)
         if evidence.demand != self.demand:
             raise ValueError(
                 "rotation healer demand evidence mismatch: provider returned a "
