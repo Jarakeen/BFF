@@ -15,6 +15,7 @@ from services.rotation_recovery_heavy_candidate_orchestration_service import (
     RotationRecoveryHeavyCandidateOrchestrationService,
 )
 from services.rotation_recovery_heavy_final_family_evaluation_service import (
+    RecoveryFinalRoleAwareInputResolver,
     RecoveryFinalScorecardResolver,
     RotationRecoveryHeavyFinalFamilyEvaluationService,
 )
@@ -42,6 +43,11 @@ class RotationRecoveryHeavyCandidateWorkflowService:
     than stale seed-plan timing. Heavy restoration can likewise be provided as a
     plan-aware resolver factory so each regenerated plan is replayed against matching
     restoration evidence instead of stale seed-plan evidence.
+
+    Effect-aware callers may additionally provide final stabilized role evidence.
+    When supplied, required-effect uptime remains a hard gate and the surviving
+    candidates are then ordered through the canonical role-aware ranker. Callers that
+    omit role evidence retain the historical effect-only final-family evaluation.
     """
 
     def __init__(
@@ -102,6 +108,7 @@ class RotationRecoveryHeavyCandidateWorkflowService:
         character_build: CharacterBuild,
         candidates: tuple[RecoveryHeavyCandidateOrchestrationInput, ...],
         scorecard_resolver: RecoveryFinalScorecardResolver,
+        role_aware_input_resolver: RecoveryFinalRoleAwareInputResolver | None = None,
         requirements: tuple[RotationEffectUptimeRequirement, ...] = (),
         passives: Iterable[PassiveGrant] = (),
         resource: ResourceType,
@@ -116,12 +123,20 @@ class RotationRecoveryHeavyCandidateWorkflowService:
         displayed_recovery_resolver_factory: RecoveryDisplayedRecoveryResolverFactory | None = None,
         runtime_combat_state_resolver_factory: RecoveryRuntimeCombatStateResolverFactory | None = None,
     ) -> RotationRecoveryHeavyCandidateOrchestrationResult:
-        final_evaluator = self.final_family_service.effect_evaluator(
-            build=character_build,
-            scorecard_resolver=scorecard_resolver,
-            requirements=tuple(requirements),
-            passives=tuple(passives),
-        )
+        if role_aware_input_resolver is None:
+            final_evaluator = self.final_family_service.effect_evaluator(
+                build=character_build,
+                scorecard_resolver=scorecard_resolver,
+                requirements=tuple(requirements),
+                passives=tuple(passives),
+            )
+        else:
+            final_evaluator = self.final_family_service.effect_role_aware_evaluator(
+                build=character_build,
+                input_resolver=role_aware_input_resolver,
+                requirements=tuple(requirements),
+                passives=tuple(passives),
+            )
         return self.orchestration_service.orchestrate(
             build=player_build,
             candidates=tuple(candidates),
