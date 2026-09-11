@@ -7,6 +7,10 @@ feature.  Extreme max-resource search needs a slightly wider reviewed vocabulary
 for gear bonuses whose resource math is explicit even when the set also contains
 unrelated mechanics.  This adapter delegates to the shared resolver first and
 adds only narrowly reviewed resource patterns.
+
+Some reviewed stack mechanics are represented at their explicit extrema with a
+condition marker.  That is sufficient for denominator relevance, but the marker
+must still be proven by a runtime/structural scorer before the effect is executable.
 """
 
 import re
@@ -207,8 +211,8 @@ class ExtremeGearSetResourceEffectResolver:
             ]
 
         # Armor Master: preserve the 5% Max Health mechanic explicitly.  Percentage
-        # stacking/reference semantics remain an Extreme objective blocker until the
-        # canonical sheet layer proves the correct base.
+        # stacking/reference semantics remain an executable Extreme blocker until
+        # the canonical sheet layer proves the correct base.
         match = re.fullmatch(
             r"While you have an Armor ability slotted, your Max Health is increased by "
             r"(?P<value>\d+(?:\.\d+)?)%\. When you use an Armor ability while in combat, "
@@ -225,6 +229,67 @@ class ExtremeGearSetResourceEffectResolver:
                     condition="armor_ability_slotted",
                     operation=EffectOperation.ADD_PERCENT,
                     unit=EffectUnit.PERCENT,
+                )
+            ]
+
+        # Death Dealer's Fete: denominator relevance uses the explicit maximum
+        # stack state (30 * 88). Runtime must still prove the stack count.
+        match = re.fullmatch(
+            r"Gain a persistent stack of Escalating Fete every (?P<gain_seconds>\d+) seconds you are in combat, "
+            r"up to (?P<max_stacks>\d+) stacks max\. Each stack of Escalating Fete increases your "
+            r"Maximum Stamina, Health, and Magicka by (?P<per_stack>\d[\d,]*)\. You lose a stack of "
+            r"Escalating Fete every (?P<loss_seconds>\d+) seconds you are out of combat\.?",
+            text,
+            re.IGNORECASE,
+        )
+        if match:
+            maximum = int(match.group("max_stacks")) * float(match.group("per_stack").replace(",", ""))
+            condition = f"escalating_fete_stacks:{match.group('max_stacks')}"
+            return [
+                self._effect(StatId.MAX_HEALTH, maximum, source_text, condition=condition),
+                self._effect(StatId.MAX_MAGICKA, maximum, source_text, condition=condition),
+                self._effect(StatId.MAX_STAMINA, maximum, source_text, condition=condition),
+            ]
+
+        # Prowler's Talisman: only the critical-damage stack branch changes max
+        # resources. Represent its explicit cap for relevance; runtime owns stacks.
+        match = re.fullmatch(
+            r"While Battle Spirit is inactive, bracing while crouching turns you invisible for \d+ seconds\. "
+            r"This can occur once every \d+ seconds\. Increase your chances of successfully Pickpocketing by \d+%\. "
+            r"On dealing Critical Damage, increase your Max Magicka and Max Stamina for \d+ seconds, "
+            r"up to (?P<resource_cap>\d[\d,]*) at (?P<max_stacks>\d+) stacks\. On dealing non-Critical Damage, "
+            r"increase your Health, Magicka, and Stamina Recovery for \d+ seconds, up to \d[\d,]* at \d+ stacks\. "
+            r"Either effect can occur up to once every \d+ second\. Talisman upgrades: \d+\.?",
+            text,
+            re.IGNORECASE,
+        )
+        if match:
+            value = float(match.group("resource_cap").replace(",", ""))
+            condition = f"prowlers_talisman_critical_stacks:{match.group('max_stacks')}"
+            return [
+                self._effect(StatId.MAX_MAGICKA, value, source_text, condition=condition),
+                self._effect(StatId.MAX_STAMINA, value, source_text, condition=condition),
+            ]
+
+        # Thrassian Stranglers: every stack is strictly harmful to Max Health.
+        # The maximum stack state makes the sign explicit for denominator pruning;
+        # runtime still owns the actual current stack count and reset conditions.
+        match = re.fullmatch(
+            r"Killing an enemy grants you a stack of Sload's Call for \d+ hour, up to a maximum of "
+            r"(?P<max_stacks>\d+) stacks\. Each stack increases your Weapon and Spell Damage by \d[\d,]*, "
+            r"reduces your Maximum Health by\s*(?P<per_stack>\d[\d,]*), and reduces effectiveness of your "
+            r"damage shields by \d+%\. Sload's Call is lost if you remove Thrassian Stranglers, go invisible, or crouch\.?",
+            text,
+            re.IGNORECASE,
+        )
+        if match:
+            maximum_loss = int(match.group("max_stacks")) * float(match.group("per_stack").replace(",", ""))
+            return [
+                self._effect(
+                    StatId.MAX_HEALTH,
+                    -maximum_loss,
+                    source_text,
+                    condition=f"sloads_call_stacks:{match.group('max_stacks')}",
                 )
             ]
 
