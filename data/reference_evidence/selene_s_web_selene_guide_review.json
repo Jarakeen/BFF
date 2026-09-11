@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "selene_s_web",
+  "encounter_id": "selene_s_web",
+  "encounter_name": "Selene",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"spider_phase","value":{"order":1,"label":"Spider Phase","threshold":"fight start","description":"Keep Selene faced away from the group and control the initial spider-form pressure before the humanoid phase."},"source_type":"guide","source_name":"Xynode Selene's Web Guide","source_locator":"Selene","game_update":"Launch","confidence":"high"},
+    {"fact_type":"phase","fact_key":"humanoid_phase","value":{"order":2,"label":"Humanoid Phase","threshold":"after spider phase","description":"Control summoned adds, react to the web-and-raven center pull, and keep Selene's heavy frontal spirit attack pointed away from allies."},"source_type":"guide","source_name":"Xynode Selene's Web Guide","source_locator":"Selene","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"webs_and_ravens","value":{"name":"Webs and Ravens","response":"after_the_group_is_pulled_to_center_move_out_of_the_large_damage_circle_when_the_web_drops"},"source_type":"guide","source_name":"Xynode Selene's Web Guide","source_locator":"Selene","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"bear_attack","value":{"name":"Bear Attack","response":"tank_keeps_selene_faced_away_and_blocks_or_sidesteps_the_large_frontal_spirit_attack"},"source_type":"guide","source_name":"Xynode Selene's Web Guide","source_locator":"Selene","game_update":"Launch","confidence":"high"}
+  ]
+}
