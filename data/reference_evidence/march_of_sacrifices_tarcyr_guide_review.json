@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "march_of_sacrifices",
+  "encounter_id": "tarcyr",
+  "encounter_name": "Tarcyr",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"combat","value":{"order":1,"label":"Combat Phase","threshold":"active combat","description":"Handle Tarcyr's frontal attacks, adds, Fire Rampage, and interruptible Lightning Prance."},"source_type":"guide","source_name":"Dr Coker March of Sacrifices Guide","source_locator":"Tarcyr","game_update":"U19","confidence":"high"},
+    {"fact_type":"phase","fact_key":"hunt","value":{"order":2,"label":"Shrouding Mist Hunt","threshold":"hunt transition","description":"Enter stealth, spread through the arena, and use the friendly wisp while avoiding detection and teleport punishment."},"source_type":"guide","source_name":"Dr Coker March of Sacrifices Guide","source_locator":"Tarcyr","game_update":"U19","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"shrouding_mist","value":{"name":"Shrouding Mist","response":"stay_in_stealth_during_hunt_and_use_wisp_synergy_without_being_detected"},"source_type":"achievement","source_name":"Mist Walker","source_locator":"March of Sacrifices achievement","game_update":"U19","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"lightning_prance","value":{"name":"Lightning Prance","response":"interrupt_immediately_to_prevent_group_wipe"},"source_type":"guide","source_name":"Dr Coker March of Sacrifices Guide","source_locator":"Tarcyr","game_update":"U19","confidence":"high"}
+  ]
+}
