@@ -4,10 +4,10 @@ from __future__ import annotations
 
 This layer closes named gear and selected reviewed equipment families only when
 their canonical denominator is proven. Max-resource objectives additionally search
-proof-reduced resource armor, reviewed static jewelry traits, and reviewed
-Undaunted Mettle. Canonical jewelry glyphs and weapon trait/enchantment families
-may be proven irrelevant to a max resource, but unknown or relevant evidence stays
-explicit and fails closed.
+proof-reduced resource armor, reviewed static jewelry traits, reviewed passive
+progression, and reviewed max-resource active-bar witnesses. Canonical jewelry
+glyphs and weapon trait/enchantment families may be proven irrelevant to a max
+resource, but unknown or relevant evidence stays explicit and fails closed.
 """
 
 from pathlib import Path
@@ -92,6 +92,7 @@ _GEAR_DEFERRED_AXIS = "gear and legal set/package topology"
 _EQUIPMENT_TRAIT_DEFERRED_AXIS = "armor, jewelry, and weapon traits"
 _GLYPH_DEFERRED_AXIS = "glyphs/enchants"
 _PASSIVE_DEFERRED_AXIS = "class/skill/armor/weapon/guild passive ranks"
+_SKILL_BAR_DEFERRED_AXIS = "skill-bar choices and morphs"
 _REMAINING_EQUIPMENT_TRAIT_AXIS = (
     "glyph-dependent/runtime armor traits plus jewelry and weapon traits"
 )
@@ -108,6 +109,12 @@ _RESOURCE_REMAINING_PASSIVE_AXIS = (
 )
 _RESOURCE_REMAINING_PASSIVE_AFTER_JUGGERNAUT_AXIS = (
     "remaining class/skill/armor/weapon/guild passive ranks excluding reviewed max-rank Undaunted Mettle and Juggernaut"
+)
+_RESOURCE_REMAINING_PASSIVE_AFTER_REVIEWED_BAR_AXIS = (
+    "remaining class/skill/armor/weapon/guild passive ranks excluding reviewed max-rank Undaunted Mettle and the objective's canonically applied reviewed resource passives"
+)
+_RESOURCE_REMAINING_SKILL_BAR_AXIS = (
+    "remaining skill-bar choices and morphs excluding reviewed max-resource passive witness bars"
 )
 _GEAR_SCOPE = (
     "all objective-surviving canonical named gear-set breakpoint assignments "
@@ -137,6 +144,9 @@ _RESOURCE_UNDAUNTED_SCOPE = (
 )
 _RESOURCE_JUGGERNAUT_SCOPE = (
     "reviewed canonical max-rank Juggernaut applied through shared Heavy Armor piece-count mechanics"
+)
+_RESOURCE_ACTIVE_BAR_SCOPE = (
+    "reviewed six-slot active-bar witness reduction for Dark Vigor, Magicka Flood, and Magicka Controller using the canonical active-skill inventory and legal selected class route"
 )
 
 
@@ -306,7 +316,9 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
 
         searched_parts = [*result.structural_scope, _GEAR_SCOPE]
         if resource_armor:
-            searched_parts.extend((_RESOURCE_ARMOR_SCOPE, _RESOURCE_UNDAUNTED_SCOPE))
+            searched_parts.extend(
+                (_RESOURCE_ARMOR_SCOPE, _RESOURCE_UNDAUNTED_SCOPE, _RESOURCE_ACTIVE_BAR_SCOPE)
+            )
             if key == "max_health":
                 searched_parts.append(_RESOURCE_JUGGERNAUT_SCOPE)
             if jewelry_state is not None:
@@ -359,11 +371,10 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
                 )
                 continue
             if axis == _PASSIVE_DEFERRED_AXIS and resource_armor:
-                omitted_rows.append(
-                    _RESOURCE_REMAINING_PASSIVE_AFTER_JUGGERNAUT_AXIS
-                    if key == "max_health"
-                    else _RESOURCE_REMAINING_PASSIVE_AXIS
-                )
+                omitted_rows.append(_RESOURCE_REMAINING_PASSIVE_AFTER_REVIEWED_BAR_AXIS)
+                continue
+            if axis == _SKILL_BAR_DEFERRED_AXIS and resource_armor:
+                omitted_rows.append(_RESOURCE_REMAINING_SKILL_BAR_AXIS)
                 continue
             omitted_rows.append(axis)
         omitted = tuple(omitted_rows)
@@ -505,6 +516,19 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
                 explanation_rows.append(
                     "Reviewed max-rank Juggernaut is applied canonically through the shared Heavy Armor piece-count resolver for every searched max-Health armor witness."
                 )
+            active_skills_reviewed = int(payload.get("resource_active_skills_reviewed") or 0)
+            if key == "max_health":
+                explanation_rows.append(
+                    f"Reviewed {active_skills_reviewed:,} canonical active skills and proof-reduced the legal six-slot bar to the strongest Dark Vigor witness ({int(payload.get('resource_active_bar_shadow_slots') or 0)} Shadow slots); shared Nightblade passive math applies the scored bonus."
+                )
+            elif key == "max_magicka":
+                explanation_rows.append(
+                    f"Reviewed {active_skills_reviewed:,} canonical active skills and jointly reduced the legal six-slot bar for Magicka Flood plus Magicka Controller ({int(payload.get('resource_active_bar_siphoning_slots') or 0)} Siphoning, {int(payload.get('resource_active_bar_mages_guild_slots') or 0)} Mages Guild slots); shared passive resolvers apply the scored bonus."
+                )
+            elif key == "max_stamina":
+                explanation_rows.append(
+                    f"Reviewed {active_skills_reviewed:,} canonical active skills and proof-reduced the legal six-slot bar to the one-slot Magicka Flood trigger ({int(payload.get('resource_active_bar_siphoning_slots') or 0)} Siphoning slot); shared Nightblade passive math applies the scored bonus."
+                )
             if jewelry_trait_catalog is not None:
                 explanation_rows.append(
                     f"Jewelry static-trait review covered {jewelry_trait_catalog.raw_loadouts_reviewed:,} CP160 Gold Necklace/Ring/Ring loadouts and retained the strongest resource continuation at {jewelry_state.direct_delta if jewelry_state is not None else 0:g} flat resource. Glyph-dependent/unreviewed jewelry traits remain separate."
@@ -543,7 +567,7 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
         explanation_rows.extend(
             (
                 f"Finite axes include {mundus_count:,} Mundus, {food_count:,} food, and {potion_count:,} potion states.",
-                "Residual equipment traits/enchants, skills, Champion Points, remaining passives, and runtime-only axes remain separate unless coverage says otherwise.",
+                "Residual equipment traits/enchants, unreviewed skill-bar/morph interactions, Champion Points, remaining passives, and runtime-only axes remain separate unless coverage says otherwise.",
             )
         )
 
