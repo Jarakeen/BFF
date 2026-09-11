@@ -2,6 +2,7 @@ from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPla
 from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
 from minmax.runtime_event import RuntimeEvent
 from services.extreme_runtime_bar_effect_attempt import ExtremeRuntimeBarEffectAttempt
+from services.extreme_runtime_bar_transition import ExtremeRuntimeBarTransition
 from services.extreme_runtime_snapshot import ExtremeRuntimePotionUse, ExtremeRuntimeSnapshot
 from services.rotation_runtime_bar_provenance_service import RotationRuntimeBarProvenanceService
 
@@ -30,7 +31,7 @@ def _plan():
     )
 
 
-def test_unbarred_attempts_are_tagged_from_canonical_bar_progression():
+def test_unbarred_attempts_are_tagged_and_bar_swaps_are_projected():
     front = _attempt(1.0, 0)
     back = _attempt(5.0, 1)
     potion = ExtremeRuntimePotionUse(time_seconds=2.0, sequence=0)
@@ -44,7 +45,12 @@ def test_unbarred_attempts_are_tagged_from_canonical_bar_progression():
     assert result.resolved
     assert result.attempts_tagged == 2
     assert result.attempts_verified == 0
+    assert result.transitions_projected == 1
     assert result.snapshot is not None
+    assert result.snapshot.bar_transition_history_complete is True
+    assert result.snapshot.bar_transitions == (
+        ExtremeRuntimeBarTransition(5.0, 0, "front", "back"),
+    )
     assert tuple(row.active_bar for row in result.snapshot.bar_effect_attempts) == (
         "front",
         "back",
@@ -79,6 +85,9 @@ def test_same_timestamp_sequence_respects_bar_swap_order():
         "back",
         "back",
     )
+    assert result.snapshot.bar_transitions == (
+        ExtremeRuntimeBarTransition(5.0, 0, "front", "back"),
+    )
 
 
 def test_existing_bar_tag_is_verified_against_plan_and_mismatch_fails_closed():
@@ -93,6 +102,23 @@ def test_existing_bar_tag_is_verified_against_plan_and_mismatch_fails_closed():
     assert not result.resolved
     assert result.snapshot is None
     assert any("disagrees with RotationPlan" in row for row in result.unresolved)
+
+
+def test_existing_transition_history_is_verified_against_plan():
+    bad_transition = ExtremeRuntimeBarTransition(4.0, 0, "front", "back")
+    source = ExtremeRuntimeSnapshot(
+        runtime_history=(_attempt(1.0, 0), bad_transition),
+        snapshot_time_seconds=8.0,
+        bar_transition_history_complete=True,
+    )
+
+    result = RotationRuntimeBarProvenanceService().bind(_plan(), source)
+
+    assert not result.resolved
+    assert result.snapshot is None
+    assert result.unresolved == (
+        "runtime bar-transition evidence disagrees with RotationPlan BAR_SWAP history",
+    )
 
 
 def test_illegal_plan_and_legacy_snapshot_fail_closed():
