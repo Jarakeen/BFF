@@ -6,12 +6,12 @@ This layer closes the named gear-set/package axis only when the canonical topolo
 slot eligibility, objective relevance, and physical realization services all prove
 their denominator. Reviewed stat objectives may additionally search either the
 established armor weight/static-trait family or the proof-reduced max-resource
-Divines/Infused + armor-glyph family beneath the existing Mundus -> food -> potion
-stack and through the canonical stat pipeline.
+Light/Medium/Heavy + Divines/Infused + armor-glyph family beneath the existing
+Mundus -> food -> potion stack and through the canonical stat pipeline.
 
 Every searched armor family is narrower than the whole equipment-trait/enchantment
-space. Residual armor, jewelry, and weapon axes remain explicit coverage gaps until
-their own canonical finite searches are closed.
+space. Residual armor, jewelry, weapon, passive, and runtime axes remain explicit
+coverage gaps until their own canonical finite searches are closed.
 """
 
 from pathlib import Path
@@ -24,6 +24,9 @@ from minmax.potion_availability_repository import PotionAvailabilityRepository
 from minmax.provisioning_static_repository import ProvisioningStaticRepository
 from services.extreme_armor_resource_trait_glyph_state_service import (
     ExtremeArmorResourceTraitGlyphStateService,
+)
+from services.extreme_armor_resource_weight_trait_glyph_state_service import (
+    ExtremeArmorResourceWeightTraitGlyphStateService,
 )
 from services.extreme_armor_weight_trait_state_service import ExtremeArmorWeightTraitStateService
 from services.extreme_best_named_gear_armor_mundus_food_potion_structural_stat_evaluator import (
@@ -84,7 +87,7 @@ _REMAINING_EQUIPMENT_TRAIT_AXIS = (
     "glyph-dependent/runtime armor traits plus jewelry and weapon traits"
 )
 _RESOURCE_REMAINING_EQUIPMENT_TRAIT_AXIS = (
-    "armor weight/passive interactions and non-resource/runtime armor traits plus jewelry and weapon traits"
+    "non-resource/runtime armor traits plus jewelry and weapon traits"
 )
 _RESOURCE_REMAINING_GLYPH_AXIS = "jewelry and weapon glyphs/enchants"
 _GEAR_SCOPE = (
@@ -96,8 +99,9 @@ _REVIEWED_ARMOR_SCOPE = (
     "(None, Divines, Reinforced, Nirnhoned, Invigorating)"
 )
 _RESOURCE_ARMOR_SCOPE = (
-    "all proof-reduced seven-piece Divines/Infused armor trait plus objective-relevant "
-    "CP160 Truly Superb armor-glyph states"
+    "all legal seven-piece Light/Medium/Heavy armor-weight continuations, proof-reduced "
+    "by distinct armor-type count, crossed with proof-reduced Divines/Infused plus "
+    "objective-relevant CP160 Truly Superb armor-glyph states"
 )
 
 
@@ -162,11 +166,15 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
 
         armor_catalog = None
         armor_count = 1
-        resource_armor = key in ExtremeArmorResourceTraitGlyphStateService.SUPPORTED_OBJECTIVES
+        resource_armor = key in ExtremeArmorResourceWeightTraitGlyphStateService.SUPPORTED_OBJECTIVES
         reviewed_armor = key in ExtremeArmorWeightTraitStateService.REVIEWED_OBJECTIVES
 
         if resource_armor:
-            armor_catalog = ExtremeArmorResourceTraitGlyphStateService(self.database_path).build(key)
+            trait_glyph_service = ExtremeArmorResourceTraitGlyphStateService(self.database_path)
+            armor_catalog = ExtremeArmorResourceWeightTraitGlyphStateService.from_services(
+                key,
+                trait_glyph_service=trait_glyph_service,
+            ).build(key)
             factory = ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory(
                 canonical_evaluator=canonical,
                 mundus_repository=mundus_repository,
@@ -218,10 +226,6 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
         )
         result: ExtremeStructuralGlobalSearchResult[dict[str, Any]] = search_service.search(key)
 
-        # Probe the established finite-axis evaluator only for denominator sizes.
-        # Depend on the evaluator contract rather than concrete classes so test
-        # doubles and future compatible implementations cannot silently zero
-        # otherwise valid coverage accounting.
         mundus_count = 0
         food_count = 0
         potion_count = 0
@@ -338,7 +342,7 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
         payload = winner.payload if isinstance(winner.payload, dict) else {}
         searched_armor_phrase = ""
         if resource_armor:
-            searched_armor_phrase = " × every proof-reduced Divines/Infused + armor-glyph state"
+            searched_armor_phrase = " × every proof-reduced armor weight + Divines/Infused + armor-glyph state"
         elif reviewed_armor:
             searched_armor_phrase = " × every reviewed armor weight/static-trait state"
 
@@ -350,11 +354,12 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
             f"Considered {gear_realization.assignments_considered:,} named set assignments; physically realized {gear_realization.assignments_realized:,} and rejected {gear_realization.assignments_rejected:,}.",
         ]
         if resource_armor:
+            weight_catalog = armor_catalog.weight_catalog
             explanation_rows.append(
-                f"Scored {armor_count:,} proof-reduced resource armor trait/glyph states for each of {len(gear_candidates):,} distinct gear witnesses before Mundus/food/potion selection."
+                f"Scored {armor_count:,} proof-reduced resource armor weight/trait/glyph states for each of {len(gear_candidates):,} distinct gear witnesses before Mundus/food/potion selection."
             )
             explanation_rows.append(
-                "The resource armor reducer jointly compares Divines and Infused with objective-relevant armor glyphs; armor-weight/passive interactions and jewelry/weapon equipment axes remain separate."
+                f"Armor-weight legality reviewed all {weight_catalog.raw_loadouts_reviewed:,} seven-slot Light/Medium/Heavy loadouts and preserved one continuation witness for each 1/2/3 armor-type count. Undaunted Mettle ownership/effect remains in the separate passive axis."
             )
         elif reviewed_armor:
             explanation_rows.append(
