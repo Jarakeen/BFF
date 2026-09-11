@@ -33,12 +33,21 @@ def build_parser() -> argparse.ArgumentParser:
         default=[],
         help="Observational ESO Logs heal alias; repeat for multiple ids.",
     )
+    parser.add_argument(
+        "--max-observations",
+        type=int,
+        default=50,
+        help="Maximum detailed heal rows printed in text mode; collection remains complete.",
+    )
     parser.add_argument("--json", action="store_true", dest="as_json")
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if args.max_observations < 0:
+        raise SystemExit("--max-observations must be non-negative")
+
     report = RotationHealerMinorLifestealEsoLogsEvidenceService().inspect(
         args.database,
         report_code=args.report_code,
@@ -81,7 +90,8 @@ def main(argv: list[str] | None = None) -> int:
     print("-" * 104)
     if not report.observations:
         print("(none)")
-    for item in report.observations:
+    displayed = report.observations[: args.max_observations]
+    for item in displayed:
         delta = (
             f"{item.previous_same_source_damage_delta_seconds:g}s"
             if item.previous_same_source_damage_delta_seconds is not None
@@ -95,6 +105,12 @@ def main(argv: list[str] | None = None) -> int:
             f"overheal={item.overheal} | prior same-source damage "
             f"event={item.previous_same_source_damage_event_index} "
             f"target={item.previous_same_source_damage_target_id} delta={delta}"
+        )
+    omitted = len(report.observations) - len(displayed)
+    if omitted:
+        print(
+            f"... {omitted} additional observations collected but omitted from text output; "
+            "use --json or report/fight filters for complete detail"
         )
 
     print("\nUNRESOLVED")
