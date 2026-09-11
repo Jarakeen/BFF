@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "purpose": "Presentation-only healer/support skill and passive history. Never used by mechanics/runtime calculations.",
+  "events": [
+    {
+      "entity_type": "Skill",
+      "name": "Radiating Regeneration",
+      "context": "Restoration Staff",
+      "update": "U23",
+      "year": 2019,
+      "change_type": "rename and rework",
+      "summary": "The former Mutagen morph was renamed Radiating Regeneration. Instead of providing the old low-health burst heal and purge, the morph began healing up to two additional nearby targets, while Regeneration itself was reworked into a stronger 10-second single-target heal-over-time per cast.",
+      "source": "ZOS PC/Mac Patch Notes v5.1.5 - Scalebreaker & Update 23",
+      "source_url": "https://forums.elderscrollsonline.com/en/discussion/488626/pc-mac-patch-notes-v5-1-5-scalebreaker-update-23"
+    },
+    {
+      "entity_type": "Skill",
+      "name": "Radiating Regeneration",
+      "context": "Restoration Staff",
+      "update": "U35",
+      "year": 2022,
+      "change_type": "healing adjustment",
+      "summary": "Regeneration and its morphs had their healing per tick reduced by 40% as part of Update 35's broader healing-over-time rebalance.",
+      "source": "ZOS PC/Mac Patch Notes v8.1.5 - Lost Depths & Update 35",
+      "source_url": "https://forums.elderscrollsonline.com/en-gb/discussion/comment/7694101"
+    },
+    {
+      "entity_type": "Skill",
+      "name": "Illustrious Healing",
+      "context": "Restoration Staff",
+      "update": "U23",
+      "year": 2019,
+      "change_type": "rework",
+      "summary": "Grand Healing was converted into a true ground-based heal-over-time with only one active instance at a time. Illustrious Healing became the longer-duration, higher-healing morph, reaching 12 seconds at Rank IV and adding 50% healing per tick.",
+      "source": "ZOS PC/Mac Patch Notes v5.1.5 - Scalebreaker & Update 23",
+      "source_url": "https://forums.elderscrollsonline.com/en/discussion/488626/pc-mac-patch-notes-v5-1-5-scalebreaker-update-23"
+    },
+    {
+      "entity_type": "Skill",
+      "name": "Illustrious Healing",
+      "context": "Restoration Staff",
+      "update": "U35",
+      "year": 2022,
+      "change_type": "rework",
+      "summary": "Grand Healing's base duration increased to 10 seconds and its heal per tick increased by about 9%. Illustrious Healing changed to add 5 seconds of duration and no longer provided its former extra-healing bonus.",
+      "source": "ZOS PC/Mac Patch Notes v8.1.5 - Lost Depths & Update 35",
+      "source_url": "https://forums.elderscrollsonline.com/en-gb/discussion/comment/7694101"
+    },
+    {
+      "entity_type": "Skill",
+      "name": "Energy Orb",
+      "context": "Undaunted",
+      "update": "U23",
+      "year": 2019,
+      "change_type": "rework",
+      "summary": "Necrotic Orb was reduced to one active orb at a time and slowed from 3 to 2 meters per second. Energy Orb's healing per tick was increased by about 20%, and Orb synergies stopped destroying the parent orb so multiple allies could use the same orb as it traveled.",
+      "source": "ZOS PC/Mac Patch Notes v5.1.5 - Scalebreaker & Update 23",
+      "source_url": "https://forums.elderscrollsonline.com/en/discussion/488626/pc-mac-patch-notes-v5-1-5-scalebreaker-update-23"
+    },
+    {
+      "entity_type": "Skill",
+      "name": "Energy Orb",
+      "context": "Undaunted",
+      "update": "U35",
+      "year": 2022,
+      "change_type": "cadence adjustment",
+      "summary": "Energy Orb kept its existing duration, movement speed, tick rate, and cost, but gained one additional healing tick over its duration; healing per tick was reduced by less than 1%.",
+      "source": "ZOS PC/Mac Patch Notes v8.1.5 - Lost Depths & Update 35",
+      "source_url": "https://forums.elderscrollsonline.com/en-gb/discussion/comment/7694101"
+    },
+    {
+      "entity_type": "Skill",
+      "name": "Budding Seeds",
+      "context": "Green Balance",
+      "update": "U27",
+      "year": 2020,
+      "change_type": "behavior fix",
+      "summary": "The Healing Seed synergy stopped counting as a Green Balance skill for passive enhancement, because the synergy is activated by an ally rather than by the Warden who cast the skill. Budding Seeds also received fixes for recast animation handling and a rare double-heal case.",
+      "source": "ZOS PC/Mac Patch Notes v6.1.5 - Stonethorn & Update 27",
+      "source_url": "https://forums.elderscrollsonline.com/en/discussion/542612/pc-mac-patch-notes-v6-1-5-stonethorn-update-27"
+    },
+    {
+      "entity_type": "Skill",
+      "name": "Budding Seeds",
+      "context": "Green Balance",
+      "update": "U35",
+      "year": 2022,
+      "change_type": "buff",
+      "summary": "Healing per tick was increased by approximately 3% during Update 35's healing-over-time rebalance.",
+      "source": "ZOS PC/Mac Patch Notes v8.1.5 - Lost Depths & Update 35",
+      "source_url": "https://forums.elderscrollsonline.com/en-gb/discussion/comment/7694101"
+    },
+    {
+      "entity_type": "Passive",
+      "name": "Maturation",
+      "context": "Green Balance",
+      "update": "U20",
+      "year": 2018,
+      "change_type": "buff",
+      "summary": "Minor Toughness began applying even when the target was completely overhealed, and its duration increased to 10/20 seconds from 5/10 seconds so Wardens could provide the group buff more reliably.",
+      "source": "ZOS PC/Mac Patch Notes v4.2.5 - Murkmire & Update 20",
+      "source_url": "https://forums.elderscrollsonline.com/en/discussion/comment/5552032/"
+    }
+  ]
+}
