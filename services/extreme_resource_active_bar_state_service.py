@@ -10,6 +10,9 @@ passives:
 * Magicka Flood: one Siphoning ability is sufficient.
 * Magicka Controller: maximize distinct Mages Guild abilities, jointly with the
   one-slot Magicka Flood trigger when Siphoning is available.
+* Blood Magic: preserve a canonical positive-cost Dark Magic trigger witness and
+  let the downstream runtime layer decide whether its ten-second window benefits
+  Max Magicka or Max Stamina from the pre-window resource comparison.
 
 Class-line legality comes from the already-validated Extreme class route so legal
 subclass lines are not rejected merely because they differ from the base class.
@@ -20,6 +23,7 @@ skill families are never used twice on one witness bar.
 from dataclasses import dataclass
 from pathlib import Path
 
+from minmax.ability_cost_repository import AbilityCostRepository
 from minmax.guild_passive_input_resolver import GuildPassiveInputResolver
 from minmax.nightblade_passive_input_resolver import NightbladePassiveInputResolver
 from minmax.passive_math import mages_guild_magicka_controller_percent
@@ -41,6 +45,7 @@ class ExtremeResourceActiveBarState:
     shadow_slots: int = 0
     siphoning_slots: int = 0
     mages_guild_slots: int = 0
+    blood_magic_trigger_skill: str = ""
     reviewed_percent_bonus: float = 0.0
 
     @property
@@ -51,6 +56,7 @@ class ExtremeResourceActiveBarState:
             self.shadow_slots,
             self.siphoning_slots,
             self.mages_guild_slots,
+            self.blood_magic_trigger_skill,
         )
 
 
@@ -70,18 +76,23 @@ class ExtremeResourceActiveBarStateService:
     SHADOW = NightbladePassiveInputResolver.SHADOW_ID
     SIPHONING = NightbladePassiveInputResolver.SIPHONING_ID
     MAGES_GUILD = GuildPassiveInputResolver.MAGES_GUILD
+    DARK_MAGIC = "dark_magic"
 
     def __init__(
         self,
         database_path: str | Path | None = None,
         *,
         skill_universe_service: ExtremeSkillUniverseService | None = None,
+        ability_cost_repository: AbilityCostRepository | None = None,
     ) -> None:
         if database_path is None and skill_universe_service is None:
             raise ValueError("database_path or skill_universe_service is required")
         self.database_path = Path(database_path) if database_path is not None else None
         self.skill_universe_service = skill_universe_service or ExtremeSkillUniverseService(
             self.database_path  # type: ignore[arg-type]
+        )
+        self.ability_cost_repository = ability_cost_repository or (
+            AbilityCostRepository(self.database_path) if self.database_path is not None else None
         )
         self._actives_cache: tuple[ExtremePlayerSkillRecord, ...] | None = None
         self._catalog_cache: dict[
@@ -171,6 +182,19 @@ class ExtremeResourceActiveBarStateService:
             self._actives_cache = tuple(self.skill_universe_service.actives())
         return self._actives_cache
 
+    def _blood_magic_trigger(
+        self,
+        rows: tuple[ExtremePlayerSkillRecord, ...],
+    ) -> ExtremePlayerSkillRecord | None:
+        repository = self.ability_cost_repository
+        if repository is None:
+            return None
+        for row in self._distinct_rows(rows, ultimate=False):
+            resolved = repository.resolve_name(row.name)
+            if resolved.base_cost is not None and not resolved.unresolved:
+                return row
+        return None
+
     def build(
         self,
         objective_key: str,
@@ -200,6 +224,7 @@ class ExtremeResourceActiveBarStateService:
 
         shadow_rows = self._line_rows(actives, self.SHADOW) if self.SHADOW in route_lines else ()
         siphoning_rows = self._line_rows(actives, self.SIPHONING) if self.SIPHONING in route_lines else ()
+        dark_magic_rows = self._line_rows(actives, self.DARK_MAGIC) if self.DARK_MAGIC in route_lines else ()
         mages_rows = self._line_rows(actives, self.MAGES_GUILD)
 
         shadow_normal = self._distinct_rows(shadow_rows, ultimate=False)
@@ -208,8 +233,10 @@ class ExtremeResourceActiveBarStateService:
         siphoning_ultimate = self._distinct_rows(siphoning_rows, ultimate=True)
         mages_normal = self._distinct_rows(mages_rows, ultimate=False)
         mages_ultimate = self._distinct_rows(mages_rows, ultimate=True)
+        blood_magic_trigger = self._blood_magic_trigger(dark_magic_rows)
 
         state = self._empty_state(key)
+        states: list[ExtremeResourceActiveBarState] = []
         unresolved: list[str] = []
 
         if key == "max_health" and self.SHADOW in route_lines:
@@ -228,24 +255,55 @@ class ExtremeResourceActiveBarStateService:
                         * count
                     ),
                 )
+            states.append(state)
 
-        elif key == "max_stamina" and self.SIPHONING in route_lines:
-            if siphoning_normal:
-                state = ExtremeResourceActiveBarState(
-                    objective_key=key,
-                    skills=self._bar_from_rows((siphoning_normal[0],)),
-                    siphoning_slots=1,
-                    reviewed_percent_bonus=NightbladePassiveInputResolver.MAGICKA_FLOOD_PERCENT,
-                )
-            elif siphoning_ultimate:
-                state = ExtremeResourceActiveBarState(
-                    objective_key=key,
-                    skills=self._bar_from_rows((), siphoning_ultimate[0]),
-                    siphoning_slots=1,
-                    reviewed_percent_bonus=NightbladePassiveInputResolver.MAGICKA_FLOOD_PERCENT,
-                )
-            else:
-                unresolved.append("No canonical bar-eligible Siphoning active witness is available for Magicka Flood")
+        elif key == "max_stamina":
+            if self.SIPHONING in route_lines:
+                if siphoning_normal:
+                    state = ExtremeResourceActiveBarState(
+                        objective_key=key,
+                        skills=self._bar_from_rows((siphoning_normal[0],)),
+                        siphoning_slots=1,
+                        reviewed_percent_bonus=NightbladePassiveInputResolver.MAGICKA_FLOOD_PERCENT,
+                    )
+                elif siphoning_ultimate:
+                    state = ExtremeResourceActiveBarState(
+                        objective_key=key,
+                        skills=self._bar_from_rows((), siphoning_ultimate[0]),
+                        siphoning_slots=1,
+                        reviewed_percent_bonus=NightbladePassiveInputResolver.MAGICKA_FLOOD_PERCENT,
+                    )
+                else:
+                    unresolved.append("No canonical bar-eligible Siphoning active witness is available for Magicka Flood")
+            states.append(state)
+
+            if self.DARK_MAGIC in route_lines:
+                if blood_magic_trigger is None:
+                    unresolved.append("No canonical positive-cost normal Dark Magic trigger is available for Blood Magic")
+                else:
+                    reserved: list[ExtremePlayerSkillRecord] = [blood_magic_trigger]
+                    siphoning_slots = 0
+                    ultimate = None
+                    if self.SIPHONING in route_lines:
+                        if siphoning_normal:
+                            reserved.insert(0, siphoning_normal[0])
+                            siphoning_slots = 1
+                        elif siphoning_ultimate:
+                            ultimate = siphoning_ultimate[0]
+                            siphoning_slots = 1
+                    states.append(
+                        ExtremeResourceActiveBarState(
+                            objective_key=key,
+                            skills=self._bar_from_rows(tuple(reserved), ultimate),
+                            siphoning_slots=siphoning_slots,
+                            blood_magic_trigger_skill=blood_magic_trigger.name,
+                            reviewed_percent_bonus=(
+                                NightbladePassiveInputResolver.MAGICKA_FLOOD_PERCENT
+                                if siphoning_slots
+                                else 0.0
+                            ),
+                        )
+                    )
 
         elif key == "max_magicka":
             candidates: list[ExtremeResourceActiveBarState] = []
@@ -263,9 +321,6 @@ class ExtremeResourceActiveBarStateService:
             )
 
             if self.SIPHONING in route_lines:
-                # One Siphoning slot is sufficient for Magicka Flood. Additional
-                # Siphoning slots are dominated because they replace a positive
-                # Magicka Controller slot without increasing Flood's 6% trigger.
                 if siphoning_normal:
                     remaining_mages = mages_normal[: BAR_SKILL_COUNT - 1]
                     ult = mages_ultimate[0] if mages_ultimate else None
@@ -300,14 +355,59 @@ class ExtremeResourceActiveBarStateService:
                 if not siphoning_normal and not siphoning_ultimate:
                     unresolved.append("No canonical bar-eligible Siphoning active witness is available for Magicka Flood")
 
-            state = max(
-                candidates,
-                key=lambda row: (row.reviewed_percent_bonus, row.skills),
-            )
+            state = max(candidates, key=lambda row: (row.reviewed_percent_bonus, row.skills))
+            states.append(state)
 
+            if self.DARK_MAGIC in route_lines:
+                if blood_magic_trigger is None:
+                    unresolved.append("No canonical positive-cost normal Dark Magic trigger is available for Blood Magic")
+                else:
+                    reserved: list[ExtremePlayerSkillRecord] = [blood_magic_trigger]
+                    siphoning_slots = 0
+                    ultimate = mages_ultimate[0] if mages_ultimate else None
+                    if self.SIPHONING in route_lines:
+                        if siphoning_normal:
+                            reserved.insert(0, siphoning_normal[0])
+                            siphoning_slots = 1
+                        elif siphoning_ultimate:
+                            ultimate = siphoning_ultimate[0]
+                            siphoning_slots = 1
+                    remaining_count = max(0, BAR_SKILL_COUNT - len(reserved))
+                    remaining_mages = mages_normal[:remaining_count]
+                    m_count = len(remaining_mages) + int(
+                        ultimate is not None and self._line_key(ultimate.skill_line) == self.MAGES_GUILD
+                    )
+                    states.append(
+                        ExtremeResourceActiveBarState(
+                            objective_key=key,
+                            skills=self._bar_from_rows(tuple((*reserved, *remaining_mages)), ultimate),
+                            siphoning_slots=siphoning_slots,
+                            mages_guild_slots=m_count,
+                            blood_magic_trigger_skill=blood_magic_trigger.name,
+                            reviewed_percent_bonus=(
+                                (NightbladePassiveInputResolver.MAGICKA_FLOOD_PERCENT if siphoning_slots else 0.0)
+                                + mages_guild_magicka_controller_percent(m_count)
+                            ),
+                        )
+                    )
+
+        if not states:
+            states.append(state)
+        unique = {row.identity: row for row in states}
+        ordered_states = tuple(
+            sorted(
+                unique.values(),
+                key=lambda row: (
+                    bool(row.blood_magic_trigger_skill),
+                    row.reviewed_percent_bonus,
+                    row.skills,
+                ),
+                reverse=True,
+            )
+        )
         catalog = ExtremeResourceActiveBarStateCatalog(
             objective_key=key,
-            states=(state,),
+            states=ordered_states,
             active_skills_reviewed=len(actives),
             denominator_proven=not unresolved,
             unresolved=tuple(dict.fromkeys(unresolved)),
