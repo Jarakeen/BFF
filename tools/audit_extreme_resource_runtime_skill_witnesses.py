@@ -25,8 +25,8 @@ def _print_rows(title: str, rows) -> None:
     print(f"\n{title} ({len(rows)})")
     for row in rows:
         print(
-            f"  {row.name} | line={row.skill_line} | skill_id={row.skill_id} | "
-            f"ability_id={row.ability_id}"
+            f"  {row.canonical_id} | name={row.name} | "
+            f"line={row.canonical_skill_line_id}"
         )
 
 
