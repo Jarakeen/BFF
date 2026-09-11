@@ -36,6 +36,7 @@ from services.rotation_healer_periodic_runtime_evidence_service import (
     RotationHealerReviewedRuntimeObservation,
 )
 from services.rotation_healer_periodic_runtime_service import (
+    RotationHealerPeriodicMagnitudeResolution,
     RotationHealerPeriodicRuntimeProjection,
     RotationHealerPeriodicRuntimeService,
 )
@@ -161,11 +162,18 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
 
         periodic_projection = RotationHealerPeriodicRuntimeProjection(events=(), unresolved=())
         if projection.periodic_seeds:
-            periodic_projection = self.periodic_runtime_service.project(
-                seeds=projection.periodic_seeds,
-                evidence=periodic_runtime_evidence,
-                horizon_seconds=candidate.plan.duration_seconds,
-            )
+            periodic_kwargs = {
+                "seeds": projection.periodic_seeds,
+                "evidence": periodic_runtime_evidence,
+                "horizon_seconds": candidate.plan.duration_seconds,
+            }
+            if runtime_build_context_resolver is not None:
+                periodic_kwargs["runtime_magnitude_resolver"] = (
+                    self._runtime_periodic_magnitude_resolver(
+                        runtime_build_context_resolver
+                    )
+                )
+            periodic_projection = self.periodic_runtime_service.project(**periodic_kwargs)
 
         delayed_projection = RotationHealerDelayedRuntimeProjection(events=(), unresolved=())
         if projection.delayed_seeds:
@@ -198,6 +206,57 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
                 result.modeled_external_conditional_healing
             ),
         )
+
+    def _runtime_periodic_magnitude_resolver(
+        self,
+        runtime_build_context_resolver: RotationRuntimeBuildContextResolver,
+    ):
+        def resolve(seed, time_seconds: float, sequence: int):
+            runtime_context = runtime_build_context_resolver(
+                float(time_seconds),
+                int(sequence),
+            )
+            if not runtime_context.resolved or runtime_context.context is None:
+                messages = runtime_context.unresolved or (
+                    "exact runtime build context is unresolved",
+                )
+                return RotationHealerPeriodicMagnitudeResolution(
+                    modeled_heal=None,
+                    unresolved=tuple(messages),
+                )
+
+            component_resolver = getattr(
+                self.action_healing_service,
+                "resolve_component_magnitude",
+                None,
+            )
+            if not callable(component_resolver):
+                return RotationHealerPeriodicMagnitudeResolution(
+                    modeled_heal=None,
+                    unresolved=(
+                        "canonical healer action service cannot resolve periodic component magnitude",
+                    ),
+                )
+
+            component = component_resolver(
+                build=self.build,
+                context=runtime_context.context,
+                source_name=seed.source_name,
+                coefficient_number=seed.coefficient_number,
+            )
+            if not component.resolved or component.modeled_heal is None:
+                messages = component.unresolved or (
+                    "periodic healing component magnitude is unresolved",
+                )
+                return RotationHealerPeriodicMagnitudeResolution(
+                    modeled_heal=None,
+                    unresolved=tuple(messages),
+                )
+            return RotationHealerPeriodicMagnitudeResolution(
+                modeled_heal=float(component.modeled_heal),
+            )
+
+        return resolve
 
     def _periodic_runtime_evidence(
         self,
