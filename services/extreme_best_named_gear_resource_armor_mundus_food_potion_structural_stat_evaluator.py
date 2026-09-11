@@ -56,6 +56,9 @@ from services.extreme_resource_active_bar_state_service import (
 from services.extreme_resource_blood_magic_canonical_stat_evaluator import (
     ExtremeResourceBloodMagicCanonicalStatEvaluator,
 )
+from services.extreme_second_mundus_forwarding_evaluator import (
+    ExtremeSecondMundusForwardingEvaluator,
+)
 from services.extreme_structural_core_stat_record_service import ExtremeCanonicalStructuralStatEvaluator
 from services.extreme_structural_global_search_service import ExtremeStructuralCandidate
 from services.extreme_structural_mundus_core_stat_record_service import ExtremeBestMundusStructuralStatEvaluator
@@ -64,6 +67,9 @@ from services.extreme_structural_mundus_food_core_stat_record_service import (
 )
 from services.extreme_structural_mundus_food_potion_core_stat_record_service import (
     ExtremeBestMundusFoodPotionStructuralStatEvaluator,
+)
+from services.extreme_twice_born_mundus_structural_stat_evaluator import (
+    ExtremeTwiceBornMundusStructuralStatEvaluator,
 )
 
 
@@ -90,6 +96,8 @@ GearResourceArmorEvaluatorFactory = Callable[
 class ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory:
     """Build Mundus/food/potion around one named-gear + resource-armor pair."""
 
+    _TWICE_BORN_STAR = "Twice-Born Star"
+
     def __init__(
         self,
         *,
@@ -112,6 +120,16 @@ class ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory:
                 active_bar_state_service = ExtremeResourceActiveBarStateService(database_path)
         self.active_bar_state_service = active_bar_state_service
 
+    @classmethod
+    def _has_active_twice_born_star(
+        cls,
+        realization: ExtremeNamedGearSetRealization,
+    ) -> bool:
+        return any(
+            str(name) == cls._TWICE_BORN_STAR and int(count) >= 5
+            for name, count in zip(realization.set_names, realization.counts)
+        )
+
     def __call__(
         self,
         realization: ExtremeNamedGearSetRealization,
@@ -121,8 +139,14 @@ class ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory:
             evaluator=self.canonical_evaluator,
             realization=realization,
         )
+        twice_born = self._has_active_twice_born_star(realization)
+        second_mundus_forwarder = (
+            ExtremeSecondMundusForwardingEvaluator(gear)
+            if twice_born
+            else None
+        )
         armor = ExtremeNamedGearResourceArmorCanonicalStatEvaluator(
-            evaluator=gear,
+            evaluator=second_mundus_forwarder or gear,
             armor_state=armor_state,
             jewelry_state=self.jewelry_state,
             active_bar_state_service=self.active_bar_state_service,
@@ -133,10 +157,17 @@ class ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory:
                 active_bar_state_service=self.active_bar_state_service,
                 database_path=getattr(self.canonical_evaluator.optimizer, "database_path", None),
             )
-        mundus = ExtremeBestMundusStructuralStatEvaluator(
-            evaluator=armor,
-            mundus_repository=self.mundus_repository,
-        )
+        if twice_born and second_mundus_forwarder is not None:
+            mundus = ExtremeTwiceBornMundusStructuralStatEvaluator(
+                evaluator=armor,
+                mundus_repository=self.mundus_repository,
+                second_mundus_setter=second_mundus_forwarder.set_second_mundus,
+            )
+        else:
+            mundus = ExtremeBestMundusStructuralStatEvaluator(
+                evaluator=armor,
+                mundus_repository=self.mundus_repository,
+            )
         food = ExtremeBestMundusFoodStructuralStatEvaluator(
             mundus_evaluator=mundus,
             provisioning_repository=self.provisioning_repository,
