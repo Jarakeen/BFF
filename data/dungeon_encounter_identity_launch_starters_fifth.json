@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "encounters": [
+    {"content_id":"direfrost_keep","content_name":"Direfrost Keep","release_year":2014,"release_update":0,"release_pack":"Base Game Launch","encounter_id":"guardian_of_the_flame","display_name":"Guardian of the Flame","member_ids":["guardian_of_the_flame"]},
+    {"content_id":"direfrost_keep","content_name":"Direfrost Keep","release_year":2014,"release_update":0,"release_pack":"Base Game Launch","encounter_id":"iceheart","display_name":"Iceheart","member_ids":["iceheart"]},
+    {"content_id":"direfrost_keep","content_name":"Direfrost Keep","release_year":2014,"release_update":0,"release_pack":"Base Game Launch","encounter_id":"drodda_of_icereach","display_name":"Drodda of Icereach","member_ids":["drodda_of_icereach"]},
+    {"content_id":"selene_s_web","content_name":"Selene's Web","release_year":2014,"release_update":0,"release_pack":"Base Game Launch","encounter_id":"longclaw","display_name":"Longclaw","member_ids":["longclaw"]},
+    {"content_id":"selene_s_web","content_name":"Selene's Web","release_year":2014,"release_update":0,"release_pack":"Base Game Launch","encounter_id":"foulhide","display_name":"Foulhide","member_ids":["foulhide"]},
+    {"content_id":"selene_s_web","content_name":"Selene's Web","release_year":2014,"release_update":0,"release_pack":"Base Game Launch","encounter_id":"selene_s_web","display_name":"Selene","member_ids":["selene"]},
+    {"content_id":"blessed_crucible","content_name":"Blessed Crucible","release_year":2014,"release_update":0,"release_pack":"Base Game Launch","encounter_id":"the_pack","display_name":"The Pack","member_ids":["dynus_aralas","kayd_at_sal","nusana","snagg_gro_mashul"]},
+    {"content_id":"blessed_crucible","content_name":"Blessed Crucible","release_year":2014,"release_update":0,"release_pack":"Base Game Launch","encounter_id":"the_beast_master","display_name":"The Beast Master","member_ids":["incineration_beetle","stinger","the_troll_king"]},
+    {"content_id":"blessed_crucible","content_name":"Blessed Crucible","release_year":2014,"release_update":0,"release_pack":"Base Game Launch","encounter_id":"the_lava_queen","display_name":"The Lava Queen","member_ids":["the_lava_queen_person"]}
+  ]
+}
