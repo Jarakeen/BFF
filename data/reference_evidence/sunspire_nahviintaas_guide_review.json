@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "content_id": "sunspire",
+  "encounter_id": "nahviintaas",
+  "encounter_name": "Nahviintaas",
+  "evidence": [
+    {
+      "fact_type": "transition",
+      "fact_key": "add_phase_thresholds",
+      "value": {
+        "label": "Add Flight Phase",
+        "thresholds": ["80%", "60%", "40%"],
+        "description": "Nahviintaas takes flight and add handling becomes the priority before he lands again."
+      },
+      "source_type": "guide",
+      "source_name": "Xynode Sunspire Trial Guide",
+      "source_family": "xynode",
+      "source_locator": "Nahviintaas - add flight thresholds",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "transition",
+      "fact_key": "portal_phase_thresholds",
+      "value": {
+        "label": "Portal Phase",
+        "thresholds": ["90%", "70%", "50%"],
+        "description": "Three players enter the portals and kill the Eternal Servant before the portal timeout."
+      },
+      "source_type": "guide",
+      "source_name": "Xynode Sunspire Trial Guide",
+      "source_family": "xynode",
+      "source_locator": "Nahviintaas - portals / Eternal Servant",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "transition",
+      "fact_key": "execute_threshold",
+      "value": {
+        "label": "Execute",
+        "threshold": "31%",
+        "description": "Execute begins under 31%; targeted ground AOEs must be placed away from the stack."
+      },
+      "source_type": "guide",
+      "source_name": "Xynode Sunspire Trial Guide",
+      "source_family": "xynode",
+      "source_locator": "Nahviintaas - Execute",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "eternal_servant",
+      "value": {
+        "name": "Eternal Servant",
+        "portal_players": 3,
+        "veteran_timeout_seconds": 90,
+        "veteran_health_approx": "3.5-3.6 million",
+        "hardmode_health_approx": "11.3 million",
+        "failure_result": "immortal_servant_enters_upstairs_and_wipes_group"
+      },
+      "source_type": "guide",
+      "source_name": "Xynode Sunspire Trial Guide",
+      "source_family": "xynode",
+      "source_locator": "Nahviintaas - Eternal Servant",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "marked_for_death",
+      "value": {
+        "name": "Marked for Death",
+        "target": "tank",
+        "repeat_hit_while_debuffed": "fatal_on_veteran",
+        "responses": ["tank_swap", "dodge_roll"]
+      },
+      "source_type": "guide",
+      "source_name": "Xynode Sunspire Trial Guide",
+      "source_family": "xynode",
+      "source_locator": "Nahviintaas - Marked For Death",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "hide_fire_phase",
+      "value": {
+        "name": "Hide / Fire Phase",
+        "final_burst": "room_wide",
+        "response": "stack_behind_statue",
+        "flame_atronachs_spawn": true
+      },
+      "source_type": "guide",
+      "source_name": "Xynode Sunspire Trial Guide",
+      "source_family": "xynode",
+      "source_locator": "Nahviintaas - Hide / Fire Phase",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "time_stop_portal_buff",
+      "value": {
+        "name": "Time Stop Portal Buff",
+        "upstairs_trigger": "player_stands_in_time_stop",
+        "downstairs_effect": "green_damage_buff_circle",
+        "purpose": "increase_portal_team_damage"
+      },
+      "source_type": "guide",
+      "source_name": "Xynode Sunspire Trial Guide",
+      "source_family": "xynode",
+      "source_locator": "Nahviintaas - Timestop / portal buff",
+      "confidence": "medium"
+    }
+  ]
+}
