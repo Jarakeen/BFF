@@ -4,6 +4,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass, replace
 
 from minmax.character_build.passive_grant import PassiveGrant
+from minmax.combat_state import CombatState
 from minmax.resource_costs import ResourceType
 from minmax.rotation_ability_priority import AbilityPriorityList
 from minmax.rotation_action_target_legality import RotationTargetStateWindow
@@ -70,8 +71,10 @@ class RotationDashboardCanonicalCandidateSupport:
     candidate pipeline owns recovery fixed-point evaluation. The production default
     canonical candidate bridge also resolves static front/back build context, so
     verified armor/passive progression and canonical resource ceilings participate in
-    readiness before recovery ranking. Mechanics coverage, when supplied, is then
-    scoped to the resolved CharacterBuild and current rotation evidence.
+    readiness before recovery ranking. An explicit CombatState is forwarded unchanged
+    into that static candidate path so transient runtime evidence remains caller-owned
+    rather than being inferred from the saved build. Mechanics coverage, when supplied,
+    is then scoped to the resolved CharacterBuild and current rotation evidence.
 
     Production defaults compose four final-candidate evidence adapters. Weapon
     attack evidence projects final light/heavy attacks through the same canonical
@@ -134,6 +137,7 @@ class RotationDashboardCanonicalCandidateSupport:
         maximum_amount: int,
         trigger_fraction: float,
         restoration_resolver: VerifiedRecoveryHeavyRestorationResolver,
+        combat_state: CombatState = CombatState(),
         demands: Iterable[RotationDemandWindow] = (),
         options: Iterable[RotationRefreshLeadCandidateOption] = (),
         wait_decision_factory: RecoveryPressureWaitDecisionFactory | None = None,
@@ -171,6 +175,7 @@ class RotationDashboardCanonicalCandidateSupport:
             maximum_amount=maximum_amount,
             trigger_fraction=trigger_fraction,
             restoration_resolver=restoration_resolver,
+            combat_state=combat_state,
             demands=tuple(demands),
             options=tuple(options),
             wait_decision_factory=wait_decision_factory,
