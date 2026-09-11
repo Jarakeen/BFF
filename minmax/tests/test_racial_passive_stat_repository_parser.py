@@ -91,6 +91,23 @@ def test_pure_utility_racial_passives_use_existing_noncombat_boundary(tmp_path):
         assert unresolved == []
 
 
+def test_environmental_racial_passives_use_mitigation_boundary(tmp_path):
+    repository = _repository(tmp_path)
+
+    descriptions = {
+        "Ashlander": "Reduces your damage taken from Lava by 50%.",
+        "Acrobat": "Reduces your fall damage taken by 10%.",
+    }
+
+    for passive_name, description in descriptions.items():
+        stats, boundaries, unresolved = repository._parse_description(passive_name, description)
+        assert stats == {}
+        assert boundaries == [
+            f"Racial environmental-damage mitigation requires mitigation model: {passive_name}"
+        ]
+        assert unresolved == []
+
+
 def test_unreviewed_racial_tooltip_still_fails_closed(tmp_path):
     repository = _repository(tmp_path)
 
