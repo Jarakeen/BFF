@@ -5,19 +5,18 @@ from __future__ import annotations
 This layer is intentionally conservative.  It consumes the shared
 ``ExtremeGearSetObjectiveService`` instead of reparsing bonus descriptions or
 inventing objective math.  A breakpoint may be pruned only when the canonical
-resolver completes and proves that the active set bonuses contribute no positive
-amount to the requested maximize objective.
+projection completes and proves that the active set bonuses contribute no
+positive amount to the requested maximize objective.
 
-Unmapped, conditional, or otherwise unresolved active bonuses remain explicit
-proof blockers.  Cross-set dominance is deliberately not inferred here: slot
-cost, slot eligibility, and the ability to equip multiple distinct sets make a
-simple larger-delta comparison unsafe.
+For Extreme max-resource work the default resolver is the reviewed resource
+adapter, which delegates to the shared resolver first and adds only explicit
+resource patterns.  Unknown mechanics remain proof blockers.
 """
 
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 
-from minmax.gear_set_effect_resolver import GearSetEffectResolver
 from minmax.gear_set_repository import GearSetRepository
 from services.extreme_gear_set_bonus_breakpoint_service import (
     ExtremeGearSetBonusBreakpointCatalog,
@@ -25,6 +24,9 @@ from services.extreme_gear_set_bonus_breakpoint_service import (
 from services.extreme_gear_set_objective_service import (
     ExtremeGearSetObjectiveCandidate,
     ExtremeGearSetObjectiveService,
+)
+from services.extreme_gear_set_resource_effect_resolver import (
+    ExtremeGearSetResourceEffectResolver,
 )
 
 
@@ -99,10 +101,10 @@ class ExtremeGearSetObjectiveRelevanceService:
         self,
         repository: GearSetRepository,
         *,
-        resolver: GearSetEffectResolver | None = None,
+        resolver: Any | None = None,
     ) -> None:
         self.repository = repository
-        self.resolver = resolver or GearSetEffectResolver()
+        self.resolver = resolver or ExtremeGearSetResourceEffectResolver()
 
     def build(
         self,
@@ -110,8 +112,6 @@ class ExtremeGearSetObjectiveRelevanceService:
         breakpoint_catalog: ExtremeGearSetBonusBreakpointCatalog,
     ) -> ExtremeGearSetObjectiveRelevanceCatalog:
         key = str(objective_key or "").strip().casefold()
-        # Fail closed immediately for objectives the canonical projection layer
-        # has not reviewed.
         ExtremeGearSetObjectiveService._target_stats(key)
 
         evidence: list[ExtremeGearSetObjectiveBreakpointEvidence] = []
