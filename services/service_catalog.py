@@ -308,6 +308,33 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.POLICY,
     ),
     ServiceDescriptor(
+        service_id="rotation.healer.canonical_role_output_factory",
+        domain="rotation",
+        purpose=(
+            "Compose saved-build static contexts and explicit reviewed runtime evidence "
+            "into canonical multi-demand healer role output."
+        ),
+        implementation_path=(
+            "services.rotation_healer_canonical_role_output_factory_service"
+        ),
+        inputs=(
+            "PlayerBuild",
+            "RotationDemandWindow",
+            "ReviewedHealerRuntimeEvidence",
+            "ExplicitConditionalHealingAssumption",
+        ),
+        outputs=("RotationHealerCanonicalRoleOutputFactoryResult",),
+        responsibilities=("rotation_healer_canonical_role_output_composition",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("Healer",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Encounter thresholds, target counts, raid DPS, and conditional attacker "
+            "counts remain explicit caller policy."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="logs.esologs.composition_evidence",
         domain="logs",
         purpose="Aggregate observed ESO Logs team snapshots into composition evidence without treating popularity as canonical truth.",
