@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "wayrest_sewers_i",
+  "encounter_id": "investigator_garron",
+  "encounter_name": "Investigator Garron",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Track Garron's roaming green hazards, keep him away from them, and control the summoned souls before group pressure snowballs."},"source_type":"guide","source_name":"Prima Wayrest Sewers Boss Guide","source_locator":"Investigator Garron","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"deaths_embrace","value":{"name":"Death's Embrace","response":"avoid_the_green_orbs_and_do_not_drag_them_through_the_group"},"source_type":"guide","source_name":"Prima Wayrest Sewers Boss Guide","source_locator":"Investigator Garron","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"restless_souls","value":{"name":"Restless Souls","response":"tank_picks_up_the_spawned_ghosts_and_damage_dealers_clear_them_quickly"},"source_type":"guide","source_name":"Prima Wayrest Sewers Boss Guide","source_locator":"Investigator Garron","game_update":"Launch","confidence":"high"}
+  ]
+}
