@@ -13,6 +13,13 @@
     {"content_id":"exiled_redoubt","content_name":"Exiled Redoubt","release_year":2025,"release_update":45,"release_pack":"Fallen Banners","encounter_id":"squall_of_retribution","display_name":"Squall of Retribution","member_ids":["squall_of_retribution"]},
     {"content_id":"lep_seclusa","content_name":"Lep Seclusa","release_year":2025,"release_update":45,"release_pack":"Fallen Banners","encounter_id":"garvin_the_tracker","display_name":"Garvin the Tracker","member_ids":["garvin_the_tracker"]},
     {"content_id":"lep_seclusa","content_name":"Lep Seclusa","release_year":2025,"release_update":45,"release_pack":"Fallen Banners","encounter_id":"noriwen","display_name":"Noriwen","member_ids":["noriwen"]},
-    {"content_id":"lep_seclusa","content_name":"Lep Seclusa","release_year":2025,"release_update":45,"release_pack":"Fallen Banners","encounter_id":"orpheon_the_tactician","display_name":"Orpheon the Tactician","member_ids":["orpheon_the_tactician"]}
+    {"content_id":"lep_seclusa","content_name":"Lep Seclusa","release_year":2025,"release_update":45,"release_pack":"Fallen Banners","encounter_id":"orpheon_the_tactician","display_name":"Orpheon the Tactician","member_ids":["orpheon_the_tactician"]},
+
+    {"content_id":"oathsworn_pit","content_name":"Oathsworn Pit","release_year":2024,"release_update":41,"release_pack":"Scions of Ithelia","encounter_id":"packmaster_rethelros","display_name":"Packmaster Rethelros and Malthil","member_ids":["packmaster_rethelros","malthil"]},
+    {"content_id":"oathsworn_pit","content_name":"Oathsworn Pit","release_year":2024,"release_update":41,"release_pack":"Scions of Ithelia","encounter_id":"anthelmir_s_construct","display_name":"Anthelmir and Anthelmir's Construct","member_ids":["anthelmir_s_construct","anthelmir"]},
+    {"content_id":"oathsworn_pit","content_name":"Oathsworn Pit","release_year":2024,"release_update":41,"release_pack":"Scions of Ithelia","encounter_id":"aradros_the_awakened","display_name":"Aradros the Awakened","member_ids":["aradros_the_awakened"]},
+    {"content_id":"bedlam_veil","content_name":"Bedlam Veil","release_year":2024,"release_update":41,"release_pack":"Scions of Ithelia","encounter_id":"shattered_champion","display_name":"Shattered Champion","member_ids":["shattered_champion"]},
+    {"content_id":"bedlam_veil","content_name":"Bedlam Veil","release_year":2024,"release_update":41,"release_pack":"Scions of Ithelia","encounter_id":"darkshard","display_name":"Darkshard","member_ids":["darkshard"]},
+    {"content_id":"bedlam_veil","content_name":"Bedlam Veil","release_year":2024,"release_update":41,"release_pack":"Scions of Ithelia","encounter_id":"the_blind","display_name":"The Blind","member_ids":["the_blind"]}
   ]
 }
