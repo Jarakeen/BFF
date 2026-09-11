@@ -55,6 +55,36 @@ ROTATION_GAMEPLAY_POLICY_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "healer reliability and encounter exceptions remain explicit policy inputs."
         ),
     ),
+    ServiceDescriptor(
+        service_id="rotation.gameplay_policy.final_recovery_role_evidence",
+        domain="rotation",
+        purpose=(
+            "Compose final stabilized recovery replay, canonical role evidence, final "
+            "scorecard evidence, and optional gameplay-practice context into the "
+            "role-aware ranking input used before final selection."
+        ),
+        implementation_path="services.rotation_recovery_final_role_evidence_service",
+        inputs=(
+            "RecoveryHeavyStabilizedCandidateSnapshot",
+            "RotationCandidatePlanEvidence",
+            "RotationGameplayPolicyContext",
+            "RotationCandidateScorecard",
+        ),
+        outputs=("RotationRoleAwareRankingInput",),
+        dependencies=(
+            "rotation.gameplay_policy.dd_personal_heal",
+            "rotation.gameplay_policy.personal_heal_slot_context",
+        ),
+        responsibilities=("rotation_final_recovery_role_evidence_composition",),
+        roles=("DPS", "Healer", "Tank", "Support"),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Uses the stabilized replay as sustain-margin authority and delegates role "
+            "output/support/hard-obligation mechanics to existing canonical providers."
+        ),
+    ),
 )
 
 
