@@ -146,6 +146,14 @@ class RotationCanonicalRoleEvidence:
         if self.role_key is not None:
             object.__setattr__(self, "role_key", str(self.role_key).strip() or None)
 
+    def with_content_type_if_missing(self, content_type: object) -> "RotationCanonicalRoleEvidence":
+        if self.content_type:
+            return self
+        resolved = str(content_type or "").strip()
+        if not resolved:
+            return self
+        return replace(self, content_type=resolved)
+
 
 @dataclass(frozen=True)
 class RotationCanonicalCandidateApplicationResult:
