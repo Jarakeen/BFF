@@ -15,6 +15,7 @@ be collapsed merely because 5+5+2 looks familiar.
 
 from dataclasses import dataclass
 from pathlib import Path
+import re
 import sqlite3
 
 from services.stickerbook_service import (
@@ -83,10 +84,43 @@ class ExtremeNamedGearSetSlotEligibilityService:
         }
 
     @staticmethod
-    def _source_by_set(connection: sqlite3.Connection) -> dict[int, tuple[str, str]]:
-        tables = ExtremeNamedGearSetSlotEligibilityService._tables(connection)
-        if not {"content", "content_sets"}.issubset(tables):
-            return {}
+    def _set_slug(value: str) -> str:
+        """Match the semantic set IDs stored by the UESP content importer."""
+
+        return re.sub(r"[^a-z0-9]+", "_", str(value or "").casefold()).strip("_")
+
+    @classmethod
+    def _source_by_set(
+        cls,
+        connection: sqlite3.Connection,
+    ) -> tuple[dict[int, tuple[str, str]], tuple[str, ...]]:
+        """Resolve content source metadata to numeric ``gear_set.id`` values.
+
+        ``content_sets.set_id`` belongs to the encounter/content schema and is a
+        semantic TEXT identity such as ``defending_warrior``.  Older fixtures used
+        numeric IDs directly.  Support both forms, but never coerce an arbitrary
+        semantic identity through ``int()``.
+        """
+
+        tables = cls._tables(connection)
+        if not {"content", "content_sets", "gear_set"}.issubset(tables):
+            return {}, ()
+
+        gear_rows = connection.execute(
+            """
+            SELECT id, name
+            FROM gear_set
+            WHERE TRIM(COALESCE(name, '')) <> ''
+            ORDER BY id
+            """
+        ).fetchall()
+        numeric_ids = {int(set_id) for set_id, _name in gear_rows}
+        ids_by_slug: dict[str, list[int]] = {}
+        for set_id_raw, name_raw in gear_rows:
+            slug = cls._set_slug(str(name_raw or ""))
+            if slug:
+                ids_by_slug.setdefault(slug, []).append(int(set_id_raw))
+
         rows = connection.execute(
             """
             SELECT cs.set_id, COALESCE(c.content_type, ''), COALESCE(c.name, '')
@@ -95,13 +129,40 @@ class ExtremeNamedGearSetSlotEligibilityService:
             ORDER BY c.name COLLATE NOCASE, c.id
             """
         ).fetchall()
+
         output: dict[int, tuple[str, str]] = {}
-        for set_id, content_type, source in rows:
+        unresolved: list[str] = []
+        for raw_set_id, content_type, source in rows:
+            raw = str(raw_set_id or "").strip()
+            resolved_id: int | None = None
+
+            try:
+                numeric = int(raw)
+            except (TypeError, ValueError):
+                numeric = None
+            if numeric is not None and numeric in numeric_ids:
+                resolved_id = numeric
+            else:
+                matches = ids_by_slug.get(cls._set_slug(raw), [])
+                if len(matches) == 1:
+                    resolved_id = matches[0]
+                elif len(matches) > 1:
+                    unresolved.append(
+                        f"Content set identity {raw!r} matches multiple canonical gear_set rows: {matches}"
+                    )
+                elif raw:
+                    unresolved.append(
+                        f"Content set identity {raw!r} has no canonical gear_set name match"
+                    )
+
+            if resolved_id is None:
+                continue
             output.setdefault(
-                int(set_id),
+                resolved_id,
                 (str(content_type or "").strip(), str(source or "").strip()),
             )
-        return output
+
+        return output, tuple(dict.fromkeys(unresolved))
 
     def build(self) -> ExtremeNamedGearSetSlotEligibilityCatalog:
         unresolved: list[str] = []
@@ -123,7 +184,8 @@ class ExtremeNamedGearSetSlotEligibilityService:
                     (), (f"Gear slot eligibility database missing table(s): {missing}",)
                 )
 
-            source_map = self._source_by_set(connection)
+            source_map, source_unresolved = self._source_by_set(connection)
+            unresolved.extend(source_unresolved)
             set_rows = connection.execute(
                 """
                 SELECT id, name, COALESCE(category, ''), max_equip_count
