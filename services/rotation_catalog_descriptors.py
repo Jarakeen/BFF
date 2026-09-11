@@ -19,7 +19,8 @@ ROTATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         domain="rotation",
         purpose=(
             "Compose canonical healer action, periodic, delayed, special-activation, "
-            "and encounter-window services into candidate-specific healing evidence."
+            "external-condition, and encounter-window services into candidate-specific "
+            "healing evidence."
         ),
         implementation_path="services.rotation_candidate_healer_role_output_service",
         inputs=(
@@ -30,6 +31,7 @@ ROTATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "RotationDemandWindow",
             "RotationHealerReviewedRuntimeObservation",
             "RotationHealerDelayedRuntimeEvidence",
+            "RotationHealerExternalConditionalDemandAssumption",
         ),
         outputs=("RotationHealerDemandHealingEvidence",),
         dependencies=("rotation.candidate_generation",),
@@ -235,8 +237,8 @@ ROTATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         service_id="rotation.healer.external_conditional_healing_evidence",
         domain="rotation",
         purpose=(
-            "Expose reviewed external-condition healer effect duration, magnitude semantics, "
-            "and trigger condition without inventing runtime heal events."
+            "Expose reviewed external-condition healer effect duration, per-trigger magnitude, "
+            "trigger actor, recipient, log-credit owner, and maximum per-actor rate."
         ),
         implementation_path="services.rotation_healer_external_conditional_healing_service",
         inputs=("CanonicalSkillSemanticId", "GameVersion"),
@@ -248,9 +250,9 @@ ROTATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=False,
         evidence_class=EvidenceClass.GAME_MECHANIC,
         notes=(
-            "Reviewed magnitude and duration may scope relevance to a demand window, but "
-            "trigger cadence, recipient ownership, and numeric timed healing remain unresolved "
-            "until separately proven."
+            "Minor Lifesteal retains damage-trigger and ownership semantics separately from "
+            "strategy participation. Demand projection requires an explicit active-attacker "
+            "count and does not fabricate periodic heal events."
         ),
     ),
     ServiceDescriptor(
