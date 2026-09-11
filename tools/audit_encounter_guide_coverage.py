@@ -22,6 +22,7 @@ if str(_REPO_ROOT) not in sys.path:
 from engine.config import get_data_dir
 from services.dungeon_encounter_identity_service import load_dungeon_encounter_identities
 from services.encounter_boss_guide import (
+    EncounterBossGuideError,
     EncounterBossGuideNotFound,
     EncounterBossGuideService,
 )
@@ -38,7 +39,7 @@ class EncounterGuideCoverageRow:
     encounter_id: str
     content_name: str
     encounter_name: str
-    canonical_timeline_rows: int
+    canonical_timeline_rows: int | None
     reviewed_timeline_rows: int
     strategy_rows: int
     release_year: int | None = None
@@ -81,13 +82,24 @@ def _include_content(content_name: str, *, trials_only: bool) -> bool:
 def _canonical_phase_count(
     guide_service: EncounterBossGuideService,
     member_ids: tuple[str, ...],
-) -> int:
+) -> int | None:
+    """Return canonical phase rows, or None when canonical persistence is unavailable.
+
+    Reviewed raid/dungeon audits have an independent reviewed-evidence fallback, so a
+    missing or schema-incompatible canonical encounter database must not prevent those
+    scopes from auditing that reviewed material. ``None`` preserves the distinction
+    between "canonical data was available and contained no timeline" and "canonical
+    persistence could not be read". Raw database audit scopes still call the guide
+    service directly and therefore continue to fail closed when persistence is invalid.
+    """
     total = 0
     for member_id in member_ids:
         try:
             total += len(guide_service.get(member_id).phases)
         except EncounterBossGuideNotFound:
             continue
+        except EncounterBossGuideError:
+            return None
     return total
 
 
@@ -218,10 +230,15 @@ def _line(row: EncounterGuideCoverageRow) -> str:
     if row.strategy_missing:
         status.append("MISSING STRATEGY")
     status_text = ", ".join(status) if status else "covered"
+    canonical_text = (
+        "unavailable"
+        if row.canonical_timeline_rows is None
+        else str(row.canonical_timeline_rows)
+    )
     return (
         f"{row.content_name} | {row.encounter_name} | {row.encounter_id} | "
         f"timeline={row.effective_timeline_source} "
-        f"(canonical={row.canonical_timeline_rows}, reviewed={row.reviewed_timeline_rows}) | "
+        f"(canonical={canonical_text}, reviewed={row.reviewed_timeline_rows}) | "
         f"strategy={row.strategy_rows} | {status_text}"
     )
 
