@@ -124,6 +124,37 @@ def test_legacy_positional_constructor_order_remains_compatible():
     assert snapshot.effective_potion_elapsed_seconds == pytest.approx(3.0)
 
 
+def test_runtime_snapshot_at_respects_same_timestamp_sequence_boundary():
+    early = ExtremeRuntimePotionUse(time_seconds=5.0, sequence=0)
+    same_before = ExtremeRuntimePotionUse(time_seconds=10.0, sequence=0)
+    same_after = ExtremeRuntimePotionUse(time_seconds=10.0, sequence=2)
+    source = ExtremeRuntimeSnapshot(
+        runtime_history=(same_after, early, same_before),
+        snapshot_time_seconds=20.0,
+        recipient_actor_id="healer_1",
+        group_member_ids=("healer_1", "healer_2"),
+    )
+
+    sliced = source.snapshot_at(10.0, sequence=1)
+
+    assert sliced.runtime_history == (early, same_before)
+    assert sliced.snapshot_time_seconds == pytest.approx(10.0)
+    assert sliced.effective_potion_elapsed_seconds == pytest.approx(0.0)
+    assert sliced.recipient_actor_id == "healer_1"
+    assert sliced.group_member_ids == ("healer_1", "healer_2")
+
+
+def test_runtime_snapshot_at_refuses_to_time_shift_legacy_evidence():
+    snapshot = ExtremeRuntimeSnapshot(
+        snapshot_time_seconds=10.0,
+        potion_elapsed_seconds=4.0,
+    )
+
+    assert snapshot.snapshot_at(10.0) is snapshot
+    with pytest.raises(ValueError, match="legacy runtime snapshot evidence"):
+        snapshot.snapshot_at(11.0)
+
+
 def test_runtime_potion_use_rejects_invalid_time_and_sequence():
     with pytest.raises(ValueError, match="runtime potion-use time"):
         ExtremeRuntimePotionUse(time_seconds=-1.0)
