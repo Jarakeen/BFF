@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {"entry_name":"Bone Armor — Poxito","mitigation":"Tank Poxito on a saw track and line up an activated saw blade through the boss as soon as Bone Armor appears."},
+    {"entry_name":"Soul Storm — Poxito","mitigation":"Totems first. Kill every Bone Effigy before the expanding Soul Storm reaches the room edge; living totems turn the finish into a wipe."},
+    {"entry_name":"Bone Effigy — Poxito","mitigation":"DD priority target. Kill immediately so specters stop spawning and cannot drag players onto traps."},
+    {"entry_name":"Skeletal Berserker — Poxito","mitigation":"Tank taunts quickly; group kills or cleaves it before Blood Frenzy cones through a DD or healer."},
+    {"entry_name":"Pressure Plate Traps — Poxito","mitigation":"Avoid accidental plate triggers and saw paths. Only use the saw deliberately to strip Bone Armor."},
+
+    {"entry_name":"Fatal Pool — Voskrona Stonehulk Poxito","mitigation":"Do not stack statue deaths. Tank moves the boss and live adds out of every Fatal Pool immediately because enemies inside become invulnerable."},
+    {"entry_name":"Pulsing Ring — Voskrona Stonehulk Poxito","mitigation":"Block or shield every ring as it crosses you. Dodge does not prevent the hit, and the pulses ramp over time."},
+    {"entry_name":"Sentinel Tether — Voskrona Stonehulk Poxito","mitigation":"Stay out of the skull-to-add tether lines and kill the tethered adds to end Death Essence phases."},
+    {"entry_name":"Statue Spacing — Voskrona Stonehulk Poxito","mitigation":"Prefer ranged taunts and spacing over stacking/gripping statues together; one dead statue should not make the next target immune."},
+
+    {"entry_name":"Guardian Circles — Talen-Lah and Bar-Sakka","mitigation":"Put one player in each guardian circle. Tank and healer are a clean default assignment so both circles are reliably occupied."},
+    {"entry_name":"Seeping Viscera — Talen-Lah and Bar-Sakka","mitigation":"Drop persistent pools toward the arena edge, then move out immediately so the center stays usable."},
+    {"entry_name":"Vortex — Talen-Lah and Bar-Sakka","mitigation":"Follow behind Talen-Lah during the walk and dodge or sidestep the outward pools; the boss ignores normal tank positioning during it."},
+    {"entry_name":"Boulder Roll — Talen-Lah and Bar-Sakka","mitigation":"Keep peripheral vision on the arena edges and avoid the bouncing boulders; player contact can split them into additional hazards."}
+  ]
+}
