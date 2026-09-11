@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "content_id": "aetherian_archive",
+  "encounter_id": "foundation_stone_atronach",
+  "encounter_name": "Foundation Stone Atronach",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main Phase","threshold":"Pull","description":"Main tank holds and turns the boss away from group while the off-tank gathers the recurring add pair into the boss for control and burn."},"source_type":"guide","source_name":"Xynode Aetherian Archive Mechanics Guide","source_locator":"Foundation Stone Atronach","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"ground_pound","value":{"name":"Ground Pound"},"source_type":"guide","source_name":"Xynode Aetherian Archive Mechanics Guide","source_locator":"Ground Pound","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"ground_pound_behavior","value":{"hits":5,"response":"tank blocks as needed; healers cover group splash damage"},"source_type":"guide","source_name":"Xynode Aetherian Archive Mechanics Guide","source_locator":"Ground Pound","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"add_pair","value":{"name":"Add Pair"},"source_type":"guide","source_name":"Xynode Aetherian Archive Mechanics Guide","source_locator":"Adds!","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"add_pair_behavior","value":{"count":2,"members":["Chain Spinner","Nullifier"],"response":"off-tank gathers and stacks adds at the boss"},"source_type":"guide","source_name":"Xynode Aetherian Archive Mechanics Guide","source_locator":"Adds!","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"summoned_monster_rewards","value":{"grants_experience_or_gold":false},"source_type":"official_patch_notes","source_name":"ESO Xbox One Patch Notes v1.1.0.0","source_locator":"Aetherian Archive > Foundation Stone Atronach","confidence":"high"}
+  ]
+}
