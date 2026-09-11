@@ -35,6 +35,7 @@ from ui.rotation_automatic_potion_cadence_candidate_support import (
 from ui.rotation_canonical_candidate_support import (
     RotationCanonicalCandidateApplicationResult,
     RotationCanonicalCandidateSupport,
+    RotationCanonicalRoleEvidence,
 )
 from ui.rotation_generation_support import (
     RotationGenerationRequest,
@@ -82,6 +83,11 @@ class RotationDashboardCanonicalCandidateSupport:
 
     Heavy restoration defaults to the canonical generated-plan evidence path. Callers
     may still provide an explicit reviewed resolver for compatibility or research.
+
+    Optional canonical role evidence is forwarded unchanged to the saved-build
+    candidate bridge. The dashboard therefore does not infer encounter type, healer
+    reliability, assignment exceptions, or role output from display state. When the
+    evidence is present, the lower canonical bridge owns role/policy composition.
 
     Production defaults compose final-candidate evidence adapters for weapon attacks,
     saved-build targets, automatic potion cadence, Ultimate affordability, and shared
@@ -143,6 +149,7 @@ class RotationDashboardCanonicalCandidateSupport:
         maximum_amount: int,
         trigger_fraction: float,
         restoration_resolver: VerifiedRecoveryHeavyRestorationResolver | None = None,
+        role_evidence: RotationCanonicalRoleEvidence | None = None,
         combat_state: CombatState = CombatState(),
         runtime_snapshot: ExtremeRuntimeSnapshot | None = None,
         runtime_snapshot_active_bar: str | None = None,
@@ -195,6 +202,8 @@ class RotationDashboardCanonicalCandidateSupport:
             character_id=character_id,
             coverage_report=coverage_report,
         )
+        if role_evidence is not None:
+            candidate_kwargs["role_evidence"] = role_evidence
         if runtime_snapshot is not None:
             candidate_kwargs["runtime_snapshot"] = runtime_snapshot
             candidate_kwargs["runtime_snapshot_active_bar"] = runtime_snapshot_active_bar
