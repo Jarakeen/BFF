@@ -28,10 +28,9 @@ class RotationHealerReviewedRuntimeEvidenceLoader:
     inference and never promotes candidate evidence.
     """
 
-    def __init__(self, database_path: str | Path) -> None:
-        self.database_path = Path(database_path)
-        self.timing_fixtures = RotationHealerPeriodicObservationFixtureService(
-            self.database_path
+    def __init__(self, database_path: str | Path | None) -> None:
+        self.database_path = (
+            Path(database_path) if database_path is not None else None
         )
         self.refresh_fixtures = RotationHealerPeriodicRefreshPolicyFixtureService()
 
@@ -52,7 +51,18 @@ class RotationHealerReviewedRuntimeEvidenceLoader:
                 unresolved=unresolved,
             )
 
-        timing_report = self.timing_fixtures.load(timing_fixture_path)
+        if self.database_path is None:
+            return RotationHealerReviewedRuntimeEvidenceLoad(
+                observations=(),
+                unresolved=(
+                    "database path is required to load reviewed healer periodic timing evidence",
+                ),
+            )
+
+        timing_fixtures = RotationHealerPeriodicObservationFixtureService(
+            self.database_path
+        )
+        timing_report = timing_fixtures.load(timing_fixture_path)
         observations = tuple(timing_report.reviewed_observations)
         unresolved = list(timing_report.unresolved)
 
