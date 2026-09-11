@@ -1,9 +1,12 @@
+from pathlib import Path
+
 from tools.audit_encounter_guide_coverage import (
     EncounterGuideCoverageRow,
     _content_key,
     _include_content,
     _line,
     _parse_args,
+    build_coverage_rows,
 )
 
 
@@ -67,15 +70,39 @@ def test_all_content_scope_keeps_non_trial_content():
 
 def test_audit_defaults_to_reviewed_raid_scope():
     args = _parse_args([])
+    assert args.dungeons is False
     assert args.raw_trial_records is False
     assert args.all_content is False
 
 
-def test_audit_raw_scope_flags_are_mutually_distinct():
+def test_audit_scope_flags_are_mutually_distinct():
+    dungeon_args = _parse_args(["--dungeons"])
     trial_args = _parse_args(["--raw-trial-records"])
     all_args = _parse_args(["--all-content"])
 
+    assert dungeon_args.dungeons is True
+    assert dungeon_args.raw_trial_records is False
+    assert dungeon_args.all_content is False
+    assert trial_args.dungeons is False
     assert trial_args.raw_trial_records is True
     assert trial_args.all_content is False
+    assert all_args.dungeons is False
     assert all_args.raw_trial_records is False
     assert all_args.all_content is True
+
+
+def test_checked_in_dungeon_scope_starts_with_update_47_feast_of_shadows():
+    data_root = Path(__file__).resolve().parents[2] / "data"
+    rows = build_coverage_rows(data_root, scope="dungeon")
+
+    assert len(rows) == 6
+    assert {(row.release_year, row.release_update) for row in rows} == {(2025, 47)}
+    assert {row.content_name for row in rows} == {"Black Gem Foundry", "Naj-Caldeesh"}
+    assert {row.encounter_id for row in rows} == {
+        "poxito",
+        "voskrona_stonehulk_poxito",
+        "talen_lah",
+        "quarrymaster_saldezaar",
+        "black_gem_monstrosity",
+        "high_soulbinder_vykand",
+    }
