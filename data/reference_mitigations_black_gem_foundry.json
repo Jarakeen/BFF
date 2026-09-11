@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {"entry_name":"Seismic Splinters — Quarrymaster Saldezaar","mitigation":"Cleanse the splinter DoT deliberately: use Galvanizing Blow, bait Galvanic Charge, or reach a Rupture threshold. Do not simply heal through accumulating splinters."},
+    {"entry_name":"Galvanizing Imp — Quarrymaster Saldezaar","mitigation":"Priority kill. Block its heavy because the hit chains lightning around the target."},
+    {"entry_name":"Giant Atronachs — Quarrymaster Saldezaar","mitigation":"Read whether the side or center atronachs activate and move immediately to the safe floor."},
+    {"entry_name":"Deadly Perimeter — Quarrymaster Saldezaar","mitigation":"Remember where the crystal hazards are after the red telegraph fades; preserve a clean Rupture flight lane."},
+
+    {"entry_name":"Lapidating Bash — Black Gem Monstrosity","mitigation":"Tank the boss near an edge and face the T-shaped cluster pattern away from the arena center."},
+    {"entry_name":"Soul Focus — Black Gem Monstrosity","mitigation":"Have the healer bait furthest. Stack the shard adds into the beam and have the tank help share beam damage."},
+    {"entry_name":"Black Gem Shards — Black Gem Monstrosity","mitigation":"Stack tightly before the shard spawn, place the small AOEs together, then line the Soul Focus beam through the shards instead of trying to brute-force them with player damage."},
+    {"entry_name":"Black Gem Barrage — Black Gem Monstrosity","mitigation":"Marked player keeps moving and leaves a clean trail. Do not double back through dropped gem AOEs."},
+
+    {"entry_name":"Soulbinding Slam — High Soulbinder Vykand","mitigation":"Move out of your personal slam AOE promptly so you do not create unnecessary Soul Essences; then react to red, yellow, and green essence behavior correctly."},
+    {"entry_name":"Acute Enervation — High Soulbinder Vykand","mitigation":"Hard swap to the spawned souls and kill them before the target circle fills, then repeat on the second target."},
+    {"entry_name":"Refraction Color Puzzle — High Soulbinder Vykand","mitigation":"Reveal the refractions, read the two colors shown by Vykand, then each player takes the third color. Wrong color is lethal."},
+    {"entry_name":"Enervating Soul — High Soulbinder Vykand","mitigation":"Drag each small soul to its matching colored crystal before killing it or you create extra Soul Essence pressure."},
+    {"entry_name":"Lost Soul — High Soulbinder Vykand","mitigation":"Big adds are priority. Tank controls them; heal through the ranged add's heal-absorb effect while DDs remove it quickly."}
+  ]
+}
