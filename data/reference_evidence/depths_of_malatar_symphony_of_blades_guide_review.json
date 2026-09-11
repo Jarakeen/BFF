@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "depths_of_malatar",
+  "encounter_id": "symphony_of_blades",
+  "encounter_name": "Symphony of Blades",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Symphony Phase","threshold":"Full fight","description":"The final fight reuses colored-orb mechanics while adding moving Auroran phalanxes and boss pressure."},"source_type":"guide","source_name":"Xynode Depths of Malatar Guide","source_locator":"Symphony of Blades","game_update":"U21","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"phalanx","value":{"name":"Auroran Phalanx","response":"cross_or_clear_wall_safely_and_prevent_boss_from_reaching_meridias_light"},"source_type":"achievement","source_name":"ESO-Hub Depths of Malatar Achievements","source_locator":"Out of Formation","game_update":"U21","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"colored_orbs","value":{"name":"Colored Orbs","response":"prioritize_orb_mechanics_unless_phalanx_wall_requires_immediate_positioning"},"source_type":"guide","source_name":"Xynode Depths of Malatar Guide","source_locator":"Symphony ORBS","game_update":"U21","confidence":"high"}
+  ]
+}
