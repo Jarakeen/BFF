@@ -11,10 +11,11 @@ class _Service:
 
     def build(self, objective):
         return SimpleNamespace(
-            passives_reviewed=4,
+            passives_reviewed=5,
             denominator_proven=True,
             projection_complete=False,
             static_relevant=(f"[class] Test Line :: {objective} Passive",),
+            accounted_elsewhere=("[racial] Imperial Skills :: Tough",),
             static_irrelevant=("[utility] Utility :: Irrelevant",),
             context_required=("[guild] Mages Guild :: Magicka Controller",),
             unresolved=("[world] Vampire :: Mystery Passive",),
@@ -30,9 +31,11 @@ def test_cli_reports_all_three_resource_objectives(monkeypatch, capsys):
     assert "MAX_HEALTH" in output
     assert "MAX_MAGICKA" in output
     assert "MAX_STAMINA" in output
-    assert "Passives reviewed: 4" in output
+    assert "Passives reviewed: 5" in output
     assert "Inventory denominator proven: yes" in output
     assert "Static projection complete: no" in output
+    assert "Accounted elsewhere: 1" in output
+    assert "Imperial Skills :: Tough" in output
     assert "Magicka Controller" in output
     assert "Mystery Passive" in output
 
