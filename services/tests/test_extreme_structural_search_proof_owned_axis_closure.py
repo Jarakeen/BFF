@@ -6,6 +6,8 @@ from services.extreme_best_named_gear_resource_armor_mundus_food_potion_structur
     _RESOURCE_ACTIVE_SKILL_SCOPE,
     _RESOURCE_CHAMPION_POINT_SCOPE,
     _RESOURCE_EQUIPMENT_TRAIT_SCOPE,
+    _RESOURCE_RUNTIME_AXES,
+    _RESOURCE_RUNTIME_SCOPE,
 )
 from services.extreme_structural_global_search_service import (
     ExtremeStructuralGlobalSearchService,
@@ -29,7 +31,7 @@ class _UniverseService:
                 "Champion Points",
                 "skill-bar choices and morphs",
                 "armor, jewelry, and weapon traits",
-                "runtime state",
+                *_RESOURCE_RUNTIME_AXES,
             ),
             structural_denominator_proven=True,
         )
@@ -45,6 +47,7 @@ class _ProofOwningScorer:
             "Champion Points",
             "skill-bar choices and morphs",
             "armor, jewelry, and weapon traits",
+            *_RESOURCE_RUNTIME_AXES,
         )
 
     def additional_search_scope(self, objective_key):
@@ -53,6 +56,7 @@ class _ProofOwningScorer:
             "reviewed CP axis",
             "reviewed active-skill axis",
             "reviewed equipment-trait axis",
+            "reviewed runtime axis",
         )
 
 
@@ -62,13 +66,11 @@ def test_structural_search_accepts_proof_owned_axis_closure_without_knowing_mech
         scorer=_ProofOwningScorer(),
     ).search("max_magicka")
 
-    assert "Champion Points" not in result.deferred_dynamic_axes
-    assert "skill-bar choices and morphs" not in result.deferred_dynamic_axes
-    assert "armor, jewelry, and weapon traits" not in result.deferred_dynamic_axes
-    assert result.deferred_dynamic_axes == ("runtime state",)
+    assert result.deferred_dynamic_axes == ()
     assert "reviewed CP axis" in result.structural_scope
     assert "reviewed active-skill axis" in result.structural_scope
     assert "reviewed equipment-trait axis" in result.structural_scope
+    assert "reviewed runtime axis" in result.structural_scope
     assert result.structural_denominator_proven is True
 
 
@@ -90,8 +92,12 @@ class _Factory:
         assert objective_key == "max_health"
         return SimpleNamespace(projection_complete=True)
 
+    def runtime_projection(self, objective_key):
+        assert objective_key == "max_health"
+        return SimpleNamespace(projection_complete=True)
 
-def test_resource_scorer_closes_executable_cp_active_skill_and_equipment_trait_axes():
+
+def test_resource_scorer_closes_executable_cp_active_skill_equipment_trait_and_runtime_axes():
     evaluator = ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator(
         gear_realization=SimpleNamespace(),
         armor_catalog=SimpleNamespace(denominator_proven=True),
@@ -102,11 +108,13 @@ def test_resource_scorer_closes_executable_cp_active_skill_and_equipment_trait_a
         "Champion Points",
         "skill-bar choices and morphs",
         "armor, jewelry, and weapon traits",
+        *_RESOURCE_RUNTIME_AXES,
     )
     assert evaluator.additional_search_scope("max_health") == (
         _RESOURCE_CHAMPION_POINT_SCOPE,
         _RESOURCE_ACTIVE_SKILL_SCOPE,
         _RESOURCE_EQUIPMENT_TRAIT_SCOPE,
+        _RESOURCE_RUNTIME_SCOPE,
     )
 
 
@@ -122,6 +130,9 @@ def test_resource_scorer_keeps_unproven_axes_open():
             return SimpleNamespace(projection_complete=False)
 
         def equipment_trait_projection(self, objective_key):
+            return SimpleNamespace(projection_complete=False)
+
+        def runtime_projection(self, objective_key):
             return SimpleNamespace(projection_complete=False)
 
     evaluator = ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator(
