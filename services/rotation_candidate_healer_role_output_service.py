@@ -29,6 +29,7 @@ from services.rotation_healer_delayed_runtime_service import (
 from services.rotation_healer_demand_healing_evidence_service import (
     RotationHealerDemandHealingEvidence,
     RotationHealerDemandHealingEvidenceService,
+    RotationHealerExternalConditionalDemandAssumption,
 )
 from services.rotation_healer_periodic_runtime_evidence_service import (
     RotationHealerPeriodicRuntimeEvidenceService,
@@ -84,6 +85,9 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
         ) = None,
         reviewed_runtime_observations: tuple[RotationHealerReviewedRuntimeObservation, ...] = (),
         delayed_runtime_evidence: tuple[RotationHealerDelayedRuntimeEvidence, ...] = (),
+        external_conditional_assumptions: tuple[
+            RotationHealerExternalConditionalDemandAssumption, ...
+        ] = (),
     ) -> None:
         path = Path(database_path)
         self.build = build
@@ -105,6 +109,9 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
         )
         self.reviewed_runtime_observations = tuple(reviewed_runtime_observations)
         self.delayed_runtime_evidence = tuple(delayed_runtime_evidence)
+        self.external_conditional_assumptions = tuple(
+            external_conditional_assumptions
+        )
 
     def evaluate_demand(
         self,
@@ -166,6 +173,7 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
             projection=projection,
             periodic_projection=periodic_projection,
             delayed_projection=delayed_projection,
+            external_conditional_assumptions=self.external_conditional_assumptions,
         )
         unresolved = self._dedupe(tuple(bridge_unresolved) + tuple(result.unresolved))
         if unresolved == result.unresolved:
@@ -179,6 +187,9 @@ class RotationCandidateHealerCanonicalDemandEvidenceProvider:
             modeled_periodic_healing=result.modeled_periodic_healing,
             modeled_delayed_healing=result.modeled_delayed_healing,
             unresolved=unresolved,
+            modeled_external_conditional_healing=(
+                result.modeled_external_conditional_healing
+            ),
         )
 
     def _periodic_runtime_evidence(
