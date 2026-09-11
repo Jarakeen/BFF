@@ -32,10 +32,6 @@ from services.healer_rotation_priority_service import HealerRotationPriorityServ
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 from services.rotation_candidate_healer_multi_demand_role_output_service import (
     RotationCandidateHealerMultiDemandOutput,
-    RotationCandidateHealerMultiDemandRoleOutputService,
-)
-from services.rotation_candidate_healer_role_output_service import (
-    RotationCandidateHealerCanonicalDemandEvidenceProvider,
 )
 from services.rotation_duration_refinement_service import RotationDurationRefinementService
 from services.rotation_healer_demand_criteria_service import RotationHealerDemandCriteriaService
@@ -48,13 +44,12 @@ from services.rotation_healer_encounter_criteria_provider import (
 from services.rotation_healer_encounter_demand_bundle_service import (
     RotationHealerEncounterDemandBundleService,
 )
-from services.rotation_healer_output_context_relevance_service import (
-    RotationHealerOutputContextRelevanceService,
+from services.rotation_healer_canonical_role_output_factory_service import (
+    RotationHealerCanonicalRoleOutputFactoryService,
 )
 from services.rotation_healer_reviewed_runtime_evidence_loader import (
     RotationHealerReviewedRuntimeEvidenceLoader,
 )
-from services.rotation_static_build_context_service import RotationStaticBuildContextService
 from tools.audit_phase13_healer_priority_comparison import _BASE_PRIORITIES, _audit_policy_set
 from tools.audit_phase13_saved_build_recovery_heavy_rotation import _load_saved_build
 from tools.audit_phase13_xalvakka_healer_threshold_rotation import (
@@ -231,25 +226,6 @@ def _load_reviewed_runtime_observations(
         refresh_fixture_path=refresh_fixture_path,
     )
     return tuple(report.observations), tuple(report.unresolved)
-
-
-def _with_static_context_blockers(
-    output: RotationCandidateHealerMultiDemandOutput,
-    blockers: tuple[str, ...],
-) -> RotationCandidateHealerMultiDemandOutput:
-    if not blockers:
-        return output
-    unresolved = tuple(
-        dict.fromkeys(
-            tuple(output.unresolved)
-            + tuple(f"static healer-output context: {message}" for message in blockers)
-        )
-    )
-    return RotationCandidateHealerMultiDemandOutput(
-        candidate_id=output.candidate_id,
-        windows=output.windows,
-        unresolved=unresolved,
-    )
 
 
 def _print_candidate_output(
@@ -437,27 +413,42 @@ def main() -> int:
         detail = "; ".join(bundle.unresolved) or "no Xalvakka healing demand projected"
         raise RuntimeError(detail)
 
-    static_contexts = RotationStaticBuildContextService(
-        builds_path=Path(args.builds),
-        database_path=database_path,
-    ).resolve(build)
-    front_context = static_contexts.context_for("front")
-    back_context = static_contexts.context_for("back")
-    if front_context is None or back_context is None:
-        detail = "; ".join(static_contexts.unresolved) or "no usable static contexts"
-        raise RuntimeError(
-            "saved-build healer audit requires front and back static contexts: " + detail
-        )
-    contexts_by_bar = {"front": front_context, "back": back_context}
-    static_relevance = RotationHealerOutputContextRelevanceService().classify(
-        static_contexts.unresolved
-    )
-
     runtime_observations, runtime_fixture_unresolved = _load_reviewed_runtime_observations(
         database_path,
         args.runtime_observations,
         args.refresh_policies,
     )
+
+    healer_role_factory = RotationHealerCanonicalRoleOutputFactoryService(
+        database_path=database_path,
+        static_context_service=RotationStaticBuildContextService(
+            builds_path=Path(args.builds),
+            database_path=database_path,
+        ),
+    )
+    healer_role_evidence = healer_role_factory.build(
+        build=build,
+        demands=bundle.demands,
+        reviewed_runtime_observations=runtime_observations,
+        external_conditional_assumptions=(
+            (
+                RotationHealerExternalConditionalDemandAssumption(
+                    effect_name="minor_lifesteal",
+                    active_attacker_count=int(
+                        args.minor_lifesteal_active_attackers
+                    ),
+                ),
+            )
+            if args.minor_lifesteal_active_attackers is not None
+            else ()
+        ),
+    )
+    if healer_role_evidence.role_output_provider is None:
+        detail = "; ".join(healer_role_evidence.unresolved) or "no usable static contexts"
+        raise RuntimeError(
+            "saved-build healer audit cannot compose canonical role output: " + detail
+        )
+    static_relevance = healer_role_evidence.context_relevance
 
     policy_set = _audit_policy_set(build, database_path=database_path)
     priorities = HealerRotationPriorityService().project(
@@ -485,40 +476,10 @@ def main() -> int:
         demands=bundle.demands,
     ).plan
 
-    demand_evidence_provider = RotationCandidateHealerCanonicalDemandEvidenceProvider(
-        database_path=database_path,
-        build=build,
-        context=front_context,
-        contexts_by_bar=contexts_by_bar,
-        reviewed_runtime_observations=runtime_observations,
-        external_conditional_assumptions=(
-            (
-                RotationHealerExternalConditionalDemandAssumption(
-                    effect_name="minor_lifesteal",
-                    active_attacker_count=int(
-                        args.minor_lifesteal_active_attackers
-                    ),
-                ),
-            )
-            if args.minor_lifesteal_active_attackers is not None
-            else ()
-        ),
-    )
-    role_output = RotationCandidateHealerMultiDemandRoleOutputService(
-        demands=bundle.demands,
-        demand_evidence_provider=demand_evidence_provider,
-    )
-
     ordinary = _candidate("ordinary", ordinary_plan)
     encounter_aware = _candidate("xalvakka-aware", encounter_plan)
-    ordinary_output = _with_static_context_blockers(
-        role_output.evaluate_windows(ordinary),
-        static_relevance.relevant,
-    )
-    encounter_output = _with_static_context_blockers(
-        role_output.evaluate_windows(encounter_aware),
-        static_relevance.relevant,
-    )
+    ordinary_output = healer_role_evidence.evaluate_windows(ordinary)
+    encounter_output = healer_role_evidence.evaluate_windows(encounter_aware)
 
     phase_2 = next(
         point
