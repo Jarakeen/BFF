@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "content_id": "earthen_root_enclave",
+  "encounter_id": "corruption_of_root",
+  "encounter_name": "Corruption of Root",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_add_cycle","value":{"order":1,"label":"Main / Add Cycle","threshold":"Pull","description":"Fight Corruption of Root while managing Fauns, spriggan animals, Root Nodes, and fast-moving green ground pressure."},"source_type":"guide","source_name":"ESO-Hub Earthen Root Enclave Dungeon Guide","source_locator":"Corruption of Root","game_update":"U35+","confidence":"high"},
+    {"fact_type":"phase","fact_key":"distributor_cycle","value":{"order":2,"label":"Distributor Split Cycle","threshold":"Repeating","description":"Corruption of Root splits into four Distributor shades that must be killed before the boss phase can continue."},"source_type":"guide","source_name":"ESO-Hub Earthen Root Enclave Dungeon Guide","source_locator":"Corruption of Root > Distributors","game_update":"U35+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"root_nodes","value":{"name":"Root Nodes","response":"focus_nodes_when_projectile_pressure_becomes_dangerous","failure":"persistent_red_orb_pressure_compounds_other_ground_mechanics"},"source_type":"guide","source_name":"ESO-Hub Earthen Root Enclave Dungeon Guide","source_locator":"Corruption of Root > Adds","game_update":"U35+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"spriggan_ground","value":{"name":"Spriggan Death Zones","response":"tank_spriggan_animals_where_their_permanent_death_aoes_will_not_cut_future_space","failure":"poor_placement_progressively_restricts_the_arena"},"source_type":"guide","source_name":"ESO-Hub Earthen Root Enclave Dungeon Guide","source_locator":"Corruption of Root > Adds","game_update":"U35+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"hardmode_fauns","value":{"name":"Hard Mode Faun / Tree Enrage","response":"kill_fauns_before_they_reach_trees_or_destroy_the_red_glowing_empowered_tree","failure":"empowered_tree_pressure_increases_group_damage"},"source_type":"guide","source_name":"ESO-Hub Earthen Root Enclave Dungeon Guide","source_locator":"Corruption of Root > Hardmode","game_update":"U35+","confidence":"high"}
+  ]
+}
