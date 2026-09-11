@@ -27,6 +27,13 @@
     {"content_id":"bal_sunnar","content_name":"Bal Sunnar","release_year":2023,"release_update":37,"release_pack":"Scribes of Fate","encounter_id":"matriarch_lladi_telvanni","display_name":"Matriarch Lladi Telvanni","member_ids":["matriarch_lladi_telvanni"]},
     {"content_id":"scrivener_s_hall","content_name":"Scrivener's Hall","release_year":2023,"release_update":37,"release_pack":"Scribes of Fate","encounter_id":"riftmaster_naqri","display_name":"Riftmaster Naqri","member_ids":["riftmaster_naqri"]},
     {"content_id":"scrivener_s_hall","content_name":"Scrivener's Hall","release_year":2023,"release_update":37,"release_pack":"Scribes of Fate","encounter_id":"ozezan_the_inferno","display_name":"Ozezan the Inferno","member_ids":["ozezan_the_inferno"]},
-    {"content_id":"scrivener_s_hall","content_name":"Scrivener's Hall","release_year":2023,"release_update":37,"release_pack":"Scribes of Fate","encounter_id":"valinna","display_name":"Valinna and Lamikhai","member_ids":["valinna","lamikhai"]}
+    {"content_id":"scrivener_s_hall","content_name":"Scrivener's Hall","release_year":2023,"release_update":37,"release_pack":"Scribes of Fate","encounter_id":"valinna","display_name":"Valinna and Lamikhai","member_ids":["valinna","lamikhai"]},
+
+    {"content_id":"earthen_root_enclave","content_name":"Earthen Root Enclave","release_year":2022,"release_update":35,"release_pack":"Lost Depths","encounter_id":"corruption_of_stone","display_name":"Corruption of Stone","member_ids":["corruption_of_stone"]},
+    {"content_id":"earthen_root_enclave","content_name":"Earthen Root Enclave","release_year":2022,"release_update":35,"release_pack":"Lost Depths","encounter_id":"corruption_of_root","display_name":"Corruption of Root","member_ids":["corruption_of_root"]},
+    {"content_id":"earthen_root_enclave","content_name":"Earthen Root Enclave","release_year":2022,"release_update":35,"release_pack":"Lost Depths","encounter_id":"archdruid_devyric","display_name":"Archdruid Devyric","member_ids":["archdruid_devyric"]},
+    {"content_id":"graven_deep","content_name":"Graven Deep","release_year":2022,"release_update":35,"release_pack":"Lost Depths","encounter_id":"the_euphotic_gatekeeper","display_name":"The Euphotic Gatekeeper","member_ids":["the_euphotic_gatekeeper"]},
+    {"content_id":"graven_deep","content_name":"Graven Deep","release_year":2022,"release_update":35,"release_pack":"Lost Depths","encounter_id":"varzunon","display_name":"Varzunon","member_ids":["varzunon"]},
+    {"content_id":"graven_deep","content_name":"Graven Deep","release_year":2022,"release_update":35,"release_pack":"Lost Depths","encounter_id":"zelvraak_the_unbreathing","display_name":"Zelvraak the Unbreathing","member_ids":["zelvraak_the_unbreathing"]}
   ]
 }
