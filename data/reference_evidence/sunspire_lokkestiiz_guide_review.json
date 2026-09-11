@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "content_id": "sunspire",
+  "encounter_id": "lokkestiiz",
+  "encounter_name": "Lokkestiiz",
+  "evidence": [
+    {
+      "fact_type": "transition",
+      "fact_key": "flight_add_phase_thresholds",
+      "value": {
+        "label": "Flight / Add Phase",
+        "thresholds": ["80%", "50%", "20%"],
+        "description": "Lokkestiiz takes flight and the group handles Storm and Ice Atronachs before he returns."
+      },
+      "source_type": "guide",
+      "source_name": "Xynode Sunspire Trial Guide",
+      "source_family": "xynode",
+      "source_locator": "Lokkestiiz - add phases",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "icy_winds",
+      "value": {
+        "name": "Icy Winds",
+        "handling_window_seconds": 8,
+        "reuse_lockout_seconds": 60,
+        "veteran_assigned_players": 3,
+        "hardmode_assigned_players": 6,
+        "hardmode_simultaneous_winds": 2
+      },
+      "source_type": "guide",
+      "source_name": "Xynode Sunspire Trial Guide",
+      "source_family": "xynode",
+      "source_locator": "Lokkestiiz - Icy Winds",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "storm_breath",
+      "value": {
+        "name": "Storm Breath",
+        "phase": "flight_add_phase",
+        "shape": "straight_line",
+        "persistent_ground_seconds": "several",
+        "avoid": true
+      },
+      "source_type": "guide",
+      "source_name": "Xynode Sunspire Trial Guide",
+      "source_family": "xynode",
+      "source_locator": "Lokkestiiz - Lightning Fly By",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "ice_laser_beam",
+      "value": {
+        "name": "Ice Laser Beam",
+        "phase": "flight_add_phase",
+        "room_wide": true,
+        "response": "block",
+        "failure_risk": "fatal_if_unblocked"
+      },
+      "source_type": "guide",
+      "source_name": "Xynode Sunspire Trial Guide",
+      "source_family": "xynode",
+      "source_locator": "Lokkestiiz - Ice Laser Beam",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "ice_ball",
+      "value": {
+        "name": "Ice Ball",
+        "target_count": 1,
+        "response": "separate_and_block",
+        "stacking_risk": "damages_nearby_players"
+      },
+      "source_type": "guide",
+      "source_name": "Xynode Sunspire Trial Guide",
+      "source_family": "xynode",
+      "source_locator": "Lokkestiiz - Ice Ball",
+      "confidence": "medium"
+    }
+  ]
+}
