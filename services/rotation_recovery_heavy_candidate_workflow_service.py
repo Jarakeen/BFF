@@ -10,6 +10,7 @@ from models.build_model import PlayerBuild
 from services.rotation_effect_uptime_service import RotationEffectUptimeRequirement
 from services.rotation_recovery_heavy_candidate_orchestration_service import (
     RecoveryHeavyCandidateOrchestrationInput,
+    RecoveryRuntimeCombatStateResolverFactory,
     RotationRecoveryHeavyCandidateOrchestrationResult,
     RotationRecoveryHeavyCandidateOrchestrationService,
 )
@@ -34,6 +35,10 @@ class RotationRecoveryHeavyCandidateWorkflowService:
     evidence stay explicit through this boundary. The workflow does not infer them
     from role or build labels; callers that have canonical evidence may provide it,
     while legacy callers retain the historical static-resource behavior.
+
+    Optional runtime combat-state resolvers are also bound only after each candidate
+    stabilizes, so final-family scorecards always query the actual final plan rather
+    than stale seed-plan timing.
     """
 
     def __init__(
@@ -64,6 +69,7 @@ class RotationRecoveryHeavyCandidateWorkflowService:
         calculation_context: BuildCalculationContext | None = None,
         maximum_event_resolver: RecoveryMaximumEventResolver | None = None,
         displayed_recovery_resolver_factory: RecoveryDisplayedRecoveryResolverFactory | None = None,
+        runtime_combat_state_resolver_factory: RecoveryRuntimeCombatStateResolverFactory | None = None,
     ) -> RotationRecoveryHeavyCandidateOrchestrationResult:
         final_evaluator = self.final_family_service.generic_evaluator(
             scorecard_resolver=scorecard_resolver,
@@ -81,6 +87,7 @@ class RotationRecoveryHeavyCandidateWorkflowService:
             calculation_context=calculation_context,
             maximum_event_resolver=maximum_event_resolver,
             displayed_recovery_resolver_factory=displayed_recovery_resolver_factory,
+            runtime_combat_state_resolver_factory=runtime_combat_state_resolver_factory,
         )
 
     def run_effects(
@@ -101,6 +108,7 @@ class RotationRecoveryHeavyCandidateWorkflowService:
         calculation_context: BuildCalculationContext | None = None,
         maximum_event_resolver: RecoveryMaximumEventResolver | None = None,
         displayed_recovery_resolver_factory: RecoveryDisplayedRecoveryResolverFactory | None = None,
+        runtime_combat_state_resolver_factory: RecoveryRuntimeCombatStateResolverFactory | None = None,
     ) -> RotationRecoveryHeavyCandidateOrchestrationResult:
         final_evaluator = self.final_family_service.effect_evaluator(
             build=character_build,
@@ -121,6 +129,7 @@ class RotationRecoveryHeavyCandidateWorkflowService:
             calculation_context=calculation_context,
             maximum_event_resolver=maximum_event_resolver,
             displayed_recovery_resolver_factory=displayed_recovery_resolver_factory,
+            runtime_combat_state_resolver_factory=runtime_combat_state_resolver_factory,
         )
 
 
