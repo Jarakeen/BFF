@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "cradle_of_shadows",
+  "encounter_id": "dranos_velador",
+  "encounter_name": "Dranos Velador",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Dranos Main Phase","threshold":"active combat","description":"Hold Dranos steady and avoid spreading mortar impacts while preparing for shadow immunity cycles."},"source_type":"guide","source_name":"Xynode Cradle of Shadows Guide","source_locator":"Dranos Velador","game_update":"U11","confidence":"high"},
+    {"fact_type":"phase","fact_key":"shadows","value":{"order":2,"label":"Shadow Orb Cycle","threshold":"immunity transition","description":"Kill the three shadow copies, collect their red essence orbs, and strip Dranos's immunity."},"source_type":"guide","source_name":"Xynode Cradle of Shadows Guide","source_locator":"Dranos Velador","game_update":"U11","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"essence_orbs","value":{"name":"Essence Orbs","response":"kill_three_shadows_and_collect_their_orbs_to_end_immunity"},"source_type":"achievement","source_name":"Divided He Fell","source_locator":"Cradle of Shadows achievement","game_update":"U11","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"mortar","value":{"name":"Mortar","response":"move_out_of_initial_impact_and_follow_up_split_paths"},"source_type":"guide","source_name":"Xynode Cradle of Shadows Guide","source_locator":"Dranos Velador","game_update":"U11","confidence":"high"}
+  ]
+}
