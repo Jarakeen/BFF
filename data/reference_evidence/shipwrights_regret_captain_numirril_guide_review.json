@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "content_id": "shipwright_s_regret",
+  "encounter_id": "captain_numirril",
+  "encounter_name": "Captain Numirril",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase_one","value":{"order":1,"label":"Main Phase I","threshold":"Pull to ~80%","description":"Manage Drown, corpses, bile pools, and wave pressure while keeping movement lanes open."},"source_type":"guide","source_name":"ESO-Hub Shipwright's Regret Dungeon Guide","source_locator":"Captain Numirril","game_update":"U33+","confidence":"high"},
+    {"fact_type":"phase","fact_key":"hulk_phase_one","value":{"order":2,"label":"Drowned Hulk I","threshold":"~80%","description":"Numirril leaves the platform and a Drowned Hulk takes priority while waves and corpse pressure continue."},"source_type":"guide","source_name":"ESO-Hub Shipwright's Regret Dungeon Guide","source_locator":"Captain Numirril > Waves / Drowned Hulks","game_update":"U33+","confidence":"high"},
+    {"fact_type":"phase","fact_key":"main_phase_two","value":{"order":3,"label":"Main Phase II","threshold":"~80% to ~40%","description":"Boss returns; maintain constant movement and prevent bile pools from consuming the platform."},"source_type":"guide","source_name":"ESO-Hub Shipwright's Regret Dungeon Guide","source_locator":"Captain Numirril","game_update":"U33+","confidence":"high"},
+    {"fact_type":"phase","fact_key":"hard_mode_hulk_phase_two","value":{"order":4,"label":"Hard Mode Double Hulk","threshold":"~40%","description":"Hard Mode spawns two Drowned Hulks while Numirril returns, creating the fight's heaviest overlap."},"source_type":"guide","source_name":"ESO-Hub Shipwright's Regret Dungeon Guide","source_locator":"Captain Numirril > Hardmode","game_update":"U33+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"drown","value":{"name":"Drown","response":"tank_dodge_rolls_cast_to_avoid_lift_and_taunt_loss","failure":"target_is_lifted_and_boss_aggro_breaks"},"source_type":"guide","source_name":"ESO-Hub Shipwright's Regret Dungeon Guide","source_locator":"Captain Numirril > Drown","game_update":"U33+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"drowned_corpses","value":{"name":"Drowned Corpses","response":"interrupt_retch_when_practical_and_manage_corpses_without_losing_boss_control","failure":"hurl_and_retch_create_more_bile_pools"},"source_type":"guide","source_name":"Ascending Tide Hard Mode Guide","source_locator":"Captain Numirril > Drowned Corpses","game_update":"U33","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"waves","value":{"name":"Tidal Waves","response":"read_adjacent_wave_origins_and_keep_moving_through_clear_lanes","benefit":"waves_clear_bile_in_their_path"},"source_type":"guide","source_name":"ESO-Hub Shipwright's Regret Dungeon Guide","source_locator":"Captain Numirril > Waves","game_update":"U33+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"bile_pools","value":{"name":"Bile Pools","response":"place_and_move_cleanly_to_preserve_platform_space","failure":"too_many_pools_collapse_safe_movement"},"source_type":"guide","source_name":"Ascending Tide Hard Mode Guide","source_locator":"Captain Numirril > Drowned Corpses","game_update":"U33","confidence":"high"}
+  ]
+}
