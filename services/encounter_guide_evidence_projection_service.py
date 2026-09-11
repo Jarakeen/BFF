@@ -96,9 +96,6 @@ def _related_detail(name: str, facts: tuple[ReconciledEncounterFact, ...]) -> st
         if not fact.safe_for_review:
             continue
         key = str(fact.fact_key or "").casefold()
-        # Evidence keys often shorten the visible mechanic name, e.g.
-        # Rapid Deluge -> deluge_veteran_behavior. Matching any mechanic-name
-        # token is presentation grouping only; source values stay unchanged.
         if tokens and not any(token in key for token in tokens):
             continue
         rendered = _render_value(fact.value)
@@ -202,15 +199,17 @@ class EncounterGuideEvidenceProjectionService:
         return result
 
     def _mitigations(self) -> dict[str, str]:
-        payload = _load_json(self.data_root / "reference_mitigations.json")
         result: dict[str, str] = {}
-        for row in payload.get("entries", ()) if isinstance(payload.get("entries"), list) else ():
-            if not isinstance(row, dict):
-                continue
-            entry_name = str(row.get("entry_name") or "").strip()
-            mitigation = str(row.get("mitigation") or "").strip()
-            if entry_name and mitigation:
-                result[entry_name.casefold()] = mitigation
+        for path in sorted(self.data_root.glob("reference_mitigations*.json"), key=lambda item: item.name.casefold()):
+            payload = _load_json(path)
+            rows = payload.get("entries", ()) if isinstance(payload.get("entries"), list) else ()
+            for row in rows:
+                if not isinstance(row, dict):
+                    continue
+                entry_name = str(row.get("entry_name") or "").strip()
+                mitigation = str(row.get("mitigation") or "").strip()
+                if entry_name and mitigation:
+                    result[entry_name.casefold()] = mitigation
         return result
 
     def get(self, encounter_id: str, encounter_name: str = "") -> EncounterGuideEvidenceProjection:
