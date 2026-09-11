@@ -3,9 +3,9 @@ from __future__ import annotations
 """Reviewed shared-resolver ownership for non-class max-resource passives.
 
 This is a proof ledger, not a second mechanics implementation. Rows are admitted
-only when an existing canonical shared resolver makes the passive's effect family
-explicit enough to prove whether it can alter Max Health, Max Magicka, or Max
-Stamina.
+only when an existing canonical shared resolver or reviewed canonical tooltip
+makes the passive's effect family explicit enough to prove whether it can alter
+Max Health, Max Magicka, or Max Stamina.
 """
 
 from dataclasses import dataclass
@@ -39,6 +39,30 @@ class ExtremeResourceSharedPassiveOwnershipService:
     SUPPORTED_OBJECTIVES = _SUPPORTED_OBJECTIVES
 
     _ROWS = (
+        ExtremeResourceSharedPassiveOwnership(
+            domain=ExtremeSkillDomain.ALLIANCE_WAR,
+            skill_line="Assault",
+            passive_name="Combat Frenzy",
+            status=ExtremeResourceSharedPassiveOwnershipStatus.PROVEN_IRRELEVANT,
+            source="Canonical Assault passive tooltip review",
+            effect_family="Ultimate generation only",
+        ),
+        ExtremeResourceSharedPassiveOwnership(
+            domain=ExtremeSkillDomain.ALLIANCE_WAR,
+            skill_line="Assault",
+            passive_name="Continuous Attack",
+            status=ExtremeResourceSharedPassiveOwnershipStatus.PROVEN_IRRELEVANT,
+            source="Canonical Assault passive tooltip review",
+            effect_family="weapon/spell damage, Health/Magicka/Stamina Recovery, and mount speed only",
+        ),
+        ExtremeResourceSharedPassiveOwnership(
+            domain=ExtremeSkillDomain.ALLIANCE_WAR,
+            skill_line="Assault",
+            passive_name="Reach",
+            status=ExtremeResourceSharedPassiveOwnershipStatus.PROVEN_IRRELEVANT,
+            source="Canonical Assault passive tooltip review",
+            effect_family="ability range only",
+        ),
         ExtremeResourceSharedPassiveOwnership(
             domain=ExtremeSkillDomain.GUILD,
             skill_line="Fighters Guild",
