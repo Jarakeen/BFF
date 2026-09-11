@@ -10,6 +10,10 @@ from services.rotation_candidate_ranking_service import (
     RotationCandidateTier,
 )
 from services.rotation_candidate_scorecard_service import RotationCandidateScorecard
+from services.rotation_gameplay_policy_assessment_service import (
+    RotationGameplayPolicyAssessment,
+    RotationGameplayPolicyStatus,
+)
 
 
 _DAMAGE_ROLES = {"damage", "damage_dealer", "dd", "dps"}
@@ -33,6 +37,13 @@ class RotationRoleAwareRankingInput:
     the selected role family makes the candidate ineligible rather than coercing an
     unknown measurement to zero. A role hard-obligation value of ``False`` fails the
     candidate; ``None`` fails closed because the hard-gate state is unresolved.
+
+    ``gameplay_policy_assessment`` is contextual play-practice evidence, not mechanic
+    truth. For Damage Dealer candidates, a resolved DISFAVORED assessment remains
+    mechanically eligible but sorts behind otherwise valid practice-compliant or
+    explicitly-overridden candidates. UNRESOLVED gameplay-policy evidence fails
+    closed. Omitted assessment preserves legacy ranking behavior until the caller's
+    evidence path is wired.
     """
 
     candidate_id: str
@@ -46,6 +57,7 @@ class RotationRoleAwareRankingInput:
     primary_role_displacement_seconds: float | None
     role_hard_obligation_satisfied: bool | None = True
     role_hard_obligation_reasons: tuple[str, ...] = ()
+    gameplay_policy_assessment: RotationGameplayPolicyAssessment | None = None
 
     def __post_init__(self) -> None:
         candidate_id = str(self.candidate_id or "").strip()
@@ -57,6 +69,13 @@ class RotationRoleAwareRankingInput:
         if role not in _DAMAGE_ROLES | _SUPPORT_ROLES:
             raise ValueError(f"unsupported role-aware rotation role: {self.role_key!r}")
         object.__setattr__(self, "role_key", role)
+
+        assessment = self.gameplay_policy_assessment
+        if assessment is not None and assessment.candidate_id.casefold() != candidate_id.casefold():
+            raise ValueError(
+                "gameplay-policy assessment candidate mismatch: "
+                f"expected {candidate_id!r}, got {assessment.candidate_id!r}"
+            )
 
         for field_name in (
             "role_output_value",
@@ -135,12 +154,17 @@ class RotationRoleAwareRankingService:
     an ineligible plan. Explicit role hard obligations are an additional gate, not a
     weighted objective, and unresolved hard-gate evidence fails closed.
 
-    Eligible Damage Dealer candidates prioritize effective role output first. Extra
-    support value does not make a DD plan win unless that support was already an
-    explicit hard obligation in the scorecard. Eligible healer/tank/support plans
-    prioritize assigned support value, then sustain margin and primary-role
-    displacement, before optional role output. Stable candidate identity is the
-    final deterministic tie-break. No weighted exchange rate is invented.
+    Eligible Damage Dealer candidates prefer resolved gameplay-practice quality
+    before effective role output when a gameplay assessment is supplied. A
+    mechanically legal but unjustified redundant personal-heal candidate therefore
+    remains eligible, yet cannot beat an otherwise valid practice-compliant or
+    explicitly-overridden candidate merely by posting more damage. No weighted
+    exchange rate is invented. Legacy candidates without a gameplay assessment keep
+    the prior damage-first behavior until their evidence path is wired.
+
+    Eligible healer/tank/support plans prioritize assigned support value, then
+    sustain margin and primary-role displacement, before optional role output.
+    Stable candidate identity is the final deterministic tie-break.
     """
 
     def __init__(
@@ -177,6 +201,7 @@ class RotationRoleAwareRankingService:
             key=lambda item: (
                 base_by_id[item.candidate_id.casefold()].rank,
                 self._hard_obligation_sort_key(item),
+                self._gameplay_policy_sort_key(item),
                 len(item.missing_required_role_evidence),
                 item.candidate_id.casefold(),
                 item.candidate_id,
@@ -211,14 +236,37 @@ class RotationRoleAwareRankingService:
         return 2
 
     @staticmethod
+    def _gameplay_policy_sort_key(item: RotationRoleAwareRankingInput) -> int:
+        assessment = item.gameplay_policy_assessment
+        if item.role_family != "damage" or assessment is None:
+            return 0
+        if assessment.status in {
+            RotationGameplayPolicyStatus.SATISFIED,
+            RotationGameplayPolicyStatus.OVERRIDDEN,
+            RotationGameplayPolicyStatus.NOT_APPLICABLE,
+        }:
+            return 0
+        if assessment.status is RotationGameplayPolicyStatus.DISFAVORED:
+            return 1
+        return 2
+
+    @classmethod
     def _is_role_eligible(
+        cls,
         item: RotationRoleAwareRankingInput,
         base: RotationCandidateRankingResult,
     ) -> bool:
+        gameplay_policy_resolved = not (
+            item.role_family == "damage"
+            and item.gameplay_policy_assessment is not None
+            and item.gameplay_policy_assessment.status
+            is RotationGameplayPolicyStatus.UNRESOLVED
+        )
         return (
             base.tier is RotationCandidateTier.ELIGIBLE
             and item.role_hard_obligation_satisfied is True
             and not item.missing_required_role_evidence
+            and gameplay_policy_resolved
         )
 
     @staticmethod
@@ -237,6 +285,7 @@ class RotationRoleAwareRankingService:
         if item.role_family == "damage":
             role_output = cls._required(item.role_output_value, "role output")
             return (
+                cls._gameplay_policy_sort_key(item),
                 -role_output,
                 -sustain,
                 displacement,
@@ -271,6 +320,14 @@ class RotationRoleAwareRankingService:
                 + ", ".join(item.missing_required_role_evidence)
             )
 
+        assessment = item.gameplay_policy_assessment
+        if item.role_family == "damage" and assessment is not None:
+            reasons.append(
+                "gameplay policy "
+                f"{assessment.policy_id}: {assessment.status.value}"
+            )
+            reasons.extend(assessment.reasons)
+
         sustain = (
             f"{item.sustain_margin:g}"
             if item.sustain_margin is not None
@@ -294,7 +351,7 @@ class RotationRoleAwareRankingService:
             )
             reasons.extend(
                 (
-                    f"DD policy: {item.role_output_label}={role_output} is the first soft objective after hard validity.",
+                    f"DD policy: {item.role_output_label}={role_output} is the first soft objective after hard validity and gameplay-practice quality.",
                     f"Sustain margin={sustain}; primary-role displacement={displacement}.",
                     f"{item.assigned_support_label}={support} is diagnostic unless the scorecard makes it a hard assigned obligation.",
                 )
