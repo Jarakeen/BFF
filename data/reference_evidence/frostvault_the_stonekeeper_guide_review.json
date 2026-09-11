@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "content_id": "frostvault",
+  "encounter_id": "the_stonekeeper",
+  "encounter_name": "The Stonekeeper",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"arms_one","value":{"order":1,"label":"Gauntlet Phase I","threshold":"100% to 55%","description":"Destroy both gauntlets, kill the spawned Centurion, then damage Stonekeeper while surviving rotating fire and tank pressure."},"source_type":"guide","source_name":"Alcast Frostvault Guide","source_locator":"Stonekeeper arms","game_update":"U21","confidence":"high"},
+    {"fact_type":"phase","fact_key":"skeevaton","value":{"order":2,"label":"Skeevaton Extermination Protocol","threshold":"55%","description":"All four players transform into Skeevatons, charge ultimate, traverse traps, and disable four Shock Conveyors."},"source_type":"guide","source_name":"Alcast Frostvault Guide","source_locator":"Stonekeeper 55 percent Skeevaton phase","game_update":"U21","confidence":"high"},
+    {"fact_type":"phase","fact_key":"arms_two","value":{"order":3,"label":"Gauntlet Phase II","threshold":"55% to 0%","description":"Stonekeeper restores both arms and repeats the fight with added rotating blades and steam-breath pressure."},"source_type":"guide","source_name":"Alcast Frostvault Guide","source_locator":"Stonekeeper post-Skeevaton phase","game_update":"U21","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"gauntlets","value":{"name":"Rotary and Flame Gauntlets","response":"destroy_both_arms_before_committing_damage_to_boss"},"source_type":"guide","source_name":"Alcast Frostvault Guide","source_locator":"Stonekeeper gauntlets","game_update":"U21","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"skeevaton_protocol","value":{"name":"Skeevaton Protocol","response":"charge_ultimate_use_role_tools_and_disable_all_four_shock_conveyors"},"source_type":"guide","source_name":"Alcast Frostvault Guide","source_locator":"Skeevaton skills","game_update":"U21","confidence":"high"}
+  ]
+}
