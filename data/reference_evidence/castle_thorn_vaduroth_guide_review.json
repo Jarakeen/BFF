@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "castle_thorn",
+  "encounter_id": "vaduroth",
+  "encounter_name": "Vaduroth",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Sickle and Corpse Main Phase","threshold":"Pull to death","description":"Manage Vaduroth while using thrown sickles and burst corpses without allowing add pressure to overwhelm the arena."},"source_type":"guide","source_name":"Xynode Castle Thorn Mechanics Guide","source_locator":"Vaduroth","game_update":"U27","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"sickle","value":{"name":"Thrown Sickle","response":"avoid_sickle_paths_and_use_corpses_deliberately"},"source_type":"guide","source_name":"Castle Thorn Sickle Skills achievement / guide review","source_locator":"Vaduroth","game_update":"U27","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"adds","value":{"name":"Reanimated Adds","response":"control_and_burn_adds_before_they_compound_floor_pressure"},"source_type":"guide","source_name":"Alcast Castle Thorn Guide","source_locator":"Vaduroth","game_update":"U27","confidence":"medium"}
+  ]
+}
