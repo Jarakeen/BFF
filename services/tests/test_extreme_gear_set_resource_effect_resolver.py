@@ -91,3 +91,52 @@ def test_armor_master_preserves_percentage_semantics():
             EffectUnit.PERCENT,
         )
     ]
+
+
+def test_death_dealers_fete_maps_explicit_maximum_stack_state():
+    rows = _rows(
+        "(1 item) Gain a persistent stack of Escalating Fete every 2 seconds you are in combat, "
+        "up to 30 stacks max. Each stack of Escalating Fete increases your Maximum Stamina, "
+        "Health, and Magicka by 88. You lose a stack of Escalating Fete every 4 seconds you are "
+        "out of combat."
+    )
+
+    assert set(row[:3] for row in rows) == {
+        (StatId.MAX_HEALTH, 2640.0, "escalating_fete_stacks:30"),
+        (StatId.MAX_MAGICKA, 2640.0, "escalating_fete_stacks:30"),
+        (StatId.MAX_STAMINA, 2640.0, "escalating_fete_stacks:30"),
+    }
+
+
+def test_prowlers_talisman_maps_only_resource_stack_branch():
+    rows = _rows(
+        "(1 item) While Battle Spirit is inactive, bracing while crouching turns you invisible for 10 seconds. "
+        "This can occur once every 45 seconds. Increase your chances of successfully Pickpocketing by 5%. "
+        "On dealing Critical Damage, increase your Max Magicka and Max Stamina for 10 seconds, up to 1900 at 10 stacks. "
+        "On dealing non-Critical Damage, increase your Health, Magicka, and Stamina Recovery for 10 seconds, up to 160 at 10 stacks. "
+        "Either effect can occur up to once every 1 second. Talisman upgrades: 0"
+    )
+
+    assert set(row[:3] for row in rows) == {
+        (StatId.MAX_MAGICKA, 1900.0, "prowlers_talisman_critical_stacks:10"),
+        (StatId.MAX_STAMINA, 1900.0, "prowlers_talisman_critical_stacks:10"),
+    }
+
+
+def test_thrassian_stranglers_maps_negative_max_health_stack_state():
+    rows = _rows(
+        "(1 item) Killing an enemy grants you a stack of Sload's Call for 1 hour, up to a maximum of 50 stacks. "
+        "Each stack increases your Weapon and Spell Damage by 23, reduces your Maximum Health by120, and reduces "
+        "effectiveness of your damage shields by 1%. Sload's Call is lost if you remove Thrassian Stranglers, "
+        "go invisible, or crouch."
+    )
+
+    assert rows == [
+        (
+            StatId.MAX_HEALTH,
+            -6000.0,
+            "sloads_call_stacks:50",
+            EffectOperation.ADD,
+            EffectUnit.FLAT,
+        )
+    ]
