@@ -81,11 +81,11 @@ def test_audit_scope_flags_are_mutually_distinct():
     assert all_args.all_content is True
 
 
-def test_checked_in_dungeon_scope_is_newest_first_through_launch_starter_slice():
+def test_checked_in_dungeon_scope_is_newest_first_through_launch_normal_slice():
     data_root = Path(__file__).resolve().parents[2] / "data"
     rows = build_coverage_rows(data_root, scope="dungeon")
 
-    assert len(rows) == 167
+    assert len(rows) == 176
     assert {(row.release_year, row.release_update) for row in rows} == {
         (2025, 47), (2025, 45), (2024, 41), (2023, 37),
         (2022, 35), (2022, 33), (2021, 31), (2021, 29),
@@ -109,6 +109,7 @@ def test_checked_in_dungeon_scope_is_newest_first_through_launch_starter_slice()
         "Fungal Grotto II", "Spindleclutch II", "The Banished Cells II",
         "Darkshade Caverns II", "Elden Hollow II", "Wayrest Sewers II",
         "Fungal Grotto I", "Spindleclutch I", "The Banished Cells I",
+        "Darkshade Caverns I", "Elden Hollow I", "Wayrest Sewers I",
     }
 
     assert {row.encounter_id for row in rows} == {
@@ -157,4 +158,7 @@ def test_checked_in_dungeon_scope_is_newest_first_through_launch_starter_slice()
         "war_chief_ozozai", "kra_gh_the_dreugh_king",
         "swarm_mother", "the_whisperer",
         "shadowrend", "high_kinlord_rilis_banished_cells_i",
+        "foreman_llothan", "the_hive_lord", "sentinel_of_rkugamz",
+        "akash_gra_mal", "chokethorn", "canonreeve_oraneth",
+        "investigator_garron", "varaine_pellingare", "allene_pellingare_wayrest_sewers_i",
     }
