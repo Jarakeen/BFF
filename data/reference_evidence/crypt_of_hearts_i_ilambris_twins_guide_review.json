@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "crypt_of_hearts_i",
+  "encounter_id": "ilambris_twins",
+  "encounter_name": "Ilambris Twins",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"both twins alive","description":"Control both Ilambris brothers, keep their elemental pressure organized, and block Athor's heavy attack while the group brings the twins down in a controlled order."},"source_type":"guide","source_name":"Xynode Crypt of Hearts I Guide","source_locator":"Ilambris Twins — Zaven & Athor","game_update":"Launch","confidence":"high"},
+    {"fact_type":"phase","fact_key":"enrage","value":{"order":2,"label":"Survivor Enrage","threshold":"one twin defeated","description":"When one Ilambris twin dies, the surviving brother enrages; avoid leaving the survivor at high health when the first twin is killed."},"source_type":"guide","source_name":"Xynode Crypt of Hearts I Guide","source_locator":"Ilambris Twins — Zaven & Athor","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"athor_heavy_attack","value":{"name":"Athor Heavy Attack","response":"block_as_soon_as_the_heavy_attack_telegraph_appears_because_the_hit_is_large_and_can_knock_the_target_down"},"source_type":"guide","source_name":"Xynode Crypt of Hearts I Guide","source_locator":"Ilambris Twins — Zaven & Athor","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"survivor_enrage","value":{"name":"Survivor Enrage","response":"keep_the_twins_health_reasonably_close_or_be_ready_to_burn_the_surviving_enraged_brother_immediately"},"source_type":"guide","source_name":"Xynode Crypt of Hearts I Guide","source_locator":"Ilambris Twins — Zaven & Athor","game_update":"Launch","confidence":"high"}
+  ]
+}
