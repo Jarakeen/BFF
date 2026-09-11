@@ -39,6 +39,12 @@ class _Universe:
                 "Increases your Max Health, Magicka, and Stamina by 4%.",
             ),
             _passive(
+                "Tough",
+                "Increases your Max Health by 2000.",
+                line="Imperial Skills",
+                domain=ExtremeSkillDomain.RACIAL,
+            ),
+            _passive(
                 "Juggernaut",
                 "Increases your Max Health by 2% for each piece of Heavy Armor equipped.",
                 line="Heavy Armor",
@@ -52,6 +58,13 @@ class _Universe:
             ),
             _passive("Mystery", "Something mechanically mysterious happens."),
         )
+
+
+class _RaceRepository:
+    def get_stat_map_by_name(self, name):
+        if name == "Imperial":
+            return {"max_health": 2000.0, "max_stamina": 2000.0}
+        return {}
 
 
 def test_projection_recognizes_static_max_resource_flat_and_percent_clauses():
@@ -145,23 +158,36 @@ def test_noncombat_craft_and_utility_passives_are_not_reported_as_unknown_mechan
 
 def test_resource_passive_audit_classifies_complete_inventory_without_zeroing_unknowns():
     audit = ExtremeResourcePassiveCoverageAuditService(
-        universe_service=_Universe()
+        universe_service=_Universe(),
+        race_repository=_RaceRepository(),
     ).build("max_health")
 
-    assert audit.passives_reviewed == 6
+    assert audit.passives_reviewed == 7
     assert audit.denominator_proven is True
     assert audit.projection_complete is False
     assert any("Last Gasp" in row for row in audit.static_relevant)
+    assert any("Tough" in row for row in audit.accounted_elsewhere)
     assert any("Deep Reserves" in row for row in audit.static_irrelevant)
     assert any("Juggernaut" in row for row in audit.context_required)
     assert any("Magicka Controller" in row for row in audit.context_required)
     assert any("Mystery" in row for row in audit.unresolved)
 
 
+def test_racial_static_resource_requires_matching_canonical_race_stat():
+    audit = ExtremeResourcePassiveCoverageAuditService(
+        universe_service=_Universe(),
+        race_repository=_RaceRepository(),
+    ).build("max_magicka")
+
+    assert not any("Tough" in row for row in audit.accounted_elsewhere)
+    assert any("Tough" in row for row in audit.static_irrelevant)
+
+
 def test_resource_passive_audit_rejects_unreviewed_objective():
     try:
         ExtremeResourcePassiveCoverageAuditService(
-            universe_service=_Universe()
+            universe_service=_Universe(),
+            race_repository=_RaceRepository(),
         ).build("spell_damage")
     except KeyError as exc:
         assert "unreviewed Extreme resource passive objective" in str(exc)
