@@ -119,11 +119,13 @@ def test_without_cadence_obligations_returns_selected_canonical_result_unchanged
     bundle = _bundle()
     build = object()
     request = object()
+    role_evidence = object()
 
     result = support.run(
         player_build=build,  # type: ignore[arg-type]
         generation_request=request,  # type: ignore[arg-type]
         evidence_bundle=bundle,  # type: ignore[arg-type]
+        role_evidence=role_evidence,  # type: ignore[arg-type]
         character_id="magrat-id",
     )
 
@@ -142,12 +144,29 @@ def test_without_cadence_obligations_returns_selected_canonical_result_unchanged
     assert call["generation_request"] is request
     assert call["evaluator_resolver"] == "evaluator"
     assert call["scorecard_resolver"] == "scorecard"
+    assert call["role_evidence"] is role_evidence
     assert call["demands"] == ("demand",)
     assert call["options"] == ("option",)
     assert call["requirements"] == ("requirement",)
     assert call["passives"] == ("passive",)
     assert call["character_id"] == "magrat-id"
     assert call["coverage_report"] == "coverage"
+
+
+def test_legacy_cadence_orchestration_forwards_no_role_evidence() -> None:
+    canonical_evidence = SimpleNamespace(
+        plan="canonical-plan",
+        sustain_projection="canonical-sustain",
+    )
+    support, canonical, _, _, _ = _support(canonical_evidence=canonical_evidence)
+
+    support.run(
+        player_build=object(),  # type: ignore[arg-type]
+        generation_request=object(),  # type: ignore[arg-type]
+        evidence_bundle=_bundle(),  # type: ignore[arg-type]
+    )
+
+    assert canonical.calls[0]["role_evidence"] is None
 
 
 def test_unselectable_canonical_result_never_starts_cadence_progression() -> None:
