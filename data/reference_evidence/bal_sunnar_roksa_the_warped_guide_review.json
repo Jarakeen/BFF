@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "content_id": "bal_sunnar",
+  "encounter_id": "roksa_the_warped",
+  "encounter_name": "Roksa the Warped",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main Phase / Darklight Orbs","threshold":"Pull","description":"Roksa cycles Darklight Orbs, tank pressure, and add control while the group prepares for darkness transitions."},"source_type":"guide","source_name":"ESO-Hub Bal Sunnar Dungeon Guide","source_locator":"Boss 2 - Roksa the Warped","game_update":"U37+","confidence":"high"},
+    {"fact_type":"phase","fact_key":"darkness_cycles","value":{"order":2,"label":"Darkness Cycles","threshold":"70%, 40%","description":"The room darkens and players must stay in light zones while adds spawn; after the cycle the tank receives a sustained beam."},"source_type":"guide","source_name":"ESO-Hub Bal Sunnar Dungeon Guide","source_locator":"Roksa the Warped > Darkness Phase","game_update":"U37+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"darklight_orbs","value":{"name":"Darklight Orbs","response":"interrupt_or_destroy_each_tethering_orb_before_its_countdown_finishes","failure":"tethered_player_dies_if_orb_resolves"},"source_type":"guide","source_name":"ESO-Hub Bal Sunnar Dungeon Guide","source_locator":"Roksa the Warped > Darklight Orbs","game_update":"U37+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"darkness_light_zones","value":{"name":"Darkness / Light Zones","response":"stay_inside_active_light_and_reposition_before_hostile_ground_aoes_block_the_safe_zone","failure":"remaining_in_darkness_is_lethal"},"source_type":"guide","source_name":"ESO-Hub Bal Sunnar Dungeon Guide","source_locator":"Roksa the Warped > Darkness Phase","game_update":"U37+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"post_darkness_beam","value":{"name":"Post-Darkness Tank Beam","response":"tank_mitigates_while_healer_focuses_single_target_healing","hard_mode":"three_beams_hit_the_tank_instead_of_one"},"source_type":"guide","source_name":"ESO-Hub Bal Sunnar Dungeon Guide","source_locator":"Roksa the Warped > Tank Beam / Hardmode","game_update":"U37+","confidence":"high"}
+  ]
+}
