@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "content_id": "sanctum_ophidia",
+  "encounter_id": "ozara",
+  "encounter_name": "Ozara",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main Phase","threshold":"Pull","description":"Main tank holds Ozara near the door while the group keeps a loose semicircle, prioritizes Overchargers, and manages an endless add stream."},"source_type":"guide","source_name":"Xynode Sanctum Ophidia Trial Guide","source_locator":"Ozara","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"overcharger_priority","value":{"name":"Overcharger Priority","response":"kill_each_overcharger_promptly_near_door"},"source_type":"guide","source_name":"Xynode Sanctum Ophidia Trial Guide","source_locator":"Ozara > Overcharger","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"shaman_totem","value":{"name":"Shaman Totem","response":"kill_totem_not_shaman_to_keep_overcharger_controlled","totem_respawns_if_shaman_dies":true},"source_type":"guide","source_name":"Xynode Sanctum Ophidia Trial Guide","source_locator":"Ozara > Shaman's Totem","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"trapping_bolt","value":{"name":"Trapping Bolt","response":"free_pinned_players_with_synergy_immediately","maximum_simultaneous_pins":4},"source_type":"guide + official_patch_notes","source_name":"Xynode Sanctum Ophidia Trial Guide; ESO Update 21 patch notes","source_locator":"Ozara > Pins / Trapping Bolt","game_update":"U21","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"pin_priority","value":{"priority_order":["tanks","healers","damage_dealers"],"note":"Pinned players cannot self-release; nearby players must use the synergy."},"source_type":"guide","source_name":"Xynode Sanctum Ophidia Trial Guide","source_locator":"Ozara > Pins","confidence":"medium"}
+  ]
+}
