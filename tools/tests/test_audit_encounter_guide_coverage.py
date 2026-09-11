@@ -1,7 +1,9 @@
 from pathlib import Path
 
+from services.encounter_boss_guide import EncounterBossGuideService
 from tools.audit_encounter_guide_coverage import (
     EncounterGuideCoverageRow,
+    _canonical_phase_count,
     _content_key,
     _include_content,
     _line,
@@ -38,6 +40,28 @@ def test_coverage_row_uses_reviewed_fallback_when_canonical_timeline_is_missing(
     assert row.effective_timeline_source == "reviewed_fallback"
     assert row.timeline_missing is False
     assert row.strategy_missing is False
+
+
+def test_coverage_row_uses_reviewed_fallback_when_canonical_persistence_is_unavailable():
+    row = EncounterGuideCoverageRow(
+        encounter_id="boss",
+        content_name="Dungeon",
+        encounter_name="Boss",
+        canonical_timeline_rows=None,
+        reviewed_timeline_rows=2,
+        strategy_rows=1,
+    )
+
+    text = _line(row)
+    assert row.effective_timeline_source == "reviewed_fallback"
+    assert row.timeline_missing is False
+    assert "canonical=unavailable" in text
+
+
+def test_canonical_phase_count_marks_missing_database_unavailable(tmp_path: Path):
+    service = EncounterBossGuideService(tmp_path / "missing.db")
+
+    assert _canonical_phase_count(service, ("boss",)) is None
 
 
 def test_coverage_row_reports_missing_timeline_and_strategy():
