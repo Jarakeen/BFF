@@ -50,6 +50,7 @@ from services.rotation_healer_canonical_role_output_factory_service import (
 from services.rotation_healer_reviewed_runtime_evidence_loader import (
     RotationHealerReviewedRuntimeEvidenceLoader,
 )
+from services.rotation_static_build_context_service import RotationStaticBuildContextService
 from tools.audit_phase13_healer_priority_comparison import _BASE_PRIORITIES, _audit_policy_set
 from tools.audit_phase13_saved_build_recovery_heavy_rotation import _load_saved_build
 from tools.audit_phase13_xalvakka_healer_threshold_rotation import (
