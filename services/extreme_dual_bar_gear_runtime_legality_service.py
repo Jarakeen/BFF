@@ -11,7 +11,8 @@ Proc attempts therefore need two separate proofs:
 
 This service owns no set-count math and no proc math. Bar-local breakpoint truth
 comes from ``ExtremeDualBarSetActivationEvidenceCatalog`` and runtime transitions
-remain owned by the existing shared effect stream helpers.
+remain owned by the existing shared effect stream helpers. Active-bar provenance
+comes from the unified Extreme runtime-history wrapper rather than a local type.
 """
 
 from dataclasses import dataclass
@@ -29,21 +30,10 @@ from services.extreme_dual_bar_set_activation_evidence_service import (
     ExtremeDualBarSetActivationEvidence,
     ExtremeDualBarSetActivationEvidenceCatalog,
 )
+from services.extreme_runtime_bar_effect_attempt import ExtremeRuntimeBarEffectAttempt
 
 
 _SOURCE_BREAKPOINT_RE = re.compile(r"\((\d+)\)\s*$")
-
-
-@dataclass(frozen=True)
-class ExtremeGearRuntimeBarAttempt:
-    attempt: RuntimeEffectEventAttempt
-    active_bar: str
-
-    def __post_init__(self) -> None:
-        bar = str(self.active_bar or "").strip().casefold()
-        if bar not in {"front", "back"}:
-            raise ValueError(f"unsupported Extreme gear runtime bar: {self.active_bar!r}")
-        object.__setattr__(self, "active_bar", bar)
 
 
 @dataclass(frozen=True)
@@ -94,7 +84,7 @@ class ExtremeDualBarGearRuntimeLegalityService:
         self,
         activation: ExtremeDualBarSetActivationEvidenceCatalog,
         *,
-        attempts: tuple[ExtremeGearRuntimeBarAttempt, ...],
+        attempts: tuple[ExtremeRuntimeBarEffectAttempt, ...],
         snapshot_time_seconds: float,
     ) -> ExtremeDualBarGearRuntimeLegalityResult:
         snapshot = float(snapshot_time_seconds)
