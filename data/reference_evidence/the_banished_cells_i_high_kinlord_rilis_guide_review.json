@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "the_banished_cells_i",
+  "encounter_id": "high_kinlord_rilis_banished_cells_i",
+  "encounter_name": "High Kinlord Rilis",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Rilis Phase","threshold":"100% to 0%","description":"Kill Feasts before they heal Rilis, step through Ghost Fire carefully, and respect his heavy and magic-bolt burst."},"source_type":"guide","source_name":"Xynode Banished Cells I Guide","source_locator":"High Kinlord Rilis","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"feasts","value":{"name":"Feasts","response":"kill_healing_orbs_before_they_reach_rilis"},"source_type":"guide","source_name":"Xynode Banished Cells I Guide","source_locator":"High Kinlord Rilis","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"ghost_fire","value":{"name":"Ghost Fire","response":"move_out_of_each_ground_fire_pool_without_running_the_boss_around_the_room"},"source_type":"guide","source_name":"Xynode Banished Cells I Guide","source_locator":"High Kinlord Rilis","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"heavy_blow","value":{"name":"Heavy Blow","response":"block_the_heavy_attack_or_risk_lethal_damage"},"source_type":"guide","source_name":"Xynode Banished Cells I Guide","source_locator":"High Kinlord Rilis","game_update":"Launch","confidence":"high"}
+  ]
+}
