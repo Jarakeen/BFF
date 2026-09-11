@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "white_gold_tower",
+  "encounter_id": "the_adjudicator",
+  "encounter_name": "The Adjudicator",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Tank the Adjudicator at the foot of the stairs while the group spaces behind her and clears accumulating zombies."},"source_type":"guide","source_name":"Xynode White-Gold Tower Guide","source_locator":"The Adjudicator","game_update":"U7","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"zombies","value":{"name":"Zombie Adds","response":"clear_zombies_with_aoe_before_they_accumulate"},"source_type":"guide","source_name":"Xynode White-Gold Tower Guide","source_locator":"The Adjudicator","game_update":"U7","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"spacing","value":{"name":"Targeted Mechanics Spacing","response":"group_uses_separate_positions_behind_boss_to_identify_targeted_player"},"source_type":"guide","source_name":"Xynode White-Gold Tower Guide","source_locator":"The Adjudicator","game_update":"U7","confidence":"high"}
+  ]
+}
