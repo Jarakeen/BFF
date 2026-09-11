@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {"entry_name":"Storm Safe Zone — Lightning Storm Atronach","mitigation":"Call the lit pad immediately and move as a group. Do not finish a rotation in the storm; stay in the safe zone until the channel ends."},
+    {"entry_name":"Shockwave — Lightning Storm Atronach","mitigation":"Return to center after Storm and block or shield through the expanding shockwave and follow-up ground AOEs."},
+    {"entry_name":"Ground Pound — Foundation Stone Atronach","mitigation":"Main tank keeps the boss turned away; block as needed while healers cover the five-hit splash sequence."},
+    {"entry_name":"Add Pair — Foundation Stone Atronach","mitigation":"Off-tank grabs the Chain Spinner and Nullifier pair and stacks them on the boss for cleave."},
+    {"entry_name":"Clone Split — Varlariel","mitigation":"Stay spread, assign clone coverage, and kill as many of the three clones as possible before the explosion. Fewer surviving clones means less incoming damage."},
+    {"entry_name":"Magic Bolt — Varlariel","mitigation":"Keep taunt stable so repeated bolts stay on the tank rather than deleting a DD."},
+    {"entry_name":"Chain Lightning — The Mage","mitigation":"Maintain deliberate spacing so Chain Lightning cannot ramp through adjacent players while still preserving the group formation behind the boss."},
+    {"entry_name":"Axes — The Mage","mitigation":"Tank controls the axes away from the group through the main phase; expect them to disappear when execute begins."},
+    {"entry_name":"Meteors — The Mage","mitigation":"Hard Mode: block the meteor impact to avoid the stun."},
+    {"entry_name":"Storm Atronachs — The Mage","mitigation":"Hard Mode: kill Storm Atronachs quickly, especially once low health triggers continuous lightning pressure."}
+  ]
+}
