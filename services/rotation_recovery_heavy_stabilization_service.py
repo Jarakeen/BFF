@@ -33,6 +33,10 @@ RecoveryDisplayedRecoveryResolverFactory = Callable[
     [RotationPlan, ResourceType],
     Callable[[float], int],
 ]
+RecoveryRestorationResolverFactory = Callable[
+    [RotationPlan],
+    VerifiedRecoveryHeavyRestorationResolver,
+]
 
 
 @dataclass(frozen=True)
@@ -78,6 +82,12 @@ class RotationRecoveryHeavyStabilizationService:
     that *actual* plan, then replays sustain with the canonical static calculation
     context. The next pressure resolver therefore observes the same bar-aware
     resource history that produced the candidate's hard-obligation state.
+
+    A legacy/static restoration resolver may still be supplied directly. Canonical
+    callers whose restoration evidence depends on the regenerated plan may instead
+    supply ``restoration_resolver_factory``; it is invoked once for each generated
+    plan before that plan is replayed. Supplying both paths is rejected so restore
+    evidence can never be silently double-sourced.
     """
 
     def __init__(
@@ -94,7 +104,8 @@ class RotationRecoveryHeavyStabilizationService:
         resource: ResourceType,
         maximum_amount: int,
         trigger_fraction: float,
-        restoration_resolver: VerifiedRecoveryHeavyRestorationResolver,
+        restoration_resolver: VerifiedRecoveryHeavyRestorationResolver | None = None,
+        restoration_resolver_factory: RecoveryRestorationResolverFactory | None = None,
         reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None,
         hard_obligation_state_resolver: RecoveryHardObligationStateResolver | None = None,
         max_iterations: int = 6,
@@ -102,6 +113,12 @@ class RotationRecoveryHeavyStabilizationService:
         maximum_event_resolver: RecoveryMaximumEventResolver | None = None,
         displayed_recovery_resolver_factory: RecoveryDisplayedRecoveryResolverFactory | None = None,
     ) -> RotationRecoveryHeavyStabilizationResult:
+        if (restoration_resolver is None) == (restoration_resolver_factory is None):
+            raise ValueError(
+                "recovery-heavy stabilization requires exactly one of "
+                "restoration_resolver or restoration_resolver_factory"
+            )
+
         limit = int(max_iterations)
         if limit <= 0:
             raise ValueError("recovery-heavy stabilization max_iterations must be positive")
@@ -125,11 +142,17 @@ class RotationRecoveryHeavyStabilizationService:
                 if displayed_recovery_resolver_factory is not None
                 else None
             )
+            active_restoration_resolver = (
+                restoration_resolver_factory(plan)
+                if restoration_resolver_factory is not None
+                else restoration_resolver
+            )
+            assert active_restoration_resolver is not None
             replay = self.replay_service.replay(
                 build=build,
                 plan=plan,
                 resource=resource,
-                restoration_resolver=restoration_resolver,
+                restoration_resolver=active_restoration_resolver,
                 maximum_events=maximum_events,
                 calculation_context=calculation_context,
                 displayed_recovery_at=displayed_recovery_at,
@@ -261,6 +284,7 @@ __all__ = [
     "RecoveryDisplayedRecoveryResolverFactory",
     "RecoveryHardObligationStateResolver",
     "RecoveryMaximumEventResolver",
+    "RecoveryRestorationResolverFactory",
     "RotationRecoveryHeavyStabilizationIteration",
     "RotationRecoveryHeavyStabilizationResult",
     "RotationRecoveryHeavyStabilizationService",
