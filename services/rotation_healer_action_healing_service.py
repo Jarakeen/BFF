@@ -193,6 +193,11 @@ class RotationHealerActionHealingService:
                                 game_version=evidence.game_version,
                             )
                         )
+                        unresolved.append(
+                            f"{action.name} at {action.time_seconds:g}s: "
+                            "reviewed healing consequence is externally triggered and is not "
+                            "modeled by caster action healing projection"
+                        )
                     continue
 
             result = self.tooltip_service.evaluate_entity_id(
