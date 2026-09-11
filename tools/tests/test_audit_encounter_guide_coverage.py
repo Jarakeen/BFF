@@ -1,4 +1,9 @@
-from tools.audit_encounter_guide_coverage import EncounterGuideCoverageRow, _line
+from tools.audit_encounter_guide_coverage import (
+    EncounterGuideCoverageRow,
+    _content_key,
+    _include_content,
+    _line,
+)
 
 
 def test_coverage_row_prefers_canonical_timeline_when_present():
@@ -46,3 +51,14 @@ def test_coverage_row_reports_missing_timeline_and_strategy():
     assert row.strategy_missing is True
     assert "MISSING TIMELINE" in text
     assert "MISSING STRATEGY" in text
+
+
+def test_trial_scope_reuses_known_trial_names_and_normalizes_leading_the():
+    assert _content_key("The Halls of Fabrication") == "halls of fabrication"
+    assert _include_content("Halls of Fabrication", trials_only=True) is True
+    assert _include_content("Dreadsail Reef", trials_only=True) is True
+    assert _include_content("Arx Corinium", trials_only=True) is False
+
+
+def test_all_content_scope_keeps_non_trial_content():
+    assert _include_content("Arx Corinium", trials_only=False) is True
