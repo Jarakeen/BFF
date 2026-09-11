@@ -90,5 +90,21 @@ def test_runtime_mechanics_page_replaces_strategy_placeholder_with_reviewed_runt
     assert page.runtime_guidance_table.item(0, 0).text() == "Healer"
     assert page.runtime_guidance_table.item(0, 1).text() == "High"
 
+    assert page.runtime_strategy_overview_label is not None
+    assert "Healer: Prepare strongest sustained coverage for Flight 2." in (
+        page.runtime_strategy_overview_label.text()
+    )
+    assert page.runtime_callouts_label is not None
+    assert "Flight 2 repeatedly carried the strongest sustained pressure." in (
+        page.runtime_callouts_label.text()
+    )
+    assert page.runtime_reminders_label is not None
+    assert "Healer: Prepare strongest sustained coverage for Flight 2." in (
+        page.runtime_reminders_label.text()
+    )
+    assert "Reviewed runtime sample: 10 successful clear(s)." in (
+        page.runtime_reminders_label.text()
+    )
+
     page.close()
     app.processEvents()
