@@ -46,8 +46,9 @@ class ExtremeResourceContextualPassiveReviewService:
     SUPPORTED_OBJECTIVES = _SUPPORTED_OBJECTIVES
 
     _ROWS = (
-        # Standing canonical passive math already participates in the ordinary
-        # context calculation when the required route/progression evidence is supplied.
+        # Standing or explicitly searched canonical passive mechanics already
+        # participate in the max-resource path when the required route,
+        # progression, bar, or reviewed runtime witness is supplied.
         ExtremeResourceContextualPassiveReview(
             objective_key="max_health",
             passive_name="Juggernaut",
@@ -71,6 +72,22 @@ class ExtremeResourceContextualPassiveReviewService:
             status=ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED,
             source="NightbladePassiveInputResolver",
             condition="The reviewed Extreme active-bar reducer searches the legal six-slot bar and maximizes distinct Shadow abilities; shared Nightblade passive math applies the resulting Max Health bonus.",
+        ),
+        ExtremeResourceContextualPassiveReview(
+            objective_key="max_health",
+            passive_name="Expert Summoner",
+            skill_line="Daedric Summoning",
+            status=ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED,
+            source="ExtremeSorcererExpertSummonerPetContextService",
+            condition="The reviewed Max Health runtime reducer activates the permanent-pet witness only on legal Daedric Summoning routes, and the canonical context rebuilder inserts the additional U50 5% Max Health branch before resource rounding.",
+        ),
+        ExtremeResourceContextualPassiveReview(
+            objective_key="max_health",
+            passive_name="Nothing Wasted",
+            skill_line="Class Mastery",
+            status=ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED,
+            source="ClassMasteryExtremeEffectService",
+            condition="The reviewed Max Health runtime reducer selects canonical Nothing Wasted Class Mastery only on a legal pure Necromancer route and applies the reviewed 10-stack Corpse Consumption maximum as +20% Max Health before resource rounding.",
         ),
         ExtremeResourceContextualPassiveReview(
             objective_key="max_magicka",
@@ -111,25 +128,6 @@ class ExtremeResourceContextualPassiveReviewService:
             status=ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED,
             source="NightbladePassiveInputResolver",
             condition="The reviewed Extreme active-bar reducer searches one legal Siphoning trigger because additional Siphoning slots cannot increase Magicka Flood; shared Nightblade passive math applies the 6% Max Stamina bonus.",
-        ),
-
-        # Reviewed mechanics exist, but the global record does not yet search
-        # the explicit runtime states required to activate their maximum branch.
-        ExtremeResourceContextualPassiveReview(
-            objective_key="max_health",
-            passive_name="Expert Summoner",
-            skill_line="Daedric Summoning",
-            status=ExtremeResourceContextualPassiveStatus.RUNTIME_STATE_REQUIRED,
-            source="ExtremeSorcererExpertSummonerPetContextService",
-            condition="Additional U50 Max Health branch requires an explicitly active permanent pet.",
-        ),
-        ExtremeResourceContextualPassiveReview(
-            objective_key="max_health",
-            passive_name="Nothing Wasted",
-            skill_line="Class Mastery",
-            status=ExtremeResourceContextualPassiveStatus.RUNTIME_STATE_REQUIRED,
-            source="ClassMasteryExtremeEffectService",
-            condition="Maximum is the reviewed 10-stack state; stacks require Corpse Consumption activity.",
         ),
     )
 
