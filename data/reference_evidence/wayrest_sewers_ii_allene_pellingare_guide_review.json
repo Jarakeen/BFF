@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "wayrest_sewers_ii",
+  "encounter_id": "allene_pellingare",
+  "encounter_name": "Varaine and Allene Pellingare",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Pellingare Twins Phase","threshold":"100% to 0%","description":"Tank both Pellingares, avoid cone and circle pressure, control vampire bats, and manage shields without splitting the group."},"source_type":"guide","source_name":"Xynode Wayrest Sewers II Guide","source_locator":"Varaine and Allene Pellingare","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"twin_control","value":{"name":"Twin Control","response":"keep_both_twins_taunted_and_faced_away_while_the_group_stays_together"},"source_type":"guide","source_name":"Xynode Wayrest Sewers II Guide","source_locator":"Varaine and Allene Pellingare","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"zombie_hard_mode","value":{"name":"Zombie Hard Mode","response":"defeat_fifteen_zombies_during_the_twins_fight_before_finishing_them_for_the_achievement"},"source_type":"achievement","source_name":"Pellingare Ghoul Slayer","source_locator":"Wayrest Sewers II achievement","game_update":"Launch","confidence":"high"}
+  ]
+}
