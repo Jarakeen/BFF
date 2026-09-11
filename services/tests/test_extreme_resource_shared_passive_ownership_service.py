@@ -32,6 +32,9 @@ def _passive(name: str, line: str, domain: ExtremeSkillDomain):
 class _Universe:
     def passives(self):
         return (
+            _passive("Combat Frenzy", "Assault", ExtremeSkillDomain.ALLIANCE_WAR),
+            _passive("Continuous Attack", "Assault", ExtremeSkillDomain.ALLIANCE_WAR),
+            _passive("Reach", "Assault", ExtremeSkillDomain.ALLIANCE_WAR),
             _passive("Slayer", "Fighters Guild", ExtremeSkillDomain.GUILD),
             _passive("Undaunted Command", "Undaunted", ExtremeSkillDomain.GUILD),
             _passive("Magicka Aid", "Support", ExtremeSkillDomain.ALLIANCE_WAR),
@@ -50,6 +53,9 @@ class _RaceRepository:
 def test_reviewed_shared_rows_are_proven_irrelevant_to_all_max_resources():
     rows = ExtremeResourceSharedPassiveOwnershipService.reviewed()
     assert [(row.domain.value, row.skill_line, row.passive_name) for row in rows] == [
+        ("alliance_war", "Assault", "Combat Frenzy"),
+        ("alliance_war", "Assault", "Continuous Attack"),
+        ("alliance_war", "Assault", "Reach"),
         ("alliance_war", "Support", "Magicka Aid"),
         ("guild", "Fighters Guild", "Slayer"),
         ("guild", "Undaunted", "Undaunted Command"),
@@ -62,21 +68,34 @@ def test_reviewed_shared_rows_are_proven_irrelevant_to_all_max_resources():
     )
 
     for objective in ("max_health", "max_magicka", "max_stamina"):
-        for passive in _Universe().passives()[:5]:
+        for passive in _Universe().passives()[:8]:
             row = ExtremeResourceSharedPassiveOwnershipService.resolve(passive, objective)
             assert row is not None
             assert row.status is ExtremeResourceSharedPassiveOwnershipStatus.PROVEN_IRRELEVANT
 
 
 def test_shared_ownership_requires_exact_domain_line_and_name():
-    wrong_line = _Universe().passives()[5]
+    wrong_line = _Universe().passives()[8]
     assert ExtremeResourceSharedPassiveOwnershipService.resolve(wrong_line, "max_health") is None
 
     wrong_domain = _passive("Slayer", "Fighters Guild", ExtremeSkillDomain.WEAPON)
     assert ExtremeResourceSharedPassiveOwnershipService.resolve(wrong_domain, "max_health") is None
 
+    wrong_assault_line = _passive("Reach", "Support", ExtremeSkillDomain.ALLIANCE_WAR)
+    assert ExtremeResourceSharedPassiveOwnershipService.resolve(wrong_assault_line, "max_health") is None
+
 
 def test_passive_denominator_moves_reviewed_shared_rows_to_static_irrelevant():
+    reviewed_names = (
+        "Combat Frenzy",
+        "Continuous Attack",
+        "Reach",
+        "Slayer",
+        "Undaunted Command",
+        "Magicka Aid",
+        "Fortress",
+        "Deflect Bolts",
+    )
     for objective in ("max_health", "max_magicka", "max_stamina"):
         audit = ExtremeResourcePassiveCoverageAuditService(
             universe_service=_Universe(),
@@ -84,12 +103,8 @@ def test_passive_denominator_moves_reviewed_shared_rows_to_static_irrelevant():
         ).build(objective)
 
         assert audit.denominator_proven is True
-        for passive_name in (
-            "Slayer",
-            "Undaunted Command",
-            "Magicka Aid",
-            "Fortress",
-            "Deflect Bolts",
-        ):
+        for passive_name in reviewed_names:
             assert any(passive_name in row for row in audit.static_irrelevant)
+            assert not any(passive_name in row for row in audit.context_required)
+            assert not any(passive_name in row for row in audit.unresolved)
         assert any("Not One Hand and Shield :: Fortress" in row for row in audit.unresolved)
