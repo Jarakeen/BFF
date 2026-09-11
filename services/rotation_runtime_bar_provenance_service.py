@@ -11,6 +11,8 @@ semantics.
 
 Pre-tagged attempts and pre-existing transition evidence are verified against the plan
 and fail closed on disagreement. Non-bar runtime entries are preserved unchanged.
+Saved-build gear may add stricter bar-access rules at this boundary; generic rotation
+bar semantics remain gear-agnostic.
 """
 
 from dataclasses import dataclass
@@ -18,9 +20,13 @@ from dataclasses import dataclass
 from minmax.rotation_active_bar_legality import RotationActiveBarAssessor
 from minmax.rotation_plan import RotationActionKind, RotationPlan
 from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
+from models.build_model import PlayerBuild
 from services.extreme_runtime_bar_effect_attempt import ExtremeRuntimeBarEffectAttempt
 from services.extreme_runtime_bar_transition import ExtremeRuntimeBarTransition
 from services.extreme_runtime_snapshot import ExtremeRuntimeSnapshot
+from services.rotation_saved_build_bar_access_service import (
+    RotationSavedBuildBarAccessService,
+)
 
 
 @dataclass(frozen=True)
@@ -80,6 +86,7 @@ class RotationRuntimeBarProvenanceService:
         snapshot: ExtremeRuntimeSnapshot,
         *,
         initial_bar: str = "front",
+        player_build: PlayerBuild | None = None,
     ) -> RotationRuntimeBarProvenanceResult:
         if not snapshot.runtime_history:
             return RotationRuntimeBarProvenanceResult(
@@ -91,6 +98,12 @@ class RotationRuntimeBarProvenanceService:
             )
 
         assessment = self.active_bar_assessor.assess(plan, initial_bar=initial_bar)
+        if player_build is not None:
+            assessment = RotationSavedBuildBarAccessService.restrict(
+                player_build,
+                plan,
+                assessment,
+            )
         if not assessment.legal:
             return RotationRuntimeBarProvenanceResult(
                 snapshot=None,
