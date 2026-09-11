@@ -29,6 +29,21 @@ def _passive(name: str, line: str, description: str = "Reviewed class mechanic."
     )
 
 
+_CLASS_MASTERY_RESOURCE_IRRELEVANT = {
+    ("Class Mastery", "Above and Beyond"),
+    ("Class Mastery", "Abyssal Emergence"),
+    ("Class Mastery", "An Eye for Exploitation"),
+    ("Class Mastery", "Bountiful Harvest"),
+    ("Class Mastery", "Bright Harbinger"),
+    ("Class Mastery", "Glacial Obstinance"),
+    ("Class Mastery", "Malevolent Promise"),
+    ("Class Mastery", "Share the Spoils"),
+    ("Class Mastery", "Sphere of Influence"),
+    ("Class Mastery", "Steadfast Candescence"),
+    ("Class Mastery", "Tundra's Maw"),
+    ("Class Mastery", "Unbound Potential"),
+}
+
 _EXPECTED_IDENTITIES = {
     ("Aedric Spear", "Balanced Warrior"),
     ("Aedric Spear", "Spear Wall"),
@@ -72,7 +87,7 @@ _EXPECTED_IDENTITIES = {
     ("Winter's Embrace", "Frozen Armor"),
     ("Winter's Embrace", "Glacial Presence"),
     ("Winter's Embrace", "Piercing Cold"),
-}
+} | _CLASS_MASTERY_RESOURCE_IRRELEVANT
 
 
 class _Universe:
@@ -124,12 +139,31 @@ def test_reviewed_class_rows_have_objective_specific_resource_status():
             assert status is expected_status
 
 
+def test_class_mastery_resource_rows_are_irrelevant_to_all_maximum_resource_objectives():
+    for objective in ("max_health", "max_magicka", "max_stamina"):
+        for line, name in _CLASS_MASTERY_RESOURCE_IRRELEVANT:
+            resolution = ExtremeResourceClassPassiveOwnershipService.resolve(
+                _passive(name, line),
+                objective,
+            )
+            assert resolution is not None
+            row, status = resolution
+            assert row.identity == (line, name)
+            assert status is ExtremeResourceClassPassiveOwnershipStatus.PROVEN_IRRELEVANT
+
+
 def test_class_passive_ownership_requires_exact_skill_line_and_class_domain():
     wrong_line = _passive("Flourish", "Not Animal Companions")
     assert ExtremeResourceClassPassiveOwnershipService.resolve(wrong_line, "max_health") is None
 
     wrong_draconic_line = _passive("Elder Dragon", "Not Draconic Power")
     assert ExtremeResourceClassPassiveOwnershipService.resolve(wrong_draconic_line, "max_health") is None
+
+    mastery_wrong_line = _passive("Bountiful Harvest", "Not Class Mastery")
+    assert (
+        ExtremeResourceClassPassiveOwnershipService.resolve(mastery_wrong_line, "max_magicka")
+        is None
+    )
 
     guild_copy = ExtremePlayerSkillRecord(
         skill_id=2,
