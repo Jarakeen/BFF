@@ -5,6 +5,9 @@ from ui.rotation_canonical_candidate_support import RotationCanonicalCandidateSu
 from ui.rotation_dashboard_canonical_candidate_support import (
     RotationDashboardCanonicalCandidateSupport,
 )
+from ui.rotation_runtime_snapshot_candidate_support import (
+    RotationRuntimeSnapshotCandidateSupport,
+)
 from ui.rotation_saved_build_target_candidate_support import (
     RotationSavedBuildTargetCandidateSupport,
 )
@@ -19,7 +22,10 @@ from ui.rotation_weapon_attack_candidate_support import (
 def test_dashboard_default_shares_canonical_adapter_with_weapon_attack_support() -> None:
     support = RotationDashboardCanonicalCandidateSupport()
 
-    ultimate = support.canonical_candidates
+    runtime = support.canonical_candidates
+    assert isinstance(runtime, RotationRuntimeSnapshotCandidateSupport)
+
+    ultimate = runtime.canonical_candidates
     assert isinstance(ultimate, RotationUltimateAffordabilityCandidateSupport)
 
     potion = ultimate.canonical_candidates
@@ -33,6 +39,9 @@ def test_dashboard_default_shares_canonical_adapter_with_weapon_attack_support()
 
     canonical = weapon.canonical_candidates
     assert isinstance(canonical, RotationCanonicalCandidateSupport)
+    assert runtime.base_canonical is canonical
+    assert runtime.build_adapter is canonical.build_adapter
+    assert runtime.static_context_service is canonical.static_context_service
     assert weapon.build_adapter is canonical.build_adapter
     assert target.static_context_service is canonical.static_context_service
     assert weapon.static_context_service is canonical.static_context_service
