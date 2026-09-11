@@ -2,21 +2,21 @@ from __future__ import annotations
 
 """Classify canonical gear-set bonus breakpoints by Extreme objective relevance.
 
-This layer is intentionally conservative.  It consumes the shared
+This layer is intentionally conservative. It consumes the shared
 ``ExtremeGearSetObjectiveService`` instead of reparsing bonus descriptions or
-inventing objective math.  A breakpoint may be pruned only when the canonical
+inventing objective math. A breakpoint may be pruned only when the canonical
 projection completes and proves that the active set bonuses contribute no
 positive amount to the requested maximize objective.
 
 For Extreme max-resource work the default resolver is the reviewed resource
 adapter, which delegates to the shared resolver first and adds only explicit
-resource patterns.  Unknown mechanics remain proof blockers.
+resource patterns. Unknown mechanics remain proof blockers.
 
-Relevance and executable projection are deliberately separate contracts.  A
-reviewed positive target-stat effect can be known to belong in the denominator
-even when its condition or percentage stacking still prevents exact scoring.
-Those execution blockers remain on the candidate, but they do not make the
-*relevance* denominator unknown.
+Relevance and executable projection are deliberately separate contracts. A
+reviewed target-stat effect can be classified as positive, non-positive, or
+unknown even when its condition or percentage stacking still prevents exact
+scoring. Those execution blockers remain on the candidate, but they do not make
+the *relevance* denominator unknown when the sign is already proven.
 """
 
 from dataclasses import dataclass
@@ -119,36 +119,43 @@ class ExtremeGearSetObjectiveRelevanceService:
         self.resolver = resolver or ExtremeGearSetResourceEffectResolver()
 
     @classmethod
-    def _positive_target_effect_is_reviewed(
+    def _reviewed_target_effect_sign(
         cls,
         candidate: ExtremeGearSetObjectiveCandidate,
         objective_key: str,
-    ) -> bool:
-        """Prove denominator relevance without pretending exact scoring is done.
+    ) -> int | None:
+        """Return +1 for positive potential, 0 for reviewed non-positive, else None.
 
-        This applies only when every candidate blocker is a known projection-only
-        blocker (condition or percentage reference semantics), and a resolved
-        target-stat effect is explicitly positive. Unknown active bonuses still
-        fail closed.
+        Sign-only classification is allowed only when every candidate blocker is a
+        known projection-only blocker (condition or percentage reference semantics)
+        and every target-stat effect uses a reviewed additive operation. Unknown
+        active bonuses or unsupported operations still fail closed.
         """
 
         if not candidate.unresolved:
-            return False
+            return None
         if any(
             not any(fragment in message for fragment in cls._RELEVANCE_ONLY_BLOCKER_FRAGMENTS)
             for message in candidate.unresolved
         ):
-            return False
+            return None
 
         target_stats = ExtremeGearSetObjectiveService._target_stats(objective_key)
-        for effect in candidate.source_effects:
-            if effect.stat not in target_stats:
-                continue
-            if effect.operation not in {EffectOperation.ADD, EffectOperation.ADD_PERCENT}:
-                continue
-            if float(effect.value) > 0.0:
-                return True
-        return False
+        target_effects = [
+            effect
+            for effect in candidate.source_effects
+            if effect.stat in target_stats
+        ]
+        if not target_effects:
+            return None
+        if any(
+            effect.operation not in {EffectOperation.ADD, EffectOperation.ADD_PERCENT}
+            for effect in target_effects
+        ):
+            return None
+        if any(float(effect.value) > 0.0 for effect in target_effects):
+            return 1
+        return 0
 
     def build(
         self,
@@ -178,8 +185,11 @@ class ExtremeGearSetObjectiveRelevanceService:
                     resolver=self.resolver,
                 )
                 if candidate.unresolved:
-                    if self._positive_target_effect_is_reviewed(candidate, key):
+                    reviewed_sign = self._reviewed_target_effect_sign(candidate, key)
+                    if reviewed_sign == 1:
                         status = ExtremeGearSetObjectiveRelevance.RELEVANT
+                    elif reviewed_sign == 0:
+                        status = ExtremeGearSetObjectiveRelevance.PROVEN_IRRELEVANT
                     else:
                         status = ExtremeGearSetObjectiveRelevance.UNRESOLVED
                         unresolved.extend(candidate.unresolved)
