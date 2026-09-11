@@ -171,6 +171,23 @@ def test_missing_log_event_table_fails_closed(tmp_path):
     assert report.unresolved == ("log_event table is unavailable",)
 
 
+def test_incomplete_log_event_schema_fails_closed(tmp_path):
+    path = tmp_path / "legacy.db"
+    with sqlite3.connect(path) as db:
+        db.execute(
+            "CREATE TABLE log_event(report_code TEXT, fight_id INTEGER)"
+        )
+
+    report = RotationHealerMinorLifestealEsoLogsEvidenceService().inspect(path)
+
+    assert report.observations == ()
+    assert report.cadence_streams == ()
+    assert report.unresolved[0].startswith(
+        "log_event schema is missing required columns:"
+    )
+    assert "raw_json" in report.unresolved[0]
+
+
 def test_inspection_does_not_mutate_database(tmp_path):
     path = _database(tmp_path)
     before = path.read_bytes()
