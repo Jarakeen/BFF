@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "moon_hunter_keep",
+  "encounter_id": "mylenne_moon_caller",
+  "encounter_name": "Mylenne Moon-Caller",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Manage periodic werewolf add waves while respecting Mylenne's heavy attacks, pounce, and lightning pressure."},"source_type":"guide","source_name":"Moon Hunter Keep community guide","source_locator":"Mylenne Moon-Caller","game_update":"U19","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"werewolf_waves","value":{"name":"Werewolf Waves","response":"prioritize_werewolves_at_each_health_interval_and_keep_them_controlled"},"source_type":"guide","source_name":"Retro Rebellion Moon Hunter Keep Boss Mechanics","source_locator":"Mylenne Moon-Caller","game_update":"U19","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"pounce_pin","value":{"name":"Pounce Pin","response":"interrupt_immediately_when_mylenne_pins_a_player"},"source_type":"guide","source_name":"Retro Rebellion Moon Hunter Keep Boss Mechanics","source_locator":"Mylenne Moon-Caller","game_update":"U19","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"shock_wardens","value":{"name":"Shock Warden Lightning","response":"avoid_lightning_pools_and_spread_personal_strikes"},"source_type":"guide","source_name":"Retro Rebellion Moon Hunter Keep Boss Mechanics","source_locator":"Mylenne Moon-Caller","game_update":"U19","confidence":"high"}
+  ]
+}
