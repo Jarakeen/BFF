@@ -46,8 +46,16 @@ class ExtremeResourceContextualPassiveReviewService:
     SUPPORTED_OBJECTIVES = _SUPPORTED_OBJECTIVES
 
     _ROWS = (
-        # Standing canonical class-passive math already participates in the
-        # ordinary context calculation for routes that own the relevant line.
+        # Standing canonical passive math already participates in the ordinary
+        # context calculation when the required route/progression evidence is supplied.
+        ExtremeResourceContextualPassiveReview(
+            objective_key="max_health",
+            passive_name="Juggernaut",
+            skill_line="Heavy Armor",
+            status=ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED,
+            source="ArmorPassiveInputResolver",
+            condition="Max-rank Juggernaut is supplied by the Extreme max-Health armor progression and scales through the shared Heavy Armor piece count.",
+        ),
         ExtremeResourceContextualPassiveReview(
             objective_key="max_health",
             passive_name="Last Gasp",
@@ -125,17 +133,6 @@ class ExtremeResourceContextualPassiveReviewService:
             status=ExtremeResourceContextualPassiveStatus.RUNTIME_STATE_REQUIRED,
             source="ClassMasteryExtremeEffectService",
             condition="Maximum is the reviewed 10-stack state; stacks require Corpse Consumption activity.",
-        ),
-
-        # The passive is known to affect the objective, but shared canonical
-        # resource math does not yet apply it. Keep this gap explicit.
-        ExtremeResourceContextualPassiveReview(
-            objective_key="max_health",
-            passive_name="Juggernaut",
-            skill_line="Heavy Armor",
-            status=ExtremeResourceContextualPassiveStatus.MECHANIC_IMPLEMENTATION_REQUIRED,
-            source="ArmorPassiveInputResolver",
-            condition="Max Health scales with equipped Heavy Armor pieces; shared resolver support is not yet implemented.",
         ),
     )
 
