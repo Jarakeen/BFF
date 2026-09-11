@@ -20,6 +20,36 @@
       "notes": "Reviewed veteran evidence records a six-second duration, ramping damage, and an explicit heal check."
     },
     {
+      "entry_name": "Bridge Phase — Tideborn Taleria",
+      "mitigation": "Send the portal team immediately and get the channeler to 50% before the 60-second Dreadsail Ascension wipe.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Current reviewed guide evidence places bridge phases at 50%, 35%, and 20% and gives the channeler team 60 seconds to reach 50% health before the group wipe."
+    },
+    {
+      "entry_name": "Summon Siren — Tideborn Taleria",
+      "mitigation": "Keep stamina available and break free immediately if Lure of the Sea fears you toward the water.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Current guide evidence records two Sirens and a fear/pull mechanic whose response is Break Free."
+    },
+    {
+      "entry_name": "Summon Behemoth — Tideborn Taleria",
+      "mitigation": "Off-tank the Sea Behemoth and kill it promptly; its dangerous ground areas disappear when it dies.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Current guide evidence says the Sea Behemoth spawns on the main tank, is handled by the off-tank, and its Arctic Annihilation areas disappear on death."
+    },
+    {
+      "entry_name": "Coral Slam — Tideborn Taleria",
+      "mitigation": "Roll-dodge the heavy attack. The dodge creates a low-damage water spout instead of taking the heavy hit.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Current guide labels this heavy attack Coral Slash; FoundryDock keeps the reviewed Coral Slam identity and records the guide naming as source-specific evidence."
+    },
+    {
+      "entry_name": "Arcing Slash — Tideborn Taleria",
+      "mitigation": "Keep Taleria faced away from the group. The frontal cone hits twice and refreshes Soaked Wound on targets it catches.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Current guide evidence records a frontal cone, two hits, and a Soaked Wound DoT refreshed by repeated hits."
+    },
+    {
       "entry_name": "Destructive Ember — Lylanar and Turlassil",
       "mitigation": "Use the opposite-element dome on the enemy and keep the fire and ice domes from touching.",
       "source": "reviewed_encounter_evidence",
