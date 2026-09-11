@@ -19,6 +19,9 @@ from services.rotation_healer_external_conditional_healing_service import (
 from services.rotation_healer_u50_skill_component_repository import (
     RotationHealerU50SkillComponentRepository,
 )
+from services.rotation_plan_runtime_build_context_service import (
+    RotationRuntimeBuildContextResolver,
+)
 
 
 @dataclass(frozen=True)
@@ -86,7 +89,13 @@ class RotationHealerActionHealingProjection:
 
 
 class RotationHealerActionHealingService:
-    """Project scheduled healer skill actions into canonical healing consequences."""
+    """Project scheduled healer skill actions into canonical healing consequences.
+
+    Static bar contexts remain the compatibility path. When an exact-time runtime
+    build-context resolver is supplied, each healing action is evaluated against the
+    rebuilt canonical context for its actual active bar and runtime CombatState.
+    This avoids applying a new CombatState to stale derived character/core stats.
+    """
 
     def __init__(
         self,
@@ -121,6 +130,7 @@ class RotationHealerActionHealingService:
         build: PlayerBuild,
         context: BuildCalculationContext,
         contexts_by_bar: Mapping[str, BuildCalculationContext] | None = None,
+        runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
     ) -> RotationHealerActionHealingProjection:
         direct_events: list[RotationHealerResolvedHealEvent] = []
         periodic_seeds: list[RotationHealerPeriodicHealSeed] = []
@@ -137,18 +147,6 @@ class RotationHealerActionHealingService:
                 continue
             if not action.name:
                 continue
-
-            action_context = context
-            if bar_contexts is not None and action.bar is not None:
-                bar = str(action.bar or "").strip().casefold()
-                if bar in {"front", "back"}:
-                    action_context = bar_contexts.get(bar)
-                    if action_context is None:
-                        unresolved.append(
-                            f"{action.name} at {action.time_seconds:g}s: "
-                            f"static build context unavailable for {bar} bar"
-                        )
-                        continue
 
             resolution = self.tooltip_service.coefficients.resolve_name(action.name)
             if resolution.rank is None:
@@ -194,6 +192,40 @@ class RotationHealerActionHealingService:
                             )
                         )
                     continue
+
+            action_context = context
+            if runtime_build_context_resolver is not None:
+                runtime_context = runtime_build_context_resolver(
+                    float(action.time_seconds),
+                    int(action.sequence),
+                )
+                if not runtime_context.resolved or runtime_context.context is None:
+                    messages = runtime_context.unresolved or (
+                        "exact runtime build context is unresolved",
+                    )
+                    unresolved.extend(
+                        f"{action.name} at {action.time_seconds:g}s: runtime context: {message}"
+                        for message in messages
+                    )
+                    continue
+                scheduled_bar = str(action.bar or "").strip().casefold()
+                if scheduled_bar in {"front", "back"} and runtime_context.active_bar != scheduled_bar:
+                    unresolved.append(
+                        f"{action.name} at {action.time_seconds:g}s: scheduled {scheduled_bar} bar "
+                        f"does not match runtime active {runtime_context.active_bar} bar"
+                    )
+                    continue
+                action_context = runtime_context.context
+            elif bar_contexts is not None and action.bar is not None:
+                bar = str(action.bar or "").strip().casefold()
+                if bar in {"front", "back"}:
+                    action_context = bar_contexts.get(bar)
+                    if action_context is None:
+                        unresolved.append(
+                            f"{action.name} at {action.time_seconds:g}s: "
+                            f"static build context unavailable for {bar} bar"
+                        )
+                        continue
 
             result = self.tooltip_service.evaluate_entity_id(
                 build=build,
