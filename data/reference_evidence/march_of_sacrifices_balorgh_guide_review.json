@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "content_id": "march_of_sacrifices",
+  "encounter_id": "balorgh",
+  "encounter_name": "Balorgh",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"combat","value":{"order":1,"label":"Balorgh Combat","threshold":"active combat","description":"Handle Balorgh's elemental arena pressure and add control while preserving safe movement space."},"source_type":"guide","source_name":"March of Sacrifices community guide","source_locator":"Balorgh","game_update":"U19","confidence":"high"},
+    {"fact_type":"phase","fact_key":"hunt","value":{"order":2,"label":"Hunt / Trap Phase","threshold":"hunt transition","description":"Stay together through the hunt, clear wolves and stranglers, and use Tharas' traps deliberately."},"source_type":"guide","source_name":"Retro Rebellion March of Sacrifices Boss Mechanics","source_locator":"Balorgh Hard Mode","game_update":"U19","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"lightning_water","value":{"name":"Lightning Water","response":"move_to_safe_island_when_water_is_electrified"},"source_type":"achievement","source_name":"Element of Surprise","source_locator":"March of Sacrifices achievement","game_update":"U19","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"poison_plants","value":{"name":"Poison Plants","response":"move_into_water_during_spore_pressure_and_avoid_poison_plant_zones"},"source_type":"achievement","source_name":"Element of Surprise","source_locator":"March of Sacrifices achievement","game_update":"U19","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"fire_remnant","value":{"name":"Fire Remnant","response":"avoid_fire_remnant_pathing_during_hard_mode"},"source_type":"achievement","source_name":"Perfect Hunt","source_locator":"March of Sacrifices achievement","game_update":"U19","confidence":"high"}
+  ]
+}
