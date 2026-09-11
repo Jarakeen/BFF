@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "encounters": [
+    {"content_id":"naj_caldeesh","content_name":"Naj-Caldeesh","release_year":2025,"release_update":47,"release_pack":"Feast of Shadows","encounter_id":"poxito","display_name":"Poxito","member_ids":["poxito"]},
+    {"content_id":"naj_caldeesh","content_name":"Naj-Caldeesh","release_year":2025,"release_update":47,"release_pack":"Feast of Shadows","encounter_id":"voskrona_stonehulk_poxito","display_name":"Voskrona Stonehulk Poxito","member_ids":["voskrona_stonehulk_poxito"]},
+    {"content_id":"naj_caldeesh","content_name":"Naj-Caldeesh","release_year":2025,"release_update":47,"release_pack":"Feast of Shadows","encounter_id":"talen_lah","display_name":"Talen-Lah and Bar-Sakka","member_ids":["talen_lah","bar_sakka"]},
+    {"content_id":"black_gem_foundry","content_name":"Black Gem Foundry","release_year":2025,"release_update":47,"release_pack":"Feast of Shadows","encounter_id":"quarrymaster_saldezaar","display_name":"Quarrymaster Saldezaar","member_ids":["quarrymaster_saldezaar"]},
+    {"content_id":"black_gem_foundry","content_name":"Black Gem Foundry","release_year":2025,"release_update":47,"release_pack":"Feast of Shadows","encounter_id":"black_gem_monstrosity","display_name":"Black Gem Monstrosity","member_ids":["black_gem_monstrosity"]},
+    {"content_id":"black_gem_foundry","content_name":"Black Gem Foundry","release_year":2025,"release_update":47,"release_pack":"Feast of Shadows","encounter_id":"high_soulbinder_vykand","display_name":"High Soulbinder Vykand","member_ids":["high_soulbinder_vykand"]}
+  ]
+}
