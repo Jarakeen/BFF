@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "darkshade_caverns_ii",
+  "encounter_id": "the_engine_guardian",
+  "encounter_name": "The Engine Guardian",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"fire","value":{"order":1,"label":"Red Fire Phase","threshold":"red mode","description":"Stay mobile around fire attacks while maintaining damage on the Guardian."},"source_type":"guide","source_name":"Darkshade Caverns II community guide","source_locator":"Engine Guardian","game_update":"Launch","confidence":"high"},
+    {"fact_type":"phase","fact_key":"poison","value":{"order":2,"label":"Green Poison Phase","threshold":"green mode","description":"Stack for healing through the poison or use the room levers to shorten the phase."},"source_type":"guide","source_name":"Darkshade Caverns II community guide","source_locator":"Engine Guardian","game_update":"Launch","confidence":"high"},
+    {"fact_type":"phase","fact_key":"lightning","value":{"order":3,"label":"Blue Lightning Phase","threshold":"blue mode","description":"Move away from the Guardian, kill sphere adds, and avoid the close-range lightning field."},"source_type":"guide","source_name":"Darkshade Caverns II community guide","source_locator":"Engine Guardian","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"phase_colors","value":{"name":"Color-Coded Modes","response":"red_move_green_heal_or_use_levers_blue_disengage_and_kill_adds"},"source_type":"guide","source_name":"Darkshade Caverns II community guide","source_locator":"Engine Guardian","game_update":"Launch","confidence":"high"}
+  ]
+}
