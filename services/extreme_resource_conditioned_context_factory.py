@@ -120,24 +120,34 @@ class ExtremeResourceConditionedPhase5ContextFactory(Phase5BuildCalculationConte
         gear_condition_context: frozenset[str] | None = None,
         **kwargs,
     ):
+        previous = self._extreme_gear_condition_context
         self._extreme_gear_condition_context = gear_condition_context
         try:
             return super().build(**kwargs)
         finally:
-            self._extreme_gear_condition_context = None
+            self._extreme_gear_condition_context = previous
 
-    def resolved_gear_inputs_with_condition(
+    def gear_inputs_with_condition(
         self,
         build: PlayerBuild,
         *,
+        progression,
         active_bar: str,
+        combat_state,
+        incoming_attack,
         condition_context: frozenset[str] | None,
     ) -> GearCalculationInputs:
-        """Resolve canonical gear inputs for a reviewed Extreme condition snapshot."""
+        """Run the full canonical gear-input pipeline under one reviewed condition snapshot."""
         previous = self._extreme_gear_condition_context
         self._extreme_gear_condition_context = condition_context
         try:
-            return self._resolved_gear_inputs(build, active_bar=active_bar)
+            return self._gear_inputs(
+                build,
+                progression=progression,
+                active_bar=active_bar,
+                combat_state=combat_state,
+                incoming_attack=incoming_attack,
+            )
         finally:
             self._extreme_gear_condition_context = previous
 
