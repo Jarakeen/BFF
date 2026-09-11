@@ -37,6 +37,12 @@ class RotationCanonicalEvidenceBundle:
     Broad mechanics coverage may be retained for later CharacterBuild-specific
     dependency discovery. Explicitly scoped coverage gaps can still participate in
     immediate readiness when the caller already knows the required dependency keys.
+
+    ``restoration_resolver`` is now an optional explicit override. When omitted, the
+    effect-aware recovery pipeline derives Heavy Attack completion/restoration from
+    the generated plan's verified channel-reservation provenance and canonical saved-
+    character mechanics. Explicit resolvers remain available for reviewed research,
+    diagnostics, and compatibility callers.
     """
 
     encounter_id: str
@@ -50,7 +56,7 @@ class RotationCanonicalEvidenceBundle:
     resource: ResourceType
     maximum_amount: int
     trigger_fraction: float
-    restoration_resolver: VerifiedRecoveryHeavyRestorationResolver
+    restoration_resolver: VerifiedRecoveryHeavyRestorationResolver | None = None
     wait_decision_factory: RecoveryPressureWaitDecisionFactory | None = None
     reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None
     max_iterations: int = 6
@@ -110,7 +116,7 @@ class RotationCanonicalEvidenceBundleSupport:
         resource: ResourceType,
         maximum_amount: int,
         trigger_fraction: float,
-        restoration_resolver: VerifiedRecoveryHeavyRestorationResolver,
+        restoration_resolver: VerifiedRecoveryHeavyRestorationResolver | None = None,
         options: tuple[RotationRefreshLeadCandidateOption, ...] = (),
         requirements: tuple[RotationEffectUptimeRequirement, ...] = (),
         passives: tuple[PassiveGrant, ...] = (),
