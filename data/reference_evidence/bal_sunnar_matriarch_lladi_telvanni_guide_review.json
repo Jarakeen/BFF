@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "content_id": "bal_sunnar",
+  "encounter_id": "matriarch_lladi_telvanni",
+  "encounter_name": "Matriarch Lladi Telvanni",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main Phase / Peryite Pressure","threshold":"Pull to first poison storm","description":"Lladi cycles frontal vomit pressure, Peryite's Glory adds, and persistent group movement before the arena-wide poison checks."},"source_type":"guide","source_name":"ESO-Hub Bal Sunnar Dungeon Guide","source_locator":"Boss 3 - Matriarch Lladi Telvanni","game_update":"U37+","confidence":"high"},
+    {"fact_type":"phase","fact_key":"poison_storm_cycles","value":{"order":2,"label":"Poison Storm / Time Stop Cycles","threshold":"70%, 35%","description":"Arena-wide poison damage must be healed until the time-stop synergy appears; using it stuns the adds and creates the intended damage window."},"source_type":"guide","source_name":"ESO-Hub Bal Sunnar Dungeon Guide","source_locator":"Matriarch Lladi Telvanni > Poison Storm","game_update":"U37+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"vomit_cone","value":{"name":"Infectious Vomit Cone","response":"tank_faces_the_tracking_cone_away_from_group_and_holds_position","failure":"cone_can_disable_or_endanger_group_members_caught_in_front"},"source_type":"guide","source_name":"The Tank Club Bal Sunnar Guide","source_locator":"Matriarch Lladi Telvanni","game_update":"U37+","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"poison_storm","value":{"name":"Choking Pestilence / Poison Storm","response":"stack_for_reliable_healing_then_use_time_stop_synergy_when_available","hard_mode":"damage_is_higher_and_spawned_adds_are_invulnerable_until_time_stopped"},"source_type":"guide","source_name":"ESO-Hub Bal Sunnar Dungeon Guide","source_locator":"Matriarch Lladi Telvanni > Poison Storm / Hardmode","game_update":"U37+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"skeevers","value":{"name":"Hard Mode Skeevers","response":"targeted_player_kites_while_group_burns_or_controls_skeever","properties":"cannot_be_taunted_but_can_be_crowd_controlled"},"source_type":"guide","source_name":"ESO-Hub Bal Sunnar Dungeon Guide","source_locator":"Matriarch Lladi Telvanni > Hardmode Skeevers","game_update":"U37+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"challenge_banner_tuning","value":{"name":"Challenge Banner Tuning","response":"treat_choking_pestilence_as_a_major_healing_check","official_note":"ZOS reduced Choking Pestilence damage during U37 PTS tuning"},"source_type":"official_patch_notes","source_name":"ESO PTS Patch Notes v8.3.3","source_locator":"Dungeons > Bal Sunnar > Matriarch Lladi Telvanni","game_update":"U37","confidence":"high"}
+  ]
+}
