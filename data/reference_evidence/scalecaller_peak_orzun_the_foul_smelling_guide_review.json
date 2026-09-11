@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "scalecaller_peak",
+  "encounter_id": "orzun_the_foul_smelling",
+  "encounter_name": "Orzun the Foul-Smelling and Rinaerus the Rancid",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Twin Ogre Phase","threshold":"100% to 0%","description":"Keep the ogres separated enough to manage pressure while preserving ice-spike shelter mechanics and killing both near the same time."},"source_type":"guide","source_name":"Alcast Scalecaller Peak Guide","source_locator":"Orzun and Rinaerus","game_update":"U17","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"terrorizing_tremor","value":{"name":"Terrorizing Tremor","response":"use_ice_spikes_as_shelter_when_the_snowstorm_and_tremor_sequence_resolves"},"source_type":"achievement","source_name":"Tremor Trouble","source_locator":"Scalecaller Peak achievement","game_update":"U17","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"skeever_channel","value":{"name":"Skeever Summon Channel","response":"interrupt_rinaerus_channel_to_stop_add_spawns"},"source_type":"guide","source_name":"Alcast Scalecaller Peak Guide","source_locator":"Orzun and Rinaerus","game_update":"U17","confidence":"high"}
+  ]
+}
