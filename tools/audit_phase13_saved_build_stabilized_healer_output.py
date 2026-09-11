@@ -15,6 +15,9 @@ from minmax.rotation_demand_window import (
     RotationDemandPattern,
     RotationDemandWindow,
 )
+from services.extreme_runtime_snapshot_combat_state_service import (
+    ExtremeRuntimeSnapshotCombatStateService,
+)
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 from services.rotation_candidate_healer_role_output_service import (
     RotationCandidateHealerCanonicalDemandEvidenceProvider,
@@ -29,6 +32,9 @@ from services.rotation_healer_reviewed_runtime_evidence_loader import (
 from services.rotation_plan_runtime_build_context_service import (
     RotationPlanRuntimeBuildContextService,
 )
+from services.rotation_plan_runtime_combat_state_service import (
+    RotationPlanRuntimeCombatStateService,
+)
 from services.rotation_recovery_healer_role_output_service import (
     RotationRecoveryHealerRoleOutputService,
 )
@@ -42,6 +48,9 @@ from tools.audit_phase13_saved_build_recovery_heavy_rotation import (
     _character_name,
     _load_saved_build,
     build_verified_heavy_restore_resolver,
+)
+from tools.rotation_runtime_snapshot_fixture import (
+    load_rotation_runtime_snapshot_fixture,
 )
 from ui.rotation_generation_support import RotationGenerationRequest, RotationGenerationSupport
 
@@ -70,6 +79,12 @@ def _load_reviewed_periodic_observations(
         refresh_fixture_path=refresh_fixture_path,
     )
     return tuple(report.observations), tuple(report.unresolved)
+
+
+def _runtime_mode_label(runtime_snapshot_path: Path | None) -> str:
+    if runtime_snapshot_path is None:
+        return "STATIC FALLBACK; snapshot has no authoritative runtime history"
+    return "EXACT-TIME RUNTIME HISTORY; explicit fixture bound to final stabilized plan"
 
 
 def _print_healing_evidence(evidence) -> None:
@@ -145,6 +160,15 @@ def main() -> int:
         default=None,
         help="optional reviewed healer periodic refresh/recast policy fixture",
     )
+    parser.add_argument(
+        "--runtime-snapshot",
+        type=Path,
+        default=None,
+        help=(
+            "optional explicit authoritative runtime-history fixture; omitted preserves "
+            "the static fallback path without inventing runtime events"
+        ),
+    )
     args = parser.parse_args()
 
     duration = float(args.duration)
@@ -161,6 +185,9 @@ def main() -> int:
 
     builds_path = Path(args.builds)
     database_path = Path(args.database)
+    runtime_snapshot_path = (
+        None if args.runtime_snapshot is None else Path(args.runtime_snapshot)
+    )
     build = _load_saved_build(
         builds_path,
         character=args.character,
@@ -243,12 +270,53 @@ def main() -> int:
         runtime_build_context_service=runtime_build_context,
     )
 
+    runtime_combat_state_resolver = None
+    runtime_build_context_resolver = None
+    if runtime_snapshot_path is not None:
+        runtime_snapshot = load_rotation_runtime_snapshot_fixture(runtime_snapshot_path)
+        progression = static_service.progression_adapter.resolve(build)
+        if not progression.resolved:
+            detail = "; ".join(progression.unresolved) or "progression is unresolved"
+            raise RuntimeError(
+                "runtime-bound stabilized healer-output audit requires canonical progression: "
+                + detail
+            )
+        plan_runtime_state = RotationPlanRuntimeCombatStateService(
+            runtime_snapshot_state=ExtremeRuntimeSnapshotCombatStateService(database_path)
+        )
+
+        def runtime_combat_state_resolver(
+            time_seconds: float,
+            sequence: int | None = None,
+        ):
+            return plan_runtime_state.resolve(
+                build,
+                progression=progression.progression,
+                plan=stabilization.plan,
+                runtime_snapshot_source=runtime_snapshot,
+                time_seconds=time_seconds,
+                sequence=sequence,
+                initial_bar="front",
+                base_combat_state=front_context.combat_state,
+            )
+
+        def runtime_build_context_resolver(
+            time_seconds: float,
+            sequence: int | None = None,
+        ):
+            return runtime_build_context.resolve(
+                build,
+                runtime_combat_state_resolver=runtime_combat_state_resolver,
+                time_seconds=time_seconds,
+                sequence=sequence,
+            )
+
     snapshot = RecoveryHeavyStabilizedCandidateSnapshot(
         candidate_id="saved-build-stabilized",
         plan=stabilization.plan,
         replay=stabilization.replay,
         stabilization=stabilization,
-        runtime_combat_state_resolver=None,
+        runtime_combat_state_resolver=runtime_combat_state_resolver,
     )
     final_role_output = stabilized_role_output.evaluate_snapshot(snapshot)
 
@@ -258,10 +326,13 @@ def main() -> int:
         refresh_leads=(),
         action_claims=(),
     )
-    detailed_evidence = demand_provider.evaluate_demand(
-        candidate=detailed_candidate,
-        demand=demand,
-    )
+    detailed_kwargs = {
+        "candidate": detailed_candidate,
+        "demand": demand,
+    }
+    if runtime_build_context_resolver is not None:
+        detailed_kwargs["runtime_build_context_resolver"] = runtime_build_context_resolver
+    detailed_evidence = demand_provider.evaluate_demand(**detailed_kwargs)
 
     print("=" * 100)
     print(" PHASE 13 SAVED-BUILD STABILIZED HEALER OUTPUT AUDIT")
@@ -277,7 +348,7 @@ def main() -> int:
     print(f"Restore bar:         {args.restore_bar or 'any scheduled heavy'}")
     print(f"Stabilization:       {'CONVERGED' if stabilization.converged else 'NOT CONVERGED'}")
     print(f"Iterations:          {len(stabilization.iterations)}")
-    print("Runtime evaluation:  STATIC FALLBACK; snapshot has no authoritative runtime history")
+    print(f"Runtime evaluation:  {_runtime_mode_label(runtime_snapshot_path)}")
     print(
         "Output unit:         modeled pre-recipient, pre-overheal healing per second over "
         "the full audit window"
@@ -320,7 +391,10 @@ def main() -> int:
     print("----------")
     print("- The audited plan is the exact final recovery-stabilized plan, not the seed schedule.")
     print("- Heavy restore amount remains caller-verified because live base restoration is not canonicalized.")
-    print("- No runtime CombatState history is fabricated; this invocation intentionally exercises static fallback.")
+    if runtime_snapshot_path is None:
+        print("- No runtime CombatState history is fabricated; this invocation intentionally exercises static fallback.")
+    else:
+        print("- Runtime CombatState comes only from the explicit authoritative runtime-history fixture supplied by the caller.")
     print("- Missing periodic, delayed, channel, or conditional healing evidence remains explicit and fail-closed.")
     print("- Modeled healing is not recipient assignment, overheal, observed HPS, or an encounter survival threshold.")
 
