@@ -3,23 +3,30 @@ from __future__ import annotations
 """Proof-reduced runtime witnesses for reviewed Extreme Max Health passives.
 
 This service owns legality/state selection only. It does not perform resource math.
-The reviewed Max Health runtime branches are mutually exclusive under current U50
-class rules:
+Reviewed Max Health runtime witnesses may stack when ESO legality permits it:
 
 * Expert Summoner's +5% Max Health requires a legal route carrying Daedric Summoning
   and an explicitly active permanent pet.
+* Maturation grants Minor Toughness to a healed target after a qualifying Green
+  Balance heal. A legal route carrying Green Balance can therefore self-provide the
+  named Max Health buff, including on subclass routes that also carry Daedric Summoning.
 * Nothing Wasted's +20% Max Health maximum requires pure Necromancer Class Mastery
   and the reviewed 10-stack Corpse Consumption state.
 
-Subclass routes cannot select Class Mastery, so no legal candidate can combine both
-branches. The service therefore returns one strongest reviewed runtime continuation
-per legal class route, plus explicit denominator evidence.
+Subclass routes cannot select Class Mastery, so Nothing Wasted remains mutually
+exclusive with subclass-only combinations. Maturation and Expert Summoner are not
+mutually exclusive and are represented together when the selected route supports
+both. Shared named-buff and canonical passive services continue to own the actual
+resource arithmetic.
 """
 
 from dataclasses import dataclass
 from pathlib import Path
 
 from minmax.character_build.character_class import CharacterClass
+from minmax.combat_effect_semantics import GameUpdate
+from minmax.named_combat_buffs import effects_for_buff
+from minmax.stat_ids import StatId
 from models.build_model import PlayerBuild
 from services.class_mastery_extreme_effect_service import ClassMasteryExtremeEffectService
 from services.class_mastery_repository import ClassMasteryPassive, ClassMasteryRepository
@@ -36,6 +43,7 @@ from services.extreme_sorcerer_expert_summoner_pet_context_service import (
 class ExtremeResourceMaxHealthRuntimeState:
     label: str
     permanent_pet_active: bool = False
+    maturation_minor_toughness_active: bool = False
     nothing_wasted_stacks: int = 0
     class_mastery_ability_ids: tuple[int, ...] = ()
     reviewed_percent_bonus: float = 0.0
@@ -46,6 +54,7 @@ class ExtremeResourceMaxHealthRuntimeState:
         return (
             self.label,
             self.permanent_pet_active,
+            self.maturation_minor_toughness_active,
             self.nothing_wasted_stacks,
             self.class_mastery_ability_ids,
             self.reviewed_percent_bonus,
@@ -64,6 +73,8 @@ class ExtremeResourceMaxHealthRuntimeStateService:
 
     NOTHING_WASTED = "Nothing Wasted"
     DAEDRIC_SUMMONING = "daedric_summoning"
+    GREEN_BALANCE = "green_balance"
+    MATURATION_BUFF = "Minor Toughness"
     MAX_NOTHING_WASTED_STACKS = 10
 
     def __init__(
@@ -85,6 +96,17 @@ class ExtremeResourceMaxHealthRuntimeStateService:
             canonical_class_skill_line_id(line)
             for line in route.equipped_skill_lines
         )
+
+    @classmethod
+    def _maturation_percent(cls) -> float:
+        rows = tuple(
+            effect
+            for effect in effects_for_buff(cls.MATURATION_BUFF, game_update=GameUpdate.U50)
+            if effect.stat is StatId.MAX_HEALTH and effect.bucket == "resource_percent"
+        )
+        if len(rows) != 1 or float(rows[0].value) <= 0.0:
+            raise ValueError("Canonical Minor Toughness Max Health effect is unavailable")
+        return float(rows[0].value)
 
     def _nothing_wasted(self) -> tuple[ClassMasteryPassive | None, tuple[str, ...]]:
         rows = tuple(
@@ -117,13 +139,26 @@ class ExtremeResourceMaxHealthRuntimeStateService:
         route: ExtremeHealClassRoute,
     ) -> ExtremeResourceMaxHealthRuntimeStateCatalog:
         lines = self._route_lines(route)
+        maturation_active = self.GREEN_BALANCE in lines
+        maturation_percent = self._maturation_percent() if maturation_active else 0.0
+        maturation_conditions = (
+            (
+                "Heal yourself with a Green Balance ability so Maturation grants "
+                "Minor Toughness during the scored snapshot."
+            ),
+        ) if maturation_active else ()
 
         if self.DAEDRIC_SUMMONING in lines:
+            expert_percent = ExtremeSorcererExpertSummonerPetContextService.MAX_HEALTH_PERCENT
+            label = "Expert Summoner permanent pet"
+            if maturation_active:
+                label += " + Maturation Minor Toughness"
             state = ExtremeResourceMaxHealthRuntimeState(
-                label="Expert Summoner permanent pet",
+                label=label,
                 permanent_pet_active=True,
-                reviewed_percent_bonus=ExtremeSorcererExpertSummonerPetContextService.MAX_HEALTH_PERCENT,
-                conditions=("Permanent pet is active.",),
+                maturation_minor_toughness_active=maturation_active,
+                reviewed_percent_bonus=float(expert_percent) + maturation_percent,
+                conditions=("Permanent pet is active.", *maturation_conditions),
             )
             return ExtremeResourceMaxHealthRuntimeStateCatalog(
                 states=(state,),
@@ -155,6 +190,19 @@ class ExtremeResourceMaxHealthRuntimeStateService:
             )
             return ExtremeResourceMaxHealthRuntimeStateCatalog(
                 states=(state,),
+                denominator_proven=True,
+            )
+
+        if maturation_active:
+            return ExtremeResourceMaxHealthRuntimeStateCatalog(
+                states=(
+                    ExtremeResourceMaxHealthRuntimeState(
+                        label="Maturation Minor Toughness",
+                        maturation_minor_toughness_active=True,
+                        reviewed_percent_bonus=maturation_percent,
+                        conditions=maturation_conditions,
+                    ),
+                ),
                 denominator_proven=True,
             )
 
