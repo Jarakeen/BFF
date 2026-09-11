@@ -207,6 +207,15 @@ https://www.youtube.com/@FaceheadMcGee
 
 **Notes:** Treat footage as observed player practice. It is particularly useful for checking what a mechanic looks like and how a successful group handles space, movement, stack positions, and role assignments. Pair exact mechanic claims with primary or reviewed textual evidence.
 
+### Temfoolery
+https://www.youtube.com/@Temfoolery
+
+**Use for:** ESO dungeon and trial strategy videos, mechanic demonstrations, positioning, role execution, and organized-group gameplay examples that can help corroborate Encounter-page strategy research.
+
+**Confidence:** Validation / gameplay-practice corroboration.
+
+**Notes:** Use encounter-specific videos as observed player practice, especially when researching Veteran/Hard Mode execution and spatial handling. Record the video date/update and corroborate exact timings, target counts, damage properties, and other patch-sensitive mechanics against official notes, UESP/client data, or logs before promoting them to shared mechanics truth.
+
 ### Game-Maps.com ESO maps and walkthroughs
 https://game-maps.com/ESO/The-Elder-Scrolls-Online.asp
 
