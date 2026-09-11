@@ -1,3 +1,4 @@
+from dataclasses import replace
 from types import SimpleNamespace
 
 from models.build_model import PlayerBuild
@@ -21,6 +22,17 @@ class _ProgressionService:
         return progression
 
 
+class _RacialProgressionService:
+    def normalize(self, progression, race):
+        ranks = dict(progression.passive_ranks or {})
+        ranks["Syrabane's Boon"] = 3
+        return replace(
+            progression,
+            owned_skill_lines=tuple(dict.fromkeys((*progression.owned_skill_lines, "High Elf Skills"))),
+            passive_ranks=ranks,
+        )
+
+
 class _Optimizer:
     def __init__(self):
         self.last_build = None
@@ -32,6 +44,20 @@ class _Optimizer:
         self.last_build = build
         return 1234.0, ()
 
+    def _objective_value(self, context, objective):
+        return context.value
+
+
+class _ContextFactory:
+    def __init__(self):
+        self.last_progression = None
+        self.last_build = None
+
+    def build(self, *, build, progression, **kwargs):
+        self.last_build = build
+        self.last_progression = progression
+        return SimpleNamespace(value=4321.0, unresolved_gear_effects=())
+
 
 class _NamedGearEvaluator:
     def __init__(self):
@@ -40,17 +66,19 @@ class _NamedGearEvaluator:
 
     def evaluate_candidate(self, objective_key, candidate, **kwargs):
         build = PlayerBuild()
+        build.Race = candidate.race
         build.Armor["Head"]["Set"] = "Set A"
         build.Armor["Chest"]["Set"] = "Set B"
         return 100.0, {"build": build.to_dict(), "gear_set_names": ("Set A", "Set B")}, ()
 
 
-def _candidate():
+def _candidate(race="Nord"):
     return SimpleNamespace(
+        race=race,
         attributes=SimpleNamespace(health=64, magicka=0, stamina=0),
         class_route=SimpleNamespace(),
         active_bar="front",
-        identity=("Nord", "Dragonknight", (), 64, 0, 0, "front"),
+        identity=(race, "Dragonknight", (), 64, 0, 0, "front"),
     )
 
 
@@ -111,6 +139,29 @@ def test_combined_evaluator_preserves_sets_and_scores_materialized_resource_armo
     assert payload["armor_infused_count"] == 1
     assert payload["armor_divines_count"] == 6
     assert payload["armor_reviewed_glyph_delta"] == 700.0
+
+
+def test_resource_evaluator_applies_hypothetical_racial_progression_to_canonical_context():
+    named = _NamedGearEvaluator()
+    context_factory = _ContextFactory()
+    evaluator = ExtremeNamedGearResourceArmorCanonicalStatEvaluator(
+        evaluator=named,
+        armor_state=_state("max_magicka"),
+        racial_progression_service=_RacialProgressionService(),
+        context_factory=context_factory,
+    )
+
+    value, payload, unresolved = evaluator.evaluate_candidate(
+        "max_magicka",
+        _candidate("High Elf"),
+    )
+
+    assert value == 4321.0
+    assert unresolved == ()
+    assert context_factory.last_build.Race == "High Elf"
+    assert context_factory.last_progression.passive_rank("Syrabane's Boon") == 3
+    assert context_factory.last_progression.owns_skill_line("High Elf Skills") is True
+    assert payload["racial_progression_applied"] is True
 
 
 def test_objective_mismatch_fails_closed():
