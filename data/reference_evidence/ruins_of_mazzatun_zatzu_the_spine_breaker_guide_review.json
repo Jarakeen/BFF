@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "ruins_of_mazzatun",
+  "encounter_id": "zatzu_the_spine_breaker",
+  "encounter_name": "Zatzu the Spine-Breaker",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Block repeated rock throws, avoid Zatzu's landing marker, and maintain clean positioning through the arena."},"source_type":"guide","source_name":"Kattatonia Ruins of Mazzatun Boss Mechanics","source_locator":"Zatzu","game_update":"U11","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"rock_throw","value":{"name":"Rock Throw","response":"block_the_rock_to_avoid_heavy_damage_and_knockdown"},"source_type":"guide","source_name":"Kattatonia Ruins of Mazzatun Boss Mechanics","source_locator":"Zatzu","game_update":"U11","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"jump","value":{"name":"Leaping Impact","response":"move_out_of_the_telegraphed_landing_area_before_zatzu_hits"},"source_type":"guide","source_name":"Kattatonia Ruins of Mazzatun Boss Mechanics","source_locator":"Zatzu","game_update":"U11","confidence":"high"}
+  ]
+}
