@@ -15,17 +15,22 @@ Usage:
 """
 
 import argparse
-from collections import Counter
+from collections import Counter, defaultdict
 import json
 from pathlib import Path
 from typing import Any, Iterable
 
 
 DEFAULT_PATH = Path("research/raw/lokkestiiz_corpus.json")
+_ROLE_KEYS = (("tanks", "Tank"), ("healers", "Healer"), ("dps", "DPS"))
 
 
 def _number(value: Any) -> float | None:
     return float(value) if isinstance(value, (int, float)) else None
+
+
+def _int_or_none(value: Any) -> int | None:
+    return int(value) if isinstance(value, (int, float)) else None
 
 
 def _duration_seconds(metadata: dict[str, Any]) -> float | None:
@@ -81,6 +86,124 @@ def _fight_label(metadata: dict[str, Any]) -> str:
     return str(name) if name else "Lokkestiiz"
 
 
+def _normalize_player_details(value: Any) -> dict[str, Any]:
+    """Accept the direct or lightly wrapped playerDetails shapes seen in ESO Logs."""
+    current = value
+    for key in ("data", "playerDetails"):
+        if isinstance(current, dict) and key in current and isinstance(current[key], dict):
+            current = current[key]
+    return current if isinstance(current, dict) else {}
+
+
+def _role_roster(fight: dict[str, Any]) -> dict[int, tuple[str, str, str]]:
+    details = _normalize_player_details(fight.get("player_details"))
+    roster: dict[int, tuple[str, str, str]] = {}
+    for key, role in _ROLE_KEYS:
+        actors = details.get(key)
+        if not isinstance(actors, list):
+            continue
+        for actor in actors:
+            if not isinstance(actor, dict):
+                continue
+            actor_id = _int_or_none(actor.get("id"))
+            if actor_id is None:
+                continue
+            name = str(actor.get("name") or f"Anonymous {actor_id}").strip()
+            class_name = str(actor.get("type") or actor.get("class") or "").strip()
+            roster[actor_id] = (role, name, class_name)
+    return roster
+
+
+def _amount(event: dict[str, Any]) -> float:
+    value = _number(event.get("amount"))
+    return max(0.0, value or 0.0)
+
+
+def _role_observations(
+    events: list[dict[str, Any]],
+    roster: dict[int, tuple[str, str, str]],
+    *,
+    top_abilities: int = 8,
+) -> list[str]:
+    actor_ids_by_role: dict[str, set[int]] = defaultdict(set)
+    for actor_id, (role, _name, _class_name) in roster.items():
+        actor_ids_by_role[role].add(actor_id)
+
+    lines: list[str] = []
+    for role in ("Tank", "Healer", "DPS"):
+        actor_ids = actor_ids_by_role.get(role, set())
+        if not actor_ids:
+            lines.append(f"{role}: no actors resolved from player_details")
+            continue
+
+        outgoing_damage = 0.0
+        outgoing_healing = 0.0
+        incoming_damage = 0.0
+        casts = 0
+        deaths = 0
+        resurrects = 0
+        ability_counts: Counter[tuple[int | None, str | None]] = Counter()
+
+        for event in events:
+            event_type = str(event.get("type") or "").casefold()
+            source_id = _int_or_none(event.get("sourceID"))
+            target_id = _int_or_none(event.get("targetID"))
+
+            if source_id in actor_ids:
+                if event_type == "damage":
+                    outgoing_damage += _amount(event)
+                elif event_type == "heal":
+                    outgoing_healing += _amount(event)
+                elif event_type in {"begincast", "cast"}:
+                    casts += 1
+
+                ability_id = _int_or_none(event.get("abilityGameID"))
+                ability_name = _ability_name(event)
+                if ability_id is not None or ability_name is not None:
+                    ability_counts[(ability_id, ability_name)] += 1
+
+            if target_id in actor_ids:
+                if event_type == "damage":
+                    incoming_damage += _amount(event)
+                elif event_type == "death":
+                    deaths += 1
+                elif event_type == "resurrect":
+                    resurrects += 1
+
+        lines.append(
+            f"{role}: actors={len(actor_ids)} | incoming_damage={incoming_damage:,.0f} | "
+            f"outgoing_damage={outgoing_damage:,.0f} | outgoing_healing={outgoing_healing:,.0f} | "
+            f"casts={casts:,} | deaths={deaths} | resurrects={resurrects}"
+        )
+        if ability_counts:
+            compact = "; ".join(
+                f"{name or ability_id} ({count:,})"
+                for (ability_id, name), count in ability_counts.most_common(top_abilities)
+            )
+            lines.append(f"  top observed source abilities: {compact}")
+    return lines
+
+
+def _roster_lines(roster: dict[int, tuple[str, str, str]]) -> list[str]:
+    lines: list[str] = []
+    for role in ("Tank", "DPS", "Healer"):
+        actors = [
+            (actor_id, name, class_name)
+            for actor_id, (actor_role, name, class_name) in roster.items()
+            if actor_role == role
+        ]
+        actors.sort(key=lambda row: row[0])
+        if not actors:
+            lines.append(f"{role}: <none resolved>")
+            continue
+        rendered = ", ".join(
+            f"{name}{f' [{class_name}]' if class_name else ''} (id={actor_id})"
+            for actor_id, name, class_name in actors
+        )
+        lines.append(f"{role}: {rendered}")
+    return lines
+
+
 def build_summary(payload: dict[str, Any], *, top_abilities: int) -> str:
     rows = tuple(_fight_rows(payload))
     lines: list[str] = []
@@ -120,6 +243,12 @@ def build_summary(payload: dict[str, Any], *, top_abilities: int) -> str:
             f"kill={kill} | difficulty={difficulty} | duration={_format_duration(duration)} | "
             f"events={len(events):,} declared={declared} | bossPercentage={boss_pct}"
         )
+
+        roster = _role_roster(fight)
+        lines.append("  ROLE ROSTER")
+        lines.extend(f"    {row}" for row in _roster_lines(roster))
+        lines.append("  ROLE OBSERVATIONS")
+        lines.extend(f"    {row}" for row in _role_observations(events, roster))
 
     lines.append("")
     lines.append("CORPUS TOTALS")
@@ -179,7 +308,8 @@ def build_summary(payload: dict[str, Any], *, top_abilities: int) -> str:
         lines.append(f"{label:30} {'available' if present else 'not seen'}" + (f" ({', '.join(present)})" if present else ""))
 
     lines.append("")
-    lines.append("NOTE: this output is observational only. It does not promote timing, ability IDs,")
+    lines.append("NOTE: role labels come from ESO Logs player_details for each fight.")
+    lines.append("This output is observational only. It does not promote timing, ability IDs,")
     lines.append("or player behavior into canonical mechanics. Human review remains required.")
     return "\n".join(lines)
 
