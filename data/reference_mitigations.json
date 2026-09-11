@@ -6,6 +6,30 @@
       "mitigation": "Get in the water and swim before it detonates. Blocking will not save you.",
       "source": "reviewed_encounter_evidence",
       "notes": "Rapid Deluge is survived by being in swimming state at detonation; official U34 patch history says it cannot be blocked."
+    },
+    {
+      "entry_name": "Crashing Wave — Tideborn Taleria",
+      "mitigation": "Dodge or block the tracked wave. Do not eat it unblocked.",
+      "source": "reviewed_encounter_evidence",
+      "notes": "Reviewed veteran evidence records dodge/block as valid responses and says an unblocked hit can be fatal."
+    },
+    {
+      "entry_name": "Maelstrom — Tideborn Taleria",
+      "mitigation": "Stay in healing and heal through the six-second ramping damage window.",
+      "source": "reviewed_encounter_evidence",
+      "notes": "Reviewed veteran evidence records a six-second duration, ramping damage, and an explicit heal check."
+    },
+    {
+      "entry_name": "Destructive Ember — Lylanar and Turlassil",
+      "mitigation": "Use the opposite-element dome on the enemy and keep the fire and ice domes from touching.",
+      "source": "reviewed_encounter_evidence",
+      "notes": "Reviewed dome evidence requires opposite-element protection and records an overload when opposing domes touch."
+    },
+    {
+      "entry_name": "Piercing Hailstone — Lylanar and Turlassil",
+      "mitigation": "Use the opposite-element dome on the enemy and keep the fire and ice domes from touching.",
+      "source": "reviewed_encounter_evidence",
+      "notes": "Reviewed dome evidence requires opposite-element protection and records an overload when opposing domes touch."
     }
   ]
 }
