@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {
+      "entry_name": "Annihilation — Count Ryelaz and Zilyesset",
+      "mitigation": "Watch the mirror for the glowing platform and move there before Annihilation finishes so your side teleports across instead of wiping.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Reviewed Lucent Citadel guide evidence places the paired Annihilation cycle at roughly 60 seconds and requires the correct glowing mirror platform to swap sides."
+    },
+    {
+      "entry_name": "Rejuvenation — Count Ryelaz and Zilyesset",
+      "mitigation": "Balance boss health and kill them together. On Veteran and Hard Mode, finish the surviving boss within 10 seconds or the dead boss returns at 30% health.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Normal uses a 20-second rejuvenation window; Veteran and Hard Mode use 10 seconds."
+    },
+    {
+      "entry_name": "Gloomy Impact — Count Ryelaz and Zilyesset",
+      "mitigation": "Ryelaz side should spread for the meteors after his heavy. Do not stack the impact circles on each other.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Reviewed guide evidence ties Gloomy Impact meteors to Ryelaz's heavy attack and warns their damage can overlap."
+    },
+    {
+      "entry_name": "Color Change — Orphic Shattered Shard",
+      "mitigation": "Assign mirror players before pull. At 90%, 60%, 40%, and 15%, flip every required mirror before the channel finishes or Incandescent Destruction wipes the raid.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Mirror count grows from four to six to eight; Hard Mode retains the 15% Color Change."
+    },
+    {
+      "entry_name": "Shockwave — Orphic Shattered Shard",
+      "mitigation": "Main tank positions Orphic so Shockwave hits the active Fate Pillar. Block or dodge the expanding wave after the slam.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Fate Pillars can only be destroyed by Orphic's Shockwave."
+    },
+    {
+      "entry_name": "Fate Sealer — Orphic Shattered Shard",
+      "mitigation": "Do not let Fate Sealer finish. Bring Orphic to the pillar and use the boss's Shockwave to destroy it before the beams kill the group.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Reviewed guide evidence identifies an unfinished Fate Sealer as lethal."
+    },
+    {
+      "entry_name": "Shard Volley — Orphic Shattered Shard",
+      "mitigation": "Farthest players should place the shard drops away from the stack and move out of the persistent crystal ground hazards.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Official U42 patch notes correct Volley to Magic damage; guide evidence says it prefers distant players and leaves dangerous crystal areas."
+    },
+    {
+      "entry_name": "Xoryn Thunder Thrall — Orphic Shattered Shard",
+      "mitigation": "Off-tank keeps Xoryn away from the stack while the assigned healer controls the furthest-player jump location. Do not let Thunder Thrall land in the group.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Reviewed guide evidence describes a common off-tank plus healer assignment for Xoryn during Orphic."
+    },
+    {
+      "entry_name": "Accelerating Charge — Xoryn",
+      "mitigation": "Tank swap after every Accelerating Charge. Weakening Charge lasts 20 seconds; taking the next charge while marked can be fatal.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Reviewed veteran/HM guide evidence requires alternating tanks after the channeled heavy."
+    },
+    {
+      "entry_name": "Chain Lightning — Xoryn",
+      "mitigation": "Keep blocking until Chain Lightning has actually reached you. In Hard Mode an unblocked hit can kill you even if the earlier jumps already happened.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Official U42 notes say a cast no longer repeats the same target and does not arc to the Arcane Knot carrier."
+    },
+    {
+      "entry_name": "Fluctuating Current — Xoryn",
+      "mitigation": "Preassign a handoff order. In Hard Mode pass Current every 10–15 seconds and never return it to a player with the 90-second Overloaded Current debuff.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Official U42 notes increased damage when Current is held too long; reviewed guide evidence gives the 60-second HM duration and 90-second reuse lockout."
+    },
+    {
+      "entry_name": "Tempest Assault — Xoryn",
+      "mitigation": "Move to assigned mirror positions before the beams fire and make only small adjustments. Hard Mode targets all 12 players, so overlapping beams turns one mistake into several.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Reviewed guide evidence places Hard Mode Tempest Assault at roughly a 30-second cadence."
+    },
+    {
+      "entry_name": "Arcane Knot Fracture — Xoryn",
+      "mitigation": "Keep the Knot carrier close enough for healing, use a planned carrying order, and drop fracture away from the group without outranging support. Hard Mode gives less time to manage Knot and Fracture states.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Official U42 patch notes reduced Hard Mode Arcane Knot and Arcane Fracture durations and increased damage on already-fractured targets."
+    }
+  ]
+}
