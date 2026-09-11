@@ -9,7 +9,6 @@ mechanics.
 """
 
 from pathlib import Path
-from typing import Iterable
 
 from engine.config import get_data_dir
 from services.eso_database import EsoDatabase
@@ -136,6 +135,8 @@ def _skill_entry(row: dict) -> ReferenceEntry | None:
     if not name:
         return None
 
+    skill_line = _clean(row.get("skill_line"))
+    display_name = f"{name} — {skill_line}" if skill_line else name
     is_passive = bool(row.get("is_passive"))
     entry_type = "Passive" if is_passive else "Skill"
     source_scope = "Skills"
@@ -146,9 +147,10 @@ def _skill_entry(row: dict) -> ReferenceEntry | None:
     details: list[tuple[str, str]] = [
         ("Authority", "Canonical skill data"),
         ("Skill ID", _clean(row.get("id")) or "Not recorded"),
+        ("Current name", name),
     ]
     for item in (
-        _detail("Skill line", row.get("skill_line")),
+        _detail("Skill line", skill_line),
         _detail("Class", row.get("class_type")),
         _detail("Skill type", row.get("skill_type")),
         _detail("Target", row.get("target")),
@@ -173,7 +175,7 @@ def _skill_entry(row: dict) -> ReferenceEntry | None:
         dict.fromkeys(
             value
             for value in (
-                _clean(row.get("skill_line")),
+                skill_line,
                 _clean(row.get("class_type")),
             )
             if value
@@ -186,7 +188,7 @@ def _skill_entry(row: dict) -> ReferenceEntry | None:
         tags.append(_clean(row.get("class_type")).upper())
 
     return ReferenceEntry(
-        name=name,
+        name=display_name,
         entry_type=entry_type,
         source_scope=source_scope,
         tags=tuple(tags),
@@ -209,16 +211,12 @@ def build_skill_reference_entries(
     try:
         service = ReferenceDataService(database)
         entries = []
-        seen: set[tuple[str, str, str]] = set()
+        seen: set[tuple[str, str]] = set()
         for row in service.list_skills():
             entry = _skill_entry(row)
             if entry is None:
                 continue
-            key = (
-                entry.entry_type.casefold(),
-                entry.name.casefold(),
-                _clean(row.get("skill_line")).casefold(),
-            )
+            key = (entry.entry_type.casefold(), entry.name.casefold())
             if key in seen:
                 continue
             seen.add(key)
