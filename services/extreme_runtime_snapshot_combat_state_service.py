@@ -25,14 +25,19 @@ class ExtremeRuntimeSnapshotCombatStateResult:
 
 
 class ExtremeRuntimeSnapshotCombatStateService:
-    """Project one role-neutral Extreme runtime snapshot into CombatState.
+    """Project one role-neutral runtime snapshot into CombatState.
 
-    This is the shared E1 projection boundary for role objectives. Skill, gear,
-    potion, and externally supplied group-buff runtime evidence enter through the
-    snapshot's authoritative ordered runtime history. Existing callers that still
-    supply the legacy ``attempts`` / ``potion_elapsed_seconds`` fields are
-    normalized by the snapshot before they reach this service. Role-specific
-    healing, tanking, or damage modifiers layer on top afterward.
+    The class keeps its original Extreme-prefixed name for compatibility, but the
+    responsibility is intentionally shared. Skill, gear, potion, and externally
+    supplied group-buff runtime evidence enter through the snapshot's authoritative
+    ordered runtime history. Role-specific healing, tanking, damage, rotation, or
+    provider interpretation belongs above this projection boundary.
+
+    ``base_combat_state`` preserves explicit snapshot facts that the runtime history
+    does not own, including game-update semantics and Emperor state. Runtime-proven
+    named buffs are merged into that base state rather than replacing it. The older
+    ``base_active_buffs`` parameter remains a compatibility view and is merged after
+    the base state's own active buffs.
     """
 
     def __init__(
@@ -57,15 +62,18 @@ class ExtremeRuntimeSnapshotCombatStateService:
         progression: CharacterProgression,
         active_bar: str,
         snapshot: ExtremeRuntimeSnapshot,
+        base_combat_state: CombatState | None = None,
         base_active_buffs: tuple[str, ...] = (),
     ) -> ExtremeRuntimeSnapshotCombatStateResult:
-        active_buffs = [
+        base_state = base_combat_state or CombatState()
+        active_buffs = list(base_state.active_buffs)
+        active_buffs.extend(
             name
             for raw_name in base_active_buffs
             if (name := str(raw_name or "").strip())
-        ]
+        )
         unresolved: list[str] = []
-        in_combat = False
+        in_combat = bool(base_state.in_combat)
         attempts = snapshot.effect_attempts
 
         if attempts:
@@ -156,6 +164,10 @@ class ExtremeRuntimeSnapshotCombatStateService:
             combat_state=CombatState(
                 in_combat=in_combat,
                 active_buffs=tuple(dict.fromkeys(active_buffs)),
+                game_update=base_state.game_update,
+                is_emperor=base_state.is_emperor,
+                in_home_campaign=base_state.in_home_campaign,
+                emperor_home_keeps=base_state.emperor_home_keeps,
             ),
             unresolved=tuple(dict.fromkeys(message for message in unresolved if message)),
         )
