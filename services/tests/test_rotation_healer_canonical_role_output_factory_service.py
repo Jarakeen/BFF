@@ -17,6 +17,7 @@ from services.rotation_healer_demand_healing_evidence_service import (
     RotationHealerDemandHealingEvidence,
     RotationHealerExternalConditionalDemandAssumption,
 )
+from services.service_catalog import EvidenceClass, canonical_service_for
 
 
 _HEALING_DEMAND = RotationDemandWindow(
@@ -198,3 +199,16 @@ def test_factory_rejects_non_healing_demand_policy() -> None:
             build=PlayerBuild(Role="Healer"),
             demands=(damage,),
         )
+
+
+def test_factory_is_registered_as_shared_canonical_service() -> None:
+    descriptor = canonical_service_for(
+        "rotation_healer_canonical_role_output_composition"
+    )
+
+    assert descriptor is not None
+    assert descriptor.service_id == "rotation.healer.canonical_role_output_factory"
+    assert descriptor.evidence_class is EvidenceClass.MIXED
+    assert descriptor.roles == ("Healer",)
+    assert descriptor.encounter_aware is True
+    assert "caller policy" in descriptor.notes
