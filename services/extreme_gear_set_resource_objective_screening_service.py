@@ -10,18 +10,17 @@ Max Magicka, or Max Stamina.
 
 This service owns no stat math.  It only decides whether an *unmapped* bonus is
 safe to prune for one reviewed max-resource objective.  Screening is deliberately
-conservative:
+conservative but observes one important mechanics rule: scaling *from* a maximum
+resource is not the same thing as modifying that resource.
 
-* any sentence containing the target resource together with Max/Maximum remains a
-  blocker, including scaling/reference language;
+* direct increase/decrease/reduction language for the target maximum resource
+  remains a blocker;
+* scaling, restore, comparison, or target-Max-Health reference language alone does
+  not make a bonus relevant to the resource maximum;
 * reviewed global equipment-state mechanics remain blockers even when they do not
   name the target resource directly;
 * Max Health also treats Toughness references as potential resource modifiers;
 * only bonuses with none of those hazards are proven irrelevant.
-
-The narrow contract avoids silently converting unknown mechanics to zero while
-also avoiding the absurd requirement to model every unrelated damage proc before
-a max-resource denominator can close.
 """
 
 from dataclasses import dataclass
@@ -36,14 +35,17 @@ _RESOURCE_WORD_BY_OBJECTIVE = {
     "max_stamina": "stamina",
 }
 
-# These mechanics can change the legal/effective equipment search even without
-# directly naming the requested resource, so they must stay explicit until their
-# dedicated Extreme legality/runtime layer accounts for them.
 _GLOBAL_EQUIPMENT_HAZARDS = (
     "disable all other item set bonuses",
     "unable to swap between your primary and backup weapon sets",
     "two mundus stone boons",
 )
+
+_DIRECT_CHANGE_VERB = re.compile(
+    r"\b(?:increase(?:s|d|ing)?|reduce(?:s|d|ing)?|decrease(?:s|d|ing)?|adds?)\b",
+    re.IGNORECASE,
+)
+_MAXIMUM_WORD = re.compile(r"\bmax(?:imum)?\b", re.IGNORECASE)
 
 
 @dataclass(frozen=True)
@@ -58,7 +60,7 @@ class ExtremeGearSetResourceObjectiveScreeningResult:
     def blockers(self) -> tuple[str, ...]:
         rows: list[str] = []
         if self.target_resource_mentioned:
-            rows.append("target maximum resource is referenced")
+            rows.append("target maximum resource is directly modified")
         rows.extend(self.global_equipment_hazards)
         rows.extend(self.named_resource_hazards)
         return tuple(rows)
@@ -73,6 +75,32 @@ class ExtremeGearSetResourceObjectiveScreeningService:
         return " ".join(text.casefold().split())
 
     @classmethod
+    def _directly_modifies_target_resource(
+        cls,
+        text: str,
+        resource_word: str,
+    ) -> bool:
+        if not text:
+            return False
+
+        for sentence in re.split(r"(?<=[.!?])\s+|\n+", text):
+            if resource_word not in sentence:
+                continue
+            if not _MAXIMUM_WORD.search(sentence):
+                continue
+
+            # Direct mutation uses a change verb in the same sentence as the
+            # maximum-resource reference.  This catches list wording such as
+            # "increase your Maximum Health, Stamina, and Magicka by 1707" and
+            # inverse wording such as "your Max Magicka is increased by 3132".
+            # Pure scaling/reference wording has no such change verb and is safe
+            # to prune for a maximum-resource objective.
+            if _DIRECT_CHANGE_VERB.search(sentence):
+                return True
+
+        return False
+
+    @classmethod
     def review(
         cls,
         description: str,
@@ -84,17 +112,10 @@ class ExtremeGearSetResourceObjectiveScreeningService:
             raise KeyError(f"unreviewed Extreme gear resource screening objective: {objective_key!r}")
 
         text = cls._normalized(description)
-        target_resource_mentioned = False
-        if text:
-            # Sentence-level co-occurrence intentionally catches list wording such as
-            # "increase your Maximum Health, Stamina, and Magicka" where only the
-            # first resource repeats the word Maximum.
-            for sentence in re.split(r"(?<=[.!?])\s+|\n+", text):
-                if resource_word not in sentence:
-                    continue
-                if re.search(r"\bmax(?:imum)?\b", sentence):
-                    target_resource_mentioned = True
-                    break
+        target_resource_mentioned = cls._directly_modifies_target_resource(
+            text,
+            resource_word,
+        )
 
         global_hazards = tuple(
             phrase
