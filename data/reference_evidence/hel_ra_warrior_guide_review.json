@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "hel_ra_citadel",
+  "encounter_id": "the_warrior_celestial",
+  "encounter_name": "The Warrior",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main Phase","threshold":"Pull","description":"Tank the Warrior away from group while the raid handles Shehai projectiles, cleaves, adds, and hard-mode Stone Form mechanics."},"source_type":"guide","source_name":"Xynode Hel Ra Citadel Trial Guide","source_locator":"The Warrior","confidence":"medium"},
+    {"fact_type":"phase","fact_key":"execute_phase","value":{"order":2,"label":"Execute","threshold":"Low health","description":"Pressure increases late in the fight; maintain boss control and prioritize survival through overlapping Shehai and hard-mode mechanics."},"source_type":"guide","source_name":"Xynode Hel Ra Citadel Trial Guide","source_locator":"The Warrior execute","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"shehai_storm","value":{"name":"Shehai Storm","response":"spread_and_dodge_visible_projectiles_while_maintaining_boss_control"},"source_type":"guide + official_patch_notes","source_name":"Xynode Hel Ra Citadel Trial Guide; ESO Patch Notes v1.3.4","source_locator":"The Warrior / Shehai Storm","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"stone_form_hm","value":{"name":"Stone Form","hard_mode":true,"response":"use_destructive_outbreak_synergy_to_free_stone_formed_players"},"source_type":"official_patch_notes","source_name":"ESO PTS Patch Notes v1.4.1","source_locator":"Hel Ra Citadel difficult mode","confidence":"high"}
+  ]
+}
