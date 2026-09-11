@@ -88,6 +88,7 @@ class EncounterBossGuide:
     source_revision_id: str
     retrieved_at: str
     source_license: str
+    content_type: str = ""
 
 
 _REQUIRED_TABLES = {
@@ -268,7 +269,8 @@ class EncounterBossGuideService:
             encounter = connection.execute(
                 """
                 SELECT
-                    e.id, e.content_id, c.name AS content_name, e.name, e.summary,
+                    e.id, e.content_id, c.name AS content_name,
+                    c.content_type AS content_type, e.name, e.summary,
                     e.location, e.species, e.reaction, e.source_url,
                     e.source_page_title, e.source_revision_id, e.retrieved_at,
                     e.source_license
@@ -395,6 +397,7 @@ class EncounterBossGuideService:
                 source_revision_id=str(encounter["source_revision_id"] or ""),
                 retrieved_at=str(encounter["retrieved_at"] or ""),
                 source_license=str(encounter["source_license"] or ""),
+                content_type=str(encounter["content_type"] or ""),
             )
         finally:
             connection.close()
