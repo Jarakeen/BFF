@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {"entry_name":"Popcorn — Possessed Mantikora","mitigation":"Spread behind the boss. When targeted, kite backward through the first pops and avoid dragging them through the group; experienced players can dodge through the final pop to return."},
+    {"entry_name":"Stomp — Possessed Mantikora","mitigation":"Whole group blocks the stomp. Healers immediately stabilize the bleed and push affected players back to full health."},
+    {"entry_name":"Shards — Possessed Mantikora","mitigation":"Assigned ranged players stay furthest back, block the incoming shard, and place its poison area away from melee."},
+    {"entry_name":"Ground Pound — Stonebreaker","mitigation":"Everyone blocks the three-line pound, not just the tank. Keep the boss faced away and do not assume the lines stay only in front."},
+    {"entry_name":"Poison Ball — Stonebreaker","mitigation":"Dodge the projectile when possible. If afflicted, isolate until it expires because touching another player spreads the poison."},
+    {"entry_name":"Overcharger Waves — Stonebreaker","mitigation":"Kill each Overcharger wave immediately at 75%, 50%, and 25%; do not let the 1/2/3 spawn waves accumulate."},
+    {"entry_name":"Overcharger Priority — Ozara","mitigation":"Keep the Overcharger near the door and kill every spawn quickly. Do not let the add drift through the raid."},
+    {"entry_name":"Shaman Totem — Ozara","mitigation":"Kill the totem, not the Shaman. Killing the Shaman creates another totem and makes Overcharger control worse."},
+    {"entry_name":"Trapping Bolt — Ozara","mitigation":"Free pinned players immediately with the synergy. Prioritize tanks and healers first; up to four players can be pinned as the fight progresses."},
+    {"entry_name":"World Shaper — The Serpent","mitigation":"Hard Mode: stay stacked until the projectile physically leaves the boss's hand, then sprint out together and return after it lands. Moving early places it badly."},
+    {"entry_name":"Mantikora Adds — The Serpent","mitigation":"Expect Mantikoras after poison phases 2 and 4. Off-tank them away from the group or bring them in for a controlled burn, but always block their heavy/stomp mechanics."},
+    {"entry_name":"Magicka Bomb — The Serpent","mitigation":"Spend magicka aggressively before detonation and get the bar down to roughly 0-10%; failing to drain it is lethal."},
+    {"entry_name":"Pull Totem — The Serpent","mitigation":"Dodge during the pull to break it early; otherwise roll away from the totem to clear the heavy snare and return to stack."},
+    {"entry_name":"Poison Totem — The Serpent","mitigation":"Kill poison totems to reduce poison-phase pressure because they buff the Serpent's poison damage."}
+  ]
+}
