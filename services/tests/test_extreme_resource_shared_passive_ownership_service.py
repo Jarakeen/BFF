@@ -86,15 +86,15 @@ def test_shared_ownership_requires_exact_domain_line_and_name():
 
 
 def test_passive_denominator_moves_reviewed_shared_rows_to_static_irrelevant():
-    reviewed_names = (
-        "Combat Frenzy",
-        "Continuous Attack",
-        "Reach",
-        "Slayer",
-        "Undaunted Command",
-        "Magicka Aid",
-        "Fortress",
-        "Deflect Bolts",
+    reviewed_identities = (
+        "[alliance_war] Assault :: Combat Frenzy",
+        "[alliance_war] Assault :: Continuous Attack",
+        "[alliance_war] Assault :: Reach",
+        "[guild] Fighters Guild :: Slayer",
+        "[guild] Undaunted :: Undaunted Command",
+        "[alliance_war] Support :: Magicka Aid",
+        "[weapon] One Hand and Shield :: Fortress",
+        "[weapon] One Hand and Shield :: Deflect Bolts",
     )
     for objective in ("max_health", "max_magicka", "max_stamina"):
         audit = ExtremeResourcePassiveCoverageAuditService(
@@ -103,8 +103,8 @@ def test_passive_denominator_moves_reviewed_shared_rows_to_static_irrelevant():
         ).build(objective)
 
         assert audit.denominator_proven is True
-        for passive_name in reviewed_names:
-            assert any(passive_name in row for row in audit.static_irrelevant)
-            assert not any(passive_name in row for row in audit.context_required)
-            assert not any(passive_name in row for row in audit.unresolved)
-        assert any("Not One Hand and Shield :: Fortress" in row for row in audit.unresolved)
+        for identity in reviewed_identities:
+            assert identity in audit.static_irrelevant
+            assert identity not in audit.context_required
+            assert identity not in audit.unresolved
+        assert "[weapon] Not One Hand and Shield :: Fortress" in audit.unresolved
