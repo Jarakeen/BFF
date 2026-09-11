@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "content_id": "imperial_city_prison",
+  "encounter_id": "flesh_abomination_imperial_city_prison",
+  "encounter_name": "Flesh Abomination",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Tank the Abomination at the arena edge and preserve the center for movement-heavy mechanics."},"source_type":"guide","source_name":"Xynode Imperial City Prison Guide","source_locator":"Flesh Abomination","game_update":"U7","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"arena_control","value":{"name":"Arena Pressure","response":"keep_boss_to_edge_and_preserve_center_for_group_movement"},"source_type":"guide","source_name":"Xynode Imperial City Prison Guide","source_locator":"Flesh Abomination","game_update":"U7","confidence":"high"}
+  ]
+}
