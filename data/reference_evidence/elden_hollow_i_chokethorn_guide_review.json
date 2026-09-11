@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "elden_hollow_i",
+  "encounter_id": "chokethorn",
+  "encounter_name": "Chokethorn",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Stay close enough to avoid unnecessary vine pulls, keep Chokethorn facing away, and leave the expanding burst before it resolves."},"source_type":"guide","source_name":"Xynode Elden Hollow I Guide","source_locator":"Chokethorn","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"vine_pull","value":{"name":"Vine Pull","response":"stay_close_to_chokethorn_so_the_long_range_chain_pull_does_not_trigger"},"source_type":"guide","source_name":"Xynode Elden Hollow I Guide","source_locator":"Chokethorn","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"burst","value":{"name":"Burst","response":"move_out_of_the_large_expanding_aoe_then_return_close_after_it_resolves"},"source_type":"guide","source_name":"Xynode Elden Hollow I Guide","source_locator":"Chokethorn","game_update":"Launch","confidence":"high"}
+  ]
+}
