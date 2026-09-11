@@ -12,6 +12,10 @@ only snapshots that agree on that shared equipment. The resulting pair catalog i
 therefore a legality denominator, not another gear-stat implementation. Bar-local
 set activation remains owned by ``GearStatInputResolver`` through
 ``ExtremeDualBarGearStateService``.
+
+Backup equipment remains materialized even for one-bar builds such as Oakensoul.
+Bar *activation* legality is a separate rule, so a disabled backup weapon set does
+not disappear from the physical equipment model.
 """
 
 from dataclasses import dataclass
@@ -20,6 +24,7 @@ from services.extreme_dual_bar_gear_state_service import (
     ExtremeDualBarGearState,
     ExtremeDualBarGearStateService,
 )
+from services.extreme_gear_bar_access_service import ExtremeGearBarAccessService
 from services.extreme_named_gear_set_realization_service import (
     ExtremeNamedGearSetRealization,
 )
@@ -41,9 +46,13 @@ class ExtremeDualBarGearStateCatalog:
         bar = str(active_bar or "front").strip().casefold()
         if bar not in {"front", "back"}:
             raise ValueError(f"unsupported active bar for Extreme dual-bar gear catalog: {active_bar!r}")
-        rows = (state.front if bar == "front" else state.back for state in self.states)
+
         unique: dict[tuple[object, ...], ExtremeNamedGearSetRealization] = {}
-        for row in rows:
+        for state in self.states:
+            access = ExtremeGearBarAccessService.resolve(state)
+            if access.unresolved or not access.allows(bar):
+                continue
+            row = state.front if bar == "front" else state.back
             identity = ExtremeDualBarGearStateCatalogService.realization_identity(row)
             unique.setdefault(identity, row)
         return tuple(unique[key] for key in sorted(unique))
@@ -100,6 +109,10 @@ class ExtremeDualBarGearStateCatalogService:
                     errors = ExtremeDualBarGearStateService.validate(state)
                     if errors:
                         local_unresolved.extend(errors)
+                        continue
+                    access = ExtremeGearBarAccessService.resolve(state)
+                    if access.unresolved:
+                        local_unresolved.extend(access.unresolved)
                         continue
                     states.append(state)
 
