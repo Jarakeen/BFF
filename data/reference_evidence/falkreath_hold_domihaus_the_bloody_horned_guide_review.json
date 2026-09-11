@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "content_id": "falkreath_hold",
+  "encounter_id": "domihaus_the_bloody_horned",
+  "encounter_name": "Domihaus the Bloody-Horned",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to execute","description":"Coordinate corner positioning, pillar shelter, slam/fireball movement, and elemental add waves while keeping taunt stable."},"source_type":"guide","source_name":"Xynode Falkreath Hold Guide","source_locator":"Domihaus the Bloody-Horned","game_update":"U15","confidence":"high"},
+    {"fact_type":"phase","fact_key":"shouts","value":{"order":2,"label":"Pillar Shouts","threshold":"70%, 50%, 30%, 10%, 5%","description":"Hide the whole group behind one pillar per shout so only one pillar is destroyed each time."},"source_type":"guide","source_name":"Xynode Falkreath Hold Guide","source_locator":"Domihaus the Bloody-Horned","game_update":"U15","confidence":"high"},
+    {"fact_type":"phase","fact_key":"execute","value":{"order":3,"label":"Shielded Execute","threshold":"very low health","description":"Domihaus gains recurring shields while adds and prior mechanics continue; clear adds while maintaining passive boss damage."},"source_type":"guide","source_name":"Xynode Falkreath Hold Guide","source_locator":"Domihaus the Bloody-Horned","game_update":"U15","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"shout","value":{"name":"Domihaus Shout","response":"all_players_hide_behind_the_same_assigned_pillar"},"source_type":"achievement","source_name":"Column Caretaker","source_locator":"Falkreath Hold achievement","game_update":"U15","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"suck_and_melt","value":{"name":"Suck In and Melt","response":"spread_to_four_corners_then_backpedal_together_to_drop_personal_aoes_cleanly"},"source_type":"guide","source_name":"Xynode Falkreath Hold Guide","source_locator":"Domihaus the Bloody-Horned","game_update":"U15","confidence":"high"}
+  ]
+}
