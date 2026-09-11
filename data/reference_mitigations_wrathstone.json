@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {"entry_name":"Poison Breath — The Scavenging Maw","mitigation":"Tank faces the frontal cone away from the group and everyone avoids the lingering ground damage."},
+    {"entry_name":"Hunting Ambush — The Scavenging Maw","mitigation":"Stay together during the search phase and interrupt the Maw immediately when it pounces a player."},
+    {"entry_name":"Glaciation — The Weeping Woman","mitigation":"Watch the floor, move out of ice and growing geysers, and preserve room to avoid overlapping hazards."},
+    {"entry_name":"Add Pressure — The Weeping Woman","mitigation":"Control or burn adds before their heavies and cumulative pressure overwhelm the tank or healer."},
+    {"entry_name":"Colored Orbs — Dark Orb","mitigation":"Switch from the central boss to the active outer orb, kill it, clean up Aurorans, then return to the Dark Orb."},
+    {"entry_name":"Auroran Adds — Dark Orb","mitigation":"Tank and stack Aurorans, face dangerous cones away from the group, and kill them before resuming boss damage."},
+    {"entry_name":"Narilmor Reflections — King Narilmor","mitigation":"Tank all copies while the group tests targets until the real Narilmor is identified and focused."},
+    {"entry_name":"Tharayya Deadlock — King Narilmor","mitigation":"Protect Tharayya and resolve the deadlock quickly so Quintus never wins the channel."},
+    {"entry_name":"Auroran Phalanx — Symphony of Blades","mitigation":"Handle the moving wall first and prevent the boss from crossing into Meridia's Light."},
+    {"entry_name":"Colored Orbs — Symphony of Blades","mitigation":"Prioritize the active color mechanic unless immediate phalanx positioning takes precedence."},
+    {"entry_name":"Stonewave — Icestalker","mitigation":"Tank faces Icestalker away so the frontal stone wave never crosses the group."},
+    {"entry_name":"Knock-up Follow-up — Icestalker","mitigation":"Interrupt immediately after the random player is knocked up to prevent the lethal follow-up."},
+    {"entry_name":"Fire Greatsword Spread — Warlord Tzogvin","mitigation":"Spread after the knockback so personal fire effects do not overlap."},
+    {"entry_name":"Frost Whirlwinds — Warlord Tzogvin","mitigation":"Avoid static whirlwinds and kite any tracking whirlwind away from teammates."},
+    {"entry_name":"Player Tether — Warlord Tzogvin","mitigation":"Tethered players move apart until the link breaks."},
+    {"entry_name":"Rotating Laser Beams — Vault Protector","mitigation":"Read the powered side of the frozen boss and rotate to the safe side before the laser sweeps."},
+    {"entry_name":"Dwemer Spider Adds — Vault Protector","mitigation":"Kill spiders before they empower ranged spheres and step clear of their death explosions."},
+    {"entry_name":"Glacial Prison Curse — Rizzuk Bonechill","mitigation":"Spread before the freeze detonations so player circles never overlap."},
+    {"entry_name":"Frost Bolt Channel — Rizzuk Bonechill","mitigation":"Interrupt the frost-bolt channel immediately."},
+    {"entry_name":"Avalanche Ice Ring — Rizzuk Bonechill","mitigation":"The tank remains inside Avalanche's ice-spike ring and absorbs the intended pressure."},
+    {"entry_name":"Rotary and Flame Gauntlets — The Stonekeeper","mitigation":"Destroy both arms first, handle the spawned Centurion, then commit damage to Stonekeeper."},
+    {"entry_name":"Skeevaton Protocol — The Stonekeeper","mitigation":"Charge Skeevaton ultimate, use role tools to survive traps, and disable all four Shock Conveyors."}
+  ]
+}
