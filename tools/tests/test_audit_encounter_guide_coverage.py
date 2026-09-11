@@ -14,14 +14,9 @@ from tools.audit_encounter_guide_coverage import (
 
 def test_coverage_row_prefers_canonical_timeline_when_present():
     row = EncounterGuideCoverageRow(
-        encounter_id="boss",
-        content_name="Trial",
-        encounter_name="Boss",
-        canonical_timeline_rows=3,
-        reviewed_timeline_rows=5,
-        strategy_rows=4,
+        encounter_id="boss", content_name="Trial", encounter_name="Boss",
+        canonical_timeline_rows=3, reviewed_timeline_rows=5, strategy_rows=4,
     )
-
     assert row.effective_timeline_source == "canonical"
     assert row.timeline_missing is False
     assert row.strategy_missing is False
@@ -29,14 +24,9 @@ def test_coverage_row_prefers_canonical_timeline_when_present():
 
 def test_coverage_row_uses_reviewed_fallback_when_canonical_timeline_is_missing():
     row = EncounterGuideCoverageRow(
-        encounter_id="boss",
-        content_name="Trial",
-        encounter_name="Boss",
-        canonical_timeline_rows=0,
-        reviewed_timeline_rows=2,
-        strategy_rows=1,
+        encounter_id="boss", content_name="Trial", encounter_name="Boss",
+        canonical_timeline_rows=0, reviewed_timeline_rows=2, strategy_rows=1,
     )
-
     assert row.effective_timeline_source == "reviewed_fallback"
     assert row.timeline_missing is False
     assert row.strategy_missing is False
@@ -44,14 +34,9 @@ def test_coverage_row_uses_reviewed_fallback_when_canonical_timeline_is_missing(
 
 def test_coverage_row_uses_reviewed_fallback_when_canonical_persistence_is_unavailable():
     row = EncounterGuideCoverageRow(
-        encounter_id="boss",
-        content_name="Dungeon",
-        encounter_name="Boss",
-        canonical_timeline_rows=None,
-        reviewed_timeline_rows=2,
-        strategy_rows=1,
+        encounter_id="boss", content_name="Dungeon", encounter_name="Boss",
+        canonical_timeline_rows=None, reviewed_timeline_rows=2, strategy_rows=1,
     )
-
     text = _line(row)
     assert row.effective_timeline_source == "reviewed_fallback"
     assert row.timeline_missing is False
@@ -65,12 +50,8 @@ def test_canonical_phase_count_marks_missing_database_unavailable(tmp_path: Path
 
 def test_coverage_row_reports_missing_timeline_and_strategy():
     row = EncounterGuideCoverageRow(
-        encounter_id="boss",
-        content_name="Trial",
-        encounter_name="Boss",
-        canonical_timeline_rows=0,
-        reviewed_timeline_rows=0,
-        strategy_rows=0,
+        encounter_id="boss", content_name="Trial", encounter_name="Boss",
+        canonical_timeline_rows=0, reviewed_timeline_rows=0, strategy_rows=0,
     )
     text = _line(row)
     assert row.timeline_missing is True
@@ -101,7 +82,6 @@ def test_audit_scope_flags_are_mutually_distinct():
     dungeon_args = _parse_args(["--dungeons"])
     trial_args = _parse_args(["--raw-trial-records"])
     all_args = _parse_args(["--all-content"])
-
     assert dungeon_args.dungeons is True
     assert dungeon_args.raw_trial_records is False
     assert dungeon_args.all_content is False
@@ -113,21 +93,23 @@ def test_audit_scope_flags_are_mutually_distinct():
     assert all_args.all_content is True
 
 
-def test_checked_in_dungeon_scope_is_newest_first_through_ascending_tide():
+def test_checked_in_dungeon_scope_is_newest_first_through_waking_flame():
     data_root = Path(__file__).resolve().parents[2] / "data"
     rows = build_coverage_rows(data_root, scope="dungeon")
 
-    assert len(rows) == 36
+    assert len(rows) == 42
     assert {(row.release_year, row.release_update) for row in rows} == {
-        (2025, 47), (2025, 45), (2024, 41), (2023, 37), (2022, 35), (2022, 33)
+        (2025, 47), (2025, 45), (2024, 41), (2023, 37),
+        (2022, 35), (2022, 33), (2021, 31),
     }
     assert (rows[0].release_year, rows[0].release_update) == (2025, 47)
-    assert (rows[-1].release_year, rows[-1].release_update) == (2022, 33)
+    assert (rows[-1].release_year, rows[-1].release_update) == (2021, 31)
 
     assert {row.content_name for row in rows} == {
         "Black Gem Foundry", "Naj-Caldeesh", "Exiled Redoubt", "Lep Seclusa",
         "Oathsworn Pit", "Bedlam Veil", "Bal Sunnar", "Scrivener's Hall",
         "Earthen Root Enclave", "Graven Deep", "Coral Aerie", "Shipwright's Regret",
+        "Red Petal Bastion", "The Dread Cellar",
     }
 
     assert {row.encounter_id for row in rows} == {
@@ -143,4 +125,6 @@ def test_checked_in_dungeon_scope_is_newest_first_through_ascending_tide():
         "the_euphotic_gatekeeper", "varzunon", "zelvraak_the_unbreathing",
         "maligalig", "sarydil", "varallion",
         "foreman_bradiggan", "nazaray", "captain_numirril",
+        "rogerain_the_sly", "artifact_bearers", "prior_thierric_sarazen",
+        "scorion_broodlord", "cyronin_artellian", "magma_incarnate",
     }
