@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "content_id": "shipwright_s_regret",
+  "encounter_id": "foreman_bradiggan",
+  "encounter_name": "Foreman Bradiggan",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase_one","value":{"order":1,"label":"Main Phase I","threshold":"Pull to ~60%","description":"Manage Paralyzing Fear, Soul Bash, Flame Shapers, and Haunters while keeping the arena controlled."},"source_type":"guide","source_name":"Alcast Shipwright's Regret Dungeon Guide","source_locator":"Foreman Bradiggan","game_update":"U33+","confidence":"high"},
+    {"fact_type":"phase","fact_key":"possession_one","value":{"order":2,"label":"Possession / Colossus I","threshold":"~60%","description":"Bradiggan disappears, personal ground pressure appears, and a Flesh Colossus must be killed before the boss returns."},"source_type":"guide","source_name":"Alcast Shipwright's Regret Dungeon Guide","source_locator":"Foreman Bradiggan > Possession / Flesh Colossus","game_update":"U33+","confidence":"high"},
+    {"fact_type":"phase","fact_key":"possession_two","value":{"order":3,"label":"Possession / Colossus II","threshold":"~30%","description":"The disappearance and Colossus phase repeats before execute."},"source_type":"guide","source_name":"Alcast Shipwright's Regret Dungeon Guide","source_locator":"Foreman Bradiggan > Possession / Flesh Colossus","game_update":"U33+","confidence":"high"},
+    {"fact_type":"phase","fact_key":"execute_hm","value":{"order":4,"label":"Hard Mode Soul-Bomb Execute","threshold":"After second Colossus to death","description":"Hard Mode adds paired damage-share Soul Bomb pressure on top of the returning boss and remaining adds."},"source_type":"guide","source_name":"Ascending Tide Hard Mode Guide","source_locator":"Shipwright's Regret > Foreman Bradiggan > Soul Bomb","game_update":"U33","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"paralyzing_fear","value":{"name":"Paralyzing Fear","response":"dodge_through_or_inward_as_outward_fear_waves_pass","failure":"hit_causes_fear_and_can_chain_pressure"},"source_type":"guide","source_name":"Ascending Tide Hard Mode Guide","source_locator":"Foreman Bradiggan > Avoiding Paralyzing Fear","game_update":"U33","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"flame_shapers","value":{"name":"Skeletal Flame Shapers","response":"chain_or_focus_and_interrupt_inferno","failure":"uninterrupted_inferno_hits_group"},"source_type":"guide","source_name":"Alcast Shipwright's Regret Dungeon Guide","source_locator":"Foreman Bradiggan > Skeletal Flame Shapers","game_update":"U33+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"harrowing_haunter","value":{"name":"Harrowing Haunter","response":"kill_quickly_to_remove_damage_healing_and_armor_debuff_pressure"},"source_type":"guide","source_name":"Alcast Shipwright's Regret Dungeon Guide","source_locator":"Foreman Bradiggan > Harrowing Haunter","game_update":"U33+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"soul_bomb","value":{"name":"Soul Bomb","response":"exactly_two_players_share_each_bomb_in_hard_mode","failure":"wrong_stack_size_is_lethal"},"source_type":"guide","source_name":"Ascending Tide Hard Mode Guide","source_locator":"Foreman Bradiggan > Soul Bomb","game_update":"U33","confidence":"high"}
+  ]
+}
