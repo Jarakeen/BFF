@@ -7,6 +7,9 @@ from services.rotation_healer_action_healing_service import (
     RotationHealerActionHealingProjection,
     RotationHealerResolvedHealEvent,
 )
+from services.rotation_healer_channel_runtime_service import (
+    RotationHealerChannelRuntimeProjection,
+)
 from services.rotation_healer_delayed_runtime_service import (
     RotationHealerDelayedRuntimeProjection,
 )
@@ -49,6 +52,8 @@ class RotationHealerDemandHealingEvidence:
     modeled_delayed_healing: float
     unresolved: tuple[str, ...]
     modeled_external_conditional_healing: float = 0.0
+    channel_events: tuple[RotationHealerResolvedHealEvent, ...] = ()
+    modeled_channel_healing: float = 0.0
 
     @property
     def modeled_total_healing(self) -> float:
@@ -56,6 +61,7 @@ class RotationHealerDemandHealingEvidence:
             self.modeled_direct_healing
             + self.modeled_periodic_healing
             + self.modeled_delayed_healing
+            + self.modeled_channel_healing
             + self.modeled_external_conditional_healing
         )
 
@@ -70,6 +76,10 @@ class RotationHealerDemandHealingEvidence:
     @property
     def has_timed_delayed_heal(self) -> bool:
         return bool(self.delayed_events)
+
+    @property
+    def has_timed_channel_heal(self) -> bool:
+        return bool(self.channel_events)
 
 
 class RotationHealerDemandHealingEvidenceService:
@@ -93,6 +103,7 @@ class RotationHealerDemandHealingEvidenceService:
         projection: RotationHealerActionHealingProjection,
         periodic_projection: RotationHealerPeriodicRuntimeProjection | None = None,
         delayed_projection: RotationHealerDelayedRuntimeProjection | None = None,
+        channel_projection: RotationHealerChannelRuntimeProjection | None = None,
         external_conditional_assumptions: tuple[
             RotationHealerExternalConditionalDemandAssumption, ...
         ] = (),
@@ -226,6 +237,36 @@ class RotationHealerDemandHealingEvidenceService:
                 if demand.start_seconds <= event.time_seconds <= demand.end_seconds
             )
 
+        channel_events: tuple[RotationHealerResolvedHealEvent, ...] = ()
+        channel_in_or_before_window = tuple(
+            seed
+            for seed in projection.channel_seeds
+            if seed.time_seconds <= demand.end_seconds
+        )
+        if channel_in_or_before_window:
+            if channel_projection is None:
+                labels = ", ".join(
+                    sorted({seed.source_name for seed in channel_in_or_before_window})
+                )
+                unresolved.append(
+                    f"{demand.name}: channel healing runtime is unresolved for demand coverage"
+                    + (f" ({labels})" if labels else "")
+                )
+            else:
+                unresolved.extend(channel_projection.unresolved)
+                channel_events = tuple(
+                    event
+                    for event in channel_projection.events
+                    if demand.start_seconds <= event.time_seconds <= demand.end_seconds
+                )
+        elif channel_projection is not None:
+            unresolved.extend(channel_projection.unresolved)
+            channel_events = tuple(
+                event
+                for event in channel_projection.events
+                if demand.start_seconds <= event.time_seconds <= demand.end_seconds
+            )
+
         return RotationHealerDemandHealingEvidence(
             demand=demand,
             direct_events=direct_events,
@@ -236,4 +277,6 @@ class RotationHealerDemandHealingEvidenceService:
             modeled_delayed_healing=sum(event.modeled_heal for event in delayed_events),
             unresolved=tuple(dict.fromkeys(unresolved)),
             modeled_external_conditional_healing=modeled_external_conditional_healing,
+            channel_events=channel_events,
+            modeled_channel_healing=sum(event.modeled_heal for event in channel_events),
         )
