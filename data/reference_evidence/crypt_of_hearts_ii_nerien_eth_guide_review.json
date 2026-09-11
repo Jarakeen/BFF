@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "content_id": "crypt_of_hearts_ii",
+  "encounter_id": "nerien_eth",
+  "encounter_name": "Nerien'eth",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"lich_phase","value":{"order":1,"label":"Lich Phase","threshold":"100% to 35%","description":"Spread around Nerien'eth, avoid lich crystals and teleport blasts, and preserve four Students if pursuing hard mode."},"source_type":"guide","source_name":"Xynode Crypt of Hearts II Guide","source_locator":"Nerien'eth","game_update":"U2","confidence":"high"},
+    {"fact_type":"phase","fact_key":"ebony_blade","value":{"order":2,"label":"Ebony Blade Phase","threshold":"35% to 0%","description":"Nerien'eth takes the Ebony Blade, gains heavy melee pressure and repeating drain-shield cycles."},"source_type":"guide","source_name":"Xynode Crypt of Hearts II Guide","source_locator":"Taking The Sword","game_update":"U2","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"students_hard_mode","value":{"name":"Students / Hard Mode","response":"keep_four_students_alive_until_nerien_eth_takes_ebony_blade_then_kill_them"},"source_type":"achievement","source_name":"The Blade's Edge","source_locator":"Crypt of Hearts II achievement","game_update":"U2","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"flying_skull","value":{"name":"Flying Skull","response":"identify_target_and_dodge_roll_projectile"},"source_type":"guide","source_name":"Xynode Crypt of Hearts II Guide","source_locator":"Nerien'eth","game_update":"U2","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"drain_shield","value":{"name":"Drain Shield","response":"targeted_player_uses_synergy_while_group_burns_damage_shield"},"source_type":"guide","source_name":"Xynode Crypt of Hearts II Guide","source_locator":"Taking The Sword","game_update":"U2","confidence":"high"}
+  ]
+}
