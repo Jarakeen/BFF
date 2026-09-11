@@ -5,6 +5,7 @@ from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
 from minmax.runtime_event import RuntimeEvent
 from models.build_model import PlayerBuild
 from services.extreme_runtime_bar_effect_attempt import ExtremeRuntimeBarEffectAttempt
+from services.extreme_runtime_bar_transition import ExtremeRuntimeBarTransition
 from services.extreme_runtime_snapshot import ExtremeRuntimeSnapshot
 from services.extreme_runtime_snapshot_combat_state_service import (
     ExtremeRuntimeSnapshotCombatStateService,
@@ -31,9 +32,18 @@ class _DualGear:
         attempts,
         snapshot_time_seconds,
         snapshot_active_bar=None,
+        bar_transitions=(),
+        bar_transition_history_complete=False,
     ):
         self.calls.append(
-            (activation, attempts, snapshot_time_seconds, snapshot_active_bar)
+            (
+                activation,
+                attempts,
+                snapshot_time_seconds,
+                snapshot_active_bar,
+                bar_transitions,
+                bar_transition_history_complete,
+            )
         )
         return SimpleNamespace(active_buffs=("Major Courage",), unresolved=())
 
@@ -61,6 +71,7 @@ def test_dual_bar_activation_uses_bar_aware_runtime_path_without_legacy_double_p
     dual = _DualGear()
     activation = SimpleNamespace(evidence=("fixture",), unresolved=())
     tagged = _bar_attempt(bar="back")
+    transition = ExtremeRuntimeBarTransition(1.5, 0, "back", "front")
     service = ExtremeRuntimeSnapshotCombatStateService(
         gear_runtime_buffs=legacy,
         dual_bar_gear_runtime=dual,
@@ -71,15 +82,18 @@ def test_dual_bar_activation_uses_bar_aware_runtime_path_without_legacy_double_p
         progression=CharacterProgression(passive_ranks={}),
         active_bar="front",
         snapshot=ExtremeRuntimeSnapshot(
-            runtime_history=(tagged,),
+            runtime_history=(tagged, transition),
             snapshot_time_seconds=2.0,
+            bar_transition_history_complete=True,
         ),
         gear_activation=activation,
     )
 
     assert result.combat_state.active_buffs == ("Major Courage",)
     assert result.unresolved == ()
-    assert dual.calls == [(activation, (tagged,), 2.0, "front")]
+    assert dual.calls == [
+        (activation, (tagged,), 2.0, "front", (transition,), True)
+    ]
     assert legacy.calls == []
 
 
