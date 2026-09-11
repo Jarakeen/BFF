@@ -42,6 +42,7 @@ class ExtremeNamedGearCanonicalStatEvaluator:
         candidate: ExtremeStructuralCandidate,
         *,
         mundus: str = "",
+        second_mundus: str = "",
         food: str = "",
         potion: str = "",
         active_buffs: tuple[str, ...] = (),
@@ -56,6 +57,7 @@ class ExtremeNamedGearCanonicalStatEvaluator:
             active_buffs=active_buffs,
         )
         build = PlayerBuild.from_dict(payload["build"])
+        build.SecondMundus = str(second_mundus or "").strip()
         build = ExtremeNamedGearBuildMaterializerService.materialize(
             build,
             self.realization,
@@ -80,7 +82,10 @@ class ExtremeNamedGearCanonicalStatEvaluator:
             f"{set_id}:{count}"
             for set_id, count in zip(self.realization.set_ids, self.realization.counts)
         ) or "none"
-        build_id = f"extreme-named-gear:{candidate.identity}:{gear_identity}:{mundus}:{food}:{potion}"
+        build_id = (
+            f"extreme-named-gear:{candidate.identity}:{gear_identity}:"
+            f"{mundus}:{second_mundus}:{food}:{potion}"
+        )
 
         if normalized_buffs:
             context = self.optimizer.context_factory.build(
@@ -108,6 +113,8 @@ class ExtremeNamedGearCanonicalStatEvaluator:
 
         output = dict(payload)
         output["build"] = build.to_dict()
+        output["mundus"] = build.Mundus
+        output["second_mundus"] = build.SecondMundus
         output["gear_topology"] = self.realization.topology_signature
         output["gear_set_ids"] = tuple(self.realization.set_ids)
         output["gear_set_names"] = tuple(self.realization.set_names)
