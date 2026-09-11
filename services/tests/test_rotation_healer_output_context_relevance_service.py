@@ -36,7 +36,7 @@ def test_bar_prefixed_non_healing_warden_passives_remain_ambient():
     assert result.output_complete is True
 
 
-def test_potion_and_charged_remain_healer_output_relevant():
+def test_potion_remains_relevant_while_charged_is_ambient_to_raw_healing():
     result = RotationHealerOutputContextRelevanceService().classify(
         (
             "Potion selected; activation/uptime is not part of static build state: spell power",
@@ -46,9 +46,10 @@ def test_potion_and_charged_remain_healer_output_relevant():
 
     assert result.relevant == (
         "Potion selected; activation/uptime is not part of static build state: spell power",
+    )
+    assert result.ambient == (
         "Back Bar Charged: requires status-effect chance model",
     )
-    assert result.ambient == ()
     assert result.output_complete is False
 
 
