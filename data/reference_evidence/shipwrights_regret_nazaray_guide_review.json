@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "content_id": "shipwright_s_regret",
+  "encounter_id": "nazaray",
+  "encounter_name": "Nazaray",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main Phase","threshold":"Pull onward","description":"Nazaray applies heavy tank pressure while adds, blue empowerment circles, and repeated Kindred Spirit checks cycle through the fight."},"source_type":"guide","source_name":"Ascending Tide Hard Mode Guide","source_locator":"Shipwright's Regret > Nazaray","game_update":"U33","confidence":"high"},
+    {"fact_type":"phase","fact_key":"kindred_cycles","value":{"order":2,"label":"Kindred Spirit Cycles","threshold":"Repeated during fight","description":"Spectral wolves appear around the arena. Kill an opposite pair to create safe areas for the room-wide resolution."},"source_type":"guide","source_name":"Ascending Tide Hard Mode Guide","source_locator":"Nazaray > Kindred Spirit","game_update":"U33","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"kindred_spirit","value":{"name":"Kindred Spirit","response":"focus_two_opposite_wolves_then_move_to_resulting_safe_areas","failure":"no_safe_area_for_roomwide_blast"},"source_type":"guide","source_name":"Ascending Tide Hard Mode Guide","source_locator":"Nazaray > Kindred Spirit","game_update":"U33","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"liquidate","value":{"name":"Liquidate / Blue Empowerment","response":"tank_moves_nazaray_out_of_blue_circles_immediately","failure":"boss_becomes_immune_and_damage_increases"},"source_type":"guide","source_name":"Ascending Tide Hard Mode Guide","source_locator":"Nazaray > Liquidate","game_update":"U33","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"lurchers","value":{"name":"Lurchers","response":"control_or_kill_when_pressure_is_high_but_avoid_pushing_bad_overlap_with_kindred_cycles","note":"high_damage_groups_may_choose_to_manage_instead_of_hard_focus"},"source_type":"guide","source_name":"Ascending Tide Hard Mode Guide","source_locator":"Nazaray > Lurchers","game_update":"U33","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"bludgeon","value":{"name":"Bludgeon","response":"tank_blocks_with_sufficient_mitigation_or_dodges_heavy","warning":"empowered_heavy_is_extremely_dangerous"},"source_type":"guide","source_name":"ESO-Hub Shipwright's Regret Dungeon Guide","source_locator":"Nazaray > Bludgeon","game_update":"U33+","confidence":"high"}
+  ]
+}
