@@ -17,14 +17,7 @@ from services.rotation_healer_periodic_runtime_service import (
 
 @dataclass(frozen=True)
 class RotationHealerDemandHealingEvidence:
-    """Timed modeled-heal evidence observed inside one healing demand window.
-
-    This is deliberately evidence, not a pass/fail healing verdict. Encounter
-    demand windows currently describe *when* healing matters, not verified HPS or
-    received-heal thresholds. Direct, delayed, and canonically scheduled periodic
-    healing can therefore be reported without pretending any of them proves
-    survival or actual received healing.
-    """
+    """Timed modeled-heal evidence observed inside one healing demand window."""
 
     demand: RotationDemandWindow
     direct_events: tuple[RotationHealerResolvedHealEvent, ...]
@@ -78,6 +71,20 @@ class RotationHealerDemandHealingEvidenceService:
             if demand.start_seconds <= event.time_seconds <= demand.end_seconds
         )
         unresolved = list(projection.unresolved)
+
+        for seed in projection.external_conditional_seeds:
+            effect_start = float(seed.time_seconds)
+            effect_end = effect_start + float(seed.duration_seconds)
+            overlaps = (
+                effect_start <= demand.end_seconds
+                and effect_end >= demand.start_seconds
+            )
+            if not overlaps:
+                continue
+            unresolved.append(
+                f"{seed.source_name} at {seed.time_seconds:g}s: reviewed external healing "
+                f"condition {seed.trigger_condition} is not yet modeled for demand coverage"
+            )
 
         periodic_events: tuple[RotationHealerResolvedHealEvent, ...] = ()
         periodic_in_or_before_window = tuple(
