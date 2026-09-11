@@ -41,6 +41,13 @@
     {"content_id":"coral_aerie","content_name":"Coral Aerie","release_year":2022,"release_update":33,"release_pack":"Ascending Tide","encounter_id":"varallion","display_name":"Varallion","member_ids":["varallion"]},
     {"content_id":"shipwright_s_regret","content_name":"Shipwright's Regret","release_year":2022,"release_update":33,"release_pack":"Ascending Tide","encounter_id":"foreman_bradiggan","display_name":"Foreman Bradiggan","member_ids":["foreman_bradiggan"]},
     {"content_id":"shipwright_s_regret","content_name":"Shipwright's Regret","release_year":2022,"release_update":33,"release_pack":"Ascending Tide","encounter_id":"nazaray","display_name":"Nazaray","member_ids":["nazaray"]},
-    {"content_id":"shipwright_s_regret","content_name":"Shipwright's Regret","release_year":2022,"release_update":33,"release_pack":"Ascending Tide","encounter_id":"captain_numirril","display_name":"Captain Numirril","member_ids":["captain_numirril"]}
+    {"content_id":"shipwright_s_regret","content_name":"Shipwright's Regret","release_year":2022,"release_update":33,"release_pack":"Ascending Tide","encounter_id":"captain_numirril","display_name":"Captain Numirril","member_ids":["captain_numirril"]},
+
+    {"content_id":"red_petal_bastion","content_name":"Red Petal Bastion","release_year":2021,"release_update":31,"release_pack":"Waking Flame","encounter_id":"rogerain_the_sly","display_name":"Rogerain the Sly","member_ids":["rogerain_the_sly"]},
+    {"content_id":"red_petal_bastion","content_name":"Red Petal Bastion","release_year":2021,"release_update":31,"release_pack":"Waking Flame","encounter_id":"artifact_bearers","display_name":"Artifact Bearers","member_ids":["eliam_merick","ihudir","liramindrel"]},
+    {"content_id":"red_petal_bastion","content_name":"Red Petal Bastion","release_year":2021,"release_update":31,"release_pack":"Waking Flame","encounter_id":"prior_thierric_sarazen","display_name":"Prior Thierric Sarazen","member_ids":["prior_thierric_sarazen"]},
+    {"content_id":"the_dread_cellar","content_name":"The Dread Cellar","release_year":2021,"release_update":31,"release_pack":"Waking Flame","encounter_id":"scorion_broodlord","display_name":"Scorion Broodlord","member_ids":["scorion_broodlord"]},
+    {"content_id":"the_dread_cellar","content_name":"The Dread Cellar","release_year":2021,"release_update":31,"release_pack":"Waking Flame","encounter_id":"cyronin_artellian","display_name":"Cyronin Artellian","member_ids":["cyronin_artellian"]},
+    {"content_id":"the_dread_cellar","content_name":"The Dread Cellar","release_year":2021,"release_update":31,"release_pack":"Waking Flame","encounter_id":"magma_incarnate","display_name":"Magma Incarnate","member_ids":["magma_incarnate"]}
   ]
 }
