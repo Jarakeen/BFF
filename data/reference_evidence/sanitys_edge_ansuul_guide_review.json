@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "content_id": "sanity_s_edge",
+  "encounter_id": "ansuul_the_tormentor",
+  "encounter_name": "Ansuul the Tormentor",
+  "evidence": [
+    {
+      "fact_type": "transition",
+      "fact_key": "manic_phobia_thresholds_veteran",
+      "value": {
+        "label": "Manic Phobia",
+        "thresholds": ["90%", "70%", "50%", "30%"],
+        "detail": "Veteran baseline. The taunting player is isolated with an Essence Manifestation; killing the Essence removes the lethal Avulse condition."
+      },
+      "source_type": "guide",
+      "source_name": "AlcastHQ Sanity's Edge Trial Guide by SGTsanttu",
+      "source_locator": "Ansuul - Manic Phobia",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "transition",
+      "fact_key": "ritual_thresholds",
+      "value": {
+        "label": "The Ritual / Maze",
+        "thresholds": ["80%", "60%", "40%"],
+        "detail": "Exit the expanding red zone, run the elemental maze, attune, and send the side team to Warlock Vanton."
+      },
+      "source_type": "guide",
+      "source_name": "AlcastHQ Sanity's Edge Trial Guide by SGTsanttu",
+      "source_locator": "Ansuul - The Ritual",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "transition",
+      "fact_key": "breakdown_threshold",
+      "value": {
+        "label": "Breakdown",
+        "thresholds": ["20%"],
+        "detail": "Ansuul splits into three elemental copies. Reduce all three copies to zero to return the real boss and continue execute."
+      },
+      "source_type": "guide",
+      "source_name": "AlcastHQ Sanity's Edge Trial Guide by SGTsanttu",
+      "source_locator": "Ansuul - Breakdown",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "manic_phobia_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "AlcastHQ Sanity's Edge Trial Guide by SGTsanttu",
+      "source_locator": "Ansuul - Manic Phobia",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "manic_phobia_behavior",
+      "value": {
+        "targets_taunting_player": true,
+        "teleports_to_arena_edge": true,
+        "spawns_essence_manifestation": true,
+        "boss_aura_contact_is_fatal": true,
+        "essence_death_removes_condition": true
+      },
+      "source_type": "guide",
+      "source_name": "AlcastHQ Sanity's Edge Trial Guide by SGTsanttu",
+      "source_locator": "Ansuul - Manic Phobia",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "ritual_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "AlcastHQ Sanity's Edge Trial Guide by SGTsanttu",
+      "source_locator": "Ansuul - The Ritual",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "ritual_behavior",
+      "value": {
+        "elements": ["fire", "poison", "shock"],
+        "hardmode_all_players_run_maze": true,
+        "ritual_blast_if_no_side_team_enters": true,
+        "ritual_blast_result": "group_wipe"
+      },
+      "source_type": "guide",
+      "source_name": "AlcastHQ Sanity's Edge Trial Guide by SGTsanttu",
+      "source_locator": "Ansuul - The Ritual and Attunement",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "vanton_torment_timeout_exists",
+      "value": true,
+      "source_type": "official_patch_notes",
+      "source_name": "ESO Update 46 patch notes",
+      "source_locator": "Sanity's Edge - Ansuul the Tormentor",
+      "game_update": "U46",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "failure_condition",
+      "fact_key": "vanton_torment_timeout",
+      "value": {
+        "timeout_seconds": 180,
+        "result": "group_wipe",
+        "ability": "Neural Takeover"
+      },
+      "source_type": "official_patch_notes",
+      "source_name": "ESO Update 46 patch notes",
+      "source_locator": "Sanity's Edge - Ansuul the Tormentor: Torment side encounters",
+      "game_update": "U46",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "poisoned_mind_exists",
+      "value": true,
+      "source_type": "guide_plus_official_patch",
+      "source_name": "AlcastHQ Sanity's Edge guide; ESO v9.0.3 patch notes",
+      "source_locator": "Ansuul - Poisoned Mind",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "poisoned_mind_behavior",
+      "value": {
+        "duration_seconds": 10,
+        "growing_poison_circle": true,
+        "hardmode_simultaneous_targets": 2,
+        "affected_by_manic_phobia_excluded_from_targeting": true
+      },
+      "source_type": "guide_plus_official_patch",
+      "source_name": "AlcastHQ Sanity's Edge guide; ESO v9.0.3 patch notes",
+      "source_locator": "Ansuul - Poisoned Mind",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "sunburst_exists",
+      "value": true,
+      "source_type": "guide_plus_official_patch",
+      "source_name": "AlcastHQ Sanity's Edge guide; ESO v9.0.6 patch notes",
+      "source_locator": "Ansuul - Sunburst",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "sunburst_behavior",
+      "value": {
+        "single_player_target": true,
+        "leaves_afterburn_crater": true,
+        "roll_dodge_avoids_impact": false,
+        "manic_phobia_targets_excluded": true
+      },
+      "source_type": "guide_plus_official_patch",
+      "source_name": "AlcastHQ Sanity's Edge guide; ESO v9.0.6 patch notes",
+      "source_locator": "Ansuul - Sunburst",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "wrathstorm_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "AlcastHQ Sanity's Edge Trial Guide by SGTsanttu",
+      "source_locator": "Ansuul - Wrathstorm",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "wrathstorm_behavior",
+      "value": {
+        "ring_of_fire_mines": true,
+        "mines_apply": "Ignite",
+        "central_explosion_dodgeable": true
+      },
+      "source_type": "guide",
+      "source_name": "AlcastHQ Sanity's Edge Trial Guide by SGTsanttu",
+      "source_locator": "Ansuul - Wrathstorm",
+      "confidence": "high"
+    }
+  ]
+}
