@@ -234,6 +234,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Generate combat rotations
 - Role-aware rotation construction
 - Healer rotation construction
+- Demand-window scoping for externally triggered healer effects
 - Tank rotation support
 - Damage Dealer rotation support
 - Candidate skill generation
