@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "wayrest_sewers_i",
+  "encounter_id": "allene_pellingare_wayrest_sewers_i",
+  "encounter_name": "Allene Pellingare",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Block Allene's heavy attacks, keep the group healthy through her random pressure, and burn the hallucinations immediately when she vanishes."},"source_type":"guide","source_name":"Prima Wayrest Sewers Boss Guide","source_locator":"Allene Pellingare","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"power_attack","value":{"name":"Power Attack","response":"tank_blocks_allene_heavy_attacks_to_avoid_the_large_burst"},"source_type":"guide","source_name":"Prima Wayrest Sewers Boss Guide","source_locator":"Allene Pellingare","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"fiendish_hallucinations","value":{"name":"Fiendish Hallucinations","response":"when_allene_vanishes_switch_to_the_hallucinations_and_burn_them_down_quickly"},"source_type":"guide","source_name":"Prima Wayrest Sewers Boss Guide","source_locator":"Allene Pellingare","game_update":"Launch","confidence":"high"}
+  ]
+}
