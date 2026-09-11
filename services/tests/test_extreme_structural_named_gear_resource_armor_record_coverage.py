@@ -8,10 +8,10 @@ from services.extreme_structural_named_gear_mundus_food_potion_core_stat_record_
     _RESOURCE_ARMOR_SCOPE,
     _RESOURCE_JEWELRY_GLYPH_IRRELEVANCE_SCOPE,
     _RESOURCE_JEWELRY_STATIC_TRAIT_SCOPE,
-    _RESOURCE_REMAINING_EQUIPMENT_TRAIT_AXIS,
-    _RESOURCE_REMAINING_GLYPH_AFTER_JEWELRY_AXIS,
+    _RESOURCE_REMAINING_EQUIPMENT_TRAIT_AFTER_WEAPON_AXIS,
     _RESOURCE_REMAINING_PASSIVE_AXIS,
     _RESOURCE_UNDAUNTED_SCOPE,
+    _RESOURCE_WEAPON_IRRELEVANCE_SCOPE,
 )
 
 
@@ -119,6 +119,25 @@ class _JewelryGlyphService:
         return _JewelryGlyphAudit()
 
 
+class _WeaponAudit:
+    denominator_proven = True
+    objective_irrelevance_proven = True
+    traits_reviewed = 9
+    enchantments_reviewed = 21
+    relevant_traits = ()
+    relevant_enchantments = ()
+    unresolved = ()
+
+
+class _WeaponService:
+    def __init__(self, path):
+        self.path = path
+
+    def build(self, key):
+        assert key == "max_health"
+        return _WeaponAudit()
+
+
 class _ResourceOuterEvaluator:
     def __init__(self, *, gear_realization, armor_catalog, evaluator_factory):
         self.gear_realization = gear_realization
@@ -201,7 +220,7 @@ class _SearchService:
         )
 
 
-def test_resource_armor_jewelry_mettle_and_glyph_irrelevance_are_recorded(monkeypatch):
+def test_resource_armor_jewelry_weapon_mettle_and_glyph_irrelevance_are_recorded(monkeypatch):
     undaunted_progression = object()
     captured = {}
 
@@ -227,6 +246,7 @@ def test_resource_armor_jewelry_mettle_and_glyph_irrelevance_are_recorded(monkey
     )
     monkeypatch.setattr(module, "ExtremeJewelryResourceStaticTraitStateService", _JewelryTraitService)
     monkeypatch.setattr(module, "ExtremeJewelryResourceGlyphRelevanceService", _JewelryGlyphService)
+    monkeypatch.setattr(module, "ExtremeWeaponResourceRelevanceService", _WeaponService)
     monkeypatch.setattr(module, "ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory", _ResourceFactory)
     monkeypatch.setattr(
         module,
@@ -251,14 +271,16 @@ def test_resource_armor_jewelry_mettle_and_glyph_irrelevance_are_recorded(monkey
     assert _RESOURCE_UNDAUNTED_SCOPE in record.search_coverage.searched
     assert _RESOURCE_JEWELRY_STATIC_TRAIT_SCOPE in record.search_coverage.searched
     assert _RESOURCE_JEWELRY_GLYPH_IRRELEVANCE_SCOPE in record.search_coverage.searched
+    assert _RESOURCE_WEAPON_IRRELEVANCE_SCOPE in record.search_coverage.searched
     assert _GEAR_DEFERRED_AXIS not in record.search_coverage.omitted
     assert "armor, jewelry, and weapon traits" not in record.search_coverage.omitted
     assert "glyphs/enchants" not in record.search_coverage.omitted
     assert _PASSIVE_DEFERRED_AXIS not in record.search_coverage.omitted
-    assert _RESOURCE_REMAINING_EQUIPMENT_TRAIT_AXIS in record.search_coverage.omitted
-    assert _RESOURCE_REMAINING_GLYPH_AFTER_JEWELRY_AXIS in record.search_coverage.omitted
+    assert _RESOURCE_REMAINING_EQUIPMENT_TRAIT_AFTER_WEAPON_AXIS in record.search_coverage.omitted
     assert _RESOURCE_REMAINING_PASSIVE_AXIS in record.search_coverage.omitted
-    assert "jewelry and weapon glyphs/enchants" not in record.search_coverage.omitted
+    assert not any("weapon trait" in row for row in record.search_coverage.omitted)
+    assert not any("weapon glyph" in row for row in record.search_coverage.omitted)
+    assert not any("jewelry and weapon glyphs/enchants" in row for row in record.search_coverage.omitted)
     assert record.search_coverage.candidates_screened == 10 * 2 * 24 * 4 * 2 * 2
     assert record.search_coverage.candidates_optimized == 10 * 2 * 24 * 4 * 2 * 2
     assert record.search_coverage.denominator_proven is False
@@ -266,4 +288,5 @@ def test_resource_armor_jewelry_mettle_and_glyph_irrelevance_are_recorded(monkey
     assert any("2,187" in row for row in record.explanation)
     assert any("216" in row for row in record.explanation)
     assert any("17" in row and "jewelry glyph" in row for row in record.explanation)
+    assert any("9" in row and "21" in row and "weapon" in row for row in record.explanation)
     assert any("Undaunted Mettle" in row for row in record.explanation)
