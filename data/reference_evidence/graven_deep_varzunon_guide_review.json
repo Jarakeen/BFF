@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "content_id": "graven_deep",
+  "encounter_id": "varzunon",
+  "encounter_name": "Varzunon",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_sacrifice_cycle","value":{"order":1,"label":"Main / Skeletal Sacrifice Cycle","threshold":"Pull","description":"Varzunon repeatedly summons skeleton waves including glowing sacrifices that can empower the boss if not handled."},"source_type":"guide","source_name":"ESO-Hub Graven Deep Dungeon Guide","source_locator":"Varzunon","game_update":"U35+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"skeletal_sacrifices","value":{"name":"Skeletal Sacrifices","response":"focus_glowing_sacrifices_before_varzunon_consumes_them","failure":"consumed_sacrifices_increase_boss_size_and_damage"},"source_type":"guide","source_name":"ESO-Hub Graven Deep Dungeon Guide","source_locator":"Varzunon > Skeletal Sacrifices","game_update":"U35+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"stomp","value":{"name":"Stomp","response":"move_out_from_boss_before_the_aoe_resolves","failure":"remaining_close_takes_heavy_aoe_damage"},"source_type":"guide","source_name":"ESO-Hub Graven Deep Dungeon Guide","source_locator":"Varzunon > Stomp","game_update":"U35+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"meteors","value":{"name":"Blue Meteors","response":"stack_for_healing_and_cover_each_target_with_sustained_support","property":"single_target_hits_are_not_avoided_by_leaving_an_aoe"},"source_type":"guide","source_name":"ESO-Hub Graven Deep Dungeon Guide","source_locator":"Varzunon > Meteors","game_update":"U35+","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"hardmode_pound","value":{"name":"Hard Mode Pound","response":"move_off_the_repeating_line_of_ground_impacts","failure":"standing_in_the_line_takes_repeated_damage"},"source_type":"guide","source_name":"Xynode Graven Deep Mechanics Guide","source_locator":"Varzunon > Pound","game_update":"U35+","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"necrotic_cage","value":{"name":"Necrotic Cage","response":"treat_cage_as_targeted_survival_pressure_and_recover_immediately_if_target_survives","property":"official_U35_PTS_fix_confirms_cage_should_not_persist_after_survival"},"source_type":"patch_notes","source_name":"ESO PTS Patch Notes v8.1.3","source_locator":"Graven Deep > Varzunon","game_update":"U35","confidence":"high"}
+  ]
+}
