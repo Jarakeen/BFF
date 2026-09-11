@@ -156,6 +156,27 @@ _REVIEWED_TOOLTIP_IRRELEVANT: tuple[tuple[str, str, str], ...] = (
     ("Class Mastery", "Wildfire Embers", "damage scaled from Weapon/Spell Damage and Max Magicka/Stamina; does not modify maxima"),
 )
 
+_OBJECTIVE_SPECIFIC_IRRELEVANT: tuple[tuple[str, str, tuple[str, ...], str], ...] = (
+    (
+        "Dark Magic",
+        "Blood Magic",
+        ("max_health",),
+        "U50 full-Health branch can modify only the higher Max Magicka or Max Stamina; the below-full-Health branch creates a Max-Health-scaled heal but does not modify Max Health",
+    ),
+    (
+        "Green Balance",
+        "Maturation",
+        ("max_magicka", "max_stamina"),
+        "Minor Toughness modifies Max Health only",
+    ),
+    (
+        "Shadow",
+        "Dark Vigor",
+        ("max_magicka", "max_stamina"),
+        "active-bar Shadow slots modify Max Health only",
+    ),
+)
+
 
 def _reviewed_tooltip_rows() -> tuple[ExtremeResourceClassPassiveOwnership, ...]:
     return tuple(
@@ -263,6 +284,20 @@ class ExtremeResourceClassPassiveOwnershipService:
             cls._normalized(passive.skill_line),
             cls._normalized(passive.name),
         )
+        for skill_line, passive_name, irrelevant_objectives, effect_family in _OBJECTIVE_SPECIFIC_IRRELEVANT:
+            identity = (
+                cls._normalized(skill_line),
+                cls._normalized(passive_name),
+            )
+            if identity == target and key in irrelevant_objectives:
+                row = ExtremeResourceClassPassiveOwnership(
+                    skill_line=skill_line,
+                    passive_name=passive_name,
+                    source=f"Canonical U50 {skill_line} objective-specific resource review",
+                    effect_family=effect_family,
+                )
+                return row, ExtremeResourceClassPassiveOwnershipStatus.PROVEN_IRRELEVANT
+
         for row in cls._ROWS:
             identity = (
                 cls._normalized(row.skill_line),
