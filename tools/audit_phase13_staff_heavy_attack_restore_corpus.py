@@ -92,6 +92,8 @@ def _following_restores(events, *, source_id: int, timestamp: float, forward_ms:
             continue
         if event.source_id != source_id:
             continue
+        if event.target_id != source_id:
+            continue
         delta = float(event.timestamp) - float(timestamp)
         if delta < 0.0 or delta > forward_ms:
             continue
@@ -105,7 +107,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
             "Scan raw ESO Logs Lokkestiiz corpus roster players for reviewed staff-heavy "
-            "log aliases and report following positive resource changes. Observational only."
+            "log aliases and report following positive self-resource changes. Observational only."
         )
     )
     parser.add_argument("--path", type=Path, default=Path("research/raw/lokkestiiz_corpus.json"))
@@ -148,7 +150,7 @@ def main() -> int:
                 observations.append((fight, action, restore, delta, name, role, label))
 
     print("=" * 112)
-    print(" PHASE 13 STAFF HEAVY-ATTACK RESTORE CORPUS AUDIT")
+    print(" PHASE 13 STAFF HEAVY-ATTACK SELF-RESTORE CORPUS AUDIT")
     print("=" * 112)
     print("Evidence status: OBSERVATIONAL LOG ALIASES ONLY")
     print(f"Raw corpus:            {args.path}")
@@ -156,7 +158,7 @@ def main() -> int:
     print(f"Restore window:        {args.forward_ms:g} ms")
     print(f"Roster actors with HA: {len({row[:5] for row in heavy_counts})}")
     print(f"Staff heavy actions:   {sum(heavy_counts.values())}")
-    print(f"Following restores:    {len(observations)}")
+    print(f"Following self restores: {len(observations)}")
 
     print()
     print("STAFF HEAVY COUNTS BY PLAYER")
@@ -177,8 +179,8 @@ def main() -> int:
         for _fight, _action, restore, _delta, _name, _role, label in observations
     )
     print()
-    print("RESTORE DISTRIBUTION BY STAFF HEAVY")
-    print("-----------------------------------")
+    print("SELF-RESTORE DISTRIBUTION BY STAFF HEAVY")
+    print("----------------------------------------")
     for (label, amount, resource_type, restore_id), count in by_restore.most_common(args.limit):
         print(
             f"{count:5d} | {label:24} | restore={amount:g} | "
@@ -192,8 +194,8 @@ def main() -> int:
         )
 
     print()
-    print("PER-PLAYER RESTORE SUMMARY")
-    print("--------------------------")
+    print("PER-PLAYER SELF-RESTORE SUMMARY")
+    print("-------------------------------")
     for key, rows in sorted(per_actor.items())[: args.limit]:
         report_code, fight_id, source_id, name, role, label = key
         common = Counter(value[0] for value in rows).most_common(5)
@@ -221,7 +223,8 @@ def main() -> int:
     print("--------")
     print("- Staff-heavy numeric ids are reviewed ESO Logs aliases, not canonical BFF skill identities.")
     print("- Only actors present in each fight's player_details roster are included.")
-    print("- Positive resource events inside the time window remain observational until reviewed.")
+    print("- Resource events must be self-targeted (source_id == target_id) to count as HA restore candidates.")
+    print("- Positive self-resource events inside the time window remain observational until reviewed.")
     print("- This audit reads raw research JSON and writes nothing.")
     return 0
 
