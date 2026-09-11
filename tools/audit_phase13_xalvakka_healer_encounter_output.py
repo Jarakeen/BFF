@@ -39,6 +39,9 @@ from services.rotation_candidate_healer_role_output_service import (
 )
 from services.rotation_duration_refinement_service import RotationDurationRefinementService
 from services.rotation_healer_demand_criteria_service import RotationHealerDemandCriteriaService
+from services.rotation_healer_demand_healing_evidence_service import (
+    RotationHealerExternalConditionalDemandAssumption,
+)
 from services.rotation_healer_encounter_criteria_provider import (
     RotationHealerEncounterCriteriaProvider,
 )
@@ -280,6 +283,7 @@ def _print_candidate_output(
             f"{prefix}: direct={evidence.modeled_direct_healing:g}, "
             f"periodic={evidence.modeled_periodic_healing:g}, "
             f"delayed={evidence.modeled_delayed_healing:g}, "
+            f"external={evidence.modeled_external_conditional_healing:g}, "
             f"total={evidence.modeled_total_healing:g}"
         )
         value = window.modeled_healing_per_demand_second
@@ -329,6 +333,15 @@ def main() -> int:
     parser.add_argument("--duration", type=float, default=60.0)
     parser.add_argument("--lead-seconds", type=float, default=3.0)
     parser.add_argument("--window-seconds", type=float, default=2.0)
+    parser.add_argument(
+        "--minor-lifesteal-active-attackers",
+        type=int,
+        default=None,
+        help=(
+            "explicit number of demand targets continuously damaging the Minor "
+            "Lifesteal-affected enemy; omitted keeps that healing unresolved"
+        ),
+    )
     parser.add_argument("--builds", type=Path, default=DEFAULT_BUILDS)
     parser.add_argument("--database", type=Path, default=DEFAULT_DATABASE)
     parser.add_argument(
@@ -359,6 +372,11 @@ def main() -> int:
         raise ValueError("--lead-seconds cannot be negative")
     if float(args.window_seconds) <= 0:
         raise ValueError("--window-seconds must be positive")
+    if (
+        args.minor_lifesteal_active_attackers is not None
+        and int(args.minor_lifesteal_active_attackers) <= 0
+    ):
+        raise ValueError("--minor-lifesteal-active-attackers must be positive")
 
     data_root = get_data_dir()
     database_path = Path(args.database)
@@ -473,6 +491,18 @@ def main() -> int:
         context=front_context,
         contexts_by_bar=contexts_by_bar,
         reviewed_runtime_observations=runtime_observations,
+        external_conditional_assumptions=(
+            (
+                RotationHealerExternalConditionalDemandAssumption(
+                    effect_name="minor_lifesteal",
+                    active_attacker_count=int(
+                        args.minor_lifesteal_active_attackers
+                    ),
+                ),
+            )
+            if args.minor_lifesteal_active_attackers is not None
+            else ()
+        ),
     )
     role_output = RotationCandidateHealerMultiDemandRoleOutputService(
         demands=bundle.demands,
@@ -518,6 +548,15 @@ def main() -> int:
     print(
         "Healing unit: modeled pre-recipient, pre-overheal healing per demand-second. "
         "This is not observed HPS or a survival threshold."
+    )
+    print(
+        "Minor Lifesteal participation: "
+        + (
+            f"{int(args.minor_lifesteal_active_attackers)} continuously active "
+            "attacker(s) (caller supplied)"
+            if args.minor_lifesteal_active_attackers is not None
+            else "UNRESOLVED; no active-attacker count was supplied"
+        )
     )
     print(
         "Encounter criteria: "
@@ -585,7 +624,8 @@ def main() -> int:
     print("- Static context diagnostics irrelevant to healer output are reported but do not block this objective.")
     print("- Unknown or healing-relevant static diagnostics remain aggregate blockers and keep weakest-window output unresolved.")
     print("- Reviewed refresh/recast policy is composed only when exact skill/component/version evidence matches.")
-    print("- Missing periodic/delayed runtime evidence remains unresolved instead of becoming fake ticks.")
+    print("- Missing periodic/delayed runtime evidence remains unresolved instead of becoming fake ticks.
+- Minor Lifesteal is modeled as a per-attacker damage-trigger rate only when the caller supplies an active-attacker count; it is not an automatic caster HoT.")
     return 0
 
 
