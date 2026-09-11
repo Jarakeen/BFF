@@ -7,7 +7,7 @@ universe for the three runtime condition families that require an actual skill o
 transformation witness before a conditional gear bonus may be activated:
 
 * ``armor_ability_slotted`` -> a bar-eligible active from an Armor skill line;
-* ``pet_active`` -> an active whose canonical description explicitly summons a creature;
+* ``pet_active`` -> an active whose canonical description proves a summoned combat creature;
 * ``transformed`` -> a canonical transformation Ultimate/form witness.
 
 It performs no stat arithmetic and does not choose a winning candidate. Candidate
@@ -66,12 +66,21 @@ class ExtremeResourceRuntimeSkillWitnessCatalogService:
     PET_ACTIVE = "pet_active"
     TRANSFORMED = "transformed"
 
-    _PET_SUMMON_RE = re.compile(
-        r"\bsummon\s+(?:(?:a|an|your)\s+)?(?:"
-        r"familiar|clannfear|twilight|(?:storm\s+)?atronach|"
-        r"(?:grizzly\s+)?bear|guardian|shade|blastbones|skeletal\s+(?:mage|archer|arcanist)"
-        r")\b",
+    _PET_CREATURE = r"(?:familiar|clannfear|twilight|(?:storm\s+)?atronach|grizzly|bear|guardian|shade)"
+    _PET_DIRECT_SUMMON_RE = re.compile(
+        rf"\bsummon\s+(?:(?:a|an|your)\s+)?(?:\w+\s+){{0,3}}{_PET_CREATURE}\b",
         re.IGNORECASE,
+    )
+    _PET_COMPANION_RE = re.compile(
+        rf"\b{_PET_CREATURE}\b",
+        re.IGNORECASE,
+    )
+    _PET_PERSISTENCE_MARKERS = (
+        "fight at your side",
+        "fight by your side",
+        "remains until killed or unsummoned",
+        "remain until killed or unsummoned",
+        "once summoned",
     )
     _TRANSFORMATION_LINES = frozenset({"werewolf", "bone tyrant", "vampire"})
 
@@ -104,12 +113,14 @@ class ExtremeResourceRuntimeSkillWitnessCatalogService:
         if not cls._concrete(row):
             return False
         text = " ".join(str(row.description or "").casefold().split())
-        if not text:
+        if not text or cls._PET_COMPANION_RE.search(text) is None:
             return False
-        # Match a summoned creature, not merely any tooltip containing "summon".
-        # This excludes environmental constructs such as Grave Grasp's summoned
-        # patches/claws while preserving canonical creature summons.
-        return cls._PET_SUMMON_RE.search(text) is not None
+        # Accept explicit creature summons and persistent combat-companion grammar.
+        # Environmental constructs such as Grave Grasp's patches/claws contain no
+        # reviewed creature marker and therefore remain excluded.
+        if cls._PET_DIRECT_SUMMON_RE.search(text) is not None:
+            return True
+        return any(marker in text for marker in cls._PET_PERSISTENCE_MARKERS)
 
     @classmethod
     def _is_transformation_witness(cls, row: ExtremePlayerSkillRecord) -> bool:
