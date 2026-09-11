@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "darkshade_caverns_i",
+  "encounter_id": "sentinel_of_rkugamz",
+  "encounter_name": "Sentinel of Rkugamz",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Color Phases","threshold":"100% to 0%","description":"React to the Sentinel's color-driven attacks: deny healing spheres, block heavy pressure, kite Cyclone, and avoid Lightning Barrage."},"source_type":"guide","source_name":"Alcast Darkshade Caverns I Guide","source_locator":"Sentinel of Rkugamz","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"healing_spiders","value":{"name":"Healing Spiders","response":"keep_the_boss_out_of_healing_spheres_and_clear_spider_pressure_if_the_room_fills"},"source_type":"guide","source_name":"Alcast Darkshade Caverns I Guide","source_locator":"Sentinel of Rkugamz","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"cyclone","value":{"name":"Cyclone","response":"targeted_player_kites_the_spinning_boss_until_the_chase_ends"},"source_type":"guide","source_name":"Alcast Darkshade Caverns I Guide","source_locator":"Sentinel of Rkugamz","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"lightning_barrage","value":{"name":"Lightning Barrage","response":"move_out_of_incoming_lightning_impacts_and_do_not_stand_in_the_fields"},"source_type":"guide","source_name":"Alcast Darkshade Caverns I Guide","source_locator":"Sentinel of Rkugamz","game_update":"Launch","confidence":"high"}
+  ]
+}
