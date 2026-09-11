@@ -375,7 +375,8 @@ class ExtremeResourceActiveBarStateService:
                     remaining_count = max(0, BAR_SKILL_COUNT - len(reserved))
                     remaining_mages = mages_normal[:remaining_count]
                     m_count = len(remaining_mages) + int(
-                        ultimate is not None and self._line_key(ultimate.skill_line) == self.MAGES_GUILD
+                        ultimate is not None
+                        and self._line_key(ultimate.skill_line) == self._line_key(self.MAGES_GUILD)
                     )
                     states.append(
                         ExtremeResourceActiveBarState(
