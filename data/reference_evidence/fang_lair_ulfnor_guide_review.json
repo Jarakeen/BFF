@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "fang_lair",
+  "encounter_id": "ulfnor",
+  "encounter_name": "Ulfnor and Sabina Cedus",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Ulfnor and Sabina","threshold":"100% to 0%","description":"Ulfnor maintains heavy melee and fire pressure while Sabina periodically chains and threatens a player."},"source_type":"guide","source_name":"Alcast Fang Lair Guide","source_locator":"Ulfnor","game_update":"U17","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"haunting_spectre","value":{"name":"Haunting Spectre","response":"find_and_burn_sabina_immediately_to_break_the_chain_before_ulfnor_reaches_the_target"},"source_type":"achievement","source_name":"Nonplussed","source_locator":"Fang Lair achievement","game_update":"U17","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"heavy_attack","value":{"name":"Ulfnor Heavy Attack","response":"tank_blocks_the_heavy_attack_and_group_stays_out_of_front"},"source_type":"guide","source_name":"Alcast Fang Lair Guide","source_locator":"Ulfnor","game_update":"U17","confidence":"high"}
+  ]
+}
