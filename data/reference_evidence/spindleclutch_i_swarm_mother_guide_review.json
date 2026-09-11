@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "spindleclutch_i",
+  "encounter_id": "swarm_mother",
+  "encounter_name": "Swarm Mother",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Swarm Phase","threshold":"100% to 0%","description":"Keep Swarm Mother stable, control spiders in cleave, and stay close enough to prevent disruptive leap travel."},"source_type":"guide","source_name":"Xynode Spindleclutch I Guide","source_locator":"Swarm Mother","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"summon_spiders","value":{"name":"Summon Spiders","response":"tank_or_chain_spiders_into_the_boss_and_interrupt_feeding_behavior"},"source_type":"guide","source_name":"Xynode Spindleclutch I Guide","source_locator":"Swarm Mother","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"leap","value":{"name":"Leap","response":"stay_close_and_block_or_dodge_the_leap_then_restack_immediately"},"source_type":"guide","source_name":"Xynode Spindleclutch I Guide","source_locator":"Swarm Mother","game_update":"Launch","confidence":"high"}
+  ]
+}
