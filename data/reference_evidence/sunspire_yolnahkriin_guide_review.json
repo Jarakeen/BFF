@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "content_id": "sunspire",
+  "encounter_id": "yolnahkriin",
+  "encounter_name": "Yolnahkriin",
+  "evidence": [
+    {
+      "fact_type": "transition",
+      "fact_key": "fire_nuke_phase_thresholds",
+      "value": {
+        "label": "Fire Nuke Phase",
+        "thresholds": ["75%", "50%", "25%"],
+        "description": "Yolnahkriin takes flight and breathes across the arena; the group moves to the edge and burns molten Iron Atronachs after the breath."
+      },
+      "source_type": "guide",
+      "source_name": "Xynode Sunspire Trial Guide",
+      "source_family": "xynode",
+      "source_locator": "Yolnahkriin - Fire Nuke Phase",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "fire_geyser_explosion",
+      "value": {
+        "name": "Fire Geyser / Explosion",
+        "simultaneous_targets": 2,
+        "ticks": 5,
+        "damage_shared_by_stack": true,
+        "final_tick_blockable": true
+      },
+      "source_type": "guide",
+      "source_name": "Xynode Sunspire Trial Guide",
+      "source_family": "xynode",
+      "source_locator": "Yolnahkriin - Fire Geyser / Explosion",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "flame_atronach",
+      "value": {
+        "name": "Flame Atronach",
+        "death_hazard": "lava_pool",
+        "hardmode_enrage": true,
+        "hardmode_failure": "charges_group_and_explodes"
+      },
+      "source_type": "guide",
+      "source_name": "Xynode Sunspire Trial Guide",
+      "source_family": "xynode",
+      "source_locator": "Yolnahkriin - Flame Atronachs",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "iron_atronach",
+      "value": {
+        "name": "Iron Atronach",
+        "assignment": "back_tank",
+        "heavy_attack_block_required": true,
+        "molten_after_fire_nuke": true,
+        "molten_damage_taken_increase": "large"
+      },
+      "source_type": "guide",
+      "source_name": "Xynode Sunspire Trial Guide",
+      "source_family": "xynode",
+      "source_locator": "Yolnahkriin - Iron Atronachs",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "time_stop",
+      "value": {
+        "name": "Time Stop",
+        "hardmode": true,
+        "target_area": "group_near_dragon",
+        "control_effect": "stun",
+        "response": "step_out_or_break_free"
+      },
+      "source_type": "guide",
+      "source_name": "Xynode Sunspire Trial Guide",
+      "source_family": "xynode",
+      "source_locator": "Yolnahkriin - Hardmode Time Stop",
+      "confidence": "medium"
+    }
+  ]
+}
