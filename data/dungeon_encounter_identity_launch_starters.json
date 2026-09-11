@@ -15,6 +15,6 @@
     {"content_id":"elden_hollow_i","content_name":"Elden Hollow I","release_year":2014,"release_update":0,"release_pack":"Base Game Launch","encounter_id":"canonreeve_oraneth","display_name":"Canonreeve Oraneth","member_ids":["canonreeve_oraneth"]},
     {"content_id":"wayrest_sewers_i","content_name":"Wayrest Sewers I","release_year":2014,"release_update":0,"release_pack":"Base Game Launch","encounter_id":"investigator_garron","display_name":"Investigator Garron","member_ids":["investigator_garron"]},
     {"content_id":"wayrest_sewers_i","content_name":"Wayrest Sewers I","release_year":2014,"release_update":0,"release_pack":"Base Game Launch","encounter_id":"varaine_pellingare","display_name":"Varaine Pellingare","member_ids":["varaine_pellingare"]},
-    {"content_id":"wayrest_sewers_i","content_name":"Wayrest Sewers I","release_year":2014,"release_update":0,"release_pack":"Base Game Launch","encounter_id":"allene_pellingare_i","display_name":"Allene Pellingare","member_ids":["allene_pellingare"]}
+    {"content_id":"wayrest_sewers_i","content_name":"Wayrest Sewers I","release_year":2014,"release_update":0,"release_pack":"Base Game Launch","encounter_id":"allene_pellingare_wayrest_sewers_i","display_name":"Allene Pellingare","member_ids":["allene_pellingare"]}
   ]
 }
