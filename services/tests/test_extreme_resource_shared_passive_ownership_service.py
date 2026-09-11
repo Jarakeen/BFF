@@ -33,6 +33,7 @@ class _Universe:
     def passives(self):
         return (
             _passive("Slayer", "Fighters Guild", ExtremeSkillDomain.GUILD),
+            _passive("Undaunted Command", "Undaunted", ExtremeSkillDomain.GUILD),
             _passive("Magicka Aid", "Support", ExtremeSkillDomain.ALLIANCE_WAR),
             _passive("Fortress", "One Hand and Shield", ExtremeSkillDomain.WEAPON),
             _passive("Deflect Bolts", "One Hand and Shield", ExtremeSkillDomain.WEAPON),
@@ -51,6 +52,7 @@ def test_reviewed_shared_rows_are_proven_irrelevant_to_all_max_resources():
     assert [(row.domain.value, row.skill_line, row.passive_name) for row in rows] == [
         ("alliance_war", "Support", "Magicka Aid"),
         ("guild", "Fighters Guild", "Slayer"),
+        ("guild", "Undaunted", "Undaunted Command"),
         ("weapon", "One Hand and Shield", "Deflect Bolts"),
         ("weapon", "One Hand and Shield", "Fortress"),
     ]
@@ -60,14 +62,14 @@ def test_reviewed_shared_rows_are_proven_irrelevant_to_all_max_resources():
     )
 
     for objective in ("max_health", "max_magicka", "max_stamina"):
-        for passive in _Universe().passives()[:4]:
+        for passive in _Universe().passives()[:5]:
             row = ExtremeResourceSharedPassiveOwnershipService.resolve(passive, objective)
             assert row is not None
             assert row.status is ExtremeResourceSharedPassiveOwnershipStatus.PROVEN_IRRELEVANT
 
 
 def test_shared_ownership_requires_exact_domain_line_and_name():
-    wrong_line = _Universe().passives()[4]
+    wrong_line = _Universe().passives()[5]
     assert ExtremeResourceSharedPassiveOwnershipService.resolve(wrong_line, "max_health") is None
 
     wrong_domain = _passive("Slayer", "Fighters Guild", ExtremeSkillDomain.WEAPON)
@@ -82,6 +84,12 @@ def test_passive_denominator_moves_reviewed_shared_rows_to_static_irrelevant():
         ).build(objective)
 
         assert audit.denominator_proven is True
-        for passive_name in ("Slayer", "Magicka Aid", "Fortress", "Deflect Bolts"):
+        for passive_name in (
+            "Slayer",
+            "Undaunted Command",
+            "Magicka Aid",
+            "Fortress",
+            "Deflect Bolts",
+        ):
             assert any(passive_name in row for row in audit.static_irrelevant)
         assert any("Not One Hand and Shield :: Fortress" in row for row in audit.unresolved)
