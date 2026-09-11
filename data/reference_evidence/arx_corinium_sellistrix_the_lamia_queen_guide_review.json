@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "arx_corinium",
+  "encounter_id": "sellistrix_the_lamia_queen",
+  "encounter_name": "Sellistrix the Lamia Queen",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Control Sellistrix's positioning between land and water, block Piercing Shriek, and react to Bolt Discharge by using the safer water space."},"source_type":"guide","source_name":"Alcast Arx Corinium Guide","source_locator":"Sellistrix the Lamia Queen","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"piercing_shriek","value":{"name":"Piercing Shriek","response":"block_the_large_conal_scream_and_keep_non_targets_out_of_the_front_of_the_boss"},"source_type":"guide","source_name":"Alcast Arx Corinium Guide","source_locator":"Sellistrix the Lamia Queen","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"bolt_discharge","value":{"name":"Bolt Discharge","response":"move_off_the_islands_and_into_the_water_to_avoid_the_heavier_falling_debris_damage"},"source_type":"guide","source_name":"Alcast Arx Corinium Guide","source_locator":"Sellistrix the Lamia Queen","game_update":"Launch","confidence":"high"}
+  ]
+}
