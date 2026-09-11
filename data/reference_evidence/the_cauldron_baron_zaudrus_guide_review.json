@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "the_cauldron",
+  "encounter_id": "baron_zaudrus",
+  "encounter_name": "Baron Zaudrus",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main Phase","threshold":"Pull to ~35%","description":"Zaudrus mixes heavy tank pressure, Molten Pillars, adds, and moving Ash Vent hazards."},"source_type":"guide","source_name":"Alcast The Cauldron Guide","source_locator":"Baron Zaudrus","game_update":"U50","confidence":"high"},
+    {"fact_type":"phase","fact_key":"hardmode_execute","value":{"order":2,"label":"Hard Mode Ash Vent Execute","threshold":"~35% to death (Hard Mode)","description":"Hard Mode increases Ash Vent density late in the fight, forcing the group to keep moving while maintaining boss and add control."},"source_type":"guide","source_name":"Alcast The Cauldron Guide","source_locator":"Baron Zaudrus > Hardmode","game_update":"U50","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"ash_vent","value":{"name":"Ash Vent","response":"move_with_the_open_space_and_do_not_cross_the_fire_lasers","failure":"Ash Vent Disintegration can kill players"},"source_type":"guide","source_name":"ESO-Hub The Cauldron Achievements","source_locator":"Hold It Together","game_update":"U50","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"molten_pillars","value":{"name":"Molten Pillars","response":"destroy_pillars_before_they_remove_too_much_arena_space_and_use_cold_flame_infusion_when_available"},"source_type":"guide","source_name":"ESO-Hub The Cauldron Achievements","source_locator":"Daedric Demolitionist","game_update":"U50","confidence":"high"}
+  ]
+}
