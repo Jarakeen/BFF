@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "hel_ra_citadel",
+  "encounter_id": "yokeda_split",
+  "encounter_name": "Yokeda Kai and Yokeda Rok'dun",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"split_groups","value":{"order":1,"label":"Split Groups","threshold":"Pull","description":"The raid splits to fight Yokeda Kai and Yokeda Rok'dun separately. Each side must complete its encounter without collapsing the opposite side."},"source_type":"guide","source_name":"Xynode Hel Ra Citadel Trial Guide","source_locator":"Yokeda Kai / Yokeda Rok'dun","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"kai_split","value":{"name":"Split","copies":4,"real_copy_count":1,"response":"assign_one_player_to_each_copy_and_interrupt_flame_channel"},"source_type":"guide","source_name":"Xynode Hel Ra Citadel Trial Guide","source_locator":"Yokeda Kai Split","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"rokdun_welwas","value":{"name":"Welwa Adds","response":"tank_controls_welwas_and_group_executes_enraged_or_excess_adds"},"source_type":"guide","source_name":"Xynode Hel Ra Citadel Trial Guide","source_locator":"Yokeda Rok'dun Welwas","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"side_wipe_enrage","value":{"name":"Side Wipe Enrage","if_either_side_wipes_other_boss_enrages":true},"source_type":"official_patch_notes","source_name":"ESO PTS Patch Notes v2.5.3","source_locator":"Hel Ra Citadel","game_update":"U11-era trial refresh","confidence":"high"}
+  ]
+}
