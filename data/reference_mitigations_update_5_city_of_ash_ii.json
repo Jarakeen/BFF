@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {"entry_name":"Flame Breath — Horvantud the Fire Maw","mitigation":"Tank faces Horvantud away from the group; non-tanks stay out of the frontal flame cone."},
+    {"entry_name":"Ground Eruptions — Horvantud the Fire Maw","mitigation":"Move out of fire eruptions without dragging Horvantud through the group or scattering the stack."},
+    {"entry_name":"Dremora Waves — Horvantud the Fire Maw","mitigation":"Control and burn incoming Dremora before add pressure compounds with boss fire mechanics."},
+    {"entry_name":"Heavy Cleave — Ash Titan","mitigation":"Tank blocks the cleave and faces the Ash Titan away from the group."},
+    {"entry_name":"Meteor Strikes — Ash Titan","mitigation":"Dodge or step out of meteor impacts and avoid overlapping targeted fire on teammates."},
+    {"entry_name":"Burning Atronachs — Ash Titan","mitigation":"Control and kill burning atronachs before they overlap with flame walls and meteor pressure."},
+    {"entry_name":"Meteor Strikes — Valkyn Skoria","mitigation":"Dodge targeted meteors and avoid stacking impacts on the group."},
+    {"entry_name":"Lava Platforms — Valkyn Skoria","mitigation":"Move together to safe platforms and preserve remaining floor space as platforms are lost."},
+    {"entry_name":"Flame Phase Interrupts — Valkyn Skoria","mitigation":"Interrupt dangerous flame casts when available and prioritize survival while the arena is collapsing."}
+  ]
+}
