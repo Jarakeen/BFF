@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "blackheart_haven",
+  "encounter_id": "captain_blackheart",
+  "encounter_name": "Captain Blackheart",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Hold Captain Blackheart still, pull summoned skeletons into cleave, step out of his spin, and adapt when a random player is transformed into a skeleton."},"source_type":"guide","source_name":"Xynode Blackheart Haven Guide","source_locator":"Captain Blackheart","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"skeletons","value":{"name":"Skeletons","response":"chain_or_pull_ranged_skeletons_into_the_boss_and_clear_them_with_aoe_before_they_accumulate"},"source_type":"guide","source_name":"Xynode Blackheart Haven Guide","source_locator":"Captain Blackheart","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"spin","value":{"name":"Spin","response":"non_tanks_step_out_of_the_small_spin_aoe_then_restack_after_it_finishes"},"source_type":"guide","source_name":"Xynode Blackheart Haven Guide","source_locator":"Captain Blackheart","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"skeleton_curse","value":{"name":"Skeleton Curse","response":"the_transformed_player_stays_with_the_group_and_uses_skeleton_attacks_until_the_transformation_expires"},"source_type":"guide","source_name":"Xynode Blackheart Haven Guide","source_locator":"Captain Blackheart","game_update":"Launch","confidence":"high"}
+  ]
+}
