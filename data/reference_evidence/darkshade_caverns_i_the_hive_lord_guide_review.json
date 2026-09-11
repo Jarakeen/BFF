@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "darkshade_caverns_i",
+  "encounter_id": "the_hive_lord",
+  "encounter_name": "The Hive Lord",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Keep the Hive Lord facing away, stay reasonably close to suppress leap pressure, and interrupt the group-wide pound."},"source_type":"guide","source_name":"Alcast Darkshade Caverns I Guide","source_locator":"The Hive Lord","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"overhead_smash","value":{"name":"Overhead Smash","response":"tank_blocks_the_frontal_cone_and_keeps_the_boss_facing_away_from_the_group"},"source_type":"guide","source_name":"Alcast Darkshade Caverns I Guide","source_locator":"The Hive Lord","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"ground_pound","value":{"name":"Ground Pound","response":"bash_the_hive_lord_to_interrupt_the_repeating_group_wide_damage"},"source_type":"guide","source_name":"Alcast Darkshade Caverns I Guide","source_locator":"The Hive Lord","game_update":"Launch","confidence":"high"}
+  ]
+}
