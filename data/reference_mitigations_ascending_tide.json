@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {"entry_name":"Storm Cell — Maligalig","mitigation":"Move the player-targeted storm into the large roaming storm to disperse it before the group-wide damage becomes unmanageable."},
+    {"entry_name":"Yaghra Larva / Toxic Burst — Maligalig","mitigation":"Watch the marked player and dodge the larva detonation instead of letting multiple explosions land in the stack."},
+    {"entry_name":"Building Static — Maligalig","mitigation":"In Hard Mode, balance platform time with brief water resets. Static builds while out of the water, but the water itself hurts, so rotate deliberately rather than panicking between platforms."},
+
+    {"entry_name":"Assault / Brand — Sarydil","mitigation":"Tank stays ready for Sarydil's teleport heavy and keeps her controlled instead of ranging so far away that the follow-up catches the group unprepared."},
+    {"entry_name":"Target Mark — Sarydil","mitigation":"Marked player walks trap drops around the outside edge and preserves the middle for later safe movement."},
+    {"entry_name":"Pinpoint — Sarydil","mitigation":"Interrupt the shadowy assassins focusing the marked target. Leaving the channels running turns the mechanic into sustained lethal focus fire."},
+    {"entry_name":"Trap Explosion — Sarydil","mitigation":"Find the safe gap before the arena traps detonate. Do not solve the mechanic by adding more badly placed traps to the route everyone needs."},
+
+    {"entry_name":"Crashing Waves / Sea Orbs — Varallion","mitigation":"Track wave origins and move between crossing paths. Hard Mode can overlap waves from multiple sides, so keep the group mobile instead of anchoring in one quadrant."},
+    {"entry_name":"Gryphon Priority — Varallion","mitigation":"Tank and focus gryphons promptly. Iliata's lightning fields and Mafremare's tornadoes become far worse when allowed to overlap with boss mechanics."},
+    {"entry_name":"Hard Mode Tether — Varallion","mitigation":"Tethered partners stay close and move as a pair while the healer supports the damage-over-time pressure."},
+    {"entry_name":"Mental Wound — Varallion","mitigation":"Heal through the DoT while keeping attention on waves and add positioning; it is dangerous mainly because it overlaps movement mechanics."},
+
+    {"entry_name":"Paralyzing Fear — Foreman Bradiggan","mitigation":"Dodge inward or sideways as the fear waves travel outward. Avoid rolling outward into the path of the next wave."},
+    {"entry_name":"Skeletal Flame Shapers — Foreman Bradiggan","mitigation":"Chain or focus the Flame Shapers and interrupt Inferno immediately so group damage does not stack with the rest of the arena pressure."},
+    {"entry_name":"Harrowing Haunter — Foreman Bradiggan","mitigation":"Kill Haunters quickly because their tether debuffs damage, healing, and armor on the affected player."},
+    {"entry_name":"Soul Bomb — Foreman Bradiggan","mitigation":"In Hard Mode, resolve each bomb with exactly two players. Too few or too many players in the share is lethal; preassigned partners simplify the first cycles."},
+
+    {"entry_name":"Kindred Spirit — Nazaray","mitigation":"Kill two wolves directly opposite one another, then move into the safe areas left where they died before the room-wide resolution."},
+    {"entry_name":"Liquidate / Blue Empowerment — Nazaray","mitigation":"Tank moves Nazaray out of blue circles immediately. Standing in them makes her immune and dramatically increases incoming tank damage."},
+    {"entry_name":"Lurchers — Nazaray","mitigation":"Control or kill lurchers when pressure is high, but avoid forcing a bad overlap with a Kindred Spirit cycle. High-damage groups may manage rather than hard-focus them."},
+    {"entry_name":"Bludgeon — Nazaray","mitigation":"Tank blocks only with sufficient mitigation or dodge-rolls the heavy, especially while Nazaray is empowered."},
+
+    {"entry_name":"Drown — Captain Numirril","mitigation":"Tank dodge-rolls the cast to avoid being lifted and losing aggro during a chaotic movement window."},
+    {"entry_name":"Drowned Corpses — Captain Numirril","mitigation":"Interrupt Retch when practical and control corpse pressure without abandoning the boss. Their ranged attacks and channels create the bile that consumes arena space."},
+    {"entry_name":"Tidal Waves — Captain Numirril","mitigation":"Read the adjacent wave origins early and move through clean lanes. Waves also wash away bile, so use the reset instead of fighting the arena forever."},
+    {"entry_name":"Bile Pools — Captain Numirril","mitigation":"Place and move cleanly so bile does not choke the small platform before later Hulk and wave overlaps."}
+  ]
+}
