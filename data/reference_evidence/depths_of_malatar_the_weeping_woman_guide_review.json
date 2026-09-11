@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "depths_of_malatar",
+  "encounter_id": "the_weeping_woman",
+  "encounter_name": "The Weeping Woman",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Ice Phase","threshold":"Full fight","description":"The fight layers geysers, expanding ice zones, tracking ice spikes, and add pressure."},"source_type":"guide","source_name":"Alcast Depths of Malatar Guide","source_locator":"Weeping Woman","game_update":"U21","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"glaciation","value":{"name":"Glaciation","response":"watch_floor_and_move_out_of_ice_and_growing_geysers"},"source_type":"guide","source_name":"ESO-Hub Depths of Malatar Achievements","source_locator":"Skating the Ice","game_update":"U21","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"adds","value":{"name":"Add Pressure","response":"control_or_burn_adds_before_they_overwhelm_tank_and_healer"},"source_type":"guide","source_name":"Alcast Depths of Malatar Guide","source_locator":"Weeping Woman adds","game_update":"U21","confidence":"high"}
+  ]
+}
