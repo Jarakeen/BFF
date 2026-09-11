@@ -14,6 +14,7 @@ from services.encounter_runtime_guide_projection_service import (
     EncounterGuideRuntimeRoleGuidance,
 )
 from services.expedition_service import ExpeditionService
+from ui.components.foundry_card import FoundryCard
 from ui.mechanics_runtime_page import RuntimeMechanicsPage
 
 
@@ -52,8 +53,23 @@ class _RuntimeGuideService:
             encounter_id="lokkestiiz",
             notes=(
                 EncounterGuideRuntimeNote(
-                    key="flight_2_pressure",
+                    key="flight_1_lighter_pressure",
+                    text="Flight 1 was lighter than the later flights.",
+                    confidence="repeated_observation",
+                ),
+                EncounterGuideRuntimeNote(
+                    key="flight_2_primary_sustained_pressure",
                     text="Flight 2 repeatedly carried the strongest sustained pressure.",
+                    confidence="repeated_observation",
+                ),
+                EncounterGuideRuntimeNote(
+                    key="flight_3_higher_death_incidence",
+                    text="Flight 3 had the highest observed death incidence.",
+                    confidence="repeated_observation",
+                ),
+                EncounterGuideRuntimeNote(
+                    key="later_flights_interrupt_activity",
+                    text="Flights 2 and 3 repeatedly contained interrupt activity.",
                     confidence="repeated_observation",
                 ),
             ),
@@ -64,7 +80,7 @@ class _RuntimeGuideService:
                     guidance="Prepare strongest sustained coverage for Flight 2.",
                 ),
             ),
-            source_labels=("Reviewed Lokke corpus",),
+            source_labels=("ESO Logs reviewed Lokkestiiz successful-clear corpus",),
             successful_kills=10,
             reviewed_windows=30,
             limitations=("Observed runtime evidence only.",),
@@ -79,6 +95,16 @@ def _page() -> RuntimeMechanicsPage:
     )
 
 
+def _card_titles(page: RuntimeMechanicsPage) -> list[str]:
+    titles: list[str] = []
+    for card in page.findChildren(FoundryCard):
+        try:
+            titles.append(card.title_label.text())
+        except RuntimeError:
+            continue
+    return titles
+
+
 def test_runtime_mechanics_page_replaces_strategy_placeholder_with_reviewed_runtime_projection():
     app = QApplication.instance() or QApplication([])
     page = _page()
@@ -87,27 +113,32 @@ def test_runtime_mechanics_page_replaces_strategy_placeholder_with_reviewed_runt
         index for index in range(page.tabs.count()) if page.tabs.tabText(index) == "STRATEGY"
     )
     assert strategy_index == 2
-    assert page.runtime_notes_table.rowCount() == 1
+    assert page.runtime_notes_table.rowCount() == 4
     assert page.runtime_guidance_table.rowCount() == 1
-    assert "10 successful clear(s)" in page.runtime_strategy_summary.text()
-    assert "not canonical encounter mechanics" in page.runtime_strategy_summary.text()
-    assert page.runtime_notes_table.item(0, 0).text().startswith("Flight 2 repeatedly")
+    assert page.runtime_notes_table.item(1, 0).text().startswith("Flight 2 repeatedly")
     assert page.runtime_guidance_table.item(0, 0).text() == "Healer"
     assert page.runtime_guidance_table.item(0, 1).text() == "High"
+
+    # Raid-lead glance surface: action first, provenance demoted to a muted footer.
+    assert "Flight 2: highest sustained pressure" in page.runtime_strategy_summary.text()
+    assert "Flights 2–3: interrupts matter" in page.runtime_strategy_summary.text()
+    assert "Flight 3: highest observed death incidence" in page.runtime_strategy_summary.text()
+    assert page.runtime_evidence_source_label.text() == "10 reviewed clear(s) • ESO Logs corpus"
+
+    titles = _card_titles(page)
+    assert "My Notes" not in titles
+    assert titles.count("Reviewed Runtime Evidence") == 1
 
     assert page.runtime_strategy_overview_label is not None
     assert "Healer: Prepare strongest sustained coverage for Flight 2." in (
         page.runtime_strategy_overview_label.text()
     )
     assert page.runtime_callouts_label is not None
-    assert "Flight 2 repeatedly carried the strongest sustained pressure." in (
+    assert "Flight 1 was lighter than the later flights." in (
         page.runtime_callouts_label.text()
     )
     assert page.runtime_reminders_label is not None
     assert "Healer: Prepare strongest sustained coverage for Flight 2." in (
-        page.runtime_reminders_label.text()
-    )
-    assert "Reviewed runtime sample: 10 successful clear(s)." in (
         page.runtime_reminders_label.text()
     )
 
@@ -129,6 +160,7 @@ def test_runtime_mechanics_page_tolerates_deleted_glance_label():
 
     assert page.runtime_notes_table.rowCount() == 0
     assert page.runtime_guidance_table.rowCount() == 0
+    assert page.runtime_strategy_summary.text().startswith("No reviewed runtime observations")
 
     page.close()
     app.processEvents()
