@@ -46,6 +46,8 @@ _REVIEWED_TOOLTIP_IRRELEVANT: tuple[tuple[str, str, str], ...] = (
     ("Aedric Spear", "Spear Wall", "Minor Berserk and Minor Protection only"),
     ("Animal Companions", "Bond with Nature", "flat self-heal when an Animal Companions skill ends only"),
     ("Animal Companions", "Savage Beast", "Ultimate generation after casting an Animal Companions ability only"),
+    ("Ardent Flame", "Fan the Flames", "Burning application chance and Burning damage only"),
+    ("Ardent Flame", "Traumatic Burns", "enemy Flame Damage Taken and movement-speed modification only"),
     ("Curative Runeforms", "Erudition", "Magicka and Stamina Recovery only"),
     ("Curative Runeforms", "Intricate Runeforms", "Curative Runeforms ability cost reduction and damage-shield strength only"),
     ("Assassination", "Master Assassin", "conditional Critical Chance rating only"),
