@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "content_id": "kynes_aegis",
+  "encounter_id": "captain_vrol",
+  "encounter_name": "Captain Vrol",
+  "evidence": [
+    {
+      "fact_type": "phase",
+      "fact_key": "pre_execute",
+      "value": {"order": 1, "label": "Conjurer / Siege Phase", "threshold": "100-50%", "description": "Vrolsworn Conjurer waves recur on roughly a 45-second timer; the group uses ballistae and a boat runner to stop summons."},
+      "source_type": "guide",
+      "source_name": "AlcastHQ Kyne's Aegis Trial Guide",
+      "source_locator": "Captain Vrol pre-50%",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "phase",
+      "fact_key": "execute",
+      "value": {"order": 2, "label": "Fire Mage Execute", "threshold": "50%", "description": "Conjurer/portal handling ends; two Vrolsworn Fire Mages appear on the boat and must be killed with ballistae while Storm Twin interrupts are handled."},
+      "source_type": "guide",
+      "source_name": "AlcastHQ Kyne's Aegis Trial Guide",
+      "source_locator": "Captain Vrol execute",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "shocking_harpoon",
+      "value": {"name": "Shocking Harpoon", "cadence_seconds_approx": 45, "priority": "kill_fast"},
+      "source_type": "guide",
+      "source_name": "AlcastHQ Kyne's Aegis Trial Guide",
+      "source_locator": "Captain Vrol Shocking Harpoon",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "boat_conjurer",
+      "value": {"name": "Vrolsworn Conjurer", "cadence_seconds_approx": 45, "before_50_percent": true},
+      "source_type": "guide",
+      "source_name": "AlcastHQ Kyne's Aegis Trial Guide",
+      "source_locator": "Captain Vrol boat mechanic",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "hardmode_portal_add_enrage",
+      "value": {"portal_adds_enrage_if_left_alone": true},
+      "source_type": "official_patch_notes",
+      "source_name": "ESO PTS Patch Notes v6.0.1",
+      "source_locator": "Kyne's Aegis > Captain Vrol",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "frigid_fog",
+      "value": {"name": "Frigid Fog", "boss_gains_refreshing_damage_shield_while_inside": true},
+      "source_type": "guide",
+      "source_name": "AlcastHQ Kyne's Aegis Trial Guide",
+      "source_locator": "Captain Vrol Frigid Fog",
+      "confidence": "medium"
+    }
+  ]
+}
