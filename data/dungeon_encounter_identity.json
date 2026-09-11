@@ -20,6 +20,13 @@
     {"content_id":"oathsworn_pit","content_name":"Oathsworn Pit","release_year":2024,"release_update":41,"release_pack":"Scions of Ithelia","encounter_id":"aradros_the_awakened","display_name":"Aradros the Awakened","member_ids":["aradros_the_awakened"]},
     {"content_id":"bedlam_veil","content_name":"Bedlam Veil","release_year":2024,"release_update":41,"release_pack":"Scions of Ithelia","encounter_id":"shattered_champion","display_name":"Shattered Champion","member_ids":["shattered_champion"]},
     {"content_id":"bedlam_veil","content_name":"Bedlam Veil","release_year":2024,"release_update":41,"release_pack":"Scions of Ithelia","encounter_id":"darkshard","display_name":"Darkshard","member_ids":["darkshard"]},
-    {"content_id":"bedlam_veil","content_name":"Bedlam Veil","release_year":2024,"release_update":41,"release_pack":"Scions of Ithelia","encounter_id":"the_blind","display_name":"The Blind","member_ids":["the_blind"]}
+    {"content_id":"bedlam_veil","content_name":"Bedlam Veil","release_year":2024,"release_update":41,"release_pack":"Scions of Ithelia","encounter_id":"the_blind","display_name":"The Blind","member_ids":["the_blind"]},
+
+    {"content_id":"bal_sunnar","content_name":"Bal Sunnar","release_year":2023,"release_update":37,"release_pack":"Scribes of Fate","encounter_id":"kovan_giryon","display_name":"Kovan Giryon","member_ids":["kovan_giryon"]},
+    {"content_id":"bal_sunnar","content_name":"Bal Sunnar","release_year":2023,"release_update":37,"release_pack":"Scribes of Fate","encounter_id":"roksa_the_warped","display_name":"Roksa the Warped","member_ids":["roksa_the_warped"]},
+    {"content_id":"bal_sunnar","content_name":"Bal Sunnar","release_year":2023,"release_update":37,"release_pack":"Scribes of Fate","encounter_id":"matriarch_lladi_telvanni","display_name":"Matriarch Lladi Telvanni","member_ids":["matriarch_lladi_telvanni"]},
+    {"content_id":"scrivener_s_hall","content_name":"Scrivener's Hall","release_year":2023,"release_update":37,"release_pack":"Scribes of Fate","encounter_id":"riftmaster_naqri","display_name":"Riftmaster Naqri","member_ids":["riftmaster_naqri"]},
+    {"content_id":"scrivener_s_hall","content_name":"Scrivener's Hall","release_year":2023,"release_update":37,"release_pack":"Scribes of Fate","encounter_id":"ozezan_the_inferno","display_name":"Ozezan the Inferno","member_ids":["ozezan_the_inferno"]},
+    {"content_id":"scrivener_s_hall","content_name":"Scrivener's Hall","release_year":2023,"release_update":37,"release_pack":"Scribes of Fate","encounter_id":"valinna","display_name":"Valinna and Lamikhai","member_ids":["valinna","lamikhai"]}
   ]
 }
