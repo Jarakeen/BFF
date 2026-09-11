@@ -13,6 +13,26 @@
     {"entry_name":"Charge and Devour — Shadowrend","mitigation":"Stay close to Shadowrend; if Devour triggers, interrupt it immediately to free the targeted player."},
     {"entry_name":"Feasts — High Kinlord Rilis","mitigation":"Kill healing orbs before they reach Rilis and restore his health."},
     {"entry_name":"Ghost Fire — High Kinlord Rilis","mitigation":"Step out of each ground-fire pool without dragging the boss around the room."},
-    {"entry_name":"Heavy Blow — High Kinlord Rilis","mitigation":"Block the heavy attack; unblocked hits can be lethal to non-tanks."}
+    {"entry_name":"Heavy Blow — High Kinlord Rilis","mitigation":"Block the heavy attack; unblocked hits can be lethal to non-tanks."},
+    {"entry_name":"Extracted Poison — Foreman Llothan","mitigation":"Move out of the poison ground effect immediately; do not try to finish a cast while standing in it."},
+    {"entry_name":"Kwama Summon — Foreman Llothan","mitigation":"Cleave or focus each Kwama wave as it appears so adds do not accumulate across health thresholds."},
+    {"entry_name":"Overhead Smash — The Hive Lord","mitigation":"Keep the boss faced away from the group and block the frontal smash."},
+    {"entry_name":"Ground Pound — The Hive Lord","mitigation":"Bash the Hive Lord promptly to stop the repeating group-wide pound."},
+    {"entry_name":"Healing Spiders — Sentinel of Rkugamz","mitigation":"Keep the Sentinel out of healing spheres and clear spider pressure if the room begins to fill."},
+    {"entry_name":"Cyclone — Sentinel of Rkugamz","mitigation":"The targeted player kites the spinning boss until the chase ends; everyone else stays clear of its path."},
+    {"entry_name":"Lightning Barrage — Sentinel of Rkugamz","mitigation":"Move out of incoming lightning impacts and avoid lingering in the resulting fields."},
+    {"entry_name":"Cleave — Akash gra-Mal","mitigation":"The tank blocks and keeps Akash facing away from the group so the frontal cone never clips allies."},
+    {"entry_name":"Whirlwind — Akash gra-Mal","mitigation":"Step out of the close-range spin and be ready to block the heavy attack that commonly follows."},
+    {"entry_name":"Vine Pull — Chokethorn","mitigation":"Stay reasonably close to Chokethorn so the long-range chain pull does not trigger unnecessarily."},
+    {"entry_name":"Burst — Chokethorn","mitigation":"Leave the large expanding AOE before it resolves, then move back in after the burst disappears."},
+    {"entry_name":"Poison Bolt — Canonreeve Oraneth","mitigation":"Watch Oraneth turn toward her chosen target and dodge roll as the channeled poison bolt is released."},
+    {"entry_name":"Blast — Canonreeve Oraneth","mitigation":"Move out of the growing AOE before it resolves, then return to your assigned position."},
+    {"entry_name":"Skeletons — Canonreeve Oraneth","mitigation":"Tank or pull the skeletons onto the boss and clear them with AOE before their heavy attacks create side pressure."},
+    {"entry_name":"Death's Embrace — Investigator Garron","mitigation":"Stay away from the roaming green hazards and never kite one through the group."},
+    {"entry_name":"Restless Souls — Investigator Garron","mitigation":"Tank the summoned ghosts and burn them down promptly before ranged add pressure stacks up."},
+    {"entry_name":"Frontal AOE — Varaine Pellingare","mitigation":"Sidestep the long frontal attack and keep healers and ranged damage dealers out of its line."},
+    {"entry_name":"Jumping Spin — Varaine Pellingare","mitigation":"When Varaine jumps, move or dodge roll out of melee range before the spinning sword attack lands."},
+    {"entry_name":"Power Attack — Allene Pellingare","mitigation":"Block Allene's heavy attack; letting it land unblocked can cause a large burst even on the tank."},
+    {"entry_name":"Fiendish Hallucinations — Allene Pellingare","mitigation":"When Allene vanishes, immediately switch to the hallucinations and kill them quickly before she returns."}
   ]
 }
