@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "fang_lair",
+  "encounter_id": "caluurion",
+  "encounter_name": "Caluurion",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Relic Cycle","threshold":"100% to 0%","description":"Caluurion cycles active relics while the group uses elemental Bonefiend explosions to deactivate them."},"source_type":"guide","source_name":"Xynode Fang Lair Guide","source_locator":"Caluurion","game_update":"U17","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"relics","value":{"name":"Elemental Relics","response":"move_to_active_relic_and_kill_matching_bonefiends_on_it"},"source_type":"achievement","source_name":"Elementary Anatomy","source_locator":"Fang Lair achievement","game_update":"U17","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"lich_crystals","value":{"name":"Lich Crystals","response":"hold_position_in_safe_gaps_and_avoid_expanding_crystal_aoes"},"source_type":"guide","source_name":"Xynode Fang Lair Guide","source_locator":"Caluurion","game_update":"U17","confidence":"high"}
+  ]
+}
