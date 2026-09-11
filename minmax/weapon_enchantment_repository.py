@@ -17,6 +17,21 @@ class WeaponEnchantmentRepository:
     def __init__(self, database_path: str | Path):
         self.database_path = str(database_path)
 
+    def list_items(self) -> tuple[tuple[int, str], ...]:
+        """Return every canonical weapon-enchantment item id and display name."""
+        with sqlite3.connect(self.database_path) as connection:
+            rows = connection.execute(
+                """
+                SELECT DISTINCT item_id, name
+                FROM weapon_enchantment
+                WHERE item_id IS NOT NULL
+                  AND name IS NOT NULL
+                  AND TRIM(name) <> ''
+                ORDER BY LOWER(TRIM(name)), item_id
+                """
+            ).fetchall()
+        return tuple((int(item_id), str(name)) for item_id, name in rows)
+
     def find_item_ids_by_label(self, label: str) -> tuple[int, ...]:
         """Return exact or semantically verified matches for one saved label.
 
