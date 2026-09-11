@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "content_id": "moon_hunter_keep",
+  "encounter_id": "hedge_maze_guardian",
+  "encounter_name": "Hedge Maze Guardian",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"boss_one","value":{"order":1,"label":"Boss Phase I","threshold":"100% to about 55%","description":"Tank the Guardian at the arena edge while the group avoids its heavy attacks and frontal arm-gun cone."},"source_type":"guide","source_name":"Moon Hunter Keep community guide","source_locator":"Hedge Maze Guardian","game_update":"U19","confidence":"high"},
+    {"fact_type":"phase","fact_key":"maze_one","value":{"order":2,"label":"Spriggan Maze I","threshold":"about 55%","description":"The Guardian becomes invulnerable and is healed by Spriggans hidden in the maze; the group must find and kill them."},"source_type":"guide","source_name":"Retro Rebellion Moon Hunter Keep Boss Mechanics","source_locator":"Hedge Maze Guardian","game_update":"U19","confidence":"high"},
+    {"fact_type":"phase","fact_key":"maze_two","value":{"order":3,"label":"Spriggan Maze II","threshold":"about 35%","description":"Repeat the maze search and remove the healing Spriggans before returning to the boss."},"source_type":"guide","source_name":"Retro Rebellion Moon Hunter Keep Boss Mechanics","source_locator":"Hedge Maze Guardian","game_update":"U19","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"strangler_snare","value":{"name":"Strangler Snare","response":"stay_together_in_maze_and_interrupt_snare_immediately"},"source_type":"achievement","source_name":"Sidestepping Stranglers","source_locator":"Moon Hunter Keep achievement","game_update":"U19","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"lurcher_roots","value":{"name":"Lurcher Roots","response":"avoid_root_attack_and_keep_movement_space_clear"},"source_type":"achievement","source_name":"Root of the Problem","source_locator":"Moon Hunter Keep achievement","game_update":"U19","confidence":"high"}
+  ]
+}
