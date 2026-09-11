@@ -103,6 +103,15 @@ def _following_restores(events, *, source_id: int, timestamp: float, forward_ms:
     return tuple(rows)
 
 
+def _heavy_event_shape_key(label: str, event):
+    return (
+        label,
+        str(event.raw_event_type or "unknown"),
+        event.tick,
+        event.cast_track_id is not None,
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
@@ -125,7 +134,8 @@ def main() -> int:
 
     observations = []
     heavy_counts = Counter()
-    roster_actor_keys = set()
+    heavy_event_shapes = Counter()
+    cast_track_ids = defaultdict(set)
 
     for fight, roster_by_id, events in _iter_corpus(args.path):
         if args.report_code and fight.report_code != args.report_code:
@@ -138,9 +148,12 @@ def main() -> int:
             if actor is None:
                 continue
             name, role = actor
-            key = (fight.report_code, fight.fight_id, int(action.source_id), name, role, label)
-            roster_actor_keys.add(key[:-1])
             heavy_counts[(label, fight.report_code, fight.fight_id, int(action.source_id), name, role)] += 1
+            heavy_event_shapes[_heavy_event_shape_key(label, action)] += 1
+            if action.cast_track_id is not None:
+                cast_track_ids[label].add(
+                    (fight.report_code, fight.fight_id, int(action.source_id), int(action.cast_track_id))
+                )
             for restore, delta in _following_restores(
                 events,
                 source_id=int(action.source_id),
@@ -156,9 +169,21 @@ def main() -> int:
     print(f"Raw corpus:            {args.path}")
     print(f"Report filter:         {args.report_code or 'all reports'}")
     print(f"Restore window:        {args.forward_ms:g} ms")
-    print(f"Roster actors with HA: {len({row[:5] for row in heavy_counts})}")
-    print(f"Staff heavy actions:   {sum(heavy_counts.values())}")
+    print(f"Roster actors with HA: {len({row[1:6] for row in heavy_counts})}")
+    print(f"Staff heavy log rows:  {sum(heavy_counts.values())}")
     print(f"Following self restores: {len(observations)}")
+
+    print()
+    print("STAFF HEAVY LOG SHAPES")
+    print("----------------------")
+    for (label, raw_type, tick, has_cast_track), count in heavy_event_shapes.most_common(args.limit):
+        print(
+            f"{count:5d} | {label:24} | raw_type={raw_type:12} | "
+            f"tick={tick!s:5} | cast_track={'yes' if has_cast_track else 'no'}"
+        )
+    for label in sorted(STAFF_HEAVY_ALIASES.values()):
+        if cast_track_ids.get(label):
+            print(f"      | {label:24} | distinct_cast_tracks={len(cast_track_ids[label])}")
 
     print()
     print("STAFF HEAVY COUNTS BY PLAYER")
@@ -175,16 +200,18 @@ def main() -> int:
             float(restore.resource_change),
             restore.resource_change_type,
             restore.ability_game_id,
+            restore.ability_name,
         )
         for _fight, _action, restore, _delta, _name, _role, label in observations
     )
     print()
     print("SELF-RESTORE DISTRIBUTION BY STAFF HEAVY")
     print("----------------------------------------")
-    for (label, amount, resource_type, restore_id), count in by_restore.most_common(args.limit):
+    for (label, amount, resource_type, restore_id, restore_name), count in by_restore.most_common(args.limit):
         print(
             f"{count:5d} | {label:24} | restore={amount:g} | "
-            f"resource_type={resource_type} | restore_id={restore_id}"
+            f"resource_type={resource_type} | restore_id={restore_id} | "
+            f"restore_name={restore_name or 'unknown'}"
         )
 
     per_actor = defaultdict(list)
@@ -212,10 +239,11 @@ def main() -> int:
         print(
             f"{name} ({role}) | {label} | report={fight.report_code} fight={fight.fight_id} "
             f"source={action.source_id} action_event={action.event_index} "
+            f"action_type={action.raw_event_type} cast_track={action.cast_track_id} tick={action.tick} "
             f"restore_event={restore.event_index} +{delta:g}ms "
             f"restore={float(restore.resource_change):g} resource_type={restore.resource_change_type} "
-            f"restore_id={restore.ability_game_id} waste={restore.waste} "
-            f"max_resource={restore.max_resource_amount}"
+            f"restore_id={restore.ability_game_id} restore_name={restore.ability_name or 'unknown'} "
+            f"waste={restore.waste} max_resource={restore.max_resource_amount}"
         )
 
     print()
@@ -224,6 +252,7 @@ def main() -> int:
     print("- Staff-heavy numeric ids are reviewed ESO Logs aliases, not canonical BFF skill identities.")
     print("- Only actors present in each fight's player_details roster are included.")
     print("- Resource events must be self-targeted (source_id == target_id) to count as HA restore candidates.")
+    print("- Raw heavy-event shapes are diagnostic only; this audit does not yet choose a completion event.")
     print("- Positive self-resource events inside the time window remain observational until reviewed.")
     print("- This audit reads raw research JSON and writes nothing.")
     return 0
