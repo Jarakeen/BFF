@@ -81,7 +81,7 @@ class JewelryGlyphParser:
             elif re.search(r"Frost Resistance", line, re.I):
                 effect_type = "frost_resistance"
 
-            elif re.search(r"Fire Resistance", line, re.I):
+            elif re.search(r"(?:Fire|Flame) Resistance", line, re.I):
                 effect_type = "flame_resistance"
 
             elif re.search(r"Shock Resistance", line, re.I):
