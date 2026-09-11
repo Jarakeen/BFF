@@ -104,14 +104,17 @@ def test_checked_in_registry_keeps_newest_first_release_slices_and_main_encounte
     assert len(by_content["bedlam_veil"]) == 3
     assert len(by_content["bal_sunnar"]) == 3
     assert len(by_content["scrivener_s_hall"]) == 3
+    assert len(by_content["earthen_root_enclave"]) == 3
+    assert len(by_content["graven_deep"]) == 3
     assert {row.release_key for row in rows} == {
         (2025, 47),
         (2025, 45),
         (2024, 41),
         (2023, 37),
+        (2022, 35),
     }
     assert rows[0].release_key == (2025, 47)
-    assert rows[-1].release_key == (2023, 37)
+    assert rows[-1].release_key == (2022, 35)
 
     naj = {row.encounter_id: row for row in by_content["naj_caldeesh"]}
     assert naj["talen_lah"].member_ids == ("talen_lah", "bar_sakka")
@@ -149,3 +152,17 @@ def test_checked_in_registry_keeps_newest_first_release_slices_and_main_encounte
     assert "lamikhai" not in {row.encounter_id for row in rows}
     assert "infernium" not in {row.encounter_id for row in rows}
     assert "cartoqueen" not in {row.encounter_id for row in rows}
+
+    earthen_root_ids = {row.encounter_id for row in by_content["earthen_root_enclave"]}
+    assert earthen_root_ids == {
+        "corruption_of_stone",
+        "corruption_of_root",
+        "archdruid_devyric",
+    }
+
+    graven_deep_ids = {row.encounter_id for row in by_content["graven_deep"]}
+    assert graven_deep_ids == {
+        "the_euphotic_gatekeeper",
+        "varzunon",
+        "zelvraak_the_unbreathing",
+    }
