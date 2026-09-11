@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "content_id": "halls_of_fabrication",
+  "encounter_id": "pinnacle_factotum",
+  "encounter_name": "Pinnacle Factotum",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main Floor Phase","threshold":"Pull","description":"Tank holds Pinnacle still and faced away while group handles Staff Attack, Streak, Charging Up, Centurion Steam, meteors, and cleave."},"source_type":"guide","source_name":"Xynode Halls of Fabrication Trial Guide","source_locator":"Pinnacle Factotum","confidence":"medium"},
+    {"fact_type":"phase","fact_key":"shade_phase","value":{"order":2,"label":"Shade Sequence Added","threshold":"75%","description":"Pinnacle splits into four shades around the tank; the solid shade attacks in sequence and must be faced and blocked correctly."},"source_type":"guide","source_name":"Xynode Halls of Fabrication Trial Guide","source_locator":"Pinnacle Factotum > Shades","confidence":"medium"},
+    {"fact_type":"phase","fact_key":"charging_centurion_phase","value":{"order":3,"label":"Charging Centurion Added","threshold":"40%","description":"Charging Centurions begin spawning in addition to existing mechanics; kill them quickly or have the off-tank kite their spin away from group."},"source_type":"guide","source_name":"Xynode Halls of Fabrication Trial Guide","source_locator":"Pinnacle Factotum > Charging Centurion","confidence":"medium"},
+    {"fact_type":"phase","fact_key":"upstairs_cycle","value":{"order":4,"label":"Upper Platform Cycle","threshold":"~90s after prior completion","description":"Four players take outer-platform synergies upstairs, kill four spheres using the lightning-beam shield-break mechanic, then activate four consoles nearly together and return."},"source_type":"guide","source_name":"Xynode Halls of Fabrication Trial Guide","source_locator":"Pinnacle Factotum > Upstairs","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"charging_up_interrupt","value":{"name":"Charging Up","interruptible":true,"targets":4,"response":"interrupt_boss_before_aoes_finish_expanding"},"source_type":"guide","source_name":"Xynode Halls of Fabrication Trial Guide","source_locator":"Pinnacle Factotum > Charging Up","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"centurion_steam","value":{"name":"Centurion Steam","spawn_cadence_seconds":60,"steam_cycle_seconds":30,"healing_debuff_stacks":true,"response":"get_ranged_and_out_of_steam"},"source_type":"guide","source_name":"Xynode Halls of Fabrication Trial Guide","source_locator":"Pinnacle Factotum > Centurion Steam","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"upstairs_timeout","value":{"name":"Upper Platform Timeout","timeout_seconds":60,"failure_result":"group_wipe_from_escalating_meteors"},"source_type":"guide","source_name":"Xynode Halls of Fabrication Trial Guide","source_locator":"Pinnacle Factotum > Upstairs","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"shockwave_stun_removed","value":{"name":"Shockwave","stuns_targets":false},"source_type":"official_patch_notes","source_name":"ESO PTS Patch Notes v5.3.0","source_locator":"Halls of Fabrication > Pinnacle Factotum","confidence":"high"}
+  ]
+}
