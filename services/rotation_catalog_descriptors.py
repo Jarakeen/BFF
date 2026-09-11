@@ -301,7 +301,8 @@ ROTATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.GAME_MECHANIC,
         notes=(
             "Only diagnostics whose non-healing role is already established are ambient. "
-            "Potion activation, Charged runtime state, and any unknown diagnostic remain "
+            "Charged status chance is ambient to raw modeled healing but remains available "
+            "to support/damage objectives. Potion activation and unknown diagnostics remain "
             "healer-output relevant until explicitly resolved."
         ),
     ),
