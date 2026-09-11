@@ -34,9 +34,11 @@ class ExtremeGearBarAccessService:
     @staticmethod
     def _set_count(realization: ExtremeNamedGearSetRealization, set_name: str) -> int:
         target = str(set_name or "").strip().casefold()
+        names = tuple(getattr(realization, "set_names", ()) or ())
+        counts = tuple(getattr(realization, "counts", ()) or ())
         return sum(
             int(count)
-            for name, count in zip(realization.set_names, realization.counts)
+            for name, count in zip(names, counts)
             if str(name or "").strip().casefold() == target
         )
 
