@@ -11,7 +11,7 @@ class _ArmorState:
     def __init__(self, label: str, *, objective_key: str = "max_health"):
         self.label = label
         self.objective_key = objective_key
-        self.identity = (("Head", label, "Max Health"),)
+        self.identity = (("weights", label), ("traits", label))
 
 
 class _ArmorCatalog:
@@ -20,8 +20,15 @@ class _ArmorCatalog:
         self.states = tuple(states)
         self.unresolved = tuple(unresolved)
         self.denominator_proven = proven
-        self.glyph_choices_reviewed = 2
-        self.dominated_states_pruned = 99
+        self.weight_catalog = SimpleNamespace(
+            states=(1, 2, 3),
+            raw_loadouts_reviewed=2187,
+            dominated_loadouts_pruned=2184,
+        )
+        self.trait_glyph_catalog = SimpleNamespace(
+            glyph_choices_reviewed=2,
+            dominated_states_pruned=99,
+        )
 
 
 class _Gear:
@@ -84,6 +91,9 @@ def test_scores_full_gear_by_resource_armor_cross_product_and_reports_counts():
     assert payload["gear_resource_armor_candidates_scored"] == 6
     assert payload["gear_denominator_proven"] is True
     assert payload["reviewed_resource_armor_denominator_proven"] is True
+    assert payload["armor_weight_states_reviewed"] == 3
+    assert payload["armor_weight_raw_loadouts_reviewed"] == 2187
+    assert payload["armor_weight_dominated_loadouts_pruned"] == 2184
     assert payload["armor_glyph_choices_reviewed"] == 2
     assert payload["armor_trait_glyph_dominated_states_pruned"] == 99
     assert unresolved == ()
@@ -138,7 +148,7 @@ def test_objective_mismatch_and_empty_denominators_fail_closed():
             evaluator_factory=_factory({}),
         )("max_health", _Candidate())
 
-    with pytest.raises(ValueError, match="no joint trait/glyph state"):
+    with pytest.raises(ValueError, match="no combined weight/trait/glyph state"):
         ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator(
             gear_realization=_GearResult((_Gear(10),)),
             armor_catalog=_ArmorCatalog(()),
