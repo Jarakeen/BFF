@@ -94,18 +94,20 @@ def enrich_reference_entries_with_version_history(
             result.append(entry)
             continue
 
-        sources = tuple(
-            dict.fromkeys(
-                str(row.get("source") or "").strip()
-                for row in rows
-                if str(row.get("source") or "").strip()
-            )
-        )
+        source_lines: list[str] = []
+        for row in rows:
+            source = str(row.get("source") or "").strip()
+            source_url = str(row.get("source_url") or "").strip()
+            if source:
+                source_lines.append(f"History source: {source}")
+            if source_url:
+                source_lines.append(f"History source URL: {source_url}")
+
         evidence = tuple(
             dict.fromkeys(
                 (
                     *entry.evidence,
-                    *(f"History source: {source}" for source in sources),
+                    *source_lines,
                 )
             )
         )
