@@ -66,10 +66,35 @@ ROTATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="rotation.healer.channel_runtime",
+        domain="rotation",
+        purpose=(
+            "Expand explicitly reviewed channel-heal timing evidence into exact channel "
+            "tick events without inferring cadence from total channel duration."
+        ),
+        implementation_path="services.rotation_healer_channel_runtime_service",
+        inputs=(
+            "RotationHealerChannelHealSeed",
+            "RotationHealerChannelRuntimeEvidence",
+            "OptionalRotationHealerChannelMagnitudeResolver",
+        ),
+        outputs=("RotationHealerChannelRuntimeProjection",),
+        responsibilities=("rotation_healer_channel_tick_runtime_projection",),
+        roles=("Healer",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Channel duration, tick cadence, first-tick placement, end-boundary behavior, "
+            "and magnitude timing remain separate evidence facts. The scheduler never "
+            "derives tick cadence from generic action occupancy or channel duration."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="rotation.healer.canonical_demand_evidence",
         domain="rotation",
         purpose=(
-            "Compose canonical healer action, periodic, delayed, special-activation, "
+            "Compose canonical healer action, periodic, delayed, channel, special-activation, "
             "external-condition, and encounter-window services into candidate-specific "
             "healing evidence."
         ),
@@ -82,18 +107,22 @@ ROTATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "RotationDemandWindow",
             "RotationHealerReviewedRuntimeObservation",
             "RotationHealerDelayedRuntimeEvidence",
+            "RotationHealerChannelRuntimeEvidence",
             "RotationHealerExternalConditionalDemandAssumption",
         ),
         outputs=("RotationHealerDemandHealingEvidence",),
-        dependencies=("rotation.candidate_generation",),
+        dependencies=(
+            "rotation.candidate_generation",
+            "rotation.healer.channel_runtime",
+        ),
         responsibilities=("rotation_healer_canonical_demand_evidence",),
         roles=("Healer",),
         behavior=ServiceBehavior.DETERMINISTIC,
         encounter_aware=True,
         evidence_class=EvidenceClass.MIXED,
         notes=(
-            "Composition only: missing first-tick, expiry, refresh, delay, special "
-            "activation, or explicitly requested bar-specific static context remains "
+            "Composition only: missing first-tick, expiry, refresh, delay, channel cadence, "
+            "special activation, or explicitly requested bar-specific static context remains "
             "unresolved rather than being inferred."
         ),
     ),
