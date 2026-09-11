@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "depths_of_malatar",
+  "encounter_id": "the_scavenging_maw",
+  "encounter_name": "The Scavenging Maw",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"hunt_cycle","value":{"order":1,"label":"Hunt Cycle","threshold":"Repeating","description":"The Maw alternates direct combat with hiding phases where the group searches together before an ambush."},"source_type":"guide","source_name":"Alcast Depths of Malatar Guide","source_locator":"Scavenging Maw","game_update":"U21","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"frontal_breath","value":{"name":"Poison Breath","response":"tank_face_cone_away_and_group_avoid_ground_aoe"},"source_type":"guide","source_name":"Alcast Depths of Malatar Guide","source_locator":"Scavenging Maw","game_update":"U21","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"ambush_interrupt","value":{"name":"Hunting Ambush","response":"search_together_and_interrupt_the_maw_when_it_pounces"},"source_type":"guide","source_name":"Alcast Depths of Malatar Guide","source_locator":"Scavenging Maw hiding phase","game_update":"U21","confidence":"high"}
+  ]
+}
