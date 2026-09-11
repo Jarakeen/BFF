@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "content_id": "dreadsail_reef",
+  "encounter_id": "tideborn_taleria",
+  "encounter_name": "Tideborn Taleria",
+  "evidence": [
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "bridge_phase_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 3 Tideborn Taleria",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Portal thresholds / Channelers",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "transition",
+      "fact_key": "bridge_phase_thresholds",
+      "value": {
+        "thresholds": ["50%", "35%", "20%"]
+      },
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 3 Tideborn Taleria",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Portal thresholds",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "failure_condition",
+      "fact_key": "bridge_phase_timeout",
+      "value": {
+        "timeout_seconds": 60,
+        "channeler_health_target": "50%",
+        "result": "group_wipe",
+        "ability": "Dreadsail Ascension"
+      },
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 3 Tideborn Taleria",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Portal / Channeler timeout",
+      "confidence": "high"
+    }
+  ]
+}
