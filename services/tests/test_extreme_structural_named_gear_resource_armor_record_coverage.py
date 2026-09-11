@@ -4,9 +4,12 @@ import services.extreme_structural_named_gear_mundus_food_potion_core_stat_recor
 from services.extreme_structural_named_gear_mundus_food_potion_core_stat_record_service import (
     ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService,
     _GEAR_DEFERRED_AXIS,
+    _PASSIVE_DEFERRED_AXIS,
     _RESOURCE_ARMOR_SCOPE,
     _RESOURCE_REMAINING_EQUIPMENT_TRAIT_AXIS,
     _RESOURCE_REMAINING_GLYPH_AXIS,
+    _RESOURCE_REMAINING_PASSIVE_AXIS,
+    _RESOURCE_UNDAUNTED_SCOPE,
 )
 
 
@@ -121,7 +124,7 @@ class _UniverseService:
         "Mundus",
         "food/drink",
         "potions",
-        "class/skill/armor/weapon/guild passive ranks",
+        _PASSIVE_DEFERRED_AXIS,
         "skill-bar choices and morphs",
     )
 
@@ -151,9 +154,21 @@ class _SearchService:
         )
 
 
-def test_resource_armor_weight_trait_glyph_axis_is_searched_and_residuals_remain_omitted(monkeypatch):
-    monkeypatch.setattr(module, "ExtremeCanonicalStructuralStatEvaluator", lambda **kwargs: object())
+def test_resource_armor_weight_trait_glyph_and_mettle_are_searched_with_residuals(monkeypatch):
+    undaunted_progression = object()
+    captured = {}
+
+    def canonical_factory(**kwargs):
+        captured.update(kwargs)
+        return object()
+
+    monkeypatch.setattr(module, "ExtremeCanonicalStructuralStatEvaluator", canonical_factory)
     monkeypatch.setattr(module, "ExtremeHypotheticalClassProgressionService", lambda path: object())
+    monkeypatch.setattr(
+        module,
+        "ExtremeHypotheticalUndauntedProgressionService",
+        lambda path: undaunted_progression,
+    )
     monkeypatch.setattr(module, "MundusRepository", lambda *args, **kwargs: object())
     monkeypatch.setattr(module, "ProvisioningStaticRepository", lambda *args, **kwargs: object())
     monkeypatch.setattr(module, "PotionAvailabilityRepository", lambda *args, **kwargs: object())
@@ -181,14 +196,17 @@ def test_resource_armor_weight_trait_glyph_axis_is_searched_and_residuals_remain
         optimizer=_Optimizer()
     ).record("max_health")
 
+    assert captured["progression_service"] is undaunted_progression
     assert _RESOURCE_ARMOR_SCOPE in record.search_coverage.searched
+    assert _RESOURCE_UNDAUNTED_SCOPE in record.search_coverage.searched
     assert _GEAR_DEFERRED_AXIS not in record.search_coverage.omitted
     assert "armor, jewelry, and weapon traits" not in record.search_coverage.omitted
     assert "glyphs/enchants" not in record.search_coverage.omitted
+    assert _PASSIVE_DEFERRED_AXIS not in record.search_coverage.omitted
     assert _RESOURCE_REMAINING_EQUIPMENT_TRAIT_AXIS in record.search_coverage.omitted
     assert _RESOURCE_REMAINING_GLYPH_AXIS in record.search_coverage.omitted
+    assert _RESOURCE_REMAINING_PASSIVE_AXIS in record.search_coverage.omitted
     assert "armor weight/passive interactions" not in " ".join(record.search_coverage.omitted)
-    assert "class/skill/armor/weapon/guild passive ranks" in record.search_coverage.omitted
     assert record.search_coverage.candidates_screened == 10 * 2 * 24 * 4 * 2 * 2
     assert record.search_coverage.candidates_optimized == 10 * 2 * 24 * 4 * 2 * 2
     assert record.search_coverage.denominator_proven is False
