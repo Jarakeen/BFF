@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {
+      "entry_name": "Hailstone Shield — Yandir the Butcher",
+      "mitigation": "Burn both frost shields before the 15-second burst. Hailstone Burst cannot be blocked or dodged, so this is a hard DPS check.",
+      "source": "reviewed_guide_and_patch_evidence",
+      "notes": "Guide evidence records the 15-second wipe window; official U26 patch notes confirm Hailstone Burst cannot be blocked or dodged."
+    },
+    {
+      "entry_name": "Totems — Yandir the Butcher",
+      "mitigation": "Kill totems quickly and react to the type: avoid Dragon fire lines, break free from Gargoyle stone, move from Harpy lightning, and spread for Chaurus poison.",
+      "source": "reviewed_guide_evidence"
+    },
+    {
+      "entry_name": "Vrolsworn Conjurer — Captain Vrol",
+      "mitigation": "Assign a boat runner and ballista support before 50%. Interrupt the Conjurer summon and clear the boat before extra waves snowball.",
+      "source": "reviewed_guide_evidence"
+    },
+    {
+      "entry_name": "Shocking Harpoon — Captain Vrol",
+      "mitigation": "Kill the conduit immediately. Its chain damage and snare ramp quickly, and siege users are especially vulnerable if one lands on them.",
+      "source": "reviewed_guide_evidence"
+    },
+    {
+      "entry_name": "Frigid Fog — Captain Vrol",
+      "mitigation": "Move Vrol out of Frigid Fog immediately so the group avoids the stun/damage ramp and the boss stops refreshing his shield.",
+      "source": "reviewed_guide_evidence"
+    },
+    {
+      "entry_name": "Sanguine Prison — Lord Falgravn",
+      "mitigation": "Break the Sanguine Prison immediately. The trapped player dies after about 8 seconds if the prison survives.",
+      "source": "reviewed_guide_evidence"
+    },
+    {
+      "entry_name": "Ichor Eruption — Lord Falgravn",
+      "mitigation": "Stop unnecessary movement during the 30-second coagulant phase and kill or control coagulants before they reach the center. More coagulants make the eruption worse.",
+      "source": "reviewed_guide_evidence"
+    },
+    {
+      "entry_name": "Torturer / Prisoner Cycle — Lord Falgravn",
+      "mitigation": "Send the assigned upstairs DDs as soon as the cells open and kill both Torturers before they execute prisoners or join the main fight empowered.",
+      "source": "reviewed_guide_evidence"
+    }
+  ]
+}
