@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "march_of_sacrifices",
+  "encounter_id": "aghaedh_of_the_solstice",
+  "encounter_name": "Aghaedh of the Solstice",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Seasonal Main Phase","threshold":"100% to 0%","description":"Handle Aghaedh with Lurcher adds and season-color shelter checks."},"source_type":"guide","source_name":"March of Sacrifices community guide","source_locator":"Aghaedh of the Solstice","game_update":"U19","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"season_colors","value":{"name":"Seasonal Colors","response":"collect_color_from_spriggans_and_stand_in_matching_circle_for_channel"},"source_type":"guide","source_name":"Dr Coker March of Sacrifices Guide","source_locator":"Aghaedh of the Solstice","game_update":"U19","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"lurchers","value":{"name":"Lurcher Adds","response":"tank_and_cleave_lurchers_promptly_before_next_season_check"},"source_type":"achievement","source_name":"Seasonal Slaying","source_locator":"March of Sacrifices achievement","game_update":"U19","confidence":"high"}
+  ]
+}
