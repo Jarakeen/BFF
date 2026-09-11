@@ -11,39 +11,44 @@ def _by_name(objective: str):
     }
 
 
-def test_max_health_review_separates_applied_bar_and_runtime_boundaries():
+def test_max_health_review_separates_applied_and_runtime_boundaries():
     rows = _by_name("max_health")
 
     assert rows["Last Gasp"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
     assert rows["Juggernaut"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
-    assert rows["Dark Vigor"].status is ExtremeResourceContextualPassiveStatus.ACTIVE_BAR_SEARCH_REQUIRED
+    assert rows["Dark Vigor"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
     assert rows["Expert Summoner"].status is ExtremeResourceContextualPassiveStatus.RUNTIME_STATE_REQUIRED
     assert rows["Nothing Wasted"].status is ExtremeResourceContextualPassiveStatus.RUNTIME_STATE_REQUIRED
     assert rows["Last Gasp"].source == "NecromancerPassiveInputResolver"
     assert rows["Juggernaut"].source == "ArmorPassiveInputResolver"
+    assert rows["Dark Vigor"].source == "NightbladePassiveInputResolver"
+    assert "six-slot" in rows["Dark Vigor"].condition.casefold()
     assert "permanent pet" in rows["Expert Summoner"].condition.casefold()
     assert "10-stack" in rows["Nothing Wasted"].condition.casefold()
     assert "heavy armor" in rows["Juggernaut"].condition.casefold()
     assert "max-health" in rows["Juggernaut"].condition.casefold()
 
 
-def test_max_magicka_review_keeps_standing_summoner_separate_from_bar_search():
+def test_max_magicka_review_marks_joint_bar_passives_applied():
     rows = _by_name("max_magicka")
 
     assert set(rows) == {"Expert Summoner", "Magicka Flood", "Magicka Controller"}
     assert rows["Expert Summoner"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
-    assert rows["Magicka Flood"].status is ExtremeResourceContextualPassiveStatus.ACTIVE_BAR_SEARCH_REQUIRED
-    assert rows["Magicka Controller"].status is ExtremeResourceContextualPassiveStatus.ACTIVE_BAR_SEARCH_REQUIRED
+    assert rows["Magicka Flood"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
+    assert rows["Magicka Controller"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
     assert rows["Magicka Flood"].source == "NightbladePassiveInputResolver"
     assert rows["Magicka Controller"].source == "GuildPassiveInputResolver"
+    assert "jointly" in rows["Magicka Flood"].condition.casefold()
+    assert "jointly" in rows["Magicka Controller"].condition.casefold()
 
 
-def test_max_stamina_review_tracks_existing_summoner_math_and_siphoning_bar_gap():
+def test_max_stamina_review_marks_siphoning_bar_trigger_applied():
     rows = _by_name("max_stamina")
 
     assert set(rows) == {"Expert Summoner", "Magicka Flood"}
     assert rows["Expert Summoner"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
-    assert rows["Magicka Flood"].status is ExtremeResourceContextualPassiveStatus.ACTIVE_BAR_SEARCH_REQUIRED
+    assert rows["Magicka Flood"].status is ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED
+    assert "one legal siphoning" in rows["Magicka Flood"].condition.casefold()
 
 
 def test_status_filter_is_deterministic_and_does_not_claim_global_denominator():
@@ -61,7 +66,7 @@ def test_status_filter_is_deterministic_and_does_not_claim_global_denominator():
     assert not hasattr(first, "denominator_proven")
 
 
-def test_no_reviewed_high_impact_resource_passive_still_lacks_mechanic_implementation():
+def test_no_reviewed_high_impact_resource_passive_still_needs_bar_or_mechanic_implementation():
     rows = (
         *ExtremeResourceContextualPassiveReviewService.build("max_health"),
         *ExtremeResourceContextualPassiveReviewService.build("max_magicka"),
@@ -69,7 +74,10 @@ def test_no_reviewed_high_impact_resource_passive_still_lacks_mechanic_implement
     )
 
     assert not any(
-        row.status is ExtremeResourceContextualPassiveStatus.MECHANIC_IMPLEMENTATION_REQUIRED
+        row.status in {
+            ExtremeResourceContextualPassiveStatus.ACTIVE_BAR_SEARCH_REQUIRED,
+            ExtremeResourceContextualPassiveStatus.MECHANIC_IMPLEMENTATION_REQUIRED,
+        }
         for row in rows
     )
 
