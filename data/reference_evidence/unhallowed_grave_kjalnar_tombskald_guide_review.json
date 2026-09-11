@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "unhallowed_grave",
+  "encounter_id": "kjalnar_tombskald",
+  "encounter_name": "Kjalnar Tombskald",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main / Repeating Mechanics","threshold":"100% to 0%","description":"Kjalnar repeatedly combines heavy tank hits, Grasp, Grave Dust, cage detonations, mines, empowered skeleton races, Blastbones, and a summoned Bone Colossus."},"source_type":"guide","source_name":"Xynode Unhallowed Grave Guide","source_locator":"Kjalnar Tombskald","game_update":"U25","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"grave_dust","value":{"name":"Grave Dust","response":"block_or_move_out_of_fast_magic_waves_and_keep_healing_ready"},"source_type":"guide","source_name":"Xynode Unhallowed Grave Guide","source_locator":"Kjalnar > Grave Dust","game_update":"U25","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"imbued_skeletons","value":{"name":"Imbued Skeleton Empowerment","response":"kill_or_control_two_hander_and_blastbones_before_empowering_runes"},"source_type":"achievement","source_name":"ESO Hub Unhallowed Grave Achievements","source_locator":"Skeletal Shutout / Unchecked Empowerment","game_update":"U25","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"skull_totem","value":{"name":"Kjalnar's Skull Totem","response":"destroy_totem_for_hard_mode_challenge_then_resume_mechanics"},"source_type":"achievement","source_name":"ESO Hub Unhallowed Grave Achievements","source_locator":"Skull Smasher","game_update":"U25","confidence":"high"}
+  ]
+}
