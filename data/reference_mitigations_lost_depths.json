@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {"entry_name":"Earthquakes — Corruption of Stone","mitigation":"Spread personal earthquake drops so four overlapping circles do not turn routine movement into a group heal check. Keep clear lanes back to the shelter pillars."},
+    {"entry_name":"Ground Slam Shelter — Corruption of Stone","mitigation":"Keep the boss near center and identify an intact pillar before each 75%, 50%, and 25% shelter sequence. Move behind cover for both lethal slams, then return promptly."},
+    {"entry_name":"Stone Atronachs — Corruption of Stone","mitigation":"Swap to active Stone Atronachs and interrupt their petrify. Leaving them alive adds dangerous pressure exactly when the group needs clean shelter movement."},
+
+    {"entry_name":"Root Nodes — Corruption of Root","mitigation":"Kill Root Nodes when their red-orb pressure starts interfering with movement or healing. Do not let background projectiles accumulate while the group is already handling adds and ground effects."},
+    {"entry_name":"Spriggan Death Zones — Corruption of Root","mitigation":"Tank spriggan animals where their permanent death zones will not carve up the center or future kiting routes. Good placement matters more the longer the fight lasts."},
+    {"entry_name":"Hard Mode Faun / Tree Enrage — Corruption of Root","mitigation":"Burn Fauns before they reach an outer tree. If one succeeds, identify the red-glowing empowered tree and destroy it rather than accepting escalating arena pressure."},
+
+    {"entry_name":"Lightning Pillar — Archdruid Devyric","mitigation":"Hard swap to each Lightning Pillar. Every extra second it lives extends group-wide lightning pressure and taxes healer resources for no benefit."},
+    {"entry_name":"Bear Charge / Stone Totems — Archdruid Devyric","mitigation":"The charge targets a random player, so that player should deliberately line the bear through stone totems when safe. Breaking multiple totems reduces later room pressure and is worth planning rather than treating the charge as pure dodge mechanics."},
+    {"entry_name":"Bear Lightning Breath — Archdruid Devyric","mitigation":"Tank points the tracking breath away from the group and holds position through it. Do not drag the frontal across teammates trying to sidestep a mechanic that follows the aggro target."},
+    {"entry_name":"Fire Wolves — Archdruid Devyric","mitigation":"Watch for the red target marker, spread the incoming wolf jump away from teammates, then leave the explosion zone. Keep wolf movement from colliding with lightning-pillars or charge lanes."},
+
+    {"entry_name":"Pangrit Pits / Poison Synergy — The Euphotic Gatekeeper","mitigation":"Use the poison synergy on active Pangrit burrows so they stop spawning adds. Make the drop deliberately; wasting the synergy leaves the pit active and creates avoidable add pressure."},
+    {"entry_name":"Charge — The Euphotic Gatekeeper","mitigation":"Step out of the charge path and the follow-up AOEs, then re-form quickly. The knockback becomes dangerous when it throws someone into a burrow, poison, or another player's route."},
+    {"entry_name":"Teleport Burst — The Euphotic Gatekeeper","mitigation":"Back away from the expanding teleport burst, then have the tank re-taunt and re-establish facing immediately after the boss moves."},
+    {"entry_name":"Molting / Untargetable Window — The Euphotic Gatekeeper","mitigation":"Do not burn resources attacking through the molt. Use the untargetable window to clean adds, reposition, and prepare for the next burrow/teleport cycle."},
+
+    {"entry_name":"Skeletal Sacrifices — Varzunon","mitigation":"Prioritize the glowing sacrifices before Varzunon consumes them. Each failed sacrifice makes the boss larger and more dangerous, turning missed add control into a compounding tank/healer problem."},
+    {"entry_name":"Stomp — Varzunon","mitigation":"Move out from the boss when the stomp begins instead of trying to heal through unnecessary point-blank damage."},
+    {"entry_name":"Blue Meteors — Varzunon","mitigation":"Stack tightly enough for efficient healing because the targeted hits are not solved by spreading out of an AOE. Healer should expect simultaneous single-target damage across the group."},
+    {"entry_name":"Hard Mode Pound — Varzunon","mitigation":"Move laterally out of the repeated line of impacts and do not re-enter until the pattern finishes. Continuous hits punish late correction."},
+    {"entry_name":"Necrotic Cage — Varzunon","mitigation":"Treat the caged player as an immediate survival target and stabilize them as soon as the effect ends. The cage should not persist after a surviving target is released under reviewed U35 behavior."},
+
+    {"entry_name":"Sea Orb — Zelvraak the Unbreathing","mitigation":"Assign orb coverage before pull and hit every descending Sea Orb before it reaches the floor. Hard Mode's four orbs are a responsibility mechanic, not something to leave to whoever happens to notice first."},
+    {"entry_name":"Unbreakable Fear — Zelvraak the Unbreathing","mitigation":"Turn your character away from Zelvraak before the fear resolves. Camera direction is irrelevant if the character is still facing him, and the resulting unbreakable fear can wreck cone facing or orb coverage."},
+    {"entry_name":"Sundered Soul — Zelvraak the Unbreathing","mitigation":"The affected player immediately finds and reclaims their golden ghost; ordinary group healing cannot replace solving the mechanic. In Hard Mode be ready for two simultaneous soul recoveries."},
+    {"entry_name":"Tracking Tank Cleave — Zelvraak the Unbreathing","mitigation":"Tank holds Zelvraak still and faces the long tracking cone away from the group. Stable boss placement also keeps copied/reflection cones predictable."},
+    {"entry_name":"Inferno — Zelvraak the Unbreathing","mitigation":"Healer preloads HoTs and reserves burst healing for the repeated group projectiles. Treat it as a sustained healing window rather than reacting after several hits have already landed."}
+  ]
+}
