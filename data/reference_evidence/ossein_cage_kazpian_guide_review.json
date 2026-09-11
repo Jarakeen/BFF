@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "content_id": "ossein_cage",
+  "encounter_id": "overfiend_kazpian",
+  "encounter_name": "Overfiend Kazpian",
+  "evidence": [
+    {
+      "fact_type": "phase",
+      "fact_key": "main_platform_cycle",
+      "value": {
+        "order": 1,
+        "label": "Main Platform",
+        "starts_at": "Pull / platform return",
+        "description": "Kazpian is tanked apart from elite allies while the group handles swords, tethers, Agonizer Bombs, healing debuffs, and add pressure."
+      },
+      "source_type": "guide",
+      "source_name": "Enter the Dominion Ossein Cage raid guide",
+      "source_locator": "Overfiend Kazpian - main arena",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "phase",
+      "fact_key": "carrion_portal_cycle",
+      "value": {
+        "order": 2,
+        "label": "Carrion Portal",
+        "starts_at": "Portal pad active",
+        "description": "Portal team kills Channelers and manages Caustic Carrion before returning; later cycles add more Channelers and platform pressure."
+      },
+      "source_type": "guide",
+      "source_name": "Enter the Dominion Ossein Cage raid guide",
+      "source_locator": "Overfiend Kazpian - Portal",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "phase",
+      "fact_key": "platform_transition_cycle",
+      "value": {
+        "order": 3,
+        "label": "Platform Transition",
+        "starts_at": "Portal complete",
+        "description": "Group returns and crosses to the next active platform as a unit. Update 47 fixed unintended platform transitions, confirming platform changes as discrete encounter states."
+      },
+      "source_type": "official_patch_notes",
+      "source_name": "ESO Update 47 patch notes",
+      "source_locator": "Ossein Cage > Overfiend Kazpian",
+      "game_update": "U47",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "agonizer_bomb_exists",
+      "value": true,
+      "source_type": "achievement",
+      "source_name": "ESO-Hub Ossein Cage achievements",
+      "source_locator": "Avoiding Agony",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "agonizer_bomb_behavior",
+      "value": {
+        "initial_target_only_should_be_hit": true,
+        "explosion_punishes_nearby_players": true
+      },
+      "source_type": "achievement",
+      "source_name": "ESO-Hub Ossein Cage achievements",
+      "source_locator": "Avoiding Agony",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "torturous_chains_exists",
+      "value": true,
+      "source_type": "addon_documentation",
+      "source_name": "Asquart's Ossein Cage Helper",
+      "source_locator": "Overfiend Kazpian > Torturous Chains",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "torturous_chains_behavior",
+      "value": {
+        "targets_two_players": true,
+        "distance_state_matters": true,
+        "giant_sword_used_to_break_chain": true
+      },
+      "source_type": "guide",
+      "source_name": "Enter the Dominion Ossein Cage raid guide",
+      "source_locator": "Overfiend Kazpian - Chain Link / sword",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "biting_blaze_exists",
+      "value": true,
+      "source_type": "official_patch_notes",
+      "source_name": "ESO Update 48 Incremental 1 patch notes",
+      "source_locator": "Ossein Cage > Overfiend Kazpian > Biting Blaze",
+      "game_update": "U48",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "biting_blaze_current_rule",
+      "value": {
+        "previous_cast_must_expire_before_recast": true
+      },
+      "source_type": "official_patch_notes",
+      "source_name": "ESO Update 48 Incremental 1 patch notes",
+      "source_locator": "Ossein Cage > Overfiend Kazpian",
+      "game_update": "U48",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "kazpian_ally_proximity_enrage_exists",
+      "value": true,
+      "source_type": "official_patch_notes",
+      "source_name": "ESO PTS Patch Notes v11.0.3",
+      "source_locator": "Ossein Cage > Overfiend Kazpian",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "kazpian_ally_proximity_enrage_behavior",
+      "value": {
+        "keep_kazpian_separated_from_allies": true
+      },
+      "source_type": "official_patch_notes",
+      "source_name": "ESO PTS Patch Notes v11.0.3",
+      "source_locator": "Kazpian not fond of fighting near allies",
+      "confidence": "high"
+    }
+  ]
+}
