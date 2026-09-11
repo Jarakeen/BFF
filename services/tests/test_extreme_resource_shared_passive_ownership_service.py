@@ -33,7 +33,18 @@ _EXPECTED_IDENTITIES = {
     (ExtremeSkillDomain.ALLIANCE_WAR, "Assault", "Combat Frenzy"),
     (ExtremeSkillDomain.ALLIANCE_WAR, "Assault", "Continuous Attack"),
     (ExtremeSkillDomain.ALLIANCE_WAR, "Assault", "Reach"),
+    (ExtremeSkillDomain.ALLIANCE_WAR, "Support", "Battle Resurrection"),
+    (ExtremeSkillDomain.ALLIANCE_WAR, "Support", "Combat Medic"),
     (ExtremeSkillDomain.ALLIANCE_WAR, "Support", "Magicka Aid"),
+    (ExtremeSkillDomain.CRAFT, "Alchemy", "Chemistry"),
+    (ExtremeSkillDomain.CRAFT, "Alchemy", "Laboratory Use"),
+    (ExtremeSkillDomain.CRAFT, "Alchemy", "Medicinal Use"),
+    (ExtremeSkillDomain.CRAFT, "Alchemy", "Snakeblood"),
+    (ExtremeSkillDomain.CRAFT, "Alchemy", "Solvent Proficiency"),
+    (ExtremeSkillDomain.CRAFT, "Provisioning", "Brewer"),
+    (ExtremeSkillDomain.CRAFT, "Provisioning", "Chef"),
+    (ExtremeSkillDomain.CRAFT, "Provisioning", "Connoisseur"),
+    (ExtremeSkillDomain.CRAFT, "Provisioning", "Gourmand"),
     (ExtremeSkillDomain.GUILD, "Dark Brotherhood", "Blade of Woe"),
     (ExtremeSkillDomain.GUILD, "Dark Brotherhood", "Padomaic Sprint"),
     (ExtremeSkillDomain.GUILD, "Dark Brotherhood", "Scales of Pitiless Justice"),
@@ -169,7 +180,8 @@ def test_passive_denominator_moves_reviewed_shared_rows_to_static_irrelevant():
             assert identity not in audit.unresolved
         assert "[weapon] Not One Hand and Shield :: Fortress" in audit.unresolved
         assert "[world] Not Vampire :: Undeath" in audit.unresolved
-        assert "[other] Emperor :: Emperor" in audit.unresolved
+        assert "[other] Emperor :: Emperor" in audit.accounted_elsewhere
+        assert "[other] Emperor :: Emperor" not in audit.unresolved
 
         # Magicka Controller is intentionally not in the shared irrelevance ledger.
         # Its real Max Magicka ownership is reviewed by the contextual active-bar path.
