@@ -232,6 +232,28 @@ ROTATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="rotation.healer.external_conditional_healing_evidence",
+        domain="rotation",
+        purpose=(
+            "Expose reviewed external-condition healer effect duration, magnitude semantics, "
+            "and trigger condition without inventing runtime heal events."
+        ),
+        implementation_path="services.rotation_healer_external_conditional_healing_service",
+        inputs=("CanonicalSkillSemanticId", "GameVersion"),
+        outputs=("RotationHealerExternalConditionalHealingEvidence",),
+        dependencies=("rotation.healer.caster_healing_relevance",),
+        responsibilities=("rotation_healer_external_conditional_healing_evidence",),
+        roles=("Healer",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Reviewed magnitude and duration may scope relevance to a demand window, but "
+            "trigger cadence, recipient ownership, and numeric timed healing remain unresolved "
+            "until separately proven."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="rotation.healer.output_context_relevance",
         domain="rotation",
         purpose=(
