@@ -5,8 +5,9 @@ from __future__ import annotations
 This layer closes named gear and selected reviewed equipment families only when
 their canonical denominator is proven. Max-resource objectives additionally search
 proof-reduced resource armor, reviewed static jewelry traits, and reviewed
-Undaunted Mettle. Canonical jewelry glyphs may be proven irrelevant to a max
-resource, but unknown or relevant glyph evidence stays explicit and fails closed.
+Undaunted Mettle. Canonical jewelry glyphs and weapon trait/enchantment families
+may be proven irrelevant to a max resource, but unknown or relevant evidence stays
+explicit and fails closed.
 """
 
 from pathlib import Path
@@ -82,6 +83,9 @@ from services.extreme_structural_mundus_food_potion_core_stat_record_service imp
     _POTION_DEFERRED_AXIS,
     _POTION_SCOPE,
 )
+from services.extreme_weapon_resource_relevance_service import (
+    ExtremeWeaponResourceRelevanceService,
+)
 
 
 _GEAR_DEFERRED_AXIS = "gear and legal set/package topology"
@@ -93,6 +97,9 @@ _REMAINING_EQUIPMENT_TRAIT_AXIS = (
 )
 _RESOURCE_REMAINING_EQUIPMENT_TRAIT_AXIS = (
     "non-resource/runtime armor traits plus remaining glyph-dependent/unreviewed jewelry traits and weapon traits"
+)
+_RESOURCE_REMAINING_EQUIPMENT_TRAIT_AFTER_WEAPON_AXIS = (
+    "non-resource/runtime armor traits plus remaining glyph-dependent/unreviewed jewelry traits"
 )
 _RESOURCE_REMAINING_GLYPH_AXIS = "jewelry and weapon glyphs/enchants"
 _RESOURCE_REMAINING_GLYPH_AFTER_JEWELRY_AXIS = "weapon glyphs/enchants"
@@ -118,6 +125,9 @@ _RESOURCE_JEWELRY_STATIC_TRAIT_SCOPE = (
 )
 _RESOURCE_JEWELRY_GLYPH_IRRELEVANCE_SCOPE = (
     "all canonical jewelry glyphs reviewed and proven unable to directly modify the requested max resource"
+)
+_RESOURCE_WEAPON_IRRELEVANCE_SCOPE = (
+    "all canonical weapon traits and weapon enchantments reviewed and proven unable to modify the requested max resource"
 )
 _RESOURCE_UNDAUNTED_SCOPE = (
     "reviewed canonical max-rank Undaunted Mettle applied through shared passive mechanics"
@@ -194,6 +204,7 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
         armor_count = 1
         jewelry_trait_catalog = None
         jewelry_glyph_audit = None
+        weapon_audit = None
         jewelry_state = None
 
         if resource_armor:
@@ -206,6 +217,9 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
                 self.database_path
             ).build(key)
             jewelry_glyph_audit = ExtremeJewelryResourceGlyphRelevanceService(
+                self.database_path
+            ).build(key)
+            weapon_audit = ExtremeWeaponResourceRelevanceService(
                 self.database_path
             ).build(key)
             if jewelry_trait_catalog.states:
@@ -291,6 +305,8 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
                 searched_parts.append(_RESOURCE_JEWELRY_STATIC_TRAIT_SCOPE)
             if jewelry_glyph_audit and jewelry_glyph_audit.objective_irrelevance_proven:
                 searched_parts.append(_RESOURCE_JEWELRY_GLYPH_IRRELEVANCE_SCOPE)
+            if weapon_audit and weapon_audit.objective_irrelevance_proven:
+                searched_parts.append(_RESOURCE_WEAPON_IRRELEVANCE_SCOPE)
         elif reviewed_armor:
             searched_parts.append(_REVIEWED_ARMOR_SCOPE)
         searched_parts.extend((_MUNDUS_SCOPE, _FOOD_SCOPE, _POTION_SCOPE))
@@ -306,17 +322,28 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
             and jewelry_glyph_audit is not None
             and jewelry_glyph_audit.objective_irrelevance_proven
         )
+        weapon_irrelevant = bool(
+            resource_armor
+            and weapon_audit is not None
+            and weapon_audit.objective_irrelevance_proven
+        )
         for axis in result.deferred_dynamic_axes:
             if axis in closed_axes:
                 continue
             if axis == _EQUIPMENT_TRAIT_DEFERRED_AXIS:
                 if resource_armor:
-                    omitted_rows.append(_RESOURCE_REMAINING_EQUIPMENT_TRAIT_AXIS)
+                    omitted_rows.append(
+                        _RESOURCE_REMAINING_EQUIPMENT_TRAIT_AFTER_WEAPON_AXIS
+                        if weapon_irrelevant
+                        else _RESOURCE_REMAINING_EQUIPMENT_TRAIT_AXIS
+                    )
                     continue
                 if reviewed_armor:
                     omitted_rows.append(_REMAINING_EQUIPMENT_TRAIT_AXIS)
                     continue
             if axis == _GLYPH_DEFERRED_AXIS and resource_armor:
+                if jewelry_glyph_irrelevant and weapon_irrelevant:
+                    continue
                 omitted_rows.append(
                     _RESOURCE_REMAINING_GLYPH_AFTER_JEWELRY_AXIS
                     if jewelry_glyph_irrelevant
@@ -360,6 +387,13 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
                 and jewelry_glyph_audit.denominator_proven
             )
         )
+        weapon_denominator_proven = bool(
+            not resource_armor
+            or (
+                weapon_audit is not None
+                and weapon_audit.denominator_proven
+            )
+        )
         denominator_proven = bool(
             result.structural_denominator_proven
             and evaluator.gear_denominator_proven
@@ -367,6 +401,7 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
             and resource_armor_denominator_proven
             and jewelry_trait_denominator_proven
             and jewelry_glyph_denominator_proven
+            and weapon_denominator_proven
             and gear_candidates
             and armor_count
             and mundus_count
@@ -394,6 +429,11 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
             if jewelry_glyph_audit is not None
             else ()
         )
+        weapon_unresolved = (
+            tuple(weapon_audit.unresolved)
+            if weapon_audit is not None
+            else ()
+        )
         aggregate_unresolved = tuple(
             dict.fromkeys(
                 str(item)
@@ -402,6 +442,7 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
                     *armor_unresolved,
                     *jewelry_trait_unresolved,
                     *jewelry_glyph_unresolved,
+                    *weapon_unresolved,
                     *result.unresolved,
                 )
                 if str(item)
@@ -461,6 +502,18 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
                     explanation_rows.append(
                         "Jewelry glyph review found objective-relevant glyphs that are not yet searched: "
                         + ", ".join(jewelry_glyph_audit.relevant_glyphs)
+                        + "."
+                    )
+            if weapon_audit is not None:
+                if weapon_audit.objective_irrelevance_proven:
+                    explanation_rows.append(
+                        f"Reviewed all {weapon_audit.traits_reviewed:,} canonical weapon traits and {weapon_audit.enchantments_reviewed:,} canonical weapon enchantments; none can modify {key}, so both weapon families are proven irrelevant to this objective."
+                    )
+                elif weapon_audit.relevant_traits or weapon_audit.relevant_enchantments:
+                    rows = (*weapon_audit.relevant_traits, *weapon_audit.relevant_enchantments)
+                    explanation_rows.append(
+                        "Weapon review found objective-relevant sources that are not yet searched: "
+                        + ", ".join(rows)
                         + "."
                     )
         elif reviewed_armor:
