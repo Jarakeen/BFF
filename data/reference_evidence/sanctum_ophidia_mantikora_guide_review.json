@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "content_id": "sanctum_ophidia",
+  "encounter_id": "possessed_mantikora",
+  "encounter_name": "Possessed Mantikora",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main Phase","threshold":"Pull","description":"Tank holds Mantikora facing away while the raid spreads in a semicircle, handles Popcorn, Stomp, and ranged shard placement."},"source_type":"guide","source_name":"Xynode Sanctum Ophidia Trial Guide","source_locator":"Possessed Mantikora","confidence":"medium"},
+    {"fact_type":"phase","fact_key":"portal_phase","value":{"order":2,"label":"Celestial Nightmare Portal","threshold":"Recurring","description":"A portal opens while Mantikora is stunned; assigned players enter to kill the Serpent's Image while the upstairs group continues damage."},"source_type":"guide + official_patch_notes","source_name":"Xynode Sanctum Ophidia Trial Guide; ESO Update 29 patch notes","source_locator":"Possessed Mantikora portal / Vortex","game_update":"U29","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"popcorn","value":{"name":"Popcorn","hits":3,"response":"kite_backward_or_dodge_through_final_pop"},"source_type":"guide","source_name":"Xynode Sanctum Ophidia Trial Guide","source_locator":"Possessed Mantikora > Popcorn","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"stomp","value":{"name":"Stomp","response":"group_blocks_then_healers_restore_players_to_full"},"source_type":"guide","source_name":"Xynode Sanctum Ophidia Trial Guide","source_locator":"Possessed Mantikora > Stomp","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"portal_timeout","value":{"timeout_seconds":105,"note":"Shade must die before timeout; portal suppresses Popcorn while active."},"source_type":"guide","source_name":"Xynode Sanctum Ophidia Trial Guide","source_locator":"Possessed Mantikora > Portal","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"shards","value":{"name":"Shards","targets":"furthest_players","response":"assigned_ranged_stack_places_shards_away_from_melee"},"source_type":"guide","source_name":"Xynode Sanctum Ophidia Trial Guide","source_locator":"Possessed Mantikora > Shards/Spears","confidence":"medium"}
+  ]
+}
