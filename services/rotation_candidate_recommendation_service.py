@@ -16,6 +16,9 @@ from services.rotation_candidate_generation_service import (
     RotationRefreshLeadCandidateOption,
 )
 from services.rotation_candidate_scorecard_service import RotationCandidateScorecard
+from services.rotation_gameplay_policy_assessment_service import (
+    RotationGameplayPolicyAssessment,
+)
 from services.rotation_role_aware_ranking_service import (
     RotationRoleAwareRankingInput,
     RotationRoleAwareRankingResult,
@@ -37,6 +40,8 @@ class RotationCandidateRecommendationEvidence:
     Role-specific hard obligations remain a separate channel from the generic
     scorecard so encounter healer criteria, future tank checks, and similar role
     gates do not masquerade as missing support effects or unresolved mechanics.
+    Optional gameplay-practice assessment remains separate from mechanical truth and
+    is forwarded unchanged to role-aware ranking.
     """
 
     candidate_id: str
@@ -47,12 +52,19 @@ class RotationCandidateRecommendationEvidence:
     primary_role_displacement_seconds: float | None
     role_hard_obligation_satisfied: bool | None = True
     role_hard_obligation_reasons: tuple[str, ...] = ()
+    gameplay_policy_assessment: RotationGameplayPolicyAssessment | None = None
 
     def __post_init__(self) -> None:
         candidate_id = str(self.candidate_id or "").strip()
         if not candidate_id:
             raise ValueError("rotation recommendation evidence candidate_id is required")
         object.__setattr__(self, "candidate_id", candidate_id)
+        assessment = self.gameplay_policy_assessment
+        if assessment is not None and assessment.candidate_id.casefold() != candidate_id.casefold():
+            raise ValueError(
+                "rotation recommendation gameplay-policy candidate mismatch: "
+                f"expected {candidate_id!r}, got {assessment.candidate_id!r}"
+            )
         object.__setattr__(
             self,
             "role_hard_obligation_reasons",
@@ -215,6 +227,9 @@ class RotationCandidateRecommendationService:
                     ),
                     role_hard_obligation_reasons=(
                         evidence.role_hard_obligation_reasons
+                    ),
+                    gameplay_policy_assessment=(
+                        evidence.gameplay_policy_assessment
                     ),
                 )
             )
