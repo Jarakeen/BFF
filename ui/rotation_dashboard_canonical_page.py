@@ -42,6 +42,7 @@ from ui.rotation_canonical_candidate_render_support import (
     RotationCanonicalCandidateRenderEvidence,
     RotationCanonicalCandidateRenderSupport,
 )
+from ui.rotation_canonical_candidate_support import RotationCanonicalRoleEvidence
 from ui.rotation_canonical_evidence_bundle_support import (
     RotationCanonicalEvidenceBundle,
     RotationCanonicalEvidenceBundleSupport,
@@ -181,6 +182,7 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
         maximum_amount: int,
         trigger_fraction: float,
         restoration_resolver: VerifiedRecoveryHeavyRestorationResolver | None = None,
+        role_evidence: RotationCanonicalRoleEvidence | None = None,
         demands: Iterable[RotationDemandWindow] = (),
         options: Iterable[RotationRefreshLeadCandidateOption] = (),
         wait_decision_factory: RecoveryPressureWaitDecisionFactory | None = None,
@@ -207,6 +209,7 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
             maximum_amount=maximum_amount,
             trigger_fraction=trigger_fraction,
             restoration_resolver=restoration_resolver,
+            role_evidence=role_evidence,
             demands=tuple(demands),
             options=tuple(options),
             wait_decision_factory=wait_decision_factory,
@@ -230,6 +233,7 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
         self,
         bundle: RotationCanonicalEvidenceBundle,
         *,
+        role_evidence: RotationCanonicalRoleEvidence | None = None,
         character_id: str | None = None,
     ) -> RotationDashboardCanonicalCandidateResult:
         """Evaluate one already-assembled canonical encounter/build evidence bundle."""
@@ -266,6 +270,7 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
             maximum_amount=bundle.maximum_amount,
             trigger_fraction=bundle.trigger_fraction,
             restoration_resolver=bundle.restoration_resolver,
+            role_evidence=role_evidence,
             demands=bundle.demands,
             options=bundle.options,
             wait_decision_factory=bundle.wait_decision_factory,
@@ -282,6 +287,7 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
         self,
         bundle: RotationCanonicalEvidenceBundle,
         *,
+        role_evidence: RotationCanonicalRoleEvidence | None = None,
         cadence_obligations: tuple[RotationSupportCadenceNeighborhoodObligation, ...] = (),
         cadence_priorities: AbilityPriorityList | None = None,
         cadence_evaluation_context: RotationSupportCadenceEvaluationContext | None = None,
@@ -297,6 +303,7 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
             player_build=build,
             generation_request=self.canonical_generation_request(),
             evidence_bundle=bundle,
+            role_evidence=role_evidence,
             cadence_obligations=tuple(cadence_obligations),
             cadence_priorities=cadence_priorities,
             cadence_evaluation_context=cadence_evaluation_context,
