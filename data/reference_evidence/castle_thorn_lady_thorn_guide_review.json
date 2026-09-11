@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "castle_thorn",
+  "encounter_id": "lady_thorn",
+  "encounter_name": "Lady Thorn",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Blood Phase","threshold":"Pull to bat swarm","description":"Hold Lady Thorn steady, manage Blood Guardian pressure, and preserve space for the bat-swarm transition."},"source_type":"guide","source_name":"Xynode Castle Thorn Mechanics Guide","source_locator":"Lady Thorn","game_update":"U27","confidence":"high"},
+    {"fact_type":"phase","fact_key":"bat_swarm","value":{"order":2,"label":"Bat Swarm / Scavenger Synergy","threshold":"Bat swarm transitions","description":"Use Blood Scavenger synergies to survive and progress the bat-swarm phase, then regroup on Lady Thorn."},"source_type":"guide","source_name":"Castle Thorn Taking Turns achievement / guide review","source_locator":"Lady Thorn","game_update":"U27","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"blood_guardian","value":{"name":"Blood Guardian","response":"control_guardian_and_preserve_it_if_attempting_guardian_preserved"},"source_type":"guide","source_name":"Castle Thorn Guardian Preserved achievement / guide review","source_locator":"Lady Thorn","game_update":"U27","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"bat_swarm","value":{"name":"Bat Swarm","response":"use_scavenger_synergy_then_regroup"},"source_type":"guide","source_name":"Xynode Castle Thorn Mechanics Guide","source_locator":"Lady Thorn","game_update":"U27","confidence":"high"}
+  ]
+}
