@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "content_id": "exiled_redoubt",
+  "encounter_id": "executioner_jerensi",
+  "encounter_name": "Executioner Jerensi",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main Phase","threshold":"Pull","description":"Manage Laceration, Swirling Darkblades, Death Knell, and Spike Traps while keeping the arena center usable."},"source_type":"guide","source_name":"Hyperioxes Exiled Redoubt Dungeon Guide","source_locator":"Executioner Jerensi","game_update":"U50","confidence":"high"},
+    {"fact_type":"phase","fact_key":"shadow_ward_cycles","value":{"order":2,"label":"Shadow Ward / Execute Cycles","threshold":"80%, 50%, 30%","description":"Jerensi fills the arena with persistent spike traps, becomes immune, and spawns add waves. Once the adds die she casts Execute; after 30% Execute repeats periodically."},"source_type":"guide","source_name":"Hyperioxes Exiled Redoubt Dungeon Guide","source_locator":"Executioner Jerensi > Shadow Ward / Execute","game_update":"U50","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"execute","value":{"name":"Execute","response":"hard_mode_all_four_players_stack_inside_yellow_circle","failure":"target_can_be_one_shot_by_oblivion_damage","repeat_after_30_percent":true},"source_type":"guide","source_name":"Hyperioxes Exiled Redoubt Dungeon Guide","source_locator":"Executioner Jerensi > Execute","game_update":"U50","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"death_knell","value":{"name":"Death Knell","response":"top_group_before_hit_then_purge_or_outheal_condemn_dot","clears_swirl_aoes":true},"source_type":"guide","source_name":"Hyperioxes Exiled Redoubt Dungeon Guide","source_locator":"Executioner Jerensi > Death Knell","game_update":"U50","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"laceration","value":{"name":"Laceration","response":"tank_blocks_sequence_then_sidesteps_or_rolls_final_cone","veteran_failure":"final_cone_applies_healing_absorb"},"source_type":"guide","source_name":"Hyperioxes Exiled Redoubt Dungeon Guide","source_locator":"Executioner Jerensi > Laceration","game_update":"U50","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"add_interrupts","value":{"name":"Jailer and Torturer Adds","response":"interrupt_jailer_channel_and_cc_or_block_late_torturer_blood_frenzy","priority":"end_immunity_phase_quickly"},"source_type":"guide","source_name":"Hyperioxes Exiled Redoubt Dungeon Guide","source_locator":"Executioner Jerensi > Albus Torturer / Albus Jailer","game_update":"U50","confidence":"high"}
+  ]
+}
