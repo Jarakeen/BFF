@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "content_id": "city_of_ash_ii",
+  "encounter_id": "valkyn_skoria_person",
+  "encounter_name": "Valkyn Skoria",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"platform_cycle","value":{"order":1,"label":"Platform Cycle","threshold":"100% to execute","description":"Fight Skoria across destructible lava platforms while dodging meteors and preserving safe floor space."},"source_type":"guide","source_name":"Xynode City of Ash II Guide","source_locator":"Valkyn Skoria","game_update":"U5","confidence":"high"},
+    {"fact_type":"phase","fact_key":"execute","value":{"order":2,"label":"Lava Execute","threshold":"final platform pressure","description":"As available platforms disappear, tighten positioning and finish Skoria before the arena is consumed."},"source_type":"guide","source_name":"City of Ash II community guide","source_locator":"Valkyn Skoria","game_update":"U5","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"meteors","value":{"name":"Meteor Strikes","response":"dodge_targeted_meteors_and_avoid_stacking_impacts_on_group"},"source_type":"guide","source_name":"Xynode City of Ash II Guide","source_locator":"Valkyn Skoria","game_update":"U5","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"lava_platforms","value":{"name":"Lava Platforms","response":"move_as_a_group_to_safe_platforms_and_do_not_waste_remaining_floor_space"},"source_type":"guide","source_name":"City of Ash II community guide","source_locator":"Valkyn Skoria","game_update":"U5","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"flame_phase_interrupts","value":{"name":"Flame Phase Interrupts","response":"interrupt_dangerous_flame_casts_when_available_and_prioritize_survival_over_stationary_damage"},"source_type":"guide","source_name":"Xynode City of Ash II Guide","source_locator":"Valkyn Skoria","game_update":"U5","confidence":"medium"}
+  ]
+}
