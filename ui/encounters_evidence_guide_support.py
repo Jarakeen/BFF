@@ -274,6 +274,7 @@ def install() -> None:
 
     from ui.encounters_page import EncountersPage
 
+    original_load_boss_index = EncountersPage._load_boss_index
     original_boss_changed = EncountersPage._boss_changed
     EncountersPage._assignments_tab = _assignments_tab_with_evidence
 
@@ -284,5 +285,11 @@ def install() -> None:
         row = self._guide_summaries[index]
         _render_encounter_evidence(self, row.encounter_id, row.name)
 
+    def load_boss_index_with_evidence(self) -> None:
+        original_load_boss_index(self)
+        if self.boss_combo.count() > 0 and self.boss_combo.currentIndex() >= 0:
+            boss_changed_with_evidence(self, self.boss_combo.currentIndex())
+
+    EncountersPage._load_boss_index = load_boss_index_with_evidence
     EncountersPage._boss_changed = boss_changed_with_evidence
     _INSTALLED = True
