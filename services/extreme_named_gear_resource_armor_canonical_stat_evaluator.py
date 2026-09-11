@@ -10,10 +10,11 @@ through the canonical calculation stack so armor, jewelry, Mundus, set effects,
 food, potions, class/race state, and reviewed passive progression meet in one
 context.
 
-For the max-resource path, reviewed max-rank Undaunted Mettle progression and the
-hypothetical race's canonical max-rank racial progression are applied when a
-canonical database path is available. Racial stat math remains owned by the Phase 5
-racial tooltip resolver; this evaluator only supplies legal progression evidence.
+For the max-resource path, reviewed max-rank Undaunted Mettle progression,
+resource-relevant armor passive progression, and the hypothetical race's canonical
+max-rank racial progression are applied when a canonical database path is available.
+Racial and armor-passive stat math remain owned by shared canonical resolvers; this
+evaluator only supplies legal progression evidence.
 """
 
 from typing import Any
@@ -30,6 +31,9 @@ from services.extreme_armor_resource_weight_trait_glyph_state_service import (
 from services.extreme_hypothetical_racial_progression_service import (
     ExtremeHypotheticalRacialProgressionService,
 )
+from services.extreme_hypothetical_resource_armor_passive_progression_service import (
+    ExtremeHypotheticalResourceArmorPassiveProgressionService,
+)
 from services.extreme_hypothetical_undaunted_progression_service import (
     ExtremeHypotheticalUndauntedProgressionService,
 )
@@ -44,7 +48,7 @@ from services.extreme_structural_global_search_service import ExtremeStructuralC
 
 
 class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
-    """Add combined resource armor, reviewed jewelry, Mettle, and racial progression."""
+    """Add resource armor, reviewed passives, jewelry, Mettle, and race progression."""
 
     def __init__(
         self,
@@ -53,6 +57,7 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
         armor_state: ExtremeArmorResourceWeightTraitGlyphState,
         jewelry_state: ExtremeJewelryResourceStaticTraitState | None = None,
         undaunted_progression_service: ExtremeHypotheticalUndauntedProgressionService | None = None,
+        resource_armor_progression_service: ExtremeHypotheticalResourceArmorPassiveProgressionService | None = None,
         racial_progression_service: ExtremeHypotheticalRacialProgressionService | None = None,
         context_factory: Phase5BuildCalculationContextFactory | None = None,
     ) -> None:
@@ -75,7 +80,19 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
                 class_progression_service=self.class_progression_service,
             )
         self.undaunted_progression_service = undaunted_progression_service
-        self.progression_service = undaunted_progression_service or self.class_progression_service
+
+        if resource_armor_progression_service is None and database_path is not None:
+            resource_armor_progression_service = ExtremeHypotheticalResourceArmorPassiveProgressionService(
+                database_path,
+                objective_key=armor_state.objective_key,
+                progression_service=undaunted_progression_service,
+            )
+        self.resource_armor_progression_service = resource_armor_progression_service
+        self.progression_service = (
+            resource_armor_progression_service
+            or undaunted_progression_service
+            or self.class_progression_service
+        )
 
         if racial_progression_service is None and database_path is not None:
             racial_progression_service = ExtremeHypotheticalRacialProgressionService(database_path)
@@ -217,6 +234,11 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
         output["undaunted_mettle_progression_applied"] = bool(
             progression.owns_skill_line("Undaunted")
             and progression.passive_rank("Undaunted Mettle")
+        )
+        output["juggernaut_rank"] = progression.passive_rank("Juggernaut")
+        output["juggernaut_progression_applied"] = bool(
+            progression.owns_skill_line("Heavy Armor")
+            and progression.passive_rank("Juggernaut")
         )
         output["racial_progression_applied"] = bool(
             self.racial_progression_service is not None
