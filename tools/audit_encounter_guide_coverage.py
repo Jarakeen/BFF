@@ -4,8 +4,9 @@ from __future__ import annotations
 
 This tool is intentionally read-only. The default scope is the reviewed raid-planning
 encounter registry, where raw NPC/source records are grouped into the fight units a
-raid lead actually plans. ``--raw-trial-records`` audits all raw records under known
-trial content; ``--all-content`` audits the full dungeon/arena/source corpus.
+raid lead actually plans. ``--dungeons`` audits the reviewed dungeon-planning registry
+in newest-first release order. ``--raw-trial-records`` audits all raw records under
+known trial content; ``--all-content`` audits the full dungeon/arena/source corpus.
 """
 
 import argparse
@@ -19,6 +20,7 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 from engine.config import get_data_dir
+from services.dungeon_encounter_identity_service import load_dungeon_encounter_identities
 from services.encounter_boss_guide import (
     EncounterBossGuideNotFound,
     EncounterBossGuideService,
@@ -39,6 +41,8 @@ class EncounterGuideCoverageRow:
     canonical_timeline_rows: int
     reviewed_timeline_rows: int
     strategy_rows: int
+    release_year: int | None = None
+    release_update: int | None = None
 
     @property
     def effective_timeline_source(self) -> str:
@@ -110,6 +114,31 @@ def _reviewed_raid_rows(data_root: Path) -> tuple[EncounterGuideCoverageRow, ...
     return tuple(rows)
 
 
+def _reviewed_dungeon_rows(data_root: Path) -> tuple[EncounterGuideCoverageRow, ...]:
+    root = Path(data_root)
+    guide_service = EncounterBossGuideService(root / "eso.db")
+    projection_service = EncounterGuideEvidenceProjectionService(root)
+    rows: list[EncounterGuideCoverageRow] = []
+
+    for identity in load_dungeon_encounter_identities(root):
+        projection = projection_service.get(identity.encounter_id, identity.display_name)
+        rows.append(
+            EncounterGuideCoverageRow(
+                encounter_id=identity.encounter_id,
+                content_name=identity.content_name,
+                encounter_name=identity.display_name,
+                canonical_timeline_rows=_canonical_phase_count(
+                    guide_service, identity.member_ids
+                ),
+                reviewed_timeline_rows=len(projection.timeline),
+                strategy_rows=len(projection.strategy),
+                release_year=identity.release_year,
+                release_update=identity.release_update,
+            )
+        )
+    return tuple(rows)
+
+
 def _raw_rows(
     data_root: Path,
     *,
@@ -147,12 +176,28 @@ def build_coverage_rows(
 ) -> tuple[EncounterGuideCoverageRow, ...]:
     if scope == "raid":
         rows = _reviewed_raid_rows(data_root)
+    elif scope == "dungeon":
+        rows = _reviewed_dungeon_rows(data_root)
     elif scope == "raw_trials":
         rows = _raw_rows(data_root, trials_only=True)
     elif scope == "all":
         rows = _raw_rows(data_root, trials_only=False)
     else:
         raise ValueError(f"unsupported encounter guide audit scope {scope!r}")
+
+    if scope == "dungeon":
+        return tuple(
+            sorted(
+                rows,
+                key=lambda row: (
+                    -(row.release_year or 0),
+                    -(row.release_update or 0),
+                    row.content_name.casefold(),
+                    row.encounter_name.casefold(),
+                    row.encounter_id,
+                ),
+            )
+        )
 
     return tuple(
         sorted(
@@ -187,6 +232,11 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     scope = parser.add_mutually_exclusive_group()
     scope.add_argument(
+        "--dungeons",
+        action="store_true",
+        help="Audit reviewed dungeon encounters newest-first by release update.",
+    )
+    scope.add_argument(
         "--raw-trial-records",
         action="store_true",
         help="Audit every raw source record under known trial content.",
@@ -201,12 +251,21 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
-    scope = "all" if args.all_content else "raw_trials" if args.raw_trial_records else "raid"
+    scope = (
+        "dungeon"
+        if args.dungeons
+        else "all"
+        if args.all_content
+        else "raw_trials"
+        if args.raw_trial_records
+        else "raid"
+    )
     rows = build_coverage_rows(get_data_dir(), scope=scope)
     missing = tuple(row for row in rows if row.timeline_missing or row.strategy_missing)
 
     scope_label = {
         "raid": "reviewed raid encounters",
+        "dungeon": "reviewed dungeon encounters (newest first)",
         "raw_trials": "raw known-trial records",
         "all": "all content",
     }[scope]
