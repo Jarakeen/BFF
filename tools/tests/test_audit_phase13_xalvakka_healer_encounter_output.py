@@ -1,3 +1,4 @@
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -10,6 +11,7 @@ from minmax.rotation_demand_window import (
 )
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from services.encounter_boss_guide import BossGuidePhase, EncounterBossGuide
+import tools.audit_phase13_xalvakka_healer_encounter_output as xalvakka_audit
 from tools.audit_phase13_xalvakka_healer_encounter_output import (
     _SourceStructuralThresholdProjectionService,
     _candidate,
@@ -134,6 +136,43 @@ def test_missing_runtime_fixture_means_no_observations_are_invented():
 
     assert observations == ()
     assert unresolved == ()
+
+
+def test_runtime_loader_forwards_optional_refresh_fixture(monkeypatch):
+    database_path = Path("test-eso.db")
+    timing_path = Path("timing.json")
+    refresh_path = Path("refresh.json")
+    calls = []
+
+    class _Loader:
+        def __init__(self, supplied_database_path):
+            calls.append(("init", supplied_database_path))
+
+        def load(self, supplied_timing_path, *, refresh_fixture_path=None):
+            calls.append(("load", supplied_timing_path, refresh_fixture_path))
+            return SimpleNamespace(
+                observations=("composed-runtime-observation",),
+                unresolved=("diagnostic",),
+            )
+
+    monkeypatch.setattr(
+        xalvakka_audit,
+        "RotationHealerReviewedRuntimeEvidenceLoader",
+        _Loader,
+    )
+
+    observations, unresolved = xalvakka_audit._load_reviewed_runtime_observations(
+        database_path=database_path,
+        fixture_path=timing_path,
+        refresh_fixture_path=refresh_path,
+    )
+
+    assert observations == ("composed-runtime-observation",)
+    assert unresolved == ("diagnostic",)
+    assert calls == [
+        ("init", database_path),
+        ("load", timing_path, refresh_path),
+    ]
 
 
 def test_source_structural_threshold_fallback_projects_exact_phase_threshold():
