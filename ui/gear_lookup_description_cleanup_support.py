@@ -1,18 +1,9 @@
 from __future__ import annotations
 
-import re
+from ui.eso_text_cleanup import strip_eso_color_markup
 
 _INSTALLED = False
 _ORIGINAL_SHOW_SELECTED = None
-
-# ESO tooltip text can contain inline color markup such as |cffffff or the
-# malformed/extended |cffffff0 seen in imported set descriptions. Gear Lookup
-# is plain-text UI, so these source formatting tokens should never be visible.
-_ESO_COLOR_TAG_RE = re.compile(r"\|c[0-9A-Fa-f]{6,8}")
-
-
-def strip_eso_color_markup(value: str) -> str:
-    return _ESO_COLOR_TAG_RE.sub("", str(value or "")).replace("|r", "")
 
 
 def install() -> None:
