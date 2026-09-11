@@ -46,9 +46,6 @@ class ExtremeResourceContextualPassiveReviewService:
     SUPPORTED_OBJECTIVES = _SUPPORTED_OBJECTIVES
 
     _ROWS = (
-        # Standing or explicitly searched canonical passive mechanics already
-        # participate in the max-resource path when the required route,
-        # progression, bar, or reviewed runtime witness is supplied.
         ExtremeResourceContextualPassiveReview(
             objective_key="max_health",
             passive_name="Juggernaut",
@@ -115,6 +112,14 @@ class ExtremeResourceContextualPassiveReviewService:
         ),
         ExtremeResourceContextualPassiveReview(
             objective_key="max_magicka",
+            passive_name="Blood Magic",
+            skill_line="Dark Magic",
+            status=ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED,
+            source="ExtremeResourceActiveBarStateService + ExtremeSorcererBloodMagicService + ExtremeResourceBloodMagicRuntimeContextService",
+            condition="The reviewed bar reducer preserves a canonical positive-cost Dark Magic trigger alongside competing Siphoning/Mages Guild witnesses; the pre-window canonical context chooses the higher Max Magicka/Stamina pool and the matching named Blood Magic resource buff is then rebuilt through CombatState.",
+        ),
+        ExtremeResourceContextualPassiveReview(
+            objective_key="max_magicka",
             passive_name="Expert Summoner",
             skill_line="Daedric Summoning",
             status=ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED,
@@ -152,6 +157,14 @@ class ExtremeResourceContextualPassiveReviewService:
             status=ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED,
             source="ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory + EmperorPassiveInputResolver",
             condition="The reviewed Extreme max-resource continuation uses the legal active-Emperor six-Home-Keep ceiling; CombatState carries campaign legality and the shared Emperor resolver applies the canonical U50 75% maximum-resource bonus.",
+        ),
+        ExtremeResourceContextualPassiveReview(
+            objective_key="max_stamina",
+            passive_name="Blood Magic",
+            skill_line="Dark Magic",
+            status=ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED,
+            source="ExtremeResourceActiveBarStateService + ExtremeSorcererBloodMagicService + ExtremeResourceBloodMagicRuntimeContextService",
+            condition="The reviewed bar reducer preserves a canonical positive-cost Dark Magic trigger alongside any Siphoning witness; the pre-window canonical context chooses the higher Max Magicka/Stamina pool and the matching named Blood Magic resource buff is then rebuilt through CombatState.",
         ),
         ExtremeResourceContextualPassiveReview(
             objective_key="max_stamina",
