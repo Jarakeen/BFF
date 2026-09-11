@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "unhallowed_grave",
+  "encounter_id": "keeper_of_the_kiln",
+  "encounter_name": "Keeper of the Kiln",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"kiln_cycles","value":{"order":1,"label":"Kiln Rune Cycles","threshold":"90%, 60%, and 30%","description":"The room ignites and players must identify the correct rune from the upper grapple platforms, reveal it, position the boss on it, and break the boss shield before the lethal burn resolves."},"source_type":"guide","source_name":"Xynode Unhallowed Grave Guide","source_locator":"Keeper of the Kiln > The Kiln","game_update":"U25","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"rune_identification","value":{"name":"Kiln Rune Identification","response":"grapple_to_upper_platforms_find_matching_symbol_and_activate_correct_ground_rune"},"source_type":"guide","source_name":"Xynode Unhallowed Grave Guide","source_locator":"Keeper of the Kiln > The Kiln","game_update":"U25","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"shield_break","value":{"name":"Boss Shield Break","response":"tank_positions_boss_on_revealed_rune_then_group_breaks_shield_before_room_burn"},"source_type":"guide","source_name":"Xynode Unhallowed Grave Guide","source_locator":"Keeper of the Kiln > The Kiln","game_update":"U25","confidence":"high"}
+  ]
+}
