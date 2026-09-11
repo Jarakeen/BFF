@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "tempest_island",
+  "encounter_id": "stormfist",
+  "encounter_name": "Stormfist",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Keep Stormfist controlled on the tank, avoid the crushing hand and lightning pools, and collect summoned adds for cleave."},"source_type":"guide","source_name":"Alcast Tempest Island Guide","source_locator":"Stormfist","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"ground_fist","value":{"name":"Ground Fist","response":"move_out_of_the_crushing_hand_aoe_or_block_and_break_free_if_caught"},"source_type":"guide","source_name":"Alcast Tempest Island Guide","source_locator":"Stormfist","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"lightning_burst","value":{"name":"Lightning Burst","response":"move_out_of_the_scattered_lightning_pools_before_they_stack_damage"},"source_type":"guide","source_name":"Alcast Tempest Island Guide","source_locator":"Stormfist","game_update":"Launch","confidence":"high"}
+  ]
+}
