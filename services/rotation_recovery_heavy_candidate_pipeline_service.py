@@ -34,6 +34,7 @@ from services.rotation_recovery_heavy_candidate_workflow_service import (
     RotationRecoveryHeavyCandidateWorkflowService,
 )
 from services.rotation_recovery_heavy_final_family_evaluation_service import (
+    RecoveryFinalRoleAwareInputResolver,
     RecoveryFinalScorecardResolver,
 )
 from services.rotation_recovery_heavy_replay_service import (
@@ -78,7 +79,9 @@ class RotationRecoveryHeavyCandidatePipelineService:
     Final scorecards are additionally decorated with saved-build bar-access rules.
     This keeps ESO gear mechanics such as Oakensoul outside generic plan semantics
     while ensuring both generic and effect-aware candidate workflows reject an
-    otherwise well-formed plan that the equipped build cannot execute.
+    otherwise well-formed plan that the equipped build cannot execute. When final
+    role-aware evidence is supplied, its scorecard is replaced with that same
+    decorated canonical scorecard before role policy is allowed to rank the family.
     """
 
     def __init__(
@@ -116,6 +119,17 @@ class RotationRecoveryHeavyCandidatePipelineService:
             if restricted == scorecard.active_bar_assessment:
                 return scorecard
             return replace(scorecard, active_bar_assessment=restricted)
+
+        return resolve
+
+    @staticmethod
+    def _with_canonical_role_scorecard(
+        resolver: RecoveryFinalRoleAwareInputResolver,
+        scorecard_resolver: RecoveryFinalScorecardResolver,
+    ) -> RecoveryFinalRoleAwareInputResolver:
+        def resolve(snapshot):
+            role_input = resolver(snapshot)
+            return replace(role_input, scorecard=scorecard_resolver(snapshot))
 
         return resolve
 
@@ -183,6 +197,7 @@ class RotationRecoveryHeavyCandidatePipelineService:
         priorities: AbilityPriorityList,
         evaluator_resolver: RecoveryCandidateEvaluatorResolver,
         scorecard_resolver: RecoveryFinalScorecardResolver,
+        role_aware_input_resolver: RecoveryFinalRoleAwareInputResolver | None = None,
         resource: ResourceType,
         maximum_amount: int,
         trigger_fraction: float,
@@ -252,14 +267,25 @@ class RotationRecoveryHeavyCandidatePipelineService:
 
             active_restoration_factory = canonical_restoration_factory
 
+        final_scorecard_resolver = self._with_saved_build_bar_access(
+            player_build,
+            scorecard_resolver,
+        )
+        active_role_input_resolver = (
+            None
+            if role_aware_input_resolver is None
+            else self._with_canonical_role_scorecard(
+                role_aware_input_resolver,
+                final_scorecard_resolver,
+            )
+        )
+
         return self.workflow.run_effects(
             player_build=player_build,
             character_build=character_build,
             candidates=bridged.candidates,
-            scorecard_resolver=self._with_saved_build_bar_access(
-                player_build,
-                scorecard_resolver,
-            ),
+            scorecard_resolver=final_scorecard_resolver,
+            role_aware_input_resolver=active_role_input_resolver,
             requirements=requirement_tuple,
             passives=passive_tuple,
             resource=resource,
