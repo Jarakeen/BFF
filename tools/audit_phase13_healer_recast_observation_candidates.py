@@ -43,6 +43,19 @@ def _nearest_delta(values: tuple[float, ...], expected: float) -> float | None:
     return min(abs(value - expected) for value in values)
 
 
+def _matching_tick_indices(
+    values: tuple[float, ...],
+    *,
+    expected: float,
+    tolerance: float,
+) -> tuple[int, ...]:
+    return tuple(
+        index
+        for index, value in enumerate(values)
+        if abs(float(value) - float(expected)) <= float(tolerance)
+    )
+
+
 def _phase_distance(*, first: float, second: float, cadence: float) -> float:
     """Return shortest distance between two periodic phases on one cadence cycle."""
 
@@ -68,10 +81,27 @@ def _recipient_shape(
     if _phase_distance(first=old_next, second=restart_first, cadence=cadence) <= tolerance:
         return "phase-ambiguous", restart_delta, old_delta
 
-    restart_seen = restart_delta <= tolerance
-    old_seen = old_delta is not None and old_delta <= tolerance
+    restart_matches = _matching_tick_indices(
+        post_ticks,
+        expected=restart_first,
+        tolerance=tolerance,
+    )
+    old_matches = _matching_tick_indices(
+        post_ticks,
+        expected=old_next,
+        tolerance=tolerance,
+    )
+    restart_seen = bool(restart_matches)
+    old_seen = bool(old_matches)
     if restart_seen and old_seen:
-        return "both-phases-observed", restart_delta, old_delta
+        distinct_phase_ticks = any(
+            restart_index != old_index
+            for restart_index in restart_matches
+            for old_index in old_matches
+        )
+        if distinct_phase_ticks:
+            return "both-phases-observed", restart_delta, old_delta
+        return "phase-ambiguous", restart_delta, old_delta
     if restart_seen:
         return "reapplied-restart-shaped", restart_delta, old_delta
     if old_seen:
@@ -378,13 +408,13 @@ def main(argv: list[str] | None = None) -> int:
     print(
         "reapplied-restart-shaped means that recipient shows the reviewed new-application phase "
         "and not the projected continuation of its own old phase. both-phases-observed requires "
-        "two distinguishable phases modulo the canonical cadence; near-colliding periodic phases "
-        "are phase-ambiguous instead of being mistaken for coexistence."
+        "distinct observed ticks supporting two distinguishable phases modulo the canonical cadence; "
+        "one tick matching both tolerance windows remains phase-ambiguous."
     )
     print(
         "old-phase-only is not evidence against restart because the recast may not have reapplied "
         "the effect to that recipient. phase-ambiguous means the periodic phases are too close "
-        "to distinguish. No row promotes a refresh policy automatically."
+        "or insufficiently distinct to distinguish. No row promotes a refresh policy automatically."
     )
     print(f"Overlapping recast pairs encountered: {total_overlap_pairs}")
     print(f"Clean first-overlap pairs inspected: {total_clean_pairs}")
