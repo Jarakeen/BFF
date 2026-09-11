@@ -138,6 +138,7 @@ def test_checked_in_registry_keeps_reviewed_progression_counts_and_chronology():
         "elden_hollow_ii": 3, "wayrest_sewers_ii": 3,
         "fungal_grotto_i": 2, "spindleclutch_i": 2, "the_banished_cells_i": 2,
         "darkshade_caverns_i": 3, "elden_hollow_i": 3, "wayrest_sewers_i": 3,
+        "arx_corinium": 3, "city_of_ash_i": 3, "crypt_of_hearts_i": 3,
     }
     assert {key: len(value) for key, value in by_content.items()} == expected_counts
 
@@ -150,7 +151,7 @@ def test_checked_in_registry_keeps_reviewed_progression_counts_and_chronology():
     }
     assert rows[0].release_key == (2025, 47)
     assert rows[-1].release_key == (2014, 0)
-    assert len(rows) == 176
+    assert len(rows) == 185
 
 
 def test_checked_in_registry_preserves_grouped_encounter_identities():
@@ -170,6 +171,9 @@ def test_checked_in_registry_preserves_grouped_encounter_identities():
     )
     assert by_id["ilambris_amalgam"].member_ids == (
         "ilambris_athor", "ilambris_zaven", "ilambris_amalgam"
+    )
+    assert by_id["ilambris_twins"].member_ids == (
+        "ilambris_athor", "ilambris_zaven"
     )
     assert by_id["allene_pellingare"].member_ids == (
         "allene_pellingare", "varaine_pellingare"
@@ -228,6 +232,21 @@ def test_launch_starter_slice_contains_only_vanquisher_progression_encounters():
     assert by_content["wayrest_sewers_i"] == {
         "investigator_garron", "varaine_pellingare", "allene_pellingare_wayrest_sewers_i"
     }
+    assert by_content["arx_corinium"] == {
+        "ganakton_the_tempest", "sliklenia_the_songstress", "sellistrix_the_lamia_queen"
+    }
+    assert by_content["city_of_ash_i"] == {
+        "infernal_guardian", "warden_of_the_shrine", "razor_master_erthas"
+    }
+    assert by_content["crypt_of_hearts_i"] == {
+        "archmaster_siniel", "death_s_leviathan", "ilambris_twins"
+    }
+
+    all_ids = {row.encounter_id for row in rows}
+    assert not {
+        "wamasu", "songstress_snake", "lurcher", "dremora", "nightblade", "dagonites",
+        "altmer", "mummy", "xivilai",
+    } & all_ids
 
 
 def test_known_reviewed_semantic_import_gaps_stay_explicit():
