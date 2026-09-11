@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "content_id": "sanctum_ophidia",
+  "encounter_id": "stonebreaker",
+  "encounter_name": "Stonebreaker",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main Phase","threshold":"100-20%","description":"Tank faces Stonebreaker away while the group blocks Ground Slam/Ground Pound, isolates poison carriers, and kills Overchargers as they spawn."},"source_type":"guide","source_name":"Xynode Sanctum Ophidia Trial Guide","source_locator":"Stonebreaker","confidence":"medium"},
+    {"fact_type":"phase","fact_key":"enrage_phase","value":{"order":2,"label":"Enrage","threshold":"~20%","description":"Stonebreaker enrages and outgoing damage increases; blocking the Ground Slam becomes especially important."},"source_type":"guide","source_name":"Xynode Sanctum Ophidia Trial Guide","source_locator":"Stonebreaker > Enrage","confidence":"medium"},
+    {"fact_type":"transition","fact_key":"overcharger_waves","value":{"label":"Overcharger Waves","thresholds":["75%","50%","25%"],"description":"Spawn counts escalate 1, then 2, then 3 Overchargers; kill them promptly to avoid accumulated lightning pressure."},"source_type":"guide","source_name":"Xynode Sanctum Ophidia Trial Guide","source_locator":"Stonebreaker > Overchargers","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"ground_pound","value":{"name":"Ground Pound","hits":3,"response":"group_blocks_lines"},"source_type":"guide","source_name":"Xynode Sanctum Ophidia Trial Guide","source_locator":"Stonebreaker > Ground Pound","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"poison_ball","value":{"name":"Poison Ball","response":"dodge_if_possible_else_isolate_until_dot_expires","spreads_on_contact":true},"source_type":"guide","source_name":"Xynode Sanctum Ophidia Trial Guide","source_locator":"Stonebreaker > Poison Ball","confidence":"medium"},
+    {"fact_type":"mechanic_detail","fact_key":"leaping_crusha_removed","value":{"enabled":false,"note":"Stonebreaker no longer uses Leaping Crusha."},"source_type":"official_patch_notes","source_name":"ESO PTS Patch Notes v7.1.2","source_locator":"Sanctum Ophidia > Stonebreaker","game_update":"U32","confidence":"high"}
+  ]
+}
