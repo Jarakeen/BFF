@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "content_id": "kynes_aegis",
+  "encounter_id": "yandir_the_butcher",
+  "encounter_name": "Yandir the Butcher",
+  "evidence": [
+    {
+      "fact_type": "phase",
+      "fact_key": "opening_phase",
+      "value": {"order": 1, "label": "Add / Shield Phase", "threshold": "100-50%", "description": "Yandir summons Gryphons and Sea Adders, uses totems, and periodically shields himself and an add."},
+      "source_type": "guide",
+      "source_name": "AlcastHQ Kyne's Aegis Trial Guide",
+      "source_locator": "Yandir the Butcher",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "phase",
+      "fact_key": "execute_phase",
+      "value": {"order": 2, "label": "Leap / Enrage Execute", "threshold": "50%", "description": "Gryphon and Sea Adder spawns stop; Yandir begins leaping to the taunting tank and enrages over time. Call Lightning is added during execute."},
+      "source_type": "guide",
+      "source_name": "AlcastHQ Kyne's Aegis Trial Guide",
+      "source_locator": "Yandir execute",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "hailstone_shield_exists",
+      "value": true,
+      "source_type": "official_patch_notes",
+      "source_name": "ESO PTS Patch Notes v6.0.2",
+      "source_locator": "Kyne's Aegis > Yandir the Butcher",
+      "game_update": "U26",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "hailstone_shield_behavior",
+      "value": {"burst_timeout_seconds": 15, "failure_result": "group_wipe", "blockable": false, "dodgeable": false},
+      "source_type": "guide + official_patch_notes",
+      "source_name": "AlcastHQ Kyne's Aegis Trial Guide; ESO PTS Patch Notes v6.0.2",
+      "source_locator": "Yandir Hailstone Shield / Hailstone Burst",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "totems",
+      "value": {"name": "Totems", "types": ["Dragon", "Gargoyle", "Harpy", "Chaurus"]},
+      "source_type": "guide",
+      "source_name": "AlcastHQ Kyne's Aegis Trial Guide",
+      "source_locator": "Yandir totems",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "adds_proximity_enrage",
+      "value": {"gryphon_and_sea_adder_enrage_near_boss": true},
+      "source_type": "official_patch_notes",
+      "source_name": "ESO PTS Patch Notes v6.0.2",
+      "source_locator": "Kyne's Aegis > Yandir the Butcher",
+      "confidence": "high"
+    }
+  ]
+}
