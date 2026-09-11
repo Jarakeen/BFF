@@ -140,6 +140,7 @@ def test_checked_in_registry_keeps_reviewed_progression_counts_and_chronology():
         "darkshade_caverns_i": 3, "elden_hollow_i": 3, "wayrest_sewers_i": 3,
         "arx_corinium": 3, "city_of_ash_i": 3, "crypt_of_hearts_i": 3,
         "volenfell": 3, "tempest_island": 3, "blackheart_haven": 3,
+        "direfrost_keep": 3, "selene_s_web": 3, "blessed_crucible": 3,
     }
     assert {key: len(value) for key, value in by_content.items()} == expected_counts
 
@@ -152,7 +153,7 @@ def test_checked_in_registry_keeps_reviewed_progression_counts_and_chronology():
     }
     assert rows[0].release_key == (2025, 47)
     assert rows[-1].release_key == (2014, 0)
-    assert len(rows) == 194
+    assert len(rows) == 203
 
 
 def test_checked_in_registry_preserves_grouped_encounter_identities():
@@ -179,6 +180,14 @@ def test_checked_in_registry_preserves_grouped_encounter_identities():
     assert by_id["guardian_council"].member_ids == (
         "the_guardian_s_spark", "the_guardian_s_soul", "the_guardian_s_strength"
     )
+    assert by_id["selene_s_web"].member_ids == ("selene",)
+    assert by_id["the_pack"].member_ids == (
+        "dynus_aralas", "kayd_at_sal", "nusana", "snagg_gro_mashul"
+    )
+    assert by_id["the_beast_master"].member_ids == (
+        "incineration_beetle", "stinger", "the_troll_king"
+    )
+    assert by_id["the_lava_queen"].member_ids == ("the_lava_queen_person",)
     assert by_id["allene_pellingare"].member_ids == (
         "allene_pellingare", "varaine_pellingare"
     )
@@ -254,11 +263,22 @@ def test_launch_starter_slice_contains_only_vanquisher_progression_encounters():
     assert by_content["blackheart_haven"] == {
         "atarus", "roost_mother", "captain_blackheart"
     }
+    assert by_content["direfrost_keep"] == {
+        "guardian_of_the_flame", "iceheart", "drodda_of_icereach"
+    }
+    assert by_content["selene_s_web"] == {
+        "longclaw", "foulhide", "selene_s_web"
+    }
+    assert by_content["blessed_crucible"] == {
+        "the_pack", "the_beast_master", "the_lava_queen"
+    }
 
     all_ids = {row.encounter_id for row in rows}
     assert not {
         "wamasu", "songstress_snake", "lurcher", "dremora", "nightblade", "dagonites",
         "altmer", "mummy", "xivilai", "monstrous_gargoyle", "ogrim", "hagraven", "skeleton",
+        "khajiit", "senche", "heartstalker", "nighteyes", "shadowhiskers", "silentpaw",
+        "bear", "changeling", "werewolf_npc", "shalk", "giant_scorpion", "troll",
     } & all_ids
 
 
