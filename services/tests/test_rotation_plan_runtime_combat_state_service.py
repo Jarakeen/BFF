@@ -5,6 +5,8 @@ from types import SimpleNamespace
 from minmax.character_progression import CharacterProgression
 from minmax.combat_state import CombatState
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
+from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
+from minmax.runtime_event import RuntimeEvent
 from models.build_model import PlayerBuild
 from services.extreme_runtime_snapshot import (
     ExtremeRuntimePotionUse,
@@ -50,6 +52,17 @@ def _plan() -> RotationPlan:
     )
 
 
+def _attempt(time_seconds: float, sequence: int) -> RuntimeEffectEventAttempt:
+    return RuntimeEffectEventAttempt(
+        RuntimeEvent(
+            time_seconds=time_seconds,
+            trigger="overheal_self_or_ally",
+            source="rotation runtime combat-state test",
+            sequence=sequence,
+        )
+    )
+
+
 def test_runtime_projection_uses_same_timestamp_plan_bar_and_history_sequence() -> None:
     projector = _RuntimeProjector()
     service = RotationPlanRuntimeCombatStateService(runtime_snapshot_state=projector)
@@ -82,6 +95,32 @@ def test_runtime_projection_uses_same_timestamp_plan_bar_and_history_sequence() 
     assert call["active_bar"] == "back"
     assert call["snapshot"].snapshot_time_seconds == 10.0
     assert [item.sequence for item in call["snapshot"].runtime_history] == [0, 0]
+
+
+def test_runtime_projection_binds_unbarred_attempts_before_shared_projection() -> None:
+    projector = _RuntimeProjector()
+    service = RotationPlanRuntimeCombatStateService(runtime_snapshot_state=projector)
+    front = _attempt(9.0, 0)
+    back = _attempt(10.0, 2)
+    source = ExtremeRuntimeSnapshot(
+        runtime_history=(back, front),
+        snapshot_time_seconds=20.0,
+    )
+
+    result = service.resolve(
+        PlayerBuild(Name="Magrat", BuildName="DF Healer", Role="Healer"),
+        progression=CharacterProgression(passive_ranks={}),
+        plan=_plan(),
+        runtime_snapshot_source=source,
+        time_seconds=10.0,
+        sequence=2,
+    )
+
+    assert result.resolved
+    snapshot = projector.calls[0][1]["snapshot"]
+    assert snapshot.unbarred_effect_attempts == ()
+    assert tuple(row.active_bar for row in snapshot.bar_effect_attempts) == ("front", "back")
+    assert snapshot.effect_attempts == (front, back)
 
 
 def test_runtime_projection_without_sequence_uses_state_after_all_same_timestamp_events() -> None:
