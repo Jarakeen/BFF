@@ -225,7 +225,7 @@ def test_reviewed_non_caster_healing_skill_skips_tooltip_projection():
     assert service.tooltip_service.calls == []
 
 
-def test_reviewed_external_conditional_healing_remains_explicitly_unresolved():
+def test_reviewed_external_conditional_healing_becomes_structured_runtime_seed():
     service = _service(
         resolution=_resolution(entity_id="overflowing_altar"),
         classifications=(),
@@ -240,10 +240,18 @@ def test_reviewed_external_conditional_healing_remains_explicitly_unresolved():
     assert projection.direct_events == ()
     assert projection.periodic_seeds == ()
     assert projection.delayed_seeds == ()
-    assert projection.unresolved == (
-        "Heal at 4s: reviewed healing consequence is externally triggered and is not "
-        "modeled by caster action healing projection",
-    )
+    assert projection.unresolved == ()
+    assert len(projection.external_conditional_seeds) == 1
+    seed = projection.external_conditional_seeds[0]
+    assert seed.time_seconds == 4.0
+    assert seed.source_name == "Heal"
+    assert seed.skill_id == "overflowing_altar"
+    assert seed.effect_name == "minor_lifesteal"
+    assert seed.duration_seconds == 30.0
+    assert seed.reviewed_magnitude == 600.0
+    assert seed.magnitude_unit == "health_per_second"
+    assert seed.trigger_condition == "damage_affected_enemy"
+    assert seed.game_version == "U50"
     assert service.tooltip_service.calls == []
 
 
