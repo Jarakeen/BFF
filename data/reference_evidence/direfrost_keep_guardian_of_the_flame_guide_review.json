@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "content_id": "direfrost_keep",
+  "encounter_id": "guardian_of_the_flame",
+  "encounter_name": "Guardian of the Flame",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"fight start","description":"Hold the Guardian in place, keep the frontal pressure controlled, and respect its telegraphed heavy attack."},"source_type":"guide","source_name":"Xynode Direfrost Keep Guide","source_locator":"Guardian of the Flame","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"heavy_attack","value":{"name":"Heavy Attack","response":"block_the_telegraphed_heavy_attack_to_avoid_the_large_hit_and_knockback"},"source_type":"guide","source_name":"Xynode Direfrost Keep Guide","source_locator":"Guardian of the Flame","game_update":"Launch","confidence":"high"}
+  ]
+}
