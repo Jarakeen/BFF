@@ -34,6 +34,12 @@ class RotationSelectedEncounterEvidenceInputs:
     These fields remain explicit because they represent rotation policy or build/runtime
     evidence rather than encounter truth. This adapter does not infer them from boss
     name, role, class, prose, or UI labels.
+
+    Heavy-attack restoration is no longer a mandatory caller-provided arithmetic
+    function. ``restoration_resolver=None`` delegates to the canonical generated-plan
+    path, which derives completion from verified channel reservations and then applies
+    saved-character weapon/progression mechanics. An explicit resolver remains a
+    reviewed compatibility/research override.
     """
 
     demand_policies: tuple[EncounterRotationDemandPolicy, ...]
@@ -42,7 +48,7 @@ class RotationSelectedEncounterEvidenceInputs:
     resource: ResourceType
     maximum_amount: int
     trigger_fraction: float
-    restoration_resolver: VerifiedRecoveryHeavyRestorationResolver
+    restoration_resolver: VerifiedRecoveryHeavyRestorationResolver | None = None
     options: tuple[RotationRefreshLeadCandidateOption, ...] = ()
     requirements: tuple[RotationEffectUptimeRequirement, ...] = ()
     passives: tuple[PassiveGrant, ...] = ()
