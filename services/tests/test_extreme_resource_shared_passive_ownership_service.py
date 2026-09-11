@@ -63,6 +63,20 @@ _EXPECTED_IDENTITIES = {
     (ExtremeSkillDomain.GUILD, "Undaunted", "Undaunted Command"),
     (ExtremeSkillDomain.WEAPON, "One Hand and Shield", "Deflect Bolts"),
     (ExtremeSkillDomain.WEAPON, "One Hand and Shield", "Fortress"),
+    (ExtremeSkillDomain.WORLD, "Soul Magic", "Soul Lock"),
+    (ExtremeSkillDomain.WORLD, "Soul Magic", "Soul Shatter"),
+    (ExtremeSkillDomain.WORLD, "Soul Magic", "Soul Summons"),
+    (ExtremeSkillDomain.WORLD, "Vampire", "Blood Ritual"),
+    (ExtremeSkillDomain.WORLD, "Vampire", "Dark Stalker"),
+    (ExtremeSkillDomain.WORLD, "Vampire", "Feed"),
+    (ExtremeSkillDomain.WORLD, "Vampire", "Strike from the Shadows"),
+    (ExtremeSkillDomain.WORLD, "Vampire", "Undeath"),
+    (ExtremeSkillDomain.WORLD, "Vampire", "Unnatural Movement"),
+    (ExtremeSkillDomain.WORLD, "Werewolf", "Blood Rage"),
+    (ExtremeSkillDomain.WORLD, "Werewolf", "Call of the Hunt"),
+    (ExtremeSkillDomain.WORLD, "Werewolf", "Insatiable Hunger"),
+    (ExtremeSkillDomain.WORLD, "Werewolf", "Master of the Chase"),
+    (ExtremeSkillDomain.WORLD, "Werewolf", "Shadow of the Bloodmoon"),
 }
 
 
@@ -77,6 +91,7 @@ class _Universe:
         )
         return reviewed + (
             _passive("Fortress", "Not One Hand and Shield", ExtremeSkillDomain.WEAPON),
+            _passive("Undeath", "Not Vampire", ExtremeSkillDomain.WORLD),
             _passive("Magicka Controller", "Mages Guild", ExtremeSkillDomain.GUILD),
         )
 
@@ -116,6 +131,12 @@ def test_shared_ownership_requires_exact_domain_line_and_name():
     wrong_assault_line = _passive("Reach", "Support", ExtremeSkillDomain.ALLIANCE_WAR)
     assert ExtremeResourceSharedPassiveOwnershipService.resolve(wrong_assault_line, "max_health") is None
 
+    wrong_world_line = _passive("Undeath", "Not Vampire", ExtremeSkillDomain.WORLD)
+    assert ExtremeResourceSharedPassiveOwnershipService.resolve(wrong_world_line, "max_health") is None
+
+    wrong_world_domain = _passive("Undeath", "Vampire", ExtremeSkillDomain.GUILD)
+    assert ExtremeResourceSharedPassiveOwnershipService.resolve(wrong_world_domain, "max_health") is None
+
     max_resource_guild_passive = _passive("Magicka Controller", "Mages Guild", ExtremeSkillDomain.GUILD)
     assert ExtremeResourceSharedPassiveOwnershipService.resolve(max_resource_guild_passive, "max_magicka") is None
 
@@ -137,6 +158,7 @@ def test_passive_denominator_moves_reviewed_shared_rows_to_static_irrelevant():
             assert identity not in audit.context_required
             assert identity not in audit.unresolved
         assert "[weapon] Not One Hand and Shield :: Fortress" in audit.unresolved
+        assert "[world] Not Vampire :: Undeath" in audit.unresolved
 
         # Magicka Controller is intentionally not in the shared irrelevance ledger.
         # Its real Max Magicka ownership is reviewed by the contextual active-bar path.
