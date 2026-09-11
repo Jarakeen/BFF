@@ -172,6 +172,12 @@ def test_shared_ownership_requires_exact_domain_line_and_name():
 
     max_resource_guild_passive = _passive("Magicka Controller", "Mages Guild", ExtremeSkillDomain.GUILD)
     assert ExtremeResourceSharedPassiveOwnershipService.resolve(max_resource_guild_passive, "max_magicka") is None
+    health = ExtremeResourceSharedPassiveOwnershipService.resolve(max_resource_guild_passive, "max_health")
+    stamina = ExtremeResourceSharedPassiveOwnershipService.resolve(max_resource_guild_passive, "max_stamina")
+    assert health is not None
+    assert stamina is not None
+    assert health.status is ExtremeResourceSharedPassiveOwnershipStatus.PROVEN_IRRELEVANT
+    assert stamina.status is ExtremeResourceSharedPassiveOwnershipStatus.PROVEN_IRRELEVANT
 
 
 def test_passive_denominator_moves_reviewed_shared_rows_to_static_irrelevant():
@@ -195,9 +201,11 @@ def test_passive_denominator_moves_reviewed_shared_rows_to_static_irrelevant():
         assert "[other] Emperor :: Emperor" in audit.accounted_elsewhere
         assert "[other] Emperor :: Emperor" not in audit.unresolved
 
-        # Magicka Controller is intentionally not in the shared irrelevance ledger.
-        # Its real Max Magicka ownership is reviewed by the contextual active-bar path.
+        controller_identity = "[guild] Mages Guild :: Magicka Controller"
         if objective == "max_magicka":
-            assert "[guild] Mages Guild :: Magicka Controller" in audit.accounted_elsewhere
+            assert controller_identity in audit.accounted_elsewhere
+            assert controller_identity not in audit.static_irrelevant
         else:
-            assert "[guild] Mages Guild :: Magicka Controller" in audit.context_required
+            assert controller_identity in audit.static_irrelevant
+            assert controller_identity not in audit.context_required
+            assert controller_identity not in audit.unresolved
