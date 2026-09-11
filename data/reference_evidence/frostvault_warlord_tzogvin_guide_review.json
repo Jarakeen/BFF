@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "frostvault",
+  "encounter_id": "warlord_tzogvin",
+  "encounter_name": "Warlord Tzogvin",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"weapon_cycles","value":{"order":1,"label":"Weapon Cycles","threshold":"Repeating","description":"Tzogvin alternates weapon-driven fire and frost pressure while maintaining heavy-hit and tether checks."},"source_type":"guide","source_name":"Alcast Frostvault Guide","source_locator":"Warlord Tzogvin","game_update":"U21","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"fire_spread","value":{"name":"Fire Greatsword Spread","response":"spread_after_knockback_to_prevent_overlapping_personal_flames"},"source_type":"guide","source_name":"Alcast Frostvault Guide","source_locator":"Warlord Tzogvin fire greatsword","game_update":"U21","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"frost_whirlwinds","value":{"name":"Frost Whirlwinds","response":"kite_tracking_whirlwind_away_from_group_and_avoid_static_whirlwinds"},"source_type":"guide","source_name":"Alcast Frostvault Guide","source_locator":"Warlord Tzogvin frost greataxe","game_update":"U21","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"tether","value":{"name":"Player Tether","response":"tethered_players_move_apart_until_link_breaks"},"source_type":"guide","source_name":"Alcast Frostvault Guide","source_locator":"Warlord Tzogvin tether note","game_update":"U21","confidence":"high"}
+  ]
+}
