@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "bloodroot_forge",
+  "encounter_id": "galchobhar",
+  "encounter_name": "Galchobhar",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Control Fire Shalks and resurrected stone adds while the tank plugs fire vents and preserves outside platforms."},"source_type":"guide","source_name":"Alcast Bloodroot Forge Guide","source_locator":"Fourth Boss - Galchobhar","game_update":"U15","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"fire_vents","value":{"name":"Fire Vents","response":"tank_stands_on_active_fire_holes_to_stop_group_damage"},"source_type":"guide","source_name":"Alcast Bloodroot Forge Guide","source_locator":"Galchobhar","game_update":"U15","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"weapon_throw","value":{"name":"Weapon Throw","response":"each_player_uses_a_separate_outer_platform_to_avoid_the_lethal_center_attack"},"source_type":"guide","source_name":"Alcast Bloodroot Forge Guide","source_locator":"Galchobhar","game_update":"U15","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"fireball","value":{"name":"Fire Shalk Lava Ball","response":"take_targeted_fireball_to_a_safe_outer_platform_and_do_not_linger_on_it"},"source_type":"guide","source_name":"Alcast Bloodroot Forge Guide","source_locator":"Galchobhar","game_update":"U15","confidence":"high"}
+  ]
+}
