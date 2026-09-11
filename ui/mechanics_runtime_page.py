@@ -63,11 +63,50 @@ class RuntimeMechanicsPage(MechanicsPage):
             self._clear_runtime_strategy()
 
     def _capture_runtime_glance_labels(self) -> None:
-        """Capture the base page's presentation placeholders without changing base ownership."""
-        labels = {label.text(): label for label in self.findChildren(QLabel)}
+        """Capture current base-page placeholders; later access revalidates widget lifetime."""
+        labels = {}
+        for label in self.findChildren(QLabel):
+            try:
+                labels[label.text()] = label
+            except RuntimeError:
+                continue
         self.runtime_strategy_overview_label = labels.get(_STRATEGY_PLACEHOLDER)
         self.runtime_callouts_label = labels.get(_CALLOUT_PLACEHOLDER)
         self.runtime_reminders_label = labels.get(_REMINDER_PLACEHOLDER)
+
+    def _live_glance_label(self, attribute: str, placeholder: str) -> QLabel | None:
+        """Return a live glance label, reacquiring it if Qt destroyed the old wrapper target.
+
+        Mechanics support layers may rebuild parts of the page after this subclass has
+        captured the original placeholder QLabel. PySide keeps the Python wrapper even
+        after the underlying C++ object is deleted, so every access must fail closed and
+        reacquire the current placeholder instead of raising libshiboken RuntimeError.
+        """
+        label = getattr(self, attribute, None)
+        if label is not None:
+            try:
+                label.text()
+                return label
+            except RuntimeError:
+                setattr(self, attribute, None)
+
+        for candidate in self.findChildren(QLabel):
+            try:
+                if candidate.text() == placeholder:
+                    setattr(self, attribute, candidate)
+                    return candidate
+            except RuntimeError:
+                continue
+        return None
+
+    def _set_glance_text(self, attribute: str, placeholder: str, text: str) -> None:
+        label = self._live_glance_label(attribute, placeholder)
+        if label is None:
+            return
+        try:
+            label.setText(text)
+        except RuntimeError:
+            setattr(self, attribute, None)
 
     def _install_runtime_strategy_tab(self) -> None:
         tab = QWidget()
@@ -188,43 +227,53 @@ class RuntimeMechanicsPage(MechanicsPage):
         guidance_rows,
     ) -> None:
         """Project a compact subset of reviewed runtime evidence onto overview cards."""
-        if self.runtime_strategy_overview_label is not None:
-            overview = guidance_rows[:2]
-            if overview:
-                self.runtime_strategy_overview_label.setText(
-                    "\n".join(
-                        f"• {row.role.replace('_', ' ').title()}: {row.guidance}"
-                        for row in overview
-                    )
-                )
-            else:
-                self.runtime_strategy_overview_label.setText(_STRATEGY_PLACEHOLDER)
+        overview = guidance_rows[:2]
+        overview_text = (
+            "\n".join(
+                f"• {row.role.replace('_', ' ').title()}: {row.guidance}"
+                for row in overview
+            )
+            if overview
+            else _STRATEGY_PLACEHOLDER
+        )
+        self._set_glance_text(
+            "runtime_strategy_overview_label",
+            _STRATEGY_PLACEHOLDER,
+            overview_text,
+        )
 
-        if self.runtime_callouts_label is not None:
-            callouts = projection.notes[:3]
-            if callouts:
-                self.runtime_callouts_label.setText(
-                    "\n".join(f"• {note.text}" for note in callouts)
-                )
-            else:
-                self.runtime_callouts_label.setText(_CALLOUT_PLACEHOLDER)
+        callouts = projection.notes[:3]
+        callout_text = (
+            "\n".join(f"• {note.text}" for note in callouts)
+            if callouts
+            else _CALLOUT_PLACEHOLDER
+        )
+        self._set_glance_text(
+            "runtime_callouts_label",
+            _CALLOUT_PLACEHOLDER,
+            callout_text,
+        )
 
-        if self.runtime_reminders_label is not None:
-            high_priority = [
-                row for row in guidance_rows if str(row.priority or "").casefold() == "high"
-            ][:3]
-            reminders = high_priority or list(guidance_rows[:2])
-            if reminders:
-                rendered = [
-                    f"• {row.role.replace('_', ' ').title()}: {row.guidance}"
-                    for row in reminders
-                ]
-                rendered.append(
-                    f"• Reviewed runtime sample: {projection.successful_kills} successful clear(s)."
-                )
-                self.runtime_reminders_label.setText("\n".join(rendered))
-            else:
-                self.runtime_reminders_label.setText(_REMINDER_PLACEHOLDER)
+        high_priority = [
+            row for row in guidance_rows if str(row.priority or "").casefold() == "high"
+        ][:3]
+        reminders = high_priority or list(guidance_rows[:2])
+        if reminders:
+            rendered = [
+                f"• {row.role.replace('_', ' ').title()}: {row.guidance}"
+                for row in reminders
+            ]
+            rendered.append(
+                f"• Reviewed runtime sample: {projection.successful_kills} successful clear(s)."
+            )
+            reminder_text = "\n".join(rendered)
+        else:
+            reminder_text = _REMINDER_PLACEHOLDER
+        self._set_glance_text(
+            "runtime_reminders_label",
+            _REMINDER_PLACEHOLDER,
+            reminder_text,
+        )
 
     def _clear_runtime_strategy(self, message: str | None = None) -> None:
         if not hasattr(self, "runtime_strategy_summary"):
@@ -234,12 +283,21 @@ class RuntimeMechanicsPage(MechanicsPage):
         )
         self.runtime_notes_table.setRowCount(0)
         self.runtime_guidance_table.setRowCount(0)
-        if self.runtime_strategy_overview_label is not None:
-            self.runtime_strategy_overview_label.setText(_STRATEGY_PLACEHOLDER)
-        if self.runtime_callouts_label is not None:
-            self.runtime_callouts_label.setText(_CALLOUT_PLACEHOLDER)
-        if self.runtime_reminders_label is not None:
-            self.runtime_reminders_label.setText(_REMINDER_PLACEHOLDER)
+        self._set_glance_text(
+            "runtime_strategy_overview_label",
+            _STRATEGY_PLACEHOLDER,
+            _STRATEGY_PLACEHOLDER,
+        )
+        self._set_glance_text(
+            "runtime_callouts_label",
+            _CALLOUT_PLACEHOLDER,
+            _CALLOUT_PLACEHOLDER,
+        )
+        self._set_glance_text(
+            "runtime_reminders_label",
+            _REMINDER_PLACEHOLDER,
+            _REMINDER_PLACEHOLDER,
+        )
 
 
 def _priority_rank(value: str) -> int:
