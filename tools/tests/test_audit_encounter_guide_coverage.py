@@ -81,18 +81,18 @@ def test_audit_scope_flags_are_mutually_distinct():
     assert all_args.all_content is True
 
 
-def test_checked_in_dungeon_scope_is_newest_first_through_wrathstone():
+def test_checked_in_dungeon_scope_is_newest_first_through_wolfhunter():
     data_root = Path(__file__).resolve().parents[2] / "data"
     rows = build_coverage_rows(data_root, scope="dungeon")
 
-    assert len(rows) == 87
+    assert len(rows) == 97
     assert {(row.release_year, row.release_update) for row in rows} == {
         (2025, 47), (2025, 45), (2024, 41), (2023, 37),
         (2022, 35), (2022, 33), (2021, 31), (2021, 29),
-        (2020, 27), (2020, 25), (2019, 23), (2019, 21),
+        (2020, 27), (2020, 25), (2019, 23), (2019, 21), (2018, 19),
     }
     assert (rows[0].release_year, rows[0].release_update) == (2025, 47)
-    assert (rows[-1].release_year, rows[-1].release_update) == (2019, 21)
+    assert (rows[-1].release_year, rows[-1].release_update) == (2018, 19)
 
     assert {row.content_name for row in rows} == {
         "Black Gem Foundry", "Naj-Caldeesh", "Exiled Redoubt", "Lep Seclusa",
@@ -101,6 +101,7 @@ def test_checked_in_dungeon_scope_is_newest_first_through_wrathstone():
         "Red Petal Bastion", "The Dread Cellar", "Black Drake Villa", "The Cauldron",
         "Castle Thorn", "Stone Garden", "Icereach", "Unhallowed Grave",
         "Moongrave Fane", "Lair of Maarselok", "Depths of Malatar", "Frostvault",
+        "Moon Hunter Keep", "March of Sacrifices",
     }
 
     assert {row.encounter_id for row in rows} == {
@@ -128,4 +129,6 @@ def test_checked_in_dungeon_scope_is_newest_first_through_wrathstone():
         "selene", "maarselok_in_flight", "azureblight_cancroid", "maarselok_on_his_perch", "maarselok_in_his_roost",
         "the_scavenging_maw", "the_weeping_woman", "dark_orb", "king_narilmor", "symphony_of_blades",
         "icestalker", "warlord_tzogvin", "vault_protector", "rizzuk_bonechill", "the_stonekeeper",
+        "jailer_melitus", "hedge_maze_guardian", "mylenne_moon_caller", "archivist_ernarde", "vykosa_the_ascendant",
+        "wyrd_sisters", "aghaedh_of_the_solstice", "dagrund_the_bulky", "tarcyr", "balorgh",
     }
