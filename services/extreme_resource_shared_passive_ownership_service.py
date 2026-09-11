@@ -33,6 +33,49 @@ class ExtremeResourceSharedPassiveOwnership:
     effect_family: str
 
 
+_REVIEWED_GUILD_IRRELEVANT: tuple[tuple[str, str, str], ...] = (
+    ("Dark Brotherhood", "Blade of Woe", "NPC execution interaction only"),
+    ("Dark Brotherhood", "Padomaic Sprint", "Major Expedition / movement speed after Blade of Woe kill only"),
+    ("Dark Brotherhood", "Scales of Pitiless Justice", "criminal bounty and heat reduction only"),
+    ("Dark Brotherhood", "Shadow Rider", "mounted hostile-monster aggression radius only"),
+    ("Dark Brotherhood", "Shadowy Supplier", "daily supplier interaction and item grant only"),
+    ("Dark Brotherhood", "Spectral Assassin", "Blade of Woe witness/bounty concealment chance only"),
+    ("Fighters Guild", "Banish the Wicked", "Ultimate generation on kill only"),
+    ("Fighters Guild", "Bounty Hunter", "Cyrodiil bounty-quest access only"),
+    ("Fighters Guild", "Intimidating Presence", "NPC intimidation plus Fighters Guild ability Stamina-cost reduction only"),
+    ("Fighters Guild", "Skilled Tracker", "Fighters Guild ability damage only"),
+    ("Mages Guild", "Everlasting Magic", "Mages Guild ability duration only"),
+    ("Mages Guild", "Mage Adept", "Mages Guild ability Magicka/Health cost reduction only"),
+    ("Mages Guild", "Might of the Guild", "Empower / Heavy Attack damage only"),
+    ("Mages Guild", "Persuasive Will", "NPC persuasion interaction only"),
+    ("Psijic Order", "Clairvoyance", "Psijic Order ability cost reduction only"),
+    ("Psijic Order", "Concentrated Barrier", "Bracing damage shield only"),
+    ("Psijic Order", "Deliberation", "damage-taken mitigation while casting/channeling only"),
+    ("Psijic Order", "See the Unseen", "Psijic rift interaction permission only"),
+    ("Psijic Order", "Spell Orb", "conditional Magic Damage proc only"),
+    ("Thieves Guild", "Clemency", "guard/criminal interaction permission only"),
+    ("Thieves Guild", "Finders Keepers", "Thieves Trove interaction permission only"),
+    ("Thieves Guild", "Haggling", "fence sale-value modifier only"),
+    ("Thieves Guild", "Swiftly Forgotten", "bounty and heat decay only"),
+    ("Thieves Guild", "Timely Escape", "Footpad/refuge escape interaction only"),
+    ("Thieves Guild", "Veil of Shadows", "witness/guard detection range only"),
+)
+
+
+def _reviewed_guild_rows() -> tuple[ExtremeResourceSharedPassiveOwnership, ...]:
+    return tuple(
+        ExtremeResourceSharedPassiveOwnership(
+            domain=ExtremeSkillDomain.GUILD,
+            skill_line=skill_line,
+            passive_name=passive_name,
+            status=ExtremeResourceSharedPassiveOwnershipStatus.PROVEN_IRRELEVANT,
+            source=f"Canonical {skill_line} passive tooltip review",
+            effect_family=effect_family,
+        )
+        for skill_line, passive_name, effect_family in _REVIEWED_GUILD_IRRELEVANT
+    )
+
+
 class ExtremeResourceSharedPassiveOwnershipService:
     """Resolve exact reviewed guild/alliance/weapon passive ownership."""
 
@@ -103,7 +146,7 @@ class ExtremeResourceSharedPassiveOwnershipService:
             source="OneHandShieldPassiveInputResolver",
             effect_family="block mitigation only",
         ),
-    )
+    ) + _reviewed_guild_rows()
 
     @staticmethod
     def _normalized(value: object) -> str:
