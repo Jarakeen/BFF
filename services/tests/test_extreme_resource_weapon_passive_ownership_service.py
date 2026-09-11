@@ -41,7 +41,15 @@ def test_reviewed_weapon_passives_are_proven_irrelevant_to_all_max_resources():
         ("Destruction Staff", "Ancient Knowledge"),
         ("Destruction Staff", "Tri Focus"),
         ("Destruction Staff", "Destruction Expert"),
+        ("Bow", "Ranger"),
+        ("Dual Wield", "Ambidextrous"),
+        ("Dual Wield", "Controlled Fury"),
+        ("Dual Wield", "Focused Killer"),
+        ("Dual Wield", "Ruffian"),
+        ("One Hand and Shield", "Battlefield Mobility"),
         ("One Hand and Shield", "Deadly Bash"),
+        ("Two Handed", "Balanced Blade"),
+        ("Two Handed", "Forceful"),
     }
     assert identities == expected
     assert all(row.status is ExtremeResourceWeaponPassiveOwnershipStatus.PROVEN_IRRELEVANT for row in rows)
