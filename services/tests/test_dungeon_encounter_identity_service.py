@@ -78,16 +78,18 @@ def test_checked_in_registry_keeps_newest_first_release_slices_and_main_encounte
         "castle_thorn", "icereach", "unhallowed_grave", "moongrave_fane",
         "lair_of_maarselok", "depths_of_malatar", "frostvault",
         "moon_hunter_keep", "march_of_sacrifices", "fang_lair", "scalecaller_peak",
+        "falkreath_hold",
     ):
         assert len(by_content[content_id]) == 5
+    assert len(by_content["bloodroot_forge"]) == 6
 
     assert {row.release_key for row in rows} == {
         (2025, 47), (2025, 45), (2024, 41), (2023, 37), (2022, 35), (2022, 33),
         (2021, 31), (2021, 29), (2020, 27), (2020, 25), (2019, 23), (2019, 21),
-        (2018, 19), (2018, 17),
+        (2018, 19), (2018, 17), (2017, 15),
     }
     assert rows[0].release_key == (2025, 47)
-    assert rows[-1].release_key == (2018, 17)
+    assert rows[-1].release_key == (2017, 15)
 
     all_ids = {row.encounter_id for row in rows}
 
@@ -195,3 +197,16 @@ def test_checked_in_registry_keeps_newest_first_release_slices_and_main_encounte
     assert peak["orzun_the_foul_smelling"].member_ids == ("orzun_the_foul_smelling", "rinaerus_the_rancid")
     assert not (data_root / "eso_info" / "bosses" / "doylemish_ironheart.json").exists()
     assert "rinaerus_the_rancid" not in all_ids and "ogre" not in all_ids and "giant" not in all_ids and "dragon_priest" not in all_ids
+
+    bloodroot = {row.encounter_id: row for row in by_content["bloodroot_forge"]}
+    assert set(bloodroot) == {"mathgamain", "caillaoife", "stoneheart", "galchobhar", "gherig_bullblood", "earthgore_amalgam"}
+    assert not (data_root / "eso_info" / "bosses" / "mathgamain.json").exists()
+    assert not (data_root / "eso_info" / "bosses" / "stoneheart.json").exists()
+    assert not (data_root / "eso_info" / "bosses" / "gherig_bullblood.json").exists()
+    assert "hagraven" not in all_ids and "minotaur" not in all_ids and "iron_atronach" not in all_ids
+
+    falkreath = {row.encounter_id: row for row in by_content["falkreath_hold"]}
+    assert set(falkreath) == {"morrigh_bullblood", "siege_mammoth", "cernunnon", "deathlord_bjarfrud_skjoralmor", "domihaus_the_bloody_horned"}
+    assert not (data_root / "eso_info" / "bosses" / "morrigh_bullblood.json").exists()
+    assert not (data_root / "eso_info" / "bosses" / "deathlord_bjarfrud_skjoralmor.json").exists()
+    assert "mammoth" not in all_ids and "bone_colossus" not in all_ids and "minotaur" not in all_ids
