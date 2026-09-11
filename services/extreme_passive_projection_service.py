@@ -133,6 +133,9 @@ _CONSUMABLE_CONTEXT_TERMS = (
 
 class ExtremePassiveProjectionService:
     REVIEWED_OBJECTIVES = (
+        "max_health",
+        "max_magicka",
+        "max_stamina",
         "critical_damage",
         "magicka_recovery",
         "stamina_recovery",
@@ -225,6 +228,13 @@ class ExtremePassiveProjectionService:
             )
 
         if "%" not in clause:
+            flat(rf"Increases your Max Health by {_NUMBER}", ("max_health",))
+            flat(rf"Increases your Max Magicka by {_NUMBER}", ("max_magicka",))
+            flat(rf"Increases your Max Stamina by {_NUMBER}", ("max_stamina",))
+            flat(
+                rf"Increases your Max Health,? Magicka,? and Stamina by {_NUMBER}",
+                ("max_health", "max_magicka", "max_stamina"),
+            )
             flat(
                 rf"Increases your (?:Weapon and Spell|Spell and Weapon) Damage by {_NUMBER}",
                 ("weapon_damage", "spell_damage"),
@@ -240,6 +250,13 @@ class ExtremePassiveProjectionService:
             flat(rf"Increases your Magicka Recovery by {_NUMBER}", ("magicka_recovery",))
             flat(rf"Increases your Stamina Recovery by {_NUMBER}", ("stamina_recovery",))
 
+        percent_reference(rf"Increases your Max Health by {_PERCENT}", ("max_health",))
+        percent_reference(rf"Increases your Max Magicka by {_PERCENT}", ("max_magicka",))
+        percent_reference(rf"Increases your Max Stamina by {_PERCENT}", ("max_stamina",))
+        percent_reference(
+            rf"Increases your Max Health,? Magicka,? and Stamina by {_PERCENT}",
+            ("max_health", "max_magicka", "max_stamina"),
+        )
         percent_reference(
             rf"Increases your (?:Weapon and Spell|Spell and Weapon) Damage by {_PERCENT}",
             ("weapon_damage", "spell_damage"),
