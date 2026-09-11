@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "content_id": "lucent_citadel",
+  "encounter_id": "orphic_shattered_shard",
+  "encounter_name": "Orphic Shattered Shard",
+  "evidence": [
+    {"fact_type": "transition", "fact_key": "color_change_thresholds", "value": {"thresholds": ["90%", "60%", "40%", "15%"], "description": "Orphic channels Color Change. Flip all required mirrors before the channel completes or Incandescent Destruction wipes the group."}, "source_type": "guide", "source_name": "AlcastHQ Lucent Citadel Trial Guide", "source_locator": "Orphic - Color Change", "confidence": "high"},
+    {"fact_type": "transition", "fact_key": "xoryn_exit_threshold", "value": {"thresholds": ["25%"], "description": "Xoryn leaves the arena; Orphic remains with add pressure. Hard Mode adds another enemy wave at 15%."}, "source_type": "guide", "source_name": "AlcastHQ Lucent Citadel Trial Guide", "source_locator": "Orphic health thresholds", "confidence": "high"},
+    {"fact_type": "mechanic_state", "fact_key": "color_change_exists", "value": true, "source_type": "guide", "source_name": "AlcastHQ Lucent Citadel Trial Guide", "source_locator": "Color Change", "confidence": "high"},
+    {"fact_type": "mechanic_detail", "fact_key": "color_change_behavior", "value": {"arena_states": ["light", "dark"], "enemy_same_affinity_immune": true, "mirror_counts_by_threshold": {"90%": 4, "60%": 6, "40%": 8, "15%": 8}, "failure": "group_wipe"}, "source_type": "guide", "source_name": "AlcastHQ Lucent Citadel Trial Guide", "source_locator": "Color Change / Mirror assignments", "confidence": "high"},
+    {"fact_type": "mechanic_state", "fact_key": "shockwave_exists", "value": true, "source_type": "guide", "source_name": "AlcastHQ Lucent Citadel Trial Guide", "source_locator": "Shockwave / Fate Pillar", "confidence": "high"},
+    {"fact_type": "mechanic_detail", "fact_key": "shockwave_behavior", "value": {"approx_cast_seconds": 3, "blockable": true, "dodgeable": true, "destroys_fate_pillar": true}, "source_type": "guide", "source_name": "AlcastHQ Lucent Citadel Trial Guide", "source_locator": "Shockwave / Fate Pillar", "confidence": "medium"},
+    {"fact_type": "mechanic_state", "fact_key": "fate_sealer_exists", "value": true, "source_type": "guide", "source_name": "AlcastHQ Lucent Citadel Trial Guide", "source_locator": "Fate Pillar - Fate Sealer", "confidence": "high"},
+    {"fact_type": "mechanic_detail", "fact_key": "fate_sealer_behavior", "value": {"failure": "kills_players", "response": "position_Orphic_Shockwave_to_destroy_pillar"}, "source_type": "guide", "source_name": "AlcastHQ Lucent Citadel Trial Guide", "source_locator": "Fate Sealer", "confidence": "high"},
+    {"fact_type": "mechanic_state", "fact_key": "shard_volley_exists", "value": true, "source_type": "guide", "source_name": "AlcastHQ Lucent Citadel Trial Guide", "source_locator": "Shard Volley", "confidence": "high"},
+    {"fact_type": "mechanic_detail", "fact_key": "shard_volley_behavior", "value": {"projectile_count": 9, "prefers_farthest_players": true, "persistent_ground_hazard": true, "damage_type": "magic"}, "source_type": "official_patch_notes", "source_name": "ESO PTS Patch Notes v10.0.3", "source_locator": "Lucent Citadel - Orphic Shattered Shard - Volley", "game_update": "U42", "confidence": "high", "notes": "Official patch notes corrected Volley to Magic damage and fixed damage/visual synchronization."},
+    {"fact_type": "mechanic_state", "fact_key": "xoryn_thunder_thrall_exists", "value": true, "source_type": "guide", "source_name": "AlcastHQ Lucent Citadel Trial Guide", "source_locator": "Orphic encounter - Xoryn Thunder Thrall", "confidence": "medium"},
+    {"fact_type": "mechanic_detail", "fact_key": "xoryn_thunder_thrall_behavior", "value": {"first_cast_seconds_approx": 8, "repeat_seconds_approx": 25, "targets_farthest_player": true, "offtank_healer_assignment_common": true}, "source_type": "guide", "source_name": "AlcastHQ Lucent Citadel Trial Guide", "source_locator": "Xoryn handling during Orphic", "confidence": "medium"}
+  ]
+}
