@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "city_of_ash_i",
+  "encounter_id": "razor_master_erthas",
+  "encounter_name": "Razor Master Erthas",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Avoid Lava Pitch fire lines, cleanse Blazing Arrow in the water, and control summoned Flame Atronachs after Erthas teleports."},"source_type":"guide","source_name":"Alcast City of Ash I Guide","source_locator":"Razor Master Erthas","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"lava_pitch","value":{"name":"Lava Pitch","response":"step_out_of_the_four_spreading_fire_lines"},"source_type":"guide","source_name":"Alcast City of Ash I Guide","source_locator":"Razor Master Erthas","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"blazing_arrow","value":{"name":"Blazing Arrow","response":"if_burning_move_through_one_of_the_small_rivers_to_cleanse_the_flame_damage_over_time"},"source_type":"guide","source_name":"Alcast City of Ash I Guide","source_locator":"Razor Master Erthas","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"summon_flame_atronach","value":{"name":"Summon Flame Atronach","response":"kill_or_cleave_the_atronachs_before_their_numbers_build_up"},"source_type":"guide","source_name":"Alcast City of Ash I Guide","source_locator":"Razor Master Erthas","game_update":"Launch","confidence":"high"}
+  ]
+}
