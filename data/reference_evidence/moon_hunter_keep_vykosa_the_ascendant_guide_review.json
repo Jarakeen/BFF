@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "moon_hunter_keep",
+  "encounter_id": "vykosa_the_ascendant",
+  "encounter_name": "Vykosa the Ascendant",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Vykosa Main Phase","threshold":"100% to 0%","description":"The fight layers recurring werewolf add waves and chained-wolf releases over Vykosa's own attacks."},"source_type":"guide","source_name":"Moon Hunter Keep community guide","source_locator":"Vykosa the Ascendant","game_update":"U19","confidence":"high"},
+    {"fact_type":"phase","fact_key":"hard_mode_escalation","value":{"order":2,"label":"Hard Mode Escalation","threshold":"health-based overlaps","description":"Hard Mode adds frequent werewolf waves, shock-warden pressure, Ernarde's return, and eventual release of the chained wolves."},"source_type":"guide","source_name":"Retro Rebellion Moon Hunter Keep Boss Mechanics","source_locator":"Vykosa Hard Mode","game_update":"U19","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"werewolf_adds","value":{"name":"Werewolf Add Waves","response":"stop_boss_burn_and_kill_priority_adds_before_next_overlap"},"source_type":"guide","source_name":"Retro Rebellion Moon Hunter Keep Boss Mechanics","source_locator":"Vykosa Hard Mode","game_update":"U19","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"restrained_wolves","value":{"name":"Restrained Wolves","response":"tank_and_control_wolf_pressure_without_dragging_it_through_group"},"source_type":"achievement","source_name":"On a Short Leash","source_locator":"Moon Hunter Keep achievement","game_update":"U19","confidence":"high"}
+  ]
+}
