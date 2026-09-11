@@ -56,6 +56,19 @@ class _Resolver:
         ]
 
 
+class _ConditionalResolver:
+    def resolve(self, bonus, *, use_max_value=True, source=""):
+        return [
+            Effect(
+                operation=EffectOperation.ADD,
+                value=float(bonus.piece_count),
+                source=source,
+                stat=StatId.MAX_MAGICKA,
+                condition="reviewed_condition",
+            )
+        ]
+
+
 def test_without_torc_all_equipped_set_bonus_counts_remain_active():
     counts = active_item_set_bonus_counts({"Ordinary Five": 5})
 
@@ -94,6 +107,31 @@ def test_ordinary_set_effect_resolution_is_unchanged_without_torc():
     service = GearSetEffectService(_Repository(), resolver=_Resolver())
 
     effects = service.active_static_effects({"Ordinary Five": 5})
+
+    assert [effect.source for effect in effects] == [
+        "Ordinary Five (2)",
+        "Ordinary Five (5)",
+    ]
+
+
+def test_explicit_empty_condition_context_suppresses_conditional_effects():
+    service = GearSetEffectService(_Repository(), resolver=_ConditionalResolver())
+
+    effects = service.active_static_effects(
+        {"Ordinary Five": 5},
+        condition_context=frozenset(),
+    )
+
+    assert effects == []
+
+
+def test_matching_condition_context_activates_conditional_effects():
+    service = GearSetEffectService(_Repository(), resolver=_ConditionalResolver())
+
+    effects = service.active_static_effects(
+        {"Ordinary Five": 5},
+        condition_context=frozenset({"reviewed_condition"}),
+    )
 
     assert [effect.source for effect in effects] == [
         "Ordinary Five (2)",
