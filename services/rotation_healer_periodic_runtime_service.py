@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 import math
+from typing import Protocol
 
 from minmax.runtime_event import PeriodicRuntimeSchedule, schedule_periodic_runtime_events
 from services.rotation_healer_action_healing_service import (
@@ -15,9 +16,37 @@ class RotationHealerPeriodicRefreshPolicy(str, Enum):
     RESTART = "restart"
 
 
+class RotationHealerPeriodicMagnitudePolicy(str, Enum):
+    """When one periodic-heal occurrence resolves its magnitude inputs."""
+
+    SNAPSHOT_AT_CAST = "snapshot_at_cast"
+    RECALCULATE_EACH_TICK = "recalculate_each_tick"
+
+
+@dataclass(frozen=True)
+class RotationHealerPeriodicMagnitudeResolution:
+    """Resolved magnitude for one exact periodic-heal occurrence."""
+
+    modeled_heal: float | None
+    unresolved: tuple[str, ...] = ()
+
+    @property
+    def resolved(self) -> bool:
+        return self.modeled_heal is not None and not self.unresolved
+
+
+class RotationHealerPeriodicMagnitudeResolver(Protocol):
+    def __call__(
+        self,
+        seed: RotationHealerPeriodicHealSeed,
+        time_seconds: float,
+        sequence: int,
+    ) -> RotationHealerPeriodicMagnitudeResolution: ...
+
+
 @dataclass(frozen=True)
 class RotationHealerPeriodicRuntimeEvidence:
-    """Explicit runtime timing evidence for one periodic healing component."""
+    """Explicit runtime timing and optional magnitude-timing evidence for one HoT component."""
 
     source_name: str
     coefficient_number: int
@@ -26,6 +55,7 @@ class RotationHealerPeriodicRuntimeEvidence:
     first_tick_offset_seconds: float
     tick_on_expiry_boundary: bool
     refresh_policy: RotationHealerPeriodicRefreshPolicy | None = None
+    magnitude_policy: RotationHealerPeriodicMagnitudePolicy | None = None
 
     def __post_init__(self) -> None:
         source_name = str(self.source_name or "").strip()
@@ -56,6 +86,14 @@ class RotationHealerPeriodicRuntimeEvidence:
                 "refresh_policy",
                 RotationHealerPeriodicRefreshPolicy(str(self.refresh_policy)),
             )
+        if self.magnitude_policy is not None and not isinstance(
+            self.magnitude_policy, RotationHealerPeriodicMagnitudePolicy
+        ):
+            object.__setattr__(
+                self,
+                "magnitude_policy",
+                RotationHealerPeriodicMagnitudePolicy(str(self.magnitude_policy)),
+            )
 
 
 @dataclass(frozen=True)
@@ -65,18 +103,19 @@ class RotationHealerPeriodicRuntimeProjection:
 
 
 class RotationHealerPeriodicRuntimeService:
-    """Expand periodic-heal seeds only from explicit timing evidence.
+    """Expand periodic-heal seeds only from explicit runtime evidence.
 
-    Healer-specific logic owns duration evidence and refresh legality. Actual
-    cadence expansion is delegated to the shared Phase 7 periodic runtime
-    scheduler so DD, healing, proc, and other recurring consequences do not grow
-    separate clock arithmetic.
+    Timing and magnitude timing are separate evidence classes. Existing callers that
+    only request canonical tick timing preserve the cast-resolved ``seed.modeled_heal``
+    value. A caller that supplies ``runtime_magnitude_resolver`` is explicitly asking
+    for time-varying magnitude evaluation; in that mode each component must also have
+    a reviewed ``magnitude_policy``. Unknown snapshot-vs-recalculation semantics fail
+    closed rather than being inferred from the fact that an effect is periodic.
 
-    The shared scheduler deliberately tolerates tiny floating-point differences
-    around its end bound. Healer evidence can define stricter semantic boundaries,
-    such as excluding a tick exactly at expiry or exactly when a restart refresh
-    occurs. Those rules are therefore enforced explicitly after shared scheduling
-    rather than encoded as epsilon-adjusted timestamps.
+    Healer-specific logic owns duration evidence and refresh legality. Actual cadence
+    expansion is delegated to the shared Phase 7 periodic runtime scheduler so DD,
+    healing, proc, and other recurring consequences do not grow separate clock
+    arithmetic.
     """
 
     def project(
@@ -85,6 +124,7 @@ class RotationHealerPeriodicRuntimeService:
         seeds: tuple[RotationHealerPeriodicHealSeed, ...],
         evidence: tuple[RotationHealerPeriodicRuntimeEvidence, ...],
         horizon_seconds: float,
+        runtime_magnitude_resolver: RotationHealerPeriodicMagnitudeResolver | None = None,
     ) -> RotationHealerPeriodicRuntimeProjection:
         horizon = float(horizon_seconds)
         if not math.isfinite(horizon) or horizon < 0:
@@ -110,6 +150,13 @@ class RotationHealerPeriodicRuntimeService:
                 unresolved.append(
                     f"{label.source_name} coefficient {label.coefficient_number}: "
                     "periodic healing runtime evidence unavailable"
+                )
+                continue
+
+            if runtime_magnitude_resolver is not None and runtime.magnitude_policy is None:
+                unresolved.append(
+                    f"{label.source_name} coefficient {label.coefficient_number}: "
+                    "periodic healing magnitude snapshot/recalculation policy is not canonically verified"
                 )
                 continue
 
@@ -173,13 +220,36 @@ class RotationHealerPeriodicRuntimeService:
                     if at_or_after_restart:
                         continue
 
+                    modeled_heal = seed.modeled_heal
+                    if (
+                        runtime_magnitude_resolver is not None
+                        and runtime.magnitude_policy
+                        is RotationHealerPeriodicMagnitudePolicy.RECALCULATE_EACH_TICK
+                    ):
+                        magnitude = runtime_magnitude_resolver(
+                            seed,
+                            float(event.time_seconds),
+                            int(event.sequence),
+                        )
+                        if not magnitude.resolved or magnitude.modeled_heal is None:
+                            messages = magnitude.unresolved or (
+                                "periodic healing tick magnitude is unresolved",
+                            )
+                            unresolved.extend(
+                                f"{seed.source_name} coefficient {seed.coefficient_number} "
+                                f"at {event.time_seconds:g}s: {message}"
+                                for message in messages
+                            )
+                            continue
+                        modeled_heal = float(magnitude.modeled_heal)
+
                     events.append(
                         RotationHealerResolvedHealEvent(
                             time_seconds=event.time_seconds,
                             sequence=event.sequence,
                             source_name=seed.source_name,
                             coefficient_number=seed.coefficient_number,
-                            modeled_heal=seed.modeled_heal,
+                            modeled_heal=modeled_heal,
                         )
                     )
 
@@ -197,3 +267,14 @@ class RotationHealerPeriodicRuntimeService:
             ),
             unresolved=tuple(dict.fromkeys(unresolved)),
         )
+
+
+__all__ = [
+    "RotationHealerPeriodicMagnitudePolicy",
+    "RotationHealerPeriodicMagnitudeResolution",
+    "RotationHealerPeriodicMagnitudeResolver",
+    "RotationHealerPeriodicRefreshPolicy",
+    "RotationHealerPeriodicRuntimeEvidence",
+    "RotationHealerPeriodicRuntimeProjection",
+    "RotationHealerPeriodicRuntimeService",
+]
