@@ -85,6 +85,18 @@ _REVIEWED_TOOLTIP_IRRELEVANT: tuple[tuple[str, str, str], ...] = (
     ("Storm Calling", "Energized", "Shock and Physical damage only"),
     ("Winter's Embrace", "Glacial Presence", "Chilled application and Chilled damage only"),
     ("Winter's Embrace", "Piercing Cold", "block amount and Frost Damage only"),
+    ("Class Mastery", "Above and Beyond", "Critical Damage and Healing cap/bonus only"),
+    ("Class Mastery", "Abyssal Emergence", "Crux generation and Weapon/Spell Damage only"),
+    ("Class Mastery", "An Eye for Exploitation", "target-health-scaled Weapon/Spell Damage and damage reduction only"),
+    ("Class Mastery", "Bountiful Harvest", "Major Heroism and current Magicka/Stamina restoration only"),
+    ("Class Mastery", "Bright Harbinger", "Weapon/Spell Damage only"),
+    ("Class Mastery", "Glacial Obstinance", "self-heal trigger and Weapon/Spell Damage only"),
+    ("Class Mastery", "Malevolent Promise", "corpse-state and combat-effect behavior only"),
+    ("Class Mastery", "Share the Spoils", "current-resource restoration/distribution only"),
+    ("Class Mastery", "Sphere of Influence", "recovery and damage shield scaled from maximum resources, without changing maxima"),
+    ("Class Mastery", "Steadfast Candescence", "Sacred Ground activation and block amount only"),
+    ("Class Mastery", "Tundra's Maw", "Chilled-triggered Major Brittle only"),
+    ("Class Mastery", "Unbound Potential", "damage-done bonus only"),
 )
 
 
