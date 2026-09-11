@@ -5,12 +5,14 @@ from services.extreme_structural_named_gear_mundus_food_potion_core_stat_record_
     ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService,
     _GEAR_DEFERRED_AXIS,
     _PASSIVE_DEFERRED_AXIS,
+    _RESOURCE_ACTIVE_BAR_SCOPE,
     _RESOURCE_ARMOR_SCOPE,
     _RESOURCE_JEWELRY_GLYPH_IRRELEVANCE_SCOPE,
     _RESOURCE_JEWELRY_STATIC_TRAIT_SCOPE,
     _RESOURCE_JUGGERNAUT_SCOPE,
     _RESOURCE_REMAINING_EQUIPMENT_TRAIT_AFTER_WEAPON_AXIS,
-    _RESOURCE_REMAINING_PASSIVE_AFTER_JUGGERNAUT_AXIS,
+    _RESOURCE_REMAINING_PASSIVE_AFTER_REVIEWED_BAR_AXIS,
+    _RESOURCE_REMAINING_SKILL_BAR_AXIS,
     _RESOURCE_UNDAUNTED_SCOPE,
     _RESOURCE_WEAPON_IRRELEVANCE_SCOPE,
 )
@@ -139,6 +141,28 @@ class _WeaponService:
         return _WeaponAudit()
 
 
+_WINNER_PAYLOAD = {
+    "potion": "alchemy_formula:test",
+    "active_buffs": ("Major Fortitude",),
+    "resource_armor_states_scored": 24,
+    "jewelry_resource_static_trait_state": _JEWELRY_STATE.identity,
+    "resource_active_bar_skills": (
+        "Shadow Skill 1",
+        "Shadow Skill 2",
+        "Shadow Skill 3",
+        "Shadow Skill 4",
+        "Shadow Skill 5",
+        "Shadow Ultimate",
+    ),
+    "resource_active_bar_shadow_slots": 6,
+    "resource_active_bar_siphoning_slots": 0,
+    "resource_active_bar_mages_guild_slots": 0,
+    "resource_active_bar_reviewed_percent_bonus": 0.30,
+    "resource_active_bar_denominator_proven": True,
+    "resource_active_skills_reviewed": 88,
+}
+
+
 class _ResourceOuterEvaluator:
     def __init__(self, *, gear_realization, armor_catalog, evaluator_factory):
         self.gear_realization = gear_realization
@@ -154,12 +178,7 @@ class _ResourceOuterEvaluator:
         return tuple(self.armor_catalog.states)
 
     def __call__(self, objective_key, candidate):
-        return 50000.0, {
-            "potion": "alchemy_formula:test",
-            "active_buffs": ("Major Fortitude",),
-            "resource_armor_states_scored": 24,
-            "jewelry_resource_static_trait_state": _JEWELRY_STATE.identity,
-        }, ()
+        return 50000.0, dict(_WINNER_PAYLOAD), ()
 
 
 class _Probe:
@@ -211,17 +230,12 @@ class _SearchService:
             unresolved=(),
             best=SimpleNamespace(
                 value=50000.0,
-                payload={
-                    "potion": "alchemy_formula:test",
-                    "active_buffs": ("Major Fortitude",),
-                    "resource_armor_states_scored": 24,
-                    "jewelry_resource_static_trait_state": _JEWELRY_STATE.identity,
-                },
+                payload=dict(_WINNER_PAYLOAD),
             ),
         )
 
 
-def test_resource_armor_jewelry_weapon_mettle_juggernaut_and_glyph_irrelevance_are_recorded(monkeypatch):
+def test_resource_armor_jewelry_weapon_mettle_juggernaut_bar_and_glyph_irrelevance_are_recorded(monkeypatch):
     undaunted_progression = object()
     captured = {}
 
@@ -271,6 +285,7 @@ def test_resource_armor_jewelry_weapon_mettle_juggernaut_and_glyph_irrelevance_a
     assert _RESOURCE_ARMOR_SCOPE in record.search_coverage.searched
     assert _RESOURCE_UNDAUNTED_SCOPE in record.search_coverage.searched
     assert _RESOURCE_JUGGERNAUT_SCOPE in record.search_coverage.searched
+    assert _RESOURCE_ACTIVE_BAR_SCOPE in record.search_coverage.searched
     assert _RESOURCE_JEWELRY_STATIC_TRAIT_SCOPE in record.search_coverage.searched
     assert _RESOURCE_JEWELRY_GLYPH_IRRELEVANCE_SCOPE in record.search_coverage.searched
     assert _RESOURCE_WEAPON_IRRELEVANCE_SCOPE in record.search_coverage.searched
@@ -278,8 +293,10 @@ def test_resource_armor_jewelry_weapon_mettle_juggernaut_and_glyph_irrelevance_a
     assert "armor, jewelry, and weapon traits" not in record.search_coverage.omitted
     assert "glyphs/enchants" not in record.search_coverage.omitted
     assert _PASSIVE_DEFERRED_AXIS not in record.search_coverage.omitted
+    assert "skill-bar choices and morphs" not in record.search_coverage.omitted
     assert _RESOURCE_REMAINING_EQUIPMENT_TRAIT_AFTER_WEAPON_AXIS in record.search_coverage.omitted
-    assert _RESOURCE_REMAINING_PASSIVE_AFTER_JUGGERNAUT_AXIS in record.search_coverage.omitted
+    assert _RESOURCE_REMAINING_PASSIVE_AFTER_REVIEWED_BAR_AXIS in record.search_coverage.omitted
+    assert _RESOURCE_REMAINING_SKILL_BAR_AXIS in record.search_coverage.omitted
     assert not any("weapon trait" in row for row in record.search_coverage.omitted)
     assert not any("weapon glyph" in row for row in record.search_coverage.omitted)
     assert not any("jewelry and weapon glyphs/enchants" in row for row in record.search_coverage.omitted)
@@ -293,3 +310,4 @@ def test_resource_armor_jewelry_weapon_mettle_juggernaut_and_glyph_irrelevance_a
     assert any("9" in row and "21" in row and "weapon" in row for row in record.explanation)
     assert any("Undaunted Mettle" in row for row in record.explanation)
     assert any("Juggernaut" in row and "Heavy Armor" in row for row in record.explanation)
+    assert any("88" in row and "active" in row.casefold() and "Dark Vigor" in row for row in record.explanation)
