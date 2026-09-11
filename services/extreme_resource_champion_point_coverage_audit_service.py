@@ -9,6 +9,12 @@ and classifies every CP star for one max-resource objective.
 The audit deliberately keeps mechanic coverage separate from legal slottable-bar
 execution.  A slottable resource star can be fully stat-mapped here while the
 four-star Champion Bar optimizer remains a separate search problem.
+
+A CP star that the generic static repository does not numerically map is not
+therefore relevant to every objective.  For max-resource audits, canonical CP
+text is screened conservatively: descriptions proven unable to modify the target
+maximum resource are objective-irrelevant, while anything that could modify that
+resource remains explicit unresolved debt.
 """
 
 from dataclasses import dataclass
@@ -17,6 +23,9 @@ from pathlib import Path
 from minmax.champion_point_static_repository import ChampionPointStaticRepository
 from services.extreme_champion_point_objective_service import (
     ExtremeChampionPointObjectiveService,
+)
+from services.extreme_gear_set_resource_objective_screening_service import (
+    ExtremeGearSetResourceObjectiveScreeningService,
 )
 
 
@@ -49,7 +58,7 @@ class ExtremeResourceChampionPointCoverageAudit:
 
     @property
     def mechanic_complete(self) -> bool:
-        """Whether every CP star has reviewed stat semantics for this objective."""
+        """Whether every CP star has reviewed semantics for this objective."""
         return self.denominator_proven and not self.unresolved
 
     @property
@@ -98,6 +107,15 @@ class ExtremeResourceChampionPointCoverageAuditService:
                 key,
             )
             if candidate.reviewed_delta is None:
+                description = " ".join(str(record.description or "").split())
+                if description:
+                    screening = ExtremeGearSetResourceObjectiveScreeningService.review(
+                        description,
+                        key,
+                    )
+                    if screening.proven_irrelevant:
+                        irrelevant.append(record.name)
+                        continue
                 detail = "; ".join(candidate.unresolved) or "unresolved Champion Point mechanic"
                 unresolved.append(f"{record.name}: {detail}")
                 continue
