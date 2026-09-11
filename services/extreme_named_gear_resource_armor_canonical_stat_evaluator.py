@@ -45,8 +45,14 @@ from services.extreme_named_gear_canonical_stat_evaluator import (
 from services.extreme_resource_active_bar_state_service import (
     ExtremeResourceActiveBarStateService,
 )
+from services.extreme_resource_candidate_runtime_condition_service import (
+    ExtremeResourceCandidateRuntimeConditionService,
+)
 from services.extreme_resource_champion_point_state_service import (
     ExtremeResourceChampionPointStateService,
+)
+from services.extreme_resource_conditioned_context_factory import (
+    ExtremeResourceConditionedPhase5ContextFactory,
 )
 from services.extreme_resource_max_health_runtime_context_service import (
     ExtremeResourceMaxHealthRuntimeContextService,
@@ -71,6 +77,7 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
         active_bar_progression_service: ExtremeHypotheticalResourceActiveBarPassiveProgressionService | None = None,
         active_bar_state_service: ExtremeResourceActiveBarStateService | None = None,
         champion_point_state_service: ExtremeResourceChampionPointStateService | None = None,
+        candidate_runtime_condition_service: ExtremeResourceCandidateRuntimeConditionService | None = None,
         max_health_runtime_state_service: ExtremeResourceMaxHealthRuntimeStateService | None = None,
         max_health_runtime_context_service: ExtremeResourceMaxHealthRuntimeContextService | None = None,
         racial_progression_service: ExtremeHypotheticalRacialProgressionService | None = None,
@@ -126,6 +133,12 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
             champion_point_state_service = ExtremeResourceChampionPointStateService(database_path)
         self.champion_point_state_service = champion_point_state_service
 
+        if candidate_runtime_condition_service is None and database_path is not None:
+            candidate_runtime_condition_service = ExtremeResourceCandidateRuntimeConditionService(
+                database_path
+            )
+        self.candidate_runtime_condition_service = candidate_runtime_condition_service
+
         if (
             armor_state.objective_key == "max_health"
             and max_health_runtime_state_service is None
@@ -154,7 +167,7 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
             race_repository = getattr(self.optimizer, "race_repository", None)
             gear_set_repository = getattr(self.optimizer, "gear_set_repository", None)
             if race_repository is not None and gear_set_repository is not None:
-                context_factory = Phase5BuildCalculationContextFactory(
+                context_factory = ExtremeResourceConditionedPhase5ContextFactory(
                     race_repository=race_repository,
                     gear_set_repository=gear_set_repository,
                     mundus_repository=getattr(self.optimizer, "mundus_repository", None),
@@ -233,6 +246,19 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
                 champion_point_state,
             )
 
+        runtime_condition_projection = None
+        gear_condition_context: frozenset[str] | None = None
+        if self.candidate_runtime_condition_service is not None:
+            runtime_condition_projection = self.candidate_runtime_condition_service.build(
+                key,
+                build=build,
+                active_bar=candidate.active_bar,
+                food=food,
+                route=candidate.class_route,
+            )
+            build = runtime_condition_projection.build
+            gear_condition_context = runtime_condition_projection.condition_context
+
         progression = CharacterProgression(
             attributes=candidate.attributes,
             passive_ranks={},
@@ -268,10 +294,15 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
         bar_identity = repr(bar_state.identity) if bar_state is not None else "none"
         runtime_identity = repr(runtime_state.identity) if runtime_state is not None else "none"
         cp_identity = repr(champion_point_state.identity) if champion_point_state is not None else "none"
+        condition_identity = (
+            repr(runtime_condition_projection.state.identity)
+            if runtime_condition_projection is not None
+            else "none"
+        )
         build_id = (
             f"extreme-named-gear-resource-armor-jewelry-bar-cp-runtime:{candidate.identity}:"
             f"{armor_identity}:{jewelry_identity}:{bar_identity}:{cp_identity}:{runtime_identity}:"
-            f"{mundus}:{food}:{potion}"
+            f"{condition_identity}:{mundus}:{food}:{potion}"
         )
         character_id = "extreme-named-gear-resource-armor-jewelry-bar-cp-runtime"
 
@@ -291,6 +322,7 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
                 build_id=build_id,
                 active_bar=candidate.active_bar,
                 combat_state=combat_state,
+                gear_condition_context=gear_condition_context,
             )
             value = self.optimizer._objective_value(context, objective)
             gear_unresolved = tuple(context.unresolved_gear_effects)
@@ -298,6 +330,11 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
             kwargs: dict[str, Any] = {}
             if combat_state is not None:
                 kwargs["combat_state"] = combat_state
+            if (
+                gear_condition_context is not None
+                and hasattr(self.context_factory, "gear_inputs_with_condition")
+            ):
+                kwargs["gear_condition_context"] = gear_condition_context
             context = self.context_factory.build(
                 character_id=character_id,
                 build_id=build_id,
@@ -370,6 +407,15 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
             output["resource_max_health_runtime_denominator_proven"] = bool(
                 runtime_catalog is not None and runtime_catalog.denominator_proven
             )
+        if runtime_condition_projection is not None:
+            output["resource_runtime_condition_state"] = runtime_condition_projection.state.identity
+            output["resource_runtime_required_conditions"] = runtime_condition_projection.required_conditions
+            output["resource_runtime_active_conditions"] = runtime_condition_projection.active_conditions
+            output["resource_runtime_condition_evidence"] = runtime_condition_projection.state.evidence
+            output["resource_runtime_condition_denominator_proven"] = runtime_condition_projection.denominator_proven
+            if runtime_condition_projection.skill_witnesses is not None:
+                output["resource_runtime_skill_witnesses"] = runtime_condition_projection.skill_witnesses.witnesses
+                output["resource_runtime_displaced_skills"] = runtime_condition_projection.skill_witnesses.displaced_skills
         output["undaunted_mettle_rank"] = progression.passive_rank("Undaunted Mettle")
         output["undaunted_mettle_progression_applied"] = bool(
             progression.owns_skill_line("Undaunted")
@@ -392,6 +438,30 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
         bar_unresolved = tuple(bar_catalog.unresolved) if bar_catalog is not None else ()
         cp_unresolved = tuple(champion_point_state.unresolved) if champion_point_state is not None else ()
         runtime_unresolved = tuple(runtime_catalog.unresolved) if runtime_catalog is not None else ()
+        condition_unresolved = (
+            tuple(runtime_condition_projection.state.unresolved_conditions)
+            + tuple(runtime_condition_projection.unresolved)
+            if runtime_condition_projection is not None
+            else ()
+        )
+        if (
+            runtime_condition_projection is not None
+            and runtime_condition_projection.required_conditions
+            and gear_condition_context is not None
+            and not (
+                self.context_factory is not None
+                and hasattr(self.context_factory, "gear_inputs_with_condition")
+            )
+            and not (
+                key == "max_health"
+                and runtime_factory is not None
+                and hasattr(runtime_factory, "gear_inputs_with_condition")
+            )
+        ):
+            condition_unresolved = (
+                *condition_unresolved,
+                "Extreme runtime conditions are proven but no conditioned canonical context factory is available",
+            )
         unresolved = tuple(
             dict.fromkeys(
                 str(item)
@@ -400,6 +470,7 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
                     *bar_unresolved,
                     *cp_unresolved,
                     *runtime_unresolved,
+                    *condition_unresolved,
                     *gear_unresolved,
                 )
                 if str(item)
