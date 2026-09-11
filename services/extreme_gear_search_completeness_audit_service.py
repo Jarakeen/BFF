@@ -26,6 +26,9 @@ from services.extreme_named_gear_set_slot_eligibility_service import (
 )
 
 
+_CONTENT_ONLY_IDENTITY_MARKER = " has no canonical gear_set name match"
+
+
 @dataclass(frozen=True)
 class ExtremeGearSearchCompletenessAuditResult:
     objective_key: str
@@ -39,6 +42,7 @@ class ExtremeGearSearchCompletenessAuditResult:
     missing_relevance_breakpoints: tuple[tuple[int, int], ...] = ()
     extra_relevance_breakpoints: tuple[tuple[int, int], ...] = ()
     candidate_sets_without_slot_evidence: tuple[int, ...] = ()
+    diagnostics: tuple[str, ...] = ()
     unresolved: tuple[str, ...] = ()
 
     @property
@@ -59,6 +63,28 @@ class ExtremeGearSearchCompletenessAuditResult:
 
 class ExtremeGearSearchCompletenessAuditService:
     """Prove that every named-gear search layer covers one canonical denominator."""
+
+    @staticmethod
+    def _partition_eligibility_messages(
+        rows: tuple[str, ...],
+    ) -> tuple[tuple[str, ...], tuple[str, ...]]:
+        """Separate content-only source diagnostics from canonical gear blockers.
+
+        ``content_sets`` belongs to the encounter/content corpus and is used only
+        as auxiliary source metadata for canonical ``gear_set`` rows.  A semantic
+        content identity with no canonical ``gear_set`` row cannot change slot
+        legality for the canonical named-gear denominator.  Keep it visible, but
+        do not let that different corpus veto the gear proof.
+        """
+
+        diagnostics: list[str] = []
+        unresolved: list[str] = []
+        for item in rows:
+            if _CONTENT_ONLY_IDENTITY_MARKER in item:
+                diagnostics.append(item)
+            else:
+                unresolved.append(item)
+        return tuple(diagnostics), tuple(unresolved)
 
     @staticmethod
     def build(
@@ -94,13 +120,18 @@ class ExtremeGearSearchCompletenessAuditService:
             )
         )
 
+        eligibility_diagnostics, eligibility_unresolved = (
+            ExtremeGearSearchCompletenessAuditService._partition_eligibility_messages(
+                eligibility.unresolved
+            )
+        )
         unresolved = tuple(
             dict.fromkeys(
                 item
                 for item in (
                     *topology.unresolved,
                     *breakpoints.unresolved,
-                    *eligibility.unresolved,
+                    *eligibility_unresolved,
                     *relevance.unresolved,
                 )
                 if item
@@ -119,6 +150,7 @@ class ExtremeGearSearchCompletenessAuditService:
             missing_relevance_breakpoints=tuple(sorted(expected_breakpoints - reviewed_breakpoints)),
             extra_relevance_breakpoints=tuple(sorted(reviewed_breakpoints - expected_breakpoints)),
             candidate_sets_without_slot_evidence=candidate_sets_without_slot_evidence,
+            diagnostics=eligibility_diagnostics,
             unresolved=unresolved,
         )
 
