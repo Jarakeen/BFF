@@ -85,7 +85,7 @@ def test_checked_in_dungeon_scope_is_newest_first_through_launch_normal_slice():
     data_root = Path(__file__).resolve().parents[2] / "data"
     rows = build_coverage_rows(data_root, scope="dungeon")
 
-    assert len(rows) == 185
+    assert len(rows) == 194
     assert {(row.release_year, row.release_update) for row in rows} == {
         (2025, 47), (2025, 45), (2024, 41), (2023, 37),
         (2022, 35), (2022, 33), (2021, 31), (2021, 29),
@@ -111,6 +111,7 @@ def test_checked_in_dungeon_scope_is_newest_first_through_launch_normal_slice():
         "Fungal Grotto I", "Spindleclutch I", "The Banished Cells I",
         "Darkshade Caverns I", "Elden Hollow I", "Wayrest Sewers I",
         "Arx Corinium", "City of Ash I", "Crypt of Hearts I",
+        "Volenfell", "Tempest Island", "Blackheart Haven",
     }
 
     assert {row.encounter_id for row in rows} == {
@@ -165,4 +166,7 @@ def test_checked_in_dungeon_scope_is_newest_first_through_launch_normal_slice():
         "ganakton_the_tempest", "sliklenia_the_songstress", "sellistrix_the_lamia_queen",
         "infernal_guardian", "warden_of_the_shrine", "razor_master_erthas",
         "archmaster_siniel", "death_s_leviathan", "ilambris_twins",
+        "quintus_verres", "tremorscale", "guardian_council",
+        "valaran_stormcaller", "stormfist", "stormreeve_neidir",
+        "atarus", "roost_mother", "captain_blackheart",
     }
