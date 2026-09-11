@@ -82,6 +82,15 @@ https://www.esologs.com/
 
 **Notes:** Excellent for filling or validating Encounter-page timelines after mechanic identity is known. Logs show what happened in a run, not necessarily the complete game rule. Use multiple representative logs before treating cadence or target patterns as general, and reconcile patch/version differences.
 
+### BTV Tools
+https://www.btvtools.com/
+
+**Use for:** ESO Logs analysis, buff/debuff uptime, crit and penetration analysis, Z'en/Heat Shock stack tracking, roster planning, top-log player-meta comparisons, calculators, and searchable ESO skills/sets/buff data.
+
+**Confidence:** Validation / runtime and build-practice corroboration.
+
+**Notes:** Particularly useful for comparing FoundryDock's Performance, Comp Maker, Rotation, and support-coverage outputs against an independent player-facing implementation. BTV Tools can import specific ESO Logs fights, exclude boss downtime, inspect group coverage over time, and build trial rosters from logged clears. Treat its derived calculations and provider relationships as corroboration rather than shared canonical truth until reconciled against primary data, official patch history, or FoundryDock's reviewed mechanics layer.
+
 ---
 
 ## Calculators / independent cross-checks
@@ -149,6 +158,10 @@ https://eso-hub.com/en/scribing-simulator
 
 **Notes:** Useful for checking names and combinations against the UESP compatibility catalogue. Do not make it the sole source for hardcoded combat math.
 
+---
+
+## Gameplay / raid-practice references
+
 ### Xynode Gaming
 https://xynodegaming.com/
 
@@ -167,6 +180,33 @@ https://thetankclub.com/game/the-elder-scrolls-online/
 
 **Notes:** Particularly useful when Encounter-page research needs to answer who tanks what, where an enemy should be positioned, when tanks swap, or how experienced tanks handle a mechanic in Veteran/Hard Mode. The site is actively maintained and includes current 2026 tank builds plus dedicated trial tank guides. Treat tank strategy and role practice as corroboration rather than canonical mechanic math; reconcile exact timings, target counts, damage types, and patch-sensitive mechanic properties against official notes, UESP/client data, or logs before promoting them to shared mechanics truth.
 
+### Ninja Pulls
+https://www.youtube.com/@NinjaPulls
+
+**Use for:** Current ESO trial guides, boss/mechanic breakdowns, trial preparation, DPS and support practice, class/system explanations, and organized-group gameplay examples.
+
+**Confidence:** Validation / gameplay-practice corroboration.
+
+**Notes:** Especially useful for newer encounter guides and for comparing FoundryDock's raid-lead explanations against concise player-facing mechanic breakdowns. Recent material includes dedicated trial-guide, trial-prep, and mechanic-focused videos. Video publication date and game update matter; corroborate exact numerical properties against official notes, UESP/client data, or logs.
+
+### SeaUnicorn
+https://www.youtube.com/@SeaUnicorn
+
+**Use for:** ESO gameplay footage, raid/trial demonstrations, positioning examples, mechanic execution, and player-practice corroboration when a visual example is more useful than written prose.
+
+**Confidence:** Validation / gameplay-practice corroboration.
+
+**Notes:** Use encounter-specific videos as visual evidence of how groups execute mechanics, not as sole authority for exact combat rules or patch-sensitive numbers. Record the video date/update when using it as encounter evidence.
+
+### FaceheadMcGee
+https://www.youtube.com/@FaceheadMcGee
+
+**Use for:** ESO raid/trial gameplay, mechanic demonstrations, positioning and role execution, and visual cross-checks for Encounter-page strategy and Raid Map research.
+
+**Confidence:** Validation / gameplay-practice corroboration.
+
+**Notes:** Treat footage as observed player practice. It is particularly useful for checking what a mechanic looks like and how a successful group handles space, movement, stack positions, and role assignments. Pair exact mechanic claims with primary or reviewed textual evidence.
+
 ### Game-Maps.com ESO maps and walkthroughs
 https://game-maps.com/ESO/The-Elder-Scrolls-Online.asp
 
@@ -174,7 +214,20 @@ https://game-maps.com/ESO/The-Elder-Scrolls-Online.asp
 
 **Confidence:** Validation / positioning corroboration.
 
-**Notes:** Use this for spatial context, map labels, and route/layout research rather than combat-math authority. Pair encounter-specific positioning claims with reviewed strategy sources or in-game/log evidence before treating them as required raid handling. The site maintains broad ESO map coverage and links current and legacy content maps. 
+**Notes:** Use this for spatial context, map labels, and route/layout research rather than combat-math authority. Pair encounter-specific positioning claims with reviewed strategy sources or in-game/log evidence before treating them as required raid handling. The site maintains broad ESO map coverage and links current and legacy content maps.
+
+---
+
+## Visual / UI asset references
+
+### Game-icons.net
+https://game-icons.net/
+
+**Use for:** Generic game/UI iconography and visual-reference ideas for non-proprietary FoundryDock interface symbols, mechanic categories, status markers, and prototype/mockup concepts.
+
+**Confidence:** Visual-reference source only; not a gameplay or mechanic authority.
+
+**Notes:** Check the license/attribution requirements for any individual icon before shipping it. Do not treat icon names or categories as ESO terminology or mechanics data.
 
 ---
 
@@ -202,10 +255,3 @@ Before a mechanic enters the shared stat/combat pipeline:
 5. Validate against a live character sheet, tooltip, combat log, or another appropriate observable result.
 
 A convenient calculator matching our expected number is evidence, not proof. ESO already provides enough opportunities for accidental folklore without us manufacturing more.
-
-
-
-https://www.btvtools.com/
-https://www.esologs.com/
-https://eso-hub.com/en/buffs-debuffs
-https://game-icons.net/
