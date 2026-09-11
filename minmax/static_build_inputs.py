@@ -9,7 +9,7 @@ from .champion_point_static_repository import ChampionPointStaticRepository
 from .character_progression import CharacterProgression
 from .derived_stats import StatContribution
 from .effects import Effect, EffectOperation, EffectUnit
-from .gear_stat_inputs import CORE_FIELDS, RESOURCE_STATS, RATIO_POINT_STATS, GearCalculationInputs
+from .gear_stat_inputs import CORE_FIELDS, RESOURCE_STATS, RATIO_POINT_STATS, GearCalculationInputs, GearStatInputResolver
 from .mundus_repository import MundusRepository
 from .provisioning_static_repository import ProvisioningStaticRepository
 from .stat_ids import StatId
@@ -34,6 +34,7 @@ class StaticBuildInputResolver:
 
     MAX_LEVEL_EFFECTIVE_LEVEL = 66.0
     _RESOLVED_DIVINES_WARNING = "Divines: requires Mundus Stone resolution"
+    _TWICE_BORN_STAR = "Twice-Born Star"
 
     def __init__(
         self,
@@ -187,22 +188,61 @@ class StaticBuildInputResolver:
             return replace(updated, applied_effect_count=result.applied_effect_count + 1)
         return result
 
-    def _apply_mundus(self, result: GearCalculationInputs, build: PlayerBuild, active_bar: str) -> GearCalculationInputs:
-        mundus_name = str(build.Mundus or "").strip()
-        if not mundus_name:
-            return result
-        unresolved = list(result.unresolved)
+    def _apply_named_mundus(
+        self,
+        result: GearCalculationInputs,
+        *,
+        mundus_name: str,
+        multiplier: float,
+        unresolved: list[str],
+    ) -> GearCalculationInputs:
         if self.mundus_repository is None:
             unresolved.append(f"Mundus selected but repository unavailable: {mundus_name}")
-            return replace(result, unresolved=tuple(unresolved))
-
-        multiplier = self._mundus_multiplier(build, active_bar, unresolved)
+            return result
         effects, mundus_unresolved = self.mundus_repository.get_effects(mundus_name, multiplier=multiplier)
         unresolved.extend(mundus_unresolved)
         if not effects and not mundus_unresolved:
             unresolved.append(f"Mundus not found for active game update: {mundus_name}")
         for effect in effects:
             result = self._apply_effect(result, effect, resource_bucket="mundus")
+        return result
+
+    def _apply_mundus(self, result: GearCalculationInputs, build: PlayerBuild, active_bar: str) -> GearCalculationInputs:
+        primary = str(build.Mundus or "").strip()
+        secondary = str(getattr(build, "SecondMundus", "") or "").strip()
+        if not primary and not secondary:
+            return result
+
+        unresolved = list(result.unresolved)
+        multiplier = self._mundus_multiplier(build, active_bar, unresolved)
+
+        if primary:
+            result = self._apply_named_mundus(
+                result,
+                mundus_name=primary,
+                multiplier=multiplier,
+                unresolved=unresolved,
+            )
+
+        if secondary:
+            if not primary:
+                unresolved.append("Secondary Mundus requires a primary Mundus boon")
+            elif secondary.casefold() == primary.casefold():
+                unresolved.append("Primary and secondary Mundus boons must be distinct")
+            else:
+                set_counts = GearStatInputResolver.equipped_set_counts(build, active_bar=active_bar)
+                twice_born_count = int(set_counts.get(self._TWICE_BORN_STAR, 0))
+                if twice_born_count < 5:
+                    unresolved.append(
+                        "Secondary Mundus requires active Twice-Born Star 5-piece bonus"
+                    )
+                else:
+                    result = self._apply_named_mundus(
+                        result,
+                        mundus_name=secondary,
+                        multiplier=multiplier,
+                        unresolved=unresolved,
+                    )
         return replace(result, unresolved=tuple(unresolved))
 
     def _apply_non_slottable_champion_points(
@@ -213,8 +253,6 @@ class StaticBuildInputResolver:
         if self.champion_point_repository is None:
             return result
 
-        # Compatibility path for callers that do not supply character-level
-        # progression at all.
         if progression is None:
             unresolved = list(result.unresolved)
             effects, passive_unresolved = self.champion_point_repository.resolve_all_non_slottable_maxed()
@@ -225,11 +263,6 @@ class StaticBuildInputResolver:
 
         allocations = progression.passive_cp_points
         if allocations is None:
-            # CharacterProgression predates explicit passive-CP persistence and
-            # many Phase 2/3 callers construct it only for attributes. Treat an
-            # absent snapshot as neutral compatibility state: do not invent
-            # passive CP, but also do not contaminate otherwise-resolved static
-            # calculations with a warning unrelated to their requested inputs.
             return result
 
         unresolved = list(result.unresolved)
@@ -263,9 +296,6 @@ class StaticBuildInputResolver:
         for entry in entries:
             record = self.champion_point_repository.get(entry.Name)
             if record is not None and record.is_non_slottable:
-                # Non-slottable CP belongs to the character progression record.
-                # Ignore legacy build-level entries so the same node cannot be
-                # counted twice.
                 continue
             try:
                 points = int(str(entry.Points or "0").strip() or 0)
