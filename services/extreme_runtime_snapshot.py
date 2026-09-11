@@ -49,19 +49,10 @@ class ExtremeRuntimeSnapshot:
 
     Bar provenance is deliberately carried by ``ExtremeRuntimeBarEffectAttempt``
     and ``ExtremeRuntimeBarTransition`` rather than added to the generic Phase 7
-    ``RuntimeEvent`` contract. Existing effect-history consumers continue to receive
-    ordinary attempts through ``effect_attempts`` while dual-bar gear legality can
-    consume exact transition evidence without reconstructing a bar from guesswork.
-
-    ``recipient_actor_id`` and ``group_member_ids`` provide the roster identity
-    evidence required to project external applications. They are ignored when
-    no external application exists in the runtime history.
-
-    When unified history is supplied, ``attempts`` and
-    ``potion_elapsed_seconds`` are populated as derived compatibility views.
-    This keeps older downstream consumers on the same authoritative runtime
-    truth while E1 call sites finish migrating to the explicit projection
-    properties.
+    ``RuntimeEvent`` contract. ``bar_transition_history_complete`` is separate from
+    the transition tuple because an empty tuple may mean either "no swaps occurred"
+    or "swap history was never proven". Strict source-bound gear persistence may
+    rely on transition absence only when this flag is true.
     """
 
     # Keep the original positional order intact while E1 callers migrate.
@@ -71,6 +62,7 @@ class ExtremeRuntimeSnapshot:
     runtime_history: tuple[ExtremeRuntimeHistoryEntry, ...] = ()
     recipient_actor_id: str | None = None
     group_member_ids: tuple[str, ...] = ()
+    bar_transition_history_complete: bool = False
 
     def __post_init__(self) -> None:
         snapshot = float(self.snapshot_time_seconds)
@@ -93,6 +85,11 @@ class ExtremeRuntimeSnapshot:
         object.__setattr__(self, "attempts", attempts)
         object.__setattr__(self, "recipient_actor_id", recipient)
         object.__setattr__(self, "group_member_ids", members)
+        object.__setattr__(
+            self,
+            "bar_transition_history_complete",
+            bool(self.bar_transition_history_complete),
+        )
 
         if history and (attempts or supplied_potion_elapsed is not None):
             raise ValueError(
@@ -167,8 +164,6 @@ class ExtremeRuntimeSnapshot:
 
     @property
     def ordered_runtime_history(self) -> tuple[ExtremeRuntimeHistoryEntry, ...]:
-        """Return the authoritative history in deterministic runtime order."""
-
         return tuple(sorted(self.runtime_history, key=self._entry_order))
 
     def snapshot_at(
@@ -177,17 +172,6 @@ class ExtremeRuntimeSnapshot:
         *,
         sequence: int | None = None,
     ) -> ExtremeRuntimeSnapshot:
-        """Project authoritative unified history through one exact ordered instant.
-
-        Unified ``runtime_history`` contains enough event provenance to move the
-        observation point forward or backward without inventing state. Legacy
-        ``attempts`` / ``potion_elapsed_seconds`` snapshots do not: they describe one
-        already-resolved instant and therefore cannot be time-shifted.
-
-        When ``sequence`` is supplied, same-timestamp history entries after that
-        sequence are excluded. Without it, all entries at the timestamp are included.
-        """
-
         instant = float(time_seconds)
         if not math.isfinite(instant) or instant < 0.0:
             raise ValueError("runtime snapshot lookup time must be finite and non-negative")
@@ -224,12 +208,11 @@ class ExtremeRuntimeSnapshot:
             snapshot_time_seconds=instant,
             recipient_actor_id=self.recipient_actor_id,
             group_member_ids=self.group_member_ids,
+            bar_transition_history_complete=self.bar_transition_history_complete,
         )
 
     @property
     def effect_attempts(self) -> tuple[RuntimeEffectEventAttempt, ...]:
-        """Return ordinary effect attempts for existing Phase 7 history consumers."""
-
         if not self.runtime_history:
             return self.attempts
         return tuple(
@@ -242,8 +225,6 @@ class ExtremeRuntimeSnapshot:
 
     @property
     def bar_effect_attempts(self) -> tuple[ExtremeRuntimeBarEffectAttempt, ...]:
-        """Return effect attempts whose active-bar provenance is explicitly proven."""
-
         if not self.runtime_history:
             return ()
         return tuple(
@@ -254,8 +235,6 @@ class ExtremeRuntimeSnapshot:
 
     @property
     def bar_transitions(self) -> tuple[ExtremeRuntimeBarTransition, ...]:
-        """Return explicit active-bar transitions through this snapshot boundary."""
-
         if not self.runtime_history:
             return ()
         return tuple(
@@ -266,8 +245,6 @@ class ExtremeRuntimeSnapshot:
 
     @property
     def unbarred_effect_attempts(self) -> tuple[RuntimeEffectEventAttempt, ...]:
-        """Return unified-history attempts that still lack active-bar provenance."""
-
         if not self.runtime_history:
             return self.attempts
         return tuple(
@@ -278,8 +255,6 @@ class ExtremeRuntimeSnapshot:
 
     @property
     def external_group_buff_applications(self) -> tuple[ExternalGroupBuffApplication, ...]:
-        """Return explicitly evidenced external applications on the shared timeline."""
-
         if not self.runtime_history:
             return ()
         return tuple(
@@ -290,8 +265,6 @@ class ExtremeRuntimeSnapshot:
 
     @property
     def effective_potion_elapsed_seconds(self) -> float | None:
-        """Resolve the latest explicit potion use at or before the snapshot."""
-
         if not self.runtime_history:
             return self.potion_elapsed_seconds
         potion_uses = tuple(
@@ -307,8 +280,6 @@ class ExtremeRuntimeSnapshot:
 
     @property
     def has_runtime_history_at_snapshot(self) -> bool:
-        """Whether explicit runtime evidence exists at or before the snapshot."""
-
         if not self.runtime_history:
             return bool(self.attempts)
         return any(
