@@ -48,6 +48,26 @@ FOUNDATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         notes="An explicit zero is a known unpurchased value; a missing key is unknown/unrecorded and must never be silently coerced to zero by calculators.",
     ),
     ServiceDescriptor(
+        service_id="mechanics.heavy_attack.progression_modifiers",
+        domain="mechanics",
+        purpose=(
+            "Resolve character-owned fully charged Heavy Attack restoration modifiers from explicit "
+            "passive progression and equipped Heavy Armor without inferring ownership from role or build archetype."
+        ),
+        implementation_path="services.heavy_attack_progression_modifier_service",
+        inputs=("PlayerBuild", "CharacterProgression", "HeavyAttackWeaponType"),
+        outputs=("HeavyAttackProgressionModifierResolution",),
+        dependencies=("character.progression.persistence",),
+        responsibilities=("heavy_attack_progression_modifier_resolution",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Currently resolves Restoration Staff Cycle of Life and Heavy Armor Revitalize. "
+            "Missing passive keys remain unknown; explicit rank 0 is known unpurchased. "
+            "Set, runtime, and target-state Heavy Attack modifiers remain separate evidence."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="mechanics.named_buff_resolution",
         domain="mechanics",
         purpose="Resolve canonical ESO named-buff stacking across heterogeneous reviewed sources and explain suppressed duplicate contributions.",
