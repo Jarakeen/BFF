@@ -5,6 +5,10 @@ from ui.reference_data_model import ReferenceEntry
 from ui.reference_mitigations import enrich_reference_entries_with_mitigations
 
 
+ROOT = Path(__file__).resolve().parents[2]
+DATA = ROOT / "data"
+
+
 def _entry() -> ReferenceEntry:
     return ReferenceEntry(
         name="Rapid Deluge — Tideborn Taleria",
@@ -71,3 +75,29 @@ def test_mitigation_field_is_appended_without_shifting_existing_positional_field
     assert entry.used_by == ("Consumer",)
     assert entry.evidence == ("Evidence",)
     assert entry.mitigation_note == ""
+
+
+def test_checked_in_dsr_mitigations_include_reef_guardian_survival_notes():
+    acid = ReferenceEntry(
+        name="Acid Reflux — Reef Guardian",
+        entry_type="Mechanic Evidence",
+        source_scope="Trial",
+        tags=("ENCOUNTER",),
+        summary="Acid Reflux mechanic.",
+        details=(),
+    )
+    heart = ReferenceEntry(
+        name="Heartburn — Reef Guardian",
+        entry_type="Mechanic Evidence",
+        source_scope="Trial",
+        tags=("ENCOUNTER",),
+        summary="Heartburn mechanic.",
+        details=(),
+    )
+
+    acid_result, heart_result = enrich_reference_entries_with_mitigations((acid, heart), DATA)
+
+    assert "taunt target" in acid_result.mitigation_note.casefold()
+    assert "acid pools" in acid_result.mitigation_note.casefold()
+    assert "60-second timeout" in heart_result.mitigation_note.casefold()
+    assert "wipes the group" in heart_result.mitigation_note.casefold()
