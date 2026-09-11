@@ -47,10 +47,10 @@ class ExtremeResourceClassPassiveOwnershipService:
 
     SUPPORTED_OBJECTIVES = _SUPPORTED_OBJECTIVES
 
-    # WardenPassiveInputResolver is explicit about all three of these mechanics:
-    # Flourish -> Magicka/Stamina Recovery, Advanced Species -> Critical Damage,
-    # Frozen Armor -> Physical/Spell Resistance. None can modify a max-resource
-    # objective, although all depend on legal class-line/bar ownership.
+    # Each row below is backed by an explicit shared resolver implementation.
+    # These effects live outside Max Health/Magicka/Stamina, so they can be
+    # removed from max-resource denominator debt without pretending the passive
+    # is globally irrelevant to other Extreme objectives.
     _ROWS = (
         ExtremeResourceClassPassiveOwnership(
             skill_line="Animal Companions",
@@ -72,6 +72,34 @@ class ExtremeResourceClassPassiveOwnershipService:
             status=ExtremeResourceClassPassiveOwnershipStatus.PROVEN_IRRELEVANT,
             source="WardenPassiveInputResolver",
             effect_family="physical/spell resistance only",
+        ),
+        ExtremeResourceClassPassiveOwnership(
+            skill_line="Ardent Flame",
+            passive_name="A Soul Ablaze",
+            status=ExtremeResourceClassPassiveOwnershipStatus.PROVEN_IRRELEVANT,
+            source="DragonknightPassiveInputResolver",
+            effect_family="healing taken only",
+        ),
+        ExtremeResourceClassPassiveOwnership(
+            skill_line="Storm Calling",
+            passive_name="Expert Mage",
+            status=ExtremeResourceClassPassiveOwnershipStatus.PROVEN_IRRELEVANT,
+            source="SorcererPassiveInputResolver",
+            effect_family="weapon/spell damage only",
+        ),
+        ExtremeResourceClassPassiveOwnership(
+            skill_line="Aedric Spear",
+            passive_name="Balanced Warrior",
+            status=ExtremeResourceClassPassiveOwnershipStatus.PROVEN_IRRELEVANT,
+            source="TemplarPassiveInputResolver",
+            effect_family="weapon/spell damage and armor only",
+        ),
+        ExtremeResourceClassPassiveOwnership(
+            skill_line="Bone Tyrant",
+            passive_name="Health Avarice",
+            status=ExtremeResourceClassPassiveOwnershipStatus.PROVEN_IRRELEVANT,
+            source="NecromancerPassiveInputResolver",
+            effect_family="healing received only",
         ),
     )
 
