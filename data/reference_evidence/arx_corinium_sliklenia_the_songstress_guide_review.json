@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "arx_corinium",
+  "encounter_id": "sliklenia_the_songstress",
+  "encounter_name": "Sliklenia the Songstress",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Keep Sliklenia's snake alive, block her heavy attack, and use the snake's protective bubble during Cacophony."},"source_type":"guide","source_name":"Alcast Arx Corinium Guide","source_locator":"Sliklenia the Songstress","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"cacophony","value":{"name":"Cacophony","response":"move_into_the_protective_bubble_around_the_pet_snake_until_the_roomwide_scream_ends"},"source_type":"guide","source_name":"Alcast Arx Corinium Guide","source_locator":"Sliklenia the Songstress","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"venomous_bite","value":{"name":"Venomous Bite","response":"block_the_heavy_attack_to_prevent_the_knockback_and_large_hit"},"source_type":"guide","source_name":"Alcast Arx Corinium Guide","source_locator":"Sliklenia the Songstress","game_update":"Launch","confidence":"high"}
+  ]
+}
