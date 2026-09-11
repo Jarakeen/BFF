@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "content_id": "frostvault",
+  "encounter_id": "vault_protector",
+  "encounter_name": "Vault Protector",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"laser_one","value":{"order":1,"label":"One-Laser Shield","threshold":"75%","description":"The boss shields and begins the first rotating laser phase."},"source_type":"guide","source_name":"Alcast Frostvault Guide","source_locator":"Vault Protector shield thresholds","game_update":"U21","confidence":"high"},
+    {"fact_type":"phase","fact_key":"laser_two","value":{"order":2,"label":"Two-Laser Shield","threshold":"40%","description":"A later shield cycle adds a second rotating laser."},"source_type":"guide","source_name":"Alcast Frostvault Guide","source_locator":"Vault Protector shield thresholds","game_update":"U21","confidence":"high"},
+    {"fact_type":"phase","fact_key":"laser_four","value":{"order":3,"label":"Four-Laser Shield","threshold":"20%","description":"The final shield cycle escalates to four rotating lasers."},"source_type":"guide","source_name":"Alcast Frostvault Guide","source_locator":"Vault Protector shield thresholds","game_update":"U21","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"laser_beams","value":{"name":"Rotating Laser Beams","response":"read_powered_side_and_rotate_to_safe_side_of_frozen_boss"},"source_type":"guide","source_name":"Alcast Frostvault Guide","source_locator":"Vault Protector laser beams","game_update":"U21","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"spiders","value":{"name":"Dwemer Spider Adds","response":"kill_spiders_before_they_empower_spheres_and_step_away_from_death_explosions"},"source_type":"guide","source_name":"Alcast Frostvault Guide","source_locator":"Vault Protector adds","game_update":"U21","confidence":"high"}
+  ]
+}
