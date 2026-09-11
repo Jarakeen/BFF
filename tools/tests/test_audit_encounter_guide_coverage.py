@@ -93,23 +93,23 @@ def test_audit_scope_flags_are_mutually_distinct():
     assert all_args.all_content is True
 
 
-def test_checked_in_dungeon_scope_is_newest_first_through_waking_flame():
+def test_checked_in_dungeon_scope_is_newest_first_through_flames_of_ambition():
     data_root = Path(__file__).resolve().parents[2] / "data"
     rows = build_coverage_rows(data_root, scope="dungeon")
 
-    assert len(rows) == 42
+    assert len(rows) == 49
     assert {(row.release_year, row.release_update) for row in rows} == {
         (2025, 47), (2025, 45), (2024, 41), (2023, 37),
-        (2022, 35), (2022, 33), (2021, 31),
+        (2022, 35), (2022, 33), (2021, 31), (2021, 29),
     }
     assert (rows[0].release_year, rows[0].release_update) == (2025, 47)
-    assert (rows[-1].release_year, rows[-1].release_update) == (2021, 31)
+    assert (rows[-1].release_year, rows[-1].release_update) == (2021, 29)
 
     assert {row.content_name for row in rows} == {
         "Black Gem Foundry", "Naj-Caldeesh", "Exiled Redoubt", "Lep Seclusa",
         "Oathsworn Pit", "Bedlam Veil", "Bal Sunnar", "Scrivener's Hall",
         "Earthen Root Enclave", "Graven Deep", "Coral Aerie", "Shipwright's Regret",
-        "Red Petal Bastion", "The Dread Cellar",
+        "Red Petal Bastion", "The Dread Cellar", "Black Drake Villa", "The Cauldron",
     }
 
     assert {row.encounter_id for row in rows} == {
@@ -127,4 +127,6 @@ def test_checked_in_dungeon_scope_is_newest_first_through_waking_flame():
         "foreman_bradiggan", "nazaray", "captain_numirril",
         "rogerain_the_sly", "artifact_bearers", "prior_thierric_sarazen",
         "scorion_broodlord", "cyronin_artellian", "magma_incarnate",
+        "kinras_ironeye", "captain_geminus", "pyroturge_encratis",
+        "oxblood_the_depraved", "taskmaster_viccia", "molten_guardian", "baron_zaudrus",
     }
