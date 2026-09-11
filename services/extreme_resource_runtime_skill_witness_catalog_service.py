@@ -2,21 +2,22 @@ from __future__ import annotations
 
 """Canonical skill witnesses for Extreme max-resource runtime conditions.
 
-This service owns identity/evidence only.  It inventories the canonical player-skill
+This service owns identity/evidence only. It inventories the canonical player-skill
 universe for the three runtime condition families that require an actual skill or
 transformation witness before a conditional gear bonus may be activated:
 
 * ``armor_ability_slotted`` -> a bar-eligible active from an Armor skill line;
-* ``pet_active`` -> an active whose canonical description explicitly summons a pet;
-* ``transformed`` -> a transformation Ultimate.
+* ``pet_active`` -> an active whose canonical description explicitly summons a creature;
+* ``transformed`` -> a canonical transformation Ultimate/form witness.
 
-It performs no stat arithmetic and does not choose a winning candidate.  Candidate
+It performs no stat arithmetic and does not choose a winning candidate. Candidate
 legality/materialization remains a separate layer so the global denominator cannot
 silently grant a skill the selected build cannot actually slot.
 """
 
 from dataclasses import dataclass
 from pathlib import Path
+import re
 
 from services.extreme_skill_universe_service import (
     ExtremePlayerSkillRecord,
@@ -65,6 +66,15 @@ class ExtremeResourceRuntimeSkillWitnessCatalogService:
     PET_ACTIVE = "pet_active"
     TRANSFORMED = "transformed"
 
+    _PET_SUMMON_RE = re.compile(
+        r"\bsummon\s+(?:(?:a|an|your)\s+)?(?:"
+        r"familiar|clannfear|twilight|(?:storm\s+)?atronach|"
+        r"(?:grizzly\s+)?bear|guardian|shade|blastbones|skeletal\s+(?:mage|archer|arcanist)"
+        r")\b",
+        re.IGNORECASE,
+    )
+    _TRANSFORMATION_LINES = frozenset({"werewolf", "bone tyrant", "vampire"})
+
     def __init__(
         self,
         database_path: str | Path | None = None,
@@ -82,8 +92,12 @@ class ExtremeResourceRuntimeSkillWitnessCatalogService:
         return "ultimate" in str(row.skill_type or "").casefold()
 
     @staticmethod
-    def _concrete(row: ExtremePlayerSkillRecord) -> bool:
-        return bool(row.max_rank_ability_id is not None and row.is_player and not row.is_passive)
+    def _player_active(row: ExtremePlayerSkillRecord) -> bool:
+        return bool(row.is_player and not row.is_passive and str(row.name or "").strip())
+
+    @classmethod
+    def _concrete(cls, row: ExtremePlayerSkillRecord) -> bool:
+        return bool(cls._player_active(row) and row.max_rank_ability_id is not None)
 
     @classmethod
     def _is_pet_witness(cls, row: ExtremePlayerSkillRecord) -> bool:
@@ -92,49 +106,42 @@ class ExtremeResourceRuntimeSkillWitnessCatalogService:
         text = " ".join(str(row.description or "").casefold().split())
         if not text:
             return False
-        # ESO summon abilities consistently identify the summon in the canonical
-        # max-rank tooltip.  This deliberately requires explicit summon wording;
-        # class/skill-line membership alone is not evidence that a pet is active.
-        return "summon" in text and any(
-            marker in text
-            for marker in (
-                "pet",
-                "familiar",
-                "clannfear",
-                "twilight",
-                "atronach",
-                "bear",
-                "guardian",
-                "companion",
-                "shade",
-                "blastbones",
-                "skeletal",
-            )
-        )
+        # Match a summoned creature, not merely any tooltip containing "summon".
+        # This excludes environmental constructs such as Grave Grasp's summoned
+        # patches/claws while preserving canonical creature summons.
+        return cls._PET_SUMMON_RE.search(text) is not None
 
     @classmethod
     def _is_transformation_witness(cls, row: ExtremePlayerSkillRecord) -> bool:
-        if not cls._concrete(row) or not cls._is_ultimate(row):
+        if not cls._player_active(row):
             return False
         name = " ".join(str(row.name or "").casefold().split())
         text = " ".join(str(row.description or "").casefold().split())
         line = " ".join(str(row.skill_line or "").casefold().split())
-        return bool(
+        has_transform_evidence = bool(
             "transformation" in name
             or "transform into" in text
             or "transform yourself" in text
             or (line == "werewolf" and "transform" in text)
         )
+        if not has_transform_evidence:
+            return False
+        # Normal rows must identify themselves as Ultimates. Some canonical
+        # transformation rows are sparse in skill_rank/skill_type; for the known
+        # transformation skill lines, explicit transformation identity is enough
+        # to preserve the witness while downstream bar legality still owns slot 5.
+        return cls._is_ultimate(row) or line in cls._TRANSFORMATION_LINES
 
     @staticmethod
     def _witness(condition: str, row: ExtremePlayerSkillRecord) -> ExtremeResourceRuntimeSkillWitness:
-        if row.max_rank_ability_id is None:
-            raise ValueError(f"runtime skill witness lacks max-rank ability identity: {row.name}")
+        observational_id = row.max_rank_ability_id or row.base_ability_id or row.skill_id
+        if observational_id is None:
+            raise ValueError(f"runtime skill witness lacks any ability identity: {row.name}")
         return ExtremeResourceRuntimeSkillWitness(
             condition=condition,
             skill_id=int(row.skill_id),
             base_ability_id=(int(row.base_ability_id) if row.base_ability_id is not None else None),
-            ability_id=int(row.max_rank_ability_id),
+            ability_id=int(observational_id),
             name=row.name,
             skill_line=row.skill_line,
             skill_type=row.skill_type,
@@ -158,12 +165,11 @@ class ExtremeResourceRuntimeSkillWitnessCatalogService:
         transformations: list[ExtremeResourceRuntimeSkillWitness] = []
 
         for row in actives:
-            if not self._concrete(row):
-                continue
-            if row.domain is ExtremeSkillDomain.ARMOR and not self._is_ultimate(row):
-                armor.append(self._witness(self.ARMOR_ABILITY, row))
-            if self._is_pet_witness(row):
-                pets.append(self._witness(self.PET_ACTIVE, row))
+            if self._concrete(row):
+                if row.domain is ExtremeSkillDomain.ARMOR and not self._is_ultimate(row):
+                    armor.append(self._witness(self.ARMOR_ABILITY, row))
+                if self._is_pet_witness(row):
+                    pets.append(self._witness(self.PET_ACTIVE, row))
             if self._is_transformation_witness(row):
                 transformations.append(self._witness(self.TRANSFORMED, row))
 
