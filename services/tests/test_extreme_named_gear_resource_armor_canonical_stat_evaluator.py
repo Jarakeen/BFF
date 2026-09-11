@@ -22,6 +22,17 @@ class _ProgressionService:
         return progression
 
 
+class _ResourceArmorProgressionService:
+    def normalize(self, progression, route):
+        ranks = dict(progression.passive_ranks or {})
+        ranks["Juggernaut"] = 2
+        return replace(
+            progression,
+            owned_skill_lines=tuple(dict.fromkeys((*progression.owned_skill_lines, "Heavy Armor"))),
+            passive_ranks=ranks,
+        )
+
+
 class _RacialProgressionService:
     def normalize(self, progression, race):
         ranks = dict(progression.passive_ranks or {})
@@ -162,6 +173,26 @@ def test_resource_evaluator_applies_hypothetical_racial_progression_to_canonical
     assert context_factory.last_progression.passive_rank("Syrabane's Boon") == 3
     assert context_factory.last_progression.owns_skill_line("High Elf Skills") is True
     assert payload["racial_progression_applied"] is True
+
+
+def test_resource_evaluator_applies_juggernaut_progression_to_canonical_context():
+    named = _NamedGearEvaluator()
+    context_factory = _ContextFactory()
+    evaluator = ExtremeNamedGearResourceArmorCanonicalStatEvaluator(
+        evaluator=named,
+        armor_state=_state("max_health"),
+        resource_armor_progression_service=_ResourceArmorProgressionService(),
+        context_factory=context_factory,
+    )
+
+    value, payload, unresolved = evaluator.evaluate_candidate("max_health", _candidate())
+
+    assert value == 4321.0
+    assert unresolved == ()
+    assert context_factory.last_progression.owns_skill_line("Heavy Armor") is True
+    assert context_factory.last_progression.passive_rank("Juggernaut") == 2
+    assert payload["juggernaut_rank"] == 2
+    assert payload["juggernaut_progression_applied"] is True
 
 
 def test_objective_mismatch_fails_closed():
