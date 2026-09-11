@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "volenfell",
+  "encounter_id": "tremorscale",
+  "encounter_name": "Tremorscale",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Keep Tremorscale controlled on the tank, block or sidestep Tail Whip, and move promptly when Burrow marks a player."},"source_type":"guide","source_name":"Xynode Volenfell Guide","source_locator":"Tremorscale","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"tail_whip","value":{"name":"Tail Whip","response":"block_or_move_out_of_the_conal_tail_attack_to_avoid_the_knockdown"},"source_type":"guide","source_name":"Xynode Volenfell Guide","source_locator":"Tremorscale","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"burrow","value":{"name":"Burrow","response":"move_or_dodge_roll_out_of_the_erupting_aoe_when_tremorscale_targets_you_then_restack"},"source_type":"guide","source_name":"Xynode Volenfell Guide","source_locator":"Tremorscale","game_update":"Launch","confidence":"high"}
+  ]
+}
