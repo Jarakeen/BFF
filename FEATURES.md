@@ -350,6 +350,9 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Encounter-specific provider obligations
 - Encounter-specific rotation obligations
 - Add-pull / non-boss encounter support
+- Reviewed encounter-evidence projection supplies boss-guide timeline fallback when canonical phase rows are absent
+- Encounters planning page replaces canned example timelines/mechanics with the selected boss's canonical-or-reviewed timeline, searchable mechanic strategy, common raid names, mitigation guidance, and quick raid-lead callouts
+- Encounter guide coverage audit reports bosses missing effective timelines or reviewed strategy so research can be queued systematically
 
 ---
 
@@ -547,6 +550,7 @@ These are easy to lose in the size of the project because they are not necessari
 - ESO numeric ability IDs are not treated as stable canonical skill identity when context-dependent IDs would make the data unreliable.
 - The app contains both player-facing tools and research / audit surfaces used to verify the underlying ESO model.
 - Combat Reference exposes gameplay-practice rules, canonical encounter mechanics, canonical combat effects, versioned Major / Minor named-effect semantics, reviewed ability / gear / potion providers, reviewed research enrichment, player-facing common names, mitigation guidance, provenance, death-review guidance, and downstream FoundryDock consumers in one human-readable surface.
+- Encounters can reuse reviewed encounter evidence as a strategy/timeline fallback while preserving canonical boss-guide phases as the higher-authority source.
 
 ---
 
