@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "march_of_sacrifices",
+  "encounter_id": "wyrd_sisters",
+  "encounter_name": "Wyrd Sisters",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Three-Sister Phase","threshold":"100% to 0%","description":"Fight Wyress Rangifer, Strigidae, and Ursus together while preventing their auras from reinforcing one another."},"source_type":"guide","source_name":"Xynode March of Sacrifices Guide","source_locator":"The Wyrd Sisters","game_update":"U19","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"auras","value":{"name":"Sister Auras","response":"keep_sisters_separated_and_focus_targets_without_overlapping_auras"},"source_type":"achievement","source_name":"Stalwart Sisterhood","source_locator":"March of Sacrifices achievement","game_update":"U19","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"ursus_priority","value":{"name":"Ursus Priority","response":"focus_ursus_first_while_tank_controls_all_three_and_keeps_archer_separate"},"source_type":"guide","source_name":"Xynode March of Sacrifices Guide","source_locator":"The Wyrd Sisters","game_update":"U19","confidence":"high"}
+  ]
+}
