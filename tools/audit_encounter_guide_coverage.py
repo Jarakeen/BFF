@@ -5,8 +5,12 @@ from __future__ import annotations
 This tool is intentionally read-only. It reports whether each selectable encounter
 has canonical boss-guide phases, reviewed evidence fallback timeline rows, and
 reviewed strategy rows. It does not promote evidence or mutate encounter data.
+
+Raid Engine work defaults to known trial content. Pass ``--all-content`` to audit
+the broader dungeon/arena/source corpus as well.
 """
 
+import argparse
 from dataclasses import dataclass
 from pathlib import Path
 import sys
@@ -24,6 +28,7 @@ from services.encounter_guide_evidence_projection_service import (
     EncounterGuideEvidenceProjectionService,
 )
 from services.encounter_identity_corrections import encounter_identity_is_excluded
+from services.esologs_client import KNOWN_TRIAL_ZONE_NAMES
 
 
 @dataclass(frozen=True)
@@ -52,7 +57,28 @@ class EncounterGuideCoverageRow:
         return self.strategy_rows == 0
 
 
-def build_coverage_rows(data_root: Path) -> tuple[EncounterGuideCoverageRow, ...]:
+def _content_key(value: str) -> str:
+    text = str(value or "").strip().casefold()
+    if text.startswith("the "):
+        text = text[4:]
+    return text
+
+
+def _known_trial_content_names() -> frozenset[str]:
+    return frozenset(_content_key(name) for name in KNOWN_TRIAL_ZONE_NAMES)
+
+
+def _include_content(content_name: str, *, trials_only: bool) -> bool:
+    if not trials_only:
+        return True
+    return _content_key(content_name) in _known_trial_content_names()
+
+
+def build_coverage_rows(
+    data_root: Path,
+    *,
+    trials_only: bool = True,
+) -> tuple[EncounterGuideCoverageRow, ...]:
     root = Path(data_root)
     guide_service = EncounterBossGuideService(root / "eso.db")
     projection_service = EncounterGuideEvidenceProjectionService(root)
@@ -61,12 +87,15 @@ def build_coverage_rows(data_root: Path) -> tuple[EncounterGuideCoverageRow, ...
     for summary in guide_service.encounter_summaries():
         if encounter_identity_is_excluded(summary.content_id, summary.encounter_id):
             continue
+        content_name = summary.content_name or summary.content_id
+        if not _include_content(content_name, trials_only=trials_only):
+            continue
         guide = guide_service.get(summary.encounter_id)
         projection = projection_service.get(summary.encounter_id, summary.name)
         rows.append(
             EncounterGuideCoverageRow(
                 encounter_id=summary.encounter_id,
-                content_name=summary.content_name or summary.content_id,
+                content_name=content_name,
                 encounter_name=summary.name,
                 canonical_timeline_rows=len(guide.phases),
                 reviewed_timeline_rows=len(projection.timeline),
@@ -100,14 +129,29 @@ def _line(row: EncounterGuideCoverageRow) -> str:
     )
 
 
-def main() -> int:
-    rows = build_coverage_rows(get_data_dir())
+def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Audit Encounter Guide timeline and strategy coverage."
+    )
+    parser.add_argument(
+        "--all-content",
+        action="store_true",
+        help="Include dungeons, arenas, and other source content. Default is known trials only.",
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = _parse_args(argv)
+    trials_only = not args.all_content
+    rows = build_coverage_rows(get_data_dir(), trials_only=trials_only)
     missing = tuple(row for row in rows if row.timeline_missing or row.strategy_missing)
 
     print("Encounter Guide Coverage Audit")
     print("==============================")
-    print(f"Encounters checked: {len(rows)}")
-    print(f"Encounters with timeline or strategy gaps: {len(missing)}")
+    print(f"Scope: {'known trials' if trials_only else 'all content'}")
+    print(f"Encounter rows checked: {len(rows)}")
+    print(f"Rows with timeline or strategy gaps: {len(missing)}")
     print()
 
     for row in missing:
