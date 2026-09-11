@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "spindleclutch_ii",
+  "encounter_id": "bloodspawn_creature",
+  "encounter_name": "Bloodspawn",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Cave-In Main Phase","threshold":"100% to 0%","description":"Block the room-wide Cave-In while moving out from lethal falling-rock markers."},"source_type":"guide","source_name":"Alcast Spindleclutch II Guide","source_locator":"Bloodspawn","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"cave_in","value":{"name":"Cave-In","response":"block_the_roomwide_slam_and_hold_position_between_rock_drops"},"source_type":"guide","source_name":"Alcast Spindleclutch II Guide","source_locator":"Bloodspawn","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"crushing_rocks","value":{"name":"Crushing Rocks","response":"move_out_of_falling_rock_markers_immediately"},"source_type":"guide","source_name":"Alcast Spindleclutch II Guide","source_locator":"Bloodspawn","game_update":"Launch","confidence":"high"}
+  ]
+}
