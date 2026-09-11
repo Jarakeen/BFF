@@ -133,6 +133,76 @@
       "source_url": "https://forums.elderscrollsonline.com/en/discussion/542612/pc-mac-patch-notes-v6-1-5-stonethorn-update-27"
     },
     {
+      "entity_type": "Gear Set",
+      "name": "Turning Tide",
+      "update": "U33",
+      "year": 2022,
+      "change_type": "released",
+      "summary": "Released with Shipwright's Regret. Blocking granted Flowing Water for 10 seconds; the next Bash dealt Magic Damage to up to 6 enemies in a 5 by 10 meter line and applied Major Vulnerability for 10 seconds, with a 15-second cooldown.",
+      "source": "ZOS PC/Mac Patch Notes v7.3.5 - Ascending Tide & Update 33",
+      "source_url": "https://forums.elderscrollsonline.com/en/discussion/599843/pc-mac-patch-notes-v7-3-5-ascending-tide-dlc-update-33"
+    },
+    {
+      "entity_type": "Gear Set",
+      "name": "Turning Tide",
+      "update": "U33",
+      "year": 2022,
+      "change_type": "bug fix",
+      "summary": "A post-launch patch fixed the set's damage so it correctly respected its own cooldown.",
+      "source": "ZOS PC/Mac Patch Notes v7.3.6",
+      "source_url": "https://forums.elderscrollsonline.com/en/discussion/601133/pc-mac-patch-notes-v7-3-6"
+    },
+    {
+      "entity_type": "Gear Set",
+      "name": "Nazaray",
+      "update": "U33",
+      "year": 2022,
+      "change_type": "released",
+      "summary": "Released with Shipwright's Regret. Using an Ultimate extended Major and Minor debuffs on the closest 6 enemies within 12 meters by 1 second per 20 Ultimate spent, with a 30-second per-target cooldown; damage beams and tethers were excluded.",
+      "source": "ZOS PC/Mac Patch Notes v7.3.5 - Ascending Tide & Update 33",
+      "source_url": "https://forums.elderscrollsonline.com/en/discussion/599843/pc-mac-patch-notes-v7-3-5-ascending-tide-dlc-update-33"
+    },
+    {
+      "entity_type": "Gear Set",
+      "name": "Spaulder of Ruin",
+      "update": "U32",
+      "year": 2021,
+      "change_type": "released",
+      "summary": "Released with Deadlands. Crouching toggled a 12-meter Aura of Pride that granted up to 6 allies 260 Weapon and Spell Damage while reducing the wearer's Health, Magicka, and Stamina Recovery by 70 for each ally benefiting.",
+      "source": "ZOS PC/Mac Patch Notes v7.2.5 - Deadlands & Update 32",
+      "source_url": "https://forums.elderscrollsonline.com/en/discussion/590109/pc-mac-patch-notes-v7-2-5-deadlands-update-32"
+    },
+    {
+      "entity_type": "Gear Set",
+      "name": "Elemental Catalyst",
+      "update": "U27",
+      "year": 2020,
+      "change_type": "released",
+      "summary": "Released with Stone Garden. Flame, Shock, and Frost damage applied matching 3-second Weakness stacks; each distinct elemental stack increased the target's Critical Damage taken by 3%, with one stack of each element allowed.",
+      "source": "ZOS PC/Mac Patch Notes v6.1.5 - Stonethorn & Update 27",
+      "source_url": "https://forums.elderscrollsonline.com/en/discussion/542612/pc-mac-patch-notes-v6-1-5-stonethorn-update-27"
+    },
+    {
+      "entity_type": "Gear Set",
+      "name": "Elemental Catalyst",
+      "update": "U34",
+      "year": 2022,
+      "change_type": "visual cleanup",
+      "summary": "Its visual effects were changed to display only to the wearer and enemies, reducing group-combat visual clutter without changing the set's combat effect.",
+      "source": "ZOS High Isle & Update 34 patch notes",
+      "source_url": "https://forums.elderscrollsonline.com/en/discussion/608715/xbox-patch-notes-v1-28-0-0-high-isle-update-34"
+    },
+    {
+      "entity_type": "Gear Set",
+      "name": "Z'en's Redress",
+      "update": "U23",
+      "year": 2019,
+      "change_type": "released",
+      "summary": "Released with Lair of Maarselok. Light Attacks applied Touch of Z'en for 20 seconds; the target took 1% additional damage for each damage-over-time effect placed by the wearer, up to 5%.",
+      "source": "ZOS PC/Mac Patch Notes v5.1.5 - Scalebreaker & Update 23",
+      "source_url": "https://forums.elderscrollsonline.com/en/discussion/488626/pc-mac-patch-notes-v5-1-5-scalebreaker-update-23"
+    },
+    {
       "entity_type": "Skill",
       "name": "Combat Prayer",
       "context": "Restoration Staff",
