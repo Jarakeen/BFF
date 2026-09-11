@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "black_drake_villa",
+  "encounter_id": "captain_geminus",
+  "encounter_name": "Captain Geminus",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Mobile Main Phase","threshold":"Pull to death","description":"Geminus repositions frequently while shades, hounds, and ranged pressure make the arena increasingly busy."},"source_type":"guide","source_name":"Xynode Black Drake Villa Mechanics Guide","source_locator":"Captain Geminus","game_update":"U50","confidence":"medium"},
+    {"fact_type":"mechanic","fact_key":"seismic_tremor","value":{"name":"Seismic Tremor","response":"move_out_of_the_tremor_lines_and_preserve_outer_space","failure":"achievement fails if a group member is struck"},"source_type":"guide","source_name":"ESO-Hub Black Drake Villa Achievements","source_locator":"Shake It Up","game_update":"U50","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"incapacitating_trap","value":{"name":"Incapacitating Trap","response":"avoid_traps_and_free_or_support_trapped_players_quickly"},"source_type":"guide","source_name":"Alcast Black Drake Villa Guide","source_locator":"Captain Geminus","game_update":"U50","confidence":"medium"}
+  ]
+}
