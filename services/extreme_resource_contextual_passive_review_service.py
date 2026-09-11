@@ -75,6 +75,14 @@ class ExtremeResourceContextualPassiveReviewService:
         ),
         ExtremeResourceContextualPassiveReview(
             objective_key="max_health",
+            passive_name="Maturation",
+            skill_line="Green Balance",
+            status=ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED,
+            source="ExtremeResourceMaxHealthRuntimeStateService + canonical Minor Toughness CombatState",
+            condition="The reviewed Max Health runtime reducer selects Maturation when Green Balance is legal, assumes a qualifying self-heal window, and routes canonical Minor Toughness through CombatState; the witness can stack with Expert Summoner on legal subclass routes.",
+        ),
+        ExtremeResourceContextualPassiveReview(
+            objective_key="max_health",
             passive_name="Expert Summoner",
             skill_line="Daedric Summoning",
             status=ExtremeResourceContextualPassiveStatus.CANONICALLY_APPLIED,
