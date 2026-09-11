@@ -13,6 +13,7 @@ from minmax.rotation_ultimate_affordability import RotationUltimateAffordability
 from minmax.ultimate_generation_sources import CombatAttackUltimateGenerationSource
 from models.build_model import PlayerBuild
 from services.canonical_mechanics_coverage_audit import CanonicalMechanicsCoverageReport
+from services.extreme_runtime_snapshot import ExtremeRuntimeSnapshot
 from services.rotation_candidate_generation_service import RotationRefreshLeadCandidateOption
 from services.rotation_effect_uptime_service import RotationEffectUptimeRequirement
 from services.rotation_recovery_heavy_candidate_generation_bridge_service import (
@@ -39,6 +40,9 @@ from ui.rotation_generation_support import (
     RotationGenerationRequest,
     RotationGenerationResult,
     RotationGenerationSupport,
+)
+from ui.rotation_runtime_snapshot_candidate_support import (
+    RotationRuntimeSnapshotCandidateSupport,
 )
 from ui.rotation_saved_build_target_candidate_support import (
     RotationSavedBuildTargetCandidateSupport,
@@ -71,25 +75,19 @@ class RotationDashboardCanonicalCandidateSupport:
     candidate pipeline owns recovery fixed-point evaluation. The production default
     canonical candidate bridge also resolves static front/back build context, so
     verified armor/passive progression and canonical resource ceilings participate in
-    readiness before recovery ranking. An explicit CombatState is forwarded unchanged
-    into that static candidate path so transient runtime evidence remains caller-owned
-    rather than being inferred from the saved build. Mechanics coverage, when supplied,
-    is then scoped to the resolved CharacterBuild and current rotation evidence.
+    readiness before recovery ranking. Explicit ``CombatState`` can provide base
+    snapshot facts, while an optional runtime snapshot is projected through BFF's
+    existing role-neutral runtime-state service before static candidate evaluation.
+    Runtime snapshot bar ownership remains explicit rather than guessed.
 
-    Production defaults compose four final-candidate evidence adapters. Weapon
-    attack evidence projects final light/heavy attacks through the same canonical
-    saved-build weapon adapter and promotes unresolved weapon identity to
-    candidate-specific evidence; wrong-bar attacks remain the existing active-bar
-    hard obligation. Saved-build target evidence enforces unambiguous Enemy, Self,
-    and Ground identities only when explicit target-state windows are supplied;
-    Area, Cone, blank, or ambiguous target evidence remains candidate-relevant
-    unresolved rather than being guessed. Automatic potion cadence derives an
-    effective shared cooldown only from complete build and scenario evidence.
-    Ultimate affordability replays resolved spend rules against every stabilized
-    candidate. Candidate-independent generation evidence may be reused directly;
-    scheduled-attack generation is recomputed from each stabilized candidate plan
-    before affordability is assessed. Missing evidence preserves the existing
-    no-guess behavior.
+    Production defaults compose final-candidate evidence adapters for weapon attacks,
+    saved-build targets, automatic potion cadence, Ultimate affordability, and shared
+    runtime snapshot state. Weapon attack evidence projects final light/heavy attacks
+    through the same canonical saved-build weapon adapter and promotes unresolved
+    weapon identity to candidate-specific evidence; wrong-bar attacks remain the
+    existing active-bar hard obligation. Saved-build target evidence enforces
+    unambiguous Enemy, Self, and Ground identities only when explicit target-state
+    windows are supplied. Missing evidence preserves the existing no-guess behavior.
     """
 
     def __init__(
@@ -102,6 +100,7 @@ class RotationDashboardCanonicalCandidateSupport:
             | RotationSavedBuildTargetCandidateSupport
             | RotationAutomaticPotionCadenceCandidateSupport
             | RotationUltimateAffordabilityCandidateSupport
+            | RotationRuntimeSnapshotCandidateSupport
             | None
         ) = None,
     ) -> None:
@@ -122,9 +121,14 @@ class RotationDashboardCanonicalCandidateSupport:
             potion_aware = RotationAutomaticPotionCadenceCandidateSupport(
                 canonical_candidates=target_aware,
             )
-            self.canonical_candidates = RotationUltimateAffordabilityCandidateSupport(
+            ultimate_aware = RotationUltimateAffordabilityCandidateSupport(
                 canonical_candidates=potion_aware,
             )
+            self.canonical_candidates = RotationRuntimeSnapshotCandidateSupport(
+                canonical_candidates=canonical,
+            )
+            self.canonical_candidates.canonical_candidates = ultimate_aware
+            self.canonical_candidates._base_canonical = canonical
 
     def run_effects(
         self,
@@ -138,6 +142,8 @@ class RotationDashboardCanonicalCandidateSupport:
         trigger_fraction: float,
         restoration_resolver: VerifiedRecoveryHeavyRestorationResolver,
         combat_state: CombatState = CombatState(),
+        runtime_snapshot: ExtremeRuntimeSnapshot | None = None,
+        runtime_snapshot_active_bar: str | None = None,
         demands: Iterable[RotationDemandWindow] = (),
         options: Iterable[RotationRefreshLeadCandidateOption] = (),
         wait_decision_factory: RecoveryPressureWaitDecisionFactory | None = None,
@@ -187,6 +193,9 @@ class RotationDashboardCanonicalCandidateSupport:
             character_id=character_id,
             coverage_report=coverage_report,
         )
+        if runtime_snapshot is not None:
+            candidate_kwargs["runtime_snapshot"] = runtime_snapshot
+            candidate_kwargs["runtime_snapshot_active_bar"] = runtime_snapshot_active_bar
         target_state_tuple = tuple(target_state_windows)
         if target_state_tuple:
             candidate_kwargs["target_state_windows"] = target_state_tuple
