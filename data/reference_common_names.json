@@ -6,6 +6,12 @@
       "common_names": ["Bubbles"],
       "source": "player_raid_terminology",
       "notes": "User-confirmed raid callout for the Rapid Deluge mechanic where affected players move into the water before detonation."
+    },
+    {
+      "entry_name": "Bridge Phase — Tideborn Taleria",
+      "common_names": ["Bridges", "Portals"],
+      "source": "raid_terminology",
+      "notes": "Search aliases for the 50%, 35%, and 20% channeler phases."
     }
   ]
 }
