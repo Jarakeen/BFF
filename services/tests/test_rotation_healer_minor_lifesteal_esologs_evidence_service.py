@@ -1,6 +1,7 @@
 import json
 import sqlite3
 
+from services.esologs_event_interpreter import EsoLogsEventInterpreter
 from services.rotation_healer_minor_lifesteal_esologs_evidence_service import (
     RotationHealerMinorLifestealEsoLogsEvidenceService,
 )
@@ -195,3 +196,23 @@ def test_inspection_does_not_mutate_database(tmp_path):
     RotationHealerMinorLifestealEsoLogsEvidenceService().inspect(path)
 
     assert path.read_bytes() == before
+
+
+def test_alias_filter_does_not_stream_the_entire_fight(tmp_path, monkeypatch):
+    path = _database(tmp_path)
+
+    def fail_if_full_fight_is_streamed(*args, **kwargs):
+        raise AssertionError("alias inspection must not stream every fight event")
+
+    monkeypatch.setattr(
+        EsoLogsEventInterpreter,
+        "iter_fight",
+        fail_if_full_fight_is_streamed,
+    )
+
+    report = RotationHealerMinorLifestealEsoLogsEvidenceService().inspect(
+        path,
+        observed_heal_ability_ids=(9001,),
+    )
+
+    assert [item.event_index for item in report.observations] == [1, 3, 5]
