@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "content_id": "icereach",
+  "encounter_id": "icereach_coven_boss",
+  "encounter_name": "Icereach Coven",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"coven_rotation","value":{"order":1,"label":"Coven Sister Rotation","threshold":"Opening and repeated cycles","description":"Only one sister is vulnerable at a time; the active sister is enraged and must stay taunted while her associated add mechanic is resolved."},"source_type":"guide","source_name":"Alcast Icereach Guide","source_locator":"Mother Ciannait HM > sister rotation","game_update":"U25","confidence":"high"},
+    {"fact_type":"phase","fact_key":"interrupt_cycles","value":{"order":2,"label":"Storm Surge Interrupt Cycles","threshold":"Between sister activations","description":"All four sisters channel together and must be interrupted quickly or the group wipes."},"source_type":"guide","source_name":"Alcast Icereach Guide","source_locator":"Mother Ciannait HM > interrupt phases","game_update":"U25","confidence":"high"},
+    {"fact_type":"phase","fact_key":"ciannait_burn","value":{"order":3,"label":"Mother Ciannait Burn","threshold":"After sister sequence","description":"Mother Ciannait appears for a burn phase with escalating group-wide pulse damage while prior arena mechanics continue."},"source_type":"guide","source_name":"Alcast Icereach Guide","source_locator":"Mother Ciannait","game_update":"U25","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"active_sister","value":{"name":"Active Sister Enrage","response":"tank_keeps_vulnerable_sister_taunted_and_group_kills_associated_adds_first"},"source_type":"guide","source_name":"Alcast Icereach Guide","source_locator":"Mother Ciannait HM","game_update":"U25","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"storm_surge","value":{"name":"Storm Surge","response":"interrupt_all_four_sisters_immediately"},"source_type":"achievement","source_name":"ESO Hub Icereach Achievements","source_locator":"Swift Silencer","game_update":"U25","confidence":"high"}
+  ]
+}
