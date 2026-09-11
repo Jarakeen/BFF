@@ -51,21 +51,45 @@
     },
     {
       "entry_name": "Destructive Ember — Lylanar and Turlassil",
-      "mitigation": "Use the opposite-element dome on the enemy and keep the fire and ice domes from touching.",
-      "source": "reviewed_encounter_evidence",
-      "notes": "Reviewed dome evidence requires opposite-element protection and records an overload when opposing domes touch."
+      "mitigation": "Use the opposite-element dome on the enemy and keep the fire and ice domes from touching. In HM, pair the dome carrier with a separate basher because the carrier cannot bash.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Reviewed dome evidence requires opposite-element protection, records an overload when opposing domes touch, and current HM guide evidence says the carrier cannot bash."
     },
     {
       "entry_name": "Piercing Hailstone — Lylanar and Turlassil",
-      "mitigation": "Use the opposite-element dome on the enemy and keep the fire and ice domes from touching.",
-      "source": "reviewed_encounter_evidence",
-      "notes": "Reviewed dome evidence requires opposite-element protection and records an overload when opposing domes touch."
+      "mitigation": "Use the opposite-element dome on the enemy and keep the fire and ice domes from touching. In HM, pair the dome carrier with a separate basher because the carrier cannot bash.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Reviewed dome evidence requires opposite-element protection, records an overload when opposing domes touch, and current HM guide evidence says the carrier cannot bash."
+    },
+    {
+      "entry_name": "Firebrand — Lylanar and Turlassil",
+      "mitigation": "Pair with one Frostbrand and detonate outside the domes. In HM, make two fire/frost pairs and aim the follow-up line away from the group.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Current guide evidence records one fire/frost pair on veteran, two pairs on HM, and follow-up line AOEs after detonation."
+    },
+    {
+      "entry_name": "Frostbrand — Lylanar and Turlassil",
+      "mitigation": "Pair with one Firebrand and detonate outside the domes. In HM, make two fire/frost pairs and aim the follow-up line away from the group.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Current guide evidence records one fire/frost pair on veteran, two pairs on HM, and follow-up line AOEs after detonation."
+    },
+    {
+      "entry_name": "Synchronized Kill — Lylanar and Turlassil",
+      "mitigation": "Kill the bosses together. After the first dies, finish the second within 15 seconds on veteran or 7.5 seconds on HM.",
+      "source": "reviewed_guide_evidence",
+      "notes": "Current guide evidence says the remaining boss must die before the held domes are dispelled and the side spheres deactivate."
     },
     {
       "entry_name": "Acid Reflux — Reef Guardian",
       "mitigation": "Keep the taunt target away from the group while the acid pools drop. Do not stack extra players into it.",
       "source": "reviewed_encounter_evidence",
       "notes": "Reviewed evidence records the taunt target as the primary target, persistent acid pools, stacking acid vulnerability, and extra pools when additional players are caught."
+    },
+    {
+      "entry_name": "Replication — Reef Guardian",
+      "mitigation": "Plan damage around the replication thresholds so new clones do not overlap other mechanics. Veteran: large at 80% and 50%, medium at 50%. HM: large at 100% and 80%, medium at 80%.",
+      "source": "reviewed_encounter_evidence",
+      "notes": "Reviewed encounter evidence and current guide data agree on the veteran and hardmode replication thresholds."
     },
     {
       "entry_name": "Heartburn — Reef Guardian",
