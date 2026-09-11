@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {"entry_name":"Proximity Enrage — Packmaster Rethelros and Malthil","mitigation":"Keep Rethelros and Malthil separated. The tank normally controls Malthil away from the ranged Packmaster so proximity enrage does not turn routine damage into lethal pressure."},
+    {"entry_name":"Protective Totem — Packmaster Rethelros and Malthil","mitigation":"Hard swap to the Protective Totem as soon as it appears. Both bosses are immune while it is active, so damage spent elsewhere is wasted."},
+    {"entry_name":"Cinder Shot — Packmaster Rethelros and Malthil","mitigation":"Spread the fire lines, block or roll the shot, then step off the bonfire it leaves. In Hard Mode all four players are targeted, so overlapping lines is especially dangerous."},
+    {"entry_name":"Malthil Chase — Packmaster Rethelros and Malthil","mitigation":"Malthil can temporarily ignore taunt and chase a player. Either keep a designated far player ready to kite or keep the group close and have the tank step out to catch the fixate; sprint if targeted because the wolf's reach is deceptive."},
+    {"entry_name":"Bear Traps and Directed Volley — Packmaster Rethelros and Malthil","mitigation":"Keep the central working area free of traps and kite Directed Volley away from the group. A trap root combined with ground pressure is much more dangerous than either mechanic alone."},
+
+    {"entry_name":"Retrieve / Hurl Axe — Anthelmir and Anthelmir's Construct","mitigation":"Keep the Construct near center and never stand between it and an axe statue or a thrown axe. The long rectangular travel lane is the mechanic, not decorative landscaping."},
+    {"entry_name":"Heat Blast — Anthelmir and Anthelmir's Construct","mitigation":"If the group cannot push the Construct cleanly to 70%, pay attention to Anthelmir and break the Heat Blast pressure rather than tunneling the Construct indefinitely."},
+    {"entry_name":"Cindermoths — Anthelmir and Anthelmir's Construct","mitigation":"Kite or kill fixating Cindermoths and keep their detonations away from Kindlepitch Barrels. Accidental barrel chains can turn the arena into persistent fire."},
+    {"entry_name":"Angry Inferno / Angry Balefire — Anthelmir and Anthelmir's Construct","mitigation":"After the 70% transformation, stay out of the Construct's frontal fire cone while continuing to move for moths and floor hazards."},
+    {"entry_name":"Kindlepitch Barrels — Anthelmir and Anthelmir's Construct","mitigation":"Do not let enemy fire touch Kindlepitch Barrels unless the group is intentionally doing the related achievement. Exploded barrels leave persistent fire behind."},
+
+    {"entry_name":"Emblazoned Strike — Aradros the Awakened","mitigation":"The tank should place each slam deliberately and rotate around the arena so ignited tiles do not consume future movement space. Hard Mode makes the placement problem less forgiving because the affected area is larger and persists."},
+    {"entry_name":"Wildfire — Aradros the Awakened","mitigation":"Non-tanks spread and keep moving so Wildfire does not overlap the group while everyone is already navigating persistent floor fire."},
+    {"entry_name":"Meteor Call — Aradros the Awakened","mitigation":"Read the long red lines early and move without crossing teammates. Hard Mode extends the lines farther than Veteran, so late reactions can cut off multiple people at once."},
+    {"entry_name":"Molten Pillar — Aradros the Awakened","mitigation":"In Hard Mode every player manages a personal magma blob and chain. Preserve spacing and avoid solving your own mechanic by dragging it through somebody else's path."},
+    {"entry_name":"Smelter Helper — Aradros the Awakened","mitigation":"During the 50% side-room intermission, the group can carry forge fire to the unfinished Iron Atronach in the middle room to create a helper. Treat it as optional assistance, not a required canonical phase transition."},
+
+    {"entry_name":"Crushing Shards — Shattered Champion","mitigation":"Tank: block and heal through the absorb if safe, or roll if the healing absorb would be unmanageable. Healer: expect the tank to need attention immediately after blocked heavies."},
+    {"entry_name":"Gaping Wound — Shattered Champion","mitigation":"Prioritize healing anyone who touches glass, especially the tank who receives the effect repeatedly. It deals Max-Health-scaled Oblivion damage, so ordinary mitigation does not solve it."},
+    {"entry_name":"Glass Fragments — Shattered Champion","mitigation":"Chain a Glass Fragment when its Splintered Glass channel starts to interrupt the channel, then kill it quickly before the projectile damage ramps out of control."},
+    {"entry_name":"Shard Glass — Shattered Champion","mitigation":"Take personal ground drops toward the outside and return after they land. Protect the center because the permanent Razor Glass circles progressively reduce usable space."},
+    {"entry_name":"Blind Path Glaziers — Shattered Champion","mitigation":"Chain and focus the Glaziers immediately at 80%, 60%, and 40%. Their beams make the boss and Glass Fragments immune; stunning only buys a short interruption."},
+
+    {"entry_name":"Terrorizing Strike — Darkshard","mitigation":"Both the tank and the furthest player must respect the mirrored heavy. Block or dodge rather than assuming only the boss-facing player is being attacked."},
+    {"entry_name":"Scream — Darkshard","mitigation":"Leave the cone immediately. Darkshard screams at the tank and a shade mirrors it at the furthest player; the damage ramps as long as anyone remains inside."},
+    {"entry_name":"Grasping Scream — Darkshard","mitigation":"Block or dodge the initial projectiles, break free if caught, then drag Darkshard out of the Negate so the group can re-establish ground skills."},
+    {"entry_name":"Obelisks and Spiderlings — Darkshard","mitigation":"Keep at least one obelisk unwebbed for fixating Spiderlings, and move the fixated player to the glowing obelisk. Unweb all five before Champion of Atrocity's enrage becomes dangerous."},
+    {"entry_name":"Enraged Scream — Darkshard","mitigation":"Keep at least one Argonian Minder alive and stack inside its protective bubble for Enraged Scream. Do not casually interrupt the scream because the interrupt enrages the Behemoth."},
+    {"entry_name":"Poison Bloom — Darkshard","mitigation":"Avoid the flowers and cleanse poison in a clean water pool if hit. In Hard Mode, kill Venomcallers promptly because they accelerate and auto-trigger the blooms and their pressure persists after the Behemoth phase."},
+
+    {"entry_name":"Condemn — The Blind","mitigation":"Tank The Blind away from the group, block Condemn, and heal through the resulting absorb. Non-tanks should stay out of the large tank-centered area because the attack is not a normal roll-dodge solution."},
+    {"entry_name":"Splintered Glass — The Blind","mitigation":"Spread personal glass drops toward the outside, then return to the group. Preserving central and lane movement space becomes critical later in the fight."},
+    {"entry_name":"Gleaming Deluge — The Blind","mitigation":"Move between lanes or dodge through the traveling waves. At 20% the waves become much more frequent, so stop treating movement as an occasional mechanic and make it the execute plan."},
+    {"entry_name":"Piercing Beam — The Blind","mitigation":"Leave the lit lane immediately. The beam covers the whole lane, ramps in damage, can be blocked, and cannot be dodge rolled; in Hard Mode it persists from the 60% intermission until 20%."},
+    {"entry_name":"Intermission Re-entry — The Blind","mitigation":"Damage dealers and healer should block as The Blind returns from an intermission until the tank can re-establish taunt. She can pick a non-tank target before a normal taunt window exists."}
+  ]
+}
