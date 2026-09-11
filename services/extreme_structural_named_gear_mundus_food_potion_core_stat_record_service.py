@@ -2,16 +2,11 @@ from __future__ import annotations
 
 """Gear-aware from-scratch Extreme records for executable core stat objectives.
 
-This layer closes the named gear-set/package axis only when the canonical topology,
-slot eligibility, objective relevance, and physical realization services all prove
-their denominator. Reviewed stat objectives may additionally search either the
-established armor weight/static-trait family or the proof-reduced max-resource
-Light/Medium/Heavy + Divines/Infused + armor-glyph family beneath the existing
-Mundus -> food -> potion stack and through the canonical stat pipeline.
-
-Every searched armor family is narrower than the whole equipment-trait/enchantment
-space. Residual armor, jewelry, weapon, passive, and runtime axes remain explicit
-coverage gaps until their own canonical finite searches are closed.
+This layer closes named gear and selected reviewed equipment families only when
+their canonical denominator is proven. Max-resource objectives additionally search
+proof-reduced resource armor, reviewed static jewelry traits, and reviewed
+Undaunted Mettle. Canonical jewelry glyphs may be proven irrelevant to a max
+resource, but unknown or relevant glyph evidence stays explicit and fails closed.
 """
 
 from pathlib import Path
@@ -49,6 +44,12 @@ from services.extreme_global_search_universe_service import ExtremeGlobalSearchU
 from services.extreme_hypothetical_class_progression_service import ExtremeHypotheticalClassProgressionService
 from services.extreme_hypothetical_undaunted_progression_service import (
     ExtremeHypotheticalUndauntedProgressionService,
+)
+from services.extreme_jewelry_resource_glyph_relevance_service import (
+    ExtremeJewelryResourceGlyphRelevanceService,
+)
+from services.extreme_jewelry_resource_static_trait_state_service import (
+    ExtremeJewelryResourceStaticTraitStateService,
 )
 from services.extreme_named_gear_set_slot_eligibility_service import ExtremeNamedGearSetSlotEligibilityService
 from services.extreme_objective_named_gear_set_catalog_realization_service import (
@@ -91,9 +92,10 @@ _REMAINING_EQUIPMENT_TRAIT_AXIS = (
     "glyph-dependent/runtime armor traits plus jewelry and weapon traits"
 )
 _RESOURCE_REMAINING_EQUIPMENT_TRAIT_AXIS = (
-    "non-resource/runtime armor traits plus jewelry and weapon traits"
+    "non-resource/runtime armor traits plus remaining glyph-dependent/unreviewed jewelry traits and weapon traits"
 )
 _RESOURCE_REMAINING_GLYPH_AXIS = "jewelry and weapon glyphs/enchants"
+_RESOURCE_REMAINING_GLYPH_AFTER_JEWELRY_AXIS = "weapon glyphs/enchants"
 _RESOURCE_REMAINING_PASSIVE_AXIS = (
     "remaining class/skill/armor/weapon/guild passive ranks excluding reviewed max-rank Undaunted Mettle"
 )
@@ -109,6 +111,13 @@ _RESOURCE_ARMOR_SCOPE = (
     "all legal seven-piece Light/Medium/Heavy armor-weight continuations, proof-reduced "
     "by distinct armor-type count, crossed with proof-reduced Divines/Infused plus "
     "objective-relevant CP160 Truly Superb armor-glyph states"
+)
+_RESOURCE_JEWELRY_STATIC_TRAIT_SCOPE = (
+    "all CP160 Gold reviewed static jewelry trait loadouts (Arcane, Healthy, Robust, "
+    "Triune, Protective, or empty), proof-reduced to the strongest max-resource continuation"
+)
+_RESOURCE_JEWELRY_GLYPH_IRRELEVANCE_SCOPE = (
+    "all canonical jewelry glyphs reviewed and proven unable to directly modify the requested max resource"
 )
 _RESOURCE_UNDAUNTED_SCOPE = (
     "reviewed canonical max-rank Undaunted Mettle applied through shared passive mechanics"
@@ -183,6 +192,9 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
 
         armor_catalog = None
         armor_count = 1
+        jewelry_trait_catalog = None
+        jewelry_glyph_audit = None
+        jewelry_state = None
 
         if resource_armor:
             trait_glyph_service = ExtremeArmorResourceTraitGlyphStateService(self.database_path)
@@ -190,11 +202,20 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
                 key,
                 trait_glyph_service=trait_glyph_service,
             ).build(key)
+            jewelry_trait_catalog = ExtremeJewelryResourceStaticTraitStateService(
+                self.database_path
+            ).build(key)
+            jewelry_glyph_audit = ExtremeJewelryResourceGlyphRelevanceService(
+                self.database_path
+            ).build(key)
+            if jewelry_trait_catalog.states:
+                jewelry_state = jewelry_trait_catalog.states[0]
             factory = ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory(
                 canonical_evaluator=canonical,
                 mundus_repository=mundus_repository,
                 provisioning_repository=provisioning_repository,
                 potion_repository=potion_repository,
+                jewelry_state=jewelry_state,
             )
             evaluator = ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator(
                 gear_realization=gear_realization,
@@ -266,6 +287,10 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
         searched_parts = [*result.structural_scope, _GEAR_SCOPE]
         if resource_armor:
             searched_parts.extend((_RESOURCE_ARMOR_SCOPE, _RESOURCE_UNDAUNTED_SCOPE))
+            if jewelry_state is not None:
+                searched_parts.append(_RESOURCE_JEWELRY_STATIC_TRAIT_SCOPE)
+            if jewelry_glyph_audit and jewelry_glyph_audit.objective_irrelevance_proven:
+                searched_parts.append(_RESOURCE_JEWELRY_GLYPH_IRRELEVANCE_SCOPE)
         elif reviewed_armor:
             searched_parts.append(_REVIEWED_ARMOR_SCOPE)
         searched_parts.extend((_MUNDUS_SCOPE, _FOOD_SCOPE, _POTION_SCOPE))
@@ -276,6 +301,11 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
             closed_axes.add(_GEAR_DEFERRED_AXIS)
 
         omitted_rows: list[str] = []
+        jewelry_glyph_irrelevant = bool(
+            resource_armor
+            and jewelry_glyph_audit is not None
+            and jewelry_glyph_audit.objective_irrelevance_proven
+        )
         for axis in result.deferred_dynamic_axes:
             if axis in closed_axes:
                 continue
@@ -287,7 +317,11 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
                     omitted_rows.append(_REMAINING_EQUIPMENT_TRAIT_AXIS)
                     continue
             if axis == _GLYPH_DEFERRED_AXIS and resource_armor:
-                omitted_rows.append(_RESOURCE_REMAINING_GLYPH_AXIS)
+                omitted_rows.append(
+                    _RESOURCE_REMAINING_GLYPH_AFTER_JEWELRY_AXIS
+                    if jewelry_glyph_irrelevant
+                    else _RESOURCE_REMAINING_GLYPH_AXIS
+                )
                 continue
             if axis == _PASSIVE_DEFERRED_AXIS and resource_armor:
                 omitted_rows.append(_RESOURCE_REMAINING_PASSIVE_AXIS)
@@ -311,11 +345,28 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
             not resource_armor
             or getattr(evaluator, "reviewed_resource_armor_denominator_proven", False)
         )
+        jewelry_trait_denominator_proven = bool(
+            not resource_armor
+            or (
+                jewelry_trait_catalog is not None
+                and jewelry_trait_catalog.denominator_proven
+                and len(jewelry_trait_catalog.states) == 1
+            )
+        )
+        jewelry_glyph_denominator_proven = bool(
+            not resource_armor
+            or (
+                jewelry_glyph_audit is not None
+                and jewelry_glyph_audit.denominator_proven
+            )
+        )
         denominator_proven = bool(
             result.structural_denominator_proven
             and evaluator.gear_denominator_proven
             and reviewed_armor_denominator_proven
             and resource_armor_denominator_proven
+            and jewelry_trait_denominator_proven
+            and jewelry_glyph_denominator_proven
             and gear_candidates
             and armor_count
             and mundus_count
@@ -333,10 +384,26 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
         )
 
         armor_unresolved = tuple(armor_catalog.unresolved) if armor_catalog is not None else ()
+        jewelry_trait_unresolved = (
+            tuple(jewelry_trait_catalog.unresolved)
+            if jewelry_trait_catalog is not None
+            else ()
+        )
+        jewelry_glyph_unresolved = (
+            tuple(jewelry_glyph_audit.unresolved)
+            if jewelry_glyph_audit is not None
+            else ()
+        )
         aggregate_unresolved = tuple(
             dict.fromkeys(
                 str(item)
-                for item in (*gear_realization.unresolved, *armor_unresolved, *result.unresolved)
+                for item in (
+                    *gear_realization.unresolved,
+                    *armor_unresolved,
+                    *jewelry_trait_unresolved,
+                    *jewelry_glyph_unresolved,
+                    *result.unresolved,
+                )
                 if str(item)
             )
         )
@@ -361,6 +428,8 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
         searched_armor_phrase = ""
         if resource_armor:
             searched_armor_phrase = " × every proof-reduced armor weight + Divines/Infused + armor-glyph state"
+            if jewelry_state is not None:
+                searched_armor_phrase += " × the strongest reviewed static jewelry-trait continuation"
         elif reviewed_armor:
             searched_armor_phrase = " × every reviewed armor weight/static-trait state"
 
@@ -379,6 +448,21 @@ class ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService:
             explanation_rows.append(
                 f"Armor-weight legality reviewed all {weight_catalog.raw_loadouts_reviewed:,} seven-slot Light/Medium/Heavy loadouts and preserved one continuation witness for each 1/2/3 armor-type count. Reviewed max-rank Undaunted Mettle is applied canonically to those witnesses; other passive ranks remain separate."
             )
+            if jewelry_trait_catalog is not None:
+                explanation_rows.append(
+                    f"Jewelry static-trait review covered {jewelry_trait_catalog.raw_loadouts_reviewed:,} CP160 Gold Necklace/Ring/Ring loadouts and retained the strongest resource continuation at {jewelry_state.direct_delta if jewelry_state is not None else 0:g} flat resource. Glyph-dependent/unreviewed jewelry traits remain separate."
+                )
+            if jewelry_glyph_audit is not None:
+                if jewelry_glyph_audit.objective_irrelevance_proven:
+                    explanation_rows.append(
+                        f"Reviewed all {jewelry_glyph_audit.glyphs_reviewed:,} canonical jewelry glyph names; none directly modifies {key}, so jewelry glyphs are proven irrelevant to this objective."
+                    )
+                elif jewelry_glyph_audit.relevant_glyphs:
+                    explanation_rows.append(
+                        "Jewelry glyph review found objective-relevant glyphs that are not yet searched: "
+                        + ", ".join(jewelry_glyph_audit.relevant_glyphs)
+                        + "."
+                    )
         elif reviewed_armor:
             explanation_rows.append(
                 f"Scored {armor_count:,} reviewed armor states for each of {len(gear_candidates):,} distinct gear witnesses before Mundus/food/potion selection."
