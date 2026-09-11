@@ -2,14 +2,16 @@ from __future__ import annotations
 
 """Reviewed ownership boundaries for armor passives in Extreme max-resource audits.
 
-This service is a proof ledger, not a second mechanics engine. Each row is backed by
-``ArmorPassiveInputResolver`` and records the exact resource objectives that the
-shared canonical resolver can modify. For other max-resource objectives, the
-passive is therefore proven irrelevant rather than left as contextual debt.
+This service is a proof ledger, not a second mechanics engine. Rows are admitted
+only when the shared armor resolver or a reviewed canonical Update-50 armor tooltip
+makes the effect family explicit enough to determine whether it can modify Max
+Health, Max Magicka, or Max Stamina.
 
-Only passives explicitly implemented by the shared resolver belong here. Armor
-bonuses/penalties and unimplemented armor passives remain outside this ledger until
-their complete mechanic families are reviewed.
+Implemented shared-resolver passives retain their canonical ownership here. The
+aggregate Light/Heavy Armor Bonuses and Penalties rows are also reviewed explicitly
+because their complete U50 effect families contain mitigation, action-cost,
+movement/stealth, block, bash, and crowd-control modifiers but no maximum-resource
+modifier.
 """
 
 from dataclasses import dataclass
@@ -50,11 +52,23 @@ class ExtremeResourceArmorPassiveOwnership:
 
 
 class ExtremeResourceArmorPassiveOwnershipService:
-    """Resolve exact shared armor-resolver ownership for a max-resource audit."""
+    """Resolve exact reviewed armor-passive ownership for a max-resource audit."""
 
     SUPPORTED_OBJECTIVES = _SUPPORTED_OBJECTIVES
 
     _ROWS = (
+        ExtremeResourceArmorPassiveOwnership(
+            skill_line="Light Armor",
+            passive_name="Light Armor Bonuses",
+            source="Canonical Update-50 Light Armor tooltip review",
+            effect_family="magical-damage mitigation, roll-dodge/break-free/bash cost, and sneak movement only",
+        ),
+        ExtremeResourceArmorPassiveOwnership(
+            skill_line="Light Armor",
+            passive_name="Light Armor Penalties",
+            source="Canonical Update-50 Light Armor tooltip review",
+            effect_family="martial-damage taken, block cost, and bash damage only",
+        ),
         ExtremeResourceArmorPassiveOwnership(
             skill_line="Light Armor",
             passive_name="Evocation",
@@ -96,6 +110,18 @@ class ExtremeResourceArmorPassiveOwnershipService:
             passive_name="Dexterity",
             source="ArmorPassiveInputResolver",
             effect_family="critical damage/healing only",
+        ),
+        ExtremeResourceArmorPassiveOwnership(
+            skill_line="Heavy Armor",
+            passive_name="Heavy Armor Bonuses",
+            source="Canonical Update-50 Heavy Armor tooltip review",
+            effect_family="martial-damage mitigation, block amount, bash damage, and crowd-control-immunity mitigation only",
+        ),
+        ExtremeResourceArmorPassiveOwnership(
+            skill_line="Heavy Armor",
+            passive_name="Heavy Armor Penalties",
+            source="Canonical Update-50 Heavy Armor tooltip review",
+            effect_family="magical-damage taken, sprint movement, roll-dodge cost, and sneak detection only",
         ),
         ExtremeResourceArmorPassiveOwnership(
             skill_line="Heavy Armor",
