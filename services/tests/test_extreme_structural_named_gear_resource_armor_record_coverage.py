@@ -8,8 +8,9 @@ from services.extreme_structural_named_gear_mundus_food_potion_core_stat_record_
     _RESOURCE_ARMOR_SCOPE,
     _RESOURCE_JEWELRY_GLYPH_IRRELEVANCE_SCOPE,
     _RESOURCE_JEWELRY_STATIC_TRAIT_SCOPE,
+    _RESOURCE_JUGGERNAUT_SCOPE,
     _RESOURCE_REMAINING_EQUIPMENT_TRAIT_AFTER_WEAPON_AXIS,
-    _RESOURCE_REMAINING_PASSIVE_AXIS,
+    _RESOURCE_REMAINING_PASSIVE_AFTER_JUGGERNAUT_AXIS,
     _RESOURCE_UNDAUNTED_SCOPE,
     _RESOURCE_WEAPON_IRRELEVANCE_SCOPE,
 )
@@ -220,7 +221,7 @@ class _SearchService:
         )
 
 
-def test_resource_armor_jewelry_weapon_mettle_and_glyph_irrelevance_are_recorded(monkeypatch):
+def test_resource_armor_jewelry_weapon_mettle_juggernaut_and_glyph_irrelevance_are_recorded(monkeypatch):
     undaunted_progression = object()
     captured = {}
 
@@ -269,6 +270,7 @@ def test_resource_armor_jewelry_weapon_mettle_and_glyph_irrelevance_are_recorded
     assert _ResourceFactory.captured_jewelry_state is _JEWELRY_STATE
     assert _RESOURCE_ARMOR_SCOPE in record.search_coverage.searched
     assert _RESOURCE_UNDAUNTED_SCOPE in record.search_coverage.searched
+    assert _RESOURCE_JUGGERNAUT_SCOPE in record.search_coverage.searched
     assert _RESOURCE_JEWELRY_STATIC_TRAIT_SCOPE in record.search_coverage.searched
     assert _RESOURCE_JEWELRY_GLYPH_IRRELEVANCE_SCOPE in record.search_coverage.searched
     assert _RESOURCE_WEAPON_IRRELEVANCE_SCOPE in record.search_coverage.searched
@@ -277,7 +279,7 @@ def test_resource_armor_jewelry_weapon_mettle_and_glyph_irrelevance_are_recorded
     assert "glyphs/enchants" not in record.search_coverage.omitted
     assert _PASSIVE_DEFERRED_AXIS not in record.search_coverage.omitted
     assert _RESOURCE_REMAINING_EQUIPMENT_TRAIT_AFTER_WEAPON_AXIS in record.search_coverage.omitted
-    assert _RESOURCE_REMAINING_PASSIVE_AXIS in record.search_coverage.omitted
+    assert _RESOURCE_REMAINING_PASSIVE_AFTER_JUGGERNAUT_AXIS in record.search_coverage.omitted
     assert not any("weapon trait" in row for row in record.search_coverage.omitted)
     assert not any("weapon glyph" in row for row in record.search_coverage.omitted)
     assert not any("jewelry and weapon glyphs/enchants" in row for row in record.search_coverage.omitted)
@@ -290,3 +292,4 @@ def test_resource_armor_jewelry_weapon_mettle_and_glyph_irrelevance_are_recorded
     assert any("17" in row and "jewelry glyph" in row for row in record.explanation)
     assert any("9" in row and "21" in row and "weapon" in row for row in record.explanation)
     assert any("Undaunted Mettle" in row for row in record.explanation)
+    assert any("Juggernaut" in row and "Heavy Armor" in row for row in record.explanation)
