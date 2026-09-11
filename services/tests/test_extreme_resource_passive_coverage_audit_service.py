@@ -100,6 +100,49 @@ def test_conditional_resource_clause_is_not_flattened_into_static_math():
     assert result.contributions == ()
 
 
+def test_per_stack_resource_clause_is_contextual_not_static():
+    result = ExtremePassiveProjectionService.project(
+        _passive(
+            "Nothing Wasted",
+            "Increases your Max Health by 2% per stack, up to 10 stacks.",
+            line="Class Mastery",
+        )
+    )
+    assert result.status is ExtremePassiveProjectionStatus.CONTEXT_REQUIRED
+    assert result.contributions == ()
+
+
+def test_noncombat_craft_and_utility_passives_are_not_reported_as_unknown_mechanics():
+    crafting = ExtremePassiveProjectionService.project(
+        _passive(
+            "Keen Eye: Ore",
+            "Ore in the world will be easier to see when you are 20 meters or closer.",
+            line="Blacksmithing",
+            domain=ExtremeSkillDomain.CRAFT,
+        )
+    )
+    utility = ExtremePassiveProjectionService.project(
+        _passive(
+            "Keen Eye: Dig Sites",
+            "Dig Sites will be easier to see when you are nearby.",
+            line="Excavation",
+            domain=ExtremeSkillDomain.UTILITY,
+        )
+    )
+    medicinal_use = ExtremePassiveProjectionService.project(
+        _passive(
+            "Medicinal Use",
+            "When using potions, resulting effects last longer.",
+            line="Alchemy",
+            domain=ExtremeSkillDomain.CRAFT,
+        )
+    )
+
+    assert crafting.status is ExtremePassiveProjectionStatus.KNOWN_NONCOMBAT
+    assert utility.status is ExtremePassiveProjectionStatus.KNOWN_NONCOMBAT
+    assert medicinal_use.status is ExtremePassiveProjectionStatus.CONTEXT_REQUIRED
+
+
 def test_resource_passive_audit_classifies_complete_inventory_without_zeroing_unknowns():
     audit = ExtremeResourcePassiveCoverageAuditService(
         universe_service=_Universe()
