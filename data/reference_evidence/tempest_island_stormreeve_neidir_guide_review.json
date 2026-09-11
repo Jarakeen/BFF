@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "content_id": "tempest_island",
+  "encounter_id": "stormreeve_neidir",
+  "encounter_name": "Stormreeve Neidir",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"100% to 0%","description":"Maintain moderate range, leave Sparking Strike immediately, avoid triggering long charges, and recover quickly from wind knockdowns."},"source_type":"guide","source_name":"Alcast Tempest Island Guide","source_locator":"Stormreeve Neidir","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"sparking_strike","value":{"name":"Sparking Strike","response":"move_out_of_the_large_aoe_immediately_and_do_not_let_wind_push_you_back_into_it"},"source_type":"guide","source_name":"Alcast Tempest Island Guide","source_locator":"Stormreeve Neidir","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"charge","value":{"name":"Charge","response":"stay_within_moderate_range_so_the_boss_does_not_charge_distant_players"},"source_type":"guide","source_name":"Alcast Tempest Island Guide","source_locator":"Stormreeve Neidir","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"gust_of_winds","value":{"name":"Gust of Winds","response":"watch_the_moving_wind_and_recover_from_knockdown_before_other_aoes_overlap"},"source_type":"guide","source_name":"Alcast Tempest Island Guide","source_locator":"Stormreeve Neidir","game_update":"Launch","confidence":"high"}
+  ]
+}
