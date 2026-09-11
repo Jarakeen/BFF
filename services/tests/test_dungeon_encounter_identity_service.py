@@ -77,17 +77,17 @@ def test_checked_in_registry_keeps_newest_first_release_slices_and_main_encounte
     for content_id in (
         "castle_thorn", "icereach", "unhallowed_grave", "moongrave_fane",
         "lair_of_maarselok", "depths_of_malatar", "frostvault",
-        "moon_hunter_keep", "march_of_sacrifices",
+        "moon_hunter_keep", "march_of_sacrifices", "fang_lair", "scalecaller_peak",
     ):
         assert len(by_content[content_id]) == 5
 
     assert {row.release_key for row in rows} == {
         (2025, 47), (2025, 45), (2024, 41), (2023, 37), (2022, 35), (2022, 33),
         (2021, 31), (2021, 29), (2020, 27), (2020, 25), (2019, 23), (2019, 21),
-        (2018, 19),
+        (2018, 19), (2018, 17),
     }
     assert rows[0].release_key == (2025, 47)
-    assert rows[-1].release_key == (2018, 19)
+    assert rows[-1].release_key == (2018, 17)
 
     all_ids = {row.encounter_id for row in rows}
 
@@ -180,3 +180,18 @@ def test_checked_in_registry_keeps_newest_first_release_slices_and_main_encounte
     assert "wyress_rangifer" not in all_ids and "wyress_strigidae" not in all_ids and "wyress_ursus" not in all_ids
     assert "glenmoril_wyrd" not in all_ids and "spriggan" not in all_ids and "werebear" not in all_ids
     assert "indrik" not in all_ids and "werewolf_behemoth" not in all_ids
+
+    fang = {row.encounter_id: row for row in by_content["fang_lair"]}
+    assert set(fang) == {"lizabet_charnis", "cadaverous_menagerie", "caluurion", "ulfnor", "orryn_the_black"}
+    assert fang["cadaverous_menagerie"].member_ids == ("cadaverous_bear", "cadaverous_guar", "cadaverous_senche_tiger")
+    assert fang["ulfnor"].member_ids == ("ulfnor", "sabina_cedus")
+    assert fang["orryn_the_black"].member_ids == ("orryn_the_black", "thurvokun")
+    assert not (data_root / "eso_info" / "bosses" / "lizabet_charnis.json").exists()
+    assert "cadaverous_bear" not in all_ids and "cadaverous_guar" not in all_ids and "cadaverous_senche_tiger" not in all_ids
+    assert "lich" not in all_ids and "ghost" not in all_ids and "dragon" not in all_ids
+
+    peak = {row.encounter_id: row for row in by_content["scalecaller_peak"]}
+    assert set(peak) == {"orzun_the_foul_smelling", "doylemish_ironheart", "matriarch_aldis", "plague_concocter_mortieu", "zaan_the_scalecaller"}
+    assert peak["orzun_the_foul_smelling"].member_ids == ("orzun_the_foul_smelling", "rinaerus_the_rancid")
+    assert not (data_root / "eso_info" / "bosses" / "doylemish_ironheart.json").exists()
+    assert "rinaerus_the_rancid" not in all_ids and "ogre" not in all_ids and "giant" not in all_ids and "dragon_priest" not in all_ids
