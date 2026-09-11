@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "wayrest_sewers_ii",
+  "encounter_id": "malubeth_the_scourger",
+  "encounter_name": "Malubeth the Scourger",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Scourger Main Phase","threshold":"100% to 0%","description":"Spread around Malubeth's ground effects and immediately free any player lifted into the air."},"source_type":"guide","source_name":"Xynode Wayrest Sewers II Guide","source_locator":"Malubeth the Scourger","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"lift","value":{"name":"Lift","response":"two_free_players_activate_the_shrines_to_release_the_lifted_target"},"source_type":"guide","source_name":"Xynode Wayrest Sewers II Guide","source_locator":"Malubeth the Scourger","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"ground_aoes","value":{"name":"Ground AoEs","response":"spread_and_keep_movement_lanes_clear_as_large_ground_zones_accumulate"},"source_type":"guide","source_name":"Xynode Wayrest Sewers II Guide","source_locator":"Malubeth the Scourger","game_update":"Launch","confidence":"high"}
+  ]
+}
