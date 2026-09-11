@@ -1,12 +1,16 @@
 from __future__ import annotations
 
-"""Canonical scoring with one named gear witness and one resource armor state fixed.
+"""Canonical scoring with one named gear witness and one full resource armor state.
 
-This layer composes a proven named-set realization with one jointly reduced
-Divines/Infused + armor-glyph state for max Health/Magicka/Stamina. It owns no
-stat arithmetic: the completed PlayerBuild is re-scored through the existing
-ExtremeOptimizationService so armor-glyph slot scaling, Infused, Divines/Mundus,
-set effects, food, potions, and class/race state meet in one canonical context.
+This layer composes a proven named-set realization with one proof-reduced
+Light/Medium/Heavy + Divines/Infused + armor-glyph state for max
+Health/Magicka/Stamina. It owns no stat arithmetic: the completed ``PlayerBuild``
+is re-scored through the existing ``ExtremeOptimizationService`` so armor weight,
+glyph slot scaling, Infused, Divines/Mundus, set effects, food, potions, and
+class/race state meet in one canonical context.
+
+Armor-weight legality is searched here. This layer deliberately does not grant
+Undaunted Mettle or any other deferred passive.
 """
 
 from typing import Any
@@ -15,9 +19,9 @@ from minmax.character_progression import CharacterProgression
 from minmax.combat_effect_semantics import GameUpdate
 from minmax.combat_state import CombatState
 from models.build_model import PlayerBuild
-from services.extreme_armor_resource_trait_glyph_state_service import (
-    ExtremeArmorResourceTraitGlyphState,
-    ExtremeArmorResourceTraitGlyphStateService,
+from services.extreme_armor_resource_weight_trait_glyph_state_service import (
+    ExtremeArmorResourceWeightTraitGlyphState,
+    ExtremeArmorResourceWeightTraitGlyphStateService,
 )
 from services.extreme_named_gear_canonical_stat_evaluator import (
     ExtremeNamedGearCanonicalStatEvaluator,
@@ -26,13 +30,13 @@ from services.extreme_structural_global_search_service import ExtremeStructuralC
 
 
 class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
-    """Add one joint resource armor trait/glyph state beneath finite axes."""
+    """Add one combined resource armor weight/trait/glyph state beneath finite axes."""
 
     def __init__(
         self,
         *,
         evaluator: ExtremeNamedGearCanonicalStatEvaluator,
-        armor_state: ExtremeArmorResourceTraitGlyphState,
+        armor_state: ExtremeArmorResourceWeightTraitGlyphState,
     ) -> None:
         self.evaluator = evaluator
         self.armor_state = armor_state
@@ -65,7 +69,10 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
             active_buffs=active_buffs,
         )
         build = PlayerBuild.from_dict(payload["build"])
-        build = ExtremeArmorResourceTraitGlyphStateService.materialize(build, self.armor_state)
+        build = ExtremeArmorResourceWeightTraitGlyphStateService.materialize(
+            build,
+            self.armor_state,
+        )
 
         progression = CharacterProgression(
             attributes=candidate.attributes,
@@ -81,10 +88,7 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
             )
         )
         objective = self.optimizer.objective(key)
-        armor_identity = ",".join(
-            f"{slot}:{trait}:{enchant or 'None'}"
-            for slot, trait, enchant in self.armor_state.identity
-        )
+        armor_identity = repr(self.armor_state.identity)
         build_id = (
             f"extreme-named-gear-resource-armor:{candidate.identity}:"
             f"{armor_identity}:{mundus}:{food}:{potion}"
@@ -116,10 +120,14 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
 
         output = dict(payload)
         output["build"] = build.to_dict()
-        output["armor_resource_trait_glyph_state"] = self.armor_state.identity
+        output["armor_resource_weight_trait_glyph_state"] = self.armor_state.identity
+        output["armor_type_count"] = self.armor_state.armor_type_count
         output["armor_divines_count"] = self.armor_state.divines_count
         output["armor_infused_count"] = self.armor_state.infused_count
-        output["armor_reviewed_glyph_delta"] = self.armor_state.direct_glyph_delta
+        output["armor_reviewed_glyph_delta"] = (
+            self.armor_state.trait_glyph_state.direct_glyph_delta
+        )
+        output["armor_weights"] = self.armor_state.weight_state.identity
 
         unresolved = tuple(
             dict.fromkeys(
