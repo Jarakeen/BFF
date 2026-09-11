@@ -35,35 +35,18 @@ def test_release_sort_is_newest_first(tmp_path):
     _write(
         tmp_path,
         [
-            _row(
-                content_id="old",
-                content_name="Old",
-                release_year=2024,
-                release_update=43,
-                encounter_id="old_boss",
-                display_name="Old Boss",
-                member_ids=["old_boss"],
-            ),
+            _row(content_id="old", content_name="Old", release_year=2024, release_update=43,
+                 encounter_id="old_boss", display_name="Old Boss", member_ids=["old_boss"]),
             _row(),
         ],
     )
-
     rows = load_dungeon_encounter_identities(tmp_path)
     assert [row.encounter_id for row in rows] == ["boss", "old_boss"]
 
 
 def test_grouped_final_encounter_keeps_members_under_one_fight(tmp_path):
-    _write(
-        tmp_path,
-        [
-            _row(
-                encounter_id="talen_lah",
-                display_name="Talen-Lah and Bar-Sakka",
-                member_ids=["talen_lah", "bar_sakka"],
-            )
-        ],
-    )
-
+    _write(tmp_path, [_row(encounter_id="talen_lah", display_name="Talen-Lah and Bar-Sakka",
+                           member_ids=["talen_lah", "bar_sakka"])])
     row = load_dungeon_encounter_identities(tmp_path)[0]
     assert row.member_ids == ("talen_lah", "bar_sakka")
     assert row.is_grouped is True
@@ -72,7 +55,6 @@ def test_grouped_final_encounter_keeps_members_under_one_fight(tmp_path):
 
 def test_content_lookup_accepts_content_name_or_id(tmp_path):
     _write(tmp_path, [_row(content_id="naj_caldeesh", content_name="Naj-Caldeesh")])
-
     assert dungeon_encounters_for_content(tmp_path, "Naj-Caldeesh")[0].encounter_id == "boss"
     assert dungeon_encounters_for_content(tmp_path, "naj_caldeesh")[0].encounter_id == "boss"
 
@@ -80,7 +62,6 @@ def test_content_lookup_accepts_content_name_or_id(tmp_path):
 def test_duplicate_reviewed_encounter_ids_fail_closed(tmp_path):
     row = _row()
     _write(tmp_path, [row, row])
-
     try:
         load_dungeon_encounter_identities(tmp_path)
     except DungeonEncounterIdentityError as exc:
@@ -100,41 +81,46 @@ def test_checked_in_registry_keeps_newest_first_release_slices_and_main_encounte
         "naj_caldeesh", "black_gem_foundry", "exiled_redoubt", "lep_seclusa",
         "oathsworn_pit", "bedlam_veil", "bal_sunnar", "scrivener_s_hall",
         "earthen_root_enclave", "graven_deep", "coral_aerie", "shipwright_s_regret",
+        "red_petal_bastion", "the_dread_cellar",
     ):
         assert len(by_content[content_id]) == 3
 
     assert {row.release_key for row in rows} == {
-        (2025, 47), (2025, 45), (2024, 41), (2023, 37), (2022, 35), (2022, 33)
+        (2025, 47), (2025, 45), (2024, 41), (2023, 37), (2022, 35), (2022, 33), (2021, 31)
     }
     assert rows[0].release_key == (2025, 47)
-    assert rows[-1].release_key == (2022, 33)
+    assert rows[-1].release_key == (2021, 31)
+
+    all_ids = {row.encounter_id for row in rows}
 
     naj = {row.encounter_id: row for row in by_content["naj_caldeesh"]}
     assert naj["talen_lah"].member_ids == ("talen_lah", "bar_sakka")
-    assert "bar_sakka" not in {row.encounter_id for row in rows}
+    assert "bar_sakka" not in all_ids
 
     oathsworn = {row.encounter_id: row for row in by_content["oathsworn_pit"]}
     assert oathsworn["packmaster_rethelros"].member_ids == ("packmaster_rethelros", "malthil")
     assert oathsworn["anthelmir_s_construct"].member_ids == ("anthelmir_s_construct", "anthelmir")
-    assert "malthil" not in {row.encounter_id for row in rows}
-    assert "anthelmir" not in {row.encounter_id for row in rows}
+    assert "malthil" not in all_ids
+    assert "anthelmir" not in all_ids
 
-    bedlam_ids = {row.encounter_id for row in by_content["bedlam_veil"]}
-    assert bedlam_ids == {"shattered_champion", "darkshard", "the_blind"}
-    assert "crystal_atronach" not in {row.encounter_id for row in rows}
-    assert "mind_terror" not in {row.encounter_id for row in rows}
+    assert {row.encounter_id for row in by_content["bedlam_veil"]} == {
+        "shattered_champion", "darkshard", "the_blind"
+    }
+    assert "crystal_atronach" not in all_ids
+    assert "mind_terror" not in all_ids
 
-    bal_sunnar_ids = {row.encounter_id for row in by_content["bal_sunnar"]}
-    assert bal_sunnar_ids == {"kovan_giryon", "roksa_the_warped", "matriarch_lladi_telvanni"}
-    assert "urvel_drath" not in {row.encounter_id for row in rows}
-    assert "house_telvanni" not in {row.encounter_id for row in rows}
+    assert {row.encounter_id for row in by_content["bal_sunnar"]} == {
+        "kovan_giryon", "roksa_the_warped", "matriarch_lladi_telvanni"
+    }
+    assert "urvel_drath" not in all_ids
+    assert "house_telvanni" not in all_ids
 
     scriveners = {row.encounter_id: row for row in by_content["scrivener_s_hall"]}
     assert set(scriveners) == {"riftmaster_naqri", "ozezan_the_inferno", "valinna"}
     assert scriveners["valinna"].member_ids == ("valinna", "lamikhai")
-    assert "lamikhai" not in {row.encounter_id for row in rows}
-    assert "infernium" not in {row.encounter_id for row in rows}
-    assert "cartoqueen" not in {row.encounter_id for row in rows}
+    assert "lamikhai" not in all_ids
+    assert "infernium" not in all_ids
+    assert "cartoqueen" not in all_ids
 
     assert {row.encounter_id for row in by_content["earthen_root_enclave"]} == {
         "corruption_of_stone", "corruption_of_root", "archdruid_devyric"
@@ -146,14 +132,27 @@ def test_checked_in_registry_keeps_newest_first_release_slices_and_main_encounte
     assert {row.encounter_id for row in by_content["coral_aerie"]} == {
         "maligalig", "sarydil", "varallion"
     }
-    assert "iliata" not in {row.encounter_id for row in rows}
-    assert "mafremare" not in {row.encounter_id for row in rows}
-    assert "ofallo" not in {row.encounter_id for row in rows}
-    assert "kargaeda" not in {row.encounter_id for row in rows}
+    assert "iliata" not in all_ids
+    assert "mafremare" not in all_ids
+    assert "ofallo" not in all_ids
+    assert "kargaeda" not in all_ids
 
     assert {row.encounter_id for row in by_content["shipwright_s_regret"]} == {
         "foreman_bradiggan", "nazaray", "captain_numirril"
     }
-    assert "wraith" not in {row.encounter_id for row in rows}
-    assert "spriggan" not in {row.encounter_id for row in rows}
-    assert "maormer" not in {row.encounter_id for row in rows}
+    assert "wraith" not in all_ids
+    assert "spriggan" not in all_ids
+    assert "maormer" not in all_ids
+
+    red_petal = {row.encounter_id: row for row in by_content["red_petal_bastion"]}
+    assert set(red_petal) == {"rogerain_the_sly", "artifact_bearers", "prior_thierric_sarazen"}
+    assert red_petal["artifact_bearers"].member_ids == ("eliam_merick", "ihudir", "liramindrel")
+    assert "eliam_merick" not in all_ids
+    assert "ihudir" not in all_ids
+    assert "liramindrel" not in all_ids
+
+    assert {row.encounter_id for row in by_content["the_dread_cellar"]} == {
+        "scorion_broodlord", "cyronin_artellian", "magma_incarnate"
+    }
+    assert "scorion" not in all_ids
+    assert "ruinach" not in all_ids
