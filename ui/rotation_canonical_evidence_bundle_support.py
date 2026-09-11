@@ -38,6 +38,10 @@ class RotationCanonicalEvidenceBundle:
     dependency discovery. Explicitly scoped coverage gaps can still participate in
     immediate readiness when the caller already knows the required dependency keys.
 
+    ``content_type`` is copied from persisted canonical content metadata for the
+    selected encounter. Consumers may use that fact instead of asking callers to
+    restate whether an encounter is a trial, dungeon, or arena.
+
     ``restoration_resolver`` is now an optional explicit override. When omitted, the
     effect-aware recovery pipeline derives Heavy Attack completion/restoration from
     the generated plan's verified channel-reservation provenance and canonical saved-
@@ -56,6 +60,7 @@ class RotationCanonicalEvidenceBundle:
     resource: ResourceType
     maximum_amount: int
     trigger_fraction: float
+    content_type: str = ""
     restoration_resolver: VerifiedRecoveryHeavyRestorationResolver | None = None
     wait_decision_factory: RecoveryPressureWaitDecisionFactory | None = None
     reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None
@@ -166,6 +171,7 @@ class RotationCanonicalEvidenceBundleSupport:
         return RotationCanonicalEvidenceBundle(
             encounter_id=guide.encounter_id,
             encounter_name=guide.name,
+            content_type=str(getattr(guide, "content_type", "") or "").strip(),
             demands=tuple(projection.demands),
             options=tuple(options),
             requirements=tuple(requirements),
