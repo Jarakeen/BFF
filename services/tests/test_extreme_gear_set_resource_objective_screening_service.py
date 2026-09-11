@@ -44,6 +44,46 @@ def test_restore_based_on_higher_maximum_does_not_modify_maximum():
     assert result.target_resource_mentioned is False
 
 
+def test_alessian_style_cap_is_not_a_max_health_modifier():
+    result = ExtremeGearSetResourceObjectiveScreeningService.review(
+        "Increase your Health Recovery by 2% of your resistances, up to a maximum of 1320.",
+        "max_health",
+    )
+
+    assert result.proven_irrelevant is True
+    assert result.target_resource_mentioned is False
+
+
+def test_bahsei_style_maximum_damage_at_magicka_threshold_is_not_max_magicka():
+    result = ExtremeGearSetResourceObjectiveScreeningService.review(
+        "Increases your damage done by up to 15% based on your missing Magicka, reaching the maximum at 50% Magicka.",
+        "max_magicka",
+    )
+
+    assert result.proven_irrelevant is True
+    assert result.target_resource_mentioned is False
+
+
+def test_corral_style_maximum_damage_at_stamina_threshold_is_not_max_stamina():
+    result = ExtremeGearSetResourceObjectiveScreeningService.review(
+        "Increases your Weapon and Spell Damage by up to 600, based on your missing Stamina, reaching the maximum at 50% Stamina.",
+        "max_stamina",
+    )
+
+    assert result.proven_irrelevant is True
+    assert result.target_resource_mentioned is False
+
+
+def test_max_stack_recovery_penalty_is_not_max_resource_mutation():
+    result = ExtremeGearSetResourceObjectiveScreeningService.review(
+        "At max stacks you gain Major Force. When max Skirmish ends, your Stamina, Magicka, and Health Recovery are reduced by 422.",
+        "max_stamina",
+    )
+
+    assert result.proven_irrelevant is True
+    assert result.target_resource_mentioned is False
+
+
 def test_list_wording_catches_shapeshifter_style_maximum_resource_modifier():
     result = ExtremeGearSetResourceObjectiveScreeningService.review(
         "(1 item) While transformed, increase your Maximum Health, Stamina, and Magicka by 1707.",
