@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {"entry_name":"Power Up Channel — Sithera","mitigation":"Interrupt Sithera immediately when she channels so the damage increase never completes."},
+    {"entry_name":"Brazier Light — Khephidaen the Spiderkith","mitigation":"Keep Khephidaen inside the active light and plan positioning before braziers extinguish; the fight becomes needlessly messy if the boss is dragged into darkness."},
+    {"entry_name":"Feeding Channel — Votary of Velidreth","mitigation":"Interrupt the feeding channel immediately so the Votary cannot rapidly heal from dead spiders."},
+    {"entry_name":"Expanding Blast — Votary of Velidreth","mitigation":"Use the center of the arena and move completely outside the growing blast before it detonates."},
+    {"entry_name":"Poison Circles — Votary of Velidreth","mitigation":"Keep clear of the poison pools and preserve an escape lane for the expanding blast."},
+    {"entry_name":"Essence Orbs — Dranos Velador","mitigation":"Kill all three shadow copies and collect the red essence orbs they leave behind to end Dranos's immunity."},
+    {"entry_name":"Mortar — Dranos Velador","mitigation":"Move out of the first impact and watch the split follow-up paths instead of immediately stepping back into them."},
+    {"entry_name":"Shadow Sense — Velidreth the Lady of Lace","mitigation":"Stop moving while Velidreth hunts from the ceiling, then dodge only when she commits to the drop."},
+    {"entry_name":"Devour — Velidreth the Lady of Lace","mitigation":"Use ultimates regularly rather than hoarding a large pool that Velidreth can drain."},
+    {"entry_name":"Venom Sacs — Velidreth the Lady of Lace","mitigation":"Avoid venom-sac impacts and leave enough room for the group to move cleanly through later overlaps."},
+    {"entry_name":"Rock Throw — Zatzu the Spine-Breaker","mitigation":"Block the thrown rocks to avoid the heavy damage and knockdown."},
+    {"entry_name":"Leaping Impact — Zatzu the Spine-Breaker","mitigation":"Move out of Zatzu's telegraphed landing area before the leap connects."},
+    {"entry_name":"Mighty Charge — The Mighty Chudan","mitigation":"The targeted player lines Chudan up with the electricity dome or shielded target and lets his charge break it."},
+    {"entry_name":"Spit — The Mighty Chudan","mitigation":"Block the projectile without abandoning the planned charge alignment."},
+    {"entry_name":"Swamp Spice — Xal-Nur the Slaver","mitigation":"Carry the green spice to a geyser to cleanse it and remove Xal-Nur's immunity or enrage before resuming damage."},
+    {"entry_name":"Chained Wamasu — Xal-Nur the Slaver","mitigation":"Release the Wamasu deliberately when needed to reduce ranged pressure rather than leaving the group buried under archers."},
+    {"entry_name":"Boss Charge — Xal-Nur the Slaver","mitigation":"Dodge the charge and keep its path clear of teammates."},
+    {"entry_name":"Totems — Tree-Minder Na-Kesh","mitigation":"Destroy priority totems immediately before their effects compound the encounter."},
+    {"entry_name":"Hist Sap / Statue Reveal — Tree-Minder Na-Kesh","mitigation":"Unaffected players reveal the correct statue; the blinded player uses the temporary sap skill on that statue to free themselves."},
+    {"entry_name":"Amber Plasm — Tree-Minder Na-Kesh","mitigation":"Control the amber before an add can claim it and gain empowerment."},
+    {"entry_name":"Blistering Amber — Tree-Minder Na-Kesh","mitigation":"Avoid amber impacts and preserve enough spacing that the group retains safe movement space."}
+  ]
+}
