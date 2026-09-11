@@ -6,6 +6,13 @@
     {"content_id":"naj_caldeesh","content_name":"Naj-Caldeesh","release_year":2025,"release_update":47,"release_pack":"Feast of Shadows","encounter_id":"talen_lah","display_name":"Talen-Lah and Bar-Sakka","member_ids":["talen_lah","bar_sakka"]},
     {"content_id":"black_gem_foundry","content_name":"Black Gem Foundry","release_year":2025,"release_update":47,"release_pack":"Feast of Shadows","encounter_id":"quarrymaster_saldezaar","display_name":"Quarrymaster Saldezaar","member_ids":["quarrymaster_saldezaar"]},
     {"content_id":"black_gem_foundry","content_name":"Black Gem Foundry","release_year":2025,"release_update":47,"release_pack":"Feast of Shadows","encounter_id":"black_gem_monstrosity","display_name":"Black Gem Monstrosity","member_ids":["black_gem_monstrosity"]},
-    {"content_id":"black_gem_foundry","content_name":"Black Gem Foundry","release_year":2025,"release_update":47,"release_pack":"Feast of Shadows","encounter_id":"high_soulbinder_vykand","display_name":"High Soulbinder Vykand","member_ids":["high_soulbinder_vykand"]}
+    {"content_id":"black_gem_foundry","content_name":"Black Gem Foundry","release_year":2025,"release_update":47,"release_pack":"Feast of Shadows","encounter_id":"high_soulbinder_vykand","display_name":"High Soulbinder Vykand","member_ids":["high_soulbinder_vykand"]},
+
+    {"content_id":"exiled_redoubt","content_name":"Exiled Redoubt","release_year":2025,"release_update":45,"release_pack":"Fallen Banners","encounter_id":"executioner_jerensi","display_name":"Executioner Jerensi","member_ids":["executioner_jerensi"]},
+    {"content_id":"exiled_redoubt","content_name":"Exiled Redoubt","release_year":2025,"release_update":45,"release_pack":"Fallen Banners","encounter_id":"prime_sorcerer_vandorallen","display_name":"Prime Sorcerer Vandorallen","member_ids":["prime_sorcerer_vandorallen"]},
+    {"content_id":"exiled_redoubt","content_name":"Exiled Redoubt","release_year":2025,"release_update":45,"release_pack":"Fallen Banners","encounter_id":"squall_of_retribution","display_name":"Squall of Retribution","member_ids":["squall_of_retribution"]},
+    {"content_id":"lep_seclusa","content_name":"Lep Seclusa","release_year":2025,"release_update":45,"release_pack":"Fallen Banners","encounter_id":"garvin_the_tracker","display_name":"Garvin the Tracker","member_ids":["garvin_the_tracker"]},
+    {"content_id":"lep_seclusa","content_name":"Lep Seclusa","release_year":2025,"release_update":45,"release_pack":"Fallen Banners","encounter_id":"noriwen","display_name":"Noriwen","member_ids":["noriwen"]},
+    {"content_id":"lep_seclusa","content_name":"Lep Seclusa","release_year":2025,"release_update":45,"release_pack":"Fallen Banners","encounter_id":"orpheon_the_tactician","display_name":"Orpheon the Tactician","member_ids":["orpheon_the_tactician"]}
   ]
 }
