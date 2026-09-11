@@ -15,6 +15,32 @@ from services.service_catalog import (
 
 ROTATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
     ServiceDescriptor(
+        service_id="rotation.runtime.combat_state_projection",
+        domain="rotation",
+        purpose=(
+            "Project authoritative ordered runtime history into CombatState at an exact "
+            "time/sequence on a concrete rotation plan using the canonical active-bar path."
+        ),
+        implementation_path="services.rotation_plan_runtime_combat_state_service",
+        inputs=(
+            "PlayerBuild",
+            "CharacterProgression",
+            "RotationPlan",
+            "ExtremeRuntimeSnapshot",
+            "CombatState",
+        ),
+        outputs=("RotationPlanRuntimeCombatStateResult",),
+        responsibilities=("rotation_time_resolved_runtime_combat_state_projection",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Reuses RotationActiveBarAssessor and the shared runtime-snapshot CombatState "
+            "projector. Time-varying evaluation requires authoritative runtime_history; "
+            "legacy one-snapshot attempts/potion elapsed evidence is not time-shifted."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="rotation.healer.canonical_demand_evidence",
         domain="rotation",
         purpose=(
