@@ -263,6 +263,12 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
                 + detail
             )
 
+        effective_role_evidence = role_evidence
+        if isinstance(role_evidence, RotationCanonicalRoleEvidence):
+            effective_role_evidence = role_evidence.with_content_type_if_missing(
+                getattr(bundle, "content_type", "")
+            )
+
         return self.evaluate_canonical_candidates(
             evaluator_resolver=bundle.evaluator_resolver,
             scorecard_resolver=bundle.scorecard_resolver,
@@ -270,7 +276,7 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
             maximum_amount=bundle.maximum_amount,
             trigger_fraction=bundle.trigger_fraction,
             restoration_resolver=bundle.restoration_resolver,
-            role_evidence=role_evidence,
+            role_evidence=effective_role_evidence,
             demands=bundle.demands,
             options=bundle.options,
             wait_decision_factory=bundle.wait_decision_factory,
