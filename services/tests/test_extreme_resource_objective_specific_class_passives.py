@@ -86,7 +86,7 @@ def test_objective_specific_class_ownership_only_closes_proven_irrelevant_axes()
             assert resolution is None
 
 
-def test_audit_preserves_only_blood_magic_as_remaining_resource_runtime_blocker():
+def test_passive_audit_closes_all_three_resource_objectives():
     audits = {
         objective: ExtremeResourcePassiveCoverageAuditService(
             universe_service=_Universe(),
@@ -98,14 +98,13 @@ def test_audit_preserves_only_blood_magic_as_remaining_resource_runtime_blocker(
     health = audits["max_health"]
     assert "[class] Dark Magic :: Blood Magic" in health.static_irrelevant
     assert "[class] Green Balance :: Maturation" in health.accounted_elsewhere
-    assert "[class] Green Balance :: Maturation" not in health.context_required
-    assert "[class] Shadow :: Dark Vigor" not in health.context_required
     assert health.context_required == ()
     assert health.unresolved == ()
 
     for objective in ("max_magicka", "max_stamina"):
         audit = audits[objective]
-        assert "[class] Dark Magic :: Blood Magic" in audit.context_required
+        assert "[class] Dark Magic :: Blood Magic" in audit.accounted_elsewhere
         assert "[class] Green Balance :: Maturation" in audit.static_irrelevant
         assert "[class] Shadow :: Dark Vigor" in audit.static_irrelevant
+        assert audit.context_required == ()
         assert audit.unresolved == ()
