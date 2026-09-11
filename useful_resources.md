@@ -73,6 +73,15 @@ https://github.com/Solinur/LibCombat/blob/master/docs/API.md
 
 **Notes:** Excellent for checking whether BFF's combat-state/proc/uptime model corresponds to observable game events. It is an addon library built on ESO APIs, so use ESOUI/client APIs as the more foundational source when the two layers need to be distinguished.
 
+### ESO Logs
+https://www.esologs.com/
+
+**Use for:** Real-run encounter timelines, cast/event ordering, target patterns, mechanic cadence, add timing, role behavior, and checking whether a proposed strategy description matches what successful groups actually do.
+
+**Confidence:** Validation / runtime corroboration.
+
+**Notes:** Excellent for filling or validating Encounter-page timelines after mechanic identity is known. Logs show what happened in a run, not necessarily the complete game rule. Use multiple representative logs before treating cadence or target patterns as general, and reconcile patch/version differences.
+
 ---
 
 ## Calculators / independent cross-checks
@@ -122,6 +131,15 @@ https://eso-hub.com/en/sets
 
 **Notes:** For U50 Jorvuld's Guidance, the five-piece tooltip was rechecked 2026-09-10 and states a 40% duration increase to Major buffs, Minor buffs, and damage shields applied by the wearer to self/allies while in combat. Preserve patch/version provenance and reconcile against primary game data before broadening hardcoded semantics.
 
+### ESO-Hub trial guides
+https://eso-hub.com/en/guides
+
+**Use for:** Boss-by-boss trial strategy, health-percentage transitions, hardmode differences, target counts, common handling, role responsibilities, add priority, portal/side-team mechanics, and raid-lead callouts for Encounter-page strategy/timeline backfill.
+
+**Confidence:** Validation / gameplay-practice corroboration.
+
+**Notes:** Prefer authored long-form trial guides over generic zone pages. These are particularly useful for filling reviewed Encounter-page strategy when canonical structural data is sparse. Do not treat every numerical statement as immutable game truth: reconcile defensive properties, exact target counts, and patch-sensitive timings against official patch notes, UESP/client data, Combat Alerts, or logs. Dreadsail Reef already demonstrates why: current guide prose and official patch history disagree on Rapid Deluge blockability.
+
 ### ESO-Hub Scribing Simulator
 https://eso-hub.com/en/scribing-simulator
 
@@ -138,7 +156,16 @@ https://xynodegaming.com/
 
 **Confidence:** Validation / gameplay-practice context.
 
-**Notes:** Useful for Field Notes and practice corroboration, not as sole authority for canonical combat math. Search results may be less indexable than ESO-Hub or official sources, so use targeted page retrieval when a specific mechanic or encounter is under review.
+**Notes:** Useful for Encounter-page strategy, Field Notes, and practice corroboration, not as sole authority for canonical combat math. Search results may be less indexable than ESO-Hub or official sources, so use targeted page retrieval when a specific mechanic or encounter is under review.
+
+### Game-Maps.com ESO maps and walkthroughs
+https://game-maps.com/ESO/The-Elder-Scrolls-Online.asp
+
+**Use for:** Zone and dungeon geography, entrances, landmarks, boss-room context, route planning, and visual positioning references that can help build or validate Encounters-page Raid Maps.
+
+**Confidence:** Validation / positioning corroboration.
+
+**Notes:** Use this for spatial context, map labels, and route/layout research rather than combat-math authority. Pair encounter-specific positioning claims with reviewed strategy sources or in-game/log evidence before treating them as required raid handling. The site maintains broad ESO map coverage and links current and legacy content maps. 
 
 ---
 
