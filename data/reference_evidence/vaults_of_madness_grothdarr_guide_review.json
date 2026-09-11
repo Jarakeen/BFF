@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "content_id": "vaults_of_madness",
+  "encounter_id": "grothdarr",
+  "encounter_name": "Grothdarr",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main","value":{"order":1,"label":"Main Phase","threshold":"fight start","description":"Keep Grothdarr faced away from the group while everyone maintains safe footing around the moving lava trails."},"source_type":"guide","source_name":"Xynode Vaults of Madness Guide","source_locator":"Grothdarr","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"slam","value":{"name":"Slam","response":"block_the_heavy_attack_to_avoid_the_knockdown"},"source_type":"guide","source_name":"Xynode Vaults of Madness Guide","source_locator":"Grothdarr","game_update":"Launch","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"lava_trails","value":{"name":"Lava Trails","response":"keep_moving_out_of_the_snaking_lava_and_follow_the_trailing_edge_when_useful"},"source_type":"guide","source_name":"Xynode Vaults of Madness Guide","source_locator":"Grothdarr","game_update":"Launch","confidence":"high"}
+  ]
+}
