@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "content_id": "the_dread_cellar",
+  "encounter_id": "cyronin_artellian",
+  "encounter_name": "Cyronin Artellian",
+  "evidence": [
+    {"fact_type":"phase","fact_key":"main_phase","value":{"order":1,"label":"Main / Mobile Add Pressure","threshold":"Pull to death","description":"Cyronin combines recurring Storm Atronachs, Boltwyrm pressure, shock fields and Dread Surge waves; Hard Mode adds paired lightning-orb drops."},"source_type":"guide","source_name":"ESO-Hub Dread Cellar Dungeon Guide","source_locator":"Cyronin Artellian","game_update":"U31","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"storm_atronachs","value":{"name":"Storm Atronachs","response":"kill_or_control_atronachs_before_heart_of_the_storm_pressure_overwhelms_group","notes":"Cyronin can revive them later."},"source_type":"guide","source_name":"ESO-Hub Dread Cellar Dungeon Guide","source_locator":"Cyronin Artellian > Storm Atronachs","game_update":"U31","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"boltwyrm","value":{"name":"Boltwyrm","response":"control_add_and_respect_arresting_bolt_slow_damage"},"source_type":"guide","source_name":"ESO-Hub Dread Cellar Dungeon Guide","source_locator":"Cyronin Artellian > Boltwyrm","game_update":"U31","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"soulstorm","value":{"name":"Soulstorm","response":"dodge_roll_targeted_skull_attack_because_block_does_not_solve_it"},"source_type":"guide","source_name":"ESO-Hub Dread Cellar Dungeon Guide","source_locator":"Cyronin Artellian > Soulstorm","game_update":"U31","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"dread_surge","value":{"name":"Dread Surge","response":"reposition_or_dodge_through_red_waves_from_crystal_cathodes"},"source_type":"guide","source_name":"ESO-Hub Dread Cellar Dungeon Guide","source_locator":"Cyronin Artellian > Dread Surge","game_update":"U31","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"hardmode_lightning_orbs","value":{"name":"Hard Mode Lightning Orbs","response":"two_targeted_players_drop_orbs_away_from_group_and_leave_ground_aoe_immediately"},"source_type":"guide","source_name":"ESO-Hub Dread Cellar Dungeon Guide","source_locator":"Cyronin Artellian > Hardmode Mechanics","game_update":"U31","confidence":"high"}
+  ]
+}
