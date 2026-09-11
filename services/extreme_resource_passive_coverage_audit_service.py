@@ -15,10 +15,10 @@ not the primary proof source for production audits.
 
 Reviewed contextual resource passives are reconciled only when their exact
 (objective, skill line, passive name) identity is marked CANONICALLY_APPLIED by
-``ExtremeResourceContextualPassiveReviewService``. Reviewed shared class- and
-armor-resolver ownership is then consulted before generic tooltip projection so
-passives with already-proven non-resource effect families do not remain false
-contextual debt.
+``ExtremeResourceContextualPassiveReviewService``. Reviewed shared class-, armor-,
+guild-, Alliance-, and weapon-resolver ownership is then consulted before generic
+tooltip projection so passives with already-proven non-resource effect families do
+not remain false contextual debt.
 
 A complete inventory denominator is not the same as complete mechanic coverage.
 The audit never assigns zero value to contextual or unresolved passives.
@@ -45,6 +45,10 @@ from services.extreme_resource_class_passive_ownership_service import (
 from services.extreme_resource_contextual_passive_review_service import (
     ExtremeResourceContextualPassiveReviewService,
     ExtremeResourceContextualPassiveStatus,
+)
+from services.extreme_resource_shared_passive_ownership_service import (
+    ExtremeResourceSharedPassiveOwnershipService,
+    ExtremeResourceSharedPassiveOwnershipStatus,
 )
 from services.extreme_skill_universe_service import (
     ExtremePlayerSkillRecord,
@@ -272,6 +276,19 @@ class ExtremeResourcePassiveCoverageAuditService:
                 else:
                     raise AssertionError(
                         f"Unhandled Extreme resource armor-passive ownership status: {armor_status!r}"
+                    )
+                continue
+
+            shared_ownership = ExtremeResourceSharedPassiveOwnershipService.resolve(passive, key)
+            if shared_ownership is not None:
+                if (
+                    shared_ownership.status
+                    is ExtremeResourceSharedPassiveOwnershipStatus.PROVEN_IRRELEVANT
+                ):
+                    static_irrelevant.append(identity)
+                else:
+                    raise AssertionError(
+                        f"Unhandled Extreme resource shared-passive ownership status: {shared_ownership.status!r}"
                     )
                 continue
 
