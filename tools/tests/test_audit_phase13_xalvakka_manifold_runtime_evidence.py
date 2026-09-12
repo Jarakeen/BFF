@@ -4,11 +4,16 @@ import json
 import sqlite3
 from pathlib import Path
 
-from tools.audit_phase13_xalvakka_manifold_runtime_evidence import audit
+import pytest
+
+from tools.audit_phase13_xalvakka_manifold_runtime_evidence import (
+    _resolve_database_path,
+    audit,
+)
 
 
-def _database(tmp_path: Path) -> Path:
-    path = tmp_path / "eso.db"
+def _database(tmp_path: Path, *, name: str = "eso.db") -> Path:
+    path = tmp_path / name
     connection = sqlite3.connect(path)
     try:
         connection.executescript(
@@ -24,6 +29,16 @@ def _database(tmp_path: Path) -> Path:
                 end_time REAL,
                 encounter_id INTEGER,
                 raw_json TEXT
+            );
+
+            CREATE TABLE log_actor (
+                report_code TEXT NOT NULL,
+                fight_id INTEGER NOT NULL,
+                actor_id INTEGER NOT NULL,
+                name TEXT,
+                display_name TEXT,
+                role TEXT,
+                actor_type TEXT
             );
 
             CREATE TABLE log_event (
@@ -133,3 +148,37 @@ def test_audit_fails_closed_when_no_xalvakka_fights_exist(tmp_path: Path) -> Non
         "MANIFOLD_OBSERVATION_READY: false",
         "UNRESOLVED: no imported Xalvakka fights exist in log_fight",
     )
+
+
+def test_runtime_database_resolver_uses_explicit_path_without_discovery(tmp_path: Path) -> None:
+    explicit = tmp_path / "explicit.db"
+    assert _resolve_database_path(explicit, discovery_roots=(tmp_path / "missing",)) == explicit
+
+
+def test_runtime_database_resolver_discovers_single_runtime_database(tmp_path: Path) -> None:
+    runtime = _database(tmp_path, name="runtime.sqlite")
+    ordinary = tmp_path / "ordinary.db"
+    sqlite3.connect(ordinary).close()
+
+    assert _resolve_database_path(None, discovery_roots=(tmp_path,)) == runtime.resolve()
+
+
+def test_runtime_database_resolver_fails_closed_when_none_exist(tmp_path: Path) -> None:
+    sqlite3.connect(tmp_path / "ordinary.db").close()
+
+    with pytest.raises(ValueError, match="no ESO Logs runtime database"):
+        _resolve_database_path(None, discovery_roots=(tmp_path,))
+
+
+def test_runtime_database_resolver_fails_closed_when_multiple_exist(tmp_path: Path) -> None:
+    first = _database(tmp_path, name="one.db")
+    second_root = tmp_path / "nested"
+    second_root.mkdir()
+    second = _database(second_root, name="two.sqlite")
+
+    with pytest.raises(ValueError, match="multiple ESO Logs runtime databases") as exc_info:
+        _resolve_database_path(None, discovery_roots=(tmp_path,))
+
+    message = str(exc_info.value)
+    assert str(first.resolve()) in message
+    assert str(second.resolve()) in message
