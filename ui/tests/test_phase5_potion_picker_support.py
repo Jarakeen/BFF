@@ -20,6 +20,18 @@ def test_potion_picker_uses_current_canonical_alchemy_source_with_legacy_fallbac
     assert "DEFAULT_PROCESSED if DEFAULT_PROCESSED.exists() else LEGACY_PROCESSED" in source
 
 
+def test_potion_picker_is_searchable_like_other_build_selectors() -> None:
+    source = Path(phase5_potion_picker_support.__file__).read_text(encoding="utf-8")
+
+    assert "combo.setEditable(True)" in source
+    assert "QCompleter(combo.model(), combo)" in source
+    assert "CaseInsensitive" in source
+    assert "MatchContains" in source
+    assert "PopupCompletion" in source
+    assert "setClearButtonEnabled(True)" in source
+    assert "NoInsert" in source
+
+
 def test_potion_picker_persists_stable_values_not_display_prefixes() -> None:
     source = Path(phase5_potion_picker_support.__file__).read_text(encoding="utf-8")
 
