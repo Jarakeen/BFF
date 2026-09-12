@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Protocol
+from typing import Mapping, Protocol
 
 from minmax.fight_damage_trajectory import RaidDamageSegment
 from minmax.resource_costs import ResourceType
@@ -39,6 +39,10 @@ class RotationGenerateEncounterDemandPolicyProvider(Protocol):
     ) -> tuple[EncounterThresholdRotationDemandPolicy, ...] | None: ...
 
 
+def _canonical_role(value: object) -> str:
+    return "_".join(str(value or "").strip().casefold().replace("-", " ").split())
+
+
 class RotationGenerateApplicationContextProvider:
     """Compose live canonical Generate context from authoritative page/application facts.
 
@@ -50,6 +54,11 @@ class RotationGenerateApplicationContextProvider:
     Persisted review blockers are converted into canonical blocking knowledge gaps. This
     lets partly researched encounters fail closed with the exact missing policy decision
     instead of collapsing back to a generic "no policy configured" state.
+
+    Role evidence can be supplied either as one explicit composer override or through a
+    role-keyed composer map. The saved build's persisted role selects from the map at
+    Generate time. Missing role-specific composition is allowed so roles without a
+    canonical composer remain on the existing role-neutral path instead of being guessed.
     """
 
     def __init__(
@@ -58,6 +67,9 @@ class RotationGenerateApplicationContextProvider:
         static_context_service: RotationStaticBuildContextService | None = None,
         demand_policy_provider: RotationGenerateEncounterDemandPolicyProvider | None = None,
         role_evidence_composer: RotationGenerateRoleEvidenceComposer | None = None,
+        role_evidence_composers: Mapping[
+            str, RotationGenerateRoleEvidenceComposer
+        ] | None = None,
     ) -> None:
         self.static_context_service = (
             static_context_service or RotationStaticBuildContextService()
@@ -66,6 +78,11 @@ class RotationGenerateApplicationContextProvider:
             demand_policy_provider or RotationEncounterDemandPolicyRegistryService()
         )
         self.role_evidence_composer = role_evidence_composer
+        self.role_evidence_composers = {
+            role_key: composer
+            for raw_role, composer in dict(role_evidence_composers or {}).items()
+            if (role_key := _canonical_role(raw_role))
+        }
 
     def context_for(self, page) -> RotationGenerateCanonicalContext:
         build = page._selected_build()
@@ -130,6 +147,7 @@ class RotationGenerateApplicationContextProvider:
         character_id = str(
             getattr(static_context.progression, "character_id", "") or ""
         ).strip() or None
+        role_evidence_composer = self._role_evidence_composer_for(build)
 
         return RotationGenerateCanonicalContext(
             evidence_inputs=RotationSelectedEncounterEvidenceInputs(
@@ -144,9 +162,20 @@ class RotationGenerateApplicationContextProvider:
                 trigger_fraction=trigger,
                 knowledge_gaps=knowledge_gaps,
             ),
-            role_evidence_composer=self.role_evidence_composer,
+            role_evidence_composer=role_evidence_composer,
             character_id=character_id,
         )
+
+    def _role_evidence_composer_for(
+        self,
+        build,
+    ) -> RotationGenerateRoleEvidenceComposer | None:
+        if self.role_evidence_composer is not None:
+            return self.role_evidence_composer
+        role_key = _canonical_role(getattr(build, "Role", ""))
+        if not role_key:
+            return None
+        return self.role_evidence_composers.get(role_key)
 
     def _demand_policy(
         self,
