@@ -1,0 +1,144 @@
+from types import SimpleNamespace
+
+import pytest
+
+from minmax.resource_costs import ResourceType
+from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
+from models.build_model import PlayerBuild
+from services.rotation_candidate_dd_role_output_service import RotationActionDamageEvidence
+from services.rotation_candidate_generation_service import GeneratedRotationCandidate
+from ui.rotation_canonical_evidence_bundle_support import RotationCanonicalEvidenceBundle
+import ui.rotation_generate_dd_role_evidence_support as dd_support
+
+
+class _StaticContextService:
+    def __init__(self, *, resolved=True, unresolved=()) -> None:
+        self.result = SimpleNamespace(resolved=resolved, unresolved=tuple(unresolved))
+        self.calls = []
+
+    def resolve(self, build):
+        self.calls.append(build)
+        return self.result
+
+
+class _FakeSkillProvider:
+    def __init__(self, **kwargs) -> None:
+        self.kwargs = kwargs
+
+    def evaluate_action(self, *, candidate, action):
+        damage = 200.0 if action.name == "meteor" else 100.0
+        return RotationActionDamageEvidence(
+            time_seconds=action.time_seconds,
+            sequence=action.sequence,
+            damage_value=damage,
+        )
+
+
+def _bundle(*, target_resistance=18200.0):
+    return RotationCanonicalEvidenceBundle(
+        encounter_id="test_encounter",
+        encounter_name="Test Encounter",
+        content_type="trial",
+        demands=(),
+        options=(),
+        requirements=(),
+        passives=(),
+        evaluator_resolver=None,
+        scorecard_resolver=None,
+        resource=ResourceType.MAGICKA,
+        maximum_amount=30000,
+        trigger_fraction=0.35,
+        target_resistance=target_resistance,
+    )
+
+
+def _dd_build(role="DD"):
+    return PlayerBuild(Name="Parse Cat", BuildName="DD", Role=role)
+
+
+def _candidate():
+    return GeneratedRotationCandidate(
+        candidate_id="dd-candidate",
+        plan=RotationPlan(
+            character_name="Parse Cat",
+            build_name="DD",
+            duration_seconds=10.0,
+            actions=(
+                RotationAction(
+                    1.0,
+                    1,
+                    RotationActionKind.SKILL,
+                    name="spammable",
+                    bar="front",
+                ),
+                RotationAction(
+                    5.0,
+                    2,
+                    RotationActionKind.ULTIMATE,
+                    name="meteor",
+                    bar="front",
+                ),
+            ),
+        ),
+        refresh_leads=(),
+        action_claims=(),
+    )
+
+
+def test_compose_routes_skill_and_ultimate_into_dd_role_output(monkeypatch) -> None:
+    monkeypatch.setattr(
+        dd_support,
+        "_RotationGenerateBarAwareSkillDamageProvider",
+        _FakeSkillProvider,
+    )
+    static = _StaticContextService()
+    support = dd_support.RotationGenerateDDRoleEvidenceSupport(
+        database_path="unused-test.db",
+        static_context_service=static,  # type: ignore[arg-type]
+    )
+    build = _dd_build()
+
+    evidence = support.compose(player_build=build, evidence_bundle=_bundle())
+
+    assert static.calls == [build]
+    assert evidence.role_key == "dd"
+    assert evidence.role_output_label == "projected DPS"
+    assert evidence.content_type == "trial"
+    output = evidence.plan_evidence_provider.role_output_evidence_provider.evaluate_plan(
+        _candidate()
+    )
+    assert output.unresolved == ()
+    assert output.value == pytest.approx(30.0)
+
+
+def test_compose_requires_explicit_target_resistance() -> None:
+    support = dd_support.RotationGenerateDDRoleEvidenceSupport(
+        database_path="unused-test.db",
+        static_context_service=_StaticContextService(),  # type: ignore[arg-type]
+    )
+
+    with pytest.raises(ValueError, match="explicit target resistance"):
+        support.compose(player_build=_dd_build(), evidence_bundle=_bundle(target_resistance=None))
+
+
+def test_compose_rejects_non_dd_role() -> None:
+    support = dd_support.RotationGenerateDDRoleEvidenceSupport(
+        database_path="unused-test.db",
+        static_context_service=_StaticContextService(),  # type: ignore[arg-type]
+    )
+
+    with pytest.raises(ValueError, match="damage-dealer saved-build role"):
+        support.compose(player_build=_dd_build("Healer"), evidence_bundle=_bundle())
+
+
+def test_unresolved_static_context_fails_closed() -> None:
+    support = dd_support.RotationGenerateDDRoleEvidenceSupport(
+        database_path="unused-test.db",
+        static_context_service=_StaticContextService(
+            resolved=False,
+            unresolved=("back bar static context unresolved",),
+        ),  # type: ignore[arg-type]
+    )
+
+    with pytest.raises(ValueError, match="back bar static context unresolved"):
+        support.compose(player_build=_dd_build(), evidence_bundle=_bundle())
