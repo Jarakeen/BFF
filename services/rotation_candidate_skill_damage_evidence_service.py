@@ -11,6 +11,7 @@ from minmax.combat_damage_modifiers import (
     damage_taken_from_target_state,
 )
 from minmax.combat_state import CombatState
+from minmax.damage_done import DamageDoneModifiers
 from minmax.dd_damage import DDDamageEvent, calculate_dd_damage
 from minmax.dd_mitigation import calculate_dd_mitigation
 from minmax.dd_stat_evaluation import evaluate_dd_stats
@@ -48,6 +49,34 @@ RotationRuntimeTargetResistanceResolver = Callable[
 ]
 
 
+_DAMAGE_DONE_FIELDS = (
+    "generic",
+    "direct",
+    "dot",
+    "area",
+    "single_target",
+    "magic",
+    "physical",
+    "flame",
+    "frost",
+    "shock",
+    "poison",
+    "disease",
+    "bleed",
+)
+
+
+def _combined_damage_done(*modifiers: DamageDoneModifiers) -> DamageDoneModifiers:
+    """Combine additive Damage Done buckets without reclassifying any event."""
+
+    return DamageDoneModifiers(
+        **{
+            field: sum(float(getattr(modifier, field)) for modifier in modifiers)
+            for field in _DAMAGE_DONE_FIELDS
+        }
+    )
+
+
 class RotationCandidateSkillDamageEvidenceService:
     """Resolve scheduled skill damage through existing canonical combat math.
 
@@ -69,6 +98,10 @@ class RotationCandidateSkillDamageEvidenceService:
     ticks resolve those recipient-side inputs at the exact tick timestamp rather than
     inheriting them from cast time. Explicit successive-hit scaling is applied by
     occurrence index only when reviewed semantics provide a multiplier.
+
+    Unconditional saved-build DD Damage Done categories live on the canonical build
+    context and are merged additively with exact-time combat-state Damage Done before
+    component classification selects direct/DoT/AoE/type buckets.
     """
 
     def __init__(
@@ -104,6 +137,13 @@ class RotationCandidateSkillDamageEvidenceService:
         self.runtime_build_context_resolver = runtime_build_context_resolver
         self.runtime_target_combat_state_resolver = runtime_target_combat_state_resolver
         self.runtime_target_resistance_resolver = runtime_target_resistance_resolver
+
+    @staticmethod
+    def _damage_done_for_context(context: BuildCalculationContext) -> DamageDoneModifiers:
+        return _combined_damage_done(
+            damage_done_from_combat_state(context.combat_state),
+            context.dd_damage_done_modifiers,
+        )
 
     def evaluate_action(
         self,
@@ -147,7 +187,7 @@ class RotationCandidateSkillDamageEvidenceService:
             target_resistance=self.context.target_resistance,
         )
         dd_stats = evaluate_dd_stats(calculation, evaluation_context)
-        damage_done = damage_done_from_combat_state(self.context.combat_state)
+        damage_done = self._damage_done_for_context(self.context)
         damage_taken = damage_taken_from_target_state(self.target_combat_state)
 
         periodic_projection = None
@@ -366,7 +406,7 @@ class RotationCandidateSkillDamageEvidenceService:
                 target_resistance=tick_context.target_resistance,
             )
             tick_dd_stats = evaluate_dd_stats(calculation, evaluation_context)
-            tick_damage_done = damage_done_from_combat_state(tick_context.combat_state)
+            tick_damage_done = self._damage_done_for_context(tick_context)
             tick_damage_taken = damage_taken_from_target_state(
                 self._target_state_for_runtime_event(event)
             )
