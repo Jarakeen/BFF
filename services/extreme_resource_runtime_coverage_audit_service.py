@@ -84,6 +84,10 @@ class ExtremeResourceRuntimeCoverageAuditService:
     """Expose the remaining runtime/proc blockers for one max-resource objective."""
 
     SUPPORTED_OBJECTIVES = _SUPPORTED_OBJECTIVES
+    _DATABASE_CACHE: dict[
+        tuple[str, str],
+        ExtremeResourceRuntimeCoverageAudit,
+    ] = {}
 
     def __init__(
         self,
@@ -94,11 +98,30 @@ class ExtremeResourceRuntimeCoverageAuditService:
         if repository is None and database_path is None:
             raise ValueError("database_path is required when no gear-set repository is supplied")
         self.repository = repository or GearSetRepository(database_path)  # type: ignore[arg-type]
+        # Shared caching is intentionally limited to the canonical repository type.
+        # Injected/fake repositories used by focused tests keep instance-local behavior.
+        self._database_path = (
+            str(getattr(self.repository, "database_path", "") or "").strip()
+            if type(self.repository) is GearSetRepository
+            else ""
+        )
+        self._instance_cache: dict[str, ExtremeResourceRuntimeCoverageAudit] = {}
 
     def build(self, objective_key: str) -> ExtremeResourceRuntimeCoverageAudit:
         key = str(objective_key or "").strip().casefold()
         if key not in _SUPPORTED_OBJECTIVES:
             raise KeyError(f"unreviewed Extreme resource runtime objective: {objective_key!r}")
+
+        cached = self._instance_cache.get(key)
+        if cached is not None:
+            return cached
+
+        shared_key = (self._database_path, key)
+        if self._database_path:
+            cached = self._DATABASE_CACHE.get(shared_key)
+            if cached is not None:
+                self._instance_cache[key] = cached
+                return cached
 
         breakpoints = ExtremeGearSetBonusBreakpointService(self.repository).build()
         relevance = ExtremeGearSetObjectiveRelevanceService(self.repository).build(
@@ -154,7 +177,7 @@ class ExtremeResourceRuntimeCoverageAuditService:
             and not unresolved
         )
 
-        return ExtremeResourceRuntimeCoverageAudit(
+        result = ExtremeResourceRuntimeCoverageAudit(
             objective_key=key,
             contextual_passives_reviewed=tuple(
                 f"{row.skill_line}: {row.passive_name}" for row in passive_rows
@@ -164,6 +187,10 @@ class ExtremeResourceRuntimeCoverageAuditService:
             denominator_proven=denominator_proven,
             unresolved=tuple(dict.fromkeys(item for item in unresolved if item)),
         )
+        self._instance_cache[key] = result
+        if self._database_path:
+            self._DATABASE_CACHE[shared_key] = result
+        return result
 
 
 __all__ = [
