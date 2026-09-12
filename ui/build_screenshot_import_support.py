@@ -326,7 +326,11 @@ def install() -> None:
 
     def build_ui_with_screenshot_import(self):
         original_build_ui(self)
-        button = FoundryButton("📷 Import Screenshots", role=ButtonRole.SECONDARY)
+        button = FoundryButton(
+            "📷 Import Screenshots",
+            role=ButtonRole.SECONDARY,
+            compact=True,
+        )
         button.setToolTip(
             "Stage several ESO Armory views plus the matching Character sheet for build import."
         )
