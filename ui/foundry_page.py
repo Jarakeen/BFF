@@ -14,6 +14,10 @@ class FoundryPage(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        # A page may contain wide tables/splitters, but those child size hints must
+        # never become a top-level window-width requirement during navigation.
+        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Expanding)
+        self.setMinimumWidth(0)
 
         self.root = QVBoxLayout(self)
         self.root.setContentsMargins(10, 8, 10, 8)
@@ -31,7 +35,12 @@ class FoundryPage(QWidget):
         self.workspace_scroll = QScrollArea()
         self.workspace_scroll.setWidgetResizable(True)
         self.workspace_scroll.setFrameShape(QFrame.Shape.NoFrame)
-        self.workspace_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.workspace_scroll.setSizePolicy(
+            QSizePolicy.Policy.Ignored,
+            QSizePolicy.Policy.Expanding,
+        )
+        self.workspace_scroll.setMinimumWidth(0)
+        self.workspace_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.workspace_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.workspace_scroll.setWidget(self.workspace_widget)
 
