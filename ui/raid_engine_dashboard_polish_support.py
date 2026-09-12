@@ -221,15 +221,15 @@ def _init_with_dashboard_polish(self, parent=None) -> None:
     # table enough width for full status pills and vertical breathing room.
     self.composition_ring.setMinimumSize(560, 350)
     self.composition_card.setMinimumWidth(575)
-    self.active_card.setMinimumWidth(470)
-    self.active_table.setMinimumWidth(455)
+    self.active_card.setMinimumWidth(420)
+    self.active_table.setMinimumWidth(405)
     self.active_table.setMinimumHeight(500)
     row_header = self.active_table.verticalHeader()
     row_header.setDefaultSectionSize(row_header.defaultSectionSize() + 10)
-    self.active_table.setColumnWidth(0, 105)
-    self.active_table.setColumnWidth(1, 90)
-    self.active_table.setColumnWidth(2, 135)
-    self.active_table.setColumnWidth(3, 110)
+    self.active_table.setColumnWidth(0, 95)
+    self.active_table.setColumnWidth(1, 80)
+    self.active_table.setColumnWidth(2, 115)
+    self.active_table.setColumnWidth(3, 100)
 
     _replace_next_actions_editor(self)
 
