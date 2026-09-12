@@ -2,6 +2,7 @@ import sqlite3
 
 import pytest
 
+import minmax.jewelry_glyph_repository as jewelry_glyph_module
 from minmax.jewelry_glyph_repository import JewelryGlyphEffectRepository
 from minmax.stat_ids import StatId
 
@@ -132,3 +133,69 @@ def test_effect_type_lookup_can_use_minimum_recorded_value(tmp_path):
     )
 
     assert effects[0].value == 20
+
+
+def test_jewelry_glyph_catalog_and_semantic_lookups_are_cached(tmp_path, monkeypatch):
+    database_path = _database(tmp_path)
+    original_connect = jewelry_glyph_module.sqlite3.connect
+    connect_count = 0
+
+    def counting_connect(*args, **kwargs):
+        nonlocal connect_count
+        connect_count += 1
+        return original_connect(*args, **kwargs)
+
+    monkeypatch.setattr(jewelry_glyph_module.sqlite3, "connect", counting_connect)
+    repository = JewelryGlyphEffectRepository(database_path)
+
+    names = repository.list_names()
+    assert repository.list_names() == names
+    assert connect_count == 1
+
+    effect_types = repository.get_jewelry_glyph_effect_types_by_name(" Glyph of Test Harm ")
+    assert repository.get_jewelry_glyph_effect_types_by_name("glyph of test harm") == effect_types
+    assert connect_count == 2
+
+    fresh_repository = JewelryGlyphEffectRepository(database_path)
+    assert fresh_repository.list_names() == names
+    assert connect_count == 3
+
+
+def test_jewelry_mapped_effect_lookups_are_cached_and_return_list_copies(tmp_path, monkeypatch):
+    database_path = _database(tmp_path)
+    original_connect = jewelry_glyph_module.sqlite3.connect
+    connect_count = 0
+
+    def counting_connect(*args, **kwargs):
+        nonlocal connect_count
+        connect_count += 1
+        return original_connect(*args, **kwargs)
+
+    monkeypatch.setattr(jewelry_glyph_module.sqlite3, "connect", counting_connect)
+    repository = JewelryGlyphEffectRepository(database_path)
+
+    by_item = repository.get_jewelry_glyph_effect(100)
+    by_item_again = repository.get_jewelry_glyph_effect(100)
+    assert by_item == by_item_again
+    assert by_item is not by_item_again
+    assert connect_count == 1
+
+    by_name = repository.get_jewelry_glyph_effect_by_name(" Glyph of Test Harm ")
+    by_name_again = repository.get_jewelry_glyph_effect_by_name("glyph of test harm")
+    assert by_name == by_name_again
+    assert by_name is not by_name_again
+    assert connect_count == 2
+
+    strongest = repository.get_strongest_jewelry_glyph_effect_by_type(" BASH_DAMAGE ")
+    strongest_again = repository.get_strongest_jewelry_glyph_effect_by_type("bash_damage")
+    assert strongest == strongest_again
+    assert strongest is not strongest_again
+    assert connect_count == 3
+
+    by_item.clear()
+    by_name.clear()
+    strongest.clear()
+    assert repository.get_jewelry_glyph_effect(100) == by_item_again
+    assert repository.get_jewelry_glyph_effect_by_name("Glyph of Test Harm") == by_name_again
+    assert repository.get_strongest_jewelry_glyph_effect_by_type("bash_damage") == strongest_again
+    assert connect_count == 3
