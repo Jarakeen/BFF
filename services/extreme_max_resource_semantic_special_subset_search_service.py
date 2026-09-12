@@ -302,7 +302,7 @@ class ExtremeMaxResourceSemanticSpecialSubsetSearchService:
                 if row.special:
                     selected_special_ids.add(row.set_id)
                 prefix = tuple(item.eligibility for item in selected)
-                if feasibility.is_possible(topology, prefix):
+                if feasibility._is_possible_prevalidated(topology, prefix):
                     visit(position + 1, score + row.exact_delta)
                 else:
                     physical_pruned += 1
