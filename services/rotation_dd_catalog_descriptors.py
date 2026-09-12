@@ -45,9 +45,10 @@ ROTATION_DD_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=False,
         evidence_class=EvidenceClass.GAME_MECHANIC,
         notes=(
-            "Currently resolves Exploiter magnitude and the explicit Off Balance condition. "
-            "Exploiter remains a production blocker until every DD action consumer applies "
-            "the condition at its exact damage timestamp."
+            "Currently resolves Exploiter magnitude and explicit Off Balance applicability. "
+            "Direct skills and Ultimates, snapshot and dynamic DoT ticks, light attacks, and "
+            "heavy-attack completion all consume exact target CombatState and fail closed when "
+            "that state is unavailable."
         ),
     ),
     ServiceDescriptor(
@@ -88,8 +89,8 @@ ROTATION_DD_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.GAME_MECHANIC,
         notes=(
             "Only diagnostics already proven irrelevant to current DD damage math are ambient. "
-            "Bloodthirsty, Exploiter, potion uptime, Charged/status chance, and unknown "
-            "mechanics remain blocking until their canonical runtime math exists."
+            "Bloodthirsty, potion uptime outside explicit scheduled activations, Charged/status "
+            "chance, and unknown mechanics remain blocking until their canonical runtime math exists."
         ),
     ),
     ServiceDescriptor(
