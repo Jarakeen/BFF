@@ -2,7 +2,7 @@ from __future__ import annotations
 
 """Compose saved-build healer mechanics into reusable whole-plan role evidence."""
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
@@ -13,7 +13,6 @@ from services.rotation_candidate_canonical_plan_evidence_service import (
 )
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 from services.rotation_candidate_healer_multi_demand_role_output_service import (
-    RotationCandidateHealerDemandWindowOutput,
     RotationCandidateHealerMultiDemandOutput,
     RotationCandidateHealerMultiDemandRoleOutputService,
 )
@@ -92,21 +91,12 @@ class RotationHealerCanonicalRoleOutputFactoryResult:
             f"static healer-output context: {message}"
             for message in self.unresolved
         )
-        blocked_windows = tuple(
-            RotationCandidateHealerDemandWindowOutput(
-                evidence=replace(
-                    window.evidence,
-                    unresolved=tuple(
-                        dict.fromkeys(tuple(window.unresolved) + blockers)
-                    ),
-                ),
-                modeled_healing_per_demand_second=None,
-            )
-            for window in output.windows
-        )
+        # Static-context blockers invalidate the aggregate comparison, not the
+        # already-modeled demand-window evidence. Keep the per-window values
+        # inspectable and fail closed through the output-level unresolved state.
         return RotationCandidateHealerMultiDemandOutput(
             candidate_id=output.candidate_id,
-            windows=blocked_windows,
+            windows=output.windows,
             unresolved=tuple(
                 dict.fromkeys(tuple(output.unresolved) + blockers)
             ),
