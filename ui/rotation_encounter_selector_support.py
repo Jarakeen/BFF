@@ -8,6 +8,9 @@ from ui.rotation_generate_action_support import install_rotation_generate_action
 from ui.rotation_generate_application_context_provider import (
     RotationGenerateApplicationContextProvider,
 )
+from ui.rotation_generate_healer_role_evidence_support import (
+    RotationGenerateHealerRoleEvidenceSupport,
+)
 from ui.rotation_threshold_projection_policy_controls import (
     install_rotation_threshold_projection_policy_controls,
 )
@@ -32,10 +35,11 @@ class RotationEncounterSelectorSupport:
     The selected value is the canonical persisted ``encounter_id`` that a later
     evidence-bundle provider resolves explicitly.
 
-    Installation also composes adjacent role-neutral Generate supports: explicit
-    health-threshold projection controls, the Generate router, and its live application
-    context provider. Those supports own their own policy/runtime inputs; this selector
-    remains only the encounter-identity owner.
+    Installation also composes adjacent Generate supports: explicit health-threshold
+    projection controls, the Generate router, its live application context provider,
+    and role-specific evidence composers that already have canonical implementations.
+    Healer output is currently installed for persisted Heal/Healer roles; unsupported
+    roles remain on the role-neutral path until their own canonical composers exist.
     """
 
     def __init__(self, guide_service: _EncounterGuideIndex) -> None:
@@ -59,8 +63,14 @@ class RotationEncounterSelectorSupport:
         self.refresh(page)
         install_rotation_threshold_projection_policy_controls(page)
         install_rotation_generate_action(page)
+        healer_role_evidence = RotationGenerateHealerRoleEvidenceSupport()
         page.set_rotation_generate_canonical_context_provider(
-            RotationGenerateApplicationContextProvider()
+            RotationGenerateApplicationContextProvider(
+                role_evidence_composers={
+                    "heal": healer_role_evidence,
+                    "healer": healer_role_evidence,
+                }
+            )
         )
 
     def refresh(self, page) -> None:
