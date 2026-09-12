@@ -49,10 +49,10 @@ class RotationDDPeriodicEsoLogsSecondaryEffectDiscoveryReport:
 class RotationDDPeriodicEsoLogsSecondaryEffectDiscoveryService:
     """Discover possible secondary DoT event identities without promoting them.
 
-    ESO Logs frequently records a skill cast under one ability identity and its
-    periodic damage under a different effect identity.  This service anchors on the
-    canonical cast skill, then inspects other damage identities from the same source
-    inside the reviewed active window.  Candidate ranking is observational only.
+    ESO Logs can record a skill cast under one ability identity and its periodic
+    damage under another. This service anchors on the canonical cast skill, then
+    inspects other damage identities from the same source inside the reviewed active
+    window. Candidate ranking is observational only and never writes runtime semantics.
 
     Canonical lower-snake skill identity remains authoritative. Numeric ability ids
     are source crosswalks only. A translated raw ability name wins over a numeric id.
@@ -90,32 +90,8 @@ class RotationDDPeriodicEsoLogsSecondaryEffectDiscoveryService:
         if not self.logs_database_path.is_file():
             raise FileNotFoundError(self.logs_database_path)
 
-        review_rows = tuple(
-            row
-            for (entity, _coefficient), row in self.review_service.by_component().items()
-            if entity == identity
-        )
-        durations = {
-            float(row.duration_seconds)
-            for row in review_rows
-            if row.duration_seconds is not None
-        }
-        intervals = {
-            float(row.reviewed_interval_seconds)
-            for row in review_rows
-            if row.reviewed_interval_seconds is not None
-        }
-        unresolved: list[str] = []
-        duration = next(iter(durations)) if len(durations) == 1 else None
-        reviewed_interval = next(iter(intervals)) if len(intervals) == 1 else None
-        if duration is None:
-            unresolved.append(
-                f"{identity}: one unambiguous reviewed duration is required for secondary-effect discovery"
-            )
-        if len(durations) > 1:
-            unresolved.append(f"{identity}: conflicting reviewed durations")
-        if len(intervals) > 1:
-            unresolved.append(f"{identity}: conflicting reviewed intervals")
+        duration, reviewed_interval, review_unresolved = self._review_window(identity)
+        unresolved = list(review_unresolved)
         if duration is None:
             return self._report(
                 identity,
@@ -142,138 +118,244 @@ class RotationDDPeriodicEsoLogsSecondaryEffectDiscoveryService:
                     reviewed_interval_seconds=reviewed_interval,
                     unresolved=tuple(dict.fromkeys((*unresolved, schema_error))),
                 )
-            rows = self._candidate_rows(
+
+            cast_rows = self._cast_rows(
                 db,
                 report_code=report_code,
                 fight_id=fight_id,
                 source_id=source_id,
             )
+            matched_cast_rows = tuple(
+                row
+                for row in cast_rows
+                if self._matches_cast_identity(row, identity=identity, aliases=aliases)
+            )
+            if not matched_cast_rows:
+                unresolved.append(f"{identity}: no matching ESO Logs cast observations found")
+                return self._report(
+                    identity,
+                    reviewed_duration_seconds=duration,
+                    reviewed_interval_seconds=reviewed_interval,
+                    unresolved=tuple(dict.fromkeys(unresolved)),
+                )
 
-        cast_rows = tuple(
-            row
-            for row in rows
-            if self._event_type(row) in self._CAST_TYPES
-            and self._matches_cast_identity(row, identity=identity, aliases=aliases)
-        )
-        if not cast_rows:
-            unresolved.append(f"{identity}: no matching ESO Logs cast observations found")
-            return self._report(
-                identity,
-                reviewed_duration_seconds=duration,
-                reviewed_interval_seconds=reviewed_interval,
-                unresolved=tuple(dict.fromkeys(unresolved)),
+            anchor_type = next(
+                kind
+                for kind in self._CAST_TYPES
+                if any(self._event_type(row) == kind for row in matched_cast_rows)
+            )
+            anchors = tuple(
+                row for row in matched_cast_rows if self._event_type(row) == anchor_type
+            )
+            grouped_anchors: dict[tuple[str, int, int], list[sqlite3.Row]] = {}
+            for cast in anchors:
+                if cast["source_id"] is None:
+                    continue
+                key = (
+                    str(cast["report_code"]),
+                    int(cast["fight_id"]),
+                    int(cast["source_id"]),
+                )
+                grouped_anchors.setdefault(key, []).append(cast)
+
+            observations: dict[str, dict[str, object]] = {}
+            cast_count = 0
+            for key, casts in grouped_anchors.items():
+                casts = sorted(
+                    casts,
+                    key=lambda row: (float(row["timestamp"]), int(row["event_index"])),
+                )
+                if not casts:
+                    continue
+                group_start = float(casts[0]["timestamp"])
+                group_end = float(casts[-1]["timestamp"]) + duration * 1000.0
+                damages = self._damage_rows_for_group(
+                    db,
+                    report_code=key[0],
+                    fight_id=key[1],
+                    source_id=key[2],
+                    start_time=group_start,
+                    end_time=group_end,
+                )
+                cast_count += self._accumulate_group(
+                    observations,
+                    casts=casts,
+                    damages=damages,
+                    identity=identity,
+                    aliases=aliases,
+                    duration_seconds=duration,
+                    reviewed_interval_seconds=reviewed_interval,
+                )
+
+        candidates = self._build_candidates(observations)
+        if max_candidates > 0:
+            candidates = candidates[: int(max_candidates)]
+        if not candidates:
+            unresolved.append(
+                f"{identity}: no repeated secondary damage identities were observed inside reviewed cast windows"
             )
 
-        anchor_type = next(
-            kind for kind in self._CAST_TYPES if any(self._event_type(row) == kind for row in cast_rows)
+        return self._report(
+            identity,
+            cast_count=cast_count,
+            reviewed_duration_seconds=duration,
+            reviewed_interval_seconds=reviewed_interval,
+            candidates=tuple(candidates),
+            unresolved=tuple(dict.fromkeys(unresolved)),
         )
-        anchors = tuple(row for row in cast_rows if self._event_type(row) == anchor_type)
-        grouped_anchors: dict[tuple[str, int, int], list[sqlite3.Row]] = {}
-        for cast in anchors:
-            if cast["source_id"] is None:
-                continue
-            key = (str(cast["report_code"]), int(cast["fight_id"]), int(cast["source_id"]))
-            grouped_anchors.setdefault(key, []).append(cast)
 
-        damage_by_group: dict[tuple[str, int, int], tuple[sqlite3.Row, ...]] = {}
-        for row in rows:
-            if self._event_type(row) != "damage" or row["source_id"] is None:
-                continue
-            key = (str(row["report_code"]), int(row["fight_id"]), int(row["source_id"]))
-            if key in grouped_anchors:
-                damage_by_group.setdefault(key, ())
-                damage_by_group[key] = (*damage_by_group[key], row)
+    def _review_window(self, identity: str) -> tuple[float | None, float | None, tuple[str, ...]]:
+        rows = tuple(
+            row
+            for (entity, _coefficient), row in self.review_service.by_component().items()
+            if entity == identity
+        )
+        durations = {
+            float(row.duration_seconds)
+            for row in rows
+            if row.duration_seconds is not None
+        }
+        intervals = {
+            float(row.reviewed_interval_seconds)
+            for row in rows
+            if row.reviewed_interval_seconds is not None
+        }
+        unresolved: list[str] = []
+        duration = next(iter(durations)) if len(durations) == 1 else None
+        interval = next(iter(intervals)) if len(intervals) == 1 else None
+        if duration is None:
+            unresolved.append(
+                f"{identity}: one unambiguous reviewed duration is required for secondary-effect discovery"
+            )
+        if len(durations) > 1:
+            unresolved.append(f"{identity}: conflicting reviewed durations")
+        if len(intervals) > 1:
+            unresolved.append(f"{identity}: conflicting reviewed intervals")
+        return duration, interval, tuple(unresolved)
 
-        observations: dict[str, dict[str, object]] = {}
-        cast_count = 0
-        for key, casts in grouped_anchors.items():
-            casts = sorted(casts, key=lambda row: (float(row["timestamp"]), int(row["event_index"])))
-            damages = damage_by_group.get(key, ())
-            for index, cast in enumerate(casts):
-                cast_count += 1
-                cast_time = float(cast["timestamp"])
-                natural_end = cast_time + duration * 1000.0
-                next_cast = float(casts[index + 1]["timestamp"]) if index + 1 < len(casts) else None
-                window_end = min(natural_end, next_cast) if next_cast is not None else natural_end
-                cast_track_id = int(cast["cast_track_id"]) if cast["cast_track_id"] is not None else None
+    def _accumulate_group(
+        self,
+        observations: dict[str, dict[str, object]],
+        *,
+        casts: list[sqlite3.Row],
+        damages: tuple[sqlite3.Row, ...],
+        identity: str,
+        aliases: set[int],
+        duration_seconds: float,
+        reviewed_interval_seconds: float | None,
+    ) -> int:
+        count = 0
+        for index, cast in enumerate(casts):
+            count += 1
+            cast_time = float(cast["timestamp"])
+            natural_end = cast_time + duration_seconds * 1000.0
+            next_cast = (
+                float(casts[index + 1]["timestamp"])
+                if index + 1 < len(casts)
+                else None
+            )
+            # Cut observational attribution at the next cast. This avoids mixing two
+            # active instances while still preserving that overlap as a review problem.
+            window_end = min(natural_end, next_cast) if next_cast is not None else natural_end
+            cast_track_id = (
+                int(cast["cast_track_id"])
+                if cast["cast_track_id"] is not None
+                else None
+            )
+            window_rows = tuple(
+                row
+                for row in damages
+                if cast_time <= float(row["timestamp"]) <= window_end
+                and not self._matches_cast_identity(row, identity=identity, aliases=aliases)
+            )
+            per_stream: dict[str, list[sqlite3.Row]] = {}
+            for row in window_rows:
+                key = self._stream_key(row)
+                if key:
+                    per_stream.setdefault(key, []).append(row)
 
-                window_rows = tuple(
-                    row
-                    for row in damages
-                    if cast_time <= float(row["timestamp"]) <= window_end
-                    and not self._matches_cast_identity(row, identity=identity, aliases=aliases)
+            for stream_key, stream_rows in per_stream.items():
+                times = tuple(
+                    sorted(dict.fromkeys(float(row["timestamp"]) for row in stream_rows))
                 )
-                per_stream: dict[str, list[sqlite3.Row]] = {}
-                for row in window_rows:
-                    stream_key = self._stream_key(row)
-                    if not stream_key:
-                        continue
-                    per_stream.setdefault(stream_key, []).append(row)
+                linked_count = sum(
+                    1
+                    for row in stream_rows
+                    if cast_track_id is not None
+                    and row["cast_track_id"] is not None
+                    and int(row["cast_track_id"]) == cast_track_id
+                )
+                if len(times) < 2 and linked_count == 0:
+                    continue
 
-                for stream_key, stream_rows in per_stream.items():
-                    times = tuple(sorted(dict.fromkeys(float(row["timestamp"]) for row in stream_rows)))
-                    linked_count = sum(
+                bucket = observations.setdefault(
+                    stream_key,
+                    {
+                        "names": set(),
+                        "ids": set(),
+                        "windows": set(),
+                        "events": set(),
+                        "occurrences": set(),
+                        "tick_count": 0,
+                        "linked_count": 0,
+                        "first_offsets": [],
+                        "intervals": [],
+                        "interval_matches": 0,
+                    },
+                )
+                window_id = (
+                    str(cast["report_code"]),
+                    int(cast["fight_id"]),
+                    int(cast["source_id"]),
+                    cast_time,
+                )
+                bucket["windows"].add(window_id)
+                bucket["first_offsets"].append((times[0] - cast_time) / 1000.0)
+                stream_intervals = tuple(
+                    (later - earlier) / 1000.0
+                    for earlier, later in zip(times, times[1:])
+                )
+                bucket["intervals"].extend(stream_intervals)
+                if reviewed_interval_seconds is not None:
+                    bucket["interval_matches"] += sum(
                         1
-                        for row in stream_rows
-                        if cast_track_id is not None
-                        and row["cast_track_id"] is not None
-                        and int(row["cast_track_id"]) == cast_track_id
-                    )
-                    # One unlinked direct hit is not useful as a periodic candidate.
-                    if len(times) < 2 and linked_count == 0:
-                        continue
-                    bucket = observations.setdefault(
-                        stream_key,
-                        {
-                            "names": set(),
-                            "ids": set(),
-                            "windows": set(),
-                            "events": set(),
-                            "occurrences": set(),
-                            "tick_count": 0,
-                            "linked_count": 0,
-                            "first_offsets": [],
-                            "intervals": [],
-                            "interval_matches": 0,
-                        },
-                    )
-                    window_id = (key, float(cast["timestamp"]))
-                    bucket["windows"].add(window_id)
-                    bucket["first_offsets"].append((times[0] - cast_time) / 1000.0)
-                    stream_intervals = tuple(
-                        (later - earlier) / 1000.0 for earlier, later in zip(times, times[1:])
-                    )
-                    bucket["intervals"].extend(stream_intervals)
-                    if reviewed_interval is not None:
-                        bucket["interval_matches"] += sum(
-                            1
-                            for value in stream_intervals
-                            if math.isclose(
-                                value,
-                                reviewed_interval,
-                                rel_tol=0.0,
-                                abs_tol=self._INTERVAL_TOLERANCE_SECONDS,
-                            )
+                        for value in stream_intervals
+                        if math.isclose(
+                            value,
+                            reviewed_interval_seconds,
+                            rel_tol=0.0,
+                            abs_tol=self._INTERVAL_TOLERANCE_SECONDS,
                         )
-                    for row in stream_rows:
-                        name = self._ability_name_from_raw(row["raw_json"])
-                        if name:
-                            bucket["names"].add(name)
-                        if row["ability_game_id"] is not None:
-                            bucket["ids"].add(int(row["ability_game_id"]))
-                        event_id = (
+                    )
+                for row in stream_rows:
+                    name = self._ability_name_from_raw(row["raw_json"])
+                    if name:
+                        bucket["names"].add(name)
+                    if row["ability_game_id"] is not None:
+                        bucket["ids"].add(int(row["ability_game_id"]))
+                    bucket["events"].add(
+                        (
                             str(row["report_code"]),
                             int(row["fight_id"]),
                             int(row["event_index"]),
                         )
-                        bucket["events"].add(event_id)
-                        bucket["occurrences"].add(
-                            (str(row["report_code"]), int(row["fight_id"]), float(row["timestamp"]))
+                    )
+                    bucket["occurrences"].add(
+                        (
+                            str(row["report_code"]),
+                            int(row["fight_id"]),
+                            float(row["timestamp"]),
                         )
-                        if bool(row["tick"]):
-                            bucket["tick_count"] += 1
-                    bucket["linked_count"] += linked_count
+                    )
+                    if bool(row["tick"]):
+                        bucket["tick_count"] += 1
+                bucket["linked_count"] += linked_count
+        return count
 
+    @staticmethod
+    def _build_candidates(
+        observations: dict[str, dict[str, object]],
+    ) -> list[RotationDDPeriodicEsoLogsSecondaryEffectCandidate]:
         candidates = [
             RotationDDPeriodicEsoLogsSecondaryEffectCandidate(
                 ability_entity_id=stream_key,
@@ -284,7 +366,9 @@ class RotationDDPeriodicEsoLogsSecondaryEffectDiscoveryService:
                 occurrence_count=len(data["occurrences"]),
                 tick_marked_event_count=int(data["tick_count"]),
                 cast_track_linked_event_count=int(data["linked_count"]),
-                first_offset_samples_seconds=tuple(float(value) for value in data["first_offsets"]),
+                first_offset_samples_seconds=tuple(
+                    float(value) for value in data["first_offsets"]
+                ),
                 interval_samples_seconds=tuple(float(value) for value in data["intervals"]),
                 reviewed_interval_match_count=int(data["interval_matches"]),
             )
@@ -299,22 +383,7 @@ class RotationDDPeriodicEsoLogsSecondaryEffectDiscoveryService:
                 item.ability_entity_id,
             )
         )
-        if max_candidates > 0:
-            candidates = candidates[: int(max_candidates)]
-
-        if not candidates:
-            unresolved.append(
-                f"{identity}: no repeated secondary damage identities were observed inside reviewed cast windows"
-            )
-
-        return self._report(
-            identity,
-            cast_count=cast_count,
-            reviewed_duration_seconds=duration,
-            reviewed_interval_seconds=reviewed_interval,
-            candidates=tuple(candidates),
-            unresolved=tuple(dict.fromkeys(unresolved)),
-        )
+        return candidates
 
     def _numeric_aliases(self, skill_id: int, morph: int) -> tuple[int, ...]:
         uri = f"file:{self.canonical_database_path.resolve().as_posix()}?mode=ro"
@@ -330,7 +399,9 @@ class RotationDDPeriodicEsoLogsSecondaryEffectDiscoveryService:
                 sorted(
                     int(row["ability_id"])
                     for row in db.execute(
-                        "SELECT ability_id FROM skill_rank WHERE skill_id=? AND COALESCE(morph,0)=? AND ability_id IS NOT NULL",
+                        "SELECT ability_id FROM skill_rank "
+                        "WHERE skill_id=? AND COALESCE(morph,0)=? "
+                        "AND ability_id IS NOT NULL",
                         (int(skill_id), int(morph)),
                     ).fetchall()
                 )
@@ -351,22 +422,36 @@ class RotationDDPeriodicEsoLogsSecondaryEffectDiscoveryService:
         if row is None:
             return "log_event table is unavailable"
         required = {
-            "report_code", "fight_id", "event_index", "timestamp", "event_type",
-            "source_id", "ability_game_id", "tick", "cast_track_id", "raw_json",
+            "report_code",
+            "fight_id",
+            "event_index",
+            "timestamp",
+            "event_type",
+            "source_id",
+            "ability_game_id",
+            "tick",
+            "cast_track_id",
+            "raw_json",
         }
-        columns = {str(row[1]) for row in db.execute("PRAGMA table_info(log_event)").fetchall()}
+        columns = {
+            str(row[1]) for row in db.execute("PRAGMA table_info(log_event)").fetchall()
+        }
         missing = sorted(required - columns)
-        return "log_event is missing required columns: " + ", ".join(missing) if missing else None
+        return (
+            "log_event is missing required columns: " + ", ".join(missing)
+            if missing
+            else None
+        )
 
     @staticmethod
-    def _candidate_rows(
+    def _cast_rows(
         db: sqlite3.Connection,
         *,
         report_code: str | None,
         fight_id: int | None,
         source_id: int | None,
     ) -> tuple[sqlite3.Row, ...]:
-        clauses = ["lower(event_type) IN ('cast','begincast','completecast','damage')"]
+        clauses = ["lower(event_type) IN ('cast','begincast','completecast')"]
         params: list[object] = []
         if report_code is not None:
             clauses.append("report_code=?")
@@ -387,8 +472,41 @@ class RotationDDPeriodicEsoLogsSecondaryEffectDiscoveryService:
             ).fetchall()
         )
 
+    @staticmethod
+    def _damage_rows_for_group(
+        db: sqlite3.Connection,
+        *,
+        report_code: str,
+        fight_id: int,
+        source_id: int,
+        start_time: float,
+        end_time: float,
+    ) -> tuple[sqlite3.Row, ...]:
+        return tuple(
+            db.execute(
+                "SELECT report_code,fight_id,event_index,timestamp,event_type,source_id,"
+                "ability_game_id,tick,cast_track_id,raw_json FROM log_event "
+                "WHERE report_code=? AND fight_id=? AND source_id=? "
+                "AND lower(event_type)='damage' AND timestamp>=? AND timestamp<=? "
+                "ORDER BY timestamp,event_index",
+                (
+                    str(report_code),
+                    int(fight_id),
+                    int(source_id),
+                    float(start_time),
+                    float(end_time),
+                ),
+            ).fetchall()
+        )
+
     @classmethod
-    def _matches_cast_identity(cls, row: sqlite3.Row, *, identity: str, aliases: set[int]) -> bool:
+    def _matches_cast_identity(
+        cls,
+        row: sqlite3.Row,
+        *,
+        identity: str,
+        aliases: set[int],
+    ) -> bool:
         raw_name = cls._ability_name_from_raw(row["raw_json"])
         if raw_name:
             return ability_entity_id(raw_name) == identity
