@@ -2,9 +2,17 @@ from __future__ import annotations
 
 import sqlite3
 
+from minmax.gear_set_repository import GearSetRepository
 from services.extreme_resource_canonical_static_snapshot_service import (
     ExtremeResourceCanonicalStaticSnapshotService,
 )
+from services.extreme_resource_champion_point_state_service import (
+    ExtremeResourceChampionPointStateService,
+)
+from services.extreme_resource_conditioned_context_factory import (
+    ExtremeResourceConditionedPhase5ContextFactory,
+)
+from services.service_catalog import SERVICE_CATALOG
 
 
 def _write_minimal_static_db(path) -> None:
@@ -105,6 +113,25 @@ def test_static_snapshot_preloads_only_canonical_evidence_not_objective_math(tmp
     assert snapshot.jewelry_glyph_names == ("Glyph of Increase Magical Harm",)
 
 
+def test_static_snapshot_is_the_single_repository_owner_for_extreme_consumers(tmp_path) -> None:
+    path = tmp_path / "eso.db"
+    _write_minimal_static_db(path)
+    snapshot = ExtremeResourceCanonicalStaticSnapshotService(path).build()
+
+    factory = ExtremeResourceConditionedPhase5ContextFactory(
+        gear_set_repository=GearSetRepository(path),
+    )
+    champion_points = ExtremeResourceChampionPointStateService(path)
+
+    assert factory.gear_resolver is not None
+    assert factory.gear_resolver.armor_glyph_repository is snapshot.armor_glyph_repository
+    assert factory.gear_resolver.jewelry_glyph_repository is snapshot.jewelry_glyph_repository
+    assert factory.gear_resolver.jewelry_trait_repository is snapshot.jewelry_trait_repository
+    assert factory.skill_line_repository is snapshot.skill_line_repository
+    assert factory.racial_passive_repository is snapshot.racial_passive_repository
+    assert champion_points.repository is snapshot.champion_point_repository
+
+
 def test_static_snapshot_preload_failure_stays_explicit_and_does_not_invent_evidence(tmp_path) -> None:
     path = tmp_path / "empty.db"
     path.touch()
@@ -118,3 +145,15 @@ def test_static_snapshot_preload_failure_stays_explicit_and_does_not_invent_evid
     assert snapshot.armor_glyph_names == ()
     assert snapshot.jewelry_glyph_names == ()
     assert snapshot.preload_unresolved
+
+
+def test_static_snapshot_responsibility_is_registered_in_canonical_service_catalog() -> None:
+    descriptor = SERVICE_CATALOG.get("extreme.resource_canonical_static_snapshot")
+
+    assert descriptor is not None
+    assert descriptor.implementation_path == (
+        "services.extreme_resource_canonical_static_snapshot_service"
+    )
+    assert descriptor.responsibilities == (
+        "extreme_resource_canonical_static_evidence_snapshot",
+    )
