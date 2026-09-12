@@ -33,6 +33,9 @@ from services.rotation_recovery_heavy_replay_service import (
     RecoveryReserveAssessmentResolver,
     VerifiedRecoveryHeavyRestorationResolver,
 )
+from services.rotation_runtime_activation_anchor_evidence_service import (
+    RotationRuntimeActivationAnchorEvidence,
+)
 from services.rotation_static_build_context_service import RotationStaticBuildContextService
 from ui.rotation_automatic_potion_cadence_candidate_support import (
     RotationAutomaticPotionCadenceCandidateSupport,
@@ -168,6 +171,9 @@ class RotationDashboardCanonicalCandidateSupport:
         combat_state: CombatState = CombatState(),
         runtime_snapshot: ExtremeRuntimeSnapshot | None = None,
         runtime_snapshot_active_bar: str | None = None,
+        runtime_activation_anchor_evidence: tuple[
+            RotationRuntimeActivationAnchorEvidence, ...
+        ] = (),
         demands: Iterable[RotationDemandWindow] = (),
         options: Iterable[RotationRefreshLeadCandidateOption] = (),
         wait_decision_factory: RecoveryPressureWaitDecisionFactory | None = None,
@@ -239,6 +245,9 @@ class RotationDashboardCanonicalCandidateSupport:
         if runtime_snapshot is not None:
             candidate_kwargs["runtime_snapshot"] = runtime_snapshot
             candidate_kwargs["runtime_snapshot_active_bar"] = runtime_snapshot_active_bar
+        anchor_evidence_tuple = tuple(runtime_activation_anchor_evidence)
+        if anchor_evidence_tuple:
+            candidate_kwargs["runtime_activation_anchor_evidence"] = anchor_evidence_tuple
         target_state_tuple = tuple(target_state_windows)
         if target_state_tuple:
             candidate_kwargs["target_state_windows"] = target_state_tuple
