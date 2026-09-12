@@ -178,6 +178,38 @@ ROTATION_DD_PERIODIC_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "observational evidence handles only."
         ),
     ),
+    ServiceDescriptor(
+        service_id="rotation.dd.periodic_esologs_magnitude_state_transition",
+        domain="rotation",
+        purpose=(
+            "Correlate same-cast periodic amount changes with observed source or target "
+            "buff/debuff transitions to strengthen snapshot-vs-dynamic magnitude review."
+        ),
+        implementation_path=(
+            "services.rotation_dd_periodic_esologs_magnitude_state_transition_service"
+        ),
+        inputs=(
+            "CanonicalSkillIdentity",
+            "EsoLogsPeriodicAbilityId",
+            "EsoLogsCastTrackId",
+            "EsoLogsTargetId",
+            "EsoLogsHitType",
+            "EsoLogsDamageAmount",
+            "EsoLogsBuffDebuffEvent",
+        ),
+        outputs=("RotationDDPeriodicEsoLogsMagnitudeStateTransitionReport",),
+        responsibilities=("rotation_dd_periodic_esologs_magnitude_state_transition",),
+        roles=("DD", "DPS"),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.OBSERVATIONAL,
+        notes=(
+            "Read-only state-transition evidence. Only buff/debuff events targeting the "
+            "damage source or damage target between consecutive same-cast ticks are "
+            "reported. Correlation can strengthen magnitude-policy review but never "
+            "promotes executable semantics automatically. Numeric IDs remain evidence handles."
+        ),
+    ),
 )
 
 
