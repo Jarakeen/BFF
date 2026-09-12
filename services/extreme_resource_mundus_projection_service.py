@@ -11,6 +11,10 @@ then dominated by that positive witness.
 This proof is also sufficient for Twice-Born Star on a single max-resource
 objective: adding a second Mundus that cannot modify the target cannot improve the
 requested ceiling, so the target stone alone is a valid exact witness.
+
+Production finite-axis search builds many evaluators around the same canonical
+Mundus repository. Completed projections are cached by database, patch, and
+objective while injected/fake repositories retain instance-local behavior.
 """
 
 from dataclasses import dataclass
@@ -42,15 +46,34 @@ class ExtremeResourceMundusProjectionService:
     """Prove the unique best Mundus witness for Max Magicka / Max Stamina."""
 
     SUPPORTED_OBJECTIVES = frozenset(_OBJECTIVE_STATS)
+    _production_projection_cache: dict[
+        tuple[str, str, str], ExtremeResourceMundusProjection
+    ] = {}
 
     def __init__(self, repository: MundusRepository) -> None:
         self.repository = repository
+
+    def _production_cache_key(self, objective_key: str) -> tuple[str, str, str] | None:
+        if not isinstance(self.repository, MundusRepository):
+            return None
+        database_path = str(getattr(self.repository, "database_path", "") or "").strip()
+        if not database_path:
+            return None
+        game_update = getattr(self.repository, "game_update", "")
+        update_value = str(getattr(game_update, "value", game_update))
+        return database_path, update_value, objective_key
 
     def build(self, objective_key: str) -> ExtremeResourceMundusProjection:
         key = str(objective_key or "").strip().casefold()
         target = _OBJECTIVE_STATS.get(key)
         if target is None:
             raise KeyError(f"unreviewed Extreme Mundus projection objective: {objective_key!r}")
+
+        cache_key = self._production_cache_key(key)
+        if cache_key is not None:
+            cached = self._production_projection_cache.get(cache_key)
+            if cached is not None:
+                return cached
 
         names = tuple(
             str(name or "").strip()
@@ -127,13 +150,16 @@ class ExtremeResourceMundusProjectionService:
             )
 
         final_unresolved = tuple(dict.fromkeys(item for item in unresolved if item))
-        return ExtremeResourceMundusProjection(
+        result = ExtremeResourceMundusProjection(
             objective_key=key,
             stones_reviewed=len(names),
             witness=witness,
             denominator_proven=bool(names) and witness is not None and not final_unresolved,
             unresolved=final_unresolved,
         )
+        if cache_key is not None:
+            self._production_projection_cache[cache_key] = result
+        return result
 
 
 __all__ = [
