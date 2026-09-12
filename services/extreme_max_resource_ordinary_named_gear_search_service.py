@@ -315,6 +315,76 @@ class ExtremeMaxResourceOrdinaryNamedGearSearchService:
         return ExtremeOrdinaryNamedGearSearchStats(**values)
 
     @staticmethod
+    def _identity_legality_possible(
+        *,
+        counts: tuple[int, ...],
+        candidates_by_count: dict[int, tuple[_Candidate, ...]],
+    ) -> bool:
+        """Prove whether distinct identities can satisfy the topology's global rules.
+
+        This is deliberately only a necessary-condition check. It enforces the two
+        identity-level rules that do not depend on physical slot placement: one set
+        identity cannot occupy two topology positions, and at most one Mythic may be
+        equipped. Armor, jewelry, and weapon eligibility are intentionally ignored,
+        so ``True`` only means the expensive search is allowed to continue.
+        """
+
+        mythic_category = ExtremeNamedGearSetRealizationService.MYTHIC_CATEGORY
+        non_mythic_domains: list[tuple[int, ...]] = []
+        mythic_domains: list[tuple[int, ...]] = []
+
+        for count in counts:
+            by_id: dict[int, bool] = {}
+            for row in candidates_by_count.get(int(count), ()):
+                set_id = int(row.set_id)
+                is_mythic = row.eligibility.category.strip().casefold() == mythic_category
+                by_id[set_id] = bool(is_mythic)
+            if not by_id:
+                return False
+            non_mythic_domains.append(
+                tuple(sorted(set_id for set_id, is_mythic in by_id.items() if not is_mythic))
+            )
+            mythic_domains.append(
+                tuple(sorted(set_id for set_id, is_mythic in by_id.items() if is_mythic))
+            )
+
+        def can_match_non_mythic(position_indices: tuple[int, ...]) -> bool:
+            matched_position_by_id: dict[int, int] = {}
+
+            def assign(position: int, seen_ids: set[int]) -> bool:
+                for set_id in non_mythic_domains[position]:
+                    if set_id in seen_ids:
+                        continue
+                    seen_ids.add(set_id)
+                    previous = matched_position_by_id.get(set_id)
+                    if previous is None or assign(previous, seen_ids):
+                        matched_position_by_id[set_id] = position
+                        return True
+                return False
+
+            ordered_positions = tuple(
+                sorted(position_indices, key=lambda index: (len(non_mythic_domains[index]), index))
+            )
+            for position in ordered_positions:
+                if not assign(position, set()):
+                    return False
+            return True
+
+        all_positions = tuple(range(len(counts)))
+        if can_match_non_mythic(all_positions):
+            return True
+
+        for mythic_position in all_positions:
+            if not mythic_domains[mythic_position]:
+                continue
+            remaining = tuple(
+                position for position in all_positions if position != mythic_position
+            )
+            if can_match_non_mythic(remaining):
+                return True
+        return False
+
+    @staticmethod
     def _distinct_id_remaining_bound(
         *,
         counts: tuple[int, ...],
@@ -364,6 +434,16 @@ class ExtremeMaxResourceOrdinaryNamedGearSearchService:
         counts = tuple(int(value) for value in topology.counts)
         candidate_rows = tuple(candidates_by_count.get(count, ()) for count in counts)
         if any(not rows for rows in candidate_rows):
+            return ExtremeOrdinaryNamedGearTopologyWinner(
+                topology=topology,
+                best_exact_flat_delta=None,
+                realizations=(),
+                stats=self._stats(),
+            )
+        if not self._identity_legality_possible(
+            counts=counts,
+            candidates_by_count=candidates_by_count,
+        ):
             return ExtremeOrdinaryNamedGearTopologyWinner(
                 topology=topology,
                 best_exact_flat_delta=None,
