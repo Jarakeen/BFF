@@ -14,6 +14,10 @@ from typing import Any
 
 from services.encounter_evidence import ReconciledEncounterFact, reconcile_encounter_evidence
 from services.encounter_evidence_packet import load_encounter_evidence_packet
+from services.reference_research_enrichment_service import (
+    ReferenceResearchEnrichmentService,
+    ReviewedReferenceFact,
+)
 
 
 @dataclass(frozen=True)
@@ -272,6 +276,75 @@ def _role_impact_rows(facts: tuple[ReconciledEncounterFact, ...]) -> tuple[str, 
     return tuple(result[:6])
 
 
+def _research_facts_for_encounter(encounter_name: str) -> tuple[ReviewedReferenceFact, ...]:
+    suffix = f" — {str(encounter_name or '').strip()}".casefold()
+    if suffix == " — ":
+        return ()
+    return tuple(
+        fact
+        for fact in ReferenceResearchEnrichmentService().all()
+        if fact.entry_name.casefold().endswith(suffix)
+    )
+
+
+def _research_strategy_rows(
+    research_facts: tuple[ReviewedReferenceFact, ...],
+) -> tuple[EncounterGuideStrategyRow, ...]:
+    grouped: dict[str, list[ReviewedReferenceFact]] = {}
+    display_names: dict[str, str] = {}
+    for fact in research_facts:
+        mechanic = fact.entry_name.split(" — ", 1)[0].strip()
+        if not mechanic:
+            continue
+        key = mechanic.casefold()
+        grouped.setdefault(key, []).append(fact)
+        display_names.setdefault(key, mechanic)
+
+    rows: list[EncounterGuideStrategyRow] = []
+    for key in sorted(grouped, key=lambda item: display_names[item].casefold()):
+        facts = grouped[key]
+        handling = next(
+            (
+                fact.value
+                for fact in facts
+                if fact.label.casefold() in {"handling", "response", "priority"}
+                and str(fact.value or "").strip()
+            ),
+            "",
+        )
+        summary_parts = [
+            f"{fact.label}: {fact.value}"
+            for fact in facts
+            if fact.label.casefold() not in {"handling", "response", "priority"}
+            and str(fact.value or "").strip()
+        ][:3]
+        if not summary_parts:
+            summary_parts = [
+                f"{fact.label}: {fact.value}"
+                for fact in facts
+                if str(fact.value or "").strip()
+            ][:3]
+        rows.append(
+            EncounterGuideStrategyRow(
+                mechanic=display_names[key],
+                common_names=(),
+                summary=" • ".join(summary_parts)
+                or "Reviewed secondary encounter research is available.",
+                mitigation=handling or "Reviewed handling not yet recorded.",
+            )
+        )
+    return tuple(rows)
+
+
+def _research_brief_rows(
+    research_rows: tuple[EncounterGuideStrategyRow, ...],
+) -> tuple[str, ...]:
+    return tuple(
+        f"{row.mechanic}: {row.summary}"
+        for row in research_rows[:6]
+    )
+
+
 def _load_json(path: Path) -> dict[str, Any]:
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
@@ -327,10 +400,17 @@ class EncounterGuideEvidenceProjectionService:
     def get(self, encounter_id: str, encounter_name: str = "") -> EncounterGuideEvidenceProjection:
         encounter_id = str(encounter_id or "").strip()
         packets = self._packets(encounter_id)
-        if not packets:
-            return EncounterGuideEvidenceProjection(encounter_id, encounter_name, (), (), (), (), (), 0)
+        resolved_name = str(
+            encounter_name
+            or (packets[0].encounter_name if packets else "")
+            or encounter_id
+        ).strip()
+        research_facts = _research_facts_for_encounter(resolved_name)
+        research_strategy = _research_strategy_rows(research_facts)
 
-        resolved_name = str(encounter_name or packets[0].encounter_name or encounter_id).strip()
+        if not packets and not research_facts:
+            return EncounterGuideEvidenceProjection(encounter_id, resolved_name, (), (), (), (), (), 0)
+
         evidence = tuple(row for packet in packets for row in packet.evidence)
         facts = tuple(reconcile_encounter_evidence(evidence))
         timeline = _timeline_rows(facts)
@@ -354,11 +434,20 @@ class EncounterGuideEvidenceProjectionService:
                 if mechanic:
                     seeds.setdefault(mechanic, mechanic.title())
 
+        research_by_name = {row.mechanic.casefold(): row for row in research_strategy}
+        for key, row in research_by_name.items():
+            seeds.setdefault(key, row.mechanic)
+
         strategy: list[EncounterGuideStrategyRow] = []
-        for _identity, mechanic in sorted(seeds.items(), key=lambda item: item[1].casefold()):
+        for identity, mechanic in sorted(seeds.items(), key=lambda item: item[1].casefold()):
             entry_name = f"{mechanic} — {resolved_name}"
             mitigation = mitigations.get(entry_name.casefold(), "")
             summary = _related_detail(mechanic, facts)
+            research_row = research_by_name.get(identity)
+            if not summary and research_row is not None:
+                summary = research_row.summary
+            if not mitigation and research_row is not None:
+                mitigation = research_row.mitigation
             if not summary:
                 summary = "Reviewed encounter mechanic; detailed behavior is not yet summarized."
             strategy.append(
@@ -369,6 +458,9 @@ class EncounterGuideEvidenceProjectionService:
                     mitigation=mitigation or "Reviewed handling not yet recorded.",
                 )
             )
+
+        if not brief and research_strategy:
+            brief = _research_brief_rows(research_strategy)
 
         callouts = tuple(
             f"{row.mechanic}: {row.mitigation}"
@@ -384,5 +476,5 @@ class EncounterGuideEvidenceProjectionService:
             callouts=callouts,
             brief=brief,
             role_impact=role_impact,
-            evidence_rows=len(evidence),
+            evidence_rows=len(evidence) + len(research_facts),
         )
