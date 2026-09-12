@@ -19,28 +19,33 @@ def test_registry_distinguishes_missing_encounter_from_explicit_empty_policy(tmp
         _write(
             tmp_path,
             {
-                "schema_version": 1,
+                "schema_version": 2,
                 "encounters": {
-                    "rockgrove_xalvakka": {"policies": []},
+                    "rockgrove_xalvakka": {
+                        "clock_policies": [],
+                        "threshold_policies": [],
+                    },
                 },
             },
         )
     )
 
     assert service.policies_for("rockgrove_xalvakka") == ()
+    assert service.threshold_policies_for("rockgrove_xalvakka") == ()
     assert service.policies_for("sunspire_lokkestiiz") is None
+    assert service.threshold_policies_for("sunspire_lokkestiiz") is None
     assert service.configured_encounter_ids() == ("rockgrove_xalvakka",)
 
 
-def test_registry_builds_exact_explicit_policy_fields(tmp_path) -> None:
+def test_registry_builds_exact_explicit_clock_policy_fields(tmp_path) -> None:
     service = RotationEncounterDemandPolicyRegistryService(
         _write(
             tmp_path,
             {
-                "schema_version": 1,
+                "schema_version": 2,
                 "encounters": {
                     "sunspire_test": {
-                        "policies": [
+                        "clock_policies": [
                             {
                                 "fact_key": "ice_cage_window",
                                 "kind": "healing",
@@ -49,7 +54,8 @@ def test_registry_builds_exact_explicit_policy_fields(tmp_path) -> None:
                                 "point_window_seconds": 2.0,
                                 "target_count": 2,
                             }
-                        ]
+                        ],
+                        "threshold_policies": [],
                     }
                 },
             },
@@ -68,21 +74,63 @@ def test_registry_builds_exact_explicit_policy_fields(tmp_path) -> None:
     assert policy.target_count == 2
 
 
-def test_registry_rejects_unknown_policy_fields_instead_of_ignoring_them(tmp_path) -> None:
+def test_registry_builds_exact_explicit_threshold_policy_fields(tmp_path) -> None:
+    service = RotationEncounterDemandPolicyRegistryService(
+        _write(
+            tmp_path,
+            {
+                "schema_version": 2,
+                "encounters": {
+                    "xalvakka": {
+                        "clock_policies": [],
+                        "threshold_policies": [
+                            {
+                                "fact_key": "phase_2",
+                                "threshold_fraction": 0.70,
+                                "kind": "healing",
+                                "pattern": "burst",
+                                "lead_seconds": 3.0,
+                                "window_seconds": 2.0,
+                                "target_count": 12,
+                                "name": "Xalvakka Phase 2 healing prep",
+                            }
+                        ],
+                    }
+                },
+            },
+        )
+    )
+
+    policies = service.threshold_policies_for("XALVAKKA")
+    assert policies is not None
+    assert len(policies) == 1
+    policy = policies[0]
+    assert policy.fact_key == "phase_2"
+    assert policy.threshold_fraction == 0.70
+    assert policy.kind is RotationDemandKind.HEALING
+    assert policy.pattern is RotationDemandPattern.BURST
+    assert policy.lead_seconds == 3.0
+    assert policy.window_seconds == 2.0
+    assert policy.target_count == 12
+    assert policy.name == "Xalvakka Phase 2 healing prep"
+
+
+def test_registry_rejects_unknown_clock_policy_fields_instead_of_ignoring_them(tmp_path) -> None:
     path = _write(
         tmp_path,
         {
-            "schema_version": 1,
+            "schema_version": 2,
             "encounters": {
                 "sunspire_test": {
-                    "policies": [
+                    "clock_policies": [
                         {
                             "fact_key": "ice_cage_window",
                             "kind": "healing",
                             "pattern": "burst",
                             "invented_threshold": 9001,
                         }
-                    ]
+                    ],
+                    "threshold_policies": [],
                 }
             },
         },
@@ -92,14 +140,14 @@ def test_registry_rejects_unknown_policy_fields_instead_of_ignoring_them(tmp_pat
         RotationEncounterDemandPolicyRegistryService(path)
 
 
-def test_registry_rejects_duplicate_fact_keys_for_one_encounter(tmp_path) -> None:
+def test_registry_rejects_duplicate_clock_fact_keys_for_one_encounter(tmp_path) -> None:
     path = _write(
         tmp_path,
         {
-            "schema_version": 1,
+            "schema_version": 2,
             "encounters": {
                 "sunspire_test": {
-                    "policies": [
+                    "clock_policies": [
                         {
                             "fact_key": "ice_cage_window",
                             "kind": "healing",
@@ -110,11 +158,43 @@ def test_registry_rejects_duplicate_fact_keys_for_one_encounter(tmp_path) -> Non
                             "kind": "support",
                             "pattern": "sustained",
                         },
-                    ]
+                    ],
+                    "threshold_policies": [],
                 }
             },
         },
     )
 
-    with pytest.raises(ValueError, match="duplicate.*fact_key"):
+    with pytest.raises(ValueError, match="duplicate.*clock fact_key"):
+        RotationEncounterDemandPolicyRegistryService(path)
+
+
+def test_registry_rejects_duplicate_threshold_identity_for_one_encounter(tmp_path) -> None:
+    path = _write(
+        tmp_path,
+        {
+            "schema_version": 2,
+            "encounters": {
+                "xalvakka": {
+                    "clock_policies": [],
+                    "threshold_policies": [
+                        {
+                            "fact_key": "phase_2",
+                            "threshold_fraction": 0.70,
+                            "kind": "healing",
+                            "pattern": "burst",
+                        },
+                        {
+                            "fact_key": "phase_2",
+                            "threshold_fraction": 0.70,
+                            "kind": "support",
+                            "pattern": "sustained",
+                        },
+                    ],
+                }
+            },
+        },
+    )
+
+    with pytest.raises(ValueError, match="duplicate.*threshold policy"):
         RotationEncounterDemandPolicyRegistryService(path)
