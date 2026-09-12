@@ -19,6 +19,13 @@ from services.extreme_skill_universe_service import (
 )
 
 
+_RACE_SKILL_LINE_ALIASES = {
+    "altmer": "high elf",
+    "bosmer": "wood elf",
+    "dunmer": "dark elf",
+}
+
+
 class ExtremeHypotheticalRacialProgressionService:
     """Install canonical max-rank passives for one hypothetical race."""
 
@@ -31,6 +38,12 @@ class ExtremeHypotheticalRacialProgressionService:
         if universe_service is None and database_path is None:
             raise ValueError("database_path is required when no skill universe service is supplied")
         self.universe_service = universe_service or ExtremeSkillUniverseService(database_path)  # type: ignore[arg-type]
+
+    @staticmethod
+    def _canonical_skill_line_race(race_name: str) -> str:
+        race = " ".join(str(race_name or "").strip().split())
+        key = race.casefold()
+        return _RACE_SKILL_LINE_ALIASES.get(key, race)
 
     def normalize(
         self,
@@ -49,7 +62,8 @@ class ExtremeHypotheticalRacialProgressionService:
         if not racial:
             raise ValueError("canonical racial passive inventory is unavailable")
 
-        expected_line = f"{race} Skills".casefold()
+        skill_line_race = self._canonical_skill_line_race(race)
+        expected_line = f"{skill_line_race} Skills".casefold()
         selected = tuple(
             row
             for row in racial
