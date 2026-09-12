@@ -11,6 +11,7 @@ from minmax.character_build.effect_layer import BarId
 from minmax.character_build.slotted_skill import SlottedSkill
 from minmax.character_build.weapon import Weapon
 from minmax.character_build.weapon_type import WeaponType
+from minmax.combat_contribution import CombatContribution
 from minmax.combat_state import CombatState
 from minmax.role import Role
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
@@ -55,7 +56,7 @@ def _build(
     )
 
 
-def _evaluation() -> BuildEvaluation:
+def _evaluation(*contributions: CombatContribution) -> BuildEvaluation:
     return BuildEvaluation(
         stats=CalculationResult(
             stats={
@@ -66,7 +67,17 @@ def _evaluation() -> BuildEvaluation:
             }
         ),
         combat_effects=(),
-        combat_contributions=(),
+        combat_contributions=tuple(contributions),
+    )
+
+
+def _exploiter(value: float = 0.04) -> CombatContribution:
+    return CombatContribution(
+        source="test Exploiter",
+        effect_type="conditional_exploiter_damage_done",
+        raw_value=value,
+        uptime=1.0,
+        effective_value=value,
     )
 
 
@@ -116,6 +127,42 @@ def test_runtime_major_berserk_applies_once_to_light_attack_formula() -> None:
 
     assert evidence.unresolved == ()
     assert evidence.damage_value == pytest.approx(3811.5)
+
+
+def test_exploiter_applies_to_light_attack_only_when_target_is_off_balance() -> None:
+    light = RotationAction(0.0, 0, RotationActionKind.LIGHT_ATTACK, bar="front")
+    candidate = _candidate(light)
+    inactive = RotationCandidateLightAttackDamageEvidenceService(
+        build=_build(),
+        evaluation=_evaluation(_exploiter()),
+        initial_bar="front",
+        target_combat_state=CombatState(),
+    ).evaluate_action(candidate=candidate, action=light)
+    active = RotationCandidateLightAttackDamageEvidenceService(
+        build=_build(),
+        evaluation=_evaluation(_exploiter()),
+        initial_bar="front",
+        target_combat_state=CombatState(active_buffs=("Off Balance",)),
+    ).evaluate_action(candidate=candidate, action=light)
+
+    assert inactive.damage_value == pytest.approx(3465.0)
+    assert active.damage_value == pytest.approx(3465.0 * 1.04)
+    assert inactive.unresolved == ()
+    assert active.unresolved == ()
+
+
+def test_exploiter_light_attack_fails_closed_when_target_state_is_unknown() -> None:
+    light = RotationAction(0.0, 0, RotationActionKind.LIGHT_ATTACK, bar="front")
+    evidence = RotationCandidateLightAttackDamageEvidenceService(
+        build=_build(),
+        evaluation=_evaluation(_exploiter()),
+        initial_bar="front",
+    ).evaluate_action(candidate=_candidate(light), action=light)
+
+    assert evidence.damage_value is None
+    assert evidence.unresolved == (
+        "Exploiter requires authoritative target CombatState at light-attack damage time",
+    )
 
 
 def test_bar_swap_routes_later_light_attack_through_frost_staff_formula() -> None:
