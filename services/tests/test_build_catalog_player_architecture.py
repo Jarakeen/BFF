@@ -138,3 +138,21 @@ def test_schema_v3_character_gamertag_upgrades_to_player_ownership(tmp_path) -> 
     assert len(catalog["players"]) == 1
     assert catalog["players"][0]["gamertag"] == "Jarakeen"
     assert catalog["characters"][0]["player_id"] == catalog["players"][0]["player_id"]
+
+
+def test_build_roster_compatibility_collection_is_not_limited_to_twelve() -> None:
+    source = BuildRoster(
+        Members=[
+            PlayerBuild(
+                Gamertag="RaidLead",
+                Name=f"Character {index}",
+                BuildName="Default",
+                Role="Healer" if index % 2 else "Damage Dealer",
+            )
+            for index in range(20)
+        ]
+    )
+
+    restored = BuildRoster.from_dict(source.to_dict())
+
+    assert len(restored.Members) == 20
