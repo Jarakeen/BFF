@@ -6,6 +6,7 @@ from minmax.skill_component_runtime_timing import (
     SkillComponentRuntimeTiming,
 )
 from services.rotation_candidate_periodic_damage_runtime_projection_service import (
+    PeriodicDamageActivationAnchor,
     PeriodicDamageRefreshBoundary,
     RotationCandidatePeriodicDamageRuntimeProjectionService,
     RotationPeriodicDamageRuntimeSemantics,
@@ -66,6 +67,7 @@ def _semantics(
     *,
     first_tick: float = 2.0,
     boundary: PeriodicDamageRefreshBoundary = PeriodicDamageRefreshBoundary.REPLACE_BEFORE_RECAST_TICK,
+    anchor: PeriodicDamageActivationAnchor = PeriodicDamageActivationAnchor.CAST,
 ) -> RotationPeriodicDamageRuntimeSemantics:
     return RotationPeriodicDamageRuntimeSemantics(
         skill_entity_id="burning_talons",
@@ -73,6 +75,7 @@ def _semantics(
         first_tick_offset_seconds=first_tick,
         refresh_boundary=boundary,
         source="reviewed U50 runtime evidence",
+        activation_anchor=anchor,
     )
 
 
@@ -134,6 +137,53 @@ def test_plan_horizon_clips_periodic_ticks_without_ghost_damage() -> None:
     assert projection.resolved is True
     assert tuple(event.time_seconds for event in projection.entries[0].events) == (10.0,)
     assert projection.entries[0].active_end_time_seconds == 10.0
+
+
+def test_impact_anchor_fails_closed_without_exact_runtime_anchor() -> None:
+    projection = RotationCandidatePeriodicDamageRuntimeProjectionService(
+        _TimingService(interval_seconds=1.0, duration_seconds=4.0)
+    ).project(
+        plan=_plan(_action(0.0), duration=10.0),
+        semantics=(
+            _semantics(
+                first_tick=1.0,
+                anchor=PeriodicDamageActivationAnchor.IMPACT,
+            ),
+        ),
+    )
+
+    assert projection.resolved is False
+    assert projection.entries[0].events == ()
+    assert "activation anchor impact requires exact runtime anchor evidence" in projection.unresolved[0]
+
+
+def test_impact_anchor_uses_resolved_impact_time_for_duration_and_ticks() -> None:
+    projection = RotationCandidatePeriodicDamageRuntimeProjectionService(
+        _TimingService(interval_seconds=1.0, duration_seconds=4.0),
+        activation_anchor_resolver=lambda action, anchor: (
+            action.time_seconds + 0.25
+            if anchor is PeriodicDamageActivationAnchor.IMPACT
+            else action.time_seconds
+        ),
+    ).project(
+        plan=_plan(_action(1.0), duration=10.0),
+        semantics=(
+            _semantics(
+                first_tick=1.0,
+                anchor=PeriodicDamageActivationAnchor.IMPACT,
+            ),
+        ),
+    )
+
+    assert projection.resolved is True
+    assert tuple(event.time_seconds for event in projection.entries[0].events) == (
+        2.25,
+        3.25,
+        4.25,
+        5.25,
+    )
+    assert projection.entries[0].active_end_time_seconds == 5.25
+    assert "activation anchor impact from reviewed U50 runtime evidence" in projection.entries[0].evidence
 
 
 def test_missing_reviewed_runtime_semantics_fail_closed() -> None:
