@@ -113,6 +113,8 @@ def test_reports_net_state_gain_on_damage_source(tmp_path) -> None:
     assert transition.state_events[0].ability_name == "Test Buff"
     assert report.transitions_with_state_change == 1
     assert report.transitions_without_state_change == 0
+    assert report.comparable_occurrence_pairs == 1
+    assert report.state_changed_amount_changed == 1
 
 
 def test_reports_net_state_gain_on_damage_target(tmp_path) -> None:
@@ -143,6 +145,7 @@ def test_remove_then_reapply_before_next_tick_is_not_net_change(tmp_path) -> Non
     assert len(report.transitions) == 1
     assert report.transitions[0].state_events == ()
     assert report.transitions_without_state_change == 1
+    assert report.state_same_amount_changed == 1
 
 
 def test_unrelated_state_event_does_not_count(tmp_path) -> None:
@@ -201,6 +204,7 @@ def test_same_amount_duplicate_rows_collapse_to_one_occurrence(tmp_path) -> None
     assert report.transitions[0].to_timestamp_ms == 3000
     assert report.transitions[0].from_amount == 1000
     assert report.transitions[0].to_amount == 1200
+    assert report.comparable_occurrence_pairs == 1
 
 
 def test_mixed_amount_near_same_time_cluster_is_ambiguous_and_breaks_sequence(tmp_path) -> None:
@@ -213,11 +217,12 @@ def test_mixed_amount_near_same_time_cluster_is_ambiguous_and_breaks_sequence(tm
     report = service.inspect("stampede", periodic_ability_id=126474)
 
     assert report.ambiguous_occurrence_clusters == 1
+    assert report.comparable_occurrence_pairs == 0
     assert report.transitions == ()
     assert any("no same-cast periodic amount-change transitions" in item for item in report.unresolved)
 
 
-def test_constant_amount_pair_does_not_create_transition(tmp_path) -> None:
+def test_constant_amount_pair_counts_as_state_same_amount_constant(tmp_path) -> None:
     service, logs = _service(tmp_path)
     _event(logs, 1, 1000, "cast", ability=39807, track=10, name="Stampede")
     _event(logs, 2, 2000, "damage", target=99, ability=126474, amount=1000, hit_type=1, track=10)
@@ -226,4 +231,26 @@ def test_constant_amount_pair_does_not_create_transition(tmp_path) -> None:
     report = service.inspect("stampede", periodic_ability_id=126474)
 
     assert report.transitions == ()
+    assert report.comparable_occurrence_pairs == 1
+    assert report.state_same_amount_constant == 1
+    assert report.state_same_amount_changed == 0
+    assert report.state_changed_amount_changed == 0
+    assert report.state_changed_amount_constant == 0
     assert any("no same-cast periodic amount-change transitions" in item for item in report.unresolved)
+
+
+def test_state_change_with_constant_amount_is_counted_in_control_table(tmp_path) -> None:
+    service, logs = _service(tmp_path)
+    _event(logs, 1, 1000, "cast", ability=39807, track=10, name="Stampede")
+    _event(logs, 2, 2000, "damage", target=99, ability=126474, amount=1000, hit_type=1, track=10)
+    _event(logs, 3, 2500, "applybuff", source=42, target=42, ability=61665, name="Test Buff")
+    _event(logs, 4, 3000, "damage", target=99, ability=126474, amount=1000, hit_type=1, track=10)
+
+    report = service.inspect("stampede", periodic_ability_id=126474)
+
+    assert report.transitions == ()
+    assert report.comparable_occurrence_pairs == 1
+    assert report.state_changed_amount_constant == 1
+    assert report.state_changed_amount_changed == 0
+    assert report.state_same_amount_changed == 0
+    assert report.state_same_amount_constant == 0
