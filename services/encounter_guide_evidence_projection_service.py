@@ -38,6 +38,7 @@ class EncounterGuideEvidenceProjection:
     timeline: tuple[EncounterGuideTimelineRow, ...]
     strategy: tuple[EncounterGuideStrategyRow, ...]
     callouts: tuple[str, ...]
+    brief: tuple[str, ...]
     evidence_rows: int
 
 
@@ -160,6 +161,65 @@ def _timeline_rows(facts: tuple[ReconciledEncounterFact, ...]) -> tuple[Encounte
     return tuple(result)
 
 
+def _overview_brief_rows(facts: tuple[ReconciledEncounterFact, ...]) -> tuple[str, ...]:
+    """Render compact reviewed fight-shape facts for the Encounters Overview."""
+    rows: list[str] = []
+    for fact in facts:
+        if not fact.safe_for_review or not isinstance(fact.value, dict):
+            continue
+        kind = fact.fact_type.casefold()
+        value = fact.value
+
+        if kind == "damage_window":
+            label = _human_key(fact.fact_key)
+            triggers = value.get("trigger_health_percent")
+            if isinstance(triggers, (list, tuple)):
+                markers = [f"{item}%" for item in triggers if isinstance(item, (int, float))]
+            else:
+                markers = []
+            details: list[str] = []
+            if value.get("boss_targetable") is False or value.get("boss_damageable") is False:
+                details.append("boss is untargetable and cannot be damaged")
+            if value.get("adds_active") is True:
+                details.append("adds are active")
+            if value.get("raid_damage_active") is True:
+                details.append("raid damage continues")
+            attacks = value.get("flight_attacks")
+            if isinstance(attacks, (list, tuple)) and attacks:
+                rendered_attacks = ", ".join(_human_key(str(item)) for item in attacks if str(item).strip())
+                if rendered_attacks:
+                    details.append(f"incoming: {rendered_attacks}")
+            if value.get("final_beam_requires_block") is True:
+                details.append("final beam must be blocked")
+            prefix = f"At {', '.join(markers)}" if markers else label
+            body = "; ".join(details) or _render_value(value)
+            if body:
+                rows.append(f"{prefix}: {body}.")
+            continue
+
+        if kind == "add_group":
+            members = value.get("members")
+            if not isinstance(members, (list, tuple)) or not members:
+                continue
+            names = ", ".join(str(item).strip() for item in members if str(item).strip())
+            trigger = _human_key(str(value.get("trigger") or ""))
+            line = f"Adds: {names}"
+            if trigger:
+                line += f" during {trigger}"
+            if value.get("exact_count_resolved") is False:
+                line += "; exact count remains unresolved"
+            rows.append(line + ".")
+
+    seen: set[str] = set()
+    result: list[str] = []
+    for row in rows:
+        if row in seen:
+            continue
+        seen.add(row)
+        result.append(row)
+    return tuple(result[:6])
+
+
 def _load_json(path: Path) -> dict[str, Any]:
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
@@ -216,12 +276,13 @@ class EncounterGuideEvidenceProjectionService:
         encounter_id = str(encounter_id or "").strip()
         packets = self._packets(encounter_id)
         if not packets:
-            return EncounterGuideEvidenceProjection(encounter_id, encounter_name, (), (), (), 0)
+            return EncounterGuideEvidenceProjection(encounter_id, encounter_name, (), (), (), (), 0)
 
         resolved_name = str(encounter_name or packets[0].encounter_name or encounter_id).strip()
         evidence = tuple(row for packet in packets for row in packet.evidence)
         facts = tuple(reconcile_encounter_evidence(evidence))
         timeline = _timeline_rows(facts)
+        brief = _overview_brief_rows(facts)
 
         common_names = self._common_names()
         mitigations = self._mitigations()
@@ -268,5 +329,6 @@ class EncounterGuideEvidenceProjectionService:
             timeline=timeline,
             strategy=tuple(strategy),
             callouts=callouts,
+            brief=brief,
             evidence_rows=len(evidence),
         )
