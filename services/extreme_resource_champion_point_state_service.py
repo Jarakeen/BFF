@@ -28,6 +28,27 @@ from services.extreme_resource_champion_point_coverage_audit_service import (
 )
 
 
+_SHARED_EXTREME_CP_REPOSITORIES: dict[str, ChampionPointStaticRepository] = {}
+
+
+def _shared_extreme_cp_repository(database_path: str | Path) -> ChampionPointStaticRepository:
+    """Reuse one read-only CP repository per canonical database in this process.
+
+    Exhaustive Extreme scoring may construct many CP state-service instances for
+    the same immutable database snapshot. ``ChampionPointStaticRepository`` already
+    owns complete per-instance caches for the CP catalog and individual records, so
+    sharing the repository preserves those caches without changing normal repository
+    semantics elsewhere in the app.
+    """
+
+    key = str(Path(database_path).resolve())
+    repository = _SHARED_EXTREME_CP_REPOSITORIES.get(key)
+    if repository is None:
+        repository = ChampionPointStaticRepository(database_path)
+        _SHARED_EXTREME_CP_REPOSITORIES[key] = repository
+    return repository
+
+
 @dataclass(frozen=True)
 class ExtremeResourceChampionPointState:
     objective_key: str
@@ -63,15 +84,19 @@ class ExtremeResourceChampionPointStateService:
     ) -> None:
         if repository is None and database_path is None:
             raise ValueError("database_path is required when no Champion Point repository is supplied")
-        self.repository = repository or ChampionPointStaticRepository(database_path)  # type: ignore[arg-type]
+        self.repository = (
+            repository
+            if repository is not None
+            else _shared_extreme_cp_repository(database_path)  # type: ignore[arg-type]
+        )
         self.audit_service = audit_service or ExtremeResourceChampionPointCoverageAuditService(
             repository=self.repository
         )
-        # One state service is shared by every finite-axis scorer created by the
-        # Extreme factory. Champion Point continuation depends only on the objective
-        # and canonical CP catalogue, not on gear, armor, class route, bar, food, or
-        # runtime candidate state. Cache the complete fail-closed result per objective
-        # so thousands of candidate scores do not rebuild the same CP audit/state.
+        # Champion Point continuation depends only on the objective and canonical
+        # CP catalogue, not on gear, armor, class route, bar, food, or runtime
+        # candidate state. Cache the complete fail-closed result per objective on
+        # each state service; the repository itself is shared across all production
+        # Extreme state services for the same immutable database snapshot.
         self._state_cache: dict[str, ExtremeResourceChampionPointState] = {}
 
     def build(self, objective_key: str) -> ExtremeResourceChampionPointState:
