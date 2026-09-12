@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import json
 from pathlib import Path
 import sys
@@ -50,6 +50,29 @@ class _DDAuditEvidenceBundle:
 class _StaticPrerequisiteGap:
     reason: str
     bars: tuple[str, ...]
+
+
+class _DDAuditStaticContextService:
+    """Apply the canonical DD relevance gate consistently inside audit composition.
+
+    The shared static context intentionally retains diagnostics needed by other roles.
+    This read-only adapter removes only diagnostics already classified as ambient for
+    modeled DD damage. Unknown or offensive diagnostics remain unresolved and fail
+    closed. The same delegate is reused for runtime context rebuilds so the audit does
+    not pass its preflight gate and then trip over a stricter duplicate gate in
+    ``RotationGenerateDDRoleEvidenceSupport``.
+    """
+
+    def __init__(self, delegate: RotationStaticBuildContextService) -> None:
+        self.delegate = delegate
+        self.relevance_service = RotationDDOutputContextRelevanceService()
+
+    def resolve(self, player_build, **kwargs):
+        result = self.delegate.resolve(player_build, **kwargs)
+        relevance = self.relevance_service.classify(result.unresolved)
+        if not result.progression.resolved or relevance.relevant:
+            return replace(result, unresolved=tuple(relevance.relevant))
+        return replace(result, unresolved=())
 
 
 def _character_name(build) -> str:
@@ -120,13 +143,15 @@ def _action_damage_provider(
     builds_path: Path,
     target_resistance: float,
 ):
-    static_context_service = RotationStaticBuildContextService(
-        database_path=database_path,
-        builds_path=builds_path,
+    static_context_service = _DDAuditStaticContextService(
+        RotationStaticBuildContextService(
+            database_path=database_path,
+            builds_path=builds_path,
+        )
     )
     support = RotationGenerateDDRoleEvidenceSupport(
         database_path=database_path,
-        static_context_service=static_context_service,
+        static_context_service=static_context_service,  # type: ignore[arg-type]
         weapon_attack_provider_factory=(
             RotationGenerateDDCanonicalWeaponAttackProviderFactory(
                 database_path=database_path,
