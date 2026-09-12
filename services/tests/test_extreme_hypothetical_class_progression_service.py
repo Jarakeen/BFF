@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sqlite3
 
+import services.extreme_hypothetical_class_progression_service as module
 from minmax.character_build.character_class import CharacterClass
 from minmax.character_build.class_configuration import ClassSkillLineConfiguration
 from minmax.character_progression import CharacterProgression
@@ -110,11 +111,38 @@ def test_normalize_does_not_invent_passives_from_unequipped_class_lines(tmp_path
     assert result.passive_rank("Evocation") is None
 
 
+def test_class_passive_max_rank_evidence_is_reused_across_service_instances(tmp_path, monkeypatch) -> None:
+    path = tmp_path / "eso.db"
+    _write_db(path)
+    module._class_passive_max_ranks_for_database.cache_clear()
+
+    real_connect = module.sqlite3.connect
+    calls = 0
+
+    def counted_connect(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        return real_connect(*args, **kwargs)
+
+    monkeypatch.setattr(module.sqlite3, "connect", counted_connect)
+
+    first = ExtremeHypotheticalClassProgressionService(path)
+    second = ExtremeHypotheticalClassProgressionService(path)
+
+    first_result = first.normalize(CharacterProgression(), _route())
+    second_result = second.normalize(CharacterProgression(), _route())
+
+    assert first_result.passive_rank("Flourish") == 2
+    assert second_result.passive_rank("Flourish") == 2
+    assert calls == 1
+
+
 def test_missing_passive_schema_fails_closed(tmp_path) -> None:
     path = tmp_path / "eso.db"
     with sqlite3.connect(path) as db:
         db.execute("CREATE TABLE skill (id INTEGER PRIMARY KEY)")
 
+    module._class_passive_max_ranks_for_database.cache_clear()
     service = ExtremeHypotheticalClassProgressionService(path)
     try:
         service.normalize(CharacterProgression(), _route())
