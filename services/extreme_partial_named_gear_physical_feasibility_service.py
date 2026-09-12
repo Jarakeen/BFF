@@ -59,6 +59,7 @@ class ExtremePartialNamedGearPhysicalFeasibilityService:
             tuple[str, tuple[tuple[object, ...], ...]],
             ExtremePartialNamedGearPhysicalFeasibilityResult,
         ] = {}
+        self._shape_cache: dict[int, tuple[object, ...]] = {}
 
     @staticmethod
     def _shape(row: ExtremeNamedGearSetSlotEligibility) -> tuple[object, ...]:
@@ -71,6 +72,17 @@ class ExtremePartialNamedGearPhysicalFeasibilityService:
             tuple(row.weapon_types),
             tuple(int(value) for value in row.other_equip_types),
         )
+
+    def _cached_shape(
+        self,
+        row: ExtremeNamedGearSetSlotEligibility,
+    ) -> tuple[object, ...]:
+        set_id = int(row.set_id)
+        cached = self._shape_cache.get(set_id)
+        if cached is None:
+            cached = self._shape(row)
+            self._shape_cache[set_id] = cached
+        return cached
 
     def _physicals(
         self,
@@ -178,7 +190,10 @@ class ExtremePartialNamedGearPhysicalFeasibilityService:
                 reason="selected set lacks physical slot eligibility evidence",
             )
 
-        key = (topology.signature, tuple(self._shape(row) for row in selected))
+        key = (
+            topology.signature,
+            tuple(self._cached_shape(row) for row in selected),
+        )
         cached = self._result_cache.get(key)
         if cached is not None:
             return cached
