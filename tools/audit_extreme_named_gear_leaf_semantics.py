@@ -151,8 +151,13 @@ def main() -> int:
             print(
                 f"{topology.signature}: ordinary_pressure={pressure(topology)} "
                 f"nodes={stats.nodes} leaves={stats.leaves} "
+                f"score_pruned={stats.score_pruned} physical_pruned={stats.physical_pruned} "
+                f"witness_checks={stats.witness_checks} feasible_leaves={stats.feasible_leaves} "
+                f"rejected_leaves={stats.rejected_leaves} "
                 f"witness_calls={topology_calls} unique_semantic_leaf_classes={topology_unique} "
                 f"duplicate_semantic_leaves={duplicate_calls} duplicate_percent={ratio:.2f} "
+                f"semantic_leaf_classes={stats.semantic_leaf_classes} "
+                f"semantic_duplicate_leaves={stats.semantic_duplicate_leaves} "
                 f"winning_realizations={len(winner.realizations)} "
                 f"best_exact_flat_delta={best}"
             )
