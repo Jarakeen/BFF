@@ -6,10 +6,14 @@ import math
 from pathlib import Path
 
 from minmax.skill_coefficient_repository import ability_entity_id
+from services.rotation_candidate_periodic_damage_runtime_projection_service import (
+    PeriodicDamageActivationAnchor,
+)
 
 
 _REQUIRED_EXECUTABLE_FIELDS = (
     "reviewed_interval_seconds",
+    "activation_anchor",
     "first_tick_offset_seconds",
     "refresh_boundary",
     "magnitude_policy",
@@ -28,6 +32,7 @@ class RotationDDPeriodicRuntimeSemanticsReviewEntry:
     coefficient_number: int
     duration_seconds: float | None = None
     reviewed_interval_seconds: float | None = None
+    activation_anchor: str | None = None
     first_tick_offset_seconds: float | None = None
     refresh_boundary: str | None = None
     magnitude_policy: str | None = None
@@ -57,6 +62,16 @@ class RotationDDPeriodicRuntimeSemanticsReviewEntry:
             ):
                 raise ValueError(f"{field_name} must be finite and valid")
             object.__setattr__(self, field_name, number)
+
+        anchor = self.activation_anchor
+        if anchor is not None:
+            try:
+                normalized_anchor = PeriodicDamageActivationAnchor(str(anchor)).value
+            except ValueError as exc:
+                raise ValueError(
+                    "activation_anchor must be a reviewed periodic activation anchor"
+                ) from exc
+            object.__setattr__(self, "activation_anchor", normalized_anchor)
 
         multiplier = self.successive_hit_multiplier
         if multiplier is not None:
@@ -120,6 +135,9 @@ class RotationDDPeriodicRuntimeSemanticsReviewService:
                     coefficient_number=int(row["coefficient_number"]),
                     duration_seconds=row.get("duration_seconds"),
                     reviewed_interval_seconds=row.get("reviewed_interval_seconds"),
+                    activation_anchor=(
+                        None if row.get("activation_anchor") is None else str(row["activation_anchor"])
+                    ),
                     first_tick_offset_seconds=row.get("first_tick_offset_seconds"),
                     refresh_boundary=(
                         None if row.get("refresh_boundary") is None else str(row["refresh_boundary"])
