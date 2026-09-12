@@ -93,11 +93,36 @@ def _build_ui_with_lazy_pages(self) -> None:
             setattr(main_window, attribute_name, original_classes[page_key])
 
     self._lazy_page_factories = dict(original_classes)
+    # OperationsConsole already calls refresh() from its constructor.  The app
+    # immediately navigates to it as the startup destination, so suppress just
+    # that first redundant navigation refresh.  Future visits refresh normally.
+    self._operations_console_initial_navigation_pending = True
 
 
 def _show_page_with_lazy_materialization(self, page_name: str):
     assert _ORIGINAL_SHOW_PAGE is not None
-    _materialize_page(self, str(page_name or ""))
+    page_key = str(page_name or "")
+    _materialize_page(self, page_key)
+
+    if (
+        page_key == "operations_console"
+        and getattr(self, "_operations_console_initial_navigation_pending", False)
+    ):
+        self._operations_console_initial_navigation_pending = False
+        page = self.pages.get("operations_console")
+        refresh = getattr(page, "refresh", None)
+        if callable(refresh):
+            had_instance_refresh = "refresh" in getattr(page, "__dict__", {})
+            prior_instance_refresh = page.__dict__.get("refresh") if had_instance_refresh else None
+            page.refresh = lambda: None
+            try:
+                return _ORIGINAL_SHOW_PAGE(self, page_name)
+            finally:
+                if had_instance_refresh:
+                    page.refresh = prior_instance_refresh
+                else:
+                    delattr(page, "refresh")
+
     return _ORIGINAL_SHOW_PAGE(self, page_name)
 
 
