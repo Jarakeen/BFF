@@ -42,6 +42,10 @@ class RotationCandidateRecommendationEvidence:
     gates do not masquerade as missing support effects or unresolved mechanics.
     Optional gameplay-practice assessment remains separate from mechanical truth and
     is forwarded unchanged to role-aware ranking.
+
+    ``diagnostics`` carries exact downstream explanation evidence, such as the
+    authoritative reason role output is unresolved. Diagnostics never participate
+    in ranking or eligibility; they only enrich the returned explanation surface.
     """
 
     candidate_id: str
@@ -52,6 +56,7 @@ class RotationCandidateRecommendationEvidence:
     primary_role_displacement_seconds: float | None
     role_hard_obligation_satisfied: bool | None = True
     role_hard_obligation_reasons: tuple[str, ...] = ()
+    diagnostics: tuple[str, ...] = ()
     gameplay_policy_assessment: RotationGameplayPolicyAssessment | None = None
 
     def __post_init__(self) -> None:
@@ -72,6 +77,17 @@ class RotationCandidateRecommendationEvidence:
                 dict.fromkeys(
                     str(item).strip()
                     for item in self.role_hard_obligation_reasons
+                    if str(item).strip()
+                )
+            ),
+        )
+        object.__setattr__(
+            self,
+            "diagnostics",
+            tuple(
+                dict.fromkeys(
+                    str(item).strip()
+                    for item in self.diagnostics
                     if str(item).strip()
                 )
             ),
@@ -97,8 +113,14 @@ class RotationCandidateRecommendationEntry:
 
     @property
     def reasons(self) -> tuple[str, ...]:
-        """Hard-validity reasons first, then role-policy reasons."""
-        return self.ranking.base_ranking.reasons + self.ranking.role_reasons
+        """Hard-validity reasons, role-policy reasons, then diagnostic detail."""
+        return tuple(
+            dict.fromkeys(
+                self.ranking.base_ranking.reasons
+                + self.ranking.role_reasons
+                + self.evidence.diagnostics
+            )
+        )
 
 
 @dataclass(frozen=True)
