@@ -57,6 +57,11 @@ class ExtremeResourceChampionPointState:
 class ExtremeResourceChampionPointStateService:
     """Resolve and materialize the strongest legal max-resource CP state."""
 
+    _SHARED_STATE_CACHE: dict[
+        tuple[str, str],
+        ExtremeResourceChampionPointState,
+    ] = {}
+
     def __init__(
         self,
         database_path: str | Path | None = None,
@@ -66,6 +71,18 @@ class ExtremeResourceChampionPointStateService:
     ) -> None:
         if repository is None and database_path is None:
             raise ValueError("database_path is required when no Champion Point repository is supplied")
+
+        production_shared = (
+            repository is None
+            and audit_service is None
+            and database_path is not None
+        )
+        self._shared_state_prefix: str | None = None
+        if production_shared:
+            snapshot_service = ExtremeResourceCanonicalStaticSnapshotService(database_path)
+            self._shared_state_prefix = snapshot_service.cache_key
+            repository = snapshot_service.build().champion_point_repository
+
         self.repository = (
             repository
             if repository is not None
@@ -74,12 +91,27 @@ class ExtremeResourceChampionPointStateService:
         self.audit_service = audit_service or ExtremeResourceChampionPointCoverageAuditService(
             repository=self.repository
         )
-        # Champion Point continuation depends only on the objective and canonical
-        # CP catalogue, not on gear, armor, class route, bar, food, or runtime
-        # candidate state. Cache the complete fail-closed result per objective on
-        # each state service; production instances share the snapshot-owned canonical
-        # repository for the same immutable database snapshot.
+        # Injected repositories/audits keep isolated instance-local behavior for
+        # tests and alternate evidence. Production services share the exact same
+        # immutable objective result per database snapshot, because CP continuation
+        # does not depend on gear, armor, class route, bars, food, or runtime state.
         self._state_cache: dict[str, ExtremeResourceChampionPointState] = {}
+
+    def _shared_key(self, objective_key: str) -> tuple[str, str] | None:
+        if self._shared_state_prefix is None:
+            return None
+        return (self._shared_state_prefix, objective_key)
+
+    def _remember(
+        self,
+        key: str,
+        state: ExtremeResourceChampionPointState,
+    ) -> ExtremeResourceChampionPointState:
+        self._state_cache[key] = state
+        shared_key = self._shared_key(key)
+        if shared_key is not None:
+            self._SHARED_STATE_CACHE[shared_key] = state
+        return state
 
     def build(self, objective_key: str) -> ExtremeResourceChampionPointState:
         key = str(objective_key or "").strip().casefold()
@@ -87,17 +119,25 @@ class ExtremeResourceChampionPointStateService:
         if cached is not None:
             return cached
 
+        shared_key = self._shared_key(key)
+        if shared_key is not None:
+            shared = self._SHARED_STATE_CACHE.get(shared_key)
+            if shared is not None:
+                self._state_cache[key] = shared
+                return shared
+
         audit = self.audit_service.build(key)
         if not audit.mechanic_complete:
-            state = ExtremeResourceChampionPointState(
-                objective_key=key,
-                non_slottable_allocations=(),
-                slottable_allocations=(),
-                denominator_proven=False,
-                unresolved=tuple(audit.unresolved),
+            return self._remember(
+                key,
+                ExtremeResourceChampionPointState(
+                    objective_key=key,
+                    non_slottable_allocations=(),
+                    slottable_allocations=(),
+                    denominator_proven=False,
+                    unresolved=tuple(audit.unresolved),
+                ),
             )
-            self._state_cache[key] = state
-            return state
 
         non_slottable: list[tuple[str, int, float]] = []
         slottable: list[tuple[str, int, float]] = []
@@ -131,17 +171,18 @@ class ExtremeResourceChampionPointStateService:
                 for name, _points, _delta in overflow
             )
 
-        state = ExtremeResourceChampionPointState(
-            objective_key=key,
-            non_slottable_allocations=tuple(
-                sorted(non_slottable, key=lambda row: row[0].casefold())
+        return self._remember(
+            key,
+            ExtremeResourceChampionPointState(
+                objective_key=key,
+                non_slottable_allocations=tuple(
+                    sorted(non_slottable, key=lambda row: row[0].casefold())
+                ),
+                slottable_allocations=selected,
+                denominator_proven=bool(audit.denominator_proven and not unresolved),
+                unresolved=unresolved,
             ),
-            slottable_allocations=selected,
-            denominator_proven=bool(audit.denominator_proven and not unresolved),
-            unresolved=unresolved,
         )
-        self._state_cache[key] = state
-        return state
 
     @staticmethod
     def materialize_progression(
