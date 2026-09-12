@@ -11,6 +11,7 @@ from minmax.character_build.effect_layer import BarId
 from minmax.character_build.slotted_skill import SlottedSkill
 from minmax.character_build.weapon import Weapon
 from minmax.character_build.weapon_type import WeaponType
+from minmax.combat_state import CombatState
 from minmax.role import Role
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from minmax.stat_ids import StatId
@@ -96,6 +97,25 @@ def test_flame_staff_light_attack_uses_canonical_weapon_identity_and_formula() -
 
     assert evidence.unresolved == ()
     assert evidence.damage_value == pytest.approx(3465.0)
+
+
+def test_runtime_major_berserk_applies_once_to_light_attack_formula() -> None:
+    light = RotationAction(0.0, 0, RotationActionKind.LIGHT_ATTACK, bar="front")
+    candidate = _candidate(light)
+    service = RotationCandidateLightAttackDamageEvidenceService(
+        build=_build(),
+        evaluation=_evaluation(),
+        initial_bar="front",
+        attacker_combat_state=CombatState(
+            in_combat=True,
+            active_buffs=("Major Berserk",),
+        ),
+    )
+
+    evidence = service.evaluate_action(candidate=candidate, action=light)
+
+    assert evidence.unresolved == ()
+    assert evidence.damage_value == pytest.approx(3811.5)
 
 
 def test_bar_swap_routes_later_light_attack_through_frost_staff_formula() -> None:
