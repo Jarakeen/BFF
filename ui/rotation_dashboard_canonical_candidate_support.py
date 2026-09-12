@@ -15,7 +15,13 @@ from models.build_model import PlayerBuild
 from services.canonical_mechanics_coverage_audit import CanonicalMechanicsCoverageReport
 from services.extreme_runtime_snapshot import ExtremeRuntimeSnapshot
 from services.rotation_candidate_generation_service import RotationRefreshLeadCandidateOption
+from services.rotation_candidate_recommendation_evidence_service import (
+    RotationCandidateSharedEvaluationContext,
+)
 from services.rotation_effect_uptime_service import RotationEffectUptimeRequirement
+from services.rotation_generate_candidate_resolver_service import (
+    RotationGenerateCandidateResolverService,
+)
 from services.rotation_recovery_heavy_candidate_generation_bridge_service import (
     RecoveryCandidateEvaluatorResolver,
     RecoveryPressureWaitDecisionFactory,
@@ -81,6 +87,11 @@ class RotationDashboardCanonicalCandidateSupport:
     existing role-neutral runtime-state service before static candidate evaluation.
     Runtime snapshot bar ownership remains explicit rather than guessed.
 
+    When callers omit both recovery evaluator and final scorecard resolvers, this
+    dashboard boundary composes them from the exact generated seed plan through the
+    canonical Generate resolver service. Supplying only one resolver is rejected so a
+    candidate family cannot mix unrelated evaluation worlds.
+
     Heavy restoration defaults to the canonical generated-plan evidence path. Callers
     may still provide an explicit reviewed resolver for compatibility or research.
 
@@ -112,8 +123,12 @@ class RotationDashboardCanonicalCandidateSupport:
             | RotationRuntimeSnapshotCandidateSupport
             | None
         ) = None,
+        candidate_resolver_service: RotationGenerateCandidateResolverService | None = None,
     ) -> None:
         self.generation = generation or RotationGenerationSupport()
+        self.candidate_resolver_service = (
+            candidate_resolver_service or RotationGenerateCandidateResolverService()
+        )
         if canonical_candidates is not None:
             self.canonical_candidates = canonical_candidates
         else:
@@ -143,8 +158,8 @@ class RotationDashboardCanonicalCandidateSupport:
         *,
         player_build: PlayerBuild,
         generation_request: RotationGenerationRequest,
-        evaluator_resolver: RecoveryCandidateEvaluatorResolver,
-        scorecard_resolver: RecoveryFinalScorecardResolver,
+        evaluator_resolver: RecoveryCandidateEvaluatorResolver | None,
+        scorecard_resolver: RecoveryFinalScorecardResolver | None,
         resource: ResourceType,
         maximum_amount: int,
         trigger_fraction: float,
@@ -180,6 +195,23 @@ class RotationDashboardCanonicalCandidateSupport:
             request=seed_request,
         )
 
+        demand_tuple = tuple(demands)
+        if (evaluator_resolver is None) != (scorecard_resolver is None):
+            raise ValueError(
+                "canonical Generate must supply both candidate resolvers or neither"
+            )
+        if evaluator_resolver is None and scorecard_resolver is None:
+            generated_resolvers = self.candidate_resolver_service.build(
+                player_build=player_build,
+                baseline_plan=seed_generation.plan,
+                resource=resource,
+                context=RotationCandidateSharedEvaluationContext(
+                    demands=demand_tuple,
+                ),
+            )
+            evaluator_resolver = generated_resolvers.evaluator_resolver
+            scorecard_resolver = generated_resolvers.scorecard_resolver
+
         candidate_kwargs = dict(
             player_build=player_build,
             seed_plan=seed_generation.plan,
@@ -191,7 +223,7 @@ class RotationDashboardCanonicalCandidateSupport:
             trigger_fraction=trigger_fraction,
             restoration_resolver=restoration_resolver,
             combat_state=combat_state,
-            demands=tuple(demands),
+            demands=demand_tuple,
             options=tuple(options),
             wait_decision_factory=wait_decision_factory,
             requirements=tuple(requirements),
