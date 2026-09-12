@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
+from math import comb
 from pathlib import Path
 import sys
 from time import perf_counter
@@ -23,13 +25,17 @@ from services.extreme_gear_set_bonus_breakpoint_service import (
     ExtremeGearSetBonusBreakpointService,
 )
 from services.extreme_gear_set_objective_relevance_service import (
+    ExtremeGearSetObjectiveRelevance,
+    ExtremeGearSetObjectiveRelevanceCatalog,
     ExtremeGearSetObjectiveRelevanceService,
 )
 from services.extreme_gear_set_topology_catalog_service import (
+    ExtremeGearSetCountTopology,
     ExtremeGearSetTopologyCatalogService,
 )
 from services.extreme_global_search_universe_service import ExtremeGlobalSearchUniverseService
 from services.extreme_named_gear_set_slot_eligibility_service import (
+    ExtremeNamedGearSetSlotEligibilityCatalog,
     ExtremeNamedGearSetSlotEligibilityService,
 )
 from services.extreme_record_result import ExtremeRecordProofStatus
@@ -81,6 +87,88 @@ def _parser() -> argparse.ArgumentParser:
         help="Run the exhaustive published-record search after the fast proof preflight.",
     )
     return parser
+
+
+def _objective_candidate_ids_by_count(
+    relevance: ExtremeGearSetObjectiveRelevanceCatalog,
+    eligibility: ExtremeNamedGearSetSlotEligibilityCatalog,
+) -> dict[int, tuple[int, ...]]:
+    """Return proof-surviving physical candidate ids for each breakpoint count.
+
+    This mirrors the objective-filtered named-gear realizer's candidate gate but
+    deliberately stops before any Cartesian-product enumeration. It is diagnostic
+    accounting only and does not alter the search denominator.
+    """
+
+    eligibility_by_id = {int(row.set_id): row for row in eligibility.sets}
+    values: dict[int, set[int]] = {}
+    for evidence in relevance.evidence:
+        if evidence.status is ExtremeGearSetObjectiveRelevance.PROVEN_IRRELEVANT:
+            continue
+        count = int(evidence.piece_count)
+        set_id = int(evidence.set_id)
+        row = eligibility_by_id.get(set_id)
+        if row is None or not row.has_physical_slot_evidence:
+            continue
+        if count > int(row.max_equip_count):
+            continue
+        values.setdefault(count, set()).add(set_id)
+    return {count: tuple(sorted(set_ids)) for count, set_ids in sorted(values.items())}
+
+
+def _topology_assignment_upper_bound(
+    topology: ExtremeGearSetCountTopology,
+    candidate_ids_by_count: dict[int, tuple[int, ...]],
+) -> int:
+    """Cheap upper bound on named assignments before cross-count distinct-id checks.
+
+    Equal-count topology parts are indistinguishable in the realizer, so choose
+    ``k`` distinct candidates from that breakpoint bucket. Different count buckets
+    are multiplied. A set that survives at more than one count can make this bound
+    larger than the exact legal assignment count; that is intentional. The number
+    is a fast pressure diagnostic, never denominator evidence.
+    """
+
+    multiplicities = Counter(int(value) for value in topology.counts)
+    total = 1
+    for count, needed in multiplicities.items():
+        available = len(candidate_ids_by_count.get(count, ()))
+        if available < needed:
+            return 0
+        total *= comb(available, needed)
+    return int(total)
+
+
+def _print_named_gear_cardinality(
+    *,
+    topology,
+    relevance: ExtremeGearSetObjectiveRelevanceCatalog,
+    eligibility: ExtremeNamedGearSetSlotEligibilityCatalog,
+) -> None:
+    candidate_ids_by_count = _objective_candidate_ids_by_count(relevance, eligibility)
+    print("named_gear_candidate_sets_by_piece_count=")
+    if not candidate_ids_by_count:
+        print("  none")
+    else:
+        for count, set_ids in candidate_ids_by_count.items():
+            print(f"  {count}-piece: {len(set_ids)}")
+
+    pressure = tuple(
+        sorted(
+            (
+                (_topology_assignment_upper_bound(row, candidate_ids_by_count), row.signature)
+                for row in topology.topologies
+            ),
+            reverse=True,
+        )
+    )
+    total_upper_bound = sum(value for value, _ in pressure)
+    print(f"named_assignment_upper_bound_total={total_upper_bound}")
+    print("named_assignment_upper_bound_largest_topologies=")
+    for value, signature in pressure[:8]:
+        print(f"  {signature}: {value}")
+    if len(pressure) > 8:
+        print(f"  ... {len(pressure) - 8} more topologies")
 
 
 def _fast_preflight(database: Path, objectives: tuple[str, ...]) -> bool:
@@ -160,6 +248,11 @@ def _fast_preflight(database: Path, objectives: tuple[str, ...]) -> bool:
         print(f"equipment_trait_projection_complete={equipment_complete}")
         print(f"runtime_projection_complete={runtime_complete}")
         print(f"preflight_complete={objective_complete}")
+        _print_named_gear_cardinality(
+            topology=topology,
+            relevance=relevance,
+            eligibility=eligibility,
+        )
 
         unresolved = tuple(
             dict.fromkeys(
@@ -186,8 +279,9 @@ def _fast_preflight(database: Path, objectives: tuple[str, ...]) -> bool:
     print("\nNOTE")
     print(
         "Fast preflight proves the independent denominator prerequisites without "
-        "enumerating the full named-gear realization search. Use --full for the "
-        "authoritative end-to-end published-record closure run."
+        "enumerating the full named-gear realization search. The named-assignment "
+        "counts above are intentionally conservative pressure diagnostics, not proof "
+        "claims. Use --full for the authoritative end-to-end published-record closure run."
     )
     return complete
 
