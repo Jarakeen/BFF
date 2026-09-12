@@ -94,3 +94,30 @@ def test_repeated_set_slot_assignments_are_interned_across_named_combinations() 
         first_set_10[key] is second_set_10[key]
         for key in first_set_10
     )
+
+
+def test_repeated_witness_lookups_reuse_cached_eligibility_shapes() -> None:
+    rows = tuple(_ordinary(set_id) for set_id in (10, 20, 30))
+    eligibility_rows = tuple(row[0] for row in rows)
+    service = ExtremeNamedGearSetCatalogRealizationService(
+        breakpoints=ExtremeGearSetBonusBreakpointCatalog(
+            sets=tuple(row[1] for row in rows),
+        ),
+        eligibility=ExtremeNamedGearSetSlotEligibilityCatalog(
+            sets=eligibility_rows,
+        ),
+    )
+
+    cached_before = {
+        set_id: shape for set_id, shape in service._eligibility_shape_by_id.items()
+    }
+    topology = ExtremeGearSetCountTopology(counts=(2, 2), unused_units=8)
+
+    assert service._find_witness_cached(topology, eligibility_rows[:2]) is not None
+    assert service._find_witness_cached(topology, (eligibility_rows[0], eligibility_rows[2])) is not None
+
+    assert service._eligibility_shape_by_id.keys() == cached_before.keys()
+    assert all(
+        service._eligibility_shape_by_id[set_id] is cached_before[set_id]
+        for set_id in cached_before
+    )
