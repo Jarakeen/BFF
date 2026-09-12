@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QMessageBox,
     QScrollArea,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
@@ -35,6 +36,36 @@ _INSTALLED = False
 
 _ROLES = ("Damage Dealer", "Healer", "Tank", "Support DD")
 _ALLIANCES = ("", "Aldmeri Dominion", "Daggerfall Covenant", "Ebonheart Pact")
+
+_CREATE_CHARACTER_STYLE = """
+QPushButton {
+    background-color: #D1983D;
+    color: #0C171B;
+    border: 1px solid #C8A46A;
+    border-radius: 15px;
+    padding: 6px 18px;
+    font-weight: 700;
+}
+QPushButton:hover {
+    background-color: #DCAA57;
+}
+QPushButton:pressed {
+    background-color: #B97F2F;
+}
+QPushButton:disabled {
+    background-color: #6D5A37;
+    color: #BFC8C6;
+}
+"""
+
+
+def _style_create_character_button(button: FoundryButton) -> FoundryButton:
+    """Give every Easy Mode entry point the same obvious amber pill treatment."""
+    button.setStyleSheet(_CREATE_CHARACTER_STYLE)
+    button.setCursor(Qt.CursorShape.PointingHandCursor)
+    button.setMinimumHeight(32)
+    button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+    return button
 
 
 class CharacterCreationEasyModeDialog(QDialog):
@@ -144,7 +175,9 @@ class CharacterCreationEasyModeDialog(QDialog):
         actions = QHBoxLayout()
         actions.addStretch()
         cancel = FoundryButton("Cancel", role=ButtonRole.SECONDARY)
-        create = FoundryButton("Create Character", role=ButtonRole.SUCCESS)
+        create = _style_create_character_button(
+            FoundryButton("Create Character", role=ButtonRole.PRIMARY)
+        )
         cancel.clicked.connect(self.reject)
         create.clicked.connect(self._accept_if_complete)
         actions.addWidget(cancel)
@@ -242,22 +275,44 @@ def _open_easy_character_creator(page) -> None:
     )
 
 
+def _open_easy_character_creator_from_overview(console) -> None:
+    """Route the Overview CTA through the canonical Builds page and open Easy Mode."""
+    window = console.window()
+    show_page = getattr(window, "show_page", None)
+    if callable(show_page):
+        show_page("console:2")
+
+    builds_page = getattr(window, "pages", {}).get("console:2")
+    if builds_page is None:
+        QMessageBox.warning(
+            console,
+            "Builds page unavailable",
+            "Could not open character creation because the Builds page is unavailable.",
+        )
+        return
+    _open_easy_character_creator(builds_page)
+
+
 def install() -> None:
-    """Add the visible Easy Mode character-creation front door to Builds."""
+    """Add the visible Easy Mode character-creation front doors and tidy Builds layout."""
     global _INSTALLED
     if _INSTALLED:
         return
 
     from ui.builds_page import BuildsPage
+    from ui.operations_console import OperationsConsole
+    from widgets.build_editor import BuildEditor
 
     original_build_ui = BuildsPage._build_ui
     original_role_for = BuildsPage._role_for
+    original_raid_status_card = OperationsConsole._raid_status_card
+    original_editor_build_ui = BuildEditor._build_ui
+    original_identity_card = BuildEditor._build_identity_card
 
     def _build_ui(self):
         original_build_ui(self)
-        self.create_character_button = FoundryButton(
-            "+ Create Character",
-            role=ButtonRole.PRIMARY,
+        self.create_character_button = _style_create_character_button(
+            FoundryButton("+ Create Character", role=ButtonRole.PRIMARY, compact=True)
         )
         self.create_character_button.clicked.connect(
             lambda: _open_easy_character_creator(self)
@@ -273,6 +328,38 @@ def install() -> None:
         roster_role, status = original_role_for(self, build)
         return roster_role or str(getattr(build, "Role", "") or "").strip(), status
 
+    def _raid_status_card(self):
+        host = QWidget()
+        host.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        layout = QVBoxLayout(host)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(8)
+
+        create_button = _style_create_character_button(
+            FoundryButton("+ Create Character", role=ButtonRole.PRIMARY, compact=True)
+        )
+        create_button.clicked.connect(
+            lambda: _open_easy_character_creator_from_overview(self)
+        )
+        layout.addWidget(create_button, 0, Qt.AlignmentFlag.AlignHCenter)
+        layout.addWidget(original_raid_status_card(self), 1)
+        return host
+
+    def _editor_build_ui(self):
+        original_editor_build_ui(self)
+        layout = self.layout()
+        if layout is not None:
+            layout.addStretch(1)
+
+    def _identity_card(self):
+        card = original_identity_card(self)
+        card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
+        card.body.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        return card
+
     BuildsPage._build_ui = _build_ui
     BuildsPage._role_for = _role_for
+    OperationsConsole._raid_status_card = _raid_status_card
+    BuildEditor._build_ui = _editor_build_ui
+    BuildEditor._build_identity_card = _identity_card
     _INSTALLED = True
