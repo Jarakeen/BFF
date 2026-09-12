@@ -37,6 +37,17 @@ def test_lokkestiiz_overview_brief_surfaces_reviewed_flight_and_add_shape():
     assert "exact count remains unresolved" in brief
 
 
+def test_lokkestiiz_overview_role_impact_uses_only_structured_reviewed_fields():
+    projection = _projection("lokkestiiz", "Lokkestiiz")
+
+    role_text = "\n".join(projection.role_impact)
+
+    assert "Damage Dealers" in role_text
+    assert "boss target while adds remain active" in role_text
+    assert "Healers" in role_text
+    assert "raid damage" in role_text
+
+
 def test_yolnahkriin_reviewed_guide_projects_fire_phase_thresholds_and_handling():
     projection = _projection("yolnahkriin", "Yolnahkriin")
 
