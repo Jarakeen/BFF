@@ -1,21 +1,44 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 from engine.config import get_data_dir
 from minmax.build_candidate_damage import calculation_result_from_build_context
 from minmax.build_evaluation import BuildEvaluation
+from minmax.character_build.bar import Bar
 from minmax.character_build.character_build import CharacterBuild
+from minmax.character_build.effect_layer import BarId
 from minmax.character_build.saved_build_adapter import SavedBuildCharacterAdapter
+from minmax.character_build.slotted_skill import SlottedSkill
+from minmax.character_build.weapon import Weapon
+from minmax.character_build.weapon_type import WeaponType
 from minmax.combat_contribution import CombatContribution
-from models.build_model import PlayerBuild
+from models.build_model import GearSlot, PlayerBuild
 from services.rotation_static_build_context_service import RotationStaticBuildContextResolution
+
+
+_WEAPON_TYPE_BY_NAME = {
+    "bow": WeaponType.BOW,
+    "inferno staff": WeaponType.FLAME_STAFF,
+    "fire staff": WeaponType.FLAME_STAFF,
+    "flame staff": WeaponType.FLAME_STAFF,
+    "lightning staff": WeaponType.LIGHTNING_STAFF,
+    "shock staff": WeaponType.LIGHTNING_STAFF,
+    "ice staff": WeaponType.FROST_STAFF,
+    "frost staff": WeaponType.FROST_STAFF,
+    "restoration staff": WeaponType.RESTORATION_STAFF,
+    "sword": WeaponType.SWORD,
+    "axe": WeaponType.AXE,
+    "mace": WeaponType.MACE,
+    "dagger": WeaponType.DAGGER,
+    "shield": WeaponType.SHIELD,
+}
 
 
 @dataclass(frozen=True)
 class RotationWeaponAttackBuildEvaluationResolution:
-    """Canonical CharacterBuild plus bar-specific weapon-attack evaluations."""
+    """Canonical weapon-only build plus bar-specific attack evaluations."""
 
     build: CharacterBuild | None
     evaluations: tuple[tuple[str, BuildEvaluation], ...] = ()
@@ -134,14 +157,15 @@ class RotationSavedBuildWeaponAttackContributionService:
 
 
 class RotationSavedBuildWeaponAttackEvaluationService:
-    """Bridge canonical saved-build static contexts into LA/HA evaluation evidence.
+    """Bridge saved-build static contexts into LA/HA evaluation evidence.
 
-    Static stats remain owned by ``RotationStaticBuildContextService``. Canonical build
-    structure remains owned by ``SavedBuildCharacterAdapter``. This service only packages
-    those existing truths into the ``BuildEvaluation`` contract consumed by the reviewed
-    light/heavy-attack calculators and adds explicitly mapped weapon-attack modifier
-    contributions. Target-state-dependent Exploiter remains a stored magnitude here;
-    LA/HA evaluators decide whether it applies from exact target CombatState.
+    Static stats remain owned by ``RotationStaticBuildContextService``. The broad
+    ``SavedBuildCharacterAdapter`` is still used for canonical character metadata,
+    but weapon attacks deliberately rebuild a weapon-only bar surface from the exact
+    saved main/off-hand weapon identities. Skill legality, weapon-enchantment label
+    resolution, and other unrelated canonical-build concerns must not veto a basic
+    LA/HA. Ambiguous legacy aggregate weapon labels remain unresolved by leaving that
+    bar unavailable; no greatsword/battleaxe/maul or dual-wield subtype is guessed.
     """
 
     def __init__(
@@ -174,6 +198,62 @@ class RotationSavedBuildWeaponAttackEvaluationService:
             effective_value=bonus,
         )
 
+    @staticmethod
+    def _weapon_type(slot: GearSlot) -> WeaponType | None:
+        if slot.is_empty:
+            return None
+        key = " ".join(str(slot.WeaponType or "").strip().casefold().split())
+        return _WEAPON_TYPE_BY_NAME.get(key)
+
+    @staticmethod
+    def _placeholder_slots(bar: str) -> tuple[SlottedSkill, ...]:
+        return tuple(
+            SlottedSkill(
+                skill_id=f"rotation_weapon_attack_{bar}_slot_{index + 1}",
+                skill_line_id="rotation_weapon_attack",
+                is_ultimate=(index == 5),
+                is_cast=False,
+                requires_active_bar=True,
+            )
+            for index in range(6)
+        )
+
+    @classmethod
+    def _weapon_only_bar(
+        cls,
+        build: PlayerBuild,
+        bar: str,
+    ) -> Bar | None:
+        main_slot, off_slot = build.active_weapon_slots(bar)
+        main_type = cls._weapon_type(main_slot)
+        if main_type is None:
+            return None
+
+        off_type = cls._weapon_type(off_slot)
+        if not off_slot.is_empty and off_type is None:
+            return None
+
+        bar_id = BarId.FRONT if bar == "front" else BarId.BACK
+        candidate = Bar(
+            bar_id=bar_id,
+            main_hand=Weapon(weapon_type=main_type),
+            off_hand=(None if off_type is None else Weapon(weapon_type=off_type)),
+            slots=cls._placeholder_slots(bar),
+        )
+        return candidate if not candidate.violations() else None
+
+    @classmethod
+    def _weapon_only_build(
+        cls,
+        canonical: CharacterBuild,
+        saved: PlayerBuild,
+    ) -> CharacterBuild:
+        return replace(
+            canonical,
+            front_bar=cls._weapon_only_bar(saved, "front"),
+            back_bar=cls._weapon_only_bar(saved, "back"),
+        )
+
     def resolve(
         self,
         *,
@@ -196,14 +276,15 @@ class RotationSavedBuildWeaponAttackEvaluationService:
             player_build,
             character_id=character_id,
         )
-        if adaptation.build is None or adaptation.unresolved:
+        if adaptation.build is None:
             return RotationWeaponAttackBuildEvaluationResolution(
-                build=adaptation.build,
+                build=None,
                 unresolved=tuple(adaptation.unresolved) or (
-                    "canonical saved-build adaptation is unavailable",
+                    "canonical saved-build character metadata is unavailable",
                 ),
             )
 
+        weapon_build = self._weapon_only_build(adaptation.build, player_build)
         contributions, contribution_unresolved = self.contribution_service.resolve(
             player_build
         )
@@ -237,7 +318,7 @@ class RotationSavedBuildWeaponAttackEvaluationService:
             )
 
         return RotationWeaponAttackBuildEvaluationResolution(
-            build=adaptation.build,
+            build=weapon_build,
             evaluations=tuple(evaluations),
             unresolved=tuple(dict.fromkeys(unresolved)),
         )
