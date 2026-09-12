@@ -20,6 +20,7 @@ def test_conditioned_factories_reuse_static_gear_input_repositories_per_database
     assert first.gear_resolver.jewelry_glyph_repository is second.gear_resolver.jewelry_glyph_repository
     assert first.gear_resolver.jewelry_trait_repository is second.gear_resolver.jewelry_trait_repository
     assert first.skill_line_repository is second.skill_line_repository
+    assert first.racial_passive_repository is second.racial_passive_repository
 
 
 def test_conditioned_factories_do_not_share_static_gear_inputs_across_databases(tmp_path) -> None:
@@ -36,3 +37,4 @@ def test_conditioned_factories_do_not_share_static_gear_inputs_across_databases(
     assert first.gear_resolver.jewelry_glyph_repository is not second.gear_resolver.jewelry_glyph_repository
     assert first.gear_resolver.jewelry_trait_repository is not second.gear_resolver.jewelry_trait_repository
     assert first.skill_line_repository is not second.skill_line_repository
+    assert first.racial_passive_repository is not second.racial_passive_repository
