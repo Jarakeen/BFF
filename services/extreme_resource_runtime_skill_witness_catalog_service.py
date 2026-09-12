@@ -19,6 +19,9 @@ from dataclasses import dataclass
 from pathlib import Path
 import re
 
+from services.extreme_resource_canonical_static_snapshot_service import (
+    ExtremeResourceCanonicalStaticSnapshotService,
+)
 from services.extreme_skill_universe_service import (
     ExtremePlayerSkillRecord,
     ExtremeSkillDomain,
@@ -76,6 +79,8 @@ class ExtremeResourceRuntimeSkillWitnessCatalogService:
     PET_ACTIVE = "pet_active"
     TRANSFORMED = "transformed"
 
+    _SHARED_CATALOG_CACHE: dict[str, ExtremeResourceRuntimeSkillWitnessCatalog] = {}
+
     _REVIEWED_PET_SKILL_IDS = frozenset(
         {
             "feral_guardian",
@@ -111,9 +116,15 @@ class ExtremeResourceRuntimeSkillWitnessCatalogService:
     ) -> None:
         if database_path is None and skill_universe_service is None:
             raise ValueError("database_path or skill_universe_service is required")
-        self.skill_universe_service = skill_universe_service or ExtremeSkillUniverseService(
-            database_path  # type: ignore[arg-type]
-        )
+
+        self._shared_cache_key: str | None = None
+        self._catalog_cache: ExtremeResourceRuntimeSkillWitnessCatalog | None = None
+        if skill_universe_service is None and database_path is not None:
+            snapshot_service = ExtremeResourceCanonicalStaticSnapshotService(database_path)
+            self._shared_cache_key = snapshot_service.cache_key
+            skill_universe_service = snapshot_service.build().skill_universe_service
+
+        self.skill_universe_service = skill_universe_service  # type: ignore[assignment]
 
     @staticmethod
     def _is_ultimate(row: ExtremePlayerSkillRecord) -> bool:
@@ -186,6 +197,14 @@ class ExtremeResourceRuntimeSkillWitnessCatalogService:
         )
 
     def build(self) -> ExtremeResourceRuntimeSkillWitnessCatalog:
+        if self._catalog_cache is not None:
+            return self._catalog_cache
+        if self._shared_cache_key is not None:
+            shared = self._SHARED_CATALOG_CACHE.get(self._shared_cache_key)
+            if shared is not None:
+                self._catalog_cache = shared
+                return shared
+
         actives = tuple(self.skill_universe_service.actives())
         armor: list[ExtremeResourceRuntimeSkillWitness] = []
         pets: list[ExtremeResourceRuntimeSkillWitness] = []
@@ -213,7 +232,7 @@ class ExtremeResourceRuntimeSkillWitnessCatalogService:
         if not transformation_rows:
             unresolved.append("No canonical transformation Ultimate witness is available for transformed")
 
-        return ExtremeResourceRuntimeSkillWitnessCatalog(
+        catalog = ExtremeResourceRuntimeSkillWitnessCatalog(
             armor_abilities=armor_rows,
             pet_abilities=pet_rows,
             transformation_ultimates=transformation_rows,
@@ -221,6 +240,10 @@ class ExtremeResourceRuntimeSkillWitnessCatalogService:
             denominator_proven=bool(actives) and not unresolved,
             unresolved=tuple(unresolved),
         )
+        self._catalog_cache = catalog
+        if self._shared_cache_key is not None:
+            self._SHARED_CATALOG_CACHE[self._shared_cache_key] = catalog
+        return catalog
 
 
 __all__ = [
