@@ -47,6 +47,11 @@ class RotationDDActionDamageEventService:
     Tick cadence, duration, refresh/overwrite behavior, and horizon clipping need
     explicit runtime evidence before a DoT becomes time-resolved damage.
 
+    Light/heavy attacks are recognized as damage-bearing rotation actions, but this
+    service does not yet own canonical weapon-attack magnitude formulas. Their
+    presence is therefore explicit unresolved damage evidence rather than silently
+    disappearing from a supposedly complete DD projection.
+
     The coefficient calculator already resolves resource/power scaling, so its
     per-component value becomes ``DDDamageEvent.base_value`` with zero additional
     scaling here. Later DD stages may still apply Damage Done, crit, mitigation,
@@ -81,6 +86,20 @@ class RotationDDActionDamageEventService:
         unresolved: list[str] = []
 
         for action in plan.actions:
+            if action.kind in {
+                RotationActionKind.LIGHT_ATTACK,
+                RotationActionKind.HEAVY_ATTACK,
+            }:
+                label = (
+                    "light attack"
+                    if action.kind is RotationActionKind.LIGHT_ATTACK
+                    else "heavy attack"
+                )
+                unresolved.append(
+                    f"{label} at {action.time_seconds:g}s: canonical weapon-attack damage projection unavailable"
+                )
+                continue
+
             if action.kind not in {
                 RotationActionKind.SKILL,
                 RotationActionKind.ULTIMATE,
