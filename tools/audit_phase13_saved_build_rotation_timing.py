@@ -11,6 +11,9 @@ if str(ROOT) not in sys.path:
 
 from minmax.saved_build_rotation_timing_audit import audit_saved_build_rotation_timing
 from models.build_model import PlayerBuild
+from services.build_gear_enchantment_compatibility_service import (
+    BuildGearEnchantmentCompatibilityService,
+)
 
 
 def _load_build(path: Path, build_name: str, character_name: str | None = None) -> PlayerBuild:
@@ -27,7 +30,8 @@ def _load_build(path: Path, build_name: str, character_name: str | None = None) 
             continue
         if target_character and candidate_character.casefold() != target_character:
             continue
-        matches.append(PlayerBuild.from_dict(member))
+        loaded = PlayerBuild.from_dict(member)
+        matches.append(BuildGearEnchantmentCompatibilityService.normalize_build(loaded))
 
     if not matches:
         if target_character:
