@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Protocol
 
 from engine.config import get_data_dir
+from minmax.evaluation_context import EvaluationContext
 from minmax.rotation_plan import RotationAction, RotationActionKind
 from models.build_model import PlayerBuild
 from services.rotation_active_bar_context_resolver_service import (
@@ -22,11 +23,18 @@ from services.rotation_candidate_dd_role_output_service import (
     RotationCandidateDDRoleOutputService,
 )
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
+from services.rotation_candidate_light_attack_damage_evidence_service import (
+    RotationCandidateLightAttackDamageEvidenceService,
+)
 from services.rotation_candidate_skill_damage_evidence_service import (
     RotationCandidateSkillDamageEvidenceService,
 )
 from services.rotation_candidate_ultimate_damage_evidence_service import (
     RotationCandidateUltimateDamageEvidenceService,
+)
+from services.rotation_saved_build_weapon_attack_evaluation_service import (
+    RotationSavedBuildWeaponAttackEvaluationService,
+    RotationWeaponAttackBuildEvaluationResolution,
 )
 from services.rotation_static_build_context_service import RotationStaticBuildContextService
 from ui.rotation_canonical_candidate_support import RotationCanonicalRoleEvidence
@@ -41,13 +49,7 @@ def _canonical_role(value: object) -> str:
 
 
 class RotationGenerateDDWeaponAttackProviderFactory(Protocol):
-    """Supply verified LA/HA evaluators from one canonical saved-build evaluation.
-
-    The weapon-attack services require ``BuildEvaluation`` evidence in addition to
-    canonical weapon identity. Generate currently resolves ``BuildCalculationContext``
-    directly, so this boundary prevents callers from fabricating a partial evaluation
-    merely to make woven rotations appear complete.
-    """
+    """Supply verified LA/HA evaluators from one canonical saved-build evaluation."""
 
     def providers_for(
         self,
@@ -110,6 +112,145 @@ class _RotationGenerateBarAwareSkillDamageProvider:
         )
 
 
+class _RotationGenerateBarAwareLightAttackDamageProvider:
+    """Evaluate each light attack from the canonical build state active on its bar."""
+
+    def __init__(
+        self,
+        *,
+        evaluation: RotationWeaponAttackBuildEvaluationResolution,
+        static_context,
+        target_resistance: float,
+    ) -> None:
+        if not evaluation.resolved or evaluation.build is None:
+            raise ValueError("bar-aware light-attack provider requires resolved weapon-attack evaluation")
+        self.evaluation = evaluation
+        self.static_context = static_context
+        self.target_resistance = float(target_resistance)
+
+    def evaluate_action(
+        self,
+        *,
+        candidate: GeneratedRotationCandidate,
+        action: RotationAction,
+    ) -> RotationActionDamageEvidence:
+        if action.kind is not RotationActionKind.LIGHT_ATTACK:
+            return RotationActionDamageEvidence(
+                time_seconds=action.time_seconds,
+                sequence=action.sequence,
+                damage_value=None,
+                unresolved=(
+                    f"{action.kind.value} is not a light attack for light-attack damage evaluation",
+                ),
+            )
+
+        resolver = RotationActiveBarContextResolverService(
+            static_context=self.static_context,
+            plan=candidate.plan,
+        )
+        context = resolver.context_at(action.time_seconds, action.sequence)
+        build_evaluation = self.evaluation.evaluation_for(context.active_bar)
+        if build_evaluation is None:
+            return RotationActionDamageEvidence(
+                time_seconds=action.time_seconds,
+                sequence=action.sequence,
+                damage_value=None,
+                unresolved=(
+                    f"{context.active_bar} canonical weapon-attack BuildEvaluation is unavailable",
+                ),
+            )
+
+        return RotationCandidateLightAttackDamageEvidenceService(
+            build=self.evaluation.build,
+            evaluation=build_evaluation,
+            initial_bar="front",
+            evaluation_context=EvaluationContext(
+                fight_duration=float(candidate.plan.duration_seconds),
+                target_resistance=self.target_resistance,
+            ),
+        ).evaluate_action(
+            candidate=candidate,
+            action=action,
+        )
+
+
+class _RotationGenerateUnresolvedWeaponAttackProvider:
+    """Preserve bridge failures as action-local unresolved evidence."""
+
+    def __init__(self, unresolved: tuple[str, ...]) -> None:
+        self.unresolved = tuple(
+            dict.fromkeys(
+                str(item).strip() for item in unresolved if str(item).strip()
+            )
+        ) or ("canonical weapon-attack evaluation is unresolved",)
+
+    def evaluate_action(
+        self,
+        *,
+        candidate: GeneratedRotationCandidate,
+        action: RotationAction,
+    ) -> RotationActionDamageEvidence:
+        return RotationActionDamageEvidence(
+            time_seconds=action.time_seconds,
+            sequence=action.sequence,
+            damage_value=None,
+            unresolved=self.unresolved,
+        )
+
+
+class RotationGenerateDDCanonicalWeaponAttackProviderFactory:
+    """Production bridge from saved-build canonical state to weapon-attack providers.
+
+    Light attacks are fully composed through the reviewed canonical LA calculator.
+    Heavy attacks deliberately remain unresolved here until candidate-specific
+    full-charge/completion evidence is connected to the same factory.
+    """
+
+    def __init__(
+        self,
+        *,
+        database_path: str | Path | None = None,
+        evaluation_service: RotationSavedBuildWeaponAttackEvaluationService | None = None,
+    ) -> None:
+        self.database_path = (
+            Path(database_path)
+            if database_path is not None
+            else get_data_dir() / "eso.db"
+        )
+        self.evaluation_service = (
+            evaluation_service
+            or RotationSavedBuildWeaponAttackEvaluationService(self.database_path)
+        )
+
+    def providers_for(
+        self,
+        *,
+        player_build: PlayerBuild,
+        static_context,
+        target_resistance: float,
+    ) -> tuple[
+        RotationActionDamageProvider | None,
+        RotationActionDamageProvider | None,
+    ]:
+        resolution = self.evaluation_service.resolve(
+            player_build=player_build,
+            static_context=static_context,
+        )
+        if not resolution.resolved:
+            return (
+                _RotationGenerateUnresolvedWeaponAttackProvider(resolution.unresolved),
+                None,
+            )
+        return (
+            _RotationGenerateBarAwareLightAttackDamageProvider(
+                evaluation=resolution,
+                static_context=static_context,
+                target_resistance=target_resistance,
+            ),
+            None,
+        )
+
+
 class RotationGenerateDDRoleEvidenceSupport:
     """Compose fail-closed canonical DD role output for Generate candidates.
 
@@ -117,13 +258,12 @@ class RotationGenerateDDRoleEvidenceSupport:
     Each skill is evaluated from the static front/back context active at its exact
     ``(time_seconds, sequence)`` point. Target resistance must be explicit evidence.
 
-    Existing canonical light/heavy-attack evaluators may participate only through a
-    verified weapon-attack provider factory. That factory owns the missing bridge from
-    the selected saved build to the ``BuildEvaluation`` required by those evaluators.
-    Without it, the shared action router keeps LA/HA consequences unresolved rather
-    than treating weaving damage as zero. Periodic skill components likewise stay
-    unresolved unless their reviewed runtime semantics are supplied by the canonical
-    skill-damage authority.
+    Existing canonical light/heavy-attack evaluators participate only through a
+    verified weapon-attack provider factory. The production factory now bridges
+    canonical saved-build static state into bar-aware Light Attack evaluation.
+    Heavy attacks remain fail-closed until candidate-specific completion/full-charge
+    evidence is attached. Periodic skill components likewise stay unresolved unless
+    their reviewed runtime semantics are supplied by the canonical skill-damage authority.
     """
 
     def __init__(
@@ -211,6 +351,7 @@ class RotationGenerateDDRoleEvidenceSupport:
 
 
 __all__ = [
+    "RotationGenerateDDCanonicalWeaponAttackProviderFactory",
     "RotationGenerateDDRoleEvidenceSupport",
     "RotationGenerateDDWeaponAttackProviderFactory",
 ]
