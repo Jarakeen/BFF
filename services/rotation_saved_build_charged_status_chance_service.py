@@ -101,14 +101,10 @@ class RotationSavedBuildChargedStatusChanceService:
         *,
         bars: tuple[str, ...] = ("front", "back"),
     ) -> RotationSavedBuildChargedStatusChanceResolution:
-        value, rule_source, rule_unresolved = self._canonical_rule()
-        if rule_unresolved:
-            return RotationSavedBuildChargedStatusChanceResolution(unresolved=rule_unresolved)
-        assert value is not None and rule_source is not None
-
-        sources: list[RotationChargedStatusChanceSource] = []
-        unresolved: list[str] = []
+        normalized_bars: list[str] = []
         seen_bars: set[str] = set()
+        unresolved: list[str] = []
+        slots_by_bar: dict[str, tuple[tuple[str, GearSlot], ...]] = {}
         for raw_bar in bars:
             bar = str(raw_bar or "").strip().casefold()
             if bar not in {"front", "back"}:
@@ -117,7 +113,24 @@ class RotationSavedBuildChargedStatusChanceService:
             if bar in seen_bars:
                 continue
             seen_bars.add(bar)
-            charged_slots = self._equipped_charged_slots(build, bar)
+            normalized_bars.append(bar)
+            slots_by_bar[bar] = self._equipped_charged_slots(build, bar)
+
+        if unresolved:
+            return RotationSavedBuildChargedStatusChanceResolution(
+                unresolved=tuple(dict.fromkeys(unresolved))
+            )
+        if not any(slots_by_bar.values()):
+            return RotationSavedBuildChargedStatusChanceResolution()
+
+        value, rule_source, rule_unresolved = self._canonical_rule()
+        if rule_unresolved:
+            return RotationSavedBuildChargedStatusChanceResolution(unresolved=rule_unresolved)
+        assert value is not None and rule_source is not None
+
+        sources: list[RotationChargedStatusChanceSource] = []
+        for bar in normalized_bars:
+            charged_slots = slots_by_bar[bar]
             if len(charged_slots) > 1:
                 unresolved.append(
                     f"{bar} bar has multiple Charged weapons; stacking semantics are not yet reviewed"
