@@ -113,7 +113,7 @@ class IncomingAttackState:
 
 @dataclass(frozen=True)
 class LightAttackState:
-    """Resolved inputs required by the staff light-attack formulas."""
+    """Resolved inputs required by canonical light-attack formulas."""
 
     # Core stats
     magicka: float
@@ -126,6 +126,8 @@ class LightAttackState:
     la_frost_weapon_damage: float = 0.0
     la_shock_spell_damage: float = 0.0
     la_shock_weapon_damage: float = 0.0
+    la_physical_spell_damage: float = 0.0
+    la_physical_weapon_damage: float = 0.0
 
     # Light-attack modifiers
     skill2_la_damage: float = 0.0
@@ -144,6 +146,9 @@ class LightAttackState:
     flame_damage_done: float = 0.0
     frost_damage_done: float = 0.0
     shock_damage_done: float = 0.0
+    physical_damage_done: float = 0.0
+    bow_damage_done: float = 0.0
+    skill_line_damage_bow: float = 0.0
     direct_damage_done: float = 0.0
     single_target_damage_done: float = 0.0
     dot_damage_done: float = 0.0
