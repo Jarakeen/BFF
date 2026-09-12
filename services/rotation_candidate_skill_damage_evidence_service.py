@@ -142,7 +142,7 @@ class RotationCandidateSkillDamageEvidenceService:
     def _damage_done_for_context(context: BuildCalculationContext) -> DamageDoneModifiers:
         return _combined_damage_done(
             damage_done_from_combat_state(context.combat_state),
-            context.dd_damage_done_modifiers,
+            getattr(context, "dd_damage_done_modifiers", DamageDoneModifiers()),
         )
 
     def evaluate_action(
