@@ -38,6 +38,7 @@ from services.raid_encounter_identity_service import (
     raid_encounters_for_content,
 )
 from ui.components.foundry_card import FoundryCard
+from ui.components.foundry_sidebar import HIDDEN_WORKSPACE_TABS
 
 
 _INSTALLED = False
@@ -445,6 +446,10 @@ def install() -> None:
         return
 
     from ui.encounters_page import EncountersPage
+
+    # Overview now has a real reviewed-evidence projection, so undo the earlier
+    # temporary visibility suppression while leaving the unfinished tabs hidden.
+    HIDDEN_WORKSPACE_TABS.get("console:1", set()).discard("overview")
 
     original_boss_rows_for_active_trial = EncountersPage._boss_rows_for_active_trial
     original_load_boss_index = EncountersPage._load_boss_index
