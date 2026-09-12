@@ -18,17 +18,41 @@ def test_new_build_creation_is_inline_not_modal() -> None:
     assert "self.setVisible(True)" in source
 
 
-def test_builds_keeps_editor_at_top_with_header_entry_button_and_inline_form() -> None:
+def test_builds_keeps_editor_at_top_with_centered_entry_button_and_inline_form() -> None:
     source = _source()
 
     assert 'FoundryButton("+ Create a New Build"' in source
-    assert "self.header.context_layout.insertWidget(" in source
-    assert "self.workspace_layout.insertWidget(insertion_index, self.new_build_panel)" in source
-    assert "button_host" not in source
+    assert "self.new_build_action_host = QWidget(self.workspace_widget)" in source
+    assert "new_build_action_layout.addStretch(1)" in source
+    assert "self.workspace_layout.insertWidget(insertion_index, self.new_build_action_host)" in source
+    assert "self.workspace_layout.insertWidget(insertion_index + 1, self.new_build_panel)" in source
+    assert "self.save_button.hide()" in source
     assert 'self.setObjectName("newBuildPullDown")' in source
     assert 'title = QLabel("Build something worth bringing to raid.")' in source
     assert 'FoundryButton("Create & Open Build"' in source
     assert "tabs.setCurrentIndex(1)" in source
+
+
+def test_build_editor_uses_one_save_action_and_no_nested_new_build_action() -> None:
+    source = _source()
+
+    assert 'button.text() == "+ Add New Build"' in source
+    assert "add_build.deleteLater()" in source
+    assert 'save.setText("Save Build")' in source
+    assert "row.addWidget(cancel)" in source
+    assert "row.addWidget(save)" in source
+
+
+def test_build_editor_save_preserves_non_editor_build_state() -> None:
+    source = _source()
+
+    assert "for field_name in _EDITOR_OWNED_BUILD_FIELDS" in source
+    assert "setattr(saved_build, field_name, getattr(edited_build, field_name))" in source
+    assert '"ScribedSkills"' not in source.split("_EDITOR_OWNED_BUILD_FIELDS = (", 1)[1].split(")", 1)[0]
+    assert '"ScribedSkillRecipes"' not in source.split("_EDITOR_OWNED_BUILD_FIELDS = (", 1)[1].split(")", 1)[0]
+    assert '"ClassSkillLines"' not in source.split("_EDITOR_OWNED_BUILD_FIELDS = (", 1)[1].split(")", 1)[0]
+    assert '"ClassMasteryAbilityIds"' not in source.split("_EDITOR_OWNED_BUILD_FIELDS = (", 1)[1].split(")", 1)[0]
+    assert '"SecondMundus"' not in source.split("_EDITOR_OWNED_BUILD_FIELDS = (", 1)[1].split(")", 1)[0]
 
 
 def test_overview_button_opens_same_inline_form_without_navigating_away() -> None:
@@ -95,7 +119,7 @@ def test_overview_new_build_button_sits_in_header_and_raid_status_is_full_height
     assert page._overview_new_build_panel.isVisible()
 
 
-def test_builds_button_shares_selector_row_without_displacing_workspace(monkeypatch) -> None:
+def test_builds_button_is_centered_above_workspace(monkeypatch) -> None:
     from PySide6.QtWidgets import QApplication, QFrame
 
     from ui.builds_page import BuildsPage
@@ -121,19 +145,20 @@ def test_builds_button_shares_selector_row_without_displacing_workspace(monkeypa
     page._build_ui()
 
     button = page.create_character_button
-    assert page.header.context_layout.itemAt(0).widget() is button
-    assert page.header.context_layout.itemAt(1).widget().isAncestorOf(page.trial_combo)
-    assert page.workspace_layout.itemAt(0).widget() is page.new_build_panel
-    assert page.workspace_layout.itemAt(1).widget() is page.splitter
+    assert page.header.context_layout.indexOf(button) == -1
+    assert page.workspace_layout.itemAt(0).widget() is page.new_build_action_host
+    assert page.workspace_layout.itemAt(1).widget() is page.new_build_panel
+    assert page.workspace_layout.itemAt(2).widget() is page.splitter
+    assert page.new_build_action_host.isAncestorOf(button)
 
     page.resize(1450, 600)
     page.show()
     app.processEvents()
-    button_bottom = button.mapToGlobal(button.rect().bottomLeft()).y()
-    selector_bottom = page.trial_combo.mapToGlobal(
-        page.trial_combo.rect().bottomLeft()
-    ).y()
-    assert abs(button_bottom - selector_bottom) <= 10
+    button_center = button.mapToGlobal(button.rect().center()).x()
+    host_center = page.new_build_action_host.mapToGlobal(
+        page.new_build_action_host.rect().center()
+    ).x()
+    assert abs(button_center - host_center) <= 10
     assert page.splitter.isVisible()
 
 
