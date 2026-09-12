@@ -64,6 +64,11 @@ class ExtremePartialNamedGearPhysicalFeasibilityService:
             tuple[tuple[int, ...], tuple[tuple[object, ...], ...]],
             bool,
         ] = {}
+        # Topology objects are immutable during one exact search. Their derived
+        # signature/count tuple used to be rebuilt millions of times in the hot
+        # feasibility path, despite never changing for that object.
+        self._topology_signature_cache: dict[int, str] = {}
+        self._topology_counts_cache: dict[int, tuple[int, ...]] = {}
 
     @staticmethod
     def _shape(row: ExtremeNamedGearSetSlotEligibility) -> tuple[object, ...]:
@@ -88,14 +93,31 @@ class ExtremePartialNamedGearPhysicalFeasibilityService:
             self._shape_cache[set_id] = cached
         return cached
 
+    def _topology_signature(self, topology: ExtremeGearSetCountTopology) -> str:
+        key = id(topology)
+        cached = self._topology_signature_cache.get(key)
+        if cached is None:
+            cached = topology.signature
+            self._topology_signature_cache[key] = cached
+        return cached
+
+    def _topology_counts(self, topology: ExtremeGearSetCountTopology) -> tuple[int, ...]:
+        key = id(topology)
+        cached = self._topology_counts_cache.get(key)
+        if cached is None:
+            cached = tuple(int(value) for value in topology.counts)
+            self._topology_counts_cache[key] = cached
+        return cached
+
     def _physicals(
         self,
         topology: ExtremeGearSetCountTopology,
     ) -> tuple[ExtremeGearPhysicalRealization, ...]:
-        rows = self._physical_cache.get(topology.signature)
+        signature = self._topology_signature(topology)
+        rows = self._physical_cache.get(signature)
         if rows is None:
             rows = ExtremeGearPhysicalSlotRealizationService._witnesses_for_topology(topology)
-            self._physical_cache[topology.signature] = rows
+            self._physical_cache[signature] = rows
         return rows
 
     @staticmethod
@@ -176,9 +198,9 @@ class ExtremePartialNamedGearPhysicalFeasibilityService:
         canonical physical witness-space test below remain authoritative.
         """
 
-        counts = tuple(int(value) for value in topology.counts)
+        counts = self._topology_counts(topology)
         key = (
-            topology.signature,
+            self._topology_signature(topology),
             tuple(self._cached_shape(row) for row in selected),
         )
         cached = self._result_cache.get(key)
@@ -224,7 +246,7 @@ class ExtremePartialNamedGearPhysicalFeasibilityService:
         topology: ExtremeGearSetCountTopology,
         selected: tuple[ExtremeNamedGearSetSlotEligibility, ...],
     ) -> ExtremePartialNamedGearPhysicalFeasibilityResult:
-        counts = tuple(int(value) for value in topology.counts)
+        counts = self._topology_counts(topology)
         if len(selected) > len(counts):
             return ExtremePartialNamedGearPhysicalFeasibilityResult(
                 possible=False,
