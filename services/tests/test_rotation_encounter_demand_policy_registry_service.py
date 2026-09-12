@@ -32,8 +32,10 @@ def test_registry_distinguishes_missing_encounter_from_explicit_empty_policy(tmp
 
     assert service.policies_for("rockgrove_xalvakka") == ()
     assert service.threshold_policies_for("rockgrove_xalvakka") == ()
+    assert service.review_blockers_for("rockgrove_xalvakka") == ()
     assert service.policies_for("sunspire_lokkestiiz") is None
     assert service.threshold_policies_for("sunspire_lokkestiiz") is None
+    assert service.review_blockers_for("sunspire_lokkestiiz") is None
     assert service.configured_encounter_ids() == ("rockgrove_xalvakka",)
 
 
@@ -113,6 +115,42 @@ def test_registry_builds_exact_explicit_threshold_policy_fields(tmp_path) -> Non
     assert policy.window_seconds == 2.0
     assert policy.target_count == 12
     assert policy.name == "Xalvakka Phase 2 healing prep"
+
+
+def test_registry_preserves_structured_review_blockers_without_making_policy(tmp_path) -> None:
+    service = RotationEncounterDemandPolicyRegistryService(
+        _write(
+            tmp_path,
+            {
+                "schema_version": 2,
+                "encounters": {
+                    "xalvakka": {
+                        "clock_policies": [],
+                        "threshold_policies": [],
+                        "review_blockers": [
+                            {
+                                "key": "phase_2_healer_demand_policy",
+                                "summary": "Phase 2 anchor is reviewed but healer policy is not.",
+                                "needed_evidence": "Approve lead, window, pattern, and target count.",
+                                "source_context": "reviewed Xalvakka Phase 2 evidence",
+                            }
+                        ],
+                    }
+                },
+            },
+        )
+    )
+
+    assert service.policies_for("xalvakka") == ()
+    assert service.threshold_policies_for("xalvakka") == ()
+    blockers = service.review_blockers_for("XALVAKKA")
+    assert blockers is not None
+    assert len(blockers) == 1
+    blocker = blockers[0]
+    assert blocker.key == "phase_2_healer_demand_policy"
+    assert blocker.summary == "Phase 2 anchor is reviewed but healer policy is not."
+    assert blocker.needed_evidence == "Approve lead, window, pattern, and target count."
+    assert blocker.source_context == "reviewed Xalvakka Phase 2 evidence"
 
 
 def test_registry_rejects_unknown_clock_policy_fields_instead_of_ignoring_them(tmp_path) -> None:
@@ -197,4 +235,34 @@ def test_registry_rejects_duplicate_threshold_identity_for_one_encounter(tmp_pat
     )
 
     with pytest.raises(ValueError, match="duplicate.*threshold policy"):
+        RotationEncounterDemandPolicyRegistryService(path)
+
+
+def test_registry_rejects_duplicate_review_blocker_keys(tmp_path) -> None:
+    path = _write(
+        tmp_path,
+        {
+            "schema_version": 2,
+            "encounters": {
+                "xalvakka": {
+                    "clock_policies": [],
+                    "threshold_policies": [],
+                    "review_blockers": [
+                        {
+                            "key": "phase_2_policy",
+                            "summary": "first",
+                            "needed_evidence": "review it",
+                        },
+                        {
+                            "key": "PHASE_2_POLICY",
+                            "summary": "second",
+                            "needed_evidence": "review it again",
+                        },
+                    ],
+                }
+            },
+        },
+    )
+
+    with pytest.raises(ValueError, match="duplicate.*review blocker"):
         RotationEncounterDemandPolicyRegistryService(path)
