@@ -100,6 +100,7 @@ def install() -> None:
     from ui.team_schedule_calendar_support import install as install_team_schedule_calendar_support
     from ui.team_schedule_multi_time_support import install as install_team_schedule_multi_time_support
     from ui.roster_player_architecture_support import install as install_roster_player_architecture_support
+    from ui.player_build_navigation_support import install as install_player_build_navigation_support
 
     # Preserve the portable calendar feature, then let the multi-time layer own
     # the final Team Schedule UI so each selected day can use its own start/end.
@@ -108,5 +109,8 @@ def install() -> None:
     # Characters and Teams compose the canonical build catalog with the durable
     # roster/team schedule state after the final Team Schedule patch is known.
     install_roster_player_architecture_support()
+    # Personnel records can jump directly into the selected player's build
+    # library only after the final Roster/Builds classes have been composed.
+    install_player_build_navigation_support()
     operations_console.OperationsConsole._raid_schedule_card = _raid_schedule_card
     _INSTALLED = True
