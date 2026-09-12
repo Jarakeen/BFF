@@ -12,6 +12,12 @@ Canonical provisioning entries whose static resolver has no mapped sheet stats a
 not automatically blockers. Their source tooltip may prove objective irrelevance
 when the target resource is absent, or appears only in an explicitly recovery-only
 clause. Anything that could plausibly describe the target maximum remains unresolved.
+
+Production record search creates many finite-axis evaluator objects around the same
+canonical provisioning repository. The projection proof is database/objective scoped,
+so completed production projections are shared across those evaluator instances.
+Food/drink identity evidence is bulk-loaded from SQLite once per service instance
+rather than opening/querying the database separately for every provisioning entry.
 """
 
 from dataclasses import dataclass
@@ -52,14 +58,34 @@ class ExtremeResourceProvisioningProjectionService:
     """Collapse canonical provisioning to strongest food + drink witnesses."""
 
     SUPPORTED_OBJECTIVES = frozenset(_OBJECTIVE_STATS)
+    _production_projection_cache: dict[
+        tuple[str, str], ExtremeResourceProvisioningProjection
+    ] = {}
 
     def __init__(self, repository: ProvisioningStaticRepository) -> None:
         self.repository = repository
+        self._kind_map: dict[str, tuple[str, ...]] | None = None
+        self._kind_map_error: str | None = None
 
-    def _kind(self, name: str) -> tuple[str | None, tuple[str, ...]]:
+    def _production_cache_key(self, objective_key: str) -> tuple[str, str] | None:
+        # Share only the real canonical repository. Test doubles and injected
+        # repositories keep instance-local behavior and cannot contaminate each other.
+        if not isinstance(self.repository, ProvisioningStaticRepository):
+            return None
         database_path = str(getattr(self.repository, "database_path", "") or "").strip()
         if not database_path:
-            return None, (f"Provisioning type evidence unavailable for {name}: no database path",)
+            return None
+        return database_path, objective_key
+
+    def _load_kind_map(self) -> None:
+        if self._kind_map is not None or self._kind_map_error is not None:
+            return
+
+        database_path = str(getattr(self.repository, "database_path", "") or "").strip()
+        if not database_path:
+            self._kind_map = {}
+            self._kind_map_error = "no database path"
+            return
 
         try:
             with sqlite3.connect(database_path) as connection:
@@ -67,21 +93,42 @@ class ExtremeResourceProvisioningProjectionService:
                     "SELECT 1 FROM sqlite_master WHERE type='table' AND name='entity'"
                 ).fetchone()
                 if table is None:
-                    return None, (f"Provisioning type evidence unavailable for {name}: entity table missing",)
+                    self._kind_map = {}
+                    self._kind_map_error = "entity table missing"
+                    return
                 rows = connection.execute(
                     """
-                    SELECT DISTINCT lower(trim(entity_type))
+                    SELECT lower(name), lower(trim(entity_type))
                     FROM entity
-                    WHERE lower(name)=lower(?)
-                      AND lower(trim(entity_type)) IN ('food', 'drink', 'provisioning')
-                    ORDER BY 1
-                    """,
-                    (name,),
+                    WHERE lower(trim(entity_type)) IN ('food', 'drink', 'provisioning')
+                    ORDER BY lower(name), lower(trim(entity_type))
+                    """
                 ).fetchall()
         except sqlite3.Error as exc:
-            return None, (f"Provisioning type evidence unreadable for {name}: {exc}",)
+            self._kind_map = {}
+            self._kind_map_error = str(exc)
+            return
 
-        kinds = tuple(str(row[0] or "").strip().casefold() for row in rows if row[0])
+        values: dict[str, set[str]] = {}
+        for raw_name, raw_kind in rows:
+            name = str(raw_name or "").strip().casefold()
+            kind = str(raw_kind or "").strip().casefold()
+            if not name or not kind:
+                continue
+            values.setdefault(name, set()).add(kind)
+        self._kind_map = {
+            name: tuple(sorted(kinds))
+            for name, kinds in values.items()
+        }
+
+    def _kind(self, name: str) -> tuple[str | None, tuple[str, ...]]:
+        self._load_kind_map()
+        if self._kind_map_error is not None:
+            return None, (
+                f"Provisioning type evidence unavailable for {name}: {self._kind_map_error}",
+            )
+
+        kinds = tuple((self._kind_map or {}).get(str(name).strip().casefold(), ()))
         concrete = tuple(kind for kind in kinds if kind in {"food", "drink"})
         if len(concrete) == 1:
             return concrete[0], ()
@@ -149,9 +196,19 @@ class ExtremeResourceProvisioningProjectionService:
         if target is None:
             raise KeyError(f"unreviewed Extreme provisioning projection objective: {objective_key!r}")
 
+        cache_key = self._production_cache_key(key)
+        if cache_key is not None:
+            cached = self._production_projection_cache.get(cache_key)
+            if cached is not None:
+                return cached
+
         names = tuple(self.repository.list_names())
         unresolved: list[str] = []
         best: dict[str, tuple[float, str] | None] = {"food": None, "drink": None}
+
+        # Load canonical food/drink identity evidence once before walking the
+        # provisioning catalogue. _kind() is then an in-memory lookup.
+        self._load_kind_map()
 
         for raw_name in names:
             name = str(raw_name or "").strip()
@@ -188,7 +245,7 @@ class ExtremeResourceProvisioningProjectionService:
             unresolved.append("Canonical provisioning catalogue produced no food/drink witness")
 
         final_unresolved = tuple(dict.fromkeys(item for item in unresolved if item))
-        return ExtremeResourceProvisioningProjection(
+        result = ExtremeResourceProvisioningProjection(
             objective_key=key,
             choices=choices,
             foods_reviewed=len(names),
@@ -197,6 +254,9 @@ class ExtremeResourceProvisioningProjectionService:
             denominator_proven=bool(names) and not final_unresolved,
             unresolved=final_unresolved,
         )
+        if cache_key is not None:
+            self._production_projection_cache[cache_key] = result
+        return result
 
 
 __all__ = [
