@@ -43,6 +43,11 @@ class RotationPeriodicDamageRuntimeSemantics:
     legal. Magnitude timing is intentionally separate from tick scheduling: callers
     must also review whether one cast snapshots its damage state or each tick reads
     the live state at that tick instant before DD output may claim complete damage.
+
+    ``successive_hit_multiplier`` models explicitly reviewed effects whose later
+    occurrences scale from the previous occurrence. The first occurrence is 1.0x,
+    the second is ``multiplier`` x, the third is ``multiplier ** 2`` x, and so on.
+    It is never inferred from tooltip duration or cadence.
     """
 
     skill_entity_id: str
@@ -52,6 +57,7 @@ class RotationPeriodicDamageRuntimeSemantics:
     source: str
     verified_interval_seconds: float | None = None
     magnitude_policy: PeriodicDamageMagnitudePolicy | None = None
+    successive_hit_multiplier: float | None = None
 
     def __post_init__(self) -> None:
         entity_id = ability_entity_id(self.skill_entity_id)
@@ -88,6 +94,11 @@ class RotationPeriodicDamageRuntimeSemantics:
                 "magnitude_policy",
                 PeriodicDamageMagnitudePolicy(str(self.magnitude_policy)),
             )
+        if self.successive_hit_multiplier is not None:
+            multiplier = float(self.successive_hit_multiplier)
+            if not math.isfinite(multiplier) or multiplier <= 0:
+                raise ValueError("successive_hit_multiplier must be finite and positive")
+            object.__setattr__(self, "successive_hit_multiplier", multiplier)
 
 
 @dataclass(frozen=True)
@@ -117,8 +128,8 @@ class RotationCandidatePeriodicDamageRuntimeProjectionService:
     Concrete recurring scheduling remains owned by the shared Phase 7 runtime
     binder. This layer only binds reviewed first-tick/refresh facts to one
     rotation plan and clips occurrences to the next recast and plan horizon.
-    Magnitude timing is preserved on the semantics record for the DD output layer;
-    it does not alter event scheduling here.
+    Magnitude timing and reviewed successive-hit scaling are preserved on the
+    semantics record for the DD output layer; they do not alter event scheduling.
     """
 
     _EPSILON = 1e-9
@@ -203,6 +214,11 @@ class RotationCandidatePeriodicDamageRuntimeProjectionService:
             evidence = (
                 *evidence,
                 f"magnitude policy {semantics.magnitude_policy.value} from {semantics.source}",
+            )
+        if semantics.successive_hit_multiplier is not None:
+            evidence = (
+                *evidence,
+                f"successive hit multiplier {semantics.successive_hit_multiplier:g} from {semantics.source}",
             )
 
         if first_occurrence > active_end + self._EPSILON:
