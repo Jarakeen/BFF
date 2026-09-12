@@ -312,6 +312,42 @@ def test_unresolved_periodic_runtime_entry_keeps_whole_skill_damage_unknown() ->
     assert evidence.unresolved == (reason,)
 
 
+def test_missing_periodic_runtime_semantics_fails_closed_with_exact_blocker() -> None:
+    action = RotationAction(
+        0.0,
+        0,
+        RotationActionKind.SKILL,
+        name="unreviewed_periodic_skill",
+        bar="front",
+    )
+    projection = _PeriodicProjection(
+        _entry(action, number=1, ticks=(1.0, 2.0))
+    )
+    skill_damage = RotationCandidateSkillDamageEvidenceService(
+        database_path="unused-test.db",
+        context=_context(),
+        calculator=_Calculator(
+            (SimpleNamespace(coefficient_number=1, final_value=100.0),)
+        ),
+        component_repository=_Components(
+            (_classification(number=1, is_dot=True),)
+        ),
+        periodic_runtime_projection_service=projection,
+        periodic_runtime_semantics=_semantics("some_other_skill", 1),
+    )
+
+    evidence = skill_damage.evaluate_action(
+        candidate=_candidate(action),
+        action=action,
+    )
+
+    assert evidence.damage_value is None
+    assert evidence.unresolved == (
+        "unreviewed_periodic_skill: coefficient 1 reviewed periodic runtime semantics are unavailable",
+    )
+    assert projection.calls == []
+
+
 def test_missing_periodic_magnitude_policy_fails_closed() -> None:
     action = RotationAction(
         0.0,
