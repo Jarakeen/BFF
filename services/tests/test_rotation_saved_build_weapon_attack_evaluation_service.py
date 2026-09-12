@@ -64,7 +64,7 @@ def _trace(value):
     return SimpleNamespace(final_value=value)
 
 
-def _context(bar: str):
+def _context(bar: str, *, dd_exploiter_bonus=0.0):
     derived = {
         StatId.MAX_MAGICKA: _trace(30000.0 if bar == "front" else 31000.0),
         StatId.MAX_STAMINA: _trace(18000.0 if bar == "front" else 19000.0),
@@ -78,6 +78,7 @@ def _context(bar: str):
     return SimpleNamespace(
         active_bar=bar,
         core_state=SimpleNamespace(derived=derived),
+        dd_exploiter_bonus=float(dd_exploiter_bonus),
     )
 
 
@@ -86,6 +87,16 @@ class _StaticContext:
     unresolved = ()
     progression = SimpleNamespace(character_id="char-1")
     contexts = (_context("front"), _context("back"))
+
+
+class _StaticContextWithExploiter:
+    resolved = True
+    unresolved = ()
+    progression = SimpleNamespace(character_id="char-1")
+    contexts = (
+        _context("front", dd_exploiter_bonus=0.04),
+        _context("back", dd_exploiter_bonus=0.04),
+    )
 
 
 def test_contribution_service_maps_reviewed_cp_weapon_attack_buckets() -> None:
@@ -173,6 +184,31 @@ def test_evaluation_bridge_projects_bar_specific_stats_and_contributions() -> No
     assert {item.effect_type: item.effective_value for item in front.combat_contributions}[
         "cp_la_damage"
     ] == pytest.approx(0.20)
+
+
+def test_evaluation_bridge_carries_exploiter_magnitude_without_claiming_uptime() -> None:
+    build = PlayerBuild(Name="Parse Cat", BuildName="DD", Role="DD")
+    adapter = _Adapter(SavedBuildAdaptation(_canonical_build(), ()))
+    service = RotationSavedBuildWeaponAttackEvaluationService(
+        database_path="unused.db",
+        build_adapter=adapter,  # type: ignore[arg-type]
+    )
+
+    result = service.resolve(
+        player_build=build,
+        static_context=_StaticContextWithExploiter(),
+    )
+
+    assert result.resolved is True
+    front = result.evaluation_for("front")
+    back = result.evaluation_for("back")
+    assert front is not None and back is not None
+    for evaluation in (front, back):
+        values = {
+            item.effect_type: item.effective_value
+            for item in evaluation.combat_contributions
+        }
+        assert values["conditional_exploiter_damage_done"] == pytest.approx(0.04)
 
 
 def test_evaluation_bridge_preserves_adapter_unresolved() -> None:
