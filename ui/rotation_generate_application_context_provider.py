@@ -8,6 +8,9 @@ from services.canonical_knowledge_gap import (
     CanonicalKnowledgeGap,
 )
 from services.encounter_rotation_demand_service import EncounterRotationDemandPolicy
+from services.rotation_encounter_demand_policy_registry_service import (
+    RotationEncounterDemandPolicyRegistryService,
+)
 from services.rotation_static_build_context_service import RotationStaticBuildContextService
 from ui.rotation_generate_canonical_context import (
     RotationGenerateCanonicalContext,
@@ -40,9 +43,9 @@ class RotationGenerateApplicationContextProvider:
     and final scorecard resolvers are left unset so the dashboard composes them from the
     exact generated seed plan.
 
-    Encounter demand policy is never inferred from boss names, guide prose, role, or
-    class. If no provider can resolve policy for the selected encounter, a blocking
-    knowledge gap travels into the canonical evidence bundle. Optional role evidence is
+    Encounter demand policy is read from the reviewed persisted policy registry by
+    default and is never inferred from boss names, guide prose, role, or class. Missing
+    registry coverage becomes a blocking knowledge gap. Optional role evidence is
     accepted only as an injected composer that sits above this shared boundary.
     """
 
@@ -56,7 +59,9 @@ class RotationGenerateApplicationContextProvider:
         self.static_context_service = (
             static_context_service or RotationStaticBuildContextService()
         )
-        self.demand_policy_provider = demand_policy_provider
+        self.demand_policy_provider = (
+            demand_policy_provider or RotationEncounterDemandPolicyRegistryService()
+        )
         self.role_evidence_composer = role_evidence_composer
 
     def context_for(self, page) -> RotationGenerateCanonicalContext:
@@ -119,11 +124,9 @@ class RotationGenerateApplicationContextProvider:
         tuple[EncounterRotationDemandPolicy, ...],
         tuple[CanonicalKnowledgeGap, ...],
     ]:
-        provider = self.demand_policy_provider
-        if provider is not None:
-            policies = provider.policies_for(encounter_id)
-            if policies is not None:
-                return tuple(policies), ()
+        policies = self.demand_policy_provider.policies_for(encounter_id)
+        if policies is not None:
+            return tuple(policies), ()
 
         return (), (
             CanonicalKnowledgeGap(
