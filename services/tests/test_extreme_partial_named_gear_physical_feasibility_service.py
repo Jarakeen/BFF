@@ -130,3 +130,15 @@ def test_repeated_prefix_shape_reuses_cached_result() -> None:
     second = service.evaluate(topology, selected)
 
     assert first is second
+
+
+def test_repeated_set_shape_is_interned_by_canonical_set_id() -> None:
+    service = ExtremePartialNamedGearPhysicalFeasibilityService()
+    first_row = _broad(10)
+    equivalent_row = _broad(10)
+
+    first = service._cached_shape(first_row)
+    second = service._cached_shape(equivalent_row)
+
+    assert first is second
+    assert tuple(service._shape_cache) == (10,)
