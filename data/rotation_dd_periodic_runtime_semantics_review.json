@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {
+      "skill_entity_id": "unnerving_boneyard",
+      "coefficient_number": 1,
+      "duration_seconds": 10.0,
+      "reviewed_interval_seconds": null,
+      "first_tick_offset_seconds": null,
+      "refresh_boundary": null,
+      "magnitude_policy": null,
+      "successive_hit_multiplier": null,
+      "evidence": [
+        "Corpsebuster DD coefficient-local tooltip: deals Frost Damage over 10 seconds"
+      ]
+    },
+    {
+      "skill_entity_id": "detonating_siphon",
+      "coefficient_number": 1,
+      "duration_seconds": 20.0,
+      "reviewed_interval_seconds": null,
+      "first_tick_offset_seconds": null,
+      "refresh_boundary": null,
+      "magnitude_policy": null,
+      "successive_hit_multiplier": null,
+      "evidence": [
+        "Corpsebuster DD coefficient-local tooltip: deals Disease Damage over 20 seconds"
+      ]
+    },
+    {
+      "skill_entity_id": "flawless_dawnbreaker",
+      "coefficient_number": 2,
+      "duration_seconds": 6.0,
+      "reviewed_interval_seconds": null,
+      "first_tick_offset_seconds": null,
+      "refresh_boundary": null,
+      "magnitude_policy": null,
+      "successive_hit_multiplier": null,
+      "evidence": [
+        "Corpsebuster DD coefficient-local tooltip: additional Physical Damage over 6 seconds"
+      ]
+    },
+    {
+      "skill_entity_id": "skeletal_archer",
+      "coefficient_number": 1,
+      "duration_seconds": 20.0,
+      "reviewed_interval_seconds": 2.0,
+      "first_tick_offset_seconds": null,
+      "refresh_boundary": null,
+      "magnitude_policy": null,
+      "successive_hit_multiplier": 1.15,
+      "evidence": [
+        "ESO-Hub current tooltip: archer attacks every 2 seconds for a 20-second duration",
+        "ESO-Hub current tooltip: each damaging attack deals 15% more damage than the previous attack"
+      ]
+    },
+    {
+      "skill_entity_id": "scalding_rune",
+      "coefficient_number": 2,
+      "duration_seconds": 22.0,
+      "reviewed_interval_seconds": null,
+      "first_tick_offset_seconds": null,
+      "refresh_boundary": null,
+      "magnitude_policy": null,
+      "successive_hit_multiplier": null,
+      "evidence": [
+        "Corpsebuster DD coefficient-local tooltip: additional Flame Damage over 22 seconds",
+        "Current public tooltip documents a 2-second rune arm delay before trigger; this is not promoted as periodic first-tick timing"
+      ]
+    },
+    {
+      "skill_entity_id": "stampede",
+      "coefficient_number": 2,
+      "duration_seconds": 15.0,
+      "reviewed_interval_seconds": 1.0,
+      "first_tick_offset_seconds": null,
+      "refresh_boundary": null,
+      "magnitude_policy": null,
+      "successive_hit_multiplier": null,
+      "evidence": [
+        "ESO-Hub current tooltip: residual Physical Damage every 1 second for 15 seconds"
+      ]
+    },
+    {
+      "skill_entity_id": "meteor",
+      "coefficient_number": 2,
+      "duration_seconds": 11.0,
+      "reviewed_interval_seconds": 1.0,
+      "first_tick_offset_seconds": null,
+      "refresh_boundary": null,
+      "magnitude_policy": null,
+      "successive_hit_multiplier": null,
+      "evidence": [
+        "Corpsebuster DD coefficient-local tooltip: post-impact Flame Damage every 1 second for 11 seconds"
+      ]
+    }
+  ]
+}
