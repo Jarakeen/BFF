@@ -51,7 +51,9 @@ class RotationCandidateSkillDamageEvidenceService:
     shared runtime projection. Cast-time magnitude may be reused for all projected
     ticks only when reviewed semantics explicitly say ``snapshot_at_cast``. Dynamic
     per-tick magnitude is recomputed only when an authoritative exact-time runtime
-    build-context resolver is supplied for every projected tick.
+    build-context resolver is supplied for every projected tick. Explicit
+    successive-hit scaling is applied by occurrence index only when reviewed
+    semantics provide a multiplier.
     """
 
     def __init__(
@@ -202,6 +204,7 @@ class RotationCandidateSkillDamageEvidenceService:
                         coefficient_number=component.coefficient_number,
                         classification=classification,
                         runtime_events=runtime_entry.events,
+                        semantic=semantic,
                     )
                     if dynamic_unresolved:
                         unresolved.extend(dynamic_unresolved)
@@ -219,7 +222,11 @@ class RotationCandidateSkillDamageEvidenceService:
                 )
                 # Explicit SNAPSHOT_AT_CAST evidence permits one cast-time damage
                 # consequence to be reused for each projected periodic occurrence.
-                total_damage += component_damage * len(runtime_entry.events)
+                total_damage += sum(
+                    component_damage
+                    * self._occurrence_multiplier(semantic, occurrence_index)
+                    for occurrence_index, _event in enumerate(runtime_entry.events)
+                )
                 continue
 
             component_damage = self._resolve_component_damage(
@@ -253,6 +260,7 @@ class RotationCandidateSkillDamageEvidenceService:
         coefficient_number: int,
         classification: SkillComponentClassification,
         runtime_events,
+        semantic: RotationPeriodicDamageRuntimeSemantics,
     ) -> tuple[float, tuple[str, ...]]:
         if self.runtime_build_context_resolver is None:
             return 0.0, (
@@ -263,7 +271,7 @@ class RotationCandidateSkillDamageEvidenceService:
         unresolved: list[str] = []
         damage_taken = damage_taken_from_target_state(self.target_combat_state)
 
-        for event in runtime_events:
+        for occurrence_index, event in enumerate(runtime_events):
             # Runtime ticks are not plan actions. Sequence=None asks the canonical
             # runtime/bar projector for the state after all plan actions at this
             # exact timestamp rather than fabricating an ordering token for the tick.
@@ -324,9 +332,19 @@ class RotationCandidateSkillDamageEvidenceService:
                 dd_stats=tick_dd_stats,
                 damage_done=tick_damage_done,
                 damage_taken=damage_taken,
-            )
+            ) * self._occurrence_multiplier(semantic, occurrence_index)
 
         return total_damage, tuple(dict.fromkeys(unresolved))
+
+    @staticmethod
+    def _occurrence_multiplier(
+        semantic: RotationPeriodicDamageRuntimeSemantics,
+        occurrence_index: int,
+    ) -> float:
+        multiplier = semantic.successive_hit_multiplier
+        if multiplier is None:
+            return 1.0
+        return float(multiplier) ** int(occurrence_index)
 
     def _periodic_semantics_for(
         self,
