@@ -312,9 +312,13 @@ class PlayerBuild:
 
 @dataclass
 class BuildRoster:
-    """Up to 12 PlayerBuilds."""
+    """Compatibility collection for the saved build library.
+
+    Raid teams are capped by team/chair composition rules, not by build storage.
+    A raid lead may keep any number of players, characters, and saved builds.
+    """
+
     Members: list[PlayerBuild] = field(default_factory=lambda: [PlayerBuild()])
-    MAX_MEMBERS = 12
 
     def to_dict(self) -> dict:
         return {"Members": [m.to_dict() for m in self.Members]}
@@ -322,4 +326,4 @@ class BuildRoster:
     @classmethod
     def from_dict(cls, data: dict | None) -> "BuildRoster":
         members = [PlayerBuild.from_dict(m) for m in (data or {}).get("Members", [])]
-        return cls(Members=members[: cls.MAX_MEMBERS] or [PlayerBuild()])
+        return cls(Members=members or [PlayerBuild()])
