@@ -15,23 +15,56 @@ def _choices():
     return PotionChoiceService(processed).list_choices()
 
 
+def _existing_named_choices(combo) -> list[str]:
+    """Capture database-backed named/non-crafted potion choices already in the editor."""
+    names: dict[str, str] = {}
+    for index in range(combo.count()):
+        text = str(combo.itemText(index) or "").strip()
+        data = str(combo.itemData(index) or "").strip()
+        value = data or text
+        if not value:
+            continue
+        names.setdefault(value.casefold(), value)
+    return sorted(names.values(), key=str.casefold)
+
+
 def _configure_combo(combo) -> None:
-    current = str(combo.currentText() or "").strip()
+    current_data = str(combo.currentData() or "").strip()
+    current_text = str(combo.currentText() or "").strip()
+    current = current_data or current_text
+    named_choices = _existing_named_choices(combo)
+
     combo.blockSignals(True)
     combo.clear()
     combo.setEditable(False)
     combo.addItem("", "")
+
     for choice in _choices():
-        combo.addItem(choice.label, choice.canonical_id)
+        combo.addItem(f"Crafted · {choice.label}", choice.canonical_id)
         index = combo.count() - 1
         combo.setItemData(
             index,
-            f"{choice.formula_count} verified reagent formula(s)",
+            f"Crafted potion effect family · {choice.formula_count} verified reagent formula(s)",
             Qt.ItemDataRole.ToolTipRole,
         )
+
+    for name in named_choices:
+        combo.addItem(f"Named · {name}", name)
+        index = combo.count() - 1
+        combo.setItemData(
+            index,
+            "Named/non-crafted potion from the canonical ESO entity catalog.",
+            Qt.ItemDataRole.ToolTipRole,
+        )
+
     if current:
-        combo.addItem(current, current)
-        combo.setCurrentIndex(combo.count() - 1)
+        for index in range(combo.count()):
+            if str(combo.itemData(index) or "").strip().casefold() == current.casefold():
+                combo.setCurrentIndex(index)
+                break
+        else:
+            combo.addItem(current, current)
+            combo.setCurrentIndex(combo.count() - 1)
     combo.blockSignals(False)
 
 
@@ -69,7 +102,8 @@ def install() -> None:
         card = original_skills_card(self)
         _configure_combo(self.potion)
         self.potion.setToolTip(
-            "Canonical crafted-potion effect family. Equivalent reagent recipes are grouped; selecting a potion does not imply uptime."
+            "Choose either a canonical crafted-potion effect family or a named/non-crafted potion. "
+            "Crafted entries group equivalent reagent recipes; selecting a potion does not imply uptime."
         )
         return card
 
