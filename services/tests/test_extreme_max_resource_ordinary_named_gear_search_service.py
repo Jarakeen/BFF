@@ -289,6 +289,44 @@ def test_numerically_tied_different_effect_signatures_remain_distinct() -> None:
     assert len(winner.realizations) == 3
 
 
+def test_seed_is_only_a_lower_bound_and_dfs_can_replace_it() -> None:
+    rows = (
+        (10, 2, 1000.0),
+        (20, 2, 900.0),
+        (10, 3, 5000.0),
+        (30, 3, 100.0),
+    )
+    service, _breakpoints, _eligibility_catalog, _relevance = _service(rows)
+    topology = ExtremeGearSetCountTopology(counts=(2, 3), unused_units=7)
+    candidates = {
+        2: (
+            _Candidate(10, "Set 10", 2, 1000.0, _eligibility(10), (("2A",),)),
+            _Candidate(20, "Set 20", 2, 900.0, _eligibility(20), (("2B",),)),
+        ),
+        3: (
+            _Candidate(10, "Set 10", 3, 5000.0, _eligibility(10), (("3A",),)),
+            _Candidate(30, "Set 30", 3, 100.0, _eligibility(30), (("3B",),)),
+        ),
+    }
+    frontier = ExtremeGearSetBonusBreakpointCatalog(
+        sets=(
+            ExtremeGearSetBonusBreakpoints(10, "Set 10", 5, (2, 3)),
+            _breakpoint(20, 2),
+            _breakpoint(30, 3),
+        )
+    )
+
+    winner = service._search_topology(
+        topology,
+        candidates,
+        frontier,
+        feasibility=ExtremePartialNamedGearPhysicalFeasibilityService(),
+    )
+
+    assert winner.best_exact_flat_delta == 5900.0
+    assert {row.set_ids for row in winner.realizations} == {(20, 10)}
+
+
 def test_partial_physical_pruning_rejects_impossible_prefix_before_leaf() -> None:
     rows = (
         (10, 3, 1500.0),
