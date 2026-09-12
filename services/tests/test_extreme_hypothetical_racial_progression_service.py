@@ -33,6 +33,8 @@ class _Universe:
             _racial("Spell Recharge", "High Elf Skills", 3),
             _racial("Resist Affliction", "Wood Elf Skills", 3),
             _racial("Hunter's Eye", "Wood Elf Skills", 3),
+            _racial("Dynamic", "Dark Elf Skills", 3),
+            _racial("Ruination", "Dark Elf Skills", 3),
             _racial("Tough", "Imperial Skills", 3),
         )
 
@@ -64,6 +66,38 @@ def test_normalize_replaces_inherited_race_with_selected_max_rank_racial_progres
     assert result.passive_rank("Tough") is None
     assert result.owns_skill_line("Undaunted") is True
     assert result.owns_skill_line("Wood Elf Skills") is True
+    assert result.owns_skill_line("High Elf Skills") is False
+
+
+def test_normalize_maps_altmer_to_high_elf_skill_line():
+    service = ExtremeHypotheticalRacialProgressionService(universe_service=_Universe())
+
+    result = service.normalize(_progression(), "Altmer")
+
+    assert result.passive_rank("Syrabane's Boon") == 3
+    assert result.passive_rank("Spell Recharge") == 3
+    assert result.owns_skill_line("High Elf Skills") is True
+
+
+def test_normalize_maps_bosmer_to_wood_elf_skill_line():
+    service = ExtremeHypotheticalRacialProgressionService(universe_service=_Universe())
+
+    result = service.normalize(_progression(), "Bosmer")
+
+    assert result.passive_rank("Resist Affliction") == 3
+    assert result.passive_rank("Hunter's Eye") == 3
+    assert result.owns_skill_line("Wood Elf Skills") is True
+    assert result.owns_skill_line("High Elf Skills") is False
+
+
+def test_normalize_maps_dunmer_to_dark_elf_skill_line():
+    service = ExtremeHypotheticalRacialProgressionService(universe_service=_Universe())
+
+    result = service.normalize(_progression(), "Dunmer")
+
+    assert result.passive_rank("Dynamic") == 3
+    assert result.passive_rank("Ruination") == 3
+    assert result.owns_skill_line("Dark Elf Skills") is True
     assert result.owns_skill_line("High Elf Skills") is False
 
 
