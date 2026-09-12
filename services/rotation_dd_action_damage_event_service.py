@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -10,6 +11,9 @@ from minmax.skill_coefficient_repository import SkillCoefficientRepository
 from minmax.skill_component_classification import SkillEffectKind
 from minmax.skill_component_repository import SkillComponentRepository
 from minmax.skill_tooltip_calculator import SkillTooltipCalculator
+
+
+RotationDDActionContextResolver = Callable[[float, int], BuildCalculationContext]
 
 
 @dataclass(frozen=True)
@@ -42,20 +46,20 @@ class RotationDDActionDamageProjection:
 class RotationDDActionDamageEventService:
     """Project verified skill/Ultimate damage components from scheduled actions.
 
-    Direct damage attaches to the scheduled cast timestamp. Verified DoT
-    components are preserved as seeds but are not expanded into ticks here.
-    Tick cadence, duration, refresh/overwrite behavior, and horizon clipping need
-    explicit runtime evidence before a DoT becomes time-resolved damage.
+    Direct damage attaches to the scheduled cast timestamp. A caller may provide an
+    exact-time context resolver so tooltip/coefficient evaluation uses the canonical
+    bar active at each action's ``(time_seconds, sequence)``. Without one, the legacy
+    single-context path remains available for focused/static callers.
+
+    Verified DoT components are preserved as seeds but are not expanded into ticks
+    here. Tick cadence, duration, refresh/overwrite behavior, horizon clipping, and
+    later-tick stat semantics need explicit runtime evidence before a DoT becomes
+    fully time-resolved damage.
 
     Light/heavy attacks are recognized as damage-bearing rotation actions, but this
     service does not yet own canonical weapon-attack magnitude formulas. Their
     presence is therefore explicit unresolved damage evidence rather than silently
     disappearing from a supposedly complete DD projection.
-
-    The coefficient calculator already resolves resource/power scaling, so its
-    per-component value becomes ``DDDamageEvent.base_value`` with zero additional
-    scaling here. Later DD stages may still apply Damage Done, crit, mitigation,
-    and Damage Taken through the existing canonical DD engine.
     """
 
     def __init__(
@@ -80,6 +84,7 @@ class RotationDDActionDamageEventService:
         *,
         plan: RotationPlan,
         context: BuildCalculationContext,
+        context_resolver: RotationDDActionContextResolver | None = None,
     ) -> RotationDDActionDamageProjection:
         events: list[RotationDDResolvedDamageEvent] = []
         dot_components: list[RotationDDDotComponentSeed] = []
@@ -108,6 +113,19 @@ class RotationDDActionDamageEventService:
             if not action.name:
                 continue
 
+            action_context = context
+            if context_resolver is not None:
+                try:
+                    action_context = context_resolver(
+                        float(action.time_seconds),
+                        int(action.sequence),
+                    )
+                except (LookupError, ValueError) as exc:
+                    unresolved.append(
+                        f"{action.name} at {action.time_seconds:g}s: active-bar damage context unavailable: {exc}"
+                    )
+                    continue
+
             resolution = self.coefficients.resolve_name(action.name)
             if resolution.rank is None:
                 unresolved.extend(
@@ -120,7 +138,7 @@ class RotationDDActionDamageEventService:
                     )
                 continue
 
-            result = self.calculator.evaluate_name(action.name, context)
+            result = self.calculator.evaluate_name(action.name, action_context)
             if result.unresolved:
                 unresolved.extend(
                     f"{action.name} at {action.time_seconds:g}s: {item}"
@@ -221,3 +239,12 @@ class RotationDDActionDamageEventService:
             seen.add(text)
             result.append(text)
         return tuple(result)
+
+
+__all__ = [
+    "RotationDDActionContextResolver",
+    "RotationDDActionDamageEventService",
+    "RotationDDActionDamageProjection",
+    "RotationDDDotComponentSeed",
+    "RotationDDResolvedDamageEvent",
+]
