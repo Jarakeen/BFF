@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from services.extreme_gear_physical_slot_realization_service import (
+    ExtremeGearPhysicalSlotRealizationService,
+)
 from services.extreme_gear_set_topology_catalog_service import ExtremeGearSetCountTopology
 from services.extreme_named_gear_set_realization_service import (
     ExtremeNamedGearSetRealizationService,
@@ -142,3 +145,31 @@ def test_repeated_set_shape_is_interned_by_canonical_set_id() -> None:
 
     assert first is second
     assert tuple(service._shape_cache) == (10,)
+
+
+def test_body_assignment_solver_reuses_identity_free_body_cache(monkeypatch) -> None:
+    service = ExtremePartialNamedGearPhysicalFeasibilityService()
+    topology = ExtremeGearSetCountTopology(counts=(3, 2), unused_units=7)
+    physical = ExtremeGearPhysicalSlotRealizationService._witnesses_for_topology(topology)[0]
+    selected = (_broad(10),)
+
+    original = ExtremeNamedGearSetRealizationService._body_assignments
+    calls = 0
+
+    def wrapped(remaining, rows):
+        nonlocal calls
+        calls += 1
+        return original(remaining, rows)
+
+    monkeypatch.setattr(
+        ExtremeNamedGearSetRealizationService,
+        "_body_assignments",
+        staticmethod(wrapped),
+    )
+
+    first = service._body_compatible(physical, selected)
+    second = service._body_compatible(physical, (_broad(20),))
+
+    assert first is second
+    assert calls == 1
+    assert len(service._body_cache) == 1
