@@ -237,6 +237,12 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 ## Rotation Builder
 
 - Generate combat rotations
+- Live canonical Generate context is resolved from the current saved build and selected encounter at click time rather than being frozen when the page opens
+- Explicit canonical recovery resource selection for Magicka or Stamina
+- Explicit canonical recovery-trigger percentage with no assumed default threshold
+- Canonical saved-build static context supplies the selected recovery pool maximum instead of a UI placeholder value
+- Missing encounter demand policy blocks encounter-aware Generate unless reviewed policy or an explicitly reviewed empty policy is configured
+- Generate-time candidate evaluator and final scorecard resolvers are composed from the exact generated seed plan through canonical sustain, duration, scorecard, and ranking services
 - Role-aware rotation construction
 - Healer rotation construction
 - Shared canonical multi-demand healer role-output composition for audits and production callers
