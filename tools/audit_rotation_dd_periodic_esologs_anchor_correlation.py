@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 from collections import Counter
 from pathlib import Path
+from statistics import mean, median, pstdev
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -22,6 +23,40 @@ def _common(values: tuple[float, ...], *, limit: int = 8) -> str:
     return ", ".join(
         f"{value:g}s x{count}" if count > 1 else f"{value:g}s"
         for value, count in rounded.most_common(limit)
+    )
+
+
+def _percentile(values: tuple[float, ...], fraction: float) -> float | None:
+    if not values:
+        return None
+    ordered = sorted(float(value) for value in values)
+    if len(ordered) == 1:
+        return ordered[0]
+    position = min(1.0, max(0.0, float(fraction))) * (len(ordered) - 1)
+    lower_index = int(position)
+    upper_index = min(lower_index + 1, len(ordered) - 1)
+    weight = position - lower_index
+    return ordered[lower_index] + (ordered[upper_index] - ordered[lower_index]) * weight
+
+
+def _distribution_lines(values: tuple[float, ...]) -> tuple[str, ...]:
+    if not values:
+        return ("  unavailable",)
+    ordered = tuple(float(value) for value in values)
+    med = float(median(ordered))
+    spread = float(pstdev(ordered)) if len(ordered) > 1 else 0.0
+    within_10ms = sum(1 for value in ordered if abs(value - med) <= 0.010)
+    within_25ms = sum(1 for value in ordered if abs(value - med) <= 0.025)
+    within_50ms = sum(1 for value in ordered if abs(value - med) <= 0.050)
+    return (
+        f"  count={len(ordered)} min={min(ordered):.3f}s p10={_percentile(ordered, 0.10):.3f}s "
+        f"p25={_percentile(ordered, 0.25):.3f}s median={med:.3f}s",
+        f"  p75={_percentile(ordered, 0.75):.3f}s p90={_percentile(ordered, 0.90):.3f}s "
+        f"p95={_percentile(ordered, 0.95):.3f}s p99={_percentile(ordered, 0.99):.3f}s max={max(ordered):.3f}s",
+        f"  mean={mean(ordered):.3f}s population_stdev={spread:.3f}s",
+        f"  within median ±10ms: {within_10ms}/{len(ordered)} ({within_10ms / len(ordered):.1%})",
+        f"  within median ±25ms: {within_25ms}/{len(ordered)} ({within_25ms / len(ordered):.1%})",
+        f"  within median ±50ms: {within_50ms}/{len(ordered)} ({within_50ms / len(ordered):.1%})",
     )
 
 
@@ -92,6 +127,9 @@ def main(argv: list[str] | None = None) -> int:
         )
     )
     print("Common cast -> impact offsets: " + _common(report.cast_to_impact_seconds))
+    print("Cast -> impact distribution:")
+    for line in _distribution_lines(report.cast_to_impact_seconds):
+        print(line)
     print(
         "Common impact -> first periodic offsets: "
         + _common(report.impact_to_first_periodic_seconds)
@@ -107,7 +145,7 @@ def main(argv: list[str] | None = None) -> int:
     print()
     print(
         "Result: OBSERVATIONAL ONLY — numeric IDs remain evidence handles; this tool "
-        "does not promote an activation anchor or first-tick semantic automatically."
+        "does not promote an activation anchor, impact delay, or first-tick semantic automatically."
     )
     return 0
 
