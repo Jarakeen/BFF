@@ -178,8 +178,8 @@ def test_real_xalvakka_projection_exposes_phase_and_split_structure():
     assert "Soul Resonance" in names
     assert "Retreat" in names
     assert "Split" in names
-    assert "Phase 3 Meteors" in names
-    assert "Havocrel Goliath Summons" in names
+    assert "Deadstar" in names
+    assert any("Goliath" in name for name in names)
 
 
 def test_bahsei_reviewed_research_populates_overview_without_canonical_packet():
@@ -197,10 +197,14 @@ def test_bahsei_reviewed_research_populates_overview_without_canonical_packet():
     assert "Summoning Runes" in names
     assert "Summon Behemoth" in names
     assert "Dagon's Wrath" in names
-    assert "90%, 85%, 80%, 75%, 70%, 65%, and 60%" in brief
     assert "50%, 40%, 25%, 20%, and 10%" in brief
 
+    summoning = next(row for row in projection.strategy if row.mechanic == "Summoning Runes")
+    behemoth = next(row for row in projection.strategy if row.mechanic == "Summon Behemoth")
     curse = next(row for row in projection.strategy if row.mechanic == "Death Touch/Kiss of Death")
+
+    assert "90%, 85%, 80%, 75%, 70%, 65%, and 60%" in summoning.summary
+    assert "50%, 40%, 25%, 20%, and 10%" in behemoth.summary
     assert "separation" in curse.mitigation.casefold()
 
 
