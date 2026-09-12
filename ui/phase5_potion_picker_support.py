@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from pathlib import Path
-
 from PySide6.QtCore import Qt
 
+from minmax.potion_availability_repository import DEFAULT_PROCESSED, LEGACY_PROCESSED
 from models.build_model import PlayerBuild
 from services.potion_choice_service import PotionChoiceService
 
@@ -11,7 +10,7 @@ _INSTALLED = False
 
 
 def _choices():
-    processed = Path(__file__).resolve().parents[1] / "data" / "processed" / "alchemy_effects.json"
+    processed = DEFAULT_PROCESSED if DEFAULT_PROCESSED.exists() else LEGACY_PROCESSED
     return PotionChoiceService(processed).list_choices()
 
 
