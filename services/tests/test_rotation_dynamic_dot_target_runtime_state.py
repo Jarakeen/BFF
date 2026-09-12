@@ -81,8 +81,18 @@ class _Projection:
                     action=self.action,
                     coefficient_number=1,
                     events=(
-                        RuntimeEvent(1.0, "damage_dealt", "tick", 0),
-                        RuntimeEvent(2.0, "damage_dealt", "tick", 1),
+                        RuntimeEvent(
+                            time_seconds=1.0,
+                            trigger="damage_dealt",
+                            source="tick",
+                            sequence=0,
+                        ),
+                        RuntimeEvent(
+                            time_seconds=2.0,
+                            trigger="damage_dealt",
+                            source="tick",
+                            sequence=1,
+                        ),
                     ),
                     active_end_time_seconds=10.0,
                     unresolved=(),
