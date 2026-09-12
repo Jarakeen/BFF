@@ -20,6 +20,12 @@ def test_uesp_scribing_catalog_has_expected_shape():
     assert result_name("Soul Burst", "Damage Shield") == "Warding Burst"
 
 
+def test_verified_magical_banner_result_name_is_explicit():
+    assert "Magic Damage" in compatible_focus("Banner Bearer")
+    assert skill_line_for_grimoire("Banner Bearer") == "Support"
+    assert result_name("Banner Bearer", "Magic Damage") == "Magical Banner"
+
+
 def test_recipe_store_keeps_legacy_name_mirror():
     build = PlayerBuild(Name="Tank")
     recipe = ScribedSkillRecipe(
