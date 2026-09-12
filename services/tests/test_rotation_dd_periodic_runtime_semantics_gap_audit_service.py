@@ -4,6 +4,7 @@ from minmax.skill_component_classification import (
     SkillComponentClassification,
     SkillEffectKind,
 )
+from models.build_model import PlayerBuild
 from services.rotation_candidate_periodic_damage_runtime_projection_service import (
     PeriodicDamageMagnitudePolicy,
     PeriodicDamageRefreshBoundary,
@@ -102,6 +103,51 @@ def test_audit_returns_only_verified_dot_components_missing_reviewed_semantics()
     assert gap.coefficient_number == 1
     assert gap.classification_source == "runtime classification"
     assert result.complete is False
+
+
+def test_audit_build_uses_both_saved_bars_and_dedupes_skill_identity() -> None:
+    coefficients = _Coefficients(
+        {
+            "wall_of_elements": _resolution("wall_of_elements", 101),
+            "barbed_trap": _resolution("barbed_trap", 102),
+        }
+    )
+    service = RotationDDPeriodicRuntimeSemanticsGapAuditService(
+        "unused.db",
+        coefficient_repository=coefficients,
+        component_repository=_Components(
+            {
+                101: (_component(1, is_dot=True),),
+                102: (
+                    SkillComponentClassification(
+                        skill_rank_id=102,
+                        coefficient_number=2,
+                        effect_kind=SkillEffectKind.DAMAGE,
+                        damage_type="physical",
+                        is_dot=True,
+                        is_aoe=False,
+                        can_crit=True,
+                        source="verified",
+                    ),
+                ),
+            }
+        ),
+        semantics_registry=_Registry(),
+    )
+    build = PlayerBuild(
+        Name="Parse Cat",
+        BuildName="DD",
+        Role="DD",
+        FrontBarSkills=["Wall of Elements", "Barbed Trap", "", "", "", ""],
+        BackBarSkills=["wall_of_elements", "", "", "", "", ""],
+    )
+
+    result = service.audit_build(build)
+
+    assert coefficients.calls == ["wall_of_elements", "barbed_trap"]
+    assert tuple(
+        (item.skill_entity_id, item.coefficient_number) for item in result.missing
+    ) == (("wall_of_elements", 1), ("barbed_trap", 2))
 
 
 def test_audit_separates_reviewed_periodic_semantics_from_missing_queue() -> None:
