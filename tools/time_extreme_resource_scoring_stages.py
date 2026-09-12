@@ -3,8 +3,10 @@ from __future__ import annotations
 """Coarsely time Max Resource stages without cProfile overhead.
 
 This diagnostic isolates named-gear realization from downstream canonical scoring and
-samples a small number of projected structural candidates. It does not alter search
-behavior or database state.
+samples individual named-gear + armor finite-axis scorers. It deliberately does not
+call the outer scorer for a full structural candidate because that would rescan every
+surviving gear/armor pair and merely reproduce the expensive production stage we are
+trying to measure. It does not alter search behavior or database state.
 """
 
 import argparse
@@ -126,21 +128,44 @@ def main() -> int:
     print(f"active_bars={len(universe.active_bars)}")
     print(f"structural_candidates={len(structural_candidates)}")
 
-    sample_count = max(0, min(int(args.sample), len(structural_candidates)))
-    print("sample_scores=")
+    if not structural_candidates or not gear_rows_front or not armor_rows:
+        print("atomic_samples=none")
+        return 0
+
+    sample_count = max(0, int(args.sample))
+    sample_candidate = structural_candidates[0]
+    sample_gear = gear_rows_front
+    pair_count = len(sample_gear) * len(armor_rows)
+    sample_pairs = []
+    for gear_index, realization in enumerate(sample_gear):
+        for armor_index, armor_state in enumerate(armor_rows):
+            sample_pairs.append((gear_index, armor_index, realization, armor_state))
+            if len(sample_pairs) >= sample_count:
+                break
+        if len(sample_pairs) >= sample_count:
+            break
+
+    print("atomic_pair_scores=")
     total = 0.0
-    for index, candidate in enumerate(structural_candidates[:sample_count], start=1):
+    for index, (gear_index, armor_index, realization, armor_state) in enumerate(sample_pairs, start=1):
+        scorer = factory(realization, armor_state)
         started = perf_counter()
-        value, _payload, unresolved = evaluator(key, candidate)
+        value, _payload, unresolved = scorer(key, sample_candidate)
         elapsed = perf_counter() - started
         total += elapsed
         print(
-            f"  {index}: seconds={elapsed:.3f} value={value:.3f} "
-            f"race={candidate.race} bar={candidate.active_bar} unresolved={len(unresolved)}"
+            f"  {index}: seconds={elapsed:.6f} value={float(value):.3f} "
+            f"gear_index={gear_index} armor_index={armor_index} unresolved={len(unresolved)}"
         )
-    if sample_count:
-        print(f"sample_average_seconds={total / sample_count:.3f}")
-        print(f"naive_projected_structural_scoring_seconds={(total / sample_count) * len(structural_candidates):.3f}")
+
+    if sample_pairs:
+        average = total / len(sample_pairs)
+        print(f"atomic_pair_average_seconds={average:.6f}")
+        print(f"projected_one_structural_candidate_seconds={average * pair_count:.3f}")
+        print(
+            f"naive_projected_all_structural_scoring_seconds="
+            f"{average * pair_count * len(structural_candidates):.3f}"
+        )
 
     return 0
 
