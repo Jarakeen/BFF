@@ -122,6 +122,33 @@ def _service(*, two_specials: bool = False) -> ExtremeMaxHealthNamedGearCandidat
     )
 
 
+def _tied_filler_service() -> ExtremeMaxHealthNamedGearCandidateSearchService:
+    ids = (10, 20, 30)
+    breakpoints = ExtremeGearSetBonusBreakpointCatalog(
+        sets=tuple(_breakpoint(set_id) for set_id in ids)
+    )
+    eligibility = ExtremeNamedGearSetSlotEligibilityCatalog(
+        sets=tuple(_eligibility(set_id) for set_id in ids)
+    )
+    relevance = ExtremeGearSetObjectiveRelevanceCatalog(
+        objective_key="max_health",
+        evidence=(
+            _evidence(10, 1000.0),
+            _evidence(20, 1000.0),
+            _evidence(30, 500.0, condition="food_buff_active"),
+        ),
+    )
+    ordinary = ExtremeMaxResourceOrdinaryNamedGearSearchService(
+        breakpoints=breakpoints,
+        eligibility=eligibility,
+        relevance=relevance,
+    )
+    return ExtremeMaxHealthNamedGearCandidateSearchService(
+        ordinary_service=ordinary,
+        eligibility=eligibility,
+    )
+
+
 def test_special_family_keeps_best_ordinary_filler_beside_ordinary_winner() -> None:
     service = _service()
     topology = ExtremeGearSetCountTopology(counts=(2, 2), unused_units=8)
@@ -155,3 +182,22 @@ def test_every_legal_special_subset_gets_its_own_candidate_family() -> None:
     assert {row.set_ids for row in by_special_ids[(40,)].realizations} == {(10, 40)}
     assert by_special_ids[(30, 40)].best_ordinary_flat_delta == 0.0
     assert {row.set_ids for row in by_special_ids[(30, 40)].realizations} == {(30, 40)}
+
+
+def test_special_family_collapses_semantically_identical_ordinary_fillers() -> None:
+    service = _tied_filler_service()
+    topology = ExtremeGearSetCountTopology(counts=(2, 2), unused_units=8)
+    catalog = ExtremeGearSetTopologyCatalog(sets=(), topologies=(topology,))
+
+    result = service.search(catalog)
+    special = next(
+        row for row in result.special_subsets
+        if row.special_pairs == ((30, "Set 30", 2),)
+    )
+
+    assert special.best_ordinary_flat_delta == 1000.0
+    assert len(special.realizations) == 1
+    assert special.realizations[0].set_ids in {(10, 30), (20, 30)}
+    assert special.stats.semantic_leaf_classes >= 1
+    assert special.stats.semantic_duplicate_leaves >= 1
+    assert special.stats.witness_checks < special.stats.feasible_leaves
