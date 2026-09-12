@@ -23,6 +23,9 @@ from services.rotation_candidate_dd_role_output_service import (
     RotationCandidateDDRoleOutputService,
 )
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
+from services.rotation_candidate_heavy_attack_damage_evidence_service import (
+    RotationCandidateHeavyAttackDamageEvidenceService,
+)
 from services.rotation_candidate_light_attack_damage_evidence_service import (
     RotationCandidateLightAttackDamageEvidenceService,
 )
@@ -31,6 +34,9 @@ from services.rotation_candidate_skill_damage_evidence_service import (
 )
 from services.rotation_candidate_ultimate_damage_evidence_service import (
     RotationCandidateUltimateDamageEvidenceService,
+)
+from services.rotation_heavy_sustain_projection_service import (
+    RotationHeavySustainProjectionService,
 )
 from services.rotation_saved_build_weapon_attack_evaluation_service import (
     RotationSavedBuildWeaponAttackEvaluationService,
@@ -123,7 +129,9 @@ class _RotationGenerateBarAwareLightAttackDamageProvider:
         target_resistance: float,
     ) -> None:
         if not evaluation.resolved or evaluation.build is None:
-            raise ValueError("bar-aware light-attack provider requires resolved weapon-attack evaluation")
+            raise ValueError(
+                "bar-aware light-attack provider requires resolved weapon-attack evaluation"
+            )
         self.evaluation = evaluation
         self.static_context = static_context
         self.target_resistance = float(target_resistance)
@@ -174,6 +182,76 @@ class _RotationGenerateBarAwareLightAttackDamageProvider:
         )
 
 
+class _RotationGenerateBarAwareHeavyAttackDamageProvider:
+    """Evaluate only scheduler-verified fully charged heavies on their active bar."""
+
+    def __init__(
+        self,
+        *,
+        evaluation: RotationWeaponAttackBuildEvaluationResolution,
+        static_context,
+        target_resistance: float,
+    ) -> None:
+        if not evaluation.resolved or evaluation.build is None:
+            raise ValueError(
+                "bar-aware heavy-attack provider requires resolved weapon-attack evaluation"
+            )
+        self.evaluation = evaluation
+        self.static_context = static_context
+        self.target_resistance = float(target_resistance)
+
+    def evaluate_action(
+        self,
+        *,
+        candidate: GeneratedRotationCandidate,
+        action: RotationAction,
+    ) -> RotationActionDamageEvidence:
+        if action.kind is not RotationActionKind.HEAVY_ATTACK:
+            return RotationActionDamageEvidence(
+                time_seconds=action.time_seconds,
+                sequence=action.sequence,
+                damage_value=None,
+                unresolved=(
+                    f"{action.kind.value} is not a heavy attack for heavy-attack damage evaluation",
+                ),
+            )
+
+        resolver = RotationActiveBarContextResolverService(
+            static_context=self.static_context,
+            plan=candidate.plan,
+        )
+        context = resolver.context_at(action.time_seconds, action.sequence)
+        build_evaluation = self.evaluation.evaluation_for(context.active_bar)
+        if build_evaluation is None:
+            return RotationActionDamageEvidence(
+                time_seconds=action.time_seconds,
+                sequence=action.sequence,
+                damage_value=None,
+                unresolved=(
+                    f"{context.active_bar} canonical weapon-attack BuildEvaluation is unavailable",
+                ),
+            )
+
+        completion_evidence = (
+            RotationHeavySustainProjectionService.completion_evidence_from_verified_reservations(
+                candidate.plan
+            )
+        )
+        return RotationCandidateHeavyAttackDamageEvidenceService(
+            build=self.evaluation.build,
+            evaluation=build_evaluation,
+            initial_bar="front",
+            completion_evidence=completion_evidence,
+            evaluation_context=EvaluationContext(
+                fight_duration=float(candidate.plan.duration_seconds),
+                target_resistance=self.target_resistance,
+            ),
+        ).evaluate_action(
+            candidate=candidate,
+            action=action,
+        )
+
+
 class _RotationGenerateUnresolvedWeaponAttackProvider:
     """Preserve bridge failures as action-local unresolved evidence."""
 
@@ -201,9 +279,10 @@ class _RotationGenerateUnresolvedWeaponAttackProvider:
 class RotationGenerateDDCanonicalWeaponAttackProviderFactory:
     """Production bridge from saved-build canonical state to weapon-attack providers.
 
-    Light attacks are fully composed through the reviewed canonical LA calculator.
-    Heavy attacks deliberately remain unresolved here until candidate-specific
-    full-charge/completion evidence is connected to the same factory.
+    Light attacks use the reviewed canonical LA calculator. Heavy attacks use the
+    reviewed canonical HA calculator only when the exact generated plan contains the
+    duration-aware scheduler's verified 1.8-second full-charge reservation. Both
+    families select the BuildEvaluation for the bar active at the action instant.
     """
 
     def __init__(
@@ -237,17 +316,21 @@ class RotationGenerateDDCanonicalWeaponAttackProviderFactory:
             static_context=static_context,
         )
         if not resolution.resolved:
-            return (
-                _RotationGenerateUnresolvedWeaponAttackProvider(resolution.unresolved),
-                None,
+            unresolved = _RotationGenerateUnresolvedWeaponAttackProvider(
+                resolution.unresolved
             )
+            return unresolved, unresolved
         return (
             _RotationGenerateBarAwareLightAttackDamageProvider(
                 evaluation=resolution,
                 static_context=static_context,
                 target_resistance=target_resistance,
             ),
-            None,
+            _RotationGenerateBarAwareHeavyAttackDamageProvider(
+                evaluation=resolution,
+                static_context=static_context,
+                target_resistance=target_resistance,
+            ),
         )
 
 
@@ -258,12 +341,12 @@ class RotationGenerateDDRoleEvidenceSupport:
     Each skill is evaluated from the static front/back context active at its exact
     ``(time_seconds, sequence)`` point. Target resistance must be explicit evidence.
 
-    Existing canonical light/heavy-attack evaluators participate only through a
-    verified weapon-attack provider factory. The production factory now bridges
-    canonical saved-build static state into bar-aware Light Attack evaluation.
-    Heavy attacks remain fail-closed until candidate-specific completion/full-charge
-    evidence is attached. Periodic skill components likewise stay unresolved unless
-    their reviewed runtime semantics are supplied by the canonical skill-damage authority.
+    Canonical light attacks are bar-aware. Canonical heavy attacks are also bar-aware,
+    but only scheduler-verified 1.8-second full-charge reservations are promoted to HA
+    completion evidence. Merely scheduling a HEAVY_ATTACK action therefore remains
+    unresolved rather than being treated as completed damage. Periodic skill components
+    likewise stay unresolved unless their reviewed runtime semantics are supplied by the
+    canonical skill-damage authority.
     """
 
     def __init__(
