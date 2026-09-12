@@ -10,9 +10,19 @@ class RuleRepository:
 
     def __init__(self, database_path: str | Path):
         self.database_path = str(database_path)
+        # Rule tables are canonical reference data during one repository
+        # lifetime. Keep an instance-scoped snapshot so repeated build and
+        # optimization evaluations do not reopen SQLite for identical lookups.
+        # A newly-created repository still observes later database changes.
+        self._weapon_trait_names_cache: tuple[str, ...] | None = None
+        self._infused_effect_cache: dict[tuple[str, str], RuleEffect] = {}
+        self._weapon_trait_rules_cache: dict[str, tuple[RuleEffect, ...]] = {}
 
     def list_weapon_trait_names(self) -> tuple[str, ...]:
         """Return every canonical weapon trait material name."""
+        if self._weapon_trait_names_cache is not None:
+            return self._weapon_trait_names_cache
+
         with sqlite3.connect(self.database_path) as connection:
             rows = connection.execute(
                 """
@@ -24,7 +34,8 @@ class RuleRepository:
                 ORDER BY LOWER(TRIM(material_name))
                 """
             ).fetchall()
-        return tuple(str(row[0]) for row in rows)
+        self._weapon_trait_names_cache = tuple(str(row[0]) for row in rows)
+        return self._weapon_trait_names_cache
 
     def get_infused_effect(
         self,
@@ -32,6 +43,10 @@ class RuleRepository:
         gear_type: str,
         quality: str,
     ) -> RuleEffect:
+        cache_key = (str(gear_type), str(quality))
+        cached = self._infused_effect_cache.get(cache_key)
+        if cached is not None:
+            return cached
 
         with sqlite3.connect(self.database_path) as connection:
             row = connection.execute(
@@ -58,7 +73,7 @@ class RuleRepository:
 
         trait_name, effect_type, value, unit = row
 
-        return RuleEffect(
+        effect = RuleEffect(
             rule_type=effect_type,
             value=float(value),
             source=trait_name,
@@ -67,11 +82,17 @@ class RuleRepository:
             gear_type=gear_type,
             quality=quality,
         )
+        self._infused_effect_cache[cache_key] = effect
+        return effect
 
     def get_weapon_trait_rules(
         self,
         trait_name: str,
     ) -> list[RuleEffect]:
+        cache_key = str(trait_name)
+        cached = self._weapon_trait_rules_cache.get(cache_key)
+        if cached is not None:
+            return list(cached)
 
         with sqlite3.connect(self.database_path) as connection:
             rows = connection.execute(
@@ -115,7 +136,9 @@ class RuleRepository:
                 )
             )
 
-        return effects
+        snapshot = tuple(effects)
+        self._weapon_trait_rules_cache[cache_key] = snapshot
+        return list(snapshot)
 
     def get_weapon_enchantment_rules(
         self,
