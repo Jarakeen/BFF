@@ -22,6 +22,9 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from services.extreme_max_resource_named_gear_candidate_search_service import (
+    ExtremeMaxResourceNamedGearCandidateSearchService,
+)
 from services.extreme_resource_canonical_static_snapshot_service import (
     ExtremeResourceCanonicalStaticSnapshotService,
 )
@@ -138,6 +141,21 @@ def main() -> int:
     if record is not None:
         print(f"raw_value={record.raw_value}")
         print(f"proof_status={record.proof_status.value}")
+
+    reuse = ExtremeMaxResourceNamedGearCandidateSearchService.reuse_diagnostics()
+    if reuse:
+        print("\n=== SPECIAL SUBSET REUSE ===")
+        for key in (
+            "fitting_subsets_seen",
+            "structural_keys_built",
+            "structural_classes_seen",
+            "representative_exact_searches",
+            "reuse_attempts",
+            "reuse_successes",
+            "rematerialization_failures",
+            "fallback_exact_searches",
+        ):
+            print(f"{key}={reuse.get(key, 0)}")
 
     print(_render(profile, limit=max(1, int(args.limit))))
 
