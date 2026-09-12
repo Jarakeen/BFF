@@ -1,0 +1,2961 @@
+{
+  "schema_version": 1,
+  "evidence_status": "candidate_observational_only",
+  "purpose": "Human review packet for encounter mechanic strategy research",
+  "encounter": "reef guardian",
+  "source_path": "research\\raw\\reef_guardian_corpus.json",
+  "report_count": 1,
+  "fight_count": 7,
+  "kill_count": 0,
+  "wipe_count": 7,
+  "bin_seconds": 10.0,
+  "review_rules": [
+    "Numeric ESO Logs ability ids are observational aliases, not canonical mechanic identity.",
+    "A repeated log signature is a review candidate, not a mechanic or strategy claim.",
+    "Observed player behavior from one group is not universal encounter strategy.",
+    "Canonical mechanic binding requires explicit human review with rationale.",
+    "Runtime timing remains fight-local evidence unless repeated evidence is reviewed for promotion."
+  ],
+  "fights": [
+    {
+      "report_code": "6h4DjY8zNAxKMb2W",
+      "fight_id": 26,
+      "kill": false,
+      "difficulty": 122,
+      "duration_seconds": 110.058,
+      "event_count": 35664,
+      "role_counts": {
+        "tank": 2,
+        "healer": 2,
+        "dps": 8
+      },
+      "observed_primary_target_id": 151,
+      "pressure_windows": [
+        {
+          "index": 0,
+          "start_seconds": 0.0,
+          "end_seconds": 10.0,
+          "primary_target_damage": 374023.0,
+          "other_hostile_damage": 680853.0,
+          "incoming_player_damage": 8718.0,
+          "healer_output": 12710.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 1,
+          "start_seconds": 10.0,
+          "end_seconds": 20.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 10396294.0,
+          "incoming_player_damage": 123083.0,
+          "healer_output": 113176.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 2,
+          "start_seconds": 20.0,
+          "end_seconds": 30.0,
+          "primary_target_damage": 908057.0,
+          "other_hostile_damage": 3408819.0,
+          "incoming_player_damage": 138697.0,
+          "healer_output": 122406.0,
+          "deaths": 1,
+          "interrupts": 0
+        },
+        {
+          "index": 3,
+          "start_seconds": 30.0,
+          "end_seconds": 40.0,
+          "primary_target_damage": 3148378.0,
+          "other_hostile_damage": 1249521.0,
+          "incoming_player_damage": 95645.0,
+          "healer_output": 65330.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 4,
+          "start_seconds": 40.0,
+          "end_seconds": 50.0,
+          "primary_target_damage": 3681886.0,
+          "other_hostile_damage": 4075686.0,
+          "incoming_player_damage": 204868.0,
+          "healer_output": 162664.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 5,
+          "start_seconds": 50.0,
+          "end_seconds": 60.0,
+          "primary_target_damage": 1225286.0,
+          "other_hostile_damage": 2533305.0,
+          "incoming_player_damage": 295803.0,
+          "healer_output": 205907.0,
+          "deaths": 3,
+          "interrupts": 0
+        },
+        {
+          "index": 6,
+          "start_seconds": 60.0,
+          "end_seconds": 70.0,
+          "primary_target_damage": 1048256.0,
+          "other_hostile_damage": 2101633.0,
+          "incoming_player_damage": 170061.0,
+          "healer_output": 68619.0,
+          "deaths": 1,
+          "interrupts": 1
+        },
+        {
+          "index": 7,
+          "start_seconds": 70.0,
+          "end_seconds": 80.0,
+          "primary_target_damage": 895813.0,
+          "other_hostile_damage": 1028536.0,
+          "incoming_player_damage": 159003.0,
+          "healer_output": 67428.0,
+          "deaths": 3,
+          "interrupts": 0
+        },
+        {
+          "index": 8,
+          "start_seconds": 80.0,
+          "end_seconds": 90.0,
+          "primary_target_damage": 252899.0,
+          "other_hostile_damage": 342429.0,
+          "incoming_player_damage": 62707.0,
+          "healer_output": 13997.0,
+          "deaths": 1,
+          "interrupts": 1
+        },
+        {
+          "index": 9,
+          "start_seconds": 90.0,
+          "end_seconds": 100.0,
+          "primary_target_damage": 30657.0,
+          "other_hostile_damage": 47290.0,
+          "incoming_player_damage": 70206.0,
+          "healer_output": 12489.0,
+          "deaths": 2,
+          "interrupts": 0
+        },
+        {
+          "index": 10,
+          "start_seconds": 100.0,
+          "end_seconds": 110.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 1306946.0,
+          "incoming_player_damage": 22517.0,
+          "healer_output": 0.0,
+          "deaths": 1,
+          "interrupts": 0
+        },
+        {
+          "index": 11,
+          "start_seconds": 110.0,
+          "end_seconds": 110.058,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 0.0,
+          "incoming_player_damage": 0.0,
+          "healer_output": 0.0,
+          "deaths": 0,
+          "interrupts": 0
+        }
+      ]
+    },
+    {
+      "report_code": "6h4DjY8zNAxKMb2W",
+      "fight_id": 27,
+      "kill": false,
+      "difficulty": 122,
+      "duration_seconds": 184.037,
+      "event_count": 72703,
+      "role_counts": {
+        "tank": 2,
+        "healer": 2,
+        "dps": 8
+      },
+      "observed_primary_target_id": 151,
+      "pressure_windows": [
+        {
+          "index": 0,
+          "start_seconds": 0.0,
+          "end_seconds": 10.0,
+          "primary_target_damage": 776494.0,
+          "other_hostile_damage": 1060079.0,
+          "incoming_player_damage": 2520.0,
+          "healer_output": 11698.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 1,
+          "start_seconds": 10.0,
+          "end_seconds": 20.0,
+          "primary_target_damage": 585921.0,
+          "other_hostile_damage": 8163039.0,
+          "incoming_player_damage": 99720.0,
+          "healer_output": 63105.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 2,
+          "start_seconds": 20.0,
+          "end_seconds": 30.0,
+          "primary_target_damage": 4011836.0,
+          "other_hostile_damage": 4244648.0,
+          "incoming_player_damage": 101311.0,
+          "healer_output": 103488.0,
+          "deaths": 0,
+          "interrupts": 1
+        },
+        {
+          "index": 3,
+          "start_seconds": 30.0,
+          "end_seconds": 40.0,
+          "primary_target_damage": 3302270.0,
+          "other_hostile_damage": 4730819.0,
+          "incoming_player_damage": 105743.0,
+          "healer_output": 59701.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 4,
+          "start_seconds": 40.0,
+          "end_seconds": 50.0,
+          "primary_target_damage": 2827599.0,
+          "other_hostile_damage": 2041596.0,
+          "incoming_player_damage": 55115.0,
+          "healer_output": 57718.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 5,
+          "start_seconds": 50.0,
+          "end_seconds": 60.0,
+          "primary_target_damage": 2952938.0,
+          "other_hostile_damage": 6551897.0,
+          "incoming_player_damage": 70003.0,
+          "healer_output": 29926.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 6,
+          "start_seconds": 60.0,
+          "end_seconds": 70.0,
+          "primary_target_damage": 4523510.0,
+          "other_hostile_damage": 5119058.0,
+          "incoming_player_damage": 122013.0,
+          "healer_output": 67213.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 7,
+          "start_seconds": 70.0,
+          "end_seconds": 80.0,
+          "primary_target_damage": 4617289.0,
+          "other_hostile_damage": 3357264.0,
+          "incoming_player_damage": 101538.0,
+          "healer_output": 76435.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 8,
+          "start_seconds": 80.0,
+          "end_seconds": 90.0,
+          "primary_target_damage": 6524002.0,
+          "other_hostile_damage": 6882050.0,
+          "incoming_player_damage": 362876.0,
+          "healer_output": 212178.0,
+          "deaths": 1,
+          "interrupts": 0
+        },
+        {
+          "index": 9,
+          "start_seconds": 90.0,
+          "end_seconds": 100.0,
+          "primary_target_damage": 7701288.0,
+          "other_hostile_damage": 8037604.0,
+          "incoming_player_damage": 331523.0,
+          "healer_output": 288810.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 10,
+          "start_seconds": 100.0,
+          "end_seconds": 110.0,
+          "primary_target_damage": 2619873.0,
+          "other_hostile_damage": 5247946.0,
+          "incoming_player_damage": 446886.0,
+          "healer_output": 227068.0,
+          "deaths": 2,
+          "interrupts": 0
+        },
+        {
+          "index": 11,
+          "start_seconds": 110.0,
+          "end_seconds": 120.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 214563.0,
+          "incoming_player_damage": 171395.0,
+          "healer_output": 89783.0,
+          "deaths": 2,
+          "interrupts": 0
+        },
+        {
+          "index": 12,
+          "start_seconds": 120.0,
+          "end_seconds": 130.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 678668.0,
+          "incoming_player_damage": 193855.0,
+          "healer_output": 170938.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 13,
+          "start_seconds": 130.0,
+          "end_seconds": 140.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 3006890.0,
+          "incoming_player_damage": 227469.0,
+          "healer_output": 114255.0,
+          "deaths": 1,
+          "interrupts": 0
+        },
+        {
+          "index": 14,
+          "start_seconds": 140.0,
+          "end_seconds": 150.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 2160653.0,
+          "incoming_player_damage": 318873.0,
+          "healer_output": 170785.0,
+          "deaths": 2,
+          "interrupts": 0
+        },
+        {
+          "index": 15,
+          "start_seconds": 150.0,
+          "end_seconds": 160.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 286967.0,
+          "incoming_player_damage": 221271.0,
+          "healer_output": 77741.0,
+          "deaths": 4,
+          "interrupts": 0
+        },
+        {
+          "index": 16,
+          "start_seconds": 160.0,
+          "end_seconds": 170.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 479582.0,
+          "incoming_player_damage": 127151.0,
+          "healer_output": 39902.0,
+          "deaths": 3,
+          "interrupts": 0
+        },
+        {
+          "index": 17,
+          "start_seconds": 170.0,
+          "end_seconds": 180.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 548309.0,
+          "incoming_player_damage": 6546.0,
+          "healer_output": 0.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 18,
+          "start_seconds": 180.0,
+          "end_seconds": 184.037,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 322076.0,
+          "incoming_player_damage": 46088.0,
+          "healer_output": 2490.0,
+          "deaths": 2,
+          "interrupts": 0
+        }
+      ]
+    },
+    {
+      "report_code": "6h4DjY8zNAxKMb2W",
+      "fight_id": 28,
+      "kill": false,
+      "difficulty": 122,
+      "duration_seconds": 148.865,
+      "event_count": 69792,
+      "role_counts": {
+        "tank": 2,
+        "healer": 2,
+        "dps": 8
+      },
+      "observed_primary_target_id": 151,
+      "pressure_windows": [
+        {
+          "index": 0,
+          "start_seconds": 0.0,
+          "end_seconds": 10.0,
+          "primary_target_damage": 493595.0,
+          "other_hostile_damage": 633330.0,
+          "incoming_player_damage": 0.0,
+          "healer_output": 15296.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 1,
+          "start_seconds": 10.0,
+          "end_seconds": 20.0,
+          "primary_target_damage": 960154.0,
+          "other_hostile_damage": 8101050.0,
+          "incoming_player_damage": 117888.0,
+          "healer_output": 80308.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 2,
+          "start_seconds": 20.0,
+          "end_seconds": 30.0,
+          "primary_target_damage": 5292836.0,
+          "other_hostile_damage": 5012256.0,
+          "incoming_player_damage": 92887.0,
+          "healer_output": 74392.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 3,
+          "start_seconds": 30.0,
+          "end_seconds": 40.0,
+          "primary_target_damage": 2695096.0,
+          "other_hostile_damage": 5614824.0,
+          "incoming_player_damage": 60255.0,
+          "healer_output": 56194.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 4,
+          "start_seconds": 40.0,
+          "end_seconds": 50.0,
+          "primary_target_damage": 1255105.0,
+          "other_hostile_damage": 418745.0,
+          "incoming_player_damage": 39291.0,
+          "healer_output": 27909.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 5,
+          "start_seconds": 50.0,
+          "end_seconds": 60.0,
+          "primary_target_damage": 3525437.0,
+          "other_hostile_damage": 6455391.0,
+          "incoming_player_damage": 91192.0,
+          "healer_output": 39132.0,
+          "deaths": 0,
+          "interrupts": 1
+        },
+        {
+          "index": 6,
+          "start_seconds": 60.0,
+          "end_seconds": 70.0,
+          "primary_target_damage": 5690247.0,
+          "other_hostile_damage": 5659461.0,
+          "incoming_player_damage": 165382.0,
+          "healer_output": 40610.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 7,
+          "start_seconds": 70.0,
+          "end_seconds": 80.0,
+          "primary_target_damage": 2752210.0,
+          "other_hostile_damage": 2331415.0,
+          "incoming_player_damage": 17814.0,
+          "healer_output": 17779.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 8,
+          "start_seconds": 80.0,
+          "end_seconds": 90.0,
+          "primary_target_damage": 7858043.0,
+          "other_hostile_damage": 8166555.0,
+          "incoming_player_damage": 149047.0,
+          "healer_output": 80477.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 9,
+          "start_seconds": 90.0,
+          "end_seconds": 100.0,
+          "primary_target_damage": 6535873.0,
+          "other_hostile_damage": 7262451.0,
+          "incoming_player_damage": 182568.0,
+          "healer_output": 118355.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 10,
+          "start_seconds": 100.0,
+          "end_seconds": 110.0,
+          "primary_target_damage": 3435355.0,
+          "other_hostile_damage": 8818614.0,
+          "incoming_player_damage": 243221.0,
+          "healer_output": 186433.0,
+          "deaths": 1,
+          "interrupts": 0
+        },
+        {
+          "index": 11,
+          "start_seconds": 110.0,
+          "end_seconds": 120.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 1840473.0,
+          "incoming_player_damage": 459113.0,
+          "healer_output": 315868.0,
+          "deaths": 1,
+          "interrupts": 1
+        },
+        {
+          "index": 12,
+          "start_seconds": 120.0,
+          "end_seconds": 130.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 2448918.0,
+          "incoming_player_damage": 372308.0,
+          "healer_output": 297591.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 13,
+          "start_seconds": 130.0,
+          "end_seconds": 140.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 848580.0,
+          "incoming_player_damage": 286281.0,
+          "healer_output": 107035.0,
+          "deaths": 2,
+          "interrupts": 0
+        },
+        {
+          "index": 14,
+          "start_seconds": 140.0,
+          "end_seconds": 148.865,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 17673.0,
+          "incoming_player_damage": 297096.0,
+          "healer_output": 96127.0,
+          "deaths": 7,
+          "interrupts": 0
+        }
+      ]
+    },
+    {
+      "report_code": "6h4DjY8zNAxKMb2W",
+      "fight_id": 29,
+      "kill": false,
+      "difficulty": 122,
+      "duration_seconds": 149.976,
+      "event_count": 56440,
+      "role_counts": {
+        "tank": 2,
+        "healer": 2,
+        "dps": 8
+      },
+      "observed_primary_target_id": 151,
+      "pressure_windows": [
+        {
+          "index": 0,
+          "start_seconds": 0.0,
+          "end_seconds": 10.0,
+          "primary_target_damage": 720002.0,
+          "other_hostile_damage": 800458.0,
+          "incoming_player_damage": 6036.0,
+          "healer_output": 12695.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 1,
+          "start_seconds": 10.0,
+          "end_seconds": 20.0,
+          "primary_target_damage": 892768.0,
+          "other_hostile_damage": 8195137.0,
+          "incoming_player_damage": 78890.0,
+          "healer_output": 66988.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 2,
+          "start_seconds": 20.0,
+          "end_seconds": 30.0,
+          "primary_target_damage": 5250347.0,
+          "other_hostile_damage": 4903078.0,
+          "incoming_player_damage": 120297.0,
+          "healer_output": 98249.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 3,
+          "start_seconds": 30.0,
+          "end_seconds": 40.0,
+          "primary_target_damage": 2206262.0,
+          "other_hostile_damage": 4987090.0,
+          "incoming_player_damage": 152057.0,
+          "healer_output": 52390.0,
+          "deaths": 1,
+          "interrupts": 0
+        },
+        {
+          "index": 4,
+          "start_seconds": 40.0,
+          "end_seconds": 50.0,
+          "primary_target_damage": 3237159.0,
+          "other_hostile_damage": 3434432.0,
+          "incoming_player_damage": 127194.0,
+          "healer_output": 78623.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 5,
+          "start_seconds": 50.0,
+          "end_seconds": 60.0,
+          "primary_target_damage": 3480666.0,
+          "other_hostile_damage": 5415208.0,
+          "incoming_player_damage": 208152.0,
+          "healer_output": 112799.0,
+          "deaths": 0,
+          "interrupts": 1
+        },
+        {
+          "index": 6,
+          "start_seconds": 60.0,
+          "end_seconds": 70.0,
+          "primary_target_damage": 4406828.0,
+          "other_hostile_damage": 4587629.0,
+          "incoming_player_damage": 126019.0,
+          "healer_output": 44427.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 7,
+          "start_seconds": 70.0,
+          "end_seconds": 80.0,
+          "primary_target_damage": 3885097.0,
+          "other_hostile_damage": 5151539.0,
+          "incoming_player_damage": 160944.0,
+          "healer_output": 132764.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 8,
+          "start_seconds": 80.0,
+          "end_seconds": 90.0,
+          "primary_target_damage": 6096767.0,
+          "other_hostile_damage": 7014284.0,
+          "incoming_player_damage": 232552.0,
+          "healer_output": 122948.0,
+          "deaths": 1,
+          "interrupts": 0
+        },
+        {
+          "index": 9,
+          "start_seconds": 90.0,
+          "end_seconds": 100.0,
+          "primary_target_damage": 1286627.0,
+          "other_hostile_damage": 911416.0,
+          "incoming_player_damage": 222418.0,
+          "healer_output": 141460.0,
+          "deaths": 3,
+          "interrupts": 0
+        },
+        {
+          "index": 10,
+          "start_seconds": 100.0,
+          "end_seconds": 110.0,
+          "primary_target_damage": 93887.0,
+          "other_hostile_damage": 254259.0,
+          "incoming_player_damage": 280530.0,
+          "healer_output": 78108.0,
+          "deaths": 2,
+          "interrupts": 0
+        },
+        {
+          "index": 11,
+          "start_seconds": 110.0,
+          "end_seconds": 120.0,
+          "primary_target_damage": 177059.0,
+          "other_hostile_damage": 2028925.0,
+          "incoming_player_damage": 109010.0,
+          "healer_output": 71792.0,
+          "deaths": 1,
+          "interrupts": 0
+        },
+        {
+          "index": 12,
+          "start_seconds": 120.0,
+          "end_seconds": 130.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 1981143.0,
+          "incoming_player_damage": 155295.0,
+          "healer_output": 57804.0,
+          "deaths": 4,
+          "interrupts": 0
+        },
+        {
+          "index": 13,
+          "start_seconds": 130.0,
+          "end_seconds": 140.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 2027646.0,
+          "incoming_player_damage": 8822.0,
+          "healer_output": 0.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 14,
+          "start_seconds": 140.0,
+          "end_seconds": 149.976,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 461722.0,
+          "incoming_player_damage": 45201.0,
+          "healer_output": 2331.0,
+          "deaths": 2,
+          "interrupts": 0
+        }
+      ]
+    },
+    {
+      "report_code": "6h4DjY8zNAxKMb2W",
+      "fight_id": 30,
+      "kill": false,
+      "difficulty": 122,
+      "duration_seconds": 167.034,
+      "event_count": 65226,
+      "role_counts": {
+        "tank": 2,
+        "healer": 2,
+        "dps": 8
+      },
+      "observed_primary_target_id": 151,
+      "pressure_windows": [
+        {
+          "index": 0,
+          "start_seconds": 0.0,
+          "end_seconds": 10.0,
+          "primary_target_damage": 683460.0,
+          "other_hostile_damage": 630072.0,
+          "incoming_player_damage": 7954.0,
+          "healer_output": 14943.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 1,
+          "start_seconds": 10.0,
+          "end_seconds": 20.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 7182094.0,
+          "incoming_player_damage": 91841.0,
+          "healer_output": 59581.0,
+          "deaths": 1,
+          "interrupts": 0
+        },
+        {
+          "index": 2,
+          "start_seconds": 20.0,
+          "end_seconds": 30.0,
+          "primary_target_damage": 3517832.0,
+          "other_hostile_damage": 4958807.0,
+          "incoming_player_damage": 74889.0,
+          "healer_output": 76500.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 3,
+          "start_seconds": 30.0,
+          "end_seconds": 40.0,
+          "primary_target_damage": 4024265.0,
+          "other_hostile_damage": 5134327.0,
+          "incoming_player_damage": 39726.0,
+          "healer_output": 30553.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 4,
+          "start_seconds": 40.0,
+          "end_seconds": 50.0,
+          "primary_target_damage": 2998232.0,
+          "other_hostile_damage": 1165122.0,
+          "incoming_player_damage": 51776.0,
+          "healer_output": 16092.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 5,
+          "start_seconds": 50.0,
+          "end_seconds": 60.0,
+          "primary_target_damage": 4812897.0,
+          "other_hostile_damage": 4967131.0,
+          "incoming_player_damage": 33020.0,
+          "healer_output": 6849.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 6,
+          "start_seconds": 60.0,
+          "end_seconds": 70.0,
+          "primary_target_damage": 5328474.0,
+          "other_hostile_damage": 7036084.0,
+          "incoming_player_damage": 165772.0,
+          "healer_output": 99053.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 7,
+          "start_seconds": 70.0,
+          "end_seconds": 80.0,
+          "primary_target_damage": 3066843.0,
+          "other_hostile_damage": 2383270.0,
+          "incoming_player_damage": 58188.0,
+          "healer_output": 54890.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 8,
+          "start_seconds": 80.0,
+          "end_seconds": 90.0,
+          "primary_target_damage": 9148705.0,
+          "other_hostile_damage": 9568532.0,
+          "incoming_player_damage": 131808.0,
+          "healer_output": 65278.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 9,
+          "start_seconds": 90.0,
+          "end_seconds": 100.0,
+          "primary_target_damage": 6474500.0,
+          "other_hostile_damage": 9489025.0,
+          "incoming_player_damage": 193189.0,
+          "healer_output": 100942.0,
+          "deaths": 1,
+          "interrupts": 0
+        },
+        {
+          "index": 10,
+          "start_seconds": 100.0,
+          "end_seconds": 110.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 5729619.0,
+          "incoming_player_damage": 270914.0,
+          "healer_output": 145026.0,
+          "deaths": 2,
+          "interrupts": 0
+        },
+        {
+          "index": 11,
+          "start_seconds": 110.0,
+          "end_seconds": 120.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 1941668.0,
+          "incoming_player_damage": 229761.0,
+          "healer_output": 58999.0,
+          "deaths": 2,
+          "interrupts": 0
+        },
+        {
+          "index": 12,
+          "start_seconds": 120.0,
+          "end_seconds": 130.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 422244.0,
+          "incoming_player_damage": 107803.0,
+          "healer_output": 41949.0,
+          "deaths": 2,
+          "interrupts": 0
+        },
+        {
+          "index": 13,
+          "start_seconds": 130.0,
+          "end_seconds": 140.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 402423.0,
+          "incoming_player_damage": 222463.0,
+          "healer_output": 94289.0,
+          "deaths": 1,
+          "interrupts": 0
+        },
+        {
+          "index": 14,
+          "start_seconds": 140.0,
+          "end_seconds": 150.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 583423.0,
+          "incoming_player_damage": 141722.0,
+          "healer_output": 17338.0,
+          "deaths": 7,
+          "interrupts": 0
+        },
+        {
+          "index": 15,
+          "start_seconds": 150.0,
+          "end_seconds": 160.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 540717.0,
+          "incoming_player_damage": 60529.0,
+          "healer_output": 0.0,
+          "deaths": 2,
+          "interrupts": 0
+        },
+        {
+          "index": 16,
+          "start_seconds": 160.0,
+          "end_seconds": 167.034,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 767486.0,
+          "incoming_player_damage": 0.0,
+          "healer_output": 0.0,
+          "deaths": 0,
+          "interrupts": 0
+        }
+      ]
+    },
+    {
+      "report_code": "6h4DjY8zNAxKMb2W",
+      "fight_id": 31,
+      "kill": false,
+      "difficulty": 122,
+      "duration_seconds": 220.206,
+      "event_count": 100879,
+      "role_counts": {
+        "tank": 2,
+        "healer": 2,
+        "dps": 8
+      },
+      "observed_primary_target_id": 151,
+      "pressure_windows": [
+        {
+          "index": 0,
+          "start_seconds": 0.0,
+          "end_seconds": 10.0,
+          "primary_target_damage": 476042.0,
+          "other_hostile_damage": 369680.0,
+          "incoming_player_damage": 0.0,
+          "healer_output": 13478.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 1,
+          "start_seconds": 10.0,
+          "end_seconds": 20.0,
+          "primary_target_damage": 682934.0,
+          "other_hostile_damage": 6519068.0,
+          "incoming_player_damage": 147207.0,
+          "healer_output": 97077.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 2,
+          "start_seconds": 20.0,
+          "end_seconds": 30.0,
+          "primary_target_damage": 5572048.0,
+          "other_hostile_damage": 6763551.0,
+          "incoming_player_damage": 88517.0,
+          "healer_output": 75295.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 3,
+          "start_seconds": 30.0,
+          "end_seconds": 40.0,
+          "primary_target_damage": 3321366.0,
+          "other_hostile_damage": 6661680.0,
+          "incoming_player_damage": 37308.0,
+          "healer_output": 26661.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 4,
+          "start_seconds": 40.0,
+          "end_seconds": 50.0,
+          "primary_target_damage": 2574907.0,
+          "other_hostile_damage": 1152441.0,
+          "incoming_player_damage": 45791.0,
+          "healer_output": 17193.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 5,
+          "start_seconds": 50.0,
+          "end_seconds": 60.0,
+          "primary_target_damage": 5112789.0,
+          "other_hostile_damage": 7245020.0,
+          "incoming_player_damage": 177822.0,
+          "healer_output": 99927.0,
+          "deaths": 0,
+          "interrupts": 1
+        },
+        {
+          "index": 6,
+          "start_seconds": 60.0,
+          "end_seconds": 70.0,
+          "primary_target_damage": 4039423.0,
+          "other_hostile_damage": 4162306.0,
+          "incoming_player_damage": 206721.0,
+          "healer_output": 170720.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 7,
+          "start_seconds": 70.0,
+          "end_seconds": 80.0,
+          "primary_target_damage": 4409772.0,
+          "other_hostile_damage": 4492511.0,
+          "incoming_player_damage": 130003.0,
+          "healer_output": 89303.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 8,
+          "start_seconds": 80.0,
+          "end_seconds": 90.0,
+          "primary_target_damage": 8143190.0,
+          "other_hostile_damage": 7281053.0,
+          "incoming_player_damage": 296053.0,
+          "healer_output": 207769.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 9,
+          "start_seconds": 90.0,
+          "end_seconds": 100.0,
+          "primary_target_damage": 6301459.0,
+          "other_hostile_damage": 7210534.0,
+          "incoming_player_damage": 273206.0,
+          "healer_output": 216183.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 10,
+          "start_seconds": 100.0,
+          "end_seconds": 110.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 5645745.0,
+          "incoming_player_damage": 304411.0,
+          "healer_output": 213711.0,
+          "deaths": 1,
+          "interrupts": 0
+        },
+        {
+          "index": 11,
+          "start_seconds": 110.0,
+          "end_seconds": 120.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 2130903.0,
+          "incoming_player_damage": 169845.0,
+          "healer_output": 79053.0,
+          "deaths": 2,
+          "interrupts": 0
+        },
+        {
+          "index": 12,
+          "start_seconds": 120.0,
+          "end_seconds": 130.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 1521925.0,
+          "incoming_player_damage": 109930.0,
+          "healer_output": 81997.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 13,
+          "start_seconds": 130.0,
+          "end_seconds": 140.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 3109325.0,
+          "incoming_player_damage": 185324.0,
+          "healer_output": 146832.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 14,
+          "start_seconds": 140.0,
+          "end_seconds": 150.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 6202942.0,
+          "incoming_player_damage": 121689.0,
+          "healer_output": 72734.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 15,
+          "start_seconds": 150.0,
+          "end_seconds": 160.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 2484045.0,
+          "incoming_player_damage": 128223.0,
+          "healer_output": 92012.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 16,
+          "start_seconds": 160.0,
+          "end_seconds": 170.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 10129205.0,
+          "incoming_player_damage": 63140.0,
+          "healer_output": 50380.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 17,
+          "start_seconds": 170.0,
+          "end_seconds": 180.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 9494796.0,
+          "incoming_player_damage": 143244.0,
+          "healer_output": 93607.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 18,
+          "start_seconds": 180.0,
+          "end_seconds": 190.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 7295471.0,
+          "incoming_player_damage": 143843.0,
+          "healer_output": 100802.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 19,
+          "start_seconds": 190.0,
+          "end_seconds": 200.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 7940653.0,
+          "incoming_player_damage": 199228.0,
+          "healer_output": 142794.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 20,
+          "start_seconds": 200.0,
+          "end_seconds": 210.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 1631138.0,
+          "incoming_player_damage": 111429.0,
+          "healer_output": 133756.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 21,
+          "start_seconds": 210.0,
+          "end_seconds": 220.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 2209138.0,
+          "incoming_player_damage": 141749.0,
+          "healer_output": 81811.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 22,
+          "start_seconds": 220.0,
+          "end_seconds": 220.206,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 41177.0,
+          "incoming_player_damage": 295562.0,
+          "healer_output": 0.0,
+          "deaths": 10,
+          "interrupts": 0
+        }
+      ]
+    },
+    {
+      "report_code": "6h4DjY8zNAxKMb2W",
+      "fight_id": 32,
+      "kill": false,
+      "difficulty": 122,
+      "duration_seconds": 264.428,
+      "event_count": 78255,
+      "role_counts": {
+        "tank": 2,
+        "healer": 2,
+        "dps": 8
+      },
+      "observed_primary_target_id": 151,
+      "pressure_windows": [
+        {
+          "index": 0,
+          "start_seconds": 0.0,
+          "end_seconds": 10.0,
+          "primary_target_damage": 402873.0,
+          "other_hostile_damage": 331535.0,
+          "incoming_player_damage": 0.0,
+          "healer_output": 20109.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 1,
+          "start_seconds": 10.0,
+          "end_seconds": 20.0,
+          "primary_target_damage": 364097.0,
+          "other_hostile_damage": 8187719.0,
+          "incoming_player_damage": 62051.0,
+          "healer_output": 46973.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 2,
+          "start_seconds": 20.0,
+          "end_seconds": 30.0,
+          "primary_target_damage": 3532017.0,
+          "other_hostile_damage": 4486124.0,
+          "incoming_player_damage": 114230.0,
+          "healer_output": 74789.0,
+          "deaths": 1,
+          "interrupts": 1
+        },
+        {
+          "index": 3,
+          "start_seconds": 30.0,
+          "end_seconds": 40.0,
+          "primary_target_damage": 4153306.0,
+          "other_hostile_damage": 5156713.0,
+          "incoming_player_damage": 62575.0,
+          "healer_output": 32459.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 4,
+          "start_seconds": 40.0,
+          "end_seconds": 50.0,
+          "primary_target_damage": 2588991.0,
+          "other_hostile_damage": 1761409.0,
+          "incoming_player_damage": 62574.0,
+          "healer_output": 46694.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 5,
+          "start_seconds": 50.0,
+          "end_seconds": 60.0,
+          "primary_target_damage": 3003204.0,
+          "other_hostile_damage": 4353357.0,
+          "incoming_player_damage": 67727.0,
+          "healer_output": 20803.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 6,
+          "start_seconds": 60.0,
+          "end_seconds": 70.0,
+          "primary_target_damage": 5909152.0,
+          "other_hostile_damage": 7066009.0,
+          "incoming_player_damage": 148315.0,
+          "healer_output": 109772.0,
+          "deaths": 0,
+          "interrupts": 1
+        },
+        {
+          "index": 7,
+          "start_seconds": 70.0,
+          "end_seconds": 80.0,
+          "primary_target_damage": 4365615.0,
+          "other_hostile_damage": 1363312.0,
+          "incoming_player_damage": 202637.0,
+          "healer_output": 161995.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 8,
+          "start_seconds": 80.0,
+          "end_seconds": 90.0,
+          "primary_target_damage": 3371339.0,
+          "other_hostile_damage": 3852579.0,
+          "incoming_player_damage": 53481.0,
+          "healer_output": 26790.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 9,
+          "start_seconds": 90.0,
+          "end_seconds": 100.0,
+          "primary_target_damage": 6661126.0,
+          "other_hostile_damage": 12380601.0,
+          "incoming_player_damage": 81163.0,
+          "healer_output": 63173.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 10,
+          "start_seconds": 100.0,
+          "end_seconds": 110.0,
+          "primary_target_damage": 5958996.0,
+          "other_hostile_damage": 7153048.0,
+          "incoming_player_damage": 61913.0,
+          "healer_output": 46278.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 11,
+          "start_seconds": 110.0,
+          "end_seconds": 120.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 1437347.0,
+          "incoming_player_damage": 207542.0,
+          "healer_output": 116462.0,
+          "deaths": 0,
+          "interrupts": 1
+        },
+        {
+          "index": 12,
+          "start_seconds": 120.0,
+          "end_seconds": 130.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 2035951.0,
+          "incoming_player_damage": 292186.0,
+          "healer_output": 100735.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 13,
+          "start_seconds": 130.0,
+          "end_seconds": 140.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 3013035.0,
+          "incoming_player_damage": 326361.0,
+          "healer_output": 293294.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 14,
+          "start_seconds": 140.0,
+          "end_seconds": 150.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 3291669.0,
+          "incoming_player_damage": 239808.0,
+          "healer_output": 189055.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 15,
+          "start_seconds": 150.0,
+          "end_seconds": 160.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 3652325.0,
+          "incoming_player_damage": 239144.0,
+          "healer_output": 120289.0,
+          "deaths": 4,
+          "interrupts": 1
+        },
+        {
+          "index": 16,
+          "start_seconds": 160.0,
+          "end_seconds": 170.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 978971.0,
+          "incoming_player_damage": 131513.0,
+          "healer_output": 31077.0,
+          "deaths": 4,
+          "interrupts": 0
+        },
+        {
+          "index": 17,
+          "start_seconds": 170.0,
+          "end_seconds": 180.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 954100.0,
+          "incoming_player_damage": 32771.0,
+          "healer_output": 0.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 18,
+          "start_seconds": 180.0,
+          "end_seconds": 190.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 1931092.0,
+          "incoming_player_damage": 0.0,
+          "healer_output": 0.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 19,
+          "start_seconds": 190.0,
+          "end_seconds": 200.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 659667.0,
+          "incoming_player_damage": 34693.0,
+          "healer_output": 0.0,
+          "deaths": 1,
+          "interrupts": 0
+        },
+        {
+          "index": 20,
+          "start_seconds": 200.0,
+          "end_seconds": 210.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 292670.0,
+          "incoming_player_damage": 0.0,
+          "healer_output": 0.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 21,
+          "start_seconds": 210.0,
+          "end_seconds": 220.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 0.0,
+          "incoming_player_damage": 0.0,
+          "healer_output": 0.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 22,
+          "start_seconds": 220.0,
+          "end_seconds": 230.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 0.0,
+          "incoming_player_damage": 0.0,
+          "healer_output": 0.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 23,
+          "start_seconds": 230.0,
+          "end_seconds": 240.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 0.0,
+          "incoming_player_damage": 0.0,
+          "healer_output": 0.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 24,
+          "start_seconds": 240.0,
+          "end_seconds": 250.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 0.0,
+          "incoming_player_damage": 0.0,
+          "healer_output": 0.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 25,
+          "start_seconds": 250.0,
+          "end_seconds": 260.0,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 0.0,
+          "incoming_player_damage": 0.0,
+          "healer_output": 0.0,
+          "deaths": 0,
+          "interrupts": 0
+        },
+        {
+          "index": 26,
+          "start_seconds": 260.0,
+          "end_seconds": 264.428,
+          "primary_target_damage": 0.0,
+          "other_hostile_damage": 7374.0,
+          "incoming_player_damage": 10097.0,
+          "healer_output": 0.0,
+          "deaths": 1,
+          "interrupts": 0
+        }
+      ]
+    }
+  ],
+  "candidate_hostile_families": [
+    {
+      "ability_game_id": 163576,
+      "fight_count": 7,
+      "raw_event_count": 4668,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 1561
+        },
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 1546
+        },
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 1491
+        },
+        {
+          "event_type": "refreshdebuff",
+          "tick": null,
+          "count": 70
+        }
+      ]
+    },
+    {
+      "ability_game_id": 175834,
+      "fight_count": 7,
+      "raw_event_count": 2446,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 815
+        },
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 721
+        },
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 520
+        },
+        {
+          "event_type": "cast",
+          "tick": null,
+          "count": 390
+        }
+      ]
+    },
+    {
+      "ability_game_id": 163575,
+      "fight_count": 7,
+      "raw_event_count": 1875,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "applydebuffstack",
+          "tick": null,
+          "count": 1231
+        },
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 322
+        },
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 322
+        }
+      ]
+    },
+    {
+      "ability_game_id": 166794,
+      "fight_count": 7,
+      "raw_event_count": 1162,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 582
+        },
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 580
+        }
+      ]
+    },
+    {
+      "ability_game_id": 165987,
+      "fight_count": 7,
+      "raw_event_count": 1058,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 370
+        },
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 344
+        },
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 344
+        }
+      ]
+    },
+    {
+      "ability_game_id": 165983,
+      "fight_count": 7,
+      "raw_event_count": 1049,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 369
+        },
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 340
+        },
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 340
+        }
+      ]
+    },
+    {
+      "ability_game_id": 174777,
+      "fight_count": 7,
+      "raw_event_count": 898,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 898
+        }
+      ]
+    },
+    {
+      "ability_game_id": 174835,
+      "fight_count": 7,
+      "raw_event_count": 486,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "applydebuffstack",
+          "tick": null,
+          "count": 222
+        },
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 132
+        },
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 132
+        }
+      ]
+    },
+    {
+      "ability_game_id": 174659,
+      "fight_count": 7,
+      "raw_event_count": 457,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "applydebuffstack",
+          "tick": null,
+          "count": 207
+        },
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 125
+        },
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 125
+        }
+      ]
+    },
+    {
+      "ability_game_id": 175831,
+      "fight_count": 7,
+      "raw_event_count": 453,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 91
+        },
+        {
+          "event_type": "begincast",
+          "tick": null,
+          "count": 91
+        },
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 91
+        },
+        {
+          "event_type": "cast",
+          "tick": null,
+          "count": 90
+        },
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 90
+        }
+      ]
+    },
+    {
+      "ability_game_id": 166019,
+      "fight_count": 7,
+      "raw_event_count": 421,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "begincast",
+          "tick": null,
+          "count": 143
+        },
+        {
+          "event_type": "cast",
+          "tick": null,
+          "count": 141
+        },
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 137
+        }
+      ]
+    },
+    {
+      "ability_game_id": 174834,
+      "fight_count": 7,
+      "raw_event_count": 376,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 376
+        }
+      ]
+    },
+    {
+      "ability_game_id": 166597,
+      "fight_count": 7,
+      "raw_event_count": 342,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 114
+        },
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 114
+        },
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 114
+        }
+      ]
+    },
+    {
+      "ability_game_id": 166593,
+      "fight_count": 7,
+      "raw_event_count": 335,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "cast",
+          "tick": null,
+          "count": 151
+        },
+        {
+          "event_type": "begincast",
+          "tick": null,
+          "count": 97
+        },
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 87
+        }
+      ]
+    },
+    {
+      "ability_game_id": 134599,
+      "fight_count": 7,
+      "raw_event_count": 301,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 151
+        },
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 150
+        }
+      ]
+    },
+    {
+      "ability_game_id": 166020,
+      "fight_count": 7,
+      "raw_event_count": 267,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "begincast",
+          "tick": null,
+          "count": 90
+        },
+        {
+          "event_type": "cast",
+          "tick": null,
+          "count": 89
+        },
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 88
+        }
+      ]
+    },
+    {
+      "ability_game_id": 174932,
+      "fight_count": 7,
+      "raw_event_count": 264,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 132
+        },
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 132
+        }
+      ]
+    },
+    {
+      "ability_game_id": 166595,
+      "fight_count": 7,
+      "raw_event_count": 260,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 70
+        },
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 66
+        },
+        {
+          "event_type": "begincast",
+          "tick": null,
+          "count": 63
+        },
+        {
+          "event_type": "cast",
+          "tick": null,
+          "count": 61
+        }
+      ]
+    },
+    {
+      "ability_game_id": 166592,
+      "fight_count": 7,
+      "raw_event_count": 222,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "begincast",
+          "tick": null,
+          "count": 75
+        },
+        {
+          "event_type": "cast",
+          "tick": null,
+          "count": 74
+        },
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 73
+        }
+      ]
+    },
+    {
+      "ability_game_id": 166585,
+      "fight_count": 7,
+      "raw_event_count": 220,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 56
+        },
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 56
+        },
+        {
+          "event_type": "begincast",
+          "tick": null,
+          "count": 38
+        },
+        {
+          "event_type": "cast",
+          "tick": null,
+          "count": 35
+        },
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 35
+        }
+      ]
+    },
+    {
+      "ability_game_id": 175832,
+      "fight_count": 7,
+      "raw_event_count": 176,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 88
+        },
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 88
+        }
+      ]
+    },
+    {
+      "ability_game_id": 166588,
+      "fight_count": 7,
+      "raw_event_count": 164,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "cast",
+          "tick": null,
+          "count": 81
+        },
+        {
+          "event_type": "begincast",
+          "tick": null,
+          "count": 43
+        },
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 40
+        }
+      ]
+    },
+    {
+      "ability_game_id": 163702,
+      "fight_count": 7,
+      "raw_event_count": 145,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "begincast",
+          "tick": null,
+          "count": 74
+        },
+        {
+          "event_type": "cast",
+          "tick": null,
+          "count": 71
+        }
+      ]
+    },
+    {
+      "ability_game_id": 166591,
+      "fight_count": 7,
+      "raw_event_count": 111,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "begincast",
+          "tick": null,
+          "count": 39
+        },
+        {
+          "event_type": "cast",
+          "tick": null,
+          "count": 36
+        },
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 36
+        }
+      ]
+    },
+    {
+      "ability_game_id": 8239,
+      "fight_count": 7,
+      "raw_event_count": 106,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 54
+        },
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 52
+        }
+      ]
+    },
+    {
+      "ability_game_id": 174655,
+      "fight_count": 7,
+      "raw_event_count": 105,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "cast",
+          "tick": null,
+          "count": 105
+        }
+      ]
+    },
+    {
+      "ability_game_id": 166639,
+      "fight_count": 7,
+      "raw_event_count": 104,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 52
+        },
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 52
+        }
+      ]
+    },
+    {
+      "ability_game_id": 166638,
+      "fight_count": 7,
+      "raw_event_count": 94,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 64
+        },
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 30
+        }
+      ]
+    },
+    {
+      "ability_game_id": 69073,
+      "fight_count": 7,
+      "raw_event_count": 87,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 31
+        },
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 31
+        },
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 25
+        }
+      ]
+    },
+    {
+      "ability_game_id": 166582,
+      "fight_count": 7,
+      "raw_event_count": 73,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "begincast",
+          "tick": null,
+          "count": 25
+        },
+        {
+          "event_type": "cast",
+          "tick": null,
+          "count": 24
+        },
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 24
+        }
+      ]
+    },
+    {
+      "ability_game_id": 166149,
+      "fight_count": 7,
+      "raw_event_count": 66,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 22
+        },
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 22
+        },
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 22
+        }
+      ]
+    },
+    {
+      "ability_game_id": 166594,
+      "fight_count": 7,
+      "raw_event_count": 62,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 62
+        }
+      ]
+    },
+    {
+      "ability_game_id": 166022,
+      "fight_count": 7,
+      "raw_event_count": 58,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "cast",
+          "tick": null,
+          "count": 58
+        }
+      ]
+    },
+    {
+      "ability_game_id": 166171,
+      "fight_count": 7,
+      "raw_event_count": 54,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 20
+        },
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 17
+        },
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 17
+        }
+      ]
+    },
+    {
+      "ability_game_id": 166586,
+      "fight_count": 7,
+      "raw_event_count": 54,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "begincast",
+          "tick": null,
+          "count": 30
+        },
+        {
+          "event_type": "cast",
+          "tick": null,
+          "count": 24
+        }
+      ]
+    },
+    {
+      "ability_game_id": 163701,
+      "fight_count": 7,
+      "raw_event_count": 53,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "begincast",
+          "tick": null,
+          "count": 27
+        },
+        {
+          "event_type": "cast",
+          "tick": null,
+          "count": 26
+        }
+      ]
+    },
+    {
+      "ability_game_id": 166031,
+      "fight_count": 7,
+      "raw_event_count": 48,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 24
+        },
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 24
+        }
+      ]
+    },
+    {
+      "ability_game_id": 175561,
+      "fight_count": 7,
+      "raw_event_count": 42,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "begincast",
+          "tick": null,
+          "count": 21
+        },
+        {
+          "event_type": "cast",
+          "tick": null,
+          "count": 21
+        }
+      ]
+    },
+    {
+      "ability_game_id": 166589,
+      "fight_count": 7,
+      "raw_event_count": 40,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 40
+        }
+      ]
+    },
+    {
+      "ability_game_id": 175034,
+      "fight_count": 7,
+      "raw_event_count": 37,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "cast",
+          "tick": null,
+          "count": 37
+        }
+      ]
+    },
+    {
+      "ability_game_id": 175081,
+      "fight_count": 7,
+      "raw_event_count": 35,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 14
+        },
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 14
+        },
+        {
+          "event_type": "applydebuffstack",
+          "tick": null,
+          "count": 7
+        }
+      ]
+    },
+    {
+      "ability_game_id": 175562,
+      "fight_count": 7,
+      "raw_event_count": 34,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 12
+        },
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 12
+        },
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 10
+        }
+      ]
+    },
+    {
+      "ability_game_id": 163692,
+      "fight_count": 7,
+      "raw_event_count": 32,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "cast",
+          "tick": null,
+          "count": 32
+        }
+      ]
+    },
+    {
+      "ability_game_id": 10950,
+      "fight_count": 7,
+      "raw_event_count": 28,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 28
+        }
+      ]
+    },
+    {
+      "ability_game_id": 166587,
+      "fight_count": 7,
+      "raw_event_count": 18,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 18
+        }
+      ]
+    },
+    {
+      "ability_game_id": 166936,
+      "fight_count": 6,
+      "raw_event_count": 93,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 33
+        },
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 30
+        },
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 30
+        }
+      ]
+    },
+    {
+      "ability_game_id": 166151,
+      "fight_count": 6,
+      "raw_event_count": 72,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 24
+        },
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 24
+        },
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 24
+        }
+      ]
+    },
+    {
+      "ability_game_id": 166170,
+      "fight_count": 6,
+      "raw_event_count": 52,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 18
+        },
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 17
+        },
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 17
+        }
+      ]
+    },
+    {
+      "ability_game_id": 166584,
+      "fight_count": 6,
+      "raw_event_count": 39,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "begincast",
+          "tick": null,
+          "count": 13
+        },
+        {
+          "event_type": "cast",
+          "tick": null,
+          "count": 13
+        },
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 13
+        }
+      ]
+    },
+    {
+      "ability_game_id": 166169,
+      "fight_count": 6,
+      "raw_event_count": 18,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 6
+        },
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 6
+        },
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 6
+        }
+      ]
+    },
+    {
+      "ability_game_id": 61727,
+      "fight_count": 6,
+      "raw_event_count": 14,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 14
+        }
+      ]
+    },
+    {
+      "ability_game_id": 117727,
+      "fight_count": 6,
+      "raw_event_count": 14,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 14
+        }
+      ]
+    },
+    {
+      "ability_game_id": 174915,
+      "fight_count": 2,
+      "raw_event_count": 57,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 19
+        },
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 19
+        },
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 19
+        }
+      ]
+    },
+    {
+      "ability_game_id": 174913,
+      "fight_count": 2,
+      "raw_event_count": 4,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "begincast",
+          "tick": null,
+          "count": 2
+        },
+        {
+          "event_type": "cast",
+          "tick": null,
+          "count": 2
+        }
+      ]
+    },
+    {
+      "ability_game_id": 175790,
+      "fight_count": 1,
+      "raw_event_count": 3,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 1
+        },
+        {
+          "event_type": "damage",
+          "tick": null,
+          "count": 1
+        },
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "ability_game_id": 21927,
+      "fight_count": 1,
+      "raw_event_count": 2,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 2
+        }
+      ]
+    },
+    {
+      "ability_game_id": 61726,
+      "fight_count": 1,
+      "raw_event_count": 2,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 2
+        }
+      ]
+    },
+    {
+      "ability_game_id": 62912,
+      "fight_count": 1,
+      "raw_event_count": 2,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "damage",
+          "tick": true,
+          "count": 2
+        }
+      ]
+    },
+    {
+      "ability_game_id": 166640,
+      "fight_count": 1,
+      "raw_event_count": 2,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "applydebuff",
+          "tick": null,
+          "count": 1
+        },
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "ability_game_id": 61742,
+      "fight_count": 1,
+      "raw_event_count": 1,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "ability_game_id": 62951,
+      "fight_count": 1,
+      "raw_event_count": 1,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "damage",
+          "tick": true,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "ability_game_id": 118746,
+      "fight_count": 1,
+      "raw_event_count": 1,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "ability_game_id": 148803,
+      "fight_count": 1,
+      "raw_event_count": 1,
+      "canonical_mechanic_id": null,
+      "review_status": "pending",
+      "review_rationale": "",
+      "observed_names": [],
+      "event_shapes": [
+        {
+          "event_type": "removedebuff",
+          "tick": null,
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "review_state": {
+    "canonical_strategy_changed": false,
+    "canonical_mechanics_changed": false,
+    "pending_human_review": true
+  }
+}
