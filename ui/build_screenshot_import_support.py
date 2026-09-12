@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QMessageBox,
     QPushButton,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -204,12 +205,23 @@ class BuildScreenshotImportDialog(QDialog):
         self.service = BuildScreenshotImportService(get_data_dir() / "build_imports")
 
         root = QVBoxLayout(self)
-        root.setContentsMargins(16, 16, 16, 16)
+        root.setContentsMargins(12, 12, 12, 12)
         root.setSpacing(10)
+
+        scroll = QScrollArea(self)
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QScrollArea.Shape.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+
+        body = QWidget(scroll)
+        body_layout = QVBoxLayout(body)
+        body_layout.setContentsMargins(4, 4, 4, 4)
+        body_layout.setSpacing(10)
 
         title = QLabel("SCREENSHOT BUILD IMPORT")
         title.setProperty("pageTitle", True)
-        root.addWidget(title)
+        body_layout.addWidget(title)
 
         intro = QLabel(
             "Capture one character's Armory views plus the main Character sheet. BFF keeps the "
@@ -218,17 +230,19 @@ class BuildScreenshotImportDialog(QDialog):
         )
         intro.setWordWrap(True)
         intro.setProperty("pageSubtitle", True)
-        root.addWidget(intro)
+        body_layout.addWidget(intro)
 
         capture_card = FoundryCard("Recommended Capture Set")
-        capture_card.addWidget(QLabel(
+        capture_text = QLabel(
             "1. Armory equipment/attributes view: build name, gear, weapons, jewelry, Mundus, attributes.\n"
             "2. Armory Skills view: both skill bars and ultimates.\n"
             "3. Armory Champion view: the slotted CP stars for all three disciplines.\n"
             "4. Character Sheet → Description: character name, race, class, alliance and stable identity details.\n"
             "Extra Armory screenshots are welcome when one screen cannot show the whole list."
-        ))
-        root.addWidget(capture_card)
+        )
+        capture_text.setWordWrap(True)
+        capture_card.addWidget(capture_text)
+        body_layout.addWidget(capture_card)
 
         grid = QGridLayout()
         grid.setHorizontalSpacing(10)
@@ -241,14 +255,18 @@ class BuildScreenshotImportDialog(QDialog):
         grid.addWidget(self.character, 0, 1)
         grid.setColumnStretch(0, 1)
         grid.setColumnStretch(1, 1)
-        root.addLayout(grid, 1)
+        body_layout.addLayout(grid)
 
         status = QLabel(
             "Recognition will create a reviewable draft before anything is allowed into builds.json. Missing or ambiguous fields stay unresolved instead of being guessed."
         )
         status.setWordWrap(True)
         status.setProperty("muted", True)
-        root.addWidget(status)
+        body_layout.addWidget(status)
+        body_layout.addStretch(1)
+
+        scroll.setWidget(body)
+        root.addWidget(scroll, 1)
 
         actions = QHBoxLayout()
         actions.addStretch(1)
