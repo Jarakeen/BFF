@@ -13,6 +13,9 @@ from services.rotation_candidate_periodic_damage_runtime_projection_service impo
 from services.rotation_dd_periodic_runtime_semantics_gap_audit_service import (
     RotationDDPeriodicRuntimeSemanticsGapAuditService,
 )
+from services.rotation_dd_periodic_runtime_semantics_review_service import (
+    RotationDDPeriodicRuntimeSemanticsReviewEntry,
+)
 
 
 class _Coefficients:
@@ -39,6 +42,17 @@ class _Registry:
 
     def load(self):
         return self.semantics
+
+
+class _ReviewService:
+    def __init__(self, entries=()):
+        self.entries = tuple(entries)
+
+    def by_component(self):
+        return {
+            (entry.skill_entity_id, entry.coefficient_number): entry
+            for entry in self.entries
+        }
 
 
 def _resolution(entity_id: str, skill_rank_id: int, unresolved=()):
@@ -89,6 +103,7 @@ def test_audit_returns_only_verified_dot_components_missing_reviewed_semantics()
             }
         ),
         semantics_registry=_Registry(),
+        review_service=_ReviewService(),
     )
 
     result = service.audit(("Wall of Elements", "wall_of_elements"))
@@ -102,6 +117,7 @@ def test_audit_returns_only_verified_dot_components_missing_reviewed_semantics()
     assert gap.skill_rank_id == 101
     assert gap.coefficient_number == 1
     assert gap.classification_source == "runtime classification"
+    assert gap.partial_review is None
     assert result.complete is False
 
 
@@ -133,6 +149,7 @@ def test_audit_build_uses_both_saved_bars_and_dedupes_skill_identity() -> None:
             }
         ),
         semantics_registry=_Registry(),
+        review_service=_ReviewService(),
     )
     build = PlayerBuild(
         Name="Parse Cat",
@@ -161,6 +178,7 @@ def test_audit_separates_reviewed_periodic_semantics_from_missing_queue() -> Non
             {101: (_component(1, is_dot=True), _component(2, is_dot=True))}
         ),
         semantics_registry=_Registry((reviewed,)),
+        review_service=_ReviewService(),
     )
 
     result = service.audit(("wall_of_elements",))
@@ -168,6 +186,37 @@ def test_audit_separates_reviewed_periodic_semantics_from_missing_queue() -> Non
     assert result.reviewed == (reviewed,)
     assert tuple(item.coefficient_number for item in result.missing) == (2,)
     assert result.unresolved == ()
+
+
+def test_audit_attaches_partial_review_without_promoting_it_to_reviewed() -> None:
+    partial = RotationDDPeriodicRuntimeSemanticsReviewEntry(
+        skill_entity_id="skeletal_archer",
+        coefficient_number=1,
+        duration_seconds=20.0,
+        reviewed_interval_seconds=2.0,
+        successive_hit_multiplier=1.15,
+        evidence=("reviewed tooltip cadence and growth",),
+    )
+    service = RotationDDPeriodicRuntimeSemanticsGapAuditService(
+        "unused.db",
+        coefficient_repository=_Coefficients(
+            {"skeletal_archer": _resolution("skeletal_archer", 101)}
+        ),
+        component_repository=_Components({101: (_component(1, is_dot=True),)}),
+        semantics_registry=_Registry(),
+        review_service=_ReviewService((partial,)),
+    )
+
+    result = service.audit(("skeletal_archer",))
+
+    assert result.reviewed == ()
+    assert len(result.missing) == 1
+    assert result.missing[0].partial_review is partial
+    assert partial.unresolved_executable_fields == (
+        "first_tick_offset_seconds",
+        "refresh_boundary",
+        "magnitude_policy",
+    )
 
 
 def test_audit_fails_closed_when_damage_periodic_identity_is_unknown() -> None:
@@ -180,6 +229,7 @@ def test_audit_fails_closed_when_damage_periodic_identity_is_unknown() -> None:
             {101: (_component(1, is_dot=None),)}
         ),
         semantics_registry=_Registry(),
+        review_service=_ReviewService(),
     )
 
     result = service.audit(("mystery_skill",))
@@ -205,6 +255,7 @@ def test_audit_preserves_unresolved_skill_identity_instead_of_guessing() -> None
         coefficient_repository=coefficients,
         component_repository=_Components({}),
         semantics_registry=_Registry(),
+        review_service=_ReviewService(),
     )
 
     result = service.audit(("Unknown Skill",))
