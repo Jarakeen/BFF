@@ -60,7 +60,7 @@ class _Conditional:
         )
 
 
-def test_dd_context_carries_exploiter_magnitude_without_claiming_runtime_completion() -> None:
+def test_dd_context_carries_exploiter_magnitude_and_retires_stale_static_warning() -> None:
     service = RotationStaticBuildContextService(
         progression_adapter=_ProgressionAdapter(),
         context_factory=_ContextFactory(),
@@ -72,8 +72,5 @@ def test_dd_context_carries_exploiter_magnitude_without_claiming_runtime_complet
     )
 
     assert [context.dd_exploiter_bonus for context in result.contexts] == [0.04, 0.04]
-    assert result.resolved is False
-    assert result.unresolved == (
-        "front static context: Champion Point effect not yet modeled: Exploiter: Increases your damage done against Off Balance enemies by 2% per stage.",
-        "back static context: Champion Point effect not yet modeled: Exploiter: Increases your damage done against Off Balance enemies by 2% per stage.",
-    )
+    assert result.resolved is True
+    assert result.unresolved == ()
