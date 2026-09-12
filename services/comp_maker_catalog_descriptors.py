@@ -14,6 +14,7 @@ from services.service_catalog import (
 )
 from services.extreme_catalog_descriptors import EXTREME_SERVICE_DESCRIPTORS
 from services.rotation_catalog_descriptors import ROTATION_SERVICE_DESCRIPTORS
+from services.rotation_dd_catalog_descriptors import ROTATION_DD_SERVICE_DESCRIPTORS
 from services.rotation_dd_periodic_catalog_descriptors import (
     ROTATION_DD_PERIODIC_SERVICE_DESCRIPTORS,
 )
@@ -135,6 +136,7 @@ COMP_MAKER_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
     ),
     *EXTREME_SERVICE_DESCRIPTORS,
     *ROTATION_SERVICE_DESCRIPTORS,
+    *ROTATION_DD_SERVICE_DESCRIPTORS,
     *ROTATION_DD_PERIODIC_SERVICE_DESCRIPTORS,
     *ROTATION_GAMEPLAY_POLICY_SERVICE_DESCRIPTORS,
     *ROTATION_OBSERVATION_SERVICE_DESCRIPTORS,
