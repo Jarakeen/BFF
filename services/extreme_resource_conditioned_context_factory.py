@@ -9,9 +9,7 @@ those whose marker is present.
 """
 
 from dataclasses import replace
-from pathlib import Path
 
-from minmax.armor_glyph_repository import ArmorGlyphEffectRepository
 from minmax.context_factory import BuildCalculationContextFactory
 from minmax.derived_stats import StatContribution
 from minmax.gear_stat_inputs import (
@@ -20,51 +18,12 @@ from minmax.gear_stat_inputs import (
     GearCalculationInputs,
     GearStatInputResolver,
 )
-from minmax.jewelry_glyph_repository import JewelryGlyphEffectRepository
-from minmax.jewelry_trait_repository import JewelryTraitRepository
 from minmax.phase5_context_factory import Phase5BuildCalculationContextFactory
-from minmax.racial_passive_stat_repository import RacialPassiveStatRepository
-from minmax.skill_line_repository import SkillLineRepository
 from minmax.stat_ids import StatId
 from models.build_model import PlayerBuild
-
-
-_SHARED_STATIC_GEAR_INPUT_REPOSITORIES: dict[
-    str,
-    tuple[
-        ArmorGlyphEffectRepository,
-        JewelryGlyphEffectRepository,
-        JewelryTraitRepository,
-        SkillLineRepository,
-        RacialPassiveStatRepository,
-    ],
-] = {}
-
-
-def _shared_static_gear_input_repositories(database_path: str | Path):
-    """Reuse immutable Extreme static repositories for one audit process.
-
-    Extreme exhaustive scoring constructs many conditioned context factories for the
-    same canonical database. These repositories already own deterministic per-name
-    caches, so recreating them per evaluator discards those caches and reopens SQLite
-    for the same armor/jewelry/skill-line/racial inputs on every candidate. The cache
-    is intentionally process-local and database-path scoped; a fresh audit process
-    therefore sees a fresh database snapshot.
-    """
-
-    key = str(Path(database_path).resolve())
-    cached = _SHARED_STATIC_GEAR_INPUT_REPOSITORIES.get(key)
-    if cached is not None:
-        return cached
-    repositories = (
-        ArmorGlyphEffectRepository(database_path),
-        JewelryGlyphEffectRepository(database_path),
-        JewelryTraitRepository(database_path),
-        SkillLineRepository(database_path),
-        RacialPassiveStatRepository(database_path),
-    )
-    _SHARED_STATIC_GEAR_INPUT_REPOSITORIES[key] = repositories
-    return repositories
+from services.extreme_resource_canonical_static_snapshot_service import (
+    ExtremeResourceCanonicalStaticSnapshotService,
+)
 
 
 class ExtremeResourceConditionedGearStatInputResolver(GearStatInputResolver):
@@ -147,18 +106,12 @@ class ExtremeResourceConditionedPhase5ContextFactory(Phase5BuildCalculationConte
         gear_set_repository = kwargs.get("gear_set_repository")
         database_path = getattr(gear_set_repository, "database_path", None)
         if database_path is not None:
-            (
-                armor_glyph,
-                jewelry_glyph,
-                jewelry_trait,
-                skill_line,
-                racial_passive,
-            ) = _shared_static_gear_input_repositories(database_path)
-            kwargs.setdefault("armor_glyph_repository", armor_glyph)
-            kwargs.setdefault("jewelry_glyph_repository", jewelry_glyph)
-            kwargs.setdefault("jewelry_trait_repository", jewelry_trait)
-            kwargs.setdefault("skill_line_repository", skill_line)
-            kwargs.setdefault("racial_passive_repository", racial_passive)
+            snapshot = ExtremeResourceCanonicalStaticSnapshotService(database_path).build()
+            kwargs.setdefault("armor_glyph_repository", snapshot.armor_glyph_repository)
+            kwargs.setdefault("jewelry_glyph_repository", snapshot.jewelry_glyph_repository)
+            kwargs.setdefault("jewelry_trait_repository", snapshot.jewelry_trait_repository)
+            kwargs.setdefault("skill_line_repository", snapshot.skill_line_repository)
+            kwargs.setdefault("racial_passive_repository", snapshot.racial_passive_repository)
 
         super().__init__(*args, **kwargs)
         existing = self.gear_resolver
