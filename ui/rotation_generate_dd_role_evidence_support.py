@@ -231,6 +231,7 @@ class _RotationGenerateBarAwareSkillDamageProvider:
             periodic_runtime_projection_service=self.periodic_runtime_projection_service,
             periodic_runtime_semantics=self.periodic_runtime_semantics,
             runtime_build_context_resolver=self.runtime_build_context_resolver,
+            runtime_target_combat_state_resolver=self.runtime_target_combat_state_resolver,
         ).evaluate_action(
             candidate=candidate,
             action=action,
@@ -502,14 +503,16 @@ class RotationGenerateDDRoleEvidenceSupport:
     canonical evaluators. Reviewed periodic semantics come from the production DD
     runtime registry. Snapshot DoTs reuse cast-time magnitude only when explicitly
     reviewed as such. Dynamic DoTs bind to the final stabilized candidate's runtime
-    combat-state resolver and rebuild exact-time calculation context for every tick.
-    Stabilized LA/HA evidence uses that same exact runtime build-context resolver so
-    temporal resource/stat/bar state does not collapse back to static build values.
-    Direct/snapshot damage also consumes explicit target-side runtime combat state
-    when authoritative evidence supplies it; target identity windows are not treated
-    as target debuff state. Non-cast periodic activation anchors consume an
-    authoritative runtime anchor resolver from the stabilized snapshot when one is
-    available; otherwise the periodic projection remains fail-closed.
+    combat-state resolver and rebuild exact-time calculation context for every tick;
+    when target-side runtime evidence exists they also re-resolve Damage Taken at the
+    exact tick timestamp. Stabilized LA/HA evidence uses that same exact runtime
+    build-context resolver so temporal resource/stat/bar state does not collapse back
+    to static build values. Direct/snapshot damage also consumes explicit target-side
+    runtime combat state when authoritative evidence supplies it; target identity
+    windows are not treated as target debuff state. Non-cast periodic activation
+    anchors consume an authoritative runtime anchor resolver from the stabilized
+    snapshot when one is available; otherwise the periodic projection remains
+    fail-closed.
     """
 
     def __init__(
