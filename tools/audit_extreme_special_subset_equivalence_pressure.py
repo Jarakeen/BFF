@@ -8,7 +8,7 @@ pairs only when the exact ordinary filler problem sees the same structural const
 * topology counts/unused units;
 * special breakpoint-count multiset;
 * special physical eligibility shapes at each required breakpoint;
-* special identities excluded from ordinary candidate domains.
+* special identities that actually overlap an ordinary candidate domain.
 
 Mechanic identity is deliberately NOT discarded. The report only estimates how many
 ordinary filler searches could be shared while distinct special mechanics remain attached
@@ -94,6 +94,10 @@ def main() -> int:
     classified = ExtremeMaxResourceSpecialNamedGearBranchService(relevance).build(special_pairs)
 
     eligibility_by_id = {int(row.set_id): row for row in eligibility.sets}
+    ordinary_ids_by_count = {
+        int(count): frozenset(int(row.set_id) for row in rows)
+        for count, rows in ordinary_candidates.items()
+    }
     branches = tuple(classified.branches)
     if classified.unresolved:
         print("UNRESOLVED")
@@ -113,7 +117,7 @@ def main() -> int:
                 raw_pairs += 1
 
                 special_rows = []
-                excluded_by_count: dict[int, list[int]] = defaultdict(list)
+                actual_excluded_by_count: dict[int, list[int]] = defaultdict(list)
                 invalid = False
                 for branch in subset:
                     physical = eligibility_by_id.get(int(branch.set_id))
@@ -121,16 +125,16 @@ def main() -> int:
                         invalid = True
                         break
                     count = int(branch.piece_count)
-                    excluded_by_count[count].append(int(branch.set_id))
+                    set_id = int(branch.set_id)
+                    if set_id in ordinary_ids_by_count.get(count, frozenset()):
+                        actual_excluded_by_count[count].append(set_id)
                     special_rows.append((count, _physical_shape(physical)))
                 if invalid:
                     continue
 
-                # The ordinary domain differs only where special identities are removed.
-                # Preserve those exclusions explicitly; do not assume identity equivalence.
                 exclusion_signature = tuple(
                     (count, tuple(sorted(ids)))
-                    for count, ids in sorted(excluded_by_count.items())
+                    for count, ids in sorted(actual_excluded_by_count.items())
                 )
                 structural_signature = (
                     topology_counts,
@@ -163,7 +167,7 @@ def main() -> int:
         topology_counts, unused, special_shapes, exclusions = signature
         print(f"size={size} topology={topology_counts}|unused:{unused}")
         print(f"  special_shapes={special_shapes}")
-        print(f"  exclusions={exclusions}")
+        print(f"  ordinary_domain_exclusions={exclusions}")
         print(f"  examples={rows[:5]}")
 
     return 0
