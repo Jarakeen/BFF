@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from minmax.combat_state import LightAttackState
 from minmax.formulas.additional_formulas import calculate_la_bow
+from minmax.formulas.final_calculations import calculate_la_melee
 from minmax.formulas.resolved_modifiers import (
     calculate_la_flame_staff,
     calculate_la_frost_staff,
@@ -87,4 +88,25 @@ def calculate_bow_light_attack(
         direct_damage_done=state.direct_damage_done,
         single_target_damage_done=state.single_target_damage_done,
         skill_line_damage_bow=state.skill_line_damage_bow,
+    )
+
+
+def calculate_melee_light_attack(
+    state: LightAttackState,
+) -> float:
+    """Evaluate the preserved UESP LAOneHand/LATwoHand shared formula."""
+
+    return calculate_la_melee(
+        magicka=state.magicka,
+        stamina=state.stamina,
+        la_physical_weapon_damage=state.la_physical_weapon_damage,
+        la_physical_spell_damage=state.la_physical_spell_damage,
+        skill2_la_damage=state.skill2_la_damage,
+        cp_la_damage=state.cp_la_damage,
+        skill_la_damage=state.skill_la_damage,
+        set_la_damage=state.set_la_damage,
+        physical_damage_done=state.physical_damage_done,
+        damage_done=state.damage_done,
+        direct_damage_done=state.direct_damage_done,
+        single_target_damage_done=state.single_target_damage_done,
     )
