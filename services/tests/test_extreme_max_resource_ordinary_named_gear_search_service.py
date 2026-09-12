@@ -28,6 +28,9 @@ from services.extreme_named_gear_set_slot_eligibility_service import (
     ExtremeNamedGearSetSlotEligibility,
     ExtremeNamedGearSetSlotEligibilityCatalog,
 )
+from services.extreme_partial_named_gear_physical_feasibility_service import (
+    ExtremePartialNamedGearPhysicalFeasibilityService,
+)
 
 
 _BODY = ("Head", "Shoulders", "Chest", "Hands", "Waist", "Legs", "Feet")
@@ -141,9 +144,9 @@ def _service(
 def test_distinct_id_remaining_bound_respects_used_ids_within_count_class() -> None:
     candidates = {
         2: (
-            _Candidate(10, "Set 10", 2, 1000.0, _eligibility(10)),
-            _Candidate(20, "Set 20", 2, 900.0, _eligibility(20)),
-            _Candidate(30, "Set 30", 2, 800.0, _eligibility(30)),
+            _Candidate(10, "Set 10", 2, 1000.0, _eligibility(10), ()),
+            _Candidate(20, "Set 20", 2, 900.0, _eligibility(20), ()),
+            _Candidate(30, "Set 30", 2, 800.0, _eligibility(30), ()),
         )
     }
 
@@ -167,15 +170,12 @@ def test_distinct_id_remaining_bound_respects_used_ids_within_count_class() -> N
 def test_distinct_id_remaining_bound_stays_optimistic_across_count_classes() -> None:
     candidates = {
         2: (
-            _Candidate(10, "Set 10", 2, 1000.0, _eligibility(10)),
-            _Candidate(20, "Set 20", 2, 900.0, _eligibility(20)),
+            _Candidate(10, "Set 10", 2, 1000.0, _eligibility(10), ()),
+            _Candidate(20, "Set 20", 2, 900.0, _eligibility(20), ()),
         ),
         3: (
-            # Reusing set 10 across another count class is illegal in the final
-            # assignment, but counting it here makes the bound an overestimate,
-            # which is intentionally safe for pruning.
-            _Candidate(10, "Set 10", 3, 700.0, _eligibility(10)),
-            _Candidate(30, "Set 30", 3, 600.0, _eligibility(30)),
+            _Candidate(10, "Set 10", 3, 700.0, _eligibility(10), ()),
+            _Candidate(30, "Set 30", 3, 600.0, _eligibility(30), ()),
         ),
     }
 
@@ -221,6 +221,72 @@ def test_branch_bound_winner_matches_exhaustive_small_catalog() -> None:
     assert result.full_named_gear_denominator_proven is True
     assert winner.best_exact_flat_delta == exhaustive_best == 1900.0
     assert {row.set_ids for row in winner.realizations} == exhaustive_winners == {(10, 20)}
+
+
+def test_semantically_identical_tied_leaves_keep_one_representative() -> None:
+    rows = ((10, 2, 1000.0), (20, 2, 1000.0), (30, 2, 1000.0))
+    service, breakpoints, eligibility, _relevance = _service(rows)
+    topology = ExtremeGearSetCountTopology(counts=(2, 2), unused_units=8)
+    signature = (("same-objective-effect",),)
+    candidates = {
+        2: tuple(
+            _Candidate(
+                set_id,
+                f"Set {set_id}",
+                2,
+                1000.0,
+                _eligibility(set_id),
+                signature,
+            )
+            for set_id in (10, 20, 30)
+        )
+    }
+    frontier = ExtremeGearSetBonusBreakpointCatalog(
+        sets=tuple(_breakpoint(set_id, 2) for set_id in (10, 20, 30))
+    )
+
+    winner = service._search_topology(
+        topology,
+        candidates,
+        frontier,
+        feasibility=ExtremePartialNamedGearPhysicalFeasibilityService(),
+    )
+
+    assert winner.best_exact_flat_delta == 2000.0
+    assert winner.stats.leaves == 3
+    assert winner.stats.semantic_leaf_classes == 1
+    assert winner.stats.semantic_duplicate_leaves == 2
+    assert winner.stats.witness_checks == 1
+    assert len(winner.realizations) == 1
+
+
+def test_numerically_tied_different_effect_signatures_remain_distinct() -> None:
+    rows = ((10, 2, 1000.0), (20, 2, 1000.0), (30, 2, 1000.0))
+    service, _breakpoints, _eligibility_catalog, _relevance = _service(rows)
+    topology = ExtremeGearSetCountTopology(counts=(2, 2), unused_units=8)
+    candidates = {
+        2: (
+            _Candidate(10, "Set 10", 2, 1000.0, _eligibility(10), (("A",),)),
+            _Candidate(20, "Set 20", 2, 1000.0, _eligibility(20), (("B",),)),
+            _Candidate(30, "Set 30", 2, 1000.0, _eligibility(30), (("A",),)),
+        )
+    }
+    frontier = ExtremeGearSetBonusBreakpointCatalog(
+        sets=tuple(_breakpoint(set_id, 2) for set_id in (10, 20, 30))
+    )
+
+    winner = service._search_topology(
+        topology,
+        candidates,
+        frontier,
+        feasibility=ExtremePartialNamedGearPhysicalFeasibilityService(),
+    )
+
+    assert winner.best_exact_flat_delta == 2000.0
+    assert winner.stats.semantic_leaf_classes == 3
+    assert winner.stats.semantic_duplicate_leaves == 0
+    assert winner.stats.witness_checks == 3
+    assert len(winner.realizations) == 3
 
 
 def test_partial_physical_pruning_rejects_impossible_prefix_before_leaf() -> None:
