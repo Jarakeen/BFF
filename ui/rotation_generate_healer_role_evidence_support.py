@@ -26,6 +26,10 @@ from services.rotation_healer_delayed_runtime_service import (
 from services.rotation_healer_demand_healing_evidence_service import (
     RotationHealerExternalConditionalDemandAssumption,
 )
+from services.rotation_healer_demand_criteria_service import (
+    RotationCandidateHealerCriteriaHardObligationService,
+    RotationHealerDemandCriterion,
+)
 from services.rotation_healer_periodic_runtime_evidence_service import (
     RotationHealerReviewedRuntimeObservation,
 )
@@ -46,7 +50,9 @@ class RotationGenerateHealerRoleEvidenceSupport:
     Encounter thresholds and windows remain owned by the evidence bundle. Reviewed
     runtime observations and external-conditional assumptions remain explicit caller
     inputs. This composer does not infer group-healing reliability, assignments,
-    target counts, phase names, or encounter policy from display text.
+    target counts, phase names, or encounter policy from display text. Explicit
+    reviewed healer criteria reuse the same window output as a separate hard gate;
+    caller assumptions never become authoritative through this bridge.
     """
 
     def __init__(
@@ -70,6 +76,7 @@ class RotationGenerateHealerRoleEvidenceSupport:
         external_conditional_assumptions: tuple[
             RotationHealerExternalConditionalDemandAssumption, ...
         ] = (),
+        criteria: tuple[RotationHealerDemandCriterion, ...] = (),
         reliable_group_healing: bool | None = None,
         exception_contexts: tuple[str, ...] = (),
         role_output_label: str = "healing demand coverage",
@@ -96,6 +103,7 @@ class RotationGenerateHealerRoleEvidenceSupport:
         self.external_conditional_assumptions = tuple(
             external_conditional_assumptions
         )
+        self.criteria = tuple(criteria)
         self.reliable_group_healing = reliable_group_healing
         self.exception_contexts = tuple(
             dict.fromkeys(
@@ -148,11 +156,19 @@ class RotationGenerateHealerRoleEvidenceSupport:
             detail = "; ".join(role_output.unresolved) or "role-output provider unavailable"
             raise ValueError("canonical healer role output is unavailable: " + detail)
 
-        plan_evidence = self.plan_evidence_factory(
-            build=player_build,
-            resource=evidence_bundle.resource,
-            role_output_evidence_provider=role_output,
-        )
+        plan_kwargs = {
+            "build": player_build,
+            "resource": evidence_bundle.resource,
+            "role_output_evidence_provider": role_output,
+        }
+        if self.criteria:
+            plan_kwargs["role_hard_obligation_evidence_provider"] = (
+                RotationCandidateHealerCriteriaHardObligationService(
+                    multi_demand_output_service=role_output,
+                    criteria=self.criteria,
+                )
+            )
+        plan_evidence = self.plan_evidence_factory(**plan_kwargs)
         return RotationCanonicalRoleEvidence(
             plan_evidence_provider=plan_evidence,
             role_output_label=self.role_output_label,
