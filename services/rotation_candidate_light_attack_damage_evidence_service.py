@@ -23,9 +23,21 @@ from minmax.light_attack_evaluation import resolve_light_attack_from_evaluation
 from minmax.rotation_plan import RotationAction, RotationActionKind
 from services.rotation_candidate_dd_role_output_service import RotationActionDamageEvidence
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
+from services.rotation_saved_build_dd_conditional_damage_done_service import (
+    exploiter_damage_done_bonus,
+)
 from services.rotation_weapon_attack_projection_service import (
     RotationWeaponAttackProjectionService,
 )
+
+
+def _sum_contributions(evaluation: BuildEvaluation, *effect_types: str) -> float:
+    wanted = set(effect_types)
+    return sum(
+        contribution.effective_value
+        for contribution in evaluation.combat_contributions
+        if contribution.effect_type in wanted
+    )
 
 
 class RotationCandidateLightAttackDamageEvidenceService:
@@ -38,9 +50,10 @@ class RotationCandidateLightAttackDamageEvidenceService:
     later combat stages.
 
     ``attacker_combat_state`` supplies reviewed transient attacker-side Damage Done
-    such as Berserk at the exact attack instant. Those modifiers are added to the
-    already-resolved static contribution buckets before the canonical LA formula is
-    evaluated; they are not applied again in the later DD stage.
+    such as Berserk at the exact attack instant. Target-state-dependent Exploiter is
+    carried as a magnitude in the canonical weapon evaluation and joins that same
+    additive Damage Done bucket only when the exact target state is Off Balance.
+    Those modifiers are not applied again in the later DD stage.
 
     Flame staff, frost staff, and bow light attacks are fully routed here. Lightning
     staff remains unresolved because the currently preserved source formula uses HA,
@@ -110,10 +123,18 @@ class RotationCandidateLightAttackDamageEvidenceService:
 
         state = resolve_light_attack_from_evaluation(evaluation=self.evaluation)
         runtime_damage_done = damage_done_from_combat_state(self.attacker_combat_state)
-        if runtime_damage_done.generic:
+        exploiter_bonus = exploiter_damage_done_bonus(
+            self.target_combat_state,
+            _sum_contributions(
+                self.evaluation,
+                "conditional_exploiter_damage_done",
+            ),
+        )
+        additive_damage_done = float(runtime_damage_done.generic) + float(exploiter_bonus)
+        if additive_damage_done:
             state = replace(
                 state,
-                damage_done=state.damage_done + float(runtime_damage_done.generic),
+                damage_done=state.damage_done + additive_damage_done,
             )
 
         if resolution.main_hand is WeaponType.FLAME_STAFF:
