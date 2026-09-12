@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 
 from minmax.build_calculation_context import BuildCalculationContext
@@ -36,6 +37,12 @@ from services.rotation_plan_runtime_build_context_service import (
 )
 
 
+RotationRuntimeTargetCombatStateResolver = Callable[
+    [float, int | None],
+    CombatState,
+]
+
+
 class RotationCandidateSkillDamageEvidenceService:
     """Resolve scheduled skill damage through existing canonical combat math.
 
@@ -51,7 +58,9 @@ class RotationCandidateSkillDamageEvidenceService:
     shared runtime projection. Cast-time magnitude may be reused for all projected
     ticks only when reviewed semantics explicitly say ``snapshot_at_cast``. Dynamic
     per-tick magnitude is recomputed only when an authoritative exact-time runtime
-    build-context resolver is supplied for every projected tick. Explicit
+    build-context resolver is supplied for every projected tick. When an authoritative
+    target-state resolver is supplied, dynamic ticks also resolve Damage Taken at the
+    exact tick timestamp rather than inheriting target state from cast time. Explicit
     successive-hit scaling is applied by occurrence index only when reviewed
     semantics provide a multiplier.
     """
@@ -72,6 +81,7 @@ class RotationCandidateSkillDamageEvidenceService:
             tuple[RotationPeriodicDamageRuntimeSemantics, ...]
         ) = (),
         runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
+        runtime_target_combat_state_resolver: RotationRuntimeTargetCombatStateResolver | None = None,
     ) -> None:
         self.database_path = Path(database_path)
         self.context = context
@@ -85,6 +95,7 @@ class RotationCandidateSkillDamageEvidenceService:
         self.periodic_runtime_projection_service = periodic_runtime_projection_service
         self.periodic_runtime_semantics = tuple(periodic_runtime_semantics)
         self.runtime_build_context_resolver = runtime_build_context_resolver
+        self.runtime_target_combat_state_resolver = runtime_target_combat_state_resolver
 
     def evaluate_action(
         self,
@@ -225,8 +236,6 @@ class RotationCandidateSkillDamageEvidenceService:
                     damage_done=damage_done,
                     damage_taken=damage_taken,
                 )
-                # Explicit SNAPSHOT_AT_CAST evidence permits one cast-time damage
-                # consequence to be reused for each projected periodic occurrence.
                 total_damage += sum(
                     component_damage
                     * self._occurrence_multiplier(semantic, occurrence_index)
@@ -247,8 +256,6 @@ class RotationCandidateSkillDamageEvidenceService:
         if unresolved:
             return self._unresolved(action, *unresolved)
 
-        # A fully classified utility/healing skill legitimately contributes zero
-        # damage. Unknown component identity was already rejected above.
         if not saw_damage_component:
             total_damage = 0.0
 
@@ -274,12 +281,8 @@ class RotationCandidateSkillDamageEvidenceService:
 
         total_damage = 0.0
         unresolved: list[str] = []
-        damage_taken = damage_taken_from_target_state(self.target_combat_state)
 
         for occurrence_index, event in enumerate(runtime_events):
-            # Runtime ticks are not plan actions. Sequence=None asks the canonical
-            # runtime/bar projector for the state after all plan actions at this
-            # exact timestamp rather than fabricating an ordering token for the tick.
             runtime = self.runtime_build_context_resolver(
                 float(event.time_seconds),
                 None,
@@ -330,13 +333,20 @@ class RotationCandidateSkillDamageEvidenceService:
             )
             tick_dd_stats = evaluate_dd_stats(calculation, evaluation_context)
             tick_damage_done = damage_done_from_combat_state(tick_context.combat_state)
+            target_state = self.target_combat_state
+            if self.runtime_target_combat_state_resolver is not None:
+                target_state = self.runtime_target_combat_state_resolver(
+                    float(event.time_seconds),
+                    None,
+                )
+            tick_damage_taken = damage_taken_from_target_state(target_state)
             total_damage += self._resolve_component_damage(
                 context=tick_context,
                 base_value=float(tick_components[0].final_value),
                 classification=classification,
                 dd_stats=tick_dd_stats,
                 damage_done=tick_damage_done,
-                damage_taken=damage_taken,
+                damage_taken=tick_damage_taken,
             ) * self._occurrence_multiplier(semantic, occurrence_index)
 
         return total_damage, tuple(dict.fromkeys(unresolved))
@@ -376,8 +386,6 @@ class RotationCandidateSkillDamageEvidenceService:
         damage_done,
         damage_taken,
     ) -> float:
-        """Route one already-resolved coefficient value through canonical DD math."""
-
         event = DDDamageEvent(
             base_value=float(base_value),
             scaling_coefficient=0.0,
@@ -428,4 +436,7 @@ class RotationCandidateSkillDamageEvidenceService:
         )
 
 
-__all__ = ["RotationCandidateSkillDamageEvidenceService"]
+__all__ = [
+    "RotationCandidateSkillDamageEvidenceService",
+    "RotationRuntimeTargetCombatStateResolver",
+]
