@@ -31,6 +31,7 @@ def test_registry_loads_explicit_runtime_and_magnitude_semantics(tmp_path) -> No
                         "first_tick_offset_seconds": 2.0,
                         "refresh_boundary": "replace_before_recast_tick",
                         "magnitude_policy": "snapshot_at_cast",
+                        "successive_hit_multiplier": 1.15,
                         "source": "reviewed U50 combat evidence",
                     }
                 ],
@@ -47,6 +48,7 @@ def test_registry_loads_explicit_runtime_and_magnitude_semantics(tmp_path) -> No
     assert row.coefficient_number == 2
     assert row.refresh_boundary is PeriodicDamageRefreshBoundary.REPLACE_BEFORE_RECAST_TICK
     assert row.magnitude_policy is PeriodicDamageMagnitudePolicy.SNAPSHOT_AT_CAST
+    assert row.successive_hit_multiplier == 1.15
     assert row.source == "reviewed U50 combat evidence"
 
 
@@ -90,4 +92,30 @@ def test_registry_requires_explicit_magnitude_policy(tmp_path) -> None:
     )
 
     with pytest.raises(ValueError, match="magnitude_policy"):
+        RotationDDPeriodicRuntimeSemanticsRegistryService(path).load()
+
+
+def test_registry_rejects_nonpositive_successive_hit_multiplier(tmp_path) -> None:
+    path = tmp_path / "dd_periodic.json"
+    path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "entries": [
+                    {
+                        "skill_entity_id": "skeletal_archer",
+                        "coefficient_number": 1,
+                        "first_tick_offset_seconds": 2.0,
+                        "refresh_boundary": "replace_before_recast_tick",
+                        "magnitude_policy": "dynamic_at_tick",
+                        "successive_hit_multiplier": 0.0,
+                        "source": "reviewed combat evidence",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="successive_hit_multiplier"):
         RotationDDPeriodicRuntimeSemanticsRegistryService(path).load()
