@@ -199,6 +199,7 @@ class PlayerBuild:
     # Twice-Born Star can make a second distinct Mundus boon legal, and the
     # canonical static resolver verifies that 5-piece requirement before use.
     SecondMundus: str = ""
+    ReadyForRaid: bool = False
 
     @property
     def attribute_points_total(self) -> int:
@@ -245,6 +246,7 @@ class PlayerBuild:
             "Food": self.Food, "Potion": self.Potion, "Notes": self.Notes,
             "BossLoadouts": [b.to_dict() for b in self.BossLoadouts],
             "ScribedSkillRecipes": [recipe.to_dict() for recipe in recipes],
+            "ReadyForRaid": bool(self.ReadyForRaid),
         }
         if str(self.SecondMundus or "").strip():
             payload["SecondMundus"] = self.SecondMundus
@@ -301,6 +303,7 @@ class PlayerBuild:
             Food=str(data.get("Food", "") or ""), Potion=str(data.get("Potion", "") or ""), Notes=str(data.get("Notes", "") or ""),
             BossLoadouts=[BossLoadout.from_dict(b) for b in data.get("BossLoadouts", [])],
             SecondMundus=str(data.get("SecondMundus", "") or ""),
+            ReadyForRaid=bool(data.get("ReadyForRaid", False)),
         )
 
     def display_label(self, fallback: str) -> str:

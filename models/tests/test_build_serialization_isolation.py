@@ -1,6 +1,16 @@
 from models.build_model import BossLoadout, PlayerBuild
 
 
+def test_ready_checkbox_survives_build_service_save_and_load(tmp_path) -> None:
+    from models.build_model import BuildRoster
+    from services.build_service import BuildService
+
+    service = BuildService(tmp_path / "builds.json")
+    service.save(BuildRoster(Members=[PlayerBuild(Name="Magrat", BuildName="DF Healer", ReadyForRaid=True)]))
+    assert service.load().Members[0].ReadyForRaid is True
+    assert PlayerBuild.from_dict({"Name": "Legacy build"}).ReadyForRaid is False
+
+
 def test_player_build_round_trip_does_not_alias_skill_bars_or_armor() -> None:
     original = PlayerBuild(
         Name="Magrat",

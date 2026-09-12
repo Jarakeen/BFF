@@ -724,3 +724,17 @@ is active at that moment.
 **For BFF:** canonical rotation candidate evaluation now accepts explicit
 `CombatState` and sends the exact same state through both bar snapshots. Runtime
 conditions remain caller-owned evidence and are never inferred merely from the build.
+---
+
+## 2026-09-12 — A buff is not proof of the specific skill that supplied it
+
+The default raid coverage watch list names **War Horn**, but its current canonical
+mapping points to the general `force` effect. Static evidence for an effect can
+come from a source other than the specific ultimate the raid lead meant to assign.
+
+**Layman's version:** seeing a Force buff in a saved build does not tell us that
+someone actually slotted, can cast, or was assigned War Horn.
+
+**For BFF:** the Main-page War Horn check stays unverified until an exact
+War Horn source and its responsibility are established. Static availability
+never proves that the buff will be active during the pull.

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from PySide6.QtCore import QRectF, Qt
+from PySide6.QtCore import QRectF, Qt, QTimer
 from PySide6.QtGui import QColor, QPainter, QPen
 from PySide6.QtWidgets import (
     QApplication,
@@ -21,8 +21,11 @@ from minmax.character_progression import AttributeAllocation, CharacterProgressi
 from minmax.context_factory import BuildCalculationContextFactory
 from minmax.gear_set_repository import GearSetRepository
 from minmax.race_repository import RaceRepository
+from minmax.stat_ids import StatId
 from models.build_model import BuildRoster, PlayerBuild
 from services.build_service import BuildService
+from services.saved_build_capability_service import SavedBuildCapabilityService
+from services.raid_coverage_profile import DEFAULT_RAID_COVERAGE_PROFILE
 from services.expedition_service import ExpeditionService
 from services.accessibility_preferences import VISUAL_THEME_RYLO
 from ui.components.foundry_card import FoundryCard
@@ -31,32 +34,9 @@ from ui.components.foundry_status_bar import FoundryStatusBar
 from ui.foundry_page import FoundryPage
 
 
-CORE_COVERAGE = (
-    "Major Courage",
-    "Major Berserk",
-    "Major Slayer",
-    "Minor Force",
-    "War Horn",
-    "Major Vulnerability",
-    "Major Breach",
-    "Crusher",
-    "Minor Maim",
-    "Minor Brittle",
-    "Orbs",
-    "Magickasteal",
-    "Minor Resolve",
-    "Minor Intellect",
-    "Purify",
+CORE_COVERAGE = tuple(
+    row.display_name for row in DEFAULT_RAID_COVERAGE_PROFILE.requirements if row.required
 )
-
-EFFECT_ALIASES = {
-    "War Horn": ("war horn", "aggressive horn"),
-    "Orbs": ("orb", "necrotic orb", "energy orb", "shards"),
-    "Crusher": ("crusher", "crushing"),
-    "Magickasteal": ("magickasteal", "magicka steal", "restore magicka"),
-    "Purify": ("purify", "purifying"),
-    "Minor Brittle": ("minor brittle", "brittle"),
-}
 
 
 class OverviewRing(QWidget):
@@ -135,8 +115,16 @@ class OperationsConsole(FoundryPage):
             race_repository=RaceRepository(DEFAULT_DATABASE),
             gear_set_repository=GearSetRepository(DEFAULT_DATABASE),
         )
+        self.capability_service = None
+        self._capability_audits = {}
         self._build_ui()
         self.refresh()
+        # MainWindow attaches its sibling pages after this constructor returns.
+        QTimer.singleShot(0, self._refresh_when_attached)
+
+    def _refresh_when_attached(self):
+        if isinstance(getattr(self.window(), "pages", None), dict):
+            self.refresh()
 
     def _build_ui(self):
         expedition = self.expedition.expedition
@@ -158,23 +146,25 @@ class OperationsConsole(FoundryPage):
         small = QLabel("CURRENT ENCOUNTER")
         small.setProperty("sidebarHeading", True)
         encounter_layout.addWidget(small)
-        encounter_layout.addWidget(QLabel(f"{trial}{f' ({difficulty})' if difficulty else ''}"))
-        boss_label = QLabel(boss)
-        boss_label.setProperty("overviewEncounterName", True)
-        encounter_layout.addWidget(boss_label)
+        self.trial_label = QLabel(f"{trial}{f' ({difficulty})' if difficulty else ''}")
+        encounter_layout.addWidget(self.trial_label)
+        self.boss_label = QLabel(boss)
+        self.boss_label.setProperty("overviewEncounterName", True)
+        encounter_layout.addWidget(self.boss_label)
         self.header.add_context_widget(encounter_box)
 
         readiness = QWidget()
         readiness_layout = QVBoxLayout(readiness)
         readiness_layout.setContentsMargins(0, 0, 0, 0)
         readiness_layout.setSpacing(1)
-        ready_heading = QLabel("PULL READINESS")
+        ready_heading = QLabel("BUILD READINESS")
         ready_heading.setProperty("sidebarHeading", True)
         readiness_layout.addWidget(ready_heading)
-        ready = QLabel("✓  READY")
-        ready.setProperty("overviewReady", True)
-        readiness_layout.addWidget(ready)
-        readiness_layout.addWidget(QLabel("Planning checks available below"))
+        self.pull_readiness_label = QLabel("—  NOT VERIFIED")
+        self.pull_readiness_label.setProperty("overviewWarning", True)
+        readiness_layout.addWidget(self.pull_readiness_label)
+        self.readiness_hint = QLabel("Set on Builds page")
+        readiness_layout.addWidget(self.readiness_hint)
         self.header.add_context_widget(readiness)
 
         self.player_combo = QComboBox()
@@ -213,6 +203,7 @@ class OperationsConsole(FoundryPage):
                 OperationsConsole._clear_layout(item.layout())
 
     def refresh(self):
+        self._refresh_encounter_context()
         try:
             self.roster = self.build_service.load()
         except Exception as exc:
@@ -223,6 +214,8 @@ class OperationsConsole(FoundryPage):
         self.player_combo.blockSignals(True)
         self.player_combo.clear()
         for index, member in enumerate(self.roster.Members):
+            if not ((member.Name or member.Gamertag or member.BuildName or "").strip()):
+                continue
             name = member.Name or member.Gamertag or f"Player {index + 1}"
             label = f"{name} • {member.BuildName}" if member.BuildName else name
             self.player_combo.addItem(label, index)
@@ -233,14 +226,28 @@ class OperationsConsole(FoundryPage):
         self.player_combo.blockSignals(False)
         self._render()
 
+    def _refresh_encounter_context(self):
+        expedition = self.expedition.expedition
+        trial = expedition.Expedition or "No Active Expedition"
+        difficulty = expedition.Difficulty or ""
+        self.trial_label.setText(f"{trial}{f' ({difficulty})' if difficulty else ''}")
+        self.boss_label.setText(expedition.Objective or "No Encounter Selected")
+
     def _selected_build(self) -> PlayerBuild | None:
         index = self.player_combo.currentData()
         if index is None:
-            return self.roster.Members[0] if self.roster.Members else None
+            return self._saved_builds()[0] if self._saved_builds() else None
         try:
             return self.roster.Members[int(index)]
         except (IndexError, TypeError, ValueError):
             return None
+
+    def _saved_builds(self) -> tuple[PlayerBuild, ...]:
+        return tuple(
+            build for build in self.roster.Members
+            if (build.Name or "").strip() or (build.Gamertag or "").strip()
+            or (build.BuildName or "").strip()
+        )
 
     @staticmethod
     def _progression_for(build: PlayerBuild) -> CharacterProgression:
@@ -252,33 +259,60 @@ class OperationsConsole(FoundryPage):
             )
         )
 
-    @staticmethod
-    def _build_text(build: PlayerBuild) -> str:
-        values = list(build.FrontBarSkills) + list(build.BackBarSkills)
-        values.extend([
-            build.FrontBarWeapon.Set,
-            build.BackBarWeapon.Set,
-            *[entry.get("Set", "") for entry in build.Armor.values()],
-        ])
-        return " ".join(str(value or "") for value in values).lower()
-
     def _coverage(self):
-        covered = {name: False for name in CORE_COVERAGE}
-        providers = {name: [] for name in CORE_COVERAGE}
-        for member in self.roster.Members:
-            haystack = self._build_text(member)
-            provider_name = member.Name or member.Gamertag or member.BuildName or "Unnamed"
-            for capability in CORE_COVERAGE:
-                aliases = EFFECT_ALIASES.get(capability, (capability.lower(),))
-                if any(alias in haystack for alias in aliases):
-                    covered[capability] = True
-                    providers[capability].append(provider_name)
-        return covered, providers
+        """Report proven static availability, never encounter uptime or pull readiness."""
+        profile = DEFAULT_RAID_COVERAGE_PROFILE
+        status = {row.display_name: "unverified" for row in profile.requirements if row.required}
+        providers = {name: [] for name in status}
+        self._capability_audits = {}
+        builds = self._saved_builds()
+        if not builds or not DEFAULT_DATABASE.is_file():
+            return status, providers
+        try:
+            if self.capability_service is None:
+                self.capability_service = SavedBuildCapabilityService(self.build_service, DEFAULT_DATABASE)
+            for build in builds:
+                self._capability_audits[id(build)] = self.capability_service.audit_build(build)
+        except Exception as exc:
+            self._capability_audits = {}
+            self.status.warning(f"Saved-build coverage could not be audited: {exc}")
+            return status, providers
+
+        for row in profile.mapped_required:
+            # A Force effect is not proof that War Horn specifically is slotted.
+            if row.requirement_id == "war_horn":
+                continue
+            conditional = False
+            for build in builds:
+                audit = self._capability_audits[id(build)]
+                for effect in audit.resolved_effects:
+                    if effect.name != row.capability_type:
+                        continue
+                    if effect.condition or effect.trigger:
+                        conditional = True
+                        continue
+                    name = build.Name or build.Gamertag or build.BuildName or "Unnamed"
+                    if name not in providers[row.display_name]:
+                        providers[row.display_name].append(name)
+            if providers[row.display_name]:
+                status[row.display_name] = "available"
+            elif conditional:
+                status[row.display_name] = "conditional"
+            elif all(not audit.capability_unresolved for audit in self._capability_audits.values()):
+                status[row.display_name] = "not_found"
+        return status, providers
 
     def _render(self, *_args):
         self._clear_layout(self.layout)
         covered, providers = self._coverage()
         build = self._selected_build()
+        confirmed = bool(build and build.ReadyForRaid)
+        self.pull_readiness_label.setText("✓  READY" if confirmed else "—  NOT MARKED READY")
+        self.readiness_hint.setText("Set on Builds page" if build else "Choose a saved build")
+        self.pull_readiness_label.setProperty("overviewReady", confirmed)
+        self.pull_readiness_label.setProperty("overviewWarning", not confirmed)
+        self.pull_readiness_label.style().unpolish(self.pull_readiness_label)
+        self.pull_readiness_label.style().polish(self.pull_readiness_label)
 
         hero = QGridLayout()
         hero.setHorizontalSpacing(10)
@@ -322,7 +356,7 @@ class OperationsConsole(FoundryPage):
         self.layout.addStretch(1)
 
         self.status.info(
-            f"Overview ready • {len(self.roster.Members)} saved build(s) • planning dashboard active."
+            f"Overview loaded • {len(self._saved_builds())} saved build(s) • planning dashboard active."
         )
 
     @staticmethod
@@ -363,61 +397,72 @@ class OperationsConsole(FoundryPage):
 
     def _raid_status_card(self) -> FoundryCard:
         card = FoundryCard("Raid Status")
-        tank_count = sum(1 for m in self.roster.Members if "tank" in str(m.Role or "").lower())
-        healer_count = sum(1 for m in self.roster.Members if "heal" in str(m.Role or "").lower())
-        dps_count = max(0, len(self.roster.Members) - tank_count - healer_count)
-        for text in (
-            f"✓  Tanks Ready                 {tank_count}",
-            f"✓  Healers Ready              {healer_count}",
-            f"✓  DPS Ready                    {dps_count}",
-            "✓  Assignments Ready",
-        ):
-            card.addWidget(QLabel(text))
+        build = self._selected_build()
+        if build is None:
+            card.addWidget(QLabel("No saved build selected."))
+        else:
+            card.addWidget(QLabel(f"Selected: {build.Name or build.BuildName or 'Unnamed build'}"))
+            card.addWidget(QLabel("Ready" if build.ReadyForRaid else "Not marked ready"))
+        builds = self._saved_builds()
+        card.addWidget(QLabel(f"Ready saved builds: {sum(member.ReadyForRaid for member in builds)} / {len(builds)}"))
         card.addStretch(1)
-        ready = QLabel("✓   PULL READY")
+        ready = QLabel("Set readiness on Builds page")
         ready.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        ready.setProperty("overviewReady", True)
+        ready.setProperty("overviewWarning", True)
         card.addWidget(ready)
         return card
 
     def _coverage_card(self, covered, providers) -> FoundryCard:
-        card = FoundryCard("Coverage Summary")
+        card = FoundryCard("Saved-Build Coverage Evidence")
         grid = QGridLayout()
         grid.setHorizontalSpacing(16)
         grid.setVerticalSpacing(5)
-        for index, name in enumerate(CORE_COVERAGE[:12]):
-            label = QLabel(f"{'✓' if covered[name] else '⚠'}  {name}")
-            label.setProperty("overviewCoverageOk", bool(covered[name]))
-            label.setToolTip(", ".join(providers[name]) if providers[name] else "No provider found")
-            grid.addWidget(label, index % 6, index // 6)
+        for index, name in enumerate(CORE_COVERAGE):
+            state = covered.get(name, "unverified")
+            marker = "✓" if state == "available" else "◇" if state == "conditional" else "?"
+            label = QLabel(f"{marker}  {name}")
+            label.setProperty("overviewCoverageOk", state == "available")
+            explanation = {
+                "available": "Static capability on saved build (uptime unverified): " + ", ".join(providers[name]),
+                "conditional": "Conditional static source; activation and uptime unverified",
+                "not_found": "No mapped source identified in audited saved builds",
+                "unverified": "No supported source mapping or audit available",
+            }
+            label.setToolTip(explanation[state])
+            grid.addWidget(label, index % 8, index // 8)
         card.addLayout(grid)
         card.addStretch(1)
-        card.addWidget(self._compact_button(f"View Full Coverage ({len(CORE_COVERAGE)})"))
+        coverage_link = self._compact_button(f"View Full Coverage ({len(covered)})")
+        coverage_link.setToolTip("This overview checks known build effects. The Coverage page still searches saved names, so its results may differ.")
+        card.addWidget(coverage_link)
         return card
 
     def _warnings_card(self, covered) -> FoundryCard:
-        card = FoundryCard("Warnings")
-        gaps = [name for name in CORE_COVERAGE if not covered[name]]
+        card = FoundryCard("Planning Checks")
+        gaps = [name for name, state in covered.items() if state != "available"]
         if gaps:
             for name in gaps[:4]:
-                label = QLabel(f"⚠  {name} Missing\n     No source detected")
+                label = QLabel(f"?  {name}\n     {covered[name].replace('_', ' ').title()}")
                 label.setProperty("overviewWarning", True)
                 card.addWidget(label)
         else:
-            card.addWidget(QLabel("✓  No core coverage gaps detected"))
+            card.addWidget(QLabel("Static sources identified; uptime not checked."))
         card.addStretch(1)
-        card.addWidget(self._compact_button("Open Coverage Checks"))
+        coverage_link = self._compact_button("Open Coverage Checks")
+        coverage_link.setToolTip("This overview checks known build effects. The Coverage page still searches saved names, so its results may differ.")
+        card.addWidget(coverage_link)
         return card
 
     def _roster_card(self) -> FoundryCard:
-        card = FoundryCard(f"Raid Roster ({len(self.roster.Members)})")
-        for member in self.roster.Members[:5]:
+        builds = self._saved_builds()
+        card = FoundryCard(f"Saved Builds ({len(builds)})")
+        for member in builds[:5]:
             name = member.Name or member.Gamertag or "Unnamed"
             role = member.Role or member.EsoClass or "Unassigned"
             build_name = member.BuildName or "Saved Build"
             card.addWidget(QLabel(f"●  {name:<18} {role}\n     {build_name}"))
-        if len(self.roster.Members) > 5:
-            card.addWidget(QLabel(f"… and {len(self.roster.Members) - 5} more"))
+        if len(builds) > 5:
+            card.addWidget(QLabel(f"… and {len(builds) - 5} more"))
         card.addStretch(1)
         card.addWidget(self._compact_button("View All Players"))
         return card
@@ -465,24 +510,33 @@ class OperationsConsole(FoundryPage):
         return card
 
     def _provides_card(self, build: PlayerBuild | None) -> FoundryCard:
-        title = "Provides"
+        title = "Build Capability Evidence"
         if build is not None and build.BuildName:
-            title = f"Provides ({build.BuildName})"
+            title = f"Build Evidence ({build.BuildName})"
         card = FoundryCard(title)
         if build is None:
             card.addWidget(QLabel("No build selected."))
             return card
-        haystack = self._build_text(build)
-        provided = []
-        for capability in CORE_COVERAGE:
-            aliases = EFFECT_ALIASES.get(capability, (capability.lower(),))
-            if any(alias in haystack for alias in aliases):
-                provided.append(capability)
-        if not provided:
-            card.addWidget(QLabel("No core coverage detected from saved names."))
+        audit = self._capability_audits.get(id(build))
+        if audit is None:
+            card.addWidget(QLabel("Canonical saved-build evidence unavailable."))
         else:
-            for item in provided[:6]:
-                card.addWidget(QLabel(f"✓  {item}"))
+            matched = []
+            for row in DEFAULT_RAID_COVERAGE_PROFILE.mapped_required:
+                if row.requirement_id == "war_horn":
+                    continue
+                for effect in audit.resolved_effects:
+                    if effect.name == row.capability_type:
+                        marker = "◇" if effect.condition or effect.trigger else "✓"
+                        matched.append(f"{marker}  {row.display_name}")
+                        break
+            for item in matched[:6]:
+                card.addWidget(QLabel(item))
+            if not matched:
+                card.addWidget(QLabel("No mapped static source identified on this build."))
+            if audit.capability_unresolved:
+                card.addWidget(QLabel(f"?  {len(audit.capability_unresolved)} unresolved source(s)"))
+            card.addWidget(QLabel("Availability only • uptime not checked"))
         card.addStretch(1)
         card.addWidget(self._compact_button("View Full Breakdown"))
         return card
@@ -522,14 +576,16 @@ class OperationsConsole(FoundryPage):
                 progression=self._progression_for(build),
                 active_bar="front",
             )
-            stats = context.stats
+            resources = context.character_state
+            derived = context.core_state.derived if context.core_state else {}
             pairs = [
-                ("Maximum Health", getattr(stats, "max_health", None)),
-                ("Maximum Magicka", getattr(stats, "max_magicka", None)),
-                ("Maximum Stamina", getattr(stats, "max_stamina", None)),
-                ("Weapon Damage", getattr(stats, "weapon_damage", None)),
-                ("Spell Damage", getattr(stats, "spell_damage", None)),
-                ("Penetration", getattr(stats, "penetration", None)),
+                ("Maximum Health", resources.max_health),
+                ("Maximum Magicka", resources.max_magicka),
+                ("Maximum Stamina", resources.max_stamina),
+                ("Weapon Damage", getattr(derived.get(StatId.WEAPON_DAMAGE), "final_value", None)),
+                ("Spell Damage", getattr(derived.get(StatId.SPELL_DAMAGE), "final_value", None)),
+                ("Physical Penetration", getattr(derived.get(StatId.PHYSICAL_PENETRATION), "final_value", None)),
+                ("Spell Penetration", getattr(derived.get(StatId.SPELL_PENETRATION), "final_value", None)),
             ]
             grid = QGridLayout()
             for row, (label, value) in enumerate(pairs):
@@ -539,47 +595,72 @@ class OperationsConsole(FoundryPage):
                 number.setAlignment(Qt.AlignmentFlag.AlignRight)
                 grid.addWidget(number, row, 1)
             card.addLayout(grid)
-        except Exception:
-            card.addWidget(QLabel("Calculated stats unavailable.\nSaved-build values will appear when resolvable."))
+            card.addWidget(QLabel("Static front-bar snapshot • no combat uptime"))
+            if context.unresolved_gear_effects:
+                card.addWidget(QLabel(f"?  {len(context.unresolved_gear_effects)} gear effect(s) unresolved"))
+        except Exception as exc:
+            card.addWidget(QLabel("Calculated stats unavailable; check the saved build and reference data."))
+            card.setToolTip(str(exc))
         return card
 
     def _achievements_card(self) -> FoundryCard:
-        card = FoundryCard("Achievements Close")
-        card.setWatermark = getattr(card, "set_watermark", None)
-        if callable(card.setWatermark):
-            card.setWatermark("feather", 0.04)
-        for title, detail, value in (
-            ("Godslayer", "One requirement remaining", 93),
-            ("Gryphon Heart", "Closing in on completion", 82),
-            ("Swashbuckler Supreme", "Dreadsail Reef progress", 80),
-            ("Voice of Reason", "Rockgrove progress", 80),
-        ):
-            card.addWidget(self._progress_row(title, detail, value))
+        card = FoundryCard("Achievement Progress")
+        card.set_watermark("feather", 0.04)
+        page = getattr(self.window(), "pages", {}).get("achievements")
+        stats = getattr(page, "achievement_stats_service", None)
+        progress = getattr(page, "achievement_progress_service", None)
+        if stats is None or progress is None:
+            card.addWidget(QLabel("Achievement progress is not loaded yet."))
+        else:
+            try:
+                progress.reload(preserve_active_profile=True)
+                profile = progress.active_profile
+                card.addWidget(QLabel(f"Profile: {profile} • completed achievements"))
+                categories = {name.casefold(): name for name in stats.top_categories()}
+                for title, values in (
+                    ("All Achievements", stats.overall()),
+                    *((name, stats.category(categories[name.casefold()])) for name in ("Trials", "Dungeons") if name.casefold() in categories),
+                ):
+                    earned, total = values["count_earned"], values["count_total"]
+                    if total:
+                        card.addWidget(self._progress_row(title, f"{earned} / {total} completed", round(100 * earned / total)))
+            except Exception as exc:
+                card.addWidget(QLabel(f"Saved achievement progress unavailable: {exc}"))
         card.addWidget(self._compact_button("View All Achievements"))
         return card
 
     def _collectibles_card(self) -> FoundryCard:
         card = FoundryCard("Collectibles Focus")
         card.setProperty("overviewAccent", "teal")
+        window = self.window()
+        collectible_service = getattr(window, "collectible_service", None)
+        sticker_page = getattr(window, "pages", {}).get("stickerbook")
+        sticker_service = getattr(sticker_page, "service", None)
+        sticker_profile = getattr(sticker_page, "profile_id", "Default")
+        rings_data = []
+        try:
+            if sticker_service is not None:
+                owned, total = sticker_service.summary(sticker_profile)
+                if total:
+                    rings_data.append((owned, total, "Sticker Book", sticker_profile, "#C8A46A", "#AEB3B7"))
+            if collectible_service is not None:
+                owned, total = collectible_service.progress_summary("Mounts")
+                if total:
+                    rings_data.append((owned, total, "Mounts", collectible_service.active_profile, "#59AEB3", "#88BDE9"))
+        except Exception as exc:
+            card.addWidget(QLabel(f"Collection progress unavailable: {exc}"))
+            rings_data.clear()
         rings = QHBoxLayout()
         rings.setSpacing(4)
-        rings.addWidget(OverviewRing(68, "Sticker Book", "412 / 605", accent="#C8A46A"))
-        rings.addWidget(OverviewRing(42, "Mounts", "18 / 43", accent="#59AEB3", rylo_accent="#88BDE9"))
-        card.addLayout(rings)
-        card.addWidget(self._section_label("PRIORITY GOALS"))
-        grid = QGridLayout()
-        goals = (
-            ("Sunspire Skin", "0 / 1"),
-            ("DSR Mount", "0 / 1"),
-            ("Trial Pet Fragment", "2 / 3"),
-            ("Class Style (Warden)", "4 / 5"),
-        )
-        for row, (name, progress) in enumerate(goals):
-            grid.addWidget(QLabel(f"◇  {name}"), row, 0)
-            value = QLabel(progress)
-            value.setAlignment(Qt.AlignmentFlag.AlignRight)
-            grid.addWidget(value, row, 1)
-        card.addLayout(grid)
+        for owned, total, title, profile, accent, rylo_accent in rings_data:
+            rings.addWidget(OverviewRing(round(100 * owned / total), title, f"{owned} / {total}", accent=accent, rylo_accent=rylo_accent))
+        if rings_data:
+            card.addLayout(rings)
+            profiles = ", ".join(f"{title}: {profile}" for _, _, title, profile, _, _ in rings_data)
+            card.addWidget(QLabel(f"Profiles • {profiles}"))
+        else:
+            card.addWidget(QLabel("No saved collection totals available yet."))
+        card.addStretch(1)
         return card
 
     def _raid_schedule_card(self, build: PlayerBuild | None) -> FoundryCard:
@@ -625,15 +706,28 @@ class OperationsConsole(FoundryPage):
 
     def _bookmarked_gear_card(self) -> FoundryCard:
         card = FoundryCard("Bookmarked Gear")
-        for name, note in (
-            ("Spell Power Cure", "Healer support"),
-            ("Pillager's Profit", "Group utility"),
-            ("Roaring Opportunist", "Raid support"),
-            ("Pearls of Ehlnofey", "Sustain / ultimate"),
-            ("Jorvuld's Guidance", "Effect duration"),
-        ):
-            row = QLabel(f"☆  {name}\n     {note}")
-            card.addWidget(row)
+        gear_page = getattr(self.window(), "pages", {}).get("gear_lookup")
+        service = getattr(gear_page, "gear_bookmark_service", None)
+        profile_combo = getattr(gear_page, "gear_bookmark_profile", None)
+        profile = profile_combo.currentText().strip() if profile_combo is not None else "Default"
+        profile = profile or "Default"
+        if service is None:
+            card.addWidget(QLabel("Saved set bookmarks are not loaded yet."))
+        else:
+            try:
+                bookmarked = service.bookmarked_set_ids(profile)
+                names = {row.get("gear_set_id"): row.get("name") for row in gear_page._sets}
+                card.addWidget(QLabel(f"Profile: {profile}"))
+                for set_id in sorted(bookmarked, key=lambda value: str(names.get(value) or value).casefold())[:5]:
+                    name = names.get(set_id) or f"Set #{set_id} (catalog name unavailable)"
+                    note = service.note(profile, set_id)
+                    card.addWidget(QLabel(f"☆  {name}" + (f"\n     {note}" if note else "")))
+                if not bookmarked:
+                    card.addWidget(QLabel("No sets bookmarked for this profile."))
+                elif len(bookmarked) > 5:
+                    card.addWidget(QLabel(f"+ {len(bookmarked) - 5} more saved set(s)"))
+            except Exception as exc:
+                card.addWidget(QLabel(f"Bookmarks unavailable: {exc}"))
         card.addStretch(1)
         card.addWidget(self._compact_button("Manage Bookmarks"))
         return card
@@ -642,12 +736,12 @@ class OperationsConsole(FoundryPage):
     # but they are intentionally no longer part of the planning-first layout.
     def _capability_gap_card(self, covered, providers) -> FoundryCard:
         card = FoundryCard("Capability Gap")
-        gaps = [name for name in CORE_COVERAGE if not covered[name]]
+        gaps = [name for name in CORE_COVERAGE if covered.get(name) != "available"]
         if gaps:
             card.addWidget(QLabel(f"⚠  {gaps[0].upper()}"))
-            card.addWidget(QLabel("Not currently provided"))
+            card.addWidget(QLabel("Not verified in saved-build evidence"))
         else:
-            card.addWidget(QLabel("✓  CORE COVERAGE COMPLETE"))
+            card.addWidget(QLabel("Static sources found; uptime not checked"))
         return card
 
     def _optimization_highlights_card(self, build: PlayerBuild | None) -> FoundryCard:

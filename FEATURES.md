@@ -91,11 +91,14 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Character summary / overview
 - Build summary information
 - Achievement progress overview
-- Achievements close to completion
-- Collectibles to work on
+- Completed-achievement counts and category progress for the selected profile
+- Sticker Book and Mount ownership totals from saved profiles
 - Raid schedule panel
-- Skills to Work On panel
-- Bookmarked Gear panel
+- Pinned Performance Focus goals
+- Saved Gear Lookup bookmarks by profile
+- Ready checkbox on each saved build, shown on the Raid Engine Overview
+- Saved-build static capability evidence with unverified and conditional states
+- Active expedition and encounter labels refresh with the overview
 - Compact visual progress indicators
 
 ---

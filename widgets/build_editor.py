@@ -816,9 +816,11 @@ class BuildEditor(QWidget):
             Potion=self.potion.currentText().strip(),
             Notes=self._notes,
             BossLoadouts=[card.value for card in self._boss_cards],
+            ReadyForRaid=getattr(self, "_ready_for_raid", False),
         )
 
     def load(self, model):
+        self._ready_for_raid = bool(getattr(model, "ReadyForRaid", False))
         self.image_path = model.ImagePath
         self._notes = model.Notes
         self.name.setText(model.Name)

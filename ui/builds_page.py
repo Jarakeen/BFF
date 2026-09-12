@@ -5,6 +5,7 @@ from pathlib import Path
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QDialog,
     QFileDialog,
@@ -240,10 +241,19 @@ class BuildsPage(FoundryPage):
         subtitle.setProperty("pageSubtitle", True)
         text.addWidget(subtitle)
         layout.addLayout(text, 1)
+        ready = QCheckBox("Ready")
+        ready.setToolTip("Mark this saved build as ready for raid. This is your own check, not a team or encounter check.")
+        ready.setChecked(build.ReadyForRaid)
+        ready.toggled.connect(lambda checked, selected=build: self._set_build_ready(selected, checked))
+        layout.addWidget(ready)
         cp = QLabel(f"CP {self._cp_total(build)}")
         cp.setProperty("cardBadge", True)
         layout.addWidget(cp)
         return frame
+
+    def _set_build_ready(self, build: PlayerBuild, checked: bool) -> None:
+        build.ReadyForRaid = checked
+        self._save()
 
     def _gear_card(self, build: PlayerBuild) -> QWidget:
         card = FoundryCard("Gear")
