@@ -319,6 +319,15 @@ def install() -> None:
 
     def _build_ui(self):
         original_build_ui(self)
+
+        action_host = self.edit_button.parentWidget()
+        action_layout = action_host.layout() if action_host is not None else None
+        if action_layout is not None:
+            for index in range(action_layout.count()):
+                widget = action_layout.itemAt(index).widget()
+                if isinstance(widget, FoundryButton):
+                    widget.set_compact(True)
+
         self.create_character_button = _style_create_character_button(
             FoundryButton("+ Create Character", role=ButtonRole.PRIMARY, compact=True)
         )
@@ -326,8 +335,6 @@ def install() -> None:
             lambda: _open_easy_character_creator(self)
         )
 
-        action_host = self.edit_button.parentWidget()
-        action_layout = action_host.layout() if action_host is not None else None
         if action_layout is not None:
             index = action_layout.indexOf(self.edit_button)
             action_layout.insertWidget(max(index, 0), self.create_character_button)
