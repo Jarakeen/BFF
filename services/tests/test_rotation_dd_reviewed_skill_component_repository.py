@@ -54,6 +54,22 @@ def test_reviewed_rows_are_complete_damage_identities() -> None:
     assert venom_skull.is_aoe is False
 
 
+def test_reviewed_personal_heal_is_not_treated_as_dd_damage() -> None:
+    repository = RotationDDReviewedSkillComponentRepository(
+        "unused.db",
+        base_repository=_BaseRepository(),
+    )
+
+    vigor = repository.get_component(6641, 1)
+
+    assert vigor is not None
+    assert vigor.effect_kind is SkillEffectKind.HEAL
+    assert vigor.is_dot is True
+    assert vigor.is_aoe is False
+    assert vigor.can_crit is True
+    assert not vigor.is_damage
+
+
 def test_reviewed_rank_contains_only_exact_reviewed_coefficients() -> None:
     repository = RotationDDReviewedSkillComponentRepository(
         "unused.db",
