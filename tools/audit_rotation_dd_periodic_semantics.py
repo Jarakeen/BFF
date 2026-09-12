@@ -19,6 +19,33 @@ from tools.audit_phase12_saved_build_candidates import _find_build
 DEFAULT_BUILDS = get_data_dir() / "builds.json"
 
 
+def _is_dd_role(value: object) -> bool:
+    normalized = " ".join(str(value or "").strip().casefold().split())
+    return normalized in {"dd", "dps", "damage", "damage dealer"}
+
+
+def list_dd_builds(*, builds_path: Path) -> int:
+    if not builds_path.exists():
+        print(f"Saved builds not found: {builds_path}")
+        return 2
+
+    builds = tuple(
+        build
+        for build in BuildService(builds_path).load().Members
+        if _is_dd_role(getattr(build, "Role", ""))
+    )
+    print("Saved DD builds:")
+    if not builds:
+        print("  - none")
+        return 0
+
+    for build in builds:
+        character = str(getattr(build, "Name", "") or "").strip() or "(unnamed)"
+        build_name = str(getattr(build, "BuildName", "") or "").strip() or "(unnamed)"
+        print(f"  - {build_name} | {character}")
+    return 0
+
+
 def audit_saved_build(
     *,
     database_path: Path,
@@ -108,7 +135,13 @@ def _parser() -> argparse.ArgumentParser:
             "reviewed Rotation Builder runtime semantics."
         )
     )
-    parser.add_argument("--build", required=True, help="Exact saved BuildName")
+    selection = parser.add_mutually_exclusive_group(required=True)
+    selection.add_argument("--build", help="Exact saved BuildName")
+    selection.add_argument(
+        "--list-dd",
+        action="store_true",
+        help="List saved DD build names and exit",
+    )
     parser.add_argument(
         "--database",
         type=Path,
@@ -126,6 +159,8 @@ def _parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
+    if args.list_dd:
+        return list_dd_builds(builds_path=args.builds)
     return audit_saved_build(
         database_path=args.database,
         builds_path=args.builds,
