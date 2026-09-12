@@ -7,6 +7,7 @@ from typing import Protocol
 from engine.config import get_data_dir
 from minmax.build_candidate_damage import calculation_result_from_build_context
 from minmax.build_evaluation import BuildEvaluation
+from minmax.combat_state import CombatState
 from minmax.evaluation_context import EvaluationContext
 from minmax.rotation_plan import RotationAction, RotationActionKind
 from models.build_model import PlayerBuild
@@ -69,6 +70,25 @@ _DD_ROLE_KEYS = {"dd", "dps", "damage", "damage_dealer"}
 
 def _canonical_role(value: object) -> str:
     return "_".join(str(value or "").strip().casefold().replace("-", " ").split())
+
+
+class RotationRuntimeTargetCombatStateResolver(Protocol):
+    """Resolve authoritative target-side combat state at one exact runtime point."""
+
+    def __call__(
+        self,
+        time_seconds: float,
+        sequence: int | None = None,
+    ) -> CombatState: ...
+
+
+def _target_state_at(
+    resolver: RotationRuntimeTargetCombatStateResolver | None,
+    action: RotationAction,
+) -> CombatState | None:
+    if resolver is None:
+        return None
+    return resolver(action.time_seconds, action.sequence)
 
 
 def _weapon_attack_evaluation_at(
@@ -136,6 +156,7 @@ class RotationGenerateDDWeaponAttackProviderFactory(Protocol):
         static_context,
         target_resistance: float,
         runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
+        runtime_target_combat_state_resolver: RotationRuntimeTargetCombatStateResolver | None = None,
     ) -> tuple[
         RotationActionDamageProvider | None,
         RotationActionDamageProvider | None,
@@ -155,6 +176,7 @@ class _RotationGenerateBarAwareSkillDamageProvider:
             RotationPeriodicDamageRuntimeSemantics, ...
         ] = (),
         runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
+        runtime_target_combat_state_resolver: RotationRuntimeTargetCombatStateResolver | None = None,
         activation_anchor_resolver: PeriodicDamageActivationAnchorResolver | None = None,
     ) -> None:
         self.database_path = database_path
@@ -162,6 +184,7 @@ class _RotationGenerateBarAwareSkillDamageProvider:
         self.target_resistance = float(target_resistance)
         self.periodic_runtime_semantics = tuple(periodic_runtime_semantics)
         self.runtime_build_context_resolver = runtime_build_context_resolver
+        self.runtime_target_combat_state_resolver = runtime_target_combat_state_resolver
         self.activation_anchor_resolver = activation_anchor_resolver
         self.periodic_runtime_projection_service = (
             RotationCandidatePeriodicDamageRuntimeProjectionService(
@@ -201,6 +224,10 @@ class _RotationGenerateBarAwareSkillDamageProvider:
         return RotationCandidateSkillDamageEvidenceService(
             database_path=self.database_path,
             context=context,
+            target_combat_state=_target_state_at(
+                self.runtime_target_combat_state_resolver,
+                action,
+            ),
             periodic_runtime_projection_service=self.periodic_runtime_projection_service,
             periodic_runtime_semantics=self.periodic_runtime_semantics,
             runtime_build_context_resolver=self.runtime_build_context_resolver,
@@ -220,6 +247,7 @@ class _RotationGenerateBarAwareLightAttackDamageProvider:
         static_context,
         target_resistance: float,
         runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
+        runtime_target_combat_state_resolver: RotationRuntimeTargetCombatStateResolver | None = None,
     ) -> None:
         if not evaluation.resolved or evaluation.build is None:
             raise ValueError(
@@ -229,6 +257,7 @@ class _RotationGenerateBarAwareLightAttackDamageProvider:
         self.static_context = static_context
         self.target_resistance = float(target_resistance)
         self.runtime_build_context_resolver = runtime_build_context_resolver
+        self.runtime_target_combat_state_resolver = runtime_target_combat_state_resolver
 
     def evaluate_action(
         self,
@@ -270,6 +299,10 @@ class _RotationGenerateBarAwareLightAttackDamageProvider:
                 target_resistance=self.target_resistance,
             ),
             attacker_combat_state=getattr(context, "combat_state", None),
+            target_combat_state=_target_state_at(
+                self.runtime_target_combat_state_resolver,
+                action,
+            ),
         ).evaluate_action(
             candidate=candidate,
             action=action,
@@ -286,6 +319,7 @@ class _RotationGenerateBarAwareHeavyAttackDamageProvider:
         static_context,
         target_resistance: float,
         runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
+        runtime_target_combat_state_resolver: RotationRuntimeTargetCombatStateResolver | None = None,
     ) -> None:
         if not evaluation.resolved or evaluation.build is None:
             raise ValueError(
@@ -295,6 +329,7 @@ class _RotationGenerateBarAwareHeavyAttackDamageProvider:
         self.static_context = static_context
         self.target_resistance = float(target_resistance)
         self.runtime_build_context_resolver = runtime_build_context_resolver
+        self.runtime_target_combat_state_resolver = runtime_target_combat_state_resolver
 
     def evaluate_action(
         self,
@@ -342,6 +377,10 @@ class _RotationGenerateBarAwareHeavyAttackDamageProvider:
                 target_resistance=self.target_resistance,
             ),
             attacker_combat_state=getattr(context, "combat_state", None),
+            target_combat_state=_target_state_at(
+                self.runtime_target_combat_state_resolver,
+                action,
+            ),
         ).evaluate_action(
             candidate=candidate,
             action=action,
@@ -398,6 +437,7 @@ class RotationGenerateDDCanonicalWeaponAttackProviderFactory:
         static_context,
         target_resistance: float,
         runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
+        runtime_target_combat_state_resolver: RotationRuntimeTargetCombatStateResolver | None = None,
     ) -> tuple[
         RotationActionDamageProvider | None,
         RotationActionDamageProvider | None,
@@ -417,12 +457,14 @@ class RotationGenerateDDCanonicalWeaponAttackProviderFactory:
                 static_context=static_context,
                 target_resistance=target_resistance,
                 runtime_build_context_resolver=runtime_build_context_resolver,
+                runtime_target_combat_state_resolver=runtime_target_combat_state_resolver,
             ),
             _RotationGenerateBarAwareHeavyAttackDamageProvider(
                 evaluation=resolution,
                 static_context=static_context,
                 target_resistance=target_resistance,
                 runtime_build_context_resolver=runtime_build_context_resolver,
+                runtime_target_combat_state_resolver=runtime_target_combat_state_resolver,
             ),
         )
 
@@ -446,6 +488,7 @@ class _RotationGenerateSnapshotAwarePlanEvidenceProvider:
     def for_stabilized_snapshot(self, snapshot):
         if (
             snapshot.runtime_combat_state_resolver is None
+            and getattr(snapshot, "runtime_target_combat_state_resolver", None) is None
             and getattr(snapshot, "runtime_activation_anchor_resolver", None) is None
         ):
             return self.static_provider
@@ -462,9 +505,11 @@ class RotationGenerateDDRoleEvidenceSupport:
     combat-state resolver and rebuild exact-time calculation context for every tick.
     Stabilized LA/HA evidence uses that same exact runtime build-context resolver so
     temporal resource/stat/bar state does not collapse back to static build values.
-    Non-cast periodic activation anchors consume an authoritative runtime anchor
-    resolver from the stabilized snapshot when one is available; otherwise the
-    periodic projection remains fail-closed.
+    Direct/snapshot damage also consumes explicit target-side runtime combat state
+    when authoritative evidence supplies it; target identity windows are not treated
+    as target debuff state. Non-cast periodic activation anchors consume an
+    authoritative runtime anchor resolver from the stabilized snapshot when one is
+    available; otherwise the periodic projection remains fail-closed.
     """
 
     def __init__(
@@ -523,6 +568,7 @@ class RotationGenerateDDRoleEvidenceSupport:
             target_resistance=target_resistance,
             periodic_runtime_semantics=periodic_runtime_semantics,
             runtime_build_context_resolver=None,
+            runtime_target_combat_state_resolver=None,
             activation_anchor_resolver=None,
         )
         runtime_context_service = RotationPlanRuntimeBuildContextService(
@@ -560,6 +606,11 @@ class RotationGenerateDDRoleEvidenceSupport:
                     if snapshot.runtime_combat_state_resolver is not None
                     else None
                 ),
+                runtime_target_combat_state_resolver=getattr(
+                    snapshot,
+                    "runtime_target_combat_state_resolver",
+                    None,
+                ),
                 activation_anchor_resolver=getattr(
                     snapshot,
                     "runtime_activation_anchor_resolver",
@@ -590,6 +641,7 @@ class RotationGenerateDDRoleEvidenceSupport:
             RotationPeriodicDamageRuntimeSemantics, ...
         ],
         runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None,
+        runtime_target_combat_state_resolver: RotationRuntimeTargetCombatStateResolver | None,
         activation_anchor_resolver: PeriodicDamageActivationAnchorResolver | None,
     ):
         skill_provider = _RotationGenerateBarAwareSkillDamageProvider(
@@ -598,6 +650,7 @@ class RotationGenerateDDRoleEvidenceSupport:
             target_resistance=target_resistance,
             periodic_runtime_semantics=periodic_runtime_semantics,
             runtime_build_context_resolver=runtime_build_context_resolver,
+            runtime_target_combat_state_resolver=runtime_target_combat_state_resolver,
             activation_anchor_resolver=activation_anchor_resolver,
         )
         ultimate_provider = RotationCandidateUltimateDamageEvidenceService(
@@ -613,6 +666,7 @@ class RotationGenerateDDRoleEvidenceSupport:
                     static_context=static_context,
                     target_resistance=target_resistance,
                     runtime_build_context_resolver=runtime_build_context_resolver,
+                    runtime_target_combat_state_resolver=runtime_target_combat_state_resolver,
                 )
             )
 
@@ -636,4 +690,5 @@ __all__ = [
     "RotationGenerateDDCanonicalWeaponAttackProviderFactory",
     "RotationGenerateDDRoleEvidenceSupport",
     "RotationGenerateDDWeaponAttackProviderFactory",
+    "RotationRuntimeTargetCombatStateResolver",
 ]
