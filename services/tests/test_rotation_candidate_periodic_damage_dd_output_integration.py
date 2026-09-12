@@ -153,6 +153,7 @@ def _semantics(
     number: int,
     *,
     magnitude_policy: PeriodicDamageMagnitudePolicy = PeriodicDamageMagnitudePolicy.SNAPSHOT_AT_CAST,
+    successive_hit_multiplier: float | None = None,
 ):
     return (
         RotationPeriodicDamageRuntimeSemantics(
@@ -162,6 +163,7 @@ def _semantics(
             refresh_boundary=PeriodicDamageRefreshBoundary.REPLACE_BEFORE_RECAST_TICK,
             source="reviewed runtime evidence",
             magnitude_policy=magnitude_policy,
+            successive_hit_multiplier=successive_hit_multiplier,
         ),
     )
 
@@ -199,6 +201,42 @@ def test_periodic_runtime_ticks_contribute_to_whole_plan_dd_output() -> None:
     assert result.unresolved == ()
     assert result.value == 30.0
     assert projection.calls == [(candidate.plan, semantics)]
+
+
+def test_snapshot_periodic_successive_hit_multiplier_scales_each_occurrence() -> None:
+    action = RotationAction(
+        0.0,
+        0,
+        RotationActionKind.SKILL,
+        name="ramping_periodic_skill",
+        bar="front",
+    )
+    skill_damage = RotationCandidateSkillDamageEvidenceService(
+        database_path="unused-test.db",
+        context=_context(),
+        calculator=_Calculator(
+            (SimpleNamespace(coefficient_number=1, final_value=100.0),)
+        ),
+        component_repository=_Components(
+            (_classification(number=1, is_dot=True),)
+        ),
+        periodic_runtime_projection_service=_PeriodicProjection(
+            _entry(action, number=1, ticks=(2.0, 4.0, 6.0))
+        ),
+        periodic_runtime_semantics=_semantics(
+            "ramping_periodic_skill",
+            1,
+            successive_hit_multiplier=1.15,
+        ),
+    )
+
+    evidence = skill_damage.evaluate_action(
+        candidate=_candidate(action),
+        action=action,
+    )
+
+    assert evidence.unresolved == ()
+    assert evidence.damage_value == 347.25
 
 
 def test_mixed_direct_and_periodic_components_sum_under_parent_cast() -> None:
@@ -388,4 +426,47 @@ def test_dynamic_periodic_magnitude_recomputes_each_exact_runtime_tick() -> None
 
     assert evidence.unresolved == ()
     assert evidence.damage_value == 300.0
+    assert runtime.calls == [(1.0, None), (2.0, None)]
+
+
+def test_dynamic_periodic_successive_hit_multiplier_applies_after_runtime_recalc() -> None:
+    action = RotationAction(
+        0.0,
+        0,
+        RotationActionKind.SKILL,
+        name="ramping_periodic_skill",
+        bar="front",
+    )
+    runtime = _RuntimeContextResolver(
+        {
+            1.0: _context(tick_value=100.0),
+            2.0: _context(tick_value=200.0),
+        }
+    )
+    skill_damage = RotationCandidateSkillDamageEvidenceService(
+        database_path="unused-test.db",
+        context=_context(),
+        calculator=_DynamicCalculator(),
+        component_repository=_Components(
+            (_classification(number=1, is_dot=True),)
+        ),
+        periodic_runtime_projection_service=_PeriodicProjection(
+            _entry(action, number=1, ticks=(1.0, 2.0))
+        ),
+        periodic_runtime_semantics=_semantics(
+            "ramping_periodic_skill",
+            1,
+            magnitude_policy=PeriodicDamageMagnitudePolicy.DYNAMIC_AT_TICK,
+            successive_hit_multiplier=1.5,
+        ),
+        runtime_build_context_resolver=runtime,
+    )
+
+    evidence = skill_damage.evaluate_action(
+        candidate=_candidate(action),
+        action=action,
+    )
+
+    assert evidence.unresolved == ()
+    assert evidence.damage_value == 400.0
     assert runtime.calls == [(1.0, None), (2.0, None)]
