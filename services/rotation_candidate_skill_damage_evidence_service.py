@@ -37,6 +37,9 @@ from services.rotation_dd_reviewed_skill_component_repository import (
 from services.rotation_plan_runtime_build_context_service import (
     RotationRuntimeBuildContextResolver,
 )
+from services.rotation_saved_build_dd_conditional_damage_done_service import (
+    exploiter_damage_done_bonus,
+)
 
 
 RotationRuntimeTargetCombatStateResolver = Callable[
@@ -90,18 +93,17 @@ class RotationCandidateSkillDamageEvidenceService:
     Direct and periodic components share the same combat-routing helper only when
     reviewed runtime evidence permits it. Periodic tick scheduling is owned by the
     shared runtime projection. ``snapshot_at_cast`` freezes source magnitude and
-    attacker state at cast time; authoritative recipient-side Damage Taken and target
-    resistance may still be resolved independently at each projected occurrence.
-    Dynamic per-tick magnitude is recomputed only when an authoritative exact-time
-    runtime build-context resolver is supplied for every projected tick. When
-    authoritative target-state or target-resistance resolvers are supplied, periodic
-    ticks resolve those recipient-side inputs at the exact tick timestamp rather than
-    inheriting them from cast time. Explicit successive-hit scaling is applied by
-    occurrence index only when reviewed semantics provide a multiplier.
+    attacker state at cast time; authoritative recipient-side Damage Taken, Exploiter
+    Off Balance applicability, and target resistance remain exact-time recipient
+    state at each projected occurrence. Dynamic per-tick magnitude is recomputed only
+    when an authoritative exact-time runtime build-context resolver is supplied for
+    every projected tick. Explicit successive-hit scaling is applied by occurrence
+    index only when reviewed semantics provide a multiplier.
 
     Unconditional saved-build DD Damage Done categories live on the canonical build
-    context and are merged additively with exact-time combat-state Damage Done before
-    component classification selects direct/DoT/AoE/type buckets.
+    context and are merged additively with exact-time combat-state Damage Done.
+    Exploiter's stored magnitude joins the generic Damage Done bucket only when the
+    exact recipient CombatState at that damage event is explicitly Off Balance.
     """
 
     def __init__(
@@ -139,10 +141,18 @@ class RotationCandidateSkillDamageEvidenceService:
         self.runtime_target_resistance_resolver = runtime_target_resistance_resolver
 
     @staticmethod
-    def _damage_done_for_context(context: BuildCalculationContext) -> DamageDoneModifiers:
+    def _damage_done_for_context(
+        context: BuildCalculationContext,
+        target_combat_state: CombatState | None,
+    ) -> DamageDoneModifiers:
+        exploiter = exploiter_damage_done_bonus(
+            target_combat_state,
+            getattr(context, "dd_exploiter_bonus", 0.0),
+        )
         return _combined_damage_done(
             damage_done_from_combat_state(context.combat_state),
             getattr(context, "dd_damage_done_modifiers", DamageDoneModifiers()),
+            DamageDoneModifiers(generic=exploiter),
         )
 
     def evaluate_action(
@@ -187,7 +197,10 @@ class RotationCandidateSkillDamageEvidenceService:
             target_resistance=self.context.target_resistance,
         )
         dd_stats = evaluate_dd_stats(calculation, evaluation_context)
-        damage_done = self._damage_done_for_context(self.context)
+        damage_done = self._damage_done_for_context(
+            self.context,
+            self.target_combat_state,
+        )
         damage_taken = damage_taken_from_target_state(self.target_combat_state)
 
         periodic_projection = None
@@ -282,7 +295,10 @@ class RotationCandidateSkillDamageEvidenceService:
                         base_value=float(component.final_value),
                         classification=classification,
                         dd_stats=dd_stats,
-                        damage_done=damage_done,
+                        damage_done=self._damage_done_for_context(
+                            self.context,
+                            self._target_state_for_runtime_event(event),
+                        ),
                         damage_taken=damage_taken_from_target_state(
                             self._target_state_for_runtime_event(event)
                         ),
@@ -406,10 +422,12 @@ class RotationCandidateSkillDamageEvidenceService:
                 target_resistance=tick_context.target_resistance,
             )
             tick_dd_stats = evaluate_dd_stats(calculation, evaluation_context)
-            tick_damage_done = self._damage_done_for_context(tick_context)
-            tick_damage_taken = damage_taken_from_target_state(
-                self._target_state_for_runtime_event(event)
+            tick_target_state = self._target_state_for_runtime_event(event)
+            tick_damage_done = self._damage_done_for_context(
+                tick_context,
+                tick_target_state,
             )
+            tick_damage_taken = damage_taken_from_target_state(tick_target_state)
             total_damage += self._resolve_component_damage(
                 context=tick_context,
                 base_value=float(tick_components[0].final_value),
