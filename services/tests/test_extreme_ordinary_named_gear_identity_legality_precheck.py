@@ -269,3 +269,86 @@ def test_impossible_physical_shape_topology_returns_before_dfs() -> None:
     assert winner.realizations == ()
     assert winner.stats.nodes == 0
     assert winner.stats.physical_pruned == 0
+
+
+def test_physical_shape_precheck_respects_finite_broad_shape_capacity() -> None:
+    topology = ExtremeGearSetCountTopology(counts=(1, 1, 1, 1), unused_units=8)
+    broad = _eligibility(10)
+    ring_rows = tuple(_ring_only(set_id) for set_id in (20, 30, 40))
+    candidates = {
+        1: (
+            _Candidate(broad.set_id, broad.name, 1, 1000.0, broad, ()),
+            *tuple(
+                _Candidate(row.set_id, row.name, 1, 900.0, row, ())
+                for row in ring_rows
+            ),
+        )
+    }
+
+    possible = ExtremeMaxResourceOrdinaryNamedGearSearchService._physical_shape_legality_possible(
+        topology=topology,
+        counts=topology.counts,
+        candidates_by_count=candidates,
+        feasibility=ExtremePartialNamedGearPhysicalFeasibilityService(),
+    )
+
+    assert possible is False
+
+
+def test_physical_shape_precheck_allows_when_shape_capacity_is_sufficient() -> None:
+    topology = ExtremeGearSetCountTopology(counts=(1, 1, 1, 1), unused_units=8)
+    broad_rows = (_eligibility(10), _eligibility(11))
+    ring_rows = (_ring_only(20), _ring_only(30))
+    candidates = {
+        1: tuple(
+            _Candidate(row.set_id, row.name, 1, 1000.0, row, ())
+            for row in (*broad_rows, *ring_rows)
+        )
+    }
+
+    possible = ExtremeMaxResourceOrdinaryNamedGearSearchService._physical_shape_legality_possible(
+        topology=topology,
+        counts=topology.counts,
+        candidates_by_count=candidates,
+        feasibility=ExtremePartialNamedGearPhysicalFeasibilityService(),
+    )
+
+    assert possible is True
+
+
+def test_finite_shape_capacity_impossible_topology_returns_before_dfs() -> None:
+    broad = _eligibility(10)
+    ring_rows = tuple(_ring_only(set_id) for set_id in (20, 30, 40))
+    rows = (broad, *ring_rows)
+    service = _service(*rows)
+    topology = ExtremeGearSetCountTopology(counts=(1, 1, 1, 1), unused_units=8)
+    candidates = {
+        1: tuple(
+            _Candidate(row.set_id, row.name, 1, 1000.0, row, ())
+            for row in rows
+        )
+    }
+    frontier = ExtremeGearSetBonusBreakpointCatalog(
+        sets=tuple(
+            ExtremeGearSetBonusBreakpoints(
+                set_id=row.set_id,
+                name=row.name,
+                max_equip_count=row.max_equip_count,
+                bonus_counts=(1,),
+            )
+            for row in rows
+        )
+    )
+
+    winner = service._search_topology(
+        topology,
+        candidates,
+        frontier,
+        feasibility=ExtremePartialNamedGearPhysicalFeasibilityService(),
+    )
+
+    assert winner.winner_found is False
+    assert winner.best_exact_flat_delta is None
+    assert winner.realizations == ()
+    assert winner.stats.nodes == 0
+    assert winner.stats.physical_pruned == 0
