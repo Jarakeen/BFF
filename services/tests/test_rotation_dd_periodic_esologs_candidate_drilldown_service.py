@@ -67,10 +67,11 @@ def test_reports_exact_same_track_offsets_and_active_end_clustering(tmp_path) ->
     _logs(logs)
 
     _event(logs, index=1, timestamp=1000, event_type="cast", ability_id=500, name="Detonating Siphon", cast_track_id=77)
-    _event(logs, index=2, timestamp=1020, event_type="damage", ability_id=118766, name="Siphon Damage", cast_track_id=77)
-    _event(logs, index=3, timestamp=2020, event_type="damage", ability_id=118766, name="Siphon Damage", cast_track_id=77)
-    _event(logs, index=4, timestamp=21000, event_type="damage", ability_id=118766, name="Siphon Damage", cast_track_id=77)
-    _event(logs, index=5, timestamp=1500, event_type="damage", ability_id=118766, name="Siphon Damage", cast_track_id=88)
+    _event(logs, index=2, timestamp=1020, event_type="damage", ability_id=118766, name="Siphon Damage", cast_track_id=77, target_id=99)
+    _event(logs, index=3, timestamp=1021, event_type="damage", ability_id=118766, name="Siphon Damage", cast_track_id=77, target_id=100)
+    _event(logs, index=4, timestamp=2020, event_type="damage", ability_id=118766, name="Siphon Damage", cast_track_id=77)
+    _event(logs, index=5, timestamp=21000, event_type="damage", ability_id=118766, name="Siphon Damage", cast_track_id=77)
+    _event(logs, index=6, timestamp=1500, event_type="damage", ability_id=118766, name="Siphon Damage", cast_track_id=88)
 
     report = _service(canonical, logs).inspect(
         "detonating_siphon",
@@ -80,11 +81,11 @@ def test_reports_exact_same_track_offsets_and_active_end_clustering(tmp_path) ->
 
     assert report.cast_count == 1
     assert report.linked_cast_count == 1
-    assert report.event_count == 4
-    assert report.linked_event_count == 3
+    assert report.event_count == 5
+    assert report.linked_event_count == 4
     assert report.ability_names == ("Siphon Damage",)
-    assert report.event_types == (("damage", 4),)
-    assert report.target_count == 1
+    assert report.event_types == (("damage", 5),)
+    assert report.target_count == 2
     assert report.first_offsets_seconds == (0.02,)
     assert report.last_offsets_seconds == (20.0,)
     assert report.within_cast_intervals_seconds == (1.0, 18.98)
