@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import minmax.weapon_enchantment_repository as weapon_enchantment_module
 from minmax.effects import EffectUnit
 from minmax.weapon_enchantment_repository import (
     WeaponEnchantmentRepository,
@@ -68,10 +69,64 @@ def test_absorb_health_has_two_effects():
     assert restore.value == 861
     assert restore.damage_type is None
 
+
 def test_weapon_enchantment_preserves_scaling_type():
     repository = WeaponEnchantmentRepository(DB_PATH)
 
     effects = repository.get_effects(5365)
 
     assert len(effects) == 1
-    assert effects[0].scaling_type is None    
+    assert effects[0].scaling_type is None
+
+
+def test_weapon_enchantment_effects_are_cached_and_returned_as_copies(monkeypatch):
+    original_connect = weapon_enchantment_module.sqlite3.connect
+    connect_count = 0
+
+    def counting_connect(*args, **kwargs):
+        nonlocal connect_count
+        connect_count += 1
+        return original_connect(*args, **kwargs)
+
+    monkeypatch.setattr(weapon_enchantment_module.sqlite3, "connect", counting_connect)
+    repository = WeaponEnchantmentRepository(DB_PATH)
+
+    first = repository.get_effects(5365)
+    second = repository.get_effects(5365)
+
+    assert first == second
+    assert first is not second
+    assert connect_count == 1
+
+    first.clear()
+    assert repository.get_effects(5365) == second
+    assert connect_count == 1
+
+
+def test_weapon_enchantment_lookup_caches_are_instance_scoped(monkeypatch):
+    original_connect = weapon_enchantment_module.sqlite3.connect
+    connect_count = 0
+
+    def counting_connect(*args, **kwargs):
+        nonlocal connect_count
+        connect_count += 1
+        return original_connect(*args, **kwargs)
+
+    monkeypatch.setattr(weapon_enchantment_module.sqlite3, "connect", counting_connect)
+    repository = WeaponEnchantmentRepository(DB_PATH)
+
+    first_items = repository.list_items()
+    second_items = repository.list_items()
+    first_label = repository.find_item_ids_by_label(" Crushing ")
+    second_label = repository.find_item_ids_by_label("crushing")
+    first_description = repository.get_description(5365)
+    second_description = repository.get_description(5365)
+
+    assert first_items == second_items
+    assert first_label == second_label
+    assert first_description == second_description
+    assert connect_count == 3
+
+    fresh_repository = WeaponEnchantmentRepository(DB_PATH)
+    assert fresh_repository.list_items() == first_items
+    assert connect_count == 4
