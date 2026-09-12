@@ -187,3 +187,39 @@ def test_combined_special_subset_is_preserved(
 
     assert set(by_special_ids) == {(30,), (40,), (30, 40)}
     assert {row.set_ids for row in by_special_ids[(30, 40)].realizations} == {(30, 40)}
+
+
+@pytest.mark.parametrize(
+    ("objective", "stat"),
+    (("max_magicka", StatId.MAX_MAGICKA), ("max_stamina", StatId.MAX_STAMINA)),
+)
+def test_structurally_equivalent_single_specials_reuse_one_exact_filler_search(
+    monkeypatch,
+    objective: str,
+    stat: StatId,
+) -> None:
+    service = _service(objective, stat, two_specials=True)
+    topology = ExtremeGearSetCountTopology(counts=(2, 2), unused_units=8)
+    catalog = ExtremeGearSetTopologyCatalog(sets=(), topologies=(topology,))
+
+    original = service._search_max_resource_subset
+    calls = 0
+
+    def wrapped(**kwargs):
+        nonlocal calls
+        calls += 1
+        return original(**kwargs)
+
+    monkeypatch.setattr(service, "_search_max_resource_subset", wrapped)
+    result = service.search(catalog)
+
+    by_special_ids = {
+        tuple(pair[0] for pair in row.special_pairs): row
+        for row in result.special_subsets
+        if row.winner_found
+    }
+    assert calls == 2
+    assert set(by_special_ids) == {(30,), (40,), (30, 40)}
+    assert {row.set_ids for row in by_special_ids[(30,)].realizations} == {(10, 30)}
+    assert {row.set_ids for row in by_special_ids[(40,)].realizations} == {(10, 40)}
+    assert by_special_ids[(30,)].best_ordinary_flat_delta == by_special_ids[(40,)].best_ordinary_flat_delta
