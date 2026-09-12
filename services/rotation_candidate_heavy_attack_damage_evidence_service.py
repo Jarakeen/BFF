@@ -43,6 +43,9 @@ from services.rotation_heavy_attack_restoration_evidence_service import (
 from services.rotation_heavy_attack_weapon_projection_service import (
     RotationHeavyAttackWeaponProjectionService,
 )
+from services.rotation_saved_build_dd_conditional_damage_done_service import (
+    exploiter_damage_done_bonus,
+)
 
 
 def _sum_contributions(evaluation: BuildEvaluation, *effect_types: str) -> float:
@@ -64,9 +67,11 @@ class RotationCandidateHeavyAttackDamageEvidenceService:
     formulas own the attacker-side HA/typed/direct/single-target/Damage Done math;
     the existing DD pipeline adds expected crit, mitigation, and target Damage Taken.
 
-    Runtime attacker combat state contributes only reviewed named generic Damage Done
-    effects. That value is folded into the formula's existing ``damage_done`` bucket
-    exactly once; target-side Damage Taken remains a separate later combat stage.
+    Runtime attacker combat state contributes reviewed named generic Damage Done
+    effects. Target-state-dependent Exploiter is carried as a magnitude in the
+    canonical weapon evaluation and joins the same additive Damage Done bucket only
+    when the exact HA completion target state is Off Balance. Target-side Damage Taken
+    remains a separate later combat stage.
 
     Flame, frost, shock, restoration staff, two-handed, dual-wield, and one-hand-and-
     shield heavies are routed here. Bow remains unresolved because the canonical
@@ -221,7 +226,18 @@ class RotationCandidateHeavyAttackDamageEvidenceService:
         direct_damage_done = _sum_contributions(self.evaluation, "direct_damage_done")
         single_target_damage_done = _sum_contributions(self.evaluation, "single_target_damage_done")
         runtime_damage_done = damage_done_from_combat_state(self.attacker_combat_state).generic
-        damage_done = _sum_contributions(self.evaluation, "damage_done") + runtime_damage_done
+        exploiter_bonus = exploiter_damage_done_bonus(
+            self.target_combat_state,
+            _sum_contributions(
+                self.evaluation,
+                "conditional_exploiter_damage_done",
+            ),
+        )
+        damage_done = (
+            _sum_contributions(self.evaluation, "damage_done")
+            + runtime_damage_done
+            + exploiter_bonus
+        )
         empower = _sum_contributions(self.evaluation, "empower")
 
         common = dict(
