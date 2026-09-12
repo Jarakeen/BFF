@@ -118,6 +118,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Gear and set editing
 - Weapon-bar configuration
 - Skill-bar configuration
+- All Build Editor dropdowns use searchable autocomplete combo boxes with case-insensitive contains matching and clear controls
 - Mundus / food / potion configuration
 - Scribed Skills interface
 - Build-specific performance information
