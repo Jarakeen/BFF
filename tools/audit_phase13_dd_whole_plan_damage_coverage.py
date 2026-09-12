@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass
+import json
 from pathlib import Path
 import sys
 
@@ -20,6 +21,9 @@ from ui.rotation_generate_dd_role_evidence_support import (
     RotationGenerateDDRoleEvidenceSupport,
 )
 from ui.rotation_generation_support import RotationGenerationRequest, RotationGenerationSupport
+
+
+_DD_ROLE_KEYS = {"dd", "dps", "damage", "damage dealer", "damage_dealer"}
 
 
 @dataclass(frozen=True)
@@ -44,6 +48,24 @@ def _character_name(build) -> str:
         or getattr(build, "Gamertag", "")
         or ""
     ).strip()
+
+
+def _saved_dd_builds(path: Path) -> tuple[tuple[str, str, str], ...]:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    rows: list[tuple[str, str, str]] = []
+    for member in payload.get("Members", []):
+        role = str(member.get("Role", "") or "").strip()
+        if role.casefold() not in _DD_ROLE_KEYS:
+            continue
+        character = str(
+            member.get("CharacterName", "")
+            or member.get("Name", "")
+            or member.get("Gamertag", "")
+            or ""
+        ).strip()
+        build_name = str(member.get("BuildName", "") or "").strip()
+        rows.append((character, build_name, role))
+    return tuple(sorted(rows, key=lambda item: (item[0].casefold(), item[1].casefold())))
 
 
 def _action_damage_provider(*, build, database_path: Path, target_resistance: float):
@@ -90,11 +112,16 @@ def main() -> int:
         )
     )
     parser.add_argument("--character")
-    parser.add_argument("--build", required=True)
+    parser.add_argument("--build")
     parser.add_argument("--database", type=Path, default=ROOT / "data" / "eso.db")
     parser.add_argument("--builds", type=Path, default=ROOT / "data" / "builds.json")
+    parser.add_argument(
+        "--list-dd-builds",
+        action="store_true",
+        help="List saved DD/DPS builds from builds.json and exit without generating a plan.",
+    )
     parser.add_argument("--duration", type=float, default=60.0)
-    parser.add_argument("--target-resistance", type=float, required=True)
+    parser.add_argument("--target-resistance", type=float)
     parser.add_argument("--ultimate-bar", choices=("front", "back"))
     parser.add_argument("--starting-ultimate", type=float, default=0.0)
     parser.add_argument(
@@ -109,6 +136,26 @@ def main() -> int:
     )
     args = parser.parse_args()
 
+    if args.list_dd_builds:
+        builds = _saved_dd_builds(Path(args.builds))
+        print("=" * 72)
+        print(" SAVED DD BUILDS ELIGIBLE FOR WHOLE-PLAN DAMAGE COVERAGE AUDIT")
+        print("=" * 72)
+        if not builds:
+            print("none")
+        else:
+            for character, build_name, role in builds:
+                print(
+                    f"{character or '(unnamed character)'} | "
+                    f"{build_name or '(unnamed build)'} | {role}"
+                )
+        return 0
+
+    if not str(args.build or "").strip():
+        parser.error("--build is required unless --list-dd-builds is used")
+    if args.target_resistance is None:
+        parser.error("--target-resistance is required unless --list-dd-builds is used")
+
     duration = float(args.duration)
     if duration <= 0.0:
         raise ValueError("duration must be positive")
@@ -118,7 +165,7 @@ def main() -> int:
 
     build = _load_build(Path(args.builds), args.build, args.character)
     role = str(getattr(build, "Role", "") or "").strip().casefold()
-    if role not in {"dd", "dps", "damage", "damage dealer", "damage_dealer"}:
+    if role not in _DD_ROLE_KEYS:
         raise ValueError(
             "whole-plan DD coverage audit requires a saved damage-dealer build; "
             f"got role={getattr(build, 'Role', '')!r}"
