@@ -92,5 +92,5 @@ def test_invalid_initial_bar_and_negative_lookup_fail_closed() -> None:
         static_context=_static_context(),
         plan=_plan(),
     )
-    with pytest.raises(ValueError, match="cannot be negative"):
+    with pytest.raises(ValueError, match="finite and non-negative"):
         resolver.context_at(-0.001, 0)
