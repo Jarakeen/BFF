@@ -27,6 +27,11 @@ class ClassMasteryRepository:
 
     def __init__(self, database_path: str | Path) -> None:
         self.database_path = Path(database_path)
+        # Class Mastery rows are canonical reference data for the lifetime of a
+        # repository instance. Cache the assembled immutable catalog so repeated
+        # Extreme/runtime queries do not reopen and rescan SQLite.
+        self._all_cache: tuple[ClassMasteryPassive, ...] | None = None
+        self._class_cache: dict[str, tuple[ClassMasteryPassive, ...]] = {}
 
     @staticmethod
     def _plain_text(value: object) -> str:
@@ -34,8 +39,12 @@ class ClassMasteryRepository:
         return " ".join(text.split())
 
     def all(self) -> tuple[ClassMasteryPassive, ...]:
+        if self._all_cache is not None:
+            return self._all_cache
+
         if not self.database_path.is_file():
-            return ()
+            self._all_cache = ()
+            return self._all_cache
 
         with sqlite3.connect(self.database_path) as db:
             columns = {str(row[1]) for row in db.execute("PRAGMA table_info(skill)").fetchall()}
@@ -49,7 +58,8 @@ class ClassMasteryRepository:
                 "is_passive",
             }
             if not required.issubset(columns):
-                return ()
+                self._all_cache = ()
+                return self._all_cache
 
             rows = db.execute(
                 """
@@ -61,7 +71,7 @@ class ClassMasteryRepository:
                 """
             ).fetchall()
 
-        return tuple(
+        self._all_cache = tuple(
             ClassMasteryPassive(
                 skill_id=int(row[0]),
                 base_ability_id=int(row[1] or 0),
@@ -71,9 +81,17 @@ class ClassMasteryRepository:
             )
             for row in rows
         )
+        return self._all_cache
 
     def for_class(self, class_name: str) -> tuple[ClassMasteryPassive, ...]:
         target = str(class_name or "").strip().casefold()
         if not target:
             return ()
-        return tuple(row for row in self.all() if row.class_name.casefold() == target)
+
+        cached = self._class_cache.get(target)
+        if cached is not None:
+            return cached
+
+        result = tuple(row for row in self.all() if row.class_name.casefold() == target)
+        self._class_cache[target] = result
+        return result
