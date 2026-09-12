@@ -6,6 +6,7 @@ from services.rotation_dd_whole_plan_damage_coverage_audit_service import (
     RotationDDWholePlanDamageCoverageAudit,
 )
 from tools.audit_phase13_dd_whole_plan_damage_coverage import (
+    _group_static_prerequisite_gaps,
     _saved_dd_builds,
     _sorted_blockers,
 )
@@ -61,3 +62,27 @@ def test_sorted_blockers_orders_highest_occurrence_count_first() -> None:
     assert ranked[0].action_name == "stampede"
     assert ranked[0].occurrence_count == 2
     assert ranked[1].action_kind is RotationActionKind.LIGHT_ATTACK
+
+
+def test_static_prerequisite_gaps_collapse_front_back_duplicates() -> None:
+    gaps = _group_static_prerequisite_gaps(
+        (
+            "front static context: Necklace jewelry trait not yet resolved: Bloodthirsty",
+            "back static context: Necklace jewelry trait not yet resolved: Bloodthirsty",
+            "front static context: Front Bar Off Hand Charged: requires status-effect chance model",
+            "build-level progression evidence missing",
+        )
+    )
+
+    assert gaps[0].reason == "Necklace jewelry trait not yet resolved: Bloodthirsty"
+    assert gaps[0].bars == ("front", "back")
+    assert any(
+        gap.reason == "Front Bar Off Hand Charged: requires status-effect chance model"
+        and gap.bars == ("front",)
+        for gap in gaps
+    )
+    assert any(
+        gap.reason == "build-level progression evidence missing"
+        and gap.bars == ("build",)
+        for gap in gaps
+    )
