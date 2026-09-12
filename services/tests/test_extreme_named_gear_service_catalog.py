@@ -12,11 +12,15 @@ def test_extreme_named_gear_proof_services_are_discoverable() -> None:
     execution = canonical_service_for(
         "extreme_max_health_special_named_gear_execution"
     )
+    frontier = canonical_service_for(
+        "extreme_max_health_named_gear_candidate_frontier"
+    )
 
     assert partial is not None
     assert ordinary is not None
     assert special is not None
     assert execution is not None
+    assert frontier is not None
     assert ordinary.dependencies == (
         "extreme.partial_named_gear_physical_feasibility",
     )
@@ -26,6 +30,11 @@ def test_extreme_named_gear_proof_services_are_discoverable() -> None:
     assert execution.dependencies == (
         "extreme.max_health_special_named_gear_branches",
     )
+    assert frontier.dependencies == (
+        "extreme.max_resource_ordinary_named_gear_search",
+        "extreme.max_health_special_named_gear_branches",
+        "extreme.partial_named_gear_physical_feasibility",
+    )
     assert ordinary.implementation_path == (
         "services.extreme_max_resource_ordinary_named_gear_search_service"
     )
@@ -34,4 +43,7 @@ def test_extreme_named_gear_proof_services_are_discoverable() -> None:
     )
     assert execution.implementation_path == (
         "services.extreme_max_health_special_named_gear_execution_service"
+    )
+    assert frontier.implementation_path == (
+        "services.extreme_max_health_named_gear_candidate_search_service"
     )
