@@ -15,11 +15,11 @@ class RotationDDEvaluationPolicyControls:
 
     def install(self, page) -> None:
         page.rotation_dd_target_resistance_spin = QDoubleSpinBox()
-        page.rotation_dd_target_resistance_spin.setRange(0.0, 100_000.0)
+        page.rotation_dd_target_resistance_spin.setRange(-1.0, 100_000.0)
         page.rotation_dd_target_resistance_spin.setDecimals(0)
         page.rotation_dd_target_resistance_spin.setSingleStep(500.0)
         page.rotation_dd_target_resistance_spin.setSpecialValueText("Not set")
-        page.rotation_dd_target_resistance_spin.setValue(0.0)
+        page.rotation_dd_target_resistance_spin.setValue(-1.0)
         page.rotation_dd_target_resistance_spin.setSuffix(" armor")
         page.rotation_dd_target_resistance_spin.setMinimumWidth(135)
         page.rotation_dd_target_resistance_spin.setToolTip(
@@ -39,7 +39,7 @@ class RotationDDEvaluationPolicyControls:
     def policy(page) -> dict[str, object | None]:
         resistance = float(page.rotation_dd_target_resistance_spin.value())
         return {
-            "target_resistance": None if resistance <= 0.0 else resistance,
+            "target_resistance": None if resistance < 0.0 else resistance,
         }
 
 
