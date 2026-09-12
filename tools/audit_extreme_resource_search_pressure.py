@@ -9,6 +9,11 @@ which remaining axis is actually expensive before adding another optimization.
 
 import argparse
 from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from minmax.mundus_repository import MundusRepository, U50_GAME_UPDATE
 from minmax.potion_availability_repository import PotionAvailabilityRepository
@@ -39,20 +44,32 @@ from services.extreme_structural_named_gear_mundus_food_potion_core_stat_record_
 _OBJECTIVES = ("max_magicka", "max_stamina")
 
 
-def _gear_identity(row) -> tuple[object, ...]:
-    return (
-        tuple(row.set_ids),
-        tuple(row.counts),
-        row.weapon_shape.value,
-        tuple((assignment.slot, assignment.set_id, assignment.weapon_type) for assignment in row.assignments),
-    )
+def _flatten_realizations(result) -> tuple:
+    unique = {}
+    realization_result = getattr(result, "realization", None)
+    for topology in tuple(getattr(realization_result, "topologies", ()) or ()):
+        for realization in tuple(getattr(topology, "realizations", ()) or ()):
+            identity = (
+                tuple(getattr(realization, "set_ids", ()) or ()),
+                tuple(getattr(realization, "counts", ()) or ()),
+                str(getattr(getattr(realization, "weapon_shape", None), "value", "")),
+                tuple(
+                    (
+                        str(getattr(row, "slot", "")),
+                        int(getattr(row, "set_id", 0) or 0),
+                        str(getattr(row, "weapon_type", "")),
+                    )
+                    for row in tuple(getattr(realization, "assignments", ()) or ())
+                ),
+            )
+            unique.setdefault(identity, realization)
+    return tuple(unique[key] for key in sorted(unique))
 
 
-def _fmt(value: int) -> str:
-    return f"{int(value):,}"
+def _print_objective(database: Path, objective: str) -> None:
+    print()
+    print(objective.upper())
 
-
-def audit(database: Path, objective: str) -> None:
     universe = ExtremeGlobalSearchUniverseService(database).build()
     projection = ExtremeResourceAttributeProjectionService.build(
         objective,
@@ -63,39 +80,38 @@ def audit(database: Path, objective: str) -> None:
         database_path=database,
     )
     gear = record_service._gear_realization(objective)
-    raw_realizations = []
-    for topology in gear.realization.topologies:
-        raw_realizations.extend(topology.realizations)
-    unique_realizations = {
-        _gear_identity(row): row
-        for row in raw_realizations
-    }
-    dual = ExtremeDualBarGearStateCatalogService.build(
-        tuple(unique_realizations[key] for key in sorted(unique_realizations)),
-        source_denominator_proven=bool(gear.denominator_proven),
-        unresolved=tuple(gear.unresolved),
+    raw_realizations = _flatten_realizations(gear)
+    dual_bar = ExtremeDualBarGearStateCatalogService.build(
+        raw_realizations,
+        source_denominator_proven=bool(getattr(gear, "denominator_proven", False)),
+        unresolved=tuple(getattr(gear, "unresolved", ()) or ()),
     )
 
-    trait_glyph = ExtremeArmorResourceTraitGlyphStateService(database)
+    trait_glyph_service = ExtremeArmorResourceTraitGlyphStateService(database)
     armor = ExtremeArmorResourceWeightTraitGlyphStateService.from_services(
         objective,
-        trait_glyph_service=trait_glyph,
+        trait_glyph_service=trait_glyph_service,
     ).build(objective)
-
-    provisioning_repository = ProvisioningStaticRepository(database)
-    provisioning = ExtremeResourceProvisioningProjectionService(
-        provisioning_repository
-    ).build(objective)
-
-    potion_repository = PotionAvailabilityRepository(database)
-    potion = ExtremeResourcePotionProjectionService(potion_repository).build(objective)
 
     mundus = MundusRepository(
         database,
         game_update=U50_GAME_UPDATE,
         initialize=False,
     )
-    mundus_count = len(mundus.list_names()) + 1  # include no-Mundus baseline
+    mundus_count = len(tuple(mundus.list_names())) + 1
+
+    provisioning_repository = ProvisioningStaticRepository(database)
+    provisioning = ExtremeResourceProvisioningProjectionService(
+        provisioning_repository
+    ).build(objective)
+    raw_provisioning = len(tuple(provisioning_repository.list_names())) + 1
+    retained_provisioning = len(tuple(provisioning.choices))
+
+    potion_repository = PotionAvailabilityRepository(database)
+    potion_catalog = potion_repository.catalog()
+    potion = ExtremeResourcePotionProjectionService(potion_repository).build(objective)
+    raw_potions = len(tuple(potion_catalog.formulas)) + 1
+    retained_potions = 1 if potion.objective_irrelevance_proven else raw_potions
 
     structural_raw = (
         len(universe.races)
@@ -110,96 +126,91 @@ def audit(database: Path, objective: str) -> None:
         * len(universe.active_bars)
     )
 
-    provisioning_raw = len(provisioning_repository.list_names()) + 1
-    provisioning_reduced = len(provisioning.choices)
-    potion_raw = len(potion_repository.catalog().formulas) + 1
-    potion_reduced = 1 if potion.objective_irrelevance_proven else potion_raw
+    front = tuple(dual_bar.front_admissible_realizations)
+    back = tuple(dual_bar.back_admissible_realizations)
+    active_gear = max(len(front), len(back))
 
-    front_candidates = len(dual.front_admissible_realizations)
-    back_candidates = len(dual.back_admissible_realizations)
-    active_snapshot_candidates = max(front_candidates, back_candidates)
-
-    finite_per_structural = (
-        max(active_snapshot_candidates, 1)
+    finite_axis_pressure = (
+        max(active_gear, 1)
         * max(len(armor.states), 1)
         * max(mundus_count, 1)
-        * max(provisioning_reduced, 1)
-        * max(potion_reduced, 1)
+        * max(retained_provisioning, 1)
+        * max(retained_potions, 1)
     )
+    reduced_score_pressure = structural_reduced * finite_axis_pressure
 
-    print(f"\n{objective.upper()}")
-    print(f"races={_fmt(len(universe.races))}")
-    print(f"class_routes={_fmt(len(universe.class_routes))}")
+    print(f"races={len(universe.races):,}")
+    print(f"class_routes={len(universe.class_routes):,}")
     print(
-        "attributes="
-        f"{_fmt(len(universe.attribute_allocations))} -> {_fmt(len(projection.allocations))} "
+        f"attributes={len(universe.attribute_allocations):,}->{len(projection.allocations):,} "
         f"projection_complete={projection.projection_complete}"
     )
-    print(f"active_bars={_fmt(len(universe.active_bars))}")
-    print(f"structural_candidates={_fmt(structural_raw)} -> {_fmt(structural_reduced)}")
-    print(f"named_gear_unique_realizations={_fmt(len(unique_realizations))}")
+    print(f"active_bars={len(universe.active_bars):,}")
+    print(f"structural_pressure={structural_raw:,}->{structural_reduced:,}")
+    print(f"named_gear_unique_realizations={len(raw_realizations):,}")
+    print(f"dual_bar_states={len(dual_bar.states):,}")
+    print(f"front_admissible_gear={len(front):,}")
+    print(f"back_admissible_gear={len(back):,}")
+    print(f"resource_armor_states={len(armor.states):,}")
+    print(f"mundus_states_including_none={mundus_count:,}")
     print(
-        "dual_bar_gear="
-        f"states={_fmt(len(dual.states))} front={_fmt(front_candidates)} back={_fmt(back_candidates)} "
-        f"denominator_proven={dual.denominator_proven}"
-    )
-    print(
-        "resource_armor_states="
-        f"{_fmt(len(armor.states))} denominator_proven={armor.denominator_proven}"
-    )
-    print(f"mundus_states_including_none={_fmt(mundus_count)}")
-    print(
-        "provisioning="
-        f"{_fmt(provisioning_raw)} raw -> {_fmt(provisioning_reduced)} witnesses "
-        f"food={provisioning.food_witness!r} drink={provisioning.drink_witness!r} "
+        f"provisioning_states={raw_provisioning:,}->{retained_provisioning:,} "
         f"projection_complete={provisioning.projection_complete}"
     )
+    print(f"  food_witness={provisioning.food_witness or '<none>'}")
+    print(f"  drink_witness={provisioning.drink_witness or '<none>'}")
     print(
-        "potions="
-        f"{_fmt(potion_raw)} raw -> {_fmt(potion_reduced)} scored states "
-        f"irrelevance_proven={potion.objective_irrelevance_proven}"
+        f"potion_states={raw_potions:,}->{retained_potions:,} "
+        f"objective_irrelevance_proven={potion.objective_irrelevance_proven}"
     )
-    print(f"finite_axis_pressure_per_structural_candidate={_fmt(finite_per_structural)}")
-    print(
-        "estimated_reduced_score_pressure="
-        f"{_fmt(structural_reduced * finite_per_structural)}"
-    )
+    print(f"finite_axis_pressure_per_structural_candidate={finite_axis_pressure:,}")
+    print(f"estimated_reduced_score_pressure={reduced_score_pressure:,}")
 
     unresolved = tuple(
         dict.fromkeys(
-            (
-                *gear.unresolved,
-                *dual.unresolved,
-                *armor.unresolved,
-                *projection.unresolved,
-                *provisioning.unresolved,
-                *potion.unresolved,
+            str(item)
+            for item in (
+                *tuple(getattr(gear, "unresolved", ()) or ()),
+                *tuple(dual_bar.unresolved),
+                *tuple(armor.unresolved),
+                *tuple(provisioning.unresolved),
+                *tuple(potion.unresolved),
             )
+            if str(item)
         )
     )
-    if unresolved:
-        print("unresolved=")
-        for row in unresolved:
-            print(f"  - {row}")
+    print(f"unresolved_count={len(unresolved):,}")
+    for item in unresolved[:10]:
+        print(f"  unresolved: {item}")
+    if len(unresolved) > 10:
+        print(f"  ... {len(unresolved) - 10:,} more")
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--database", default="data/eso.db")
+    parser = argparse.ArgumentParser(
+        description="Report proof-reduced Extreme max-resource search pressure without scoring builds."
+    )
+    parser.add_argument(
+        "--database",
+        default=str(ROOT / "data" / "eso.db"),
+        help="Path to the canonical ESO SQLite database.",
+    )
     parser.add_argument(
         "--objective",
-        choices=(*_OBJECTIVES, "all"),
-        default="all",
+        choices=_OBJECTIVES,
+        action="append",
+        help="Optional objective to report; repeat for both. Defaults to both.",
     )
     args = parser.parse_args()
 
     database = Path(args.database)
-    objectives = _OBJECTIVES if args.objective == "all" else (args.objective,)
+    objectives = tuple(args.objective or _OBJECTIVES)
+
     print("EXTREME RESOURCE SEARCH PRESSURE")
     print(f"Database: {database}")
-    print("No build scoring is performed by this audit.")
+    print("This audit constructs proven source/reduction catalogs only; it does not score builds.")
     for objective in objectives:
-        audit(database, objective)
+        _print_objective(database, objective)
     return 0
 
 
