@@ -43,6 +43,9 @@ class RotationSelectedEncounterEvidenceInputs:
     policies require both an explicit difficulty and an explicit raid-damage trajectory;
     neither is inferred from build potency or encounter names.
 
+    DD target resistance is also explicit evaluation evidence. An unset resistance
+    remains unknown rather than being interpreted as zero armor or inferred from content.
+
     The evaluator and scorecard resolver pair may both be omitted. The canonical
     dashboard candidate boundary then composes both from the exact generated seed plan
     through the shared Generate resolver service. Supplying only one remains invalid at
@@ -58,6 +61,7 @@ class RotationSelectedEncounterEvidenceInputs:
     threshold_demand_policies: tuple[EncounterThresholdRotationDemandPolicy, ...] = ()
     threshold_damage_segments: tuple[RaidDamageSegment, ...] = ()
     difficulty: str = ""
+    target_resistance: float | None = None
     restoration_resolver: VerifiedRecoveryHeavyRestorationResolver | None = None
     options: tuple[RotationRefreshLeadCandidateOption, ...] = ()
     requirements: tuple[RotationEffectUptimeRequirement, ...] = ()
@@ -99,6 +103,7 @@ class RotationSelectedEncounterEvidenceSupport:
             threshold_demand_policies=tuple(inputs.threshold_demand_policies),
             threshold_damage_segments=tuple(inputs.threshold_damage_segments),
             difficulty=str(inputs.difficulty or ""),
+            target_resistance=inputs.target_resistance,
             evaluator_resolver=inputs.evaluator_resolver,
             scorecard_resolver=inputs.scorecard_resolver,
             resource=inputs.resource,
