@@ -11,12 +11,14 @@ from services.rotation_candidate_canonical_plan_evidence_service import (
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 
 
-_DAMAGE_ACTION_KINDS = {
-    RotationActionKind.SKILL,
-    RotationActionKind.LIGHT_ATTACK,
-    RotationActionKind.HEAVY_ATTACK,
-    RotationActionKind.ULTIMATE,
-}
+DD_DAMAGE_ACTION_KINDS = frozenset(
+    {
+        RotationActionKind.SKILL,
+        RotationActionKind.LIGHT_ATTACK,
+        RotationActionKind.HEAVY_ATTACK,
+        RotationActionKind.ULTIMATE,
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -100,7 +102,7 @@ class RotationCandidateDDRoleOutputService:
         total_damage = 0.0
 
         for action in plan.actions:
-            if action.kind not in _DAMAGE_ACTION_KINDS:
+            if action.kind not in DD_DAMAGE_ACTION_KINDS:
                 continue
 
             evidence = self.action_damage_evidence_provider.evaluate_action(
@@ -153,6 +155,7 @@ class RotationCandidateDDRoleOutputService:
 
 
 __all__ = [
+    "DD_DAMAGE_ACTION_KINDS",
     "RotationActionDamageEvidence",
     "RotationActionDamageEvidenceProvider",
     "RotationCandidateDDRoleOutputService",
