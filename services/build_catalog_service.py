@@ -8,14 +8,19 @@ from uuid import NAMESPACE_URL, uuid5
 
 from models.build_model import BuildRoster, PlayerBuild
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 
 class BuildCatalogService:
-    """Persist character identity separately from reusable build configs.
+    """Persist player -> character -> build ownership as canonical user state.
 
-    eso.db remains read-only ESO reference data. User-owned state lives here.
-    Existing builds.json can be migrated without changing or deleting it.
+    ``eso.db`` remains read-only ESO reference data. User-owned identity and
+    build state live here. ``PlayerBuild`` / ``BuildRoster`` are compatibility
+    snapshots for existing consumers, not the identity authority.
+
+    Schema v4 adds explicit player records and build-level team assignments.
+    Older character/build catalogs are upgraded deterministically in memory and
+    written back only when a normal catalog save occurs.
     """
 
     def __init__(self, catalog_path: Path):
@@ -34,6 +39,10 @@ class BuildCatalogService:
         if gamertag:
             return f"{gamertag}:unnamed-{index + 1}"
         return f"member-{index + 1}"
+
+    @staticmethod
+    def _player_match_key(gamertag: object) -> str:
+        return str(gamertag or "").strip().casefold()
 
     @staticmethod
     def _character_match_key(name: object, gamertag: object) -> tuple[str, str]:
@@ -107,6 +116,37 @@ class BuildCatalogService:
         return character
 
     @classmethod
+    def _normalize_player(cls, value: Any) -> dict[str, Any]:
+        player = copy.deepcopy(value) if isinstance(value, dict) else {}
+        player["player_id"] = str(player.get("player_id") or "").strip()
+        player["gamertag"] = str(player.get("gamertag") or "").strip()
+        player["display_name"] = str(player.get("display_name") or "").strip()
+        player["notes"] = str(player.get("notes") or "").strip()
+        player["status"] = str(player.get("status") or "Active").strip() or "Active"
+        return player
+
+    @classmethod
+    def _normalize_assignment(cls, value: Any) -> dict[str, Any] | None:
+        if not isinstance(value, dict):
+            return None
+        build_id = str(value.get("build_id") or "").strip()
+        team_name = str(value.get("team_name") or value.get("team") or "").strip()
+        if not build_id or not team_name:
+            return None
+        assignment_id = str(value.get("assignment_id") or "").strip() or cls._stable_id(
+            "team-assignment", f"{team_name.casefold()}:{build_id}"
+        )
+        return {
+            "assignment_id": assignment_id,
+            "team_name": team_name,
+            "build_id": build_id,
+            "raid_role": str(value.get("raid_role") or "").strip(),
+            "slot_name": str(value.get("slot_name") or "").strip(),
+            "status": str(value.get("status") or "Active").strip() or "Active",
+            "notes": str(value.get("notes") or "").strip(),
+        }
+
+    @classmethod
     def _has_meaningful_value(cls, value: Any) -> bool:
         if value is None:
             return False
@@ -129,13 +169,72 @@ class BuildCatalogService:
     @classmethod
     def _normalize(cls, data: Any) -> dict[str, Any]:
         data = data if isinstance(data, dict) else {}
+        raw_players = [
+            cls._normalize_player(player)
+            for player in list(data.get("players") or [])
+            if isinstance(player, dict)
+        ]
+        players_by_id = {
+            player["player_id"]: player
+            for player in raw_players
+            if player.get("player_id")
+        }
+        players_by_gamertag = {
+            cls._player_match_key(player.get("gamertag")): player
+            for player in raw_players
+            if cls._player_match_key(player.get("gamertag"))
+        }
+
+        characters: list[dict[str, Any]] = []
+        for raw_character in list(data.get("characters") or []):
+            if not isinstance(raw_character, dict):
+                continue
+            character = cls._normalize_character(raw_character)
+            character_id = str(character.get("character_id") or "").strip()
+            gamertag = str(character.get("gamertag") or "").strip()
+            player_id = str(character.get("player_id") or "").strip()
+
+            player = players_by_id.get(player_id) if player_id else None
+            if player is None and gamertag:
+                player = players_by_gamertag.get(cls._player_match_key(gamertag))
+            if player is None:
+                player_seed = gamertag.casefold() or character_id or str(character.get("name") or "unknown")
+                player_id = cls._stable_id("player", player_seed)
+                player = cls._normalize_player(
+                    {
+                        "player_id": player_id,
+                        "gamertag": gamertag,
+                        "status": "Active",
+                    }
+                )
+                players_by_id[player_id] = player
+                if gamertag:
+                    players_by_gamertag[cls._player_match_key(gamertag)] = player
+            else:
+                player_id = str(player.get("player_id") or "").strip()
+
+            character["player_id"] = player_id
+            # Retain the historical mirror for compatibility readers. Player is
+            # authoritative for Gamertag from schema v4 onward.
+            if not gamertag:
+                character["gamertag"] = str(player.get("gamertag") or "")
+            characters.append(character)
+
+        assignments = []
+        seen_assignment_ids: set[str] = set()
+        for raw_assignment in list(data.get("team_assignments") or []):
+            assignment = cls._normalize_assignment(raw_assignment)
+            if assignment is None or assignment["assignment_id"] in seen_assignment_ids:
+                continue
+            seen_assignment_ids.add(assignment["assignment_id"])
+            assignments.append(assignment)
+
         return {
             "schema_version": SCHEMA_VERSION,
-            "characters": [
-                cls._normalize_character(character)
-                for character in list(data.get("characters") or [])
-            ],
+            "players": list(players_by_id.values()),
+            "characters": characters,
             "builds": list(data.get("builds") or []),
+            "team_assignments": assignments,
         }
 
     def new_catalog(self) -> dict[str, Any]:
@@ -162,8 +261,18 @@ class BuildCatalogService:
         temp.replace(self.catalog_path)
 
     def import_legacy_roster(self, roster: BuildRoster) -> dict[str, Any]:
-        """Create canonical records while preserving character-owned state."""
+        """Create canonical ownership records while preserving character state."""
         existing = self.load()
+        existing_players_by_tag = {
+            self._player_match_key(player.get("gamertag")): player
+            for player in existing["players"]
+            if isinstance(player, dict) and self._player_match_key(player.get("gamertag"))
+        }
+        existing_characters_by_id = {
+            str(character.get("character_id") or "").strip(): character
+            for character in existing["characters"]
+            if isinstance(character, dict) and str(character.get("character_id") or "").strip()
+        }
         existing_by_character = {
             self._character_match_key(
                 character.get("name"),
@@ -173,7 +282,12 @@ class BuildCatalogService:
             if isinstance(character, dict)
         }
 
-        catalog = self._normalize(None)
+        catalog = self.new_catalog()
+        players: dict[str, dict[str, Any]] = {
+            str(player.get("player_id")): copy.deepcopy(player)
+            for player in existing["players"]
+            if isinstance(player, dict) and str(player.get("player_id") or "").strip()
+        }
         characters: dict[str, dict[str, Any]] = {}
 
         for index, member in enumerate(roster.Members):
@@ -181,6 +295,25 @@ class BuildCatalogService:
                 continue
 
             identity = self._identity(member, index)
+            gamertag = member.Gamertag.strip()
+            tag_key = self._player_match_key(gamertag)
+            previous_player = existing_players_by_tag.get(tag_key) if tag_key else None
+            player_id = (
+                str(previous_player.get("player_id") or "").strip()
+                if previous_player
+                else self._stable_id("player", tag_key or identity)
+            )
+            if player_id not in players:
+                players[player_id] = self._normalize_player(
+                    {
+                        "player_id": player_id,
+                        "gamertag": gamertag,
+                        "status": "Active",
+                    }
+                )
+            elif gamertag:
+                players[player_id]["gamertag"] = gamertag
+
             match_key = self._character_match_key(member.Name, member.Gamertag)
             previous = existing_by_character.get(match_key)
             previous_id = str(previous.get("character_id", "")).strip() if previous else ""
@@ -193,8 +326,9 @@ class BuildCatalogService:
             if character_id not in characters:
                 characters[character_id] = {
                     "character_id": character_id,
+                    "player_id": player_id,
                     "name": member.Name,
-                    "gamertag": member.Gamertag,
+                    "gamertag": gamertag,
                     "eso_class": member.EsoClass,
                     "race": member.Race,
                     "role": member.Role,
@@ -225,14 +359,36 @@ class BuildCatalogService:
                 }
             )
 
+        # Characters may exist before they have a build. Preserve those records
+        # and the player relationship instead of deleting them during a legacy
+        # compatibility resync.
+        for character_id, character in existing_characters_by_id.items():
+            if character_id not in characters:
+                characters[character_id] = copy.deepcopy(character)
+
+        catalog["players"] = list(players.values())
         catalog["characters"] = list(characters.values())
+        build_ids = {
+            str(build.get("build_id") or "").strip()
+            for build in catalog["builds"]
+            if isinstance(build, dict)
+        }
+        catalog["team_assignments"] = [
+            copy.deepcopy(assignment)
+            for assignment in existing.get("team_assignments", [])
+            if isinstance(assignment, dict)
+            and str(assignment.get("build_id") or "").strip() in build_ids
+        ]
         return catalog
 
     def import_legacy_file(self, legacy_path: Path) -> dict[str, Any]:
-        roster = BuildRoster.from_dict(
-            json.loads(Path(legacy_path).read_text(encoding="utf-8"))
-        )
-        return self.import_legacy_roster(roster)
+        payload = json.loads(Path(legacy_path).read_text(encoding="utf-8"))
+        members = [
+            PlayerBuild.from_dict(member)
+            for member in (payload or {}).get("Members", [])
+            if isinstance(member, dict)
+        ]
+        return self.import_legacy_roster(BuildRoster(Members=members))
 
     def migrate_if_needed(self, legacy_path: Path) -> dict[str, Any]:
         current = self.load()
@@ -241,6 +397,28 @@ class BuildCatalogService:
         migrated = self.import_legacy_file(legacy_path)
         self.save(migrated)
         return migrated
+
+    def list_players(self) -> list[dict[str, Any]]:
+        return [copy.deepcopy(player) for player in self.load()["players"]]
+
+    def get_player(self, player_id: str) -> dict[str, Any] | None:
+        for player in self.load()["players"]:
+            if player.get("player_id") == player_id:
+                return copy.deepcopy(player)
+        return None
+
+    def characters_for_player(self, player_id: str) -> list[dict[str, Any]]:
+        return [
+            copy.deepcopy(character)
+            for character in self.load()["characters"]
+            if character.get("player_id") == player_id
+        ]
+
+    def player_for_character(self, character_id: str) -> dict[str, Any] | None:
+        character = self.get_character(character_id)
+        if character is None:
+            return None
+        return self.get_player(str(character.get("player_id") or ""))
 
     def get_character(self, character_id: str) -> dict[str, Any] | None:
         catalog = self.load()
@@ -382,7 +560,80 @@ class BuildCatalogService:
 
     def builds_for_character(self, character_id: str) -> list[dict[str, Any]]:
         return [
-            build
+            copy.deepcopy(build)
             for build in self.load()["builds"]
             if build.get("character_id") == character_id
+        ]
+
+    def assign_build_to_team(
+        self,
+        *,
+        build_id: str,
+        team_name: str,
+        raid_role: str = "",
+        slot_name: str = "",
+        status: str = "Active",
+        notes: str = "",
+    ) -> dict[str, Any]:
+        build_id = str(build_id or "").strip()
+        team_name = str(team_name or "").strip()
+        if not build_id:
+            raise ValueError("build_id is required")
+        if not team_name:
+            raise ValueError("team_name is required")
+        if self.get_build(build_id) is None:
+            raise ValueError(f"Unknown canonical build: {build_id}")
+
+        catalog = self.load()
+        assignment = self._normalize_assignment(
+            {
+                "team_name": team_name,
+                "build_id": build_id,
+                "raid_role": raid_role,
+                "slot_name": slot_name,
+                "status": status,
+                "notes": notes,
+            }
+        )
+        assert assignment is not None
+        for index, existing in enumerate(catalog["team_assignments"]):
+            if existing.get("assignment_id") == assignment["assignment_id"]:
+                catalog["team_assignments"][index] = assignment
+                self.save(catalog)
+                return copy.deepcopy(assignment)
+        catalog["team_assignments"].append(assignment)
+        self.save(catalog)
+        return copy.deepcopy(assignment)
+
+    def unassign_build_from_team(self, *, build_id: str, team_name: str) -> bool:
+        build_id = str(build_id or "").strip()
+        team_name = str(team_name or "").strip().casefold()
+        catalog = self.load()
+        kept = [
+            assignment
+            for assignment in catalog["team_assignments"]
+            if not (
+                str(assignment.get("build_id") or "").strip() == build_id
+                and str(assignment.get("team_name") or "").strip().casefold() == team_name
+            )
+        ]
+        changed = len(kept) != len(catalog["team_assignments"])
+        if changed:
+            catalog["team_assignments"] = kept
+            self.save(catalog)
+        return changed
+
+    def assignments_for_build(self, build_id: str) -> list[dict[str, Any]]:
+        return [
+            copy.deepcopy(assignment)
+            for assignment in self.load()["team_assignments"]
+            if assignment.get("build_id") == build_id
+        ]
+
+    def assignments_for_team(self, team_name: str) -> list[dict[str, Any]]:
+        wanted = str(team_name or "").strip().casefold()
+        return [
+            copy.deepcopy(assignment)
+            for assignment in self.load()["team_assignments"]
+            if str(assignment.get("team_name") or "").strip().casefold() == wanted
         ]
