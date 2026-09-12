@@ -3,19 +3,25 @@ from __future__ import annotations
 """Small layout polish for permanent workspaces and shared tab geometry.
 
 Builds keeps the working tab behavior intact while matching the Coverage tab
-treatment. Theme application also gets one shared rounded-tab rule so every
-visual theme receives the same tab shape without duplicating CSS per theme.
+treatment. Theme application also gets one shared file-folder tab rule so every
+visual theme receives rounded top corners and square bottom corners.
 """
 
 _INSTALLED = False
 
 _ROUNDED_TAB_STYLE = """
 QTabBar::tab {
-    border-radius: 9px;
+    border-top-left-radius: 9px;
+    border-top-right-radius: 9px;
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
     margin-right: 4px;
 }
 QTabBar::tab:selected {
-    border-radius: 9px;
+    border-top-left-radius: 9px;
+    border-top-right-radius: 9px;
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
 }
 """
 
