@@ -15,6 +15,7 @@ potion search or stat math.
 """
 
 from dataclasses import dataclass
+from inspect import signature
 from pathlib import Path
 from typing import Any
 
@@ -185,7 +186,7 @@ class ExtremeBestMundusFoodPotionStructuralStatEvaluator:
                 potion=state.selection,
                 active_buffs=snapshot_buffs,
             )
-            unresolved.extend(str(item) for item in candidate_unresolved if item)
+            unresolved.extend(str(item) for item in candidate_unresolved if str(item))
             score = float(value)
             if (
                 best_value is None
@@ -248,6 +249,13 @@ class ExtremeStructuralMundusFoodPotionCoreStatRecordService:
             scorer=self.evaluator,
         )
 
+    @staticmethod
+    def _food_choices(food_evaluator, objective_key: str) -> tuple[str, ...]:
+        resolver = food_evaluator.food_choices
+        if signature(resolver).parameters:
+            return tuple(resolver(objective_key))
+        return tuple(resolver())
+
     def record(self, objective_key: str) -> ExtremeRecordResult:
         key = str(objective_key or "").strip().casefold()
         if not ExtremeCoreStatRecordService.supports(key):
@@ -259,7 +267,7 @@ class ExtremeStructuralMundusFoodPotionCoreStatRecordService:
         result: ExtremeStructuralGlobalSearchResult[dict[str, Any]] = self.search_service.search(key)
         potion_projection = self.evaluator.potion_projection(key)
         potion_states = self.evaluator.potion_states(key)
-        food_choices = self.evaluator.food_evaluator.food_choices(key)
+        food_choices = self._food_choices(self.evaluator.food_evaluator, key)
         mundus_choices = self.evaluator.food_evaluator.mundus_evaluator.mundus_choices()
         searched = tuple((*result.structural_scope, _MUNDUS_SCOPE, _FOOD_SCOPE, _POTION_SCOPE))
         omitted = tuple(
