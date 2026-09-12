@@ -88,12 +88,13 @@ class ExtremeStructuralGlobalSearchService(Generic[ScorePayload]):
     still exposing how many structurally distinct candidates share the best value.
 
     Scorers may optionally expose ``closed_dynamic_axes(objective_key)`` and
-    ``additional_search_scope(objective_key)``.  They may also expose
-    ``structural_attribute_projection(objective_key, source_allocations)``.  The
-    latter is honored only when the returned object reports ``projection_complete``;
-    otherwise the full canonical attribute simplex is searched.  This lets an
-    objective-specific scorer own a proof reduction without teaching this generic
-    structural layer any ESO formula.
+    ``additional_search_scope(objective_key)``. They may also expose
+    ``structural_attribute_projection(objective_key, source_allocations)`` and
+    ``structural_class_route_projection(objective_key, source_routes)``. A
+    structural projection is honored only when the returned object reports
+    ``projection_complete``; otherwise the full canonical source axis is searched.
+    This lets an objective-specific scorer own a proof reduction without teaching
+    this generic structural layer any ESO formula.
     """
 
     def __init__(
@@ -126,6 +127,31 @@ class ExtremeStructuralGlobalSearchService(Generic[ScorePayload]):
                 if str(value).strip()
             )
         )
+
+    def _projected_class_routes(
+        self,
+        objective_key: str,
+        universe: ExtremeGlobalSearchUniverse,
+    ) -> tuple[tuple[ExtremeHealClassRoute, ...], tuple[str, ...]]:
+        resolver = getattr(self.scorer, "structural_class_route_projection", None)
+        if not callable(resolver):
+            return tuple(universe.class_routes), ()
+
+        projection = resolver(objective_key, tuple(universe.class_routes))
+        if projection is None or not bool(getattr(projection, "projection_complete", False)):
+            return tuple(universe.class_routes), ()
+
+        routes = tuple(getattr(projection, "routes", ()) or ())
+        if not routes:
+            return tuple(universe.class_routes), ()
+        scope = tuple(
+            dict.fromkeys(
+                str(value).strip()
+                for value in tuple(getattr(projection, "scope", ()) or ())
+                if str(value).strip()
+            )
+        )
+        return routes, scope
 
     def _projected_attributes(
         self,
@@ -160,7 +186,8 @@ class ExtremeStructuralGlobalSearchService(Generic[ScorePayload]):
             raise ValueError("Extreme structural search objective_key is required")
 
         universe = self.universe_service.build()
-        attributes_to_score, projection_scope = self._projected_attributes(key, universe)
+        routes_to_score, route_projection_scope = self._projected_class_routes(key, universe)
+        attributes_to_score, attribute_projection_scope = self._projected_attributes(key, universe)
         best: ExtremeStructuralScore[ScorePayload] | None = None
         best_value: float | None = None
         ties = 0
@@ -168,7 +195,7 @@ class ExtremeStructuralGlobalSearchService(Generic[ScorePayload]):
         unresolved: list[str] = []
 
         for race in universe.races:
-            for route in universe.class_routes:
+            for route in routes_to_score:
                 for attributes in attributes_to_score:
                     for active_bar in universe.active_bars:
                         candidate = ExtremeStructuralCandidate(
@@ -199,7 +226,7 @@ class ExtremeStructuralGlobalSearchService(Generic[ScorePayload]):
 
         expected = (
             len(universe.races)
-            * len(universe.class_routes)
+            * len(routes_to_score)
             * len(attributes_to_score)
             * len(universe.active_bars)
         )
@@ -217,7 +244,12 @@ class ExtremeStructuralGlobalSearchService(Generic[ScorePayload]):
             ties_at_best=ties,
             structural_scope=tuple(
                 dict.fromkeys(
-                    (*universe.structural_scope, *projection_scope, *additional_scope)
+                    (
+                        *universe.structural_scope,
+                        *route_projection_scope,
+                        *attribute_projection_scope,
+                        *additional_scope,
+                    )
                 )
             ),
             deferred_dynamic_axes=tuple(
