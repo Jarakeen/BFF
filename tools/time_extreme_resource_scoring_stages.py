@@ -2,12 +2,11 @@ from __future__ import annotations
 
 """Coarsely time Max Resource stages without cProfile overhead.
 
-This diagnostic isolates named-gear realization from downstream canonical scoring,
-measures conservative scoring-equivalence pressure across physical gear witnesses,
-and samples individual named-gear + armor finite-axis scorers. It deliberately does
-not call the outer scorer for a full structural candidate because that would rescan
-every surviving gear/armor pair and merely reproduce the expensive production stage
-we are trying to measure. It does not alter search behavior or database state.
+This diagnostic isolates named-gear realization from downstream canonical scoring and
+samples individual named-gear + armor finite-axis scorers. It deliberately does not
+call the outer scorer for a full structural candidate because that would rescan every
+surviving gear/armor pair and merely reproduce the expensive production stage we are
+trying to measure. It does not alter search behavior or database state.
 """
 
 import argparse
@@ -52,51 +51,38 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _gear_scoring_signature(realization) -> tuple[object, ...]:
-    """Conservative score-facing identity for one active-snapshot gear witness.
-
-    Body/jewelry slot permutations are deliberately omitted. Canonical Max Resource
-    set mechanics consume active set identity/count state, while weapon placement/type
-    can change active-set access and runtime conditions such as destruction-staff
-    equipped, so those details remain explicit in the signature.
-
-    This is diagnostic accounting only. Production does not collapse by this key yet.
-    """
-
-    set_counts = tuple(
-        sorted(
-            (int(set_id), int(count))
-            for set_id, count in zip(realization.set_ids, realization.counts)
-        )
-    )
-    weapon_assignments = tuple(
+def _weapon_signature(realization) -> tuple[tuple[str, int, str], ...]:
+    return tuple(
         sorted(
             (
                 str(row.slot),
                 int(row.set_id),
-                str(row.weapon_type or "").strip(),
+                str(row.weapon_type or ""),
             )
-            for row in realization.weapon_assignments
+            for row in realization.assignments
+            if str(row.slot) in {"Main Hand", "Off Hand"}
         )
     )
+
+
+def _gear_scoring_signature(realization) -> tuple[object, ...]:
     return (
-        set_counts,
+        tuple((int(set_id), int(count)) for set_id, count in zip(realization.set_ids, realization.counts)),
         realization.weapon_shape.value,
-        weapon_assignments,
+        _weapon_signature(realization),
     )
 
 
 def _print_scoring_equivalence(label: str, rows) -> None:
     counts = Counter(_gear_scoring_signature(row) for row in rows)
-    unique = len(counts)
-    total = len(rows)
-    duplicate_rows = total - unique
+    signatures = len(counts)
+    duplicates = len(rows) - signatures
     largest = max(counts.values(), default=0)
-    print(f"gear_scoring_signatures_{label}={unique}")
-    print(f"gear_scoring_duplicate_witnesses_{label}={duplicate_rows}")
+    reduction = (100.0 * duplicates / len(rows)) if rows else 0.0
+    print(f"gear_scoring_signatures_{label}={signatures}")
+    print(f"gear_scoring_duplicate_witnesses_{label}={duplicates}")
     print(f"gear_scoring_largest_equivalence_class_{label}={largest}")
-    if total:
-        print(f"gear_scoring_equivalence_reduction_percent_{label}={(duplicate_rows / total) * 100.0:.3f}")
+    print(f"gear_scoring_equivalence_reduction_percent_{label}={reduction:.3f}")
 
 
 def main() -> int:
@@ -184,51 +170,53 @@ def main() -> int:
 
     sample_count = max(0, int(args.sample))
     sample_candidate = structural_candidates[0]
-    sample_gear = gear_rows_front
-    pair_count = len(sample_gear) * len(armor_rows)
-    sample_pairs = []
-    for gear_index, realization in enumerate(sample_gear):
-        for armor_index, armor_state in enumerate(armor_rows):
-            sample_pairs.append((gear_index, armor_index, realization, armor_state))
-            if len(sample_pairs) >= sample_count:
-                break
-        if len(sample_pairs) >= sample_count:
-            break
+    pair_count = len(gear_rows_front) * len(armor_rows)
 
-    print("atomic_pair_scores=")
+    # Warm one complete canonical pair and report it separately. The first evaluation
+    # initializes shared repositories/caches and is not representative of steady-state
+    # pair cost. The warm sample is deliberately excluded from projections below.
+    warm_scorer = factory(gear_rows_front[0], armor_rows[0])
+    started = perf_counter()
+    warm_value, _warm_payload, warm_unresolved = warm_scorer(key, sample_candidate)
+    warm_seconds = perf_counter() - started
+    print(
+        "cold_start_pair="
+        f"seconds={warm_seconds:.6f} value={float(warm_value):.3f} "
+        f"unresolved={len(warm_unresolved)}"
+    )
+
+    if sample_count <= 0:
+        return 0
+
+    # Spread samples across the full gear catalog instead of timing adjacent armor
+    # variants from one gear witness. This better represents steady-state pair cost.
+    sample_pairs = []
+    gear_span = max(1, len(gear_rows_front) // sample_count)
+    for index in range(sample_count):
+        gear_index = min(len(gear_rows_front) - 1, index * gear_span)
+        armor_index = index % len(armor_rows)
+        sample_pairs.append((gear_index, armor_index, gear_rows_front[gear_index], armor_rows[armor_index]))
+
+    print("warm_atomic_pair_scores=")
     total = 0.0
-    warm_total = 0.0
-    warm_count = 0
     for index, (gear_index, armor_index, realization, armor_state) in enumerate(sample_pairs, start=1):
         scorer = factory(realization, armor_state)
         started = perf_counter()
         value, _payload, unresolved = scorer(key, sample_candidate)
         elapsed = perf_counter() - started
         total += elapsed
-        if index > 1:
-            warm_total += elapsed
-            warm_count += 1
         print(
             f"  {index}: seconds={elapsed:.6f} value={float(value):.3f} "
             f"gear_index={gear_index} armor_index={armor_index} unresolved={len(unresolved)}"
         )
 
-    if sample_pairs:
-        average = total / len(sample_pairs)
-        print(f"atomic_pair_average_seconds={average:.6f}")
-        if warm_count:
-            warm_average = warm_total / warm_count
-            print(f"atomic_pair_warm_average_seconds={warm_average:.6f}")
-            print(f"warm_projected_one_structural_candidate_seconds={warm_average * pair_count:.3f}")
-            print(
-                f"warm_naive_projected_all_structural_scoring_seconds="
-                f"{warm_average * pair_count * len(structural_candidates):.3f}"
-            )
-        print(f"projected_one_structural_candidate_seconds={average * pair_count:.3f}")
-        print(
-            f"naive_projected_all_structural_scoring_seconds="
-            f"{average * pair_count * len(structural_candidates):.3f}"
-        )
+    average = total / len(sample_pairs)
+    print(f"warm_atomic_pair_average_seconds={average:.6f}")
+    print(f"projected_one_structural_candidate_seconds={average * pair_count:.3f}")
+    print(
+        f"naive_projected_all_structural_scoring_seconds="
+        f"{average * pair_count * len(structural_candidates):.3f}"
+    )
 
     return 0
 
