@@ -18,8 +18,15 @@ def test_production_xalvakka_policy_keeps_distinct_healer_obligations_blocked() 
     )
 
     manifold, stairs, split = blockers
-    assert "unavoidable flame damage" in manifold.summary
+    assert "sustained pressure semantics" in manifold.summary
+    assert "continuous unavoidable high flame damage" in manifold.summary
+    assert "Demand kind=healing and pattern=sustained are reviewed" in manifold.needed_evidence
+    assert "1.3-second damage frequency" in manifold.needed_evidence
+    assert "3 hardmode targets" in manifold.needed_evidence
+    assert "runtime/log evidence" in manifold.needed_evidence
     assert "Heal-Check (Manifold)" in manifold.source_context
+    assert "ESOAZ" in manifold.source_context
+    assert "SeaUnicorn" in manifold.source_context
 
     assert "70% and 40%" in stairs.summary
     assert "3-second preparation lead" in stairs.needed_evidence
