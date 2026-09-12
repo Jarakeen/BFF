@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from services.rotation_candidate_periodic_damage_runtime_projection_service import (
+    PeriodicDamageActivationAnchor,
     PeriodicDamageMagnitudePolicy,
     PeriodicDamageRefreshBoundary,
     RotationPeriodicDamageRuntimeSemantics,
@@ -13,10 +14,10 @@ from services.rotation_candidate_periodic_damage_runtime_projection_service impo
 class RotationDDPeriodicRuntimeSemanticsRegistryService:
     """Load reviewed DD periodic runtime semantics from versioned repository data.
 
-    The registry is deliberately evidence-only. It does not infer first-tick timing,
-    refresh behavior, magnitude timing, cadence, or successive-hit scaling from skill
-    names or tooltip prose. Missing/empty registries therefore resolve to no
-    executable periodic semantics.
+    The registry is deliberately evidence-only. It does not infer activation anchors,
+    first-tick timing, refresh behavior, magnitude timing, cadence, or successive-hit
+    scaling from skill names or tooltip prose. Missing/empty registries therefore
+    resolve to no executable periodic semantics.
     """
 
     SCHEMA_VERSION = 1
@@ -72,6 +73,9 @@ class RotationDDPeriodicRuntimeSemanticsRegistryService:
                         None
                         if row.get("successive_hit_multiplier") is None
                         else float(row["successive_hit_multiplier"])
+                    ),
+                    activation_anchor=PeriodicDamageActivationAnchor(
+                        str(row.get("activation_anchor", "cast"))
                     ),
                 )
             except (KeyError, TypeError, ValueError) as exc:
