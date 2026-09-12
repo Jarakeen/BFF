@@ -206,7 +206,7 @@ def test_unresolved_skill_name_is_reported_and_not_projected():
     assert projection.unresolved == ("Hit at 1s: ambiguous skill name",)
 
 
-def test_non_skill_actions_do_not_create_damage_events():
+def test_weapon_attacks_fail_closed_until_canonical_damage_projection_exists():
     service = _service(classifications=(_classification(),))
     plan = _plan(
         RotationAction(
@@ -218,6 +218,12 @@ def test_non_skill_actions_do_not_create_damage_events():
         RotationAction(
             time_seconds=2.0,
             sequence=0,
+            kind=RotationActionKind.HEAVY_ATTACK,
+            bar="front",
+        ),
+        RotationAction(
+            time_seconds=3.0,
+            sequence=0,
             kind=RotationActionKind.WAIT,
         ),
     )
@@ -226,7 +232,10 @@ def test_non_skill_actions_do_not_create_damage_events():
 
     assert projection.events == ()
     assert projection.dot_components == ()
-    assert projection.unresolved == ()
+    assert projection.unresolved == (
+        "light attack at 1s: canonical weapon-attack damage projection unavailable",
+        "heavy attack at 2s: canonical weapon-attack damage projection unavailable",
+    )
 
 
 def test_calculator_unresolved_is_preserved_alongside_resolved_direct_event():
