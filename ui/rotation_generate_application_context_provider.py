@@ -2,12 +2,16 @@ from __future__ import annotations
 
 from typing import Protocol
 
+from minmax.fight_damage_trajectory import RaidDamageSegment
 from minmax.resource_costs import ResourceType
 from services.canonical_knowledge_gap import (
     CanonicalKnowledgeDomain,
     CanonicalKnowledgeGap,
 )
 from services.encounter_rotation_demand_service import EncounterRotationDemandPolicy
+from services.encounter_threshold_rotation_demand_service import (
+    EncounterThresholdRotationDemandPolicy,
+)
 from services.rotation_encounter_demand_policy_registry_service import (
     RotationEncounterDemandPolicyRegistryService,
 )
@@ -22,31 +26,26 @@ from ui.rotation_selected_encounter_evidence_support import (
 
 
 class RotationGenerateEncounterDemandPolicyProvider(Protocol):
-    """Return explicit reviewed/configured demand policies for one encounter.
-
-    ``None`` means policy evidence is unavailable. An empty tuple is distinct: it means
-    the provider explicitly resolved that this Generate scope has no demand policies.
-    """
+    """Return explicit reviewed/configured demand policies for one encounter."""
 
     def policies_for(
         self,
         encounter_id: str,
     ) -> tuple[EncounterRotationDemandPolicy, ...] | None: ...
 
+    def threshold_policies_for(
+        self,
+        encounter_id: str,
+    ) -> tuple[EncounterThresholdRotationDemandPolicy, ...] | None: ...
+
 
 class RotationGenerateApplicationContextProvider:
     """Compose live canonical Generate context from authoritative page/application facts.
 
-    The provider is intentionally role-neutral. It reads the exact selected saved build,
-    exact persisted encounter identity, and explicit recovery policy controls at click
-    time. Canonical static build context owns the resource maximum. Candidate evaluator
-    and final scorecard resolvers are left unset so the dashboard composes them from the
-    exact generated seed plan.
-
-    Encounter demand policy is read from the reviewed persisted policy registry by
-    default and is never inferred from boss names, guide prose, role, or class. Missing
-    registry coverage becomes a blocking knowledge gap. Optional role evidence is
-    accepted only as an injected composer that sits above this shared boundary.
+    Clock-timed and health-threshold encounter policies are read from the reviewed
+    persisted registry. Threshold policies additionally require explicit difficulty and
+    raid DPS from the live page; constant raid DPS is represented as an explicit damage
+    trajectory rather than inferred from build potency, parse targets, or encounter name.
     """
 
     def __init__(
@@ -98,7 +97,32 @@ class RotationGenerateApplicationContextProvider:
         if maximum_amount <= 0:
             raise ValueError("canonical recovery resource maximum must be positive")
 
-        demand_policies, knowledge_gaps = self._demand_policy(encounter_id)
+        demand_policies, threshold_policies, knowledge_gaps = self._demand_policy(
+            encounter_id
+        )
+        difficulty = ""
+        threshold_segments: tuple[RaidDamageSegment, ...] = ()
+        if threshold_policies:
+            threshold_context = page.canonical_threshold_projection_policy()
+            difficulty = str(threshold_context.get("difficulty") or "").strip().casefold()
+            raid_dps = threshold_context.get("raid_dps")
+            if difficulty not in {"normal", "veteran", "hardmode"}:
+                raise ValueError(
+                    "select Normal, Veteran, or Hardmode before projecting health-threshold encounter demands"
+                )
+            if raid_dps is None or float(raid_dps) <= 0.0:
+                raise ValueError(
+                    "set explicit raid DPS before projecting health-threshold encounter demands"
+                )
+            threshold_segments = (
+                RaidDamageSegment(
+                    0.0,
+                    None,
+                    float(raid_dps),
+                    "explicit Rotation Builder constant raid DPS input",
+                ),
+            )
+
         character_id = str(
             getattr(static_context.progression, "character_id", "") or ""
         ).strip() or None
@@ -106,6 +130,9 @@ class RotationGenerateApplicationContextProvider:
         return RotationGenerateCanonicalContext(
             evidence_inputs=RotationSelectedEncounterEvidenceInputs(
                 demand_policies=demand_policies,
+                threshold_demand_policies=threshold_policies,
+                threshold_damage_segments=threshold_segments,
+                difficulty=difficulty,
                 evaluator_resolver=None,
                 scorecard_resolver=None,
                 resource=resource,
@@ -122,13 +149,16 @@ class RotationGenerateApplicationContextProvider:
         encounter_id: str,
     ) -> tuple[
         tuple[EncounterRotationDemandPolicy, ...],
+        tuple[EncounterThresholdRotationDemandPolicy, ...],
         tuple[CanonicalKnowledgeGap, ...],
     ]:
-        policies = self.demand_policy_provider.policies_for(encounter_id)
-        if policies is not None:
-            return tuple(policies), ()
+        provider = self.demand_policy_provider
+        clock_policies = provider.policies_for(encounter_id)
+        threshold_policies = provider.threshold_policies_for(encounter_id)
+        if clock_policies is not None and threshold_policies is not None:
+            return tuple(clock_policies), tuple(threshold_policies), ()
 
-        return (), (
+        return (), (), (
             CanonicalKnowledgeGap(
                 domain=CanonicalKnowledgeDomain.ENCOUNTER_DEMAND,
                 key=f"{encounter_id}.rotation_demand_policy",
@@ -136,8 +166,8 @@ class RotationGenerateApplicationContextProvider:
                     "No explicit rotation demand policy is configured for the selected encounter."
                 ),
                 needed_evidence=(
-                    "Persist or configure reviewed rotation demand policy for this encounter, "
-                    "or explicitly record that this Generate scope has no demand policies."
+                    "Persist or configure reviewed clock/threshold rotation demand policy for "
+                    "this encounter, or explicitly record that this Generate scope has no demand policies."
                 ),
                 consumers=("rotation_maker",),
                 source_context=f"selected encounter: {encounter_id}",
