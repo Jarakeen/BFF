@@ -67,18 +67,30 @@ class ExtremeResourceChampionPointStateService:
         self.audit_service = audit_service or ExtremeResourceChampionPointCoverageAuditService(
             repository=self.repository
         )
+        # One state service is shared by every finite-axis scorer created by the
+        # Extreme factory. Champion Point continuation depends only on the objective
+        # and canonical CP catalogue, not on gear, armor, class route, bar, food, or
+        # runtime candidate state. Cache the complete fail-closed result per objective
+        # so thousands of candidate scores do not rebuild the same CP audit/state.
+        self._state_cache: dict[str, ExtremeResourceChampionPointState] = {}
 
     def build(self, objective_key: str) -> ExtremeResourceChampionPointState:
         key = str(objective_key or "").strip().casefold()
+        cached = self._state_cache.get(key)
+        if cached is not None:
+            return cached
+
         audit = self.audit_service.build(key)
         if not audit.mechanic_complete:
-            return ExtremeResourceChampionPointState(
+            state = ExtremeResourceChampionPointState(
                 objective_key=key,
                 non_slottable_allocations=(),
                 slottable_allocations=(),
                 denominator_proven=False,
                 unresolved=tuple(audit.unresolved),
             )
+            self._state_cache[key] = state
+            return state
 
         non_slottable: list[tuple[str, int, float]] = []
         slottable: list[tuple[str, int, float]] = []
@@ -112,7 +124,7 @@ class ExtremeResourceChampionPointStateService:
                 for name, _points, _delta in overflow
             )
 
-        return ExtremeResourceChampionPointState(
+        state = ExtremeResourceChampionPointState(
             objective_key=key,
             non_slottable_allocations=tuple(
                 sorted(non_slottable, key=lambda row: row[0].casefold())
@@ -121,6 +133,8 @@ class ExtremeResourceChampionPointStateService:
             denominator_proven=bool(audit.denominator_proven and not unresolved),
             unresolved=unresolved,
         )
+        self._state_cache[key] = state
+        return state
 
     @staticmethod
     def materialize_progression(
