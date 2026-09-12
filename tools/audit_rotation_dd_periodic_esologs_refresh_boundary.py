@@ -65,6 +65,14 @@ def audit(
     print(f"Pairs with old periodic evidence: {report.observations_with_old_periodic}")
     print(f"Old periodic events at boundary: {report.old_tick_at_boundary_count}")
     print(f"Old periodic events after boundary: {report.old_tick_after_boundary_count}")
+    print(
+        "Exact-timestamp old ticks before new impact event: "
+        f"{report.exact_boundary_old_tick_before_impact_count}"
+    )
+    print(
+        "Exact-timestamp old ticks after new impact event:  "
+        f"{report.exact_boundary_old_tick_after_impact_count}"
+    )
     median_last = report.median_last_old_periodic_offset_seconds
     print(
         "Median last old periodic event relative to new impact: "
@@ -84,6 +92,22 @@ def audit(
     print(f"Common last-old offsets: {_common(last_offsets)}")
     print(f"Common first-new offsets: {_common(new_offsets)}")
 
+    exact_rows = tuple(
+        item
+        for item in report.observations
+        if item.exact_boundary_old_tick_event_indices
+    )
+    if exact_rows:
+        print("Exact-timestamp event ordering:")
+        for item in exact_rows[:12]:
+            print(
+                "  - "
+                f"report={item.report_code} fight={item.fight_id} source={item.source_id} "
+                f"old_track={item.old_cast_track_id} new_track={item.new_cast_track_id} "
+                f"impact_event_index={item.new_impact_event_index} "
+                f"old_tick_event_indices={','.join(str(value) for value in item.exact_boundary_old_tick_event_indices)}"
+            )
+
     if report.unresolved:
         print("Unresolved evidence:")
         for item in report.unresolved:
@@ -91,8 +115,8 @@ def audit(
 
     print()
     print(
-        "Result: OBSERVATIONAL ONLY — this report can support review of the refresh "
-        "boundary, but it never promotes executable semantics automatically."
+        "Result: OBSERVATIONAL ONLY — timestamp ties use ESO Logs event_index ordering, "
+        "but this report still never promotes executable refresh semantics automatically."
     )
     return 0
 
