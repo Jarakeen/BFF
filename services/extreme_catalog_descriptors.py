@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Service-catalog descriptors for Extreme named-gear proof/search responsibilities."""
+"""Service-catalog descriptors for Extreme proof/search responsibilities."""
 
 from services.service_catalog import (
     EvidenceClass,
@@ -10,6 +10,25 @@ from services.service_catalog import (
 
 
 EXTREME_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
+    ServiceDescriptor(
+        service_id="extreme.resource_canonical_static_snapshot",
+        domain="extreme",
+        purpose=(
+            "Own one process-local read-only snapshot of canonical database evidence and "
+            "repository lifetimes for exhaustive max-resource scoring without duplicating stat math."
+        ),
+        implementation_path="services.extreme_resource_canonical_static_snapshot_service",
+        inputs=("CanonicalEsoDatabase",),
+        outputs=("ExtremeResourceCanonicalStaticSnapshot",),
+        responsibilities=("extreme_resource_canonical_static_evidence_snapshot",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "This service changes when immutable evidence is loaded, not how a candidate is scored. "
+            "Canonical repositories and calculation services remain authoritative; preload failures "
+            "stay explicit and a fresh process receives a fresh database snapshot."
+        ),
+    ),
     ServiceDescriptor(
         service_id="extreme.max_resource_ordinary_named_gear_search",
         domain="extreme",
