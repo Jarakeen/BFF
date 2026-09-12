@@ -180,3 +180,44 @@ def test_real_xalvakka_projection_exposes_phase_and_split_structure():
     assert "Split" in names
     assert "Phase 3 Meteors" in names
     assert "Havocrel Goliath Summons" in names
+
+
+def test_bahsei_reviewed_research_populates_overview_without_canonical_packet():
+    projection = EncounterGuideEvidenceProjectionService(DATA).get(
+        "flame_herald_bahsei", "Flame-Herald Bahsei"
+    )
+
+    names = {row.mechanic for row in projection.strategy}
+    brief = "\n".join(projection.brief)
+
+    assert "Skull Salvo" in names
+    assert "Cursed Ground/Unholy Spike" in names
+    assert "Death Touch/Kiss of Death" in names
+    assert "Meteor Swarm" in names
+    assert "Summoning Runes" in names
+    assert "Summon Behemoth" in names
+    assert "Dagon's Wrath" in names
+    assert "90%, 85%, 80%, 75%, 70%, 65%, and 60%" in brief
+    assert "50%, 40%, 25%, 20%, and 10%" in brief
+
+    curse = next(row for row in projection.strategy if row.mechanic == "Death Touch/Kiss of Death")
+    assert "separation" in curse.mitigation.casefold()
+
+
+def test_oaxiltso_reviewed_research_populates_overview_without_canonical_packet():
+    projection = EncounterGuideEvidenceProjectionService(DATA).get(
+        "oaxiltso", "Oaxiltso"
+    )
+
+    names = {row.mechanic for row in projection.strategy}
+    brief = "\n".join(projection.brief)
+
+    assert "Savage Blitz" in names
+    assert "Fiery Stomp" in names
+    assert "Blistering Smash" in names
+    assert "Noxious Sludge" in names
+    assert "Summon Havocrel Annihilators" in names
+    assert "90%, 75%, 50%, and 25%" in brief
+
+    blitz = next(row for row in projection.strategy if row.mechanic == "Savage Blitz")
+    assert "dodge" in blitz.mitigation.casefold()
