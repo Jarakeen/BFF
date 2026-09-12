@@ -353,17 +353,24 @@ class ExtremeObjectiveNamedGearSetCatalogRealizationService:
             from services.extreme_max_resource_joint_feasibility_search_service import (
                 ExtremeMaxResourceJointFeasibilitySearchService,
             )
-            from services.extreme_max_resource_named_gear_realization_adapter_service import (
-                ExtremeMaxResourceNamedGearRealizationAdapterService,
+            from services.extreme_max_resource_named_gear_candidate_realization_adapter_service import (
+                ExtremeMaxResourceNamedGearCandidateRealizationAdapterService,
+            )
+            from services.extreme_max_resource_named_gear_candidate_search_service import (
+                ExtremeMaxResourceNamedGearCandidateSearchService,
             )
 
-            search = ExtremeMaxResourceJointFeasibilitySearchService(
+            ordinary = ExtremeMaxResourceJointFeasibilitySearchService(
                 breakpoints=self.breakpoints,
                 eligibility=self.eligibility,
                 relevance=self.relevance,
+            )
+            candidate_search = ExtremeMaxResourceNamedGearCandidateSearchService(
+                ordinary_service=ordinary,
+                eligibility=self.eligibility,
             ).search(topology_catalog)
-            return ExtremeMaxResourceNamedGearRealizationAdapterService.build(
-                search=search,
+            return ExtremeMaxResourceNamedGearCandidateRealizationAdapterService.build(
+                search=candidate_search,
                 topology_catalog=topology_catalog,
                 relevance=self.relevance,
             )
