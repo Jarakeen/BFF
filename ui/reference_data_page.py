@@ -307,10 +307,11 @@ class ReferenceDataPage(FoundryPage):
         right.addWidget(death, 2)
 
         image = FoundryCard("Mechanic Visual", "◉").set_watermark("compass", 0.06)
-        self.visual = QLabel(
-            "MECHANIC / ATTACK VISUAL\n\n"
-            "Artwork, icon, combat-log sample,\n"
-            "or positioning diagram can live here."
+        from ui.components.field_office_empty_artwork import FieldOfficeEmptyArtwork
+
+        self.visual = FieldOfficeEmptyArtwork(
+            "unrecorded_mechanic.webp",
+            "Mechanic visual not recorded\nField sketch only • no verified attack diagram",
         )
         self.visual.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.visual.setMinimumHeight(260)

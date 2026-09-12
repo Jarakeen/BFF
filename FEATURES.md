@@ -24,6 +24,9 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Raid Engine overview accents and New Build entry adapt to Foundry teal/amber or Rylo's squared steel palette, with text and numeric progress cues alongside color
 - Raid Engine overview cards reflow into fewer columns when the available desktop width is narrow
 - Main and Coverage share canonical saved-build effect evidence: available static sources, conditional sources, effects not identified, and unmapped or unaudited effects remain distinct; Coverage filters work without inferring assignments or uptime
+- Raid Engine dashboard sends explicit Team Optimization slot/build selections into a labeled Coverage scope; Coverage can switch between that team snapshot and all saved builds without inferring provider assignments
+- Raid Engine dashboard summarizes static coverage evidence with distinct available, conditional, not-identified, and unverified labels rather than treating an unknown effect as missing
+- Empty boss, mechanic, positioning, and Raid Map panels use distinct compact field-art placeholders for Foundry and Rylo, with visible labels that distinguish decorative art from reviewed encounter evidence
 - Main character overview dashboard
 - Role-aware application surfaces
 - Archive page / archived data access
@@ -385,6 +388,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 ## Raid Maps & Encounter Visualization
 
 - Raid map support
+- Empty Raid Map and positioning previews show clearly labeled decorative placeholders until a real map or captured positioning is available
 - Animated raid maps
 - Encounter-position visualization
 - Mechanic-position visualization

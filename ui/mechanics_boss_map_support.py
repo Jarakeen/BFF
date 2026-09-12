@@ -237,7 +237,12 @@ def _map_tab(self) -> QWidget:
     toolbar.addWidget(self.remove_raid_map_button)
     root.addLayout(toolbar)
 
-    self.raid_map_preview = QLabel("No Raid Maps saved for this boss.")
+    from ui.components.field_office_empty_artwork import FieldOfficeEmptyArtwork
+
+    self.raid_map_preview = FieldOfficeEmptyArtwork(
+        "unrecorded_raid_map.webp",
+        "No Raid Maps saved for this boss.\nUse Add Raid Map to attach a strategy image.",
+    )
     self.raid_map_preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
     self.raid_map_preview.setWordWrap(True)
     self.raid_map_preview.setMinimumHeight(430)

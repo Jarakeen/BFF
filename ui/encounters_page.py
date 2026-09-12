@@ -164,7 +164,12 @@ class EncountersPage(FoundryPage):
         phase_row.addWidget(phase_list)
 
         self.positioning_card = FoundryCard("Positioning", "treasure-map").set_watermark("compass", 0.035)
-        self.positioning_preview = QLabel()
+        from ui.components.field_office_empty_artwork import FieldOfficeEmptyArtwork
+
+        self.positioning_preview = FieldOfficeEmptyArtwork(
+            "unrecorded_raid_map.webp",
+            "No positioning capture yet.\nBuild the encounter on the Mechanics tab, then Capture Positioning.",
+        )
         self.positioning_preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.positioning_preview.setMinimumHeight(300)
         self.positioning_preview.setProperty("positioningMap", True)

@@ -94,7 +94,11 @@ class MechanicsPage(FoundryPage):
         boss_card = FoundryCard("Encounter", "♜").set_watermark("compass", 0.045)
         boss_card.setProperty("bossHeroCard", True)
         boss_body = QHBoxLayout()
-        artwork = QLabel("BOSS ARTWORK")
+        from ui.components.field_office_empty_artwork import FieldOfficeEmptyArtwork
+
+        artwork = FieldOfficeEmptyArtwork(
+            "unrecorded_boss.webp", "Boss portrait not recorded\nField sketch only • identity unverified"
+        )
         artwork.setMinimumSize(280, 170)
         artwork.setAlignment(Qt.AlignmentFlag.AlignCenter)
         artwork.setProperty("bossArtworkPlaceholder", True)
