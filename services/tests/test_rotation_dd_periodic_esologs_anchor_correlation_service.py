@@ -99,6 +99,22 @@ def test_correlates_cast_impact_and_clustered_periodic_occurrences(tmp_path) -> 
     assert report.median_cast_to_impact_seconds == pytest.approx(0.15)
     assert report.median_impact_to_first_periodic_seconds == pytest.approx(1.0)
 
+    assert len(report.cast_impact_observations) == 1
+    observation = report.cast_impact_observations[0]
+    assert observation.skill_entity_id == "stampede"
+    assert observation.report_code == "R"
+    assert observation.fight_id == 1
+    assert observation.source_id == 42
+    assert observation.cast_event_index == 1
+    assert observation.cast_timestamp_ms == pytest.approx(1000.0)
+    assert observation.cast_ability_id == 39807
+    assert observation.impact_event_index == 2
+    assert observation.impact_timestamp_ms == pytest.approx(1150.0)
+    assert observation.impact_ability_id == 38792
+    assert observation.cast_track_id == 10
+    assert observation.cast_track_linked is True
+    assert observation.cast_to_impact_seconds == pytest.approx(0.15)
+
 
 def test_prefers_cast_track_linked_effect_rows(tmp_path) -> None:
     canonical = tmp_path / "canonical.db"
@@ -121,6 +137,39 @@ def test_prefers_cast_track_linked_effect_rows(tmp_path) -> None:
     assert report.cast_to_impact_seconds == pytest.approx((0.2,))
     assert report.impact_to_first_periodic_seconds == pytest.approx((1.0,))
     assert report.periodic_intervals_seconds == pytest.approx((1.0,))
+    assert len(report.cast_impact_observations) == 1
+    observation = report.cast_impact_observations[0]
+    assert observation.impact_event_index == 3
+    assert observation.impact_timestamp_ms == pytest.approx(1200.0)
+    assert observation.cast_track_id == 10
+    assert observation.cast_track_linked is True
+
+
+def test_retains_fallback_impact_as_unlinked_observational_evidence(tmp_path) -> None:
+    canonical = tmp_path / "canonical.db"
+    logs = tmp_path / "logs.db"
+    _logs(logs)
+    _event(logs, 1, 1000, "cast", 39807, track=10, name="Stampede")
+    _event(logs, 2, 1125, "damage", 38792, track=99)
+    _event(logs, 3, 2125, "damage", 126474, track=99)
+    _event(logs, 4, 3125, "damage", 126474, track=99)
+
+    report = _service(canonical, logs).inspect(
+        "stampede",
+        impact_ability_id=38792,
+        periodic_ability_id=126474,
+        active_window_seconds=15.0,
+    )
+
+    assert report.cast_to_impact_seconds == pytest.approx((0.125,))
+    assert report.cast_track_linked_impact_count == 0
+    assert len(report.cast_impact_observations) == 1
+    observation = report.cast_impact_observations[0]
+    assert observation.cast_event_index == 1
+    assert observation.impact_event_index == 2
+    assert observation.cast_track_id == 10
+    assert observation.cast_track_linked is False
+    assert observation.cast_to_impact_seconds == pytest.approx(0.125)
 
 
 def test_missing_effect_rows_fail_closed(tmp_path) -> None:
@@ -138,5 +187,6 @@ def test_missing_effect_rows_fail_closed(tmp_path) -> None:
 
     assert report.impact_observation_count == 0
     assert report.periodic_observation_count == 0
+    assert report.cast_impact_observations == ()
     assert any("no impact ability 38792" in item for item in report.unresolved)
     assert any("no periodic ability 126474" in item for item in report.unresolved)
