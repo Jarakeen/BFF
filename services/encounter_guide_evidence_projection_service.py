@@ -39,6 +39,7 @@ class EncounterGuideEvidenceProjection:
     strategy: tuple[EncounterGuideStrategyRow, ...]
     callouts: tuple[str, ...]
     brief: tuple[str, ...]
+    role_impact: tuple[str, ...]
     evidence_rows: int
 
 
@@ -220,6 +221,57 @@ def _overview_brief_rows(facts: tuple[ReconciledEncounterFact, ...]) -> tuple[st
     return tuple(result[:6])
 
 
+def _fact_subject(fact_key: str) -> str:
+    key = str(fact_key or "").strip().casefold()
+    for suffix in ("_core_behavior", "_behavior", "_targeting", "_detail"):
+        if key.endswith(suffix):
+            key = key[: -len(suffix)]
+            break
+    if "_behavior_" in key:
+        key = key.split("_behavior_", 1)[0]
+    return _human_key(key)
+
+
+def _role_impact_rows(facts: tuple[ReconciledEncounterFact, ...]) -> tuple[str, ...]:
+    """Derive role implications only from explicit structured reviewed fields."""
+    rows: list[str] = []
+    for fact in facts:
+        if not fact.safe_for_review or not isinstance(fact.value, dict):
+            continue
+        kind = fact.fact_type.casefold()
+        value = fact.value
+
+        if str(value.get("target") or "").casefold() == "taunt_target":
+            subject = _fact_subject(fact.fact_key) or "Taunt-target mechanic"
+            details: list[str] = []
+            if value.get("leaves_acid_pools") is True:
+                details.append("leaves persistent pools")
+            if value.get("applies_stacking_acid_vulnerability") is True:
+                details.append("applies stacking vulnerability")
+            suffix = f"; {', '.join(details)}" if details else ""
+            rows.append(f"Tanks — {subject} targets the taunt target{suffix}.")
+
+        if kind == "damage_window":
+            boss_unavailable = value.get("boss_targetable") is False or value.get("boss_damageable") is False
+            if boss_unavailable and value.get("adds_active") is True:
+                rows.append(
+                    "Damage Dealers — Reviewed boss downtime has an unavailable boss target while adds remain active."
+                )
+            if value.get("raid_damage_active") is True:
+                rows.append(
+                    "Healers — Reviewed boss downtime still has active raid damage; healing pressure does not pause with boss damage."
+                )
+
+    seen: set[str] = set()
+    result: list[str] = []
+    for row in rows:
+        if row in seen:
+            continue
+        seen.add(row)
+        result.append(row)
+    return tuple(result[:6])
+
+
 def _load_json(path: Path) -> dict[str, Any]:
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
@@ -276,13 +328,14 @@ class EncounterGuideEvidenceProjectionService:
         encounter_id = str(encounter_id or "").strip()
         packets = self._packets(encounter_id)
         if not packets:
-            return EncounterGuideEvidenceProjection(encounter_id, encounter_name, (), (), (), (), 0)
+            return EncounterGuideEvidenceProjection(encounter_id, encounter_name, (), (), (), (), (), 0)
 
         resolved_name = str(encounter_name or packets[0].encounter_name or encounter_id).strip()
         evidence = tuple(row for packet in packets for row in packet.evidence)
         facts = tuple(reconcile_encounter_evidence(evidence))
         timeline = _timeline_rows(facts)
         brief = _overview_brief_rows(facts)
+        role_impact = _role_impact_rows(facts)
 
         common_names = self._common_names()
         mitigations = self._mitigations()
@@ -330,5 +383,6 @@ class EncounterGuideEvidenceProjectionService:
             strategy=tuple(strategy),
             callouts=callouts,
             brief=brief,
+            role_impact=role_impact,
             evidence_rows=len(evidence),
         )
