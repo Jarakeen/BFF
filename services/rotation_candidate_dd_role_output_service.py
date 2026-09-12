@@ -79,7 +79,9 @@ class RotationCandidateDDRoleOutputService:
 
     Periodic damage and proc damage must be included by the action owner that
     spawned them, within the selected plan horizon. The aggregator never guesses
-    ticks from duration or manufactures proc schedules itself.
+    ticks from duration or manufactures proc schedules itself. Provider blockers are
+    preserved verbatim but prefixed with exact scheduled-action identity so repeated
+    casts cannot collapse into ambiguous whole-plan diagnostics.
     """
 
     def __init__(
@@ -115,12 +117,14 @@ class RotationCandidateDDRoleOutputService:
                     f"got ({evidence.time_seconds:g}s, {evidence.sequence})"
                 )
 
+            action_identity = self._action_identity(action)
             if evidence.unresolved:
-                unresolved.extend(evidence.unresolved)
+                unresolved.extend(
+                    f"{action_identity}: {message}" for message in evidence.unresolved
+                )
             elif evidence.damage_value is None:
                 unresolved.append(
-                    f"{action.time_seconds:g}s #{action.sequence} "
-                    f"{action.kind.value}: damage consequence unavailable"
+                    f"{action_identity}: damage consequence unavailable"
                 )
             else:
                 total_damage += evidence.damage_value
@@ -137,6 +141,14 @@ class RotationCandidateDDRoleOutputService:
             candidate_id=candidate.candidate_id,
             value=value,
             unresolved=tuple(unresolved),
+        )
+
+    @staticmethod
+    def _action_identity(action: RotationAction) -> str:
+        name = f" {action.name}" if action.name else ""
+        return (
+            f"{action.time_seconds:g}s #{action.sequence} "
+            f"{action.kind.value}{name}"
         )
 
 
