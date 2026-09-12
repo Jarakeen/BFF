@@ -14,6 +14,10 @@ from services.rotation_candidate_periodic_damage_runtime_projection_service impo
 from services.rotation_dd_periodic_runtime_semantics_registry_service import (
     RotationDDPeriodicRuntimeSemanticsRegistryService,
 )
+from services.rotation_dd_periodic_runtime_semantics_review_service import (
+    RotationDDPeriodicRuntimeSemanticsReviewEntry,
+    RotationDDPeriodicRuntimeSemanticsReviewService,
+)
 from services.rotation_dd_reviewed_skill_component_repository import (
     RotationDDReviewedSkillComponentRepository,
 )
@@ -21,12 +25,13 @@ from services.rotation_dd_reviewed_skill_component_repository import (
 
 @dataclass(frozen=True)
 class RotationDDPeriodicRuntimeSemanticsGap:
-    """One verified periodic damage component still missing reviewed runtime semantics."""
+    """One verified periodic damage component still missing executable runtime semantics."""
 
     skill_entity_id: str
     skill_rank_id: int
     coefficient_number: int
     classification_source: str = ""
+    partial_review: RotationDDPeriodicRuntimeSemanticsReviewEntry | None = None
 
 
 @dataclass(frozen=True)
@@ -49,9 +54,10 @@ class RotationDDPeriodicRuntimeSemanticsGapAuditService:
     Numeric ESO ability IDs remain repository crosswalk details and are never used as
     the durable audit key. Reviewed DD component identities are layered over the
     read-only canonical database before periodic filtering. Only components explicitly
-    classified as damage + DoT are eligible for the missing-semantics queue. Unknown
-    periodic identity stays unresolved rather than being guessed from duration,
-    tooltip prose, or names.
+    classified as damage + DoT are eligible for the missing-semantics queue. Partial
+    review evidence is attached to missing gaps for diagnostics only; it never counts
+    as executable semantics. Unknown periodic identity stays unresolved rather than
+    being guessed from duration, tooltip prose, or names.
     """
 
     def __init__(
@@ -61,6 +67,7 @@ class RotationDDPeriodicRuntimeSemanticsGapAuditService:
         coefficient_repository: SkillCoefficientRepository | None = None,
         component_repository: SkillComponentRepository | object | None = None,
         semantics_registry: RotationDDPeriodicRuntimeSemanticsRegistryService | None = None,
+        review_service: RotationDDPeriodicRuntimeSemanticsReviewService | object | None = None,
     ) -> None:
         self.database_path = Path(database_path)
         self.coefficients = coefficient_repository or SkillCoefficientRepository(
@@ -72,6 +79,7 @@ class RotationDDPeriodicRuntimeSemanticsGapAuditService:
         self.semantics_registry = (
             semantics_registry or RotationDDPeriodicRuntimeSemanticsRegistryService()
         )
+        self.review_service = review_service or RotationDDPeriodicRuntimeSemanticsReviewService()
 
     def audit_build(
         self,
@@ -110,6 +118,7 @@ class RotationDDPeriodicRuntimeSemanticsGapAuditService:
             (item.skill_entity_id, item.coefficient_number): item
             for item in reviewed_registry
         }
+        partial_review_by_key = self.review_service.by_component()
 
         reviewed: list[RotationPeriodicDamageRuntimeSemantics] = []
         missing: list[RotationDDPeriodicRuntimeSemanticsGap] = []
@@ -160,6 +169,7 @@ class RotationDDPeriodicRuntimeSemanticsGapAuditService:
                         skill_rank_id=rank.skill_rank_id,
                         coefficient_number=component.coefficient_number,
                         classification_source=str(component.source or "").strip(),
+                        partial_review=partial_review_by_key.get(key),
                     )
                 )
 
