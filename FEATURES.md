@@ -240,6 +240,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Role-aware rotation construction
 - Healer rotation construction
 - Shared canonical multi-demand healer role-output composition for audits and production callers
+- Generate-time healer role evidence from the selected saved build and canonical healing-demand bundle
 - Demand-window scoping for externally triggered healer effects
 - Explicit-attacker Minor Lifesteal demand projection
 - Read-only Minor Lifesteal runtime evidence discovery from ESO Logs
