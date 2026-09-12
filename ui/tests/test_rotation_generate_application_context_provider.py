@@ -30,13 +30,18 @@ class _StaticContextService:
 
 
 class _PolicyProvider:
-    def __init__(self, result) -> None:
-        self.result = result
+    def __init__(self, clock=(), threshold=()) -> None:
+        self.clock = clock
+        self.threshold = threshold
         self.calls = []
 
     def policies_for(self, encounter_id):
-        self.calls.append(encounter_id)
-        return self.result
+        self.calls.append(("clock", encounter_id))
+        return self.clock
+
+    def threshold_policies_for(self, encounter_id):
+        self.calls.append(("threshold", encounter_id))
+        return self.threshold
 
 
 class _Page:
@@ -46,6 +51,10 @@ class _Page:
         self.policy = {
             "resource": ResourceType.MAGICKA,
             "trigger_fraction": 0.35,
+        }
+        self.threshold_policy = {
+            "difficulty": None,
+            "raid_dps": None,
         }
 
     def _selected_build(self):
@@ -57,11 +66,14 @@ class _Page:
     def canonical_recovery_policy(self):
         return dict(self.policy)
 
+    def canonical_threshold_projection_policy(self):
+        return dict(self.threshold_policy)
+
 
 def test_live_context_uses_exact_build_encounter_explicit_policy_and_static_maximum() -> None:
     static = _StaticContextService(_StaticContext())
     demand_policy = object()
-    policies = _PolicyProvider((demand_policy,))
+    policies = _PolicyProvider(clock=(demand_policy,))
     composer = object()
     provider = RotationGenerateApplicationContextProvider(
         static_context_service=static,  # type: ignore[arg-type]
@@ -73,8 +85,14 @@ def test_live_context_uses_exact_build_encounter_explicit_policy_and_static_maxi
     context = provider.context_for(page)
 
     assert static.calls == [page.build]
-    assert policies.calls == ["rockgrove_xalvakka"]
+    assert policies.calls == [
+        ("clock", "rockgrove_xalvakka"),
+        ("threshold", "rockgrove_xalvakka"),
+    ]
     assert context.evidence_inputs.demand_policies == (demand_policy,)
+    assert context.evidence_inputs.threshold_demand_policies == ()
+    assert context.evidence_inputs.threshold_damage_segments == ()
+    assert context.evidence_inputs.difficulty == ""
     assert context.evidence_inputs.evaluator_resolver is None
     assert context.evidence_inputs.scorecard_resolver is None
     assert context.evidence_inputs.resource is ResourceType.MAGICKA
@@ -85,15 +103,49 @@ def test_live_context_uses_exact_build_encounter_explicit_policy_and_static_maxi
     assert context.character_id == "magrat-id"
 
 
+def test_threshold_policy_requires_explicit_difficulty_and_raid_dps() -> None:
+    threshold_policy = object()
+    provider = RotationGenerateApplicationContextProvider(
+        static_context_service=_StaticContextService(_StaticContext()),  # type: ignore[arg-type]
+        demand_policy_provider=_PolicyProvider(threshold=(threshold_policy,)),  # type: ignore[arg-type]
+    )
+    page = _Page()
+
+    try:
+        provider.context_for(page)
+    except ValueError as exc:
+        assert "select Normal, Veteran, or Hardmode" in str(exc)
+    else:
+        raise AssertionError("threshold policy without difficulty should block Generate")
+
+    page.threshold_policy["difficulty"] = "hardmode"
+    try:
+        provider.context_for(page)
+    except ValueError as exc:
+        assert "set explicit raid DPS" in str(exc)
+    else:
+        raise AssertionError("threshold policy without raid DPS should block Generate")
+
+    page.threshold_policy["raid_dps"] = 2_000_000.0
+    context = provider.context_for(page)
+    assert context.evidence_inputs.threshold_demand_policies == (threshold_policy,)
+    assert context.evidence_inputs.difficulty == "hardmode"
+    assert len(context.evidence_inputs.threshold_damage_segments) == 1
+    segment = context.evidence_inputs.threshold_damage_segments[0]
+    assert segment.damage_per_second == 2_000_000.0
+    assert "explicit Rotation Builder" in segment.source
+
+
 def test_missing_demand_policy_is_blocking_not_silently_empty() -> None:
     provider = RotationGenerateApplicationContextProvider(
         static_context_service=_StaticContextService(_StaticContext()),  # type: ignore[arg-type]
-        demand_policy_provider=None,
+        demand_policy_provider=_PolicyProvider(clock=None, threshold=None),  # type: ignore[arg-type]
     )
 
     context = provider.context_for(_Page())
 
     assert context.evidence_inputs.demand_policies == ()
+    assert context.evidence_inputs.threshold_demand_policies == ()
     assert len(context.evidence_inputs.knowledge_gaps) == 1
     gap = context.evidence_inputs.knowledge_gaps[0]
     assert gap.blocking is True
@@ -102,22 +154,22 @@ def test_missing_demand_policy_is_blocking_not_silently_empty() -> None:
 
 
 def test_explicit_empty_demand_policy_is_distinct_from_unknown_policy() -> None:
-    policies = _PolicyProvider(())
     provider = RotationGenerateApplicationContextProvider(
         static_context_service=_StaticContextService(_StaticContext()),  # type: ignore[arg-type]
-        demand_policy_provider=policies,  # type: ignore[arg-type]
+        demand_policy_provider=_PolicyProvider(clock=(), threshold=()),  # type: ignore[arg-type]
     )
 
     context = provider.context_for(_Page())
 
     assert context.evidence_inputs.demand_policies == ()
+    assert context.evidence_inputs.threshold_demand_policies == ()
     assert context.evidence_inputs.knowledge_gaps == ()
 
 
 def test_live_context_requires_explicit_recovery_resource_and_trigger() -> None:
     provider = RotationGenerateApplicationContextProvider(
         static_context_service=_StaticContextService(_StaticContext()),  # type: ignore[arg-type]
-        demand_policy_provider=_PolicyProvider(()),  # type: ignore[arg-type]
+        demand_policy_provider=_PolicyProvider(),  # type: ignore[arg-type]
     )
     page = _Page()
     page.policy["resource"] = None
@@ -144,7 +196,7 @@ def test_unresolved_static_context_blocks_instead_of_inventing_resource_maximum(
         static_context_service=_StaticContextService(
             _StaticContext(resolved=False, unresolved=("unknown gear effect",))
         ),  # type: ignore[arg-type]
-        demand_policy_provider=_PolicyProvider(()),  # type: ignore[arg-type]
+        demand_policy_provider=_PolicyProvider(),  # type: ignore[arg-type]
     )
 
     try:
