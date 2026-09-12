@@ -22,8 +22,10 @@ def _evidence(
     name: str,
     piece_count: int,
     effect: Effect | None = None,
+    effects: tuple[Effect, ...] | None = None,
     search_state_rule: ExtremeGearSearchStateRule | None = None,
 ) -> ExtremeGearSetObjectiveBreakpointEvidence:
+    source_effects = tuple(effects) if effects is not None else (() if effect is None else (effect,))
     candidate = ExtremeGearSetObjectiveCandidate(
         set_id=set_id,
         set_name=name,
@@ -31,7 +33,7 @@ def _evidence(
         equipped_piece_count=piece_count,
         objective_key="max_health",
         reviewed_delta=0.0,
-        source_effects=(() if effect is None else (effect,)),
+        source_effects=source_effects,
         unresolved=("special runtime/search-state review",),
     )
     return ExtremeGearSetObjectiveBreakpointEvidence(
@@ -49,7 +51,7 @@ def _evidence(
 def _effect(
     *,
     value: float,
-    condition: str,
+    condition: str = "",
     operation: EffectOperation = EffectOperation.ADD,
     unit: EffectUnit = EffectUnit.FLAT,
 ) -> Effect:
@@ -60,7 +62,7 @@ def _effect(
         stat=StatId.MAX_HEALTH,
         kind=EffectKind.STAT,
         unit=unit,
-        condition=condition,
+        condition=(condition or None),
     )
 
 
@@ -124,6 +126,52 @@ def test_classifies_conditional_flat_percent_and_search_state_branches() -> None
     )
 
 
+def test_cumulative_breakpoint_bundle_keeps_baseline_and_runtime_obligation() -> None:
+    relevance = ExtremeGearSetObjectiveRelevanceCatalog(
+        objective_key="max_health",
+        evidence=(
+            _evidence(
+                set_id=287,
+                name="Green Pact",
+                piece_count=5,
+                effects=(
+                    _effect(value=1206.0),
+                    _effect(value=1206.0),
+                    _effect(value=2500.0, condition="food_buff_active"),
+                ),
+            ),
+            _evidence(
+                set_id=178,
+                name="Armor Master",
+                piece_count=5,
+                effects=(
+                    _effect(value=1206.0),
+                    _effect(
+                        value=5.0,
+                        condition="armor_ability_slotted",
+                        operation=EffectOperation.ADD_PERCENT,
+                        unit=EffectUnit.PERCENT,
+                    ),
+                ),
+            ),
+        ),
+    )
+
+    result = ExtremeMaxHealthSpecialNamedGearBranchService(relevance).build(
+        ((287, "Green Pact", 5), (178, "Armor Master", 5))
+    )
+
+    assert result.denominator_classified is True
+    assert not result.unresolved
+    by_name = {row.set_name: row for row in result.branches}
+    assert by_name["Green Pact"].kind is ExtremeMaxHealthSpecialBranchKind.CONDITIONAL_BUNDLE
+    assert len(by_name["Green Pact"].target_effects) == 3
+    assert by_name["Green Pact"].required_conditions == ("food_buff_active",)
+    assert by_name["Armor Master"].kind is ExtremeMaxHealthSpecialBranchKind.CONDITIONAL_BUNDLE
+    assert len(by_name["Armor Master"].target_effects) == 2
+    assert by_name["Armor Master"].required_conditions == ("armor_ability_slotted",)
+
+
 def test_missing_requested_pair_keeps_denominator_open() -> None:
     relevance = ExtremeGearSetObjectiveRelevanceCatalog(
         objective_key="max_health",
@@ -166,7 +214,7 @@ def test_unconditioned_non_search_state_effect_fails_closed() -> None:
     )
 
     assert result.denominator_classified is False
-    assert "has no explicit condition" in result.unresolved[0]
+    assert "contains no conditional or percentage effect" in result.unresolved[0]
 
 
 def test_wrong_objective_is_rejected() -> None:
