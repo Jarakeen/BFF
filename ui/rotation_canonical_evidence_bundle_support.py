@@ -5,15 +5,23 @@ from pathlib import Path
 
 from engine.config import get_data_dir
 from minmax.character_build.passive_grant import PassiveGrant
+from minmax.fight_damage_trajectory import RaidDamageSegment
 from minmax.resource_costs import ResourceType
 from minmax.rotation_demand_window import RotationDemandWindow
 from services.canonical_knowledge_gap import CanonicalKnowledgeGap
 from services.canonical_mechanics_coverage_audit import CanonicalMechanicsCoverageReport
 from services.encounter_boss_guide import EncounterBossGuideService
+from services.encounter_health_threshold_projection_service import (
+    EncounterHealthThresholdProjectionService,
+)
 from services.encounter_rotation_demand_service import (
     EncounterRotationDemandPolicy,
     EncounterRotationDemandProjection,
     EncounterRotationDemandService,
+)
+from services.encounter_threshold_rotation_demand_service import (
+    EncounterThresholdRotationDemandPolicy,
+    EncounterThresholdRotationDemandService,
 )
 from services.rotation_candidate_generation_service import RotationRefreshLeadCandidateOption
 from services.rotation_effect_uptime_service import RotationEffectUptimeRequirement
@@ -32,27 +40,7 @@ from services.rotation_recovery_heavy_replay_service import (
 
 @dataclass(frozen=True)
 class RotationCanonicalEvidenceBundle:
-    """Application-ready evidence for one canonical rotation candidate run.
-
-    Broad mechanics coverage may be retained for later CharacterBuild-specific
-    dependency discovery. Explicitly scoped coverage gaps can still participate in
-    immediate readiness when the caller already knows the required dependency keys.
-
-    ``content_type`` is copied from persisted canonical content metadata for the
-    selected encounter. Consumers may use that fact instead of asking callers to
-    restate whether an encounter is a trial, dungeon, or arena.
-
-    The evaluator and final scorecard resolver may both be ``None``. The canonical
-    dashboard candidate boundary then composes the pair from the exact generated seed
-    plan through the shared Generate resolver service. Resolver absence is therefore
-    a composition choice, not missing mechanics evidence.
-
-    ``restoration_resolver`` is an optional explicit override. When omitted, the
-    effect-aware recovery pipeline derives Heavy Attack completion/restoration from
-    the generated plan's verified channel-reservation provenance and canonical saved-
-    character mechanics. Explicit resolvers remain available for reviewed research,
-    diagnostics, and compatibility callers.
-    """
+    """Application-ready evidence for one canonical rotation candidate run."""
 
     encounter_id: str
     encounter_name: str
@@ -88,8 +76,6 @@ class RotationCanonicalEvidenceBundle:
         return not self.unresolved and not self.blocking_knowledge_gaps
 
     def research_for(self, consumer: str) -> tuple[CanonicalKnowledgeGap, ...]:
-        """Return currently materialized blocking and advisory research for a consumer."""
-
         key = str(consumer or "").strip().casefold()
         if not key:
             raise ValueError("research consumer must be non-empty")
@@ -99,10 +85,11 @@ class RotationCanonicalEvidenceBundle:
 class RotationCanonicalEvidenceBundleSupport:
     """Assemble canonical encounter evidence without inventing execution facts.
 
-    If explicit ``coverage_dependency_keys`` are supplied, those mechanics are scoped
-    immediately and can affect bundle readiness. If a broad coverage report is supplied
-    without explicit dependencies, the report is retained but its global gaps are not
-    merged yet; the resolved CharacterBuild later discovers which rows actually matter.
+    Clock-timed facts are projected directly through ``EncounterRotationDemandService``.
+    Health-threshold policies are projected separately through the canonical encounter
+    health/raid-damage clock layer, and only when the caller supplies explicit difficulty
+    plus raid-damage segments. The two demand families are merged only after each has
+    independently resolved its own evidence.
     """
 
     def __init__(
@@ -111,10 +98,18 @@ class RotationCanonicalEvidenceBundleSupport:
         database_path: str | Path | None = None,
         guide_service: EncounterBossGuideService | None = None,
         demand_service: EncounterRotationDemandService | None = None,
+        threshold_projection_service: EncounterHealthThresholdProjectionService | None = None,
+        threshold_demand_service: EncounterThresholdRotationDemandService | None = None,
     ) -> None:
         database = Path(database_path) if database_path is not None else get_data_dir() / "eso.db"
         self.guide_service = guide_service or EncounterBossGuideService(database)
         self.demand_service = demand_service or EncounterRotationDemandService()
+        self.threshold_projection_service = (
+            threshold_projection_service or EncounterHealthThresholdProjectionService()
+        )
+        self.threshold_demand_service = (
+            threshold_demand_service or EncounterThresholdRotationDemandService()
+        )
 
     def build(
         self,
@@ -126,6 +121,9 @@ class RotationCanonicalEvidenceBundleSupport:
         resource: ResourceType,
         maximum_amount: int,
         trigger_fraction: float,
+        threshold_demand_policies: tuple[EncounterThresholdRotationDemandPolicy, ...] = (),
+        threshold_damage_segments: tuple[RaidDamageSegment, ...] = (),
+        difficulty: str = "",
         restoration_resolver: VerifiedRecoveryHeavyRestorationResolver | None = None,
         options: tuple[RotationRefreshLeadCandidateOption, ...] = (),
         requirements: tuple[RotationEffectUptimeRequirement, ...] = (),
@@ -158,12 +156,48 @@ class RotationCanonicalEvidenceBundleSupport:
             guide=guide,
             policies=tuple(demand_policies),
         )
-
-        unresolved = tuple(
+        demands = list(projection.demands)
+        unresolved = [
             str(item).strip()
             for item in projection.unresolved
             if str(item).strip()
-        )
+        ]
+
+        threshold_policies = tuple(threshold_demand_policies)
+        if threshold_policies:
+            difficulty_key = str(difficulty or "").strip().casefold()
+            damage_segments = tuple(threshold_damage_segments)
+            if difficulty_key not in {"normal", "veteran", "hardmode"}:
+                unresolved.append(
+                    "health-threshold encounter demands require explicit normal, veteran, or hardmode difficulty"
+                )
+            elif not damage_segments:
+                unresolved.append(
+                    "health-threshold encounter demands require an explicit raid-damage trajectory"
+                )
+            else:
+                threshold_projection = self.threshold_projection_service.project(
+                    guide=guide,
+                    difficulty=difficulty_key,
+                    damage_segments=damage_segments,
+                )
+                threshold_demands = self.threshold_demand_service.project(
+                    thresholds=threshold_projection,
+                    policies=threshold_policies,
+                )
+                demands.extend(threshold_demands.demands)
+                unresolved.extend(
+                    str(item).strip()
+                    for item in threshold_projection.unresolved
+                    if str(item).strip()
+                )
+                unresolved.extend(
+                    str(item).strip()
+                    for item in threshold_demands.unresolved
+                    if str(item).strip()
+                )
+
+        demands.sort(key=lambda item: (item.start_seconds, item.end_seconds, item.name))
         merged_gaps = list(knowledge_gaps)
         if coverage_report is not None and coverage_dependency_keys is not None:
             merged_gaps.extend(
@@ -177,7 +211,7 @@ class RotationCanonicalEvidenceBundleSupport:
             encounter_id=guide.encounter_id,
             encounter_name=guide.name,
             content_type=str(getattr(guide, "content_type", "") or "").strip(),
-            demands=tuple(projection.demands),
+            demands=tuple(demands),
             options=tuple(options),
             requirements=tuple(requirements),
             passives=tuple(passives),
@@ -191,7 +225,7 @@ class RotationCanonicalEvidenceBundleSupport:
             reserve_assessment_resolver=reserve_assessment_resolver,
             max_iterations=iterations,
             baseline_id=baseline,
-            unresolved=unresolved,
+            unresolved=tuple(dict.fromkeys(unresolved)),
             knowledge_gaps=self._dedupe_gaps(tuple(merged_gaps)),
             coverage_report=coverage_report,
         )
