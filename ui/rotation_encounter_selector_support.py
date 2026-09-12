@@ -5,6 +5,9 @@ from typing import Protocol
 from PySide6.QtWidgets import QComboBox
 
 from ui.rotation_generate_action_support import install_rotation_generate_action
+from ui.rotation_generate_application_context_provider import (
+    RotationGenerateApplicationContextProvider,
+)
 
 
 class _EncounterSummary(Protocol):
@@ -24,7 +27,13 @@ class RotationEncounterSelectorSupport:
     This support owns encounter *selection only*. It does not infer demand policies,
     strategy, uptime requirements, cadence obligations, or any other execution truth.
     The selected value is the canonical persisted ``encounter_id`` that a later
-    evidence-bundle provider can resolve explicitly.
+    evidence-bundle provider resolves explicitly.
+
+    Installing the selector also installs the common Generate router and its live,
+    role-neutral application context provider. That provider still fails closed when
+    explicit recovery or encounter-demand policy evidence is absent; installing it does
+    not make this selector an owner of those facts. Callers may replace the provider
+    afterward through the router's explicit setter.
     """
 
     def __init__(self, guide_service: _EncounterGuideIndex) -> None:
@@ -47,6 +56,9 @@ class RotationEncounterSelectorSupport:
         )
         self.refresh(page)
         install_rotation_generate_action(page)
+        page.set_rotation_generate_canonical_context_provider(
+            RotationGenerateApplicationContextProvider()
+        )
 
     def refresh(self, page) -> None:
         self.summaries = tuple(self.guide_service.encounter_summaries())
