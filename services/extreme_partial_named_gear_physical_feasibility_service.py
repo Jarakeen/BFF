@@ -60,6 +60,10 @@ class ExtremePartialNamedGearPhysicalFeasibilityService:
             ExtremePartialNamedGearPhysicalFeasibilityResult,
         ] = {}
         self._shape_cache: dict[int, tuple[object, ...]] = {}
+        self._body_cache: dict[
+            tuple[tuple[int, ...], tuple[tuple[object, ...], ...]],
+            bool,
+        ] = {}
 
     @staticmethod
     def _shape(row: ExtremeNamedGearSetSlotEligibility) -> tuple[object, ...]:
@@ -130,8 +134,8 @@ class ExtremePartialNamedGearPhysicalFeasibilityService:
                 return False
         return True
 
-    @staticmethod
     def _body_compatible(
+        self,
         physical: ExtremeGearPhysicalRealization,
         selected: tuple[ExtremeNamedGearSetSlotEligibility, ...],
     ) -> bool:
@@ -141,13 +145,22 @@ class ExtremePartialNamedGearPhysicalFeasibilityService:
             int(value)
             for value in physical.body_jewelry_counts[: len(selected)]
         )
-        return (
+        key = (
+            remaining,
+            tuple(self._cached_shape(row) for row in selected),
+        )
+        cached = self._body_cache.get(key)
+        if cached is not None:
+            return cached
+        possible = (
             ExtremeNamedGearSetRealizationService._body_assignments(
                 remaining,
                 selected,
             )
             is not None
         )
+        self._body_cache[key] = possible
+        return possible
 
     def evaluate(
         self,
