@@ -41,13 +41,15 @@ class RotationDDPeriodicEsoLogsCandidateDrilldownService:
 
     The service keeps canonical skill identity separate from the numeric candidate id,
     requires exact same-cast-track linkage for its strongest observations, and reports
-    whether the candidate clusters near the reviewed active-window end. It never
-    converts those observations into executable cadence, anchor, refresh, or magnitude
-    semantics.
+    whether the candidate clusters near the reviewed active-window end. Near-simultaneous
+    multi-target rows are clustered into one observational occurrence before interval
+    calculations so ESO Logs row spacing is not mistaken for game cadence. It never
+    converts observations into executable cadence, anchor, refresh, or magnitude semantics.
     """
 
     _CAST_TYPES = ("cast", "completecast", "begincast")
     _END_TOLERANCE_MS = 250.0
+    _OCCURRENCE_CLUSTER_MS = 50.0
 
     def __init__(self, *, canonical_database_path: str | Path, logs_database_path: str | Path) -> None:
         self.canonical_database_path = Path(canonical_database_path)
@@ -156,7 +158,7 @@ class RotationDDPeriodicEsoLogsCandidateDrilldownService:
                 continue
             linked_cast_count += 1
             linked_event_count += len(linked)
-            times = [float(row["timestamp"]) for row in linked]
+            times = self._cluster_times(float(row["timestamp"]) for row in linked)
             first_offsets.append((times[0] - cast_time) / 1000.0)
             last_offsets.append((times[-1] - cast_time) / 1000.0)
             intervals.extend((b - a) / 1000.0 for a, b in zip(times, times[1:]))
@@ -176,6 +178,14 @@ class RotationDDPeriodicEsoLogsCandidateDrilldownService:
             within_cast_intervals_seconds=tuple(intervals), near_active_end_count=near_end_count,
             unresolved=tuple(dict.fromkeys(unresolved)),
         )
+
+    @classmethod
+    def _cluster_times(cls, values) -> tuple[float, ...]:
+        clustered: list[float] = []
+        for value in sorted(float(item) for item in values):
+            if not clustered or value - clustered[-1] > cls._OCCURRENCE_CLUSTER_MS:
+                clustered.append(value)
+        return tuple(clustered)
 
     def _numeric_aliases(self, skill_id: int, morph: int) -> tuple[int, ...]:
         uri = f"file:{self.canonical_database_path.resolve().as_posix()}?mode=ro"
