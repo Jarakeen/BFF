@@ -64,6 +64,8 @@ class ChampionPointStaticRepository:
     def __init__(self, database_path: str | Path) -> None:
         self.database_path = str(database_path)
         self._record_cache: dict[str, ChampionPointRecord | None] = {}
+        self._non_slottable_records_cache: tuple[ChampionPointRecord, ...] | None = None
+        self._slottable_records_cache: tuple[ChampionPointRecord, ...] | None = None
 
     def _connect(self) -> sqlite3.Connection:
         connection = sqlite3.connect(self.database_path)
@@ -89,6 +91,14 @@ class ChampionPointStaticRepository:
             description=ChampionPointStaticRepository._clean(row["description"]),
         )
 
+    def _cache_records(
+        self,
+        records: tuple[ChampionPointRecord, ...],
+    ) -> tuple[ChampionPointRecord, ...]:
+        for record in records:
+            self._record_cache[record.name] = record
+        return records
+
     def get(self, name: str) -> ChampionPointRecord | None:
         requested = str(name).strip()
         if requested in self._record_cache:
@@ -111,6 +121,9 @@ class ChampionPointStaticRepository:
     def non_slottable_records(self) -> tuple[ChampionPointRecord, ...]:
         """Return every always-active Champion Point passive in the database."""
 
+        if self._non_slottable_records_cache is not None:
+            return self._non_slottable_records_cache
+
         with self._connect() as connection:
             rows = connection.execute(
                 """
@@ -124,10 +137,15 @@ class ChampionPointStaticRepository:
                 """,
                 (CHAMPION_SKILL_TYPE_NORMAL,),
             ).fetchall()
-        return tuple(self._record_from_row(row) for row in rows)
+        records = self._cache_records(tuple(self._record_from_row(row) for row in rows))
+        self._non_slottable_records_cache = records
+        return records
 
     def slottable_records(self) -> tuple[ChampionPointRecord, ...]:
         """Return every Champion Point star that requires a Champion Bar slot."""
+
+        if self._slottable_records_cache is not None:
+            return self._slottable_records_cache
 
         with self._connect() as connection:
             rows = connection.execute(
@@ -145,7 +163,9 @@ class ChampionPointStaticRepository:
                     CHAMPION_SKILL_TYPE_STAT_POOL_SLOTTABLE,
                 ),
             ).fetchall()
-        return tuple(self._record_from_row(row) for row in rows)
+        records = self._cache_records(tuple(self._record_from_row(row) for row in rows))
+        self._slottable_records_cache = records
+        return records
 
     def resolve_all_non_slottable_maxed(self) -> tuple[list[Effect], list[str]]:
         """Resolve all non-slottable passives at their maximum purchased rank.
@@ -232,28 +252,29 @@ class ChampionPointStaticRepository:
         )
         if finesse:
             amount = float(finesse.group(1)) * stages
-            return (
-                self._effects_for_simple_stat(source, StatId.CRITICAL_DAMAGE, amount, EffectUnit.PERCENT)
-                + self._effects_for_simple_stat(source, StatId.CRITICAL_HEALING, amount, EffectUnit.PERCENT),
-                [],
-            )
+            return [
+                Effect(
+                    source=f"Champion Point: {source}",
+                    stat=StatId.CRITICAL_DAMAGE,
+                    operation=EffectOperation.ADD_PERCENT,
+                    value=amount,
+                    unit=EffectUnit.PERCENT,
+                ),
+                Effect(
+                    source=f"Champion Point: {source}",
+                    stat=StatId.CRITICAL_HEALING,
+                    operation=EffectOperation.ADD_PERCENT,
+                    value=amount,
+                    unit=EffectUnit.PERCENT,
+                ),
+            ], []
 
-        tireless = re.match(
-            rf"^Reduces the cost of Block by {_VALUE} Stamina per stage\.$",
-            first_line,
-            flags=re.IGNORECASE,
-        )
-        if tireless:
-            amount = float(tireless.group(1)) * stages
-            return self._effects_for_simple_stat(source, StatId.BLOCK_COST, amount, EffectUnit.FLAT), []
+        if source.strip().casefold() in {"boundless vitality", "arcane supremacy", "tireless guardian"}:
+            stat = {
+                "boundless vitality": StatId.MAX_HEALTH,
+                "arcane supremacy": StatId.MAX_MAGICKA,
+                "tireless guardian": StatId.MAX_STAMINA,
+            }[source.strip().casefold()]
+            return self._effects_for_simple_stat(source, stat, float(stages) * 28.0, EffectUnit.FLAT), []
 
-        fortification = re.match(
-            rf"^Increases the amount of damage you can block by {_VALUE}% per stage\.$",
-            first_line,
-            flags=re.IGNORECASE,
-        )
-        if fortification:
-            amount = float(fortification.group(1)) * stages
-            return self._effects_for_simple_stat(source, StatId.BLOCK_MITIGATION, amount, EffectUnit.PERCENT), []
-
-        return [], [f"Champion Point is dynamic or not yet stat-mapped: {source}"]
+        return [], [f"Champion Point effect not yet modeled: {source}: {first_line}"]
