@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from PySide6.QtWidgets import QApplication, QCheckBox, QComboBox, QLabel, QPushButton, QWidget
+from PySide6.QtWidgets import QApplication, QCheckBox, QComboBox, QLabel, QProgressBar, QPushButton, QVBoxLayout, QWidget
 
 from minmax.stat_ids import StatId
 from models.build_model import BuildRoster, PlayerBuild
@@ -103,6 +103,65 @@ def test_key_stats_use_canonical_context_fields_instead_of_missing_stats_propert
     text = " ".join(label.text() for label in card.findChildren(QLabel))
     assert "30,000" in text and "4,267" in text and "2,500" in text
     assert "unavailable" not in text.lower()
+
+
+def test_main_dashboard_keeps_four_cards_per_row_without_horizontal_scroll(tmp_path):
+    from ui.operations_console import CORE_COVERAGE
+
+    page = _console(tmp_path)
+    page.roster.Members[0].AttributeMagicka = 64
+    page.expedition = SimpleNamespace(expedition=SimpleNamespace(Expedition="", Difficulty="", Objective=""))
+    page.build_service = SimpleNamespace(load=lambda: page.roster)
+    page.context_factory = SimpleNamespace(build=lambda **_kwargs: (_ for _ in ()).throw(ValueError("unavailable")))
+    page._coverage = lambda: ({name: "unverified" for name in CORE_COVERAGE}, {name: [] for name in CORE_COVERAGE})
+    page._capability_audits = {}
+    del page._render  # Use the actual dashboard renderer instead of _console's test stub.
+    page._build_ui()
+    page.refresh()
+
+    for width in (1200, 1366, 1918):
+        page.resize(width, 900)
+        page.show()
+        QApplication.processEvents()
+        assert page.workspace_scroll.horizontalScrollBar().maximum() == 0
+        for row in (page._hero_cards, page._detail_cards, page._goal_cards):
+            assert len(row) == 4
+            assert len({card.y() for card in row}) == 1
+
+    bars = page._hero_cards[0].findChildren(QProgressBar)
+    assert [bar.property("overviewAttribute") for bar in bars] == ["health", "stamina", "magicka"]
+    assert [bar.width() for bar in bars] == [96, 96, 96]
+    assert [bar.value() for bar in bars] == [0, 0, 64]
+    assert "BOOKMARKS" in " ".join(label.text() for label in page._detail_cards[2].findChildren(QLabel))
+
+
+def test_attribute_meters_have_distinct_colors_in_both_themes(tmp_path):
+    from ui.grimoire_theme import load_grimoire_stylesheet
+    from ui.theme.theme_manager import FOUNDRY_OVERVIEW_ACCENTS, RYLO_GRAYSCALE_OVERRIDES
+
+    app = QApplication.instance() or QApplication([])
+    old_stylesheet = app.styleSheet()
+    page = _console(tmp_path)
+    page.roster.Members[0].AttributeHealth = 22
+    page.roster.Members[0].AttributeStamina = 44
+    page.roster.Members[0].AttributeMagicka = 60
+    workspace = QWidget()
+    workspace.setProperty("operationsOverview", True)
+    workspace.setLayout(QVBoxLayout())
+    workspace.layout().addWidget(page._player_card(page.roster.Members[0]))
+    try:
+        for css, expected in (
+            (FOUNDRY_OVERVIEW_ACCENTS, ("#c96569", "#78b887", "#73a9d8")),
+            (RYLO_GRAYSCALE_OVERRIDES, ("#c48a83", "#9dac85", "#86accf")),
+        ):
+            app.setStyleSheet(load_grimoire_stylesheet() + "\n" + css)
+            workspace.resize(380, 340)
+            workspace.show()
+            app.processEvents()
+            colors = tuple(bar.grab().toImage().pixelColor(10, 6).name() for bar in workspace.findChildren(QProgressBar))
+            assert colors == expected
+    finally:
+        app.setStyleSheet(old_stylesheet)
 
 
 def test_progress_and_bookmark_cards_use_loaded_profile_sources(tmp_path):

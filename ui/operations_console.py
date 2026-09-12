@@ -304,7 +304,6 @@ class OperationsConsole(FoundryPage):
         self._goal_cards = (
             self._achievements_card(), self._collectibles_card(),
             self._raid_schedule_card(build), self._skills_to_work_on_card(build),
-            self._bookmarked_gear_card(),
         )
         self._hero_grid = QGridLayout()
         self._detail_grid = QGridLayout()
@@ -313,23 +312,21 @@ class OperationsConsole(FoundryPage):
             grid.setHorizontalSpacing(10)
             grid.setVerticalSpacing(10)
         self._arrange_overview_grid(self._hero_grid, self._hero_cards, (
-            (0, 0, 1, 2), (0, 2, 1, 1), (0, 3, 1, 2), (0, 5, 1, 1),
-        ), 6)
+            (0, 0, 1, 1), (0, 1, 1, 1), (0, 2, 1, 1), (0, 3, 1, 1),
+        ), 4)
         self._arrange_overview_grid(self._detail_grid, self._detail_cards, (
-            (0, 0, 1, 2), (0, 2, 1, 2), (0, 4, 1, 2), (0, 6, 1, 2),
-        ), 8)
+            (0, 0, 1, 1), (0, 1, 1, 1), (0, 2, 1, 1), (0, 3, 1, 1),
+        ), 4)
         self._arrange_overview_grid(self._goal_grid, self._goal_cards, (
-            (0, 0, 1, 3), (0, 3, 1, 3), (0, 6, 1, 2),
-            (0, 8, 1, 2), (0, 10, 1, 2),
-        ), 12)
+            (0, 0, 1, 1), (0, 1, 1, 1), (0, 2, 1, 1), (0, 3, 1, 1),
+        ), 4)
         self.layout.addLayout(self._hero_grid)
         self.layout.addLayout(self._detail_grid)
         self.layout.addLayout(self._goal_grid)
 
         self.layout.addWidget(self._raid_notes_card())
         self.layout.addStretch(1)
-        self._compact_overview = False
-        self._update_overview_layout()
+        self.workspace_widget.updateGeometry()
 
         self.status.info(
             f"Overview loaded • {len(self._saved_builds())} saved build(s) • planning dashboard active."
@@ -339,55 +336,10 @@ class OperationsConsole(FoundryPage):
     def _arrange_overview_grid(grid, cards, positions, columns):
         while grid.count():
             grid.takeAt(0)
-        for column in range(12):
-            grid.setColumnStretch(column, 1 if column < columns else 0)
+        for column in range(columns):
+            grid.setColumnStretch(column, 1)
         for card, position in zip(cards, positions):
             grid.addWidget(card, *position)
-
-    def _update_overview_layout(self):
-        if not hasattr(self, "_hero_grid"):
-            return
-        viewport_width = self.workspace_scroll.viewport().width()
-        # Other dashboard sections can have large size hints even when the four
-        # hero cards fit. Use the actual desktop breakpoint instead of feeding
-        # the full workspace's minimum width back into the hero layout decision.
-        compact = viewport_width < 1550
-        if compact == self._compact_overview:
-            return
-        self._compact_overview = compact
-        if compact:
-            self._arrange_overview_grid(self._hero_grid, self._hero_cards, (
-                (0, 0, 1, 3), (0, 3, 1, 1),
-                (1, 0, 1, 3), (1, 3, 1, 1),
-            ), 4)
-            self._arrange_overview_grid(self._detail_grid, self._detail_cards, (
-                (0, 0, 1, 2), (0, 2, 1, 2),
-                (1, 0, 1, 2), (1, 2, 1, 2),
-            ), 4)
-            self._arrange_overview_grid(self._goal_grid, self._goal_cards, (
-                (0, 0, 1, 3), (0, 3, 1, 3),
-                (1, 0, 1, 3), (1, 3, 1, 3),
-                (2, 0, 1, 6),
-            ), 6)
-        else:
-            self._arrange_overview_grid(self._hero_grid, self._hero_cards, (
-                (0, 0, 1, 2), (0, 2, 1, 1),
-                (0, 3, 1, 2), (0, 5, 1, 1),
-            ), 6)
-            self._arrange_overview_grid(self._detail_grid, self._detail_cards, (
-                (0, 0, 1, 2), (0, 2, 1, 2),
-                (0, 4, 1, 2), (0, 6, 1, 2),
-            ), 8)
-            self._arrange_overview_grid(self._goal_grid, self._goal_cards, (
-                (0, 0, 1, 3), (0, 3, 1, 3),
-                (0, 6, 1, 2), (0, 8, 1, 2), (0, 10, 1, 2),
-            ), 12)
-        self.workspace_widget.updateGeometry()
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        # The scroll viewport finishes sizing after the page receives its resize.
-        QTimer.singleShot(0, self._update_overview_layout)
 
     @staticmethod
     def _section_label(text: str) -> QLabel:
@@ -443,12 +395,11 @@ class OperationsConsole(FoundryPage):
         return card
 
     def _coverage_card(self, covered, providers) -> FoundryCard:
-        card = FoundryCard("Saved-Build Coverage Evidence")
+        card = FoundryCard("Coverage Evidence")
         grid = QGridLayout()
-        grid.setHorizontalSpacing(16)
         grid.setVerticalSpacing(5)
         identified = [name for name in CORE_COVERAGE if covered.get(name) != "unverified"]
-        for index, name in enumerate(identified):
+        for index, name in enumerate(identified[:6]):
             state = covered.get(name, "unverified")
             marker = "✓" if state == "available" else "◇" if state == "conditional" else "?"
             label = QLabel(f"{marker}  {name}")
@@ -460,14 +411,22 @@ class OperationsConsole(FoundryPage):
                 "unverified": "No supported source mapping or audit available",
             }
             label.setToolTip(explanation[state])
-            grid.addWidget(label, index % 8, index // 8)
+            grid.addWidget(label, index, 0)
         if identified:
             card.addLayout(grid)
+            if len(identified) > 6:
+                more = QLabel(f"+ {len(identified) - 6} more identified checks in Coverage")
+                more.setWordWrap(True)
+                card.addWidget(more)
         else:
-            card.addWidget(QLabel("No saved-build coverage effect verified yet."))
+            empty = QLabel("No saved-build coverage effect verified yet.")
+            empty.setWordWrap(True)
+            card.addWidget(empty)
         unknown_count = sum(state == "unverified" for state in covered.values())
         if unknown_count:
-            card.addWidget(QLabel(f"{unknown_count} effects unverified • inspect source gaps in Coverage"))
+            unknown = QLabel(f"{unknown_count} effects unverified • inspect source gaps in Coverage")
+            unknown.setWordWrap(True)
+            card.addWidget(unknown)
         card.addStretch(1)
         coverage_link = self._compact_button("View Coverage Details")
         coverage_link.setToolTip("See the same saved-build capability evidence in the Coverage plan; assignments and uptime are not inferred.")
@@ -483,7 +442,9 @@ class OperationsConsole(FoundryPage):
                 label.setProperty("overviewWarning", True)
                 card.addWidget(label)
         elif any(state == "unverified" for state in covered.values()):
-            card.addWidget(QLabel("Coverage evidence incomplete.\nReview unresolved sources in Coverage."))
+            message = QLabel("Coverage evidence incomplete.\nReview unresolved sources in Coverage.")
+            message.setWordWrap(True)
+            card.addWidget(message)
         else:
             card.addWidget(QLabel("Static sources identified; uptime not checked."))
         card.addStretch(1)
@@ -499,7 +460,9 @@ class OperationsConsole(FoundryPage):
             name = member.Name or member.Gamertag or "Unnamed"
             role = member.Role or member.EsoClass or "Unassigned"
             build_name = member.BuildName or "Saved Build"
-            card.addWidget(QLabel(f"●  {name:<18} {role}\n     {build_name}"))
+            member_label = QLabel(f"●  {name} · {role}\n     {build_name}")
+            member_label.setWordWrap(True)
+            card.addWidget(member_label)
         if len(builds) > 5:
             card.addWidget(QLabel(f"… and {len(builds) - 5} more"))
         card.addStretch(1)
@@ -514,18 +477,18 @@ class OperationsConsole(FoundryPage):
             card.addStretch()
             return card
 
-        heading = QHBoxLayout()
-        identity = QVBoxLayout()
         name = build.Name or build.Gamertag or "Unnamed Player"
         title = QLabel(name.upper())
         title.setProperty("overviewPlayerName", True)
-        identity.addWidget(title)
-        identity.addWidget(QLabel(" • ".join(v for v in (build.EsoClass, build.Race, build.Role) if v)))
-        heading.addLayout(identity, 1)
+        title.setWordWrap(True)
+        card.addWidget(title)
+        identity = QLabel(" • ".join(v for v in (build.EsoClass, build.Race, build.Role) if v))
+        identity.setWordWrap(True)
+        card.addWidget(identity)
         build_name = QLabel(build.BuildName or "Saved Build")
         build_name.setProperty("cardBadge", True)
-        heading.addWidget(build_name, 0, Qt.AlignmentFlag.AlignTop)
-        card.addLayout(heading)
+        build_name.setWordWrap(True)
+        card.addWidget(build_name)
 
         for label, value in (
             ("HEALTH", getattr(build, "AttributeHealth", 0)),
@@ -533,32 +496,46 @@ class OperationsConsole(FoundryPage):
             ("MAGICKA", getattr(build, "AttributeMagicka", 0)),
         ):
             row = QHBoxLayout()
-            row.addWidget(QLabel(label))
+            row.setSpacing(6)
+            name_label = QLabel(label.title())
+            name_label.setFixedWidth(66)
+            row.addWidget(name_label)
             bar = QProgressBar()
             bar.setRange(0, 64)
             bar.setValue(max(0, min(64, int(value or 0))))
             bar.setTextVisible(False)
-            row.addWidget(bar, 1)
-            row.addWidget(QLabel(str(value)))
+            bar.setProperty("overviewAttribute", label.lower())
+            bar.setFixedSize(96, 12)
+            row.addWidget(bar)
+            amount = QLabel(str(value))
+            amount.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            amount.setFixedWidth(20)
+            row.addWidget(amount)
+            row.addStretch(1)
             card.addLayout(row)
 
-        actions = QHBoxLayout()
-        for text in ("Build", "Stats", "Buff Uptime", "Optimization"):
-            actions.addWidget(self._compact_button(text))
+        actions = QGridLayout()
+        actions.setHorizontalSpacing(6)
+        actions.setVerticalSpacing(6)
+        for index, text in enumerate(("Build", "Stats", "Buff Uptime", "Optimization")):
+            actions.addWidget(self._compact_button(text), index // 2, index % 2)
         card.addLayout(actions)
         return card
 
     def _provides_card(self, build: PlayerBuild | None) -> FoundryCard:
-        title = "Build Capability Evidence"
-        if build is not None and build.BuildName:
-            title = f"Build Evidence ({build.BuildName})"
-        card = FoundryCard(title)
+        card = FoundryCard("Build Evidence")
         if build is None:
             card.addWidget(QLabel("No build selected."))
             return card
+        if build.BuildName:
+            build_label = QLabel(build.BuildName)
+            build_label.setWordWrap(True)
+            card.addWidget(build_label)
         audit = self._capability_audits.get(id(build))
         if audit is None:
-            card.addWidget(QLabel("Canonical saved-build evidence unavailable."))
+            message = QLabel("Canonical saved-build evidence unavailable.")
+            message.setWordWrap(True)
+            card.addWidget(message)
         else:
             matched = []
             for row in DEFAULT_RAID_COVERAGE_PROFILE.mapped_required:
@@ -572,7 +549,9 @@ class OperationsConsole(FoundryPage):
             for item in matched[:6]:
                 card.addWidget(QLabel(item))
             if not matched:
-                card.addWidget(QLabel("No mapped static source identified on this build."))
+                message = QLabel("No mapped static source identified on this build.")
+                message.setWordWrap(True)
+                card.addWidget(message)
             if audit.capability_unresolved:
                 unresolved = QLabel(f"?  {len(audit.capability_unresolved)} unresolved source(s) • hover for details")
                 unresolved.setToolTip("\n".join(audit.capability_unresolved))
@@ -583,23 +562,26 @@ class OperationsConsole(FoundryPage):
         return card
 
     def _gear_card(self, build: PlayerBuild | None) -> FoundryCard:
-        card = FoundryCard("Current Gear")
+        card = FoundryCard("Gear & Bookmarks")
         if build is None:
             card.addWidget(QLabel("No build selected."))
-            return card
-        entries = []
-        for slot in ("Head", "Shoulders", "Chest", "Hands", "Waist", "Legs", "Feet"):
-            entry = build.Armor.get(slot, {})
-            if entry.get("Set"):
-                entries.append(entry["Set"])
-        for slot in (build.FrontBarWeapon, build.BackBarWeapon, build.Necklace, build.Ring1, build.Ring2):
-            if slot.Set:
-                entries.append(slot.Set)
-        unique = []
-        for value in entries:
-            if value not in unique:
-                unique.append(value)
-        card.addWidget(QLabel("\n".join(f"◇  {name}" for name in unique[:6]) or "No gear entered."))
+        else:
+            entries = []
+            for slot in ("Head", "Shoulders", "Chest", "Hands", "Waist", "Legs", "Feet"):
+                entry = build.Armor.get(slot, {})
+                if entry.get("Set"):
+                    entries.append(entry["Set"])
+            for slot in (build.FrontBarWeapon, build.BackBarWeapon, build.Necklace, build.Ring1, build.Ring2):
+                if slot.Set:
+                    entries.append(slot.Set)
+            unique = []
+            for value in entries:
+                if value not in unique:
+                    unique.append(value)
+            card.addWidget(self._section_label("EQUIPPED SETS"))
+            card.addWidget(QLabel("\n".join(f"◇  {name}" for name in unique[:4]) or "No gear entered."))
+        card.addWidget(self._section_label("BOOKMARKS"))
+        self._add_bookmarked_gear_content(card, limit=3)
         card.addStretch(1)
         card.addWidget(self._compact_button("View Gear & Set Details"))
         return card
@@ -636,11 +618,15 @@ class OperationsConsole(FoundryPage):
                 number.setAlignment(Qt.AlignmentFlag.AlignRight)
                 grid.addWidget(number, row, 1)
             card.addLayout(grid)
-            card.addWidget(QLabel("Static front-bar snapshot • no combat uptime"))
+            note = QLabel("Static front-bar snapshot • no combat uptime")
+            note.setWordWrap(True)
+            card.addWidget(note)
             if context.unresolved_gear_effects:
                 card.addWidget(QLabel(f"?  {len(context.unresolved_gear_effects)} gear effect(s) unresolved"))
         except Exception as exc:
-            card.addWidget(QLabel("Calculated stats unavailable; check the saved build and reference data."))
+            message = QLabel("Calculated stats unavailable; check the saved build and reference data.")
+            message.setWordWrap(True)
+            card.addWidget(message)
             card.setToolTip(str(exc))
         return card
 
@@ -717,10 +703,13 @@ class OperationsConsole(FoundryPage):
         )
         grid = QGridLayout()
         grid.setHorizontalSpacing(8)
+        grid.setColumnStretch(1, 2)
+        grid.setColumnStretch(2, 1)
         for row, (day, raid, time, assignment) in enumerate(entries):
             grid.addWidget(QLabel(day), row, 0)
             grid.addWidget(QLabel(f"{raid}\n{time}"), row, 1)
             assigned = QLabel(assignment)
+            assigned.setWordWrap(True)
             assigned.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
             grid.addWidget(assigned, row, 2)
         card.addLayout(grid)
@@ -747,31 +736,36 @@ class OperationsConsole(FoundryPage):
 
     def _bookmarked_gear_card(self) -> FoundryCard:
         card = FoundryCard("Bookmarked Gear")
+        self._add_bookmarked_gear_content(card, limit=5)
+        card.addStretch(1)
+        card.addWidget(self._compact_button("Manage Bookmarks"))
+        return card
+
+    def _add_bookmarked_gear_content(self, card: FoundryCard, *, limit: int) -> None:
         gear_page = getattr(self.window(), "pages", {}).get("gear_lookup")
         service = getattr(gear_page, "gear_bookmark_service", None)
         profile_combo = getattr(gear_page, "gear_bookmark_profile", None)
         profile = profile_combo.currentText().strip() if profile_combo is not None else "Default"
         profile = profile or "Default"
         if service is None:
-            card.addWidget(QLabel("Saved set bookmarks are not loaded yet."))
+            message = QLabel("Saved set bookmarks are not loaded yet.")
+            message.setWordWrap(True)
+            card.addWidget(message)
         else:
             try:
                 bookmarked = service.bookmarked_set_ids(profile)
                 names = {row.get("gear_set_id"): row.get("name") for row in gear_page._sets}
                 card.addWidget(QLabel(f"Profile: {profile}"))
-                for set_id in sorted(bookmarked, key=lambda value: str(names.get(value) or value).casefold())[:5]:
+                for set_id in sorted(bookmarked, key=lambda value: str(names.get(value) or value).casefold())[:limit]:
                     name = names.get(set_id) or f"Set #{set_id} (catalog name unavailable)"
                     note = service.note(profile, set_id)
                     card.addWidget(QLabel(f"☆  {name}" + (f"\n     {note}" if note else "")))
                 if not bookmarked:
                     card.addWidget(QLabel("No sets bookmarked for this profile."))
-                elif len(bookmarked) > 5:
-                    card.addWidget(QLabel(f"+ {len(bookmarked) - 5} more saved set(s)"))
+                elif len(bookmarked) > limit:
+                    card.addWidget(QLabel(f"+ {len(bookmarked) - limit} more saved set(s)"))
             except Exception as exc:
                 card.addWidget(QLabel(f"Bookmarks unavailable: {exc}"))
-        card.addStretch(1)
-        card.addWidget(self._compact_button("Manage Bookmarks"))
-        return card
 
     # Legacy helpers remain available for compatibility with older page patches/tests,
     # but they are intentionally no longer part of the planning-first layout.

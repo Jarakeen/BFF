@@ -46,6 +46,15 @@ QWidget[operationsOverview="true"] QLabel[overviewGoalName="true"] {
 QWidget[operationsOverview="true"] QProgressBar::chunk {
     background-color: #58AEB3;
 }
+QWidget[operationsOverview="true"] QProgressBar[overviewAttribute="health"]::chunk {
+    background-color: #C96569;
+}
+QWidget[operationsOverview="true"] QProgressBar[overviewAttribute="stamina"]::chunk {
+    background-color: #78B887;
+}
+QWidget[operationsOverview="true"] QProgressBar[overviewAttribute="magicka"]::chunk {
+    background-color: #73A9D8;
+}
 QWidget[operationsOverview="true"] QFrame[overviewAccent="teal"] {
     border-left: 3px solid #58AEB3;
 }
@@ -238,6 +247,19 @@ QLabel[bossArtworkPlaceholder="true"], QLabel[positioningMap="true"] {
     color: #888781;
 }
 QLabel[timerValue="true"] { color: #D9CDBA; }
+/* Muted resource colors; written labels and values carry the meaning. */
+QWidget[operationsOverview="true"] QProgressBar[overviewAttribute="health"]::chunk {
+    background-color: #C48A83;
+    border-radius: 0;
+}
+QWidget[operationsOverview="true"] QProgressBar[overviewAttribute="stamina"]::chunk {
+    background-color: #9DAC85;
+    border-radius: 0;
+}
+QWidget[operationsOverview="true"] QProgressBar[overviewAttribute="magicka"]::chunk {
+    background-color: #86ACCF;
+    border-radius: 0;
+}
 """
 
 

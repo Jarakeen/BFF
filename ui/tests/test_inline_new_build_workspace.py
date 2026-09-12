@@ -173,4 +173,6 @@ def test_overview_cards_reflow_without_sideways_scroll_at_desktop_widths():
         app.processEvents()
         app.processEvents()
         assert page.workspace_scroll.horizontalScrollBar().maximum() == 0
-        assert page._compact_overview == (width < 1600)
+        assert all(len(row) == 4 and len({card.y() for card in row}) == 1 for row in (
+            page._hero_cards, page._detail_cards, page._goal_cards,
+        ))
