@@ -123,6 +123,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Scribed Skills interface
 - Build-specific performance information
 - Role-aware build information
+- Conditional **Rotation** tab appears only when the selected build owns a saved completed rotation
 
 ---
 
@@ -248,6 +249,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 ## Rotation Builder
 
 - Generate combat rotations
+- Completed rendered rotations can be saved directly to their canonical build dossier by `build_id`; saving again replaces only that build's prior rotation artifact
 - Live canonical Generate context is resolved from the current saved build and selected encounter at click time rather than being frozen when the page opens
 - Explicit canonical recovery resource selection for Magicka or Stamina
 - Explicit canonical recovery-trigger percentage with no assumed default threshold
