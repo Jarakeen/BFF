@@ -61,7 +61,7 @@ class MainWindow(QMainWindow):
         self.expedition_service = expedition if expedition is not None else ExpeditionService()
         self.broadcast_enabled = broadcast_enabled()
         self.setWindowTitle("Black Feather Foundry Field Office")
-        self.resize(1700, 950)
+        self.resize(1400, 900)
         self.build_ui()
         self.connect_signals()
 
