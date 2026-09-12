@@ -32,9 +32,11 @@ def test_potion_picker_is_searchable_like_other_build_selectors() -> None:
     assert "NoInsert" in source
 
 
-def test_potion_picker_persists_stable_values_not_display_prefixes() -> None:
+def test_potion_picker_persists_selected_data_or_new_typed_text() -> None:
     source = Path(phase5_potion_picker_support.__file__).read_text(encoding="utf-8")
 
     assert "build.Potion = _persisted_value(self.potion)" in source
-    assert "data = str(combo.currentData() or \"\").strip()" in source
-    assert "return data or str(combo.currentText() or \"\").strip()" in source
+    assert "text = str(combo.currentText() or \"\").strip()" in source
+    assert "text == str(combo.itemText(index) or \"\").strip()" in source
+    assert "data = str(combo.itemData(index) or \"\").strip()" in source
+    assert "return text" in source
