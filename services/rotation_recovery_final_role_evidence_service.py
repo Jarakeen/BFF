@@ -52,11 +52,11 @@ class RotationRecoveryFinalRoleEvidenceService:
     policy is assessed separately from mechanics through the existing context and
     policy services.
 
-    Callers with final-plan runtime evidence may supply a snapshot-bound plan-evidence
-    provider factory. It is invoked only after stabilization, so role-output services
-    that need exact runtime state cannot accidentally bind themselves to a seed plan.
-    Callers without runtime-sensitive role output continue to use the ordinary static
-    plan-evidence provider.
+    Runtime-sensitive providers may bind themselves to the final stabilized snapshot
+    by implementing ``for_stabilized_snapshot(snapshot)``. Callers may alternatively
+    supply an explicit snapshot provider factory. In either case binding occurs only
+    after stabilization, so exact-time role output never consults a seed schedule.
+    Ordinary providers keep the existing static path unchanged.
 
     This adapter never recalculates the final scorecard. The caller supplies the
     same final scorecard resolver used by the recovery pipeline, and the pipeline
@@ -104,9 +104,7 @@ class RotationRecoveryFinalRoleEvidenceService:
             plan=snapshot.plan,
             refresh_leads=(),
         )
-        provider = self.plan_evidence_provider
-        if self.snapshot_plan_evidence_provider_factory is not None:
-            provider = self.snapshot_plan_evidence_provider_factory(snapshot)
+        provider = self._provider_for_snapshot(snapshot)
         evidence = provider.evaluate_plan(candidate)
         gameplay_policy_assessment = self._gameplay_policy_assessment(candidate)
 
@@ -134,6 +132,18 @@ class RotationRecoveryFinalRoleEvidenceService:
             ),
             gameplay_policy_assessment=gameplay_policy_assessment,
         )
+
+    def _provider_for_snapshot(
+        self,
+        snapshot: RecoveryHeavyStabilizedCandidateSnapshot,
+    ) -> RotationCandidatePlanEvidenceProvider:
+        if self.snapshot_plan_evidence_provider_factory is not None:
+            return self.snapshot_plan_evidence_provider_factory(snapshot)
+
+        binder = getattr(self.plan_evidence_provider, "for_stabilized_snapshot", None)
+        if callable(binder):
+            return binder(snapshot)
+        return self.plan_evidence_provider
 
     def _gameplay_policy_assessment(self, candidate: GeneratedRotationCandidate):
         provider = self.gameplay_policy_context_provider
