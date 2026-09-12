@@ -3,9 +3,9 @@ from __future__ import annotations
 """Explicit build-persistence and saved-build capability catalog descriptors.
 
 Metadata only. Runtime code keeps using typed imports and explicit wiring. These
-entries document which layer owns canonical character/build state, which layer is
-only a compatibility facade, and which legacy persistence implementation has been
-superseded.
+entries document which layer owns canonical player/character/build state, which
+layer is only a compatibility facade, and which legacy persistence implementation
+has been superseded.
 """
 
 from services.service_catalog import (
@@ -20,14 +20,31 @@ BUILD_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
     ServiceDescriptor(
         service_id="build.catalog.persistence",
         domain="build",
-        purpose="Persist canonical character identity, reusable build records, and character-owned progression separately from ESO reference data.",
+        purpose="Persist canonical player identity, character ownership, reusable build records, character-owned progression, and build-level team assignments separately from ESO reference data.",
         implementation_path="services.build_catalog_service",
-        inputs=("BuildRoster", "PlayerBuild", "CanonicalCharacterRecord"),
-        outputs=("BuildCatalog", "CanonicalCharacterRecord", "CanonicalBuildRecord"),
-        responsibilities=("canonical_character_build_persistence",),
+        inputs=(
+            "BuildRoster",
+            "PlayerBuild",
+            "CanonicalPlayerRecord",
+            "CanonicalCharacterRecord",
+            "CanonicalBuildRecord",
+            "CanonicalTeamAssignmentRecord",
+        ),
+        outputs=(
+            "BuildCatalog",
+            "CanonicalPlayerRecord",
+            "CanonicalCharacterRecord",
+            "CanonicalBuildRecord",
+            "CanonicalTeamAssignmentRecord",
+        ),
+        responsibilities=(
+            "canonical_player_character_build_persistence",
+            "canonical_character_build_persistence",
+            "canonical_team_assignment_persistence",
+        ),
         behavior=ServiceBehavior.DETERMINISTIC,
         evidence_class=EvidenceClass.NONE,
-        notes="This is the authoritative character/build catalog. User-owned state lives outside eso.db; builds.json is compatibility data, not the source of truth.",
+        notes="This is the authoritative player/character/build ownership catalog. Gamertag is player-owned display identity; stable IDs carry identity. User-owned state lives outside eso.db; builds.json is compatibility data, not the source of truth.",
     ),
     ServiceDescriptor(
         service_id="build.compatibility.persistence_facade",
