@@ -2,13 +2,13 @@ from __future__ import annotations
 
 """Dispatch classified Max Health special named-gear branches to canonical executors.
 
-Classification says *what* makes a named-gear breakpoint special.  This bridge says
-which already-canonical execution contract owns that obligation.  It does not
+Classification says *what* makes a named-gear breakpoint special. This bridge says
+which already-canonical execution contract owns that obligation. It does not
 reimplement runtime-condition materialization or Twice-Born Star Mundus scoring.
 
-Conditional branches are executed through
+Conditional branches and cumulative conditional bundles are executed through
 ``ExtremeResourceCandidateRuntimeConditionService`` for the materialized candidate
-build.  Search-state mutations are accepted only when the reviewed rule has a
+build. Search-state mutations are accepted only when the reviewed rule has a
 canonical execution surface; ``ALLOWS_TWO_MUNDUS`` is owned by the existing
 Twice-Born structural evaluator.
 """
@@ -90,6 +90,14 @@ class ExtremeMaxHealthSpecialNamedGearExecutionService:
         report = ExtremeGearSearchStateExecutionCoverageService.build()
         return {row.rule: row.execution_surfaces for row in report.rows if row.executable}
 
+    @staticmethod
+    def _required_conditions(
+        branch: ExtremeMaxHealthSpecialNamedGearBranch,
+    ) -> tuple[str, ...]:
+        if branch.required_conditions:
+            return tuple(branch.required_conditions)
+        return (() if not branch.condition else (branch.condition,))
+
     def _execute_branch(
         self,
         branch: ExtremeMaxHealthSpecialNamedGearBranch,
@@ -102,16 +110,9 @@ class ExtremeMaxHealthSpecialNamedGearExecutionService:
         if branch.kind in {
             ExtremeMaxHealthSpecialBranchKind.CONDITIONAL_FLAT,
             ExtremeMaxHealthSpecialBranchKind.CONDITIONAL_PERCENT,
+            ExtremeMaxHealthSpecialBranchKind.CONDITIONAL_BUNDLE,
         }:
-            if not branch.condition:
-                return ExtremeMaxHealthSpecialNamedGearExecution(
-                    branch=branch,
-                    execution_owner=(
-                        "services.extreme_resource_candidate_runtime_condition_service."
-                        "ExtremeResourceCandidateRuntimeConditionService"
-                    ),
-                    unresolved=("classified conditional branch has no condition marker",),
-                )
+            required = self._required_conditions(branch)
             projection = self.runtime_condition_service.build(
                 "max_health",
                 build=build,
@@ -120,14 +121,15 @@ class ExtremeMaxHealthSpecialNamedGearExecutionService:
                 route=route,
             )
             unresolved: list[str] = list(projection.unresolved)
-            if branch.condition not in projection.required_conditions:
-                unresolved.append(
-                    f"materialized candidate does not expose required condition: {branch.condition}"
-                )
-            if branch.condition not in projection.active_conditions:
-                unresolved.append(
-                    f"required special-gear condition is not active: {branch.condition}"
-                )
+            for condition in required:
+                if condition not in projection.required_conditions:
+                    unresolved.append(
+                        f"materialized candidate does not expose required condition: {condition}"
+                    )
+                if condition not in projection.active_conditions:
+                    unresolved.append(
+                        f"required special-gear condition is not active: {condition}"
+                    )
             return ExtremeMaxHealthSpecialNamedGearExecution(
                 branch=branch,
                 execution_owner=(
