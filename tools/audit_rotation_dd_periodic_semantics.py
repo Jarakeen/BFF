@@ -94,6 +94,37 @@ def list_dd_builds(*, builds_path: Path) -> int:
     return 0
 
 
+def _format_partial_review(item) -> tuple[str, ...]:
+    review = getattr(item, "partial_review", None)
+    if review is None:
+        return ()
+
+    known: list[str] = []
+    if review.duration_seconds is not None:
+        known.append(f"duration={review.duration_seconds:g}s")
+    if review.reviewed_interval_seconds is not None:
+        known.append(f"interval={review.reviewed_interval_seconds:g}s")
+    if review.first_tick_offset_seconds is not None:
+        known.append(f"first_tick={review.first_tick_offset_seconds:g}s")
+    if review.refresh_boundary is not None:
+        known.append(f"refresh={review.refresh_boundary}")
+    if review.magnitude_policy is not None:
+        known.append(f"magnitude={review.magnitude_policy}")
+    if review.successive_hit_multiplier is not None:
+        known.append(f"successive_hit_multiplier={review.successive_hit_multiplier:g}")
+
+    lines: list[str] = []
+    if known:
+        lines.append("      known: " + ", ".join(known))
+    if review.unresolved_executable_fields:
+        lines.append(
+            "      still needed: " + ", ".join(review.unresolved_executable_fields)
+        )
+    if review.evidence:
+        lines.append("      review evidence: " + " | ".join(review.evidence))
+    return tuple(lines)
+
+
 def audit_saved_build(
     *,
     database_path: Path,
@@ -161,6 +192,8 @@ def audit_saved_build(
             )
             if item.classification_source:
                 print(f"      component classification: {item.classification_source}")
+            for line in _format_partial_review(item):
+                print(line)
     else:
         print("  - none")
 
