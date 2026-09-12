@@ -50,6 +50,9 @@ from services.extreme_named_gear_set_slot_eligibility_service import (
 from services.extreme_resource_attribute_projection_service import (
     ExtremeResourceAttributeProjectionService,
 )
+from services.extreme_resource_mundus_projection_service import (
+    ExtremeResourceMundusProjectionService,
+)
 from services.extreme_resource_potion_projection_service import (
     ExtremeResourcePotionProjectionService,
 )
@@ -144,12 +147,14 @@ def _print_objective(
         trait_glyph_service=trait_glyph_service,
     ).build(objective)
 
-    mundus = MundusRepository(
+    mundus_repository = MundusRepository(
         database,
         game_update=U50_GAME_UPDATE,
         initialize=False,
     )
-    mundus_count = len(tuple(mundus.list_names())) + 1
+    raw_mundus = len(tuple(mundus_repository.list_names())) + 1
+    mundus = ExtremeResourceMundusProjectionService(mundus_repository).build(objective)
+    retained_mundus = 1 if mundus.projection_complete else raw_mundus
 
     provisioning_repository = ProvisioningStaticRepository(database)
     provisioning = ExtremeResourceProvisioningProjectionService(
@@ -181,7 +186,7 @@ def _print_objective(
     # Named-gear branch-and-bound and physical feasibility can reduce it further.
     finite_non_gear_pressure = (
         max(len(armor.states), 1)
-        * max(mundus_count, 1)
+        * max(retained_mundus, 1)
         * max(retained_provisioning, 1)
         * max(retained_potions, 1)
     )
@@ -213,7 +218,11 @@ def _print_objective(
 
     print(f"resource_armor_states={len(armor.states):,}")
     print(f"resource_armor_denominator_proven={armor.denominator_proven}")
-    print(f"mundus_states_including_none={mundus_count:,}")
+    print(
+        f"mundus_states={raw_mundus:,}->{retained_mundus:,} "
+        f"projection_complete={mundus.projection_complete}"
+    )
+    print(f"  mundus_witness={mundus.witness or '<none>'}")
     print(
         f"provisioning_states={raw_provisioning:,}->{retained_provisioning:,} "
         f"projection_complete={provisioning.projection_complete}"
@@ -240,6 +249,7 @@ def _print_objective(
             for item in (
                 *tuple(getattr(gear_audit, "unresolved", ()) or ()),
                 *tuple(armor.unresolved),
+                *tuple(mundus.unresolved),
                 *tuple(provisioning.unresolved),
                 *tuple(potion.unresolved),
             )
