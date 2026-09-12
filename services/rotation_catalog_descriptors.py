@@ -66,6 +66,31 @@ ROTATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="rotation.generate.candidate_resolvers",
+        domain="rotation",
+        purpose=(
+            "Compose Generate-time recovery candidate evaluators and final scorecard "
+            "resolvers from the exact seed plan using canonical sustain, duration, "
+            "scorecard, and ranking services."
+        ),
+        implementation_path="services.rotation_generate_candidate_resolver_service",
+        inputs=(
+            "PlayerBuild",
+            "RotationPlan",
+            "ResourceType",
+            "RotationCandidateSharedEvaluationContext",
+        ),
+        outputs=("RotationGenerateCandidateResolvers",),
+        responsibilities=("rotation_generate_candidate_resolver_composition",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Composition only. Encounter obligations and recovery policy remain explicit "
+            "caller evidence; this service does not invent thresholds or strategy facts."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="rotation.healer.channel_runtime",
         domain="rotation",
         purpose=(
