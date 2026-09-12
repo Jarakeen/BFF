@@ -49,11 +49,13 @@ def _context(
     *,
     role_evidence="role-evidence",
     role_evidence_inputs=None,
+    role_evidence_composer=None,
 ) -> RotationGenerateCanonicalContext:
     return RotationGenerateCanonicalContext(
         evidence_inputs=object(),  # type: ignore[arg-type]
         role_evidence=role_evidence,  # type: ignore[arg-type]
         role_evidence_inputs=role_evidence_inputs,
+        role_evidence_composer=role_evidence_composer,
         cadence_obligations=("obligation",),  # type: ignore[arg-type]
         cadence_priorities="priorities",  # type: ignore[arg-type]
         cadence_evaluation_context="evaluation",  # type: ignore[arg-type]
@@ -200,3 +202,35 @@ def test_generate_blocks_composition_when_saved_build_role_is_missing() -> None:
         "Encounter-aware rotation generation blocked: "
         "automatic canonical role evidence requires an explicit saved-build role"
     ]
+
+
+class _RoleEvidenceComposer:
+    def __init__(self) -> None:
+        self.calls = []
+        self.result = object()
+
+    def compose(self, **kwargs):
+        self.calls.append(kwargs)
+        return self.result
+
+
+def test_generate_composes_role_evidence_from_exact_build_and_bundle() -> None:
+    support = RotationGenerateActionSupport()
+    composer = _RoleEvidenceComposer()
+    context = _context(
+        role_evidence=None,
+        role_evidence_composer=composer,
+    )
+    page = _Page(context=context)
+
+    support.generate(page)
+
+    assert composer.calls == [
+        {
+            "player_build": page.build,
+            "evidence_bundle": page.bundle,
+        }
+    ]
+    _, kwargs = page.run_calls[0]
+    assert kwargs["role_evidence"] is composer.result
+    assert page.status.warnings == []
