@@ -45,7 +45,8 @@
       "magnitude_policy": null,
       "successive_hit_multiplier": null,
       "evidence": [
-        "Corpsebuster DD coefficient-local tooltip: additional Physical Damage over 6 seconds"
+        "Corpsebuster DD coefficient-local tooltip: additional Physical Damage over 6 seconds",
+        "ESO Logs mystery-era corpus: only two Flawless Dawnbreaker casts were observed. Secondary-effect discovery found multiple nearby repeated-damage candidates but zero cast-track-linked candidate events, so periodic ownership, cadence, activation anchor, first-tick timing, refresh behavior, and magnitude policy remain unresolved and no numeric candidate is promoted."
       ]
     },
     {
