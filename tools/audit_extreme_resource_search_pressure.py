@@ -50,6 +50,9 @@ from services.extreme_named_gear_set_slot_eligibility_service import (
 from services.extreme_resource_attribute_projection_service import (
     ExtremeResourceAttributeProjectionService,
 )
+from services.extreme_resource_class_route_projection_service import (
+    ExtremeResourceClassRouteProjectionService,
+)
 from services.extreme_resource_mundus_projection_service import (
     ExtremeResourceMundusProjectionService,
 )
@@ -114,9 +117,18 @@ def _print_objective(
     print()
     print(objective.upper())
 
-    projection = ExtremeResourceAttributeProjectionService.build(
+    attribute_projection = ExtremeResourceAttributeProjectionService.build(
         objective,
         tuple(universe.attribute_allocations),
+    )
+    route_projection = ExtremeResourceClassRouteProjectionService(database).build(
+        objective,
+        tuple(universe.class_routes),
+    )
+    retained_routes = (
+        len(route_projection.routes)
+        if route_projection.projection_complete
+        else len(universe.class_routes)
     )
 
     relevance = ExtremeGearSetObjectiveRelevanceService(repository).build(
@@ -177,8 +189,8 @@ def _print_objective(
     )
     structural_reduced = (
         len(universe.races)
-        * len(universe.class_routes)
-        * len(projection.allocations)
+        * retained_routes
+        * len(attribute_projection.allocations)
         * len(universe.active_bars)
     )
 
@@ -197,10 +209,17 @@ def _print_objective(
     )
 
     print(f"races={len(universe.races):,}")
-    print(f"class_routes={len(universe.class_routes):,}")
     print(
-        f"attributes={len(universe.attribute_allocations):,}->{len(projection.allocations):,} "
-        f"projection_complete={projection.projection_complete}"
+        f"class_routes={len(universe.class_routes):,}->{retained_routes:,} "
+        f"projection_complete={route_projection.projection_complete}"
+    )
+    print(
+        "  relevant_class_lines="
+        + (", ".join(route_projection.relevant_class_lines) or "<none>")
+    )
+    print(
+        f"attributes={len(universe.attribute_allocations):,}->{len(attribute_projection.allocations):,} "
+        f"projection_complete={attribute_projection.projection_complete}"
     )
     print(f"active_bars={len(universe.active_bars):,}")
     print(f"structural_pressure={structural_raw:,}->{structural_reduced:,}")
@@ -249,6 +268,7 @@ def _print_objective(
             for item in (
                 *tuple(getattr(gear_audit, "unresolved", ()) or ()),
                 *tuple(armor.unresolved),
+                *tuple(route_projection.unresolved),
                 *tuple(mundus.unresolved),
                 *tuple(provisioning.unresolved),
                 *tuple(potion.unresolved),
