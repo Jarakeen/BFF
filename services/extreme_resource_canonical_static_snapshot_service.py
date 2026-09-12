@@ -10,6 +10,7 @@ instead of rebuilding static readers for every scorer instance.
 """
 
 from dataclasses import dataclass
+import os
 from pathlib import Path
 import sqlite3
 from typing import Callable, TypeVar
@@ -59,21 +60,28 @@ class ExtremeResourceCanonicalStaticSnapshot:
 class ExtremeResourceCanonicalStaticSnapshotService:
     """Build/reuse immutable canonical evidence for one exhaustive audit process.
 
-    The cache is keyed by the resolved database path and intentionally lives only
-    in the Python process. A new audit process therefore sees a fresh database
-    snapshot. Repository objects remain the canonical implementations; the service
-    merely gives them the lifetime needed for their existing deterministic caches
-    to be useful during exhaustive scoring.
+    The cache is keyed by a normalized absolute database path and intentionally
+    lives only in the Python process. A new audit process therefore sees a fresh
+    database snapshot. Repository objects remain the canonical implementations;
+    the service merely gives them the lifetime needed for their existing
+    deterministic caches to be useful during exhaustive scoring.
     """
 
     _CACHE: dict[str, ExtremeResourceCanonicalStaticSnapshot] = {}
 
     def __init__(self, database_path: str | Path) -> None:
         self.database_path = Path(database_path)
+        # ``Path.resolve`` reaches into the filesystem on Windows. Snapshot lookup
+        # is a hot path because many scorer wrappers request the same snapshot, so
+        # normalize lexically instead. The audit database is process-local and its
+        # identity does not depend on resolving symlinks or final NT path handles.
+        self._cache_key = os.path.normcase(
+            os.path.abspath(os.fspath(self.database_path))
+        )
 
     @property
     def cache_key(self) -> str:
-        return str(self.database_path.resolve())
+        return self._cache_key
 
     @staticmethod
     def _preload(
@@ -89,7 +97,8 @@ class ExtremeResourceCanonicalStaticSnapshotService:
             return (), f"Extreme static snapshot preload unavailable [{label}]: {exc}"
 
     def build(self) -> ExtremeResourceCanonicalStaticSnapshot:
-        cached = self._CACHE.get(self.cache_key)
+        key = self.cache_key
+        cached = self._CACHE.get(key)
         if cached is not None:
             return cached
 
@@ -139,7 +148,7 @@ class ExtremeResourceCanonicalStaticSnapshotService:
             unresolved.append(error)
 
         snapshot = ExtremeResourceCanonicalStaticSnapshot(
-            database_path=self.database_path.resolve(),
+            database_path=Path(key),
             armor_glyph_repository=armor_glyph_repository,
             jewelry_glyph_repository=jewelry_glyph_repository,
             jewelry_trait_repository=jewelry_trait_repository,
@@ -154,7 +163,7 @@ class ExtremeResourceCanonicalStaticSnapshotService:
             jewelry_glyph_names=jewelry_glyph_names,
             preload_unresolved=tuple(unresolved),
         )
-        self._CACHE[self.cache_key] = snapshot
+        self._CACHE[key] = snapshot
         return snapshot
 
 
