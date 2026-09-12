@@ -27,6 +27,11 @@ class GearSetCategoryResolver:
 
     def __init__(self, database_path: str | Path) -> None:
         self.database_path = str(database_path)
+        self._tables_cache: frozenset[str] | None = None
+        self._structure_cache: dict[
+            int,
+            tuple[int | None, frozenset[int], bool, int] | None,
+        ] = {}
 
     def resolve(
         self,
@@ -67,15 +72,26 @@ class GearSetCategoryResolver:
         self,
         set_id: int,
     ) -> tuple[int | None, set[int], bool, int] | None:
+        key = int(set_id)
+        if key in self._structure_cache:
+            cached = self._structure_cache[key]
+            if cached is None:
+                return None
+            max_equip_count, equip_types, has_weapon_piece, source_item_count = cached
+            return max_equip_count, set(equip_types), has_weapon_piece, source_item_count
+
         with sqlite3.connect(self.database_path) as connection:
-            tables = {
-                str(row[0])
-                for row in connection.execute(
-                    "SELECT name FROM sqlite_master WHERE type='table'"
-                ).fetchall()
-            }
+            if self._tables_cache is None:
+                self._tables_cache = frozenset(
+                    str(row[0])
+                    for row in connection.execute(
+                        "SELECT name FROM sqlite_master WHERE type='table'"
+                    ).fetchall()
+                )
+            tables = self._tables_cache
             required = {"gear_set", "gear_set_piece"}
             if not required.issubset(tables):
+                self._structure_cache[key] = None
                 return None
 
             row = connection.execute(
@@ -83,6 +99,7 @@ class GearSetCategoryResolver:
                 (set_id,),
             ).fetchone()
             if row is None:
+                self._structure_cache[key] = None
                 return None
 
             piece_rows = connection.execute(
@@ -94,13 +111,14 @@ class GearSetCategoryResolver:
                 (set_id,),
             ).fetchall()
             if not piece_rows:
+                self._structure_cache[key] = None
                 return None
 
-            equip_types = {
+            equip_types = frozenset(
                 int(equip_type)
                 for equip_type, _weapon_type in piece_rows
                 if equip_type is not None
-            }
+            )
             has_weapon_piece = any(
                 weapon_type is not None and int(weapon_type) > 0
                 for _equip_type, weapon_type in piece_rows
@@ -116,4 +134,6 @@ class GearSetCategoryResolver:
                 )
 
         max_equip_count = int(row[0]) if row[0] is not None else None
-        return max_equip_count, equip_types, has_weapon_piece, source_item_count
+        cached = (max_equip_count, equip_types, has_weapon_piece, source_item_count)
+        self._structure_cache[key] = cached
+        return max_equip_count, set(equip_types), has_weapon_piece, source_item_count
