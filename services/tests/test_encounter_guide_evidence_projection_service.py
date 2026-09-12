@@ -136,3 +136,27 @@ def test_real_reef_guardian_projection_exposes_reviewed_tank_role_impact():
     assert "taunt target" in role_text
     assert "persistent pools" in role_text
     assert "stacking vulnerability" in role_text
+
+
+def test_real_taleria_projection_exposes_thresholds_and_reviewed_mechanics():
+    projection = EncounterGuideEvidenceProjectionService(DATA).get(
+        "tideborn_taleria", "Tideborn Taleria"
+    )
+
+    markers = {row.marker for row in projection.timeline}
+    names = {row.mechanic for row in projection.strategy}
+
+    assert {"~75%", "50%", "35%", "20%"}.issubset(markers)
+    assert "Rapid Deluge" in names
+    assert "Crashing Wave" in names
+    assert "Maelstrom" in names
+    assert "Coral Slam" in names
+    assert "Arcing Slash" in names
+
+    deluge = next(row for row in projection.strategy if row.mechanic == "Rapid Deluge")
+    crashing = next(row for row in projection.strategy if row.mechanic == "Crashing Wave")
+    maelstrom = next(row for row in projection.strategy if row.mechanic == "Maelstrom")
+
+    assert "swim" in deluge.mitigation.casefold()
+    assert "dodge" in crashing.mitigation.casefold() or "block" in crashing.mitigation.casefold()
+    assert "heal" in maelstrom.mitigation.casefold()
