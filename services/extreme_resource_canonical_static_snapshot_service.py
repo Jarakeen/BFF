@@ -112,6 +112,13 @@ class ExtremeResourceCanonicalStaticSnapshotService:
 
         unresolved: list[str] = []
 
+        try:
+            skill_line_repository.preload_all_static()
+        except (sqlite3.Error, OSError) as exc:
+            unresolved.append(
+                f"Extreme static snapshot preload unavailable [skill line metadata]: {exc}"
+            )
+
         player_skills, error = self._preload(
             "player skills",
             skill_universe_service.all_player_skills,
