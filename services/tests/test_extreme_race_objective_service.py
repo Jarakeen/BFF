@@ -57,6 +57,26 @@ def test_race_repository_lists_canonical_races_in_deterministic_name_order(tmp_p
     ]
 
 
+def test_race_repository_list_cache_is_instance_scoped_snapshot(tmp_path):
+    repository = _repository(tmp_path)
+
+    first = [race.name for race in repository.list_races()]
+
+    with sqlite3.connect(repository.database_path) as connection:
+        connection.execute(
+            "INSERT INTO race(id, name, alliance, association) VALUES (?, ?, '', '')",
+            (4, "Delta Race"),
+        )
+
+    assert [race.name for race in repository.list_races()] == first
+    assert [race.name for race in RaceRepository(repository.database_path).list_races()] == [
+        "Alpha Race",
+        "Beta Race",
+        "Delta Race",
+        "Gamma Race",
+    ]
+
+
 def test_extreme_race_candidates_rank_flat_structured_stat_contributions(tmp_path):
     repository = _repository(tmp_path)
 
