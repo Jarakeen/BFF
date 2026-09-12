@@ -101,6 +101,7 @@ def install() -> None:
     from ui.team_schedule_multi_time_support import install as install_team_schedule_multi_time_support
     from ui.roster_player_architecture_support import install as install_roster_player_architecture_support
     from ui.player_build_navigation_support import install as install_player_build_navigation_support
+    from ui.rotation_dashboard_layout_support import install as install_rotation_dashboard_layout_support
 
     # Preserve the portable calendar feature, then let the multi-time layer own
     # the final Team Schedule UI so each selected day can use its own start/end.
@@ -112,5 +113,8 @@ def install() -> None:
     # Personnel records can jump directly into the selected player's build
     # library only after the final Roster/Builds classes have been composed.
     install_player_build_navigation_support()
+    # Rotation layout polish moves the existing canonical controls into their
+    # logical cards without replacing or duplicating the mechanics-owned widgets.
+    install_rotation_dashboard_layout_support()
     operations_console.OperationsConsole._raid_schedule_card = _raid_schedule_card
     _INSTALLED = True
