@@ -47,6 +47,8 @@ def calculation_result_from_build_context(
 
     stats: dict[StatId, StatBreakdown] = {}
     for stat in (
+        StatId.MAX_MAGICKA,
+        StatId.MAX_STAMINA,
         StatId.WEAPON_DAMAGE,
         StatId.SPELL_DAMAGE,
         StatId.PHYSICAL_PENETRATION,
