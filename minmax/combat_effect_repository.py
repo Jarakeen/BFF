@@ -60,8 +60,16 @@ class CombatEffectRepository:
 
     def __init__(self, database_path: str | Path):
         self.database_path = str(database_path)
+        # The canonical combat-effect corpus is immutable for the lifetime of
+        # one repository.  Cache the fully assembled records so repeated support
+        # resolution does not reopen SQLite and rerun trigger/interaction queries
+        # for every effect.  A fresh repository still observes later DB changes.
+        self._all_cache: tuple[CombatEffectRecord, ...] | None = None
 
     def get_all(self) -> list[CombatEffectRecord]:
+        if self._all_cache is not None:
+            return list(self._all_cache)
+
         with sqlite3.connect(self.database_path) as connection:
             effect_rows = connection.execute(
                 """
@@ -108,7 +116,8 @@ class CombatEffectRepository:
                     )
                 )
 
-            return records
+        self._all_cache = tuple(records)
+        return list(self._all_cache)
 
     def _get_triggers(
         self,
