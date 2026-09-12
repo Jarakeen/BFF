@@ -12,7 +12,12 @@
       "magnitude_policy": null,
       "successive_hit_multiplier": null,
       "evidence": [
-        "Corpsebuster DD coefficient-local tooltip: deals Frost Damage over 10 seconds"
+        "Corpsebuster DD coefficient-local tooltip: deals Frost Damage over 10 seconds",
+        "ESO Logs mystery-era corpus: evidence ID 117809 was observed on 162 of 170 Boneyard cast tracks with 1871 same-track damage events; clustered intervals concentrate around approximately 1 second, median first observed damage is 0.3585 seconds after cast, and median last observed damage is 9.3065 seconds after cast",
+        "ESO Logs mystery-era cast-track topology: 117809 is the only observed same-track component group in the reviewed 10-second window, with no separate earlier same-track placement or impact event",
+        "ESO Logs mystery-era refresh review: across 37 consecutive replacement pairs, no old-track 117809 event occurred at or after the first new-track 117809 event; median last-old event was 1.345 seconds before the new observable boundary, so the corpus supports no post-boundary overlap but does not establish exact cast-time replacement",
+        "ESO Logs mystery-era magnitude review: 1266 unambiguous adjacent occurrence pairs were comparable, but every pair had reconstructed source or target state changes; 1191 changed amount and 75 kept constant amount, with no stable-state controls, so snapshot_at_cast versus dynamic_at_tick remains unresolved",
+        "The imported ESO Logs corpus lacks recoverable patch/game-version provenance; these observations remain non-executable evidence and do not promote cadence, activation anchor, first-tick offset, refresh policy, or magnitude policy automatically"
       ]
     },
     {
