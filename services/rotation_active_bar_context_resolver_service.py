@@ -29,14 +29,9 @@ class RotationActiveBarContextResolverService:
     )
 
     def __post_init__(self) -> None:
-        # Normalize/validate through the existing bar authority rather than growing a
-        # second private definition of valid rotation bars here.
-        initial = self.active_bar_assessor.active_bar_at(
-            self.plan,
-            time_seconds=0.0,
-            sequence=-0 if False else 0,
-            initial_bar=self.initial_bar,
-        )
+        initial = str(self.initial_bar or "").strip().casefold()
+        if initial not in {"front", "back"}:
+            raise ValueError("rotation initial bar must be front or back")
         if self.static_context.context_for(initial) is None:
             raise ValueError(
                 f"rotation static context is missing initial bar: {initial!r}"
