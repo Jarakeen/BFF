@@ -23,6 +23,7 @@ from minmax.gear_stat_inputs import (
 from minmax.jewelry_glyph_repository import JewelryGlyphEffectRepository
 from minmax.jewelry_trait_repository import JewelryTraitRepository
 from minmax.phase5_context_factory import Phase5BuildCalculationContextFactory
+from minmax.skill_line_repository import SkillLineRepository
 from minmax.stat_ids import StatId
 from models.build_model import PlayerBuild
 
@@ -33,19 +34,20 @@ _SHARED_STATIC_GEAR_INPUT_REPOSITORIES: dict[
         ArmorGlyphEffectRepository,
         JewelryGlyphEffectRepository,
         JewelryTraitRepository,
+        SkillLineRepository,
     ],
 ] = {}
 
 
 def _shared_static_gear_input_repositories(database_path: str | Path):
-    """Reuse immutable Extreme gear-input repositories for one audit process.
+    """Reuse immutable Extreme static repositories for one audit process.
 
     Extreme exhaustive scoring constructs many conditioned context factories for the
     same canonical database. These repositories already own deterministic per-name
     caches, so recreating them per evaluator discards those caches and reopens SQLite
-    for the same armor/jewelry inputs on every candidate. The cache is intentionally
-    process-local and database-path scoped; a fresh audit process therefore sees a
-    fresh database snapshot.
+    for the same armor/jewelry/skill-line inputs on every candidate. The cache is
+    intentionally process-local and database-path scoped; a fresh audit process
+    therefore sees a fresh database snapshot.
     """
 
     key = str(Path(database_path).resolve())
@@ -56,6 +58,7 @@ def _shared_static_gear_input_repositories(database_path: str | Path):
         ArmorGlyphEffectRepository(database_path),
         JewelryGlyphEffectRepository(database_path),
         JewelryTraitRepository(database_path),
+        SkillLineRepository(database_path),
     )
     _SHARED_STATIC_GEAR_INPUT_REPOSITORIES[key] = repositories
     return repositories
@@ -141,12 +144,16 @@ class ExtremeResourceConditionedPhase5ContextFactory(Phase5BuildCalculationConte
         gear_set_repository = kwargs.get("gear_set_repository")
         database_path = getattr(gear_set_repository, "database_path", None)
         if database_path is not None:
-            armor_glyph, jewelry_glyph, jewelry_trait = _shared_static_gear_input_repositories(
-                database_path
-            )
+            (
+                armor_glyph,
+                jewelry_glyph,
+                jewelry_trait,
+                skill_line,
+            ) = _shared_static_gear_input_repositories(database_path)
             kwargs.setdefault("armor_glyph_repository", armor_glyph)
             kwargs.setdefault("jewelry_glyph_repository", jewelry_glyph)
             kwargs.setdefault("jewelry_trait_repository", jewelry_trait)
+            kwargs.setdefault("skill_line_repository", skill_line)
 
         super().__init__(*args, **kwargs)
         existing = self.gear_resolver
