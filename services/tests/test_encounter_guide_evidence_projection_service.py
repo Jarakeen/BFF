@@ -160,3 +160,23 @@ def test_real_taleria_projection_exposes_thresholds_and_reviewed_mechanics():
     assert "swim" in deluge.mitigation.casefold()
     assert "dodge" in crashing.mitigation.casefold() or "block" in crashing.mitigation.casefold()
     assert "heal" in maelstrom.mitigation.casefold()
+
+
+def test_real_xalvakka_projection_exposes_phase_and_split_structure():
+    projection = EncounterGuideEvidenceProjectionService(DATA).get(
+        "xalvakka", "Xalvakka"
+    )
+
+    markers = {row.marker for row in projection.timeline}
+    labels = {row.label for row in projection.timeline}
+    names = {row.mechanic for row in projection.strategy}
+
+    assert {"70%", "40%"}.issubset(markers)
+    assert "Phase 2" in labels
+    assert "Phase 3" in labels
+    assert "Wraith Summons" in names
+    assert "Soul Resonance" in names
+    assert "Retreat" in names
+    assert "Split" in names
+    assert "Phase 3 Meteors" in names
+    assert "Havocrel Goliath Summons" in names
