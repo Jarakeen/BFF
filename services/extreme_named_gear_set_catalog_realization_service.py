@@ -12,7 +12,9 @@ identity. Exhaustive production searches therefore memoize exact witness templat
 by that semantic legality shape and rematerialize the current set ids/names. The
 immutable concrete slot assignments used during rematerialization are interned by
 set identity + slot + weapon type, avoiding repeated dataclass construction across
-large named-set combinations without pruning any named assignment.
+large named-set combinations without pruning any named assignment. Eligibility
+shapes are likewise interned once per canonical set id so repeated witness lookups
+do not rebuild the same immutable legality descriptor.
 
 A caller may cap assignments for exploratory/runtime use. Any such truncation is
 explicit and prevents denominator proof. Exhaustive means exhaustive; a progress
@@ -123,6 +125,10 @@ class ExtremeNamedGearSetCatalogRealizationService:
         self.eligibility = eligibility
         self._breakpoint_by_id = {row.set_id: row for row in breakpoints.sets}
         self._eligibility_by_id = {row.set_id: row for row in eligibility.sets}
+        self._eligibility_shape_by_id = {
+            int(row.set_id): self._eligibility_shape(row)
+            for row in eligibility.sets
+        }
         self._witness_template_cache: dict[
             tuple[str, tuple[_EligibilityShape, ...]],
             _WitnessTemplate | None,
@@ -143,6 +149,17 @@ class ExtremeNamedGearSetCatalogRealizationService:
             weapon_types=tuple(row.weapon_types),
             other_equip_types=tuple(row.other_equip_types),
         )
+
+    def _eligibility_shape_cached(
+        self,
+        row: ExtremeNamedGearSetSlotEligibility,
+    ) -> _EligibilityShape:
+        set_id = int(row.set_id)
+        shape = self._eligibility_shape_by_id.get(set_id)
+        if shape is None:
+            shape = self._eligibility_shape(row)
+            self._eligibility_shape_by_id[set_id] = shape
+        return shape
 
     @classmethod
     def _template_from_witness(
@@ -216,7 +233,7 @@ class ExtremeNamedGearSetCatalogRealizationService:
     ) -> ExtremeNamedGearSetRealization | None:
         key = (
             topology.signature,
-            tuple(self._eligibility_shape(row) for row in selected),
+            tuple(self._eligibility_shape_cached(row) for row in selected),
         )
         if key not in self._witness_template_cache:
             witness = ExtremeNamedGearSetRealizationService.find_witness(
