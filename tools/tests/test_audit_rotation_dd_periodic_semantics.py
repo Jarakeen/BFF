@@ -4,6 +4,9 @@ from types import SimpleNamespace
 import pytest
 
 import tools.audit_rotation_dd_periodic_semantics as audit_tool
+from services.rotation_dd_periodic_runtime_semantics_review_service import (
+    RotationDDPeriodicRuntimeSemanticsReviewEntry,
+)
 
 
 class _BuildService:
@@ -96,3 +99,25 @@ def test_resolve_build_rejects_ambiguous_character_name() -> None:
 
     with pytest.raises(ValueError, match="matches multiple saved builds"):
         audit_tool._resolve_build(builds, "Rylonia")
+
+
+def test_partial_review_formatter_separates_known_and_still_needed_fields() -> None:
+    review = RotationDDPeriodicRuntimeSemanticsReviewEntry(
+        skill_entity_id="skeletal_archer",
+        coefficient_number=1,
+        duration_seconds=20.0,
+        reviewed_interval_seconds=2.0,
+        successive_hit_multiplier=1.15,
+        evidence=("reviewed tooltip cadence and growth",),
+    )
+    item = SimpleNamespace(partial_review=review)
+
+    lines = audit_tool._format_partial_review(item)
+
+    assert lines[0] == (
+        "      known: duration=20s, interval=2s, successive_hit_multiplier=1.15"
+    )
+    assert lines[1] == (
+        "      still needed: first_tick_offset_seconds, refresh_boundary, magnitude_policy"
+    )
+    assert lines[2] == "      review evidence: reviewed tooltip cadence and growth"
