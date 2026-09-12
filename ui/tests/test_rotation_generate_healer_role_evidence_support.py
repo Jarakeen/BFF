@@ -9,6 +9,11 @@ from minmax.rotation_demand_window import (
     RotationDemandWindow,
 )
 from models.build_model import PlayerBuild
+from services.rotation_healer_demand_criteria_service import (
+    RotationCandidateHealerCriteriaHardObligationService,
+    RotationHealerDemandCriterion,
+    RotationHealerDemandCriterionSourceKind,
+)
 from ui.rotation_generate_healer_role_evidence_support import (
     RotationGenerateHealerRoleEvidenceSupport,
 )
@@ -163,3 +168,36 @@ def test_generate_healer_composer_blocks_unavailable_role_output_provider() -> N
         )
 
     assert plan_factory.calls == []
+
+
+def test_generate_healer_composer_attaches_verified_criteria_as_separate_hard_gate() -> None:
+    criterion = RotationHealerDemandCriterion(
+        demand_name=_HEALING.name,
+        minimum_modeled_healing_per_demand_second=1250.0,
+        source_kind=(
+            RotationHealerDemandCriterionSourceKind.VERIFIED_ENCOUNTER_EVIDENCE
+        ),
+        provenance=("encounter_fact=reviewed_healer_floor",),
+    )
+    role_factory = _RoleOutputFactory()
+    plan_factory = _PlanEvidenceFactory()
+    support = RotationGenerateHealerRoleEvidenceSupport(
+        role_output_factory=role_factory,
+        plan_evidence_factory=plan_factory,
+        criteria=(criterion,),
+    )
+    build = PlayerBuild(Role="Healer")
+
+    evidence = support.compose(
+        player_build=build,
+        evidence_bundle=_bundle(_HEALING),  # type: ignore[arg-type]
+    )
+
+    assert evidence.plan_evidence_provider is plan_factory.result
+    hard_gate = plan_factory.calls[0]["role_hard_obligation_evidence_provider"]
+    assert isinstance(
+        hard_gate,
+        RotationCandidateHealerCriteriaHardObligationService,
+    )
+    assert hard_gate.multi_demand_output_service is role_factory.result
+    assert hard_gate.criteria == (criterion,)
