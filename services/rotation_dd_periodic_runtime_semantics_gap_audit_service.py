@@ -7,6 +7,7 @@ from typing import Iterable
 from minmax.skill_coefficient_repository import SkillCoefficientRepository, ability_entity_id
 from minmax.skill_component_classification import SkillEffectKind
 from minmax.skill_component_repository import SkillComponentRepository
+from models.build_model import PlayerBuild
 from services.rotation_candidate_periodic_damage_runtime_projection_service import (
     RotationPeriodicDamageRuntimeSemantics,
 )
@@ -65,6 +66,23 @@ class RotationDDPeriodicRuntimeSemanticsGapAuditService:
         )
         self.semantics_registry = (
             semantics_registry or RotationDDPeriodicRuntimeSemanticsRegistryService()
+        )
+
+    def audit_build(
+        self,
+        player_build: PlayerBuild,
+    ) -> RotationDDPeriodicRuntimeSemanticsGapAudit:
+        """Audit the canonical skill identities saved on both bars of one build.
+
+        Bar order and duplicate slots do not change periodic runtime semantics, so
+        this adapter delegates to ``audit`` after collecting the saved skill names.
+        Ultimates are included because the sixth saved slot shares the same canonical
+        skill identity path as ordinary skills; non-periodic components are filtered
+        by verified component classification below.
+        """
+
+        return self.audit(
+            tuple(player_build.FrontBarSkills) + tuple(player_build.BackBarSkills)
         )
 
     def audit(
