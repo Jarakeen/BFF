@@ -9,8 +9,10 @@ assignment rather than two copies of the same equipment state.
 
 Physical realizability depends on topology plus slot-eligibility shape, not set
 identity. Exhaustive production searches therefore memoize exact witness templates
-by that semantic legality shape and rematerialize the current set ids/names. This
-removes repeated slot-packing backtracking without pruning any named assignment.
+by that semantic legality shape and rematerialize the current set ids/names. The
+immutable concrete slot assignments used during rematerialization are interned by
+set identity + slot + weapon type, avoiding repeated dataclass construction across
+large named-set combinations without pruning any named assignment.
 
 A caller may cap assignments for exploratory/runtime use. Any such truncation is
 explicit and prevents denominator proof. Exhaustive means exhaustive; a progress
@@ -125,6 +127,10 @@ class ExtremeNamedGearSetCatalogRealizationService:
             tuple[str, tuple[_EligibilityShape, ...]],
             _WitnessTemplate | None,
         ] = {}
+        self._slot_assignment_cache: dict[
+            tuple[int, str, str, str],
+            ExtremeNamedGearSlotAssignment,
+        ] = {}
 
     @staticmethod
     def _eligibility_shape(row: ExtremeNamedGearSetSlotEligibility) -> _EligibilityShape:
@@ -159,18 +165,38 @@ class ExtremeNamedGearSetCatalogRealizationService:
             ),
         )
 
-    @staticmethod
+    def _materialized_slot_assignment(
+        self,
+        row: ExtremeNamedGearSetSlotEligibility,
+        template_assignment: _WitnessTemplateAssignment,
+    ) -> ExtremeNamedGearSlotAssignment:
+        key = (
+            int(row.set_id),
+            row.name,
+            template_assignment.slot,
+            template_assignment.weapon_type,
+        )
+        assignment = self._slot_assignment_cache.get(key)
+        if assignment is None:
+            assignment = ExtremeNamedGearSlotAssignment(
+                slot=template_assignment.slot,
+                set_id=int(row.set_id),
+                set_name=row.name,
+                weapon_type=template_assignment.weapon_type,
+            )
+            self._slot_assignment_cache[key] = assignment
+        return assignment
+
     def _materialize_template(
+        self,
         topology: ExtremeGearSetCountTopology,
         selected: tuple[ExtremeNamedGearSetSlotEligibility, ...],
         template: _WitnessTemplate,
     ) -> ExtremeNamedGearSetRealization:
         assignments = tuple(
-            ExtremeNamedGearSlotAssignment(
-                slot=item.slot,
-                set_id=int(selected[item.set_position].set_id),
-                set_name=selected[item.set_position].name,
-                weapon_type=item.weapon_type,
+            self._materialized_slot_assignment(
+                selected[item.set_position],
+                item,
             )
             for item in template.assignments
         )
@@ -178,7 +204,7 @@ class ExtremeNamedGearSetCatalogRealizationService:
             topology_signature=topology.signature,
             set_ids=tuple(int(row.set_id) for row in selected),
             set_names=tuple(row.name for row in selected),
-            counts=tuple(int(value) for value in topology.counts),
+            counts=tuple(topology.counts),
             weapon_shape=template.weapon_shape,
             assignments=assignments,
         )
@@ -205,7 +231,10 @@ class ExtremeNamedGearSetCatalogRealizationService:
             return None
         return self._materialize_template(topology, selected, template)
 
-    def _candidates_for_count(self, count: int) -> tuple[ExtremeNamedGearSetSlotEligibility, ...]:
+    def _candidates_for_count(
+        self,
+        count: int,
+    ) -> tuple[ExtremeNamedGearSetSlotEligibility, ...]:
         rows: list[ExtremeNamedGearSetSlotEligibility] = []
         for set_id, breakpoint in self._breakpoint_by_id.items():
             if int(count) not in breakpoint.bonus_counts:
