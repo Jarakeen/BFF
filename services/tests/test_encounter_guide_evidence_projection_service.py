@@ -235,3 +235,47 @@ def test_oaxiltso_reviewed_research_populates_overview_without_canonical_packet(
 
     blitz = next(row for row in projection.strategy if row.mechanic == "Savage Blitz")
     assert "dodge" in blitz.mitigation.casefold()
+
+
+def test_real_euphotic_gatekeeper_projection_exposes_reviewed_mechanics():
+    projection = EncounterGuideEvidenceProjectionService(DATA).get(
+        "the_euphotic_gatekeeper", "The Euphotic Gatekeeper"
+    )
+
+    names = {row.mechanic for row in projection.strategy}
+
+    assert "Bristlebarb" in names
+    assert "Pangrit Den" in names
+    assert "Charge" in names
+    assert "Bristlepitch Hazard" in names
+
+    bristlebarb = next(row for row in projection.strategy if row.mechanic == "Bristlebarb")
+    charge = next(row for row in projection.strategy if row.mechanic == "Charge")
+
+    assert "poison" in bristlebarb.summary.casefold()
+    assert "knockback" in charge.summary.casefold() or "aoe" in charge.summary.casefold()
+
+
+def test_real_zelvraak_projection_exposes_split_afterlife_and_wipe_mechanics():
+    projection = EncounterGuideEvidenceProjectionService(DATA).get(
+        "zelvraak_the_unbreathing", "Zelvraak the Unbreathing"
+    )
+
+    timeline = {(row.marker, row.label) for row in projection.timeline}
+    names = {row.mechanic for row in projection.strategy}
+
+    assert ("50%", "Afterlife/Banished") in timeline
+    assert ("75%", "Split Thresholds") in timeline
+    assert ("25%", "Split Thresholds") in timeline
+
+    assert "Heavy Cone" in names
+    assert "Sea Orbs" in names
+    assert "Fractured Souls" in names
+    assert "Split" in names
+    assert "Inferno" in names
+
+    sea_orbs = next(row for row in projection.strategy if row.mechanic == "Sea Orbs")
+    split = next(row for row in projection.strategy if row.mechanic == "Split")
+
+    assert "4" in sea_orbs.summary
+    assert "interrupt" in split.summary.casefold()
