@@ -34,6 +34,31 @@ class _FakeSkillProvider:
         )
 
 
+class _FixedDamageProvider:
+    def __init__(self, value: float) -> None:
+        self.value = float(value)
+        self.calls = []
+
+    def evaluate_action(self, *, candidate, action):
+        self.calls.append((candidate, action))
+        return RotationActionDamageEvidence(
+            time_seconds=action.time_seconds,
+            sequence=action.sequence,
+            damage_value=self.value,
+        )
+
+
+class _WeaponAttackProviderFactory:
+    def __init__(self) -> None:
+        self.light = _FixedDamageProvider(40.0)
+        self.heavy = _FixedDamageProvider(300.0)
+        self.calls = []
+
+    def providers_for(self, **kwargs):
+        self.calls.append(kwargs)
+        return self.light, self.heavy
+
+
 def _bundle(*, target_resistance=18200.0):
     return RotationCanonicalEvidenceBundle(
         encounter_id="test_encounter",
@@ -85,6 +110,37 @@ def _candidate():
     )
 
 
+def _woven_candidate():
+    return GeneratedRotationCandidate(
+        candidate_id="woven-dd",
+        plan=RotationPlan(
+            character_name="Parse Cat",
+            build_name="DD",
+            duration_seconds=10.0,
+            actions=(
+                RotationAction(0.0, 0, RotationActionKind.LIGHT_ATTACK, bar="front"),
+                RotationAction(
+                    0.0,
+                    1,
+                    RotationActionKind.SKILL,
+                    name="spammable",
+                    bar="front",
+                ),
+                RotationAction(4.0, 0, RotationActionKind.HEAVY_ATTACK, bar="front"),
+                RotationAction(
+                    8.0,
+                    0,
+                    RotationActionKind.ULTIMATE,
+                    name="meteor",
+                    bar="front",
+                ),
+            ),
+        ),
+        refresh_leads=(),
+        action_claims=(),
+    )
+
+
 def test_compose_routes_skill_and_ultimate_into_dd_role_output(monkeypatch) -> None:
     monkeypatch.setattr(
         dd_support,
@@ -109,6 +165,57 @@ def test_compose_routes_skill_and_ultimate_into_dd_role_output(monkeypatch) -> N
     )
     assert output.unresolved == ()
     assert output.value == pytest.approx(30.0)
+
+
+def test_compose_routes_verified_light_and_heavy_attack_providers(monkeypatch) -> None:
+    monkeypatch.setattr(
+        dd_support,
+        "_RotationGenerateBarAwareSkillDamageProvider",
+        _FakeSkillProvider,
+    )
+    static = _StaticContextService()
+    factory = _WeaponAttackProviderFactory()
+    support = dd_support.RotationGenerateDDRoleEvidenceSupport(
+        database_path="unused-test.db",
+        static_context_service=static,  # type: ignore[arg-type]
+        weapon_attack_provider_factory=factory,
+    )
+    build = _dd_build()
+
+    evidence = support.compose(player_build=build, evidence_bundle=_bundle())
+    output = evidence.plan_evidence_provider.role_output_evidence_provider.evaluate_plan(
+        _woven_candidate()
+    )
+
+    assert len(factory.calls) == 1
+    assert factory.calls[0]["player_build"] is build
+    assert factory.calls[0]["static_context"] is static.result
+    assert factory.calls[0]["target_resistance"] == 18200.0
+    assert output.unresolved == ()
+    assert output.value == pytest.approx((40.0 + 100.0 + 300.0 + 200.0) / 10.0)
+    assert len(factory.light.calls) == 1
+    assert len(factory.heavy.calls) == 1
+
+
+def test_without_weapon_attack_factory_woven_damage_fails_closed(monkeypatch) -> None:
+    monkeypatch.setattr(
+        dd_support,
+        "_RotationGenerateBarAwareSkillDamageProvider",
+        _FakeSkillProvider,
+    )
+    support = dd_support.RotationGenerateDDRoleEvidenceSupport(
+        database_path="unused-test.db",
+        static_context_service=_StaticContextService(),  # type: ignore[arg-type]
+    )
+
+    evidence = support.compose(player_build=_dd_build(), evidence_bundle=_bundle())
+    output = evidence.plan_evidence_provider.role_output_evidence_provider.evaluate_plan(
+        _woven_candidate()
+    )
+
+    assert output.value is None
+    assert "light_attack damage consequence has no canonical evaluator configured" in output.unresolved
+    assert "heavy_attack damage consequence has no canonical evaluator configured" in output.unresolved
 
 
 def test_compose_requires_explicit_target_resistance() -> None:
