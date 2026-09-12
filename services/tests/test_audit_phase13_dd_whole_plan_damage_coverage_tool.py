@@ -1,5 +1,7 @@
 import json
 
+import pytest
+
 from minmax.rotation_plan import RotationActionKind
 from services.rotation_dd_whole_plan_damage_coverage_audit_service import (
     RotationDDDamageCoverageBlocker,
@@ -7,6 +9,7 @@ from services.rotation_dd_whole_plan_damage_coverage_audit_service import (
 )
 from tools.audit_phase13_dd_whole_plan_damage_coverage import (
     _group_static_prerequisite_gaps,
+    _parse_target_window,
     _saved_dd_builds,
     _sorted_blockers,
 )
@@ -86,3 +89,19 @@ def test_static_prerequisite_gaps_collapse_front_back_duplicates() -> None:
         and gap.bars == ("build",)
         for gap in gaps
     )
+
+
+def test_parse_target_window_builds_authoritative_off_balance_window() -> None:
+    window = _parse_target_window("5:12")
+
+    assert window.start_seconds == pytest.approx(5.0)
+    assert window.end_seconds == pytest.approx(12.0)
+    assert window.active_buffs == ("Off Balance",)
+
+
+def test_parse_target_window_rejects_bad_shape_and_non_numeric_values() -> None:
+    with pytest.raises(ValueError, match="START:END"):
+        _parse_target_window("5")
+
+    with pytest.raises(ValueError, match="numeric START:END"):
+        _parse_target_window("five:twelve")
