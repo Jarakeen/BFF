@@ -12,6 +12,10 @@ source-table cells. For this narrow max-resource proof, ``non-trait source cells
 are proof-neutral only when the explicit U50 max-resource review covers the complete
 canonical U50 Alchemy trait universe. Other catalog unresolved evidence remains a
 hard blocker.
+
+Production finite-axis search constructs many evaluator objects around the same
+canonical repository. Completed potion irrelevance proofs are therefore cached by
+canonical database, patch, and objective; injected test repositories remain local.
 """
 
 from dataclasses import dataclass
@@ -28,11 +32,6 @@ _OBJECTIVE_STATS = {
     "max_stamina": StatId.MAX_STAMINA,
 }
 
-# U50 potion effect families that do not modify a maximum resource. Restore-resource
-# traits affect current resources and named recovery buffs; the remaining families
-# affect recovery, offense, defense, control, visibility, movement, healing, or
-# resource drain rather than the character-sheet maxima. This explicit patch-scoped
-# review means a newly introduced trait is a blocker until it is reviewed.
 _REVIEWED_U50_MAX_RESOURCE_IRRELEVANT_TRAITS = frozenset(
     {
         "Breach",
@@ -92,9 +91,22 @@ class ExtremeResourcePotionProjectionService:
     """Prove whether the canonical potion catalogue can alter one max resource."""
 
     SUPPORTED_OBJECTIVES = frozenset(_OBJECTIVE_STATS)
+    _production_projection_cache: dict[
+        tuple[str, str, str], ExtremeResourcePotionProjection
+    ] = {}
 
     def __init__(self, repository: PotionAvailabilityRepository) -> None:
         self.repository = repository
+
+    def _production_cache_key(self, objective_key: str) -> tuple[str, str, str] | None:
+        if not isinstance(self.repository, PotionAvailabilityRepository):
+            return None
+        database_path = str(getattr(self.repository, "database_path", "") or "").strip()
+        if not database_path:
+            return None
+        game_update = getattr(self.repository, "game_update", GameUpdate.U50)
+        update_value = str(getattr(game_update, "value", game_update))
+        return database_path, update_value, objective_key
 
     @staticmethod
     def _catalog_unresolved_for_max_resource_proof(
@@ -102,13 +114,6 @@ class ExtremeResourcePotionProjectionService:
         *,
         game_update: GameUpdate,
     ) -> tuple[str, ...]:
-        """Return only catalog unresolved evidence that can still affect this proof.
-
-        U50 non-trait source-cell warnings are scraped table noise, not unknown
-        canonical Alchemy mechanics, but they are proof-neutral only while the
-        patch-scoped review exactly covers the canonical U50 trait universe.
-        """
-
         complete_u50_trait_review = bool(
             game_update is GameUpdate.U50
             and _REVIEWED_U50_MAX_RESOURCE_IRRELEVANT_TRAITS == U50_ALCHEMY_TRAITS
@@ -131,6 +136,12 @@ class ExtremeResourcePotionProjectionService:
         target = _OBJECTIVE_STATS.get(key)
         if target is None:
             raise KeyError(f"unreviewed Extreme potion projection objective: {objective_key!r}")
+
+        cache_key = self._production_cache_key(key)
+        if cache_key is not None:
+            cached = self._production_projection_cache.get(cache_key)
+            if cached is not None:
+                return cached
 
         catalog = self.repository.catalog()
         game_update = getattr(self.repository, "game_update", GameUpdate.U50)
@@ -209,13 +220,16 @@ class ExtremeResourcePotionProjectionService:
                 relevant.append(formula_id or "+".join(traits))
 
         final_unresolved = tuple(dict.fromkeys(item for item in unresolved if item))
-        return ExtremeResourcePotionProjection(
+        result = ExtremeResourcePotionProjection(
             objective_key=key,
             formulas_reviewed=len(catalog.formulas),
             relevant_formulas=tuple(dict.fromkeys(relevant)),
             denominator_proven=bool(catalog.formulas) and not final_unresolved,
             unresolved=final_unresolved,
         )
+        if cache_key is not None:
+            self._production_projection_cache[cache_key] = result
+        return result
 
 
 __all__ = [
