@@ -115,6 +115,57 @@ def _sync_event_lists(self, row: int, *, source: str) -> None:
     _render_selected_event(self, row)
 
 
+def _overview_tab_with_evidence(self) -> QWidget:
+    tab = QWidget()
+    root = QVBoxLayout(tab)
+    root.setContentsMargins(0, 0, 0, 0)
+    root.setSpacing(8)
+
+    top = QHBoxLayout()
+    top.setSpacing(8)
+
+    brief = FoundryCard("Encounter Brief", "trial").set_watermark("compass", 0.04)
+    self.encounter_overview_summary = QLabel(
+        "Select an encounter to load reviewed encounter intelligence."
+    )
+    self.encounter_overview_summary.setWordWrap(True)
+    brief.addWidget(self.encounter_overview_summary)
+    top.addWidget(brief, 2)
+
+    evidence = FoundryCard("Evidence Status", "open-book")
+    self.encounter_overview_evidence = QLabel(
+        "Only canonical or review-safe encounter evidence is shown here."
+    )
+    self.encounter_overview_evidence.setWordWrap(True)
+    evidence.addWidget(self.encounter_overview_evidence)
+    top.addWidget(evidence, 1)
+    root.addLayout(top)
+
+    lower = QHBoxLayout()
+    lower.setSpacing(8)
+
+    fight_shape = FoundryCard("Fight Shape", "stopwatch")
+    self.encounter_overview_timeline = QLabel("No reviewed timeline yet.")
+    self.encounter_overview_timeline.setWordWrap(True)
+    fight_shape.addWidget(self.encounter_overview_timeline)
+    lower.addWidget(fight_shape, 2)
+
+    mechanics = FoundryCard("What Matters", "crossed-swords")
+    self.encounter_overview_mechanics = QLabel("No reviewed mechanic strategy yet.")
+    self.encounter_overview_mechanics.setWordWrap(True)
+    mechanics.addWidget(self.encounter_overview_mechanics)
+    lower.addWidget(mechanics, 2)
+
+    raid_read = FoundryCard("Raid Lead Read", "feather").make_parchment().set_watermark("feather", 0.10)
+    self.encounter_overview_callouts = QLabel("No reviewed raid-lead callouts yet.")
+    self.encounter_overview_callouts.setWordWrap(True)
+    raid_read.addWidget(self.encounter_overview_callouts)
+    lower.addWidget(raid_read, 2)
+
+    root.addLayout(lower, 1)
+    return tab
+
+
 def _assignments_tab_with_evidence(self) -> QWidget:
     tab = QWidget()
     root = QVBoxLayout(tab)
@@ -288,10 +339,62 @@ def _render_selected_mechanic(self) -> None:
     )
 
 
+def _render_overview_evidence(
+    self,
+    encounter_name: str,
+    timeline_rows,
+    projection,
+    *,
+    timeline_source: str,
+) -> None:
+    if not hasattr(self, "encounter_overview_summary"):
+        return
+
+    self.encounter_overview_summary.setText(
+        f"{encounter_name}\n\n"
+        f"{len(timeline_rows)} timeline marker(s), {len(projection.strategy)} reviewed mechanic strategy row(s), "
+        f"and {projection.evidence_rows} underlying evidence row(s) are available for this encounter."
+    )
+
+    timeline_lines = [
+        f"• {marker}  {label} — {detail}"
+        for marker, label, detail in timeline_rows[:6]
+    ]
+    self.encounter_overview_timeline.setText(
+        "\n".join(timeline_lines)
+        if timeline_lines
+        else "No canonical phase timeline or reviewed evidence fallback is available yet."
+    )
+
+    mechanic_lines = [
+        f"• {row.mechanic}: {row.mitigation}"
+        for row in projection.strategy[:6]
+    ]
+    self.encounter_overview_mechanics.setText(
+        "\n".join(mechanic_lines)
+        if mechanic_lines
+        else "No reviewed mechanic strategy is available yet."
+    )
+
+    self.encounter_overview_callouts.setText(
+        "\n".join(f"• {value}" for value in projection.callouts)
+        if projection.callouts
+        else "No reviewed raid-lead callouts are available yet."
+    )
+
+    self.encounter_overview_evidence.setText(
+        f"Timeline source: {timeline_source}.\n"
+        f"Reviewed evidence rows: {projection.evidence_rows}.\n"
+        f"Strategy rows: {len(projection.strategy)}.\n\n"
+        "This view is read-only. Candidate review-packet aliases remain hidden until they are explicitly reviewed."
+    )
+
+
 def _render_encounter_evidence(self, encounter_id: str, encounter_name: str) -> None:
     projection = _projection_service(self).get(encounter_id, encounter_name)
     guide = _display_guide(self, encounter_id)
     timeline_rows = _timeline_rows(self, guide, projection)
+    timeline_source = "canonical" if guide.phases else "reviewed evidence fallback"
     self._encounter_display_timeline = timeline_rows
 
     self.encounter_phase_list.blockSignals(True)
@@ -321,9 +424,15 @@ def _render_encounter_evidence(self, encounter_id: str, encounter_name: str) -> 
         if projection.callouts
         else "No reviewed raid-lead callouts for the selected encounter yet."
     )
+    _render_overview_evidence(
+        self,
+        encounter_name,
+        timeline_rows,
+        projection,
+        timeline_source=timeline_source,
+    )
 
     if hasattr(self, "status"):
-        timeline_source = "canonical" if guide.phases else "reviewed evidence fallback"
         self.status.success(
             f"Selected encounter: {encounter_name}. Timeline {len(timeline_rows)} row(s) from {timeline_source}; "
             f"{len(projection.strategy)} reviewed mechanic strategy row(s)."
@@ -340,6 +449,7 @@ def install() -> None:
     original_boss_rows_for_active_trial = EncountersPage._boss_rows_for_active_trial
     original_load_boss_index = EncountersPage._load_boss_index
     original_boss_changed = EncountersPage._boss_changed
+    EncountersPage._overview_tab = _overview_tab_with_evidence
     EncountersPage._assignments_tab = _assignments_tab_with_evidence
 
     def boss_rows_for_active_trial_with_reviewed_identity(self):
