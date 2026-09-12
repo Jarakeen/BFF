@@ -44,13 +44,20 @@ class RosterService:
                 raid_days TEXT NOT NULL DEFAULT '',
                 raid_time TEXT NOT NULL DEFAULT '',
                 timezone TEXT NOT NULL DEFAULT '',
-                raid_schedule_json TEXT NOT NULL DEFAULT ''
+                raid_schedule_json TEXT NOT NULL DEFAULT '',
+                current_focus TEXT NOT NULL DEFAULT ''
             )
         """)
         existing_team_columns = {
             row["name"] for row in self.db.execute("PRAGMA table_info(team)").fetchall()
         }
-        for column in ("raid_days", "raid_time", "timezone", "raid_schedule_json"):
+        for column in (
+            "raid_days",
+            "raid_time",
+            "timezone",
+            "raid_schedule_json",
+            "current_focus",
+        ):
             if column not in existing_team_columns:
                 self.db.execute(
                     f"ALTER TABLE team ADD COLUMN {column} TEXT NOT NULL DEFAULT ''"
@@ -123,13 +130,7 @@ class RosterService:
         return self._row_to_member(row)
 
     def ensure_team_name(self, team_name: str) -> str:
-        """Ensure one durable Roster team identity exists for ``team_name``.
-
-        Generated plans and roster membership are separate persistence concerns, but
-        they share this user-facing team identity. This method is deliberately
-        idempotent and does not fabricate membership for recruitment-only chairs.
-        """
-
+        """Ensure one durable Roster team identity exists for ``team_name``."""
         name = str(team_name or "").strip()
         if not name:
             raise ValueError("team name is required")
@@ -172,11 +173,12 @@ class RosterService:
             RaidTime=row["raid_time"] or "",
             TimeZone=row["timezone"] or "",
             Slots=slots,
+            CurrentFocus=(row["current_focus"] if "current_focus" in row.keys() else "") or "",
         )
 
     def list_team_schedules(self) -> list[TeamSchedule]:
         rows = self.db.execute("""
-            SELECT name, raid_days, raid_time, timezone, raid_schedule_json
+            SELECT name, raid_days, raid_time, timezone, raid_schedule_json, current_focus
             FROM team ORDER BY name COLLATE NOCASE
         """).fetchall()
         return [self._schedule_from_row(row) for row in rows]
@@ -186,7 +188,7 @@ class RosterService:
         if not name:
             return None
         row = self.db.execute("""
-            SELECT name, raid_days, raid_time, timezone, raid_schedule_json
+            SELECT name, raid_days, raid_time, timezone, raid_schedule_json, current_focus
             FROM team WHERE name = ? COLLATE NOCASE
         """, (name,)).fetchone()
         if row is None:
@@ -197,8 +199,6 @@ class RosterService:
         name = str(schedule.TeamName or "").strip()
         if not name:
             raise ValueError("Team name is required before a raid schedule can be saved.")
-        # Preserve the old one-time-for-many-days representation. JSON slots are
-        # persisted only when the caller actually supplied per-day schedule slots.
         slots = tuple(schedule.Slots)
         raid_days = str(schedule.RaidDays or "").strip()
         raid_time = str(schedule.RaidTime or "").strip()
@@ -212,13 +212,14 @@ class RosterService:
         self.db.execute("INSERT OR IGNORE INTO team (name) VALUES (?)", (name,))
         self.db.execute("""
             UPDATE team
-            SET raid_days = ?, raid_time = ?, timezone = ?, raid_schedule_json = ?
+            SET raid_days = ?, raid_time = ?, timezone = ?, raid_schedule_json = ?, current_focus = ?
             WHERE name = ? COLLATE NOCASE
         """, (
             raid_days,
             raid_time,
             str(schedule.TimeZone or "").strip(),
             slots_json,
+            str(schedule.CurrentFocus or "").strip(),
             name,
         ))
         self.db.commit()
