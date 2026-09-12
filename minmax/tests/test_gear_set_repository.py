@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import minmax.gear_set_repository as gear_set_module
 from minmax.gear_set_repository import GearSetRepository
 
 
@@ -93,6 +94,28 @@ def test_get_bonus_returns_none_for_unavailable_piece_count():
     bonus = repository.get_bonus(VESTMENTS_OF_THE_WARLOCK_ID, 12)
 
     assert bonus is None
+
+
+def test_get_bonus_reuses_cached_set_bonus_catalog(monkeypatch):
+    original_connect = gear_set_module.sqlite3.connect
+    connect_count = 0
+
+    def counting_connect(*args, **kwargs):
+        nonlocal connect_count
+        connect_count += 1
+        return original_connect(*args, **kwargs)
+
+    monkeypatch.setattr(gear_set_module.sqlite3, "connect", counting_connect)
+    repository = GearSetRepository(DB_PATH)
+
+    first = repository.get_bonus(VESTMENTS_OF_THE_WARLOCK_ID, 3)
+    second = repository.get_bonus(VESTMENTS_OF_THE_WARLOCK_ID, 5)
+    all_bonuses = repository.get_bonuses(VESTMENTS_OF_THE_WARLOCK_ID)
+
+    assert first is not None and first.piece_count == 3
+    assert second is not None and second.piece_count == 5
+    assert len(all_bonuses) == 4
+    assert connect_count == 1
 
 
 def test_witchman_armor_set_lookup():
