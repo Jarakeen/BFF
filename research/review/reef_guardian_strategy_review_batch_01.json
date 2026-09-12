@@ -1,0 +1,36 @@
+{
+  "encounter": "reef_guardian",
+  "purpose": "First explicit human-reviewed alias bindings for the Reef Guardian strategy review packet. Only aliases independently corroborated by existing high-confidence encounter evidence are accepted here; all other packet families remain pending.",
+  "decisions": [
+    {
+      "ability_game_id": 166020,
+      "status": "accepted",
+      "canonical_mechanic_id": "claw",
+      "rationale": "Existing high-confidence Combat Alerts evidence for Reef Guardian explicitly identifies ability 166020 as Claw via TIMER_ALERTS_LEGACY."
+    },
+    {
+      "ability_game_id": 166019,
+      "status": "accepted",
+      "canonical_mechanic_id": "crush",
+      "rationale": "Existing high-confidence Combat Alerts evidence for Reef Guardian explicitly identifies ability 166019 as Crush via TIMER_ALERTS_LEGACY."
+    },
+    {
+      "ability_game_id": 165987,
+      "status": "accepted",
+      "canonical_mechanic_id": "acid_pool",
+      "rationale": "Existing high-confidence Combat Alerts evidence for Reef Guardian explicitly identifies ability 165987 as Acid Pool via AOE_ALERTS, corroborating the repeated packet signature."
+    },
+    {
+      "ability_game_id": 163701,
+      "status": "accepted",
+      "canonical_mechanic_id": "replication",
+      "rationale": "Existing high-confidence Combat Alerts evidence for Reef Guardian explicitly identifies ability 163701 as the Replication combat event."
+    },
+    {
+      "ability_game_id": 166031,
+      "status": "accepted",
+      "canonical_mechanic_id": "heartburn",
+      "rationale": "Existing high-confidence Combat Alerts evidence records ability 166031 as the Heartburn Vulnerability success result; bind the numeric alias to the canonical Heartburn mechanic rather than treating the result effect as a separate mechanic identity."
+    }
+  ]
+}
