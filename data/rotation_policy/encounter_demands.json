@@ -1,4 +1,17 @@
 {
   "schema_version": 2,
-  "encounters": {}
+  "encounters": {
+    "xalvakka": {
+      "clock_policies": [],
+      "threshold_policies": [],
+      "review_blockers": [
+        {
+          "key": "phase_2_healer_demand_policy",
+          "summary": "Xalvakka Phase 2 at 70% health is reviewed encounter evidence, including continuous flame damage during the Phase 2 split, but the Rotation Builder healer-demand interpretation is not yet reviewed.",
+          "needed_evidence": "Review and explicitly approve the demand kind/pattern, preparation lead seconds, modeled window seconds, and target count. Existing 3-second lead, 2-second window, and 12-target values are audit-only policy and must not be promoted automatically.",
+          "source_context": "data/encounter_evidence/rockgrove_boss3.json phase_2 and phase_2_floor_fire_during_split; GAME_MECHANICS_FIELD_NOTES.md Xalvakka audit notes"
+        }
+      ]
+    }
+  }
 }
