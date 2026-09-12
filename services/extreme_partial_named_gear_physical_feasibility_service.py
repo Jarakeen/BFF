@@ -255,6 +255,21 @@ class ExtremePartialNamedGearPhysicalFeasibilityService:
         if cached is not None:
             return cached
 
+        counts = self._topology_counts(topology)
+        if ExtremeNamedGearSetRealizationService._violates_global_set_legality(
+            counts[: len(selected)],
+            selected,
+        ):
+            result = ExtremePartialNamedGearPhysicalFeasibilityResult(
+                possible=False,
+                selected_count=len(selected),
+                compatible_physical_shapes=0,
+                reason="selected prefix violates global named-set legality",
+            )
+            self._compatible_physical_cache[key] = ()
+            self._result_cache[key] = result
+            return result
+
         compatible = self._compatible_physicals_prevalidated(topology, selected)
         result = ExtremePartialNamedGearPhysicalFeasibilityResult(
             possible=bool(compatible),
