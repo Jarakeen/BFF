@@ -9,6 +9,16 @@ from services.character_creation_service import (
 )
 
 
+class _WeightResolver:
+    def __init__(self, value: str | None) -> None:
+        self.value = value
+        self.calls: list[str] = []
+
+    def resolve(self, set_name: str) -> str | None:
+        self.calls.append(set_name)
+        return self.value
+
+
 def test_create_builds_default_character_and_assigns_starter_sets():
     build = CharacterCreationService().create(
         CharacterCreationRequest(
@@ -36,6 +46,36 @@ def test_create_builds_default_character_and_assigns_starter_sets():
     assert build.Necklace.Set == "Powerful Assault"
     assert build.Ring1.Set == "Powerful Assault"
     assert build.Ring2.Set == "Powerful Assault"
+
+
+def test_create_autofills_unambiguous_body_set_weight():
+    resolver = _WeightResolver("Light")
+    build = CharacterCreationService(resolver).create(
+        CharacterCreationRequest(
+            name="Magrat",
+            eso_class="Warden",
+            race="Breton",
+            role="Healer",
+            body_set="Spell Power Cure",
+        )
+    )
+
+    assert resolver.calls == ["Spell Power Cure"]
+    assert all(build.Armor[slot]["Weight"] == "Light" for slot in ARMOR_SLOTS)
+
+
+def test_create_leaves_weight_blank_when_body_set_is_not_single_weight():
+    build = CharacterCreationService(_WeightResolver(None)).create(
+        CharacterCreationRequest(
+            name="Flexible Toon",
+            eso_class="Warden",
+            race="Breton",
+            role="Healer",
+            body_set="Flexible Set",
+        )
+    )
+
+    assert all(build.Armor[slot]["Weight"] == "" for slot in ARMOR_SLOTS)
 
 
 def test_create_allows_optional_fields_and_sets_to_be_blank():
