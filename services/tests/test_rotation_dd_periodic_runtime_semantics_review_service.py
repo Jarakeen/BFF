@@ -69,10 +69,8 @@ def test_repository_review_ledger_tracks_the_seven_current_dd_components() -> No
     assert stampede.reviewed_interval_seconds == 1.0
     assert stampede.activation_anchor == "impact"
     assert stampede.first_tick_offset_seconds == 1.0
-    assert stampede.unresolved_executable_fields == (
-        "refresh_boundary",
-        "magnitude_policy",
-    )
+    assert stampede.refresh_boundary == "allow_old_tick_at_recast"
+    assert stampede.unresolved_executable_fields == ("magnitude_policy",)
     assert by_key[("meteor", 2)].reviewed_interval_seconds == 1.0
 
 
