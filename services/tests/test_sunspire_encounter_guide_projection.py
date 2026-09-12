@@ -23,6 +23,20 @@ def test_lokkestiiz_reviewed_guide_projects_flight_thresholds_and_handling():
     assert "Block" in mechanics["Ice Laser Beam"].mitigation
 
 
+def test_lokkestiiz_overview_brief_surfaces_reviewed_flight_and_add_shape():
+    projection = _projection("lokkestiiz", "Lokkestiiz")
+
+    brief = "\n".join(projection.brief)
+
+    assert "80%, 50%, 20%" in brief
+    assert "boss is untargetable and cannot be damaged" in brief
+    assert "adds are active" in brief
+    assert "raid damage continues" in brief
+    assert "final beam must be blocked" in brief
+    assert "Frost Atronach, Storm Atronach" in brief
+    assert "exact count remains unresolved" in brief
+
+
 def test_yolnahkriin_reviewed_guide_projects_fire_phase_thresholds_and_handling():
     projection = _projection("yolnahkriin", "Yolnahkriin")
 
