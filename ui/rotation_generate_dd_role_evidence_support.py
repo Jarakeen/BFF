@@ -365,6 +365,12 @@ class _RotationGenerateSnapshotAwarePlanEvidenceProvider:
         self.static_provider = static_provider
         self.runtime_provider_factory = runtime_provider_factory
 
+    @property
+    def role_output_evidence_provider(self):
+        """Preserve the canonical plan-evidence compatibility surface."""
+
+        return self.static_provider.role_output_evidence_provider
+
     def evaluate_plan(self, candidate: GeneratedRotationCandidate):
         return self.static_provider.evaluate_plan(candidate)
 
