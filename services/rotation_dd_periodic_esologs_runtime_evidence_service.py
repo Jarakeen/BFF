@@ -305,8 +305,8 @@ class RotationDDPeriodicEsoLogsRuntimeEvidenceService:
         numeric_aliases: set[int],
     ) -> bool:
         raw_name = cls._ability_name_from_raw(row["raw_json"])
-        if raw_name and ability_entity_id(raw_name) == identity:
-            return True
+        if raw_name:
+            return ability_entity_id(raw_name) == identity
         ability_id = row["ability_game_id"]
         return ability_id is not None and int(ability_id) in numeric_aliases
 
