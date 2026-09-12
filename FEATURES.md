@@ -371,6 +371,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Add-pull / non-boss encounter support
 - Reviewed encounter-evidence projection supplies boss-guide timeline fallback when canonical phase rows are absent
 - Encounters planning page replaces canned example timelines/mechanics with the selected boss's canonical-or-reviewed timeline, searchable mechanic strategy, common raid names, mitigation guidance, and quick raid-lead callouts
+- Encounters Overview projects the selected fight's reviewed timeline, mechanic handling, raid-lead callouts, and evidence status while keeping unreviewed packet aliases hidden
 - Encounter guide coverage audit reports bosses missing effective timelines or reviewed strategy so research can be queued systematically
 
 ---
