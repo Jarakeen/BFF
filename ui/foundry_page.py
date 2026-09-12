@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QScrollArea, QSizePolicy, QFrame
 
 
@@ -49,6 +49,11 @@ class FoundryPage(QWidget):
         self.header = None
         self.actions = None
         self.status = None
+
+    def minimumSizeHint(self) -> QSize:
+        """Do not let a page's wide content force the application window wider."""
+        hint = super().minimumSizeHint()
+        return QSize(0, hint.height())
 
     def set_header(self, widget):
         self.header = widget
