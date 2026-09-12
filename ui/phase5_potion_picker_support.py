@@ -97,8 +97,13 @@ def _select_saved(combo, saved_value: str) -> None:
 
 
 def _persisted_value(combo) -> str:
-    data = str(combo.currentData() or "").strip()
-    return data or str(combo.currentText() or "").strip()
+    text = str(combo.currentText() or "").strip()
+    index = combo.currentIndex()
+    if index >= 0 and text == str(combo.itemText(index) or "").strip():
+        data = str(combo.itemData(index) or "").strip()
+        if data:
+            return data
+    return text
 
 
 def install() -> None:
