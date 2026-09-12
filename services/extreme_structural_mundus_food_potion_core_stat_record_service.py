@@ -111,6 +111,7 @@ class ExtremeBestMundusFoodPotionStructuralStatEvaluator:
         states: list[ExtremePotionSnapshotState] = [ExtremePotionSnapshotState(selection="")]
         unresolved: list[str] = [str(item) for item in catalog.unresolved if item]
         seen = {""}
+        game_update = getattr(self.potion_repository, "game_update", GameUpdate.U50)
 
         for formula in catalog.formulas:
             selection = str(formula.canonical_id or "").strip()
@@ -124,7 +125,7 @@ class ExtremeBestMundusFoodPotionStructuralStatEvaluator:
             for trait in availability.canonical_traits:
                 named_buff = potion_buff_for_trait(
                     trait,
-                    game_update=self.potion_repository.game_update,
+                    game_update=game_update,
                 )
                 if named_buff and named_buff not in buffs:
                     buffs.append(named_buff)
