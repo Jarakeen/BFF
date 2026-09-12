@@ -119,6 +119,36 @@ ROTATION_DD_PERIODIC_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="rotation.dd.periodic_esologs_replay_anchor_mapping",
+        domain="rotation",
+        purpose=(
+            "Map exact cast-track-linked ESO Logs cast/impact observations onto exact "
+            "rotation replay actions and emit semantic activation-anchor evidence."
+        ),
+        implementation_path=(
+            "services.rotation_dd_periodic_esologs_replay_anchor_mapping_service"
+        ),
+        inputs=(
+            "RotationPlan",
+            "RotationDDPeriodicEsoLogsCastImpactObservation",
+            "ReplayOriginTimestamp",
+        ),
+        outputs=(
+            "RotationDDPeriodicEsoLogsReplayAnchorMappingResult",
+            "RotationRuntimeActivationAnchorEvidence",
+        ),
+        responsibilities=("rotation_dd_periodic_esologs_replay_anchor_mapping",),
+        roles=("DD", "DPS"),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Replay-only bridge. Matching requires exact plan time, canonical skill identity, "
+            "and cast-track-linked observation provenance. It never searches for a nearest "
+            "action or promotes aggregate cast-to-impact delay statistics into future timing."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="rotation.dd.periodic_esologs_refresh_boundary_evidence",
         domain="rotation",
         purpose=(
