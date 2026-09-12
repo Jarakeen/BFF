@@ -2,7 +2,7 @@ from __future__ import annotations
 
 """Inline, inviting front-door character/build creation.
 
-Builds keeps its normal workspace layout with one centered entry button.
+Builds keeps its normal workspace layout with a header entry button.
 The detailed creation card exists only while the user is actively creating a
 build. Raid Engine Overview uses the same full-width pull-down form instead of
 opening a modal or navigating away.
@@ -21,7 +21,6 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QSizePolicy,
     QVBoxLayout,
-    QWidget,
 )
 
 from models.roster_model import ESO_CLASSES
@@ -325,13 +324,13 @@ def _open_easy_character_creator_from_overview(console) -> None:
             on_created=console.refresh,
             parent=console.workspace,
         )
-        console.layout.insertWidget(1, panel)
+        console.layout.insertWidget(0, panel)
         console._overview_new_build_panel = panel
     panel.open_for_creation()
 
 
 def install() -> None:
-    """Add centered New Build entry points and shared inline pull-down forms."""
+    """Add header New Build entry points and shared inline pull-down forms."""
     global _INSTALLED
     if _INSTALLED:
         return
@@ -343,6 +342,7 @@ def install() -> None:
     original_build_ui = BuildsPage._build_ui
     original_role_for = BuildsPage._role_for
     original_raid_status_card = OperationsConsole._raid_status_card
+    original_overview_build_ui = OperationsConsole._build_ui
     original_overview_render = OperationsConsole._render
     original_editor_build_ui = BuildEditor._build_ui
     original_identity_card = BuildEditor._build_identity_card
@@ -358,28 +358,35 @@ def install() -> None:
                 if isinstance(widget, FoundryButton):
                     widget.set_compact(True)
 
-        button_host = QWidget(self.workspace_widget)
-        button_layout = QHBoxLayout(button_host)
-        button_layout.setContentsMargins(0, 2, 0, 4)
-        button_layout.addStretch(1)
         self.create_character_button = _style_create_character_button(
             FoundryButton("+ Create a New Build", role=ButtonRole.PRIMARY, compact=True)
         )
         self.create_character_button.clicked.connect(
             lambda: _open_easy_character_creator(self)
         )
-        button_layout.addWidget(self.create_character_button)
-        button_layout.addStretch(1)
+        self.header.context_layout.addWidget(
+            self.create_character_button, 0, Qt.AlignmentFlag.AlignBottom
+        )
 
         tabs = getattr(self, "build_tabs", None)
         tab_index = self.workspace_layout.indexOf(tabs) if tabs is not None else 0
         insertion_index = max(0, tab_index)
-        self.workspace_layout.insertWidget(insertion_index, button_host)
-
         self.new_build_panel = CharacterCreationEasyModePanel(
             page=self, parent=self.workspace_widget
         )
-        self.workspace_layout.insertWidget(insertion_index + 1, self.new_build_panel)
+        self.workspace_layout.insertWidget(insertion_index, self.new_build_panel)
+
+    def _overview_build_ui(self):
+        original_overview_build_ui(self)
+        self.create_character_button = _style_create_character_button(
+            FoundryButton("+ Create a New Build", role=ButtonRole.PRIMARY, compact=True)
+        )
+        self.create_character_button.clicked.connect(
+            lambda: _open_easy_character_creator_from_overview(self)
+        )
+        self.header.context_layout.insertWidget(
+            2, self.create_character_button, 0, Qt.AlignmentFlag.AlignBottom
+        )
 
     def _role_for(self, build):
         roster_role, status = original_role_for(self, build)
@@ -389,21 +396,7 @@ def install() -> None:
         card = original_raid_status_card(self)
         card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         card.setMinimumHeight(255)
-
-        create_button = _style_create_character_button(
-            FoundryButton("+ Create a New Build", role=ButtonRole.PRIMARY, compact=True)
-        )
-        create_button.clicked.connect(
-            lambda: _open_easy_character_creator_from_overview(self)
-        )
-        status_group = QWidget()
-        status_group.setObjectName("overviewRaidStatusGroup")
-        status_layout = QVBoxLayout(status_group)
-        status_layout.setContentsMargins(0, 0, 0, 0)
-        status_layout.setSpacing(8)
-        status_layout.addWidget(create_button, 0, Qt.AlignmentFlag.AlignHCenter)
-        status_layout.addWidget(card, 1)
-        return status_group
+        return card
 
     def _render(self, *_args):
         self._overview_new_build_panel = None
@@ -423,6 +416,7 @@ def install() -> None:
 
     BuildsPage._build_ui = _build_ui
     BuildsPage._role_for = _role_for
+    OperationsConsole._build_ui = _overview_build_ui
     OperationsConsole._raid_status_card = _raid_status_card
     OperationsConsole._render = _render
     OperationsConsole._compact_button = staticmethod(_overview_action_pill)
