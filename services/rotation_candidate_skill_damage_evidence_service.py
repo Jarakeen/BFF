@@ -104,6 +104,7 @@ class RotationCandidateSkillDamageEvidenceService:
     context and are merged additively with exact-time combat-state Damage Done.
     Exploiter's stored magnitude joins the generic Damage Done bucket only when the
     exact recipient CombatState at that damage event is explicitly Off Balance.
+    Unknown target state remains unresolved rather than silently claiming no bonus.
     """
 
     def __init__(
@@ -155,6 +156,20 @@ class RotationCandidateSkillDamageEvidenceService:
             DamageDoneModifiers(generic=exploiter),
         )
 
+    def _target_state_for_action(self, action: RotationAction) -> CombatState | None:
+        if self.target_combat_state is not None:
+            return self.target_combat_state
+        if self.runtime_target_combat_state_resolver is None:
+            return None
+        return self.runtime_target_combat_state_resolver(
+            float(action.time_seconds),
+            int(action.sequence),
+        )
+
+    @staticmethod
+    def _requires_exploiter_target_state(context: BuildCalculationContext) -> bool:
+        return float(getattr(context, "dd_exploiter_bonus", 0.0)) > 0.0
+
     def evaluate_action(
         self,
         *,
@@ -170,6 +185,13 @@ class RotationCandidateSkillDamageEvidenceService:
             return self._unresolved(
                 action,
                 "scheduled skill action has no canonical skill identity",
+            )
+
+        action_target_state = self._target_state_for_action(action)
+        if self._requires_exploiter_target_state(self.context) and action_target_state is None:
+            return self._unresolved(
+                action,
+                "Exploiter requires authoritative target CombatState at skill damage time",
             )
 
         calculation = calculation_result_from_build_context(self.context)
@@ -199,9 +221,9 @@ class RotationCandidateSkillDamageEvidenceService:
         dd_stats = evaluate_dd_stats(calculation, evaluation_context)
         damage_done = self._damage_done_for_context(
             self.context,
-            self.target_combat_state,
+            action_target_state,
         )
-        damage_taken = damage_taken_from_target_state(self.target_combat_state)
+        damage_taken = damage_taken_from_target_state(action_target_state)
 
         periodic_projection = None
         unresolved: list[str] = []
@@ -289,23 +311,27 @@ class RotationCandidateSkillDamageEvidenceService:
                     total_damage += dynamic_damage
                     continue
 
-                total_damage += sum(
-                    self._resolve_component_damage(
+                for occurrence_index, event in enumerate(runtime_entry.events):
+                    tick_target_state = self._target_state_for_runtime_event(event)
+                    if (
+                        self._requires_exploiter_target_state(self.context)
+                        and tick_target_state is None
+                    ):
+                        unresolved.append(
+                            f"{action.name}: coefficient {component.coefficient_number} tick at {float(event.time_seconds):g}s: Exploiter requires authoritative target CombatState"
+                        )
+                        continue
+                    total_damage += self._resolve_component_damage(
                         context=self._context_for_runtime_event(self.context, event),
                         base_value=float(component.final_value),
                         classification=classification,
                         dd_stats=dd_stats,
                         damage_done=self._damage_done_for_context(
                             self.context,
-                            self._target_state_for_runtime_event(event),
+                            tick_target_state,
                         ),
-                        damage_taken=damage_taken_from_target_state(
-                            self._target_state_for_runtime_event(event)
-                        ),
-                    )
-                    * self._occurrence_multiplier(semantic, occurrence_index)
-                    for occurrence_index, event in enumerate(runtime_entry.events)
-                )
+                        damage_taken=damage_taken_from_target_state(tick_target_state),
+                    ) * self._occurrence_multiplier(semantic, occurrence_index)
                 continue
 
             component_damage = self._resolve_component_damage(
@@ -423,6 +449,11 @@ class RotationCandidateSkillDamageEvidenceService:
             )
             tick_dd_stats = evaluate_dd_stats(calculation, evaluation_context)
             tick_target_state = self._target_state_for_runtime_event(event)
+            if self._requires_exploiter_target_state(tick_context) and tick_target_state is None:
+                unresolved.append(
+                    f"{action.name}: coefficient {coefficient_number} tick at {float(event.time_seconds):g}s: Exploiter requires authoritative target CombatState"
+                )
+                continue
             tick_damage_done = self._damage_done_for_context(
                 tick_context,
                 tick_target_state,
