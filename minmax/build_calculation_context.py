@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from .base_character_state import BaseCharacterState
 from .character_progression import CharacterProgression
 from .combat_state import CombatState, IncomingAttackState
+from .damage_done import DamageDoneModifiers
 
 if TYPE_CHECKING:
     from .core_stat_calculator import CoreStatState
@@ -62,6 +63,7 @@ class BuildCalculationContext:
     gear_set_counts: tuple[tuple[str, int], ...] = field(default_factory=tuple)
     gear_effects_applied: int = 0
     unresolved_gear_effects: tuple[str, ...] = field(default_factory=tuple)
+    dd_damage_done_modifiers: DamageDoneModifiers = DamageDoneModifiers()
 
     def __post_init__(self) -> None:
         if not self.character_id.strip():
