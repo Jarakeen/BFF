@@ -3,6 +3,7 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
+import minmax.gear_set_category_resolver as category_resolver_module
 from minmax.character_build.gear_piece import GearPieceCategory
 from minmax.gear_set_category_resolver import GearSetCategoryResolver
 
@@ -103,3 +104,51 @@ def test_explicit_imported_special_category_wins_without_structure(tmp_path: Pat
 
     assert resolver.resolve(1, raw_category="mythic") == GearPieceCategory.MYTHIC
     assert resolver.resolve(2, raw_category="monster") == GearPieceCategory.MONSTER_SET
+
+
+def test_repeated_structure_resolution_uses_instance_cache(tmp_path: Path, monkeypatch) -> None:
+    database = tmp_path / "eso.db"
+    _make_db(database)
+    original_connect = category_resolver_module.sqlite3.connect
+    connect_count = 0
+
+    def counting_connect(*args, **kwargs):
+        nonlocal connect_count
+        connect_count += 1
+        return original_connect(*args, **kwargs)
+
+    monkeypatch.setattr(category_resolver_module.sqlite3, "connect", counting_connect)
+    resolver = GearSetCategoryResolver(database)
+
+    assert resolver.resolve(609, raw_category="standard") == GearPieceCategory.MONSTER_SET
+    assert resolver.resolve(609, raw_category="standard") == GearPieceCategory.MONSTER_SET
+    assert resolver.resolve(609, raw_category="") == GearPieceCategory.MONSTER_SET
+    assert connect_count == 1
+
+
+def test_fresh_resolver_observes_later_database_changes(tmp_path: Path) -> None:
+    database = tmp_path / "eso.db"
+    _make_db(database)
+    resolver = GearSetCategoryResolver(database)
+
+    assert resolver.resolve(901, raw_category="standard") == GearPieceCategory.SET_PIECE
+
+    with sqlite3.connect(database) as db:
+        db.execute(
+            "INSERT INTO gear_set VALUES (?, ?, ?, ?)",
+            (901, "Later Mythic", "standard", 1),
+        )
+        db.execute(
+            "INSERT INTO gear_set_piece(set_id, equip_type, armor_type, weapon_type) VALUES (?, ?, ?, ?)",
+            (901, 4, 1, 0),
+        )
+        db.execute(
+            "INSERT INTO gear_set_item VALUES (?, ?)",
+            (901, 999901),
+        )
+
+    # This resolver intentionally keeps its snapshot for its lifetime.
+    assert resolver.resolve(901, raw_category="standard") == GearPieceCategory.SET_PIECE
+
+    fresh = GearSetCategoryResolver(database)
+    assert fresh.resolve(901, raw_category="standard") == GearPieceCategory.MYTHIC
