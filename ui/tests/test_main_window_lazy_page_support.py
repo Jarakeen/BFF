@@ -10,6 +10,7 @@ def test_lazy_page_set_is_limited_to_dependency_light_pages():
         "rotations": "CanonicalRotationDashboardPage",
         "gear_lookup": "GearLookupPage",
         "stickerbook": "StickerbookPage",
+        "timers": "AsylumPerfectaTimerPage",
         "community_news": "CommunityNewsPage",
         "incident": "IncidentPage",
     }
@@ -128,3 +129,45 @@ def test_first_lazy_gear_lookup_reuses_constructor_refresh_then_refreshes_later(
         window, "gear_lookup"
     ) == "gear_lookup"
     assert calls == ["refresh"]
+
+
+def test_first_lazy_timer_reuses_constructor_refresh_then_refreshes_context_later(monkeypatch):
+    calls = []
+
+    class Placeholder:
+        pass
+
+    class Page:
+        def refresh_context(self):
+            calls.append("refresh_context")
+
+    page = Page()
+    window = SimpleNamespace(
+        pages={"timers": Placeholder()},
+        _lazy_page_factories={"timers": object()},
+        _operations_console_initial_navigation_pending=False,
+    )
+
+    def materialize(self, page_name):
+        self.pages[page_name] = page
+        self._lazy_page_factories.pop(page_name, None)
+        return page
+
+    def original_show_page(self, page_name):
+        if page_name == "timers":
+            self.pages[page_name].refresh_context()
+        return page_name
+
+    monkeypatch.setattr(lazy_support, "_LazyPagePlaceholder", Placeholder)
+    monkeypatch.setattr(lazy_support, "_materialize_page", materialize)
+    monkeypatch.setattr(lazy_support, "_ORIGINAL_SHOW_PAGE", original_show_page)
+
+    assert lazy_support._show_page_with_lazy_materialization(
+        window, "timers"
+    ) == "timers"
+    assert calls == []
+
+    assert lazy_support._show_page_with_lazy_materialization(
+        window, "timers"
+    ) == "timers"
+    assert calls == ["refresh_context"]
