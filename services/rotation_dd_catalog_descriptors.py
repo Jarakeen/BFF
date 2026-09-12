@@ -52,6 +52,30 @@ ROTATION_DD_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="rotation.dd.saved_build_charged_status_chance",
+        domain="rotation",
+        purpose=(
+            "Resolve reviewed Charged weapon-trait status-effect chance magnitude for the exact "
+            "saved weapon slot without inventing downstream proc consequences."
+        ),
+        implementation_path=(
+            "services.rotation_saved_build_charged_status_chance_service"
+        ),
+        inputs=("PlayerBuild", "WeaponTraitRule"),
+        outputs=("RotationSavedBuildChargedStatusChanceResolution",),
+        responsibilities=("rotation_dd_saved_build_charged_status_chance",),
+        roles=("DD", "DPS"),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Canonical baseline status chances and the base*(1+percent increases) relationship "
+            "live in minmax.status_effect_chance. Charged magnitude is now carried per bar in "
+            "BuildCalculationContext. Status-effect damage/debuff consequences remain explicitly "
+            "unresolved until the exact proc runtime consumes those probabilities."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="rotation.dd.plan_potion_combat_state",
         domain="rotation",
         purpose=(
@@ -90,9 +114,10 @@ ROTATION_DD_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         notes=(
             "Only diagnostics already proven irrelevant to current DD damage math are ambient. "
             "Selected-potion static diagnostics are ambient because exact scheduled potion "
-            "activation is owned by the plan runtime combat-state bridge. Bloodthirsty, "
-            "Charged/status chance, and unknown mechanics remain blocking until their canonical "
-            "runtime math exists."
+            "activation is owned by the plan runtime combat-state bridge. Charged's static "
+            "magnitude placeholder is retired once the canonical per-bar chance resolves, but "
+            "its status proc consequences remain blocking downstream. Bloodthirsty and unknown "
+            "mechanics remain blocking until their canonical runtime math exists."
         ),
     ),
     ServiceDescriptor(
