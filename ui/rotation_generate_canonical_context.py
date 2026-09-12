@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Protocol
 
 from minmax.rotation_ability_priority import AbilityPriorityList
 from services.rotation_candidate_recommendation_evidence_service import (
@@ -16,6 +17,15 @@ from ui.rotation_canonical_candidate_support import RotationCanonicalRoleEvidenc
 from ui.rotation_selected_encounter_evidence_support import (
     RotationSelectedEncounterEvidenceInputs,
 )
+
+
+class RotationGenerateRoleEvidenceComposer(Protocol):
+    def compose(
+        self,
+        *,
+        player_build,
+        evidence_bundle,
+    ) -> RotationCanonicalRoleEvidence: ...
 
 
 @dataclass(frozen=True)
@@ -95,6 +105,7 @@ class RotationGenerateCanonicalContext:
     evidence_inputs: RotationSelectedEncounterEvidenceInputs
     role_evidence: RotationCanonicalRoleEvidence | None = None
     role_evidence_inputs: RotationGenerateRoleEvidenceInputs | None = None
+    role_evidence_composer: RotationGenerateRoleEvidenceComposer | None = None
     cadence_obligations: tuple[RotationSupportCadenceNeighborhoodObligation, ...] = ()
     cadence_priorities: AbilityPriorityList | None = None
     cadence_evaluation_context: RotationSupportCadenceEvaluationContext | None = None
@@ -102,9 +113,19 @@ class RotationGenerateCanonicalContext:
     character_id: str | None = None
 
     def __post_init__(self) -> None:
-        if self.role_evidence is not None and self.role_evidence_inputs is not None:
+        role_sources = tuple(
+            source
+            for source in (
+                self.role_evidence,
+                self.role_evidence_inputs,
+                self.role_evidence_composer,
+            )
+            if source is not None
+        )
+        if len(role_sources) > 1:
             raise ValueError(
-                "supply either explicit role_evidence or role_evidence_inputs, not both"
+                "supply only one of role_evidence, role_evidence_inputs, or "
+                "role_evidence_composer"
             )
         iterations = int(self.cadence_max_iterations)
         if iterations <= 0:
@@ -116,10 +137,24 @@ class RotationGenerateCanonicalContext:
         self,
         *,
         player_build,
+        evidence_bundle=None,
         content_type: object = "",
     ) -> RotationCanonicalRoleEvidence | None:
         if self.role_evidence is not None:
             return self.role_evidence
+        if self.role_evidence_composer is not None:
+            if player_build is None:
+                raise ValueError(
+                    "select a saved build before composing canonical role evidence"
+                )
+            if evidence_bundle is None:
+                raise ValueError(
+                    "automatic canonical role evidence requires a resolved evidence bundle"
+                )
+            return self.role_evidence_composer.compose(
+                player_build=player_build,
+                evidence_bundle=evidence_bundle,
+            )
         if self.role_evidence_inputs is None:
             return None
         return self.role_evidence_inputs.compose(
@@ -130,5 +165,6 @@ class RotationGenerateCanonicalContext:
 
 __all__ = [
     "RotationGenerateCanonicalContext",
+    "RotationGenerateRoleEvidenceComposer",
     "RotationGenerateRoleEvidenceInputs",
 ]
