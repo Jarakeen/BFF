@@ -142,6 +142,12 @@ def _overview_tab_with_evidence(self) -> QWidget:
     top.addWidget(evidence, 1)
     root.addLayout(top)
 
+    roles = FoundryCard("Role Impact", "assignment")
+    self.encounter_overview_roles = QLabel("No reviewed role-specific implications are available yet.")
+    self.encounter_overview_roles.setWordWrap(True)
+    roles.addWidget(self.encounter_overview_roles)
+    root.addWidget(roles)
+
     lower = QHBoxLayout()
     lower.setSpacing(8)
 
@@ -361,6 +367,14 @@ def _render_overview_evidence(
         f"and {projection.evidence_rows} underlying evidence row(s) are available for this encounter."
     )
     self.encounter_overview_summary.setText("\n".join(summary_lines))
+
+    role_rows = tuple(getattr(projection, "role_impact", ()) or ())
+    if hasattr(self, "encounter_overview_roles"):
+        self.encounter_overview_roles.setText(
+            "\n".join(f"• {value}" for value in role_rows)
+            if role_rows
+            else "No reviewed role-specific implications are available yet."
+        )
 
     timeline_lines = [
         f"• {marker}  {label} — {detail}"
