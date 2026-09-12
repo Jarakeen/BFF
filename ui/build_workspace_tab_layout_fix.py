@@ -50,6 +50,13 @@ def install() -> None:
         # which draws the long continuation line across the remaining tab bar.
         self.build_tabs.setDocumentMode(False)
 
+        # The left workspace is saved character/build data, not the raid team
+        # roster. Use labels that describe what users are actually looking at.
+        self.build_tabs.setTabText(0, "Builds")
+        roster_card = self.splitter.widget(0)
+        if hasattr(roster_card, "set_title"):
+            roster_card.set_title("Character Builds")
+
         scribed_tab = self.build_tabs.widget(3)
         scribed_layout = scribed_tab.layout()
         recipe_editor = getattr(self, "scribed_recipe_editor", None)
