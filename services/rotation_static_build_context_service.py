@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Callable
 
@@ -19,6 +19,12 @@ from services.minmax_character_progression_adapter import (
     MinmaxCharacterProgressionAdapter,
     SavedBuildProgressionResolution,
 )
+from services.rotation_saved_build_dd_damage_done_service import (
+    RotationSavedBuildDDDamageDoneService,
+)
+
+
+_DD_ROLE_KEYS = {"dd", "dps", "damage", "damage dealer", "damage_dealer"}
 
 
 @dataclass(frozen=True)
@@ -194,7 +200,8 @@ class RotationStaticBuildContextService:
     This service owns no ESO formulas. It deliberately reuses
     ``BuildCalculationContextFactory`` so armor-weight passives, Undaunted Mettle,
     class/guild/weapon passives, static gear, race, CP, food and other already-
-    verified inputs keep one source of truth.
+    verified inputs keep one source of truth. Reviewed unconditional DD Damage Done
+    categories are attached as context metadata rather than flattened into sheet stats.
     """
 
     def __init__(
@@ -204,6 +211,7 @@ class RotationStaticBuildContextService:
         database_path: str | Path | None = None,
         progression_adapter: MinmaxCharacterProgressionAdapter | None = None,
         context_factory: BuildCalculationContextFactory | None = None,
+        dd_damage_done_service: RotationSavedBuildDDDamageDoneService | None = None,
     ) -> None:
         data_dir = get_data_dir()
         builds = Path(builds_path) if builds_path is not None else data_dir / "builds.json"
@@ -222,6 +230,9 @@ class RotationStaticBuildContextService:
 
         self.progression_adapter = progression_adapter
         self.context_factory = context_factory
+        self.dd_damage_done_service = (
+            dd_damage_done_service or RotationSavedBuildDDDamageDoneService(database)
+        )
 
     def resolve(
         self,
@@ -239,13 +250,23 @@ class RotationStaticBuildContextService:
                 unresolved=self._dedupe(tuple(progression.unresolved)),
             )
 
+        role_key = " ".join(
+            str(getattr(player_build, "Role", "") or "").strip().casefold().split()
+        )
+        dd_damage_done = None
+        dd_unresolved: tuple[str, ...] = ()
+        if role_key in _DD_ROLE_KEYS:
+            dd_resolution = self.dd_damage_done_service.resolve(player_build)
+            dd_damage_done = dd_resolution.modifiers
+            dd_unresolved = tuple(dd_resolution.unresolved)
+
         build_id = (
             str(getattr(player_build, "BuildId", "") or "").strip()
             or str(getattr(player_build, "BuildName", "") or "").strip()
             or "rotation-build"
         )
         contexts: list[BuildCalculationContext] = []
-        unresolved: list[str] = []
+        unresolved: list[str] = list(dd_unresolved)
         for bar in requested:
             context = self.context_factory.build(
                 character_id=progression.character_id,
@@ -255,6 +276,11 @@ class RotationStaticBuildContextService:
                 active_bar=bar,
                 combat_state=combat_state,
             )
+            if dd_damage_done is not None:
+                context = replace(
+                    context,
+                    dd_damage_done_modifiers=dd_damage_done,
+                )
             contexts.append(context)
             unresolved.extend(
                 f"{bar} static context: {message}"
