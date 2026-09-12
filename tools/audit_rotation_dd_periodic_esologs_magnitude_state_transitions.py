@@ -57,6 +57,12 @@ def audit(
             f"source={source_id if source_id is not None else '*'}"
         )
     print(f"Ambiguous mixed-amount occurrence clusters excluded: {report.ambiguous_occurrence_clusters}")
+    print(f"Comparable unambiguous occurrence pairs: {report.comparable_occurrence_pairs}")
+    print("Magnitude/state contingency:")
+    print(f"  state changed + amount changed:   {report.state_changed_amount_changed}")
+    print(f"  state changed + amount constant:  {report.state_changed_amount_constant}")
+    print(f"  state same    + amount changed:   {report.state_same_amount_changed}")
+    print(f"  state same    + amount constant:  {report.state_same_amount_constant}")
     print(f"Amount-change transitions: {len(report.transitions)}")
     print(f"With net source/target state changes: {report.transitions_with_state_change}")
     print(f"Without net source/target state changes: {report.transitions_without_state_change}")
@@ -140,10 +146,10 @@ def audit(
     print()
     print(
         "Result: OBSERVATIONAL ONLY — mixed-amount rows inside one near-same-time "
-        "periodic occurrence are excluded as ambiguous. Remaining magnitude changes "
-        "across genuine tick-boundary state deltas can strengthen dynamic-at-tick "
-        "evidence, but this tool never promotes magnitude policy automatically. "
-        "Numeric IDs remain evidence handles only."
+        "periodic occurrence are excluded as ambiguous. The 2x2 control table compares "
+        "all remaining adjacent occurrence pairs, including constant-amount controls. "
+        "This can strengthen or weaken dynamic-at-tick evidence but never promotes "
+        "magnitude policy automatically. Numeric IDs remain evidence handles only."
     )
     return 0
 
@@ -151,7 +157,7 @@ def audit(
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Compare same-cast DD periodic amount changes against net source/target "
+            "Compare same-cast DD periodic magnitude against net source/target "
             "combat-state deltas at distinct periodic occurrence boundaries."
         )
     )
