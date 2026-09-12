@@ -70,8 +70,8 @@ class RotationCandidateHeavyAttackDamageEvidenceService:
     Runtime attacker combat state contributes reviewed named generic Damage Done
     effects. Target-state-dependent Exploiter is carried as a magnitude in the
     canonical weapon evaluation and joins the same additive Damage Done bucket only
-    when the exact HA completion target state is Off Balance. Target-side Damage Taken
-    remains a separate later combat stage.
+    when the exact HA completion target state is Off Balance. Unknown completion-time
+    target state remains unresolved rather than silently treating Exploiter as inactive.
 
     Flame, frost, shock, restoration staff, two-handed, dual-wield, and one-hand-and-
     shield heavies are routed here. Bow remains unresolved because the canonical
@@ -155,6 +155,16 @@ class RotationCandidateHeavyAttackDamageEvidenceService:
             return self._unresolved(
                 action,
                 "scheduled heavy attack has no resolved active-bar weapon identity",
+            )
+
+        exploiter_magnitude = _sum_contributions(
+            self.evaluation,
+            "conditional_exploiter_damage_done",
+        )
+        if exploiter_magnitude > 0.0 and self.target_combat_state is None:
+            return self._unresolved(
+                action,
+                "Exploiter requires authoritative target CombatState at heavy-attack completion time",
             )
 
         formula_damage = self._formula_damage(resolution.weapon)
