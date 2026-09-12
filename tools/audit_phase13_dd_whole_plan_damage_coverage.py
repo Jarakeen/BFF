@@ -13,6 +13,9 @@ if str(ROOT) not in sys.path:
 
 from minmax.resource_costs import ResourceType
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
+from services.rotation_dd_output_context_relevance_service import (
+    RotationDDOutputContextRelevanceService,
+)
 from services.rotation_dd_whole_plan_damage_coverage_audit_service import (
     RotationDDWholePlanDamageCoverageAuditService,
 )
@@ -49,7 +52,6 @@ class _StaticPrerequisiteGap:
     bars: tuple[str, ...]
 
 
-
 def _character_name(build) -> str:
     return str(
         getattr(build, "CharacterName", "")
@@ -57,7 +59,6 @@ def _character_name(build) -> str:
         or getattr(build, "Gamertag", "")
         or ""
     ).strip()
-
 
 
 def _saved_dd_builds(path: Path) -> tuple[tuple[str, str, str], ...]:
@@ -76,7 +77,6 @@ def _saved_dd_builds(path: Path) -> tuple[tuple[str, str, str], ...]:
         build_name = str(member.get("BuildName", "") or "").strip()
         rows.append((character, build_name, role))
     return tuple(sorted(rows, key=lambda item: (item[0].casefold(), item[1].casefold())))
-
 
 
 def _group_static_prerequisite_gaps(
@@ -113,7 +113,6 @@ def _group_static_prerequisite_gaps(
     )
 
 
-
 def _action_damage_provider(
     *,
     build,
@@ -147,7 +146,6 @@ def _action_damage_provider(
     return provider
 
 
-
 def _sorted_blockers(audit):
     return tuple(
         sorted(
@@ -162,29 +160,38 @@ def _sorted_blockers(audit):
     )
 
 
-
-def _print_static_prerequisite_report(*, build, gaps: tuple[_StaticPrerequisiteGap, ...]) -> None:
+def _print_static_prerequisite_report(
+    *,
+    build,
+    gaps: tuple[_StaticPrerequisiteGap, ...],
+    ambient: tuple[str, ...] = (),
+) -> None:
     print("=" * 72)
     print(" PHASE 13 DD STATIC DAMAGE PREREQUISITE AUDIT")
     print("=" * 72)
     print(f"Character:             {_character_name(build) or 'unnamed'}")
     print(f"Build:                 {getattr(build, 'BuildName', '') or 'unnamed'}")
     print(f"Role:                  {getattr(build, 'Role', '') or 'unresolved'}")
-    print("Boundary:              action-damage coverage not attempted until static damage state resolves")
+    print("Boundary:              action-damage coverage not attempted until DD-relevant static state resolves")
     print()
-    print("STATIC PREREQUISITE GAPS")
-    print("------------------------")
-    for index, gap in enumerate(gaps, start=1):
-        bars = ", ".join(gap.bars)
-        print(f"{index:2d}. {len(gap.bars)} bar(s) | {bars}")
-        print(f"    {gap.reason}")
+    print("DD-RELEVANT PREREQUISITE GAPS")
+    print("-----------------------------")
+    if gaps:
+        for index, gap in enumerate(gaps, start=1):
+            bars = ", ".join(gap.bars)
+            print(f"{index:2d}. {len(gap.bars)} bar(s) | {bars}")
+            print(f"    {gap.reason}")
+    else:
+        print("none")
+    print()
+    print(f"Ambient non-damage diagnostics excluded from this gate: {len(ambient)}")
     print()
     print(
-        "Interpretation: these are canonical static-build prerequisites encountered before "
-        "the per-action DD damage router can run. Duplicate front/back manifestations are "
-        "collapsed to one root gap; no unresolved input is treated as zero."
+        "Interpretation: only unresolved facts that can still affect modeled DD damage "
+        "remain blocking here. Known movement-speed, harvesting, max-health-only, and "
+        "healing-taken-only diagnostics are ambient for this output. Unknown mechanics "
+        "still fail closed, and no unresolved offensive input is treated as zero."
     )
-
 
 
 def main() -> int:
@@ -261,9 +268,17 @@ def main() -> int:
         builds_path=builds_path,
     )
     static_context = static_context_service.resolve(build)
-    if not static_context.resolved:
-        gaps = _group_static_prerequisite_gaps(tuple(static_context.unresolved))
-        _print_static_prerequisite_report(build=build, gaps=gaps)
+    relevance = RotationDDOutputContextRelevanceService().classify(
+        static_context.unresolved
+    )
+    if not static_context.progression.resolved or relevance.relevant:
+        relevant = tuple(static_context.progression.unresolved) + tuple(relevance.relevant)
+        gaps = _group_static_prerequisite_gaps(tuple(dict.fromkeys(relevant)))
+        _print_static_prerequisite_report(
+            build=build,
+            gaps=gaps,
+            ambient=tuple(relevance.ambient),
+        )
         return 2
 
     generated = RotationGenerationSupport().generate_with_evidence(
