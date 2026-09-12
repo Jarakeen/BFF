@@ -13,7 +13,6 @@ from services.build_service import BuildService
 from services.rotation_dd_periodic_runtime_semantics_gap_audit_service import (
     RotationDDPeriodicRuntimeSemanticsGapAuditService,
 )
-from tools.audit_phase12_saved_build_candidates import _find_build
 
 
 DEFAULT_BUILDS = get_data_dir() / "builds.json"
@@ -22,6 +21,51 @@ DEFAULT_BUILDS = get_data_dir() / "builds.json"
 def _is_dd_role(value: object) -> bool:
     normalized = " ".join(str(value or "").strip().casefold().split())
     return normalized in {"dd", "dps", "damage", "damage dealer"}
+
+
+def _display_selector(build) -> str:
+    build_name = str(getattr(build, "BuildName", "") or "").strip()
+    character = str(getattr(build, "Name", "") or "").strip()
+    return f"{build_name} | {character}" if character else build_name
+
+
+def _resolve_build(builds, requested: str):
+    key = str(requested or "").strip().casefold()
+    if not key:
+        raise ValueError("--build is required")
+
+    def text(build, attr: str) -> str:
+        return str(getattr(build, attr, "") or "").strip()
+
+    build_name_matches = [
+        build for build in builds if text(build, "BuildName").casefold() == key
+    ]
+    if len(build_name_matches) == 1:
+        return build_name_matches[0]
+    if len(build_name_matches) > 1:
+        raise ValueError(f"Saved build name is ambiguous: {requested!r}")
+
+    character_matches = [
+        build for build in builds if text(build, "Name").casefold() == key
+    ]
+    if len(character_matches) == 1:
+        return character_matches[0]
+    if len(character_matches) > 1:
+        names = ", ".join(
+            sorted(text(build, "BuildName") or "(unnamed)" for build in character_matches)
+        )
+        raise ValueError(
+            f"Character name {requested!r} matches multiple saved builds: {names}. "
+            "Use the exact BuildName."
+        )
+
+    display_matches = [
+        build for build in builds if _display_selector(build).casefold() == key
+    ]
+    if len(display_matches) == 1:
+        return display_matches[0]
+
+    raise ValueError(f"Saved build not found: {requested!r}")
 
 
 def list_dd_builds(*, builds_path: Path) -> int:
@@ -43,6 +87,10 @@ def list_dd_builds(*, builds_path: Path) -> int:
         character = str(getattr(build, "Name", "") or "").strip() or "(unnamed)"
         build_name = str(getattr(build, "BuildName", "") or "").strip() or "(unnamed)"
         print(f"  - {build_name} | {character}")
+        print(
+            "    "
+            f'python tools/audit_rotation_dd_periodic_semantics.py --build "{build_name}"'
+        )
     return 0
 
 
@@ -61,7 +109,7 @@ def audit_saved_build(
 
     saved_members = BuildService(builds_path).load().Members
     try:
-        build = _find_build(saved_members, build_name)
+        build = _resolve_build(saved_members, build_name)
     except ValueError as exc:
         print(exc)
         return 3
@@ -145,7 +193,10 @@ def _parser() -> argparse.ArgumentParser:
         )
     )
     selection = parser.add_mutually_exclusive_group(required=True)
-    selection.add_argument("--build", help="Exact saved BuildName")
+    selection.add_argument(
+        "--build",
+        help="Saved BuildName, unique character name, or exact 'BuildName | CharacterName' display",
+    )
     selection.add_argument(
         "--list-dd",
         action="store_true",
