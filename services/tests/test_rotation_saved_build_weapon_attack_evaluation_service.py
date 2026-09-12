@@ -66,6 +66,8 @@ def _trace(value):
 
 def _context(bar: str):
     derived = {
+        StatId.MAX_MAGICKA: _trace(30000.0 if bar == "front" else 31000.0),
+        StatId.MAX_STAMINA: _trace(18000.0 if bar == "front" else 19000.0),
         StatId.WEAPON_DAMAGE: _trace(4000.0 if bar == "front" else 4500.0),
         StatId.SPELL_DAMAGE: _trace(5000.0 if bar == "front" else 5500.0),
         StatId.PHYSICAL_PENETRATION: _trace(6000.0),
@@ -161,6 +163,10 @@ def test_evaluation_bridge_projects_bar_specific_stats_and_contributions() -> No
     front = result.evaluation_for("front")
     back = result.evaluation_for("back")
     assert front is not None and back is not None
+    assert front.stats.value(StatId.MAX_MAGICKA) == pytest.approx(30000.0)
+    assert back.stats.value(StatId.MAX_MAGICKA) == pytest.approx(31000.0)
+    assert front.stats.value(StatId.MAX_STAMINA) == pytest.approx(18000.0)
+    assert back.stats.value(StatId.MAX_STAMINA) == pytest.approx(19000.0)
     assert front.stats.value(StatId.SPELL_DAMAGE) == pytest.approx(5000.0)
     assert back.stats.value(StatId.SPELL_DAMAGE) == pytest.approx(5500.0)
     assert front.stats.value(StatId.CRITICAL_DAMAGE) == pytest.approx(50.0)
