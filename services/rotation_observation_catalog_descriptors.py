@@ -7,6 +7,35 @@ from services.service_catalog import EvidenceClass, ServiceBehavior, ServiceDesc
 
 ROTATION_OBSERVATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
     ServiceDescriptor(
+        service_id="rotation.encounter.damage_esologs_observation",
+        domain="rotation",
+        purpose=(
+            "Extract per-cast encounter-damage cadence and target-scope candidates from "
+            "ESO Logs using explicit reviewed observational aliases without promoting "
+            "observed values into canonical encounter policy."
+        ),
+        implementation_path="services.rotation_encounter_esologs_damage_observation_service",
+        inputs=(
+            "EsoLogsSemanticEventSource",
+            "CanonicalEncounterMechanicId",
+            "ExplicitCastObservationAliases",
+            "ExplicitDamageObservationAliases",
+            "ReportCode",
+            "FightId",
+        ),
+        outputs=("RotationEncounterDamageObservationReport",),
+        responsibilities=("rotation_encounter_damage_runtime_observation_discovery",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.OBSERVATIONAL,
+        notes=(
+            "Canonical lower-snake-case mechanic identity owns meaning; numeric ids and display "
+            "names are observation aliases only. Matching damage is bounded by consecutive explicit "
+            "cast events rather than an invented episode gap. Output remains candidate evidence and "
+            "cannot directly populate encounter-demand policy."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="rotation.heavy_restore.esologs_observation",
         domain="rotation",
         purpose=(
