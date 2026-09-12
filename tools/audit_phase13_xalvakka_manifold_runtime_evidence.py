@@ -15,6 +15,7 @@ from services.rotation_encounter_esologs_damage_observation_service import (
     RotationEncounterDamageObservationTarget,
     RotationEncounterEsoLogsDamageObservationService,
 )
+from tools.discover_esologs_runtime_db import discover
 
 
 _CANONICAL_MECHANIC_ID = "creeping_manifold"
@@ -35,6 +36,40 @@ def _table_exists(connection: sqlite3.Connection, name: str) -> bool:
         (name,),
     ).fetchone()
     return row is not None
+
+
+def _default_discovery_roots() -> tuple[Path, ...]:
+    return (
+        get_data_dir(),
+        ROOT / "data",
+        ROOT / "user_data",
+        ROOT / "research",
+    )
+
+
+def _resolve_database_path(
+    explicit_database: Path | None,
+    *,
+    discovery_roots: tuple[Path, ...] | None = None,
+) -> Path:
+    if explicit_database is not None:
+        return explicit_database
+
+    roots = discovery_roots or _default_discovery_roots()
+    matches = discover(roots=roots)
+    if not matches:
+        searched = ", ".join(str(path) for path in roots)
+        raise ValueError(
+            "no ESO Logs runtime database containing log_fight, log_actor, and log_event "
+            f"was found under: {searched}; import ESO Logs evidence first or pass --database"
+        )
+    if len(matches) > 1:
+        choices = ", ".join(str(path) for path in matches)
+        raise ValueError(
+            "multiple ESO Logs runtime databases were found; choose one explicitly with "
+            f"--database: {choices}"
+        )
+    return matches[0]
 
 
 def _fight_rows(connection: sqlite3.Connection) -> tuple[sqlite3.Row, ...]:
@@ -147,7 +182,11 @@ def main() -> int:
     parser.add_argument(
         "--database",
         type=Path,
-        default=get_data_dir() / "eso.db",
+        default=None,
+        help=(
+            "Optional ESO Logs runtime SQLite database. When omitted, the audit reuses the "
+            "repository runtime-database discovery roots and requires exactly one match."
+        ),
     )
     parser.add_argument(
         "--cast-ability-id",
@@ -165,8 +204,9 @@ def main() -> int:
     )
     args = parser.parse_args()
     try:
+        database_path = _resolve_database_path(args.database)
         lines = audit(
-            database_path=args.database,
+            database_path=database_path,
             cast_ability_ids=tuple(args.cast_ability_id),
             damage_ability_ids=tuple(args.damage_ability_id),
         )
