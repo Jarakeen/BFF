@@ -18,17 +18,20 @@ CHAMPION_SKILL_TYPE_NORMAL = 0
 CHAMPION_SKILL_TYPE_NORMAL_SLOTTABLE = 1
 CHAMPION_SKILL_TYPE_STAT_POOL_SLOTTABLE = 2
 
-# These stars intentionally have no standing-sheet Effect here. Their runtime
-# behavior is resolved by dedicated Phase 5 dynamic-effect paths instead.
-# Keeping the names here prevents the static layer from reporting a false
+# These stars intentionally have no standing-sheet Effect here. Their behavior
+# is resolved by dedicated runtime or event-classification paths instead.
+# Keeping the names here prevents the static sheet layer from reporting a false
 # "not yet modeled" warning while still leaving every other unsupported CP
 # fail-closed and explicit.
 EXTERNALLY_MODELED_DYNAMIC_CP_NAMES = frozenset(
     {
+        "biting aura",
         "from the brink",
+        "master-at-arms",
         "rejuvenator",
         "soothing tide",
         "swift renewal",
+        "thaumaturge",
     }
 )
 
