@@ -42,6 +42,12 @@ class RotationWeaponAttackProjectionService:
     HEAVY_ATTACK actions. It does not infer whether an attack hit a target, heavy
     completion/channel duration, restoration magnitude, Ultimate generation, or
     transformation/unarmed semantics.
+
+    Action-specific failures stay attached to the exact attack that triggered them.
+    Plan-level ``unresolved`` is reserved for state that is not owned by one attack
+    (for example an invalid bar-swap destination). Keeping those two scopes separate
+    prevents one unresolved attack from being copied onto every other weapon attack
+    by downstream evidence providers.
     """
 
     _ATTACK_KINDS = frozenset(
@@ -96,10 +102,14 @@ class RotationWeaponAttackProjectionService:
 
             bar = build.front_bar if active_bar == "front" else build.back_bar
             if bar is None:
-                unresolved.append(
-                    f"scheduled {action.kind.value.replace('_', ' ')} at "
-                    f"{action.time_seconds:.3f}s uses {active_bar} bar, but that bar "
-                    "is unavailable on the build"
+                violations.append(
+                    RotationWeaponAttackViolation(
+                        action=action,
+                        reason=(
+                            f"{action.kind.value.replace('_', ' ')} uses {active_bar} bar, "
+                            "but that bar's exact weapon identity is unavailable on the build"
+                        ),
+                    )
                 )
                 continue
 
@@ -111,10 +121,14 @@ class RotationWeaponAttackProjectionService:
             try:
                 weapon_skill_line = bar.weapon_skill_line
             except ValueError as exc:
-                unresolved.append(
-                    f"scheduled {action.kind.value.replace('_', ' ')} at "
-                    f"{action.time_seconds:.3f}s on {active_bar} bar has unresolved "
-                    f"weapon identity: {exc}"
+                violations.append(
+                    RotationWeaponAttackViolation(
+                        action=action,
+                        reason=(
+                            f"{action.kind.value.replace('_', ' ')} on {active_bar} bar has "
+                            f"unresolved weapon identity: {exc}"
+                        ),
+                    )
                 )
                 continue
 
