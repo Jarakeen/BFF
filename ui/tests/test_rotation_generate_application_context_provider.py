@@ -30,9 +30,10 @@ class _StaticContextService:
 
 
 class _PolicyProvider:
-    def __init__(self, clock=(), threshold=()) -> None:
+    def __init__(self, clock=(), threshold=(), blockers=()) -> None:
         self.clock = clock
         self.threshold = threshold
+        self.blockers = blockers
         self.calls = []
 
     def policies_for(self, encounter_id):
@@ -42,6 +43,10 @@ class _PolicyProvider:
     def threshold_policies_for(self, encounter_id):
         self.calls.append(("threshold", encounter_id))
         return self.threshold
+
+    def review_blockers_for(self, encounter_id):
+        self.calls.append(("blockers", encounter_id))
+        return self.blockers
 
 
 class _Page:
@@ -88,6 +93,7 @@ def test_live_context_uses_exact_build_encounter_explicit_policy_and_static_maxi
     assert policies.calls == [
         ("clock", "rockgrove_xalvakka"),
         ("threshold", "rockgrove_xalvakka"),
+        ("blockers", "rockgrove_xalvakka"),
     ]
     assert context.evidence_inputs.demand_policies == (demand_policy,)
     assert context.evidence_inputs.threshold_demand_policies == ()
@@ -164,6 +170,33 @@ def test_explicit_empty_demand_policy_is_distinct_from_unknown_policy() -> None:
     assert context.evidence_inputs.demand_policies == ()
     assert context.evidence_inputs.threshold_demand_policies == ()
     assert context.evidence_inputs.knowledge_gaps == ()
+
+
+def test_reviewed_encounter_with_policy_blocker_surfaces_specific_gap() -> None:
+    blocker = SimpleNamespace(
+        key="phase_2_healer_demand_policy",
+        summary="Phase 2 anchor is reviewed but healer demand policy is not.",
+        needed_evidence="Approve lead, window, pattern, and target count.",
+        source_context="reviewed Xalvakka Phase 2 evidence",
+    )
+    provider = RotationGenerateApplicationContextProvider(
+        static_context_service=_StaticContextService(_StaticContext()),  # type: ignore[arg-type]
+        demand_policy_provider=_PolicyProvider(
+            clock=(), threshold=(), blockers=(blocker,)
+        ),  # type: ignore[arg-type]
+    )
+
+    context = provider.context_for(_Page())
+
+    assert context.evidence_inputs.demand_policies == ()
+    assert context.evidence_inputs.threshold_demand_policies == ()
+    assert len(context.evidence_inputs.knowledge_gaps) == 1
+    gap = context.evidence_inputs.knowledge_gaps[0]
+    assert gap.blocking is True
+    assert gap.key == "rockgrove_xalvakka.phase_2_healer_demand_policy"
+    assert gap.summary == blocker.summary
+    assert gap.needed_evidence == blocker.needed_evidence
+    assert gap.source_context == blocker.source_context
 
 
 def test_live_context_requires_explicit_recovery_resource_and_trigger() -> None:
