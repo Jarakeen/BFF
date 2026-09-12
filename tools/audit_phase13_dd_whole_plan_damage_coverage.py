@@ -6,6 +6,7 @@ from dataclasses import dataclass, replace
 import json
 from pathlib import Path
 import sys
+from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -18,6 +19,10 @@ from services.rotation_dd_output_context_relevance_service import (
 )
 from services.rotation_dd_whole_plan_damage_coverage_audit_service import (
     RotationDDWholePlanDamageCoverageAuditService,
+)
+from services.rotation_explicit_target_combat_state_schedule_service import (
+    RotationExplicitTargetCombatStateScheduleService,
+    RotationTargetCombatStateWindow,
 )
 from services.rotation_static_build_context_service import RotationStaticBuildContextService
 from tools.audit_phase13_saved_build_rotation_timing import _load_build
@@ -102,6 +107,27 @@ def _saved_dd_builds(path: Path) -> tuple[tuple[str, str, str], ...]:
     return tuple(sorted(rows, key=lambda item: (item[0].casefold(), item[1].casefold())))
 
 
+def _parse_target_window(
+    raw: str,
+    *,
+    buff_name: str = "Off Balance",
+) -> RotationTargetCombatStateWindow:
+    text = str(raw or "").strip()
+    parts = text.split(":")
+    if len(parts) != 2:
+        raise ValueError(
+            f"target state window must use START:END seconds, got {raw!r}"
+        )
+    try:
+        start = float(parts[0])
+        end = float(parts[1])
+    except ValueError as exc:
+        raise ValueError(
+            f"target state window must use numeric START:END seconds, got {raw!r}"
+        ) from exc
+    return RotationTargetCombatStateWindow(start, end, (buff_name,))
+
+
 def _group_static_prerequisite_gaps(
     unresolved: tuple[str, ...],
 ) -> tuple[_StaticPrerequisiteGap, ...]:
@@ -142,6 +168,8 @@ def _action_damage_provider(
     database_path: Path,
     builds_path: Path,
     target_resistance: float,
+    plan=None,
+    target_state_resolver=None,
 ):
     static_context_service = _DDAuditStaticContextService(
         RotationStaticBuildContextService(
@@ -164,7 +192,23 @@ def _action_damage_provider(
             target_resistance=float(target_resistance),
         ),  # type: ignore[arg-type]
     )
-    role_output = role_evidence.plan_evidence_provider.role_output_evidence_provider
+    plan_evidence = role_evidence.plan_evidence_provider
+    if target_state_resolver is not None:
+        if plan is None:
+            raise ValueError("runtime target-state audit provider requires a rotation plan")
+        binder = getattr(plan_evidence, "for_stabilized_snapshot", None)
+        if not callable(binder):
+            raise RuntimeError("DD plan evidence does not expose runtime snapshot binding")
+        plan_evidence = binder(
+            SimpleNamespace(
+                plan=plan,
+                runtime_combat_state_resolver=None,
+                runtime_target_combat_state_resolver=target_state_resolver,
+                runtime_target_resistance_resolver=None,
+                runtime_activation_anchor_resolver=None,
+            )
+        )
+    role_output = plan_evidence.role_output_evidence_provider
     provider = getattr(role_output, "action_damage_evidence_provider", None)
     if provider is None:
         raise RuntimeError("DD role evidence did not expose its canonical action-damage provider")
@@ -237,6 +281,24 @@ def main() -> int:
     )
     parser.add_argument("--duration", type=float, default=60.0)
     parser.add_argument("--target-resistance", type=float)
+    parser.add_argument(
+        "--target-state-known",
+        action="store_true",
+        help=(
+            "Treat target CombatState as authoritative even outside named windows. "
+            "With no windows this means the target is known not to have scheduled buffs."
+        ),
+    )
+    parser.add_argument(
+        "--off-balance-window",
+        action="append",
+        default=[],
+        metavar="START:END",
+        help=(
+            "Add one authoritative half-open Off Balance window [START, END) in seconds. "
+            "May be supplied multiple times and implies --target-state-known."
+        ),
+    )
     parser.add_argument("--ultimate-bar", choices=("front", "back"))
     parser.add_argument("--starting-ultimate", type=float, default=0.0)
     parser.add_argument(
@@ -277,6 +339,17 @@ def main() -> int:
     target_resistance = float(args.target_resistance)
     if target_resistance < 0.0:
         raise ValueError("target resistance cannot be negative")
+
+    off_balance_windows = tuple(
+        _parse_target_window(raw)
+        for raw in tuple(args.off_balance_window or ())
+    )
+    target_state_known = bool(args.target_state_known or off_balance_windows)
+    target_state_resolver = (
+        RotationExplicitTargetCombatStateScheduleService(off_balance_windows)
+        if target_state_known
+        else None
+    )
 
     builds_path = Path(args.builds)
     database_path = Path(args.database)
@@ -329,6 +402,8 @@ def main() -> int:
         database_path=database_path,
         builds_path=builds_path,
         target_resistance=target_resistance,
+        plan=candidate.plan,
+        target_state_resolver=target_state_resolver,
     )
     audit = RotationDDWholePlanDamageCoverageAuditService(
         action_damage_evidence_provider=provider,
@@ -342,6 +417,21 @@ def main() -> int:
     print(f"Role:                  {getattr(build, 'Role', '') or 'unresolved'}")
     print(f"Duration:              {duration:g}s")
     print(f"Target resistance:     {target_resistance:g}")
+    print(
+        "Target CombatState:    "
+        + ("explicit schedule" if target_state_known else "unresolved")
+    )
+    if target_state_known:
+        if off_balance_windows:
+            print(
+                "Off Balance windows:   "
+                + ", ".join(
+                    f"{window.start_seconds:g}:{window.end_seconds:g}s"
+                    for window in off_balance_windows
+                )
+            )
+        else:
+            print("Off Balance windows:   none (authoritative)")
     print(f"Light-attack weaving:  {'off' if args.no_weave else 'on'}")
     print(f"Ultimate bar:          {args.ultimate_bar or 'not selected'}")
     print("Boundary:              read-only coverage audit; unresolved damage remains unknown")
