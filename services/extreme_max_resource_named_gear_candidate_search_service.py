@@ -7,11 +7,9 @@ max_stamina.  It reuses the already-proven subset search mechanics from the lega
 Max Health compositor while replacing the Health-only classifier with the canonical
 objective-driven Max Resource classifier.
 
-The inheritance is intentionally compatibility-first: the Health implementation owns
-no Health-specific search math inside ``_search_subset``; it only previously fixed the
-objective at construction/classification time.  Keeping that proven search body in one
-place avoids cloning several hundred lines while the callers migrate to the shared
-contract.
+Max Magicka / Max Stamina additionally use semantic-prefix memoization for both the
+ordinary branch and required-special subset search.  Max Health remains on the
+legacy special-subset path until parity is reviewed separately.
 """
 
 from dataclasses import dataclass
@@ -28,6 +26,9 @@ from services.extreme_max_resource_ordinary_named_gear_search_service import (
 )
 from services.extreme_max_resource_semantic_memo_search_service import (
     ExtremeMaxResourceSemanticMemoSearchService,
+)
+from services.extreme_max_resource_semantic_special_subset_search_service import (
+    ExtremeMaxResourceSemanticSpecialSubsetSearchService,
 )
 from services.extreme_max_resource_special_named_gear_branch_service import (
     ExtremeMaxResourceSpecialNamedGearBranchResult,
@@ -112,6 +113,32 @@ class ExtremeMaxResourceNamedGearCandidateSearchService(
         self.ordinary_service = ordinary_service
         self.eligibility = eligibility
 
+    def _search_max_resource_subset(
+        self,
+        *,
+        topology,
+        subset,
+        ordinary_candidates_by_count,
+        frontier,
+        feasibility,
+    ) -> ExtremeMaxHealthSpecialSubsetWinner:
+        if self.objective_key in {"max_magicka", "max_stamina"}:
+            return ExtremeMaxResourceSemanticSpecialSubsetSearchService.search(
+                self,
+                topology=topology,
+                subset=subset,
+                ordinary_candidates_by_count=ordinary_candidates_by_count,
+                frontier=frontier,
+                feasibility=feasibility,
+            )
+        return self._search_subset(
+            topology=topology,
+            subset=subset,
+            ordinary_candidates_by_count=ordinary_candidates_by_count,
+            frontier=frontier,
+            feasibility=feasibility,
+        )
+
     def search(
         self,
         topology_catalog: ExtremeGearSetTopologyCatalog,
@@ -145,7 +172,7 @@ class ExtremeMaxResourceNamedGearCandidateSearchService(
                     if not self._subset_fits_counts(topology, subset_tuple):
                         continue
                     subset_winners.append(
-                        self._search_subset(
+                        self._search_max_resource_subset(
                             topology=topology,
                             subset=subset_tuple,
                             ordinary_candidates_by_count=ordinary_candidates,
