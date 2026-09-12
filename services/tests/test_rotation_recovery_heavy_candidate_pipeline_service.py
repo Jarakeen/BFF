@@ -51,6 +51,7 @@ def test_generic_pipeline_bridges_generation_into_recovery_workflow() -> None:
     maximum_event_resolver = object()
     displayed_recovery_factory = object()
     runtime_state_factory = object()
+    runtime_anchor_factory = object()
     demands = (item for item in ("demand-a", "demand-b"))
     options = (item for item in ("option-a", "option-b"))
 
@@ -74,6 +75,7 @@ def test_generic_pipeline_bridges_generation_into_recovery_workflow() -> None:
         maximum_event_resolver=maximum_event_resolver,
         displayed_recovery_resolver_factory=displayed_recovery_factory,
         runtime_combat_state_resolver_factory=runtime_state_factory,
+        runtime_activation_anchor_resolver_factory=runtime_anchor_factory,
     )
 
     assert result == "generic-result"
@@ -88,23 +90,23 @@ def test_generic_pipeline_bridges_generation_into_recovery_workflow() -> None:
             "baseline_id": "saved-build-baseline",
         }
     ]
-    assert workflow.generic_calls == [
-        {
-            "player_build": player_build,
-            "candidates": ("baseline-candidate", "option-candidate"),
-            "scorecard_resolver": scorecard_resolver,
-            "resource": ResourceType.MAGICKA,
-            "maximum_amount": 30000,
-            "trigger_fraction": 0.35,
-            "restoration_resolver": restoration_resolver,
-            "reserve_assessment_resolver": reserve_resolver,
-            "max_iterations": 8,
-            "calculation_context": calculation_context,
-            "maximum_event_resolver": maximum_event_resolver,
-            "displayed_recovery_resolver_factory": displayed_recovery_factory,
-            "runtime_combat_state_resolver_factory": runtime_state_factory,
-        }
-    ]
+    assert len(workflow.generic_calls) == 1
+    call = workflow.generic_calls[0]
+    assert call["player_build"] is player_build
+    assert call["candidates"] == ("baseline-candidate", "option-candidate")
+    assert callable(call["scorecard_resolver"])
+    assert call["resource"] is ResourceType.MAGICKA
+    assert call["maximum_amount"] == 30000
+    assert call["trigger_fraction"] == 0.35
+    assert call["restoration_resolver"] is restoration_resolver
+    assert call["restoration_resolver_factory"] is None
+    assert call["reserve_assessment_resolver"] is reserve_resolver
+    assert call["max_iterations"] == 8
+    assert call["calculation_context"] is calculation_context
+    assert call["maximum_event_resolver"] is maximum_event_resolver
+    assert call["displayed_recovery_resolver_factory"] is displayed_recovery_factory
+    assert call["runtime_combat_state_resolver_factory"] is runtime_state_factory
+    assert call["runtime_activation_anchor_resolver_factory"] is runtime_anchor_factory
 
 
 def test_effect_pipeline_preserves_build_boundary_and_materializes_effect_evidence() -> None:
@@ -126,6 +128,7 @@ def test_effect_pipeline_preserves_build_boundary_and_materializes_effect_eviden
     maximum_event_resolver = object()
     displayed_recovery_factory = object()
     runtime_state_factory = object()
+    runtime_anchor_factory = object()
     requirements = (item for item in ("major-brittle", "minor-vulnerability"))
     passives = (item for item in ("class-passive", "armor-passive"))
 
@@ -148,30 +151,30 @@ def test_effect_pipeline_preserves_build_boundary_and_materializes_effect_eviden
         maximum_event_resolver=maximum_event_resolver,
         displayed_recovery_resolver_factory=displayed_recovery_factory,
         runtime_combat_state_resolver_factory=runtime_state_factory,
+        runtime_activation_anchor_resolver_factory=runtime_anchor_factory,
     )
 
     assert result == "effect-result"
     assert bridge.calls[0]["demands"] == ("support-window",)
     assert bridge.calls[0]["options"] == ("refresh-option",)
-    assert workflow.effect_calls == [
-        {
-            "player_build": player_build,
-            "character_build": character_build,
-            "candidates": ("baseline-candidate", "option-candidate"),
-            "scorecard_resolver": scorecard_resolver,
-            "requirements": ("major-brittle", "minor-vulnerability"),
-            "passives": ("class-passive", "armor-passive"),
-            "resource": ResourceType.MAGICKA,
-            "maximum_amount": 32000,
-            "trigger_fraction": 0.4,
-            "restoration_resolver": restoration_resolver,
-            "reserve_assessment_resolver": None,
-            "max_iterations": 6,
-            "calculation_context": calculation_context,
-            "maximum_event_resolver": maximum_event_resolver,
-            "displayed_recovery_resolver_factory": displayed_recovery_factory,
-            "runtime_combat_state_resolver_factory": runtime_state_factory,
-        }
-    ]
-    assert workflow.effect_calls[0]["player_build"] is player_build
-    assert workflow.effect_calls[0]["character_build"] is character_build
+    assert len(workflow.effect_calls) == 1
+    call = workflow.effect_calls[0]
+    assert call["player_build"] is player_build
+    assert call["character_build"] is character_build
+    assert call["candidates"] == ("baseline-candidate", "option-candidate")
+    assert callable(call["scorecard_resolver"])
+    assert call["role_aware_input_resolver"] is None
+    assert call["requirements"] == ("major-brittle", "minor-vulnerability")
+    assert call["passives"] == ("class-passive", "armor-passive")
+    assert call["resource"] is ResourceType.MAGICKA
+    assert call["maximum_amount"] == 32000
+    assert call["trigger_fraction"] == 0.4
+    assert call["restoration_resolver"] is restoration_resolver
+    assert call["restoration_resolver_factory"] is None
+    assert call["reserve_assessment_resolver"] is None
+    assert call["max_iterations"] == 6
+    assert call["calculation_context"] is calculation_context
+    assert call["maximum_event_resolver"] is maximum_event_resolver
+    assert call["displayed_recovery_resolver_factory"] is displayed_recovery_factory
+    assert call["runtime_combat_state_resolver_factory"] is runtime_state_factory
+    assert call["runtime_activation_anchor_resolver_factory"] is runtime_anchor_factory
