@@ -64,6 +64,64 @@ That is expected. Do not "fix" the database by collapsing these into one number.
 
 ---
 
+# DD periodic runtime / ESO Logs IDs
+
+These rows capture numeric IDs encountered while researching Rotation Builder periodic runtime semantics. They are intentionally evidence-first: the semantic skill identity remains authoritative, while raw ESO Logs IDs may represent the cast, direct impact, periodic effect, pet hit, or an unrelated effect that merely occurred in the same cast window.
+
+## Stampede
+
+Canonical identity: `stampede`
+
+Canonical/source crosswalk aliases observed from the skill-rank repository:
+
+`28448`, `38788`, `39797`, `39802`, `39807`
+
+| Numeric ID | Working role | Confidence | Evidence / note |
+|---:|---|---|---|
+| `126474` | ESO Logs secondary periodic-damage candidate | STRONG OBSERVATION | Seen in 784/807 Stampede cast windows in the Lokkestiiz runtime corpus; 9,020 tick-marked events, 8,989 cast-track-linked events, and 6,531 intervals matching the reviewed 1s cadence. Median first event offset from cast was ~1.221s. Do not yet encode as canonical periodic alias until impact-relative timing review is complete. |
+| `38792` | ESO Logs direct-impact / arrival-side candidate | STRONG OBSERVATION | Seen in 804/807 Stampede cast windows with 1,076 cast-track-linked events, zero tick-marked events, and median first offset ~0.144s from cast. Strongly resembles the impact/arrival event rather than the residual ground DoT. |
+| `26879` | secondary periodic candidate in Stampede windows | UNKNOWN | 1,633 tick-marked events and many ~1s intervals, but no cast-track linkage; may be another concurrent periodic effect. |
+| `117809` | secondary periodic candidate in Stampede windows | UNKNOWN | 1,601 tick-marked events and many ~1s intervals, but no cast-track linkage. |
+| `16499` | repeated secondary damage identity in Stampede windows | UNKNOWN | Many ~1s intervals but no tick flags/cast-track linkage sufficient to associate it with Stampede. |
+| `17902` | repeated secondary damage identity in Stampede windows | UNKNOWN | Repeated event stream; cadence does not match the reviewed Stampede 1s cadence strongly enough for promotion. |
+| `17895` | repeated secondary damage identity in Stampede windows | UNKNOWN | Repeated event stream; unresolved association. |
+| `46746` | repeated secondary damage identity in Stampede windows | UNKNOWN | Repeated event stream; unresolved association. |
+
+Working timing lesson: Stampede likely requires an **impact-relative activation anchor** rather than blindly measuring `first_tick_offset_seconds` from button/cast time. The strong `38792` impact-like candidate followed by the `126474` ~1s periodic stream is observational evidence only until the linkage is reviewed.
+
+## Skeletal Archer
+
+Canonical identity: `skeletal_archer`
+
+Canonical/source crosswalk aliases observed from the skill-rank repository:
+
+`114317`, `118680`, `20118680`, `30118680`, `40118680`
+
+| Numeric ID | Working role | Confidence | Evidence / note |
+|---:|---|---|---|
+| `38747` | ESO Logs pet/periodic damage candidate | SUSPECTED | Strongest current 2s-cadence candidate: 860 tick-marked events, 535 reviewed-cadence matches, 158 cast windows. No cast-track linkage, so do not promote yet. |
+| `21929` | ESO Logs pet/periodic damage candidate | SUSPECTED | 1,035 tick-marked events, 507 reviewed 2s-cadence matches, 176 cast windows; no cast-track linkage. |
+| `18084` | ESO Logs pet/periodic damage candidate | SUSPECTED | 923 tick-marked events, 481 reviewed 2s-cadence matches, 176 cast windows; no cast-track linkage. |
+| `40385` | ESO Logs pet/periodic damage candidate | SUSPECTED | 578 tick-marked events, 439 reviewed 2s-cadence matches, 108 cast windows; no cast-track linkage. |
+| `148801` | ESO Logs pet/periodic damage candidate | SUSPECTED | 578 tick-marked events, 331 reviewed 2s-cadence matches, 139 cast windows; no cast-track linkage. |
+| `21925` | secondary damage candidate in Skeletal Archer windows | UNKNOWN | Many events but weak 2s-cadence evidence and no tick/cast-track linkage. |
+| `227072` | secondary damage candidate in Skeletal Archer windows | UNKNOWN | Repeated stream with limited 2s-cadence evidence; unresolved association. |
+| `16499` | repeated secondary damage identity in Skeletal Archer windows | UNKNOWN | Limited 2s-cadence evidence; also appears in Stampede windows, so proximity alone is not identity evidence. |
+
+Current rule: **none of the Skeletal Archer candidate IDs are promoted as the pet attack identity yet**. Cadence agreement alone is insufficient because several unrelated combat streams can repeat at approximately 2 seconds.
+
+### DD periodic-ID lesson
+
+For periodic skills, preserve at least three roles separately when evidence supports them:
+
+1. cast/action alias;
+2. direct impact / activation alias;
+3. periodic effect / repeated-damage alias.
+
+A secondary effect ID can be extremely useful for log correlation without becoming canonical identity. Record it here, carry its confidence label, and only promote it into executable runtime semantics after the timing and component relationship are reviewed.
+
+---
+
 # Staff heavy-attack raw IDs
 
 ## Heavy-attack action aliases
