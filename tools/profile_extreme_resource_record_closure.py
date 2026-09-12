@@ -4,8 +4,8 @@ from __future__ import annotations
 
 The canonical static snapshot is warmed before profiling so the report isolates
 candidate-search/scoring cost from the intentional one-time cost of loading immutable
-ESO evidence. Ctrl+C still prints the partial profile, making this useful without
-waiting for the full exhaustive search to finish.
+ESO evidence. Ctrl+C still prints the partial profile, and ``--seconds`` can bound a
+Windows profiling run automatically without changing the authoritative search path.
 """
 
 import argparse
@@ -14,7 +14,9 @@ import io
 from pathlib import Path
 import pstats
 import sys
+from threading import Timer
 from time import perf_counter
+import _thread
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -45,6 +47,15 @@ def _parser() -> argparse.ArgumentParser:
         type=int,
         default=40,
         help="Number of rows to print for each profile view (default: 40).",
+    )
+    parser.add_argument(
+        "--seconds",
+        type=float,
+        default=None,
+        help=(
+            "Optional wall-clock bound for the profiled search. When reached, the "
+            "tool interrupts the main thread and prints the partial profile."
+        ),
     )
     parser.add_argument(
         "--save",
@@ -94,10 +105,20 @@ def main() -> int:
         database_path=database
     )
 
+    timer: Timer | None = None
+    if args.seconds is not None:
+        seconds = float(args.seconds)
+        if seconds <= 0:
+            raise ValueError("--seconds must be greater than zero")
+        timer = Timer(seconds, _thread.interrupt_main)
+        timer.daemon = True
+
     profile = cProfile.Profile()
     started = perf_counter()
     completed = False
     record = None
+    if timer is not None:
+        timer.start()
     profile.enable()
     try:
         record = service.record(args.objective)
@@ -106,6 +127,8 @@ def main() -> int:
         print("\nPROFILE INTERRUPTED: reporting work completed so far.", flush=True)
     finally:
         profile.disable()
+        if timer is not None:
+            timer.cancel()
 
     elapsed = perf_counter() - started
     print("EXTREME RESOURCE RECORD PROFILE")
