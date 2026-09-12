@@ -191,10 +191,39 @@ def test_compose_routes_verified_light_and_heavy_attack_providers(monkeypatch) -
     assert factory.calls[0]["player_build"] is build
     assert factory.calls[0]["static_context"] is static.result
     assert factory.calls[0]["target_resistance"] == 18200.0
+    assert factory.calls[0]["runtime_build_context_resolver"] is None
     assert output.unresolved == ()
     assert output.value == pytest.approx((40.0 + 100.0 + 300.0 + 200.0) / 10.0)
     assert len(factory.light.calls) == 1
     assert len(factory.heavy.calls) == 1
+
+
+def test_stabilized_dd_provider_rebinds_weapon_attacks_to_runtime_context(monkeypatch) -> None:
+    monkeypatch.setattr(
+        dd_support,
+        "_RotationGenerateBarAwareSkillDamageProvider",
+        _FakeSkillProvider,
+    )
+    static = _StaticContextService()
+    factory = _WeaponAttackProviderFactory()
+    support = dd_support.RotationGenerateDDRoleEvidenceSupport(
+        database_path="unused-test.db",
+        static_context_service=static,  # type: ignore[arg-type]
+        weapon_attack_provider_factory=factory,
+    )
+
+    evidence = support.compose(player_build=_dd_build(), evidence_bundle=_bundle())
+    snapshot = SimpleNamespace(
+        plan=_woven_candidate().plan,
+        runtime_combat_state_resolver=lambda *_args, **_kwargs: None,
+        runtime_activation_anchor_resolver=None,
+    )
+
+    runtime_provider = evidence.plan_evidence_provider.for_stabilized_snapshot(snapshot)
+
+    assert runtime_provider is not evidence.plan_evidence_provider.static_provider
+    assert len(factory.calls) == 2
+    assert callable(factory.calls[1]["runtime_build_context_resolver"])
 
 
 def test_without_weapon_attack_factory_woven_damage_fails_closed(monkeypatch) -> None:
