@@ -8,9 +8,13 @@ from services.extreme_resource_potion_projection_service import (
 
 
 class _Repository:
-    def __init__(self, formulas):
+    def __init__(self, formulas, *, unresolved=()):
         self.game_update = GameUpdate.U50
-        self._catalog = AlchemyFormulaCatalog(tuple(formulas), GameUpdate.U50)
+        self._catalog = AlchemyFormulaCatalog(
+            tuple(formulas),
+            GameUpdate.U50,
+            tuple(unresolved),
+        )
 
     def catalog(self):
         return self._catalog
@@ -63,3 +67,29 @@ def test_unknown_potion_trait_fails_closed_instead_of_assuming_irrelevance():
 
     assert result.objective_irrelevance_proven is False
     assert any("no max-resource relevance review" in row for row in result.unresolved)
+
+
+def test_u50_non_trait_source_cell_warnings_are_proof_neutral_for_max_resource():
+    repository = _Repository(
+        (_formula("Restore Magicka", "Increase Spell Power"),),
+        unresolved=(
+            "Breach formula #1: non-trait source cells rejected: Lady's Smock, Beetle Scuttle",
+        ),
+    )
+
+    result = ExtremeResourcePotionProjectionService(repository).build("max_magicka")
+
+    assert result.objective_irrelevance_proven is True
+    assert result.unresolved == ()
+
+
+def test_other_catalog_unresolved_evidence_still_blocks_potion_irrelevance_proof():
+    repository = _Repository(
+        (_formula("Restore Magicka"),),
+        unresolved=("Alchemy formula #9: fewer than two reagents",),
+    )
+
+    result = ExtremeResourcePotionProjectionService(repository).build("max_magicka")
+
+    assert result.objective_irrelevance_proven is False
+    assert result.unresolved == ("Alchemy formula #9: fewer than two reagents",)
