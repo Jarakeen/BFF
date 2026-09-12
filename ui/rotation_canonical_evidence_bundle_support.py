@@ -54,6 +54,7 @@ class RotationCanonicalEvidenceBundle:
     maximum_amount: int
     trigger_fraction: float
     content_type: str = ""
+    target_resistance: float | None = None
     restoration_resolver: VerifiedRecoveryHeavyRestorationResolver | None = None
     wait_decision_factory: RecoveryPressureWaitDecisionFactory | None = None
     reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None
@@ -124,6 +125,7 @@ class RotationCanonicalEvidenceBundleSupport:
         threshold_demand_policies: tuple[EncounterThresholdRotationDemandPolicy, ...] = (),
         threshold_damage_segments: tuple[RaidDamageSegment, ...] = (),
         difficulty: str = "",
+        target_resistance: float | None = None,
         restoration_resolver: VerifiedRecoveryHeavyRestorationResolver | None = None,
         options: tuple[RotationRefreshLeadCandidateOption, ...] = (),
         requirements: tuple[RotationEffectUptimeRequirement, ...] = (),
@@ -150,6 +152,9 @@ class RotationCanonicalEvidenceBundleSupport:
         baseline = str(baseline_id or "").strip()
         if not baseline:
             raise ValueError("canonical rotation evidence requires a non-empty baseline_id")
+        resistance = None if target_resistance is None else float(target_resistance)
+        if resistance is not None and resistance < 0.0:
+            raise ValueError("canonical rotation target_resistance cannot be negative")
 
         guide = self.guide_service.get(encounter_key)
         projection: EncounterRotationDemandProjection = self.demand_service.project(
@@ -220,6 +225,7 @@ class RotationCanonicalEvidenceBundleSupport:
             resource=resource,
             maximum_amount=int(maximum_amount),
             trigger_fraction=trigger,
+            target_resistance=resistance,
             restoration_resolver=restoration_resolver,
             wait_decision_factory=wait_decision_factory,
             reserve_assessment_resolver=reserve_assessment_resolver,
