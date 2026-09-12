@@ -23,30 +23,12 @@ from models.build_model import ChampionPointEntry, PlayerBuild
 from services.extreme_champion_point_objective_service import (
     ExtremeChampionPointObjectiveService,
 )
+from services.extreme_resource_canonical_static_snapshot_service import (
+    ExtremeResourceCanonicalStaticSnapshotService,
+)
 from services.extreme_resource_champion_point_coverage_audit_service import (
     ExtremeResourceChampionPointCoverageAuditService,
 )
-
-
-_SHARED_EXTREME_CP_REPOSITORIES: dict[str, ChampionPointStaticRepository] = {}
-
-
-def _shared_extreme_cp_repository(database_path: str | Path) -> ChampionPointStaticRepository:
-    """Reuse one read-only CP repository per canonical database in this process.
-
-    Exhaustive Extreme scoring may construct many CP state-service instances for
-    the same immutable database snapshot. ``ChampionPointStaticRepository`` already
-    owns complete per-instance caches for the CP catalog and individual records, so
-    sharing the repository preserves those caches without changing normal repository
-    semantics elsewhere in the app.
-    """
-
-    key = str(Path(database_path).resolve())
-    repository = _SHARED_EXTREME_CP_REPOSITORIES.get(key)
-    if repository is None:
-        repository = ChampionPointStaticRepository(database_path)
-        _SHARED_EXTREME_CP_REPOSITORIES[key] = repository
-    return repository
 
 
 @dataclass(frozen=True)
@@ -87,7 +69,7 @@ class ExtremeResourceChampionPointStateService:
         self.repository = (
             repository
             if repository is not None
-            else _shared_extreme_cp_repository(database_path)  # type: ignore[arg-type]
+            else ExtremeResourceCanonicalStaticSnapshotService(database_path).build().champion_point_repository  # type: ignore[arg-type]
         )
         self.audit_service = audit_service or ExtremeResourceChampionPointCoverageAuditService(
             repository=self.repository
@@ -95,8 +77,8 @@ class ExtremeResourceChampionPointStateService:
         # Champion Point continuation depends only on the objective and canonical
         # CP catalogue, not on gear, armor, class route, bar, food, or runtime
         # candidate state. Cache the complete fail-closed result per objective on
-        # each state service; the repository itself is shared across all production
-        # Extreme state services for the same immutable database snapshot.
+        # each state service; production instances share the snapshot-owned canonical
+        # repository for the same immutable database snapshot.
         self._state_cache: dict[str, ExtremeResourceChampionPointState] = {}
 
     def build(self, objective_key: str) -> ExtremeResourceChampionPointState:
