@@ -16,6 +16,7 @@ class RaceRepository:
         # Instance-scoped caches preserve one canonical DB snapshot for the
         # repository lifetime while allowing a fresh repository to observe
         # later database changes.
+        self._race_list_cache: tuple[Race, ...] | None = None
         self._race_by_name_cache: dict[str, Race | None] = {}
         self._race_by_id_cache: dict[int, Race | None] = {}
         self._stats_cache: dict[int, tuple[RaceStat, ...]] = {}
@@ -23,6 +24,9 @@ class RaceRepository:
 
     def list_races(self) -> list[Race]:
         """Return every canonical race in deterministic name order."""
+        if self._race_list_cache is not None:
+            return list(self._race_list_cache)
+
         with sqlite3.connect(self.database_path) as connection:
             rows = connection.execute(
                 """
@@ -36,11 +40,12 @@ class RaceRepository:
                 """
             ).fetchall()
 
-        result = [self._to_race(row) for row in rows]
+        result = tuple(self._to_race(row) for row in rows)
+        self._race_list_cache = result
         for race in result:
             self._race_by_id_cache.setdefault(int(race.id), race)
             self._race_by_name_cache.setdefault(str(race.name), race)
-        return result
+        return list(result)
 
     def get_race(self, name: str) -> Race | None:
         key = str(name)
