@@ -125,6 +125,9 @@ def main() -> int:
             f"witness_checks={stats.witness_checks} feasible={stats.feasible_leaves} "
             f"rejected={stats.rejected_leaves} score_pruned={stats.score_pruned} "
             f"physical_pruned={stats.physical_pruned} "
+            f"semantic_leaf_classes={stats.semantic_leaf_classes} "
+            f"semantic_duplicate_leaves={stats.semantic_duplicate_leaves} "
+            f"winning_realizations={len(winner.realizations)} "
             f"best_exact_flat_delta={best}"
         )
 
