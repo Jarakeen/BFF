@@ -241,14 +241,11 @@ class ExtremeMaxResourceNamedGearCandidateSearchService(
                     if reusable and structural_key is not None:
                         if cached is None:
                             type(self)._reuse_diagnostics["representative_exact_searches"] += 1
+                            representative_cache[structural_key] = (subset_tuple, winner)
+                            type(self)._reuse_diagnostics["structural_classes_seen"] += 1
                         else:
                             type(self)._reuse_diagnostics["fallback_exact_searches"] += 1
-                        representative_cache.setdefault(
-                            structural_key,
-                            (subset_tuple, winner),
-                        )
 
-        type(self)._reuse_diagnostics["structural_classes_seen"] = len(representative_cache)
         unresolved = tuple(
             dict.fromkeys(
                 (
