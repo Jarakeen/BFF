@@ -34,6 +34,7 @@ def _logs(path) -> None:
                 amount REAL,
                 hit_type INTEGER,
                 cast_track_id INTEGER,
+                stack INTEGER,
                 raw_json TEXT
             )
             """
@@ -52,12 +53,13 @@ def _event(
     amount=None,
     hit_type=None,
     track=None,
+    stack=None,
     name=None,
 ) -> None:
     raw = {} if name is None else {"ability": {"name": name}}
     with sqlite3.connect(path) as db:
         db.execute(
-            "INSERT INTO log_event VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO log_event VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 "R",
                 1,
@@ -70,6 +72,7 @@ def _event(
                 amount,
                 hit_type,
                 track,
+                stack,
                 json.dumps(raw),
             ),
         )
@@ -89,7 +92,7 @@ def _service(tmp_path):
     return service, logs
 
 
-def test_correlates_amount_change_with_state_event_on_damage_source(tmp_path) -> None:
+def test_reports_net_state_gain_on_damage_source(tmp_path) -> None:
     service, logs = _service(tmp_path)
     _event(logs, 1, 1000, "cast", ability=39807, track=10, name="Stampede")
     _event(logs, 2, 2000, "damage", target=99, ability=126474, amount=1000, hit_type=1, track=10)
@@ -105,13 +108,14 @@ def test_correlates_amount_change_with_state_event_on_damage_source(tmp_path) ->
     assert transition.to_amount == 1200
     assert transition.has_observed_state_change is True
     assert len(transition.state_events) == 1
+    assert transition.state_events[0].event_type == "state_gained"
     assert transition.state_events[0].ability_game_id == 61665
     assert transition.state_events[0].ability_name == "Test Buff"
     assert report.transitions_with_state_change == 1
     assert report.transitions_without_state_change == 0
 
 
-def test_correlates_amount_change_with_state_event_on_damage_target(tmp_path) -> None:
+def test_reports_net_state_gain_on_damage_target(tmp_path) -> None:
     service, logs = _service(tmp_path)
     _event(logs, 1, 1000, "cast", ability=39807, track=10, name="Stampede")
     _event(logs, 2, 2000, "damage", target=99, ability=126474, amount=1000, hit_type=1, track=10)
@@ -121,8 +125,24 @@ def test_correlates_amount_change_with_state_event_on_damage_target(tmp_path) ->
     report = service.inspect("stampede", periodic_ability_id=126474)
 
     assert report.transitions_with_state_change == 1
-    assert report.transitions[0].state_events[0].event_type == "applydebuff"
+    assert report.transitions[0].state_events[0].event_type == "state_gained"
     assert report.transitions[0].state_events[0].target_id == 99
+
+
+def test_remove_then_reapply_before_next_tick_is_not_net_change(tmp_path) -> None:
+    service, logs = _service(tmp_path)
+    _event(logs, 1, 1000, "applybuff", source=42, target=42, ability=61665, name="Test Buff")
+    _event(logs, 2, 1200, "cast", ability=39807, track=10, name="Stampede")
+    _event(logs, 3, 2000, "damage", target=99, ability=126474, amount=1000, hit_type=1, track=10)
+    _event(logs, 4, 2400, "removebuff", source=42, target=42, ability=61665, name="Test Buff")
+    _event(logs, 5, 2600, "applybuff", source=42, target=42, ability=61665, name="Test Buff")
+    _event(logs, 6, 3000, "damage", target=99, ability=126474, amount=1200, hit_type=1, track=10)
+
+    report = service.inspect("stampede", periodic_ability_id=126474)
+
+    assert len(report.transitions) == 1
+    assert report.transitions[0].state_events == ()
+    assert report.transitions_without_state_change == 1
 
 
 def test_unrelated_state_event_does_not_count(tmp_path) -> None:
@@ -136,7 +156,6 @@ def test_unrelated_state_event_does_not_count(tmp_path) -> None:
 
     assert len(report.transitions) == 1
     assert report.transitions[0].state_events == ()
-    assert report.transitions_without_state_change == 1
 
 
 def test_same_timestamp_state_event_uses_event_index_order(tmp_path) -> None:
@@ -151,6 +170,20 @@ def test_same_timestamp_state_event_uses_event_index_order(tmp_path) -> None:
 
     assert len(report.transitions[0].state_events) == 1
     assert report.transitions[0].state_events[0].ability_game_id == 61665
+
+
+def test_stack_value_change_is_net_state_change(tmp_path) -> None:
+    service, logs = _service(tmp_path)
+    _event(logs, 1, 1000, "applybuffstack", source=42, target=42, ability=777, stack=1, name="Stacking Buff")
+    _event(logs, 2, 1200, "cast", ability=39807, track=10, name="Stampede")
+    _event(logs, 3, 2000, "damage", target=99, ability=126474, amount=1000, hit_type=1, track=10)
+    _event(logs, 4, 2500, "applybuffstack", source=42, target=42, ability=777, stack=2, name="Stacking Buff")
+    _event(logs, 5, 3000, "damage", target=99, ability=126474, amount=1200, hit_type=1, track=10)
+
+    report = service.inspect("stampede", periodic_ability_id=126474)
+
+    assert report.transitions[0].state_events[0].event_type == "state_changed"
+    assert report.transitions[0].state_events[0].ability_game_id == 777
 
 
 def test_constant_amount_pair_does_not_create_transition(tmp_path) -> None:
