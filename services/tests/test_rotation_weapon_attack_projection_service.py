@@ -123,7 +123,7 @@ def test_explicit_light_attack_bar_must_match_reconstructed_active_bar() -> None
     assert "plan has front bar active" in projection.violations[0].reason
 
 
-def test_missing_active_build_bar_remains_unresolved() -> None:
+def test_missing_active_build_bar_is_action_local_violation() -> None:
     build = CharacterBuild(
         name="Weapon Attack Build",
         character_class=CharacterClass.WARDEN,
@@ -131,19 +131,25 @@ def test_missing_active_build_bar_remains_unresolved() -> None:
         front_bar=_bar(BarId.FRONT, WeaponType.RESTORATION_STAFF),
         back_bar=None,
     )
+    first = RotationAction(2.0, 0, RotationActionKind.LIGHT_ATTACK)
+    second = RotationAction(3.0, 0, RotationActionKind.LIGHT_ATTACK)
     projection = RotationWeaponAttackProjectionService().project(
         build=build,
         plan=_plan(
             RotationAction(1.0, 0, RotationActionKind.BAR_SWAP, bar="back"),
-            RotationAction(2.0, 0, RotationActionKind.LIGHT_ATTACK),
+            first,
+            second,
         ),
         initial_bar="front",
     )
 
     assert projection.is_legal is False
     assert projection.resolutions == ()
-    assert projection.violations == ()
-    assert "bar is unavailable on the build" in projection.unresolved[0]
+    assert projection.unresolved == ()
+    assert tuple(item.action for item in projection.violations) == (first, second)
+    assert {item.reason for item in projection.violations} == {
+        "light attack uses back bar, but that bar's exact weapon identity is unavailable on the build"
+    }
 
 
 def test_rotation_action_rejects_invalid_swap_destination_before_weapon_projection() -> None:
