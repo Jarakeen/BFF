@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Mapping, Protocol
 
+from engine.config import get_data_dir
 from minmax.fight_damage_trajectory import RaidDamageSegment
 from minmax.resource_costs import ResourceType
 from services.canonical_knowledge_gap import (
@@ -11,6 +12,9 @@ from services.canonical_knowledge_gap import (
 from services.encounter_rotation_demand_service import EncounterRotationDemandPolicy
 from services.encounter_threshold_rotation_demand_service import (
     EncounterThresholdRotationDemandPolicy,
+)
+from services.rotation_dd_periodic_runtime_semantics_gap_audit_service import (
+    RotationDDPeriodicRuntimeSemanticsGapAuditService,
 )
 from services.rotation_encounter_demand_policy_registry_service import (
     RotationEncounterDemandPolicyRegistryService,
@@ -55,6 +59,12 @@ class RotationGenerateApplicationContextProvider:
     installed. Missing resistance remains ``None`` and is left for the DD role composer
     to reject; non-DD roles do not acquire a fabricated target armor requirement.
 
+    Selected DD builds also receive advisory periodic-runtime research gaps derived from
+    verified canonical component identity. These are advisory because a slotted skill is
+    not proof that a generated candidate actually casts it; the candidate damage evaluator
+    remains authoritative and fails closed only when an unresolved periodic component is
+    actually used.
+
     Persisted review blockers are converted into canonical blocking knowledge gaps. This
     lets partly researched encounters fail closed with the exact missing policy decision
     instead of collapsing back to a generic "no policy configured" state.
@@ -74,6 +84,9 @@ class RotationGenerateApplicationContextProvider:
         role_evidence_composers: Mapping[
             str, RotationGenerateRoleEvidenceComposer
         ] | None = None,
+        dd_periodic_semantics_gap_audit_service: (
+            RotationDDPeriodicRuntimeSemanticsGapAuditService | None
+        ) = None,
     ) -> None:
         self.static_context_service = (
             static_context_service or RotationStaticBuildContextService()
@@ -87,6 +100,10 @@ class RotationGenerateApplicationContextProvider:
             for raw_role, composer in dict(role_evidence_composers or {}).items()
             if (role_key := _canonical_role(raw_role))
         }
+        self.dd_periodic_semantics_gap_audit_service = (
+            dd_periodic_semantics_gap_audit_service
+            or RotationDDPeriodicRuntimeSemanticsGapAuditService(get_data_dir() / "eso.db")
+        )
 
     def context_for(self, page) -> RotationGenerateCanonicalContext:
         build = page._selected_build()
@@ -135,6 +152,7 @@ class RotationGenerateApplicationContextProvider:
         demand_policies, threshold_policies, knowledge_gaps = self._demand_policy(
             encounter_id
         )
+        knowledge_gaps = tuple(knowledge_gaps) + self._dd_periodic_semantics_gaps(build)
         difficulty = ""
         threshold_segments: tuple[RaidDamageSegment, ...] = ()
         if threshold_policies:
@@ -180,6 +198,60 @@ class RotationGenerateApplicationContextProvider:
             role_evidence_composer=role_evidence_composer,
             character_id=character_id,
         )
+
+    def _dd_periodic_semantics_gaps(
+        self,
+        build,
+    ) -> tuple[CanonicalKnowledgeGap, ...]:
+        if _canonical_role(getattr(build, "Role", "")) not in {
+            "dd",
+            "dps",
+            "damage",
+            "damage_dealer",
+        }:
+            return ()
+
+        audit = self.dd_periodic_semantics_gap_audit_service.audit_build(build)
+        gaps: list[CanonicalKnowledgeGap] = []
+        for item in audit.missing:
+            gaps.append(
+                CanonicalKnowledgeGap(
+                    domain=CanonicalKnowledgeDomain.SKILL_MECHANIC,
+                    key=(
+                        f"{item.skill_entity_id}.coefficient_{item.coefficient_number}."
+                        "periodic_runtime_semantics"
+                    ),
+                    summary=(
+                        f"{item.skill_entity_id} coefficient {item.coefficient_number} is a "
+                        "verified periodic damage component without reviewed runtime semantics."
+                    ),
+                    needed_evidence=(
+                        "Review first-tick placement, refresh-boundary behavior, and magnitude "
+                        "timing policy for this periodic damage component."
+                    ),
+                    consumers=("rotation_maker",),
+                    source_context=(
+                        f"selected DD build; skill rank {item.skill_rank_id}; "
+                        f"classification source: {item.classification_source or 'canonical component evidence'}"
+                    ),
+                    blocking=False,
+                )
+            )
+        for message in audit.unresolved:
+            gaps.append(
+                CanonicalKnowledgeGap(
+                    domain=CanonicalKnowledgeDomain.SKILL_MECHANIC,
+                    key="dd_periodic_runtime_semantics.unresolved",
+                    summary=str(message),
+                    needed_evidence=(
+                        "Resolve canonical skill/component identity before reviewing periodic runtime semantics."
+                    ),
+                    consumers=("rotation_maker",),
+                    source_context="selected DD build periodic-semantics audit",
+                    blocking=False,
+                )
+            )
+        return tuple(gaps)
 
     def _role_evidence_composer_for(
         self,
