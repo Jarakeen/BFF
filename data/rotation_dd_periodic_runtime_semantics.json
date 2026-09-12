@@ -1,4 +1,16 @@
 {
   "schema_version": 1,
-  "entries": []
+  "entries": [
+    {
+      "skill_entity_id": "stampede",
+      "coefficient_number": 2,
+      "first_tick_offset_seconds": 1.0,
+      "refresh_boundary": "allow_old_tick_at_recast",
+      "activation_anchor": "impact",
+      "verified_interval_seconds": 1.0,
+      "magnitude_policy": "dynamic_at_tick",
+      "successive_hit_multiplier": null,
+      "source": "Reviewed Stampede coefficient 2 runtime semantics promoted from rotation_dd_periodic_runtime_semantics_review.json after ESO Logs anchor, cadence, refresh-boundary, magnitude-state, and stable-control review"
+    }
+  ]
 }
