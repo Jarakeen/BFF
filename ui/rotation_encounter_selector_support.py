@@ -8,6 +8,9 @@ from ui.rotation_generate_action_support import install_rotation_generate_action
 from ui.rotation_generate_application_context_provider import (
     RotationGenerateApplicationContextProvider,
 )
+from ui.rotation_threshold_projection_policy_controls import (
+    install_rotation_threshold_projection_policy_controls,
+)
 
 
 class _EncounterSummary(Protocol):
@@ -29,11 +32,10 @@ class RotationEncounterSelectorSupport:
     The selected value is the canonical persisted ``encounter_id`` that a later
     evidence-bundle provider resolves explicitly.
 
-    Installing the selector also installs the common Generate router and its live,
-    role-neutral application context provider. That provider still fails closed when
-    explicit recovery or encounter-demand policy evidence is absent; installing it does
-    not make this selector an owner of those facts. Callers may replace the provider
-    afterward through the router's explicit setter.
+    Installation also composes adjacent role-neutral Generate supports: explicit
+    health-threshold projection controls, the Generate router, and its live application
+    context provider. Those supports own their own policy/runtime inputs; this selector
+    remains only the encounter-identity owner.
     """
 
     def __init__(self, guide_service: _EncounterGuideIndex) -> None:
@@ -55,6 +57,7 @@ class RotationEncounterSelectorSupport:
             lambda _index: self.populate_bosses(page)
         )
         self.refresh(page)
+        install_rotation_threshold_projection_policy_controls(page)
         install_rotation_generate_action(page)
         page.set_rotation_generate_canonical_context_provider(
             RotationGenerateApplicationContextProvider()
