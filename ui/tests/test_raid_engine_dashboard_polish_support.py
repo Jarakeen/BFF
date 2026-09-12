@@ -45,12 +45,24 @@ def test_dashboard_polish_applies_requested_main_page_navigation_and_visibility(
     source = Path("ui/raid_engine_dashboard_polish_support.py").read_text(encoding="utf-8")
     assert "insertSpacing(index + 1, 48)" in source
     assert '_center_named_card_button(card, "Open Calendar")' in source
-    assert 'button.clicked.connect(lambda *_: _open_coverage_raid_review(self))' in source
-    assert 'tabs.tabText(index).strip().upper() == "RAID REVIEW"' in source
+    assert '_rewire_button(button, lambda: _open_coverage_raid_review(self))' in source
+    assert 'tabs.tabText(index).strip().upper() == wanted' in source
     assert "scope_card.setVisible(False)" in source
     assert 'tabs.tabText(index).strip().upper() == "OVERVIEW"' in source
     assert "tabs.setTabVisible(index, False)" in source
     assert "_center_create_character_button(self)" in source
+
+
+def test_dashboard_shortcuts_land_on_requested_workspaces() -> None:
+    source = Path("ui/raid_engine_dashboard_polish_support.py").read_text(encoding="utf-8")
+    assert 'if text == "Performance"' in source
+    assert '_open_coverage_tab(page, "RAID REVIEW")' in source
+    assert 'elif text == "Coverage"' in source
+    assert '_open_coverage_tab(page, "BUFFS & DEBUFFS")' in source
+    assert 'text.startswith("Browse All Saved Builds")' in source
+    assert '_show_page(page, "characters")' in source
+    assert 'candidate.text() == "Build"' in source
+    assert '_show_page(self, "console:2")' in source
 
 
 def test_generated_next_actions_preserve_dashboard_recommendations() -> None:
