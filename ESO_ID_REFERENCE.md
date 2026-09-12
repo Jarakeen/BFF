@@ -110,6 +110,16 @@ Canonical/source crosswalk aliases observed from the skill-rank repository:
 
 Current rule: **none of the Skeletal Archer candidate IDs are promoted as the pet attack identity yet**. Cadence agreement alone is insufficient because several unrelated combat streams can repeat at approximately 2 seconds.
 
+## Unnerving Boneyard
+
+Canonical identity: `unnerving_boneyard`
+
+| Numeric ID | Working role | Confidence | Evidence / note |
+|---:|---|---|---|
+| `117809` | ESO Logs repeated Boneyard damage component | STRONG OBSERVATION | Observed on 162/170 Boneyard cast tracks with 1,871 same-track events. First observed damage clustered near 0.3585s after cast, last near 9.3065s, and clustered same-track intervals concentrate around ~1.0s. Cast-track topology found no separate earlier same-track placement/impact component. In 37 consecutive replacement pairs, no old-track `117809` event occurred at or after the first new-track `117809` event. The corpus has no patch/version provenance and no stable-state magnitude controls, so activation anchor, executable first-tick offset, refresh policy name, and magnitude policy remain unresolved. |
+
+Important identity lesson: `117809` also appears in unrelated Stampede windows without Stampede cast-track linkage. Window proximity alone is weak evidence; exact Boneyard cast-track ownership is what raises this ID to STRONG OBSERVATION for Boneyard.
+
 ### DD periodic-ID lesson
 
 For periodic skills, preserve at least three roles separately when evidence supports them:
