@@ -66,6 +66,7 @@ class BuildCalculationContext:
     dd_damage_done_modifiers: DamageDoneModifiers = DamageDoneModifiers()
     dd_exploiter_bonus: float = 0.0
     dd_status_effect_chance_bonus_percent: float = 0.0
+    dd_bloodthirsty_max_weapon_spell_damage: float = 0.0
 
     def __post_init__(self) -> None:
         if not self.character_id.strip():
@@ -84,6 +85,8 @@ class BuildCalculationContext:
             raise ValueError("dd_exploiter_bonus cannot be negative")
         if self.dd_status_effect_chance_bonus_percent < 0:
             raise ValueError("dd_status_effect_chance_bonus_percent cannot be negative")
+        if self.dd_bloodthirsty_max_weapon_spell_damage < 0:
+            raise ValueError("dd_bloodthirsty_max_weapon_spell_damage cannot be negative")
 
     def resolve_scaling(self, rule: ScalingRule) -> int:
         return rule.resolve(self.character_state)
