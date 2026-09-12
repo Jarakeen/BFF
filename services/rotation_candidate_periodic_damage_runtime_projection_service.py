@@ -26,6 +26,13 @@ class PeriodicDamageRefreshBoundary(str, Enum):
     ALLOW_OLD_TICK_AT_RECAST = "allow_old_tick_at_recast"
 
 
+class PeriodicDamageMagnitudePolicy(str, Enum):
+    """Reviewed rule for which combat state owns periodic tick magnitude."""
+
+    SNAPSHOT_AT_CAST = "snapshot_at_cast"
+    DYNAMIC_AT_TICK = "dynamic_at_tick"
+
+
 @dataclass(frozen=True)
 class RotationPeriodicDamageRuntimeSemantics:
     """Reviewed runtime facts that canonical cadence/duration evidence cannot infer.
@@ -33,7 +40,9 @@ class RotationPeriodicDamageRuntimeSemantics:
     These values are evidence inputs, not defaults. A caller must identify the
     canonical skill/component, preserve a source, and state the first-tick offset
     and refresh-boundary behavior explicitly before concrete tick timestamps are
-    legal.
+    legal. Magnitude timing is intentionally separate from tick scheduling: callers
+    must also review whether one cast snapshots its damage state or each tick reads
+    the live state at that tick instant before DD output may claim complete damage.
     """
 
     skill_entity_id: str
@@ -42,6 +51,7 @@ class RotationPeriodicDamageRuntimeSemantics:
     refresh_boundary: PeriodicDamageRefreshBoundary
     source: str
     verified_interval_seconds: float | None = None
+    magnitude_policy: PeriodicDamageMagnitudePolicy | None = None
 
     def __post_init__(self) -> None:
         entity_id = ability_entity_id(self.skill_entity_id)
@@ -69,6 +79,15 @@ class RotationPeriodicDamageRuntimeSemantics:
             if not math.isfinite(interval) or interval <= 0:
                 raise ValueError("verified_interval_seconds must be finite and positive")
             object.__setattr__(self, "verified_interval_seconds", interval)
+        if self.magnitude_policy is not None and not isinstance(
+            self.magnitude_policy,
+            PeriodicDamageMagnitudePolicy,
+        ):
+            object.__setattr__(
+                self,
+                "magnitude_policy",
+                PeriodicDamageMagnitudePolicy(str(self.magnitude_policy)),
+            )
 
 
 @dataclass(frozen=True)
@@ -98,6 +117,8 @@ class RotationCandidatePeriodicDamageRuntimeProjectionService:
     Concrete recurring scheduling remains owned by the shared Phase 7 runtime
     binder. This layer only binds reviewed first-tick/refresh facts to one
     rotation plan and clips occurrences to the next recast and plan horizon.
+    Magnitude timing is preserved on the semantics record for the DD output layer;
+    it does not alter event scheduling here.
     """
 
     _EPSILON = 1e-9
@@ -178,6 +199,11 @@ class RotationCandidatePeriodicDamageRuntimeProjectionService:
             f"first tick offset {semantics.first_tick_offset_seconds:g}s from {semantics.source}",
             f"refresh boundary {semantics.refresh_boundary.value} from {semantics.source}",
         )
+        if semantics.magnitude_policy is not None:
+            evidence = (
+                *evidence,
+                f"magnitude policy {semantics.magnitude_policy.value} from {semantics.source}",
+            )
 
         if first_occurrence > active_end + self._EPSILON:
             return RotationPeriodicDamageRuntimeProjectionEntry(
@@ -258,6 +284,7 @@ class RotationCandidatePeriodicDamageRuntimeProjectionService:
 
 
 __all__ = [
+    "PeriodicDamageMagnitudePolicy",
     "PeriodicDamageRefreshBoundary",
     "RotationCandidatePeriodicDamageRuntimeProjectionService",
     "RotationPeriodicDamageRuntimeProjection",
