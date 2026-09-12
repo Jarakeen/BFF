@@ -28,10 +28,11 @@ class RotationCandidateUltimateDamageEvidenceService:
     identity, timestamp, sequence, bar, coefficients, crit, mitigation, target
     state, and unresolved evidence are preserved.
 
-    Periodic Ultimate damage remains fail-closed until the shared periodic runtime
-    projection can bind Ultimate parent casts. This adapter does not invent a
-    second periodic scheduler or silently convert a full DoT tooltip into cast-time
-    damage.
+    Periodic Ultimate damage uses the same shared periodic runtime projection as
+    ordinary skills when reviewed runtime semantics exist. Missing cadence,
+    activation-anchor, refresh, or magnitude evidence still fails closed. This
+    adapter does not invent a second periodic scheduler or silently convert a full
+    DoT tooltip into cast-time damage.
     """
 
     def __init__(
