@@ -42,6 +42,8 @@ class RotationSavedBuildChargedStatusChanceService:
     """Resolve source-backed Charged magnitude without inventing proc consequences.
 
     The weapon-trait table owns the imported ``status_effect_chance`` percentage.
+    The table stores trait-material names, not player-facing trait labels, so Charged
+    is selected by its canonical semantic effect type rather than by material name.
     This service binds that reviewed trait rule to the exact active weapon slot in a
     saved build. It deliberately stops before deciding which scheduled damage event
     can proc which status; that belongs to the status-effect runtime/consequence layer.
@@ -62,9 +64,9 @@ class RotationSavedBuildChargedStatusChanceService:
 
     def _canonical_rule(self) -> tuple[float | None, str | None, tuple[str, ...]]:
         rules = tuple(
-            rule
-            for rule in self.rule_repository.get_weapon_trait_rules("Charged")
-            if str(rule.rule_type or "").strip().casefold() == "status_effect_chance"
+            self.rule_repository.get_weapon_trait_rules_by_effect_type(
+                "status_effect_chance"
+            )
         )
         if len(rules) != 1:
             return None, None, (
