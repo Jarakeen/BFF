@@ -9,10 +9,11 @@ percentage, food, transformation, stack, or Mundus evaluation.
 
 This service therefore enumerates every non-empty subset of the classified special
 breakpoints that can fit a topology, fixes those identities into the branch, and
-branch-and-bounds only the remaining ordinary exact-flat fillers.  Special effects
+branch-and-bounds only the remaining ordinary exact-flat fillers. Special effects
 contribute zero to the pruning score, so the bound is deliberately optimistic and
-cannot discard a stronger special branch.  Each surviving family is materialized
-as an exact named-slot witness for downstream canonical scoring.
+cannot discard a stronger special branch. Ordinary filler leaves are collapsed only
+when their full requested-objective effect signatures and physical eligibility are
+identical; special identities remain explicit in every semantic key.
 """
 
 from dataclasses import dataclass
@@ -57,6 +58,8 @@ class ExtremeMaxHealthSpecialSubsetSearchStats:
     score_pruned: int = 0
     physical_pruned: int = 0
     requirement_pruned: int = 0
+    semantic_leaf_classes: int = 0
+    semantic_duplicate_leaves: int = 0
 
 
 @dataclass(frozen=True)
@@ -114,6 +117,7 @@ class _SearchCandidate:
     piece_count: int
     exact_delta: float
     eligibility: ExtremeNamedGearSetSlotEligibility
+    objective_effect_signature: tuple[tuple[object, ...], ...] = ()
     special: bool = False
 
 
@@ -160,6 +164,7 @@ class ExtremeMaxHealthNamedGearCandidateSearchService:
         subset: tuple[ExtremeMaxHealthSpecialNamedGearBranch, ...],
         ordinary_candidates_by_count,
         frontier,
+        feasibility: ExtremePartialNamedGearPhysicalFeasibilityService,
     ) -> ExtremeMaxHealthSpecialSubsetWinner:
         counts = tuple(int(value) for value in topology.counts)
         eligibility_by_id = {int(row.set_id): row for row in self.eligibility.sets}
@@ -178,6 +183,7 @@ class ExtremeMaxHealthNamedGearCandidateSearchService:
                 piece_count=int(branch.piece_count),
                 exact_delta=0.0,
                 eligibility=physical,
+                objective_effect_signature=(),
                 special=True,
             )
             special_by_count.setdefault(int(branch.piece_count), ())
@@ -196,8 +202,8 @@ class ExtremeMaxHealthNamedGearCandidateSearchService:
                 stats=self._stats(),
             )
 
-        rows_by_position: list[tuple[_SearchCandidate, ...]] = []
-        for count in counts:
+        combined_by_count: dict[int, tuple[_SearchCandidate, ...]] = {}
+        for count in set(counts):
             ordinary_rows = tuple(
                 _SearchCandidate(
                     set_id=int(row.set_id),
@@ -205,21 +211,21 @@ class ExtremeMaxHealthNamedGearCandidateSearchService:
                     piece_count=int(row.piece_count),
                     exact_delta=float(row.exact_delta),
                     eligibility=row.eligibility,
+                    objective_effect_signature=tuple(row.objective_effect_signature),
                     special=False,
                 )
                 for row in ordinary_candidates_by_count.get(int(count), ())
                 if int(row.set_id) not in special_ids
             )
             special_rows = tuple(special_by_count.get(int(count), ()))
-            rows_by_position.append(
-                tuple(
-                    sorted(
-                        (*ordinary_rows, *special_rows),
-                        key=lambda row: (-row.exact_delta, row.set_id, row.name.casefold(), row.name),
-                    )
+            combined_by_count[int(count)] = tuple(
+                sorted(
+                    (*ordinary_rows, *special_rows),
+                    key=lambda row: (-row.exact_delta, row.set_id, row.name.casefold(), row.name),
                 )
             )
 
+        rows_by_position = tuple(combined_by_count.get(int(count), ()) for count in counts)
         if any(not rows for rows in rows_by_position):
             return ExtremeMaxHealthSpecialSubsetWinner(
                 topology=topology,
@@ -229,35 +235,69 @@ class ExtremeMaxHealthNamedGearCandidateSearchService:
                 stats=self._stats(),
             )
 
-        suffix_best = [0.0] * (len(counts) + 1)
-        for position in range(len(counts) - 1, -1, -1):
-            suffix_best[position] = suffix_best[position + 1] + max(
-                row.exact_delta for row in rows_by_position[position]
-            )
-
         realizer = ExtremeNamedGearSetCatalogRealizationService(
             breakpoints=frontier,
             eligibility=self.eligibility,
         )
-        feasibility = ExtremePartialNamedGearPhysicalFeasibilityService()
         selected: list[_SearchCandidate] = []
         used_ids: set[int] = set()
         selected_special_ids: set[int] = set()
         best = float("-inf")
-        winners: list[ExtremeNamedGearSetRealization] = []
+        winners_by_semantic_key: dict[
+            tuple[tuple[object, ...], ...],
+            ExtremeNamedGearSetRealization,
+        ] = {}
+        leaf_semantic_cache: dict[
+            tuple[tuple[object, ...], ...],
+            ExtremeNamedGearSetRealization | None,
+        ] = {}
         nodes = leaves = witness_checks = feasible_leaves = rejected_leaves = 0
         score_pruned = physical_pruned = requirement_pruned = 0
+        semantic_duplicate_leaves = 0
 
         def remaining_positions_for_count(position: int, count: int) -> int:
             return sum(1 for value in counts[position:] if int(value) == int(count))
 
+        def semantic_key() -> tuple[tuple[object, ...], ...]:
+            rows: list[tuple[object, ...]] = []
+            for row in selected:
+                physical_shape = realizer._eligibility_shape_cached(row.eligibility)
+                if row.special:
+                    rows.append(
+                        (
+                            "special",
+                            int(row.set_id),
+                            int(row.piece_count),
+                            physical_shape,
+                        )
+                    )
+                else:
+                    rows.append(
+                        (
+                            "ordinary",
+                            physical_shape,
+                            row.objective_effect_signature,
+                        )
+                    )
+            return tuple(rows)
+
         def visit(position: int, score: float) -> None:
-            nonlocal best, winners
+            nonlocal best, winners_by_semantic_key
             nonlocal nodes, leaves, witness_checks, feasible_leaves, rejected_leaves
             nonlocal score_pruned, physical_pruned, requirement_pruned
+            nonlocal semantic_duplicate_leaves
             nodes += 1
 
-            if best != float("-inf") and score + suffix_best[position] < best - 1e-9:
+            remaining_bound = self.ordinary_service._distinct_id_remaining_bound(
+                counts=counts,
+                position=position,
+                candidates_by_count=combined_by_count,
+                used_ids=used_ids,
+            )
+            if remaining_bound is None:
+                score_pruned += 1
+                return
+            if best != float("-inf") and score + remaining_bound < best - 1e-9:
                 score_pruned += 1
                 return
 
@@ -266,18 +306,24 @@ class ExtremeMaxHealthNamedGearCandidateSearchService:
                     requirement_pruned += 1
                     return
                 leaves += 1
-                physical = tuple(row.eligibility for row in selected)
-                witness_checks += 1
-                witness = realizer._find_witness_cached(topology, physical)
+                key = semantic_key()
+                if key in leaf_semantic_cache:
+                    semantic_duplicate_leaves += 1
+                    witness = leaf_semantic_cache[key]
+                else:
+                    physical = tuple(row.eligibility for row in selected)
+                    witness_checks += 1
+                    witness = realizer._find_witness_cached(topology, physical)
+                    leaf_semantic_cache[key] = witness
                 if witness is None:
                     rejected_leaves += 1
                     return
                 feasible_leaves += 1
                 if score > best + 1e-9:
                     best = score
-                    winners = [witness]
+                    winners_by_semantic_key = {key: witness}
                 elif abs(score - best) <= 1e-9:
-                    winners.append(witness)
+                    winners_by_semantic_key.setdefault(key, witness)
                 return
 
             count = int(counts[position])
@@ -318,7 +364,8 @@ class ExtremeMaxHealthNamedGearCandidateSearchService:
                 selected.pop()
 
         visit(0, 0.0)
-        winners.sort(
+        winners = sorted(
+            winners_by_semantic_key.values(),
             key=lambda witness: (
                 witness.set_ids,
                 witness.weapon_shape.value,
@@ -339,6 +386,8 @@ class ExtremeMaxHealthNamedGearCandidateSearchService:
                 score_pruned=score_pruned,
                 physical_pruned=physical_pruned,
                 requirement_pruned=requirement_pruned,
+                semantic_leaf_classes=len(leaf_semantic_cache),
+                semantic_duplicate_leaves=semantic_duplicate_leaves,
             ),
         )
 
@@ -367,6 +416,7 @@ class ExtremeMaxHealthNamedGearCandidateSearchService:
 
         branches = tuple(classified.branches)
         subset_winners: list[ExtremeMaxHealthSpecialSubsetWinner] = []
+        feasibility = ExtremePartialNamedGearPhysicalFeasibilityService()
         for topology in topology_catalog.topologies:
             for size in range(1, len(branches) + 1):
                 for subset in combinations(branches, size):
@@ -379,6 +429,7 @@ class ExtremeMaxHealthNamedGearCandidateSearchService:
                             subset=subset_tuple,
                             ordinary_candidates_by_count=ordinary_candidates,
                             frontier=frontier,
+                            feasibility=feasibility,
                         )
                     )
 
