@@ -141,11 +141,14 @@ class RotationCandidateCanonicalPlanEvidenceService:
     service never calculates the restoration amount itself.
 
     Role output stays unknown until an authoritative provider supplies resolved
-    evidence for this exact candidate. Role-specific hard obligations are also
-    supplied by a dedicated provider and travel separately from the generic
-    scorecard. Provider workload may supply primary-role displacement and canonical
-    assigned-support temporal coverage. The adapter never derives support from
-    copied booleans and never combines unlike dimensions into a weighted score.
+    evidence for this exact candidate. Exact unresolved role-output reasons are
+    preserved as diagnostics so downstream Generate explanations can state why an
+    output remained unknown without turning those strings into a second ranking gate.
+    Role-specific hard obligations are also supplied by a dedicated provider and
+    travel separately from the generic scorecard. Provider workload may supply
+    primary-role displacement and canonical assigned-support temporal coverage. The
+    adapter never derives support from copied booleans and never combines unlike
+    dimensions into a weighted score.
     """
 
     def __init__(
@@ -224,6 +227,7 @@ class RotationCandidateCanonicalPlanEvidenceService:
         sustain_margin = float(sustain.run.sustain.minimum_amount)
 
         role_output_value: float | None = None
+        role_output_unresolved: tuple[str, ...] = ()
         if self.role_output_evidence_provider is not None:
             role_output = self.role_output_evidence_provider.evaluate_plan(candidate)
             if role_output.candidate_id.casefold() != candidate.candidate_id.casefold():
@@ -232,6 +236,7 @@ class RotationCandidateCanonicalPlanEvidenceService:
                     f"expected {candidate.candidate_id!r}, got {role_output.candidate_id!r}"
                 )
             role_output_value = role_output.resolved_value
+            role_output_unresolved = tuple(role_output.unresolved)
 
         role_hard_obligation_satisfied: bool | None = True
         role_hard_obligation_reasons: tuple[str, ...] = ()
@@ -282,6 +287,7 @@ class RotationCandidateCanonicalPlanEvidenceService:
             primary_role_displacement_seconds=primary_role_displacement_seconds,
             role_hard_obligation_satisfied=role_hard_obligation_satisfied,
             role_hard_obligation_reasons=role_hard_obligation_reasons,
+            role_output_unresolved=role_output_unresolved,
         )
 
     @staticmethod
