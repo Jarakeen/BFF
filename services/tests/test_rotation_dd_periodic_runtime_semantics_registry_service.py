@@ -10,6 +10,9 @@ from services.rotation_candidate_periodic_damage_runtime_projection_service impo
 from services.rotation_dd_periodic_runtime_semantics_registry_service import (
     RotationDDPeriodicRuntimeSemanticsRegistryService,
 )
+from services.rotation_dd_periodic_runtime_semantics_review_service import (
+    RotationDDPeriodicRuntimeSemanticsReviewService,
+)
 
 
 def test_missing_registry_is_reviewed_empty(tmp_path) -> None:
@@ -53,6 +56,29 @@ def test_registry_loads_explicit_runtime_and_magnitude_semantics(tmp_path) -> No
     assert row.magnitude_policy is PeriodicDamageMagnitudePolicy.SNAPSHOT_AT_CAST
     assert row.successive_hit_multiplier == 1.15
     assert row.source == "reviewed U50 combat evidence"
+
+
+def test_repository_registry_promotes_reviewed_stampede_without_semantic_drift() -> None:
+    rows = RotationDDPeriodicRuntimeSemanticsRegistryService().load()
+    review = RotationDDPeriodicRuntimeSemanticsReviewService().by_component()[
+        ("stampede", 2)
+    ]
+
+    assert len(rows) == 1
+    row = rows[0]
+    assert (row.skill_entity_id, row.coefficient_number) == ("stampede", 2)
+    assert review.executable_complete is True
+    assert row.verified_interval_seconds == review.reviewed_interval_seconds == 1.0
+    assert row.first_tick_offset_seconds == review.first_tick_offset_seconds == 1.0
+    assert row.activation_anchor.value == review.activation_anchor == "impact"
+    assert (
+        row.refresh_boundary.value
+        == review.refresh_boundary
+        == "allow_old_tick_at_recast"
+    )
+    assert row.magnitude_policy.value == review.magnitude_policy == "dynamic_at_tick"
+    assert row.successive_hit_multiplier == review.successive_hit_multiplier is None
+    assert "reviewed" in row.source.casefold()
 
 
 def test_registry_defaults_legacy_entries_to_cast_anchor(tmp_path) -> None:
