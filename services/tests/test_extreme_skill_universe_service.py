@@ -124,3 +124,31 @@ def test_known_noncombat_lines_remain_in_universe_but_are_marked_noncombat(tmp_p
     assert by_name["Medicinal Use"].known_noncombat_line is True
     assert by_name["Keen Eye"].known_noncombat_line is True
     assert by_name["Wall of Elements"].known_noncombat_line is False
+
+
+def test_player_skill_universe_is_shared_across_service_instances(tmp_path, monkeypatch):
+    path = _db(tmp_path)
+    cache_key = str(path.resolve())
+    ExtremeSkillUniverseService._production_universe_cache.pop(cache_key, None)
+
+    import services.extreme_skill_universe_service as module
+
+    real_connect = module.sqlite3.connect
+    connect_calls = 0
+
+    def counting_connect(*args, **kwargs):
+        nonlocal connect_calls
+        connect_calls += 1
+        return real_connect(*args, **kwargs)
+
+    monkeypatch.setattr(module.sqlite3, "connect", counting_connect)
+
+    first = ExtremeSkillUniverseService(path)
+    second = ExtremeSkillUniverseService(path)
+
+    first_rows = first.passives()
+    second_rows = second.actives()
+
+    assert len(first_rows) == 9
+    assert len(second_rows) == 2
+    assert connect_calls == 1
