@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from minmax.build_evaluation import BuildEvaluation
 from minmax.character_build.character_build import CharacterBuild
-from minmax.combat_damage_modifiers import damage_taken_from_target_state
+from minmax.combat_damage_modifiers import (
+    damage_done_from_combat_state,
+    damage_taken_from_target_state,
+)
 from minmax.combat_state import CombatState
 from minmax.dd_damage import DDDamageEvent, calculate_dd_damage
 from minmax.dd_mitigation import calculate_dd_mitigation
@@ -61,6 +64,10 @@ class RotationCandidateHeavyAttackDamageEvidenceService:
     formulas own the attacker-side HA/typed/direct/single-target/Damage Done math;
     the existing DD pipeline adds expected crit, mitigation, and target Damage Taken.
 
+    Runtime attacker combat state contributes only reviewed named generic Damage Done
+    effects. That value is folded into the formula's existing ``damage_done`` bucket
+    exactly once; target-side Damage Taken remains a separate later combat stage.
+
     Flame, frost, shock, restoration staff, two-handed, dual-wield, and one-hand-and-
     shield heavies are routed here. Bow remains unresolved because the canonical
     heavy-attack formula module does not currently expose a reviewed bow damage
@@ -78,6 +85,7 @@ class RotationCandidateHeavyAttackDamageEvidenceService:
         completion_evidence: tuple[RotationHeavyAttackCompletionEvidence, ...],
         evaluation_context: EvaluationContext = EvaluationContext(),
         weapon_projection_service: RotationHeavyAttackWeaponProjectionService | None = None,
+        attacker_combat_state: CombatState | None = None,
         target_combat_state: CombatState | None = None,
         target_critical_resistance: float = 0.0,
     ) -> None:
@@ -91,6 +99,7 @@ class RotationCandidateHeavyAttackDamageEvidenceService:
         self.weapon_projection_service = (
             weapon_projection_service or RotationHeavyAttackWeaponProjectionService()
         )
+        self.attacker_combat_state = attacker_combat_state
         self.target_combat_state = target_combat_state
         self.target_critical_resistance = float(target_critical_resistance)
 
@@ -211,7 +220,8 @@ class RotationCandidateHeavyAttackDamageEvidenceService:
         set_ha_damage = _sum_contributions(self.evaluation, "set_ha_damage")
         direct_damage_done = _sum_contributions(self.evaluation, "direct_damage_done")
         single_target_damage_done = _sum_contributions(self.evaluation, "single_target_damage_done")
-        damage_done = _sum_contributions(self.evaluation, "damage_done")
+        runtime_damage_done = damage_done_from_combat_state(self.attacker_combat_state).generic
+        damage_done = _sum_contributions(self.evaluation, "damage_done") + runtime_damage_done
         empower = _sum_contributions(self.evaluation, "empower")
 
         common = dict(
