@@ -1,5 +1,7 @@
 from pathlib import Path
+from types import SimpleNamespace
 
+import ui.main_window_lazy_page_support as lazy_support
 from ui.main_window_lazy_page_support import LAZY_PAGE_SPECS
 
 
@@ -51,3 +53,36 @@ def test_lazy_bootstrap_wraps_completed_startup_stack_and_roster_stays_home():
     assert "install_lazy_pages()" in dd_support
     assert dd_support.index("install_role_surface()") < dd_support.index("install_lazy_pages()")
     assert 'window.show_page("operations_console")' in app_source
+
+
+def test_startup_roster_overview_reuses_constructor_refresh_then_refreshes_later(monkeypatch):
+    calls = []
+
+    class Page:
+        def refresh(self):
+            calls.append("refresh")
+
+    page = Page()
+    window = SimpleNamespace(
+        pages={"operations_console": page},
+        _lazy_page_factories={},
+        _operations_console_initial_navigation_pending=True,
+    )
+
+    def original_show_page(self, page_name):
+        if page_name == "operations_console":
+            self.pages[page_name].refresh()
+        return page_name
+
+    monkeypatch.setattr(lazy_support, "_ORIGINAL_SHOW_PAGE", original_show_page)
+
+    assert lazy_support._show_page_with_lazy_materialization(
+        window, "operations_console"
+    ) == "operations_console"
+    assert calls == []
+    assert window._operations_console_initial_navigation_pending is False
+
+    assert lazy_support._show_page_with_lazy_materialization(
+        window, "operations_console"
+    ) == "operations_console"
+    assert calls == ["refresh"]
