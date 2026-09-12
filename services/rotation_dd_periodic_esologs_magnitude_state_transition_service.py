@@ -25,6 +25,7 @@ _STATE_APPLY_OR_REFRESH = (
 _STATE_REMOVE = BUFF_REMOVE_EVENTS | DEBUFF_REMOVE_EVENTS
 _STATE_EVENT_TYPES = tuple(sorted(_STATE_APPLY_OR_REFRESH | _STATE_REMOVE))
 _CAST_TYPES = ("cast", "completecast", "begincast")
+_OCCURRENCE_CLUSTER_TOLERANCE_MS = 5.0
 
 
 @dataclass(frozen=True)
@@ -62,6 +63,7 @@ class RotationDDPeriodicEsoLogsMagnitudeStateTransitionReport:
     skill_entity_id: str
     periodic_ability_id: int
     transitions: tuple[RotationDDPeriodicEsoLogsMagnitudeTransition, ...]
+    ambiguous_occurrence_clusters: int = 0
     unresolved: tuple[str, ...] = ()
 
     @property
@@ -80,6 +82,10 @@ class RotationDDPeriodicEsoLogsMagnitudeStateTransitionService:
     remain ESO Logs evidence handles only. State is replayed in exact timestamp/event
     order and compared at the two tick boundaries, so transient remove/apply churn that
     returns to the same state is not reported as a magnitude-state transition.
+
+    Damage rows within 5 ms for the same cast/target/hit type are one observational
+    occurrence. Same-amount duplicates collapse to one row. Mixed-amount occurrence
+    clusters are ambiguous and excluded rather than being misread as sequential ticks.
     Results remain observational and never promote snapshot-vs-dynamic policy.
     """
 
@@ -135,6 +141,7 @@ class RotationDDPeriodicEsoLogsMagnitudeStateTransitionService:
             )
 
         transitions: list[RotationDDPeriodicEsoLogsMagnitudeTransition] = []
+        ambiguous_occurrence_clusters = 0
         with self._open_logs() as db:
             schema_error = self._schema_error(db)
             if schema_error:
@@ -212,6 +219,23 @@ class RotationDDPeriodicEsoLogsMagnitudeStateTransitionService:
                 if not grouped:
                     continue
 
+                occurrence_sequences: dict[
+                    tuple[int, int, int | None], tuple[tuple[sqlite3.Row, ...], ...]
+                ] = {}
+                for key, rows in grouped.items():
+                    sequences, ambiguous_count = self._unambiguous_occurrence_sequences(rows)
+                    ambiguous_occurrence_clusters += ambiguous_count
+                    occurrence_sequences[key] = sequences
+
+                occurrence_rows = tuple(
+                    row
+                    for sequences in occurrence_sequences.values()
+                    for sequence in sequences
+                    for row in sequence
+                )
+                if not occurrence_rows:
+                    continue
+
                 relevant_actors = {group_source}
                 relevant_actors.update(target for _, target, _ in grouped)
                 state_rows = self._state_rows_for_actors(
@@ -223,53 +247,49 @@ class RotationDDPeriodicEsoLogsMagnitudeStateTransitionService:
 
                 boundaries = {
                     (float(row["timestamp"]), int(row["event_index"]))
-                    for rows in grouped.values()
-                    for row in rows
+                    for row in occurrence_rows
                 }
                 snapshots = self._snapshots_at_boundaries(
                     state_rows,
                     boundaries=tuple(sorted(boundaries)),
                 )
 
-                for (track, target, hit_type), rows in grouped.items():
-                    ordered = sorted(
-                        rows,
-                        key=lambda row: (float(row["timestamp"]), int(row["event_index"])),
-                    )
+                for (track, target, hit_type), sequences in occurrence_sequences.items():
                     actor_filter = {group_source, target}
-                    for previous, current in zip(ordered, ordered[1:]):
-                        from_amount = float(previous["amount"])
-                        to_amount = float(current["amount"])
-                        if from_amount == to_amount:
-                            continue
-                        previous_key = (
-                            float(previous["timestamp"]),
-                            int(previous["event_index"]),
-                        )
-                        current_key = (
-                            float(current["timestamp"]),
-                            int(current["event_index"]),
-                        )
-                        state_events = self._net_state_delta(
-                            snapshots[previous_key],
-                            snapshots[current_key],
-                            relevant_actors=actor_filter,
-                        )
-                        transitions.append(
-                            RotationDDPeriodicEsoLogsMagnitudeTransition(
-                                report_code=group_report,
-                                fight_id=group_fight,
-                                source_id=group_source,
-                                target_id=target,
-                                cast_track_id=track,
-                                hit_type=hit_type,
-                                from_timestamp_ms=previous_key[0],
-                                to_timestamp_ms=current_key[0],
-                                from_amount=from_amount,
-                                to_amount=to_amount,
-                                state_events=state_events,
+                    for sequence in sequences:
+                        for previous, current in zip(sequence, sequence[1:]):
+                            from_amount = float(previous["amount"])
+                            to_amount = float(current["amount"])
+                            if from_amount == to_amount:
+                                continue
+                            previous_key = (
+                                float(previous["timestamp"]),
+                                int(previous["event_index"]),
                             )
-                        )
+                            current_key = (
+                                float(current["timestamp"]),
+                                int(current["event_index"]),
+                            )
+                            state_events = self._net_state_delta(
+                                snapshots[previous_key],
+                                snapshots[current_key],
+                                relevant_actors=actor_filter,
+                            )
+                            transitions.append(
+                                RotationDDPeriodicEsoLogsMagnitudeTransition(
+                                    report_code=group_report,
+                                    fight_id=group_fight,
+                                    source_id=group_source,
+                                    target_id=target,
+                                    cast_track_id=track,
+                                    hit_type=hit_type,
+                                    from_timestamp_ms=previous_key[0],
+                                    to_timestamp_ms=current_key[0],
+                                    from_amount=from_amount,
+                                    to_amount=to_amount,
+                                    state_events=state_events,
+                                )
+                            )
 
         if not transitions:
             unresolved.append(
@@ -279,8 +299,50 @@ class RotationDDPeriodicEsoLogsMagnitudeStateTransitionService:
             identity,
             periodic_ability_id,
             transitions=tuple(transitions),
+            ambiguous_occurrence_clusters=ambiguous_occurrence_clusters,
             unresolved=tuple(dict.fromkeys(unresolved)),
         )
+
+    @classmethod
+    def _unambiguous_occurrence_sequences(
+        cls,
+        rows: list[sqlite3.Row],
+    ) -> tuple[tuple[tuple[sqlite3.Row, ...], ...], int]:
+        ordered = sorted(
+            rows,
+            key=lambda row: (float(row["timestamp"]), int(row["event_index"])),
+        )
+        if not ordered:
+            return (), 0
+
+        clusters: list[list[sqlite3.Row]] = []
+        cluster: list[sqlite3.Row] = [ordered[0]]
+        cluster_start = float(ordered[0]["timestamp"])
+        for row in ordered[1:]:
+            timestamp = float(row["timestamp"])
+            if timestamp - cluster_start <= _OCCURRENCE_CLUSTER_TOLERANCE_MS:
+                cluster.append(row)
+                continue
+            clusters.append(cluster)
+            cluster = [row]
+            cluster_start = timestamp
+        clusters.append(cluster)
+
+        sequences: list[tuple[sqlite3.Row, ...]] = []
+        current: list[sqlite3.Row] = []
+        ambiguous_count = 0
+        for occurrence in clusters:
+            amounts = {float(row["amount"]) for row in occurrence}
+            if len(amounts) > 1:
+                ambiguous_count += 1
+                if current:
+                    sequences.append(tuple(current))
+                    current = []
+                continue
+            current.append(occurrence[0])
+        if current:
+            sequences.append(tuple(current))
+        return tuple(sequences), ambiguous_count
 
     @classmethod
     def _snapshots_at_boundaries(
@@ -560,12 +622,14 @@ class RotationDDPeriodicEsoLogsMagnitudeStateTransitionService:
         periodic_ability_id: int,
         *,
         transitions: tuple[RotationDDPeriodicEsoLogsMagnitudeTransition, ...] = (),
+        ambiguous_occurrence_clusters: int = 0,
         unresolved: tuple[str, ...] = (),
     ) -> RotationDDPeriodicEsoLogsMagnitudeStateTransitionReport:
         return RotationDDPeriodicEsoLogsMagnitudeStateTransitionReport(
             skill_entity_id=skill_entity_id,
             periodic_ability_id=int(periodic_ability_id),
             transitions=transitions,
+            ambiguous_occurrence_clusters=int(ambiguous_occurrence_clusters),
             unresolved=unresolved,
         )
 
