@@ -122,3 +122,17 @@ def test_real_reef_guardian_projection_exposes_replication_strategy():
     assert "80%" in replication.mitigation
     assert "50%" in replication.mitigation
     assert "HM" in replication.mitigation
+
+
+def test_real_reef_guardian_projection_exposes_reviewed_tank_role_impact():
+    projection = EncounterGuideEvidenceProjectionService(DATA).get(
+        "reef_guardian", "Reef Guardian"
+    )
+
+    role_text = "\n".join(projection.role_impact)
+
+    assert "Tanks" in role_text
+    assert "Acid Reflux" in role_text
+    assert "taunt target" in role_text
+    assert "persistent pools" in role_text
+    assert "stacking vulnerability" in role_text
