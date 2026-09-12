@@ -9,7 +9,6 @@ generates, repairs, or infers rotation evidence while saving.
 
 from typing import Any
 
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QLabel,
@@ -97,6 +96,13 @@ def _build_rotation_workspace(page) -> QWidget:
     summary_card.addWidget(page.saved_rotation_summary)
     root.addWidget(summary_card)
 
+    setup_card = FoundryCard("Rotation Setup", "◆").set_watermark("compass", 0.03)
+    page.saved_rotation_setup = QLabel()
+    page.saved_rotation_setup.setWordWrap(True)
+    page.saved_rotation_setup.setProperty("muted", True)
+    setup_card.addWidget(page.saved_rotation_setup)
+    root.addWidget(setup_card)
+
     timeline_card = FoundryCard("Rotation Timeline", "☷").set_watermark("compass", 0.03)
     page.saved_rotation_table = QTableWidget(0, 5)
     page.saved_rotation_table.setHorizontalHeaderLabels(
@@ -126,6 +132,17 @@ def _fallback_build_tab(page) -> None:
     page.workspace_tabs.setCurrentIndex(index)
 
 
+def _display_number(value, *, suffix: str = "") -> str:
+    if value is None or value == "":
+        return "Not set"
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return str(value)
+    text = f"{number:,.0f}" if number.is_integer() else f"{number:g}"
+    return f"{text}{suffix}"
+
+
 def _refresh_build_rotation(page) -> None:
     if not hasattr(page, "saved_rotation_workspace"):
         return
@@ -146,6 +163,7 @@ def _refresh_build_rotation(page) -> None:
         page.workspace_tabs.setTabVisible(tab_index, False)
         page.saved_rotation_table.setRowCount(0)
         page.saved_rotation_summary.setText("")
+        page.saved_rotation_setup.setText("")
         return
 
     page.workspace_tabs.setTabVisible(tab_index, True)
@@ -165,9 +183,25 @@ def _refresh_build_rotation(page) -> None:
     ]
     if encounter_id:
         summary_lines.append(f"Encounter: {encounter_id}")
-    if potion:
-        summary_lines.append(f"Potion: {potion}")
     page.saved_rotation_summary.setText("\n".join(summary_lines))
+
+    recovery_resource = str(setup.get("recovery_resource") or "Not set").title()
+    recovery_trigger = setup.get("recovery_trigger_fraction")
+    recovery_trigger_text = (
+        "Not set"
+        if recovery_trigger is None
+        else f"{float(recovery_trigger) * 100:g}%"
+    )
+    setup_lines = [
+        f"Execute: {_display_number(setup.get('execute_percent'), suffix='%')}",
+        f"Target: {setup.get('target_type') or 'Not set'}",
+        f"Raid DPS: {_display_number(setup.get('raid_dps'))}",
+        f"Target resistance: {_display_number(setup.get('target_resistance'))}",
+        f"Recovery: {recovery_resource} at {recovery_trigger_text}",
+        f"Potion: {potion or 'None'}",
+        f"Potion on cooldown: {'Yes' if setup.get('potion_on_cooldown') else 'No'}",
+    ]
+    page.saved_rotation_setup.setText("\n".join(setup_lines))
 
     page.saved_rotation_table.setRowCount(0)
     for action in actions:
