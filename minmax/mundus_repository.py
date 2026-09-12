@@ -105,6 +105,12 @@ class MundusRepository:
         self.database_path = str(database_path)
         self.game_update = int(game_update)
         self.read_only = not bool(initialize)
+        self._names_cache: tuple[str, ...] | None = None
+        self._records_cache: dict[str, tuple[MundusEffectRecord, ...]] = {}
+        self._effects_cache: dict[
+            tuple[str, float],
+            tuple[tuple[Effect, ...], tuple[str, ...]],
+        ] = {}
         if initialize:
             self.ensure_schema_and_seed()
 
@@ -181,16 +187,29 @@ class MundusRepository:
                         """,
                         (mundus_id, stat_id, value, unit, supported, notes),
                     )
+        # Seeding is the only mutating operation this repository owns. If a caller
+        # explicitly reseeds an existing instance, discard read caches so subsequent
+        # reads observe the newly seeded canonical rows.
+        self._names_cache = None
+        self._records_cache.clear()
+        self._effects_cache.clear()
 
     def list_names(self) -> list[str]:
+        if self._names_cache is not None:
+            return list(self._names_cache)
         with self._connect() as connection:
             rows = connection.execute(
                 "SELECT name FROM mundus_stone WHERE game_update = ? ORDER BY name",
                 (self.game_update,),
             ).fetchall()
-        return [str(row["name"]) for row in rows]
+        self._names_cache = tuple(str(row["name"]) for row in rows)
+        return list(self._names_cache)
 
     def get_records(self, name: str) -> list[MundusEffectRecord]:
+        requested = str(name).strip()
+        cached = self._records_cache.get(requested)
+        if cached is not None:
+            return list(cached)
         with self._connect() as connection:
             rows = connection.execute(
                 """
@@ -200,9 +219,9 @@ class MundusRepository:
                 WHERE ms.name = ? AND ms.game_update = ?
                 ORDER BY me.id
                 """,
-                (str(name).strip(), self.game_update),
+                (requested, self.game_update),
             ).fetchall()
-        return [
+        records = tuple(
             MundusEffectRecord(
                 name=str(row["name"]),
                 stat_id=str(row["stat_id"]),
@@ -212,12 +231,21 @@ class MundusRepository:
                 notes=str(row["notes"] or ""),
             )
             for row in rows
-        ]
+        )
+        self._records_cache[requested] = records
+        return list(records)
 
     def get_effects(self, name: str, *, multiplier: float = 1.0) -> tuple[list[Effect], list[str]]:
+        requested = str(name).strip()
+        cache_key = (requested, float(multiplier))
+        cached = self._effects_cache.get(cache_key)
+        if cached is not None:
+            effects, unresolved = cached
+            return list(effects), list(unresolved)
+
         effects: list[Effect] = []
         unresolved: list[str] = []
-        for record in self.get_records(name):
+        for record in self.get_records(requested):
             if not record.supported:
                 unresolved.append(f"{record.name}: {record.stat_id} unresolved ({record.notes})")
                 continue
@@ -238,4 +266,5 @@ class MundusRepository:
                     unit=unit,
                 )
             )
-        return effects, unresolved
+        self._effects_cache[cache_key] = (tuple(effects), tuple(unresolved))
+        return list(effects), list(unresolved)
