@@ -6,10 +6,23 @@ from pathlib import Path
 
 from engine.config import get_data_dir
 from minmax.champion_point_static_repository import ChampionPointStaticRepository
+from minmax.combat_state import CombatState
 from models.build_model import PlayerBuild
 
 
 _VALUE = r"([0-9]+(?:\.[0-9]+)?)"
+
+
+def exploiter_damage_done_bonus(
+    target_combat_state: CombatState | None,
+    bonus: float,
+) -> float:
+    """Return reviewed Exploiter Damage Done only for explicit Off Balance state."""
+
+    value = max(0.0, float(bonus))
+    if value <= 0.0 or target_combat_state is None:
+        return 0.0
+    return value if target_combat_state.has_buff("Off Balance") else 0.0
 
 
 @dataclass(frozen=True)
@@ -107,4 +120,5 @@ class RotationSavedBuildDDConditionalDamageDoneService:
 __all__ = [
     "RotationSavedBuildDDConditionalDamageDoneResolution",
     "RotationSavedBuildDDConditionalDamageDoneService",
+    "exploiter_damage_done_bonus",
 ]
