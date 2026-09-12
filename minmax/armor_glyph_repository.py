@@ -10,6 +10,7 @@ class ArmorGlyphEffectRepository:
 
     def __init__(self, database_path: str | Path):
         self.database_path = str(database_path)
+        self._names_cache: tuple[str, ...] | None = None
         self._item_cache: dict[tuple[int, bool], tuple[Effect, ...]] = {}
         self._name_cache: dict[tuple[str, bool], tuple[Effect, ...]] = {}
 
@@ -19,6 +20,9 @@ class ArmorGlyphEffectRepository:
 
     def list_names(self) -> tuple[str, ...]:
         """Return every distinct canonical armor-glyph name."""
+        if self._names_cache is not None:
+            return self._names_cache
+
         with sqlite3.connect(self.database_path) as connection:
             rows = connection.execute(
                 """
@@ -28,7 +32,8 @@ class ArmorGlyphEffectRepository:
                 ORDER BY name COLLATE NOCASE
                 """
             ).fetchall()
-        return tuple(str(row[0]) for row in rows)
+        self._names_cache = tuple(str(row[0]) for row in rows)
+        return self._names_cache
 
     def get_armor_glyph_effect(
         self,
