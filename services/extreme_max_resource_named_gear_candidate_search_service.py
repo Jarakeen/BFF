@@ -91,6 +91,24 @@ class ExtremeMaxResourceNamedGearCandidateSearchService(
     """Build the proof-safe named-gear candidate frontier for any Max Resource."""
 
     SUPPORTED_OBJECTIVES = frozenset({"max_health", "max_magicka", "max_stamina"})
+    _reuse_diagnostics: dict[str, int] = {}
+
+    @classmethod
+    def reuse_diagnostics(cls) -> dict[str, int]:
+        return dict(cls._reuse_diagnostics)
+
+    @classmethod
+    def _reset_reuse_diagnostics(cls) -> None:
+        cls._reuse_diagnostics = {
+            "fitting_subsets_seen": 0,
+            "structural_keys_built": 0,
+            "representative_exact_searches": 0,
+            "reuse_attempts": 0,
+            "reuse_successes": 0,
+            "rematerialization_failures": 0,
+            "fallback_exact_searches": 0,
+            "structural_classes_seen": 0,
+        }
 
     def __init__(
         self,
@@ -146,6 +164,7 @@ class ExtremeMaxResourceNamedGearCandidateSearchService(
         self,
         topology_catalog: ExtremeGearSetTopologyCatalog,
     ) -> ExtremeMaxResourceNamedGearCandidateSearchResult:
+        type(self)._reset_reuse_diagnostics()
         ordinary = self.ordinary_service.search(topology_catalog)
         classified = ExtremeMaxResourceSpecialNamedGearBranchService(
             self.ordinary_service.relevance
@@ -181,8 +200,10 @@ class ExtremeMaxResourceNamedGearCandidateSearchService(
                     subset_tuple = tuple(subset)
                     if not self._subset_fits_counts(topology, subset_tuple):
                         continue
+                    type(self)._reuse_diagnostics["fitting_subsets_seen"] += 1
 
                     structural_key = None
+                    cached = None
                     if reusable:
                         structural_key = ExtremeMaxResourceSpecialSubsetEquivalenceService.structural_key(
                             topology=topology,
@@ -191,8 +212,10 @@ class ExtremeMaxResourceNamedGearCandidateSearchService(
                             eligibility_by_id=eligibility_by_id,
                         )
                         if structural_key is not None:
+                            type(self)._reuse_diagnostics["structural_keys_built"] += 1
                             cached = representative_cache.get(structural_key)
                             if cached is not None:
+                                type(self)._reuse_diagnostics["reuse_attempts"] += 1
                                 representative_subset, representative_winner = cached
                                 rematerialized = ExtremeMaxResourceSpecialSubsetEquivalenceService.rematerialize(
                                     topology=topology,
@@ -202,8 +225,10 @@ class ExtremeMaxResourceNamedGearCandidateSearchService(
                                     eligibility_by_id=eligibility_by_id,
                                 )
                                 if rematerialized is not None:
+                                    type(self)._reuse_diagnostics["reuse_successes"] += 1
                                     subset_winners.append(rematerialized)
                                     continue
+                                type(self)._reuse_diagnostics["rematerialization_failures"] += 1
 
                     winner = self._search_max_resource_subset(
                         topology=topology,
@@ -214,11 +239,16 @@ class ExtremeMaxResourceNamedGearCandidateSearchService(
                     )
                     subset_winners.append(winner)
                     if reusable and structural_key is not None:
+                        if cached is None:
+                            type(self)._reuse_diagnostics["representative_exact_searches"] += 1
+                        else:
+                            type(self)._reuse_diagnostics["fallback_exact_searches"] += 1
                         representative_cache.setdefault(
                             structural_key,
                             (subset_tuple, winner),
                         )
 
+        type(self)._reuse_diagnostics["structural_classes_seen"] = len(representative_cache)
         unresolved = tuple(
             dict.fromkeys(
                 (
