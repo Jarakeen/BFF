@@ -3,13 +3,10 @@ from __future__ import annotations
 """Add the finite Mundus axis to structural Extreme core-stat search.
 
 This service composes, rather than replaces, the existing structural search.
-For every race × legal class route × 64-point attribute allocation × active-bar
-candidate it evaluates every canonical Update-50 Mundus Stone plus the legal
-no-Mundus baseline through the same canonical stat evaluator.
-
-Closing this axis is useful denominator progress, but it does not promote the
-record to global proof while gear, skills, CP, consumables, runtime state, and
-other dynamic axes remain deferred.
+For ordinary objectives every canonical Update-50 Mundus Stone plus the legal
+no-Mundus baseline remains exhaustive. Max Magicka / Max Stamina may use the
+proof-owned resource Mundus projection when the canonical catalogue proves a
+unique dominant target-resource witness.
 """
 
 from pathlib import Path
@@ -27,6 +24,10 @@ from services.extreme_record_result import (
     ExtremeRecordResult,
     ExtremeRecordSearchCoverage,
 )
+from services.extreme_resource_mundus_projection_service import (
+    ExtremeResourceMundusProjection,
+    ExtremeResourceMundusProjectionService,
+)
 from services.extreme_structural_core_stat_record_service import (
     ExtremeCanonicalStructuralStatEvaluator,
     ExtremeStructuralCoreStatRecordService,
@@ -43,7 +44,7 @@ _MUNDUS_SCOPE = "all canonical Update-50 Mundus Stone choices plus no-Mundus bas
 
 
 class ExtremeBestMundusStructuralStatEvaluator:
-    """Score every legal Mundus choice for one structural candidate."""
+    """Score legal Mundus choices, using proof reductions for max resources."""
 
     def __init__(
         self,
@@ -53,8 +54,19 @@ class ExtremeBestMundusStructuralStatEvaluator:
     ) -> None:
         self.evaluator = evaluator
         self.mundus_repository = mundus_repository
+        self._projection_cache: dict[str, ExtremeResourceMundusProjection] = {}
 
-    def mundus_choices(self) -> tuple[str, ...]:
+    def mundus_projection(self, objective_key: str) -> ExtremeResourceMundusProjection | None:
+        key = str(objective_key or "").strip().casefold()
+        if key not in ExtremeResourceMundusProjectionService.SUPPORTED_OBJECTIVES:
+            return None
+        cached = self._projection_cache.get(key)
+        if cached is None:
+            cached = ExtremeResourceMundusProjectionService(self.mundus_repository).build(key)
+            self._projection_cache[key] = cached
+        return cached
+
+    def _all_mundus_choices(self) -> tuple[str, ...]:
         values: list[str] = [""]
         seen = {""}
         for raw in self.mundus_repository.list_names():
@@ -64,6 +76,14 @@ class ExtremeBestMundusStructuralStatEvaluator:
             seen.add(name)
             values.append(name)
         return tuple(values)
+
+    def mundus_choices(self, objective_key: str | None = None) -> tuple[str, ...]:
+        key = str(objective_key or "").strip().casefold()
+        if key:
+            projection = self.mundus_projection(key)
+            if projection is not None and projection.projection_complete:
+                return (str(projection.witness),)
+        return self._all_mundus_choices()
 
     def __call__(
         self,
@@ -81,18 +101,13 @@ class ExtremeBestMundusStructuralStatEvaluator:
         potion: str = "",
         active_buffs: tuple[str, ...] = (),
     ) -> tuple[float, dict[str, Any], tuple[str, ...]]:
-        """Pick best Mundus while preserving optional outer finite selections.
-
-        Optional values are forwarded only when actually present.  This keeps the
-        original structural/Mundus evaluator contract compatible with simpler
-        canonical scorers while still allowing food/potion layers to compose.
-        """
+        """Pick best retained Mundus while preserving optional outer selections."""
         best_value: float | None = None
         best_payload: dict[str, Any] | None = None
         best_unresolved: tuple[str, ...] = ()
         best_mundus = ""
 
-        for mundus in self.mundus_choices():
+        for mundus in self.mundus_choices(objective_key):
             kwargs: dict[str, Any] = {"mundus": mundus}
             if str(food or "").strip():
                 kwargs["food"] = food
@@ -166,7 +181,8 @@ class ExtremeStructuralMundusCoreStatRecordService:
             )
 
         result: ExtremeStructuralGlobalSearchResult[dict[str, Any]] = self.search_service.search(key)
-        choices = self.mundus_evaluator.mundus_choices()
+        choices = self.mundus_evaluator.mundus_choices(key)
+        projection = self.mundus_evaluator.mundus_projection(key)
         searched = tuple((*result.structural_scope, _MUNDUS_SCOPE))
         omitted = tuple(
             axis for axis in result.deferred_dynamic_axes if axis != _MUNDUS_DEFERRED_AXIS
@@ -176,6 +192,7 @@ class ExtremeStructuralMundusCoreStatRecordService:
             result.structural_denominator_proven
             and choices
             and not omitted
+            and (projection is None or projection.projection_complete)
         )
         coverage = ExtremeRecordSearchCoverage(
             searched=searched,
@@ -194,6 +211,7 @@ class ExtremeStructuralMundusCoreStatRecordService:
                     dict.fromkeys(
                         (
                             "Structural + Mundus Extreme search produced no scored candidate",
+                            *((projection.unresolved if projection is not None else ())),
                             *result.unresolved,
                         )
                     )
@@ -205,9 +223,14 @@ class ExtremeStructuralMundusCoreStatRecordService:
         winner_mundus = ""
         if isinstance(winner.payload, dict):
             winner_mundus = str(winner.payload.get("mundus") or "")
+        mundus_text = (
+            f"reviewed {projection.stones_reviewed:,} canonical Mundus stones and retained exact witness {projection.witness}"
+            if projection is not None and projection.projection_complete
+            else f"searched {len(choices):,} Mundus states including no-Mundus"
+        )
         explanation = (
-            "Exhaustively searched race × legal class/subclass route × all 64-point attribute allocations × active bar × every Update-50 Mundus choice.",
-            f"Evaluated {expanded_count:,} structural/Mundus combinations across {len(choices):,} Mundus states including no-Mundus.",
+            f"Exhaustively searched the structural denominator and {mundus_text}.",
+            f"Evaluated {expanded_count:,} structural/Mundus combinations.",
             f"Winning Mundus: {winner_mundus or 'none'}.",
             "Other dynamic axes remain deferred, so this is not yet a globally proven Extreme Record.",
         )
