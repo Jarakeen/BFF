@@ -174,7 +174,7 @@ def test_real_xalvakka_projection_exposes_phase_and_split_structure():
     assert {"70%", "40%"}.issubset(markers)
     assert "Phase 2" in labels
     assert "Phase 3" in labels
-    assert "Wraith Summons" in names
+    assert "Summon Wraiths" in names
     assert "Soul Resonance" in names
     assert "Retreat" in names
     assert "Split" in names
