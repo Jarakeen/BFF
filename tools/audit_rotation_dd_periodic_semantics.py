@@ -104,8 +104,11 @@ def _format_partial_review(item) -> tuple[str, ...]:
         known.append(f"duration={review.duration_seconds:g}s")
     if review.reviewed_interval_seconds is not None:
         known.append(f"interval={review.reviewed_interval_seconds:g}s")
+    if review.activation_anchor is not None:
+        known.append(f"activation_anchor={review.activation_anchor}")
     if review.first_tick_offset_seconds is not None:
-        known.append(f"first_tick={review.first_tick_offset_seconds:g}s")
+        anchor = review.activation_anchor or "unresolved_anchor"
+        known.append(f"first_tick={review.first_tick_offset_seconds:g}s after {anchor}")
     if review.refresh_boundary is not None:
         known.append(f"refresh={review.refresh_boundary}")
     if review.magnitude_policy is not None:
@@ -173,6 +176,7 @@ def audit_saved_build(
             print(
                 "  - "
                 f"{item.skill_entity_id} coeff {item.coefficient_number}: "
+                f"anchor={item.activation_anchor.value}, "
                 f"first_tick={item.first_tick_offset_seconds:g}s, "
                 f"refresh={item.refresh_boundary.value}, "
                 f"magnitude={item.magnitude_policy.value if item.magnitude_policy is not None else 'unresolved'}"
