@@ -186,6 +186,37 @@ def test_stack_value_change_is_net_state_change(tmp_path) -> None:
     assert report.transitions[0].state_events[0].ability_game_id == 777
 
 
+def test_same_amount_duplicate_rows_collapse_to_one_occurrence(tmp_path) -> None:
+    service, logs = _service(tmp_path)
+    _event(logs, 1, 1000, "cast", ability=39807, track=10, name="Stampede")
+    _event(logs, 2, 2000, "damage", target=99, ability=126474, amount=1000, hit_type=1, track=10)
+    _event(logs, 3, 2001, "damage", target=99, ability=126474, amount=1000, hit_type=1, track=10)
+    _event(logs, 4, 3000, "damage", target=99, ability=126474, amount=1200, hit_type=1, track=10)
+
+    report = service.inspect("stampede", periodic_ability_id=126474)
+
+    assert report.ambiguous_occurrence_clusters == 0
+    assert len(report.transitions) == 1
+    assert report.transitions[0].from_timestamp_ms == 2000
+    assert report.transitions[0].to_timestamp_ms == 3000
+    assert report.transitions[0].from_amount == 1000
+    assert report.transitions[0].to_amount == 1200
+
+
+def test_mixed_amount_near_same_time_cluster_is_ambiguous_and_breaks_sequence(tmp_path) -> None:
+    service, logs = _service(tmp_path)
+    _event(logs, 1, 1000, "cast", ability=39807, track=10, name="Stampede")
+    _event(logs, 2, 2000, "damage", target=99, ability=126474, amount=1000, hit_type=1, track=10)
+    _event(logs, 3, 2001, "damage", target=99, ability=126474, amount=1200, hit_type=1, track=10)
+    _event(logs, 4, 3000, "damage", target=99, ability=126474, amount=1300, hit_type=1, track=10)
+
+    report = service.inspect("stampede", periodic_ability_id=126474)
+
+    assert report.ambiguous_occurrence_clusters == 1
+    assert report.transitions == ()
+    assert any("no same-cast periodic amount-change transitions" in item for item in report.unresolved)
+
+
 def test_constant_amount_pair_does_not_create_transition(tmp_path) -> None:
     service, logs = _service(tmp_path)
     _event(logs, 1, 1000, "cast", ability=39807, track=10, name="Stampede")
