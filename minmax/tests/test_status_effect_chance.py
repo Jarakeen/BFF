@@ -5,6 +5,7 @@ from minmax.status_effect_chance import (
     base_status_effect_chance,
     calculate_status_effect_chance,
     classify_skill_status_effect_source,
+    status_effect_name_for_damage_type,
 )
 
 
@@ -24,6 +25,18 @@ def test_skill_component_classification_selects_reviewed_baseline_family() -> No
     assert classify_skill_status_effect_source(is_dot=False, is_aoe=True) is StatusEffectChanceSource.AREA_DIRECT
     assert classify_skill_status_effect_source(is_dot=True, is_aoe=False) is StatusEffectChanceSource.SINGLE_TARGET_DOT
     assert classify_skill_status_effect_source(is_dot=True, is_aoe=True) is StatusEffectChanceSource.AREA_DOT
+
+
+def test_reviewed_damage_types_map_to_status_families() -> None:
+    assert status_effect_name_for_damage_type("flame") == "Burning"
+    assert status_effect_name_for_damage_type("frost") == "Chilled"
+    assert status_effect_name_for_damage_type("shock") == "Concussion"
+    assert status_effect_name_for_damage_type("magical") == "Overcharged"
+    assert status_effect_name_for_damage_type("physical") == "Sundered"
+    assert status_effect_name_for_damage_type("poison") == "Poisoned"
+    assert status_effect_name_for_damage_type("disease") == "Diseased"
+    assert status_effect_name_for_damage_type("bleed") == "Hemorrhaging"
+    assert status_effect_name_for_damage_type("oblivion") is None
 
 
 def test_percent_increases_multiply_the_source_baseline() -> None:
