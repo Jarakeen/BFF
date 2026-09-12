@@ -18,6 +18,7 @@ from minmax.light_attack_calculator import (
     calculate_bow_light_attack,
     calculate_flame_staff_light_attack,
     calculate_frost_staff_light_attack,
+    calculate_melee_light_attack,
 )
 from minmax.light_attack_evaluation import resolve_light_attack_from_evaluation
 from minmax.rotation_plan import RotationAction, RotationActionKind
@@ -40,14 +41,27 @@ def _sum_contributions(evaluation: BuildEvaluation, *effect_types: str) -> float
     )
 
 
+_MELEE_LIGHT_ATTACK_WEAPONS = frozenset(
+    {
+        WeaponType.SWORD,
+        WeaponType.AXE,
+        WeaponType.MACE,
+        WeaponType.DAGGER,
+        WeaponType.GREATSWORD,
+        WeaponType.BATTLEAXE,
+        WeaponType.MAUL,
+    }
+)
+
+
 class RotationCandidateLightAttackDamageEvidenceService:
     """Resolve supported scheduled light attacks through canonical weapon/LA math.
 
     Weapon identity and active-bar reconstruction remain owned by
     ``RotationWeaponAttackProjectionService``. Existing UESP-derived light-attack
-    formulas own the flame/frost staff and bow pre-critical Damage Done result.
-    Existing DD stat, critical, mitigation, and target Damage Taken services own the
-    later combat stages.
+    formulas own the flame/frost staff, bow, and shared one-/two-handed melee
+    pre-critical Damage Done result. Existing DD stat, critical, mitigation, and
+    target Damage Taken services own the later combat stages.
 
     ``attacker_combat_state`` supplies reviewed transient attacker-side Damage Done
     such as Berserk at the exact attack instant. Target-state-dependent Exploiter is
@@ -56,11 +70,10 @@ class RotationCandidateLightAttackDamageEvidenceService:
     Unknown target state remains unresolved rather than silently treating Exploiter as
     inactive. Those modifiers are not applied again in the later DD stage.
 
-    Flame staff, frost staff, and bow light attacks are fully routed here. Lightning
-    staff remains unresolved because the currently preserved source formula uses HA,
-    Empower, and DoT modifier buckets; treating that as ordinary direct damage would
-    silently change the source mechanic. Other weapon families remain unresolved
-    until their own canonical light-attack formulas are present.
+    Flame staff, frost staff, bow, one-handed melee, and two-handed melee light attacks
+    are routed here. Lightning staff remains unresolved because the currently preserved
+    source formula uses HA, Empower, and DoT modifier buckets; treating that as ordinary
+    direct damage would silently change the source mechanic.
     """
 
     def __init__(
@@ -153,6 +166,9 @@ class RotationCandidateLightAttackDamageEvidenceService:
             damage_type = "frost"
         elif resolution.main_hand is WeaponType.BOW:
             formula_damage = calculate_bow_light_attack(state)
+            damage_type = "physical"
+        elif resolution.main_hand in _MELEE_LIGHT_ATTACK_WEAPONS:
+            formula_damage = calculate_melee_light_attack(state)
             damage_type = "physical"
         elif resolution.main_hand is WeaponType.LIGHTNING_STAFF:
             return self._unresolved(
