@@ -17,6 +17,11 @@ from services.rotation_healer_demand_healing_evidence_service import (
     RotationHealerDemandHealingEvidence,
     RotationHealerExternalConditionalDemandAssumption,
 )
+from services.rotation_healer_demand_criteria_service import (
+    RotationCandidateHealerCriteriaHardObligationService,
+    RotationHealerDemandCriterion,
+    RotationHealerDemandCriterionSourceKind,
+)
 from services.service_catalog import EvidenceClass, canonical_service_for
 
 
@@ -154,6 +159,26 @@ def test_relevant_static_context_gap_remains_role_output_blocker() -> None:
     assert plan_output.candidate_id == candidate.candidate_id
     assert plan_output.value is None
     assert plan_output.unresolved == output.unresolved
+
+    hard_gate = RotationCandidateHealerCriteriaHardObligationService(
+        multi_demand_output_service=result,  # type: ignore[arg-type]
+        criteria=(
+            RotationHealerDemandCriterion(
+                demand_name=_HEALING_DEMAND.name,
+                minimum_modeled_healing_per_demand_second=500.0,
+                source_kind=(
+                    RotationHealerDemandCriterionSourceKind.VERIFIED_ENCOUNTER_EVIDENCE
+                ),
+                provenance=("encounter_fact=reviewed_healer_floor",),
+            ),
+        ),
+    )
+    hard_result = hard_gate.evaluate_plan(candidate)
+    assert hard_result.satisfied is None
+    assert any(
+        "static healer-output context: unknown healing potency modifier" in reason
+        for reason in hard_result.reasons
+    )
 
 
 def test_proven_ambient_static_gap_does_not_block_healer_output() -> None:
