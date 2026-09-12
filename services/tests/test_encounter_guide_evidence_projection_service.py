@@ -193,6 +193,12 @@ def test_bahsei_reviewed_research_populates_overview_without_canonical_packet():
 
     names = {row.mechanic for row in projection.strategy}
     brief = "\n".join(projection.brief)
+    timeline = {(row.marker, row.label) for row in projection.timeline}
+
+    assert ("55%", "Burning Specters") in timeline
+    assert ("55%", "Dagon's Wrath") in timeline
+    assert ("50%", "Meteor Swarm") in timeline
+    assert ("30%", "Prime Meteor Execute") in timeline
 
     assert "Skull Salvo" in names
     assert "Cursed Ground/Unholy Spike" in names
