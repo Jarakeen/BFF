@@ -26,6 +26,9 @@ from services.extreme_max_resource_ordinary_named_gear_search_service import (
     ExtremeMaxResourceOrdinaryNamedGearSearchResult,
     ExtremeMaxResourceOrdinaryNamedGearSearchService,
 )
+from services.extreme_max_resource_semantic_memo_search_service import (
+    ExtremeMaxResourceSemanticMemoSearchService,
+)
 from services.extreme_max_resource_special_named_gear_branch_service import (
     ExtremeMaxResourceSpecialNamedGearBranchResult,
     ExtremeMaxResourceSpecialNamedGearBranchService,
@@ -97,6 +100,15 @@ class ExtremeMaxResourceNamedGearCandidateSearchService(
                 f"Max Resource named-gear candidate composition does not support {objective!r}"
             )
         self.objective_key = objective
+        if objective in {"max_magicka", "max_stamina"} and not isinstance(
+            ordinary_service,
+            ExtremeMaxResourceSemanticMemoSearchService,
+        ):
+            ordinary_service = ExtremeMaxResourceSemanticMemoSearchService(
+                breakpoints=ordinary_service.breakpoints,
+                eligibility=ordinary_service.eligibility,
+                relevance=ordinary_service.relevance,
+            )
         self.ordinary_service = ordinary_service
         self.eligibility = eligibility
 
