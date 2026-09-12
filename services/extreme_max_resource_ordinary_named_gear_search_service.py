@@ -20,7 +20,7 @@ ordinary objective. Only one concrete realization per such semantic class is
 materialized and retained as a winner representative.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from minmax.effects import EffectOperation
 from services.extreme_gear_set_bonus_breakpoint_service import (
@@ -388,6 +388,82 @@ class ExtremeMaxResourceOrdinaryNamedGearSearchService:
         return False
 
     @staticmethod
+    def _physical_shape_legality_possible(
+        *,
+        topology: ExtremeGearSetCountTopology,
+        counts: tuple[int, ...],
+        candidates_by_count: dict[int, tuple[_Candidate, ...]],
+        feasibility: ExtremePartialNamedGearPhysicalFeasibilityService,
+    ) -> bool:
+        """Reject topologies whose candidate eligibility shapes cannot physically fit.
+
+        Concrete set identity and score are intentionally discarded here. Each
+        piece-count position receives the distinct canonical eligibility shapes that
+        occur anywhere in that count's candidate domain. Non-Mythic shapes may be
+        reused with synthetic identities, making this an optimistic relaxation of the
+        exact named-set search. The canonical partial-feasibility service still owns
+        armor/jewelry/weapon placement and global Mythic legality. Therefore ``False``
+        is proof that no concrete assignment can work, while ``True`` only permits the
+        exact branch-and-bound search to continue.
+        """
+
+        domains: list[tuple[ExtremeNamedGearSetSlotEligibility, ...]] = []
+        for count in counts:
+            by_shape: dict[tuple[object, ...], ExtremeNamedGearSetSlotEligibility] = {}
+            for row in candidates_by_count.get(int(count), ()):
+                shape = feasibility._cached_shape(row.eligibility)
+                by_shape.setdefault(shape, row.eligibility)
+            if not by_shape:
+                return False
+            domains.append(
+                tuple(
+                    row
+                    for _shape, row in sorted(
+                        by_shape.items(),
+                        key=lambda item: repr(item[0]),
+                    )
+                )
+            )
+
+        selected: list[ExtremeNamedGearSetSlotEligibility] = []
+        selected_shape_indices: list[int] = []
+        prefix_cache: dict[tuple[int, tuple[tuple[object, ...], ...]], bool] = {}
+
+        def visit(position: int) -> bool:
+            if position >= len(counts):
+                return True
+
+            minimum_shape_index = 0
+            if position > 0 and counts[position - 1] == counts[position]:
+                minimum_shape_index = selected_shape_indices[position - 1]
+
+            for shape_index, source in enumerate(domains[position]):
+                if shape_index < minimum_shape_index:
+                    continue
+                synthetic = replace(
+                    source,
+                    set_id=-((position + 1) * 1000 + shape_index + 1),
+                    name=f"shape-{position}-{shape_index}",
+                )
+                selected.append(synthetic)
+                selected_shape_indices.append(shape_index)
+                shape_key = tuple(feasibility._cached_shape(item) for item in selected)
+                cache_key = (position + 1, shape_key)
+                possible = prefix_cache.get(cache_key)
+                if possible is None:
+                    possible = feasibility.is_possible(topology, tuple(selected))
+                    prefix_cache[cache_key] = possible
+                if possible and visit(position + 1):
+                    selected_shape_indices.pop()
+                    selected.pop()
+                    return True
+                selected_shape_indices.pop()
+                selected.pop()
+            return False
+
+        return visit(0)
+
+    @staticmethod
     def _distinct_id_remaining_bound(
         *,
         counts: tuple[int, ...],
@@ -446,6 +522,18 @@ class ExtremeMaxResourceOrdinaryNamedGearSearchService:
         if not self._identity_legality_possible(
             counts=counts,
             candidates_by_count=candidates_by_count,
+        ):
+            return ExtremeOrdinaryNamedGearTopologyWinner(
+                topology=topology,
+                best_exact_flat_delta=None,
+                realizations=(),
+                stats=self._stats(),
+            )
+        if not self._physical_shape_legality_possible(
+            topology=topology,
+            counts=counts,
+            candidates_by_count=candidates_by_count,
+            feasibility=feasibility,
         ):
             return ExtremeOrdinaryNamedGearTopologyWinner(
                 topology=topology,
