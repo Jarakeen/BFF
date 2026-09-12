@@ -34,6 +34,9 @@ from services.extreme_max_resource_special_named_gear_branch_service import (
     ExtremeMaxResourceSpecialNamedGearBranchResult,
     ExtremeMaxResourceSpecialNamedGearBranchService,
 )
+from services.extreme_max_resource_special_subset_equivalence_service import (
+    ExtremeMaxResourceSpecialSubsetEquivalenceService,
+)
 from services.extreme_named_gear_set_realization_service import ExtremeNamedGearSetRealization
 from services.extreme_named_gear_set_slot_eligibility_service import (
     ExtremeNamedGearSetSlotEligibilityCatalog,
@@ -165,21 +168,56 @@ class ExtremeMaxResourceNamedGearCandidateSearchService(
         branches = tuple(classified.branches)
         subset_winners: list[ExtremeMaxHealthSpecialSubsetWinner] = []
         feasibility = ExtremePartialNamedGearPhysicalFeasibilityService()
+        eligibility_by_id = {int(row.set_id): row for row in self.eligibility.sets}
+        reusable = self.objective_key in {"max_magicka", "max_stamina"}
+        representative_cache: dict[
+            tuple[object, ...],
+            tuple[tuple[object, ...], ExtremeMaxHealthSpecialSubsetWinner],
+        ] = {}
+
         for topology in topology_catalog.topologies:
             for size in range(1, len(branches) + 1):
                 for subset in combinations(branches, size):
                     subset_tuple = tuple(subset)
                     if not self._subset_fits_counts(topology, subset_tuple):
                         continue
-                    subset_winners.append(
-                        self._search_max_resource_subset(
+
+                    structural_key = None
+                    if reusable:
+                        structural_key = ExtremeMaxResourceSpecialSubsetEquivalenceService.structural_key(
                             topology=topology,
                             subset=subset_tuple,
                             ordinary_candidates_by_count=ordinary_candidates,
-                            frontier=frontier,
-                            feasibility=feasibility,
+                            eligibility_by_id=eligibility_by_id,
                         )
+                        if structural_key is not None:
+                            cached = representative_cache.get(structural_key)
+                            if cached is not None:
+                                representative_subset, representative_winner = cached
+                                rematerialized = ExtremeMaxResourceSpecialSubsetEquivalenceService.rematerialize(
+                                    topology=topology,
+                                    representative_subset=representative_subset,
+                                    representative_winner=representative_winner,
+                                    target_subset=subset_tuple,
+                                    eligibility_by_id=eligibility_by_id,
+                                )
+                                if rematerialized is not None:
+                                    subset_winners.append(rematerialized)
+                                    continue
+
+                    winner = self._search_max_resource_subset(
+                        topology=topology,
+                        subset=subset_tuple,
+                        ordinary_candidates_by_count=ordinary_candidates,
+                        frontier=frontier,
+                        feasibility=feasibility,
                     )
+                    subset_winners.append(winner)
+                    if reusable and structural_key is not None:
+                        representative_cache.setdefault(
+                            structural_key,
+                            (subset_tuple, winner),
+                        )
 
         unresolved = tuple(
             dict.fromkeys(
