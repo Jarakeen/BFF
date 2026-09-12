@@ -75,7 +75,7 @@ def main() -> int:
     print(f"preload_seconds={warm_elapsed:.3f}")
     print(f"preload_complete={snapshot.preload_complete}")
 
-    ExtremeMaxResourceNamedGearCandidateSearchService.reset_reuse_diagnostics()
+    ExtremeMaxResourceNamedGearCandidateSearchService._reset_reuse_diagnostics()
     service = ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService(
         database_path=database
     )
