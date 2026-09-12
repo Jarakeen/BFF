@@ -33,6 +33,17 @@ INFUSED_ENCHANTMENT_PERCENT = {
     "Legendary": 60.0,
 }
 
+# Current CP160 Bloodthirsty maximum Weapon/Spell Damage by jewelry quality.
+# The conditional health scaling remains runtime math; this table owns only the
+# verified per-item ceiling.
+BLOODTHIRSTY_MAX_DAMAGE = {
+    "Normal": 70.0,
+    "Fine": 140.0,
+    "Superior": 210.0,
+    "Epic": 280.0,
+    "Legendary": 350.0,
+}
+
 STATIC_TRAIT_VALUES = {
     "arcane": {
         "Normal": ((StatId.MAX_MAGICKA, 767.0),),
@@ -132,6 +143,13 @@ class JewelryTraitRepository:
         if not database_quality:
             return None
         return INFUSED_ENCHANTMENT_PERCENT.get(database_quality)
+
+    def get_bloodthirsty_max_damage(self, *, quality: str, level: str) -> float | None:
+        database_quality = self.database_quality(quality)
+        item_level = self.database_item_level(level)
+        if not database_quality or item_level is None:
+            return None
+        return BLOODTHIRSTY_MAX_DAMAGE.get(database_quality)
 
     def get_static_effects(self, trait_name: str, *, quality: str, level: str) -> list[Effect]:
         trait = str(trait_name or "").strip()
