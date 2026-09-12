@@ -24,7 +24,7 @@ def _trace(value: float):
     return SimpleNamespace(final_value=value)
 
 
-def _context():
+def _context(*, dd_exploiter_bonus=0.0):
     return SimpleNamespace(
         core_state=SimpleNamespace(
             derived={
@@ -39,6 +39,7 @@ def _context():
         fight_duration=10.0,
         target_resistance=None,
         combat_state=CombatState(),
+        dd_exploiter_bonus=float(dd_exploiter_bonus),
     )
 
 
@@ -102,27 +103,21 @@ class _Projection:
 
 
 class _RuntimeContextResolver:
-    def __init__(self):
+    def __init__(self, *, dd_exploiter_bonus=0.0):
         self.calls = []
+        self.dd_exploiter_bonus = float(dd_exploiter_bonus)
 
     def __call__(self, time_seconds, sequence=None):
         self.calls.append((float(time_seconds), sequence))
         return SimpleNamespace(
             resolved=True,
-            context=_context(),
+            context=_context(dd_exploiter_bonus=self.dd_exploiter_bonus),
             unresolved=(),
         )
 
 
-def test_dynamic_dot_re_resolves_target_damage_taken_at_each_tick() -> None:
-    action = RotationAction(
-        0.0,
-        0,
-        RotationActionKind.SKILL,
-        name="periodic_skill",
-        bar="front",
-    )
-    candidate = GeneratedRotationCandidate(
+def _candidate(action):
+    return GeneratedRotationCandidate(
         candidate_id="dynamic-target-state",
         plan=RotationPlan(
             character_name="Damage Tester",
@@ -132,6 +127,29 @@ def test_dynamic_dot_re_resolves_target_damage_taken_at_each_tick() -> None:
         ),
         refresh_leads=(),
         action_claims=(),
+    )
+
+
+def _semantics():
+    return (
+        RotationPeriodicDamageRuntimeSemantics(
+            skill_entity_id="periodic_skill",
+            coefficient_number=1,
+            first_tick_offset_seconds=1.0,
+            refresh_boundary=PeriodicDamageRefreshBoundary.REPLACE_BEFORE_RECAST_TICK,
+            source="reviewed runtime evidence",
+            magnitude_policy=PeriodicDamageMagnitudePolicy.DYNAMIC_AT_TICK,
+        ),
+    )
+
+
+def test_dynamic_dot_re_resolves_target_damage_taken_at_each_tick() -> None:
+    action = RotationAction(
+        0.0,
+        0,
+        RotationActionKind.SKILL,
+        name="periodic_skill",
+        bar="front",
     )
     runtime_context = _RuntimeContextResolver()
     target_calls = []
@@ -148,23 +166,50 @@ def test_dynamic_dot_re_resolves_target_damage_taken_at_each_tick() -> None:
         calculator=_Calculator(),
         component_repository=_Components(),
         periodic_runtime_projection_service=_Projection(action),
-        periodic_runtime_semantics=(
-            RotationPeriodicDamageRuntimeSemantics(
-                skill_entity_id="periodic_skill",
-                coefficient_number=1,
-                first_tick_offset_seconds=1.0,
-                refresh_boundary=PeriodicDamageRefreshBoundary.REPLACE_BEFORE_RECAST_TICK,
-                source="reviewed runtime evidence",
-                magnitude_policy=PeriodicDamageMagnitudePolicy.DYNAMIC_AT_TICK,
-            ),
-        ),
+        periodic_runtime_semantics=_semantics(),
         runtime_build_context_resolver=runtime_context,
         runtime_target_combat_state_resolver=target_state,
     )
 
-    evidence = service.evaluate_action(candidate=candidate, action=action)
+    evidence = service.evaluate_action(candidate=_candidate(action), action=action)
 
     assert evidence.unresolved == ()
     assert evidence.damage_value == pytest.approx(210.0)
     assert runtime_context.calls == [(1.0, None), (2.0, None)]
     assert target_calls == [(1.0, None), (2.0, None)]
+
+
+def test_dynamic_dot_exploiter_uses_off_balance_state_at_each_tick() -> None:
+    action = RotationAction(
+        0.0,
+        0,
+        RotationActionKind.SKILL,
+        name="periodic_skill",
+        bar="front",
+    )
+    runtime_context = _RuntimeContextResolver(dd_exploiter_bonus=0.04)
+    target_calls = []
+
+    def target_state(time_seconds, sequence=None):
+        target_calls.append((float(time_seconds), sequence))
+        if float(time_seconds) == 1.0:
+            return CombatState(active_buffs=("Off Balance",))
+        return CombatState()
+
+    service = RotationCandidateSkillDamageEvidenceService(
+        database_path="unused-test.db",
+        context=_context(dd_exploiter_bonus=0.04),
+        calculator=_Calculator(),
+        component_repository=_Components(),
+        periodic_runtime_projection_service=_Projection(action),
+        periodic_runtime_semantics=_semantics(),
+        runtime_build_context_resolver=runtime_context,
+        runtime_target_combat_state_resolver=target_state,
+    )
+
+    evidence = service.evaluate_action(candidate=_candidate(action), action=action)
+
+    assert evidence.unresolved == ()
+    assert evidence.damage_value == pytest.approx(204.0)
+    assert runtime_context.calls == [(1.0, None), (2.0, None)]
+    assert target_calls == [(0.0, 0), (1.0, None), (2.0, None)]
