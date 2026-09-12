@@ -4,9 +4,15 @@ from typing import Protocol
 
 from PySide6.QtWidgets import QComboBox
 
+from ui.rotation_dd_evaluation_policy_controls import (
+    install_rotation_dd_evaluation_policy_controls,
+)
 from ui.rotation_generate_action_support import install_rotation_generate_action
 from ui.rotation_generate_application_context_provider import (
     RotationGenerateApplicationContextProvider,
+)
+from ui.rotation_generate_dd_role_evidence_support import (
+    RotationGenerateDDRoleEvidenceSupport,
 )
 from ui.rotation_generate_healer_role_evidence_support import (
     RotationGenerateHealerRoleEvidenceSupport,
@@ -36,10 +42,10 @@ class RotationEncounterSelectorSupport:
     evidence-bundle provider resolves explicitly.
 
     Installation also composes adjacent Generate supports: explicit health-threshold
-    projection controls, the Generate router, its live application context provider,
-    and role-specific evidence composers that already have canonical implementations.
-    Healer output is currently installed for persisted Heal/Healer roles; unsupported
-    roles remain on the role-neutral path until their own canonical composers exist.
+    projection controls, explicit DD target-resistance policy, the Generate router,
+    its live application context provider, and role-specific evidence composers that
+    already have canonical implementations. Healer and DD roles are routed explicitly;
+    unsupported roles remain on the role-neutral path until their own composers exist.
     """
 
     def __init__(self, guide_service: _EncounterGuideIndex) -> None:
@@ -62,13 +68,19 @@ class RotationEncounterSelectorSupport:
         )
         self.refresh(page)
         install_rotation_threshold_projection_policy_controls(page)
+        install_rotation_dd_evaluation_policy_controls(page)
         install_rotation_generate_action(page)
         healer_role_evidence = RotationGenerateHealerRoleEvidenceSupport()
+        dd_role_evidence = RotationGenerateDDRoleEvidenceSupport()
         page.set_rotation_generate_canonical_context_provider(
             RotationGenerateApplicationContextProvider(
                 role_evidence_composers={
                     "heal": healer_role_evidence,
                     "healer": healer_role_evidence,
+                    "dd": dd_role_evidence,
+                    "dps": dd_role_evidence,
+                    "damage": dd_role_evidence,
+                    "damage dealer": dd_role_evidence,
                 }
             )
         )
