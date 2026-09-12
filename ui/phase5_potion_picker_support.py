@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QComboBox, QCompleter
 
 from minmax.potion_availability_repository import DEFAULT_PROCESSED, LEGACY_PROCESSED
 from models.build_model import PlayerBuild
@@ -27,6 +28,20 @@ def _existing_named_choices(combo) -> list[str]:
     return sorted(names.values(), key=str.casefold)
 
 
+def _configure_search(combo: QComboBox) -> None:
+    """Match the Build Editor's searchable combo behavior."""
+    combo.setEditable(True)
+    combo.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+    combo.setDuplicatesEnabled(False)
+    completer = QCompleter(combo.model(), combo)
+    completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+    completer.setFilterMode(Qt.MatchFlag.MatchContains)
+    completer.setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
+    combo.setCompleter(completer)
+    if combo.lineEdit() is not None:
+        combo.lineEdit().setClearButtonEnabled(True)
+
+
 def _configure_combo(combo) -> None:
     current_data = str(combo.currentData() or "").strip()
     current_text = str(combo.currentText() or "").strip()
@@ -35,7 +50,6 @@ def _configure_combo(combo) -> None:
 
     combo.blockSignals(True)
     combo.clear()
-    combo.setEditable(False)
     combo.addItem("", "")
 
     for choice in _choices():
@@ -64,6 +78,7 @@ def _configure_combo(combo) -> None:
         else:
             combo.addItem(current, current)
             combo.setCurrentIndex(combo.count() - 1)
+    _configure_search(combo)
     combo.blockSignals(False)
 
 
@@ -102,6 +117,7 @@ def install() -> None:
         _configure_combo(self.potion)
         self.potion.setToolTip(
             "Choose either a canonical crafted-potion effect family or a named/non-crafted potion. "
+            "Type any part of the potion name or effect to filter the list. "
             "Crafted entries group equivalent reagent recipes; selecting a potion does not imply uptime."
         )
         return card
