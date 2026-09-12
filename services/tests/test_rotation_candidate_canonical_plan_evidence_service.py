@@ -172,6 +172,7 @@ def test_provider_does_not_invent_role_or_support_measurements() -> None:
     evidence = service.evaluate_plan(candidate)
 
     assert evidence.role_output_value is None
+    assert evidence.role_output_unresolved == ()
     assert evidence.assigned_support_value is None
     assert evidence.primary_role_displacement_seconds is None
 
@@ -195,16 +196,18 @@ def test_provider_carries_resolved_authoritative_role_output_for_exact_candidate
 
     assert output_provider.calls == [candidate]
     assert evidence.role_output_value == 143250.5
+    assert evidence.role_output_unresolved == ()
     assert evidence.assigned_support_value is None
 
 
 def test_provider_keeps_role_output_unknown_when_authority_reports_unresolved_evidence() -> None:
     candidate = _candidate()
+    blocker = "light-attack damage consequence unresolved"
     output_provider = _RoleOutputProvider(
         RotationCandidateRoleOutputEvidence(
             candidate_id="candidate",
             value=143250.5,
-            unresolved=("light-attack damage consequence unresolved",),
+            unresolved=(blocker,),
         )
     )
     service = RotationCandidateCanonicalPlanEvidenceService(
@@ -217,6 +220,7 @@ def test_provider_keeps_role_output_unknown_when_authority_reports_unresolved_ev
     evidence = service.evaluate_plan(candidate)
 
     assert evidence.role_output_value is None
+    assert evidence.role_output_unresolved == (blocker,)
 
 
 def test_provider_rejects_role_output_evidence_for_a_different_candidate() -> None:
