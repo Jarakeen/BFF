@@ -91,6 +91,32 @@ ROTATION_DD_PERIODIC_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="rotation.dd.periodic_esologs_reviewed_coverage",
+        domain="rotation",
+        purpose=(
+            "Report which reviewed DD periodic skill identities have matching cast "
+            "observations in an imported ESO Logs corpus."
+        ),
+        implementation_path=(
+            "services.rotation_dd_periodic_esologs_reviewed_coverage_service"
+        ),
+        inputs=(
+            "RotationDDPeriodicRuntimeSemanticsReviewEntry",
+            "RotationDDPeriodicEsoLogsSecondaryEffectDiscoveryReport",
+        ),
+        outputs=("RotationDDPeriodicEsoLogsReviewedCoverageReport",),
+        responsibilities=("rotation_dd_periodic_esologs_reviewed_coverage",),
+        roles=("DD", "DPS"),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.OBSERVATIONAL,
+        notes=(
+            "Composition-only corpus triage. It reuses reviewed canonical identities and "
+            "the existing secondary-effect discovery parser, ranks observed skills first, "
+            "and never promotes observational evidence into executable runtime semantics."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="rotation.dd.periodic_esologs_anchor_correlation",
         domain="rotation",
         purpose=(
