@@ -288,6 +288,45 @@ class ExtremeMaxResourceOrdinaryNamedGearSearchService:
     def _stats(**values: int) -> ExtremeOrdinaryNamedGearSearchStats:
         return ExtremeOrdinaryNamedGearSearchStats(**values)
 
+    @staticmethod
+    def _distinct_id_remaining_bound(
+        *,
+        counts: tuple[int, ...],
+        position: int,
+        candidates_by_count: dict[int, tuple[_Candidate, ...]],
+        used_ids: set[int],
+    ) -> float | None:
+        """Return a proof-safe tighter upper bound for the remaining ordinary score.
+
+        For each remaining breakpoint-count class, take the strongest still-unused
+        distinct set IDs needed to fill that class. The same set ID may still be
+        counted again in a *different* count class, so this deliberately remains an
+        overestimate whenever cross-count identity conflicts exist. Ignoring physical
+        conflicts is likewise optimistic. Therefore a finite result is safe for
+        branch-and-bound pruning; ``None`` means there are not even enough distinct
+        IDs inside one count class to complete the topology.
+        """
+
+        remaining_by_count: dict[int, int] = {}
+        for count in counts[position:]:
+            remaining_by_count[int(count)] = remaining_by_count.get(int(count), 0) + 1
+
+        total = 0.0
+        for count, needed in remaining_by_count.items():
+            available: list[float] = []
+            seen: set[int] = set()
+            for row in candidates_by_count.get(int(count), ()):
+                if row.set_id in used_ids or row.set_id in seen:
+                    continue
+                seen.add(row.set_id)
+                available.append(float(row.exact_delta))
+                if len(available) >= needed:
+                    break
+            if len(available) < needed:
+                return None
+            total += sum(available[:needed])
+        return float(total)
+
     def _search_topology(
         self,
         topology: ExtremeGearSetCountTopology,
@@ -304,12 +343,6 @@ class ExtremeMaxResourceOrdinaryNamedGearSearchService:
                 best_exact_flat_delta=None,
                 realizations=(),
                 stats=self._stats(),
-            )
-
-        suffix_best = [0.0] * (len(counts) + 1)
-        for position in range(len(counts) - 1, -1, -1):
-            suffix_best[position] = suffix_best[position + 1] + max(
-                row.exact_delta for row in candidate_rows[position]
             )
 
         realizer = ExtremeNamedGearSetCatalogRealizationService(
@@ -329,7 +362,16 @@ class ExtremeMaxResourceOrdinaryNamedGearSearchService:
             nonlocal rejected_leaves, score_pruned, physical_pruned, winners
             nodes += 1
 
-            if best != float("-inf") and score + suffix_best[position] < best - 1e-9:
+            remaining_bound = self._distinct_id_remaining_bound(
+                counts=counts,
+                position=position,
+                candidates_by_count=candidates_by_count,
+                used_ids=used_ids,
+            )
+            if remaining_bound is None:
+                score_pruned += 1
+                return
+            if best != float("-inf") and score + remaining_bound < best - 1e-9:
                 score_pruned += 1
                 return
 
