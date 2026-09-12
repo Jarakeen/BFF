@@ -130,3 +130,10 @@ def install() -> None:
     install_dot_ui()
     install_weave_ui()
     install_role_surface()
+
+    # app.py installs DD dashboard support last among MainWindow-affecting startup
+    # layers. Use that stable bootstrap point so deferred pages wrap the completed
+    # UI stack rather than forcing another broad startup rewrite.
+    from ui.main_window_lazy_page_support import install as install_lazy_pages
+
+    install_lazy_pages()
