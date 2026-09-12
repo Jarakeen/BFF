@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "content_id": "rockgrove",
+  "encounter_id": "flame_herald_bahsei",
+  "encounter_name": "Flame-Herald Bahsei",
+  "evidence": [
+    {
+      "fact_type": "transition",
+      "fact_key": "burning_specters_begin",
+      "value": {
+        "label": "Burning Specters",
+        "threshold": "55%",
+        "description": "Burning Specter summons begin at 55% boss Health."
+      },
+      "source_type": "uesp",
+      "source_name": "UESP Online:Flame-Herald Bahsei",
+      "source_locator": "Abilities - Summon Specters",
+      "source_revision": "3450945",
+      "confidence": "high",
+      "notes": "Presentation projection of the reviewed transition_state fact already stored in rockgrove_boss2.json."
+    },
+    {
+      "fact_type": "transition",
+      "fact_key": "dagons_wrath_begin",
+      "value": {
+        "label": "Dagon's Wrath",
+        "threshold": "55%",
+        "description": "Dagon's Wrath begins at 55% boss Health, adding moving flame walls across the arena."
+      },
+      "source_type": "uesp",
+      "source_name": "UESP Online:Flame-Herald Bahsei",
+      "source_locator": "Abilities - Dagon's Wrath",
+      "source_revision": "3450945",
+      "confidence": "high",
+      "notes": "Presentation projection of the reviewed transition_state fact already stored in rockgrove_boss2.json."
+    },
+    {
+      "fact_type": "transition",
+      "fact_key": "meteor_swarm_begin",
+      "value": {
+        "label": "Meteor Swarm",
+        "threshold": "50%",
+        "description": "Meteor Swarm begins at 50% boss Health."
+      },
+      "source_type": "uesp",
+      "source_name": "UESP Online:Flame-Herald Bahsei",
+      "source_locator": "Abilities - Meteor Swarm",
+      "source_revision": "3450945",
+      "confidence": "high",
+      "notes": "Presentation projection of the reviewed Meteor Swarm phase threshold already stored in rockgrove_boss2.json."
+    },
+    {
+      "fact_type": "transition",
+      "fact_key": "prime_meteor_execute",
+      "value": {
+        "label": "Prime Meteor Execute",
+        "threshold": "30%",
+        "description": "At 30% boss Health and below, Meteor Swarm intensifies and landed Prime Meteors become timed kill priorities."
+      },
+      "source_type": "uesp",
+      "source_name": "UESP Online:Flame-Herald Bahsei",
+      "source_locator": "Abilities - Meteor Swarm",
+      "source_revision": "3450945",
+      "confidence": "high",
+      "notes": "Presentation projection of the reviewed execute threshold already stored in rockgrove_boss2.json; handling remains sourced from reviewed reference research."
+    }
+  ]
+}
