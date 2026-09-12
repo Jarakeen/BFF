@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import replace
 from pathlib import Path
 
 from minmax.build_calculation_context import BuildCalculationContext
@@ -41,6 +42,10 @@ RotationRuntimeTargetCombatStateResolver = Callable[
     [float, int | None],
     CombatState,
 ]
+RotationRuntimeTargetResistanceResolver = Callable[
+    [float, int | None],
+    float,
+]
 
 
 class RotationCandidateSkillDamageEvidenceService:
@@ -55,15 +60,15 @@ class RotationCandidateSkillDamageEvidenceService:
 
     Direct and periodic components share the same combat-routing helper only when
     reviewed runtime evidence permits it. Periodic tick scheduling is owned by the
-    shared runtime projection. ``snapshot_at_cast`` freezes source magnitude,
-    attacker state, and mitigation inputs at cast time; authoritative target-side
-    Damage Taken may still be resolved independently at each projected occurrence.
+    shared runtime projection. ``snapshot_at_cast`` freezes source magnitude and
+    attacker state at cast time; authoritative recipient-side Damage Taken and target
+    resistance may still be resolved independently at each projected occurrence.
     Dynamic per-tick magnitude is recomputed only when an authoritative exact-time
-    runtime build-context resolver is supplied for every projected tick. When an
-    authoritative target-state resolver is supplied, dynamic ticks also resolve
-    Damage Taken at the exact tick timestamp rather than inheriting target state from
-    cast time. Explicit successive-hit scaling is applied by occurrence index only
-    when reviewed semantics provide a multiplier.
+    runtime build-context resolver is supplied for every projected tick. When
+    authoritative target-state or target-resistance resolvers are supplied, periodic
+    ticks resolve those recipient-side inputs at the exact tick timestamp rather than
+    inheriting them from cast time. Explicit successive-hit scaling is applied by
+    occurrence index only when reviewed semantics provide a multiplier.
     """
 
     def __init__(
@@ -83,6 +88,7 @@ class RotationCandidateSkillDamageEvidenceService:
         ) = (),
         runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
         runtime_target_combat_state_resolver: RotationRuntimeTargetCombatStateResolver | None = None,
+        runtime_target_resistance_resolver: RotationRuntimeTargetResistanceResolver | None = None,
     ) -> None:
         self.database_path = Path(database_path)
         self.context = context
@@ -97,6 +103,7 @@ class RotationCandidateSkillDamageEvidenceService:
         self.periodic_runtime_semantics = tuple(periodic_runtime_semantics)
         self.runtime_build_context_resolver = runtime_build_context_resolver
         self.runtime_target_combat_state_resolver = runtime_target_combat_state_resolver
+        self.runtime_target_resistance_resolver = runtime_target_resistance_resolver
 
     def evaluate_action(
         self,
@@ -231,7 +238,7 @@ class RotationCandidateSkillDamageEvidenceService:
 
                 total_damage += sum(
                     self._resolve_component_damage(
-                        context=self.context,
+                        context=self._context_for_runtime_event(self.context, event),
                         base_value=float(component.final_value),
                         classification=classification,
                         dd_stats=dd_stats,
@@ -275,6 +282,23 @@ class RotationCandidateSkillDamageEvidenceService:
             None,
         )
 
+    def _context_for_runtime_event(
+        self,
+        context: BuildCalculationContext,
+        event,
+    ) -> BuildCalculationContext:
+        if self.runtime_target_resistance_resolver is None:
+            return context
+        return replace(
+            context,
+            target_resistance=float(
+                self.runtime_target_resistance_resolver(
+                    float(event.time_seconds),
+                    None,
+                )
+            ),
+        )
+
     def _resolve_dynamic_periodic_damage(
         self,
         *,
@@ -307,7 +331,7 @@ class RotationCandidateSkillDamageEvidenceService:
                 )
                 continue
 
-            tick_context = runtime.context
+            tick_context = self._context_for_runtime_event(runtime.context, event)
             calculation = calculation_result_from_build_context(tick_context)
             if calculation is None:
                 unresolved.append(
@@ -445,4 +469,5 @@ class RotationCandidateSkillDamageEvidenceService:
 __all__ = [
     "RotationCandidateSkillDamageEvidenceService",
     "RotationRuntimeTargetCombatStateResolver",
+    "RotationRuntimeTargetResistanceResolver",
 ]
