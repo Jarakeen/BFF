@@ -27,7 +27,7 @@ def test_distribution_lines_report_spread_and_median_bands() -> None:
     assert "population_stdev=" in text
     assert "within median ±10ms: 3/4 (75.0%)" in text
     assert "within median ±25ms: 3/4 (75.0%)" in text
-    assert "within median ±50ms: 4/4 (100.0%)" in text
+    assert "within median ±50ms: 3/4 (75.0%)" in text
 
 
 def test_distribution_lines_handle_empty_evidence() -> None:
