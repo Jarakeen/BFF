@@ -60,7 +60,6 @@ def test_repository_review_ledger_tracks_the_seven_current_dd_components() -> No
         ("stampede", 2),
         ("meteor", 2),
     }
-    assert all(row.executable_complete is False for row in rows)
 
     by_key = {(row.skill_entity_id, row.coefficient_number): row for row in rows}
     assert by_key[("skeletal_archer", 1)].reviewed_interval_seconds == 2.0
@@ -70,7 +69,14 @@ def test_repository_review_ledger_tracks_the_seven_current_dd_components() -> No
     assert stampede.activation_anchor == "impact"
     assert stampede.first_tick_offset_seconds == 1.0
     assert stampede.refresh_boundary == "allow_old_tick_at_recast"
-    assert stampede.unresolved_executable_fields == ("magnitude_policy",)
+    assert stampede.magnitude_policy == "dynamic_at_tick"
+    assert stampede.unresolved_executable_fields == ()
+    assert stampede.executable_complete is True
+    assert all(
+        row.executable_complete is False
+        for row in rows
+        if (row.skill_entity_id, row.coefficient_number) != ("stampede", 2)
+    )
     assert by_key[("meteor", 2)].reviewed_interval_seconds == 1.0
 
 
