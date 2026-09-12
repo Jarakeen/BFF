@@ -41,6 +41,26 @@ class _LazyPagePlaceholder(QWidget):
         self.page_key = str(page_key)
 
 
+def _construct_lazy_page(factory: Callable[[], QWidget], page_key: str) -> QWidget:
+    """Construct a deferred page without performing known throwaway first work."""
+    if page_key != "stickerbook":
+        return factory()
+
+    # StickerbookPage refreshes the Default profile from __init__(), but its
+    # first navigation immediately synchronizes the active Achievements profile
+    # and refreshes again.  Suppress only that constructor refresh so the first
+    # database read/population is for the profile the user actually has active.
+    refresh = getattr(factory, "refresh", None)
+    if not callable(refresh):
+        return factory()
+
+    setattr(factory, "refresh", lambda self: None)
+    try:
+        return factory()
+    finally:
+        setattr(factory, "refresh", refresh)
+
+
 def _materialize_page(window, page_key: str):
     factories: dict[str, Callable[[], QWidget]] = getattr(
         window, "_lazy_page_factories", {}
@@ -51,7 +71,7 @@ def _materialize_page(window, page_key: str):
         return current
 
     started = perf_counter()
-    page = factory()
+    page = _construct_lazy_page(factory, page_key)
     container = window.wrap_page(page)
     old_container = window.page_containers.get(page_key)
     old_index = window.stack.indexOf(old_container) if old_container is not None else -1
