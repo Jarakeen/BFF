@@ -341,6 +341,7 @@ class _RotationGenerateBarAwareHeavyAttackDamageProvider:
                 fight_duration=float(candidate.plan.duration_seconds),
                 target_resistance=self.target_resistance,
             ),
+            attacker_combat_state=getattr(context, "combat_state", None),
         ).evaluate_action(
             candidate=candidate,
             action=action,
