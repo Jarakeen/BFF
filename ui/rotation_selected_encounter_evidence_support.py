@@ -35,6 +35,11 @@ class RotationSelectedEncounterEvidenceInputs:
     evidence rather than encounter truth. This adapter does not infer them from boss
     name, role, class, prose, or UI labels.
 
+    The evaluator and scorecard resolver pair may both be omitted. The canonical
+    dashboard candidate boundary then composes both from the exact generated seed plan
+    through the shared Generate resolver service. Supplying only one remains invalid at
+    that boundary so evaluation cannot mix incompatible evidence worlds.
+
     Heavy-attack restoration is no longer a mandatory caller-provided arithmetic
     function. ``restoration_resolver=None`` delegates to the canonical generated-plan
     path, which derives completion from verified channel reservations and then applies
@@ -43,8 +48,8 @@ class RotationSelectedEncounterEvidenceInputs:
     """
 
     demand_policies: tuple[EncounterRotationDemandPolicy, ...]
-    evaluator_resolver: RecoveryCandidateEvaluatorResolver
-    scorecard_resolver: RecoveryFinalScorecardResolver
+    evaluator_resolver: RecoveryCandidateEvaluatorResolver | None
+    scorecard_resolver: RecoveryFinalScorecardResolver | None
     resource: ResourceType
     maximum_amount: int
     trigger_fraction: float
