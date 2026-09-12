@@ -29,6 +29,20 @@ _BASE_CHANCE = {
     StatusEffectChanceSource.HEAVY_ATTACK: 0.0,
 }
 
+_STATUS_EFFECT_BY_DAMAGE_TYPE = {
+    "flame": "Burning",
+    "fire": "Burning",
+    "frost": "Chilled",
+    "shock": "Concussion",
+    "magic": "Overcharged",
+    "magical": "Overcharged",
+    "physical": "Sundered",
+    "poison": "Poisoned",
+    "disease": "Diseased",
+    "bleed": "Hemorrhaging",
+    "bleeding": "Hemorrhaging",
+}
+
 
 @dataclass(frozen=True)
 class StatusEffectChanceResult:
@@ -62,6 +76,13 @@ def base_status_effect_chance(source: StatusEffectChanceSource) -> float:
     """
 
     return _BASE_CHANCE[source]
+
+
+def status_effect_name_for_damage_type(damage_type: str | None) -> str | None:
+    """Return the canonical status family associated with a reviewed damage type."""
+
+    key = str(damage_type or "").strip().casefold()
+    return _STATUS_EFFECT_BY_DAMAGE_TYPE.get(key)
 
 
 def classify_skill_status_effect_source(
@@ -113,4 +134,5 @@ __all__ = [
     "base_status_effect_chance",
     "calculate_status_effect_chance",
     "classify_skill_status_effect_source",
+    "status_effect_name_for_damage_type",
 ]
