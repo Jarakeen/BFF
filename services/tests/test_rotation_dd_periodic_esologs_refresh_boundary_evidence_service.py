@@ -97,6 +97,8 @@ def test_reports_old_periodic_events_relative_to_next_impact(tmp_path) -> None:
     assert observation.first_new_periodic_offset_seconds == 1.0
     assert report.old_tick_at_boundary_count == 0
     assert report.old_tick_after_boundary_count == 0
+    assert report.exact_boundary_old_tick_before_impact_count == 0
+    assert report.exact_boundary_old_tick_after_impact_count == 0
 
 
 def test_reports_old_tick_at_and_after_new_impact_without_promoting_policy(tmp_path) -> None:
@@ -123,6 +125,34 @@ def test_reports_old_tick_at_and_after_new_impact_without_promoting_policy(tmp_p
     assert observation.old_periodic_after_boundary == 1
     assert report.old_tick_at_boundary_count == 1
     assert report.old_tick_after_boundary_count == 1
+
+
+def test_exact_boundary_ticks_are_ordered_against_new_impact_by_event_index(tmp_path) -> None:
+    service, logs = _service(tmp_path)
+    _event(logs, 1, 1000, "cast", 39807, 10, name="Stampede")
+    _event(logs, 2, 1150, "damage", 38792, 10)
+    _event(logs, 3, 2150, "damage", 126474, 10)
+    _event(logs, 4, 4000, "cast", 39807, 20, name="Stampede")
+    _event(logs, 5, 4200, "damage", 126474, 10)
+    _event(logs, 6, 4200, "damage", 38792, 20)
+    _event(logs, 7, 4200, "damage", 126474, 10)
+    _event(logs, 8, 5200, "damage", 126474, 20)
+
+    report = service.inspect(
+        "stampede",
+        impact_ability_id=38792,
+        periodic_ability_id=126474,
+        active_window_seconds=15.0,
+        boundary_tolerance_ms=0.0,
+    )
+
+    observation = report.observations[0]
+    assert observation.new_impact_event_index == 6
+    assert observation.exact_boundary_old_tick_event_indices == (5, 7)
+    assert observation.exact_boundary_old_tick_before_impact == 1
+    assert observation.exact_boundary_old_tick_after_impact == 1
+    assert report.exact_boundary_old_tick_before_impact_count == 1
+    assert report.exact_boundary_old_tick_after_impact_count == 1
 
 
 def test_missing_consecutive_linked_impacts_fails_closed(tmp_path) -> None:
