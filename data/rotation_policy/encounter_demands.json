@@ -6,10 +6,22 @@
       "threshold_policies": [],
       "review_blockers": [
         {
-          "key": "phase_2_healer_demand_policy",
-          "summary": "Xalvakka Phase 2 at 70% health is reviewed encounter evidence, including continuous flame damage during the Phase 2 split, but the Rotation Builder healer-demand interpretation is not yet reviewed.",
-          "needed_evidence": "Review and explicitly approve the demand kind/pattern, preparation lead seconds, modeled window seconds, and target count. Existing 3-second lead, 2-second window, and 12-target values are audit-only policy and must not be promoted automatically.",
-          "source_context": "data/encounter_evidence/rockgrove_boss3.json phase_2 and phase_2_floor_fire_during_split; GAME_MECHANICS_FIELD_NOTES.md Xalvakka audit notes"
+          "key": "creeping_manifold_healer_demand",
+          "summary": "Creeping Manifold is reviewed as unavoidable flame damage, and healer-specific Rockgrove guidance identifies it as a Xalvakka heal-check, but canonical timing, modeled demand width, and target scope are not yet reviewed for Rotation Builder execution.",
+          "needed_evidence": "Review Creeping Manifold timing/cadence and target scope, then explicitly approve the healing demand pattern, modeled window, and any preparation lead. Do not infer a clock window from the Phase 2 70% transition.",
+          "source_context": "data/encounter_evidence/rockgrove_boss3.json creeping_manifold; Facehead McGee Rockgrove Healer Guide chapter 'Heal-Check (Manifold)'"
+        },
+        {
+          "key": "xalvakka_stair_transition_healer_demand",
+          "summary": "Xalvakka transitions at 70% and 40% are reviewed, rising lava kills players left behind, and healer-specific guidance separately calls out healing the stairs; the transition's healer-demand timing and target scope are not yet reviewed as executable Rotation Builder policy.",
+          "needed_evidence": "Review the damage actually taken during each stair transition, whether the healer obligation begins before or after the health threshold, its duration, and target scope. The old audit-only 3-second preparation lead must not be promoted automatically.",
+          "source_context": "data/encounter_evidence/rockgrove_boss3.json retreat_thresholds, retreat_lava_catches_left_behind_players, phase_2, phase_3; Facehead McGee Rockgrove Healer Guide chapter 'Healing Stairs'"
+        },
+        {
+          "key": "xalvakka_split_floor_healer_demand",
+          "summary": "During Xalvakka's split the floor is reviewed to deal continuous flame damage to the group, and independent guides explicitly instruct healers to keep healing through the split; however the split event has no reviewed clock/health trigger suitable for direct Rotation Builder scheduling yet.",
+          "needed_evidence": "Review a canonical trigger or runtime-detection rule for split start/end and confirm target scope. Healing/sustained pressure is source-supported, but no fixed lead, fixed duration, or 12-target executable policy should be invented from that description alone.",
+          "source_context": "data/encounter_evidence/rockgrove_boss3.json split_exists and phase_2_floor_fire_during_split; AlcastHQ Rockgrove guide Xalvakka Phase 2; Xynode Rockgrove guide 'Which one is real?'; Facehead McGee Rockgrove Healer Guide chapter 'Healing Triple Split Damage'"
         }
       ]
     }
