@@ -19,6 +19,50 @@ class GearSetRepository:
         self._set_id_cache: dict[int, GearSet | None] = {}
         self._bonuses_cache: dict[int, tuple[GearSetBonus, ...]] = {}
         self._all_sets_cache: tuple[GearSet, ...] | None = None
+        self._preload_complete = False
+
+    def preload_all_static(self) -> None:
+        """Warm instance-local set and bonus caches with one read-only pass.
+
+        This is intended for exhaustive Extreme audits where every surviving set
+        may be visited repeatedly. It does not change repository semantics; new
+        repository instances still observe fresh database state.
+        """
+        if self._preload_complete:
+            return
+
+        with sqlite3.connect(self.database_path) as connection:
+            set_rows = connection.execute(
+                """
+                SELECT id, name, category, max_equip_count
+                FROM gear_set
+                WHERE name IS NOT NULL
+                  AND TRIM(name) <> ''
+                ORDER BY name COLLATE NOCASE, id
+                """
+            ).fetchall()
+            bonus_rows = connection.execute(
+                """
+                SELECT id, set_id, piece_count, description
+                FROM gear_set_bonus
+                ORDER BY set_id, piece_count, id
+                """
+            ).fetchall()
+
+        sets = tuple(self._to_gear_set(row) for row in set_rows)
+        self._all_sets_cache = sets
+        for gear_set in sets:
+            self._set_id_cache[gear_set.id] = gear_set
+            self._set_name_cache[gear_set.name] = gear_set
+
+        grouped: dict[int, list[GearSetBonus]] = {}
+        for row in bonus_rows:
+            bonus = self._to_gear_set_bonus(row)
+            grouped.setdefault(int(bonus.set_id), []).append(bonus)
+        for gear_set in sets:
+            self._bonuses_cache[int(gear_set.id)] = tuple(grouped.get(int(gear_set.id), ()))
+
+        self._preload_complete = True
 
     def list_sets(self) -> tuple[GearSet, ...]:
         """Return every canonical gear set in deterministic name/id order."""
