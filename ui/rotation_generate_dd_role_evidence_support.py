@@ -29,11 +29,21 @@ from services.rotation_candidate_heavy_attack_damage_evidence_service import (
 from services.rotation_candidate_light_attack_damage_evidence_service import (
     RotationCandidateLightAttackDamageEvidenceService,
 )
+from services.rotation_candidate_periodic_damage_runtime_projection_service import (
+    RotationCandidatePeriodicDamageRuntimeProjectionService,
+    RotationPeriodicDamageRuntimeSemantics,
+)
+from services.rotation_candidate_periodic_damage_timing_evidence_service import (
+    RotationCandidatePeriodicDamageTimingEvidenceService,
+)
 from services.rotation_candidate_skill_damage_evidence_service import (
     RotationCandidateSkillDamageEvidenceService,
 )
 from services.rotation_candidate_ultimate_damage_evidence_service import (
     RotationCandidateUltimateDamageEvidenceService,
+)
+from services.rotation_dd_periodic_runtime_semantics_registry_service import (
+    RotationDDPeriodicRuntimeSemanticsRegistryService,
 )
 from services.rotation_heavy_sustain_projection_service import (
     RotationHeavySustainProjectionService,
@@ -78,10 +88,21 @@ class _RotationGenerateBarAwareSkillDamageProvider:
         database_path: Path,
         static_context,
         target_resistance: float,
+        periodic_runtime_semantics: tuple[
+            RotationPeriodicDamageRuntimeSemantics, ...
+        ] = (),
     ) -> None:
         self.database_path = database_path
         self.static_context = static_context
         self.target_resistance = float(target_resistance)
+        self.periodic_runtime_semantics = tuple(periodic_runtime_semantics)
+        self.periodic_runtime_projection_service = (
+            RotationCandidatePeriodicDamageRuntimeProjectionService(
+                RotationCandidatePeriodicDamageTimingEvidenceService(database_path)
+            )
+            if self.periodic_runtime_semantics
+            else None
+        )
 
     def evaluate_action(
         self,
@@ -112,6 +133,8 @@ class _RotationGenerateBarAwareSkillDamageProvider:
         return RotationCandidateSkillDamageEvidenceService(
             database_path=self.database_path,
             context=context,
+            periodic_runtime_projection_service=self.periodic_runtime_projection_service,
+            periodic_runtime_semantics=self.periodic_runtime_semantics,
         ).evaluate_action(
             candidate=candidate,
             action=action,
@@ -343,10 +366,10 @@ class RotationGenerateDDRoleEvidenceSupport:
 
     Canonical light attacks are bar-aware. Canonical heavy attacks are also bar-aware,
     but only scheduler-verified 1.8-second full-charge reservations are promoted to HA
-    completion evidence. Merely scheduling a HEAVY_ATTACK action therefore remains
-    unresolved rather than being treated as completed damage. Periodic skill components
-    likewise stay unresolved unless their reviewed runtime semantics are supplied by the
-    canonical skill-damage authority.
+    completion evidence. Reviewed periodic semantics are loaded from the production
+    DD runtime registry. Empty/missing review data keeps DoTs unresolved; snapshot-at-
+    cast may reuse the cast context, while dynamic-at-tick stays blocked until exact-
+    time runtime context projection is connected.
     """
 
     def __init__(
@@ -356,6 +379,9 @@ class RotationGenerateDDRoleEvidenceSupport:
         static_context_service: RotationStaticBuildContextService | None = None,
         weapon_attack_provider_factory: (
             RotationGenerateDDWeaponAttackProviderFactory | None
+        ) = None,
+        periodic_runtime_semantics_registry: (
+            RotationDDPeriodicRuntimeSemanticsRegistryService | None
         ) = None,
     ) -> None:
         self.database_path = (
@@ -367,6 +393,10 @@ class RotationGenerateDDRoleEvidenceSupport:
             static_context_service or RotationStaticBuildContextService()
         )
         self.weapon_attack_provider_factory = weapon_attack_provider_factory
+        self.periodic_runtime_semantics_registry = (
+            periodic_runtime_semantics_registry
+            or RotationDDPeriodicRuntimeSemanticsRegistryService()
+        )
 
     def compose(
         self,
@@ -389,11 +419,13 @@ class RotationGenerateDDRoleEvidenceSupport:
             detail = "; ".join(static_context.unresolved) or "static build context unavailable"
             raise ValueError("canonical DD static build evidence is unresolved: " + detail)
 
+        periodic_runtime_semantics = self.periodic_runtime_semantics_registry.load()
         target_resistance = float(evidence_bundle.target_resistance)
         skill_provider = _RotationGenerateBarAwareSkillDamageProvider(
             database_path=self.database_path,
             static_context=static_context,
             target_resistance=target_resistance,
+            periodic_runtime_semantics=periodic_runtime_semantics,
         )
         ultimate_provider = RotationCandidateUltimateDamageEvidenceService(
             skill_damage_delegate=skill_provider,
