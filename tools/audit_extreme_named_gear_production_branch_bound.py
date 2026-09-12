@@ -4,9 +4,9 @@ from __future__ import annotations
 
 Unlike the earlier exploratory diagnostics, this tool does not duplicate the DFS.
 It builds the canonical Max-resource denominator, selects the highest-pressure
-requested topologies, then invokes the production ordinary search service directly.
-This keeps reported node/prune counts synchronized with the code used by the record
-engine.
+requested topologies, then invokes the production ordinary search services directly.
+The joint identity/physical feasibility precheck is exercised before score search,
+matching the path used by the Max Health record engine.
 """
 
 import argparse
@@ -22,8 +22,11 @@ from minmax.gear_set_repository import GearSetRepository
 from services.extreme_gear_set_bonus_breakpoint_service import ExtremeGearSetBonusBreakpointService
 from services.extreme_gear_set_objective_relevance_service import ExtremeGearSetObjectiveRelevanceService
 from services.extreme_gear_set_topology_catalog_service import ExtremeGearSetTopologyCatalogService
+from services.extreme_max_resource_joint_feasibility_search_service import (
+    ExtremeMaxResourceJointFeasibilitySearchService,
+)
 from services.extreme_max_resource_ordinary_named_gear_search_service import (
-    ExtremeMaxResourceOrdinaryNamedGearSearchService,
+    ExtremeOrdinaryNamedGearTopologyWinner,
 )
 from services.extreme_named_gear_set_slot_eligibility_service import (
     ExtremeNamedGearSetSlotEligibilityService,
@@ -60,7 +63,7 @@ def main() -> int:
     eligibility = ExtremeNamedGearSetSlotEligibilityService(database).build()
     relevance = ExtremeGearSetObjectiveRelevanceService(repository).build(objective, breakpoints)
 
-    service = ExtremeMaxResourceOrdinaryNamedGearSearchService(
+    service = ExtremeMaxResourceJointFeasibilitySearchService(
         breakpoints=breakpoints,
         eligibility=eligibility,
         relevance=relevance,
@@ -107,12 +110,39 @@ def main() -> int:
 
     feasibility = ExtremePartialNamedGearPhysicalFeasibilityService()
     for topology in selected:
-        winner = service._search_topology(
-            topology,
-            candidates,
-            frontier,
+        counts = tuple(int(value) for value in topology.counts)
+        independent_possible = (
+            service._identity_legality_possible(
+                counts=counts,
+                candidates_by_count=candidates,
+            )
+            and service._physical_shape_legality_possible(
+                topology=topology,
+                counts=counts,
+                candidates_by_count=candidates,
+                feasibility=feasibility,
+            )
+        )
+        joint_possible = independent_possible and service._joint_legality_possible(
+            topology=topology,
+            candidates_by_count=candidates,
             feasibility=feasibility,
         )
+        if joint_possible:
+            winner = service._search_topology(
+                topology,
+                candidates,
+                frontier,
+                feasibility=feasibility,
+            )
+        else:
+            winner = ExtremeOrdinaryNamedGearTopologyWinner(
+                topology=topology,
+                best_exact_flat_delta=None,
+                realizations=(),
+                stats=service._stats(),
+            )
+
         stats = winner.stats
         best = (
             "none"
@@ -121,6 +151,7 @@ def main() -> int:
         )
         print(
             f"{topology.signature}: ordinary_pressure={pressure(topology)} "
+            f"joint_precheck={'pass' if joint_possible else 'reject'} "
             f"nodes={stats.nodes} leaves={stats.leaves} "
             f"witness_checks={stats.witness_checks} feasible={stats.feasible_leaves} "
             f"rejected={stats.rejected_leaves} score_pruned={stats.score_pruned} "
