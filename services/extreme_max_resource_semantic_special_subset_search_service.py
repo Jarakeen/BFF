@@ -128,7 +128,34 @@ class ExtremeMaxResourceSemanticSpecialSubsetSearchService:
             breakpoints=frontier,
             eligibility=owner.eligibility,
         )
+
+        # Candidate semantic atoms are immutable. Build each once, then push/pop the
+        # atom alongside the selected candidate instead of reconstructing every
+        # selected prefix on every DFS node.
+        semantic_atom_by_object_id: dict[int, tuple[object, ...]] = {}
+        for rows in rows_by_position:
+            for row in rows:
+                object_id = id(row)
+                if object_id in semantic_atom_by_object_id:
+                    continue
+                physical_shape = realizer._eligibility_shape_cached(row.eligibility)
+                if row.special:
+                    semantic_atom_by_object_id[object_id] = (
+                        "special",
+                        int(row.set_id),
+                        int(row.piece_count),
+                        physical_shape,
+                    )
+                else:
+                    semantic_atom_by_object_id[object_id] = (
+                        "ordinary",
+                        physical_shape,
+                        row.objective_effect_signature,
+                    )
+
         selected: list[_SearchCandidate] = []
+        selected_semantics: list[tuple[object, ...]] = []
+        selected_eligibilities = []
         used_ids: set[int] = set()
         selected_special_ids: set[int] = set()
         best = float("-inf")
@@ -145,30 +172,38 @@ class ExtremeMaxResourceSemanticSpecialSubsetSearchService:
             running.update(int(row.set_id) for row in rows_by_position[position])
             future_ids[position] = frozenset(running)
 
+        # Both of these are pure functions of topology position. Precompute once
+        # rather than rebuilding count histograms/scanning suffixes on every node.
+        remaining_slots_by_position: list[dict[int, int]] = [
+            {} for _ in range(len(counts) + 1)
+        ]
+        running_slots: dict[int, int] = {}
+        for position in range(len(counts) - 1, -1, -1):
+            count = int(counts[position])
+            running_slots = dict(running_slots)
+            running_slots[count] = running_slots.get(count, 0) + 1
+            remaining_slots_by_position[position] = running_slots
+
+        special_ids_by_count = {
+            int(count): tuple(sorted(int(row.set_id) for row in rows))
+            for count, rows in special_by_count.items()
+        }
+
         visited_states: set[tuple[object, ...]] = set()
         nodes = leaves = witness_checks = feasible_leaves = rejected_leaves = 0
         score_pruned = physical_pruned = requirement_pruned = 0
         semantic_duplicate_leaves = 0
 
-        def remaining_positions_for_count(position: int, count: int) -> int:
-            return sum(1 for value in counts[position:] if int(value) == int(count))
-
         def remaining_required_ids(count: int) -> tuple[int, ...]:
             return tuple(
-                sorted(
-                    row.set_id
-                    for row in special_by_count.get(int(count), ())
-                    if row.set_id not in selected_special_ids
-                )
+                set_id
+                for set_id in special_ids_by_count.get(int(count), ())
+                if set_id not in selected_special_ids
             )
 
         def special_aware_remaining_bound(position: int) -> float | None:
-            remaining_by_count: dict[int, int] = {}
-            for count in counts[position:]:
-                remaining_by_count[int(count)] = remaining_by_count.get(int(count), 0) + 1
-
             total = 0.0
-            for count, slots in remaining_by_count.items():
+            for count, slots in remaining_slots_by_position[position].items():
                 required = remaining_required_ids(count)
                 if len(required) > slots:
                     return None
@@ -191,27 +226,7 @@ class ExtremeMaxResourceSemanticSpecialSubsetSearchService:
             return float(total)
 
         def semantic_key() -> tuple[tuple[object, ...], ...]:
-            rows: list[tuple[object, ...]] = []
-            for row in selected:
-                physical_shape = realizer._eligibility_shape_cached(row.eligibility)
-                if row.special:
-                    rows.append(
-                        (
-                            "special",
-                            int(row.set_id),
-                            int(row.piece_count),
-                            physical_shape,
-                        )
-                    )
-                else:
-                    rows.append(
-                        (
-                            "ordinary",
-                            physical_shape,
-                            row.objective_effect_signature,
-                        )
-                    )
-            return tuple(rows)
+            return tuple(selected_semantics)
 
         def equal_floor(position: int) -> int | None:
             if position <= 0 or position >= len(counts):
@@ -222,7 +237,7 @@ class ExtremeMaxResourceSemanticSpecialSubsetSearchService:
 
         def prefix_state(position: int, score: float) -> tuple[object, ...]:
             still_relevant_used = tuple(
-                sorted(set(used_ids).intersection(future_ids[position]))
+                sorted(set_id for set_id in used_ids if set_id in future_ids[position])
             )
             return (
                 int(position),
@@ -263,7 +278,7 @@ class ExtremeMaxResourceSemanticSpecialSubsetSearchService:
                     semantic_duplicate_leaves += 1
                     witness = leaf_semantic_cache[key]
                 else:
-                    physical = tuple(row.eligibility for row in selected)
+                    physical = tuple(selected_eligibilities)
                     witness_checks += 1
                     witness = realizer._find_witness_cached(topology, physical)
                     leaf_semantic_cache[key] = witness
@@ -279,14 +294,15 @@ class ExtremeMaxResourceSemanticSpecialSubsetSearchService:
                 return
 
             count = int(counts[position])
-            remaining_required = set(remaining_required_ids(count))
-            remaining_slots = remaining_positions_for_count(position, count)
+            remaining_required_tuple = remaining_required_ids(count)
+            remaining_required = set(remaining_required_tuple)
+            remaining_slots = remaining_slots_by_position[position].get(count, 0)
             if len(remaining_required) > remaining_slots:
                 requirement_pruned += 1
                 return
 
             previous_equal_id = equal_floor(position)
-            minimum_required = min(remaining_required) if remaining_required else None
+            minimum_required = remaining_required_tuple[0] if remaining_required_tuple else None
             for row in rows_by_position[position]:
                 if row.set_id in used_ids:
                     continue
@@ -298,10 +314,12 @@ class ExtremeMaxResourceSemanticSpecialSubsetSearchService:
                     continue
 
                 selected.append(row)
+                selected_semantics.append(semantic_atom_by_object_id[id(row)])
+                selected_eligibilities.append(row.eligibility)
                 used_ids.add(row.set_id)
                 if row.special:
                     selected_special_ids.add(row.set_id)
-                prefix = tuple(item.eligibility for item in selected)
+                prefix = tuple(selected_eligibilities)
                 if feasibility._is_possible_prevalidated(topology, prefix):
                     visit(position + 1, score + row.exact_delta)
                 else:
@@ -309,6 +327,8 @@ class ExtremeMaxResourceSemanticSpecialSubsetSearchService:
                 if row.special:
                     selected_special_ids.remove(row.set_id)
                 used_ids.remove(row.set_id)
+                selected_eligibilities.pop()
+                selected_semantics.pop()
                 selected.pop()
 
         visit(0, 0.0)
