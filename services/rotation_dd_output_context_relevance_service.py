@@ -40,6 +40,7 @@ class RotationDDOutputContextRelevanceService:
         "champion point effect not yet modeled: celerity:",
         "champion point is dynamic or not yet stat-mapped: celerity",
         "movement_speed unresolved",
+        "potion selected; activation/uptime is not part of static build state:",
     )
 
     _STATIC_CONTEXT_PREFIXES = (
