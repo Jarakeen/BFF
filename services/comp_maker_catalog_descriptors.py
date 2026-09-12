@@ -12,6 +12,7 @@ from services.service_catalog import (
     ServiceBehavior,
     ServiceDescriptor,
 )
+from services.extreme_catalog_descriptors import EXTREME_SERVICE_DESCRIPTORS
 from services.rotation_catalog_descriptors import ROTATION_SERVICE_DESCRIPTORS
 from services.rotation_gameplay_policy_catalog_descriptors import (
     ROTATION_GAMEPLAY_POLICY_SERVICE_DESCRIPTORS,
@@ -129,6 +130,7 @@ COMP_MAKER_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.POLICY,
         notes="Comparison is bounded to static capability presence, redundancy, gaps, conditional sources, recruits, and evidence boundaries.",
     ),
+    *EXTREME_SERVICE_DESCRIPTORS,
     *ROTATION_SERVICE_DESCRIPTORS,
     *ROTATION_GAMEPLAY_POLICY_SERVICE_DESCRIPTORS,
     *ROTATION_OBSERVATION_SERVICE_DESCRIPTORS,
