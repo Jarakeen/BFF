@@ -107,6 +107,46 @@ def test_reviewed_stampede_registry_and_exact_impact_evidence_schedule_runtime_t
     assert any("magnitude policy dynamic_at_tick" in evidence for evidence in entry.evidence)
 
 
+def test_prospective_stampede_preserves_impact_semantics_but_does_not_invent_ticks() -> None:
+    action = RotationAction(
+        time_seconds=1.0,
+        sequence=7,
+        kind=RotationActionKind.SKILL,
+        name="stampede",
+        bar="back",
+    )
+    plan = RotationPlan(
+        character_name="Parse Cat",
+        build_name="DD",
+        duration_seconds=6.0,
+        actions=(action,),
+    )
+
+    semantics = RotationDDPeriodicRuntimeSemanticsRegistryService().load()
+    stampede = next(
+        row
+        for row in semantics
+        if row.skill_entity_id == "stampede" and row.coefficient_number == 2
+    )
+    assert stampede.activation_anchor is PeriodicDamageActivationAnchor.IMPACT
+    assert stampede.first_tick_offset_seconds == 1.0
+    assert stampede.verified_interval_seconds == 1.0
+
+    projection = RotationCandidatePeriodicDamageRuntimeProjectionService(
+        _StampedeTimingService(),  # type: ignore[arg-type]
+        activation_anchor_resolver=None,
+    ).project(
+        plan=plan,
+        semantics=semantics,
+    )
+
+    assert projection.resolved is False
+    assert len(projection.entries) == 1
+    assert projection.entries[0].events == ()
+    assert projection.entries[0].active_end_time_seconds is None
+    assert "reviewed activation anchor impact requires exact runtime anchor evidence" in projection.unresolved[0]
+
+
 def test_stampede_runtime_chain_fails_closed_when_exact_impact_evidence_does_not_match_final_action() -> None:
     action = RotationAction(
         time_seconds=1.0,
