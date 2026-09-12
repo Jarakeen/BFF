@@ -1,6 +1,8 @@
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 import tools.audit_rotation_dd_periodic_semantics as audit_tool
 
 
@@ -12,9 +14,13 @@ class _BuildService:
         return SimpleNamespace(
             Members=(
                 SimpleNamespace(Name="Magrat", BuildName="DF Healer", Role="Healer"),
-                SimpleNamespace(Name="Parse Cat", BuildName="Parse DD", Role="DD"),
+                SimpleNamespace(Name="Rylonia", BuildName="Corpsebuster DD", Role="DD"),
             )
         )
+
+
+def _build(name: str, build_name: str, role: str = "DD"):
+    return SimpleNamespace(Name=name, BuildName=build_name, Role=role)
 
 
 def test_non_dd_build_is_rejected_before_periodic_audit(monkeypatch, tmp_path, capsys) -> None:
@@ -24,13 +30,6 @@ def test_non_dd_build_is_rejected_before_periodic_audit(monkeypatch, tmp_path, c
     builds_path.write_text("{}", encoding="utf-8")
 
     monkeypatch.setattr(audit_tool, "BuildService", _BuildService)
-    monkeypatch.setattr(
-        audit_tool,
-        "_find_build",
-        lambda members, requested: next(
-            build for build in members if build.BuildName == requested
-        ),
-    )
 
     class _ShouldNotRun:
         def __init__(self, *_args, **_kwargs):
@@ -55,7 +54,9 @@ def test_non_dd_build_is_rejected_before_periodic_audit(monkeypatch, tmp_path, c
     assert "--list-dd" in output
 
 
-def test_list_dd_filters_non_dd_builds(monkeypatch, tmp_path, capsys) -> None:
+def test_list_dd_filters_non_dd_builds_and_prints_copyable_command(
+    monkeypatch, tmp_path, capsys
+) -> None:
     builds_path = tmp_path / "builds.json"
     builds_path.write_text("{}", encoding="utf-8")
     monkeypatch.setattr(audit_tool, "BuildService", _BuildService)
@@ -64,5 +65,34 @@ def test_list_dd_filters_non_dd_builds(monkeypatch, tmp_path, capsys) -> None:
 
     assert result == 0
     output = capsys.readouterr().out
-    assert "Parse DD | Parse Cat" in output
+    assert "Corpsebuster DD | Rylonia" in output
+    assert '--build "Corpsebuster DD"' in output
     assert "DF Healer" not in output
+
+
+def test_resolve_build_accepts_exact_build_name() -> None:
+    build = _build("Rylonia", "Corpsebuster DD")
+
+    assert audit_tool._resolve_build((build,), "Corpsebuster DD") is build
+
+
+def test_resolve_build_accepts_unique_character_name() -> None:
+    build = _build("Rylonia", "Corpsebuster DD")
+
+    assert audit_tool._resolve_build((build,), "Rylonia") is build
+
+
+def test_resolve_build_accepts_display_selector() -> None:
+    build = _build("Rylonia", "Corpsebuster DD")
+
+    assert audit_tool._resolve_build((build,), "Corpsebuster DD | Rylonia") is build
+
+
+def test_resolve_build_rejects_ambiguous_character_name() -> None:
+    builds = (
+        _build("Rylonia", "Corpsebuster DD"),
+        _build("Rylonia", "Parse DD"),
+    )
+
+    with pytest.raises(ValueError, match="matches multiple saved builds"):
+        audit_tool._resolve_build(builds, "Rylonia")
