@@ -44,10 +44,8 @@ class _Pipeline:
         return self.result
 
 
-def test_canonical_bridge_forwards_runtime_state_resolver_factory_unchanged() -> None:
-    pipeline = _Pipeline()
-    factory = object()
-    support = RotationCanonicalCandidateSupport(
+def _support(pipeline: _Pipeline) -> RotationCanonicalCandidateSupport:
+    return RotationCanonicalCandidateSupport(
         build_adapter=_Adapter(),
         pipeline=pipeline,
         action_timing_service=_EvidenceService(RotationSavedBuildActionTimingEvidence()),
@@ -55,7 +53,12 @@ def test_canonical_bridge_forwards_runtime_state_resolver_factory_unchanged() ->
         action_slot_service=_EvidenceService(RotationSavedBuildActionSlotEvidence()),
     )
 
-    support.run_effects(
+
+def test_canonical_bridge_forwards_runtime_state_resolver_factory_unchanged() -> None:
+    pipeline = _Pipeline()
+    factory = object()
+
+    _support(pipeline).run_effects(
         player_build=object(),
         seed_plan=object(),
         priorities=object(),
@@ -70,3 +73,24 @@ def test_canonical_bridge_forwards_runtime_state_resolver_factory_unchanged() ->
 
     assert len(pipeline.calls) == 1
     assert pipeline.calls[0]["runtime_combat_state_resolver_factory"] is factory
+
+
+def test_canonical_bridge_forwards_runtime_activation_anchor_factory_unchanged() -> None:
+    pipeline = _Pipeline()
+    factory = object()
+
+    _support(pipeline).run_effects(
+        player_build=object(),
+        seed_plan=object(),
+        priorities=object(),
+        evaluator_resolver=object(),
+        scorecard_resolver=object(),
+        resource=ResourceType.MAGICKA,
+        maximum_amount=30000,
+        trigger_fraction=0.35,
+        restoration_resolver=object(),
+        runtime_activation_anchor_resolver_factory=factory,
+    )
+
+    assert len(pipeline.calls) == 1
+    assert pipeline.calls[0]["runtime_activation_anchor_resolver_factory"] is factory
