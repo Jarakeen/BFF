@@ -24,7 +24,51 @@ ROTATION_DD_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         notes=(
             "Currently owns reviewed unconditional Master-at-Arms, Biting Aura, and "
             "Thaumaturge event-category modifiers. Stage thresholds and per-stage values come "
-            "from canonical Champion Point records. Exploiter remains runtime target-state work."
+            "from canonical Champion Point records."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="rotation.dd.saved_build_conditional_damage_done",
+        domain="rotation",
+        purpose=(
+            "Resolve reviewed saved-build DD Damage Done magnitudes whose application depends "
+            "on exact target runtime state, without inventing that state."
+        ),
+        implementation_path=(
+            "services.rotation_saved_build_dd_conditional_damage_done_service"
+        ),
+        inputs=("PlayerBuild", "ChampionPointRecord", "CombatState"),
+        outputs=("RotationSavedBuildDDConditionalDamageDoneResolution",),
+        responsibilities=("rotation_dd_saved_build_conditional_damage_done",),
+        roles=("DD", "DPS"),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Currently resolves Exploiter magnitude and the explicit Off Balance condition. "
+            "Exploiter remains a production blocker until every DD action consumer applies "
+            "the condition at its exact damage timestamp."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="rotation.dd.plan_potion_combat_state",
+        domain="rotation",
+        purpose=(
+            "Project source-backed potion buffs into attacker CombatState only after an "
+            "explicit POTION action in the exact final plan."
+        ),
+        implementation_path="services.rotation_plan_potion_combat_state_service",
+        inputs=("PlayerBuild", "CharacterProgression", "RotationPlan", "CombatState"),
+        outputs=("RotationPlanPotionCombatStateResult",),
+        responsibilities=("rotation_plan_potion_combat_state",),
+        roles=("DD", "DPS"),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Potion selection proves availability only. Buff activation requires an explicit "
+            "scheduled potion action; durations come from source-backed potion evidence and "
+            "recorded Medicinal Use rank. Scheduling and cooldown legality remain separate."
         ),
     ),
     ServiceDescriptor(
