@@ -316,6 +316,36 @@ class ExtremeObjectiveNamedGearSetCatalogRealizationService:
         *,
         max_assignments_per_topology: int | None = None,
     ) -> ExtremeObjectiveNamedGearSetCatalogRealizationResult:
+        objective = str(self.relevance.objective_key or "").strip().casefold()
+        if objective == "max_health" and max_assignments_per_topology is None:
+            # Local imports avoid an import cycle: the Max Health frontier reuses
+            # this service's proof-reduction helpers but only calls them after this
+            # module is fully initialized.
+            from services.extreme_max_health_named_gear_candidate_search_service import (
+                ExtremeMaxHealthNamedGearCandidateSearchService,
+            )
+            from services.extreme_max_health_named_gear_realization_adapter_service import (
+                ExtremeMaxHealthNamedGearRealizationAdapterService,
+            )
+            from services.extreme_max_resource_ordinary_named_gear_search_service import (
+                ExtremeMaxResourceOrdinaryNamedGearSearchService,
+            )
+
+            ordinary = ExtremeMaxResourceOrdinaryNamedGearSearchService(
+                breakpoints=self.breakpoints,
+                eligibility=self.eligibility,
+                relevance=self.relevance,
+            )
+            candidate_search = ExtremeMaxHealthNamedGearCandidateSearchService(
+                ordinary_service=ordinary,
+                eligibility=self.eligibility,
+            ).search(topology_catalog)
+            return ExtremeMaxHealthNamedGearRealizationAdapterService.build(
+                search=candidate_search,
+                topology_catalog=topology_catalog,
+                relevance=self.relevance,
+            )
+
         reduced, equivalent_pruned, representative_limit = self.proof_reduced_breakpoints(
             topology_catalog
         )
