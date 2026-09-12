@@ -52,6 +52,29 @@ EXTREME_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "Classification is evidence-driven and does not score or execute the special branch."
         ),
     ),
+    ServiceDescriptor(
+        service_id="extreme.max_health_special_named_gear_execution",
+        domain="extreme",
+        purpose=(
+            "Dispatch classified Max Health special named-gear obligations to the existing "
+            "canonical runtime-condition or search-state execution owner."
+        ),
+        implementation_path="services.extreme_max_health_special_named_gear_execution_service",
+        inputs=(
+            "ExtremeMaxHealthSpecialNamedGearBranchResult",
+            "PlayerBuild",
+            "ExtremeHealClassRoute",
+        ),
+        outputs=("ExtremeMaxHealthSpecialNamedGearExecutionResult",),
+        dependencies=("extreme.max_health_special_named_gear_branches",),
+        responsibilities=("extreme_max_health_special_named_gear_execution",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Conditional branches reuse candidate runtime-condition materialization; "
+            "Twice-Born Star reuses the canonical two-Mundus structural evaluator."
+        ),
+    ),
 )
 
 
