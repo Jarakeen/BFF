@@ -29,12 +29,13 @@ def test_u50_potion_catalog_is_proven_irrelevant_to_max_magicka():
         (
             _formula("Restore Magicka", "Increase Spell Power", "Spell Critical"),
             _formula("Restore Health", "Increase Armor"),
+            _formula("Invisible", "Speed", "Unstoppable"),
         )
     )
 
     result = ExtremeResourcePotionProjectionService(repository).build("max_magicka")
 
-    assert result.formulas_reviewed == 2
+    assert result.formulas_reviewed == 3
     assert result.relevant_formulas == ()
     assert result.objective_irrelevance_proven is True
 
@@ -44,12 +45,13 @@ def test_u50_potion_catalog_is_proven_irrelevant_to_max_stamina():
         (
             _formula("Restore Stamina", "Increase Weapon Power", "Weapon Critical"),
             _formula("Restore Health", "Increase Spell Resist"),
+            _formula("Ravage Magicka", "Defile", "Hindrance"),
         )
     )
 
     result = ExtremeResourcePotionProjectionService(repository).build("max_stamina")
 
-    assert result.formulas_reviewed == 2
+    assert result.formulas_reviewed == 3
     assert result.relevant_formulas == ()
     assert result.objective_irrelevance_proven is True
 
@@ -60,4 +62,4 @@ def test_unknown_potion_trait_fails_closed_instead_of_assuming_irrelevance():
     result = ExtremeResourcePotionProjectionService(repository).build("max_magicka")
 
     assert result.objective_irrelevance_proven is False
-    assert any("no reviewed named-buff semantics" in row for row in result.unresolved)
+    assert any("no max-resource relevance review" in row for row in result.unresolved)
