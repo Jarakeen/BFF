@@ -34,7 +34,7 @@ def _trace(value: float):
     return SimpleNamespace(final_value=value)
 
 
-def _context(*, target_resistance=None, combat_state=None):
+def _context(*, target_resistance=None, combat_state=None, dd_exploiter_bonus=0.0):
     derived = {
         StatId.WEAPON_DAMAGE: _trace(3000.0),
         StatId.SPELL_DAMAGE: _trace(3000.0),
@@ -48,6 +48,7 @@ def _context(*, target_resistance=None, combat_state=None):
         fight_duration=10.0,
         target_resistance=target_resistance,
         combat_state=combat_state or CombatState(),
+        dd_exploiter_bonus=float(dd_exploiter_bonus),
     )
 
 
@@ -135,6 +136,52 @@ def test_direct_skill_action_uses_canonical_entity_and_combat_damage_path() -> N
     assert evidence.sequence == 3
     assert evidence.damage_value == 1000.0
     assert evidence.unresolved == ()
+
+
+def test_direct_skill_exploiter_applies_only_to_explicit_off_balance_state() -> None:
+    calculator = _Calculator(
+        _tooltip(components=(SimpleNamespace(coefficient_number=1, final_value=1000.0),))
+    )
+    action = RotationAction(2.0, 3, RotationActionKind.SKILL, name="skill_x", bar="front")
+
+    inactive = RotationCandidateSkillDamageEvidenceService(
+        database_path="unused-test.db",
+        context=_context(dd_exploiter_bonus=0.04),
+        calculator=calculator,
+        component_repository=_Components((_component(),)),
+        target_combat_state=CombatState(),
+    ).evaluate_action(candidate=_candidate(), action=action)
+    active = RotationCandidateSkillDamageEvidenceService(
+        database_path="unused-test.db",
+        context=_context(dd_exploiter_bonus=0.04),
+        calculator=calculator,
+        component_repository=_Components((_component(),)),
+        target_combat_state=CombatState(active_buffs=("Off Balance",)),
+    ).evaluate_action(candidate=_candidate(), action=action)
+
+    assert inactive.damage_value == 1000.0
+    assert active.damage_value == 1040.0
+    assert inactive.unresolved == ()
+    assert active.unresolved == ()
+
+
+def test_direct_skill_exploiter_fails_closed_when_target_state_is_unknown() -> None:
+    service = RotationCandidateSkillDamageEvidenceService(
+        database_path="unused-test.db",
+        context=_context(dd_exploiter_bonus=0.04),
+        calculator=_Calculator(
+            _tooltip(components=(SimpleNamespace(coefficient_number=1, final_value=1000.0),))
+        ),
+        component_repository=_Components((_component(),)),
+    )
+    action = RotationAction(2.0, 3, RotationActionKind.SKILL, name="skill_x", bar="front")
+
+    evidence = service.evaluate_action(candidate=_candidate(), action=action)
+
+    assert evidence.damage_value is None
+    assert evidence.unresolved == (
+        "Exploiter requires authoritative target CombatState at skill damage time",
+    )
 
 
 def test_direct_skill_action_applies_existing_target_mitigation() -> None:
