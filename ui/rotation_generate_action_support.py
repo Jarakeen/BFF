@@ -14,9 +14,9 @@ class RotationGenerateActionSupport:
     ``RotationGenerateCanonicalContext``. Once configured, Generate resolves evidence
     for the exact selected encounter and either runs the canonical/cadence orchestration
     path or reports the blocking evidence. Explicit role evidence is forwarded
-    unchanged. When authoritative plan-evidence inputs are configured, the router
-    composes role evidence from those inputs, the saved build's explicit role, and
-    the selected encounter's persisted content type. It never derives healer
+    unchanged. When authoritative plan-evidence inputs or a canonical composer are
+    configured, the router composes role evidence from the selected saved build and
+    resolved encounter bundle. It never derives healer
     reliability or assignment exceptions from display state. It never
     silently falls back to the plain generator for a configured encounter-aware request.
     """
@@ -60,7 +60,10 @@ class RotationGenerateActionSupport:
         try:
             bundle = page.selected_encounter_evidence_bundle(context.evidence_inputs)
             player_build = None
-            if context.role_evidence_inputs is not None:
+            if (
+                context.role_evidence_inputs is not None
+                or context.role_evidence_composer is not None
+            ):
                 player_build = page._selected_build()
                 if player_build is None:
                     raise ValueError(
@@ -68,6 +71,7 @@ class RotationGenerateActionSupport:
                     )
             role_evidence = context.role_evidence_for(
                 player_build=player_build,
+                evidence_bundle=bundle,
                 content_type=getattr(bundle, "content_type", ""),
             )
             result = page.run_canonical_cadence_orchestration(
