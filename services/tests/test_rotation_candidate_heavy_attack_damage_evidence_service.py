@@ -9,6 +9,7 @@ from minmax.character_build.effect_layer import BarId
 from minmax.character_build.slotted_skill import SlottedSkill
 from minmax.character_build.weapon import Weapon
 from minmax.character_build.weapon_type import WeaponType
+from minmax.combat_state import CombatState
 from minmax.role import Role
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from minmax.stat_ids import StatId
@@ -123,6 +124,25 @@ def test_fully_charged_flame_staff_heavy_uses_existing_uesp_formula() -> None:
 
     assert result.unresolved == ()
     assert result.damage_value == pytest.approx(5892.0)
+
+
+def test_runtime_major_berserk_applies_to_heavy_attack_exactly_once() -> None:
+    action = RotationAction(0.0, 0, RotationActionKind.HEAVY_ATTACK, bar="front")
+    service = RotationCandidateHeavyAttackDamageEvidenceService(
+        build=_build(),
+        evaluation=_evaluation(),
+        initial_bar="front",
+        completion_evidence=(_completion(action),),
+        attacker_combat_state=CombatState(
+            in_combat=True,
+            active_buffs=("Major Berserk",),
+        ),
+    )
+
+    result = service.evaluate_action(candidate=_candidate(action), action=action)
+
+    assert result.unresolved == ()
+    assert result.damage_value == pytest.approx(5892.0 * 1.10)
 
 
 def test_heavy_damage_does_not_require_restore_amount_when_completion_is_proven() -> None:
