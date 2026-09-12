@@ -10,6 +10,33 @@ from minmax.skill_coefficient_repository import SkillCoefficientRepository, abil
 
 
 @dataclass(frozen=True)
+class RotationDDPeriodicEsoLogsCastImpactObservation:
+    """One exact observational cast-to-impact pair from imported ESO Logs evidence.
+
+    This record preserves provenance and event identity for later replay/import work.
+    It is observational evidence only. In particular, the observed delay must not be
+    promoted into a deterministic future cast-to-impact mechanic.
+    """
+
+    skill_entity_id: str
+    report_code: str
+    fight_id: int
+    source_id: int
+    cast_event_index: int
+    cast_timestamp_ms: float
+    cast_ability_id: int | None
+    impact_event_index: int
+    impact_timestamp_ms: float
+    impact_ability_id: int
+    cast_track_id: int | None
+    cast_track_linked: bool
+
+    @property
+    def cast_to_impact_seconds(self) -> float:
+        return (self.impact_timestamp_ms - self.cast_timestamp_ms) / 1000.0
+
+
+@dataclass(frozen=True)
 class RotationDDPeriodicEsoLogsAnchorCorrelationReport:
     skill_entity_id: str
     impact_ability_id: int
@@ -22,6 +49,9 @@ class RotationDDPeriodicEsoLogsAnchorCorrelationReport:
     cast_to_impact_seconds: tuple[float, ...]
     impact_to_first_periodic_seconds: tuple[float, ...]
     periodic_intervals_seconds: tuple[float, ...]
+    cast_impact_observations: tuple[
+        RotationDDPeriodicEsoLogsCastImpactObservation, ...
+    ] = ()
     unresolved: tuple[str, ...] = ()
 
     @property
@@ -47,6 +77,10 @@ class RotationDDPeriodicEsoLogsAnchorCorrelationService:
     Numeric IDs are evidence handles only. Canonical lower-snake skill identity
     remains authoritative for the cast. The supplied impact/periodic IDs are never
     promoted into canonical identity or executable semantics by this service.
+
+    Exact cast-to-impact pairs are retained with report/fight/source/event provenance
+    so a later explicit replay mapper can bind historical observations to exact
+    rotation actions without reconstructing timing from aggregate delay statistics.
     """
 
     _CAST_TYPES = ("cast", "completecast", "begincast")
@@ -168,6 +202,9 @@ class RotationDDPeriodicEsoLogsAnchorCorrelationService:
             cast_to_impact: list[float] = []
             impact_to_periodic: list[float] = []
             periodic_intervals: list[float] = []
+            cast_impact_observations: list[
+                RotationDDPeriodicEsoLogsCastImpactObservation
+            ] = []
             impact_observations = 0
             periodic_observations = 0
             linked_impacts = 0
@@ -218,8 +255,30 @@ class RotationDDPeriodicEsoLogsAnchorCorrelationService:
                     impact_time = float(impact["timestamp"])
                     impact_observations += 1
                     cast_to_impact.append((impact_time - cast_time) / 1000.0)
-                    if self._cast_track_matches(impact, cast_track):
+                    cast_track_linked = self._cast_track_matches(impact, cast_track)
+                    if cast_track_linked:
                         linked_impacts += 1
+                    cast_ability_id = (
+                        int(cast["ability_game_id"])
+                        if cast["ability_game_id"] is not None
+                        else None
+                    )
+                    cast_impact_observations.append(
+                        RotationDDPeriodicEsoLogsCastImpactObservation(
+                            skill_entity_id=identity,
+                            report_code=group_report,
+                            fight_id=group_fight,
+                            source_id=group_source,
+                            cast_event_index=int(cast["event_index"]),
+                            cast_timestamp_ms=cast_time,
+                            cast_ability_id=cast_ability_id,
+                            impact_event_index=int(impact["event_index"]),
+                            impact_timestamp_ms=impact_time,
+                            impact_ability_id=int(impact["ability_game_id"]),
+                            cast_track_id=cast_track,
+                            cast_track_linked=cast_track_linked,
+                        )
+                    )
 
                     periodic_rows = tuple(
                         row
@@ -271,6 +330,7 @@ class RotationDDPeriodicEsoLogsAnchorCorrelationService:
             cast_to_impact_seconds=tuple(cast_to_impact),
             impact_to_first_periodic_seconds=tuple(impact_to_periodic),
             periodic_intervals_seconds=tuple(periodic_intervals),
+            cast_impact_observations=tuple(cast_impact_observations),
             unresolved=tuple(dict.fromkeys(unresolved)),
         )
 
@@ -475,6 +535,9 @@ class RotationDDPeriodicEsoLogsAnchorCorrelationService:
         cast_to_impact_seconds: tuple[float, ...] = (),
         impact_to_first_periodic_seconds: tuple[float, ...] = (),
         periodic_intervals_seconds: tuple[float, ...] = (),
+        cast_impact_observations: tuple[
+            RotationDDPeriodicEsoLogsCastImpactObservation, ...
+        ] = (),
         unresolved: tuple[str, ...] = (),
     ) -> RotationDDPeriodicEsoLogsAnchorCorrelationReport:
         return RotationDDPeriodicEsoLogsAnchorCorrelationReport(
@@ -489,6 +552,7 @@ class RotationDDPeriodicEsoLogsAnchorCorrelationService:
             cast_to_impact_seconds=cast_to_impact_seconds,
             impact_to_first_periodic_seconds=impact_to_first_periodic_seconds,
             periodic_intervals_seconds=periodic_intervals_seconds,
+            cast_impact_observations=cast_impact_observations,
             unresolved=unresolved,
         )
 
@@ -496,4 +560,5 @@ class RotationDDPeriodicEsoLogsAnchorCorrelationService:
 __all__ = [
     "RotationDDPeriodicEsoLogsAnchorCorrelationReport",
     "RotationDDPeriodicEsoLogsAnchorCorrelationService",
+    "RotationDDPeriodicEsoLogsCastImpactObservation",
 ]
