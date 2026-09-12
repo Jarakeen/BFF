@@ -11,6 +11,10 @@ from services.extreme_runtime_snapshot_combat_state_service import (
 from services.rotation_plan_runtime_combat_state_service import (
     RotationPlanRuntimeCombatStateService,
 )
+from services.rotation_runtime_activation_anchor_evidence_service import (
+    RotationRuntimeActivationAnchorEvidence,
+    RotationRuntimeActivationAnchorEvidenceService,
+)
 from ui.rotation_canonical_candidate_support import (
     RotationCanonicalCandidateApplicationResult,
     RotationCanonicalCandidateSupport,
@@ -43,6 +47,12 @@ class RotationRuntimeSnapshotCandidateSupport:
     a final-plan resolver that derives active bar from each stabilized plan at the
     exact queried time/sequence.
 
+    Explicit runtime activation-anchor evidence is independent caller-owned evidence.
+    It is converted to a final-plan resolver factory without inferring impact timing
+    from generic RuntimeEvent source text or numeric ESO IDs. If an evidence row no
+    longer matches the stabilized action identity, downstream periodic projection
+    remains fail-closed.
+
     Explicit ``combat_state`` remains useful as base snapshot context for facts not
     owned by runtime history, including game-update and Emperor state. Runtime-proven
     buffs are merged into that base state by the shared projector.
@@ -56,6 +66,7 @@ class RotationRuntimeSnapshotCandidateSupport:
         database_path: str | Path | None = None,
         runtime_snapshot_state: ExtremeRuntimeSnapshotCombatStateService | None = None,
         plan_runtime_state: RotationPlanRuntimeCombatStateService | None = None,
+        activation_anchor_evidence_service: RotationRuntimeActivationAnchorEvidenceService | None = None,
     ) -> None:
         database = Path(database_path) if database_path is not None else get_data_dir() / "eso.db"
         self.canonical_candidates = canonical_candidates
@@ -72,6 +83,10 @@ class RotationRuntimeSnapshotCandidateSupport:
         self.plan_runtime_state = plan_runtime_state or RotationPlanRuntimeCombatStateService(
             runtime_snapshot_state=self.runtime_snapshot_state,
         )
+        self.activation_anchor_evidence_service = (
+            activation_anchor_evidence_service
+            or RotationRuntimeActivationAnchorEvidenceService()
+        )
 
     @property
     def static_context_service(self):
@@ -86,10 +101,30 @@ class RotationRuntimeSnapshotCandidateSupport:
         *,
         runtime_snapshot: ExtremeRuntimeSnapshot | None = None,
         runtime_snapshot_active_bar: str | None = None,
+        runtime_activation_anchor_evidence: tuple[
+            RotationRuntimeActivationAnchorEvidence, ...
+        ] = (),
         **kwargs,
     ):
+        anchor_evidence = tuple(runtime_activation_anchor_evidence)
+        if (
+            anchor_evidence
+            and kwargs.get("runtime_activation_anchor_resolver_factory") is not None
+        ):
+            raise ValueError(
+                "runtime activation-anchor evidence cannot be combined with an explicit "
+                "runtime_activation_anchor_resolver_factory"
+            )
+
         if runtime_snapshot is None:
-            return self.canonical_candidates.run_effects(**kwargs)
+            forwarded = dict(kwargs)
+            if anchor_evidence:
+                forwarded["runtime_activation_anchor_resolver_factory"] = (
+                    self.activation_anchor_evidence_service.resolver_factory(
+                        anchor_evidence
+                    )
+                )
+            return self.canonical_candidates.run_effects(**forwarded)
 
         player_build = kwargs["player_build"]
         character_id = kwargs.get("character_id")
@@ -144,6 +179,12 @@ class RotationRuntimeSnapshotCandidateSupport:
 
         forwarded = dict(kwargs)
         forwarded["combat_state"] = runtime_state.combat_state
+        if anchor_evidence:
+            forwarded["runtime_activation_anchor_resolver_factory"] = (
+                self.activation_anchor_evidence_service.resolver_factory(
+                    anchor_evidence
+                )
+            )
         if runtime_snapshot.runtime_history:
             initial_bar = str(kwargs.get("initial_bar", "front") or "front")
 
