@@ -2,7 +2,7 @@ from __future__ import annotations
 
 """Inline, inviting front-door character/build creation.
 
-Builds keeps its normal workspace layout with a header entry button.
+Builds keeps its normal workspace layout with a centered entry button.
 The detailed creation card exists only while the user is actively creating a
 build. Raid Engine Overview uses the same full-width pull-down form instead of
 opening a modal or navigating away.
@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QSizePolicy,
     QVBoxLayout,
+    QWidget,
 )
 
 from models.roster_model import ESO_CLASSES
@@ -36,6 +37,38 @@ _INSTALLED = False
 
 _ROLES = ("Damage Dealer", "Healer", "Tank", "Support DD")
 _ALLIANCES = ("", "Aldmeri Dominion", "Daggerfall Covenant", "Ebonheart Pact")
+_EDITOR_OWNED_BUILD_FIELDS = (
+    "Name",
+    "Gamertag",
+    "BuildName",
+    "ImagePath",
+    "Race",
+    "EsoClass",
+    "Role",
+    "Alliance",
+    "Mundus",
+    "Vampire",
+    "Werewolf",
+    "AttributeHealth",
+    "AttributeMagicka",
+    "AttributeStamina",
+    "Armor",
+    "FrontBarWeapon",
+    "FrontBarOffHand",
+    "BackBarWeapon",
+    "BackBarOffHand",
+    "Necklace",
+    "Ring1",
+    "Ring2",
+    "ChampionPoints",
+    "FrontBarSkills",
+    "BackBarSkills",
+    "Food",
+    "Potion",
+    "Notes",
+    "BossLoadouts",
+    "ReadyForRaid",
+)
 
 
 def _style_create_character_button(button: FoundryButton) -> FoundryButton:
@@ -379,7 +412,7 @@ def _open_easy_character_creator_from_overview(console) -> None:
 
 
 def install() -> None:
-    """Add header New Build entry points and shared inline pull-down forms."""
+    """Add centered New Build entry points and shared inline pull-down forms."""
     global _INSTALLED
     if _INSTALLED:
         return
@@ -406,6 +439,7 @@ def install() -> None:
     original_skills_to_work_on_card = OperationsConsole._skills_to_work_on_card
     original_editor_build_ui = BuildEditor._build_ui
     original_identity_card = BuildEditor._build_identity_card
+    original_boss_card = BuildEditor._build_boss_card
 
     def _build_ui(self):
         original_build_ui(self)
@@ -418,23 +452,33 @@ def install() -> None:
                 if isinstance(widget, FoundryButton):
                     widget.set_compact(True)
 
+        # The editor owns saving now. Keeping a second page-level Save Builds
+        # button only made it unclear which save mattered.
+        self.save_button.hide()
+
         self.create_character_button = _style_create_character_button(
             FoundryButton("+ Create a New Build", role=ButtonRole.PRIMARY, compact=True)
         )
         self.create_character_button.clicked.connect(
             lambda: _open_easy_character_creator(self)
         )
-        self.header.context_layout.insertWidget(
-            0, self.create_character_button, 0, Qt.AlignmentFlag.AlignBottom
-        )
 
         tabs = getattr(self, "build_tabs", None)
         tab_index = self.workspace_layout.indexOf(tabs) if tabs is not None else 0
         insertion_index = max(0, tab_index)
+
+        self.new_build_action_host = QWidget(self.workspace_widget)
+        new_build_action_layout = QHBoxLayout(self.new_build_action_host)
+        new_build_action_layout.setContentsMargins(0, 0, 0, 0)
+        new_build_action_layout.addStretch(1)
+        new_build_action_layout.addWidget(self.create_character_button)
+        new_build_action_layout.addStretch(1)
+        self.workspace_layout.insertWidget(insertion_index, self.new_build_action_host)
+
         self.new_build_panel = CharacterCreationEasyModePanel(
             page=self, parent=self.workspace_widget
         )
-        self.workspace_layout.insertWidget(insertion_index, self.new_build_panel)
+        self.workspace_layout.insertWidget(insertion_index + 1, self.new_build_panel)
 
     def _overview_build_ui(self):
         original_overview_build_ui(self)
@@ -566,8 +610,54 @@ def install() -> None:
         card.body.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         return card
 
+    def _boss_card(self):
+        card = original_boss_card(self)
+        buttons = _detach_card_buttons(card.body_layout)
+        add_boss = next((button for button in buttons if button.text() == "+ Add Boss Alternate"), None)
+        add_build = next((button for button in buttons if button.text() == "+ Add New Build"), None)
+        save = next((button for button in buttons if button.text() == "Save This Build"), None)
+        cancel = next((button for button in buttons if button.text() == "Cancel"), None)
+
+        if add_build is not None:
+            add_build.deleteLater()
+        if save is not None:
+            save.setText("Save Build")
+
+        row = QHBoxLayout()
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(8)
+        if add_boss is not None:
+            row.addWidget(add_boss)
+        row.addStretch(1)
+        if cancel is not None:
+            row.addWidget(cancel)
+        if save is not None:
+            row.addWidget(save)
+        card.addLayout(row)
+        return card
+
+    def _save_edit_tab(self) -> None:
+        """Save editor-owned fields while preserving every other build surface."""
+        editor = getattr(self, "_build_editor", None)
+        index = getattr(self, "_build_editor_index", None)
+        if editor is None or index is None or index < 0 or index >= len(self.roster.Members):
+            return
+
+        saved_build = self.roster.Members[index]
+        edited_build = editor.model
+        for field_name in _EDITOR_OWNED_BUILD_FIELDS:
+            setattr(saved_build, field_name, getattr(edited_build, field_name))
+
+        self.selected_index = index
+        self._save()
+        self._refresh_roster()
+        refresh_selectors = getattr(self, "_refresh_build_tab_selectors", None)
+        if refresh_selectors is not None:
+            refresh_selectors()
+
     BuildsPage._build_ui = _build_ui
     BuildsPage._role_for = _role_for
+    BuildsPage._save_edit_tab = _save_edit_tab
     OperationsConsole._build_ui = _overview_build_ui
     OperationsConsole._player_card = _player_card
     OperationsConsole._raid_status_card = _raid_status_card
@@ -585,4 +675,5 @@ def install() -> None:
     OperationsConsole._compact_button = staticmethod(_overview_action_pill)
     BuildEditor._build_ui = _editor_build_ui
     BuildEditor._build_identity_card = _identity_card
+    BuildEditor._build_boss_card = _boss_card
     _INSTALLED = True
