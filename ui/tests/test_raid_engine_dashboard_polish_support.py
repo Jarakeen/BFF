@@ -14,12 +14,15 @@ def test_dashboard_polish_uses_balanced_composition_surface() -> None:
     source = Path("ui/raid_engine_dashboard_polish_support.py").read_text(encoding="utf-8")
     assert "setMinimumSize(560, 350)" in source
     assert "setMinimumWidth(575)" in source
-    assert "setMinimumWidth(470)" in source
-    assert "setMinimumWidth(455)" in source
+    assert "setMinimumWidth(420)" in source
+    assert "setMinimumWidth(405)" in source
     assert "setMinimumHeight(500)" in source
     assert "setDefaultSectionSize(row_header.defaultSectionSize() + 10)" in source
     assert "setContentsMargins(6, 4, 6, 4)" in source
-    assert "setColumnWidth(3, 110)" in source
+    assert "setColumnWidth(0, 95)" in source
+    assert "setColumnWidth(1, 80)" in source
+    assert "setColumnWidth(2, 115)" in source
+    assert "setColumnWidth(3, 100)" in source
 
 
 def test_dashboard_polish_uses_status_pills_and_colored_coverage() -> None:
