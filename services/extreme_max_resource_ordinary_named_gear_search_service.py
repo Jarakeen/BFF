@@ -433,7 +433,6 @@ class ExtremeMaxResourceOrdinaryNamedGearSearchService:
         if seeded is not None:
             best, seeded_witness, seeded_key = seeded
             winners_by_semantic_key[seeded_key] = seeded_witness
-            leaf_semantic_cache[seeded_key] = seeded_witness
         selected.clear()
         used_ids.clear()
 
