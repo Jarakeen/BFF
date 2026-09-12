@@ -26,7 +26,7 @@ def _trace(value: float):
     return SimpleNamespace(final_value=value)
 
 
-def _context():
+def _context(*, tick_value: float | None = None):
     return SimpleNamespace(
         core_state=SimpleNamespace(
             derived={
@@ -41,6 +41,7 @@ def _context():
         fight_duration=10.0,
         target_resistance=None,
         combat_state=CombatState(),
+        tick_value=tick_value,
     )
 
 
@@ -53,6 +54,17 @@ class _Calculator:
         return SimpleNamespace(
             skill=SimpleNamespace(skill_rank_id=101),
             components=self.components,
+            unresolved=(),
+        )
+
+
+class _DynamicCalculator:
+    def evaluate_entity_id(self, entity_id, context):
+        del entity_id
+        value = 50.0 if context.tick_value is None else float(context.tick_value)
+        return SimpleNamespace(
+            skill=SimpleNamespace(skill_rank_id=101),
+            components=(SimpleNamespace(coefficient_number=1, final_value=value),),
             unresolved=(),
         )
 
@@ -74,6 +86,21 @@ class _PeriodicProjection:
     def project(self, *, plan, semantics):
         self.calls.append((plan, semantics))
         return RotationPeriodicDamageRuntimeProjection(entries=(self.entry,))
+
+
+class _RuntimeContextResolver:
+    def __init__(self, contexts):
+        self.contexts = dict(contexts)
+        self.calls = []
+
+    def __call__(self, time_seconds, sequence=None):
+        self.calls.append((float(time_seconds), sequence))
+        context = self.contexts.get(float(time_seconds))
+        return SimpleNamespace(
+            resolved=context is not None,
+            context=context,
+            unresolved=() if context is not None else ("runtime context unavailable",),
+        )
 
 
 def _classification(*, number: int, is_dot: bool) -> SkillComponentClassification:
@@ -320,3 +347,45 @@ def test_dynamic_periodic_magnitude_waits_for_exact_tick_context() -> None:
 
     assert evidence.damage_value is None
     assert "dynamic per-tick magnitude requires exact-time runtime build context projection" in evidence.unresolved[0]
+
+
+def test_dynamic_periodic_magnitude_recomputes_each_exact_runtime_tick() -> None:
+    action = RotationAction(
+        0.0,
+        0,
+        RotationActionKind.SKILL,
+        name="periodic_skill",
+        bar="front",
+    )
+    runtime = _RuntimeContextResolver(
+        {
+            1.0: _context(tick_value=100.0),
+            2.0: _context(tick_value=200.0),
+        }
+    )
+    skill_damage = RotationCandidateSkillDamageEvidenceService(
+        database_path="unused-test.db",
+        context=_context(),
+        calculator=_DynamicCalculator(),
+        component_repository=_Components(
+            (_classification(number=1, is_dot=True),)
+        ),
+        periodic_runtime_projection_service=_PeriodicProjection(
+            _entry(action, number=1, ticks=(1.0, 2.0))
+        ),
+        periodic_runtime_semantics=_semantics(
+            "periodic_skill",
+            1,
+            magnitude_policy=PeriodicDamageMagnitudePolicy.DYNAMIC_AT_TICK,
+        ),
+        runtime_build_context_resolver=runtime,
+    )
+
+    evidence = skill_damage.evaluate_action(
+        candidate=_candidate(action),
+        action=action,
+    )
+
+    assert evidence.unresolved == ()
+    assert evidence.damage_value == 300.0
+    assert runtime.calls == [(1.0, None), (2.0, None)]
