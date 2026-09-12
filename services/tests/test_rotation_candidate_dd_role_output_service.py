@@ -80,7 +80,41 @@ def test_dd_role_output_fails_closed_when_any_required_damage_action_is_unresolv
     evidence = service.evaluate_plan(candidate)
 
     assert evidence.value is None
-    assert evidence.unresolved == ("light-attack combat consequence unresolved",)
+    assert evidence.unresolved == (
+        "0s #1 light_attack: light-attack combat consequence unresolved",
+    )
+
+
+def test_dd_role_output_keeps_repeated_blockers_bound_to_their_exact_casts() -> None:
+    first = RotationAction(1.0, 0, RotationActionKind.SKILL, name="stampede", bar="back")
+    second = RotationAction(6.0, 0, RotationActionKind.SKILL, name="stampede", bar="back")
+    candidate = _candidate(first, second)
+    provider = _DamageProvider(
+        {
+            (1.0, 0): RotationActionDamageEvidence(
+                1.0,
+                0,
+                None,
+                unresolved=("direct impact timing semantics unavailable",),
+            ),
+            (6.0, 0): RotationActionDamageEvidence(
+                6.0,
+                0,
+                None,
+                unresolved=("direct impact timing semantics unavailable",),
+            ),
+        }
+    )
+
+    evidence = RotationCandidateDDRoleOutputService(
+        action_damage_evidence_provider=provider,
+    ).evaluate_plan(candidate)
+
+    assert evidence.value is None
+    assert evidence.unresolved == (
+        "1s #0 skill stampede: direct impact timing semantics unavailable",
+        "6s #0 skill stampede: direct impact timing semantics unavailable",
+    )
 
 
 def test_dd_role_output_does_not_treat_missing_damage_value_as_zero() -> None:
@@ -97,7 +131,7 @@ def test_dd_role_output_does_not_treat_missing_damage_value_as_zero() -> None:
 
     assert evidence.value is None
     assert evidence.unresolved == (
-        "2s #0 skill: damage consequence unavailable",
+        "2s #0 skill skill_x: damage consequence unavailable",
     )
 
 
