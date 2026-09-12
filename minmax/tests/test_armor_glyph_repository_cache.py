@@ -67,3 +67,26 @@ def test_unresolved_named_glyph_is_cached(monkeypatch) -> None:
     assert repository.get_armor_glyph_effect_by_name("Definitely Missing Glyph") == []
     assert repository.get_armor_glyph_effect_by_name(" definitely missing glyph ") == []
     assert connect_count == 1
+
+
+def test_armor_glyph_name_catalog_is_cached_per_repository(monkeypatch) -> None:
+    original_connect = armor_glyph_module.sqlite3.connect
+    connect_count = 0
+
+    def counting_connect(*args, **kwargs):
+        nonlocal connect_count
+        connect_count += 1
+        return original_connect(*args, **kwargs)
+
+    monkeypatch.setattr(armor_glyph_module.sqlite3, "connect", counting_connect)
+    repository = ArmorGlyphEffectRepository(DB_PATH)
+
+    first = repository.list_names()
+    second = repository.list_names()
+
+    assert first == second
+    assert connect_count == 1
+
+    fresh_repository = ArmorGlyphEffectRepository(DB_PATH)
+    assert fresh_repository.list_names() == first
+    assert connect_count == 2
