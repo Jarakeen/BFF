@@ -129,6 +129,23 @@ def test_bow_light_attack_uses_preserved_uesp_formula() -> None:
     assert evidence.damage_value == pytest.approx(3465.0)
 
 
+def test_two_handed_light_attack_remains_explicitly_unresolved_without_source_formula() -> None:
+    light = RotationAction(0.0, 0, RotationActionKind.LIGHT_ATTACK, bar="front")
+    candidate = _candidate(light)
+    service = RotationCandidateLightAttackDamageEvidenceService(
+        build=_build(front=WeaponType.GREATSWORD),
+        evaluation=_evaluation(),
+        initial_bar="front",
+    )
+
+    evidence = service.evaluate_action(candidate=candidate, action=light)
+
+    assert evidence.damage_value is None
+    assert evidence.unresolved == (
+        "canonical light-attack damage formula unavailable for greatsword",
+    )
+
+
 def test_unsupported_weapon_family_remains_unresolved_not_zero() -> None:
     light = RotationAction(0.0, 0, RotationActionKind.LIGHT_ATTACK, bar="front")
     candidate = _candidate(light)
