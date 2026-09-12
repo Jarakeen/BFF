@@ -48,6 +48,10 @@ from services.rotation_dd_periodic_runtime_semantics_registry_service import (
 from services.rotation_heavy_sustain_projection_service import (
     RotationHeavySustainProjectionService,
 )
+from services.rotation_plan_runtime_build_context_service import (
+    RotationPlanRuntimeBuildContextService,
+    RotationRuntimeBuildContextResolver,
+)
 from services.rotation_saved_build_weapon_attack_evaluation_service import (
     RotationSavedBuildWeaponAttackEvaluationService,
     RotationWeaponAttackBuildEvaluationResolution,
@@ -80,7 +84,7 @@ class RotationGenerateDDWeaponAttackProviderFactory(Protocol):
 
 
 class _RotationGenerateBarAwareSkillDamageProvider:
-    """Evaluate one skill against the static context active at its exact plan point."""
+    """Evaluate one skill against the canonical context active at its exact plan point."""
 
     def __init__(
         self,
@@ -91,11 +95,13 @@ class _RotationGenerateBarAwareSkillDamageProvider:
         periodic_runtime_semantics: tuple[
             RotationPeriodicDamageRuntimeSemantics, ...
         ] = (),
+        runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
     ) -> None:
         self.database_path = database_path
         self.static_context = static_context
         self.target_resistance = float(target_resistance)
         self.periodic_runtime_semantics = tuple(periodic_runtime_semantics)
+        self.runtime_build_context_resolver = runtime_build_context_resolver
         self.periodic_runtime_projection_service = (
             RotationCandidatePeriodicDamageRuntimeProjectionService(
                 RotationCandidatePeriodicDamageTimingEvidenceService(database_path)
@@ -135,6 +141,7 @@ class _RotationGenerateBarAwareSkillDamageProvider:
             context=context,
             periodic_runtime_projection_service=self.periodic_runtime_projection_service,
             periodic_runtime_semantics=self.periodic_runtime_semantics,
+            runtime_build_context_resolver=self.runtime_build_context_resolver,
         ).evaluate_action(
             candidate=candidate,
             action=action,
@@ -300,13 +307,7 @@ class _RotationGenerateUnresolvedWeaponAttackProvider:
 
 
 class RotationGenerateDDCanonicalWeaponAttackProviderFactory:
-    """Production bridge from saved-build canonical state to weapon-attack providers.
-
-    Light attacks use the reviewed canonical LA calculator. Heavy attacks use the
-    reviewed canonical HA calculator only when the exact generated plan contains the
-    duration-aware scheduler's verified 1.8-second full-charge reservation. Both
-    families select the BuildEvaluation for the bar active at the action instant.
-    """
+    """Production bridge from saved-build canonical state to weapon-attack providers."""
 
     def __init__(
         self,
@@ -357,19 +358,31 @@ class RotationGenerateDDCanonicalWeaponAttackProviderFactory:
         )
 
 
+class _RotationGenerateSnapshotAwarePlanEvidenceProvider:
+    """Use static evidence normally and bind runtime evidence only after stabilization."""
+
+    def __init__(self, *, static_provider, runtime_provider_factory) -> None:
+        self.static_provider = static_provider
+        self.runtime_provider_factory = runtime_provider_factory
+
+    def evaluate_plan(self, candidate: GeneratedRotationCandidate):
+        return self.static_provider.evaluate_plan(candidate)
+
+    def for_stabilized_snapshot(self, snapshot):
+        if snapshot.runtime_combat_state_resolver is None:
+            return self.static_provider
+        return self.runtime_provider_factory(snapshot)
+
+
 class RotationGenerateDDRoleEvidenceSupport:
     """Compose fail-closed canonical DD role output for Generate candidates.
 
-    Skill and Ultimate damage reuse the existing candidate action-damage authorities.
-    Each skill is evaluated from the static front/back context active at its exact
-    ``(time_seconds, sequence)`` point. Target resistance must be explicit evidence.
-
-    Canonical light attacks are bar-aware. Canonical heavy attacks are also bar-aware,
-    but only scheduler-verified 1.8-second full-charge reservations are promoted to HA
-    completion evidence. Reviewed periodic semantics are loaded from the production
-    DD runtime registry. Empty/missing review data keeps DoTs unresolved; snapshot-at-
-    cast may reuse the cast context, while dynamic-at-tick stays blocked until exact-
-    time runtime context projection is connected.
+    Direct skills, Ultimates, LA, and verified completed HA use their existing
+    canonical evaluators. Reviewed periodic semantics come from the production DD
+    runtime registry. Snapshot DoTs reuse cast-time magnitude only when explicitly
+    reviewed as such. Dynamic DoTs bind to the final stabilized candidate's runtime
+    combat-state resolver and rebuild exact-time calculation context for every tick.
+    Without authoritative runtime history they remain unresolved.
     """
 
     def __init__(
@@ -421,11 +434,77 @@ class RotationGenerateDDRoleEvidenceSupport:
 
         periodic_runtime_semantics = self.periodic_runtime_semantics_registry.load()
         target_resistance = float(evidence_bundle.target_resistance)
+        static_plan_evidence = self._build_plan_evidence_provider(
+            player_build=player_build,
+            evidence_bundle=evidence_bundle,
+            static_context=static_context,
+            target_resistance=target_resistance,
+            periodic_runtime_semantics=periodic_runtime_semantics,
+            runtime_build_context_resolver=None,
+        )
+        runtime_context_service = RotationPlanRuntimeBuildContextService(
+            static_context_service=self.static_context_service,
+        )
+
+        def runtime_provider_factory(snapshot):
+            def resolve_runtime_context(
+                time_seconds: float,
+                sequence: int | None = None,
+            ):
+                result = runtime_context_service.resolve(
+                    player_build,
+                    runtime_combat_state_resolver=snapshot.runtime_combat_state_resolver,
+                    time_seconds=time_seconds,
+                    sequence=sequence,
+                )
+                if not result.resolved or result.context is None:
+                    return result
+                context = replace(
+                    result.context,
+                    target_resistance=target_resistance,
+                    fight_duration=float(snapshot.plan.duration_seconds),
+                )
+                return replace(result, context=context)
+
+            return self._build_plan_evidence_provider(
+                player_build=player_build,
+                evidence_bundle=evidence_bundle,
+                static_context=static_context,
+                target_resistance=target_resistance,
+                periodic_runtime_semantics=periodic_runtime_semantics,
+                runtime_build_context_resolver=resolve_runtime_context,
+            )
+
+        plan_evidence = _RotationGenerateSnapshotAwarePlanEvidenceProvider(
+            static_provider=static_plan_evidence,
+            runtime_provider_factory=runtime_provider_factory,
+        )
+        return RotationCanonicalRoleEvidence(
+            plan_evidence_provider=plan_evidence,
+            role_output_label="projected DPS",
+            assigned_support_label="assigned support coverage",
+            content_type=str(evidence_bundle.content_type or "").strip(),
+            role_key=role_key,
+        )
+
+    def _build_plan_evidence_provider(
+        self,
+        *,
+        player_build: PlayerBuild,
+        evidence_bundle: RotationCanonicalEvidenceBundle,
+        static_context,
+        target_resistance: float,
+        periodic_runtime_semantics: tuple[
+            RotationPeriodicDamageRuntimeSemantics, ...
+        ],
+        runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None,
+    ):
         skill_provider = _RotationGenerateBarAwareSkillDamageProvider(
             database_path=self.database_path,
             static_context=static_context,
             target_resistance=target_resistance,
             periodic_runtime_semantics=periodic_runtime_semantics,
+            runtime_build_context_resolver=runtime_build_context_resolver,
         )
         ultimate_provider = RotationCandidateUltimateDamageEvidenceService(
             skill_damage_delegate=skill_provider,
@@ -451,17 +530,10 @@ class RotationGenerateDDRoleEvidenceSupport:
         role_output = RotationCandidateDDRoleOutputService(
             action_damage_evidence_provider=action_router,
         )
-        plan_evidence = RotationCandidateCanonicalPlanEvidenceService(
+        return RotationCandidateCanonicalPlanEvidenceService(
             build=player_build,
             resource=evidence_bundle.resource,
             role_output_evidence_provider=role_output,
-        )
-        return RotationCanonicalRoleEvidence(
-            plan_evidence_provider=plan_evidence,
-            role_output_label="projected DPS",
-            assigned_support_label="assigned support coverage",
-            content_type=str(evidence_bundle.content_type or "").strip(),
-            role_key=role_key,
         )
 
 
