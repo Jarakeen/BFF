@@ -18,6 +18,12 @@ from minmax.skill_component_runtime_timing import (
 from minmax.skill_component_text_evidence import extract_component_text_evidence
 
 
+_PERIODIC_SKILL_ACTION_KINDS = {
+    RotationActionKind.SKILL,
+    RotationActionKind.ULTIMATE,
+}
+
+
 @dataclass(frozen=True)
 class RotationPeriodicDamageTimingEntry:
     """Canonical cadence/duration evidence for one periodic damage component.
@@ -73,11 +79,13 @@ class RotationPeriodicDamageTimingReport:
 
 
 class RotationCandidatePeriodicDamageTimingEvidenceService:
-    """Resolve periodic-damage cadence and duration for one scheduled skill.
+    """Resolve periodic-damage cadence and duration for one scheduled named skill.
 
-    This is a composition helper over existing shared mechanics. Canonical skill
-    identity remains owned by ``SkillCoefficientRepository``; component identity
-    by ``SkillComponentRepository``; coefficient-local cadence by
+    Ordinary skill and Ultimate actions both carry canonical skill identities and may
+    own coefficient-bearing periodic damage. This is a composition helper over
+    existing shared mechanics. Canonical skill identity remains owned by
+    ``SkillCoefficientRepository``; component identity by
+    ``SkillComponentRepository``; coefficient-local cadence by
     ``extract_skill_component_runtime_timing``; and duration by the existing
     rotation-duration evidence resolver. The service does not invent first-tick
     timing, refresh semantics, or concrete tick events.
@@ -99,19 +107,19 @@ class RotationCandidatePeriodicDamageTimingEvidenceService:
         )
 
     def inspect_action(self, action: RotationAction) -> RotationPeriodicDamageTimingReport:
-        if action.kind is not RotationActionKind.SKILL:
+        if action.kind not in _PERIODIC_SKILL_ACTION_KINDS:
             return RotationPeriodicDamageTimingReport(
                 action=action,
                 entries=(),
                 unresolved=(
-                    f"{action.kind.value} is not a scheduled skill action for periodic-damage timing",
+                    f"{action.kind.value} is not a scheduled named-skill action for periodic-damage timing",
                 ),
             )
         if not str(action.name or "").strip():
             return RotationPeriodicDamageTimingReport(
                 action=action,
                 entries=(),
-                unresolved=("scheduled skill action has no canonical skill identity",),
+                unresolved=("scheduled named-skill action has no canonical skill identity",),
             )
 
         resolution = self.coefficients.resolve_entity_id(str(action.name))
