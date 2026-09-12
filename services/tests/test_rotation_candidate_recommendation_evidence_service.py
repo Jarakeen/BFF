@@ -81,6 +81,7 @@ def _plan_evidence(
     support: float | None = None,
     sustain: float | None = 1000.0,
     displacement: float | None = 0.0,
+    output_unresolved: tuple[str, ...] = (),
 ):
     return RotationCandidatePlanEvidence(
         sustain=object(),
@@ -89,6 +90,7 @@ def _plan_evidence(
         assigned_support_value=support,
         sustain_margin=sustain,
         primary_role_displacement_seconds=displacement,
+        role_output_unresolved=output_unresolved,
     )
 
 
@@ -201,8 +203,14 @@ def test_shared_hard_obligation_context_is_forwarded_unchanged_to_scorecard_serv
 
 def test_evidence_bridge_fails_closed_when_role_critical_measurement_is_unknown() -> None:
     candidate = _candidate("unknown-output")
+    blocker = "unnerving_boneyard coefficient 1: reviewed periodic runtime semantics are unavailable"
     plan_provider = _PlanEvidenceProvider(
-        {"unknown-output": _plan_evidence(output=None)}
+        {
+            "unknown-output": _plan_evidence(
+                output=None,
+                output_unresolved=(blocker,),
+            )
+        }
     )
     scorecards = _ScorecardService({"unknown-output": _scorecard()})
     evidence_service = RotationCandidateRecommendationEvidenceService(
@@ -224,6 +232,8 @@ def test_evidence_bridge_fails_closed_when_role_critical_measurement_is_unknown(
     assert "role ranking evidence missing: role output" in (
         result.best_available.ranking.role_reasons
     )
+    assert result.best_available.evidence.diagnostics == (blocker,)
+    assert blocker in result.best_available.reasons
 
 
 def test_evidence_bridge_rejects_cross_family_baseline_reuse() -> None:
