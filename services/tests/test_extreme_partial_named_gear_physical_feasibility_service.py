@@ -10,6 +10,7 @@ from services.extreme_named_gear_set_slot_eligibility_service import (
 from services.extreme_partial_named_gear_physical_feasibility_service import (
     ExtremePartialNamedGearPhysicalFeasibilityService,
 )
+from services.service_catalog import canonical_service_for
 
 
 _BODY = ("Head", "Shoulders", "Chest", "Hands", "Waist", "Legs", "Feet")
@@ -51,6 +52,16 @@ def _rings_only(set_id: int) -> ExtremeNamedGearSetSlotEligibility:
         armor_slots=(),
         jewelry_slots=("Ring",),
         weapon_types=(),
+    )
+
+
+def test_partial_named_gear_feasibility_is_registered_canonically() -> None:
+    descriptor = canonical_service_for("partial_named_gear_physical_feasibility")
+
+    assert descriptor is not None
+    assert descriptor.service_id == "extreme.partial_named_gear_physical_feasibility"
+    assert descriptor.implementation_path == (
+        "services.extreme_partial_named_gear_physical_feasibility_service"
     )
 
 
