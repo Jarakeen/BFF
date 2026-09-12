@@ -11,8 +11,11 @@ from minmax.stat_ids import StatId
 from services.rotation_candidate_dd_role_output_service import RotationCandidateDDRoleOutputService
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 from services.rotation_candidate_periodic_damage_runtime_projection_service import (
+    PeriodicDamageMagnitudePolicy,
+    PeriodicDamageRefreshBoundary,
     RotationPeriodicDamageRuntimeProjection,
     RotationPeriodicDamageRuntimeProjectionEntry,
+    RotationPeriodicDamageRuntimeSemantics,
 )
 from services.rotation_candidate_skill_damage_evidence_service import (
     RotationCandidateSkillDamageEvidenceService,
@@ -118,6 +121,24 @@ def _entry(action: RotationAction, *, number: int, ticks: tuple[float, ...], unr
     )
 
 
+def _semantics(
+    skill: str,
+    number: int,
+    *,
+    magnitude_policy: PeriodicDamageMagnitudePolicy = PeriodicDamageMagnitudePolicy.SNAPSHOT_AT_CAST,
+):
+    return (
+        RotationPeriodicDamageRuntimeSemantics(
+            skill_entity_id=skill,
+            coefficient_number=number,
+            first_tick_offset_seconds=1.0,
+            refresh_boundary=PeriodicDamageRefreshBoundary.REPLACE_BEFORE_RECAST_TICK,
+            source="reviewed runtime evidence",
+            magnitude_policy=magnitude_policy,
+        ),
+    )
+
+
 def test_periodic_runtime_ticks_contribute_to_whole_plan_dd_output() -> None:
     action = RotationAction(
         0.0,
@@ -129,6 +150,7 @@ def test_periodic_runtime_ticks_contribute_to_whole_plan_dd_output() -> None:
     projection = _PeriodicProjection(
         _entry(action, number=1, ticks=(2.0, 4.0, 6.0))
     )
+    semantics = _semantics("periodic_skill", 1)
     skill_damage = RotationCandidateSkillDamageEvidenceService(
         database_path="unused-test.db",
         context=_context(),
@@ -139,6 +161,7 @@ def test_periodic_runtime_ticks_contribute_to_whole_plan_dd_output() -> None:
             (_classification(number=1, is_dot=True),)
         ),
         periodic_runtime_projection_service=projection,
+        periodic_runtime_semantics=semantics,
     )
     candidate = _candidate(action)
 
@@ -148,7 +171,7 @@ def test_periodic_runtime_ticks_contribute_to_whole_plan_dd_output() -> None:
 
     assert result.unresolved == ()
     assert result.value == 30.0
-    assert projection.calls == [(candidate.plan, ())]
+    assert projection.calls == [(candidate.plan, semantics)]
 
 
 def test_mixed_direct_and_periodic_components_sum_under_parent_cast() -> None:
@@ -177,6 +200,7 @@ def test_mixed_direct_and_periodic_components_sum_under_parent_cast() -> None:
         periodic_runtime_projection_service=_PeriodicProjection(
             _entry(action, number=2, ticks=(1.0, 2.0))
         ),
+        periodic_runtime_semantics=_semantics("mixed_skill", 2),
     )
 
     evidence = skill_damage.evaluate_action(
@@ -209,6 +233,7 @@ def test_unresolved_periodic_runtime_entry_keeps_whole_skill_damage_unknown() ->
         periodic_runtime_projection_service=_PeriodicProjection(
             _entry(action, number=1, ticks=(), unresolved=(reason,))
         ),
+        periodic_runtime_semantics=_semantics("periodic_skill", 1),
     )
 
     evidence = skill_damage.evaluate_action(
@@ -218,3 +243,80 @@ def test_unresolved_periodic_runtime_entry_keeps_whole_skill_damage_unknown() ->
 
     assert evidence.damage_value is None
     assert evidence.unresolved == (reason,)
+
+
+def test_missing_periodic_magnitude_policy_fails_closed() -> None:
+    action = RotationAction(
+        0.0,
+        0,
+        RotationActionKind.SKILL,
+        name="periodic_skill",
+        bar="front",
+    )
+    semantics = (
+        RotationPeriodicDamageRuntimeSemantics(
+            skill_entity_id="periodic_skill",
+            coefficient_number=1,
+            first_tick_offset_seconds=1.0,
+            refresh_boundary=PeriodicDamageRefreshBoundary.REPLACE_BEFORE_RECAST_TICK,
+            source="reviewed runtime evidence",
+        ),
+    )
+    skill_damage = RotationCandidateSkillDamageEvidenceService(
+        database_path="unused-test.db",
+        context=_context(),
+        calculator=_Calculator(
+            (SimpleNamespace(coefficient_number=1, final_value=100.0),)
+        ),
+        component_repository=_Components(
+            (_classification(number=1, is_dot=True),)
+        ),
+        periodic_runtime_projection_service=_PeriodicProjection(
+            _entry(action, number=1, ticks=(1.0, 2.0))
+        ),
+        periodic_runtime_semantics=semantics,
+    )
+
+    evidence = skill_damage.evaluate_action(
+        candidate=_candidate(action),
+        action=action,
+    )
+
+    assert evidence.damage_value is None
+    assert "periodic magnitude timing policy is unavailable" in evidence.unresolved[0]
+
+
+def test_dynamic_periodic_magnitude_waits_for_exact_tick_context() -> None:
+    action = RotationAction(
+        0.0,
+        0,
+        RotationActionKind.SKILL,
+        name="periodic_skill",
+        bar="front",
+    )
+    skill_damage = RotationCandidateSkillDamageEvidenceService(
+        database_path="unused-test.db",
+        context=_context(),
+        calculator=_Calculator(
+            (SimpleNamespace(coefficient_number=1, final_value=100.0),)
+        ),
+        component_repository=_Components(
+            (_classification(number=1, is_dot=True),)
+        ),
+        periodic_runtime_projection_service=_PeriodicProjection(
+            _entry(action, number=1, ticks=(1.0, 2.0))
+        ),
+        periodic_runtime_semantics=_semantics(
+            "periodic_skill",
+            1,
+            magnitude_policy=PeriodicDamageMagnitudePolicy.DYNAMIC_AT_TICK,
+        ),
+    )
+
+    evidence = skill_damage.evaluate_action(
+        candidate=_candidate(action),
+        action=action,
+    )
+
+    assert evidence.damage_value is None
+    assert "dynamic per-tick magnitude requires exact-time runtime build context projection" in evidence.unresolved[0]
