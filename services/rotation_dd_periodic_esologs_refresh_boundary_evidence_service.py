@@ -18,9 +18,13 @@ class RotationDDPeriodicEsoLogsRefreshBoundaryObservation:
     new_cast_track_id: int | None
     old_impact_timestamp_ms: float
     new_impact_timestamp_ms: float
+    new_impact_event_index: int
     old_periodic_before_boundary: int
     old_periodic_at_boundary: int
     old_periodic_after_boundary: int
+    exact_boundary_old_tick_before_impact: int
+    exact_boundary_old_tick_after_impact: int
+    exact_boundary_old_tick_event_indices: tuple[int, ...]
     last_old_periodic_offset_seconds: float | None
     first_new_periodic_offset_seconds: float | None
 
@@ -41,6 +45,14 @@ class RotationDDPeriodicEsoLogsRefreshBoundaryEvidenceReport:
     @property
     def old_tick_after_boundary_count(self) -> int:
         return sum(item.old_periodic_after_boundary for item in self.observations)
+
+    @property
+    def exact_boundary_old_tick_before_impact_count(self) -> int:
+        return sum(item.exact_boundary_old_tick_before_impact for item in self.observations)
+
+    @property
+    def exact_boundary_old_tick_after_impact_count(self) -> int:
+        return sum(item.exact_boundary_old_tick_after_impact for item in self.observations)
 
     @property
     def observations_with_old_periodic(self) -> int:
@@ -71,8 +83,10 @@ class RotationDDPeriodicEsoLogsRefreshBoundaryEvidenceService:
     Canonical lower-snake identity selects the cast skill. Numeric impact/periodic
     IDs are evidence handles only. The service relies on ESO Logs cast-track IDs when
     available so old-instance periodic events can be distinguished from the new
-    instance after replacement. Results remain observational and are never promoted
-    into executable refresh semantics automatically.
+    instance after replacement. Exact timestamp ties are also ordered by ESO Logs
+    ``event_index`` so a same-millisecond old tick can be distinguished as occurring
+    before or after the new impact event. Results remain observational and are never
+    promoted into executable refresh semantics automatically.
     """
 
     _CAST_TYPES = ("cast", "completecast", "begincast")
@@ -219,6 +233,7 @@ class RotationDDPeriodicEsoLogsRefreshBoundaryEvidenceService:
                         continue
                     old_impact_time = float(old_impact["timestamp"])
                     new_impact_time = float(new_impact["timestamp"])
+                    new_impact_index = int(new_impact["event_index"])
                     if new_impact_time <= old_impact_time:
                         continue
                     if new_impact_time - old_impact_time > float(active_window_seconds) * 1000.0:
@@ -251,6 +266,17 @@ class RotationDDPeriodicEsoLogsRefreshBoundaryEvidenceService:
                         for row in old_periodic
                         if float(row["timestamp"]) > new_impact_time + tolerance
                     )
+                    exact_boundary = tuple(
+                        row
+                        for row in old_periodic
+                        if float(row["timestamp"]) == new_impact_time
+                    )
+                    exact_before_impact = tuple(
+                        row for row in exact_boundary if int(row["event_index"]) < new_impact_index
+                    )
+                    exact_after_impact = tuple(
+                        row for row in exact_boundary if int(row["event_index"]) > new_impact_index
+                    )
                     last_old = max(
                         (float(row["timestamp"]) for row in old_periodic),
                         default=None,
@@ -268,9 +294,15 @@ class RotationDDPeriodicEsoLogsRefreshBoundaryEvidenceService:
                             new_cast_track_id=new_track,
                             old_impact_timestamp_ms=old_impact_time,
                             new_impact_timestamp_ms=new_impact_time,
+                            new_impact_event_index=new_impact_index,
                             old_periodic_before_boundary=len(before),
                             old_periodic_at_boundary=len(at_boundary),
                             old_periodic_after_boundary=len(after),
+                            exact_boundary_old_tick_before_impact=len(exact_before_impact),
+                            exact_boundary_old_tick_after_impact=len(exact_after_impact),
+                            exact_boundary_old_tick_event_indices=tuple(
+                                int(row["event_index"]) for row in exact_boundary
+                            ),
                             last_old_periodic_offset_seconds=(
                                 None
                                 if last_old is None
