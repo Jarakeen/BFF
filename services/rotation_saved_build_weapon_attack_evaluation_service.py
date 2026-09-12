@@ -140,7 +140,8 @@ class RotationSavedBuildWeaponAttackEvaluationService:
     structure remains owned by ``SavedBuildCharacterAdapter``. This service only packages
     those existing truths into the ``BuildEvaluation`` contract consumed by the reviewed
     light/heavy-attack calculators and adds explicitly mapped weapon-attack modifier
-    contributions.
+    contributions. Target-state-dependent Exploiter remains a stored magnitude here;
+    LA/HA evaluators decide whether it applies from exact target CombatState.
     """
 
     def __init__(
@@ -158,6 +159,19 @@ class RotationSavedBuildWeaponAttackEvaluationService:
         self.build_adapter = build_adapter or SavedBuildCharacterAdapter(self.database_path)
         self.contribution_service = (
             contribution_service or RotationSavedBuildWeaponAttackContributionService()
+        )
+
+    @staticmethod
+    def _conditional_exploiter_contribution(value: float) -> CombatContribution | None:
+        bonus = max(0.0, float(value))
+        if bonus <= 0.0:
+            return None
+        return CombatContribution(
+            source="Champion Point: Exploiter runtime magnitude",
+            effect_type="conditional_exploiter_damage_done",
+            raw_value=bonus,
+            uptime=1.0,
+            effective_value=bonus,
         )
 
     def resolve(
@@ -203,13 +217,21 @@ class RotationSavedBuildWeaponAttackEvaluationService:
                     f"{context.active_bar} weapon-attack evaluation requires resolved canonical core stats"
                 )
                 continue
+            conditional = self._conditional_exploiter_contribution(
+                getattr(context, "dd_exploiter_bonus", 0.0)
+            )
+            context_contributions = (
+                contributions
+                if conditional is None
+                else (*contributions, conditional)
+            )
             evaluations.append(
                 (
                     context.active_bar,
                     BuildEvaluation(
                         stats=calculation,
                         combat_effects=(),
-                        combat_contributions=contributions,
+                        combat_contributions=context_contributions,
                     ),
                 )
             )
