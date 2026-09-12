@@ -23,6 +23,7 @@ class _Status:
 class _Page:
     def __init__(self, context=None) -> None:
         self.rotation_generate_canonical_context = context
+        self.rotation_generate_canonical_context_provider = None
         self.status = _Status()
         self.bundle_calls = []
         self.run_calls = []
@@ -151,6 +152,7 @@ def test_set_and_clear_context_are_explicit_opt_in_controls() -> None:
 
     support.set_context(page, context)
     assert page.rotation_generate_canonical_context is context
+    assert page.rotation_generate_canonical_context_provider is None
 
     support.clear_context(page)
     assert page.rotation_generate_canonical_context is None
@@ -234,3 +236,89 @@ def test_generate_composes_role_evidence_from_exact_build_and_bundle() -> None:
     _, kwargs = page.run_calls[0]
     assert kwargs["role_evidence"] is composer.result
     assert page.status.warnings == []
+
+
+class _ContextProvider:
+    def __init__(self, contexts) -> None:
+        self.contexts = list(contexts)
+        self.calls = []
+
+    def context_for(self, page):
+        self.calls.append(
+            {
+                "page": page,
+                "build": page._selected_build(),
+                "encounter_id": page.selected_encounter_id(),
+            }
+        )
+        return self.contexts[len(self.calls) - 1]
+
+
+def test_context_provider_is_resolved_fresh_for_each_generate_click() -> None:
+    support = RotationGenerateActionSupport()
+    first = _context(role_evidence="first-role-evidence")
+    second = _context(role_evidence="second-role-evidence")
+    provider = _ContextProvider((first, second))
+    page = _Page(context=None)
+    support.set_context_provider(page, provider)
+
+    first_build = page.build
+    support.generate(page)
+    page.build = SimpleNamespace(Role="Healer")
+    support.generate(page)
+
+    assert page.rotation_generate_canonical_context is None
+    assert page.rotation_generate_canonical_context_provider is provider
+    assert [call["build"] for call in provider.calls] == [first_build, page.build]
+    assert [call["encounter_id"] for call in provider.calls] == [
+        "sunspire_lokkestiiz",
+        "sunspire_lokkestiiz",
+    ]
+    assert page.bundle_calls == [first.evidence_inputs, second.evidence_inputs]
+    assert [kwargs["role_evidence"] for _, kwargs in page.run_calls] == [
+        "first-role-evidence",
+        "second-role-evidence",
+    ]
+
+
+def test_static_context_and_provider_are_mutually_exclusive() -> None:
+    support = RotationGenerateActionSupport()
+    page = _Page(context=None)
+    provider = _ContextProvider((_context(),))
+    context = _context()
+
+    support.set_context_provider(page, provider)
+    assert page.rotation_generate_canonical_context is None
+    assert page.rotation_generate_canonical_context_provider is provider
+
+    support.set_context(page, context)
+    assert page.rotation_generate_canonical_context is context
+    assert page.rotation_generate_canonical_context_provider is None
+
+
+def test_context_provider_failure_blocks_without_plain_fallback(monkeypatch) -> None:
+    support = RotationGenerateActionSupport()
+    page = _Page(context=None)
+    plain_calls = []
+
+    class _BlockedProvider:
+        @staticmethod
+        def context_for(_page):
+            raise ValueError("explicit recovery trigger is not configured")
+
+    support.set_context_provider(page, _BlockedProvider())
+    monkeypatch.setattr(
+        RotationDashboardPage,
+        "generate_rotation",
+        lambda supplied_page: plain_calls.append(supplied_page),
+    )
+
+    support.generate(page)
+
+    assert plain_calls == []
+    assert page.bundle_calls == []
+    assert page.run_calls == []
+    assert page.status.warnings == [
+        "Encounter-aware rotation generation blocked: "
+        "explicit recovery trigger is not configured"
+    ]
