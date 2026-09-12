@@ -35,6 +35,56 @@ EXTREME_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.max_resource_joint_named_gear_feasibility",
+        domain="extreme",
+        purpose=(
+            "Prove concrete distinct-identity plus physical-slot feasibility before score-ordered "
+            "max-resource named-gear search."
+        ),
+        implementation_path="services.extreme_max_resource_joint_feasibility_search_service",
+        inputs=(
+            "ExtremeGearSetTopologyCatalog",
+            "ExtremeGearSetBonusBreakpointCatalog",
+            "ExtremeNamedGearSetSlotEligibilityCatalog",
+            "ExtremeGearSetObjectiveRelevanceCatalog",
+        ),
+        outputs=("ExtremeMaxResourceOrdinaryNamedGearSearchResult",),
+        dependencies=(
+            "extreme.max_resource_ordinary_named_gear_search",
+            "extreme.partial_named_gear_physical_feasibility",
+        ),
+        responsibilities=("extreme_max_resource_joint_named_gear_feasibility",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Feasibility-only constrained search reorders topology labels but preserves the exact "
+            "count multiset; false proves impossibility, true only permits exact score search."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.max_resource_named_gear_realization_adapter",
+        domain="extreme",
+        purpose=(
+            "Expose exact ordinary Max Magicka and Max Stamina named-gear winners through the "
+            "legacy realization contract with canonical dual-bar admissibility proof."
+        ),
+        implementation_path="services.extreme_max_resource_named_gear_realization_adapter_service",
+        inputs=(
+            "ExtremeMaxResourceOrdinaryNamedGearSearchResult",
+            "ExtremeGearSetTopologyCatalog",
+            "ExtremeGearSetObjectiveRelevanceCatalog",
+        ),
+        outputs=("ExtremeObjectiveNamedGearSetCatalogRealizationResult",),
+        dependencies=("extreme.max_resource_joint_named_gear_feasibility",),
+        responsibilities=("extreme_max_resource_named_gear_realization_adaptation",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Any non-ordinary Max Magicka or Max Stamina branch remains explicit unresolved evidence "
+            "and prevents denominator closure."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.max_health_special_named_gear_branches",
         domain="extreme",
         purpose=(
