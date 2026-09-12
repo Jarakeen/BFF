@@ -114,7 +114,7 @@ def test_generate_context_rejects_ambiguous_role_evidence_sources() -> None:
         assigned_support_label="assigned support coverage",
     )
 
-    with pytest.raises(ValueError, match="either explicit role_evidence"):
+    with pytest.raises(ValueError, match="supply only one"):
         RotationGenerateCanonicalContext(
             evidence_inputs=_inputs(),
             role_evidence=explicit,
@@ -136,4 +136,62 @@ def test_automatic_role_evidence_requires_explicit_saved_build_role() -> None:
         context.role_evidence_for(
             player_build=SimpleNamespace(Role=""),
             content_type="trial",
+        )
+
+
+class _RoleEvidenceComposer:
+    def __init__(self) -> None:
+        self.calls = []
+        self.result = object()
+
+    def compose(self, **kwargs):
+        self.calls.append(kwargs)
+        return self.result
+
+
+def test_generate_context_delegates_to_bundle_aware_role_composer() -> None:
+    composer = _RoleEvidenceComposer()
+    context = RotationGenerateCanonicalContext(
+        evidence_inputs=_inputs(),
+        role_evidence_composer=composer,
+    )
+    build = SimpleNamespace(Role="Healer")
+    bundle = object()
+
+    result = context.role_evidence_for(
+        player_build=build,
+        evidence_bundle=bundle,
+    )
+
+    assert result is composer.result
+    assert composer.calls == [
+        {
+            "player_build": build,
+            "evidence_bundle": bundle,
+        }
+    ]
+
+
+def test_generate_context_composer_requires_resolved_bundle() -> None:
+    context = RotationGenerateCanonicalContext(
+        evidence_inputs=_inputs(),
+        role_evidence_composer=_RoleEvidenceComposer(),
+    )
+
+    with pytest.raises(ValueError, match="requires a resolved evidence bundle"):
+        context.role_evidence_for(
+            player_build=SimpleNamespace(Role="Healer"),
+        )
+
+
+def test_generate_context_rejects_composer_with_another_role_source() -> None:
+    with pytest.raises(ValueError, match="supply only one"):
+        RotationGenerateCanonicalContext(
+            evidence_inputs=_inputs(),
+            role_evidence_inputs=RotationGenerateRoleEvidenceInputs(
+                plan_evidence_provider=object(),  # type: ignore[arg-type]
+                role_output_label="primary role output",
+                assigned_support_label="assigned support coverage",
+            ),
+            role_evidence_composer=_RoleEvidenceComposer(),
         )
