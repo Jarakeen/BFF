@@ -5,6 +5,8 @@ from pathlib import Path
 from typing import Protocol
 
 from engine.config import get_data_dir
+from minmax.build_candidate_damage import calculation_result_from_build_context
+from minmax.build_evaluation import BuildEvaluation
 from minmax.evaluation_context import EvaluationContext
 from minmax.rotation_plan import RotationAction, RotationActionKind
 from models.build_model import PlayerBuild
@@ -69,6 +71,61 @@ def _canonical_role(value: object) -> str:
     return "_".join(str(value or "").strip().casefold().replace("-", " ").split())
 
 
+def _weapon_attack_evaluation_at(
+    *,
+    evaluation: RotationWeaponAttackBuildEvaluationResolution,
+    static_context,
+    candidate: GeneratedRotationCandidate,
+    action: RotationAction,
+    runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None,
+) -> tuple[BuildEvaluation | None, object | None, tuple[str, ...]]:
+    """Resolve one LA/HA evaluation from the exact canonical action-time context."""
+
+    if runtime_build_context_resolver is not None:
+        runtime = runtime_build_context_resolver(
+            action.time_seconds,
+            action.sequence,
+        )
+        if not runtime.resolved or runtime.context is None:
+            unresolved = tuple(
+                dict.fromkeys(
+                    str(message).strip()
+                    for message in runtime.unresolved
+                    if str(message).strip()
+                )
+            ) or ("runtime weapon-attack build context is unresolved",)
+            return None, None, unresolved
+        context = runtime.context
+        active_bar = runtime.active_bar
+    else:
+        resolver = RotationActiveBarContextResolverService(
+            static_context=static_context,
+            plan=candidate.plan,
+        )
+        context = resolver.context_at(action.time_seconds, action.sequence)
+        active_bar = context.active_bar
+
+    base_evaluation = evaluation.evaluation_for(active_bar)
+    if base_evaluation is None:
+        return (
+            None,
+            context,
+            (f"{active_bar} canonical weapon-attack BuildEvaluation is unavailable",),
+        )
+
+    calculation = calculation_result_from_build_context(context)
+    if calculation is None:
+        return (
+            None,
+            context,
+            (
+                f"{active_bar} weapon-attack evaluation requires resolved canonical core stats",
+            ),
+        )
+
+    return replace(base_evaluation, stats=calculation), context, ()
+
+
 class RotationGenerateDDWeaponAttackProviderFactory(Protocol):
     """Supply verified LA/HA evaluators from one canonical saved-build evaluation."""
 
@@ -78,6 +135,7 @@ class RotationGenerateDDWeaponAttackProviderFactory(Protocol):
         player_build: PlayerBuild,
         static_context,
         target_resistance: float,
+        runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
     ) -> tuple[
         RotationActionDamageProvider | None,
         RotationActionDamageProvider | None,
@@ -153,7 +211,7 @@ class _RotationGenerateBarAwareSkillDamageProvider:
 
 
 class _RotationGenerateBarAwareLightAttackDamageProvider:
-    """Evaluate each light attack from the canonical build state active on its bar."""
+    """Evaluate each light attack from the exact canonical state active on its bar."""
 
     def __init__(
         self,
@@ -161,6 +219,7 @@ class _RotationGenerateBarAwareLightAttackDamageProvider:
         evaluation: RotationWeaponAttackBuildEvaluationResolution,
         static_context,
         target_resistance: float,
+        runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
     ) -> None:
         if not evaluation.resolved or evaluation.build is None:
             raise ValueError(
@@ -169,6 +228,7 @@ class _RotationGenerateBarAwareLightAttackDamageProvider:
         self.evaluation = evaluation
         self.static_context = static_context
         self.target_resistance = float(target_resistance)
+        self.runtime_build_context_resolver = runtime_build_context_resolver
 
     def evaluate_action(
         self,
@@ -186,20 +246,19 @@ class _RotationGenerateBarAwareLightAttackDamageProvider:
                 ),
             )
 
-        resolver = RotationActiveBarContextResolverService(
+        build_evaluation, context, unresolved = _weapon_attack_evaluation_at(
+            evaluation=self.evaluation,
             static_context=self.static_context,
-            plan=candidate.plan,
+            candidate=candidate,
+            action=action,
+            runtime_build_context_resolver=self.runtime_build_context_resolver,
         )
-        context = resolver.context_at(action.time_seconds, action.sequence)
-        build_evaluation = self.evaluation.evaluation_for(context.active_bar)
-        if build_evaluation is None:
+        if build_evaluation is None or context is None:
             return RotationActionDamageEvidence(
                 time_seconds=action.time_seconds,
                 sequence=action.sequence,
                 damage_value=None,
-                unresolved=(
-                    f"{context.active_bar} canonical weapon-attack BuildEvaluation is unavailable",
-                ),
+                unresolved=unresolved,
             )
 
         return RotationCandidateLightAttackDamageEvidenceService(
@@ -210,6 +269,7 @@ class _RotationGenerateBarAwareLightAttackDamageProvider:
                 fight_duration=float(candidate.plan.duration_seconds),
                 target_resistance=self.target_resistance,
             ),
+            attacker_combat_state=getattr(context, "combat_state", None),
         ).evaluate_action(
             candidate=candidate,
             action=action,
@@ -217,7 +277,7 @@ class _RotationGenerateBarAwareLightAttackDamageProvider:
 
 
 class _RotationGenerateBarAwareHeavyAttackDamageProvider:
-    """Evaluate only scheduler-verified fully charged heavies on their active bar."""
+    """Evaluate only scheduler-verified fully charged heavies on their exact runtime bar."""
 
     def __init__(
         self,
@@ -225,6 +285,7 @@ class _RotationGenerateBarAwareHeavyAttackDamageProvider:
         evaluation: RotationWeaponAttackBuildEvaluationResolution,
         static_context,
         target_resistance: float,
+        runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
     ) -> None:
         if not evaluation.resolved or evaluation.build is None:
             raise ValueError(
@@ -233,6 +294,7 @@ class _RotationGenerateBarAwareHeavyAttackDamageProvider:
         self.evaluation = evaluation
         self.static_context = static_context
         self.target_resistance = float(target_resistance)
+        self.runtime_build_context_resolver = runtime_build_context_resolver
 
     def evaluate_action(
         self,
@@ -250,20 +312,19 @@ class _RotationGenerateBarAwareHeavyAttackDamageProvider:
                 ),
             )
 
-        resolver = RotationActiveBarContextResolverService(
+        build_evaluation, context, unresolved = _weapon_attack_evaluation_at(
+            evaluation=self.evaluation,
             static_context=self.static_context,
-            plan=candidate.plan,
+            candidate=candidate,
+            action=action,
+            runtime_build_context_resolver=self.runtime_build_context_resolver,
         )
-        context = resolver.context_at(action.time_seconds, action.sequence)
-        build_evaluation = self.evaluation.evaluation_for(context.active_bar)
-        if build_evaluation is None:
+        if build_evaluation is None or context is None:
             return RotationActionDamageEvidence(
                 time_seconds=action.time_seconds,
                 sequence=action.sequence,
                 damage_value=None,
-                unresolved=(
-                    f"{context.active_bar} canonical weapon-attack BuildEvaluation is unavailable",
-                ),
+                unresolved=unresolved,
             )
 
         completion_evidence = (
@@ -335,6 +396,7 @@ class RotationGenerateDDCanonicalWeaponAttackProviderFactory:
         player_build: PlayerBuild,
         static_context,
         target_resistance: float,
+        runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
     ) -> tuple[
         RotationActionDamageProvider | None,
         RotationActionDamageProvider | None,
@@ -353,11 +415,13 @@ class RotationGenerateDDCanonicalWeaponAttackProviderFactory:
                 evaluation=resolution,
                 static_context=static_context,
                 target_resistance=target_resistance,
+                runtime_build_context_resolver=runtime_build_context_resolver,
             ),
             _RotationGenerateBarAwareHeavyAttackDamageProvider(
                 evaluation=resolution,
                 static_context=static_context,
                 target_resistance=target_resistance,
+                runtime_build_context_resolver=runtime_build_context_resolver,
             ),
         )
 
@@ -395,6 +459,8 @@ class RotationGenerateDDRoleEvidenceSupport:
     runtime registry. Snapshot DoTs reuse cast-time magnitude only when explicitly
     reviewed as such. Dynamic DoTs bind to the final stabilized candidate's runtime
     combat-state resolver and rebuild exact-time calculation context for every tick.
+    Stabilized LA/HA evidence uses that same exact runtime build-context resolver so
+    temporal resource/stat/bar state does not collapse back to static build values.
     Non-cast periodic activation anchors consume an authoritative runtime anchor
     resolver from the stabilized snapshot when one is available; otherwise the
     periodic projection remains fail-closed.
@@ -545,6 +611,7 @@ class RotationGenerateDDRoleEvidenceSupport:
                     player_build=player_build,
                     static_context=static_context,
                     target_resistance=target_resistance,
+                    runtime_build_context_resolver=runtime_build_context_resolver,
                 )
             )
 
