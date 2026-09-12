@@ -29,6 +29,7 @@ def _group(
         report=RotationDDPeriodicEsoLogsMagnitudeStateTransitionReport(
             skill_entity_id="stampede",
             periodic_ability_id=126474,
+            transitions=(),
             comparable_occurrence_pairs=comparable,
             state_changed_amount_changed=changed_changed,
             state_changed_amount_constant=changed_constant,
