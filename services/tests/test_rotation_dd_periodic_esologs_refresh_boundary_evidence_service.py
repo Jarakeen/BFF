@@ -2,25 +2,19 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from types import SimpleNamespace
 
 from services.rotation_dd_periodic_esologs_refresh_boundary_evidence_service import (
     RotationDDPeriodicEsoLogsRefreshBoundaryEvidenceService,
 )
 
 
-def _canonical(path) -> None:
-    with sqlite3.connect(path) as db:
-        db.execute(
-            "CREATE TABLE skill_rank (id INTEGER PRIMARY KEY, skill_id INTEGER, ability_id INTEGER, morph INTEGER)"
-        )
-        db.execute(
-            "INSERT INTO skill_rank (id, skill_id, ability_id, morph) VALUES (1, 7, 39807, 1)"
-        )
-        db.execute(
-            "CREATE TABLE skill_entity (entity_id TEXT, skill_rank_id INTEGER)"
-        )
-        db.execute(
-            "INSERT INTO skill_entity (entity_id, skill_rank_id) VALUES ('stampede', 1)"
+class _Coefficients:
+    def resolve_entity_id(self, entity_id):
+        assert entity_id == "stampede"
+        return SimpleNamespace(
+            rank=SimpleNamespace(skill_id=7, morph=1, base_ability_id=39807),
+            unresolved=(),
         )
 
 
@@ -65,15 +59,15 @@ def _event(path, index, timestamp, event_type, ability_id, track, *, name=None) 
 def _service(tmp_path):
     canonical = tmp_path / "canonical.db"
     logs = tmp_path / "logs.db"
-    _canonical(canonical)
+    canonical.touch()
     _logs(logs)
-    return (
-        RotationDDPeriodicEsoLogsRefreshBoundaryEvidenceService(
-            canonical_database_path=canonical,
-            logs_database_path=logs,
-        ),
-        logs,
+    service = RotationDDPeriodicEsoLogsRefreshBoundaryEvidenceService(
+        canonical_database_path=canonical,
+        logs_database_path=logs,
     )
+    service.coefficients = _Coefficients()
+    service._numeric_aliases = lambda skill_id, morph, base_ability_id: (39807,)
+    return service, logs
 
 
 def test_reports_old_periodic_events_relative_to_next_impact(tmp_path) -> None:
