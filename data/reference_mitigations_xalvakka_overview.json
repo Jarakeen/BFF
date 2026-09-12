@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {
+      "entry_name": "Havocrel Goliath Summons — Xalvakka",
+      "mitigation": "When a Havocrel Goliath appears, move into the small safe zone in the center during its arena-filling lava attack.",
+      "source": "reviewed_encounter_evidence",
+      "notes": "Reviewed Xalvakka evidence records Havocrel Goliath summons; the canonical boss source describes the Goliath filling most of the arena with lava while leaving a small central safe zone."
+    }
+  ]
+}
