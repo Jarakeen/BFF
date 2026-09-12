@@ -25,6 +25,13 @@ _RACE_SKILL_LINE_ALIASES = {
     "dunmer": "dark elf",
 }
 
+# Exhaustive Extreme scoring constructs many short-lived racial-progression
+# services against the same canonical database.  The racial passive inventory is
+# immutable patch data, so keep the projected tuple once per resolved database
+# path for the lifetime of the audit process.  Injected/fake universe services do
+# not participate in this shared cache.
+_RACIAL_PASSIVE_CACHE: dict[str, tuple[object, ...]] = {}
+
 
 class ExtremeHypotheticalRacialProgressionService:
     """Install canonical max-rank passives for one hypothetical race."""
@@ -37,6 +44,9 @@ class ExtremeHypotheticalRacialProgressionService:
     ) -> None:
         if universe_service is None and database_path is None:
             raise ValueError("database_path is required when no skill universe service is supplied")
+        self._shared_cache_key: str | None = None
+        if universe_service is None and database_path is not None:
+            self._shared_cache_key = str(Path(database_path).resolve())
         self.universe_service = universe_service or ExtremeSkillUniverseService(database_path)  # type: ignore[arg-type]
 
     @staticmethod
@@ -44,6 +54,21 @@ class ExtremeHypotheticalRacialProgressionService:
         race = " ".join(str(race_name or "").strip().split())
         key = race.casefold()
         return _RACE_SKILL_LINE_ALIASES.get(key, race)
+
+    def _racial_passives(self):
+        if self._shared_cache_key is not None:
+            cached = _RACIAL_PASSIVE_CACHE.get(self._shared_cache_key)
+            if cached is not None:
+                return cached
+
+        racial = tuple(
+            row
+            for row in self.universe_service.passives()
+            if row.domain is ExtremeSkillDomain.RACIAL
+        )
+        if self._shared_cache_key is not None:
+            _RACIAL_PASSIVE_CACHE[self._shared_cache_key] = racial
+        return racial
 
     def normalize(
         self,
@@ -54,11 +79,7 @@ class ExtremeHypotheticalRacialProgressionService:
         if not race:
             raise ValueError("hypothetical Extreme racial progression requires a race")
 
-        racial = tuple(
-            row
-            for row in self.universe_service.passives()
-            if row.domain is ExtremeSkillDomain.RACIAL
-        )
+        racial = self._racial_passives()
         if not racial:
             raise ValueError("canonical racial passive inventory is unavailable")
 
