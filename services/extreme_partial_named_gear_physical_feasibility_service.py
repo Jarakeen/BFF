@@ -162,47 +162,21 @@ class ExtremePartialNamedGearPhysicalFeasibilityService:
         self._body_cache[key] = possible
         return possible
 
-    def evaluate(
+    def _evaluate_prevalidated(
         self,
         topology: ExtremeGearSetCountTopology,
         selected: tuple[ExtremeNamedGearSetSlotEligibility, ...],
     ) -> ExtremePartialNamedGearPhysicalFeasibilityResult:
-        counts = tuple(int(value) for value in topology.counts)
-        if len(selected) > len(counts):
-            return ExtremePartialNamedGearPhysicalFeasibilityResult(
-                possible=False,
-                selected_count=len(selected),
-                compatible_physical_shapes=0,
-                reason="selected prefix is longer than topology",
-            )
-        if len({int(row.set_id) for row in selected}) != len(selected):
-            return ExtremePartialNamedGearPhysicalFeasibilityResult(
-                possible=False,
-                selected_count=len(selected),
-                compatible_physical_shapes=0,
-                reason="selected prefix repeats a named set identity",
-            )
-        if any(
-            int(counts[index]) > int(row.max_equip_count)
-            for index, row in enumerate(selected)
-        ):
-            return ExtremePartialNamedGearPhysicalFeasibilityResult(
-                possible=False,
-                selected_count=len(selected),
-                compatible_physical_shapes=0,
-                reason="selected set cannot supply its topology piece count",
-            )
-        if any(
-            int(counts[index]) > 0 and not row.has_physical_slot_evidence
-            for index, row in enumerate(selected)
-        ):
-            return ExtremePartialNamedGearPhysicalFeasibilityResult(
-                possible=False,
-                selected_count=len(selected),
-                compatible_physical_shapes=0,
-                reason="selected set lacks physical slot eligibility evidence",
-            )
+        """Evaluate a prefix whose exact-search caller already proved local guards.
 
+        This is intentionally private to exact branch-and-bound callers. They already
+        enforce distinct set identities and construct candidates only from rows with
+        sufficient breakpoint count and physical-slot evidence. Skipping those three
+        repeated guards changes no legality rule; global named-set legality and the
+        canonical physical witness-space test below remain authoritative.
+        """
+
+        counts = tuple(int(value) for value in topology.counts)
         key = (
             topology.signature,
             tuple(self._cached_shape(row) for row in selected),
@@ -245,12 +219,62 @@ class ExtremePartialNamedGearPhysicalFeasibilityService:
         self._result_cache[key] = result
         return result
 
+    def evaluate(
+        self,
+        topology: ExtremeGearSetCountTopology,
+        selected: tuple[ExtremeNamedGearSetSlotEligibility, ...],
+    ) -> ExtremePartialNamedGearPhysicalFeasibilityResult:
+        counts = tuple(int(value) for value in topology.counts)
+        if len(selected) > len(counts):
+            return ExtremePartialNamedGearPhysicalFeasibilityResult(
+                possible=False,
+                selected_count=len(selected),
+                compatible_physical_shapes=0,
+                reason="selected prefix is longer than topology",
+            )
+        if len({int(row.set_id) for row in selected}) != len(selected):
+            return ExtremePartialNamedGearPhysicalFeasibilityResult(
+                possible=False,
+                selected_count=len(selected),
+                compatible_physical_shapes=0,
+                reason="selected prefix repeats a named set identity",
+            )
+        if any(
+            int(counts[index]) > int(row.max_equip_count)
+            for index, row in enumerate(selected)
+        ):
+            return ExtremePartialNamedGearPhysicalFeasibilityResult(
+                possible=False,
+                selected_count=len(selected),
+                compatible_physical_shapes=0,
+                reason="selected set cannot supply its topology piece count",
+            )
+        if any(
+            int(counts[index]) > 0 and not row.has_physical_slot_evidence
+            for index, row in enumerate(selected)
+        ):
+            return ExtremePartialNamedGearPhysicalFeasibilityResult(
+                possible=False,
+                selected_count=len(selected),
+                compatible_physical_shapes=0,
+                reason="selected set lacks physical slot eligibility evidence",
+            )
+
+        return self._evaluate_prevalidated(topology, selected)
+
     def is_possible(
         self,
         topology: ExtremeGearSetCountTopology,
         selected: tuple[ExtremeNamedGearSetSlotEligibility, ...],
     ) -> bool:
         return self.evaluate(topology, selected).possible
+
+    def _is_possible_prevalidated(
+        self,
+        topology: ExtremeGearSetCountTopology,
+        selected: tuple[ExtremeNamedGearSetSlotEligibility, ...],
+    ) -> bool:
+        return self._evaluate_prevalidated(topology, selected).possible
 
 
 __all__ = [
