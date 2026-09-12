@@ -218,12 +218,14 @@ def _init_with_dashboard_polish(self, parent=None) -> None:
     _ORIGINAL_INIT(self, parent)
 
     # Keep the composition art readable while giving the Active Composition
-    # table enough width for full status pills instead of clipped buttons.
+    # table enough width for full status pills and vertical breathing room.
     self.composition_ring.setMinimumSize(560, 350)
     self.composition_card.setMinimumWidth(575)
     self.active_card.setMinimumWidth(470)
     self.active_table.setMinimumWidth(455)
-    self.active_table.setMinimumHeight(380)
+    self.active_table.setMinimumHeight(500)
+    row_header = self.active_table.verticalHeader()
+    row_header.setDefaultSectionSize(row_header.defaultSectionSize() + 10)
     self.active_table.setColumnWidth(0, 105)
     self.active_table.setColumnWidth(1, 90)
     self.active_table.setColumnWidth(2, 135)
@@ -240,7 +242,7 @@ def _refresh_active_with_status_pills(self, slots) -> None:
         pill = _pill(status, status)
         host = QWidget()
         layout = QHBoxLayout(host)
-        layout.setContentsMargins(6, 3, 6, 3)
+        layout.setContentsMargins(6, 4, 6, 4)
         layout.addWidget(pill, 0, Qt.AlignmentFlag.AlignCenter)
         self.active_table.setCellWidget(row, 3, host)
 
