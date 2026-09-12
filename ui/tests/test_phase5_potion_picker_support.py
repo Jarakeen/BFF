@@ -12,6 +12,14 @@ def test_potion_picker_preserves_named_and_adds_crafted_sources() -> None:
     assert "PotionChoiceService(processed).list_choices()" in source
 
 
+def test_potion_picker_uses_current_canonical_alchemy_source_with_legacy_fallback() -> None:
+    source = Path(phase5_potion_picker_support.__file__).read_text(encoding="utf-8")
+
+    assert "DEFAULT_PROCESSED" in source
+    assert "LEGACY_PROCESSED" in source
+    assert "DEFAULT_PROCESSED if DEFAULT_PROCESSED.exists() else LEGACY_PROCESSED" in source
+
+
 def test_potion_picker_persists_stable_values_not_display_prefixes() -> None:
     source = Path(phase5_potion_picker_support.__file__).read_text(encoding="utf-8")
 
