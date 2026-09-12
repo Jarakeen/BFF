@@ -391,14 +391,51 @@ class ExtremeMaxResourceOrdinaryNamedGearSearchService:
         score_pruned = physical_pruned = 0
         semantic_duplicate_leaves = 0
 
-        def semantic_key() -> tuple[tuple[object, ...], ...]:
+        def semantic_key(rows: tuple[_Candidate, ...] | list[_Candidate]) -> tuple[tuple[object, ...], ...]:
             return tuple(
                 (
                     realizer._eligibility_shape_cached(row.eligibility),
                     row.objective_effect_signature,
                 )
-                for row in selected
+                for row in rows
             )
+
+        def seed_first_feasible(position: int, score: float) -> tuple[float, ExtremeNamedGearSetRealization, tuple[tuple[object, ...], ...]] | None:
+            if position >= len(counts):
+                physical = tuple(row.eligibility for row in selected)
+                witness = realizer._find_witness_cached(topology, physical)
+                if witness is None:
+                    return None
+                return float(score), witness, semantic_key(selected)
+
+            previous_equal_id: int | None = None
+            if position > 0 and counts[position - 1] == counts[position]:
+                previous_equal_id = selected[position - 1].set_id
+
+            for row in candidate_rows[position]:
+                if row.set_id in used_ids:
+                    continue
+                if previous_equal_id is not None and row.set_id <= previous_equal_id:
+                    continue
+                selected.append(row)
+                used_ids.add(row.set_id)
+                physical_prefix = tuple(item.eligibility for item in selected)
+                seeded = None
+                if feasibility.is_possible(topology, physical_prefix):
+                    seeded = seed_first_feasible(position + 1, score + row.exact_delta)
+                used_ids.remove(row.set_id)
+                selected.pop()
+                if seeded is not None:
+                    return seeded
+            return None
+
+        seeded = seed_first_feasible(0, 0.0)
+        if seeded is not None:
+            best, seeded_witness, seeded_key = seeded
+            winners_by_semantic_key[seeded_key] = seeded_witness
+            leaf_semantic_cache[seeded_key] = seeded_witness
+        selected.clear()
+        used_ids.clear()
 
         def visit(position: int, score: float) -> None:
             nonlocal best, nodes, leaves, witness_checks, feasible_leaves
@@ -421,7 +458,7 @@ class ExtremeMaxResourceOrdinaryNamedGearSearchService:
 
             if position >= len(counts):
                 leaves += 1
-                key = semantic_key()
+                key = semantic_key(selected)
                 if key in leaf_semantic_cache:
                     semantic_duplicate_leaves += 1
                     witness = leaf_semantic_cache[key]
