@@ -5,9 +5,15 @@ from types import SimpleNamespace
 from minmax.character_build.saved_build_adapter import SavedBuildAdaptation
 from minmax.character_progression import CharacterProgression
 from minmax.combat_state import CombatState
-from minmax.rotation_plan import RotationPlan
+from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from services.extreme_runtime_snapshot import ExtremeRuntimePotionUse, ExtremeRuntimeSnapshot
 from services.minmax_character_progression_adapter import SavedBuildProgressionResolution
+from services.rotation_candidate_periodic_damage_runtime_projection_service import (
+    PeriodicDamageActivationAnchor,
+)
+from services.rotation_runtime_activation_anchor_evidence_service import (
+    RotationRuntimeActivationAnchorEvidence,
+)
 from ui.rotation_canonical_candidate_support import RotationCanonicalCandidateSupport
 from ui.rotation_recovery_validation_support import RotationRecoveryValidationScope
 from ui.rotation_runtime_snapshot_candidate_support import (
@@ -222,6 +228,42 @@ def test_unified_runtime_history_binds_final_plan_state_resolver() -> None:
     assert call["sequence"] == 4
     assert call["initial_bar"] == "BACK"
     assert call["base_combat_state"] is base_state
+
+
+def test_explicit_activation_anchor_evidence_binds_against_final_plan() -> None:
+    support, execution, _, _, _, _ = _support()
+    build = object()
+    action = RotationAction(
+        time_seconds=4.0,
+        sequence=3,
+        kind=RotationActionKind.SKILL,
+        name="Stampede",
+        bar="back",
+    )
+    evidence = RotationRuntimeActivationAnchorEvidence(
+        skill_entity_id="stampede",
+        action_time_seconds=4.0,
+        action_sequence=3,
+        activation_anchor=PeriodicDamageActivationAnchor.IMPACT,
+        anchor_time_seconds=4.173,
+        source="authoritative runtime impact event",
+    )
+
+    result = support.run_effects(
+        player_build=build,
+        runtime_activation_anchor_evidence=(evidence,),
+    )
+
+    assert result is execution.result
+    factory = execution.calls[0]["runtime_activation_anchor_resolver_factory"]
+    plan = RotationPlan(
+        character_name="Parse Test",
+        build_name="DD",
+        duration_seconds=20.0,
+        actions=(action,),
+    )
+    resolver = factory(plan)
+    assert resolver(action, PeriodicDamageActivationAnchor.IMPACT) == 4.173
 
 
 def test_unresolved_runtime_projection_blocks_candidate_execution() -> None:
