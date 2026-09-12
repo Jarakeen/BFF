@@ -156,19 +156,21 @@ class RotationCandidateSkillDamageEvidenceService:
             DamageDoneModifiers(generic=exploiter),
         )
 
+    @staticmethod
+    def _requires_exploiter_target_state(context: BuildCalculationContext) -> bool:
+        return float(getattr(context, "dd_exploiter_bonus", 0.0)) > 0.0
+
     def _target_state_for_action(self, action: RotationAction) -> CombatState | None:
         if self.target_combat_state is not None:
             return self.target_combat_state
+        if not self._requires_exploiter_target_state(self.context):
+            return None
         if self.runtime_target_combat_state_resolver is None:
             return None
         return self.runtime_target_combat_state_resolver(
             float(action.time_seconds),
             int(action.sequence),
         )
-
-    @staticmethod
-    def _requires_exploiter_target_state(context: BuildCalculationContext) -> bool:
-        return float(getattr(context, "dd_exploiter_bonus", 0.0)) > 0.0
 
     def evaluate_action(
         self,
