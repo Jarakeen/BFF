@@ -2,6 +2,13 @@ from types import SimpleNamespace
 
 from minmax.resource_costs import ResourceType
 from models.build_model import PlayerBuild
+from services.rotation_candidate_periodic_damage_runtime_projection_service import (
+    PeriodicDamageActivationAnchor,
+    PeriodicDamageMagnitudePolicy,
+)
+from services.rotation_dd_periodic_runtime_semantics_registry_service import (
+    RotationDDPeriodicRuntimeSemanticsRegistryService,
+)
 from ui.rotation_canonical_evidence_bundle_support import RotationCanonicalEvidenceBundle
 import ui.rotation_generate_dd_role_evidence_support as dd_support
 
@@ -103,4 +110,46 @@ def test_anchor_only_snapshot_still_builds_runtime_provider() -> None:
     assert len(support.calls) == 2
     runtime_call = support.calls[1]
     assert runtime_call["runtime_build_context_resolver"] is None
+    assert runtime_call["activation_anchor_resolver"] is anchor_resolver
+
+
+def test_generate_stabilized_stampede_provider_composes_reviewed_runtime_authorities() -> None:
+    support = _RecordingSupport(
+        database_path="unused.db",
+        static_context_service=_StaticContextService(),  # type: ignore[arg-type]
+        periodic_runtime_semantics_registry=(
+            RotationDDPeriodicRuntimeSemanticsRegistryService()
+        ),
+    )
+    role_evidence = support.compose(
+        player_build=PlayerBuild(Name="Parse Cat", BuildName="DD", Role="DD"),
+        evidence_bundle=_bundle(),
+    )
+
+    runtime_combat_state_resolver = object()
+
+    def anchor_resolver(action, anchor):
+        del action, anchor
+        return 1.3
+
+    snapshot = SimpleNamespace(
+        plan=SimpleNamespace(duration_seconds=37.0),
+        runtime_combat_state_resolver=runtime_combat_state_resolver,
+        runtime_activation_anchor_resolver=anchor_resolver,
+    )
+    role_evidence.plan_evidence_provider.for_stabilized_snapshot(snapshot)
+
+    assert len(support.calls) == 2
+    runtime_call = support.calls[1]
+    stampede = next(
+        row
+        for row in runtime_call["periodic_runtime_semantics"]
+        if row.skill_entity_id == "stampede" and row.coefficient_number == 2
+    )
+
+    assert stampede.activation_anchor is PeriodicDamageActivationAnchor.IMPACT
+    assert stampede.magnitude_policy is PeriodicDamageMagnitudePolicy.DYNAMIC_AT_TICK
+    assert stampede.first_tick_offset_seconds == 1.0
+    assert stampede.verified_interval_seconds == 1.0
+    assert runtime_call["runtime_build_context_resolver"] is not None
     assert runtime_call["activation_anchor_resolver"] is anchor_resolver
