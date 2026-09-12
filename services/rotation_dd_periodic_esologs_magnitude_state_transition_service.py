@@ -64,6 +64,11 @@ class RotationDDPeriodicEsoLogsMagnitudeStateTransitionReport:
     periodic_ability_id: int
     transitions: tuple[RotationDDPeriodicEsoLogsMagnitudeTransition, ...]
     ambiguous_occurrence_clusters: int = 0
+    comparable_occurrence_pairs: int = 0
+    state_changed_amount_changed: int = 0
+    state_changed_amount_constant: int = 0
+    state_same_amount_changed: int = 0
+    state_same_amount_constant: int = 0
     unresolved: tuple[str, ...] = ()
 
     @property
@@ -86,7 +91,10 @@ class RotationDDPeriodicEsoLogsMagnitudeStateTransitionService:
     Damage rows within 5 ms for the same cast/target/hit type are one observational
     occurrence. Same-amount duplicates collapse to one row. Mixed-amount occurrence
     clusters are ambiguous and excluded rather than being misread as sequential ticks.
-    Results remain observational and never promote snapshot-vs-dynamic policy.
+
+    The report also exposes a 2x2 contingency table across every unambiguous adjacent
+    occurrence pair: state changed/same crossed with amount changed/constant. That
+    control evidence is observational only and never promotes magnitude policy.
     """
 
     def __init__(
@@ -142,6 +150,12 @@ class RotationDDPeriodicEsoLogsMagnitudeStateTransitionService:
 
         transitions: list[RotationDDPeriodicEsoLogsMagnitudeTransition] = []
         ambiguous_occurrence_clusters = 0
+        comparable_occurrence_pairs = 0
+        state_changed_amount_changed = 0
+        state_changed_amount_constant = 0
+        state_same_amount_changed = 0
+        state_same_amount_constant = 0
+
         with self._open_logs() as db:
             schema_error = self._schema_error(db)
             if schema_error:
@@ -258,10 +272,6 @@ class RotationDDPeriodicEsoLogsMagnitudeStateTransitionService:
                     actor_filter = {group_source, target}
                     for sequence in sequences:
                         for previous, current in zip(sequence, sequence[1:]):
-                            from_amount = float(previous["amount"])
-                            to_amount = float(current["amount"])
-                            if from_amount == to_amount:
-                                continue
                             previous_key = (
                                 float(previous["timestamp"]),
                                 int(previous["event_index"]),
@@ -275,6 +285,23 @@ class RotationDDPeriodicEsoLogsMagnitudeStateTransitionService:
                                 snapshots[current_key],
                                 relevant_actors=actor_filter,
                             )
+                            from_amount = float(previous["amount"])
+                            to_amount = float(current["amount"])
+                            amount_changed = from_amount != to_amount
+                            state_changed = bool(state_events)
+
+                            comparable_occurrence_pairs += 1
+                            if state_changed and amount_changed:
+                                state_changed_amount_changed += 1
+                            elif state_changed:
+                                state_changed_amount_constant += 1
+                            elif amount_changed:
+                                state_same_amount_changed += 1
+                            else:
+                                state_same_amount_constant += 1
+
+                            if not amount_changed:
+                                continue
                             transitions.append(
                                 RotationDDPeriodicEsoLogsMagnitudeTransition(
                                     report_code=group_report,
@@ -300,6 +327,11 @@ class RotationDDPeriodicEsoLogsMagnitudeStateTransitionService:
             periodic_ability_id,
             transitions=tuple(transitions),
             ambiguous_occurrence_clusters=ambiguous_occurrence_clusters,
+            comparable_occurrence_pairs=comparable_occurrence_pairs,
+            state_changed_amount_changed=state_changed_amount_changed,
+            state_changed_amount_constant=state_changed_amount_constant,
+            state_same_amount_changed=state_same_amount_changed,
+            state_same_amount_constant=state_same_amount_constant,
             unresolved=tuple(dict.fromkeys(unresolved)),
         )
 
@@ -410,11 +442,7 @@ class RotationDDPeriodicEsoLogsMagnitudeStateTransitionService:
     ) -> tuple[RotationDDPeriodicEsoLogsStateEventEvidence, ...]:
         before, _before_events = before_snapshot
         after, after_events = after_snapshot
-        keys = {
-            key
-            for key in set(before) | set(after)
-            if key[0] in relevant_actors
-        }
+        keys = {key for key in set(before) | set(after) if key[0] in relevant_actors}
         evidence: list[RotationDDPeriodicEsoLogsStateEventEvidence] = []
         for key in sorted(keys):
             before_value = before.get(key)
@@ -623,6 +651,11 @@ class RotationDDPeriodicEsoLogsMagnitudeStateTransitionService:
         *,
         transitions: tuple[RotationDDPeriodicEsoLogsMagnitudeTransition, ...] = (),
         ambiguous_occurrence_clusters: int = 0,
+        comparable_occurrence_pairs: int = 0,
+        state_changed_amount_changed: int = 0,
+        state_changed_amount_constant: int = 0,
+        state_same_amount_changed: int = 0,
+        state_same_amount_constant: int = 0,
         unresolved: tuple[str, ...] = (),
     ) -> RotationDDPeriodicEsoLogsMagnitudeStateTransitionReport:
         return RotationDDPeriodicEsoLogsMagnitudeStateTransitionReport(
@@ -630,6 +663,11 @@ class RotationDDPeriodicEsoLogsMagnitudeStateTransitionService:
             periodic_ability_id=int(periodic_ability_id),
             transitions=transitions,
             ambiguous_occurrence_clusters=int(ambiguous_occurrence_clusters),
+            comparable_occurrence_pairs=int(comparable_occurrence_pairs),
+            state_changed_amount_changed=int(state_changed_amount_changed),
+            state_changed_amount_constant=int(state_changed_amount_constant),
+            state_same_amount_changed=int(state_same_amount_changed),
+            state_same_amount_constant=int(state_same_amount_constant),
             unresolved=unresolved,
         )
 
