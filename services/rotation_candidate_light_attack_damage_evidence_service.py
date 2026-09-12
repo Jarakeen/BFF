@@ -10,6 +10,7 @@ from minmax.dd_mitigation import calculate_dd_mitigation
 from minmax.dd_stat_evaluation import evaluate_dd_stats
 from minmax.evaluation_context import EvaluationContext
 from minmax.light_attack_calculator import (
+    calculate_bow_light_attack,
     calculate_flame_staff_light_attack,
     calculate_frost_staff_light_attack,
 )
@@ -27,12 +28,12 @@ class RotationCandidateLightAttackDamageEvidenceService:
 
     Weapon identity and active-bar reconstruction remain owned by
     ``RotationWeaponAttackProjectionService``. Existing UESP-derived light-attack
-    formulas own the flame/frost staff pre-critical Damage Done result. Existing DD
-    stat, critical, mitigation, and target Damage Taken services own the later
-    combat stages.
+    formulas own the flame/frost staff and bow pre-critical Damage Done result.
+    Existing DD stat, critical, mitigation, and target Damage Taken services own the
+    later combat stages.
 
-    Only flame and frost staff light attacks are fully routed here. Lightning staff
-    remains unresolved because the currently preserved source formula uses HA,
+    Flame staff, frost staff, and bow light attacks are fully routed here. Lightning
+    staff remains unresolved because the currently preserved source formula uses HA,
     Empower, and DoT modifier buckets; treating that as ordinary direct damage would
     silently change the source mechanic. Other weapon families remain unresolved
     until their own canonical light-attack formulas are present.
@@ -103,6 +104,9 @@ class RotationCandidateLightAttackDamageEvidenceService:
         elif resolution.main_hand is WeaponType.FROST_STAFF:
             formula_damage = calculate_frost_staff_light_attack(state)
             damage_type = "frost"
+        elif resolution.main_hand is WeaponType.BOW:
+            formula_damage = calculate_bow_light_attack(state)
+            damage_type = "physical"
         elif resolution.main_hand is WeaponType.LIGHTNING_STAFF:
             return self._unresolved(
                 action,
@@ -115,10 +119,9 @@ class RotationCandidateLightAttackDamageEvidenceService:
                 f"canonical light-attack damage formula unavailable for {resolution.main_hand.value}",
             )
 
-        # The canonical flame/frost LA formulas already apply attacker-side
-        # elemental/direct/single-target/generic Damage Done. Do not apply that
-        # bucket a second time here. This stage adds only expected crit, target
-        # resistance mitigation, and explicit target-side Damage Taken.
+        # Canonical LA formulas already apply their attacker-side Damage Done buckets.
+        # Do not apply that bucket a second time here. This stage adds only expected
+        # crit, target resistance mitigation, and explicit target-side Damage Taken.
         dd_stats = evaluate_dd_stats(self.evaluation.stats, self.evaluation_context)
         damage_taken = damage_taken_from_target_state(self.target_combat_state)
         event = DDDamageEvent(
