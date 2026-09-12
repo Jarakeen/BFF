@@ -6,12 +6,18 @@ Every canonical formula remains part of the denominator. A formula may be collap
 to the no-potion baseline only when every source trait is either routed through the
 versioned named-buff semantics or explicitly reviewed as irrelevant to maximum
 resources for the active patch. New or unreviewed traits fail closed.
+
+The general Alchemy catalog also preserves parser-provenance warnings for malformed
+source-table cells. For this narrow max-resource proof, ``non-trait source cells``
+are proof-neutral only when the explicit U50 max-resource review covers the complete
+canonical U50 Alchemy trait universe. Other catalog unresolved evidence remains a
+hard blocker.
 """
 
 from dataclasses import dataclass
 
 from minmax.alchemy_potion_buff_semantics import potion_buff_for_trait
-from minmax.combat_effect_semantics import GameUpdate
+from minmax.combat_effect_semantics import GameUpdate, U50_ALCHEMY_TRAITS
 from minmax.named_combat_buffs import effects_for_buff
 from minmax.potion_availability_repository import PotionAvailabilityRepository
 from minmax.stat_ids import StatId
@@ -62,6 +68,8 @@ _REVIEWED_U50_MAX_RESOURCE_IRRELEVANT_TRAITS = frozenset(
     }
 )
 
+_PROOF_NEUTRAL_U50_CATALOG_UNRESOLVED = "non-trait source cells rejected:"
+
 
 @dataclass(frozen=True)
 class ExtremeResourcePotionProjection:
@@ -88,6 +96,36 @@ class ExtremeResourcePotionProjectionService:
     def __init__(self, repository: PotionAvailabilityRepository) -> None:
         self.repository = repository
 
+    @staticmethod
+    def _catalog_unresolved_for_max_resource_proof(
+        values: tuple[str, ...],
+        *,
+        game_update: GameUpdate,
+    ) -> tuple[str, ...]:
+        """Return only catalog unresolved evidence that can still affect this proof.
+
+        U50 non-trait source-cell warnings are scraped table noise, not unknown
+        canonical Alchemy mechanics, but they are proof-neutral only while the
+        patch-scoped review exactly covers the canonical U50 trait universe.
+        """
+
+        complete_u50_trait_review = bool(
+            game_update is GameUpdate.U50
+            and _REVIEWED_U50_MAX_RESOURCE_IRRELEVANT_TRAITS == U50_ALCHEMY_TRAITS
+        )
+        unresolved: list[str] = []
+        for raw in values:
+            message = str(raw or "").strip()
+            if not message:
+                continue
+            if (
+                complete_u50_trait_review
+                and _PROOF_NEUTRAL_U50_CATALOG_UNRESOLVED in message
+            ):
+                continue
+            unresolved.append(message)
+        return tuple(dict.fromkeys(unresolved))
+
     def build(self, objective_key: str) -> ExtremeResourcePotionProjection:
         key = str(objective_key or "").strip().casefold()
         target = _OBJECTIVE_STATS.get(key)
@@ -95,13 +133,39 @@ class ExtremeResourcePotionProjectionService:
             raise KeyError(f"unreviewed Extreme potion projection objective: {objective_key!r}")
 
         catalog = self.repository.catalog()
-        unresolved: list[str] = [str(item) for item in catalog.unresolved if str(item)]
-        relevant: list[str] = []
         game_update = getattr(self.repository, "game_update", GameUpdate.U50)
+        unresolved: list[str] = list(
+            self._catalog_unresolved_for_max_resource_proof(
+                tuple(str(item) for item in catalog.unresolved if str(item)),
+                game_update=game_update,
+            )
+        )
+        relevant: list[str] = []
 
         if game_update is not GameUpdate.U50:
             unresolved.append(
                 f"Max-resource potion irrelevance review is not yet closed for {game_update.value}"
+            )
+
+        if (
+            game_update is GameUpdate.U50
+            and _REVIEWED_U50_MAX_RESOURCE_IRRELEVANT_TRAITS != U50_ALCHEMY_TRAITS
+        ):
+            missing = tuple(
+                sorted(
+                    U50_ALCHEMY_TRAITS - _REVIEWED_U50_MAX_RESOURCE_IRRELEVANT_TRAITS,
+                    key=str.casefold,
+                )
+            )
+            extra = tuple(
+                sorted(
+                    _REVIEWED_U50_MAX_RESOURCE_IRRELEVANT_TRAITS - U50_ALCHEMY_TRAITS,
+                    key=str.casefold,
+                )
+            )
+            unresolved.append(
+                "U50 max-resource potion trait review does not match canonical trait universe: "
+                f"missing={missing!r}, extra={extra!r}"
             )
 
         for formula in catalog.formulas:
