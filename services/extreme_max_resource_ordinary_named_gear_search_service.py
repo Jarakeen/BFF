@@ -395,30 +395,45 @@ class ExtremeMaxResourceOrdinaryNamedGearSearchService:
         candidates_by_count: dict[int, tuple[_Candidate, ...]],
         feasibility: ExtremePartialNamedGearPhysicalFeasibilityService,
     ) -> bool:
-        """Reject topologies whose candidate eligibility shapes cannot physically fit.
+        """Reject topologies whose finite eligibility-shape supply cannot physically fit.
 
-        Concrete set identity and score are intentionally discarded here. Each
-        piece-count position receives the distinct canonical eligibility shapes that
-        occur anywhere in that count's candidate domain. Non-Mythic shapes may be
-        reused with synthetic identities, making this an optimistic relaxation of the
-        exact named-set search. The canonical partial-feasibility service still owns
-        armor/jewelry/weapon placement and global Mythic legality. Therefore ``False``
-        is proof that no concrete assignment can work, while ``True`` only permits the
-        exact branch-and-bound search to continue.
+        Concrete identity and score are discarded, but the number of distinct concrete
+        candidates that provide each eligibility shape inside each piece-count class is
+        retained as a capacity. Cross-count identity reuse remains intentionally
+        optimistic, so this is still only a necessary-condition proof. The canonical
+        partial-feasibility service continues to own body/jewelry/weapon placement and
+        global Mythic legality. Therefore ``False`` proves the exact search impossible;
+        ``True`` only permits it to continue.
         """
 
-        domains: list[tuple[ExtremeNamedGearSetSlotEligibility, ...]] = []
+        domains: list[
+            tuple[
+                tuple[
+                    tuple[object, ...],
+                    ExtremeNamedGearSetSlotEligibility,
+                    int,
+                ],
+                ...,
+            ]
+        ] = []
         for count in counts:
-            by_shape: dict[tuple[object, ...], ExtremeNamedGearSetSlotEligibility] = {}
+            by_shape: dict[
+                tuple[object, ...],
+                tuple[ExtremeNamedGearSetSlotEligibility, set[int]],
+            ] = {}
             for row in candidates_by_count.get(int(count), ()):
                 shape = feasibility._cached_shape(row.eligibility)
-                by_shape.setdefault(shape, row.eligibility)
+                current = by_shape.get(shape)
+                if current is None:
+                    by_shape[shape] = (row.eligibility, {int(row.set_id)})
+                else:
+                    current[1].add(int(row.set_id))
             if not by_shape:
                 return False
             domains.append(
                 tuple(
-                    row
-                    for _shape, row in sorted(
+                    (shape, source, len(set_ids))
+                    for shape, (source, set_ids) in sorted(
                         by_shape.items(),
                         key=lambda item: repr(item[0]),
                     )
@@ -427,6 +442,7 @@ class ExtremeMaxResourceOrdinaryNamedGearSearchService:
 
         selected: list[ExtremeNamedGearSetSlotEligibility] = []
         selected_shape_indices: list[int] = []
+        used_capacity: dict[tuple[int, tuple[object, ...]], int] = {}
         prefix_cache: dict[tuple[int, tuple[tuple[object, ...], ...]], bool] = {}
 
         def visit(position: int) -> bool:
@@ -437,9 +453,15 @@ class ExtremeMaxResourceOrdinaryNamedGearSearchService:
             if position > 0 and counts[position - 1] == counts[position]:
                 minimum_shape_index = selected_shape_indices[position - 1]
 
-            for shape_index, source in enumerate(domains[position]):
+            count = int(counts[position])
+            for shape_index, (shape, source, capacity) in enumerate(domains[position]):
                 if shape_index < minimum_shape_index:
                     continue
+                capacity_key = (count, shape)
+                used = used_capacity.get(capacity_key, 0)
+                if used >= int(capacity):
+                    continue
+
                 synthetic = replace(
                     source,
                     set_id=-((position + 1) * 1000 + shape_index + 1),
@@ -447,6 +469,8 @@ class ExtremeMaxResourceOrdinaryNamedGearSearchService:
                 )
                 selected.append(synthetic)
                 selected_shape_indices.append(shape_index)
+                used_capacity[capacity_key] = used + 1
+
                 shape_key = tuple(feasibility._cached_shape(item) for item in selected)
                 cache_key = (position + 1, shape_key)
                 possible = prefix_cache.get(cache_key)
@@ -456,9 +480,18 @@ class ExtremeMaxResourceOrdinaryNamedGearSearchService:
                 if possible and visit(position + 1):
                     selected_shape_indices.pop()
                     selected.pop()
+                    if used:
+                        used_capacity[capacity_key] = used
+                    else:
+                        used_capacity.pop(capacity_key, None)
                     return True
+
                 selected_shape_indices.pop()
                 selected.pop()
+                if used:
+                    used_capacity[capacity_key] = used
+                else:
+                    used_capacity.pop(capacity_key, None)
             return False
 
         return visit(0)
