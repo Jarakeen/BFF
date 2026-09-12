@@ -1,12 +1,23 @@
 from __future__ import annotations
 
-"""Small layout polish for the permanent Builds workspace.
+"""Small layout polish for permanent workspaces and shared tab geometry.
 
-Keep the working tab behavior intact while matching the Coverage tab treatment
-and placing the Scribed Skill recipe editor before the saved-recipe list.
+Builds keeps the working tab behavior intact while matching the Coverage tab
+treatment. Theme application also gets one shared rounded-tab rule so every
+visual theme receives the same tab shape without duplicating CSS per theme.
 """
 
 _INSTALLED = False
+
+_ROUNDED_TAB_STYLE = """
+QTabBar::tab {
+    border-radius: 9px;
+    margin-right: 4px;
+}
+QTabBar::tab:selected {
+    border-radius: 9px;
+}
+"""
 
 
 def install() -> None:
@@ -15,8 +26,16 @@ def install() -> None:
         return
 
     from ui.builds_page import BuildsPage
+    from ui.theme import ThemeManager
 
     original_build_ui = BuildsPage._build_ui
+    original_theme_apply = ThemeManager.apply
+
+    def apply_with_rounded_tabs(self, app) -> None:
+        original_theme_apply(self, app)
+        stylesheet = app.styleSheet()
+        if _ROUNDED_TAB_STYLE.strip() not in stylesheet:
+            app.setStyleSheet(stylesheet + "\n" + _ROUNDED_TAB_STYLE)
 
     def build_ui_with_coverage_style_tabs(self) -> None:
         original_build_ui(self)
@@ -37,5 +56,6 @@ def install() -> None:
             list_index = scribed_layout.indexOf(recipe_list)
             scribed_layout.insertWidget(max(0, list_index), recipe_editor)
 
+    ThemeManager.apply = apply_with_rounded_tabs
     BuildsPage._build_ui = build_ui_with_coverage_style_tabs
     _INSTALLED = True
