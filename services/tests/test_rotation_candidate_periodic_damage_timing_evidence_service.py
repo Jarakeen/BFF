@@ -105,6 +105,23 @@ def test_periodic_damage_timing_resolves_canonical_cadence_and_duration(tmp_path
     assert "recast/refresh boundary semantics" in entry.runtime_binding_gaps[1]
 
 
+def test_periodic_damage_timing_accepts_ultimate_parent_action(tmp_path) -> None:
+    path = _database(
+        tmp_path,
+        coef_description="Deals $1 Flame Damage every 2 seconds.",
+        duration_ms=6000,
+    )
+    service = RotationCandidatePeriodicDamageTimingEvidenceService(path)
+
+    report = service.inspect_action(_action(RotationActionKind.ULTIMATE))
+
+    assert report.unresolved == ()
+    assert len(report.entries) == 1
+    assert report.entries[0].source_name == "Burning Test"
+    assert report.entries[0].cadence_seconds == 2.0
+    assert report.entries[0].duration_seconds == 6.0
+
+
 def test_periodic_damage_timing_uses_fixed_count_duration_without_inventing_interval(tmp_path) -> None:
     path = _database(
         tmp_path,
@@ -161,5 +178,5 @@ def test_periodic_damage_timing_rejects_non_skill_action() -> None:
 
     assert report.entries == ()
     assert report.unresolved == (
-        "light_attack is not a scheduled skill action for periodic-damage timing",
+        "light_attack is not a scheduled named-skill action for periodic-damage timing",
     )
