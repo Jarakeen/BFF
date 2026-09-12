@@ -16,7 +16,9 @@ def test_dashboard_polish_uses_balanced_composition_surface() -> None:
     assert "setMinimumWidth(575)" in source
     assert "setMinimumWidth(470)" in source
     assert "setMinimumWidth(455)" in source
-    assert "setMinimumHeight(380)" in source
+    assert "setMinimumHeight(500)" in source
+    assert "setDefaultSectionSize(row_header.defaultSectionSize() + 10)" in source
+    assert "setContentsMargins(6, 4, 6, 4)" in source
     assert "setColumnWidth(3, 110)" in source
 
 
