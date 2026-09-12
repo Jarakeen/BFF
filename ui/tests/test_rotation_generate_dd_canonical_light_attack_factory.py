@@ -91,8 +91,8 @@ def test_factory_routes_light_attacks_through_bar_specific_build_evaluations(mon
         target_resistance=18200.0,
     )
 
-    assert heavy is None
     assert light is not None
+    assert heavy is not None
     candidate = _candidate()
     front = light.evaluate_action(candidate=candidate, action=candidate.plan.actions[0])
     back = light.evaluate_action(candidate=candidate, action=candidate.plan.actions[2])
@@ -114,7 +114,7 @@ def test_factory_routes_light_attacks_through_bar_specific_build_evaluations(mon
     )
 
 
-def test_factory_preserves_bridge_failure_as_light_attack_unresolved() -> None:
+def test_factory_preserves_bridge_failure_for_both_weapon_attack_families() -> None:
     resolution = RotationWeaponAttackBuildEvaluationResolution(
         build=None,
         evaluations=(),
@@ -130,9 +130,13 @@ def test_factory_preserves_bridge_failure_as_light_attack_unresolved() -> None:
         target_resistance=18200.0,
     )
 
-    assert heavy is None
     assert light is not None
-    action = RotationAction(1.0, 0, RotationActionKind.LIGHT_ATTACK, bar="front")
-    evidence = light.evaluate_action(candidate=_candidate(), action=action)
-    assert evidence.damage_value is None
-    assert evidence.unresolved == ("canonical weapon adaptation unresolved",)
+    assert heavy is not None
+    light_action = RotationAction(1.0, 0, RotationActionKind.LIGHT_ATTACK, bar="front")
+    heavy_action = RotationAction(2.0, 0, RotationActionKind.HEAVY_ATTACK, bar="front")
+    light_evidence = light.evaluate_action(candidate=_candidate(), action=light_action)
+    heavy_evidence = heavy.evaluate_action(candidate=_candidate(), action=heavy_action)
+    assert light_evidence.damage_value is None
+    assert heavy_evidence.damage_value is None
+    assert light_evidence.unresolved == ("canonical weapon adaptation unresolved",)
+    assert heavy_evidence.unresolved == ("canonical weapon adaptation unresolved",)
