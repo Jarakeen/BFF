@@ -327,11 +327,11 @@ class ExtremeObjectiveNamedGearSetCatalogRealizationService:
             from services.extreme_max_health_named_gear_realization_adapter_service import (
                 ExtremeMaxHealthNamedGearRealizationAdapterService,
             )
-            from services.extreme_max_resource_ordinary_named_gear_search_service import (
-                ExtremeMaxResourceOrdinaryNamedGearSearchService,
+            from services.extreme_max_resource_joint_feasibility_search_service import (
+                ExtremeMaxResourceJointFeasibilitySearchService,
             )
 
-            ordinary = ExtremeMaxResourceOrdinaryNamedGearSearchService(
+            ordinary = ExtremeMaxResourceJointFeasibilitySearchService(
                 breakpoints=self.breakpoints,
                 eligibility=self.eligibility,
                 relevance=self.relevance,
