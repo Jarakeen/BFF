@@ -1652,9 +1652,9 @@
       "ability_game_id": 165987,
       "fight_count": 7,
       "raw_event_count": 1058,
-      "canonical_mechanic_id": null,
-      "review_status": "pending",
-      "review_rationale": "",
+      "canonical_mechanic_id": "acid_pool",
+      "review_status": "accepted",
+      "review_rationale": "Existing high-confidence Combat Alerts evidence for Reef Guardian explicitly identifies ability 165987 as Acid Pool via AOE_ALERTS, corroborating the repeated packet signature.",
       "observed_names": [],
       "event_shapes": [
         {
@@ -1808,9 +1808,9 @@
       "ability_game_id": 166019,
       "fight_count": 7,
       "raw_event_count": 421,
-      "canonical_mechanic_id": null,
-      "review_status": "pending",
-      "review_rationale": "",
+      "canonical_mechanic_id": "crush",
+      "review_status": "accepted",
+      "review_rationale": "Existing high-confidence Combat Alerts evidence for Reef Guardian explicitly identifies ability 166019 as Crush via TIMER_ALERTS_LEGACY.",
       "observed_names": [],
       "event_shapes": [
         {
@@ -1923,9 +1923,9 @@
       "ability_game_id": 166020,
       "fight_count": 7,
       "raw_event_count": 267,
-      "canonical_mechanic_id": null,
-      "review_status": "pending",
-      "review_rationale": "",
+      "canonical_mechanic_id": "claw",
+      "review_status": "accepted",
+      "review_rationale": "Existing high-confidence Combat Alerts evidence for Reef Guardian explicitly identifies ability 166020 as Claw via TIMER_ALERTS_LEGACY.",
       "observed_names": [],
       "event_shapes": [
         {
@@ -2393,9 +2393,9 @@
       "ability_game_id": 163701,
       "fight_count": 7,
       "raw_event_count": 53,
-      "canonical_mechanic_id": null,
-      "review_status": "pending",
-      "review_rationale": "",
+      "canonical_mechanic_id": "replication",
+      "review_status": "accepted",
+      "review_rationale": "Existing high-confidence Combat Alerts evidence for Reef Guardian explicitly identifies ability 163701 as the Replication combat event.",
       "observed_names": [],
       "event_shapes": [
         {
@@ -2414,9 +2414,9 @@
       "ability_game_id": 166031,
       "fight_count": 7,
       "raw_event_count": 48,
-      "canonical_mechanic_id": null,
-      "review_status": "pending",
-      "review_rationale": "",
+      "canonical_mechanic_id": "heartburn",
+      "review_status": "accepted",
+      "review_rationale": "Existing high-confidence Combat Alerts evidence records ability 166031 as the Heartburn Vulnerability success result; bind the numeric alias to the canonical Heartburn mechanic rather than treating the result effect as a separate mechanic identity.",
       "observed_names": [],
       "event_shapes": [
         {
