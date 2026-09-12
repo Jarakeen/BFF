@@ -54,6 +54,7 @@ class ExtremeObjectiveNamedGearSetCatalogRealizationResult:
     breakpoints_pruned_equivalent: int = 0
     representative_limit_per_equivalence_class: int = 0
     equivalence_reduction_proven: bool = True
+    candidate_reduction_proven: bool = True
     unresolved: tuple[str, ...] = ()
 
     @property
@@ -76,6 +77,7 @@ class ExtremeObjectiveNamedGearSetCatalogRealizationResult:
     def denominator_proven(self) -> bool:
         return (
             self.equivalence_reduction_proven
+            and self.candidate_reduction_proven
             and self.realization.denominator_proven
             and not self.unresolved
         )
@@ -360,5 +362,6 @@ class ExtremeObjectiveNamedGearSetCatalogRealizationService:
             breakpoints_pruned_equivalent=equivalent_pruned,
             representative_limit_per_equivalence_class=representative_limit,
             equivalence_reduction_proven=True,
+            candidate_reduction_proven=True,
             unresolved=unresolved,
         )
