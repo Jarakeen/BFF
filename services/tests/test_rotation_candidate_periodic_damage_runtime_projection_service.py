@@ -186,6 +186,61 @@ def test_impact_anchor_uses_resolved_impact_time_for_duration_and_ticks() -> Non
     assert "activation anchor impact from reviewed U50 runtime evidence" in projection.entries[0].evidence
 
 
+def test_impact_anchored_refresh_uses_next_impact_not_next_cast() -> None:
+    impacts = {0: 0.5, 1: 5.8}
+    projection = RotationCandidatePeriodicDamageRuntimeProjectionService(
+        _TimingService(interval_seconds=2.0, duration_seconds=10.0),
+        activation_anchor_resolver=lambda action, anchor: (
+            impacts[action.sequence]
+            if anchor is PeriodicDamageActivationAnchor.IMPACT
+            else action.time_seconds
+        ),
+    ).project(
+        plan=_plan(_action(0.0, 0), _action(5.0, 1), duration=10.0),
+        semantics=(
+            _semantics(
+                first_tick=1.0,
+                anchor=PeriodicDamageActivationAnchor.IMPACT,
+            ),
+        ),
+    )
+
+    assert projection.resolved is True
+    assert tuple(event.time_seconds for event in projection.entries[0].events) == (
+        1.5,
+        3.5,
+        5.5,
+    )
+    assert projection.entries[0].active_end_time_seconds == 5.8
+    assert tuple(event.time_seconds for event in projection.entries[1].events) == (
+        6.8,
+        8.8,
+    )
+
+
+def test_impact_anchored_refresh_fails_closed_when_next_impact_is_unknown() -> None:
+    projection = RotationCandidatePeriodicDamageRuntimeProjectionService(
+        _TimingService(interval_seconds=1.0, duration_seconds=10.0),
+        activation_anchor_resolver=lambda action, anchor: (
+            0.25
+            if anchor is PeriodicDamageActivationAnchor.IMPACT and action.sequence == 0
+            else None
+        ),
+    ).project(
+        plan=_plan(_action(0.0, 0), _action(5.0, 1), duration=10.0),
+        semantics=(
+            _semantics(
+                first_tick=1.0,
+                anchor=PeriodicDamageActivationAnchor.IMPACT,
+            ),
+        ),
+    )
+
+    assert projection.resolved is False
+    assert projection.entries[0].events == ()
+    assert "next impact refresh anchor requires exact runtime anchor evidence" in projection.unresolved[0]
+
+
 def test_missing_reviewed_runtime_semantics_fail_closed() -> None:
     projection = RotationCandidatePeriodicDamageRuntimeProjectionService(
         _TimingService()
