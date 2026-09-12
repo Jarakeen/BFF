@@ -316,6 +316,7 @@ def main() -> int:
     theme.apply(app)
 
     window = MainWindow()
+    window.show_page("operations_console")
     if not foundry_icon.isNull():
         window.setWindowIcon(foundry_icon)
     window.show()
