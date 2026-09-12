@@ -7,9 +7,9 @@
       "review_blockers": [
         {
           "key": "creeping_manifold_healer_demand",
-          "summary": "Creeping Manifold is reviewed as unavoidable flame damage, and healer-specific Rockgrove guidance identifies it as a Xalvakka heal-check, but canonical timing, modeled demand width, and target scope are not yet reviewed for Rotation Builder execution.",
-          "needed_evidence": "Review Creeping Manifold timing/cadence and target scope, then explicitly approve the healing demand pattern, modeled window, and any preparation lead. Do not infer a clock window from the Phase 2 70% transition.",
-          "source_context": "data/encounter_evidence/rockgrove_boss3.json creeping_manifold; Facehead McGee Rockgrove Healer Guide chapter 'Heal-Check (Manifold)'"
+          "summary": "Creeping Manifold is reviewed as a healer obligation with sustained pressure semantics: source-backed encounter data describes continuous unavoidable high flame damage to several targets, and independent healer/raid sources consistently describe it as a heal-check. Rotation Builder execution is still blocked because canonical runtime timing, exact modeled demand width, and authoritative hardmode target scope are not yet established.",
+          "needed_evidence": "Validate Creeping Manifold from representative runtime/log evidence to establish cast-to-first-hit timing, active duration, tick cadence, and hardmode target scope. Existing research candidates are approximately 1.3-second damage frequency and 3 hardmode targets; keep both as corroboration only until runtime evidence confirms them. Demand kind=healing and pattern=sustained are reviewed; do not infer a clock window from the Phase 2 70% transition.",
+          "source_context": "data/eso_info/bosses/xalvakka.json Creeping Manifold; data/encounter_evidence/rockgrove_boss3.json creeping_manifold; Facehead McGee Rockgrove Healer Guide chapter 'Heal-Check (Manifold)'; ESOAZ Rockgrove HM guide (3-target research candidate); ESO official forum PTS Update 34 healer feedback by SeaUnicorn (1.3s-frequency research candidate)"
         },
         {
           "key": "xalvakka_stair_transition_healer_demand",
