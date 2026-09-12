@@ -114,6 +114,21 @@ def test_bar_swap_routes_later_light_attack_through_frost_staff_formula() -> Non
     assert evidence.damage_value == pytest.approx(3465.0)
 
 
+def test_bow_light_attack_uses_preserved_uesp_formula() -> None:
+    light = RotationAction(0.0, 0, RotationActionKind.LIGHT_ATTACK, bar="front")
+    candidate = _candidate(light)
+    service = RotationCandidateLightAttackDamageEvidenceService(
+        build=_build(front=WeaponType.BOW),
+        evaluation=_evaluation(),
+        initial_bar="front",
+    )
+
+    evidence = service.evaluate_action(candidate=candidate, action=light)
+
+    assert evidence.unresolved == ()
+    assert evidence.damage_value == pytest.approx(3465.0)
+
+
 def test_unsupported_weapon_family_remains_unresolved_not_zero() -> None:
     light = RotationAction(0.0, 0, RotationActionKind.LIGHT_ATTACK, bar="front")
     candidate = _candidate(light)
