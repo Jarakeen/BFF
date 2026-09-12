@@ -24,7 +24,9 @@ class RotationGenerateActionSupport:
 
     Once configured, Generate resolves evidence for the exact selected encounter and
     either runs the canonical/cadence orchestration path or reports the blocking
-    evidence. Explicit role evidence is forwarded unchanged. When authoritative
+    evidence. Shared bundle readiness is checked before role-specific evidence is
+    composed so missing encounter/build policy cannot be misreported as a role-output
+    failure. Explicit role evidence is forwarded unchanged. When authoritative
     plan-evidence inputs or a canonical composer are configured, the router composes
     role evidence from the selected saved build and resolved encounter bundle. It never
     derives healer reliability or assignment exceptions from display state. It never
@@ -110,6 +112,7 @@ class RotationGenerateActionSupport:
 
         try:
             bundle = page.selected_encounter_evidence_bundle(context.evidence_inputs)
+            self._require_ready_bundle(bundle)
             player_build = None
             if (
                 context.role_evidence_inputs is not None
@@ -142,6 +145,34 @@ class RotationGenerateActionSupport:
             encounter_id = page.selected_encounter_id()
             scope = f" for {encounter_id}" if encounter_id else ""
             page.status.info(f"Canonical rotation generated{scope}.")
+
+    @staticmethod
+    def _require_ready_bundle(bundle) -> None:
+        if bool(getattr(bundle, "ready", True)):
+            return
+        details = [
+            str(item).strip()
+            for item in getattr(bundle, "unresolved", ())
+            if str(item).strip()
+        ]
+        blocking_gaps = getattr(bundle, "blocking_knowledge_gaps", None)
+        if blocking_gaps is None:
+            blocking_gaps = tuple(
+                gap
+                for gap in getattr(bundle, "knowledge_gaps", ())
+                if bool(getattr(gap, "blocking", True))
+            )
+        for gap in blocking_gaps:
+            summary = str(getattr(gap, "summary", "") or "").strip()
+            needed = str(getattr(gap, "needed_evidence", "") or "").strip()
+            if summary and needed:
+                details.append(f"{summary} Bring back: {needed}")
+            elif summary:
+                details.append(summary)
+        detail = "; ".join(details) or "unspecified unresolved evidence"
+        raise ValueError(
+            "canonical rotation evidence bundle is not ready for Generate: " + detail
+        )
 
 
 
