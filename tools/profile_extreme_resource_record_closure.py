@@ -2,11 +2,10 @@ from __future__ import annotations
 
 """Profile one Extreme max-resource published-record closure run.
 
-This tool is deliberately diagnostic. It executes the same authoritative record
-service used by the closure audit under ``cProfile`` and prints cumulative and
-self-time hot spots even when the run is interrupted with Ctrl+C. That makes it
-possible to optimize the whole scoring stack from measured call volume instead
-of discovering one repeated database reader per KeyboardInterrupt traceback.
+The canonical static snapshot is warmed before profiling so the report isolates
+candidate-search/scoring cost from the intentional one-time cost of loading immutable
+ESO evidence. Ctrl+C still prints the partial profile, making this useful without
+waiting for the full exhaustive search to finish.
 """
 
 import argparse
@@ -21,6 +20,9 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from services.extreme_resource_canonical_static_snapshot_service import (
+    ExtremeResourceCanonicalStaticSnapshotService,
+)
 from services.extreme_structural_named_gear_mundus_food_potion_core_stat_record_service import (
     ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService,
 )
@@ -32,8 +34,8 @@ _OBJECTIVES = ("max_health", "max_magicka", "max_stamina")
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Profile the authoritative Extreme max-resource record search. Interrupting "
-            "the run still prints the hottest cumulative/self-time functions."
+            "Profile the authoritative Extreme max-resource record search after warming "
+            "the canonical static snapshot. Interrupting still prints hot spots."
         )
     )
     parser.add_argument("--database", default="data/eso.db")
@@ -71,6 +73,23 @@ def _render(profile: cProfile.Profile, *, limit: int) -> str:
 def main() -> int:
     args = _parser().parse_args()
     database = Path(args.database)
+
+    warm_started = perf_counter()
+    snapshot = ExtremeResourceCanonicalStaticSnapshotService(database).build()
+    warm_elapsed = perf_counter() - warm_started
+
+    print("EXTREME RESOURCE STATIC SNAPSHOT")
+    print(f"database={snapshot.database_path}")
+    print(f"preload_seconds={warm_elapsed:.3f}")
+    print(f"preload_complete={snapshot.preload_complete}")
+    print(f"player_skills={len(snapshot.player_skills)}")
+    print(f"cp_non_slottable={len(snapshot.champion_points_non_slottable)}")
+    print(f"cp_slottable={len(snapshot.champion_points_slottable)}")
+    if snapshot.preload_unresolved:
+        print("preload_unresolved=")
+        for item in snapshot.preload_unresolved:
+            print(f"  {item}")
+
     service = ExtremeStructuralNamedGearMundusFoodPotionCoreStatRecordService(
         database_path=database
     )
@@ -90,9 +109,8 @@ def main() -> int:
 
     elapsed = perf_counter() - started
     print("EXTREME RESOURCE RECORD PROFILE")
-    print(f"database={database}")
     print(f"objective={args.objective}")
-    print(f"elapsed_seconds={elapsed:.3f}")
+    print(f"profiled_elapsed_seconds={elapsed:.3f}")
     print(f"completed={completed}")
     if record is not None:
         print(f"raw_value={record.raw_value}")
