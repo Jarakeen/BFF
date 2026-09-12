@@ -55,14 +55,15 @@ class RotationCandidateSkillDamageEvidenceService:
 
     Direct and periodic components share the same combat-routing helper only when
     reviewed runtime evidence permits it. Periodic tick scheduling is owned by the
-    shared runtime projection. Cast-time magnitude may be reused for all projected
-    ticks only when reviewed semantics explicitly say ``snapshot_at_cast``. Dynamic
-    per-tick magnitude is recomputed only when an authoritative exact-time runtime
-    build-context resolver is supplied for every projected tick. When an authoritative
-    target-state resolver is supplied, dynamic ticks also resolve Damage Taken at the
-    exact tick timestamp rather than inheriting target state from cast time. Explicit
-    successive-hit scaling is applied by occurrence index only when reviewed
-    semantics provide a multiplier.
+    shared runtime projection. ``snapshot_at_cast`` freezes source magnitude,
+    attacker state, and mitigation inputs at cast time; authoritative target-side
+    Damage Taken may still be resolved independently at each projected occurrence.
+    Dynamic per-tick magnitude is recomputed only when an authoritative exact-time
+    runtime build-context resolver is supplied for every projected tick. When an
+    authoritative target-state resolver is supplied, dynamic ticks also resolve
+    Damage Taken at the exact tick timestamp rather than inheriting target state from
+    cast time. Explicit successive-hit scaling is applied by occurrence index only
+    when reviewed semantics provide a multiplier.
     """
 
     def __init__(
@@ -228,18 +229,19 @@ class RotationCandidateSkillDamageEvidenceService:
                     total_damage += dynamic_damage
                     continue
 
-                component_damage = self._resolve_component_damage(
-                    context=self.context,
-                    base_value=float(component.final_value),
-                    classification=classification,
-                    dd_stats=dd_stats,
-                    damage_done=damage_done,
-                    damage_taken=damage_taken,
-                )
                 total_damage += sum(
-                    component_damage
+                    self._resolve_component_damage(
+                        context=self.context,
+                        base_value=float(component.final_value),
+                        classification=classification,
+                        dd_stats=dd_stats,
+                        damage_done=damage_done,
+                        damage_taken=damage_taken_from_target_state(
+                            self._target_state_for_runtime_event(event)
+                        ),
+                    )
                     * self._occurrence_multiplier(semantic, occurrence_index)
-                    for occurrence_index, _event in enumerate(runtime_entry.events)
+                    for occurrence_index, event in enumerate(runtime_entry.events)
                 )
                 continue
 
@@ -263,6 +265,14 @@ class RotationCandidateSkillDamageEvidenceService:
             time_seconds=action.time_seconds,
             sequence=action.sequence,
             damage_value=total_damage,
+        )
+
+    def _target_state_for_runtime_event(self, event) -> CombatState | None:
+        if self.runtime_target_combat_state_resolver is None:
+            return self.target_combat_state
+        return self.runtime_target_combat_state_resolver(
+            float(event.time_seconds),
+            None,
         )
 
     def _resolve_dynamic_periodic_damage(
@@ -333,13 +343,9 @@ class RotationCandidateSkillDamageEvidenceService:
             )
             tick_dd_stats = evaluate_dd_stats(calculation, evaluation_context)
             tick_damage_done = damage_done_from_combat_state(tick_context.combat_state)
-            target_state = self.target_combat_state
-            if self.runtime_target_combat_state_resolver is not None:
-                target_state = self.runtime_target_combat_state_resolver(
-                    float(event.time_seconds),
-                    None,
-                )
-            tick_damage_taken = damage_taken_from_target_state(target_state)
+            tick_damage_taken = damage_taken_from_target_state(
+                self._target_state_for_runtime_event(event)
+            )
             total_damage += self._resolve_component_damage(
                 context=tick_context,
                 base_value=float(tick_components[0].final_value),
