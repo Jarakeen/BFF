@@ -118,6 +118,35 @@ ROTATION_DD_PERIODIC_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "impact activation anchor and offset but never promotes semantics automatically."
         ),
     ),
+    ServiceDescriptor(
+        service_id="rotation.dd.periodic_esologs_refresh_boundary_evidence",
+        domain="rotation",
+        purpose=(
+            "Observe cast-track-linked old periodic events around the next reviewed "
+            "activation impact to support DD refresh-boundary review."
+        ),
+        implementation_path=(
+            "services.rotation_dd_periodic_esologs_refresh_boundary_evidence_service"
+        ),
+        inputs=(
+            "CanonicalSkillIdentity",
+            "EsoLogsImpactAbilityId",
+            "EsoLogsPeriodicAbilityId",
+            "EsoLogsCastTrackId",
+            "EsoLogsLogEvent",
+        ),
+        outputs=("RotationDDPeriodicEsoLogsRefreshBoundaryEvidenceReport",),
+        responsibilities=("rotation_dd_periodic_esologs_refresh_boundary_evidence",),
+        roles=("DD", "DPS"),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.OBSERVATIONAL,
+        notes=(
+            "Read-only boundary evidence. Replacement is measured at the reviewed "
+            "activation event, not blindly at button press. Numeric IDs remain evidence "
+            "handles and the probe never promotes executable refresh policy automatically."
+        ),
+    ),
 )
 
 
