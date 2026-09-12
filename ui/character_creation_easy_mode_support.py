@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QPushButton,
     QSizePolicy,
     QVBoxLayout,
 )
@@ -36,6 +37,7 @@ _INSTALLED = False
 _ROLES = ("Damage Dealer", "Healer", "Tank", "Support DD")
 _ALLIANCES = ("", "Aldmeri Dominion", "Daggerfall Covenant", "Ebonheart Pact")
 
+
 def _style_create_character_button(button: FoundryButton) -> FoundryButton:
     """Mark creation entry points for the active visual theme."""
     button.setProperty("newBuildAction", True)
@@ -51,6 +53,53 @@ def _overview_action_pill(text: str) -> FoundryButton:
     button.setCursor(Qt.CursorShape.PointingHandCursor)
     button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
     return button
+
+
+def _detach_card_buttons(layout) -> list[QPushButton]:
+    """Remove buttons from a card layout while preserving their visual order."""
+    buttons: list[QPushButton] = []
+    index = 0
+    while index < layout.count():
+        item = layout.itemAt(index)
+        widget = item.widget()
+        nested = item.layout()
+        if isinstance(widget, QPushButton):
+            layout.takeAt(index)
+            widget.setParent(None)
+            buttons.append(widget)
+            continue
+        if nested is not None:
+            buttons.extend(_detach_card_buttons(nested))
+        index += 1
+    return buttons
+
+
+def _add_centered_footer(card, buttons: list[QPushButton], *, add_stretch: bool = True) -> None:
+    """Place card actions on a centered footer row instead of the left edge."""
+    if not buttons:
+        return
+    if add_stretch:
+        card.addStretch(1)
+    row = QHBoxLayout()
+    row.setContentsMargins(0, 0, 0, 0)
+    row.setSpacing(6)
+    row.addStretch(1)
+    for button in buttons:
+        row.addWidget(button)
+    row.addStretch(1)
+    card.addLayout(row)
+
+
+def _center_existing_footer_buttons(card) -> None:
+    buttons = _detach_card_buttons(card.body_layout)
+    _add_centered_footer(card, buttons)
+
+
+def _remove_body_label(card, predicate) -> None:
+    for label in card.body.findChildren(QLabel):
+        if predicate(label):
+            label.setParent(None)
+            label.deleteLater()
 
 
 class CharacterCreationEasyModePanel(QFrame):
@@ -344,6 +393,17 @@ def install() -> None:
     original_raid_status_card = OperationsConsole._raid_status_card
     original_overview_build_ui = OperationsConsole._build_ui
     original_overview_render = OperationsConsole._render
+    original_player_card = OperationsConsole._player_card
+    original_key_stats_card = OperationsConsole._key_stats_card
+    original_collectibles_card = OperationsConsole._collectibles_card
+    original_coverage_card = OperationsConsole._coverage_card
+    original_warnings_card = OperationsConsole._warnings_card
+    original_roster_card = OperationsConsole._roster_card
+    original_provides_card = OperationsConsole._provides_card
+    original_gear_card = OperationsConsole._gear_card
+    original_achievements_card = OperationsConsole._achievements_card
+    original_raid_schedule_card = OperationsConsole._raid_schedule_card
+    original_skills_to_work_on_card = OperationsConsole._skills_to_work_on_card
     original_editor_build_ui = BuildEditor._build_ui
     original_identity_card = BuildEditor._build_identity_card
 
@@ -378,6 +438,15 @@ def install() -> None:
 
     def _overview_build_ui(self):
         original_overview_build_ui(self)
+
+        # The Main Page no longer repeats encounter/readiness status in the
+        # header. Keep the underlying labels alive because the legacy refresh
+        # methods still update them, but hidden widgets consume no layout space.
+        for label in (self.trial_label, self.pull_readiness_label):
+            host = label.parentWidget()
+            if host is not None:
+                host.setVisible(False)
+
         self.create_character_button = _style_create_character_button(
             FoundryButton("+ Create a New Build", role=ButtonRole.PRIMARY, compact=True)
         )
@@ -392,10 +461,93 @@ def install() -> None:
         roster_role, status = original_role_for(self, build)
         return roster_role or str(getattr(build, "Role", "") or "").strip(), status
 
+    def _player_card(self, build):
+        card = original_player_card(self, build)
+
+        # The build-name badge sat between class/race/role and the resource
+        # bars like a stray nametag. The character identity above it already
+        # supplies the useful context.
+        _remove_body_label(
+            card,
+            lambda label: bool(label.property("cardBadge")),
+        )
+
+        buttons = _detach_card_buttons(card.body_layout)
+        remaining = [button for button in buttons if button.text() not in {"Build", "Stats"}]
+        for button in buttons:
+            if button not in remaining:
+                button.deleteLater()
+        _add_centered_footer(card, remaining)
+        return card
+
     def _raid_status_card(self):
         card = original_raid_status_card(self)
         card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         card.setMinimumHeight(255)
+        _add_centered_footer(card, [_overview_action_pill("Build")])
+        return card
+
+    def _key_stats_card(self, build):
+        card = original_key_stats_card(self, build)
+        _remove_body_label(
+            card,
+            lambda label: (
+                label.text().startswith("Static front-bar snapshot")
+                or (
+                    label.text().startswith("?")
+                    and "gear effect(s) unresolved" in label.text()
+                )
+            ),
+        )
+        _add_centered_footer(card, [_overview_action_pill("Stats")])
+        return card
+
+    def _collectibles_card(self):
+        card = original_collectibles_card(self)
+        card.setProperty("overviewAccent", None)
+        card.style().unpolish(card)
+        card.style().polish(card)
+        _add_centered_footer(card, [_overview_action_pill("Collectibles")], add_stretch=False)
+        return card
+
+    def _coverage_card(self, covered, providers):
+        card = original_coverage_card(self, covered, providers)
+        _center_existing_footer_buttons(card)
+        return card
+
+    def _warnings_card(self, covered):
+        card = original_warnings_card(self, covered)
+        _center_existing_footer_buttons(card)
+        return card
+
+    def _roster_card(self):
+        card = original_roster_card(self)
+        _center_existing_footer_buttons(card)
+        return card
+
+    def _provides_card(self, build):
+        card = original_provides_card(self, build)
+        _center_existing_footer_buttons(card)
+        return card
+
+    def _gear_card(self, build):
+        card = original_gear_card(self, build)
+        _center_existing_footer_buttons(card)
+        return card
+
+    def _achievements_card(self):
+        card = original_achievements_card(self)
+        _center_existing_footer_buttons(card)
+        return card
+
+    def _raid_schedule_card(self, build):
+        card = original_raid_schedule_card(self, build)
+        _center_existing_footer_buttons(card)
+        return card
+
+    def _skills_to_work_on_card(self, build):
+        card = original_skills_to_work_on_card(self, build)
+        _center_existing_footer_buttons(card)
         return card
 
     def _render(self, *_args):
@@ -417,7 +569,18 @@ def install() -> None:
     BuildsPage._build_ui = _build_ui
     BuildsPage._role_for = _role_for
     OperationsConsole._build_ui = _overview_build_ui
+    OperationsConsole._player_card = _player_card
     OperationsConsole._raid_status_card = _raid_status_card
+    OperationsConsole._key_stats_card = _key_stats_card
+    OperationsConsole._collectibles_card = _collectibles_card
+    OperationsConsole._coverage_card = _coverage_card
+    OperationsConsole._warnings_card = _warnings_card
+    OperationsConsole._roster_card = _roster_card
+    OperationsConsole._provides_card = _provides_card
+    OperationsConsole._gear_card = _gear_card
+    OperationsConsole._achievements_card = _achievements_card
+    OperationsConsole._raid_schedule_card = _raid_schedule_card
+    OperationsConsole._skills_to_work_on_card = _skills_to_work_on_card
     OperationsConsole._render = _render
     OperationsConsole._compact_button = staticmethod(_overview_action_pill)
     BuildEditor._build_ui = _editor_build_ui
