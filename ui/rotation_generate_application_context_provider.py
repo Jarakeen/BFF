@@ -46,6 +46,10 @@ class RotationGenerateApplicationContextProvider:
     persisted registry. Threshold policies additionally require explicit difficulty and
     raid DPS from the live page; constant raid DPS is represented as an explicit damage
     trajectory rather than inferred from build potency, parse targets, or encounter name.
+
+    Persisted review blockers are converted into canonical blocking knowledge gaps. This
+    lets partly researched encounters fail closed with the exact missing policy decision
+    instead of collapsing back to a generic "no policy configured" state.
     """
 
     def __init__(
@@ -155,8 +159,29 @@ class RotationGenerateApplicationContextProvider:
         provider = self.demand_policy_provider
         clock_policies = provider.policies_for(encounter_id)
         threshold_policies = provider.threshold_policies_for(encounter_id)
+
+        review_blockers = ()
+        blockers_for = getattr(provider, "review_blockers_for", None)
+        if callable(blockers_for):
+            review_blockers = tuple(blockers_for(encounter_id) or ())
+
         if clock_policies is not None and threshold_policies is not None:
-            return tuple(clock_policies), tuple(threshold_policies), ()
+            blocker_gaps = tuple(
+                CanonicalKnowledgeGap(
+                    domain=CanonicalKnowledgeDomain.ENCOUNTER_DEMAND,
+                    key=f"{encounter_id}.{blocker.key}",
+                    summary=blocker.summary,
+                    needed_evidence=blocker.needed_evidence,
+                    consumers=("rotation_maker",),
+                    source_context=(
+                        blocker.source_context
+                        or f"selected encounter: {encounter_id}"
+                    ),
+                    blocking=True,
+                )
+                for blocker in review_blockers
+            )
+            return tuple(clock_policies), tuple(threshold_policies), blocker_gaps
 
         return (), (), (
             CanonicalKnowledgeGap(
