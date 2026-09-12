@@ -14,6 +14,9 @@ from services.rotation_candidate_periodic_damage_runtime_projection_service impo
 from services.rotation_dd_periodic_runtime_semantics_registry_service import (
     RotationDDPeriodicRuntimeSemanticsRegistryService,
 )
+from services.rotation_dd_reviewed_skill_component_repository import (
+    RotationDDReviewedSkillComponentRepository,
+)
 
 
 @dataclass(frozen=True)
@@ -44,9 +47,11 @@ class RotationDDPeriodicRuntimeSemanticsGapAuditService:
 
     Requested skills are normalized to canonical lower-snake-case ability identity.
     Numeric ESO ability IDs remain repository crosswalk details and are never used as
-    the durable audit key. Only components explicitly classified as damage + DoT are
-    eligible for the missing-semantics queue. Unknown periodic identity stays
-    unresolved rather than being guessed from duration, tooltip prose, or names.
+    the durable audit key. Reviewed DD component identities are layered over the
+    read-only canonical database before periodic filtering. Only components explicitly
+    classified as damage + DoT are eligible for the missing-semantics queue. Unknown
+    periodic identity stays unresolved rather than being guessed from duration,
+    tooltip prose, or names.
     """
 
     def __init__(
@@ -54,14 +59,14 @@ class RotationDDPeriodicRuntimeSemanticsGapAuditService:
         database_path: str | Path,
         *,
         coefficient_repository: SkillCoefficientRepository | None = None,
-        component_repository: SkillComponentRepository | None = None,
+        component_repository: SkillComponentRepository | object | None = None,
         semantics_registry: RotationDDPeriodicRuntimeSemanticsRegistryService | None = None,
     ) -> None:
         self.database_path = Path(database_path)
         self.coefficients = coefficient_repository or SkillCoefficientRepository(
             self.database_path
         )
-        self.components = component_repository or SkillComponentRepository(
+        self.components = component_repository or RotationDDReviewedSkillComponentRepository(
             self.database_path
         )
         self.semantics_registry = (
