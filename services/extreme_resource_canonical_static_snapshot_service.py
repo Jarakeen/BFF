@@ -11,6 +11,8 @@ instead of rebuilding static readers for every scorer instance.
 
 from dataclasses import dataclass
 from pathlib import Path
+import sqlite3
+from typing import Callable, TypeVar
 
 from minmax.armor_glyph_repository import ArmorGlyphEffectRepository
 from minmax.champion_point_static_repository import (
@@ -25,6 +27,9 @@ from services.extreme_skill_universe_service import (
     ExtremePlayerSkillRecord,
     ExtremeSkillUniverseService,
 )
+
+
+_T = TypeVar("_T")
 
 
 @dataclass(frozen=True)
@@ -44,6 +49,11 @@ class ExtremeResourceCanonicalStaticSnapshot:
     champion_points_slottable: tuple[ChampionPointRecord, ...]
     armor_glyph_names: tuple[str, ...]
     jewelry_glyph_names: tuple[str, ...]
+    preload_unresolved: tuple[str, ...] = ()
+
+    @property
+    def preload_complete(self) -> bool:
+        return not self.preload_unresolved
 
 
 class ExtremeResourceCanonicalStaticSnapshotService:
@@ -65,6 +75,19 @@ class ExtremeResourceCanonicalStaticSnapshotService:
     def cache_key(self) -> str:
         return str(self.database_path.resolve())
 
+    @staticmethod
+    def _preload(
+        label: str,
+        loader: Callable[[], tuple[_T, ...]],
+    ) -> tuple[tuple[_T, ...], str | None]:
+        try:
+            return tuple(loader()), None
+        except (sqlite3.Error, OSError) as exc:
+            # Snapshot warming is an optimization boundary, not a mechanic owner.
+            # Preserve the failure as evidence and leave the canonical repository
+            # untouched so later proof/scoring calls still fail closed normally.
+            return (), f"Extreme static snapshot preload unavailable [{label}]: {exc}"
+
     def build(self) -> ExtremeResourceCanonicalStaticSnapshot:
         cached = self._CACHE.get(self.cache_key)
         if cached is not None:
@@ -78,16 +101,42 @@ class ExtremeResourceCanonicalStaticSnapshotService:
         champion_point_repository = ChampionPointStaticRepository(self.database_path)
         skill_universe_service = ExtremeSkillUniverseService(self.database_path)
 
-        # Warm the broad immutable catalogues once. Per-name repository lookups stay
-        # lazy and canonical; their existing instance caches now survive for the
-        # lifetime of the snapshot rather than being discarded between candidates.
-        player_skills = tuple(skill_universe_service.all_player_skills())
-        champion_points_non_slottable = tuple(
-            champion_point_repository.non_slottable_records()
+        unresolved: list[str] = []
+
+        player_skills, error = self._preload(
+            "player skills",
+            skill_universe_service.all_player_skills,
         )
-        champion_points_slottable = tuple(champion_point_repository.slottable_records())
-        armor_glyph_names = tuple(armor_glyph_repository.list_names())
-        jewelry_glyph_names = tuple(jewelry_glyph_repository.list_names())
+        if error:
+            unresolved.append(error)
+
+        champion_points_non_slottable, error = self._preload(
+            "non-slottable champion points",
+            champion_point_repository.non_slottable_records,
+        )
+        if error:
+            unresolved.append(error)
+
+        champion_points_slottable, error = self._preload(
+            "slottable champion points",
+            champion_point_repository.slottable_records,
+        )
+        if error:
+            unresolved.append(error)
+
+        armor_glyph_names, error = self._preload(
+            "armor glyph names",
+            armor_glyph_repository.list_names,
+        )
+        if error:
+            unresolved.append(error)
+
+        jewelry_glyph_names, error = self._preload(
+            "jewelry glyph names",
+            jewelry_glyph_repository.list_names,
+        )
+        if error:
+            unresolved.append(error)
 
         snapshot = ExtremeResourceCanonicalStaticSnapshot(
             database_path=self.database_path.resolve(),
@@ -103,6 +152,7 @@ class ExtremeResourceCanonicalStaticSnapshotService:
             champion_points_slottable=champion_points_slottable,
             armor_glyph_names=armor_glyph_names,
             jewelry_glyph_names=jewelry_glyph_names,
+            preload_unresolved=tuple(unresolved),
         )
         self._CACHE[self.cache_key] = snapshot
         return snapshot
