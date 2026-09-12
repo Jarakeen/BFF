@@ -2,14 +2,20 @@ from __future__ import annotations
 
 """Proof-reduce provisioning choices for Extreme max-resource ceilings.
 
-The full canonical provisioning catalogue is still reviewed.  For Max Magicka and
+The full canonical provisioning catalogue is still reviewed. For Max Magicka and
 Max Stamina, static provisioning effects are additive and non-negative, so only the
 strongest witness in each semantic provisioning kind can affect the objective.
 Keeping food and drink separate preserves runtime conditions such as
 ``drink_buff_active`` while avoiding repeated scoring of every recipe.
+
+Canonical provisioning entries whose static resolver has no mapped sheet stats are
+not automatically blockers. Their source tooltip may prove objective irrelevance
+when the target resource is absent, or appears only in an explicitly recovery-only
+clause. Anything that could plausibly describe the target maximum remains unresolved.
 """
 
 from dataclasses import dataclass
+import re
 import sqlite3
 
 from minmax.effects import EffectOperation
@@ -20,6 +26,10 @@ from minmax.stat_ids import StatId
 _OBJECTIVE_STATS = {
     "max_magicka": StatId.MAX_MAGICKA,
     "max_stamina": StatId.MAX_STAMINA,
+}
+_OBJECTIVE_RESOURCE_WORD = {
+    "max_magicka": "magicka",
+    "max_stamina": "stamina",
 }
 
 
@@ -97,6 +107,42 @@ class ExtremeResourceProvisioningProjectionService:
             return candidate
         return current
 
+    def _unmapped_description_proven_irrelevant(
+        self,
+        objective_key: str,
+        name: str,
+    ) -> bool:
+        description_getter = getattr(self.repository, "description", None)
+        if not callable(description_getter):
+            return False
+        description = str(description_getter(name) or "").strip()
+        if not description:
+            return False
+
+        text = " ".join(description.casefold().split())
+        resource = _OBJECTIVE_RESOURCE_WORD[objective_key]
+        if resource not in text:
+            return True
+
+        # Any source tooltip that couples the target resource with a Max clause is
+        # potentially relevant and must remain explicit rather than being guessed away.
+        if "max" in text:
+            return False
+
+        # Remove reviewed recovery-only grammar. This covers both explicit single
+        # recovery clauses and ESO's shared "Magicka and Stamina Recovery" wording.
+        recovery_patterns = (
+            r"health\s*,?\s*magicka\s*,?\s*(?:and\s*)?stamina\s+recovery",
+            r"magicka\s+and\s+stamina\s+recovery",
+            r"magicka\s+recovery",
+            r"stamina\s+recovery",
+        )
+        remainder = text
+        for pattern in recovery_patterns:
+            remainder = re.sub(pattern, " ", remainder)
+        remainder = " ".join(remainder.split())
+        return resource not in remainder
+
     def build(self, objective_key: str) -> ExtremeResourceProvisioningProjection:
         key = str(objective_key or "").strip().casefold()
         target = _OBJECTIVE_STATS.get(key)
@@ -112,7 +158,10 @@ class ExtremeResourceProvisioningProjectionService:
             if not name:
                 continue
             effects, effect_unresolved = self.repository.resolve(name)
+            if effect_unresolved and self._unmapped_description_proven_irrelevant(key, name):
+                continue
             unresolved.extend(str(item) for item in effect_unresolved if str(item))
+
             kind, kind_unresolved = self._kind(name)
             unresolved.extend(kind_unresolved)
             if effect_unresolved or kind not in best:
