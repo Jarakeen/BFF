@@ -3,6 +3,7 @@ import json
 import pytest
 
 from services.rotation_candidate_periodic_damage_runtime_projection_service import (
+    PeriodicDamageActivationAnchor,
     PeriodicDamageMagnitudePolicy,
     PeriodicDamageRefreshBoundary,
 )
@@ -30,6 +31,7 @@ def test_registry_loads_explicit_runtime_and_magnitude_semantics(tmp_path) -> No
                         "coefficient_number": 2,
                         "first_tick_offset_seconds": 2.0,
                         "refresh_boundary": "replace_before_recast_tick",
+                        "activation_anchor": "impact",
                         "magnitude_policy": "snapshot_at_cast",
                         "successive_hit_multiplier": 1.15,
                         "source": "reviewed U50 combat evidence",
@@ -47,9 +49,36 @@ def test_registry_loads_explicit_runtime_and_magnitude_semantics(tmp_path) -> No
     assert row.skill_entity_id == "burning_talons"
     assert row.coefficient_number == 2
     assert row.refresh_boundary is PeriodicDamageRefreshBoundary.REPLACE_BEFORE_RECAST_TICK
+    assert row.activation_anchor is PeriodicDamageActivationAnchor.IMPACT
     assert row.magnitude_policy is PeriodicDamageMagnitudePolicy.SNAPSHOT_AT_CAST
     assert row.successive_hit_multiplier == 1.15
     assert row.source == "reviewed U50 combat evidence"
+
+
+def test_registry_defaults_legacy_entries_to_cast_anchor(tmp_path) -> None:
+    path = tmp_path / "dd_periodic.json"
+    path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "entries": [
+                    {
+                        "skill_entity_id": "burning_talons",
+                        "coefficient_number": 2,
+                        "first_tick_offset_seconds": 2.0,
+                        "refresh_boundary": "replace_before_recast_tick",
+                        "magnitude_policy": "snapshot_at_cast",
+                        "source": "reviewed U50 combat evidence",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    row = RotationDDPeriodicRuntimeSemanticsRegistryService(path).load()[0]
+
+    assert row.activation_anchor is PeriodicDamageActivationAnchor.CAST
 
 
 def test_registry_rejects_duplicate_component_semantics(tmp_path) -> None:
