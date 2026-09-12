@@ -149,10 +149,31 @@ class RotationGenerateActionSupport:
             page.status.warning(f"Encounter-aware rotation generation blocked: {exc}")
             return
 
-        if result.final_plan is not None and result.cadence_evidence is None:
+        if result.final_plan is None:
+            reasons = self._canonical_validation_reasons(result)
+            if reasons:
+                page.status.warning(
+                    "Canonical rotation not selected: " + "; ".join(reasons)
+                )
+            return
+
+        if result.cadence_evidence is None:
             encounter_id = page.selected_encounter_id()
             scope = f" for {encounter_id}" if encounter_id else ""
             page.status.info(f"Canonical rotation generated{scope}.")
+
+    @staticmethod
+    def _canonical_validation_reasons(result) -> tuple[str, ...]:
+        canonical_result = getattr(result, "canonical_result", None)
+        candidate_result = getattr(canonical_result, "candidate_result", None)
+        validation = getattr(candidate_result, "validation", None)
+        return tuple(
+            dict.fromkeys(
+                str(item).strip()
+                for item in getattr(validation, "reasons", ())
+                if str(item).strip()
+            )
+        )
 
     @staticmethod
     def _require_ready_bundle(bundle) -> None:
