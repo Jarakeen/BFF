@@ -28,6 +28,9 @@ from services.rotation_candidate_periodic_damage_runtime_projection_service impo
     RotationCandidatePeriodicDamageRuntimeProjectionService,
     RotationPeriodicDamageRuntimeSemantics,
 )
+from services.rotation_plan_runtime_build_context_service import (
+    RotationRuntimeBuildContextResolver,
+)
 
 
 class RotationCandidateSkillDamageEvidenceService:
@@ -43,8 +46,8 @@ class RotationCandidateSkillDamageEvidenceService:
     reviewed runtime evidence permits it. Periodic tick scheduling is owned by the
     shared runtime projection. Cast-time magnitude may be reused for all projected
     ticks only when reviewed semantics explicitly say ``snapshot_at_cast``. Dynamic
-    per-tick magnitude remains unresolved until exact-time runtime build context is
-    available for every projected tick.
+    per-tick magnitude is recomputed only when an authoritative exact-time runtime
+    build-context resolver is supplied for every projected tick.
     """
 
     def __init__(
@@ -62,6 +65,7 @@ class RotationCandidateSkillDamageEvidenceService:
         periodic_runtime_semantics: (
             tuple[RotationPeriodicDamageRuntimeSemantics, ...]
         ) = (),
+        runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
     ) -> None:
         self.database_path = Path(database_path)
         self.context = context
@@ -74,6 +78,7 @@ class RotationCandidateSkillDamageEvidenceService:
         self.target_critical_resistance = float(target_critical_resistance)
         self.periodic_runtime_projection_service = periodic_runtime_projection_service
         self.periodic_runtime_semantics = tuple(periodic_runtime_semantics)
+        self.runtime_build_context_resolver = runtime_build_context_resolver
 
     def evaluate_action(
         self,
@@ -158,19 +163,9 @@ class RotationCandidateSkillDamageEvidenceService:
                     action_name=action.name,
                     coefficient_number=component.coefficient_number,
                 )
-                if semantic is None:
+                if semantic is None or semantic.magnitude_policy is None:
                     unresolved.append(
                         f"{action.name}: coefficient {component.coefficient_number} periodic magnitude timing policy is unavailable"
-                    )
-                    continue
-                if semantic.magnitude_policy is None:
-                    unresolved.append(
-                        f"{action.name}: coefficient {component.coefficient_number} periodic magnitude timing policy is unavailable"
-                    )
-                    continue
-                if semantic.magnitude_policy is PeriodicDamageMagnitudePolicy.DYNAMIC_AT_TICK:
-                    unresolved.append(
-                        f"{action.name}: coefficient {component.coefficient_number} dynamic per-tick magnitude requires exact-time runtime build context projection"
                     )
                     continue
 
@@ -197,7 +192,21 @@ class RotationCandidateSkillDamageEvidenceService:
                     unresolved.extend(runtime_entry.unresolved)
                     continue
 
+                if semantic.magnitude_policy is PeriodicDamageMagnitudePolicy.DYNAMIC_AT_TICK:
+                    dynamic_damage, dynamic_unresolved = self._resolve_dynamic_periodic_damage(
+                        action=action,
+                        coefficient_number=component.coefficient_number,
+                        classification=classification,
+                        runtime_events=runtime_entry.events,
+                    )
+                    if dynamic_unresolved:
+                        unresolved.extend(dynamic_unresolved)
+                        continue
+                    total_damage += dynamic_damage
+                    continue
+
                 component_damage = self._resolve_component_damage(
+                    context=self.context,
                     base_value=float(component.final_value),
                     classification=classification,
                     dd_stats=dd_stats,
@@ -210,6 +219,7 @@ class RotationCandidateSkillDamageEvidenceService:
                 continue
 
             component_damage = self._resolve_component_damage(
+                context=self.context,
                 base_value=float(component.final_value),
                 classification=classification,
                 dd_stats=dd_stats,
@@ -232,6 +242,88 @@ class RotationCandidateSkillDamageEvidenceService:
             damage_value=total_damage,
         )
 
+    def _resolve_dynamic_periodic_damage(
+        self,
+        *,
+        action: RotationAction,
+        coefficient_number: int,
+        classification: SkillComponentClassification,
+        runtime_events,
+    ) -> tuple[float, tuple[str, ...]]:
+        if self.runtime_build_context_resolver is None:
+            return 0.0, (
+                f"{action.name}: coefficient {coefficient_number} dynamic per-tick magnitude requires exact-time runtime build context projection",
+            )
+
+        total_damage = 0.0
+        unresolved: list[str] = []
+        damage_taken = damage_taken_from_target_state(self.target_combat_state)
+
+        for event in runtime_events:
+            # Runtime ticks are not plan actions. Sequence=None asks the canonical
+            # runtime/bar projector for the state after all plan actions at this
+            # exact timestamp rather than fabricating an ordering token for the tick.
+            runtime = self.runtime_build_context_resolver(
+                float(event.time_seconds),
+                None,
+            )
+            if not runtime.resolved or runtime.context is None:
+                detail = tuple(runtime.unresolved) or (
+                    "exact-time runtime build context is unresolved",
+                )
+                unresolved.extend(
+                    f"{action.name}: coefficient {coefficient_number} tick at {float(event.time_seconds):g}s: {message}"
+                    for message in detail
+                )
+                continue
+
+            tick_context = runtime.context
+            calculation = calculation_result_from_build_context(tick_context)
+            if calculation is None:
+                unresolved.append(
+                    f"{action.name}: coefficient {coefficient_number} tick at {float(event.time_seconds):g}s has no resolved canonical core stat state"
+                )
+                continue
+
+            tick_tooltip = self.calculator.evaluate_entity_id(action.name, tick_context)
+            if tick_tooltip.skill is None or tick_tooltip.unresolved:
+                detail = tick_tooltip.unresolved or (
+                    "canonical skill rank is unavailable at runtime tick",
+                )
+                unresolved.extend(
+                    f"{action.name}: coefficient {coefficient_number} tick at {float(event.time_seconds):g}s: {message}"
+                    for message in detail
+                )
+                continue
+
+            tick_components = tuple(
+                item
+                for item in tick_tooltip.components
+                if item.coefficient_number == coefficient_number
+            )
+            if len(tick_components) != 1:
+                unresolved.append(
+                    f"{action.name}: coefficient {coefficient_number} tick at {float(event.time_seconds):g}s expected one runtime tooltip component, found {len(tick_components)}"
+                )
+                continue
+
+            evaluation_context = EvaluationContext(
+                fight_duration=tick_context.fight_duration,
+                target_resistance=tick_context.target_resistance,
+            )
+            tick_dd_stats = evaluate_dd_stats(calculation, evaluation_context)
+            tick_damage_done = damage_done_from_combat_state(tick_context.combat_state)
+            total_damage += self._resolve_component_damage(
+                context=tick_context,
+                base_value=float(tick_components[0].final_value),
+                classification=classification,
+                dd_stats=tick_dd_stats,
+                damage_done=tick_damage_done,
+                damage_taken=damage_taken,
+            )
+
+        return total_damage, tuple(dict.fromkeys(unresolved))
+
     def _periodic_semantics_for(
         self,
         *,
@@ -250,6 +342,7 @@ class RotationCandidateSkillDamageEvidenceService:
     def _resolve_component_damage(
         self,
         *,
+        context: BuildCalculationContext,
         base_value: float,
         classification: SkillComponentClassification,
         dd_stats,
@@ -274,12 +367,9 @@ class RotationCandidateSkillDamageEvidenceService:
             target_critical_resistance=self.target_critical_resistance,
         )
         mitigation = None
-        if (
-            self.context.target_resistance is not None
-            and raw.penetration_stat is not None
-        ):
+        if context.target_resistance is not None and raw.penetration_stat is not None:
             mitigation = calculate_dd_mitigation(
-                target_resistance=self.context.target_resistance,
+                target_resistance=context.target_resistance,
                 penetration=raw.penetration,
             )
         resolved = calculate_dd_damage(
