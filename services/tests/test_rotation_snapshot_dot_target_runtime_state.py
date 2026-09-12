@@ -24,7 +24,7 @@ def _trace(value: float):
     return SimpleNamespace(final_value=value)
 
 
-def _context():
+def _context(*, dd_exploiter_bonus=0.0):
     return SimpleNamespace(
         core_state=SimpleNamespace(
             derived={
@@ -39,6 +39,7 @@ def _context():
         fight_duration=10.0,
         target_resistance=None,
         combat_state=CombatState(),
+        dd_exploiter_bonus=float(dd_exploiter_bonus),
     )
 
 
@@ -101,15 +102,8 @@ class _Projection:
         )
 
 
-def test_snapshot_dot_keeps_source_snapshot_but_re_resolves_target_state_per_tick() -> None:
-    action = RotationAction(
-        0.0,
-        0,
-        RotationActionKind.SKILL,
-        name="snapshot_periodic_skill",
-        bar="front",
-    )
-    candidate = GeneratedRotationCandidate(
+def _candidate(action):
+    return GeneratedRotationCandidate(
         candidate_id="snapshot-target-state",
         plan=RotationPlan(
             character_name="Damage Tester",
@@ -119,6 +113,29 @@ def test_snapshot_dot_keeps_source_snapshot_but_re_resolves_target_state_per_tic
         ),
         refresh_leads=(),
         action_claims=(),
+    )
+
+
+def _semantics():
+    return (
+        RotationPeriodicDamageRuntimeSemantics(
+            skill_entity_id="snapshot_periodic_skill",
+            coefficient_number=1,
+            first_tick_offset_seconds=1.0,
+            refresh_boundary=PeriodicDamageRefreshBoundary.REPLACE_BEFORE_RECAST_TICK,
+            source="reviewed runtime evidence",
+            magnitude_policy=PeriodicDamageMagnitudePolicy.SNAPSHOT_AT_CAST,
+        ),
+    )
+
+
+def test_snapshot_dot_keeps_source_snapshot_but_re_resolves_target_state_per_tick() -> None:
+    action = RotationAction(
+        0.0,
+        0,
+        RotationActionKind.SKILL,
+        name="snapshot_periodic_skill",
+        bar="front",
     )
     target_calls = []
 
@@ -134,22 +151,47 @@ def test_snapshot_dot_keeps_source_snapshot_but_re_resolves_target_state_per_tic
         calculator=_Calculator(),
         component_repository=_Components(),
         periodic_runtime_projection_service=_Projection(action),
-        periodic_runtime_semantics=(
-            RotationPeriodicDamageRuntimeSemantics(
-                skill_entity_id="snapshot_periodic_skill",
-                coefficient_number=1,
-                first_tick_offset_seconds=1.0,
-                refresh_boundary=PeriodicDamageRefreshBoundary.REPLACE_BEFORE_RECAST_TICK,
-                source="reviewed runtime evidence",
-                magnitude_policy=PeriodicDamageMagnitudePolicy.SNAPSHOT_AT_CAST,
-            ),
-        ),
+        periodic_runtime_semantics=_semantics(),
         runtime_build_context_resolver=None,
         runtime_target_combat_state_resolver=target_state,
     )
 
-    evidence = service.evaluate_action(candidate=candidate, action=action)
+    evidence = service.evaluate_action(candidate=_candidate(action), action=action)
 
     assert evidence.unresolved == ()
     assert evidence.damage_value == pytest.approx(210.0)
     assert target_calls == [(1.0, None), (2.0, None)]
+
+
+def test_snapshot_dot_exploiter_uses_off_balance_state_at_each_tick() -> None:
+    action = RotationAction(
+        0.0,
+        0,
+        RotationActionKind.SKILL,
+        name="snapshot_periodic_skill",
+        bar="front",
+    )
+    target_calls = []
+
+    def target_state(time_seconds, sequence=None):
+        target_calls.append((float(time_seconds), sequence))
+        if float(time_seconds) == 1.0:
+            return CombatState(active_buffs=("Off Balance",))
+        return CombatState()
+
+    service = RotationCandidateSkillDamageEvidenceService(
+        database_path="unused-test.db",
+        context=_context(dd_exploiter_bonus=0.04),
+        calculator=_Calculator(),
+        component_repository=_Components(),
+        periodic_runtime_projection_service=_Projection(action),
+        periodic_runtime_semantics=_semantics(),
+        runtime_build_context_resolver=None,
+        runtime_target_combat_state_resolver=target_state,
+    )
+
+    evidence = service.evaluate_action(candidate=_candidate(action), action=action)
+
+    assert evidence.unresolved == ()
+    assert evidence.damage_value == pytest.approx(204.0)
+    assert target_calls == [(0.0, 0), (1.0, None), (2.0, None)]
