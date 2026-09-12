@@ -53,21 +53,24 @@ class RacialPassiveStatRepository:
 
     def __init__(self, database_path: str | Path) -> None:
         self.database_path = Path(database_path)
+        self._racial_passive_rows_cache: dict[str, tuple[tuple[str, int, str], ...]] = {}
 
     @staticmethod
     def _clean(text: object) -> str:
         value = _COLOR.sub("", str(text or ""))
         return " ".join(value.split())
 
-    def _racial_passive_rows(self, race_name: str) -> tuple[sqlite3.Row, ...]:
+    def _racial_passive_rows(self, race_name: str) -> tuple[tuple[str, int, str], ...]:
         if not self.database_path.exists():
             return ()
         race = self._clean(race_name)
         if not race:
             return ()
         expected_line = f"{race} Skills".casefold()
+        cached = self._racial_passive_rows_cache.get(expected_line)
+        if cached is not None:
+            return cached
         with sqlite3.connect(self.database_path) as db:
-            db.row_factory = sqlite3.Row
             rows = db.execute(
                 """
                 SELECT
@@ -84,7 +87,16 @@ class RacialPassiveStatRepository:
                 """,
                 (expected_line,),
             ).fetchall()
-        return tuple(rows)
+        result = tuple(
+            (
+                str(row[0] or ""),
+                int(row[1] or 0),
+                str(row[2] or ""),
+            )
+            for row in rows
+        )
+        self._racial_passive_rows_cache[expected_line] = result
+        return result
 
     @staticmethod
     def _add(stats: dict[str, float], key: str, value: float) -> None:
@@ -191,13 +203,13 @@ class RacialPassiveStatRepository:
                 unresolved=(f"Canonical racial passive rows not found: {race}",) if race else (),
             )
 
-        by_name_rank: dict[tuple[str, int], sqlite3.Row] = {}
+        by_name_rank: dict[tuple[str, int], tuple[str, int, str]] = {}
         passive_names: dict[str, str] = {}
-        for row in rows:
-            name = self._clean(row["passive_name"])
+        for passive_name, rank_value, description in rows:
+            name = self._clean(passive_name)
             key = name.casefold()
             passive_names[key] = name
-            by_name_rank[(key, int(row["rank"] or 0))] = row
+            by_name_rank[(key, int(rank_value or 0))] = (passive_name, rank_value, description)
 
         stats: dict[str, float] = {}
         boundaries: list[str] = []
@@ -219,7 +231,7 @@ class RacialPassiveStatRepository:
                 continue
             parsed, passive_boundaries, passive_unresolved = self._parse_description(
                 canonical_name,
-                str(row["description"] or ""),
+                row[2],
             )
             for stat, value in parsed.items():
                 self._add(stats, stat, value)
