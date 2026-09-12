@@ -1,5 +1,6 @@
 import sqlite3
 
+import minmax.skill_component_damage_scaling_repository as damage_scaling_module
 from minmax.skill_component_damage_scaling import SkillComponentDamageScalingType
 from minmax.skill_component_damage_scaling_repository import SkillComponentDamageScalingRepository
 
@@ -56,3 +57,34 @@ def test_repository_fails_closed_when_tables_are_missing(tmp_path):
     path = tmp_path / "eso.db"
     sqlite3.connect(path).close()
     assert SkillComponentDamageScalingRepository(path).resolve(10, 1) == ()
+
+
+def test_repository_reuses_rank_source_across_component_lookups(tmp_path, monkeypatch):
+    path = tmp_path / "eso.db"
+    _make_db(path)
+
+    original_connect = damage_scaling_module.sqlite3.connect
+    connect_count = 0
+
+    def counting_connect(*args, **kwargs):
+        nonlocal connect_count
+        connect_count += 1
+        return original_connect(*args, **kwargs)
+
+    monkeypatch.setattr(damage_scaling_module.sqlite3, "connect", counting_connect)
+    repository = SkillComponentDamageScalingRepository(path)
+
+    stored = repository.resolve(10, 2)
+    base = repository.resolve(10, 1)
+    stored_again = repository.resolve(10, 2)
+
+    assert [row.scaling_type for row in stored] == [
+        SkillComponentDamageScalingType.ACCUMULATED_DAMAGE
+    ]
+    assert base == ()
+    assert stored_again == stored
+    assert connect_count == 1
+
+    fresh_repository = SkillComponentDamageScalingRepository(path)
+    assert fresh_repository.resolve(10, 2) == stored
+    assert connect_count == 2
