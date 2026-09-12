@@ -27,6 +27,7 @@ LAZY_PAGE_SPECS: dict[str, str] = {
     "rotations": "CanonicalRotationDashboardPage",
     "gear_lookup": "GearLookupPage",
     "stickerbook": "StickerbookPage",
+    "timers": "AsylumPerfectaTimerPage",
     "community_news": "CommunityNewsPage",
     "incident": "IncidentPage",
 }
@@ -99,24 +100,33 @@ def _build_ui_with_lazy_pages(self) -> None:
     self._operations_console_initial_navigation_pending = True
 
 
-def _show_page_without_refresh(window, page_name: str, page_key: str):
-    """Run normal navigation while temporarily suppressing one page refresh."""
+def _show_page_without_method(
+    window,
+    page_name: str,
+    page_key: str,
+    method_name: str,
+):
+    """Run normal navigation while suppressing one page refresh-style method."""
     assert _ORIGINAL_SHOW_PAGE is not None
     page = window.pages.get(page_key)
-    refresh = getattr(page, "refresh", None)
-    if not callable(refresh):
+    method = getattr(page, method_name, None)
+    if not callable(method):
         return _ORIGINAL_SHOW_PAGE(window, page_name)
 
-    had_instance_refresh = "refresh" in getattr(page, "__dict__", {})
-    prior_instance_refresh = page.__dict__.get("refresh") if had_instance_refresh else None
-    page.refresh = lambda: None
+    had_instance_method = method_name in getattr(page, "__dict__", {})
+    prior_instance_method = page.__dict__.get(method_name) if had_instance_method else None
+    setattr(page, method_name, lambda: None)
     try:
         return _ORIGINAL_SHOW_PAGE(window, page_name)
     finally:
-        if had_instance_refresh:
-            page.refresh = prior_instance_refresh
+        if had_instance_method:
+            setattr(page, method_name, prior_instance_method)
         else:
-            delattr(page, "refresh")
+            delattr(page, method_name)
+
+
+def _show_page_without_refresh(window, page_name: str, page_key: str):
+    return _show_page_without_method(window, page_name, page_key, "refresh")
 
 
 def _show_page_with_lazy_materialization(self, page_name: str):
@@ -138,6 +148,17 @@ def _show_page_with_lazy_materialization(self, page_name: str):
     # retain the existing refresh behavior.
     if page_key == "gear_lookup" and was_lazy:
         return _show_page_without_refresh(self, page_name, "gear_lookup")
+
+    # The vAS+2 timer constructor finishes with _refresh(), while its navigation
+    # hook calls refresh_context(), which is just another _refresh().  Reuse the
+    # constructor state on first materialization and keep later context refreshes.
+    if page_key == "timers" and was_lazy:
+        return _show_page_without_method(
+            self,
+            page_name,
+            "timers",
+            "refresh_context",
+        )
 
     return _ORIGINAL_SHOW_PAGE(self, page_name)
 
