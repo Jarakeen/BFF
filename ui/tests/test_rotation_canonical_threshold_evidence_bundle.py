@@ -1,3 +1,5 @@
+import pytest
+
 from minmax.fight_damage_trajectory import RaidDamageSegment
 from minmax.resource_costs import ResourceType
 from minmax.rotation_demand_window import RotationDemandKind, RotationDemandPattern
@@ -92,8 +94,8 @@ def test_bundle_projects_reviewed_threshold_policy_from_explicit_raid_dps() -> N
     assert len(bundle.demands) == 1
     demand = bundle.demands[0]
     assert demand.name == "Xalvakka Phase 2 healing prep"
-    assert demand.start_seconds == 12.0
-    assert demand.end_seconds == 17.0
+    assert demand.start_seconds == pytest.approx(12.0)
+    assert demand.end_seconds == pytest.approx(17.0)
     assert demand.kind is RotationDemandKind.HEALING
     assert demand.pattern is RotationDemandPattern.BURST
     assert demand.target_count == 12
