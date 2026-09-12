@@ -28,6 +28,7 @@ from services.rotation_saved_build_dd_damage_done_service import (
 
 
 _DD_ROLE_KEYS = {"dd", "dps", "damage", "damage dealer", "damage_dealer"}
+_EXPLOITER_UNMODELED_PREFIX = "champion point effect not yet modeled: exploiter:"
 
 
 @dataclass(frozen=True)
@@ -266,6 +267,7 @@ class RotationStaticBuildContextService:
         )
         dd_damage_done = None
         dd_exploiter_bonus = 0.0
+        dd_conditional_resolved = False
         dd_unresolved: list[str] = []
         if role_key in _DD_ROLE_KEYS:
             dd_resolution = self.dd_damage_done_service.resolve(player_build)
@@ -273,6 +275,7 @@ class RotationStaticBuildContextService:
             dd_unresolved.extend(dd_resolution.unresolved)
             conditional = self.dd_conditional_damage_done_service.resolve(player_build)
             dd_exploiter_bonus = float(conditional.exploiter_bonus)
+            dd_conditional_resolved = conditional.resolved
             dd_unresolved.extend(conditional.unresolved)
 
         build_id = (
@@ -302,6 +305,12 @@ class RotationStaticBuildContextService:
                 f"{bar} static context: {message}"
                 for message in context.unresolved_gear_effects
                 if str(message or "").strip()
+                and not (
+                    dd_conditional_resolved
+                    and str(message or "").strip().casefold().startswith(
+                        _EXPLOITER_UNMODELED_PREFIX
+                    )
+                )
             )
 
         return RotationStaticBuildContextResolution(
@@ -338,9 +347,3 @@ class RotationStaticBuildContextService:
             seen.add(key)
             result.append(value)
         return tuple(result)
-
-
-__all__ = [
-    "RotationStaticBuildContextResolution",
-    "RotationStaticBuildContextService",
-]
