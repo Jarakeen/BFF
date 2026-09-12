@@ -171,3 +171,34 @@ def test_first_lazy_timer_reuses_constructor_refresh_then_refreshes_context_late
         window, "timers"
     ) == "timers"
     assert calls == ["refresh_context"]
+
+
+def test_lazy_stickerbook_skips_default_constructor_refresh_then_restores_refresh():
+    calls = []
+
+    class Stickerbook:
+        def __init__(self):
+            self.refresh()
+
+        def refresh(self):
+            calls.append("refresh")
+
+    page = lazy_support._construct_lazy_page(Stickerbook, "stickerbook")
+
+    assert calls == []
+    page.refresh()
+    assert calls == ["refresh"]
+
+
+def test_other_lazy_page_constructor_refresh_is_not_suppressed():
+    calls = []
+
+    class Page:
+        def __init__(self):
+            self.refresh()
+
+        def refresh(self):
+            calls.append("refresh")
+
+    lazy_support._construct_lazy_page(Page, "community_news")
+    assert calls == ["refresh"]
