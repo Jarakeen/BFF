@@ -54,6 +54,14 @@ class RotationGenerateActionSupport:
             page,
         )
 
+        # These are small action-row controls, so keep them visually consistent
+        # with the Foundry's pill/chip treatment rather than full-size rectangles.
+        for button in (page.generate_button, page.clear_plan_button):
+            button.setProperty("compact", True)
+            button.setMinimumHeight(26)
+            button.style().unpolish(button)
+            button.style().polish(button)
+
         # The base dashboard connected Generate before the canonical selector was
         # installed. Replace that connection with this explicit router.
         try:
