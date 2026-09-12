@@ -14,6 +14,9 @@ from services.esologs_event_interpreter import (
     DEBUFF_REFRESH_EVENTS,
     DEBUFF_REMOVE_EVENTS,
 )
+from services.rotation_dd_periodic_runtime_semantics_review_service import (
+    RotationDDPeriodicRuntimeSemanticsReviewService,
+)
 
 
 _STATE_APPLY_OR_REFRESH = (
@@ -25,7 +28,7 @@ _STATE_APPLY_OR_REFRESH = (
 _STATE_REMOVE = BUFF_REMOVE_EVENTS | DEBUFF_REMOVE_EVENTS
 _STATE_EVENT_TYPES = tuple(sorted(_STATE_APPLY_OR_REFRESH | _STATE_REMOVE))
 _CAST_TYPES = ("cast", "completecast", "begincast")
-_OCCURRENCE_CLUSTER_TOLERANCE_MS = 5.0
+_FALLBACK_OCCURRENCE_CLUSTER_TOLERANCE_MS = 5.0
 
 
 @dataclass(frozen=True)
@@ -88,9 +91,13 @@ class RotationDDPeriodicEsoLogsMagnitudeStateTransitionService:
     order and compared at the two tick boundaries, so transient remove/apply churn that
     returns to the same state is not reported as a magnitude-state transition.
 
-    Damage rows within 5 ms for the same cast/target/hit type are one observational
-    occurrence. Same-amount duplicates collapse to one row. Mixed-amount occurrence
-    clusters are ambiguous and excluded rather than being misread as sequential ticks.
+    When reviewed cadence exists, damage rows for the same cast/target/hit type that
+    land closer than half one reviewed interval are treated as one observational
+    occurrence. This deliberately rejects separations that cannot represent consecutive
+    reviewed ticks while tolerating ESO Logs batching/jitter. Without reviewed cadence,
+    the service falls back to a narrow 5 ms duplicate window. Same-amount duplicates
+    collapse to one row. Mixed-amount occurrence clusters are ambiguous and excluded
+    rather than being misread as sequential ticks.
 
     The report also exposes a 2x2 contingency table across every unambiguous adjacent
     occurrence pair: state changed/same crossed with amount changed/constant. That
@@ -106,6 +113,7 @@ class RotationDDPeriodicEsoLogsMagnitudeStateTransitionService:
         self.canonical_database_path = Path(canonical_database_path)
         self.logs_database_path = Path(logs_database_path)
         self.coefficients = SkillCoefficientRepository(self.canonical_database_path)
+        self.reviewed_semantics = RotationDDPeriodicRuntimeSemanticsReviewService()
 
     def inspect(
         self,
@@ -148,6 +156,7 @@ class RotationDDPeriodicEsoLogsMagnitudeStateTransitionService:
                 str(item).strip() for item in resolution.unresolved if str(item).strip()
             )
 
+        reviewed_interval_seconds = self._reviewed_interval_seconds(identity)
         transitions: list[RotationDDPeriodicEsoLogsMagnitudeTransition] = []
         ambiguous_occurrence_clusters = 0
         comparable_occurrence_pairs = 0
@@ -237,7 +246,10 @@ class RotationDDPeriodicEsoLogsMagnitudeStateTransitionService:
                     tuple[int, int, int | None], tuple[tuple[sqlite3.Row, ...], ...]
                 ] = {}
                 for key, rows in grouped.items():
-                    sequences, ambiguous_count = self._unambiguous_occurrence_sequences(rows)
+                    sequences, ambiguous_count = self._unambiguous_occurrence_sequences(
+                        rows,
+                        reviewed_interval_seconds=reviewed_interval_seconds,
+                    )
                     ambiguous_occurrence_clusters += ambiguous_count
                     occurrence_sequences[key] = sequences
 
@@ -335,10 +347,23 @@ class RotationDDPeriodicEsoLogsMagnitudeStateTransitionService:
             unresolved=tuple(dict.fromkeys(unresolved)),
         )
 
+    def _reviewed_interval_seconds(self, identity: str) -> float | None:
+        intervals = {
+            float(entry.reviewed_interval_seconds)
+            for entry in self.reviewed_semantics.load()
+            if entry.skill_entity_id == identity and entry.reviewed_interval_seconds is not None
+        }
+        if len(intervals) != 1:
+            return None
+        value = next(iter(intervals))
+        return value if value > 0 else None
+
     @classmethod
     def _unambiguous_occurrence_sequences(
         cls,
         rows: list[sqlite3.Row],
+        *,
+        reviewed_interval_seconds: float | None = None,
     ) -> tuple[tuple[tuple[sqlite3.Row, ...], ...], int]:
         ordered = sorted(
             rows,
@@ -347,12 +372,17 @@ class RotationDDPeriodicEsoLogsMagnitudeStateTransitionService:
         if not ordered:
             return (), 0
 
+        if reviewed_interval_seconds is not None and reviewed_interval_seconds > 0:
+            cluster_tolerance_ms = float(reviewed_interval_seconds) * 1000.0 / 2.0
+        else:
+            cluster_tolerance_ms = _FALLBACK_OCCURRENCE_CLUSTER_TOLERANCE_MS
+
         clusters: list[list[sqlite3.Row]] = []
         cluster: list[sqlite3.Row] = [ordered[0]]
         cluster_start = float(ordered[0]["timestamp"])
         for row in ordered[1:]:
             timestamp = float(row["timestamp"])
-            if timestamp - cluster_start <= _OCCURRENCE_CLUSTER_TOLERANCE_MS:
+            if timestamp - cluster_start < cluster_tolerance_ms:
                 cluster.append(row)
                 continue
             clusters.append(cluster)
