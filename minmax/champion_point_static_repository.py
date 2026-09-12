@@ -26,7 +26,6 @@ CHAMPION_SKILL_TYPE_STAT_POOL_SLOTTABLE = 2
 EXTERNALLY_MODELED_DYNAMIC_CP_NAMES = frozenset(
     {
         "biting aura",
-        "exploiter",
         "from the brink",
         "master-at-arms",
         "rejuvenator",
