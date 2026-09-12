@@ -24,6 +24,7 @@ def audit(
     report_code: str | None,
     fight_id: int | None,
     source_id: int | None,
+    only_no_state_change: bool,
 ) -> int:
     if not database.is_file():
         print(f"Canonical ESO database not found: {database}")
@@ -58,28 +59,56 @@ def audit(
     print(f"Amount-change transitions: {len(report.transitions)}")
     print(f"With net source/target state changes: {report.transitions_with_state_change}")
     print(f"Without net source/target state changes: {report.transitions_without_state_change}")
+    if only_no_state_change:
+        print("Display filter: no net source/target state change only")
 
-    ranked = sorted(
-        report.transitions,
-        key=lambda item: (
-            not item.has_observed_state_change,
-            item.report_code,
-            item.fight_id,
-            item.cast_track_id,
-            item.to_timestamp_ms,
-        ),
-    )
+    if only_no_state_change:
+        candidates = tuple(item for item in report.transitions if not item.has_observed_state_change)
+        ranked = sorted(
+            candidates,
+            key=lambda item: (
+                item.report_code,
+                item.fight_id,
+                item.cast_track_id,
+                item.target_id,
+                item.hit_type if item.hit_type is not None else -1,
+                item.to_timestamp_ms,
+            ),
+        )
+    else:
+        ranked = sorted(
+            report.transitions,
+            key=lambda item: (
+                not item.has_observed_state_change,
+                item.report_code,
+                item.fight_id,
+                item.cast_track_id,
+                item.to_timestamp_ms,
+            ),
+        )
+
     for index, item in enumerate(ranked[: max(0, int(max_transitions))], start=1):
         delta_ms = item.to_timestamp_ms - item.from_timestamp_ms
+        amount_delta = item.to_amount - item.from_amount
+        percent_delta = (
+            (amount_delta / item.from_amount) * 100.0
+            if item.from_amount != 0
+            else None
+        )
         print()
         print(
             f"  [{index}] report={item.report_code} fight={item.fight_id} "
             f"source={item.source_id} target={item.target_id} track={item.cast_track_id} "
             f"hit_type={item.hit_type}"
         )
+        percent_text = "n/a" if percent_delta is None else f"{percent_delta:+.2f}%"
         print(
             f"      amount: {item.from_amount:g} -> {item.to_amount:g} "
-            f"over {delta_ms / 1000.0:.3f}s"
+            f"(delta {amount_delta:+g}, {percent_text}) over {delta_ms / 1000.0:.3f}s"
+        )
+        print(
+            f"      tick timestamps: {item.from_timestamp_ms / 1000.0:.3f}s "
+            f"-> {item.to_timestamp_ms / 1000.0:.3f}s"
         )
         if not item.state_events:
             print("      net source/target state delta at tick boundaries: none")
@@ -97,6 +126,10 @@ def audit(
                 f"target={event.target_id}, event_index={event.event_index})"
             )
 
+    if only_no_state_change and not ranked:
+        print()
+        print("No amount-change transitions without a net source/target state change were observed.")
+
     if report.unresolved:
         print()
         print("Unresolved evidence:")
@@ -106,8 +139,10 @@ def audit(
     print()
     print(
         "Result: OBSERVATIONAL ONLY — a magnitude change across a genuine tick-boundary "
-        "source/target state delta can strengthen dynamic-at-tick evidence, but this tool "
-        "never promotes magnitude policy automatically. Numeric IDs remain evidence handles only."
+        "source/target state delta can strengthen dynamic-at-tick evidence; amount changes "
+        "with no reconstructed state delta are especially useful for finding unmodeled live "
+        "inputs or mixed event identities. This tool never promotes magnitude policy "
+        "automatically. Numeric IDs remain evidence handles only."
     )
     return 0
 
@@ -125,6 +160,14 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--report-code")
     parser.add_argument("--fight-id", type=int)
     parser.add_argument("--source-id", type=int)
+    parser.add_argument(
+        "--only-no-state-change",
+        action="store_true",
+        help=(
+            "Display only amount-change transitions whose reconstructed source/target "
+            "buff/debuff state is identical at both tick boundaries."
+        ),
+    )
     parser.add_argument("--database", type=Path, default=Path(DEFAULT_DATABASE))
     parser.add_argument("--logs-db", type=Path, required=True)
     return parser
@@ -141,6 +184,7 @@ def main(argv: list[str] | None = None) -> int:
         report_code=args.report_code,
         fight_id=args.fight_id,
         source_id=args.source_id,
+        only_no_state_change=args.only_no_state_change,
     )
 
 
