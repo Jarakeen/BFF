@@ -62,6 +62,34 @@ ROTATION_DD_PERIODIC_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "refresh-boundary or magnitude-policy semantics automatically."
         ),
     ),
+    ServiceDescriptor(
+        service_id="rotation.dd.periodic_esologs_secondary_effect_discovery",
+        domain="rotation",
+        purpose=(
+            "Discover and rank secondary ESO Logs damage identities that repeatedly "
+            "occur after a canonical DD periodic skill cast."
+        ),
+        implementation_path=(
+            "services.rotation_dd_periodic_esologs_secondary_effect_discovery_service"
+        ),
+        inputs=(
+            "CanonicalSkillIdentity",
+            "EsoLogsLogEvent",
+            "RotationDDPeriodicRuntimeSemanticsReviewEntry",
+        ),
+        outputs=("RotationDDPeriodicEsoLogsSecondaryEffectDiscoveryReport",),
+        responsibilities=("rotation_dd_periodic_esologs_secondary_effect_discovery",),
+        roles=("DD", "DPS"),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.OBSERVATIONAL,
+        notes=(
+            "Read-only candidate discovery for combat-log cases where a cast and its "
+            "periodic damage use different event identities. Candidate ranking may use "
+            "cast-track linkage and reviewed cadence, but never promotes executable "
+            "runtime semantics automatically."
+        ),
+    ),
 )
 
 
