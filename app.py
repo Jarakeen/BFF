@@ -203,6 +203,7 @@ def main() -> int:
     from ui.build_editor_performance import install as install_build_editor_performance
     from ui.build_progression_scroll_fix import install as install_build_progression_scroll_fix
     from ui.build_progression_readiness_support import install as install_build_progression_readiness_support
+    from ui.character_creation_easy_mode_support import install as install_character_creation_easy_mode_support
     from ui.build_screenshot_import_support import install as install_build_screenshot_import_support
     from ui.icon_consistency import install as install_icon_consistency
     from ui.encounter_board_accessibility import install as install_encounter_board_accessibility
@@ -250,6 +251,9 @@ def main() -> int:
     install_build_editor_performance()
     install_build_progression_scroll_fix()
     install_build_progression_readiness_support()
+    # Easy Mode is the visible front door for making a new character. It creates
+    # a Default build without silently adding the character to the raid roster.
+    install_character_creation_easy_mode_support()
     # Builds can stage Armory + Character screenshot pairs before MainWindow
     # constructs the Builds page. Recognition remains review-first and never
     # writes guessed fields directly into builds.json.
