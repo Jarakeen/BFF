@@ -75,7 +75,14 @@
       "successive_hit_multiplier": null,
       "evidence": [
         "Corpsebuster DD coefficient-local tooltip: additional Flame Damage over 22 seconds",
-        "Current public tooltip documents a 2-second rune arm delay before trigger; this is not promoted as periodic first-tick timing"
+        "Current public tooltip documents a 2-second rune arm delay before trigger; this is not promoted as periodic first-tick timing",
+        "ESO Logs mystery-era cast-track topology: evidence ID 40469 appears as the first same-track damage component in 113 of 128 cast windows with 133 cast-track-linked, non-tick events and median first observation 2.172 seconds after cast",
+        "ESO Logs mystery-era cast-track topology: evidence ID 40468 appears as the later repeated damage component in 108 of 128 cast windows; 733 of 751 events are cast-track linked, all 751 are tick-marked, median first observation is about 4.228 seconds after cast, and clustered same-track intervals concentrate around approximately 2 seconds",
+        "ESO Logs mystery-era topology therefore places the first observed 40468 periodic damage about 2.056 seconds after the median 40469 trigger observation; observed timing is retained as evidence rather than encoded as exact constants",
+        "ESO Logs mystery-era refresh review: six consecutive 40469 trigger pairs were observed, five with old periodic evidence, with zero old 40468 events at or after the new 40469 trigger and no exact-timestamp overlap; first-new 40468 offsets clustered from 2.022 to 2.090 seconds after the new trigger",
+        "ESO Logs mystery-era magnitude review: all 150 same-target/same-hit-type sequences varied in raw amount, but among 697 comparable unambiguous adjacent occurrence pairs every pair also had reconstructed source or target state changes; 578 changed amount and 119 kept constant amount, with no stable-state controls, so snapshot_at_cast versus dynamic_at_tick remains unresolved",
+        "Some observed 40468 events occur beyond 22 seconds from cast, so the reviewed 22-second duration must not be assumed cast-relative from this corpus; duration anchor remains unresolved",
+        "The imported ESO Logs corpus lacks recoverable patch/game-version provenance; these observations remain non-executable evidence and do not promote cadence, activation anchor, first-tick offset, refresh policy, duration anchor, or magnitude policy automatically"
       ]
     },
     {
