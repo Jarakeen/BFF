@@ -120,6 +120,17 @@ Canonical identity: `unnerving_boneyard`
 
 Important identity lesson: `117809` also appears in unrelated Stampede windows without Stampede cast-track linkage. Window proximity alone is weak evidence; exact Boneyard cast-track ownership is what raises this ID to STRONG OBSERVATION for Boneyard.
 
+## Scalding Rune
+
+Canonical identity: `scalding_rune`
+
+| Numeric ID | Working role | Confidence | Evidence / note |
+|---:|---|---|---|
+| `40469` | ESO Logs Rune trigger / activation-side damage component | STRONG OBSERVATION | Observed in 113/128 Scalding Rune cast windows with 133 cast-track-linked events and no tick-marked events. Median first observation is ~2.172s after cast, matching the reviewed public 2-second arm-delay concept observationally. Cast-track topology places this component before the repeated `40468` stream. |
+| `40468` | ESO Logs repeated Scalding Rune periodic-damage component | STRONG OBSERVATION | Observed in 108/128 cast windows with 733 of 751 events cast-track linked and all 751 events tick-marked. Median first observation is ~4.228s after cast, about 2.056s after the median `40469` trigger observation, and clustered same-track intervals concentrate around ~2.0s. In six consecutive trigger pairs, no old-track `40468` event occurred at or after the new `40469` trigger; first-new offsets clustered ~2.02–2.09s after the new trigger. Raw magnitude varied in all 150 inspected same-target/same-hit-type sequences, but all 697 unambiguous adjacent occurrence pairs also had reconstructed source/target state changes, leaving magnitude policy unresolved. |
+
+The imported ESO Logs corpus has no recoverable patch/game-version provenance. These IDs are strong observational handles, not canonical identity, and the observed ~2s trigger/cadence shape does not by itself promote executable activation, first-tick, refresh, duration-anchor, or magnitude semantics.
+
 ### DD periodic-ID lesson
 
 For periodic skills, preserve at least three roles separately when evidence supports them:
