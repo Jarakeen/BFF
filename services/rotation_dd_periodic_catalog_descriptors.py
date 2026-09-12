@@ -90,6 +90,34 @@ ROTATION_DD_PERIODIC_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "runtime semantics automatically."
         ),
     ),
+    ServiceDescriptor(
+        service_id="rotation.dd.periodic_esologs_anchor_correlation",
+        domain="rotation",
+        purpose=(
+            "Measure observational cast-to-impact and impact-to-periodic timing for a "
+            "canonical DD skill using reviewed ESO Logs evidence IDs."
+        ),
+        implementation_path=(
+            "services.rotation_dd_periodic_esologs_anchor_correlation_service"
+        ),
+        inputs=(
+            "CanonicalSkillIdentity",
+            "EsoLogsImpactAbilityId",
+            "EsoLogsPeriodicAbilityId",
+            "EsoLogsLogEvent",
+        ),
+        outputs=("RotationDDPeriodicEsoLogsAnchorCorrelationReport",),
+        responsibilities=("rotation_dd_periodic_esologs_anchor_correlation",),
+        roles=("DD", "DPS"),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.OBSERVATIONAL,
+        notes=(
+            "Read-only evidence correlation. Numeric impact/periodic IDs are explicit "
+            "evidence handles, never canonical identities. Correlation may nominate an "
+            "impact activation anchor and offset but never promotes semantics automatically."
+        ),
+    ),
 )
 
 
