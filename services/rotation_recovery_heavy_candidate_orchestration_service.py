@@ -43,6 +43,11 @@ RecoveryRuntimeCombatStateResolverFactory = Callable[
     [RotationPlan],
     RecoveryRuntimeCombatStateResolver,
 ]
+RecoveryRuntimeActivationAnchorResolver = Callable[..., float | None]
+RecoveryRuntimeActivationAnchorResolverFactory = Callable[
+    [RotationPlan],
+    RecoveryRuntimeActivationAnchorResolver,
+]
 
 
 @dataclass(frozen=True)
@@ -64,10 +69,10 @@ class RecoveryHeavyCandidateOrchestrationInput:
 class RecoveryHeavyStabilizedCandidateSnapshot:
     """Final stabilized execution evidence supplied to family-level ranking.
 
-    ``runtime_combat_state_resolver`` is bound only after the candidate plan reaches
-    its final stabilized form. Family-level scorecards and role-output evaluators may
-    therefore ask for exact time/sequence state without accidentally consulting the
-    seed schedule or rebuilding bar/runtime history independently.
+    Runtime resolvers are bound only after the candidate plan reaches its final
+    stabilized form. Family-level scorecards and role-output evaluators may therefore
+    query exact runtime state or activation anchors without consulting the seed
+    schedule or rebuilding timing evidence independently.
     """
 
     candidate_id: str
@@ -75,6 +80,7 @@ class RecoveryHeavyStabilizedCandidateSnapshot:
     replay: RotationRecoveryHeavyReplay
     stabilization: RotationRecoveryHeavyStabilizationResult
     runtime_combat_state_resolver: RecoveryRuntimeCombatStateResolver | None = None
+    runtime_activation_anchor_resolver: RecoveryRuntimeActivationAnchorResolver | None = None
 
 
 RecoveryFinalFamilyEvaluator = Callable[
@@ -123,6 +129,7 @@ class RotationRecoveryHeavyCandidateOrchestrationService:
         maximum_event_resolver: RecoveryMaximumEventResolver | None = None,
         displayed_recovery_resolver_factory: RecoveryDisplayedRecoveryResolverFactory | None = None,
         runtime_combat_state_resolver_factory: RecoveryRuntimeCombatStateResolverFactory | None = None,
+        runtime_activation_anchor_resolver_factory: RecoveryRuntimeActivationAnchorResolverFactory | None = None,
     ) -> RotationRecoveryHeavyCandidateOrchestrationResult:
         if not candidates:
             return RotationRecoveryHeavyCandidateOrchestrationResult(
@@ -188,6 +195,11 @@ class RotationRecoveryHeavyCandidateOrchestrationService:
                 if runtime_combat_state_resolver_factory is None
                 else runtime_combat_state_resolver_factory(stabilization.plan)
             )
+            activation_anchor_resolver = (
+                None
+                if runtime_activation_anchor_resolver_factory is None
+                else runtime_activation_anchor_resolver_factory(stabilization.plan)
+            )
             stabilized.append(
                 RecoveryHeavyStabilizedCandidateSnapshot(
                     candidate_id=candidate.candidate_id,
@@ -195,6 +207,7 @@ class RotationRecoveryHeavyCandidateOrchestrationService:
                     replay=stabilization.replay,
                     stabilization=stabilization,
                     runtime_combat_state_resolver=runtime_resolver,
+                    runtime_activation_anchor_resolver=activation_anchor_resolver,
                 )
             )
 
@@ -258,6 +271,8 @@ __all__ = [
     "RecoveryFinalFamilyEvaluator",
     "RecoveryHeavyCandidateOrchestrationInput",
     "RecoveryHeavyStabilizedCandidateSnapshot",
+    "RecoveryRuntimeActivationAnchorResolver",
+    "RecoveryRuntimeActivationAnchorResolverFactory",
     "RecoveryRuntimeCombatStateResolver",
     "RecoveryRuntimeCombatStateResolverFactory",
     "RotationRecoveryHeavyCandidateOrchestrationResult",
