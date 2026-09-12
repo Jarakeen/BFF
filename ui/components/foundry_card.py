@@ -18,9 +18,11 @@ from PySide6.QtWidgets import (
     QTableWidget,
     QTableView,
     QVBoxLayout,
+    QApplication,
 )
 
 from engine.config import get_resource_path
+from services.accessibility_preferences import VISUAL_THEME_RYLO
 from ui.theme.fonts import Fonts
 from ui.ux_icons import icon_path, semantic_icon, set_button_icon
 
@@ -216,10 +218,12 @@ class FoundryCard(QFrame):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
         parchment = bool(self.property("parchment") or self.property("foundryNoteCard"))
+        app = QApplication.instance()
+        rylo = app is not None and app.property("visualTheme") == VISUAL_THEME_RYLO
 
         # Keep the original restrained corner marks. They frame the card without
         # intruding into the content area.
-        ornament = QColor("#6F5736" if parchment else "#9A794A")
+        ornament = QColor("#73777C" if rylo else ("#6F5736" if parchment else "#9A794A"))
         ornament.setAlpha(105 if parchment else 82)
         painter.setPen(QPen(ornament, 1.0))
 
@@ -240,18 +244,19 @@ class FoundryCard(QFrame):
         # from the visual mockup. These strokes stay at the perimeter and never
         # pass through labels, fields, tables, or other card content.
         if self.width() > 16 and self.height() > 16:
-            inner_highlight = QColor("#B89A63" if not parchment else "#8A6B43")
+            inner_highlight = QColor("#8F959B" if rylo else ("#B89A63" if not parchment else "#8A6B43"))
             inner_highlight.setAlpha(34 if not parchment else 30)
             painter.setPen(QPen(inner_highlight, 1.0))
-            painter.drawRoundedRect(QRectF(2.5, 2.5, self.width() - 6, self.height() - 6), 3.0, 3.0)
+            radius = 0.5 if rylo else 3.0
+            painter.drawRoundedRect(QRectF(2.5, 2.5, self.width() - 6, self.height() - 6), radius, radius)
 
-            inner_shadow = QColor("#02090A" if not parchment else "#3A2A1D")
+            inner_shadow = QColor("#090A0C" if rylo else ("#02090A" if not parchment else "#3A2A1D"))
             inner_shadow.setAlpha(82 if not parchment else 48)
             painter.setPen(QPen(inner_shadow, 1.0))
             painter.drawLine(5, h - 2, w - 5, h - 2)
             painter.drawLine(w - 2, 5, w - 2, h - 5)
 
-            top_glint = QColor("#C8A46A" if not parchment else "#8F7346")
+            top_glint = QColor("#AEB3B7" if rylo else ("#C8A46A" if not parchment else "#8F7346"))
             top_glint.setAlpha(24)
             painter.setPen(QPen(top_glint, 1.0))
             painter.drawLine(6, 2, w - 6, 2)

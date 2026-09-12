@@ -129,6 +129,47 @@ QWidget[cardBody="true"] {
     background-image: none;
     border: none;
 }
+
+/* The same overview and build-creation entry points use Rylo's square steel. */
+QWidget[operationsOverview="true"] QLabel[overviewPlayerName="true"],
+QWidget[operationsOverview="true"] QLabel[overviewGoalName="true"] {
+    color: #B5C7D5;
+}
+QWidget[operationsOverview="true"] QProgressBar::chunk {
+    background-color: #88BDE9;
+}
+QWidget[operationsOverview="true"] QFrame[overviewAccent="teal"] {
+    border-left: 3px solid #88BDE9;
+    border-radius: 1px;
+}
+QPushButton[newBuildAction="true"] {
+    background-color: #283847;
+    color: #F0ECE7;
+    border: 2px solid #88BDE9;
+    border-radius: 1px;
+    padding: 8px 22px;
+    font-weight: 700;
+}
+QPushButton[newBuildAction="true"]:hover { background-color: #34495B; }
+QPushButton[newBuildAction="true"]:pressed { background-color: #192733; }
+QPushButton[newBuildAction="true"]:disabled {
+    background-color: #24272B;
+    color: #AEB3B7;
+    border-color: #5A5D61;
+}
+QFrame#newBuildPullDown {
+    border: 2px solid #5A5D61;
+    border-left: 3px solid #88BDE9;
+    border-radius: 1px;
+    background-color: #151517;
+    background-image: none;
+}
+QLabel#newBuildEyebrow {
+    color: #B5C7D5;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+QLabel#newBuildTitle { font-size: 24px; font-weight: 700; }
 """
 
 

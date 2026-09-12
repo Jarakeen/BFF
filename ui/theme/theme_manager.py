@@ -37,6 +37,43 @@ COLOR_VISION_LABELS = {
 }
 
 
+FOUNDRY_OVERVIEW_ACCENTS = r"""
+/* Overview: quiet teal for identity and progress, amber for the main action. */
+QWidget[operationsOverview="true"] QLabel[overviewPlayerName="true"],
+QWidget[operationsOverview="true"] QLabel[overviewGoalName="true"] {
+    color: #85C8CA;
+}
+QWidget[operationsOverview="true"] QProgressBar::chunk {
+    background-color: #58AEB3;
+}
+QWidget[operationsOverview="true"] QFrame[overviewAccent="teal"] {
+    border-left: 3px solid #58AEB3;
+}
+
+QPushButton[newBuildAction="true"] {
+    background-color: #D1983D;
+    color: #0C171B;
+    border: 1px solid #C8A46A;
+    border-radius: 17px;
+    padding: 8px 22px;
+    font-weight: 700;
+}
+QPushButton[newBuildAction="true"]:hover { background-color: #DCAA57; }
+QPushButton[newBuildAction="true"]:pressed { background-color: #B97F2F; }
+QPushButton[newBuildAction="true"]:disabled {
+    background-color: #6D5A37;
+    color: #BFC8C6;
+}
+QFrame#newBuildPullDown {
+    border: 1px solid #C8A46A;
+    border-radius: 18px;
+    background-color: rgba(47, 122, 128, 28);
+}
+QLabel#newBuildEyebrow { font-weight: 700; letter-spacing: 1px; }
+QLabel#newBuildTitle { font-size: 24px; font-weight: 700; }
+"""
+
+
 RYLO_GRAYSCALE_OVERRIDES = r"""
 /* ============================================================
    RYLO GRAYSCALE
@@ -281,6 +318,8 @@ class ThemeManager:
         qss = load_grimoire_stylesheet()
         if self.visual_theme() == VISUAL_THEME_RYLO:
             qss += "\n" + RYLO_GRAYSCALE_OVERRIDES
+        else:
+            qss += "\n" + FOUNDRY_OVERVIEW_ACCENTS
         if self.color_vision_mode() == COLOR_VISION_FRIENDLY:
             qss += "\n" + COLORBLIND_FRIENDLY_OVERRIDES
         return qss

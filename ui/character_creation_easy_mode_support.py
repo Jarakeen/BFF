@@ -2,7 +2,7 @@ from __future__ import annotations
 
 """Inline, inviting front-door character/build creation.
 
-Builds keeps its normal workspace layout with one centered amber entry button.
+Builds keeps its normal workspace layout with one centered entry button.
 The detailed creation card exists only while the user is actively creating a
 build. Raid Engine Overview uses the same full-width pull-down form instead of
 opening a modal or navigating away.
@@ -37,47 +37,9 @@ _INSTALLED = False
 _ROLES = ("Damage Dealer", "Healer", "Tank", "Support DD")
 _ALLIANCES = ("", "Aldmeri Dominion", "Daggerfall Covenant", "Ebonheart Pact")
 
-_CREATE_CHARACTER_STYLE = """
-QPushButton {
-    background-color: #D1983D;
-    color: #0C171B;
-    border: 1px solid #C8A46A;
-    border-radius: 17px;
-    padding: 8px 22px;
-    font-weight: 700;
-}
-QPushButton:hover {
-    background-color: #DCAA57;
-}
-QPushButton:pressed {
-    background-color: #B97F2F;
-}
-QPushButton:disabled {
-    background-color: #6D5A37;
-    color: #BFC8C6;
-}
-"""
-
-_FORM_CARD_STYLE = """
-QFrame#newBuildPullDown {
-    border: 1px solid #C8A46A;
-    border-radius: 18px;
-    background-color: rgba(47, 122, 128, 28);
-}
-QLabel#newBuildEyebrow {
-    font-weight: 700;
-    letter-spacing: 1px;
-}
-QLabel#newBuildTitle {
-    font-size: 24px;
-    font-weight: 700;
-}
-"""
-
-
 def _style_create_character_button(button: FoundryButton) -> FoundryButton:
-    """Give every creation entry point the same obvious amber pill treatment."""
-    button.setStyleSheet(_CREATE_CHARACTER_STYLE)
+    """Mark creation entry points for the active visual theme."""
+    button.setProperty("newBuildAction", True)
     button.setCursor(Qt.CursorShape.PointingHandCursor)
     button.setMinimumHeight(36)
     button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
@@ -109,7 +71,6 @@ class CharacterCreationEasyModePanel(QFrame):
         self.on_created = on_created
         self.reference = page.reference
         self.setObjectName("newBuildPullDown")
-        self.setStyleSheet(_FORM_CARD_STYLE)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
 
         root = QVBoxLayout(self)

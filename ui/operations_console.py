@@ -3,6 +3,7 @@ from __future__ import annotations
 from PySide6.QtCore import QRectF, Qt
 from PySide6.QtGui import QColor, QPainter, QPen
 from PySide6.QtWidgets import (
+    QApplication,
     QComboBox,
     QGridLayout,
     QHBoxLayout,
@@ -23,6 +24,7 @@ from minmax.race_repository import RaceRepository
 from models.build_model import BuildRoster, PlayerBuild
 from services.build_service import BuildService
 from services.expedition_service import ExpeditionService
+from services.accessibility_preferences import VISUAL_THEME_RYLO
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
@@ -67,6 +69,7 @@ class OverviewRing(QWidget):
         detail: str,
         *,
         accent: str = "#C8A46A",
+        rylo_accent: str = "#AEB3B7",
         parent=None,
     ):
         super().__init__(parent)
@@ -74,6 +77,7 @@ class OverviewRing(QWidget):
         self.label = label
         self.detail = detail
         self.accent = QColor(accent)
+        self.rylo_accent = QColor(rylo_accent)
         self.setMinimumSize(112, 126)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
@@ -81,16 +85,20 @@ class OverviewRing(QWidget):
         super().paintEvent(event)
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        app = QApplication.instance()
+        rylo = app is not None and app.property("visualTheme") == VISUAL_THEME_RYLO
 
         diameter = min(74, self.width() - 20)
         left = (self.width() - diameter) / 2
         ring = QRectF(left, 5, diameter, diameter)
 
-        track = QColor("#24383A")
-        painter.setPen(QPen(track, 7, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+        track = QColor("#414448" if rylo else "#24383A")
+        cap = Qt.PenCapStyle.SquareCap if rylo else Qt.PenCapStyle.RoundCap
+        accent = self.rylo_accent if rylo else self.accent
+        painter.setPen(QPen(track, 7, Qt.PenStyle.SolidLine, cap))
         painter.drawArc(ring, 0, 360 * 16)
 
-        painter.setPen(QPen(self.accent, 7, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+        painter.setPen(QPen(accent, 7, Qt.PenStyle.SolidLine, cap))
         painter.drawArc(ring, 90 * 16, -int(360 * 16 * self.percent / 100))
 
         painter.setPen(QColor("#E5ECEB"))
@@ -103,12 +111,12 @@ class OverviewRing(QWidget):
         font.setPointSize(9)
         font.setBold(False)
         painter.setFont(font)
-        painter.setPen(QColor("#C8A46A"))
+        painter.setPen(QColor("#D5D6D7" if rylo else "#C8A46A"))
         painter.drawText(QRectF(0, 83, self.width(), 19), Qt.AlignmentFlag.AlignCenter, self.label)
 
         font.setPointSize(8)
         painter.setFont(font)
-        painter.setPen(QColor("#BFC8C6"))
+        painter.setPen(QColor("#C8CDD1" if rylo else "#BFC8C6"))
         painter.drawText(QRectF(0, 102, self.width(), 18), Qt.AlignmentFlag.AlignCenter, self.detail)
         painter.end()
 
@@ -416,6 +424,7 @@ class OperationsConsole(FoundryPage):
 
     def _player_card(self, build: PlayerBuild | None) -> FoundryCard:
         card = FoundryCard("Character Command")
+        card.setProperty("overviewAccent", "teal")
         if build is None:
             card.addWidget(QLabel("No saved build selected."))
             card.addStretch()
@@ -551,10 +560,11 @@ class OperationsConsole(FoundryPage):
 
     def _collectibles_card(self) -> FoundryCard:
         card = FoundryCard("Collectibles Focus")
+        card.setProperty("overviewAccent", "teal")
         rings = QHBoxLayout()
         rings.setSpacing(4)
         rings.addWidget(OverviewRing(68, "Sticker Book", "412 / 605", accent="#C8A46A"))
-        rings.addWidget(OverviewRing(42, "Mounts", "18 / 43", accent="#59AEB3"))
+        rings.addWidget(OverviewRing(42, "Mounts", "18 / 43", accent="#59AEB3", rylo_accent="#88BDE9"))
         card.addLayout(rings)
         card.addWidget(self._section_label("PRIORITY GOALS"))
         grid = QGridLayout()
