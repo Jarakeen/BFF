@@ -293,6 +293,8 @@ class ExtremeMaxResourceOrdinaryNamedGearSearchService:
         topology: ExtremeGearSetCountTopology,
         candidates_by_count: dict[int, tuple[_Candidate, ...]],
         frontier: ExtremeGearSetBonusBreakpointCatalog,
+        *,
+        feasibility: ExtremePartialNamedGearPhysicalFeasibilityService,
     ) -> ExtremeOrdinaryNamedGearTopologyWinner:
         counts = tuple(int(value) for value in topology.counts)
         candidate_rows = tuple(candidates_by_count.get(count, ()) for count in counts)
@@ -314,7 +316,6 @@ class ExtremeMaxResourceOrdinaryNamedGearSearchService:
             breakpoints=frontier,
             eligibility=self.eligibility,
         )
-        feasibility = ExtremePartialNamedGearPhysicalFeasibilityService()
         selected: list[_Candidate] = []
         used_ids: set[int] = set()
         best = float("-inf")
@@ -410,9 +411,15 @@ class ExtremeMaxResourceOrdinaryNamedGearSearchService:
         )
         frontier, frontier_pruned = self._frontier(reduced, representative_limit)
         candidates, special = self._candidates(frontier)
+        feasibility = ExtremePartialNamedGearPhysicalFeasibilityService()
 
         winners = tuple(
-            self._search_topology(topology, candidates, frontier)
+            self._search_topology(
+                topology,
+                candidates,
+                frontier,
+                feasibility=feasibility,
+            )
             for topology in topology_catalog.topologies
         )
         unresolved = tuple(
