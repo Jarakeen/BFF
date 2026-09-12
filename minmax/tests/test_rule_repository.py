@@ -51,6 +51,18 @@ def test_potent_nirncrux_does_not_return_as_enchantment_rule():
     assert effects == []
 
 
+def test_status_effect_chance_rule_is_resolved_semantically_not_by_material_name():
+    repository = RuleRepository(DB_PATH)
+
+    rules = repository.get_weapon_trait_rules_by_effect_type("status_effect_chance")
+
+    assert len(rules) == 1
+    assert rules[0].rule_type == "status_effect_chance"
+    assert rules[0].unit.value == "percent"
+    assert rules[0].value > 0
+    assert rules[0].source
+
+
 def test_rule_repository_reuses_instance_scoped_reference_queries(monkeypatch):
     original_connect = rule_repository_module.sqlite3.connect
     connect_calls = 0
@@ -86,6 +98,12 @@ def test_rule_repository_reuses_instance_scoped_reference_queries(monkeypatch):
     assert repository.get_weapon_trait_rules("Potent Nirncrux") == rules
     assert connect_calls == 3
 
+    status_rules = repository.get_weapon_trait_rules_by_effect_type("status_effect_chance")
+    assert status_rules
+    assert connect_calls == 4
+    assert repository.get_weapon_trait_rules_by_effect_type("status_effect_chance") == status_rules
+    assert connect_calls == 4
+
     fresh_repository = RuleRepository(DB_PATH)
     assert fresh_repository.list_weapon_trait_names() == trait_names
-    assert connect_calls == 4
+    assert connect_calls == 5
