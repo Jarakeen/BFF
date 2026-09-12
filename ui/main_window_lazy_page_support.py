@@ -99,9 +99,30 @@ def _build_ui_with_lazy_pages(self) -> None:
     self._operations_console_initial_navigation_pending = True
 
 
+def _show_page_without_refresh(window, page_name: str, page_key: str):
+    """Run normal navigation while temporarily suppressing one page refresh."""
+    assert _ORIGINAL_SHOW_PAGE is not None
+    page = window.pages.get(page_key)
+    refresh = getattr(page, "refresh", None)
+    if not callable(refresh):
+        return _ORIGINAL_SHOW_PAGE(window, page_name)
+
+    had_instance_refresh = "refresh" in getattr(page, "__dict__", {})
+    prior_instance_refresh = page.__dict__.get("refresh") if had_instance_refresh else None
+    page.refresh = lambda: None
+    try:
+        return _ORIGINAL_SHOW_PAGE(window, page_name)
+    finally:
+        if had_instance_refresh:
+            page.refresh = prior_instance_refresh
+        else:
+            delattr(page, "refresh")
+
+
 def _show_page_with_lazy_materialization(self, page_name: str):
     assert _ORIGINAL_SHOW_PAGE is not None
     page_key = str(page_name or "")
+    was_lazy = isinstance(self.pages.get(page_key), _LazyPagePlaceholder)
     _materialize_page(self, page_key)
 
     if (
@@ -109,19 +130,14 @@ def _show_page_with_lazy_materialization(self, page_name: str):
         and getattr(self, "_operations_console_initial_navigation_pending", False)
     ):
         self._operations_console_initial_navigation_pending = False
-        page = self.pages.get("operations_console")
-        refresh = getattr(page, "refresh", None)
-        if callable(refresh):
-            had_instance_refresh = "refresh" in getattr(page, "__dict__", {})
-            prior_instance_refresh = page.__dict__.get("refresh") if had_instance_refresh else None
-            page.refresh = lambda: None
-            try:
-                return _ORIGINAL_SHOW_PAGE(self, page_name)
-            finally:
-                if had_instance_refresh:
-                    page.refresh = prior_instance_refresh
-                else:
-                    delattr(page, "refresh")
+        return _show_page_without_refresh(self, page_name, "operations_console")
+
+    # GearLookupPage performs its canonical database refresh in __init__().
+    # Its ordinary navigation path also refreshes, so the very first lazy visit
+    # would otherwise read and repopulate the same catalog twice. Later visits
+    # retain the existing refresh behavior.
+    if page_key == "gear_lookup" and was_lazy:
+        return _show_page_without_refresh(self, page_name, "gear_lookup")
 
     return _ORIGINAL_SHOW_PAGE(self, page_name)
 
