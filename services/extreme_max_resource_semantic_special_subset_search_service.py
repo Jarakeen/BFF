@@ -129,9 +129,6 @@ class ExtremeMaxResourceSemanticSpecialSubsetSearchService:
             eligibility=owner.eligibility,
         )
 
-        # Candidate semantic atoms are immutable. Build each once, then push/pop the
-        # atom alongside the selected candidate instead of reconstructing every
-        # selected prefix on every DFS node.
         semantic_atom_by_object_id: dict[int, tuple[object, ...]] = {}
         for rows in rows_by_position:
             for row in rows:
@@ -172,8 +169,6 @@ class ExtremeMaxResourceSemanticSpecialSubsetSearchService:
             running.update(int(row.set_id) for row in rows_by_position[position])
             future_ids[position] = frozenset(running)
 
-        # Both of these are pure functions of topology position. Precompute once
-        # rather than rebuilding count histograms/scanning suffixes on every node.
         remaining_slots_by_position: list[dict[int, int]] = [
             {} for _ in range(len(counts) + 1)
         ]
@@ -248,7 +243,7 @@ class ExtremeMaxResourceSemanticSpecialSubsetSearchService:
                 equal_floor(position),
             )
 
-        def visit(position: int, score: float) -> None:
+        def visit(position: int, score: float, compatible_physicals) -> None:
             nonlocal best, winners_by_semantic_key
             nonlocal nodes, leaves, witness_checks, feasible_leaves, rejected_leaves
             nonlocal score_pruned, physical_pruned, requirement_pruned
@@ -320,8 +315,13 @@ class ExtremeMaxResourceSemanticSpecialSubsetSearchService:
                 if row.special:
                     selected_special_ids.add(row.set_id)
                 prefix = tuple(selected_eligibilities)
-                if feasibility._is_possible_prevalidated(topology, prefix):
-                    visit(position + 1, score + row.exact_delta)
+                child_physicals = feasibility._compatible_physicals_prevalidated(
+                    topology,
+                    prefix,
+                    candidates=compatible_physicals,
+                )
+                if child_physicals:
+                    visit(position + 1, score + row.exact_delta, child_physicals)
                 else:
                     physical_pruned += 1
                 if row.special:
@@ -331,7 +331,7 @@ class ExtremeMaxResourceSemanticSpecialSubsetSearchService:
                 selected_semantics.pop()
                 selected.pop()
 
-        visit(0, 0.0)
+        visit(0, 0.0, feasibility._physicals(topology))
         winners = sorted(
             winners_by_semantic_key.values(),
             key=lambda witness: (
