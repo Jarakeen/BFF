@@ -10,9 +10,22 @@ class JewelryGlyphEffectRepository:
 
     def __init__(self, database_path: str | Path):
         self.database_path = str(database_path)
+        self._names_cache: tuple[str, ...] | None = None
+        self._effect_types_cache: dict[str, tuple[str, ...]] = {}
+        self._descriptions_cache: dict[str, tuple[str, ...]] = {}
+        self._item_cache: dict[tuple[int, bool], tuple[Effect, ...]] = {}
+        self._name_cache: dict[tuple[str, bool], tuple[Effect, ...]] = {}
+        self._strongest_type_cache: dict[tuple[str, bool], tuple[Effect, ...]] = {}
+
+    @staticmethod
+    def _name_key(value: str) -> str:
+        return str(value or "").strip().casefold()
 
     def list_names(self) -> tuple[str, ...]:
         """Return every distinct canonical jewelry-glyph name."""
+        if self._names_cache is not None:
+            return self._names_cache
+
         with sqlite3.connect(self.database_path) as connection:
             rows = connection.execute(
                 """
@@ -22,7 +35,8 @@ class JewelryGlyphEffectRepository:
                 ORDER BY name COLLATE NOCASE
                 """
             ).fetchall()
-        return tuple(str(row[0]) for row in rows)
+        self._names_cache = tuple(str(row[0]) for row in rows)
+        return self._names_cache
 
     def get_jewelry_glyph_effect_types_by_name(self, glyph_name: str) -> tuple[str, ...]:
         """Return canonical semantic effect identities for one named jewelry glyph.
@@ -33,6 +47,11 @@ class JewelryGlyphEffectRepository:
         the semantic source identity without forcing every ESO mechanic through
         ``EffectMapper`` merely to prove it is unrelated to their objective.
         """
+        key = self._name_key(glyph_name)
+        cached = self._effect_types_cache.get(key)
+        if cached is not None:
+            return cached
+
         with sqlite3.connect(self.database_path) as connection:
             rows = connection.execute(
                 """
@@ -47,7 +66,9 @@ class JewelryGlyphEffectRepository:
                 """,
                 (glyph_name,),
             ).fetchall()
-        return tuple(str(row[0]) for row in rows)
+        result = tuple(str(row[0]) for row in rows)
+        self._effect_types_cache[key] = result
+        return result
 
     def get_jewelry_glyph_descriptions_by_name(self, glyph_name: str) -> tuple[str, ...]:
         """Return stored canonical descriptions for one named jewelry glyph.
@@ -57,6 +78,11 @@ class JewelryGlyphEffectRepository:
         semantic effect table is sparse without mutating the database or inventing
         an engine stat mapping.
         """
+        key = self._name_key(glyph_name)
+        cached = self._descriptions_cache.get(key)
+        if cached is not None:
+            return cached
+
         with sqlite3.connect(self.database_path) as connection:
             rows = connection.execute(
                 """
@@ -69,7 +95,13 @@ class JewelryGlyphEffectRepository:
                 """,
                 (glyph_name,),
             ).fetchall()
-        return tuple(str(row[0]).strip() for row in rows if str(row[0] or "").strip())
+        result = tuple(
+            str(row[0]).strip()
+            for row in rows
+            if str(row[0] or "").strip()
+        )
+        self._descriptions_cache[key] = result
+        return result
 
     def get_jewelry_glyph_effect(
         self,
@@ -77,6 +109,11 @@ class JewelryGlyphEffectRepository:
         *,
         use_max_value: bool = True,
     ) -> list[Effect]:
+        cache_key = (int(item_id), bool(use_max_value))
+        cached = self._item_cache.get(cache_key)
+        if cached is not None:
+            return list(cached)
+
         with sqlite3.connect(self.database_path) as connection:
             rows = connection.execute(
                 """
@@ -96,7 +133,9 @@ class JewelryGlyphEffectRepository:
                 (item_id,),
             ).fetchall()
 
-        return self._map_rows(rows, use_max_value=use_max_value)
+        result = tuple(self._map_rows(rows, use_max_value=use_max_value))
+        self._item_cache[cache_key] = result
+        return list(result)
 
     def get_jewelry_glyph_effect_by_name(
         self,
@@ -111,6 +150,11 @@ class JewelryGlyphEffectRepository:
         the strongest recorded row for each effect type, mirroring the armor
         glyph repository while preserving multi-effect jewelry glyphs.
         """
+        cache_key = (self._name_key(glyph_name), bool(use_max_value))
+        cached = self._name_cache.get(cache_key)
+        if cached is not None:
+            return list(cached)
+
         with sqlite3.connect(self.database_path) as connection:
             rows = connection.execute(
                 """
@@ -139,7 +183,9 @@ class JewelryGlyphEffectRepository:
             seen_effect_types.add(effect_type)
             strongest.append(row)
 
-        return self._map_rows(strongest, use_max_value=use_max_value)
+        result = tuple(self._map_rows(strongest, use_max_value=use_max_value))
+        self._name_cache[cache_key] = result
+        return list(result)
 
     def get_strongest_jewelry_glyph_effect_by_type(
         self,
@@ -157,6 +203,11 @@ class JewelryGlyphEffectRepository:
         normalized = str(effect_type or "").strip().casefold()
         if not normalized:
             return []
+
+        cache_key = (normalized, bool(use_max_value))
+        cached = self._strongest_type_cache.get(cache_key)
+        if cached is not None:
+            return list(cached)
 
         with sqlite3.connect(self.database_path) as connection:
             rows = connection.execute(
@@ -178,7 +229,9 @@ class JewelryGlyphEffectRepository:
                 (normalized,),
             ).fetchall()
 
-        return self._map_rows(rows, use_max_value=use_max_value)
+        result = tuple(self._map_rows(rows, use_max_value=use_max_value))
+        self._strongest_type_cache[cache_key] = result
+        return list(result)
 
     @staticmethod
     def _map_rows(rows, *, use_max_value: bool) -> list[Effect]:
