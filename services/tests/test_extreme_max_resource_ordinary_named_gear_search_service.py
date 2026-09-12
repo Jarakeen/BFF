@@ -19,6 +19,7 @@ from services.extreme_gear_set_topology_catalog_service import (
 )
 from services.extreme_max_resource_ordinary_named_gear_search_service import (
     ExtremeMaxResourceOrdinaryNamedGearSearchService,
+    _Candidate,
 )
 from services.extreme_named_gear_set_catalog_realization_service import (
     ExtremeNamedGearSetCatalogRealizationService,
@@ -135,6 +136,57 @@ def _service(
         eligibility,
         relevance,
     )
+
+
+def test_distinct_id_remaining_bound_respects_used_ids_within_count_class() -> None:
+    candidates = {
+        2: (
+            _Candidate(10, "Set 10", 2, 1000.0, _eligibility(10)),
+            _Candidate(20, "Set 20", 2, 900.0, _eligibility(20)),
+            _Candidate(30, "Set 30", 2, 800.0, _eligibility(30)),
+        )
+    }
+
+    fresh = ExtremeMaxResourceOrdinaryNamedGearSearchService._distinct_id_remaining_bound(
+        counts=(2, 2),
+        position=0,
+        candidates_by_count=candidates,
+        used_ids=set(),
+    )
+    after_10 = ExtremeMaxResourceOrdinaryNamedGearSearchService._distinct_id_remaining_bound(
+        counts=(2, 2),
+        position=0,
+        candidates_by_count=candidates,
+        used_ids={10},
+    )
+
+    assert fresh == 1900.0
+    assert after_10 == 1700.0
+
+
+def test_distinct_id_remaining_bound_stays_optimistic_across_count_classes() -> None:
+    candidates = {
+        2: (
+            _Candidate(10, "Set 10", 2, 1000.0, _eligibility(10)),
+            _Candidate(20, "Set 20", 2, 900.0, _eligibility(20)),
+        ),
+        3: (
+            # Reusing set 10 across another count class is illegal in the final
+            # assignment, but counting it here makes the bound an overestimate,
+            # which is intentionally safe for pruning.
+            _Candidate(10, "Set 10", 3, 700.0, _eligibility(10)),
+            _Candidate(30, "Set 30", 3, 600.0, _eligibility(30)),
+        ),
+    }
+
+    bound = ExtremeMaxResourceOrdinaryNamedGearSearchService._distinct_id_remaining_bound(
+        counts=(2, 2, 3),
+        position=0,
+        candidates_by_count=candidates,
+        used_ids=set(),
+    )
+
+    assert bound == 2600.0
 
 
 def test_branch_bound_winner_matches_exhaustive_small_catalog() -> None:
