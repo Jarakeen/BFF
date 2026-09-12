@@ -167,10 +167,16 @@ class ExtremeNamedGearResourceArmorCanonicalStatEvaluator:
             race_repository = getattr(self.optimizer, "race_repository", None)
             gear_set_repository = getattr(self.optimizer, "gear_set_repository", None)
             if race_repository is not None and gear_set_repository is not None:
+                champion_point_repository = (
+                    getattr(self.champion_point_state_service, "repository", None)
+                    if self.champion_point_state_service is not None
+                    else None
+                )
                 context_factory = ExtremeResourceConditionedPhase5ContextFactory(
                     race_repository=race_repository,
                     gear_set_repository=gear_set_repository,
                     mundus_repository=getattr(self.optimizer, "mundus_repository", None),
+                    champion_point_repository=champion_point_repository,
                     provisioning_repository=getattr(self.optimizer, "provisioning_repository", None),
                 )
         self.context_factory = context_factory
