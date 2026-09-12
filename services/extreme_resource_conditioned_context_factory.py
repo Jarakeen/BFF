@@ -106,6 +106,9 @@ class ExtremeResourceConditionedPhase5ContextFactory(Phase5BuildCalculationConte
         gear_set_repository = kwargs.get("gear_set_repository")
         database_path = getattr(gear_set_repository, "database_path", None)
         if database_path is not None:
+            preload = getattr(gear_set_repository, "preload_all_static", None)
+            if callable(preload):
+                preload()
             snapshot = ExtremeResourceCanonicalStaticSnapshotService(database_path).build()
             kwargs.setdefault("armor_glyph_repository", snapshot.armor_glyph_repository)
             kwargs.setdefault("jewelry_glyph_repository", snapshot.jewelry_glyph_repository)
