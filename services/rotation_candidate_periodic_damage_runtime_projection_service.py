@@ -21,7 +21,7 @@ from services.rotation_candidate_periodic_damage_timing_evidence_service import 
 
 
 class PeriodicDamageRefreshBoundary(str, Enum):
-    """Reviewed behavior for an old periodic instance at an exact recast boundary."""
+    """Reviewed behavior for an old periodic instance at an exact refresh boundary."""
 
     REPLACE_BEFORE_RECAST_TICK = "replace_before_recast_tick"
     ALLOW_OLD_TICK_AT_RECAST = "allow_old_tick_at_recast"
@@ -62,7 +62,9 @@ class RotationPeriodicDamageRuntimeSemantics:
     clock. Most effects begin from the skill cast and therefore use ``CAST``.
     Travel/impact-triggered effects can instead use ``IMPACT``. Non-cast anchors
     require an explicit runtime anchor resolver; they never silently fall back to
-    the action timestamp.
+    the action timestamp. The same anchor also owns replacement timing on a later
+    recast: an impact-anchored ground effect is replaced at the next reviewed impact,
+    not merely when the player presses the skill again.
 
     ``successive_hit_multiplier`` models explicitly reviewed effects whose later
     occurrences scale from the previous occurrence. The first occurrence is 1.0x,
@@ -154,9 +156,10 @@ class RotationCandidatePeriodicDamageRuntimeProjectionService:
     Cadence and duration remain owned by the periodic timing evidence service.
     Concrete recurring scheduling remains owned by the shared Phase 7 runtime
     binder. This layer only binds reviewed activation-anchor/first-tick/refresh
-    facts to one rotation plan and clips occurrences to the next recast and plan
-    horizon. Magnitude timing and reviewed successive-hit scaling are preserved on
-    the semantics record for the DD output layer; they do not alter event scheduling.
+    facts to one rotation plan and clips occurrences to the next reviewed refresh
+    anchor and plan horizon. Magnitude timing and reviewed successive-hit scaling are
+    preserved on the semantics record for the DD output layer; they do not alter
+    event scheduling.
     """
 
     _EPSILON = 1e-9
@@ -237,11 +240,23 @@ class RotationCandidatePeriodicDamageRuntimeProjectionService:
                 f"reviewed activation anchor {semantics.activation_anchor.value} requires exact runtime anchor evidence",
             )
 
+        next_refresh, refresh_unresolved = self._next_refresh_time(
+            plan,
+            action_index,
+            action,
+            semantics.activation_anchor,
+        )
+        if refresh_unresolved is not None:
+            return self._unresolved_entry(
+                action,
+                timing_entry,
+                f"{timing_entry.source_name} coefficient {timing_entry.coefficient_number}: {refresh_unresolved}",
+            )
+
         natural_end = activation_time + float(timing_entry.duration_seconds)
-        next_recast = self._next_recast_time(plan, action_index, action)
         active_end = min(natural_end, plan.duration_seconds)
-        if next_recast is not None:
-            active_end = min(active_end, next_recast)
+        if next_refresh is not None:
+            active_end = min(active_end, next_refresh)
 
         first_occurrence = activation_time + semantics.first_tick_offset_seconds
         evidence = (
@@ -294,11 +309,11 @@ class RotationCandidatePeriodicDamageRuntimeProjectionService:
                 continue
             if event.time_seconds > natural_end + self._EPSILON:
                 continue
-            if next_recast is not None:
+            if next_refresh is not None:
                 if semantics.refresh_boundary is PeriodicDamageRefreshBoundary.REPLACE_BEFORE_RECAST_TICK:
-                    if event.time_seconds >= next_recast - self._EPSILON:
+                    if event.time_seconds >= next_refresh - self._EPSILON:
                         continue
-                elif event.time_seconds > next_recast + self._EPSILON:
+                elif event.time_seconds > next_refresh + self._EPSILON:
                     continue
             filtered.append(event)
 
@@ -327,19 +342,29 @@ class RotationCandidatePeriodicDamageRuntimeProjectionService:
             return None
         return resolved
 
-    @staticmethod
-    def _next_recast_time(
+    def _next_refresh_time(
+        self,
         plan: RotationPlan,
         action_index: int,
         action: RotationAction,
-    ) -> float | None:
+        anchor: PeriodicDamageActivationAnchor,
+    ) -> tuple[float | None, str | None]:
         identity = ability_entity_id(action.name or "")
         for later in plan.actions[action_index + 1 :]:
             if later.kind is not RotationActionKind.SKILL:
                 continue
-            if ability_entity_id(later.name or "") == identity:
-                return later.time_seconds
-        return None
+            if ability_entity_id(later.name or "") != identity:
+                continue
+            if anchor is PeriodicDamageActivationAnchor.CAST:
+                return float(later.time_seconds), None
+            resolved = self._activation_time(later, anchor)
+            if resolved is None:
+                return (
+                    None,
+                    f"next {anchor.value} refresh anchor requires exact runtime anchor evidence",
+                )
+            return resolved, None
+        return None, None
 
     @staticmethod
     def _unresolved_entry(
