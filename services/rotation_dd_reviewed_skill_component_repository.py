@@ -11,12 +11,16 @@ from minmax.skill_component_repository import SkillComponentRepository
 
 
 class RotationDDReviewedSkillComponentRepository:
-    """Overlay exact reviewed DD component identities without mutating ``eso.db``.
+    """Overlay exact reviewed components encountered by DD rotation evidence.
 
     These rows are reviewed from coefficient-local ``ability.coef_description``
     evidence. They are keyed by exact max-rank ``skill_rank_id`` + coefficient
     number, while durable ability identity remains the canonical lower-snake-case
     skill entity used by the coefficient repository and Rotation Builder.
+
+    Most rows are DD damage components. A DD build may also slot a personal heal;
+    reviewed non-damage identity belongs here when it is needed to keep the DD
+    evaluator from treating a known heal as unresolved damage evidence.
 
     ``can_crit=True`` follows the repository's existing ordinary active-skill rule:
     normal skill damage/healing components are crit-eligible; proc/set and special
@@ -25,6 +29,10 @@ class RotationDDReviewedSkillComponentRepository:
 
     _REVIEW_SOURCE = (
         "reviewed coefficient-local damage identity from Corpsebuster DD audit; "
+        "ordinary active-skill crit rule"
+    )
+    _RESOLVING_VIGOR_SOURCE = (
+        "reviewed Resolving Vigor self heal-over-time identity; "
         "ordinary active-skill crit rule"
     )
 
@@ -192,6 +200,16 @@ class RotationDDReviewedSkillComponentRepository:
             is_aoe=True,
             can_crit=True,
             source=_REVIEW_SOURCE,
+            confidence=1.0,
+        ),
+        (6641, 1): SkillComponentClassification(
+            skill_rank_id=6641,
+            coefficient_number=1,
+            effect_kind=SkillEffectKind.HEAL,
+            is_dot=True,
+            is_aoe=False,
+            can_crit=True,
+            source=_RESOLVING_VIGOR_SOURCE,
             confidence=1.0,
         ),
     }
