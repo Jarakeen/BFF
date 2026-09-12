@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QComboBox
 
 from models.build_model import BuildRoster, PlayerBuild
 from services.raid_coverage_profile import DEFAULT_RAID_COVERAGE_PROFILE
@@ -48,6 +48,9 @@ def test_coverage_page_filters_real_static_evidence_without_claiming_uptime(tmp_
         _effect("major_courage"), _effect("minor_brittle", "requires frost"), _effect("force")
     ) if _build.Name == "Magrat" else _audit(_effect("major_courage")))
     page.status = SimpleNamespace(info=lambda *_: None, warning=lambda *_: None)
+    page.scope_combo = QComboBox(page)
+    page.scope_combo.addItem("All Saved Builds", "all")
+    page._team_scope = ()
     workspace = page._coverage_tab()
     workspace.setParent(page)
     page.refresh()

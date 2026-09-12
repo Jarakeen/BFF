@@ -20,7 +20,7 @@ def test_dashboard_polish_uses_balanced_composition_surface() -> None:
 
 def test_dashboard_polish_uses_status_pills_and_colored_coverage() -> None:
     source = Path("ui/raid_engine_dashboard_polish_support.py").read_text(encoding="utf-8")
-    assert "border-radius: 10px" in source
+    assert "'0' if _is_rylo() else '10px'" in source
     assert '"SAVED", "COVERED"' in source
     assert '"NEEDS BUILD", "MISSING"' in source
     assert "setCellWidget(row, 3, host)" in source

@@ -420,6 +420,8 @@ class MainWindow(QMainWindow):
             # overview whenever it becomes visible instead of showing the card
             # state captured when the application first launched.
             self.pages["operations_console"].refresh()
+        elif page_name == "console:7":
+            self.pages["console:7"].refresh()
         elif page_name == "console:4":
             self.pages["console:4"].refresh_context()
         elif page_name == "gear_lookup":

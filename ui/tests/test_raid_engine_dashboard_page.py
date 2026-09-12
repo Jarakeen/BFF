@@ -39,6 +39,7 @@ def test_dashboard_readiness_improves_with_assignments_and_coverage() -> None:
     )
 
     assert 0 <= empty < partial < ready == 100
+    assert empty == 0  # No team and no static evidence must not look partly ready.
 
 
 def test_dashboard_declares_exact_twelve_player_trial_shape() -> None:

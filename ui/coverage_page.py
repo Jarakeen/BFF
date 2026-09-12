@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
 )
 
 from engine.config import DEFAULT_DATABASE, get_data_dir
-from models.build_model import BuildRoster
+from models.build_model import BuildRoster, PlayerBuild
 from services.build_service import BuildService
 from services.saved_build_capability_service import SavedBuildCapabilityService, summarize_raid_coverage
 from services.performance_raid_review_runner_service import PerformanceRaidReviewRunnerService
@@ -44,6 +44,9 @@ class CoveragePage(FoundryPage):
         super().__init__(parent)
         self.build_service = BuildService(get_data_dir() / "builds.json")
         self.capability_service = None
+        self._team_scope: tuple[tuple[str, PlayerBuild], ...] = ()
+        self._team_scope_name = ""
+        self._team_total_slots = 12
         self.raid_review_runner = raid_review_runner or PerformanceRaidReviewRunnerService()
         self.raid_review_selection_mode_service = PerformanceRaidReviewSelectionModeService()
         self._raid_review_task: RaidReviewAsyncTask | None = None
@@ -64,6 +67,10 @@ class CoveragePage(FoundryPage):
         self.encounter_combo.setEnabled(False)
         self.encounter_combo.setToolTip("This watch list is fixed; encounter-specific requirements are not connected yet.")
         self.header.add_context_widget(self._context_field("REQUIREMENTS", self.encounter_combo))
+        self.scope_combo = QComboBox()
+        self.scope_combo.addItem("All Saved Builds", "all")
+        self.scope_combo.currentIndexChanged.connect(self.refresh)
+        self.header.add_context_widget(self._context_field("BUILD SCOPE", self.scope_combo))
 
         self.tabs = QTabWidget()
         self.tabs.addTab(self._coverage_tab(), "BUFFS & DEBUFFS")
@@ -93,6 +100,12 @@ class CoveragePage(FoundryPage):
         root = QVBoxLayout(page)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(8)
+
+        self.scope_card = FoundryCard("Who Is In This Check", "team")
+        self.scope_note = QLabel()
+        self.scope_note.setWordWrap(True)
+        self.scope_card.addWidget(self.scope_note)
+        root.addWidget(self.scope_card)
 
         filters = QHBoxLayout()
         self.effect_filter = QComboBox()
@@ -144,6 +157,27 @@ class CoveragePage(FoundryPage):
         lower.addWidget(notes, 2)
         root.addLayout(lower, 1)
         return page
+
+    def set_team_scope(
+        self, name: str, members: tuple[tuple[str, PlayerBuild], ...], *, total_slots: int = 12
+    ) -> None:
+        """Use explicit selected builds from the dashboard, never infer a roster from names."""
+        if not members:
+            self.status.warning("Select saved builds in Team Optimization before sending a team to Coverage.")
+            return
+        self._team_scope = tuple((slot, PlayerBuild.from_dict(build.to_dict())) for slot, build in members)
+        self._team_scope_name = name.strip() or "Selected Team"
+        self._team_total_slots = total_slots
+        self.scope_combo.blockSignals(True)
+        index = self.scope_combo.findData("team")
+        if index < 0:
+            self.scope_combo.addItem("Selected Team", "team")
+            index = self.scope_combo.findData("team")
+        self.scope_combo.setItemText(index, self._team_scope_name)
+        self.scope_combo.setCurrentIndex(index)
+        self.scope_combo.blockSignals(False)
+        self.tabs.setCurrentIndex(0)
+        self.refresh()
 
     def _raid_review_tab(self) -> QWidget:
         page = QWidget()
@@ -522,6 +556,22 @@ class CoveragePage(FoundryPage):
             )
             self.table.setRowHidden(row, not visible)
 
+    def snapshot_for_builds(self, builds: tuple[PlayerBuild, ...]):
+        """Audit an explicit build subset without claiming those builds form an assigned provider plan."""
+        self._last_audit_error = None
+        empty = summarize_raid_coverage(DEFAULT_RAID_COVERAGE_PROFILE, [])
+        if not builds or not DEFAULT_DATABASE.is_file():
+            return empty
+        try:
+            if self.capability_service is None:
+                self.capability_service = SavedBuildCapabilityService(self.build_service, DEFAULT_DATABASE)
+            audits = [(build, self.capability_service.audit_build(build)) for build in builds]
+        except Exception as exc:
+            self._last_audit_error = f"Saved-build coverage could not be audited: {exc}"
+            self.status.warning(self._last_audit_error)
+            return empty
+        return summarize_raid_coverage(DEFAULT_RAID_COVERAGE_PROFILE, audits)
+
     def refresh(self):
         load_error = None
         try:
@@ -530,25 +580,30 @@ class CoveragePage(FoundryPage):
             self.roster = BuildRoster()
             load_error = f"Could not load saved builds: {exc}"
 
-        build_audits = []
-        audit_error = None
-        builds = tuple(
+        saved_builds = tuple(
             build for build in self.roster.Members
             if (build.Name or "").strip() or (build.Gamertag or "").strip()
             or (build.BuildName or "").strip()
         )
-        if builds and DEFAULT_DATABASE.is_file():
-            try:
-                if self.capability_service is None:
-                    self.capability_service = SavedBuildCapabilityService(self.build_service, DEFAULT_DATABASE)
-                build_audits = [
-                    (build, self.capability_service.audit_build(build))
-                    for build in builds
-                ]
-            except Exception as exc:
-                audit_error = f"Saved-build coverage could not be audited: {exc}"
-                build_audits = []
-        snapshot = summarize_raid_coverage(DEFAULT_RAID_COVERAGE_PROFILE, build_audits)
+        team_active = self.scope_combo.currentData() == "team" and bool(self._team_scope)
+        builds = tuple(build for _, build in self._team_scope) if team_active else saved_builds
+        if team_active:
+            members = ", ".join(
+                f"{slot}: {build.Name or build.Gamertag or build.BuildName} ({build.BuildName or 'Saved Build'})"
+                for slot, build in self._team_scope
+            )
+            self.scope_card.set_title(f"Selected Team: {self._team_scope_name}")
+            self.scope_note.setText(
+                f"{len(self._team_scope)}/{self._team_total_slots} slots with saved builds • {members}\n"
+                "Team Optimization snapshot. Resend after edits. Static effects only; provider duties and uptime remain unassigned."
+            )
+        else:
+            self.scope_card.set_title("All Saved Builds")
+            self.scope_note.setText(
+                f"Checking all {len(saved_builds)} named saved builds, regardless of raid team. "
+                "To check one team, select its builds in Team Optimization, then use Send Team to Coverage on Raid Engine."
+            )
+        snapshot = self.snapshot_for_builds(builds)
         self.table.setRowCount(0)
         for effect in CORE_COVERAGE:
             row = self.table.rowCount()
@@ -610,7 +665,7 @@ class CoveragePage(FoundryPage):
                 self.providers_card.addWidget(QLabel(f"{name}   {count} effect(s) identified"))
         else:
             self.providers_card.addWidget(QLabel("No unconditional static sources identified."))
-        if load_error or audit_error:
-            self.status.warning(load_error or audit_error)
+        if load_error or self._last_audit_error:
+            self.status.warning(load_error or self._last_audit_error)
         else:
             self.status.info(f"Coverage evidence • {available}/{len(CORE_COVERAGE)} effects have static sources; uptime unknown.")

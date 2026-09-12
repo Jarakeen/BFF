@@ -28,14 +28,14 @@ def _is_rylo() -> bool:
 def _status_palette(kind: str) -> tuple[str, str, str]:
     key = str(kind or "").strip().upper()
     if _is_rylo():
-        if key in {"SAVED", "COVERED"}:
+        if key in {"SAVED", "COVERED", "AVAILABLE"}:
             return "#193126", "#6DA07D", "#D7E8DC"
-        if key in {"NEEDS BUILD", "MISSING"}:
+        if key in {"NEEDS BUILD", "MISSING", "NOT_FOUND"}:
             return "#3A1719", "#A73A40", "#E8C6C8"
         return "#25272B", "#696B70", "#D0C8B9"
-    if key in {"SAVED", "COVERED"}:
+    if key in {"SAVED", "COVERED", "AVAILABLE"}:
         return "#173A2B", "#4F8E68", "#D9EEE2"
-    if key in {"NEEDS BUILD", "MISSING"}:
+    if key in {"NEEDS BUILD", "MISSING", "NOT_FOUND"}:
         return "#4A281B", "#B36A38", "#F0D8C2"
     return "#173339", "#4C777C", "#D6E6E5"
 
@@ -49,7 +49,7 @@ def _pill(text: str, kind: str) -> QLabel:
     label.setStyleSheet(
         "QLabel {"
         f"background: {background}; color: {foreground}; border: 1px solid {border};"
-        "border-radius: 10px; padding: 1px 8px; font-weight: 600;"
+        f"border-radius: {'0' if _is_rylo() else '10px'}; padding: 1px 8px; font-weight: 600;"
         "}"
     )
     return label
@@ -162,17 +162,14 @@ def _refresh_coverage_with_colored_states(self, coverage) -> None:
         widget = item.widget()
         if not isinstance(widget, QLabel):
             continue
-        text = widget.text().strip()
-        if "Covered" in text:
-            background, border, foreground = _status_palette("COVERED")
-        elif "Missing" in text:
-            background, border, foreground = _status_palette("MISSING")
-        else:
+        state = widget.property("dashboardCoverageState")
+        if not state:
             continue
+        background, border, foreground = _status_palette(str(state))
         widget.setStyleSheet(
             "QLabel {"
             f"color: {foreground}; background: {background}; border: 1px solid {border};"
-            "border-radius: 9px; padding: 1px 7px; font-weight: 600;"
+            f"border-radius: {'0' if _is_rylo() else '9px'}; padding: 1px 7px; font-weight: 600;"
             "}"
         )
 
@@ -180,7 +177,8 @@ def _refresh_coverage_with_colored_states(self, coverage) -> None:
 def _generated_next_actions(slots, coverage, optimization) -> str:
     open_slots = [slot.slot for slot in slots if slot.status == "OPEN"]
     needs_build = [slot.slot for slot in slots if slot.status == "NEEDS BUILD"]
-    missing = [name for name, covered in coverage.effects if not covered]
+    missing = [name for name, state in coverage.effects if state == "not_found" or state is False]
+    unknown = sum(state == "unverified" for _, state in coverage.effects)
     actions: list[str] = []
     if "Off Tank" in open_slots:
         actions.append("☐  Assign an Off Tank.")
@@ -190,7 +188,9 @@ def _generated_next_actions(slots, coverage, optimization) -> str:
     if needs_build:
         actions.append(f"☐  Finish builds for {', '.join(needs_build[:3])}{'…' if len(needs_build) > 3 else ''}.")
     if missing:
-        actions.append(f"☐  Resolve missing coverage: {', '.join(missing[:3])}{'…' if len(missing) > 3 else ''}.")
+        actions.append(f"☐  Review sources not identified: {', '.join(missing[:3])}{'…' if len(missing) > 3 else ''}.")
+    if unknown:
+        actions.append(f"☐  Review evidence for {unknown} unverified effect(s).")
     if optimization.capability_gaps:
         actions.append(f"☐  Review {optimization.capability_gaps} capability-resolution gap(s).")
     actions.append("☐  Load a saved team or send the current team to Roster.")

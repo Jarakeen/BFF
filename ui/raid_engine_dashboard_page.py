@@ -32,6 +32,7 @@ from PySide6.QtWidgets import (
 
 from engine.config import get_resource_path
 from services.accessibility_preferences import VISUAL_THEME_RYLO
+from services.raid_coverage_profile import DEFAULT_RAID_COVERAGE_PROFILE
 from ui.components.foundry_button import ButtonRole, FoundryButton
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
@@ -54,18 +55,7 @@ RAID_SLOTS = (
     "DD 8",
 )
 
-COVERAGE_WATCH = (
-    "Major Vulnerability",
-    "Minor Brittle",
-    "Major Courage",
-    "Crusher",
-    "War Horn",
-    "Purify",
-    "Orbs",
-    "Minor Maim",
-    "Major Slayer",
-    "Minor Lifesteal",
-)
+COVERAGE_WATCH = tuple(row.display_name for row in DEFAULT_RAID_COVERAGE_PROFILE.requirements if row.required)
 
 
 @dataclass(frozen=True)
@@ -79,7 +69,7 @@ class RaidSlotSnapshot:
 
 @dataclass(frozen=True)
 class CoverageSnapshot:
-    effects: tuple[tuple[str, bool], ...]
+    effects: tuple[tuple[str, str], ...]
     covered: int
     total: int
 
@@ -123,6 +113,8 @@ def _normalize_slot_name(value: object) -> str:
 
 def _readiness_score(*, assigned: int, total_slots: int, covered: int, total_coverage: int, capability_gaps: int) -> int:
     """Dashboard-only readiness pulse; not combat math and not an optimization rank."""
+    if assigned <= 0 and covered <= 0:
+        return 0
     slot_ratio = assigned / max(1, total_slots)
     coverage_ratio = covered / max(1, total_coverage)
     gap_ratio = 1.0 / (1.0 + max(0, capability_gaps))
@@ -323,7 +315,7 @@ class ReadinessRingWidget(QWidget):
         font.setPointSize(8)
         font.setBold(False)
         painter.setFont(font)
-        painter.drawText(QRectF(0, self.height() * 0.62, self.width(), 22), Qt.AlignmentFlag.AlignCenter, "READY")
+        painter.drawText(QRectF(0, self.height() * 0.62, self.width(), 22), Qt.AlignmentFlag.AlignCenter, "PLAN")
 
 
 class EncounterMiniMap(QWidget):
@@ -446,7 +438,7 @@ class RaidEngineDashboardPage(FoundryPage):
 
         right = QVBoxLayout()
         right.setSpacing(9)
-        self.optimization_card = FoundryCard("Optimization Pulse", "chart")
+        self.optimization_card = FoundryCard("Planning Pulse", "chart")
         pulse = QHBoxLayout()
         self.readiness_ring = ReadinessRingWidget()
         pulse.addWidget(self.readiness_ring, 0, Qt.AlignmentFlag.AlignTop)
@@ -461,12 +453,19 @@ class RaidEngineDashboardPage(FoundryPage):
         right.addWidget(self.optimization_card, 1)
 
         self.coverage_card = FoundryCard("Coverage Snapshot", "shield")
+        self.coverage_scope_label = QLabel("Select saved builds in Team Optimization to check this team.")
+        self.coverage_scope_label.setWordWrap(True)
+        self.coverage_card.addWidget(self.coverage_scope_label)
         self.coverage_grid = QGridLayout()
         self.coverage_grid.setHorizontalSpacing(12)
         self.coverage_grid.setVerticalSpacing(4)
         self.coverage_card.addLayout(self.coverage_grid)
-        coverage_link = FoundryButton("View Full Coverage →", role=ButtonRole.GHOST, compact=True)
-        coverage_link.clicked.connect(lambda *_: self.pageRequested.emit("console:7"))
+        self.send_coverage_button = FoundryButton("Send Selected Team to Coverage", role=ButtonRole.PRIMARY, compact=True)
+        self.send_coverage_button.setToolTip("Check exactly the saved builds selected in Team Optimization; open slots stay open.")
+        self.send_coverage_button.clicked.connect(self._send_team_to_coverage)
+        self.coverage_card.addWidget(self.send_coverage_button)
+        coverage_link = FoundryButton("Browse All Saved Builds →", role=ButtonRole.GHOST, compact=True)
+        coverage_link.clicked.connect(self._browse_all_coverage)
         self.coverage_card.addWidget(coverage_link)
         right.addWidget(self.coverage_card, 1)
         top.addLayout(right, 30)
@@ -585,6 +584,37 @@ class RaidEngineDashboardPage(FoundryPage):
                 slots.append(RaidSlotSnapshot(slot=slot))
         return tuple(slots)
 
+    def _selected_team_members(self):
+        """Only explicit saved-build selections, with their optimization slot."""
+        page = self.optimization
+        table = getattr(page, "team_table", None)
+        if not isinstance(table, QTableWidget):
+            return ()
+        if hasattr(page, "team_tabs") and page.team_tabs.currentIndex() == 1:
+            table = getattr(page, "team_b_table", table)
+        roster = getattr(getattr(page, "roster", None), "Members", ())
+        selected = []
+        for row in range(table.rowCount()):
+            slot = _normalize_slot_name(_table_text(table, row, 0))
+            selector = table.cellWidget(row, 1)
+            index = selector.currentData() if isinstance(selector, QComboBox) else None
+            if slot in RAID_SLOTS and isinstance(index, int) and 0 <= index < len(roster):
+                selected.append((slot, roster[index]))
+        return tuple(selected)
+
+    def _send_team_to_coverage(self, *_args) -> None:
+        selected = self._selected_team_members()
+        if self.coverage is None or not selected:
+            self.status.warning("Select saved builds in Team Optimization before sending a team to Coverage.")
+            return
+        self.coverage.set_team_scope(self.plan_combo.currentText(), selected, total_slots=len(RAID_SLOTS))
+        self.pageRequested.emit("console:7")
+
+    def _browse_all_coverage(self, *_args) -> None:
+        if self.coverage is not None:
+            self.coverage.scope_combo.setCurrentIndex(self.coverage.scope_combo.findData("all"))
+        self.pageRequested.emit("console:7")
+
     def _comp_slots(self) -> tuple[RaidSlotSnapshot, ...]:
         page = self.comp_builder
         table = getattr(page, "matrix_table", None)
@@ -613,22 +643,12 @@ class RaidEngineDashboardPage(FoundryPage):
         return self._comp_slots()
 
     def _coverage_snapshot(self) -> CoverageSnapshot:
-        page = self.coverage
-        table = getattr(page, "table", None)
-        if page is None or not isinstance(table, QTableWidget):
-            return CoverageSnapshot(tuple((name, False) for name in COVERAGE_WATCH), 0, len(COVERAGE_WATCH))
-        effect_col = _table_column(table, ("EFFECT",))
-        status_col = _table_column(table, ("STATUS",))
-        status_by_effect: dict[str, bool] = {}
-        for row in range(table.rowCount()):
-            effect = _table_text(table, row, effect_col)
-            status = _table_text(table, row, status_col).casefold()
-            if effect:
-                status_by_effect[effect.casefold()] = status == "covered"
-        effects = tuple((name, status_by_effect.get(name.casefold(), False)) for name in COVERAGE_WATCH)
-        covered_all = sum(1 for value in status_by_effect.values() if value)
-        total_all = max(table.rowCount(), len(status_by_effect))
-        return CoverageSnapshot(effects, covered_all, total_all)
+        selected = self._selected_team_members()
+        if self.coverage is None or not selected:
+            return CoverageSnapshot(tuple((name, "unverified") for name in COVERAGE_WATCH), 0, len(COVERAGE_WATCH))
+        snapshot = self.coverage.snapshot_for_builds(tuple(build for _, build in selected))
+        effects = tuple((name, snapshot.status.get(name, "unverified")) for name in COVERAGE_WATCH)
+        return CoverageSnapshot(effects, sum(state == "available" for _, state in effects), len(effects))
 
     def _optimization_snapshot(self, slots: tuple[RaidSlotSnapshot, ...], coverage: CoverageSnapshot) -> OptimizationSnapshot:
         assigned = sum(1 for slot in slots if slot.status == "SAVED")
@@ -672,8 +692,12 @@ class RaidEngineDashboardPage(FoundryPage):
                 self.trial_combo.setCurrentIndex(index)
 
             plan = _clean(getattr(getattr(self.comp_builder, "plan_name_input", None), "text", lambda: "")())
-            loaded = _clean(getattr(self.optimization, "_optimization_loaded_team_name_a", ""))
-            display = plan or loaded or "Current Raid Composition"
+            team_b = hasattr(self.optimization, "team_tabs") and self.optimization.team_tabs.currentIndex() == 1
+            loaded = _clean(getattr(self.optimization, "_optimization_loaded_team_name_b" if team_b else "_optimization_loaded_team_name_a", ""))
+            if self._selected_team_members():
+                display = loaded or f"Team Optimization • Team {'B' if team_b else 'A'}"
+            else:
+                display = plan or "Current Raid Composition"
             self.plan_combo.clear()
             self.plan_combo.addItem(display)
         finally:
@@ -695,14 +719,17 @@ class RaidEngineDashboardPage(FoundryPage):
             item = self.coverage_grid.takeAt(0)
             if item.widget() is not None:
                 item.widget().deleteLater()
-        for index, (effect, covered) in enumerate(coverage.effects):
-            column = 0 if index < math.ceil(len(coverage.effects) / 2) else 2
-            row = index if column == 0 else index - math.ceil(len(coverage.effects) / 2)
+        labels = {"available": "✓ Static source", "conditional": "◇ Conditional", "not_found": "? Not identified", "unverified": "? Unverified"}
+        priority = {"available": 0, "conditional": 1, "not_found": 2, "unverified": 3}
+        ranked = sorted(coverage.effects, key=lambda entry: priority.get(entry[1], 3))
+        for row, (effect, evidence) in enumerate(ranked[:5]):
             name = QLabel(effect)
-            state = QLabel("✓ Covered" if covered else "✕ Missing")
-            state.setProperty("dashboardCovered", covered)
-            self.coverage_grid.addWidget(name, row, column)
-            self.coverage_grid.addWidget(state, row, column + 1)
+            state = QLabel(labels.get(evidence, "? Unverified"))
+            state.setProperty("dashboardCoverageState", evidence)
+            self.coverage_grid.addWidget(name, row, 0)
+            self.coverage_grid.addWidget(state, row, 1)
+        if len(ranked) > 5:
+            self.coverage_grid.addWidget(QLabel(f"+ {len(ranked) - 5} more checks in Coverage"), 5, 0, 1, 2)
 
     def _refresh_encounter(self) -> None:
         title = "No Encounter Selected"
@@ -733,7 +760,8 @@ class RaidEngineDashboardPage(FoundryPage):
     def _refresh_next_actions(self, slots: tuple[RaidSlotSnapshot, ...], coverage: CoverageSnapshot, optimization: OptimizationSnapshot) -> None:
         open_slots = [slot.slot for slot in slots if slot.status == "OPEN"]
         needs_build = [slot.slot for slot in slots if slot.status == "NEEDS BUILD"]
-        missing = [name for name, covered in coverage.effects if not covered]
+        missing = [name for name, state in coverage.effects if state == "not_found"]
+        unknown = sum(state == "unverified" for _, state in coverage.effects)
         actions: list[str] = []
         if "Off Tank" in open_slots:
             actions.append("☐  Assign an Off Tank.")
@@ -743,7 +771,9 @@ class RaidEngineDashboardPage(FoundryPage):
         if needs_build:
             actions.append(f"☐  Finish builds for {', '.join(needs_build[:3])}{'…' if len(needs_build) > 3 else ''}.")
         if missing:
-            actions.append(f"☐  Resolve missing coverage: {', '.join(missing[:3])}{'…' if len(missing) > 3 else ''}.")
+            actions.append(f"☐  Review sources not identified: {', '.join(missing[:3])}{'…' if len(missing) > 3 else ''}.")
+        if unknown:
+            actions.append(f"☐  Review evidence for {unknown} unverified effect(s).")
         if optimization.capability_gaps:
             actions.append(f"☐  Review {optimization.capability_gaps} capability-resolution gap(s).")
         actions.append("☐  Load a saved team or send the current team to Roster.")
@@ -762,6 +792,17 @@ class RaidEngineDashboardPage(FoundryPage):
 
         self._sync_context_labels()
         slots = self._slot_snapshot()
+        selected = self._selected_team_members()
+        self.send_coverage_button.setEnabled(bool(selected))
+        if selected:
+            self.coverage_scope_label.setText(
+                f"Team Optimization: {len(selected)}/{len(RAID_SLOTS)} slots have saved builds. "
+                "Check this selected team; open slots have no coverage evidence."
+            )
+        else:
+            self.coverage_scope_label.setText(
+                "No saved builds selected in Team Optimization. Select a build in its team slots to check team coverage."
+            )
         coverage = self._coverage_snapshot()
         optimization = self._optimization_snapshot(slots, coverage)
 
@@ -772,21 +813,21 @@ class RaidEngineDashboardPage(FoundryPage):
         self.optimization_metrics.setText(
             f"Assigned Slots          {optimization.assigned} / 12\n"
             f"Saved Builds            {optimization.saved_builds}\n"
-            f"Coverage Represented     {optimization.coverage_covered} / {max(optimization.coverage_total, 0)}\n"
+            f"Static Sources Found     {optimization.coverage_covered} / {max(optimization.coverage_total, 0)}\n"
             f"Capability Gaps          {optimization.capability_gaps}\n"
             f"Build Swaps Suggested    {optimization.build_swaps}"
         )
         if optimization.readiness >= 80:
-            note = "Strong readiness. Review encounter details and performance before the pull."
+            note = "Planning estimate only. Review assignments, mechanics and actual combat evidence before the pull."
         elif optimization.readiness >= 45:
-            note = "Core structure is taking shape. Resolve open chairs and coverage gaps next."
+            note = "Planning estimate only. Fill open slots and review unverified coverage next."
         else:
-            note = "Solid foundation. Complete core roles and resolve key coverage gaps to improve readiness."
+            note = "Planning estimate only. Fill open slots and review unverified coverage next."
         self.optimization_note.setText(note)
         self._refresh_encounter()
         self._refresh_performance()
         self._refresh_next_actions(slots, coverage, optimization)
         self.status.info(
             f"Raid Engine dashboard ready • {optimization.assigned}/12 assigned • "
-            f"{optimization.coverage_covered}/{max(optimization.coverage_total, 0)} coverage represented."
+            f"{optimization.coverage_covered}/{max(optimization.coverage_total, 0)} static sources identified."
         )
