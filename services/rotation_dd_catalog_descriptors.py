@@ -7,6 +7,27 @@ from services.service_catalog import EvidenceClass, ServiceBehavior, ServiceDesc
 
 ROTATION_DD_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
     ServiceDescriptor(
+        service_id="rotation.dd.output_context_relevance",
+        domain="rotation",
+        purpose=(
+            "Classify broad static build-context diagnostics by whether they can invalidate "
+            "modeled DD damage output, preserving unknown offensive diagnostics fail-closed."
+        ),
+        implementation_path="services.rotation_dd_output_context_relevance_service",
+        inputs=("BuildCalculationContextUnresolved",),
+        outputs=("RotationDDOutputContextRelevance",),
+        responsibilities=("rotation_dd_output_context_relevance",),
+        roles=("DD", "DPS"),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Only diagnostics already proven irrelevant to current DD damage math are ambient. "
+            "Bloodthirsty, offensive Champion Points, potion uptime, Charged/status chance, "
+            "and unknown mechanics remain blocking until their canonical runtime math exists."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="rotation.dd.whole_plan_damage_coverage_audit",
         domain="rotation",
         purpose=(
