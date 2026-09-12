@@ -34,6 +34,10 @@ from services.extreme_record_result import (
     ExtremeRecordResult,
     ExtremeRecordSearchCoverage,
 )
+from services.extreme_resource_potion_projection_service import (
+    ExtremeResourcePotionProjection,
+    ExtremeResourcePotionProjectionService,
+)
 from services.extreme_structural_core_stat_record_service import (
     ExtremeCanonicalStructuralStatEvaluator,
     ExtremeStructuralCoreStatRecordService,
@@ -66,7 +70,7 @@ class ExtremePotionSnapshotState:
 
 
 class ExtremeBestMundusFoodPotionStructuralStatEvaluator:
-    """Score every canonical potion formula over the nested food/Mundus search."""
+    """Score canonical potion states, using proof reductions when available."""
 
     def __init__(
         self,
@@ -87,8 +91,19 @@ class ExtremeBestMundusFoodPotionStructuralStatEvaluator:
         self._states_cache: tuple[ExtremePotionSnapshotState, ...] | None = None
         self._unresolved_cache: tuple[str, ...] | None = None
         self._denominator_proven_cache: bool | None = None
+        self._projection_cache: dict[str, ExtremeResourcePotionProjection] = {}
 
-    def potion_states(self) -> tuple[ExtremePotionSnapshotState, ...]:
+    def potion_projection(self, objective_key: str) -> ExtremeResourcePotionProjection | None:
+        key = str(objective_key or "").strip().casefold()
+        if key not in ExtremeResourcePotionProjectionService.SUPPORTED_OBJECTIVES:
+            return None
+        cached = self._projection_cache.get(key)
+        if cached is None:
+            cached = ExtremeResourcePotionProjectionService(self.potion_repository).build(key)
+            self._projection_cache[key] = cached
+        return cached
+
+    def _all_potion_states(self) -> tuple[ExtremePotionSnapshotState, ...]:
         if self._states_cache is not None:
             return self._states_cache
 
@@ -107,7 +122,10 @@ class ExtremeBestMundusFoodPotionStructuralStatEvaluator:
 
             buffs: list[str] = []
             for trait in availability.canonical_traits:
-                named_buff = potion_buff_for_trait(trait, game_update=GameUpdate.U50)
+                named_buff = potion_buff_for_trait(
+                    trait,
+                    game_update=self.potion_repository.game_update,
+                )
                 if named_buff and named_buff not in buffs:
                     buffs.append(named_buff)
             states.append(
@@ -122,14 +140,22 @@ class ExtremeBestMundusFoodPotionStructuralStatEvaluator:
         self._denominator_proven_cache = bool(catalog.formulas) and not self._unresolved_cache
         return self._states_cache
 
+    def potion_states(self, objective_key: str | None = None) -> tuple[ExtremePotionSnapshotState, ...]:
+        key = str(objective_key or "").strip().casefold()
+        if key:
+            projection = self.potion_projection(key)
+            if projection is not None and projection.objective_irrelevance_proven:
+                return (ExtremePotionSnapshotState(selection=""),)
+        return self._all_potion_states()
+
     @property
     def unresolved(self) -> tuple[str, ...]:
-        self.potion_states()
+        self._all_potion_states()
         return tuple(self._unresolved_cache or ())
 
     @property
     def denominator_proven(self) -> bool:
-        self.potion_states()
+        self._all_potion_states()
         return bool(self._denominator_proven_cache)
 
     def __call__(
@@ -140,9 +166,15 @@ class ExtremeBestMundusFoodPotionStructuralStatEvaluator:
         best_value: float | None = None
         best_payload: dict[str, Any] | None = None
         best_selection = ""
-        unresolved: list[str] = list(self.unresolved)
+        projection = self.potion_projection(objective_key)
+        unresolved: list[str] = []
+        if projection is not None and not projection.objective_irrelevance_proven:
+            unresolved.extend(projection.unresolved)
+            unresolved.extend(self.unresolved)
+        elif projection is None:
+            unresolved.extend(self.unresolved)
 
-        for state in self.potion_states():
+        for state in self.potion_states(objective_key):
             snapshot_buffs = tuple(
                 dict.fromkeys((*self.base_active_buffs, *state.active_buffs))
             )
@@ -224,8 +256,9 @@ class ExtremeStructuralMundusFoodPotionCoreStatRecordService:
             )
 
         result: ExtremeStructuralGlobalSearchResult[dict[str, Any]] = self.search_service.search(key)
-        potion_states = self.evaluator.potion_states()
-        food_choices = self.evaluator.food_evaluator.food_choices()
+        potion_projection = self.evaluator.potion_projection(key)
+        potion_states = self.evaluator.potion_states(key)
+        food_choices = self.evaluator.food_evaluator.food_choices(key)
         mundus_choices = self.evaluator.food_evaluator.mundus_evaluator.mundus_choices()
         searched = tuple((*result.structural_scope, _MUNDUS_SCOPE, _FOOD_SCOPE, _POTION_SCOPE))
         omitted = tuple(
@@ -239,12 +272,16 @@ class ExtremeStructuralMundusFoodPotionCoreStatRecordService:
             * len(food_choices)
             * len(potion_states)
         )
+        potion_proven = bool(
+            (potion_projection is not None and potion_projection.objective_irrelevance_proven)
+            or (potion_projection is None and self.evaluator.denominator_proven)
+        )
         denominator_proven = bool(
             result.structural_denominator_proven
             and mundus_choices
             and food_choices
             and potion_states
-            and self.evaluator.denominator_proven
+            and potion_proven
             and not omitted
             and not result.unresolved
         )
@@ -265,7 +302,7 @@ class ExtremeStructuralMundusFoodPotionCoreStatRecordService:
                     dict.fromkeys(
                         (
                             "Structural + Mundus + food + potion Extreme search produced no scored candidate",
-                            *self.evaluator.unresolved,
+                            *(potion_projection.unresolved if potion_projection is not None else self.evaluator.unresolved),
                             *result.unresolved,
                         )
                     )
@@ -290,9 +327,14 @@ class ExtremeStructuralMundusFoodPotionCoreStatRecordService:
                 "Winning potion formula must be activated and its mapped effects active at the scored snapshot.",
             )
 
+        potion_search_text = (
+            f"reviewed {potion_projection.formulas_reviewed:,} canonical potion formulas and proved them irrelevant to {key}, then scored the no-potion witness"
+            if potion_projection is not None and potion_projection.objective_irrelevance_proven
+            else f"searched {len(potion_states):,} canonical potion states"
+        )
         explanation = (
-            "Exhaustively searched structural candidates × every Update-50 Mundus × canonical food/drink × canonical potion formula state.",
-            f"Evaluated {expanded_count:,} combinations across {len(mundus_choices):,} Mundus, {len(food_choices):,} food, and {len(potion_states):,} potion states including empty baselines.",
+            f"Exhaustively searched the proof-retained finite axes; {potion_search_text}.",
+            f"Evaluated {expanded_count:,} combinations across {len(mundus_choices):,} Mundus, {len(food_choices):,} provisioning witnesses, and {len(potion_states):,} scored potion states.",
             f"Winning Mundus: {winner_mundus or 'none'}; food/drink: {winner_food or 'none'}; potion: {winner_potion or 'none'}.",
             "Potion selection proves availability; named potion buffs are applied only in the explicit active snapshot scored by this layer.",
             "Other dynamic axes remain deferred, so this is not yet a globally proven Extreme Record.",
