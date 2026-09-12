@@ -77,13 +77,13 @@ BUILD_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         purpose="Resolve what an explicit saved build can canonically provide while preserving unresolved and runtime-only boundaries.",
         implementation_path="services.saved_build_capability_service",
         inputs=("PlayerBuild", "CanonicalEsoDatabase", "CharacterProgression"),
-        outputs=("SavedBuildCapabilityAudit",),
+        outputs=("SavedBuildCapabilityAudit", "RaidCoverageSnapshot"),
         dependencies=("build.compatibility.persistence_facade",),
         responsibilities=("saved_build_static_capability_analysis",),
         behavior=ServiceBehavior.DETERMINISTIC,
         encounter_aware=False,
         evidence_class=EvidenceClass.GAME_MECHANIC,
-        notes="Static capability availability is not runtime uptime. Dynamic CP, potion activation, conditional effects, and unresolved scribing semantics remain explicit boundaries rather than being inferred.",
+        notes="Static capability availability is not runtime uptime. Profile summaries do not assign providers. Dynamic CP, potion activation, conditional effects, and unresolved scribing semantics remain explicit boundaries rather than being inferred.",
     ),
 )
 

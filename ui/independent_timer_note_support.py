@@ -288,9 +288,9 @@ def _install_overview_navigation() -> None:
         "Stats": "console:2",
         "Buff Uptime": "console:3",
         "Optimization": "console:6",
-        "Open Coverage Checks": "console:5",
+        "Open Coverage Checks": "console:7",
         "View All Players": "roster_page",
-        "View Full Breakdown": "console:5",
+        "View Full Breakdown": "console:7",
         "View Gear & Set Details": "console:2",
         "View All Achievements": "achievements",
         "Open Performance Focus": "console:3",
@@ -300,7 +300,7 @@ def _install_overview_navigation() -> None:
         button = original_compact_button(text)
         route = route_by_label.get(text)
         if route is None and text.startswith("View Full Coverage"):
-            route = "console:5"
+            route = "console:7"
 
         if text == "Open Calendar":
             button.clicked.connect(

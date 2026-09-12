@@ -15,6 +15,7 @@ from minmax.skill_effect_repository import SkillEffectRepository
 from models.build_model import PlayerBuild
 from models.scribing_recipe import ScribedSkillRecipe
 from services.build_service import BuildService
+from services.raid_coverage_profile import RaidCoverageProfile
 from services.minmax_character_progression_adapter import MinmaxCharacterProgressionAdapter
 from services.scribing_catalog import is_grimoire_compatible
 
@@ -39,6 +40,44 @@ class SavedBuildCapabilityAudit:
     def capability_resolution_gaps(self) -> tuple[str, ...]:
         """Backward-compatible alias for Phase 10 capability-only gaps."""
         return self.capability_unresolved
+
+
+@dataclass(frozen=True)
+class RaidCoverageSnapshot:
+    """Static build evidence only; no assignments or observed uptime."""
+
+    status: dict[str, str]
+    providers: dict[str, list[str]]
+    conditional_providers: dict[str, list[str]]
+
+
+def summarize_raid_coverage(
+    profile: RaidCoverageProfile,
+    build_audits: list[tuple[PlayerBuild, SavedBuildCapabilityAudit]],
+) -> RaidCoverageSnapshot:
+    """Classify the same canonical audit evidence for Main and Coverage."""
+    status = {row.display_name: "unverified" for row in profile.requirements if row.required}
+    providers: dict[str, list[str]] = {name: [] for name in status}
+    conditional: dict[str, list[str]] = {name: [] for name in status}
+    for row in profile.mapped_required:
+        # Generic Force can come from other sources; it does not prove War Horn.
+        if row.requirement_id == "war_horn":
+            continue
+        for build, audit in build_audits:
+            name = build.Name or build.Gamertag or build.BuildName or "Unnamed"
+            for effect in audit.resolved_effects:
+                if effect.name != row.capability_type:
+                    continue
+                bucket = conditional[row.display_name] if effect.condition or effect.trigger else providers[row.display_name]
+                if name not in bucket:
+                    bucket.append(name)
+        if providers[row.display_name]:
+            status[row.display_name] = "available"
+        elif conditional[row.display_name]:
+            status[row.display_name] = "conditional"
+        elif build_audits and all(not audit.capability_unresolved for _, audit in build_audits):
+            status[row.display_name] = "not_found"
+    return RaidCoverageSnapshot(status, providers, conditional)
 
 
 @dataclass(frozen=True)

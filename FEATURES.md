@@ -23,6 +23,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Theme-aware cards, controls, tables, and result surfaces
 - Raid Engine overview accents and New Build entry adapt to Foundry teal/amber or Rylo's squared steel palette, with text and numeric progress cues alongside color
 - Raid Engine overview cards reflow into fewer columns when the available desktop width is narrow
+- Main and Coverage share canonical saved-build effect evidence: available static sources, conditional sources, effects not identified, and unmapped or unaudited effects remain distinct; Coverage filters work without inferring assignments or uptime
 - Main character overview dashboard
 - Role-aware application surfaces
 - Archive page / archived data access

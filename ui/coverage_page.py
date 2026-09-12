@@ -16,9 +16,10 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from engine.config import get_data_dir
-from models.build_model import BuildRoster, PlayerBuild
+from engine.config import DEFAULT_DATABASE, get_data_dir
+from models.build_model import BuildRoster
 from services.build_service import BuildService
+from services.saved_build_capability_service import SavedBuildCapabilityService, summarize_raid_coverage
 from services.performance_raid_review_runner_service import PerformanceRaidReviewRunnerService
 from services.performance_raid_review_selection_mode_service import (
     PerformanceRaidReviewSelectionModeService,
@@ -31,20 +32,9 @@ from ui.foundry_page import FoundryPage
 from ui.raid_review_async_task import RaidReviewAsyncTask
 
 
-CORE_COVERAGE = tuple(
-    row.display_name
-    for row in DEFAULT_RAID_COVERAGE_PROFILE.requirements
-    if row.required
-)
-
-ALIASES = {
-    "War Horn": ("war horn", "aggressive horn"),
-    "Orbs": ("orb", "necrotic orb", "energy orb", "shards"),
-    "Crusher": ("crusher", "crushing"),
-    "Minor Brittle": ("minor brittle", "brittle"),
-    "Magickasteal": ("magickasteal", "magicka steal"),
-    "Purify": ("purify", "purifying"),
-}
+CORE_COVERAGE = tuple(row.display_name for row in DEFAULT_RAID_COVERAGE_PROFILE.requirements if row.required)
+DEBUFFS = {"Major Vulnerability", "Major Breach", "Crusher", "Minor Brittle", "Minor Maim"}
+UTILITY = {"Orbs", "Purify", "Magickasteal"}
 
 
 class CoveragePage(FoundryPage):
@@ -53,6 +43,7 @@ class CoveragePage(FoundryPage):
     def __init__(self, parent=None, raid_review_runner=None):
         super().__init__(parent)
         self.build_service = BuildService(get_data_dir() / "builds.json")
+        self.capability_service = None
         self.raid_review_runner = raid_review_runner or PerformanceRaidReviewRunnerService()
         self.raid_review_selection_mode_service = PerformanceRaidReviewSelectionModeService()
         self._raid_review_task: RaidReviewAsyncTask | None = None
@@ -63,14 +54,16 @@ class CoveragePage(FoundryPage):
     def _build_ui(self):
         self.header = FoundryHeader(
             title="Coverage & Buff Management",
-            subtitle="Plan encounter coverage, then review what actually happened in combat.",
+            subtitle="Inspect static build evidence, then review what actually happened in combat.",
             department="Raid Engine • Coverage",
         )
         self.set_header(self.header)
 
         self.encounter_combo = QComboBox()
-        self.encounter_combo.addItems(["Current Encounter", "Whole Trial", "Custom Plan"])
-        self.header.add_context_widget(self._context_field("VIEW", self.encounter_combo))
+        self.encounter_combo.addItem(DEFAULT_RAID_COVERAGE_PROFILE.name)
+        self.encounter_combo.setEnabled(False)
+        self.encounter_combo.setToolTip("This watch list is fixed; encounter-specific requirements are not connected yet.")
+        self.header.add_context_widget(self._context_field("REQUIREMENTS", self.encounter_combo))
 
         self.tabs = QTabWidget()
         self.tabs.addTab(self._coverage_tab(), "BUFFS & DEBUFFS")
@@ -104,8 +97,8 @@ class CoveragePage(FoundryPage):
         filters = QHBoxLayout()
         self.effect_filter = QComboBox()
         self.effect_filter.addItems(["All Effects", "Buffs", "Debuffs", "Utility"])
-        self.missing_only = QCheckBox("Show Missing Only")
-        self.redundant_only = QCheckBox("Show Redundant")
+        self.missing_only = QCheckBox("Needs Review Only")
+        self.redundant_only = QCheckBox("Multiple Static Sources")
         self.search = QLineEdit()
         self.search.setPlaceholderText("Search effect...")
         filters.addWidget(self.effect_filter)
@@ -113,14 +106,21 @@ class CoveragePage(FoundryPage):
         filters.addWidget(self.redundant_only)
         filters.addStretch(1)
         filters.addWidget(self.search, 1)
+        self.effect_filter.currentTextChanged.connect(self._apply_coverage_filters)
+        self.missing_only.toggled.connect(self._apply_coverage_filters)
+        self.redundant_only.toggled.connect(self._apply_coverage_filters)
+        self.search.textChanged.connect(self._apply_coverage_filters)
 
-        table_card = FoundryCard("Coverage Plan", "◈")
-        table_card.set_header_action(QPushButton("Edit Requirements"))
+        table_card = FoundryCard("Saved-Build Coverage Evidence", "◈")
+        edit_requirements = QPushButton("Edit Requirements")
+        edit_requirements.setEnabled(False)
+        edit_requirements.setToolTip("Editing the default coverage requirements is not available yet.")
+        table_card.set_header_action(edit_requirements)
         table_card.addLayout(filters)
         self.table = QTableWidget(0, 9)
         self.table.setHorizontalHeaderLabels([
-            "Effect", "Type", "Required", "Source", "Planned Provider",
-            "Backup", "Target Uptime", "Actual Uptime", "Status",
+            "Effect", "Type", "Required", "Static Sources", "Planned Provider",
+            "Backup", "Target Uptime", "Actual Uptime", "Evidence",
         ])
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.verticalHeader().setVisible(False)
@@ -132,12 +132,12 @@ class CoveragePage(FoundryPage):
         lower = QHBoxLayout()
         lower.setSpacing(8)
         self.summary_card = FoundryCard("Coverage Summary", "✓").set_watermark("compass", 0.055)
-        self.providers_card = FoundryCard("Most Reliable Providers", "♜").set_watermark("compass", 0.045)
+        self.providers_card = FoundryCard("Identified Static Sources", "♜").set_watermark("compass", 0.045)
         notes = FoundryCard("Coverage Notes", "✎").make_parchment().set_watermark("feather", 0.11)
         notes.addWidget(QLabel(
-            "• Encounter requirements can override the default watch list.\n"
-            "• Planned provider is not the same thing as measured uptime.\n"
-            "• Decide who owns each required effect before the pull."
+            "• This fixed watch list shows only canonically resolved saved-build effects.\n"
+            "• Static availability does not assign a player or prove uptime.\n"
+            "• Review conditional and unverified effects before planning a pull."
         ))
         lower.addWidget(self.summary_card, 2)
         lower.addWidget(self.providers_card, 2)
@@ -502,81 +502,115 @@ class CoveragePage(FoundryPage):
         layout.addWidget(card)
         return page
 
-    @staticmethod
-    def _build_text(build: PlayerBuild) -> str:
-        values = list(build.FrontBarSkills) + list(build.BackBarSkills)
-        values.extend([
-            build.FrontBarWeapon.Set, build.BackBarWeapon.Set,
-            *[entry.get("Set", "") for entry in build.Armor.values()],
-        ])
-        return " ".join(str(value or "") for value in values).lower()
-
-    def _resolve(self):
-        providers = {name: [] for name in CORE_COVERAGE}
-        for member in self.roster.Members:
-            text = self._build_text(member)
-            provider = member.Name or member.Gamertag or member.BuildName or "Unnamed"
-            for effect in CORE_COVERAGE:
-                aliases = ALIASES.get(effect, (effect.lower(),))
-                if any(alias in text for alias in aliases):
-                    providers[effect].append(provider)
-        return providers
+    def _apply_coverage_filters(self, *_args) -> None:
+        effect_type = self.effect_filter.currentText()
+        query = self.search.text().strip().casefold()
+        for row in range(self.table.rowCount()):
+            item = self.table.item(row, 0)
+            if item is None:
+                continue
+            name = item.text()
+            evidence = self.table.item(row, 8).data(Qt.ItemDataRole.UserRole)
+            source_count = self.table.item(row, 3).data(Qt.ItemDataRole.UserRole) or 0
+            category = "Debuffs" if name in DEBUFFS else "Utility" if name in UTILITY else "Buffs"
+            searchable = f"{name} {self.table.item(row, 3).text()}".casefold()
+            visible = (
+                (effect_type == "All Effects" or effect_type == category)
+                and (not self.missing_only.isChecked() or evidence != "available")
+                and (not self.redundant_only.isChecked() or source_count > 1)
+                and (not query or query in searchable)
+            )
+            self.table.setRowHidden(row, not visible)
 
     def refresh(self):
+        load_error = None
         try:
             self.roster = self.build_service.load()
         except Exception as exc:
             self.roster = BuildRoster()
-            self.status.warning(f"Could not load saved builds: {exc}")
+            load_error = f"Could not load saved builds: {exc}"
 
-        providers = self._resolve()
+        build_audits = []
+        audit_error = None
+        builds = tuple(
+            build for build in self.roster.Members
+            if (build.Name or "").strip() or (build.Gamertag or "").strip()
+            or (build.BuildName or "").strip()
+        )
+        if builds and DEFAULT_DATABASE.is_file():
+            try:
+                if self.capability_service is None:
+                    self.capability_service = SavedBuildCapabilityService(self.build_service, DEFAULT_DATABASE)
+                build_audits = [
+                    (build, self.capability_service.audit_build(build))
+                    for build in builds
+                ]
+            except Exception as exc:
+                audit_error = f"Saved-build coverage could not be audited: {exc}"
+                build_audits = []
+        snapshot = summarize_raid_coverage(DEFAULT_RAID_COVERAGE_PROFILE, build_audits)
         self.table.setRowCount(0)
-        source_defaults = {
-            "Major Courage": "SPC / class", "Major Vulnerability": "Colossus / sets",
-            "Major Breach": "taunt / skill", "Crusher": "weapon enchant",
-            "Minor Brittle": "frost source", "Orbs": "healer skill",
-            "War Horn": "ultimate", "Purify": "cleanse",
-        }
         for effect in CORE_COVERAGE:
             row = self.table.rowCount()
             self.table.insertRow(row)
-            names = providers[effect]
-            status = "Covered" if names else "Missing"
+            names = snapshot.providers[effect]
+            conditional = snapshot.conditional_providers[effect]
+            state = snapshot.status[effect]
+            source_text = ", ".join(names) if names else (
+                f"Conditional: {', '.join(conditional)}" if conditional else "—"
+            )
             values = [
                 effect,
-                "Debuff" if effect in {"Major Vulnerability", "Major Breach", "Crusher", "Minor Brittle", "Minor Maim"} else "Buff / Utility",
+                "Debuff" if effect in DEBUFFS else "Utility" if effect in UTILITY else "Buff",
                 "Yes",
-                source_defaults.get(effect, "skill / gear"),
-                names[0] if names else "—",
-                names[1] if len(names) > 1 else "—",
-                "High",
+                source_text,
                 "—",
-                status,
+                "—",
+                "—",
+                "—",
+                {
+                    "available": "Available (static)",
+                    "conditional": "Conditional",
+                    "not_found": "Not identified",
+                    "unverified": "Unverified",
+                }[state],
             ]
             for col, value in enumerate(values):
                 item = QTableWidgetItem(str(value))
                 if col == 8:
-                    item.setData(Qt.ItemDataRole.UserRole, status)
+                    item.setData(Qt.ItemDataRole.UserRole, state)
+                if col == 3:
+                    item.setData(Qt.ItemDataRole.UserRole, len(names))
+                item.setToolTip(
+                    "Static build evidence only. Provider assignments and uptime are not inferred."
+                    if col >= 3 else "Default raid coverage requirement."
+                )
                 self.table.setItem(row, col, item)
 
-        missing = sum(1 for effect in CORE_COVERAGE if not providers[effect])
-        covered = len(CORE_COVERAGE) - missing
-        overlap = sum(1 for effect in CORE_COVERAGE if len(providers[effect]) > 1)
+        self._apply_coverage_filters()
+        available = sum(state == "available" for state in snapshot.status.values())
+        conditional_count = sum(state == "conditional" for state in snapshot.status.values())
+        not_found = sum(state == "not_found" for state in snapshot.status.values())
+        unverified = sum(state == "unverified" for state in snapshot.status.values())
         self.summary_card.clear()
         self.summary_card.addWidget(QLabel(
             f"TOTAL EFFECTS   {len(CORE_COVERAGE)}\n"
-            f"FULLY COVERED   {covered}\n"
-            f"MISSING         {missing}\n"
-            f"OVERLAP         {overlap}"
+            f"STATIC SOURCES  {available}\n"
+            f"CONDITIONAL     {conditional_count}\n"
+            f"NOT IDENTIFIED  {not_found}\n"
+            f"UNVERIFIED      {unverified}"
         ))
         self.providers_card.clear()
         provider_counts: dict[str, int] = {}
-        for names in providers.values():
+        for names in snapshot.providers.values():
             for name in names:
                 provider_counts[name] = provider_counts.get(name, 0) + 1
         if provider_counts:
             for name, count in sorted(provider_counts.items(), key=lambda x: (-x[1], x[0]))[:5]:
-                self.providers_card.addWidget(QLabel(f"✓  {name}   {count} effect(s)"))
+                self.providers_card.addWidget(QLabel(f"{name}   {count} effect(s) identified"))
         else:
-            self.providers_card.addWidget(QLabel("No providers resolved from saved build names yet."))
-        self.status.info(f"Coverage plan ready • {covered}/{len(CORE_COVERAGE)} watch-list effects represented.")
+            self.providers_card.addWidget(QLabel("No unconditional static sources identified."))
+        if load_error or audit_error:
+            self.status.warning(load_error or audit_error)
+        else:
+            self.status.info(f"Coverage evidence • {available}/{len(CORE_COVERAGE)} effects have static sources; uptime unknown.")

@@ -24,7 +24,7 @@ from minmax.race_repository import RaceRepository
 from minmax.stat_ids import StatId
 from models.build_model import BuildRoster, PlayerBuild
 from services.build_service import BuildService
-from services.saved_build_capability_service import SavedBuildCapabilityService
+from services.saved_build_capability_service import SavedBuildCapabilityService, summarize_raid_coverage
 from services.raid_coverage_profile import DEFAULT_RAID_COVERAGE_PROFILE
 from services.expedition_service import ExpeditionService
 from services.accessibility_preferences import VISUAL_THEME_RYLO
@@ -262,12 +262,11 @@ class OperationsConsole(FoundryPage):
     def _coverage(self):
         """Report proven static availability, never encounter uptime or pull readiness."""
         profile = DEFAULT_RAID_COVERAGE_PROFILE
-        status = {row.display_name: "unverified" for row in profile.requirements if row.required}
-        providers = {name: [] for name in status}
+        empty = summarize_raid_coverage(profile, [])
         self._capability_audits = {}
         builds = self._saved_builds()
         if not builds or not DEFAULT_DATABASE.is_file():
-            return status, providers
+            return empty.status, empty.providers
         try:
             if self.capability_service is None:
                 self.capability_service = SavedBuildCapabilityService(self.build_service, DEFAULT_DATABASE)
@@ -276,31 +275,11 @@ class OperationsConsole(FoundryPage):
         except Exception as exc:
             self._capability_audits = {}
             self.status.warning(f"Saved-build coverage could not be audited: {exc}")
-            return status, providers
-
-        for row in profile.mapped_required:
-            # A Force effect is not proof that War Horn specifically is slotted.
-            if row.requirement_id == "war_horn":
-                continue
-            conditional = False
-            for build in builds:
-                audit = self._capability_audits[id(build)]
-                for effect in audit.resolved_effects:
-                    if effect.name != row.capability_type:
-                        continue
-                    if effect.condition or effect.trigger:
-                        conditional = True
-                        continue
-                    name = build.Name or build.Gamertag or build.BuildName or "Unnamed"
-                    if name not in providers[row.display_name]:
-                        providers[row.display_name].append(name)
-            if providers[row.display_name]:
-                status[row.display_name] = "available"
-            elif conditional:
-                status[row.display_name] = "conditional"
-            elif all(not audit.capability_unresolved for audit in self._capability_audits.values()):
-                status[row.display_name] = "not_found"
-        return status, providers
+            return empty.status, empty.providers
+        snapshot = summarize_raid_coverage(
+            profile, [(build, self._capability_audits[id(build)]) for build in builds]
+        )
+        return snapshot.status, snapshot.providers
 
     def _render(self, *_args):
         self._clear_layout(self.layout)
@@ -482,7 +461,7 @@ class OperationsConsole(FoundryPage):
         card.addLayout(grid)
         card.addStretch(1)
         coverage_link = self._compact_button(f"View Full Coverage ({len(covered)})")
-        coverage_link.setToolTip("This overview checks known build effects. The Coverage page still searches saved names, so its results may differ.")
+        coverage_link.setToolTip("See the same saved-build capability evidence in the Coverage plan; assignments and uptime are not inferred.")
         card.addWidget(coverage_link)
         return card
 
@@ -498,7 +477,7 @@ class OperationsConsole(FoundryPage):
             card.addWidget(QLabel("Static sources identified; uptime not checked."))
         card.addStretch(1)
         coverage_link = self._compact_button("Open Coverage Checks")
-        coverage_link.setToolTip("This overview checks known build effects. The Coverage page still searches saved names, so its results may differ.")
+        coverage_link.setToolTip("See the same saved-build capability evidence in the Coverage plan; assignments and uptime are not inferred.")
         card.addWidget(coverage_link)
         return card
 
