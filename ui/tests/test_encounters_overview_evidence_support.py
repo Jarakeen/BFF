@@ -25,6 +25,7 @@ def test_overview_projects_reviewed_encounter_intelligence_without_packet_aliase
     page = _page()
     projection = SimpleNamespace(
         evidence_rows=27,
+        brief=("At 80%, 50%, 20%: boss is untargetable and raid damage continues.",),
         strategy=(
             SimpleNamespace(mechanic="Acid Reflux", mitigation="Keep the cone away from the group."),
             SimpleNamespace(mechanic="Replication", mitigation="Swap targets as clones split."),
@@ -45,6 +46,7 @@ def test_overview_projects_reviewed_encounter_intelligence_without_packet_aliase
     )
 
     assert "Reef Guardian" in page.encounter_overview_summary.text
+    assert "boss is untargetable and raid damage continues" in page.encounter_overview_summary.text
     assert "27 underlying evidence row(s)" in page.encounter_overview_summary.text
     assert "80%  Replication" in page.encounter_overview_timeline.text
     assert "Acid Reflux: Keep the cone away" in page.encounter_overview_mechanics.text
