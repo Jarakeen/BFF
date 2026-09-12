@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 from minmax.build_evaluation import BuildEvaluation
 from minmax.character_build.character_build import CharacterBuild
 from minmax.character_build.weapon_type import WeaponType
-from minmax.combat_damage_modifiers import damage_taken_from_target_state
+from minmax.combat_damage_modifiers import (
+    damage_done_from_combat_state,
+    damage_taken_from_target_state,
+)
 from minmax.combat_state import CombatState
 from minmax.dd_damage import DDDamageEvent, calculate_dd_damage
 from minmax.dd_mitigation import calculate_dd_mitigation
@@ -32,6 +37,11 @@ class RotationCandidateLightAttackDamageEvidenceService:
     Existing DD stat, critical, mitigation, and target Damage Taken services own the
     later combat stages.
 
+    ``attacker_combat_state`` supplies reviewed transient attacker-side Damage Done
+    such as Berserk at the exact attack instant. Those modifiers are added to the
+    already-resolved static contribution buckets before the canonical LA formula is
+    evaluated; they are not applied again in the later DD stage.
+
     Flame staff, frost staff, and bow light attacks are fully routed here. Lightning
     staff remains unresolved because the currently preserved source formula uses HA,
     Empower, and DoT modifier buckets; treating that as ordinary direct damage would
@@ -47,6 +57,7 @@ class RotationCandidateLightAttackDamageEvidenceService:
         initial_bar: str,
         evaluation_context: EvaluationContext = EvaluationContext(),
         weapon_projection_service: RotationWeaponAttackProjectionService | None = None,
+        attacker_combat_state: CombatState | None = None,
         target_combat_state: CombatState | None = None,
         target_critical_resistance: float = 0.0,
     ) -> None:
@@ -59,6 +70,7 @@ class RotationCandidateLightAttackDamageEvidenceService:
         self.weapon_projection_service = (
             weapon_projection_service or RotationWeaponAttackProjectionService()
         )
+        self.attacker_combat_state = attacker_combat_state
         self.target_combat_state = target_combat_state
         self.target_critical_resistance = float(target_critical_resistance)
 
@@ -97,6 +109,12 @@ class RotationCandidateLightAttackDamageEvidenceService:
             )
 
         state = resolve_light_attack_from_evaluation(evaluation=self.evaluation)
+        runtime_damage_done = damage_done_from_combat_state(self.attacker_combat_state)
+        if runtime_damage_done.generic:
+            state = replace(
+                state,
+                damage_done=state.damage_done + float(runtime_damage_done.generic),
+            )
 
         if resolution.main_hand is WeaponType.FLAME_STAFF:
             formula_damage = calculate_flame_staff_light_attack(state)
