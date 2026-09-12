@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import defaultdict
 from dataclasses import dataclass
 import json
 from pathlib import Path
@@ -15,6 +16,7 @@ from services.rotation_candidate_generation_service import GeneratedRotationCand
 from services.rotation_dd_whole_plan_damage_coverage_audit_service import (
     RotationDDWholePlanDamageCoverageAuditService,
 )
+from services.rotation_static_build_context_service import RotationStaticBuildContextService
 from tools.audit_phase13_saved_build_rotation_timing import _load_build
 from ui.rotation_generate_dd_role_evidence_support import (
     RotationGenerateDDCanonicalWeaponAttackProviderFactory,
@@ -41,6 +43,13 @@ class _DDAuditEvidenceBundle:
     content_type: str = "audit"
 
 
+@dataclass(frozen=True)
+class _StaticPrerequisiteGap:
+    reason: str
+    bars: tuple[str, ...]
+
+
+
 def _character_name(build) -> str:
     return str(
         getattr(build, "CharacterName", "")
@@ -48,6 +57,7 @@ def _character_name(build) -> str:
         or getattr(build, "Gamertag", "")
         or ""
     ).strip()
+
 
 
 def _saved_dd_builds(path: Path) -> tuple[tuple[str, str, str], ...]:
@@ -68,9 +78,56 @@ def _saved_dd_builds(path: Path) -> tuple[tuple[str, str, str], ...]:
     return tuple(sorted(rows, key=lambda item: (item[0].casefold(), item[1].casefold())))
 
 
-def _action_damage_provider(*, build, database_path: Path, target_resistance: float):
+
+def _group_static_prerequisite_gaps(
+    unresolved: tuple[str, ...],
+) -> tuple[_StaticPrerequisiteGap, ...]:
+    grouped: dict[str, set[str]] = defaultdict(set)
+    for raw in unresolved:
+        message = str(raw or "").strip()
+        if not message:
+            continue
+        bar = "build"
+        reason = message
+        for candidate in ("front", "back"):
+            prefix = f"{candidate} static context: "
+            if message.casefold().startswith(prefix):
+                bar = candidate
+                reason = message[len(prefix):].strip()
+                break
+        grouped[reason].add(bar)
+
+    order = {"front": 0, "back": 1, "build": 2}
+    result = [
+        _StaticPrerequisiteGap(
+            reason=reason,
+            bars=tuple(sorted(bars, key=lambda value: (order.get(value, 99), value))),
+        )
+        for reason, bars in grouped.items()
+    ]
+    return tuple(
+        sorted(
+            result,
+            key=lambda item: (-len(item.bars), item.reason.casefold()),
+        )
+    )
+
+
+
+def _action_damage_provider(
+    *,
+    build,
+    database_path: Path,
+    builds_path: Path,
+    target_resistance: float,
+):
+    static_context_service = RotationStaticBuildContextService(
+        database_path=database_path,
+        builds_path=builds_path,
+    )
     support = RotationGenerateDDRoleEvidenceSupport(
         database_path=database_path,
+        static_context_service=static_context_service,
         weapon_attack_provider_factory=(
             RotationGenerateDDCanonicalWeaponAttackProviderFactory(
                 database_path=database_path,
@@ -90,6 +147,7 @@ def _action_damage_provider(*, build, database_path: Path, target_resistance: fl
     return provider
 
 
+
 def _sorted_blockers(audit):
     return tuple(
         sorted(
@@ -102,6 +160,31 @@ def _sorted_blockers(audit):
             ),
         )
     )
+
+
+
+def _print_static_prerequisite_report(*, build, gaps: tuple[_StaticPrerequisiteGap, ...]) -> None:
+    print("=" * 72)
+    print(" PHASE 13 DD STATIC DAMAGE PREREQUISITE AUDIT")
+    print("=" * 72)
+    print(f"Character:             {_character_name(build) or 'unnamed'}")
+    print(f"Build:                 {getattr(build, 'BuildName', '') or 'unnamed'}")
+    print(f"Role:                  {getattr(build, 'Role', '') or 'unresolved'}")
+    print("Boundary:              action-damage coverage not attempted until static damage state resolves")
+    print()
+    print("STATIC PREREQUISITE GAPS")
+    print("------------------------")
+    for index, gap in enumerate(gaps, start=1):
+        bars = ", ".join(gap.bars)
+        print(f"{index:2d}. {len(gap.bars)} bar(s) | {bars}")
+        print(f"    {gap.reason}")
+    print()
+    print(
+        "Interpretation: these are canonical static-build prerequisites encountered before "
+        "the per-action DD damage router can run. Duplicate front/back manifestations are "
+        "collapsed to one root gap; no unresolved input is treated as zero."
+    )
+
 
 
 def main() -> int:
@@ -163,13 +246,25 @@ def main() -> int:
     if target_resistance < 0.0:
         raise ValueError("target resistance cannot be negative")
 
-    build = _load_build(Path(args.builds), args.build, args.character)
+    builds_path = Path(args.builds)
+    database_path = Path(args.database)
+    build = _load_build(builds_path, args.build, args.character)
     role = str(getattr(build, "Role", "") or "").strip().casefold()
     if role not in _DD_ROLE_KEYS:
         raise ValueError(
             "whole-plan DD coverage audit requires a saved damage-dealer build; "
             f"got role={getattr(build, 'Role', '')!r}"
         )
+
+    static_context_service = RotationStaticBuildContextService(
+        database_path=database_path,
+        builds_path=builds_path,
+    )
+    static_context = static_context_service.resolve(build)
+    if not static_context.resolved:
+        gaps = _group_static_prerequisite_gaps(tuple(static_context.unresolved))
+        _print_static_prerequisite_report(build=build, gaps=gaps)
+        return 2
 
     generated = RotationGenerationSupport().generate_with_evidence(
         build=build,
@@ -191,7 +286,8 @@ def main() -> int:
     )
     provider = _action_damage_provider(
         build=build,
-        database_path=Path(args.database),
+        database_path=database_path,
+        builds_path=builds_path,
         target_resistance=target_resistance,
     )
     audit = RotationDDWholePlanDamageCoverageAuditService(
