@@ -269,13 +269,13 @@ def test_real_zelvraak_projection_exposes_split_afterlife_and_wipe_mechanics():
     assert ("25%", "Split Thresholds") in timeline
 
     assert "Heavy Cone" in names
-    assert "Sea Orbs" in names
-    assert "Fractured Souls" in names
+    assert "Sea Orb" in names
+    assert "Sundered Soul" in names
     assert "Split" in names
     assert "Inferno" in names
 
-    sea_orbs = next(row for row in projection.strategy if row.mechanic == "Sea Orbs")
+    sea_orb = next(row for row in projection.strategy if row.mechanic == "Sea Orb")
     split = next(row for row in projection.strategy if row.mechanic == "Split")
 
-    assert "4" in sea_orbs.summary
+    assert "4" in sea_orb.summary
     assert "interrupt" in split.summary.casefold()
