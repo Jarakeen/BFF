@@ -31,6 +31,7 @@ from services.character_creation_service import (
     CharacterCreationService,
 )
 from services.gear_set_armor_weight_resolver import GearSetArmorWeightResolver
+from ui import phase5_build_ui_support
 from ui.components.foundry_button import ButtonRole, FoundryButton
 
 _INSTALLED = False
@@ -440,6 +441,7 @@ def install() -> None:
     original_editor_build_ui = BuildEditor._build_ui
     original_identity_card = BuildEditor._build_identity_card
     original_boss_card = BuildEditor._build_boss_card
+    original_finish_endgame_gear = phase5_build_ui_support._finish_endgame_gear
 
     def _build_ui(self):
         original_build_ui(self)
@@ -452,9 +454,26 @@ def install() -> None:
                 if isinstance(widget, FoundryButton):
                     widget.set_compact(True)
 
-        # The editor owns saving now. Keeping a second page-level Save Builds
-        # button only made it unclear which save mattered.
+        # The fixed page action bar owns Save/Cancel so the user never has to
+        # scroll through a tall build editor to find them.
         self.save_button.hide()
+        self.cancel_build_button = FoundryButton(
+            "Cancel", role=ButtonRole.SECONDARY, compact=True
+        )
+        self.save_build_button = FoundryButton(
+            "Save Build", role=ButtonRole.PRIMARY, compact=True
+        )
+        self.cancel_build_button.clicked.connect(lambda *_: self._cancel_edit_tab())
+        self.save_build_button.clicked.connect(lambda *_: self._save_edit_tab())
+        if action_layout is not None:
+            delete_button = getattr(self, "delete_build_button", None)
+            delete_index = action_layout.indexOf(delete_button) if delete_button is not None else -1
+            if delete_index >= 0:
+                action_layout.insertWidget(delete_index, self.cancel_build_button)
+                action_layout.insertWidget(delete_index + 1, self.save_build_button)
+            else:
+                action_layout.addWidget(self.cancel_build_button)
+                action_layout.addWidget(self.save_build_button)
 
         self.create_character_button = _style_create_character_button(
             FoundryButton("+ Create a New Build", role=ButtonRole.PRIMARY, compact=True)
@@ -618,10 +637,9 @@ def install() -> None:
         save = next((button for button in buttons if button.text() == "Save This Build"), None)
         cancel = next((button for button in buttons if button.text() == "Cancel"), None)
 
-        if add_build is not None:
-            add_build.deleteLater()
-        if save is not None:
-            save.setText("Save Build")
+        for button in (add_build, save, cancel):
+            if button is not None:
+                button.deleteLater()
 
         row = QHBoxLayout()
         row.setContentsMargins(0, 0, 0, 0)
@@ -629,10 +647,6 @@ def install() -> None:
         if add_boss is not None:
             row.addWidget(add_boss)
         row.addStretch(1)
-        if cancel is not None:
-            row.addWidget(cancel)
-        if save is not None:
-            row.addWidget(save)
         card.addLayout(row)
         return card
 
@@ -655,6 +669,16 @@ def install() -> None:
         if refresh_selectors is not None:
             refresh_selectors()
 
+    def _finish_endgame_gear(self) -> None:
+        """Finish populated gear at the endgame level, quality, and glyph tier."""
+        original_finish_endgame_gear(self)
+        for row in getattr(self, "gear_rows", {}).values():
+            if row.value.is_empty:
+                continue
+            row.enchant_tier_combo.setCurrentText("Truly Superb")
+
+    phase5_build_ui_support._finish_endgame_gear = _finish_endgame_gear
+    BuildEditor.finish_endgame_gear = _finish_endgame_gear
     BuildsPage._build_ui = _build_ui
     BuildsPage._role_for = _role_for
     BuildsPage._save_edit_tab = _save_edit_tab
