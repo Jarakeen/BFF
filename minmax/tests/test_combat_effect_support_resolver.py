@@ -9,6 +9,7 @@ if str(ROOT) not in sys.path:
 
 from importers.combat_effect_importer import CombatEffectImporter
 
+import minmax.combat_effect_repository as combat_effect_module
 from minmax.combat_effect_repository import CombatEffectRepository
 from minmax.combat_effect_support_resolver import CombatEffectSupportResolver
 from minmax.effects import EffectUnit
@@ -61,6 +62,34 @@ def test_repository_loads_real_curated_catalog(database_path):
 
     assert len(records) > 0
     assert any(record.name == "Chilled" for record in records)
+
+
+def test_repository_caches_fully_assembled_catalog_per_instance(database_path, monkeypatch):
+    original_connect = combat_effect_module.sqlite3.connect
+    connect_count = 0
+
+    def counting_connect(*args, **kwargs):
+        nonlocal connect_count
+        connect_count += 1
+        return original_connect(*args, **kwargs)
+
+    monkeypatch.setattr(combat_effect_module.sqlite3, "connect", counting_connect)
+    repository = CombatEffectRepository(database_path)
+
+    first = repository.get_all()
+    second = repository.get_all()
+
+    assert first == second
+    assert first is not second
+    assert connect_count == 1
+
+    first.clear()
+    assert repository.get_all() == second
+    assert connect_count == 1
+
+    fresh_repository = CombatEffectRepository(database_path)
+    assert fresh_repository.get_all() == second
+    assert connect_count == 2
 
 
 def test_chilled_is_resolved_as_a_status_targeting_enemy(registry):
