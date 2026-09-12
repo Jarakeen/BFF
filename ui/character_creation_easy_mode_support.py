@@ -68,6 +68,14 @@ def _style_create_character_button(button: FoundryButton) -> FoundryButton:
     return button
 
 
+def _overview_action_pill(text: str) -> FoundryButton:
+    """Render the Overview card footer actions as compact secondary pills."""
+    button = FoundryButton(text, role=ButtonRole.SECONDARY, compact=True)
+    button.setCursor(Qt.CursorShape.PointingHandCursor)
+    button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+    return button
+
+
 class CharacterCreationEasyModeDialog(QDialog):
     """Small, scroll-safe character creation form."""
 
@@ -360,6 +368,7 @@ def install() -> None:
     BuildsPage._build_ui = _build_ui
     BuildsPage._role_for = _role_for
     OperationsConsole._raid_status_card = _raid_status_card
+    OperationsConsole._compact_button = staticmethod(_overview_action_pill)
     BuildEditor._build_ui = _editor_build_ui
     BuildEditor._build_identity_card = _identity_card
     _INSTALLED = True
