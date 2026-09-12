@@ -19,6 +19,9 @@ from services.minmax_character_progression_adapter import (
     MinmaxCharacterProgressionAdapter,
     SavedBuildProgressionResolution,
 )
+from services.rotation_saved_build_bloodthirsty_service import (
+    RotationSavedBuildBloodthirstyService,
+)
 from services.rotation_saved_build_charged_status_chance_service import (
     RotationSavedBuildChargedStatusChanceService,
 )
@@ -208,8 +211,9 @@ class RotationStaticBuildContextService:
     ``BuildCalculationContextFactory`` so armor-weight passives, Undaunted Mettle,
     class/guild/weapon passives, static gear, race, CP, food and other already-
     verified inputs keep one source of truth. Reviewed unconditional DD Damage Done,
-    conditional Exploiter magnitude, and reviewed Charged status-chance magnitude are
-    attached as context metadata rather than flattened into standing-sheet stats.
+    conditional Exploiter magnitude, reviewed Charged status-chance magnitude, and
+    Bloodthirsty's static maximum Weapon/Spell Damage ceiling are attached as context
+    metadata rather than flattened into standing-sheet stats.
     """
 
     def __init__(
@@ -226,6 +230,7 @@ class RotationStaticBuildContextService:
         charged_status_chance_service: (
             RotationSavedBuildChargedStatusChanceService | None
         ) = None,
+        bloodthirsty_service: RotationSavedBuildBloodthirstyService | None = None,
     ) -> None:
         data_dir = get_data_dir()
         builds = Path(builds_path) if builds_path is not None else data_dir / "builds.json"
@@ -255,6 +260,9 @@ class RotationStaticBuildContextService:
             charged_status_chance_service
             or RotationSavedBuildChargedStatusChanceService(database)
         )
+        self.bloodthirsty_service = (
+            bloodthirsty_service or RotationSavedBuildBloodthirstyService(database)
+        )
 
     def resolve(
         self,
@@ -280,6 +288,8 @@ class RotationStaticBuildContextService:
         dd_conditional_resolved = False
         charged_resolution = None
         charged_messages_by_bar: dict[str, set[str]] = {"front": set(), "back": set()}
+        bloodthirsty_max_damage = 0.0
+        bloodthirsty_static_messages: set[str] = set()
         dd_unresolved: list[str] = []
         if role_key in _DD_ROLE_KEYS:
             dd_resolution = self.dd_damage_done_service.resolve(player_build)
@@ -298,6 +308,15 @@ class RotationStaticBuildContextService:
                 for source in charged_resolution.sources:
                     charged_messages_by_bar[source.bar].add(
                         f"{source.slot_name} Charged: requires status-effect chance model".casefold()
+                    )
+
+            bloodthirsty = self.bloodthirsty_service.resolve(player_build)
+            dd_unresolved.extend(bloodthirsty.unresolved)
+            if bloodthirsty.resolved:
+                bloodthirsty_max_damage = bloodthirsty.total_max_weapon_spell_damage
+                for source in bloodthirsty.sources:
+                    bloodthirsty_static_messages.add(
+                        f"{source.slot_name} jewelry trait not yet resolved: Bloodthirsty".casefold()
                     )
 
         build_id = (
@@ -327,6 +346,7 @@ class RotationStaticBuildContextService:
                     dd_damage_done_modifiers=dd_damage_done,
                     dd_exploiter_bonus=dd_exploiter_bonus,
                     dd_status_effect_chance_bonus_percent=charged_bonus,
+                    dd_bloodthirsty_max_weapon_spell_damage=bloodthirsty_max_damage,
                 )
             contexts.append(context)
             unresolved.extend(
@@ -341,6 +361,8 @@ class RotationStaticBuildContextService:
                 )
                 and str(message or "").strip().casefold()
                 not in charged_messages_by_bar.get(bar, set())
+                and str(message or "").strip().casefold()
+                not in bloodthirsty_static_messages
             )
 
         return RotationStaticBuildContextResolution(
