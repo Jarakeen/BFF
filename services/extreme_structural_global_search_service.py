@@ -23,6 +23,9 @@ from services.extreme_global_search_universe_service import (
     ExtremeGlobalSearchUniverseService,
 )
 from services.extreme_heal_class_route_service import ExtremeHealClassRoute
+from services.extreme_resource_class_route_projection_service import (
+    ExtremeResourceClassRouteProjectionService,
+)
 
 
 ScorePayload = TypeVar("ScorePayload")
@@ -95,6 +98,12 @@ class ExtremeStructuralGlobalSearchService(Generic[ScorePayload]):
     ``projection_complete``; otherwise the full canonical source axis is searched.
     This lets an objective-specific scorer own a proof reduction without teaching
     this generic structural layer any ESO formula.
+
+    The production max-resource scorer predates the explicit class-route hook. For
+    that scorer only, the service may discover its canonical database path through
+    the existing evaluator-factory chain and invoke the shared max-resource route
+    projection service. Unsupported objectives and injected scorers without that
+    proof context remain fully exhaustive.
     """
 
     def __init__(
@@ -128,22 +137,43 @@ class ExtremeStructuralGlobalSearchService(Generic[ScorePayload]):
             )
         )
 
+    def _discovered_resource_route_projection(
+        self,
+        objective_key: str,
+        source_routes: tuple[ExtremeHealClassRoute, ...],
+    ):
+        key = str(objective_key or "").strip().casefold()
+        if key not in ExtremeResourceClassRouteProjectionService.SUPPORTED_OBJECTIVES:
+            return None
+        factory = getattr(self.scorer, "evaluator_factory", None)
+        canonical = getattr(factory, "canonical_evaluator", None)
+        optimizer = getattr(canonical, "optimizer", None)
+        database_path = getattr(optimizer, "database_path", None)
+        if database_path is None:
+            return None
+        return ExtremeResourceClassRouteProjectionService(database_path).build(
+            key,
+            source_routes,
+        )
+
     def _projected_class_routes(
         self,
         objective_key: str,
         universe: ExtremeGlobalSearchUniverse,
     ) -> tuple[tuple[ExtremeHealClassRoute, ...], tuple[str, ...]]:
+        source_routes = tuple(universe.class_routes)
         resolver = getattr(self.scorer, "structural_class_route_projection", None)
-        if not callable(resolver):
-            return tuple(universe.class_routes), ()
-
-        projection = resolver(objective_key, tuple(universe.class_routes))
+        projection = (
+            resolver(objective_key, source_routes)
+            if callable(resolver)
+            else self._discovered_resource_route_projection(objective_key, source_routes)
+        )
         if projection is None or not bool(getattr(projection, "projection_complete", False)):
-            return tuple(universe.class_routes), ()
+            return source_routes, ()
 
         routes = tuple(getattr(projection, "routes", ()) or ())
         if not routes:
-            return tuple(universe.class_routes), ()
+            return source_routes, ()
         scope = tuple(
             dict.fromkeys(
                 str(value).strip()
