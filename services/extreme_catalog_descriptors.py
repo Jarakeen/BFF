@@ -11,24 +11,6 @@ from services.service_catalog import (
 
 EXTREME_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
     ServiceDescriptor(
-        service_id="extreme.partial_named_gear_physical_feasibility",
-        domain="extreme",
-        purpose=(
-            "Prove a necessary-condition physical legality gate for partial named-set "
-            "assignments before full witness construction."
-        ),
-        implementation_path="services.extreme_partial_named_gear_physical_feasibility_service",
-        inputs=("ExtremeGearSetCountTopology", "ExtremeNamedGearSetSlotEligibilityPrefix"),
-        outputs=("ExtremePartialNamedGearPhysicalFeasibilityResult",),
-        responsibilities=("partial_named_gear_physical_feasibility",),
-        behavior=ServiceBehavior.DETERMINISTIC,
-        evidence_class=EvidenceClass.GAME_MECHANIC,
-        notes=(
-            "A negative result proves the branch cannot become physically legal. "
-            "A positive result is only permission to continue toward a full named-slot witness."
-        ),
-    ),
-    ServiceDescriptor(
         service_id="extreme.max_resource_ordinary_named_gear_search",
         domain="extreme",
         purpose=(
