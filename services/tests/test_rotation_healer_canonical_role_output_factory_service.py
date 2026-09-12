@@ -154,6 +154,8 @@ def test_relevant_static_context_gap_remains_role_output_blocker() -> None:
     assert output.unresolved == (
         "static healer-output context: unknown healing potency modifier",
     )
+    assert output.windows[0].modeled_healing_per_demand_second is None
+    assert output.windows[0].unresolved == output.unresolved
 
     plan_output = result.evaluate_plan(candidate)
     assert plan_output.candidate_id == candidate.candidate_id
