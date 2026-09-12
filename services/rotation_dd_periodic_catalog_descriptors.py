@@ -35,6 +35,33 @@ ROTATION_DD_PERIODIC_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "durations, or tooltip prose."
         ),
     ),
+    ServiceDescriptor(
+        service_id="rotation.dd.periodic_esologs_runtime_evidence",
+        domain="rotation",
+        purpose=(
+            "Inspect imported ESO Logs cast and tick timestamps as non-executable "
+            "observational evidence for DD periodic runtime semantics."
+        ),
+        implementation_path=(
+            "services.rotation_dd_periodic_esologs_runtime_evidence_service"
+        ),
+        inputs=(
+            "CanonicalSkillIdentity",
+            "EsoLogsLogEvent",
+            "RotationDDPeriodicRuntimeSemanticsReviewEntry",
+        ),
+        outputs=("RotationDDPeriodicEsoLogsRuntimeEvidenceReport",),
+        responsibilities=("rotation_dd_periodic_esologs_runtime_evidence",),
+        roles=("DD", "DPS"),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.OBSERVATIONAL,
+        notes=(
+            "Read-only evidence probe. Translated ESO Logs ability names outrank numeric "
+            "ability-id aliases when both are present. Observed timing never promotes "
+            "refresh-boundary or magnitude-policy semantics automatically."
+        ),
+    ),
 )
 
 
