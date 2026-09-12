@@ -322,3 +322,31 @@ def test_context_provider_failure_blocks_without_plain_fallback(monkeypatch) -> 
         "Encounter-aware rotation generation blocked: "
         "explicit recovery trigger is not configured"
     ]
+
+
+def test_generate_surfaces_canonical_validation_reasons_when_no_plan_is_selectable() -> None:
+    support = RotationGenerateActionSupport()
+    page = _Page(context=_context())
+    page.result = SimpleNamespace(
+        final_plan=None,
+        cadence_evidence=None,
+        canonical_result=SimpleNamespace(
+            candidate_result=SimpleNamespace(
+                validation=SimpleNamespace(
+                    reasons=(
+                        "role ranking evidence missing: role output",
+                        "unnerving_boneyard: coefficient 1 reviewed periodic runtime semantics are unavailable",
+                    )
+                )
+            )
+        ),
+    )
+
+    support.generate(page)
+
+    assert page.status.infos == []
+    assert page.status.warnings == [
+        "Canonical rotation not selected: "
+        "role ranking evidence missing: role output; "
+        "unnerving_boneyard: coefficient 1 reviewed periodic runtime semantics are unavailable"
+    ]
