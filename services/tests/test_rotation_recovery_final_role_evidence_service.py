@@ -16,20 +16,35 @@ from services.rotation_recovery_final_role_evidence_service import (
 
 
 class _PlanEvidenceProvider:
-    def __init__(self) -> None:
+    def __init__(self, *, role_output_value: float = 200_000.0) -> None:
         self.calls = []
+        self.role_output_value = float(role_output_value)
 
     def evaluate_plan(self, candidate):
         self.calls.append(candidate)
         return RotationCandidatePlanEvidence(
             sustain=object(),
-            role_output_value=200_000.0,
+            role_output_value=self.role_output_value,
             assigned_support_value=0.75,
             sustain_margin=999_999.0,
             primary_role_displacement_seconds=1.25,
             role_hard_obligation_satisfied=True,
             role_hard_obligation_reasons=("verified DD assignment",),
         )
+
+
+class _SnapshotAwarePlanEvidenceProvider:
+    def __init__(self) -> None:
+        self.static = _PlanEvidenceProvider(role_output_value=100_000.0)
+        self.runtime = _PlanEvidenceProvider(role_output_value=250_000.0)
+        self.snapshots = []
+
+    def evaluate_plan(self, candidate):
+        return self.static.evaluate_plan(candidate)
+
+    def for_stabilized_snapshot(self, snapshot):
+        self.snapshots.append(snapshot)
+        return self.runtime
 
 
 class _PolicyContextProvider:
@@ -91,8 +106,6 @@ def test_final_role_evidence_uses_stabilized_replay_for_sustain_margin() -> None
     assert result.primary_role_displacement_seconds == pytest.approx(1.25)
     assert result.role_hard_obligation_satisfied is True
     assert result.role_hard_obligation_reasons == ("verified DD assignment",)
-    # The exact stabilized recovery replay is authoritative, not the plan provider's
-    # deliberately absurd 999999 sustain-margin fixture.
     assert result.sustain_margin == pytest.approx(4321.0)
     assert result.gameplay_policy_assessment is not None
     assert (
@@ -105,6 +118,29 @@ def test_final_role_evidence_uses_stabilized_replay_for_sustain_margin() -> None
     assert plan_evidence.calls[0].plan is snapshot.plan
     assert len(policy.calls) == 1
     assert policy.calls[0].plan is snapshot.plan
+
+
+def test_final_role_evidence_binds_snapshot_aware_provider_after_stabilization() -> None:
+    provider = _SnapshotAwarePlanEvidenceProvider()
+    scorecard = object()
+    service = RotationRecoveryFinalRoleEvidenceService(
+        plan_evidence_provider=provider,
+        scorecard_resolver=lambda _snapshot: scorecard,
+        configuration=RotationRecoveryFinalRoleEvidenceConfiguration(
+            role_key="dd",
+            role_output_label="effective damage",
+            assigned_support_label="assigned support coverage",
+        ),
+    )
+    snapshot = _snapshot("runtime")
+
+    result = service.resolve(snapshot)
+
+    assert provider.snapshots == [snapshot]
+    assert provider.static.calls == []
+    assert len(provider.runtime.calls) == 1
+    assert provider.runtime.calls[0].plan is snapshot.plan
+    assert result.role_output_value == pytest.approx(250_000.0)
 
 
 def test_final_role_evidence_without_policy_context_preserves_mechanical_role_evidence() -> None:
