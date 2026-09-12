@@ -79,11 +79,15 @@ class RotationDDPeriodicRuntimeSemanticsGapAuditService:
         Ultimates are included because the sixth saved slot shares the same canonical
         skill identity path as ordinary skills; non-periodic components are filtered
         by verified component classification below.
+
+        Minimal/legacy build-like objects may omit one or both bar fields. Missing
+        bars contribute no skill identities instead of turning an evidence audit into
+        an attribute error.
         """
 
-        return self.audit(
-            tuple(player_build.FrontBarSkills) + tuple(player_build.BackBarSkills)
-        )
+        front = tuple(getattr(player_build, "FrontBarSkills", ()) or ())
+        back = tuple(getattr(player_build, "BackBarSkills", ()) or ())
+        return self.audit(front + back)
 
     def audit(
         self,
