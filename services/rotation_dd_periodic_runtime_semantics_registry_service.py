@@ -14,8 +14,9 @@ class RotationDDPeriodicRuntimeSemanticsRegistryService:
     """Load reviewed DD periodic runtime semantics from versioned repository data.
 
     The registry is deliberately evidence-only. It does not infer first-tick timing,
-    refresh behavior, magnitude timing, or cadence from skill names or tooltip prose.
-    Missing/empty registries therefore resolve to no executable periodic semantics.
+    refresh behavior, magnitude timing, cadence, or successive-hit scaling from skill
+    names or tooltip prose. Missing/empty registries therefore resolve to no
+    executable periodic semantics.
     """
 
     SCHEMA_VERSION = 1
@@ -66,6 +67,11 @@ class RotationDDPeriodicRuntimeSemanticsRegistryService:
                     ),
                     magnitude_policy=PeriodicDamageMagnitudePolicy(
                         str(row["magnitude_policy"])
+                    ),
+                    successive_hit_multiplier=(
+                        None
+                        if row.get("successive_hit_multiplier") is None
+                        else float(row["successive_hit_multiplier"])
                     ),
                 )
             except (KeyError, TypeError, ValueError) as exc:
