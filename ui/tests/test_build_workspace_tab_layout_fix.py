@@ -9,6 +9,13 @@ def test_builds_tabs_match_coverage_document_mode() -> None:
     assert "self.build_tabs.setDocumentMode(False)" in source
 
 
+def test_builds_workspace_uses_build_focused_labels() -> None:
+    source = Path(build_workspace_tab_layout_fix.__file__).read_text(encoding="utf-8")
+
+    assert 'self.build_tabs.setTabText(0, "Builds")' in source
+    assert 'roster_card.set_title("Character Builds")' in source
+
+
 def test_scribed_recipe_editor_precedes_saved_recipe_list() -> None:
     source = Path(build_workspace_tab_layout_fix.__file__).read_text(encoding="utf-8")
 
