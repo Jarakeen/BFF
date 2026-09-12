@@ -19,18 +19,18 @@ class _Rules:
                     rule_type="status_effect_chance",
                     value=182.5,
                     unit=EffectUnit.PERCENT,
-                    source="Charged",
+                    source="Charged trait material",
                 ),
             )
         )
 
-    def get_weapon_trait_rules(self, trait_name):
-        assert trait_name == "Charged"
+    def get_weapon_trait_rules_by_effect_type(self, effect_type):
+        assert effect_type == "status_effect_chance"
         return list(self.rules)
 
 
 class _UnexpectedRules:
-    def get_weapon_trait_rules(self, _trait_name):
+    def get_weapon_trait_rules_by_effect_type(self, _effect_type):
         raise AssertionError("Charged rule lookup should not occur when the build has no Charged weapon")
 
 
@@ -107,7 +107,7 @@ def test_non_percent_charged_rule_fails_closed() -> None:
                     rule_type="status_effect_chance",
                     value=182.5,
                     unit=EffectUnit.FLAT,
-                    source="Charged",
+                    source="Charged trait material",
                 ),
             )
         ),  # type: ignore[arg-type]
