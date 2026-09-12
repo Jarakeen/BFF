@@ -81,14 +81,15 @@
       "activation_anchor": "impact",
       "first_tick_offset_seconds": 1.0,
       "refresh_boundary": "allow_old_tick_at_recast",
-      "magnitude_policy": null,
+      "magnitude_policy": "dynamic_at_tick",
       "successive_hit_multiplier": null,
       "evidence": [
         "ESO-Hub current tooltip: residual Physical Damage every 1 second for 15 seconds",
         "ESO Logs Lokkestiiz runtime corpus: impact evidence ID 38792 observed after 804 of 807 Stampede casts and cast-track linked for all 804 observations",
         "ESO Logs Lokkestiiz runtime corpus: periodic evidence ID 126474 followed impact in 783 cast windows with 8986 cast-track-linked periodic events",
         "ESO Logs Lokkestiiz runtime corpus: median cast-to-impact 0.144s, median impact-to-first-periodic 1.077s, and subsequent periodic intervals cluster around the reviewed 1.0s cadence; reviewed runtime idealizes the first residual occurrence as 1.0s after impact rather than after cast",
-        "ESO Logs Lokkestiiz runtime corpus refresh review: 244 consecutive impact pairs, 234 with old periodic evidence, zero old periodic events after the new impact timestamp, and two exact-timestamp old periodic ticks; both exact ties had later ESO Logs event_index values than the new impact event, supporting allowance of the old tick at the reviewed impact replacement boundary but no continuation afterward"
+        "ESO Logs Lokkestiiz runtime corpus refresh review: 244 consecutive impact pairs, 234 with old periodic evidence, zero old periodic events after the new impact timestamp, and two exact-timestamp old periodic ticks; both exact ties had later ESO Logs event_index values than the new impact event, supporting allowance of the old tick at the reviewed impact replacement boundary but no continuation afterward",
+        "ESO Logs Lokkestiiz magnitude review: cadence-aware clustering excludes mixed-amount rows that occur too close to represent distinct reviewed ticks; across 131 Stampede cast groups, the only surviving stable-state control group had state-same/amount-changed 0 and state-same/amount-constant 1, while reviewed scoped fights showed magnitude changes overwhelmingly alongside net source/target state changes. This observational control pattern supports live evaluation of magnitude at each tick rather than cast-time snapshotting."
       ]
     },
     {
