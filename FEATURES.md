@@ -22,6 +22,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Rylo theme and Rylo-specific visual assets
 - Theme-aware cards, controls, tables, and result surfaces
 - Raid Engine overview accents and New Build entry adapt to Foundry teal/amber or Rylo's squared steel palette, with text and numeric progress cues alongside color
+- Raid Engine overview cards reflow into fewer columns when the available desktop width is narrow
 - Main character overview dashboard
 - Role-aware application surfaces
 - Archive page / archived data access

@@ -364,8 +364,8 @@ def install() -> None:
         self.create_character_button.clicked.connect(
             lambda: _open_easy_character_creator(self)
         )
-        self.header.context_layout.addWidget(
-            self.create_character_button, 0, Qt.AlignmentFlag.AlignBottom
+        self.header.context_layout.insertWidget(
+            0, self.create_character_button, 0, Qt.AlignmentFlag.AlignBottom
         )
 
         tabs = getattr(self, "build_tabs", None)
@@ -385,7 +385,7 @@ def install() -> None:
             lambda: _open_easy_character_creator_from_overview(self)
         )
         self.header.context_layout.insertWidget(
-            2, self.create_character_button, 0, Qt.AlignmentFlag.AlignBottom
+            0, self.create_character_button, 0, Qt.AlignmentFlag.AlignBottom
         )
 
     def _role_for(self, build):

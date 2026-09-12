@@ -314,50 +314,99 @@ class OperationsConsole(FoundryPage):
         self.pull_readiness_label.style().unpolish(self.pull_readiness_label)
         self.pull_readiness_label.style().polish(self.pull_readiness_label)
 
-        hero = QGridLayout()
-        hero.setHorizontalSpacing(10)
-        hero.setVerticalSpacing(10)
-        hero.addWidget(self._player_card(build), 0, 0, 2, 2)
-        hero.addWidget(self._raid_status_card(), 0, 2, 2, 1)
-        hero.addWidget(self._coverage_card(covered, providers), 0, 3, 2, 2)
-        hero.addWidget(self._warnings_card(covered), 0, 5, 2, 1)
-        hero.setColumnStretch(0, 1)
-        hero.setColumnStretch(1, 1)
-        hero.setColumnStretch(2, 1)
-        hero.setColumnStretch(3, 1)
-        hero.setColumnStretch(4, 1)
-        hero.setColumnStretch(5, 1)
-        self.layout.addLayout(hero)
-
-        details = QGridLayout()
-        details.setHorizontalSpacing(10)
-        details.setVerticalSpacing(10)
-        details.addWidget(self._roster_card(), 0, 0, 1, 2)
-        details.addWidget(self._provides_card(build), 0, 2, 1, 2)
-        details.addWidget(self._gear_card(build), 0, 4, 1, 2)
-        details.addWidget(self._key_stats_card(build), 0, 6, 1, 2)
-        for column in range(8):
-            details.setColumnStretch(column, 1)
-        self.layout.addLayout(details)
-
-        goals = QGridLayout()
-        goals.setHorizontalSpacing(10)
-        goals.setVerticalSpacing(10)
-        goals.addWidget(self._achievements_card(), 0, 0, 1, 3)
-        goals.addWidget(self._collectibles_card(), 0, 3, 1, 3)
-        goals.addWidget(self._raid_schedule_card(build), 0, 6, 1, 2)
-        goals.addWidget(self._skills_to_work_on_card(build), 0, 8, 1, 2)
-        goals.addWidget(self._bookmarked_gear_card(), 0, 10, 1, 2)
-        for column in range(12):
-            goals.setColumnStretch(column, 1)
-        self.layout.addLayout(goals)
+        self._hero_cards = (
+            self._player_card(build), self._raid_status_card(),
+            self._coverage_card(covered, providers), self._warnings_card(covered),
+        )
+        self._detail_cards = (
+            self._roster_card(), self._provides_card(build),
+            self._gear_card(build), self._key_stats_card(build),
+        )
+        self._goal_cards = (
+            self._achievements_card(), self._collectibles_card(),
+            self._raid_schedule_card(build), self._skills_to_work_on_card(build),
+            self._bookmarked_gear_card(),
+        )
+        self._hero_grid = QGridLayout()
+        self._detail_grid = QGridLayout()
+        self._goal_grid = QGridLayout()
+        for grid in (self._hero_grid, self._detail_grid, self._goal_grid):
+            grid.setHorizontalSpacing(10)
+            grid.setVerticalSpacing(10)
+        self._arrange_overview_grid(self._hero_grid, self._hero_cards, (
+            (0, 0, 1, 2), (0, 2, 1, 1), (0, 3, 1, 2), (0, 5, 1, 1),
+        ), 6)
+        self._arrange_overview_grid(self._detail_grid, self._detail_cards, (
+            (0, 0, 1, 2), (0, 2, 1, 2), (0, 4, 1, 2), (0, 6, 1, 2),
+        ), 8)
+        self._arrange_overview_grid(self._goal_grid, self._goal_cards, (
+            (0, 0, 1, 3), (0, 3, 1, 3), (0, 6, 1, 2),
+            (0, 8, 1, 2), (0, 10, 1, 2),
+        ), 12)
+        self.layout.addLayout(self._hero_grid)
+        self.layout.addLayout(self._detail_grid)
+        self.layout.addLayout(self._goal_grid)
 
         self.layout.addWidget(self._raid_notes_card())
         self.layout.addStretch(1)
+        self._wide_overview_width = self.workspace_widget.minimumSizeHint().width()
+        self._compact_overview = False
+        self._update_overview_layout()
 
         self.status.info(
             f"Overview loaded • {len(self._saved_builds())} saved build(s) • planning dashboard active."
         )
+
+    @staticmethod
+    def _arrange_overview_grid(grid, cards, positions, columns):
+        while grid.count():
+            grid.takeAt(0)
+        for column in range(12):
+            grid.setColumnStretch(column, 1 if column < columns else 0)
+        for card, position in zip(cards, positions):
+            grid.addWidget(card, *position)
+
+    def _update_overview_layout(self):
+        if not hasattr(self, "_hero_grid"):
+            return
+        viewport_width = self.workspace_scroll.viewport().width()
+        compact = viewport_width < max(1380, self._wide_overview_width + 20)
+        if compact == self._compact_overview:
+            return
+        self._compact_overview = compact
+        if compact:
+            self._arrange_overview_grid(self._hero_grid, self._hero_cards, (
+                (0, 0, 1, 3), (0, 3, 1, 1),
+                (1, 0, 1, 3), (1, 3, 1, 1),
+            ), 4)
+            self._arrange_overview_grid(self._detail_grid, self._detail_cards, (
+                (0, 0, 1, 2), (0, 2, 1, 2),
+                (1, 0, 1, 2), (1, 2, 1, 2),
+            ), 4)
+            self._arrange_overview_grid(self._goal_grid, self._goal_cards, (
+                (0, 0, 1, 3), (0, 3, 1, 3),
+                (1, 0, 1, 3), (1, 3, 1, 3),
+                (2, 0, 1, 6),
+            ), 6)
+        else:
+            self._arrange_overview_grid(self._hero_grid, self._hero_cards, (
+                (0, 0, 1, 2), (0, 2, 1, 1),
+                (0, 3, 1, 2), (0, 5, 1, 1),
+            ), 6)
+            self._arrange_overview_grid(self._detail_grid, self._detail_cards, (
+                (0, 0, 1, 2), (0, 2, 1, 2),
+                (0, 4, 1, 2), (0, 6, 1, 2),
+            ), 8)
+            self._arrange_overview_grid(self._goal_grid, self._goal_cards, (
+                (0, 0, 1, 3), (0, 3, 1, 3),
+                (0, 6, 1, 2), (0, 8, 1, 2), (0, 10, 1, 2),
+            ), 12)
+        self.workspace_widget.updateGeometry()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        # The scroll viewport finishes sizing after the page receives its resize.
+        QTimer.singleShot(0, self._update_overview_layout)
 
     @staticmethod
     def _section_label(text: str) -> QLabel:
