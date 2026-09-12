@@ -25,7 +25,7 @@ class TeamScheduleSlot:
 
 @dataclass(frozen=True)
 class TeamSchedule:
-    """Human-entered recurring raid schedule for one named team.
+    """Human-entered recurring raid schedule and current team focus.
 
     ``Slots`` is the canonical representation when different raid days use
     different start/end times. ``RaidDays`` and ``RaidTime`` remain for backward
@@ -37,6 +37,7 @@ class TeamSchedule:
     RaidTime: str = ""
     TimeZone: str = ""
     Slots: tuple[TeamScheduleSlot, ...] = ()
+    CurrentFocus: str = ""
 
     @property
     def effective_slots(self) -> tuple[TeamScheduleSlot, ...]:
@@ -52,7 +53,7 @@ class TeamSchedule:
 
     @property
     def is_configured(self) -> bool:
-        return bool(self.effective_slots or self.TimeZone.strip())
+        return bool(self.effective_slots or self.TimeZone.strip() or self.CurrentFocus.strip())
 
     @property
     def display_text(self) -> str:
