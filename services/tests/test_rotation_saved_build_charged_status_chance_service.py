@@ -1,3 +1,4 @@
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -26,6 +27,11 @@ class _Rules:
     def get_weapon_trait_rules(self, trait_name):
         assert trait_name == "Charged"
         return list(self.rules)
+
+
+class _UnexpectedRules:
+    def get_weapon_trait_rules(self, _trait_name):
+        raise AssertionError("Charged rule lookup should not occur when the build has no Charged weapon")
 
 
 def _weapon(*, trait="", weapon_type="Dagger") -> GearSlot:
@@ -106,8 +112,33 @@ def test_non_percent_charged_rule_fails_closed() -> None:
             )
         ),  # type: ignore[arg-type]
     )
+    build = PlayerBuild(FrontBarWeapon=_weapon(trait="Charged"))
 
-    result = service.resolve(PlayerBuild())
+    result = service.resolve(build)
 
     assert result.resolved is False
     assert "unsupported unit" in result.unresolved[0]
+
+
+def test_build_without_charged_skips_rule_repository_lookup() -> None:
+    service = RotationSavedBuildChargedStatusChanceService(
+        rule_repository=_UnexpectedRules(),  # type: ignore[arg-type]
+    )
+
+    result = service.resolve(PlayerBuild())
+
+    assert result.resolved is True
+    assert result.sources == ()
+
+
+def test_real_database_exposes_one_positive_percent_charged_rule() -> None:
+    build = PlayerBuild(
+        FrontBarWeapon=_weapon(trait="Precise", weapon_type="Dagger"),
+        FrontBarOffHand=_weapon(trait="Charged", weapon_type="Dagger"),
+    )
+    service = RotationSavedBuildChargedStatusChanceService(Path("data/eso.db"))
+
+    result = service.resolve(build)
+
+    assert result.resolved is True
+    assert result.bonus_percent_for("front") > 0.0
