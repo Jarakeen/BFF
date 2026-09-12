@@ -56,6 +56,7 @@ def audit(
             f"report={report_code or '*'} fight={fight_id if fight_id is not None else '*'} "
             f"source={source_id if source_id is not None else '*'}"
         )
+    print(f"Ambiguous mixed-amount occurrence clusters excluded: {report.ambiguous_occurrence_clusters}")
     print(f"Amount-change transitions: {len(report.transitions)}")
     print(f"With net source/target state changes: {report.transitions_with_state_change}")
     print(f"Without net source/target state changes: {report.transitions_without_state_change}")
@@ -138,11 +139,11 @@ def audit(
 
     print()
     print(
-        "Result: OBSERVATIONAL ONLY — a magnitude change across a genuine tick-boundary "
-        "source/target state delta can strengthen dynamic-at-tick evidence; amount changes "
-        "with no reconstructed state delta are especially useful for finding unmodeled live "
-        "inputs or mixed event identities. This tool never promotes magnitude policy "
-        "automatically. Numeric IDs remain evidence handles only."
+        "Result: OBSERVATIONAL ONLY — mixed-amount rows inside one near-same-time "
+        "periodic occurrence are excluded as ambiguous. Remaining magnitude changes "
+        "across genuine tick-boundary state deltas can strengthen dynamic-at-tick "
+        "evidence, but this tool never promotes magnitude policy automatically. "
+        "Numeric IDs remain evidence handles only."
     )
     return 0
 
@@ -151,7 +152,7 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
             "Compare same-cast DD periodic amount changes against net source/target "
-            "combat-state deltas at the two tick boundaries."
+            "combat-state deltas at distinct periodic occurrence boundaries."
         )
     )
     parser.add_argument("--skill", required=True)
