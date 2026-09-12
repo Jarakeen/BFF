@@ -29,6 +29,8 @@ class _Repository:
             2: _Set(2, "Irrelevant Set"),
             3: _Set(3, "Unresolved Set"),
             4: _Set(4, "Weaker Relevant Set"),
+            5: _Set(5, "Magicka Only Set"),
+            6: _Set(6, "Stamina Set"),
         }
 
     def get_set_by_id(self, set_id):
@@ -86,6 +88,34 @@ def test_positive_complete_breakpoint_is_relevant_and_zero_complete_is_safe_to_p
     irrelevant = next(row for row in catalog.evidence if row.set_id == 2)
     assert irrelevant.safe_to_prune is True
     assert catalog.candidate_set_ids == (1,)
+    assert catalog.denominator_proven is True
+
+
+def test_cross_resource_only_named_set_is_pruned_from_max_stamina_denominator(monkeypatch):
+    repository = _Repository()
+
+    def fake_candidate(repo, set_name, objective_key, *, equipped_piece_count=None, resolver=None):
+        if set_name == "Stamina Set":
+            return _candidate(6, set_name, equipped_piece_count, objective_key, 2000.0)
+        return _candidate(5, set_name, equipped_piece_count, objective_key, 0.0)
+
+    monkeypatch.setattr(ExtremeGearSetObjectiveService, "candidate_for_set", fake_candidate)
+    monkeypatch.setattr(ExtremeGearSetObjectiveService, "_target_stats", lambda key: {object()})
+
+    catalog = ExtremeGearSetObjectiveRelevanceService(repository).build(
+        "max_stamina",
+        _breakpoints(
+            _row(5, "Magicka Only Set", 5),
+            _row(6, "Stamina Set", 5),
+        ),
+    )
+
+    magicka_only = next(row for row in catalog.evidence if row.set_id == 5)
+    stamina = next(row for row in catalog.evidence if row.set_id == 6)
+    assert magicka_only.status is ExtremeGearSetObjectiveRelevance.PROVEN_IRRELEVANT
+    assert magicka_only.safe_to_prune is True
+    assert stamina.status is ExtremeGearSetObjectiveRelevance.RELEVANT
+    assert catalog.candidate_set_ids == (6,)
     assert catalog.denominator_proven is True
 
 
