@@ -23,6 +23,7 @@ from services.rotation_dd_dot_runtime_service import RotationDDDotRuntimeProject
 
 
 DamageEvaluator = Callable[..., ModeledDamagePotency]
+DirectContextResolver = Callable[[float, int], BuildCalculationContext]
 
 
 @dataclass(frozen=True)
@@ -55,9 +56,20 @@ class RotationDDCanonicalDamageService:
     target resistance, and expected single-event damage. The damage projection
     service owns timeline aggregation.
 
+    ``direct_context_resolver`` may supply the canonical active-bar static context
+    for each direct event at its exact ``(time_seconds, sequence)`` point. This lets
+    two-bar rotations evaluate direct skills/Ultimates against the bar that actually
+    owns the cast without teaching this service bar progression itself.
+
+    DoT runtime events deliberately do not use that resolver yet. ESO effects may
+    snapshot some cast-time state or update dynamically, so a bar-aware direct-cast
+    resolver is not sufficient evidence for tick-time DoT context semantics. When a
+    caller requests bar-aware direct contexts and also supplies DoT runtime events,
+    the projection remains unresolved rather than silently choosing one policy.
+
     This service still does not infer proc events, execute scaling, target-health
-    transitions, light/heavy attack damage, or runtime buff windows. Missing
-    evidence in any required area remains unresolved.
+    transitions, light/heavy attack damage, DoT snapshot policy, or runtime buff
+    windows. Missing evidence in any required area remains unresolved.
     """
 
     def __init__(
@@ -77,15 +89,20 @@ class RotationDDCanonicalDamageService:
         evaluation_context: EvaluationContext,
         action_projection: RotationDDActionDamageProjection,
         dot_projection: RotationDDDotRuntimeProjection | None = None,
+        direct_context_resolver: DirectContextResolver | None = None,
     ) -> RotationDDCanonicalDamageProjection:
         instances: list[RotationDDDamageInstance] = []
         evaluation_unresolved: list[str] = []
 
-        projected_events: tuple[RotationDDResolvedDamageEvent, ...] = tuple(
-            action_projection.events
-        )
+        direct_events = tuple(action_projection.events)
+        dot_events: tuple[RotationDDResolvedDamageEvent, ...] = ()
         if dot_projection is not None:
-            projected_events += tuple(dot_projection.events)
+            dot_events = tuple(dot_projection.events)
+            if direct_context_resolver is not None and dot_events:
+                evaluation_unresolved.append(
+                    "bar-aware DoT damage context semantics are unresolved; direct-cast "
+                    "bar context cannot be reused as tick-time or snapshot evidence"
+                )
         elif action_projection.dot_components:
             evaluation_unresolved.extend(
                 f"{seed.source_name} coefficient {seed.coefficient_number} at "
@@ -93,39 +110,36 @@ class RotationDDCanonicalDamageService:
                 for seed in action_projection.dot_components
             )
 
-        for projected in projected_events:
-            measurement = self.damage_evaluator(
-                context=context,
-                event=projected.event,
+        for projected in direct_events:
+            event_context = context
+            if direct_context_resolver is not None:
+                try:
+                    event_context = direct_context_resolver(
+                        projected.time_seconds,
+                        projected.sequence,
+                    )
+                except (LookupError, RuntimeError, TypeError, ValueError) as exc:
+                    evaluation_unresolved.append(
+                        f"{projected.source_name} coefficient {projected.coefficient_number} "
+                        f"at {projected.time_seconds:g}s: canonical direct-damage build "
+                        f"context unavailable: {exc}"
+                    )
+                    continue
+            self._evaluate_event(
+                projected=projected,
+                context=event_context,
                 evaluation_context=evaluation_context,
+                instances=instances,
+                evaluation_unresolved=evaluation_unresolved,
             )
-            event_id = (
-                f"{projected.sequence}:{projected.coefficient_number}:"
-                f"{projected.time_seconds:g}:{projected.source_name.casefold()}"
-            )
-            unresolved = tuple(
-                f"{projected.source_name} coefficient {projected.coefficient_number} "
-                f"at {projected.time_seconds:g}s: {item}"
-                for item in measurement.unresolved
-            )
-            if measurement.value is None and not unresolved:
-                unresolved = (
-                    f"{projected.source_name} coefficient {projected.coefficient_number} "
-                    f"at {projected.time_seconds:g}s: canonical damage value unavailable",
-                )
-            evaluation_unresolved.extend(unresolved)
-            instances.append(
-                RotationDDDamageInstance(
-                    time_seconds=projected.time_seconds,
-                    source_name=projected.source_name,
-                    expected_damage=(
-                        float(measurement.value)
-                        if measurement.value is not None and not unresolved
-                        else None
-                    ),
-                    event_id=event_id,
-                    unresolved=unresolved,
-                )
+
+        for projected in dot_events:
+            self._evaluate_event(
+                projected=projected,
+                context=context,
+                evaluation_context=evaluation_context,
+                instances=instances,
+                evaluation_unresolved=evaluation_unresolved,
             )
 
         damage_projection = self.projection_service.project(
@@ -151,6 +165,49 @@ class RotationDDCanonicalDamageService:
             total_damage=total_damage,
             projected_dps=projected_dps,
             unresolved=unresolved,
+        )
+
+    def _evaluate_event(
+        self,
+        *,
+        projected: RotationDDResolvedDamageEvent,
+        context: BuildCalculationContext,
+        evaluation_context: EvaluationContext,
+        instances: list[RotationDDDamageInstance],
+        evaluation_unresolved: list[str],
+    ) -> None:
+        measurement = self.damage_evaluator(
+            context=context,
+            event=projected.event,
+            evaluation_context=evaluation_context,
+        )
+        event_id = (
+            f"{projected.sequence}:{projected.coefficient_number}:"
+            f"{projected.time_seconds:g}:{projected.source_name.casefold()}"
+        )
+        unresolved = tuple(
+            f"{projected.source_name} coefficient {projected.coefficient_number} "
+            f"at {projected.time_seconds:g}s: {item}"
+            for item in measurement.unresolved
+        )
+        if measurement.value is None and not unresolved:
+            unresolved = (
+                f"{projected.source_name} coefficient {projected.coefficient_number} "
+                f"at {projected.time_seconds:g}s: canonical damage value unavailable",
+            )
+        evaluation_unresolved.extend(unresolved)
+        instances.append(
+            RotationDDDamageInstance(
+                time_seconds=projected.time_seconds,
+                source_name=projected.source_name,
+                expected_damage=(
+                    float(measurement.value)
+                    if measurement.value is not None and not unresolved
+                    else None
+                ),
+                event_id=event_id,
+                unresolved=unresolved,
+            )
         )
 
     @staticmethod
