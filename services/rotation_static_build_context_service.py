@@ -19,6 +19,9 @@ from services.minmax_character_progression_adapter import (
     MinmaxCharacterProgressionAdapter,
     SavedBuildProgressionResolution,
 )
+from services.rotation_saved_build_charged_status_chance_service import (
+    RotationSavedBuildChargedStatusChanceService,
+)
 from services.rotation_saved_build_dd_conditional_damage_done_service import (
     RotationSavedBuildDDConditionalDamageDoneService,
 )
@@ -204,9 +207,9 @@ class RotationStaticBuildContextService:
     This service owns no ESO formulas. It deliberately reuses
     ``BuildCalculationContextFactory`` so armor-weight passives, Undaunted Mettle,
     class/guild/weapon passives, static gear, race, CP, food and other already-
-    verified inputs keep one source of truth. Reviewed unconditional DD Damage Done
-    categories and reviewed conditional magnitudes are attached as context metadata
-    rather than flattened into standing-sheet stats.
+    verified inputs keep one source of truth. Reviewed unconditional DD Damage Done,
+    conditional Exploiter magnitude, and reviewed Charged status-chance magnitude are
+    attached as context metadata rather than flattened into standing-sheet stats.
     """
 
     def __init__(
@@ -219,6 +222,9 @@ class RotationStaticBuildContextService:
         dd_damage_done_service: RotationSavedBuildDDDamageDoneService | None = None,
         dd_conditional_damage_done_service: (
             RotationSavedBuildDDConditionalDamageDoneService | None
+        ) = None,
+        charged_status_chance_service: (
+            RotationSavedBuildChargedStatusChanceService | None
         ) = None,
     ) -> None:
         data_dir = get_data_dir()
@@ -245,6 +251,10 @@ class RotationStaticBuildContextService:
             dd_conditional_damage_done_service
             or RotationSavedBuildDDConditionalDamageDoneService(database)
         )
+        self.charged_status_chance_service = (
+            charged_status_chance_service
+            or RotationSavedBuildChargedStatusChanceService(database)
+        )
 
     def resolve(
         self,
@@ -268,6 +278,8 @@ class RotationStaticBuildContextService:
         dd_damage_done = None
         dd_exploiter_bonus = 0.0
         dd_conditional_resolved = False
+        charged_resolution = None
+        charged_messages_by_bar: dict[str, set[str]] = {"front": set(), "back": set()}
         dd_unresolved: list[str] = []
         if role_key in _DD_ROLE_KEYS:
             dd_resolution = self.dd_damage_done_service.resolve(player_build)
@@ -277,6 +289,16 @@ class RotationStaticBuildContextService:
             dd_exploiter_bonus = float(conditional.exploiter_bonus)
             dd_conditional_resolved = conditional.resolved
             dd_unresolved.extend(conditional.unresolved)
+            charged_resolution = self.charged_status_chance_service.resolve(
+                player_build,
+                bars=requested,
+            )
+            dd_unresolved.extend(charged_resolution.unresolved)
+            if charged_resolution.resolved:
+                for source in charged_resolution.sources:
+                    charged_messages_by_bar[source.bar].add(
+                        f"{source.slot_name} Charged: requires status-effect chance model".casefold()
+                    )
 
         build_id = (
             str(getattr(player_build, "BuildId", "") or "").strip()
@@ -295,10 +317,16 @@ class RotationStaticBuildContextService:
                 combat_state=combat_state,
             )
             if dd_damage_done is not None:
+                charged_bonus = (
+                    charged_resolution.bonus_percent_for(bar)
+                    if charged_resolution is not None and charged_resolution.resolved
+                    else 0.0
+                )
                 context = replace(
                     context,
                     dd_damage_done_modifiers=dd_damage_done,
                     dd_exploiter_bonus=dd_exploiter_bonus,
+                    dd_status_effect_chance_bonus_percent=charged_bonus,
                 )
             contexts.append(context)
             unresolved.extend(
@@ -311,6 +339,8 @@ class RotationStaticBuildContextService:
                         _EXPLOITER_UNMODELED_PREFIX
                     )
                 )
+                and str(message or "").strip().casefold()
+                not in charged_messages_by_bar.get(bar, set())
             )
 
         return RotationStaticBuildContextResolution(
