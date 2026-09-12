@@ -133,6 +133,10 @@ class ExtremeMaxResourceSemanticMemoSearchService(
             )
 
         def previous_equal_id(position: int) -> int | None:
+            # At the terminal state there is no next topology position, so there is
+            # no equal-count symmetry floor left to preserve in the memo key.
+            if position >= len(counts):
+                return None
             if position > 0 and counts[position - 1] == counts[position]:
                 return int(selected[position - 1].set_id)
             return None
