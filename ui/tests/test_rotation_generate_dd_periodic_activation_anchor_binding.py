@@ -113,6 +113,36 @@ def test_anchor_only_snapshot_still_builds_runtime_provider() -> None:
     assert runtime_call["activation_anchor_resolver"] is anchor_resolver
 
 
+def test_generate_prospective_stampede_keeps_reviewed_semantics_without_inventing_impact_time() -> None:
+    support = _RecordingSupport(
+        database_path="unused.db",
+        static_context_service=_StaticContextService(),  # type: ignore[arg-type]
+        periodic_runtime_semantics_registry=(
+            RotationDDPeriodicRuntimeSemanticsRegistryService()
+        ),
+    )
+
+    support.compose(
+        player_build=PlayerBuild(Name="Parse Cat", BuildName="DD", Role="DD"),
+        evidence_bundle=_bundle(),
+    )
+
+    assert len(support.calls) == 1
+    prospective_call = support.calls[0]
+    stampede = next(
+        row
+        for row in prospective_call["periodic_runtime_semantics"]
+        if row.skill_entity_id == "stampede" and row.coefficient_number == 2
+    )
+
+    assert stampede.activation_anchor is PeriodicDamageActivationAnchor.IMPACT
+    assert stampede.magnitude_policy is PeriodicDamageMagnitudePolicy.DYNAMIC_AT_TICK
+    assert stampede.first_tick_offset_seconds == 1.0
+    assert stampede.verified_interval_seconds == 1.0
+    assert prospective_call["runtime_build_context_resolver"] is None
+    assert prospective_call["activation_anchor_resolver"] is None
+
+
 def test_generate_stabilized_stampede_provider_composes_reviewed_runtime_authorities() -> None:
     support = _RecordingSupport(
         database_path="unused.db",
