@@ -82,6 +82,16 @@ class RotationRuntimeTargetCombatStateResolver(Protocol):
     ) -> CombatState: ...
 
 
+class RotationRuntimeTargetResistanceResolver(Protocol):
+    """Resolve authoritative target resistance at one exact runtime point."""
+
+    def __call__(
+        self,
+        time_seconds: float,
+        sequence: int | None = None,
+    ) -> float: ...
+
+
 def _target_state_at_time(
     resolver: RotationRuntimeTargetCombatStateResolver | None,
     *,
@@ -99,6 +109,32 @@ def _target_state_at(
 ) -> CombatState | None:
     return _target_state_at_time(
         resolver,
+        time_seconds=action.time_seconds,
+        sequence=action.sequence,
+    )
+
+
+def _target_resistance_at_time(
+    resolver: RotationRuntimeTargetResistanceResolver | None,
+    *,
+    fallback: float,
+    time_seconds: float,
+    sequence: int | None,
+) -> float:
+    if resolver is None:
+        return float(fallback)
+    return float(resolver(float(time_seconds), sequence))
+
+
+def _target_resistance_at(
+    resolver: RotationRuntimeTargetResistanceResolver | None,
+    *,
+    fallback: float,
+    action: RotationAction,
+) -> float:
+    return _target_resistance_at_time(
+        resolver,
+        fallback=fallback,
         time_seconds=action.time_seconds,
         sequence=action.sequence,
     )
@@ -175,6 +211,7 @@ class RotationGenerateDDWeaponAttackProviderFactory(Protocol):
         target_resistance: float,
         runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
         runtime_target_combat_state_resolver: RotationRuntimeTargetCombatStateResolver | None = None,
+        runtime_target_resistance_resolver: RotationRuntimeTargetResistanceResolver | None = None,
     ) -> tuple[
         RotationActionDamageProvider | None,
         RotationActionDamageProvider | None,
@@ -195,6 +232,7 @@ class _RotationGenerateBarAwareSkillDamageProvider:
         ] = (),
         runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
         runtime_target_combat_state_resolver: RotationRuntimeTargetCombatStateResolver | None = None,
+        runtime_target_resistance_resolver: RotationRuntimeTargetResistanceResolver | None = None,
         activation_anchor_resolver: PeriodicDamageActivationAnchorResolver | None = None,
     ) -> None:
         self.database_path = database_path
@@ -203,6 +241,7 @@ class _RotationGenerateBarAwareSkillDamageProvider:
         self.periodic_runtime_semantics = tuple(periodic_runtime_semantics)
         self.runtime_build_context_resolver = runtime_build_context_resolver
         self.runtime_target_combat_state_resolver = runtime_target_combat_state_resolver
+        self.runtime_target_resistance_resolver = runtime_target_resistance_resolver
         self.activation_anchor_resolver = activation_anchor_resolver
         self.periodic_runtime_projection_service = (
             RotationCandidatePeriodicDamageRuntimeProjectionService(
@@ -234,9 +273,14 @@ class _RotationGenerateBarAwareSkillDamageProvider:
             plan=candidate.plan,
         )
         context = resolver.context_at(action.time_seconds, action.sequence)
+        action_target_resistance = _target_resistance_at(
+            self.runtime_target_resistance_resolver,
+            fallback=self.target_resistance,
+            action=action,
+        )
         context = replace(
             context,
-            target_resistance=self.target_resistance,
+            target_resistance=action_target_resistance,
             fight_duration=float(candidate.plan.duration_seconds),
         )
         return RotationCandidateSkillDamageEvidenceService(
@@ -250,6 +294,7 @@ class _RotationGenerateBarAwareSkillDamageProvider:
             periodic_runtime_semantics=self.periodic_runtime_semantics,
             runtime_build_context_resolver=self.runtime_build_context_resolver,
             runtime_target_combat_state_resolver=self.runtime_target_combat_state_resolver,
+            runtime_target_resistance_resolver=self.runtime_target_resistance_resolver,
         ).evaluate_action(
             candidate=candidate,
             action=action,
@@ -267,6 +312,7 @@ class _RotationGenerateBarAwareLightAttackDamageProvider:
         target_resistance: float,
         runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
         runtime_target_combat_state_resolver: RotationRuntimeTargetCombatStateResolver | None = None,
+        runtime_target_resistance_resolver: RotationRuntimeTargetResistanceResolver | None = None,
     ) -> None:
         if not evaluation.resolved or evaluation.build is None:
             raise ValueError(
@@ -277,6 +323,7 @@ class _RotationGenerateBarAwareLightAttackDamageProvider:
         self.target_resistance = float(target_resistance)
         self.runtime_build_context_resolver = runtime_build_context_resolver
         self.runtime_target_combat_state_resolver = runtime_target_combat_state_resolver
+        self.runtime_target_resistance_resolver = runtime_target_resistance_resolver
 
     def evaluate_action(
         self,
@@ -315,7 +362,11 @@ class _RotationGenerateBarAwareLightAttackDamageProvider:
             initial_bar="front",
             evaluation_context=EvaluationContext(
                 fight_duration=float(candidate.plan.duration_seconds),
-                target_resistance=self.target_resistance,
+                target_resistance=_target_resistance_at(
+                    self.runtime_target_resistance_resolver,
+                    fallback=self.target_resistance,
+                    action=action,
+                ),
             ),
             attacker_combat_state=getattr(context, "combat_state", None),
             target_combat_state=_target_state_at(
@@ -339,6 +390,7 @@ class _RotationGenerateBarAwareHeavyAttackDamageProvider:
         target_resistance: float,
         runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
         runtime_target_combat_state_resolver: RotationRuntimeTargetCombatStateResolver | None = None,
+        runtime_target_resistance_resolver: RotationRuntimeTargetResistanceResolver | None = None,
     ) -> None:
         if not evaluation.resolved or evaluation.build is None:
             raise ValueError(
@@ -349,6 +401,7 @@ class _RotationGenerateBarAwareHeavyAttackDamageProvider:
         self.target_resistance = float(target_resistance)
         self.runtime_build_context_resolver = runtime_build_context_resolver
         self.runtime_target_combat_state_resolver = runtime_target_combat_state_resolver
+        self.runtime_target_resistance_resolver = runtime_target_resistance_resolver
 
     def evaluate_action(
         self,
@@ -414,6 +467,20 @@ class _RotationGenerateBarAwareHeavyAttackDamageProvider:
                 action,
             )
         )
+        target_resistance = (
+            _target_resistance_at_time(
+                self.runtime_target_resistance_resolver,
+                fallback=self.target_resistance,
+                time_seconds=completion.completion_time_seconds,
+                sequence=None,
+            )
+            if completion is not None
+            else _target_resistance_at(
+                self.runtime_target_resistance_resolver,
+                fallback=self.target_resistance,
+                action=action,
+            )
+        )
         return RotationCandidateHeavyAttackDamageEvidenceService(
             build=self.evaluation.build,
             evaluation=build_evaluation,
@@ -421,7 +488,7 @@ class _RotationGenerateBarAwareHeavyAttackDamageProvider:
             completion_evidence=completion_evidence,
             evaluation_context=EvaluationContext(
                 fight_duration=float(candidate.plan.duration_seconds),
-                target_resistance=self.target_resistance,
+                target_resistance=target_resistance,
             ),
             attacker_combat_state=getattr(context, "combat_state", None),
             target_combat_state=target_combat_state,
@@ -482,6 +549,7 @@ class RotationGenerateDDCanonicalWeaponAttackProviderFactory:
         target_resistance: float,
         runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
         runtime_target_combat_state_resolver: RotationRuntimeTargetCombatStateResolver | None = None,
+        runtime_target_resistance_resolver: RotationRuntimeTargetResistanceResolver | None = None,
     ) -> tuple[
         RotationActionDamageProvider | None,
         RotationActionDamageProvider | None,
@@ -502,6 +570,7 @@ class RotationGenerateDDCanonicalWeaponAttackProviderFactory:
                 target_resistance=target_resistance,
                 runtime_build_context_resolver=runtime_build_context_resolver,
                 runtime_target_combat_state_resolver=runtime_target_combat_state_resolver,
+                runtime_target_resistance_resolver=runtime_target_resistance_resolver,
             ),
             _RotationGenerateBarAwareHeavyAttackDamageProvider(
                 evaluation=resolution,
@@ -509,6 +578,7 @@ class RotationGenerateDDCanonicalWeaponAttackProviderFactory:
                 target_resistance=target_resistance,
                 runtime_build_context_resolver=runtime_build_context_resolver,
                 runtime_target_combat_state_resolver=runtime_target_combat_state_resolver,
+                runtime_target_resistance_resolver=runtime_target_resistance_resolver,
             ),
         )
 
@@ -533,6 +603,7 @@ class _RotationGenerateSnapshotAwarePlanEvidenceProvider:
         if (
             snapshot.runtime_combat_state_resolver is None
             and getattr(snapshot, "runtime_target_combat_state_resolver", None) is None
+            and getattr(snapshot, "runtime_target_resistance_resolver", None) is None
             and getattr(snapshot, "runtime_activation_anchor_resolver", None) is None
         ):
             return self.static_provider
@@ -544,15 +615,14 @@ class RotationGenerateDDRoleEvidenceSupport:
 
     Direct skills, Ultimates, LA, and verified completed HA use their existing
     canonical evaluators. Reviewed periodic semantics come from the production DD
-    runtime registry. Snapshot DoTs reuse cast-time magnitude only when explicitly
-    reviewed as such. Dynamic DoTs bind to the final stabilized candidate's runtime
-    combat-state resolver and rebuild exact-time calculation context for every tick;
-    when target-side runtime evidence exists they also re-resolve Damage Taken at the
-    exact tick timestamp. Stabilized LA evidence uses exact action-time runtime state;
-    verified HA evidence resolves attacker and target state at the scheduler-proven
-    completion timestamp. Direct/snapshot damage also consumes explicit target-side
-    runtime combat state when authoritative evidence supplies it; target identity
-    windows are not treated as target debuff state. Non-cast periodic activation
+    runtime registry. Snapshot DoTs reuse cast-time source magnitude only when
+    explicitly reviewed as such, while recipient-side target state and resistance may
+    still vary at each tick. Dynamic DoTs bind to the final stabilized candidate's
+    runtime combat-state resolver and rebuild exact-time calculation context for every
+    tick. Stabilized LA evidence uses exact action-time runtime state and target
+    resistance; verified HA evidence resolves attacker state, target state, and target
+    resistance at the scheduler-proven completion timestamp. Target identity windows
+    are not treated as target debuff or resistance state. Non-cast periodic activation
     anchors consume an authoritative runtime anchor resolver from the stabilized
     snapshot when one is available; otherwise the periodic projection remains
     fail-closed.
@@ -615,6 +685,7 @@ class RotationGenerateDDRoleEvidenceSupport:
             periodic_runtime_semantics=periodic_runtime_semantics,
             runtime_build_context_resolver=None,
             runtime_target_combat_state_resolver=None,
+            runtime_target_resistance_resolver=None,
             activation_anchor_resolver=None,
         )
         runtime_context_service = RotationPlanRuntimeBuildContextService(
@@ -622,6 +693,12 @@ class RotationGenerateDDRoleEvidenceSupport:
         )
 
         def runtime_provider_factory(snapshot):
+            runtime_target_resistance_resolver = getattr(
+                snapshot,
+                "runtime_target_resistance_resolver",
+                None,
+            )
+
             def resolve_runtime_context(
                 time_seconds: float,
                 sequence: int | None = None,
@@ -636,7 +713,12 @@ class RotationGenerateDDRoleEvidenceSupport:
                     return result
                 context = replace(
                     result.context,
-                    target_resistance=target_resistance,
+                    target_resistance=_target_resistance_at_time(
+                        runtime_target_resistance_resolver,
+                        fallback=target_resistance,
+                        time_seconds=time_seconds,
+                        sequence=sequence,
+                    ),
                     fight_duration=float(snapshot.plan.duration_seconds),
                 )
                 return replace(result, context=context)
@@ -657,6 +739,7 @@ class RotationGenerateDDRoleEvidenceSupport:
                     "runtime_target_combat_state_resolver",
                     None,
                 ),
+                runtime_target_resistance_resolver=runtime_target_resistance_resolver,
                 activation_anchor_resolver=getattr(
                     snapshot,
                     "runtime_activation_anchor_resolver",
@@ -688,6 +771,7 @@ class RotationGenerateDDRoleEvidenceSupport:
         ],
         runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None,
         runtime_target_combat_state_resolver: RotationRuntimeTargetCombatStateResolver | None,
+        runtime_target_resistance_resolver: RotationRuntimeTargetResistanceResolver | None,
         activation_anchor_resolver: PeriodicDamageActivationAnchorResolver | None,
     ):
         skill_provider = _RotationGenerateBarAwareSkillDamageProvider(
@@ -697,6 +781,7 @@ class RotationGenerateDDRoleEvidenceSupport:
             periodic_runtime_semantics=periodic_runtime_semantics,
             runtime_build_context_resolver=runtime_build_context_resolver,
             runtime_target_combat_state_resolver=runtime_target_combat_state_resolver,
+            runtime_target_resistance_resolver=runtime_target_resistance_resolver,
             activation_anchor_resolver=activation_anchor_resolver,
         )
         ultimate_provider = RotationCandidateUltimateDamageEvidenceService(
@@ -713,6 +798,7 @@ class RotationGenerateDDRoleEvidenceSupport:
                     target_resistance=target_resistance,
                     runtime_build_context_resolver=runtime_build_context_resolver,
                     runtime_target_combat_state_resolver=runtime_target_combat_state_resolver,
+                    runtime_target_resistance_resolver=runtime_target_resistance_resolver,
                 )
             )
 
@@ -737,4 +823,5 @@ __all__ = [
     "RotationGenerateDDRoleEvidenceSupport",
     "RotationGenerateDDWeaponAttackProviderFactory",
     "RotationRuntimeTargetCombatStateResolver",
+    "RotationRuntimeTargetResistanceResolver",
 ]
