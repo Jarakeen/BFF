@@ -9,24 +9,31 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from engine.config import DEFAULT_DATABASE
-from services.rotation_dd_periodic_esologs_runtime_evidence_service import (
-    RotationDDPeriodicEsoLogsRuntimeEvidenceService,
+from services.rotation_dd_periodic_esologs_split_database_evidence_service import (
+    RotationDDPeriodicEsoLogsSplitDatabaseEvidenceService,
 )
 
 
 def audit_skill(
     *,
     database_path: Path,
+    logs_database_path: Path,
     skill: str,
     report_code: str | None = None,
     fight_id: int | None = None,
     source_id: int | None = None,
 ) -> int:
     if not database_path.exists():
-        print(f"Database not found: {database_path}")
+        print(f"Canonical database not found: {database_path}")
         return 1
+    if not logs_database_path.exists():
+        print(f"ESO Logs database not found: {logs_database_path}")
+        return 2
 
-    result = RotationDDPeriodicEsoLogsRuntimeEvidenceService(database_path).inspect_skill(
+    result = RotationDDPeriodicEsoLogsSplitDatabaseEvidenceService(
+        canonical_database_path=database_path,
+        logs_database_path=logs_database_path,
+    ).inspect_skill(
         skill,
         report_code=report_code,
         fight_id=fight_id,
@@ -38,6 +45,8 @@ def audit_skill(
     print(" DD PERIODIC ESO LOGS RUNTIME EVIDENCE")
     print("============================================")
     print(f"Skill: {result.skill_entity_id or '(unresolved)'}")
+    print(f"Canonical DB: {database_path}")
+    print(f"ESO Logs DB:  {logs_database_path}")
     print(
         "Observed/crosswalk ability IDs: "
         + (", ".join(str(value) for value in result.observed_ability_ids) or "none")
@@ -109,7 +118,8 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
             "Inspect imported ESO Logs cast/tick events as observational evidence for "
-            "one canonical DD periodic skill identity."
+            "one canonical DD periodic skill identity. Canonical mechanics and combat "
+            "logs are read from separate SQLite databases."
         )
     )
     parser.add_argument("--skill", required=True, help="Canonical skill name or lower_snake identity")
@@ -117,7 +127,13 @@ def _parser() -> argparse.ArgumentParser:
         "--database",
         type=Path,
         default=Path(DEFAULT_DATABASE),
-        help="Canonical ESO SQLite database containing imported log_event rows",
+        help="Canonical ESO SQLite database used for skill/rank identity and numeric crosswalks",
+    )
+    parser.add_argument(
+        "--logs-db",
+        type=Path,
+        required=True,
+        help="SQLite database containing imported ESO Logs log_event rows",
     )
     parser.add_argument("--report", dest="report_code", help="Optional ESO Logs report code filter")
     parser.add_argument("--fight", dest="fight_id", type=int, help="Optional fight id filter")
@@ -129,6 +145,7 @@ def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     return audit_skill(
         database_path=args.database,
+        logs_database_path=args.logs_db,
         skill=args.skill,
         report_code=args.report_code,
         fight_id=args.fight_id,
