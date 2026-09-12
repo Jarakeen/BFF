@@ -29,6 +29,8 @@ def resolve_light_attack_from_evaluation(
     la_frost_weapon_damage: float | None = None,
     la_shock_spell_damage: float | None = None,
     la_shock_weapon_damage: float | None = None,
+    la_physical_spell_damage: float | None = None,
+    la_physical_weapon_damage: float | None = None,
 ) -> LightAttackState:
     """Resolve a LightAttackState from an already evaluated build.
 
@@ -50,95 +52,30 @@ def resolve_light_attack_from_evaluation(
         magicka=magicka,
         stamina=stamina,
 
-        la_flame_spell_damage=(
-            spell_damage
-            if la_flame_spell_damage is None
-            else la_flame_spell_damage
-        ),
-        la_flame_weapon_damage=(
-            weapon_damage
-            if la_flame_weapon_damage is None
-            else la_flame_weapon_damage
-        ),
+        la_flame_spell_damage=(spell_damage if la_flame_spell_damage is None else la_flame_spell_damage),
+        la_flame_weapon_damage=(weapon_damage if la_flame_weapon_damage is None else la_flame_weapon_damage),
+        la_frost_spell_damage=(spell_damage if la_frost_spell_damage is None else la_frost_spell_damage),
+        la_frost_weapon_damage=(weapon_damage if la_frost_weapon_damage is None else la_frost_weapon_damage),
+        la_shock_spell_damage=(spell_damage if la_shock_spell_damage is None else la_shock_spell_damage),
+        la_shock_weapon_damage=(weapon_damage if la_shock_weapon_damage is None else la_shock_weapon_damage),
+        la_physical_spell_damage=(spell_damage if la_physical_spell_damage is None else la_physical_spell_damage),
+        la_physical_weapon_damage=(weapon_damage if la_physical_weapon_damage is None else la_physical_weapon_damage),
 
-        la_frost_spell_damage=(
-            spell_damage
-            if la_frost_spell_damage is None
-            else la_frost_spell_damage
-        ),
-        la_frost_weapon_damage=(
-            weapon_damage
-            if la_frost_weapon_damage is None
-            else la_frost_weapon_damage
-        ),
-
-        la_shock_spell_damage=(
-            spell_damage
-            if la_shock_spell_damage is None
-            else la_shock_spell_damage
-        ),
-        la_shock_weapon_damage=(
-            weapon_damage
-            if la_shock_weapon_damage is None
-            else la_shock_weapon_damage
-        ),
-
-        skill2_la_damage=_sum_contributions(
-            evaluation,
-            "skill2_la_damage",
-        ),
-        cp_la_damage=_sum_contributions(
-            evaluation,
-            "cp_la_damage",
-        ),
-        skill_la_damage=_sum_contributions(
-            evaluation,
-            "skill_la_damage",
-        ),
-        set_la_damage=_sum_contributions(
-            evaluation,
-            "set_la_damage",
-        ),
-
-        skill_ha_damage=_sum_contributions(
-            evaluation,
-            "skill_ha_damage",
-        ),
-        set_ha_damage=_sum_contributions(
-            evaluation,
-            "set_ha_damage",
-        ),
-        buff_empower=_sum_contributions(
-            evaluation,
-            "empower",
-        ),
-
-        flame_damage_done=_sum_contributions(
-            evaluation,
-            "flame_damage_done",
-        ),
-        frost_damage_done=_sum_contributions(
-            evaluation,
-            "frost_damage_done",
-        ),
-        shock_damage_done=_sum_contributions(
-            evaluation,
-            "shock_damage_done",
-        ),
-        direct_damage_done=_sum_contributions(
-            evaluation,
-            "direct_damage_done",
-        ),
-        single_target_damage_done=_sum_contributions(
-            evaluation,
-            "single_target_damage_done",
-        ),
-        dot_damage_done=_sum_contributions(
-            evaluation,
-            "dot_damage_done",
-        ),
-        damage_done=_sum_contributions(
-            evaluation,
-            "damage_done",
-        ),
+        skill2_la_damage=_sum_contributions(evaluation, "skill2_la_damage"),
+        cp_la_damage=_sum_contributions(evaluation, "cp_la_damage"),
+        skill_la_damage=_sum_contributions(evaluation, "skill_la_damage"),
+        set_la_damage=_sum_contributions(evaluation, "set_la_damage"),
+        skill_ha_damage=_sum_contributions(evaluation, "skill_ha_damage"),
+        set_ha_damage=_sum_contributions(evaluation, "set_ha_damage"),
+        buff_empower=_sum_contributions(evaluation, "empower"),
+        flame_damage_done=_sum_contributions(evaluation, "flame_damage_done"),
+        frost_damage_done=_sum_contributions(evaluation, "frost_damage_done"),
+        shock_damage_done=_sum_contributions(evaluation, "shock_damage_done"),
+        physical_damage_done=_sum_contributions(evaluation, "physical_damage_done"),
+        bow_damage_done=_sum_contributions(evaluation, "bow_damage_done"),
+        skill_line_damage_bow=_sum_contributions(evaluation, "skill_line_damage_bow"),
+        direct_damage_done=_sum_contributions(evaluation, "direct_damage_done"),
+        single_target_damage_done=_sum_contributions(evaluation, "single_target_damage_done"),
+        dot_damage_done=_sum_contributions(evaluation, "dot_damage_done"),
+        damage_done=_sum_contributions(evaluation, "damage_done"),
     )
