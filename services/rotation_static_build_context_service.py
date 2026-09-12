@@ -19,6 +19,9 @@ from services.minmax_character_progression_adapter import (
     MinmaxCharacterProgressionAdapter,
     SavedBuildProgressionResolution,
 )
+from services.rotation_saved_build_dd_conditional_damage_done_service import (
+    RotationSavedBuildDDConditionalDamageDoneService,
+)
 from services.rotation_saved_build_dd_damage_done_service import (
     RotationSavedBuildDDDamageDoneService,
 )
@@ -201,7 +204,8 @@ class RotationStaticBuildContextService:
     ``BuildCalculationContextFactory`` so armor-weight passives, Undaunted Mettle,
     class/guild/weapon passives, static gear, race, CP, food and other already-
     verified inputs keep one source of truth. Reviewed unconditional DD Damage Done
-    categories are attached as context metadata rather than flattened into sheet stats.
+    categories and reviewed conditional magnitudes are attached as context metadata
+    rather than flattened into standing-sheet stats.
     """
 
     def __init__(
@@ -212,6 +216,9 @@ class RotationStaticBuildContextService:
         progression_adapter: MinmaxCharacterProgressionAdapter | None = None,
         context_factory: BuildCalculationContextFactory | None = None,
         dd_damage_done_service: RotationSavedBuildDDDamageDoneService | None = None,
+        dd_conditional_damage_done_service: (
+            RotationSavedBuildDDConditionalDamageDoneService | None
+        ) = None,
     ) -> None:
         data_dir = get_data_dir()
         builds = Path(builds_path) if builds_path is not None else data_dir / "builds.json"
@@ -232,6 +239,10 @@ class RotationStaticBuildContextService:
         self.context_factory = context_factory
         self.dd_damage_done_service = (
             dd_damage_done_service or RotationSavedBuildDDDamageDoneService(database)
+        )
+        self.dd_conditional_damage_done_service = (
+            dd_conditional_damage_done_service
+            or RotationSavedBuildDDConditionalDamageDoneService(database)
         )
 
     def resolve(
@@ -254,11 +265,15 @@ class RotationStaticBuildContextService:
             str(getattr(player_build, "Role", "") or "").strip().casefold().split()
         )
         dd_damage_done = None
-        dd_unresolved: tuple[str, ...] = ()
+        dd_exploiter_bonus = 0.0
+        dd_unresolved: list[str] = []
         if role_key in _DD_ROLE_KEYS:
             dd_resolution = self.dd_damage_done_service.resolve(player_build)
             dd_damage_done = dd_resolution.modifiers
-            dd_unresolved = tuple(dd_resolution.unresolved)
+            dd_unresolved.extend(dd_resolution.unresolved)
+            conditional = self.dd_conditional_damage_done_service.resolve(player_build)
+            dd_exploiter_bonus = float(conditional.exploiter_bonus)
+            dd_unresolved.extend(conditional.unresolved)
 
         build_id = (
             str(getattr(player_build, "BuildId", "") or "").strip()
@@ -280,6 +295,7 @@ class RotationStaticBuildContextService:
                 context = replace(
                     context,
                     dd_damage_done_modifiers=dd_damage_done,
+                    dd_exploiter_bonus=dd_exploiter_bonus,
                 )
             contexts.append(context)
             unresolved.extend(
