@@ -243,8 +243,10 @@ def test_without_weapon_attack_factory_woven_damage_fails_closed(monkeypatch) ->
     )
 
     assert output.value is None
-    assert "light_attack damage consequence has no canonical evaluator configured" in output.unresolved
-    assert "heavy_attack damage consequence has no canonical evaluator configured" in output.unresolved
+    assert output.unresolved == (
+        "0s #0 light_attack: light_attack damage consequence has no canonical evaluator configured",
+        "4s #0 heavy_attack: heavy_attack damage consequence has no canonical evaluator configured",
+    )
 
 
 def test_compose_requires_explicit_target_resistance() -> None:
