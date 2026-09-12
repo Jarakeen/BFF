@@ -9,6 +9,7 @@ from minmax.character_build.effect_layer import BarId
 from minmax.character_build.slotted_skill import SlottedSkill
 from minmax.character_build.weapon import Weapon
 from minmax.character_build.weapon_type import WeaponType
+from minmax.combat_contribution import CombatContribution
 from minmax.combat_state import CombatState
 from minmax.role import Role
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
@@ -56,7 +57,7 @@ def _build(
     )
 
 
-def _evaluation() -> BuildEvaluation:
+def _evaluation(*contributions: CombatContribution) -> BuildEvaluation:
     return BuildEvaluation(
         stats=CalculationResult(
             stats={
@@ -71,7 +72,17 @@ def _evaluation() -> BuildEvaluation:
             }
         ),
         combat_effects=(),
-        combat_contributions=(),
+        combat_contributions=tuple(contributions),
+    )
+
+
+def _exploiter(value: float = 0.04) -> CombatContribution:
+    return CombatContribution(
+        source="test Exploiter",
+        effect_type="conditional_exploiter_damage_done",
+        raw_value=value,
+        uptime=1.0,
+        effective_value=value,
     )
 
 
@@ -143,6 +154,45 @@ def test_runtime_major_berserk_applies_to_heavy_attack_exactly_once() -> None:
 
     assert result.unresolved == ()
     assert result.damage_value == pytest.approx(5892.0 * 1.10)
+
+
+def test_exploiter_applies_to_heavy_attack_only_when_completion_target_is_off_balance() -> None:
+    action = RotationAction(0.0, 0, RotationActionKind.HEAVY_ATTACK, bar="front")
+    candidate = _candidate(action)
+    inactive = RotationCandidateHeavyAttackDamageEvidenceService(
+        build=_build(),
+        evaluation=_evaluation(_exploiter()),
+        initial_bar="front",
+        completion_evidence=(_completion(action),),
+        target_combat_state=CombatState(),
+    ).evaluate_action(candidate=candidate, action=action)
+    active = RotationCandidateHeavyAttackDamageEvidenceService(
+        build=_build(),
+        evaluation=_evaluation(_exploiter()),
+        initial_bar="front",
+        completion_evidence=(_completion(action),),
+        target_combat_state=CombatState(active_buffs=("Off Balance",)),
+    ).evaluate_action(candidate=candidate, action=action)
+
+    assert inactive.damage_value == pytest.approx(5892.0)
+    assert active.damage_value == pytest.approx(5892.0 * 1.04)
+    assert inactive.unresolved == ()
+    assert active.unresolved == ()
+
+
+def test_exploiter_heavy_attack_fails_closed_when_completion_target_state_is_unknown() -> None:
+    action = RotationAction(0.0, 0, RotationActionKind.HEAVY_ATTACK, bar="front")
+    result = RotationCandidateHeavyAttackDamageEvidenceService(
+        build=_build(),
+        evaluation=_evaluation(_exploiter()),
+        initial_bar="front",
+        completion_evidence=(_completion(action),),
+    ).evaluate_action(candidate=_candidate(action), action=action)
+
+    assert result.damage_value is None
+    assert result.unresolved == (
+        "Exploiter requires authoritative target CombatState at heavy-attack completion time",
+    )
 
 
 def test_heavy_damage_does_not_require_restore_amount_when_completion_is_proven() -> None:
