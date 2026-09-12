@@ -86,3 +86,45 @@ def test_startup_roster_overview_reuses_constructor_refresh_then_refreshes_later
         window, "operations_console"
     ) == "operations_console"
     assert calls == ["refresh"]
+
+
+def test_first_lazy_gear_lookup_reuses_constructor_refresh_then_refreshes_later(monkeypatch):
+    calls = []
+
+    class Placeholder:
+        pass
+
+    class Page:
+        def refresh(self):
+            calls.append("refresh")
+
+    page = Page()
+    window = SimpleNamespace(
+        pages={"gear_lookup": Placeholder()},
+        _lazy_page_factories={"gear_lookup": object()},
+        _operations_console_initial_navigation_pending=False,
+    )
+
+    def materialize(self, page_name):
+        self.pages[page_name] = page
+        self._lazy_page_factories.pop(page_name, None)
+        return page
+
+    def original_show_page(self, page_name):
+        if page_name == "gear_lookup":
+            self.pages[page_name].refresh()
+        return page_name
+
+    monkeypatch.setattr(lazy_support, "_LazyPagePlaceholder", Placeholder)
+    monkeypatch.setattr(lazy_support, "_materialize_page", materialize)
+    monkeypatch.setattr(lazy_support, "_ORIGINAL_SHOW_PAGE", original_show_page)
+
+    assert lazy_support._show_page_with_lazy_materialization(
+        window, "gear_lookup"
+    ) == "gear_lookup"
+    assert calls == []
+
+    assert lazy_support._show_page_with_lazy_materialization(
+        window, "gear_lookup"
+    ) == "gear_lookup"
+    assert calls == ["refresh"]
