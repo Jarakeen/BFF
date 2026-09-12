@@ -56,6 +56,9 @@ from services.extreme_resource_active_bar_state_service import (
 from services.extreme_resource_active_skill_coverage_audit_service import (
     ExtremeResourceActiveSkillCoverageAuditService,
 )
+from services.extreme_resource_attribute_projection_service import (
+    ExtremeResourceAttributeProjectionService,
+)
 from services.extreme_resource_blood_magic_canonical_stat_evaluator import (
     ExtremeResourceBloodMagicCanonicalStatEvaluator,
 )
@@ -337,6 +340,12 @@ class ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator:
     @property
     def reviewed_resource_armor_denominator_proven(self) -> bool:
         return bool(self.armor_catalog.denominator_proven)
+
+    def structural_attribute_projection(self, objective_key: str, source_allocations):
+        return ExtremeResourceAttributeProjectionService.build(
+            objective_key,
+            tuple(source_allocations),
+        )
 
     def _champion_point_state(self, objective_key: str):
         resolver = getattr(self.evaluator_factory, "champion_point_state", None)
