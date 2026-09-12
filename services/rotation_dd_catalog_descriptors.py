@@ -7,6 +7,27 @@ from services.service_catalog import EvidenceClass, ServiceBehavior, ServiceDesc
 
 ROTATION_DD_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
     ServiceDescriptor(
+        service_id="rotation.dd.saved_build_damage_done",
+        domain="rotation",
+        purpose=(
+            "Resolve reviewed unconditional saved-build DD Damage Done Champion Point "
+            "categories from canonical Champion Point records without promoting conditional stars."
+        ),
+        implementation_path="services.rotation_saved_build_dd_damage_done_service",
+        inputs=("PlayerBuild", "ChampionPointRecord"),
+        outputs=("RotationSavedBuildDDDamageDoneResolution", "DamageDoneModifiers"),
+        responsibilities=("rotation_dd_saved_build_damage_done",),
+        roles=("DD", "DPS"),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Currently owns reviewed unconditional Master-at-Arms, Biting Aura, and "
+            "Thaumaturge event-category modifiers. Stage thresholds and per-stage values come "
+            "from canonical Champion Point records. Exploiter remains runtime target-state work."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="rotation.dd.output_context_relevance",
         domain="rotation",
         purpose=(
@@ -23,8 +44,8 @@ ROTATION_DD_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.GAME_MECHANIC,
         notes=(
             "Only diagnostics already proven irrelevant to current DD damage math are ambient. "
-            "Bloodthirsty, offensive Champion Points, potion uptime, Charged/status chance, "
-            "and unknown mechanics remain blocking until their canonical runtime math exists."
+            "Bloodthirsty, Exploiter, potion uptime, Charged/status chance, and unknown "
+            "mechanics remain blocking until their canonical runtime math exists."
         ),
     ),
     ServiceDescriptor(
