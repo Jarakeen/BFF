@@ -126,10 +126,10 @@ def _selected_build(page):
 
 
 def _fallback_build_tab(page) -> None:
-    index = _find_tab(page.workspace_tabs, "Build")
+    index = _find_tab(page.build_tabs, "Builds")
     if index < 0:
         index = 0
-    page.workspace_tabs.setCurrentIndex(index)
+    page.build_tabs.setCurrentIndex(index)
 
 
 def _display_number(value, *, suffix: str = "") -> str:
@@ -144,10 +144,10 @@ def _display_number(value, *, suffix: str = "") -> str:
 
 
 def _refresh_build_rotation(page) -> None:
-    if not hasattr(page, "saved_rotation_workspace"):
+    if not hasattr(page, "saved_rotation_workspace") or not hasattr(page, "build_tabs"):
         return
 
-    tab_index = page.workspace_tabs.indexOf(page.saved_rotation_workspace)
+    tab_index = page.build_tabs.indexOf(page.saved_rotation_workspace)
     if tab_index < 0:
         return
 
@@ -158,15 +158,15 @@ def _refresh_build_rotation(page) -> None:
     visible = bool(build_id and artifact and actions)
 
     if not visible:
-        if page.workspace_tabs.currentWidget() is page.saved_rotation_workspace:
+        if page.build_tabs.currentWidget() is page.saved_rotation_workspace:
             _fallback_build_tab(page)
-        page.workspace_tabs.setTabVisible(tab_index, False)
+        page.build_tabs.setTabVisible(tab_index, False)
         page.saved_rotation_table.setRowCount(0)
         page.saved_rotation_summary.setText("")
         page.saved_rotation_setup.setText("")
         return
 
-    page.workspace_tabs.setTabVisible(tab_index, True)
+    page.build_tabs.setTabVisible(tab_index, True)
     setup = artifact.get("setup") if isinstance(artifact.get("setup"), dict) else {}
     character = str(artifact.get("character_name") or getattr(build, "Name", "") or "Unnamed Character")
     build_name = str(artifact.get("build_name") or getattr(build, "BuildName", "") or "Current Build")
@@ -298,19 +298,15 @@ def install() -> None:
         builds_build_ui(self)
         self.build_rotation_artifacts = _artifact_service()
         self.saved_rotation_workspace = _build_rotation_workspace(self)
-        performance_index = _find_tab(self.workspace_tabs, "Performance")
-        if performance_index < 0:
-            performance_index = self.workspace_tabs.count()
-        rotation_index = self.workspace_tabs.insertTab(
-            performance_index,
+        rotation_index = self.build_tabs.addTab(
             self.saved_rotation_workspace,
             "Rotation",
         )
-        self.workspace_tabs.setTabToolTip(
+        self.build_tabs.setTabToolTip(
             rotation_index,
             "Completed rotation saved from Raid Engine • Rotations for this exact build.",
         )
-        self.workspace_tabs.setTabVisible(rotation_index, False)
+        self.build_tabs.setTabVisible(rotation_index, False)
 
     def select_member_with_rotation(self, row: int) -> None:
         builds_select_member(self, row)
