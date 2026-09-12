@@ -89,8 +89,10 @@ ROTATION_DD_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.GAME_MECHANIC,
         notes=(
             "Only diagnostics already proven irrelevant to current DD damage math are ambient. "
-            "Bloodthirsty, potion uptime outside explicit scheduled activations, Charged/status "
-            "chance, and unknown mechanics remain blocking until their canonical runtime math exists."
+            "Selected-potion static diagnostics are ambient because exact scheduled potion "
+            "activation is owned by the plan runtime combat-state bridge. Bloodthirsty, "
+            "Charged/status chance, and unknown mechanics remain blocking until their canonical "
+            "runtime math exists."
         ),
     ),
     ServiceDescriptor(
