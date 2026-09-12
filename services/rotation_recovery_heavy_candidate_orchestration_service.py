@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Callable
 
 from minmax.build_calculation_context import BuildCalculationContext
+from minmax.combat_state import CombatState
 from minmax.resource_costs import ResourceType
 from minmax.rotation_plan import RotationPlan
 from models.build_model import PlayerBuild
@@ -43,6 +44,11 @@ RecoveryRuntimeCombatStateResolverFactory = Callable[
     [RotationPlan],
     RecoveryRuntimeCombatStateResolver,
 ]
+RecoveryRuntimeTargetCombatStateResolver = Callable[[float, int | None], CombatState]
+RecoveryRuntimeTargetCombatStateResolverFactory = Callable[
+    [RotationPlan],
+    RecoveryRuntimeTargetCombatStateResolver,
+]
 RecoveryRuntimeActivationAnchorResolver = Callable[..., float | None]
 RecoveryRuntimeActivationAnchorResolverFactory = Callable[
     [RotationPlan],
@@ -71,8 +77,8 @@ class RecoveryHeavyStabilizedCandidateSnapshot:
 
     Runtime resolvers are bound only after the candidate plan reaches its final
     stabilized form. Family-level scorecards and role-output evaluators may therefore
-    query exact runtime state or activation anchors without consulting the seed
-    schedule or rebuilding timing evidence independently.
+    query exact attacker state, target state, or activation anchors without consulting
+    the seed schedule or rebuilding timing evidence independently.
     """
 
     candidate_id: str
@@ -80,6 +86,7 @@ class RecoveryHeavyStabilizedCandidateSnapshot:
     replay: RotationRecoveryHeavyReplay
     stabilization: RotationRecoveryHeavyStabilizationResult
     runtime_combat_state_resolver: RecoveryRuntimeCombatStateResolver | None = None
+    runtime_target_combat_state_resolver: RecoveryRuntimeTargetCombatStateResolver | None = None
     runtime_activation_anchor_resolver: RecoveryRuntimeActivationAnchorResolver | None = None
 
 
@@ -129,6 +136,7 @@ class RotationRecoveryHeavyCandidateOrchestrationService:
         maximum_event_resolver: RecoveryMaximumEventResolver | None = None,
         displayed_recovery_resolver_factory: RecoveryDisplayedRecoveryResolverFactory | None = None,
         runtime_combat_state_resolver_factory: RecoveryRuntimeCombatStateResolverFactory | None = None,
+        runtime_target_combat_state_resolver_factory: RecoveryRuntimeTargetCombatStateResolverFactory | None = None,
         runtime_activation_anchor_resolver_factory: RecoveryRuntimeActivationAnchorResolverFactory | None = None,
     ) -> RotationRecoveryHeavyCandidateOrchestrationResult:
         if not candidates:
@@ -195,6 +203,11 @@ class RotationRecoveryHeavyCandidateOrchestrationService:
                 if runtime_combat_state_resolver_factory is None
                 else runtime_combat_state_resolver_factory(stabilization.plan)
             )
+            target_runtime_resolver = (
+                None
+                if runtime_target_combat_state_resolver_factory is None
+                else runtime_target_combat_state_resolver_factory(stabilization.plan)
+            )
             activation_anchor_resolver = (
                 None
                 if runtime_activation_anchor_resolver_factory is None
@@ -207,6 +220,7 @@ class RotationRecoveryHeavyCandidateOrchestrationService:
                     replay=stabilization.replay,
                     stabilization=stabilization,
                     runtime_combat_state_resolver=runtime_resolver,
+                    runtime_target_combat_state_resolver=target_runtime_resolver,
                     runtime_activation_anchor_resolver=activation_anchor_resolver,
                 )
             )
@@ -275,6 +289,8 @@ __all__ = [
     "RecoveryRuntimeActivationAnchorResolverFactory",
     "RecoveryRuntimeCombatStateResolver",
     "RecoveryRuntimeCombatStateResolverFactory",
+    "RecoveryRuntimeTargetCombatStateResolver",
+    "RecoveryRuntimeTargetCombatStateResolverFactory",
     "RotationRecoveryHeavyCandidateOrchestrationResult",
     "RotationRecoveryHeavyCandidateOrchestrationService",
 ]
