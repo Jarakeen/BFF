@@ -179,7 +179,11 @@ def test_real_xalvakka_projection_exposes_phase_and_split_structure():
     assert "Retreat" in names
     assert "Split" in names
     assert "Deadstar" in names
-    assert any("Goliath" in name for name in names)
+    assert "Havocrel Goliath Summons" in names
+
+    goliath = next(row for row in projection.strategy if row.mechanic == "Havocrel Goliath Summons")
+    assert "safe zone" in goliath.mitigation.casefold()
+    assert "center" in goliath.mitigation.casefold()
 
 
 def test_bahsei_reviewed_research_populates_overview_without_canonical_packet():
@@ -204,7 +208,7 @@ def test_bahsei_reviewed_research_populates_overview_without_canonical_packet():
     curse = next(row for row in projection.strategy if row.mechanic == "Death Touch/Kiss of Death")
 
     assert "90%, 85%, 80%, 75%, 70%, 65%, and 60%" in summoning.summary
-    assert "50%, 40%, 25%, 20%, and 10%" in behemoth.summary
+    assert "50%, 40%, 25%, 20%, 10%" in behemoth.summary
     assert "separation" in curse.mitigation.casefold()
 
 
