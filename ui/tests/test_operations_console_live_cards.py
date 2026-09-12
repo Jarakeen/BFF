@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from PySide6.QtWidgets import QApplication, QCheckBox, QComboBox, QLabel, QWidget
+from PySide6.QtWidgets import QApplication, QCheckBox, QComboBox, QLabel, QPushButton, QWidget
 
 from minmax.stat_ids import StatId
 from models.build_model import BuildRoster, PlayerBuild
@@ -43,6 +43,24 @@ def test_unmapped_or_conditional_effect_never_becomes_confirmed_coverage(tmp_pat
     assert status["War Horn"] == "unverified"
     assert status["Orbs"] == "unverified"
     assert status["Minor Brittle"] == "not_found"
+
+
+def test_unknown_coverage_is_summarized_without_claiming_missing_providers(tmp_path):
+    page = _console(tmp_path)
+    from ui.operations_console import CORE_COVERAGE
+
+    states = {name: "unverified" for name in CORE_COVERAGE}
+    providers = {name: [] for name in CORE_COVERAGE}
+    coverage = page._coverage_card(states, providers)
+    checks = page._warnings_card(states)
+    coverage_text = " ".join(label.text() for label in coverage.findChildren(QLabel))
+    checks_text = " ".join(label.text() for label in checks.findChildren(QLabel))
+
+    assert "15 effects unverified" in coverage_text
+    assert any(button.text() == "View Coverage Details" for button in coverage.findChildren(QPushButton))
+    assert "?  Major Courage" not in coverage_text
+    assert "Coverage evidence incomplete" in checks_text
+    assert "Major Courage" not in checks_text
 
 
 def test_raid_status_reflects_selected_saved_build_ready_flag(tmp_path):

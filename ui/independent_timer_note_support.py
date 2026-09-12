@@ -299,7 +299,7 @@ def _install_overview_navigation() -> None:
     def compact_button_with_navigation(self, text: str):
         button = original_compact_button(text)
         route = route_by_label.get(text)
-        if route is None and text.startswith("View Full Coverage"):
+        if route is None and text == "View Coverage Details":
             route = "console:7"
 
         if text == "Open Calendar":

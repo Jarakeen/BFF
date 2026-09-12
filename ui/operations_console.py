@@ -328,7 +328,6 @@ class OperationsConsole(FoundryPage):
 
         self.layout.addWidget(self._raid_notes_card())
         self.layout.addStretch(1)
-        self._wide_overview_width = self.workspace_widget.minimumSizeHint().width()
         self._compact_overview = False
         self._update_overview_layout()
 
@@ -349,7 +348,10 @@ class OperationsConsole(FoundryPage):
         if not hasattr(self, "_hero_grid"):
             return
         viewport_width = self.workspace_scroll.viewport().width()
-        compact = viewport_width < max(1380, self._wide_overview_width + 20)
+        # Other dashboard sections can have large size hints even when the four
+        # hero cards fit. Use the actual desktop breakpoint instead of feeding
+        # the full workspace's minimum width back into the hero layout decision.
+        compact = viewport_width < 1550
         if compact == self._compact_overview:
             return
         self._compact_overview = compact
@@ -445,7 +447,8 @@ class OperationsConsole(FoundryPage):
         grid = QGridLayout()
         grid.setHorizontalSpacing(16)
         grid.setVerticalSpacing(5)
-        for index, name in enumerate(CORE_COVERAGE):
+        identified = [name for name in CORE_COVERAGE if covered.get(name) != "unverified"]
+        for index, name in enumerate(identified):
             state = covered.get(name, "unverified")
             marker = "✓" if state == "available" else "◇" if state == "conditional" else "?"
             label = QLabel(f"{marker}  {name}")
@@ -458,21 +461,29 @@ class OperationsConsole(FoundryPage):
             }
             label.setToolTip(explanation[state])
             grid.addWidget(label, index % 8, index // 8)
-        card.addLayout(grid)
+        if identified:
+            card.addLayout(grid)
+        else:
+            card.addWidget(QLabel("No saved-build coverage effect verified yet."))
+        unknown_count = sum(state == "unverified" for state in covered.values())
+        if unknown_count:
+            card.addWidget(QLabel(f"{unknown_count} effects unverified • inspect source gaps in Coverage"))
         card.addStretch(1)
-        coverage_link = self._compact_button(f"View Full Coverage ({len(covered)})")
+        coverage_link = self._compact_button("View Coverage Details")
         coverage_link.setToolTip("See the same saved-build capability evidence in the Coverage plan; assignments and uptime are not inferred.")
         card.addWidget(coverage_link)
         return card
 
     def _warnings_card(self, covered) -> FoundryCard:
         card = FoundryCard("Planning Checks")
-        gaps = [name for name, state in covered.items() if state != "available"]
+        gaps = [name for name, state in covered.items() if state in {"not_found", "conditional"}]
         if gaps:
             for name in gaps[:4]:
                 label = QLabel(f"?  {name}\n     {covered[name].replace('_', ' ').title()}")
                 label.setProperty("overviewWarning", True)
                 card.addWidget(label)
+        elif any(state == "unverified" for state in covered.values()):
+            card.addWidget(QLabel("Coverage evidence incomplete.\nReview unresolved sources in Coverage."))
         else:
             card.addWidget(QLabel("Static sources identified; uptime not checked."))
         card.addStretch(1)
@@ -563,7 +574,9 @@ class OperationsConsole(FoundryPage):
             if not matched:
                 card.addWidget(QLabel("No mapped static source identified on this build."))
             if audit.capability_unresolved:
-                card.addWidget(QLabel(f"?  {len(audit.capability_unresolved)} unresolved source(s)"))
+                unresolved = QLabel(f"?  {len(audit.capability_unresolved)} unresolved source(s) • hover for details")
+                unresolved.setToolTip("\n".join(audit.capability_unresolved))
+                card.addWidget(unresolved)
             card.addWidget(QLabel("Availability only • uptime not checked"))
         card.addStretch(1)
         card.addWidget(self._compact_button("View Full Breakdown"))
