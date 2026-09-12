@@ -170,3 +170,13 @@ def test_state_build_reuses_objective_state_without_rebuilding_audit_or_reposito
     assert first.slottable_allocations == (("Arcane Supremacy", 50, 1300.0),)
     assert audit.calls == 1
     assert repo.resolve_calls == 1
+
+
+def test_production_state_services_share_repository_per_database(tmp_path):
+    database = tmp_path / "eso.db"
+    first = ExtremeResourceChampionPointStateService(database)
+    second = ExtremeResourceChampionPointStateService(database)
+    other = ExtremeResourceChampionPointStateService(tmp_path / "other.db")
+
+    assert first.repository is second.repository
+    assert first.repository is not other.repository
