@@ -118,6 +118,27 @@ def test_partial_review_formatter_separates_known_and_still_needed_fields() -> N
         "      known: duration=20s, interval=2s, successive_hit_multiplier=1.15"
     )
     assert lines[1] == (
-        "      still needed: first_tick_offset_seconds, refresh_boundary, magnitude_policy"
+        "      still needed: activation_anchor, first_tick_offset_seconds, refresh_boundary, magnitude_policy"
     )
     assert lines[2] == "      review evidence: reviewed tooltip cadence and growth"
+
+
+def test_partial_review_formatter_shows_impact_anchored_first_tick() -> None:
+    review = RotationDDPeriodicRuntimeSemanticsReviewEntry(
+        skill_entity_id="stampede",
+        coefficient_number=2,
+        duration_seconds=15.0,
+        reviewed_interval_seconds=1.0,
+        activation_anchor="impact",
+        first_tick_offset_seconds=1.0,
+        evidence=("reviewed ESO Logs impact correlation",),
+    )
+    item = SimpleNamespace(partial_review=review)
+
+    lines = audit_tool._format_partial_review(item)
+
+    assert lines[0] == (
+        "      known: duration=15s, interval=1s, activation_anchor=impact, first_tick=1s after impact"
+    )
+    assert lines[1] == "      still needed: refresh_boundary, magnitude_policy"
+    assert lines[2] == "      review evidence: reviewed ESO Logs impact correlation"
