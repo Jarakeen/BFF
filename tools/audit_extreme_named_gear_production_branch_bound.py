@@ -106,6 +106,10 @@ def main() -> int:
     print(f"frontier_breakpoints_pruned={frontier_pruned}")
     print(f"ordinary_exact_flat_candidate_pairs={sum(len(rows) for rows in candidates.values())}")
     print(f"special_candidate_pairs_excluded={len(special)}")
+    if special:
+        print("special_candidate_pairs=")
+        for set_id, name, piece_count in special:
+            print(f"  set_id={set_id} name={name!r} piece_count={piece_count}")
     print(f"topologies_executed={len(selected)}")
 
     feasibility = ExtremePartialNamedGearPhysicalFeasibilityService()
