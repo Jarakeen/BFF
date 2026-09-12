@@ -29,6 +29,7 @@ _ORIGINAL_REFRESH_NEXT_ACTIONS = None
 _ORIGINAL_BUILDS_BUILD_UI = None
 _ORIGINAL_OVERVIEW_BUILD_UI = None
 _ORIGINAL_OVERVIEW_PLAYER_CARD = None
+_ORIGINAL_OVERVIEW_RAID_STATUS_CARD = None
 _ORIGINAL_OVERVIEW_RAID_SCHEDULE_CARD = None
 _ORIGINAL_OVERVIEW_SKILLS_CARD = None
 _ORIGINAL_COVERAGE_TAB = None
@@ -197,9 +198,16 @@ def _center_named_card_button(card, text: str) -> QPushButton | None:
     return button
 
 
-def _open_coverage_raid_review(overview) -> None:
-    """Navigate the Main Page focus action directly to Coverage > Raid Review."""
-    window = overview.window()
+def _show_page(source, page_name: str) -> None:
+    window = source.window()
+    show_page = getattr(window, "show_page", None)
+    if callable(show_page):
+        show_page(page_name)
+
+
+def _open_coverage_tab(source, tab_name: str) -> None:
+    """Open Coverage and select one of its canonical workspaces by label."""
+    window = source.window()
     show_page = getattr(window, "show_page", None)
     if callable(show_page):
         show_page("console:7")
@@ -207,10 +215,37 @@ def _open_coverage_raid_review(overview) -> None:
     tabs = getattr(coverage_page, "tabs", None)
     if tabs is None:
         return
+    wanted = tab_name.strip().upper()
     for index in range(tabs.count()):
-        if tabs.tabText(index).strip().upper() == "RAID REVIEW":
+        if tabs.tabText(index).strip().upper() == wanted:
             tabs.setCurrentIndex(index)
             break
+
+
+def _open_coverage_raid_review(overview) -> None:
+    """Navigate a focus/performance action directly to Coverage > Raid Review."""
+    _open_coverage_tab(overview, "RAID REVIEW")
+
+
+def _rewire_button(button: QPushButton, callback) -> None:
+    """Replace an old dashboard shortcut with one explicit destination."""
+    try:
+        button.clicked.disconnect()
+    except (RuntimeError, TypeError):
+        pass
+    button.clicked.connect(lambda *_: callback())
+
+
+def _wire_dashboard_navigation(page) -> None:
+    """Make Raid Engine shortcut labels land on the workspaces they name."""
+    for button in page.findChildren(QPushButton):
+        text = button.text().strip()
+        if text == "Performance":
+            _rewire_button(button, lambda: _open_coverage_tab(page, "RAID REVIEW"))
+        elif text == "Coverage":
+            _rewire_button(button, lambda: _open_coverage_tab(page, "BUFFS & DEBUFFS"))
+        elif text.startswith("Browse All Saved Builds"):
+            _rewire_button(button, lambda: _show_page(page, "characters"))
 
 
 def _init_with_dashboard_polish(self, parent=None) -> None:
@@ -232,6 +267,7 @@ def _init_with_dashboard_polish(self, parent=None) -> None:
     self.active_table.setColumnWidth(3, 100)
 
     _replace_next_actions_editor(self)
+    _wire_dashboard_navigation(self)
 
 
 def _refresh_active_with_status_pills(self, slots) -> None:
@@ -340,6 +376,18 @@ def _overview_player_card_with_identity_gap(self, build):
     return card
 
 
+def _overview_raid_status_with_build_link(self):
+    assert _ORIGINAL_OVERVIEW_RAID_STATUS_CARD is not None
+    card = _ORIGINAL_OVERVIEW_RAID_STATUS_CARD(self)
+    button = next(
+        (candidate for candidate in card.body.findChildren(QPushButton) if candidate.text() == "Build"),
+        None,
+    )
+    if button is not None:
+        _rewire_button(button, lambda: _show_page(self, "console:2"))
+    return card
+
+
 def _overview_raid_schedule_with_centered_calendar(self, build):
     assert _ORIGINAL_OVERVIEW_RAID_SCHEDULE_CARD is not None
     card = _ORIGINAL_OVERVIEW_RAID_SCHEDULE_CARD(self, build)
@@ -352,7 +400,7 @@ def _overview_skills_with_raid_review_link(self, build):
     card = _ORIGINAL_OVERVIEW_SKILLS_CARD(self, build)
     button = _center_named_card_button(card, "Open Performance Focus")
     if button is not None:
-        button.clicked.connect(lambda *_: _open_coverage_raid_review(self))
+        _rewire_button(button, lambda: _open_coverage_raid_review(self))
     return card
 
 
@@ -383,9 +431,9 @@ def install() -> None:
     global _INSTALLED, _ORIGINAL_INIT, _ORIGINAL_REFRESH_ACTIVE
     global _ORIGINAL_REFRESH_COVERAGE, _ORIGINAL_REFRESH_NEXT_ACTIONS
     global _ORIGINAL_BUILDS_BUILD_UI, _ORIGINAL_OVERVIEW_BUILD_UI
-    global _ORIGINAL_OVERVIEW_PLAYER_CARD, _ORIGINAL_OVERVIEW_RAID_SCHEDULE_CARD
-    global _ORIGINAL_OVERVIEW_SKILLS_CARD, _ORIGINAL_COVERAGE_TAB
-    global _ORIGINAL_ENCOUNTERS_BUILD_UI
+    global _ORIGINAL_OVERVIEW_PLAYER_CARD, _ORIGINAL_OVERVIEW_RAID_STATUS_CARD
+    global _ORIGINAL_OVERVIEW_RAID_SCHEDULE_CARD, _ORIGINAL_OVERVIEW_SKILLS_CARD
+    global _ORIGINAL_COVERAGE_TAB, _ORIGINAL_ENCOUNTERS_BUILD_UI
     if _INSTALLED:
         return
 
@@ -402,6 +450,7 @@ def install() -> None:
     _ORIGINAL_BUILDS_BUILD_UI = BuildsPage._build_ui
     _ORIGINAL_OVERVIEW_BUILD_UI = OperationsConsole._build_ui
     _ORIGINAL_OVERVIEW_PLAYER_CARD = OperationsConsole._player_card
+    _ORIGINAL_OVERVIEW_RAID_STATUS_CARD = OperationsConsole._raid_status_card
     _ORIGINAL_OVERVIEW_RAID_SCHEDULE_CARD = OperationsConsole._raid_schedule_card
     _ORIGINAL_OVERVIEW_SKILLS_CARD = OperationsConsole._skills_to_work_on_card
     _ORIGINAL_COVERAGE_TAB = CoveragePage._coverage_tab
@@ -414,6 +463,7 @@ def install() -> None:
     BuildsPage._build_ui = _builds_ui_with_centered_creator
     OperationsConsole._build_ui = _overview_ui_with_centered_creator
     OperationsConsole._player_card = _overview_player_card_with_identity_gap
+    OperationsConsole._raid_status_card = _overview_raid_status_with_build_link
     OperationsConsole._raid_schedule_card = _overview_raid_schedule_with_centered_calendar
     OperationsConsole._skills_to_work_on_card = _overview_skills_with_raid_review_link
     CoveragePage._coverage_tab = _coverage_tab_without_scope_banner
