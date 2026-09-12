@@ -435,10 +435,14 @@ def install() -> None:
         create_button.clicked.connect(
             lambda: _open_easy_character_creator_from_overview(self)
         )
-        card.body_layout.insertWidget(
-            0, create_button, 0, Qt.AlignmentFlag.AlignHCenter
-        )
-        return card
+        status_group = QWidget()
+        status_group.setObjectName("overviewRaidStatusGroup")
+        status_layout = QVBoxLayout(status_group)
+        status_layout.setContentsMargins(0, 0, 0, 0)
+        status_layout.setSpacing(8)
+        status_layout.addWidget(create_button, 0, Qt.AlignmentFlag.AlignHCenter)
+        status_layout.addWidget(card, 1)
+        return status_group
 
     def _render(self, *_args):
         self._overview_new_build_panel = None

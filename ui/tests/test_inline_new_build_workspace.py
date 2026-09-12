@@ -1,4 +1,5 @@
 from pathlib import Path
+from types import SimpleNamespace
 
 from ui import character_creation_easy_mode_support
 
@@ -39,10 +40,31 @@ def test_overview_button_opens_same_inline_form_without_navigating_away() -> Non
     assert "show_page(\"console:2\")" not in source
 
 
-def test_overview_raid_status_card_stretches_with_neighbor_cards() -> None:
-    source = _source()
+def test_overview_new_build_button_is_above_raid_status_card() -> None:
+    from PySide6.QtWidgets import QApplication
 
-    assert "card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)" in source
-    assert "card.setMinimumHeight(255)" in source
-    assert "card.body_layout.insertWidget(" in source
-    assert "Qt.AlignmentFlag.AlignHCenter" in source
+    from models.build_model import BuildRoster
+    from ui.components.foundry_button import FoundryButton
+    from ui.components.foundry_card import FoundryCard
+    from ui.operations_console import OperationsConsole
+
+    app = QApplication.instance() or QApplication([])
+    character_creation_easy_mode_support.install()
+    group = OperationsConsole._raid_status_card(
+        SimpleNamespace(roster=BuildRoster())
+    )
+    layout = group.layout()
+    button = layout.itemAt(0).widget()
+    card = layout.itemAt(1).widget()
+
+    assert isinstance(button, FoundryButton)
+    assert button.text() == "+ Create a New Build"
+    assert isinstance(card, FoundryCard)
+    assert card.title_label.text() == "Raid Status"
+    assert button.parentWidget() is group
+    assert not card.isAncestorOf(button)
+
+    group.resize(260, 316)
+    group.show()
+    app.processEvents()
+    assert button.geometry().bottom() < card.geometry().top()
