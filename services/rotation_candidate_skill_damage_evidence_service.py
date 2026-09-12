@@ -14,7 +14,7 @@ from minmax.dd_mitigation import calculate_dd_mitigation
 from minmax.dd_stat_evaluation import evaluate_dd_stats
 from minmax.evaluation_context import EvaluationContext
 from minmax.rotation_plan import RotationAction, RotationActionKind
-from minmax.skill_coefficient_repository import SkillCoefficientRepository
+from minmax.skill_coefficient_repository import SkillCoefficientRepository, ability_entity_id
 from minmax.skill_component_classification import (
     SkillComponentClassification,
     SkillEffectKind,
@@ -24,6 +24,7 @@ from minmax.skill_tooltip_calculator import SkillTooltipCalculator
 from services.rotation_candidate_dd_role_output_service import RotationActionDamageEvidence
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 from services.rotation_candidate_periodic_damage_runtime_projection_service import (
+    PeriodicDamageMagnitudePolicy,
     RotationCandidatePeriodicDamageRuntimeProjectionService,
     RotationPeriodicDamageRuntimeSemantics,
 )
@@ -38,12 +39,12 @@ class RotationCandidateSkillDamageEvidenceService:
     ``SkillComponentRepository``. DD stat caps, Damage Done, mitigation, critical
     handling, and Damage Taken remain owned by their existing combat services.
 
-    Direct and periodic components deliberately share the same combat-routing
-    helper. Periodic components differ only in *when* their already-resolved
-    coefficient consequence occurs: the Phase 7 runtime projection proves the
-    actual tick events for the exact parent cast, including recast and horizon
-    clipping. Missing periodic runtime evidence remains unresolved rather than
-    turning a full DoT tooltip value into cast-time damage.
+    Direct and periodic components share the same combat-routing helper only when
+    reviewed runtime evidence permits it. Periodic tick scheduling is owned by the
+    shared runtime projection. Cast-time magnitude may be reused for all projected
+    ticks only when reviewed semantics explicitly say ``snapshot_at_cast``. Dynamic
+    per-tick magnitude remains unresolved until exact-time runtime build context is
+    available for every projected tick.
     """
 
     def __init__(
@@ -146,20 +147,33 @@ class RotationCandidateSkillDamageEvidenceService:
                 )
                 continue
 
-            component_damage = self._resolve_component_damage(
-                base_value=float(component.final_value),
-                classification=classification,
-                dd_stats=dd_stats,
-                damage_done=damage_done,
-                damage_taken=damage_taken,
-            )
-
             if classification.is_dot:
                 if self.periodic_runtime_projection_service is None:
                     unresolved.append(
                         f"{action.name}: coefficient {component.coefficient_number} periodic damage requires horizon-aware runtime tick projection"
                     )
                     continue
+
+                semantic = self._periodic_semantics_for(
+                    action_name=action.name,
+                    coefficient_number=component.coefficient_number,
+                )
+                if semantic is None:
+                    unresolved.append(
+                        f"{action.name}: coefficient {component.coefficient_number} periodic magnitude timing policy is unavailable"
+                    )
+                    continue
+                if semantic.magnitude_policy is None:
+                    unresolved.append(
+                        f"{action.name}: coefficient {component.coefficient_number} periodic magnitude timing policy is unavailable"
+                    )
+                    continue
+                if semantic.magnitude_policy is PeriodicDamageMagnitudePolicy.DYNAMIC_AT_TICK:
+                    unresolved.append(
+                        f"{action.name}: coefficient {component.coefficient_number} dynamic per-tick magnitude requires exact-time runtime build context projection"
+                    )
+                    continue
+
                 if periodic_projection is None:
                     periodic_projection = self.periodic_runtime_projection_service.project(
                         plan=candidate.plan,
@@ -183,12 +197,25 @@ class RotationCandidateSkillDamageEvidenceService:
                     unresolved.extend(runtime_entry.unresolved)
                     continue
 
-                # The coefficient's final value is the consequence for one
-                # periodic occurrence. Runtime projection owns how many such
-                # occurrences actually exist inside this exact cast instance.
+                component_damage = self._resolve_component_damage(
+                    base_value=float(component.final_value),
+                    classification=classification,
+                    dd_stats=dd_stats,
+                    damage_done=damage_done,
+                    damage_taken=damage_taken,
+                )
+                # Explicit SNAPSHOT_AT_CAST evidence permits one cast-time damage
+                # consequence to be reused for each projected periodic occurrence.
                 total_damage += component_damage * len(runtime_entry.events)
                 continue
 
+            component_damage = self._resolve_component_damage(
+                base_value=float(component.final_value),
+                classification=classification,
+                dd_stats=dd_stats,
+                damage_done=damage_done,
+                damage_taken=damage_taken,
+            )
             total_damage += component_damage
 
         if unresolved:
@@ -204,6 +231,21 @@ class RotationCandidateSkillDamageEvidenceService:
             sequence=action.sequence,
             damage_value=total_damage,
         )
+
+    def _periodic_semantics_for(
+        self,
+        *,
+        action_name: str,
+        coefficient_number: int,
+    ) -> RotationPeriodicDamageRuntimeSemantics | None:
+        identity = ability_entity_id(action_name)
+        matches = tuple(
+            semantic
+            for semantic in self.periodic_runtime_semantics
+            if semantic.skill_entity_id == identity
+            and semantic.coefficient_number == coefficient_number
+        )
+        return matches[0] if len(matches) == 1 else None
 
     def _resolve_component_damage(
         self,
