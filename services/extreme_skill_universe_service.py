@@ -139,6 +139,12 @@ class ExtremePlayerSkillRecord:
 class ExtremeSkillUniverseService:
     """Enumerate every canonical player skill and passive from ``eso.db``."""
 
+    # Exhaustive Extreme scoring constructs many service instances against the same
+    # immutable canonical database. The full player-skill inventory is patch-scoped
+    # evidence, not candidate state, so load it once per resolved database path for
+    # the life of the audit process. A new audit process naturally gets a fresh view.
+    _production_universe_cache: dict[str, tuple[ExtremePlayerSkillRecord, ...]] = {}
+
     def __init__(self, database_path: str | Path) -> None:
         self.database_path = Path(database_path)
 
@@ -177,6 +183,11 @@ class ExtremeSkillUniverseService:
         if not self.database_path.is_file():
             return ()
 
+        cache_key = str(self.database_path.resolve())
+        cached = self._production_universe_cache.get(cache_key)
+        if cached is not None:
+            return cached
+
         with sqlite3.connect(self.database_path) as db:
             db.row_factory = sqlite3.Row
             skill_columns = self._columns(db, "skill")
@@ -184,7 +195,9 @@ class ExtremeSkillUniverseService:
             ability_columns = self._columns(db, "ability")
             required = {"id", "name", "is_passive"}
             if not required.issubset(skill_columns):
-                return ()
+                result: tuple[ExtremePlayerSkillRecord, ...] = ()
+                self._production_universe_cache[cache_key] = result
+                return result
 
             def skill_expr(column: str, default: str) -> str:
                 return f"s.{column}" if column in skill_columns else f"{default} AS {column}"
@@ -237,12 +250,12 @@ class ExtremeSkillUniverseService:
             """
             rows = db.execute(query).fetchall()
 
-        result: list[ExtremePlayerSkillRecord] = []
+        records: list[ExtremePlayerSkillRecord] = []
         for row in rows:
             description = _clean(row["concrete_description"] or row["description"])
             class_type = _clean(row["class_type"])
             skill_line = _clean(row["skill_line"])
-            result.append(
+            records.append(
                 ExtremePlayerSkillRecord(
                     skill_id=int(row["id"]),
                     name=_clean(row["name"]),
@@ -270,7 +283,9 @@ class ExtremeSkillUniverseService:
                     ),
                 )
             )
-        return tuple(result)
+        result = tuple(records)
+        self._production_universe_cache[cache_key] = result
+        return result
 
     def passives(self) -> tuple[ExtremePlayerSkillRecord, ...]:
         return tuple(row for row in self.all_player_skills() if row.is_passive)
