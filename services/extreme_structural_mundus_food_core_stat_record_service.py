@@ -18,6 +18,10 @@ from services.extreme_record_result import (
     ExtremeRecordResult,
     ExtremeRecordSearchCoverage,
 )
+from services.extreme_resource_provisioning_projection_service import (
+    ExtremeResourceProvisioningProjection,
+    ExtremeResourceProvisioningProjectionService,
+)
 from services.extreme_structural_core_stat_record_service import (
     ExtremeCanonicalStructuralStatEvaluator,
     ExtremeStructuralCoreStatRecordService,
@@ -39,7 +43,7 @@ _FOOD_SCOPE = "all canonical food/drink choices present in eso.db plus no-food b
 
 
 class ExtremeBestMundusFoodStructuralStatEvaluator:
-    """Score every canonical food choice, with exhaustive Mundus choice nested inside."""
+    """Score canonical food choices, using proof reductions when available."""
 
     def __init__(
         self,
@@ -49,8 +53,9 @@ class ExtremeBestMundusFoodStructuralStatEvaluator:
     ) -> None:
         self.mundus_evaluator = mundus_evaluator
         self.provisioning_repository = provisioning_repository
+        self._projection_cache: dict[str, ExtremeResourceProvisioningProjection] = {}
 
-    def food_choices(self) -> tuple[str, ...]:
+    def _all_food_choices(self) -> tuple[str, ...]:
         values: list[str] = [""]
         seen = {""}
         for raw in self.provisioning_repository.list_names():
@@ -60,6 +65,29 @@ class ExtremeBestMundusFoodStructuralStatEvaluator:
             seen.add(name)
             values.append(name)
         return tuple(values)
+
+    def provisioning_projection(
+        self,
+        objective_key: str,
+    ) -> ExtremeResourceProvisioningProjection | None:
+        key = str(objective_key or "").strip().casefold()
+        if key not in ExtremeResourceProvisioningProjectionService.SUPPORTED_OBJECTIVES:
+            return None
+        cached = self._projection_cache.get(key)
+        if cached is None:
+            cached = ExtremeResourceProvisioningProjectionService(
+                self.provisioning_repository
+            ).build(key)
+            self._projection_cache[key] = cached
+        return cached
+
+    def food_choices(self, objective_key: str | None = None) -> tuple[str, ...]:
+        key = str(objective_key or "").strip().casefold()
+        if key:
+            projection = self.provisioning_projection(key)
+            if projection is not None and projection.projection_complete:
+                return tuple(projection.choices)
+        return self._all_food_choices()
 
     def __call__(
         self,
@@ -82,7 +110,11 @@ class ExtremeBestMundusFoodStructuralStatEvaluator:
         best_food = ""
         unresolved_across_foods: list[str] = []
 
-        for food in self.food_choices():
+        projection = self.provisioning_projection(objective_key)
+        if projection is not None and not projection.projection_complete:
+            unresolved_across_foods.extend(projection.unresolved)
+
+        for food in self.food_choices(objective_key):
             if food:
                 _, food_unresolved = self.provisioning_repository.resolve(food)
                 unresolved_across_foods.extend(str(item) for item in food_unresolved if item)
@@ -167,7 +199,8 @@ class ExtremeStructuralMundusFoodCoreStatRecordService:
             )
 
         result: ExtremeStructuralGlobalSearchResult[dict[str, Any]] = self.search_service.search(key)
-        food_choices = self.evaluator.food_choices()
+        food_projection = self.evaluator.provisioning_projection(key)
+        food_choices = self.evaluator.food_choices(key)
         mundus_choices = self.evaluator.mundus_evaluator.mundus_choices()
         searched = tuple((*result.structural_scope, _MUNDUS_SCOPE, _FOOD_SCOPE))
         omitted = tuple(
@@ -176,10 +209,14 @@ class ExtremeStructuralMundusFoodCoreStatRecordService:
             if axis not in {_MUNDUS_DEFERRED_AXIS, _FOOD_DEFERRED_AXIS}
         )
         expanded_count = int(result.candidates_scored) * len(mundus_choices) * len(food_choices)
+        provisioning_proven = bool(
+            food_projection is None or food_projection.projection_complete
+        )
         denominator_proven = bool(
             result.structural_denominator_proven
             and mundus_choices
             and food_choices
+            and provisioning_proven
             and not omitted
             and not result.unresolved
         )
@@ -200,6 +237,7 @@ class ExtremeStructuralMundusFoodCoreStatRecordService:
                     dict.fromkeys(
                         (
                             "Structural + Mundus + food Extreme search produced no scored candidate",
+                            *(food_projection.unresolved if food_projection is not None else ()),
                             *result.unresolved,
                         )
                     )
@@ -214,9 +252,15 @@ class ExtremeStructuralMundusFoodCoreStatRecordService:
             winner_food = str(winner.payload.get("food") or "")
             winner_mundus = str(winner.payload.get("mundus") or "")
 
+        food_search_text = (
+            f"proof-reduced all {food_projection.foods_reviewed:,} canonical provisioning entries "
+            f"to {len(food_choices):,} strongest food/drink semantic witnesses"
+            if food_projection is not None and food_projection.projection_complete
+            else f"searched all {len(food_choices):,} canonical food/drink states"
+        )
         explanation = (
-            "Exhaustively searched structural candidates × every Update-50 Mundus choice × every canonical food/drink choice.",
-            f"Evaluated {expanded_count:,} structural/Mundus/food combinations across {len(mundus_choices):,} Mundus states and {len(food_choices):,} food states.",
+            f"Exhaustively searched structural candidates × every Update-50 Mundus choice and {food_search_text}.",
+            f"Evaluated {expanded_count:,} structural/Mundus/food combinations across {len(mundus_choices):,} Mundus states and {len(food_choices):,} scored provisioning witnesses.",
             f"Winning Mundus: {winner_mundus or 'none'}; winning food/drink: {winner_food or 'none'}.",
             "Unmapped legal provisioning entries remain unresolved proof blockers rather than being discarded as numerical losers.",
             "Other dynamic axes remain deferred, so this is not yet a globally proven Extreme Record.",
