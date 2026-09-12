@@ -43,7 +43,7 @@ FOCUS_COMPATIBILITY: dict[str, tuple[str, ...]] = {
     'Pull': ('Shield Throw', 'Traveling Knife', 'Wield Soul', 'Soul Burst'),
     'Restore Resources': ("Mender's Bond", 'Banner Bearer'),
     'Shock Damage': ('Elemental Explosion', 'Wield Soul', 'Soul Burst', "Ulfsild's Contingency", 'Banner Bearer'),
-    'Stun': ('Elemental Explosion', 'Smash', 'Traveling Knife', 'Wield Soul', 'Torchbearer', 'Trample'),
+    'Stun': ('Elemental Explosion', 'Shield Throw', 'Smash', 'Traveling Knife', 'Wield Soul', 'Torchbearer', 'Trample'),
     'Taunt': ('Shield Throw', 'Smash', 'Vault'),
     'Trauma': ('Elemental Explosion', 'Trample')
 }
@@ -104,6 +104,8 @@ AFFIX_COMPATIBILITY: dict[str, tuple[str, ...]] = {
 # independently verified should be added here. Never synthesize names.
 RESULT_NAMES: dict[tuple[str, str], str] = {
     ('Soul Burst', 'Damage Shield'): 'Warding Burst',
+    # Verified from the in-game Scribing UI: Banner Bearer + Magic Damage.
+    ('Banner Bearer', 'Magic Damage'): 'Magical Banner',
 }
 
 
