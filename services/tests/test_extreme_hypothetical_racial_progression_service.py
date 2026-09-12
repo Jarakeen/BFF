@@ -1,3 +1,4 @@
+import services.extreme_hypothetical_racial_progression_service as racial_module
 from minmax.character_progression import AttributeAllocation, CharacterProgression
 from services.extreme_hypothetical_racial_progression_service import (
     ExtremeHypotheticalRacialProgressionService,
@@ -124,3 +125,27 @@ def test_normalize_fails_closed_when_selected_passive_has_no_max_rank():
         assert "canonical max rank unavailable" in str(exc)
     else:
         raise AssertionError("expected missing max-rank evidence to fail closed")
+
+
+def test_production_services_share_racial_passive_projection_per_database(tmp_path, monkeypatch):
+    database = tmp_path / "eso.db"
+    database.touch()
+    calls = {"passives": 0}
+
+    class _CountingUniverse:
+        def __init__(self, database_path):
+            self.database_path = database_path
+
+        def passives(self):
+            calls["passives"] += 1
+            return _Universe().passives()
+
+    racial_module._RACIAL_PASSIVE_CACHE.clear()
+    monkeypatch.setattr(racial_module, "ExtremeSkillUniverseService", _CountingUniverse)
+
+    first = racial_module.ExtremeHypotheticalRacialProgressionService(database)
+    second = racial_module.ExtremeHypotheticalRacialProgressionService(database)
+
+    assert first.normalize(_progression(), "Altmer").passive_rank("Syrabane's Boon") == 3
+    assert second.normalize(_progression(), "Bosmer").passive_rank("Hunter's Eye") == 3
+    assert calls["passives"] == 1
