@@ -169,7 +169,12 @@ class RotationCandidateSkillDamageEvidenceService:
                     action_name=action.name,
                     coefficient_number=component.coefficient_number,
                 )
-                if semantic is None or semantic.magnitude_policy is None:
+                if semantic is None:
+                    unresolved.append(
+                        f"{action.name}: coefficient {component.coefficient_number} reviewed periodic runtime semantics are unavailable"
+                    )
+                    continue
+                if semantic.magnitude_policy is None:
                     unresolved.append(
                         f"{action.name}: coefficient {component.coefficient_number} periodic magnitude timing policy is unavailable"
                     )
