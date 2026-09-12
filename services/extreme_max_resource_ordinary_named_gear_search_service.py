@@ -3,16 +3,21 @@ from __future__ import annotations
 """Exact branch-and-bound search for ordinary max-resource named gear.
 
 This service owns only the mechanic-complete, ordinary named-set branch for
-Max Health, Max Magicka, and Max Stamina.  Search-state mutators, conditional
+Max Health, Max Magicka, and Max Stamina. Search-state mutators, conditional
 resource effects, and unresolved candidates remain explicit exclusions and must
 be composed by a higher layer before the *full* named-gear denominator can close.
 
 For the ordinary branch, every retained requested-resource effect is an exact
-flat ADD contribution.  The search therefore admits an additive optimistic bound.
+flat ADD contribution. The search therefore admits an additive optimistic bound.
 It also applies the canonical optimistic partial physical-feasibility contract,
 which may prune a branch only when the already-selected prefix cannot fit any
 canonical active-snapshot physical realization even if all future sets are treated
 as unconstrained.
+
+Complete leaves that have the same full requested-objective effect signature and
+the same identity-free physical eligibility shape are interchangeable for this
+ordinary objective. Only one concrete realization per such semantic class is
+materialized and retained as a winner representative.
 """
 
 from dataclasses import dataclass
@@ -57,6 +62,8 @@ class ExtremeOrdinaryNamedGearSearchStats:
     rejected_leaves: int = 0
     score_pruned: int = 0
     physical_pruned: int = 0
+    semantic_leaf_classes: int = 0
+    semantic_duplicate_leaves: int = 0
 
 
 @dataclass(frozen=True)
@@ -104,6 +111,7 @@ class _Candidate:
     piece_count: int
     exact_delta: float
     eligibility: ExtremeNamedGearSetSlotEligibility
+    objective_effect_signature: tuple[tuple[object, ...], ...]
 
 
 class ExtremeMaxResourceOrdinaryNamedGearSearchService:
@@ -144,6 +152,20 @@ class ExtremeMaxResourceOrdinaryNamedGearSearchService:
         if any(effect.condition for effect in effects):
             return None
         return float(evidence.reviewed_delta)
+
+    @staticmethod
+    def _objective_effect_signature(
+        evidence: ExtremeGearSetObjectiveBreakpointEvidence,
+        objective_key: str,
+    ) -> tuple[tuple[object, ...], ...]:
+        target_stats = ExtremeGearSetObjectiveService._target_stats(objective_key)
+        return tuple(
+            sorted(
+                ExtremeObjectiveNamedGearSetCatalogRealizationService._effect_signature(effect)
+                for effect in evidence.candidate.source_effects
+                if effect.stat in target_stats
+            )
+        )
 
     def _frontier(
         self,
@@ -265,6 +287,10 @@ class ExtremeMaxResourceOrdinaryNamedGearSearchService:
                         piece_count=int(count),
                         exact_delta=float(delta),
                         eligibility=physical,
+                        objective_effect_signature=self._objective_effect_signature(
+                            evidence,
+                            self.relevance.objective_key,
+                        ),
                     )
                 )
 
@@ -352,14 +378,32 @@ class ExtremeMaxResourceOrdinaryNamedGearSearchService:
         selected: list[_Candidate] = []
         used_ids: set[int] = set()
         best = float("-inf")
-        winners: list[ExtremeNamedGearSetRealization] = []
+        winners_by_semantic_key: dict[
+            tuple[tuple[object, ...], ...],
+            ExtremeNamedGearSetRealization,
+        ] = {}
+        leaf_semantic_cache: dict[
+            tuple[tuple[object, ...], ...],
+            ExtremeNamedGearSetRealization | None,
+        ] = {}
 
         nodes = leaves = witness_checks = feasible_leaves = rejected_leaves = 0
         score_pruned = physical_pruned = 0
+        semantic_duplicate_leaves = 0
+
+        def semantic_key() -> tuple[tuple[object, ...], ...]:
+            return tuple(
+                (
+                    realizer._eligibility_shape_cached(row.eligibility),
+                    row.objective_effect_signature,
+                )
+                for row in selected
+            )
 
         def visit(position: int, score: float) -> None:
             nonlocal best, nodes, leaves, witness_checks, feasible_leaves
-            nonlocal rejected_leaves, score_pruned, physical_pruned, winners
+            nonlocal rejected_leaves, score_pruned, physical_pruned
+            nonlocal winners_by_semantic_key, semantic_duplicate_leaves
             nodes += 1
 
             remaining_bound = self._distinct_id_remaining_bound(
@@ -377,18 +421,24 @@ class ExtremeMaxResourceOrdinaryNamedGearSearchService:
 
             if position >= len(counts):
                 leaves += 1
-                physical = tuple(row.eligibility for row in selected)
-                witness_checks += 1
-                witness = realizer._find_witness_cached(topology, physical)
+                key = semantic_key()
+                if key in leaf_semantic_cache:
+                    semantic_duplicate_leaves += 1
+                    witness = leaf_semantic_cache[key]
+                else:
+                    physical = tuple(row.eligibility for row in selected)
+                    witness_checks += 1
+                    witness = realizer._find_witness_cached(topology, physical)
+                    leaf_semantic_cache[key] = witness
                 if witness is None:
                     rejected_leaves += 1
                     return
                 feasible_leaves += 1
                 if score > best + 1e-9:
                     best = score
-                    winners = [witness]
+                    winners_by_semantic_key = {key: witness}
                 elif abs(score - best) <= 1e-9:
-                    winners.append(witness)
+                    winners_by_semantic_key.setdefault(key, witness)
                 return
 
             previous_equal_id: int | None = None
@@ -411,12 +461,13 @@ class ExtremeMaxResourceOrdinaryNamedGearSearchService:
                 selected.pop()
 
         visit(0, 0.0)
-        winners.sort(
+        winners = sorted(
+            winners_by_semantic_key.values(),
             key=lambda witness: (
                 witness.set_ids,
                 witness.weapon_shape.value,
                 tuple((row.slot, row.set_id, row.weapon_type) for row in witness.assignments),
-            )
+            ),
         )
         return ExtremeOrdinaryNamedGearTopologyWinner(
             topology=topology,
@@ -430,6 +481,8 @@ class ExtremeMaxResourceOrdinaryNamedGearSearchService:
                 rejected_leaves=rejected_leaves,
                 score_pruned=score_pruned,
                 physical_pruned=physical_pruned,
+                semantic_leaf_classes=len(leaf_semantic_cache),
+                semantic_duplicate_leaves=semantic_duplicate_leaves,
             ),
         )
 
