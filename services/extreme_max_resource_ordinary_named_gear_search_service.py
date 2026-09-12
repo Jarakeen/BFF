@@ -40,7 +40,10 @@ from services.extreme_gear_set_topology_catalog_service import (
 from services.extreme_named_gear_set_catalog_realization_service import (
     ExtremeNamedGearSetCatalogRealizationService,
 )
-from services.extreme_named_gear_set_realization_service import ExtremeNamedGearSetRealization
+from services.extreme_named_gear_set_realization_service import (
+    ExtremeNamedGearSetRealization,
+    ExtremeNamedGearSetRealizationService,
+)
 from services.extreme_named_gear_set_slot_eligibility_service import (
     ExtremeNamedGearSetSlotEligibility,
     ExtremeNamedGearSetSlotEligibilityCatalog,
