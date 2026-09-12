@@ -147,6 +147,37 @@ ROTATION_DD_PERIODIC_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "handles and the probe never promotes executable refresh policy automatically."
         ),
     ),
+    ServiceDescriptor(
+        service_id="rotation.dd.periodic_esologs_magnitude_observation",
+        domain="rotation",
+        purpose=(
+            "Observe same-cast periodic damage amounts under fixed target and hit-type "
+            "grouping to support DD snapshot-vs-dynamic magnitude review."
+        ),
+        implementation_path=(
+            "services.rotation_dd_periodic_esologs_magnitude_observation_service"
+        ),
+        inputs=(
+            "CanonicalSkillIdentity",
+            "EsoLogsPeriodicAbilityId",
+            "EsoLogsCastTrackId",
+            "EsoLogsTargetId",
+            "EsoLogsHitType",
+            "EsoLogsDamageAmount",
+        ),
+        outputs=("RotationDDPeriodicEsoLogsMagnitudeObservationReport",),
+        responsibilities=("rotation_dd_periodic_esologs_magnitude_observation",),
+        roles=("DD", "DPS"),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.OBSERVATIONAL,
+        notes=(
+            "Read-only magnitude evidence. Target and hit type are separated to avoid "
+            "obvious confounders, but amount variation still cannot promote snapshot or "
+            "dynamic magnitude policy without combat-state review. Numeric IDs remain "
+            "observational evidence handles only."
+        ),
+    ),
 )
 
 
