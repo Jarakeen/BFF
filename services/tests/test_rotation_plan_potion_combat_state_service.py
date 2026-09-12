@@ -1,6 +1,6 @@
 from minmax.character_progression import CharacterProgression
 from minmax.combat_state import CombatState
-from minmax.potion_use_event import PotionBuffGrant, PotionUseEvent
+from minmax.potion_use_event import PotionBuffGrant, PotionTraitUse, PotionUseEvent
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from models.build_model import PlayerBuild
 from services.rotation_plan_potion_combat_state_service import (
@@ -13,7 +13,28 @@ class _Resolver:
         assert selected_label == "Alliance Battle Draught"
         return PotionUseEvent(
             selected_label=selected_label,
-            traits=(),
+            traits=(
+                PotionTraitUse(
+                    trait="Increase Weapon Power",
+                    kind="timed_trait",
+                    magnitude=None,
+                    duration=36.6,
+                    triple_duration=None,
+                    tier_name="Alliance Battle Draught",
+                    solvent="Lorkhan's Tears",
+                    level=50,
+                ),
+                PotionTraitUse(
+                    trait="Weapon Critical",
+                    kind="timed_trait",
+                    magnitude=None,
+                    duration=36.6,
+                    triple_duration=None,
+                    tier_name="Alliance Battle Draught",
+                    solvent="Lorkhan's Tears",
+                    level=50,
+                ),
+            ),
             buff_grants=(
                 PotionBuffGrant(
                     source_trait="Increase Weapon Power",
