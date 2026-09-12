@@ -123,25 +123,17 @@ class GearSetRepository:
         return list(bonuses)
 
     def get_bonus(self, set_id: int, piece_count: int) -> GearSetBonus | None:
-        with sqlite3.connect(self.database_path) as connection:
-            row = connection.execute(
-                """
-                SELECT
-                    id,
-                    set_id,
-                    piece_count,
-                    description
-                FROM gear_set_bonus
-                WHERE set_id = ? AND piece_count = ?
-                ORDER BY id
-                """,
-                (set_id, piece_count),
-            ).fetchone()
+        """Return the first deterministic bonus for one piece count.
 
-        if row is None:
-            return None
-
-        return self._to_gear_set_bonus(row)
+        Reuse ``get_bonuses`` so callers share the repository's existing
+        instance-scoped cache instead of reopening SQLite for every focused
+        bonus lookup.
+        """
+        target_piece_count = int(piece_count)
+        for bonus in self.get_bonuses(set_id):
+            if int(bonus.piece_count) == target_piece_count:
+                return bonus
+        return None
 
     @staticmethod
     def _to_gear_set(row) -> GearSet:
