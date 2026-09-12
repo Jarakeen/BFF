@@ -62,6 +62,7 @@ from services.rotation_recovery_heavy_candidate_generation_bridge_service import
     RecoveryPressureWaitDecisionFactory,
 )
 from services.rotation_recovery_heavy_candidate_orchestration_service import (
+    RecoveryRuntimeActivationAnchorResolverFactory,
     RecoveryRuntimeCombatStateResolverFactory,
     RotationRecoveryHeavyCandidateOrchestrationResult,
 )
@@ -207,9 +208,10 @@ class RotationCanonicalCandidateSupport:
     This bridge does not assume the base 45-second potion cooldown is correct for a
     build with unmodeled cooldown-reduction mechanics.
 
-    Optional time-varying runtime state remains caller-owned evidence too. When a
-    resolver factory is supplied, it is forwarded untouched so recovery orchestration
-    can bind that resolver only after each candidate reaches its final stabilized plan.
+    Optional time-varying runtime state and runtime activation-anchor evidence remain
+    caller-owned too. Resolver factories are forwarded untouched so recovery
+    orchestration can bind them only after each candidate reaches its final stabilized
+    plan.
 
     Optional ``role_evidence`` composes final stabilized role evidence automatically.
     Saved-bar personal-heal classification is derived from canonical component data;
@@ -290,6 +292,7 @@ class RotationCanonicalCandidateSupport:
         potion_cadence_requirement: RotationPotionCadenceRequirement | None = None,
         reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None,
         runtime_combat_state_resolver_factory: RecoveryRuntimeCombatStateResolverFactory | None = None,
+        runtime_activation_anchor_resolver_factory: RecoveryRuntimeActivationAnchorResolverFactory | None = None,
         role_evidence: RotationCanonicalRoleEvidence | None = None,
         initial_bar: str = "front",
         max_iterations: int = 6,
@@ -478,6 +481,7 @@ class RotationCanonicalCandidateSupport:
             maximum_event_resolver=maximum_event_resolver,
             displayed_recovery_resolver_factory=displayed_recovery_resolver_factory,
             runtime_combat_state_resolver_factory=runtime_combat_state_resolver_factory,
+            runtime_activation_anchor_resolver_factory=runtime_activation_anchor_resolver_factory,
         )
         return RotationCanonicalCandidateApplicationResult(
             build_adaptation=adaptation,
