@@ -1,8 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Protocol
 
 from models.build_model import ARMOR_SLOTS, GearSlot, PlayerBuild
+
+
+class ArmorWeightResolver(Protocol):
+    def resolve(self, set_name: str) -> str | None: ...
 
 
 @dataclass(frozen=True)
@@ -28,6 +33,9 @@ class CharacterCreationService:
     """
 
     DEFAULT_BUILD_NAME = "Default"
+
+    def __init__(self, armor_weight_resolver: ArmorWeightResolver | None = None) -> None:
+        self.armor_weight_resolver = armor_weight_resolver
 
     @staticmethod
     def _clean(value: object) -> str:
@@ -70,8 +78,13 @@ class CharacterCreationService:
         )
 
         if body_set:
+            weight = None
+            if self.armor_weight_resolver is not None:
+                weight = self.armor_weight_resolver.resolve(body_set)
             for slot in ARMOR_SLOTS:
                 build.Armor[slot]["Set"] = body_set
+                if weight:
+                    build.Armor[slot]["Weight"] = weight
 
         if weapons_jewelry_set:
             build.FrontBarWeapon = GearSlot(Set=weapons_jewelry_set)
