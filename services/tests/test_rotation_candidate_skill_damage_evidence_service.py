@@ -11,6 +11,9 @@ from services.rotation_candidate_generation_service import GeneratedRotationCand
 from services.rotation_candidate_skill_damage_evidence_service import (
     RotationCandidateSkillDamageEvidenceService,
 )
+from services.rotation_dd_reviewed_skill_component_repository import (
+    RotationDDReviewedSkillComponentRepository,
+)
 
 
 def _candidate() -> GeneratedRotationCandidate:
@@ -92,6 +95,16 @@ def _component(
         can_crit=can_crit if kind is SkillEffectKind.DAMAGE else None,
         source="test",
     )
+
+
+def test_default_component_repository_uses_reviewed_dd_overlay() -> None:
+    service = RotationCandidateSkillDamageEvidenceService(
+        database_path="unused-test.db",
+        context=_context(),
+        calculator=_Calculator(_tooltip(components=())),
+    )
+
+    assert isinstance(service.components, RotationDDReviewedSkillComponentRepository)
 
 
 def test_direct_skill_action_uses_canonical_entity_and_combat_damage_path() -> None:
