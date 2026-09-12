@@ -42,7 +42,12 @@ class RotationCanonicalEvidenceBundle:
     selected encounter. Consumers may use that fact instead of asking callers to
     restate whether an encounter is a trial, dungeon, or arena.
 
-    ``restoration_resolver`` is now an optional explicit override. When omitted, the
+    The evaluator and final scorecard resolver may both be ``None``. The canonical
+    dashboard candidate boundary then composes the pair from the exact generated seed
+    plan through the shared Generate resolver service. Resolver absence is therefore
+    a composition choice, not missing mechanics evidence.
+
+    ``restoration_resolver`` is an optional explicit override. When omitted, the
     effect-aware recovery pipeline derives Heavy Attack completion/restoration from
     the generated plan's verified channel-reservation provenance and canonical saved-
     character mechanics. Explicit resolvers remain available for reviewed research,
@@ -55,8 +60,8 @@ class RotationCanonicalEvidenceBundle:
     options: tuple[RotationRefreshLeadCandidateOption, ...]
     requirements: tuple[RotationEffectUptimeRequirement, ...]
     passives: tuple[PassiveGrant, ...]
-    evaluator_resolver: RecoveryCandidateEvaluatorResolver
-    scorecard_resolver: RecoveryFinalScorecardResolver
+    evaluator_resolver: RecoveryCandidateEvaluatorResolver | None
+    scorecard_resolver: RecoveryFinalScorecardResolver | None
     resource: ResourceType
     maximum_amount: int
     trigger_fraction: float
@@ -116,8 +121,8 @@ class RotationCanonicalEvidenceBundleSupport:
         *,
         encounter_id: str,
         demand_policies: tuple[EncounterRotationDemandPolicy, ...],
-        evaluator_resolver: RecoveryCandidateEvaluatorResolver,
-        scorecard_resolver: RecoveryFinalScorecardResolver,
+        evaluator_resolver: RecoveryCandidateEvaluatorResolver | None,
+        scorecard_resolver: RecoveryFinalScorecardResolver | None,
         resource: ResourceType,
         maximum_amount: int,
         trigger_fraction: float,
