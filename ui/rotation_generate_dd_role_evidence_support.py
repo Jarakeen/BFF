@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from pathlib import Path
+from typing import Protocol
 
 from engine.config import get_data_dir
 from minmax.rotation_plan import RotationAction, RotationActionKind
@@ -10,6 +11,7 @@ from services.rotation_active_bar_context_resolver_service import (
     RotationActiveBarContextResolverService,
 )
 from services.rotation_candidate_action_damage_evidence_service import (
+    RotationActionDamageProvider,
     RotationCandidateActionDamageEvidenceService,
 )
 from services.rotation_candidate_canonical_plan_evidence_service import (
@@ -36,6 +38,27 @@ _DD_ROLE_KEYS = {"dd", "dps", "damage", "damage_dealer"}
 
 def _canonical_role(value: object) -> str:
     return "_".join(str(value or "").strip().casefold().replace("-", " ").split())
+
+
+class RotationGenerateDDWeaponAttackProviderFactory(Protocol):
+    """Supply verified LA/HA evaluators from one canonical saved-build evaluation.
+
+    The weapon-attack services require ``BuildEvaluation`` evidence in addition to
+    canonical weapon identity. Generate currently resolves ``BuildCalculationContext``
+    directly, so this boundary prevents callers from fabricating a partial evaluation
+    merely to make woven rotations appear complete.
+    """
+
+    def providers_for(
+        self,
+        *,
+        player_build: PlayerBuild,
+        static_context,
+        target_resistance: float,
+    ) -> tuple[
+        RotationActionDamageProvider | None,
+        RotationActionDamageProvider | None,
+    ]: ...
 
 
 class _RotationGenerateBarAwareSkillDamageProvider:
@@ -94,11 +117,13 @@ class RotationGenerateDDRoleEvidenceSupport:
     Each skill is evaluated from the static front/back context active at its exact
     ``(time_seconds, sequence)`` point. Target resistance must be explicit evidence.
 
-    Light/heavy attack providers are intentionally not fabricated here. Until their
-    production BuildEvaluation boundary is wired from the selected saved build, the
-    shared action router reports them unresolved. Periodic skill components likewise
-    stay unresolved unless their reviewed runtime semantics are supplied by the
-    canonical skill-damage authority.
+    Existing canonical light/heavy-attack evaluators may participate only through a
+    verified weapon-attack provider factory. That factory owns the missing bridge from
+    the selected saved build to the ``BuildEvaluation`` required by those evaluators.
+    Without it, the shared action router keeps LA/HA consequences unresolved rather
+    than treating weaving damage as zero. Periodic skill components likewise stay
+    unresolved unless their reviewed runtime semantics are supplied by the canonical
+    skill-damage authority.
     """
 
     def __init__(
@@ -106,6 +131,9 @@ class RotationGenerateDDRoleEvidenceSupport:
         *,
         database_path: str | Path | None = None,
         static_context_service: RotationStaticBuildContextService | None = None,
+        weapon_attack_provider_factory: (
+            RotationGenerateDDWeaponAttackProviderFactory | None
+        ) = None,
     ) -> None:
         self.database_path = (
             Path(database_path)
@@ -115,6 +143,7 @@ class RotationGenerateDDRoleEvidenceSupport:
         self.static_context_service = (
             static_context_service or RotationStaticBuildContextService()
         )
+        self.weapon_attack_provider_factory = weapon_attack_provider_factory
 
     def compose(
         self,
@@ -137,16 +166,31 @@ class RotationGenerateDDRoleEvidenceSupport:
             detail = "; ".join(static_context.unresolved) or "static build context unavailable"
             raise ValueError("canonical DD static build evidence is unresolved: " + detail)
 
+        target_resistance = float(evidence_bundle.target_resistance)
         skill_provider = _RotationGenerateBarAwareSkillDamageProvider(
             database_path=self.database_path,
             static_context=static_context,
-            target_resistance=float(evidence_bundle.target_resistance),
+            target_resistance=target_resistance,
         )
         ultimate_provider = RotationCandidateUltimateDamageEvidenceService(
             skill_damage_delegate=skill_provider,
         )
+
+        light_attack_provider: RotationActionDamageProvider | None = None
+        heavy_attack_provider: RotationActionDamageProvider | None = None
+        if self.weapon_attack_provider_factory is not None:
+            light_attack_provider, heavy_attack_provider = (
+                self.weapon_attack_provider_factory.providers_for(
+                    player_build=player_build,
+                    static_context=static_context,
+                    target_resistance=target_resistance,
+                )
+            )
+
         action_router = RotationCandidateActionDamageEvidenceService(
             skill_provider=skill_provider,
+            light_attack_provider=light_attack_provider,
+            heavy_attack_provider=heavy_attack_provider,
             ultimate_provider=ultimate_provider,
         )
         role_output = RotationCandidateDDRoleOutputService(
@@ -166,4 +210,7 @@ class RotationGenerateDDRoleEvidenceSupport:
         )
 
 
-__all__ = ["RotationGenerateDDRoleEvidenceSupport"]
+__all__ = [
+    "RotationGenerateDDRoleEvidenceSupport",
+    "RotationGenerateDDWeaponAttackProviderFactory",
+]
