@@ -23,6 +23,7 @@ from minmax.gear_stat_inputs import (
 from minmax.jewelry_glyph_repository import JewelryGlyphEffectRepository
 from minmax.jewelry_trait_repository import JewelryTraitRepository
 from minmax.phase5_context_factory import Phase5BuildCalculationContextFactory
+from minmax.racial_passive_stat_repository import RacialPassiveStatRepository
 from minmax.skill_line_repository import SkillLineRepository
 from minmax.stat_ids import StatId
 from models.build_model import PlayerBuild
@@ -35,6 +36,7 @@ _SHARED_STATIC_GEAR_INPUT_REPOSITORIES: dict[
         JewelryGlyphEffectRepository,
         JewelryTraitRepository,
         SkillLineRepository,
+        RacialPassiveStatRepository,
     ],
 ] = {}
 
@@ -45,8 +47,8 @@ def _shared_static_gear_input_repositories(database_path: str | Path):
     Extreme exhaustive scoring constructs many conditioned context factories for the
     same canonical database. These repositories already own deterministic per-name
     caches, so recreating them per evaluator discards those caches and reopens SQLite
-    for the same armor/jewelry/skill-line inputs on every candidate. The cache is
-    intentionally process-local and database-path scoped; a fresh audit process
+    for the same armor/jewelry/skill-line/racial inputs on every candidate. The cache
+    is intentionally process-local and database-path scoped; a fresh audit process
     therefore sees a fresh database snapshot.
     """
 
@@ -59,6 +61,7 @@ def _shared_static_gear_input_repositories(database_path: str | Path):
         JewelryGlyphEffectRepository(database_path),
         JewelryTraitRepository(database_path),
         SkillLineRepository(database_path),
+        RacialPassiveStatRepository(database_path),
     )
     _SHARED_STATIC_GEAR_INPUT_REPOSITORIES[key] = repositories
     return repositories
@@ -149,11 +152,13 @@ class ExtremeResourceConditionedPhase5ContextFactory(Phase5BuildCalculationConte
                 jewelry_glyph,
                 jewelry_trait,
                 skill_line,
+                racial_passive,
             ) = _shared_static_gear_input_repositories(database_path)
             kwargs.setdefault("armor_glyph_repository", armor_glyph)
             kwargs.setdefault("jewelry_glyph_repository", jewelry_glyph)
             kwargs.setdefault("jewelry_trait_repository", jewelry_trait)
             kwargs.setdefault("skill_line_repository", skill_line)
+            kwargs.setdefault("racial_passive_repository", racial_passive)
 
         super().__init__(*args, **kwargs)
         existing = self.gear_resolver
