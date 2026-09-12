@@ -20,10 +20,12 @@ def test_rotation_page_can_save_only_a_completed_plan_to_build() -> None:
 def test_build_workspace_rotation_tab_is_conditional() -> None:
     source = _source()
 
+    assert 'self.build_tabs.addTab(' in source
     assert '"Rotation",' in source
-    assert "self.workspace_tabs.setTabVisible(rotation_index, False)" in source
-    assert "page.workspace_tabs.setTabVisible(tab_index, True)" in source
-    assert "page.workspace_tabs.setTabVisible(tab_index, False)" in source
+    assert "self.build_tabs.setTabVisible(rotation_index, False)" in source
+    assert "page.build_tabs.setTabVisible(tab_index, True)" in source
+    assert "page.build_tabs.setTabVisible(tab_index, False)" in source
+    assert "workspace_tabs" not in source
     assert "page.build_rotation_artifacts.get_rotation(build_id or \"\")" in source
 
 
