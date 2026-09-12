@@ -64,6 +64,7 @@ class BuildCalculationContext:
     gear_effects_applied: int = 0
     unresolved_gear_effects: tuple[str, ...] = field(default_factory=tuple)
     dd_damage_done_modifiers: DamageDoneModifiers = DamageDoneModifiers()
+    dd_exploiter_bonus: float = 0.0
 
     def __post_init__(self) -> None:
         if not self.character_id.strip():
@@ -78,6 +79,8 @@ class BuildCalculationContext:
             raise ValueError("active_bar must be 'front' or 'back'")
         if self.gear_effects_applied < 0:
             raise ValueError("gear_effects_applied cannot be negative")
+        if self.dd_exploiter_bonus < 0:
+            raise ValueError("dd_exploiter_bonus cannot be negative")
 
     def resolve_scaling(self, rule: ScalingRule) -> int:
         return rule.resolve(self.character_state)
