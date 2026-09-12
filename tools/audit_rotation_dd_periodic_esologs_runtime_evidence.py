@@ -26,8 +26,17 @@ def audit_skill(
     if not database_path.exists():
         print(f"Canonical database not found: {database_path}")
         return 1
+    if not database_path.is_file():
+        print(f"Canonical database path is not a file: {database_path}")
+        return 1
     if not logs_database_path.exists():
         print(f"ESO Logs database not found: {logs_database_path}")
+        return 2
+    if not logs_database_path.is_file():
+        print(
+            "ESO Logs database path is not a SQLite file: "
+            f"{logs_database_path}"
+        )
         return 2
 
     result = RotationDDPeriodicEsoLogsSplitDatabaseEvidenceService(
@@ -133,7 +142,7 @@ def _parser() -> argparse.ArgumentParser:
         "--logs-db",
         type=Path,
         required=True,
-        help="SQLite database containing imported ESO Logs log_event rows",
+        help="SQLite file containing imported ESO Logs log_event rows",
     )
     parser.add_argument("--report", dest="report_code", help="Optional ESO Logs report code filter")
     parser.add_argument("--fight", dest="fight_id", type=int, help="Optional fight id filter")
