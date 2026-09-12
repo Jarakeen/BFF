@@ -1,5 +1,7 @@
 from types import SimpleNamespace
 
+import pytest
+
 from minmax.combat_state import CombatState
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from minmax.runtime_event import RuntimeEvent
@@ -236,7 +238,7 @@ def test_snapshot_periodic_successive_hit_multiplier_scales_each_occurrence() ->
     )
 
     assert evidence.unresolved == ()
-    assert evidence.damage_value == 347.25
+    assert evidence.damage_value == pytest.approx(347.25)
 
 
 def test_mixed_direct_and_periodic_components_sum_under_parent_cast() -> None:
