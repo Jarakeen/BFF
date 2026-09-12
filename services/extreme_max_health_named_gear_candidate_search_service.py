@@ -258,6 +258,53 @@ class ExtremeMaxHealthNamedGearCandidateSearchService:
         def remaining_positions_for_count(position: int, count: int) -> int:
             return sum(1 for value in counts[position:] if int(value) == int(count))
 
+        def remaining_required_ids(count: int) -> tuple[int, ...]:
+            return tuple(
+                sorted(
+                    row.set_id
+                    for row in special_by_count.get(int(count), ())
+                    if row.set_id not in selected_special_ids
+                )
+            )
+
+        def special_aware_remaining_bound(position: int) -> float | None:
+            """Upper-bound only the ordinary filler contribution still available.
+
+            The special subset is fixed, so every still-unselected special consumes
+            one remaining slot of its breakpoint count and contributes zero to this
+            ordinary-filler objective.  Treating those slots as ordinary candidates
+            made the previous bound needlessly loose.  Cross-count identity and
+            physical conflicts remain ignored, so this remains safely optimistic.
+            """
+
+            remaining_by_count: dict[int, int] = {}
+            for count in counts[position:]:
+                remaining_by_count[int(count)] = remaining_by_count.get(int(count), 0) + 1
+
+            total = 0.0
+            for count, slots in remaining_by_count.items():
+                required = remaining_required_ids(count)
+                if len(required) > slots:
+                    return None
+                ordinary_needed = slots - len(required)
+                if ordinary_needed <= 0:
+                    continue
+
+                available: list[float] = []
+                seen: set[int] = set()
+                for row in ordinary_candidates_by_count.get(int(count), ()):
+                    set_id = int(row.set_id)
+                    if set_id in used_ids or set_id in special_ids or set_id in seen:
+                        continue
+                    seen.add(set_id)
+                    available.append(float(row.exact_delta))
+                    if len(available) >= ordinary_needed:
+                        break
+                if len(available) < ordinary_needed:
+                    return None
+                total += sum(available[:ordinary_needed])
+            return float(total)
+
         def semantic_key() -> tuple[tuple[object, ...], ...]:
             rows: list[tuple[object, ...]] = []
             for row in selected:
@@ -281,6 +328,66 @@ class ExtremeMaxHealthNamedGearCandidateSearchService:
                     )
             return tuple(rows)
 
+        def seed(position: int, score: float) -> bool:
+            """Find one feasible required-special completion to seed a lower bound."""
+
+            nonlocal best
+            if position >= len(counts):
+                if selected_special_ids != special_ids:
+                    return False
+                physical = tuple(row.eligibility for row in selected)
+                if realizer._find_witness_cached(topology, physical) is None:
+                    return False
+                best = float(score)
+                return True
+
+            count = int(counts[position])
+            remaining_required = set(remaining_required_ids(count))
+            remaining_slots = remaining_positions_for_count(position, count)
+            if len(remaining_required) > remaining_slots:
+                return False
+
+            previous_equal_id: int | None = None
+            if position > 0 and counts[position - 1] == counts[position]:
+                previous_equal_id = selected[position - 1].set_id
+
+            minimum_required = min(remaining_required) if remaining_required else None
+
+            def seed_order(row: _SearchCandidate):
+                if minimum_required is None:
+                    return (0, -row.exact_delta, row.set_id, row.name.casefold(), row.name)
+                if not row.special and row.set_id < minimum_required:
+                    return (0, -row.exact_delta, row.set_id, row.name.casefold(), row.name)
+                if row.set_id == minimum_required:
+                    return (1, 0.0, row.set_id, row.name.casefold(), row.name)
+                return (2, -row.exact_delta, row.set_id, row.name.casefold(), row.name)
+
+            for row in sorted(rows_by_position[position], key=seed_order):
+                if row.set_id in used_ids:
+                    continue
+                if previous_equal_id is not None and row.set_id <= previous_equal_id:
+                    continue
+                if len(remaining_required) == remaining_slots and row.set_id not in remaining_required:
+                    continue
+                if minimum_required is not None and row.set_id > minimum_required:
+                    continue
+
+                selected.append(row)
+                used_ids.add(row.set_id)
+                if row.special:
+                    selected_special_ids.add(row.set_id)
+                prefix = tuple(item.eligibility for item in selected)
+                found = False
+                if feasibility.is_possible(topology, prefix):
+                    found = seed(position + 1, score + row.exact_delta)
+                if row.special:
+                    selected_special_ids.remove(row.set_id)
+                used_ids.remove(row.set_id)
+                selected.pop()
+                if found:
+                    return True
+            return False
+
         def visit(position: int, score: float) -> None:
             nonlocal best, winners_by_semantic_key
             nonlocal nodes, leaves, witness_checks, feasible_leaves, rejected_leaves
@@ -288,12 +395,7 @@ class ExtremeMaxHealthNamedGearCandidateSearchService:
             nonlocal semantic_duplicate_leaves
             nodes += 1
 
-            remaining_bound = self.ordinary_service._distinct_id_remaining_bound(
-                counts=counts,
-                position=position,
-                candidates_by_count=combined_by_count,
-                used_ids=used_ids,
-            )
+            remaining_bound = special_aware_remaining_bound(position)
             if remaining_bound is None:
                 score_pruned += 1
                 return
@@ -327,11 +429,7 @@ class ExtremeMaxHealthNamedGearCandidateSearchService:
                 return
 
             count = int(counts[position])
-            remaining_required = {
-                row.set_id
-                for row in special_by_count.get(count, ())
-                if row.set_id not in selected_special_ids
-            }
+            remaining_required = set(remaining_required_ids(count))
             remaining_slots = remaining_positions_for_count(position, count)
             if len(remaining_required) > remaining_slots:
                 requirement_pruned += 1
@@ -340,6 +438,7 @@ class ExtremeMaxHealthNamedGearCandidateSearchService:
             previous_equal_id: int | None = None
             if position > 0 and counts[position - 1] == counts[position]:
                 previous_equal_id = selected[position - 1].set_id
+            minimum_required = min(remaining_required) if remaining_required else None
 
             for row in rows_by_position[position]:
                 if row.set_id in used_ids:
@@ -347,6 +446,11 @@ class ExtremeMaxHealthNamedGearCandidateSearchService:
                 if previous_equal_id is not None and row.set_id <= previous_equal_id:
                     continue
                 if len(remaining_required) == remaining_slots and row.set_id not in remaining_required:
+                    continue
+                # Equal-count positions are canonicalized by ascending set ID.  If a
+                # required special with a smaller ID remains, choosing a larger row
+                # now would make that special impossible to place later.
+                if minimum_required is not None and row.set_id > minimum_required:
                     continue
 
                 selected.append(row)
@@ -363,6 +467,7 @@ class ExtremeMaxHealthNamedGearCandidateSearchService:
                 used_ids.remove(row.set_id)
                 selected.pop()
 
+        seed(0, 0.0)
         visit(0, 0.0)
         winners = sorted(
             winners_by_semantic_key.values(),
