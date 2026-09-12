@@ -6,6 +6,9 @@ from typing import Any
 
 from models.build_model import BuildRoster, PlayerBuild
 from services.build_catalog_service import BuildCatalogService
+from services.build_gear_enchantment_compatibility_service import (
+    BuildGearEnchantmentCompatibilityService,
+)
 
 
 class CanonicalBuildBridge:
@@ -35,11 +38,14 @@ class CanonicalBuildBridge:
         self.legacy_path = Path(legacy_path)
         self.catalog_path = catalog_path or self.legacy_path.with_name("characters.json")
         self.catalog_service = BuildCatalogService(self.catalog_path)
+        self.enchantment_compatibility = BuildGearEnchantmentCompatibilityService()
 
     def load(self) -> BuildRoster:
         catalog = self.catalog_service.load()
         if catalog["builds"]:
-            canonical_roster = self._roster_from_catalog(catalog)
+            canonical_roster = self.enchantment_compatibility.normalize_roster(
+                self._roster_from_catalog(catalog)
+            )
             if canonical_roster.Members:
                 return canonical_roster
 
@@ -47,20 +53,21 @@ class CanonicalBuildBridge:
             # populated compatibility mirror. Recover the real legacy roster
             # and immediately resync it so the catalog becomes authoritative
             # again on the same load.
-            roster = self._load_legacy()
+            roster = self.enchantment_compatibility.normalize_roster(self._load_legacy())
             if roster.Members:
                 self.sync_from_roster(roster)
                 return roster
             return canonical_roster
 
-        roster = self._load_legacy()
+        roster = self.enchantment_compatibility.normalize_roster(self._load_legacy())
         if roster.Members:
             self.sync_from_roster(roster)
         return roster
 
     def save(self, roster: BuildRoster) -> None:
-        self._save_legacy(roster)
-        self.sync_from_roster(roster)
+        normalized = self.enchantment_compatibility.normalize_roster(roster)
+        self._save_legacy(normalized)
+        self.sync_from_roster(normalized)
 
     def sync_from_roster(self, roster: BuildRoster) -> dict[str, Any]:
         """Resync builds without deleting canonical characters that have none.
@@ -69,8 +76,9 @@ class CanonicalBuildBridge:
         Rebuilding the compatibility roster must therefore be allowed to remove
         every build for a character while preserving that character record.
         """
+        normalized = self.enchantment_compatibility.normalize_roster(roster)
         existing = self.catalog_service.load()
-        catalog = self.catalog_service.import_legacy_roster(roster)
+        catalog = self.catalog_service.import_legacy_roster(normalized)
 
         represented_ids = {
             str(character.get("character_id", "")).strip()
