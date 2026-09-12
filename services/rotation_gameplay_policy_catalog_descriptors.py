@@ -20,16 +20,24 @@ ROTATION_GAMEPLAY_POLICY_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
         implementation_path="services.rotation_encounter_demand_policy_registry_service",
         inputs=("EncounterId", "PersistedRotationEncounterDemandPolicyRegistry"),
-        outputs=("RotationEncounterDemandPolicyRegistryEntry",),
-        responsibilities=("rotation_encounter_demand_policy_persistence",),
+        outputs=(
+            "RotationEncounterDemandPolicyRegistryEntry",
+            "RotationEncounterDemandPolicyReviewBlocker",
+        ),
+        responsibilities=(
+            "rotation_encounter_demand_policy_persistence",
+            "rotation_encounter_demand_policy_review_debt_persistence",
+        ),
         behavior=ServiceBehavior.DETERMINISTIC,
         encounter_aware=True,
         evidence_class=EvidenceClass.POLICY,
         notes=(
             "A missing encounter key means reviewed policy is unavailable; explicitly "
-            "empty clock and threshold policy lists mean review resolved that scope to no "
-            "demands. Threshold policy still requires explicit difficulty and raid-damage "
-            "trajectory before it can become a clock window."
+            "empty clock and threshold policy lists with no review blockers mean review "
+            "resolved that scope to no demands. Review blockers preserve known missing "
+            "policy decisions without promoting audit defaults. Threshold policy still "
+            "requires explicit difficulty and raid-damage trajectory before it can become "
+            "a clock window."
         ),
     ),
     ServiceDescriptor(
