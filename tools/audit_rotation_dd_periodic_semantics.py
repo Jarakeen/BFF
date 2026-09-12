@@ -66,6 +66,15 @@ def audit_saved_build(
         print(exc)
         return 3
 
+    if not _is_dd_role(getattr(build, "Role", "")):
+        role = str(getattr(build, "Role", "") or "(unset)").strip() or "(unset)"
+        print(
+            f"Saved build {build.BuildName!r} has role {role!r}. "
+            "This tool audits DD periodic damage runtime semantics only."
+        )
+        print("Use --list-dd to show saved DD builds that are valid inputs.")
+        return 4
+
     audit = RotationDDPeriodicRuntimeSemanticsGapAuditService(
         database_path
     ).audit_build(build)
