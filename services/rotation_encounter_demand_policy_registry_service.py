@@ -20,16 +20,35 @@ DEFAULT_ROTATION_ENCOUNTER_DEMAND_POLICY = (
 
 
 @dataclass(frozen=True)
+class RotationEncounterDemandPolicyReviewBlocker:
+    """Persisted review debt for a partly researched encounter-demand policy.
+
+    Review blockers preserve what still needs an explicit decision without promoting
+    audit defaults or encounter prose into executable rotation policy.
+    """
+
+    key: str
+    summary: str
+    needed_evidence: str
+    source_context: str = ""
+
+
+@dataclass(frozen=True)
 class RotationEncounterDemandPolicyRegistryEntry:
     """Reviewed role interpretation for one canonical encounter.
 
     Clock policies consume reviewed timeline facts that already carry explicit seconds.
     Threshold policies consume reviewed boss-health threshold facts and therefore still
     require an explicit raid-damage trajectory before they can become clock windows.
+
+    Review blockers are non-executable policy research debt. Their presence means the
+    encounter has been reviewed enough to identify a specific missing decision, but not
+    enough to safely emit canonical rotation demands yet.
     """
 
     clock_policies: tuple[EncounterRotationDemandPolicy, ...] = ()
     threshold_policies: tuple[EncounterThresholdRotationDemandPolicy, ...] = ()
+    review_blockers: tuple[RotationEncounterDemandPolicyReviewBlocker, ...] = ()
 
 
 class RotationEncounterDemandPolicyRegistryService:
@@ -37,12 +56,14 @@ class RotationEncounterDemandPolicyRegistryService:
 
     Registry presence is itself evidence. A missing encounter key means no reviewed
     policy has been persisted yet and returns ``None``. An encounter explicitly stored
-    with empty ``clock_policies`` and ``threshold_policies`` lists means review concluded
-    that this Generate scope has no encounter-demand policies.
+    with empty policy lists and no review blockers means review concluded that this
+    Generate scope has no encounter-demand policies.
 
     Clock-timed and health-threshold policies remain separate evidence families. This
     service never converts health thresholds to seconds, invents raid DPS, or derives
-    policy from boss names, fact labels, encounter prose, role, or class.
+    policy from boss names, fact labels, encounter prose, role, or class. Partly reviewed
+    encounters may persist structured review blockers so Generate can fail closed with a
+    precise reason instead of pretending no research exists.
     """
 
     def __init__(self, path: str | Path = DEFAULT_ROTATION_ENCOUNTER_DEMAND_POLICY) -> None:
@@ -75,7 +96,11 @@ class RotationEncounterDemandPolicyRegistryService:
                 raise ValueError(
                     f"rotation encounter demand policy {encounter_id!r} must be an object"
                 )
-            unknown_entry = set(raw_entry) - {"clock_policies", "threshold_policies"}
+            unknown_entry = set(raw_entry) - {
+                "clock_policies",
+                "threshold_policies",
+                "review_blockers",
+            }
             if unknown_entry:
                 raise ValueError(
                     f"rotation encounter demand policy {encounter_id!r} has unsupported "
@@ -84,6 +109,7 @@ class RotationEncounterDemandPolicyRegistryService:
 
             raw_clock = raw_entry.get("clock_policies", [])
             raw_threshold = raw_entry.get("threshold_policies", [])
+            raw_blockers = raw_entry.get("review_blockers", [])
             if not isinstance(raw_clock, list):
                 raise ValueError(
                     f"rotation encounter demand policy {encounter_id!r} requires a clock_policies list"
@@ -92,10 +118,15 @@ class RotationEncounterDemandPolicyRegistryService:
                 raise ValueError(
                     f"rotation encounter demand policy {encounter_id!r} requires a threshold_policies list"
                 )
+            if not isinstance(raw_blockers, list):
+                raise ValueError(
+                    f"rotation encounter demand policy {encounter_id!r} requires a review_blockers list"
+                )
 
             loaded[normalized_id] = RotationEncounterDemandPolicyRegistryEntry(
                 clock_policies=cls._clock_policies(encounter_id, raw_clock),
                 threshold_policies=cls._threshold_policies(encounter_id, raw_threshold),
+                review_blockers=cls._review_blockers(encounter_id, raw_blockers),
             )
         return loaded
 
@@ -209,6 +240,54 @@ class RotationEncounterDemandPolicyRegistryService:
             )
         return tuple(policies)
 
+    @staticmethod
+    def _review_blockers(
+        encounter_id: str,
+        rows: list[object],
+    ) -> tuple[RotationEncounterDemandPolicyReviewBlocker, ...]:
+        blockers: list[RotationEncounterDemandPolicyReviewBlocker] = []
+        seen_keys: set[str] = set()
+        for raw_blocker in rows:
+            if not isinstance(raw_blocker, dict):
+                raise ValueError(
+                    f"rotation encounter demand review blockers {encounter_id!r} must be objects"
+                )
+            unknown = set(raw_blocker) - {
+                "key",
+                "summary",
+                "needed_evidence",
+                "source_context",
+            }
+            if unknown:
+                raise ValueError(
+                    f"rotation encounter demand review blocker {encounter_id!r} has unsupported "
+                    f"fields: {', '.join(sorted(unknown))}"
+                )
+            key = str(raw_blocker.get("key") or "").strip()
+            summary = str(raw_blocker.get("summary") or "").strip()
+            needed_evidence = str(raw_blocker.get("needed_evidence") or "").strip()
+            source_context = str(raw_blocker.get("source_context") or "").strip()
+            if not key or not summary or not needed_evidence:
+                raise ValueError(
+                    f"rotation encounter demand review blocker {encounter_id!r} requires "
+                    "key, summary, and needed_evidence"
+                )
+            identity = key.casefold()
+            if identity in seen_keys:
+                raise ValueError(
+                    f"duplicate rotation encounter demand review blocker for {encounter_id!r}: {key!r}"
+                )
+            seen_keys.add(identity)
+            blockers.append(
+                RotationEncounterDemandPolicyReviewBlocker(
+                    key=key,
+                    summary=summary,
+                    needed_evidence=needed_evidence,
+                    source_context=source_context,
+                )
+            )
+        return tuple(blockers)
+
     def entry_for(
         self,
         encounter_id: str,
@@ -232,6 +311,13 @@ class RotationEncounterDemandPolicyRegistryService:
         entry = self.entry_for(encounter_id)
         return None if entry is None else entry.threshold_policies
 
+    def review_blockers_for(
+        self,
+        encounter_id: str,
+    ) -> tuple[RotationEncounterDemandPolicyReviewBlocker, ...] | None:
+        entry = self.entry_for(encounter_id)
+        return None if entry is None else entry.review_blockers
+
     def configured_encounter_ids(self) -> tuple[str, ...]:
         return tuple(self._entries)
 
@@ -239,5 +325,6 @@ class RotationEncounterDemandPolicyRegistryService:
 __all__ = [
     "DEFAULT_ROTATION_ENCOUNTER_DEMAND_POLICY",
     "RotationEncounterDemandPolicyRegistryEntry",
+    "RotationEncounterDemandPolicyReviewBlocker",
     "RotationEncounterDemandPolicyRegistryService",
 ]
