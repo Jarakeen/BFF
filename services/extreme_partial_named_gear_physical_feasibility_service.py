@@ -55,6 +55,10 @@ class ExtremePartialNamedGearPhysicalFeasibilityService:
 
     def __init__(self) -> None:
         self._physical_cache: dict[str, tuple[ExtremeGearPhysicalRealization, ...]] = {}
+        self._compatible_physical_cache: dict[
+            tuple[str, tuple[tuple[object, ...], ...]],
+            tuple[ExtremeGearPhysicalRealization, ...],
+        ] = {}
         self._result_cache: dict[
             tuple[str, tuple[tuple[object, ...], ...]],
             ExtremePartialNamedGearPhysicalFeasibilityResult,
@@ -184,6 +188,51 @@ class ExtremePartialNamedGearPhysicalFeasibilityService:
         self._body_cache[key] = possible
         return possible
 
+    def _compatible_physicals_prevalidated(
+        self,
+        topology: ExtremeGearSetCountTopology,
+        selected: tuple[ExtremeNamedGearSetSlotEligibility, ...],
+        *,
+        candidates: tuple[ExtremeGearPhysicalRealization, ...] | None = None,
+    ) -> tuple[ExtremeGearPhysicalRealization, ...]:
+        """Return exact compatible topology witnesses for a prevalidated prefix.
+
+        Compatibility is monotone as a prefix grows: adding a named-set constraint
+        cannot make a physical realization that already failed the parent prefix
+        become legal again. Exact DFS callers may therefore pass the parent's
+        compatible witnesses as ``candidates`` and filter only that shrinking set.
+
+        Results are still cached by the full semantic prefix, so a repeated state
+        receives the same complete compatible set regardless of which parent path
+        reached it. Global named-set legality remains authoritative here.
+        """
+
+        counts = self._topology_counts(topology)
+        key = (
+            self._topology_signature(topology),
+            tuple(self._cached_shape(row) for row in selected),
+        )
+        cached = self._compatible_physical_cache.get(key)
+        if cached is not None:
+            return cached
+
+        if ExtremeNamedGearSetRealizationService._violates_global_set_legality(
+            counts[: len(selected)],
+            selected,
+        ):
+            self._compatible_physical_cache[key] = ()
+            return ()
+
+        source = self._physicals(topology) if candidates is None else candidates
+        compatible = tuple(
+            physical
+            for physical in source
+            if self._weapon_compatible(physical, selected)
+            and self._body_compatible(physical, selected)
+        )
+        self._compatible_physical_cache[key] = compatible
+        return compatible
+
     def _evaluate_prevalidated(
         self,
         topology: ExtremeGearSetCountTopology,
@@ -198,7 +247,6 @@ class ExtremePartialNamedGearPhysicalFeasibilityService:
         canonical physical witness-space test below remain authoritative.
         """
 
-        counts = self._topology_counts(topology)
         key = (
             self._topology_signature(topology),
             tuple(self._cached_shape(row) for row in selected),
@@ -207,34 +255,14 @@ class ExtremePartialNamedGearPhysicalFeasibilityService:
         if cached is not None:
             return cached
 
-        if ExtremeNamedGearSetRealizationService._violates_global_set_legality(
-            counts[: len(selected)],
-            selected,
-        ):
-            result = ExtremePartialNamedGearPhysicalFeasibilityResult(
-                possible=False,
-                selected_count=len(selected),
-                compatible_physical_shapes=0,
-                reason="selected prefix violates global named-set legality",
-            )
-            self._result_cache[key] = result
-            return result
-
-        compatible = 0
-        for physical in self._physicals(topology):
-            if not self._weapon_compatible(physical, selected):
-                continue
-            if not self._body_compatible(physical, selected):
-                continue
-            compatible += 1
-
+        compatible = self._compatible_physicals_prevalidated(topology, selected)
         result = ExtremePartialNamedGearPhysicalFeasibilityResult(
-            possible=compatible > 0,
+            possible=bool(compatible),
             selected_count=len(selected),
-            compatible_physical_shapes=compatible,
+            compatible_physical_shapes=len(compatible),
             reason=(
                 ""
-                if compatible > 0
+                if compatible
                 else "selected prefix cannot fit any canonical physical realization"
             ),
         )
