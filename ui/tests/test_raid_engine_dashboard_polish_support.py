@@ -14,8 +14,10 @@ def test_dashboard_polish_uses_balanced_composition_surface() -> None:
     source = Path("ui/raid_engine_dashboard_polish_support.py").read_text(encoding="utf-8")
     assert "setMinimumSize(560, 350)" in source
     assert "setMinimumWidth(575)" in source
-    assert "setMinimumWidth(300)" in source
+    assert "setMinimumWidth(470)" in source
+    assert "setMinimumWidth(455)" in source
     assert "setMinimumHeight(380)" in source
+    assert "setColumnWidth(3, 110)" in source
 
 
 def test_dashboard_polish_uses_status_pills_and_colored_coverage() -> None:
@@ -32,6 +34,18 @@ def test_dashboard_polish_next_actions_are_editable_and_saveable() -> None:
     assert 'FoundryButton("Save Note"' in source
     assert 'raid_engine_dashboard_notes.json' in source
     assert "_raid_engine_notes_dirty" in source
+
+
+def test_dashboard_polish_applies_requested_main_page_navigation_and_visibility() -> None:
+    source = Path("ui/raid_engine_dashboard_polish_support.py").read_text(encoding="utf-8")
+    assert "insertSpacing(index + 1, 48)" in source
+    assert '_center_named_card_button(card, "Open Calendar")' in source
+    assert 'button.clicked.connect(lambda *_: _open_coverage_raid_review(self))' in source
+    assert 'tabs.tabText(index).strip().upper() == "RAID REVIEW"' in source
+    assert "scope_card.setVisible(False)" in source
+    assert 'tabs.tabText(index).strip().upper() == "OVERVIEW"' in source
+    assert "tabs.setTabVisible(index, False)" in source
+    assert "_center_create_character_button(self)" in source
 
 
 def test_generated_next_actions_preserve_dashboard_recommendations() -> None:

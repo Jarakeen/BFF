@@ -1,12 +1,20 @@
 from __future__ import annotations
 
-"""Visual polish and editable notes for the Raid Engine dashboard."""
+"""Visual polish and focused workflow tweaks for Raid Engine surfaces."""
 
 import json
 from pathlib import Path
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication, QHBoxLayout, QLabel, QTextEdit, QWidget
+from PySide6.QtWidgets import (
+    QApplication,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QSizePolicy,
+    QTextEdit,
+    QWidget,
+)
 
 from engine.config import get_data_dir
 from services.accessibility_preferences import VISUAL_THEME_RYLO
@@ -18,6 +26,13 @@ _ORIGINAL_INIT = None
 _ORIGINAL_REFRESH_ACTIVE = None
 _ORIGINAL_REFRESH_COVERAGE = None
 _ORIGINAL_REFRESH_NEXT_ACTIONS = None
+_ORIGINAL_BUILDS_BUILD_UI = None
+_ORIGINAL_OVERVIEW_BUILD_UI = None
+_ORIGINAL_OVERVIEW_PLAYER_CARD = None
+_ORIGINAL_OVERVIEW_RAID_SCHEDULE_CARD = None
+_ORIGINAL_OVERVIEW_SKILLS_CARD = None
+_ORIGINAL_COVERAGE_TAB = None
+_ORIGINAL_ENCOUNTERS_BUILD_UI = None
 
 
 def _is_rylo() -> bool:
@@ -127,16 +142,92 @@ def _replace_next_actions_editor(page) -> None:
     page.next_actions_card.set_header_action(save)
 
 
+def _take_widget_from_layout(layout, target: QWidget) -> bool:
+    """Detach one widget from nested layouts without disturbing sibling content."""
+    for index in range(layout.count()):
+        item = layout.itemAt(index)
+        if item.widget() is target:
+            layout.takeAt(index)
+            return True
+        nested = item.layout()
+        if nested is not None and _take_widget_from_layout(nested, target):
+            return True
+    return False
+
+
+def _center_create_character_button(page) -> None:
+    """Give the creation entry point its own balanced header slot."""
+    button = getattr(page, "create_character_button", None)
+    header = getattr(page, "header", None)
+    context_layout = getattr(header, "context_layout", None)
+    if not isinstance(button, QPushButton) or context_layout is None:
+        return
+
+    _take_widget_from_layout(context_layout, button)
+    button.setParent(None)
+    host = QWidget(header)
+    host.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+    row = QHBoxLayout(host)
+    row.setContentsMargins(0, 0, 0, 0)
+    row.setSpacing(0)
+    row.addStretch(1)
+    row.addWidget(button, 0, Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignBottom)
+    row.addStretch(1)
+    context_layout.insertWidget(0, host, 1, Qt.AlignmentFlag.AlignBottom)
+    page.create_character_button_host = host
+
+
+def _center_named_card_button(card, text: str) -> QPushButton | None:
+    """Move one named action into a clean bottom-center row."""
+    button = next(
+        (candidate for candidate in card.body.findChildren(QPushButton) if candidate.text() == text),
+        None,
+    )
+    if button is None:
+        return None
+    _take_widget_from_layout(card.body_layout, button)
+    button.setParent(None)
+    row = QHBoxLayout()
+    row.setContentsMargins(0, 0, 0, 0)
+    row.setSpacing(0)
+    row.addStretch(1)
+    row.addWidget(button)
+    row.addStretch(1)
+    card.body_layout.addLayout(row)
+    return button
+
+
+def _open_coverage_raid_review(overview) -> None:
+    """Navigate the Main Page focus action directly to Coverage > Raid Review."""
+    window = overview.window()
+    show_page = getattr(window, "show_page", None)
+    if callable(show_page):
+        show_page("console:7")
+    coverage_page = getattr(window, "pages", {}).get("console:7")
+    tabs = getattr(coverage_page, "tabs", None)
+    if tabs is None:
+        return
+    for index in range(tabs.count()):
+        if tabs.tabText(index).strip().upper() == "RAID REVIEW":
+            tabs.setCurrentIndex(index)
+            break
+
+
 def _init_with_dashboard_polish(self, parent=None) -> None:
     assert _ORIGINAL_INIT is not None
     _ORIGINAL_INIT(self, parent)
 
-    # Keep the composition art readable without forcing the dashboard wider
-    # than the normal Field Office viewport.
+    # Keep the composition art readable while giving the Active Composition
+    # table enough width for full status pills instead of clipped buttons.
     self.composition_ring.setMinimumSize(560, 350)
     self.composition_card.setMinimumWidth(575)
-    self.active_card.setMinimumWidth(300)
+    self.active_card.setMinimumWidth(470)
+    self.active_table.setMinimumWidth(455)
     self.active_table.setMinimumHeight(380)
+    self.active_table.setColumnWidth(0, 105)
+    self.active_table.setColumnWidth(1, 90)
+    self.active_table.setColumnWidth(2, 135)
+    self.active_table.setColumnWidth(3, 110)
 
     _replace_next_actions_editor(self)
 
@@ -217,21 +308,112 @@ def _refresh_next_actions_editable(self, slots, coverage, optimization) -> None:
     self._raid_engine_notes_dirty = False
 
 
+def _builds_ui_with_centered_creator(self) -> None:
+    assert _ORIGINAL_BUILDS_BUILD_UI is not None
+    _ORIGINAL_BUILDS_BUILD_UI(self)
+    _center_create_character_button(self)
+
+
+def _overview_ui_with_centered_creator(self) -> None:
+    assert _ORIGINAL_OVERVIEW_BUILD_UI is not None
+    _ORIGINAL_OVERVIEW_BUILD_UI(self)
+    _center_create_character_button(self)
+
+
+def _overview_player_card_with_identity_gap(self, build):
+    assert _ORIGINAL_OVERVIEW_PLAYER_CARD is not None
+    card = _ORIGINAL_OVERVIEW_PLAYER_CARD(self, build)
+    if build is None:
+        return card
+    identity = " • ".join(
+        value for value in (build.EsoClass, build.Race, build.Role) if value
+    )
+    if not identity:
+        return card
+    for index in range(card.body_layout.count()):
+        widget = card.body_layout.itemAt(index).widget()
+        if isinstance(widget, QLabel) and widget.text() == identity:
+            card.body_layout.insertSpacing(index + 1, 48)
+            break
+    return card
+
+
+def _overview_raid_schedule_with_centered_calendar(self, build):
+    assert _ORIGINAL_OVERVIEW_RAID_SCHEDULE_CARD is not None
+    card = _ORIGINAL_OVERVIEW_RAID_SCHEDULE_CARD(self, build)
+    _center_named_card_button(card, "Open Calendar")
+    return card
+
+
+def _overview_skills_with_raid_review_link(self, build):
+    assert _ORIGINAL_OVERVIEW_SKILLS_CARD is not None
+    card = _ORIGINAL_OVERVIEW_SKILLS_CARD(self, build)
+    button = _center_named_card_button(card, "Open Performance Focus")
+    if button is not None:
+        button.clicked.connect(lambda *_: _open_coverage_raid_review(self))
+    return card
+
+
+def _coverage_tab_without_scope_banner(self):
+    assert _ORIGINAL_COVERAGE_TAB is not None
+    page = _ORIGINAL_COVERAGE_TAB(self)
+    scope_card = getattr(self, "scope_card", None)
+    if scope_card is not None:
+        scope_card.setVisible(False)
+    return page
+
+
+def _encounters_ui_without_overview_tab(self) -> None:
+    assert _ORIGINAL_ENCOUNTERS_BUILD_UI is not None
+    _ORIGINAL_ENCOUNTERS_BUILD_UI(self)
+    tabs = getattr(self, "section_tabs", None)
+    if tabs is None:
+        return
+    for index in range(tabs.count()):
+        if tabs.tabText(index).strip().upper() == "OVERVIEW":
+            tabs.setTabVisible(index, False)
+            if tabs.currentIndex() == index and tabs.count() > 1:
+                tabs.setCurrentIndex(1)
+            break
+
+
 def install() -> None:
     global _INSTALLED, _ORIGINAL_INIT, _ORIGINAL_REFRESH_ACTIVE
     global _ORIGINAL_REFRESH_COVERAGE, _ORIGINAL_REFRESH_NEXT_ACTIONS
+    global _ORIGINAL_BUILDS_BUILD_UI, _ORIGINAL_OVERVIEW_BUILD_UI
+    global _ORIGINAL_OVERVIEW_PLAYER_CARD, _ORIGINAL_OVERVIEW_RAID_SCHEDULE_CARD
+    global _ORIGINAL_OVERVIEW_SKILLS_CARD, _ORIGINAL_COVERAGE_TAB
+    global _ORIGINAL_ENCOUNTERS_BUILD_UI
     if _INSTALLED:
         return
 
+    from ui.builds_page import BuildsPage
+    from ui.coverage_page import CoveragePage
+    from ui.encounters_page import EncountersPage
+    from ui.operations_console import OperationsConsole
     from ui.raid_engine_dashboard_page import RaidEngineDashboardPage
 
     _ORIGINAL_INIT = RaidEngineDashboardPage.__init__
     _ORIGINAL_REFRESH_ACTIVE = RaidEngineDashboardPage._refresh_active_table
     _ORIGINAL_REFRESH_COVERAGE = RaidEngineDashboardPage._refresh_coverage
     _ORIGINAL_REFRESH_NEXT_ACTIONS = RaidEngineDashboardPage._refresh_next_actions
+    _ORIGINAL_BUILDS_BUILD_UI = BuildsPage._build_ui
+    _ORIGINAL_OVERVIEW_BUILD_UI = OperationsConsole._build_ui
+    _ORIGINAL_OVERVIEW_PLAYER_CARD = OperationsConsole._player_card
+    _ORIGINAL_OVERVIEW_RAID_SCHEDULE_CARD = OperationsConsole._raid_schedule_card
+    _ORIGINAL_OVERVIEW_SKILLS_CARD = OperationsConsole._skills_to_work_on_card
+    _ORIGINAL_COVERAGE_TAB = CoveragePage._coverage_tab
+    _ORIGINAL_ENCOUNTERS_BUILD_UI = EncountersPage._build_ui
 
     RaidEngineDashboardPage.__init__ = _init_with_dashboard_polish
     RaidEngineDashboardPage._refresh_active_table = _refresh_active_with_status_pills
     RaidEngineDashboardPage._refresh_coverage = _refresh_coverage_with_colored_states
     RaidEngineDashboardPage._refresh_next_actions = _refresh_next_actions_editable
+    BuildsPage._build_ui = _builds_ui_with_centered_creator
+    OperationsConsole._build_ui = _overview_ui_with_centered_creator
+    OperationsConsole._player_card = _overview_player_card_with_identity_gap
+    OperationsConsole._raid_schedule_card = _overview_raid_schedule_with_centered_calendar
+    OperationsConsole._skills_to_work_on_card = _overview_skills_with_raid_review_link
+    CoveragePage._coverage_tab = _coverage_tab_without_scope_banner
+    EncountersPage._build_ui = _encounters_ui_without_overview_tab
     _INSTALLED = True
