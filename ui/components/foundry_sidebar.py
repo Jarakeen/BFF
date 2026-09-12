@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QTimer, Qt, Signal
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QApplication,
@@ -88,6 +88,17 @@ CORE_NAV_SECTIONS = [
 ]
 
 
+NAV_LABEL_OVERRIDES = {
+    "console:3": "Top Gear",
+}
+
+HIDDEN_WORKSPACE_TABS = {
+    "console:7": {"providers", "encounter needs", "reports"},
+    "console:1": {"overview", "loot & rewards", "notes"},
+    "console:3": {"performance dashboard"},
+}
+
+
 def nav_sections(include_broadcast: bool) -> list:
     sections = list(CORE_NAV_SECTIONS)
     if include_broadcast:
@@ -106,6 +117,7 @@ class FoundrySidebar(QWidget):
         self.setMinimumWidth(215)
         self.setMaximumWidth(248)
         self.build_ui()
+        QTimer.singleShot(0, self.apply_workspace_visibility)
 
     @staticmethod
     def _asset_pixmap(filename: str, width: int, height: int) -> QPixmap:
@@ -241,6 +253,48 @@ class FoundrySidebar(QWidget):
         line.setProperty("sidebarDivider", True)
         return line
 
+    @staticmethod
+    def _hide_named_tabs(tab_control, hidden_labels: set[str]) -> None:
+        if tab_control is None:
+            return
+        for index in range(tab_control.count()):
+            if tab_control.tabText(index).strip().casefold() in hidden_labels:
+                tab_control.setTabVisible(index, False)
+
+    def apply_workspace_visibility(self) -> None:
+        window = self.window()
+        pages = getattr(window, "pages", {})
+        if not isinstance(pages, dict):
+            return
+
+        coverage_page = pages.get("console:7")
+        if coverage_page is not None:
+            self._hide_named_tabs(
+                getattr(coverage_page, "tabs", None),
+                HIDDEN_WORKSPACE_TABS["console:7"],
+            )
+
+        encounters_page = pages.get("console:1")
+        if encounters_page is not None:
+            self._hide_named_tabs(
+                getattr(encounters_page, "section_tabs", None),
+                HIDDEN_WORKSPACE_TABS["console:1"],
+            )
+
+        top_gear_page = pages.get("console:3")
+        if top_gear_page is not None:
+            self._hide_named_tabs(
+                getattr(top_gear_page, "desk_tabs", None),
+                HIDDEN_WORKSPACE_TABS["console:3"],
+            )
+            for attribute in (
+                "save_performance_button",
+                "export_performance_csv_button",
+            ):
+                widget = getattr(top_gear_page, attribute, None)
+                if widget is not None:
+                    widget.setVisible(False)
+
     def build_leaf_button(
         self,
         text: str,
@@ -248,7 +302,8 @@ class FoundrySidebar(QWidget):
         header_style: bool = False,
         submenu: bool = False,
     ) -> QPushButton:
-        button = QPushButton(f"•  {text}" if submenu else text)
+        display_text = NAV_LABEL_OVERRIDES.get(page, text)
+        button = QPushButton(f"•  {display_text}" if submenu else display_text)
         button.setCheckable(True)
         button.setProperty("nav", True)
         if header_style:
@@ -256,7 +311,7 @@ class FoundrySidebar(QWidget):
         if submenu:
             button.setProperty("navSubmenu", True)
         else:
-            icon_name = semantic_icon(text)
+            icon_name = semantic_icon(display_text)
             if icon_name:
                 set_button_icon(button, icon_name, 16)
         button.clicked.connect(lambda checked=False, p=page: self.pageRequested.emit(p))
