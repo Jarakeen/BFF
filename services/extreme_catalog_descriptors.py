@@ -80,8 +80,100 @@ EXTREME_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         behavior=ServiceBehavior.DETERMINISTIC,
         evidence_class=EvidenceClass.GAME_MECHANIC,
         notes=(
-            "Any non-ordinary Max Magicka or Max Stamina branch remains explicit unresolved evidence "
-            "and prevents denominator closure."
+            "This lower-level adapter exposes the ordinary frontier only; production uncapped "
+            "resource objectives use the composed candidate adapter after special branches are included."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.max_resource_special_named_gear_branches",
+        domain="extreme",
+        purpose=(
+            "Classify ordinary-search exclusions for Max Health, Max Magicka, and Max Stamina "
+            "into explicit conditional, percentage, bundle, or search-state proof obligations."
+        ),
+        implementation_path="services.extreme_max_resource_special_named_gear_branch_service",
+        inputs=("ExtremeGearSetObjectiveRelevanceCatalog", "ExcludedNamedGearPairs"),
+        outputs=("ExtremeMaxResourceSpecialNamedGearBranchResult",),
+        dependencies=("extreme.max_resource_ordinary_named_gear_search",),
+        responsibilities=("extreme_max_resource_special_named_gear_branch_classification",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Classification is objective-driven and name-agnostic; classification alone does not "
+            "score or execute the special branch."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.max_resource_special_named_gear_execution",
+        domain="extreme",
+        purpose=(
+            "Dispatch classified Max Resource special named-gear obligations to canonical "
+            "runtime-condition or search-state execution owners."
+        ),
+        implementation_path="services.extreme_max_resource_special_named_gear_execution_service",
+        inputs=(
+            "ExtremeMaxResourceSpecialNamedGearBranchResult",
+            "PlayerBuild",
+            "ExtremeHealClassRoute",
+        ),
+        outputs=("ExtremeMaxResourceSpecialNamedGearExecutionResult",),
+        dependencies=("extreme.max_resource_special_named_gear_branches",),
+        responsibilities=("extreme_max_resource_special_named_gear_execution",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Conditional branches reuse candidate runtime-condition materialization; search-state "
+            "mutations reuse the canonical execution-coverage owners such as the two-Mundus evaluator."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.max_resource_named_gear_candidate_search",
+        domain="extreme",
+        purpose=(
+            "Compose exact ordinary Max Resource winners with every legal non-empty special-set "
+            "subset while preserving proof-safe physical feasibility and tied ordinary fillers."
+        ),
+        implementation_path="services.extreme_max_resource_named_gear_candidate_search_service",
+        inputs=(
+            "ExtremeGearSetTopologyCatalog",
+            "ExtremeMaxResourceOrdinaryNamedGearSearchResult",
+            "ExtremeMaxResourceSpecialNamedGearBranchResult",
+        ),
+        outputs=("ExtremeMaxResourceNamedGearCandidateSearchResult",),
+        dependencies=(
+            "extreme.max_resource_joint_named_gear_feasibility",
+            "extreme.max_resource_special_named_gear_branches",
+            "extreme.partial_named_gear_physical_feasibility",
+        ),
+        responsibilities=("extreme_max_resource_named_gear_candidate_frontier",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Special mechanics contribute zero to the ordinary filler pruning bound and are scored "
+            "later by their canonical runtime or search-axis owner."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.max_resource_named_gear_candidate_realization_adapter",
+        domain="extreme",
+        purpose=(
+            "Expose the composed ordinary-plus-special Max Resource candidate frontier through the "
+            "legacy realization contract with canonical dual-bar admissibility proof."
+        ),
+        implementation_path="services.extreme_max_resource_named_gear_candidate_realization_adapter_service",
+        inputs=(
+            "ExtremeMaxResourceNamedGearCandidateSearchResult",
+            "ExtremeGearSetTopologyCatalog",
+            "ExtremeGearSetObjectiveRelevanceCatalog",
+        ),
+        outputs=("ExtremeObjectiveNamedGearSetCatalogRealizationResult",),
+        dependencies=("extreme.max_resource_named_gear_candidate_search",),
+        responsibilities=("extreme_max_resource_named_gear_candidate_realization_adaptation",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Denominator closure requires the composed frontier to remain unchanged under canonical "
+            "dual-bar admissibility and to contain no unresolved evidence."
         ),
     ),
     ServiceDescriptor(
