@@ -346,6 +346,28 @@ class ExtremeObjectiveNamedGearSetCatalogRealizationService:
                 relevance=self.relevance,
             )
 
+        if (
+            objective in {"max_magicka", "max_stamina"}
+            and max_assignments_per_topology is None
+        ):
+            from services.extreme_max_resource_joint_feasibility_search_service import (
+                ExtremeMaxResourceJointFeasibilitySearchService,
+            )
+            from services.extreme_max_resource_named_gear_realization_adapter_service import (
+                ExtremeMaxResourceNamedGearRealizationAdapterService,
+            )
+
+            search = ExtremeMaxResourceJointFeasibilitySearchService(
+                breakpoints=self.breakpoints,
+                eligibility=self.eligibility,
+                relevance=self.relevance,
+            ).search(topology_catalog)
+            return ExtremeMaxResourceNamedGearRealizationAdapterService.build(
+                search=search,
+                topology_catalog=topology_catalog,
+                relevance=self.relevance,
+            )
+
         reduced, equivalent_pruned, representative_limit = self.proof_reduced_breakpoints(
             topology_catalog
         )
