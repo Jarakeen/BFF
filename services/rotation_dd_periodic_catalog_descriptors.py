@@ -91,6 +91,90 @@ ROTATION_DD_PERIODIC_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="rotation.dd.periodic_esologs_candidate_drilldown",
+        domain="rotation",
+        purpose=(
+            "Drill into one numeric secondary-effect candidate for a canonical DD "
+            "periodic skill and summarize exact same-track timing evidence."
+        ),
+        implementation_path=(
+            "services.rotation_dd_periodic_esologs_candidate_drilldown_service"
+        ),
+        inputs=(
+            "CanonicalSkillIdentity",
+            "EsoLogsCandidateAbilityId",
+            "EsoLogsCastTrackId",
+            "EsoLogsLogEvent",
+        ),
+        outputs=("RotationDDPeriodicEsoLogsCandidateDrilldownReport",),
+        responsibilities=("rotation_dd_periodic_esologs_candidate_drilldown",),
+        roles=("DD", "DPS"),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.OBSERVATIONAL,
+        notes=(
+            "Read-only candidate inspection. Exact source and cast-track ownership outrank "
+            "mere window proximity; numeric IDs remain evidence handles and no candidate "
+            "is promoted into canonical or executable identity automatically."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="rotation.dd.periodic_esologs_source_window_exclusivity",
+        domain="rotation",
+        purpose=(
+            "Measure whether a candidate damage identity is concentrated inside the "
+            "reviewed source skill's cast windows rather than broadly across the fight."
+        ),
+        implementation_path=(
+            "services.rotation_dd_periodic_esologs_source_window_exclusivity_service"
+        ),
+        inputs=(
+            "CanonicalSkillIdentity",
+            "EsoLogsCandidateAbilityId",
+            "EsoLogsLogEvent",
+            "ReviewedActiveWindow",
+        ),
+        outputs=("RotationDDPeriodicEsoLogsSourceWindowExclusivityReport",),
+        responsibilities=("rotation_dd_periodic_esologs_source_window_exclusivity",),
+        roles=("DD", "DPS"),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.OBSERVATIONAL,
+        notes=(
+            "Read-only discriminator for candidates that may simply be concurrent player "
+            "effects. Exclusivity can strengthen or weaken association, but cannot replace "
+            "exact cast-track ownership or promote runtime semantics."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="rotation.dd.periodic_esologs_cast_track_topology",
+        domain="rotation",
+        purpose=(
+            "Describe the ordered same-track component topology observed after a canonical "
+            "DD periodic skill cast."
+        ),
+        implementation_path=(
+            "services.rotation_dd_periodic_esologs_cast_track_topology_service"
+        ),
+        inputs=(
+            "CanonicalSkillIdentity",
+            "EsoLogsCastTrackId",
+            "EsoLogsLogEvent",
+            "ReviewedActiveWindow",
+        ),
+        outputs=("RotationDDPeriodicEsoLogsCastTrackTopologyReport",),
+        responsibilities=("rotation_dd_periodic_esologs_cast_track_topology",),
+        roles=("DD", "DPS"),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.OBSERVATIONAL,
+        notes=(
+            "Read-only topology evidence. Components are ordered by observed offset on the "
+            "same cast track. The service preserves numeric component IDs as observational "
+            "handles and never promotes an activation anchor or periodic identity automatically."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="rotation.dd.periodic_esologs_reviewed_coverage",
         domain="rotation",
         purpose=(
