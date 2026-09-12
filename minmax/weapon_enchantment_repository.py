@@ -16,9 +16,20 @@ class WeaponEnchantmentRepository:
 
     def __init__(self, database_path: str | Path):
         self.database_path = str(database_path)
+        self._items_cache: tuple[tuple[int, str], ...] | None = None
+        self._description_cache: dict[int, str] = {}
+        self._label_cache: dict[str, tuple[int, ...]] = {}
+        self._effects_cache: dict[tuple[int, bool], tuple[CombatEffect, ...]] = {}
+
+    @staticmethod
+    def _label_key(value: str) -> str:
+        return " ".join(str(value or "").strip().split()).casefold()
 
     def list_items(self) -> tuple[tuple[int, str], ...]:
         """Return every canonical weapon-enchantment item id and display name."""
+        if self._items_cache is not None:
+            return self._items_cache
+
         with sqlite3.connect(self.database_path) as connection:
             rows = connection.execute(
                 """
@@ -30,7 +41,8 @@ class WeaponEnchantmentRepository:
                 ORDER BY LOWER(TRIM(name)), item_id
                 """
             ).fetchall()
-        return tuple((int(item_id), str(name)) for item_id, name in rows)
+        self._items_cache = tuple((int(item_id), str(name)) for item_id, name in rows)
+        return self._items_cache
 
     def get_description(self, item_id: int) -> str:
         """Return stored canonical description for one weapon-enchantment row.
@@ -39,6 +51,10 @@ class WeaponEnchantmentRepository:
         it as mechanic identity; the returned canonical prose/effect semantics own
         classification.
         """
+        key = int(item_id)
+        if key in self._description_cache:
+            return self._description_cache[key]
+
         with sqlite3.connect(self.database_path) as connection:
             row = connection.execute(
                 """
@@ -49,9 +65,9 @@ class WeaponEnchantmentRepository:
                 """,
                 (item_id,),
             ).fetchone()
-        if row is None:
-            return ""
-        return str(row[0] or "").strip()
+        result = "" if row is None else str(row[0] or "").strip()
+        self._description_cache[key] = result
+        return result
 
     def find_item_ids_by_label(self, label: str) -> tuple[int, ...]:
         """Return exact or semantically verified matches for one saved label.
@@ -67,6 +83,9 @@ class WeaponEnchantmentRepository:
             return ()
 
         normalized = value.casefold()
+        if normalized in self._label_cache:
+            return self._label_cache[normalized]
+
         with sqlite3.connect(self.database_path) as connection:
             columns = {
                 str(row[1])
@@ -75,6 +94,7 @@ class WeaponEnchantmentRepository:
                 ).fetchall()
             }
             if not {"item_id", "name"}.issubset(columns):
+                self._label_cache[normalized] = ()
                 return ()
 
             predicates = ["LOWER(TRIM(name)) = LOWER(TRIM(?))"]
@@ -94,10 +114,12 @@ class WeaponEnchantmentRepository:
             ).fetchall()
             exact = tuple(int(row[0]) for row in rows)
             if exact:
+                self._label_cache[normalized] = exact
                 return exact
 
             effect_type = _SAVED_LABEL_EFFECT_ALIASES.get(normalized)
             if effect_type is None:
+                self._label_cache[normalized] = ()
                 return ()
 
             effect_columns = {
@@ -108,6 +130,7 @@ class WeaponEnchantmentRepository:
             }
             required = {"enchantment_item_id", "effect_type"}
             if not required.issubset(effect_columns):
+                self._label_cache[normalized] = ()
                 return ()
 
             rows = connection.execute(
@@ -120,7 +143,9 @@ class WeaponEnchantmentRepository:
                 (effect_type,),
             ).fetchall()
 
-        return tuple(int(row[0]) for row in rows)
+        result = tuple(int(row[0]) for row in rows)
+        self._label_cache[normalized] = result
+        return result
 
     def get_effects(
         self,
@@ -128,6 +153,10 @@ class WeaponEnchantmentRepository:
         *,
         use_max_value: bool = True,
     ) -> list[CombatEffect]:
+        cache_key = (int(item_id), bool(use_max_value))
+        cached = self._effects_cache.get(cache_key)
+        if cached is not None:
+            return list(cached)
 
         with sqlite3.connect(self.database_path) as connection:
             rows = connection.execute(
@@ -190,4 +219,6 @@ class WeaponEnchantmentRepository:
                 )
             )
 
-        return effects
+        result = tuple(effects)
+        self._effects_cache[cache_key] = result
+        return list(result)
