@@ -75,6 +75,33 @@ EXTREME_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "Twice-Born Star reuses the canonical two-Mundus structural evaluator."
         ),
     ),
+    ServiceDescriptor(
+        service_id="extreme.max_health_named_gear_candidate_search",
+        domain="extreme",
+        purpose=(
+            "Compose the ordinary exact Max Health gear winner with every legal non-empty "
+            "special-set subset, maximizing only the proven ordinary flat fillers around each subset."
+        ),
+        implementation_path="services.extreme_max_health_named_gear_candidate_search_service",
+        inputs=(
+            "ExtremeGearSetTopologyCatalog",
+            "ExtremeMaxResourceOrdinaryNamedGearSearchResult",
+            "ExtremeMaxHealthSpecialNamedGearBranchResult",
+        ),
+        outputs=("ExtremeMaxHealthNamedGearCandidateSearchResult",),
+        dependencies=(
+            "extreme.max_resource_ordinary_named_gear_search",
+            "extreme.max_health_special_named_gear_branches",
+            "extreme.partial_named_gear_physical_feasibility",
+        ),
+        responsibilities=("extreme_max_health_named_gear_candidate_frontier",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Special mechanics contribute zero to the pruning bound and are scored later by their "
+            "canonical runtime or search-axis owner, so the candidate reduction remains optimistic."
+        ),
+    ),
 )
 
 
