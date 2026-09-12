@@ -53,6 +53,10 @@ class RotationCandidatePlanEvidence:
     scorecard. It carries role-specific encounter gates, such as a verified healer
     demand criterion, without pretending they are support-effect gaps or unresolved
     mechanics. ``None`` means the hard-obligation state itself is unresolved.
+
+    ``role_output_unresolved`` preserves the authoritative role-output provider's
+    exact fail-closed reasons for diagnostics. It does not become a second ranking
+    gate; ranking continues to use ``role_output_value`` as its authority boundary.
     """
 
     sustain: RotationSustainProjection
@@ -63,6 +67,7 @@ class RotationCandidatePlanEvidence:
     primary_role_displacement_seconds: float | None = None
     role_hard_obligation_satisfied: bool | None = True
     role_hard_obligation_reasons: tuple[str, ...] = ()
+    role_output_unresolved: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -72,6 +77,17 @@ class RotationCandidatePlanEvidence:
                 dict.fromkeys(
                     str(item).strip()
                     for item in self.role_hard_obligation_reasons
+                    if str(item).strip()
+                )
+            ),
+        )
+        object.__setattr__(
+            self,
+            "role_output_unresolved",
+            tuple(
+                dict.fromkeys(
+                    str(item).strip()
+                    for item in self.role_output_unresolved
                     if str(item).strip()
                 )
             ),
@@ -220,6 +236,7 @@ class RotationCandidateRecommendationEvidenceService:
             role_hard_obligation_reasons=(
                 candidate_evidence.role_hard_obligation_reasons
             ),
+            diagnostics=candidate_evidence.role_output_unresolved,
             gameplay_policy_assessment=gameplay_policy_assessment,
         )
 
