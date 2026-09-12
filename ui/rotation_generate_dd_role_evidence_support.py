@@ -82,13 +82,26 @@ class RotationRuntimeTargetCombatStateResolver(Protocol):
     ) -> CombatState: ...
 
 
+def _target_state_at_time(
+    resolver: RotationRuntimeTargetCombatStateResolver | None,
+    *,
+    time_seconds: float,
+    sequence: int | None,
+) -> CombatState | None:
+    if resolver is None:
+        return None
+    return resolver(float(time_seconds), sequence)
+
+
 def _target_state_at(
     resolver: RotationRuntimeTargetCombatStateResolver | None,
     action: RotationAction,
 ) -> CombatState | None:
-    if resolver is None:
-        return None
-    return resolver(action.time_seconds, action.sequence)
+    return _target_state_at_time(
+        resolver,
+        time_seconds=action.time_seconds,
+        sequence=action.sequence,
+    )
 
 
 def _weapon_attack_evaluation_at(
@@ -98,13 +111,18 @@ def _weapon_attack_evaluation_at(
     candidate: GeneratedRotationCandidate,
     action: RotationAction,
     runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None,
+    runtime_point: tuple[float, int | None] | None = None,
 ) -> tuple[BuildEvaluation | None, object | None, tuple[str, ...]]:
-    """Resolve one LA/HA evaluation from the exact canonical action-time context."""
+    """Resolve one LA/HA evaluation from its authoritative runtime damage point."""
 
     if runtime_build_context_resolver is not None:
-        runtime = runtime_build_context_resolver(
+        runtime_time, runtime_sequence = runtime_point or (
             action.time_seconds,
             action.sequence,
+        )
+        runtime = runtime_build_context_resolver(
+            float(runtime_time),
+            runtime_sequence,
         )
         if not runtime.resolved or runtime.context is None:
             unresolved = tuple(
@@ -311,7 +329,7 @@ class _RotationGenerateBarAwareLightAttackDamageProvider:
 
 
 class _RotationGenerateBarAwareHeavyAttackDamageProvider:
-    """Evaluate only scheduler-verified fully charged heavies on their exact runtime bar."""
+    """Evaluate verified fully charged heavies at their exact completion runtime point."""
 
     def __init__(
         self,
@@ -348,12 +366,33 @@ class _RotationGenerateBarAwareHeavyAttackDamageProvider:
                 ),
             )
 
+        completion_evidence = (
+            RotationHeavySustainProjectionService.completion_evidence_from_verified_reservations(
+                candidate.plan
+            )
+        )
+        completion = next(
+            (
+                item
+                for item in completion_evidence
+                if item.action_time_seconds == action.time_seconds
+                and item.action_sequence == action.sequence
+            ),
+            None,
+        )
+        runtime_point = (
+            (float(completion.completion_time_seconds), None)
+            if completion is not None
+            else None
+        )
+
         build_evaluation, context, unresolved = _weapon_attack_evaluation_at(
             evaluation=self.evaluation,
             static_context=self.static_context,
             candidate=candidate,
             action=action,
             runtime_build_context_resolver=self.runtime_build_context_resolver,
+            runtime_point=runtime_point,
         )
         if build_evaluation is None or context is None:
             return RotationActionDamageEvidence(
@@ -363,9 +402,16 @@ class _RotationGenerateBarAwareHeavyAttackDamageProvider:
                 unresolved=unresolved,
             )
 
-        completion_evidence = (
-            RotationHeavySustainProjectionService.completion_evidence_from_verified_reservations(
-                candidate.plan
+        target_combat_state = (
+            _target_state_at_time(
+                self.runtime_target_combat_state_resolver,
+                time_seconds=completion.completion_time_seconds,
+                sequence=None,
+            )
+            if completion is not None
+            else _target_state_at(
+                self.runtime_target_combat_state_resolver,
+                action,
             )
         )
         return RotationCandidateHeavyAttackDamageEvidenceService(
@@ -378,10 +424,7 @@ class _RotationGenerateBarAwareHeavyAttackDamageProvider:
                 target_resistance=self.target_resistance,
             ),
             attacker_combat_state=getattr(context, "combat_state", None),
-            target_combat_state=_target_state_at(
-                self.runtime_target_combat_state_resolver,
-                action,
-            ),
+            target_combat_state=target_combat_state,
         ).evaluate_action(
             candidate=candidate,
             action=action,
@@ -505,9 +548,9 @@ class RotationGenerateDDRoleEvidenceSupport:
     reviewed as such. Dynamic DoTs bind to the final stabilized candidate's runtime
     combat-state resolver and rebuild exact-time calculation context for every tick;
     when target-side runtime evidence exists they also re-resolve Damage Taken at the
-    exact tick timestamp. Stabilized LA/HA evidence uses that same exact runtime
-    build-context resolver so temporal resource/stat/bar state does not collapse back
-    to static build values. Direct/snapshot damage also consumes explicit target-side
+    exact tick timestamp. Stabilized LA evidence uses exact action-time runtime state;
+    verified HA evidence resolves attacker and target state at the scheduler-proven
+    completion timestamp. Direct/snapshot damage also consumes explicit target-side
     runtime combat state when authoritative evidence supplies it; target identity
     windows are not treated as target debuff state. Non-cast periodic activation
     anchors consume an authoritative runtime anchor resolver from the stabilized
