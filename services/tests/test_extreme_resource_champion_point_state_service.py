@@ -130,3 +130,43 @@ def test_incomplete_cp_mechanics_fail_closed_without_materializing_candidates():
     assert state.non_slottable_allocations == ()
     assert state.slottable_allocations == ()
     assert state.unresolved == ("unresolved CP",)
+
+
+def test_state_build_reuses_objective_state_without_rebuilding_audit_or_repository():
+    record = _record("Arcane Supremacy", slottable=True)
+
+    class _CountingRepository(_Repository):
+        def __init__(self):
+            super().__init__(
+                (record,),
+                {"Arcane Supremacy": [_effect("Arcane Supremacy", StatId.MAX_MAGICKA, 1300.0)]},
+            )
+            self.resolve_calls = 0
+
+        def resolve(self, name, points):
+            self.resolve_calls += 1
+            return super().resolve(name, points)
+
+    class _CountingAudit(_Audit):
+        def __init__(self):
+            super().__init__(complete=True)
+            self.calls = 0
+
+        def build(self, objective_key):
+            self.calls += 1
+            return super().build(objective_key)
+
+    repo = _CountingRepository()
+    audit = _CountingAudit()
+    service = ExtremeResourceChampionPointStateService(
+        repository=repo,
+        audit_service=audit,
+    )
+
+    first = service.build("max_magicka")
+    second = service.build("MAX_MAGICKA")
+
+    assert second is first
+    assert first.slottable_allocations == (("Arcane Supremacy", 50, 1300.0),)
+    assert audit.calls == 1
+    assert repo.resolve_calls == 1
