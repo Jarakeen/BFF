@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Service-catalog metadata for Rotation Builder gameplay-practice policy."""
+"""Service-catalog metadata for Rotation Builder policy responsibilities."""
 
 from services.service_catalog import (
     EvidenceClass,
@@ -10,6 +10,26 @@ from services.service_catalog import (
 
 
 ROTATION_GAMEPLAY_POLICY_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
+    ServiceDescriptor(
+        service_id="rotation.encounter_demand_policy.registry",
+        domain="rotation",
+        purpose=(
+            "Load reviewed encounter-demand interpretation policy from the persisted "
+            "Rotation Builder policy registry without inferring policy from encounter prose."
+        ),
+        implementation_path="services.rotation_encounter_demand_policy_registry_service",
+        inputs=("EncounterId", "PersistedRotationEncounterDemandPolicyRegistry"),
+        outputs=("EncounterRotationDemandPolicy",),
+        responsibilities=("rotation_encounter_demand_policy_persistence",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.POLICY,
+        notes=(
+            "A missing encounter key means reviewed policy is unavailable; an explicitly "
+            "persisted empty policy list means review resolved that scope to no demands. "
+            "The registry never derives policy from boss names, labels, or prose."
+        ),
+    ),
     ServiceDescriptor(
         service_id="rotation.gameplay_policy.dd_personal_heal",
         domain="rotation",
