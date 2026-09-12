@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
+from PySide6.QtWidgets import QComboBox, QDoubleSpinBox
+
 from engine.config import get_data_dir
 from minmax.character_build.passive_grant import PassiveGrant
 from minmax.resource_costs import ResourceType
@@ -53,6 +55,7 @@ from ui.rotation_dashboard_canonical_candidate_support import (
 )
 from ui.rotation_dashboard_page import RotationDashboardPage
 from ui.rotation_encounter_selector_support import RotationEncounterSelectorSupport
+from ui.rotation_generate_action_support import RotationGenerateCanonicalContextProvider
 from ui.rotation_generation_support import RotationGenerationRequest
 from ui.rotation_pdf_export_support import install_rotation_pdf_export
 from ui.rotation_selected_encounter_evidence_support import (
@@ -79,6 +82,7 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
         canonical_cadence_orchestration: RotationCanonicalCadenceOrchestrationSupport | None = None,
         encounter_guide_service: EncounterBossGuideService | None = None,
         selected_encounter_evidence: RotationSelectedEncounterEvidenceSupport | None = None,
+        canonical_generate_context_provider: RotationGenerateCanonicalContextProvider | None = None,
     ) -> None:
         super().__init__(parent)
         install_rotation_timeline(self)
@@ -88,6 +92,7 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
         )
         self.rotation_encounter_selector = RotationEncounterSelectorSupport(guide_service)
         self.rotation_encounter_selector.install(self)
+        self._install_canonical_recovery_policy_controls()
         self.rotation_selected_encounter_evidence = (
             selected_encounter_evidence
             or RotationSelectedEncounterEvidenceSupport(
@@ -131,6 +136,51 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
         self.last_canonical_cadence_orchestration_result: (
             RotationCanonicalCadenceOrchestrationResult | None
         ) = None
+        if canonical_generate_context_provider is not None:
+            self.set_rotation_generate_canonical_context_provider(
+                canonical_generate_context_provider
+            )
+
+    def _install_canonical_recovery_policy_controls(self) -> None:
+        self.rotation_recovery_resource_combo = QComboBox()
+        self.rotation_recovery_resource_combo.setMinimumWidth(120)
+        self.rotation_recovery_resource_combo.addItem("Select resource", None)
+        self.rotation_recovery_resource_combo.addItem("Magicka", ResourceType.MAGICKA)
+        self.rotation_recovery_resource_combo.addItem("Stamina", ResourceType.STAMINA)
+        self.rotation_recovery_resource_combo.setToolTip(
+            "Explicit resource pool used for canonical recovery-heavy stabilization. "
+            "Heavy Attack restoration is resolved from the actual weapon mechanics."
+        )
+
+        self.rotation_recovery_trigger_spin = QDoubleSpinBox()
+        self.rotation_recovery_trigger_spin.setRange(-1.0, 100.0)
+        self.rotation_recovery_trigger_spin.setDecimals(1)
+        self.rotation_recovery_trigger_spin.setSingleStep(1.0)
+        self.rotation_recovery_trigger_spin.setSpecialValueText("Not set")
+        self.rotation_recovery_trigger_spin.setValue(-1.0)
+        self.rotation_recovery_trigger_spin.setSuffix("%")
+        self.rotation_recovery_trigger_spin.setMinimumWidth(100)
+        self.rotation_recovery_trigger_spin.setToolTip(
+            "Explicit resource fraction at or below which recovery-heavy pressure may "
+            "participate. No threshold is assumed until you set one."
+        )
+
+        self.header.add_context_widget(
+            self._context_field("RECOVERY", self.rotation_recovery_resource_combo)
+        )
+        self.header.add_context_widget(
+            self._context_field("RECOVERY TRIGGER", self.rotation_recovery_trigger_spin)
+        )
+
+    def canonical_recovery_policy(self) -> dict[str, object | None]:
+        """Return only explicit recovery policy selected in the canonical UI."""
+        trigger_percent = float(self.rotation_recovery_trigger_spin.value())
+        return {
+            "resource": self.rotation_recovery_resource_combo.currentData(),
+            "trigger_fraction": (
+                None if trigger_percent < 0.0 else trigger_percent / 100.0
+            ),
+        }
 
     def selected_encounter_id(self) -> str | None:
         """Return the persisted encounter selected for later evidence resolution."""
@@ -176,8 +226,8 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
     def evaluate_canonical_candidates(
         self,
         *,
-        evaluator_resolver: RecoveryCandidateEvaluatorResolver,
-        scorecard_resolver: RecoveryFinalScorecardResolver,
+        evaluator_resolver: RecoveryCandidateEvaluatorResolver | None,
+        scorecard_resolver: RecoveryFinalScorecardResolver | None,
         resource: ResourceType,
         maximum_amount: int,
         trigger_fraction: float,
