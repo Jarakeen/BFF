@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Callable
 
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 from services.rotation_candidate_recommendation_evidence_service import (
@@ -18,6 +19,12 @@ from services.rotation_recovery_heavy_final_family_evaluation_service import (
     RecoveryFinalScorecardResolver,
 )
 from services.rotation_role_aware_ranking_service import RotationRoleAwareRankingInput
+
+
+RotationSnapshotPlanEvidenceProviderFactory = Callable[
+    [RecoveryHeavyStabilizedCandidateSnapshot],
+    RotationCandidatePlanEvidenceProvider,
+]
 
 
 @dataclass(frozen=True)
@@ -45,6 +52,12 @@ class RotationRecoveryFinalRoleEvidenceService:
     policy is assessed separately from mechanics through the existing context and
     policy services.
 
+    Callers with final-plan runtime evidence may supply a snapshot-bound plan-evidence
+    provider factory. It is invoked only after stabilization, so role-output services
+    that need exact runtime state cannot accidentally bind themselves to a seed plan.
+    Callers without runtime-sensitive role output continue to use the ordinary static
+    plan-evidence provider.
+
     This adapter never recalculates the final scorecard. The caller supplies the
     same final scorecard resolver used by the recovery pipeline, and the pipeline
     still replaces the scorecard once more with its saved-build legality-decorated
@@ -58,6 +71,9 @@ class RotationRecoveryFinalRoleEvidenceService:
         plan_evidence_provider: RotationCandidatePlanEvidenceProvider,
         scorecard_resolver: RecoveryFinalScorecardResolver,
         configuration: RotationRecoveryFinalRoleEvidenceConfiguration,
+        snapshot_plan_evidence_provider_factory: (
+            RotationSnapshotPlanEvidenceProviderFactory | None
+        ) = None,
         gameplay_policy_context_provider: (
             RotationCandidateGameplayPolicyContextProvider | None
         ) = None,
@@ -66,6 +82,9 @@ class RotationRecoveryFinalRoleEvidenceService:
         ) = None,
     ) -> None:
         self.plan_evidence_provider = plan_evidence_provider
+        self.snapshot_plan_evidence_provider_factory = (
+            snapshot_plan_evidence_provider_factory
+        )
         self.scorecard_resolver = scorecard_resolver
         self.configuration = configuration
         self.gameplay_policy_context_provider = gameplay_policy_context_provider
@@ -85,7 +104,10 @@ class RotationRecoveryFinalRoleEvidenceService:
             plan=snapshot.plan,
             refresh_leads=(),
         )
-        evidence = self.plan_evidence_provider.evaluate_plan(candidate)
+        provider = self.plan_evidence_provider
+        if self.snapshot_plan_evidence_provider_factory is not None:
+            provider = self.snapshot_plan_evidence_provider_factory(snapshot)
+        evidence = provider.evaluate_plan(candidate)
         gameplay_policy_assessment = self._gameplay_policy_assessment(candidate)
 
         sustain_margin = float(
@@ -131,4 +153,5 @@ class RotationRecoveryFinalRoleEvidenceService:
 __all__ = [
     "RotationRecoveryFinalRoleEvidenceConfiguration",
     "RotationRecoveryFinalRoleEvidenceService",
+    "RotationSnapshotPlanEvidenceProviderFactory",
 ]
