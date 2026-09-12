@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
 import math
@@ -33,6 +34,19 @@ class PeriodicDamageMagnitudePolicy(str, Enum):
     DYNAMIC_AT_TICK = "dynamic_at_tick"
 
 
+class PeriodicDamageActivationAnchor(str, Enum):
+    """Reviewed event from which periodic duration and first-tick offset are measured."""
+
+    CAST = "cast"
+    IMPACT = "impact"
+
+
+PeriodicDamageActivationAnchorResolver = Callable[
+    [RotationAction, PeriodicDamageActivationAnchor],
+    float | None,
+]
+
+
 @dataclass(frozen=True)
 class RotationPeriodicDamageRuntimeSemantics:
     """Reviewed runtime facts that canonical cadence/duration evidence cannot infer.
@@ -43,6 +57,12 @@ class RotationPeriodicDamageRuntimeSemantics:
     legal. Magnitude timing is intentionally separate from tick scheduling: callers
     must also review whether one cast snapshots its damage state or each tick reads
     the live state at that tick instant before DD output may claim complete damage.
+
+    ``activation_anchor`` identifies the reviewed event that owns the periodic
+    clock. Most effects begin from the skill cast and therefore use ``CAST``.
+    Travel/impact-triggered effects can instead use ``IMPACT``. Non-cast anchors
+    require an explicit runtime anchor resolver; they never silently fall back to
+    the action timestamp.
 
     ``successive_hit_multiplier`` models explicitly reviewed effects whose later
     occurrences scale from the previous occurrence. The first occurrence is 1.0x,
@@ -58,6 +78,7 @@ class RotationPeriodicDamageRuntimeSemantics:
     verified_interval_seconds: float | None = None
     magnitude_policy: PeriodicDamageMagnitudePolicy | None = None
     successive_hit_multiplier: float | None = None
+    activation_anchor: PeriodicDamageActivationAnchor = PeriodicDamageActivationAnchor.CAST
 
     def __post_init__(self) -> None:
         entity_id = ability_entity_id(self.skill_entity_id)
@@ -75,6 +96,12 @@ class RotationPeriodicDamageRuntimeSemantics:
                 self,
                 "refresh_boundary",
                 PeriodicDamageRefreshBoundary(str(self.refresh_boundary)),
+            )
+        if not isinstance(self.activation_anchor, PeriodicDamageActivationAnchor):
+            object.__setattr__(
+                self,
+                "activation_anchor",
+                PeriodicDamageActivationAnchor(str(self.activation_anchor)),
             )
         source = str(self.source or "").strip()
         if not source:
@@ -126,10 +153,10 @@ class RotationCandidatePeriodicDamageRuntimeProjectionService:
 
     Cadence and duration remain owned by the periodic timing evidence service.
     Concrete recurring scheduling remains owned by the shared Phase 7 runtime
-    binder. This layer only binds reviewed first-tick/refresh facts to one
-    rotation plan and clips occurrences to the next recast and plan horizon.
-    Magnitude timing and reviewed successive-hit scaling are preserved on the
-    semantics record for the DD output layer; they do not alter event scheduling.
+    binder. This layer only binds reviewed activation-anchor/first-tick/refresh
+    facts to one rotation plan and clips occurrences to the next recast and plan
+    horizon. Magnitude timing and reviewed successive-hit scaling are preserved on
+    the semantics record for the DD output layer; they do not alter event scheduling.
     """
 
     _EPSILON = 1e-9
@@ -137,8 +164,11 @@ class RotationCandidatePeriodicDamageRuntimeProjectionService:
     def __init__(
         self,
         timing_service: RotationCandidatePeriodicDamageTimingEvidenceService,
+        *,
+        activation_anchor_resolver: PeriodicDamageActivationAnchorResolver | None = None,
     ) -> None:
         self.timing_service = timing_service
+        self.activation_anchor_resolver = activation_anchor_resolver
 
     def project(
         self,
@@ -198,15 +228,25 @@ class RotationCandidatePeriodicDamageRuntimeProjectionService:
                 f"{timing_entry.source_name} coefficient {timing_entry.coefficient_number}: reviewed first-tick/refresh semantics are unavailable",
             )
 
-        natural_end = action.time_seconds + float(timing_entry.duration_seconds)
+        activation_time = self._activation_time(action, semantics.activation_anchor)
+        if activation_time is None:
+            return self._unresolved_entry(
+                action,
+                timing_entry,
+                f"{timing_entry.source_name} coefficient {timing_entry.coefficient_number}: "
+                f"reviewed activation anchor {semantics.activation_anchor.value} requires exact runtime anchor evidence",
+            )
+
+        natural_end = activation_time + float(timing_entry.duration_seconds)
         next_recast = self._next_recast_time(plan, action_index, action)
         active_end = min(natural_end, plan.duration_seconds)
         if next_recast is not None:
             active_end = min(active_end, next_recast)
 
-        first_occurrence = action.time_seconds + semantics.first_tick_offset_seconds
+        first_occurrence = activation_time + semantics.first_tick_offset_seconds
         evidence = (
             *timing_entry.evidence,
+            f"activation anchor {semantics.activation_anchor.value} from {semantics.source}",
             f"first tick offset {semantics.first_tick_offset_seconds:g}s from {semantics.source}",
             f"refresh boundary {semantics.refresh_boundary.value} from {semantics.source}",
         )
@@ -270,6 +310,23 @@ class RotationCandidatePeriodicDamageRuntimeProjectionService:
             evidence=tuple(dict.fromkeys(evidence)),
         )
 
+    def _activation_time(
+        self,
+        action: RotationAction,
+        anchor: PeriodicDamageActivationAnchor,
+    ) -> float | None:
+        if anchor is PeriodicDamageActivationAnchor.CAST:
+            return float(action.time_seconds)
+        if self.activation_anchor_resolver is None:
+            return None
+        value = self.activation_anchor_resolver(action, anchor)
+        if value is None:
+            return None
+        resolved = float(value)
+        if not math.isfinite(resolved) or resolved < action.time_seconds - self._EPSILON:
+            return None
+        return resolved
+
     @staticmethod
     def _next_recast_time(
         plan: RotationPlan,
@@ -300,6 +357,8 @@ class RotationCandidatePeriodicDamageRuntimeProjectionService:
 
 
 __all__ = [
+    "PeriodicDamageActivationAnchor",
+    "PeriodicDamageActivationAnchorResolver",
     "PeriodicDamageMagnitudePolicy",
     "PeriodicDamageRefreshBoundary",
     "RotationCandidatePeriodicDamageRuntimeProjectionService",
