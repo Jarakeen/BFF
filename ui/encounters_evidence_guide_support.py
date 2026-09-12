@@ -351,11 +351,16 @@ def _render_overview_evidence(
     if not hasattr(self, "encounter_overview_summary"):
         return
 
-    self.encounter_overview_summary.setText(
-        f"{encounter_name}\n\n"
+    brief_rows = tuple(getattr(projection, "brief", ()) or ())
+    summary_lines = [encounter_name, ""]
+    summary_lines.extend(f"• {value}" for value in brief_rows)
+    if brief_rows:
+        summary_lines.append("")
+    summary_lines.append(
         f"{len(timeline_rows)} timeline marker(s), {len(projection.strategy)} reviewed mechanic strategy row(s), "
         f"and {projection.evidence_rows} underlying evidence row(s) are available for this encounter."
     )
+    self.encounter_overview_summary.setText("\n".join(summary_lines))
 
     timeline_lines = [
         f"• {marker}  {label} — {detail}"
