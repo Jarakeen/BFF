@@ -72,6 +72,20 @@ class _CanonicalCandidates:
         return self.result
 
 
+class _CandidateResolverService:
+    def __init__(self) -> None:
+        self.calls = []
+        self.evaluator = object()
+        self.scorecard = object()
+
+    def build(self, **kwargs):
+        self.calls.append(kwargs)
+        return SimpleNamespace(
+            evaluator_resolver=self.evaluator,
+            scorecard_resolver=self.scorecard,
+        )
+
+
 def test_dashboard_default_candidate_bridge_enables_static_build_context() -> None:
     support = RotationDashboardCanonicalCandidateSupport(generation=_Generation())
 
@@ -152,6 +166,65 @@ def test_dashboard_path_generates_unstabilized_seed_then_runs_canonical_candidat
     assert call["max_iterations"] == 8
     assert call["baseline_id"] == "dashboard-baseline"
     assert call["character_id"] == "magrat-id"
+
+
+def test_dashboard_composes_omitted_resolver_pair_from_exact_generated_seed() -> None:
+    generation = _Generation()
+    canonical = _CanonicalCandidates()
+    resolver_service = _CandidateResolverService()
+    support = RotationDashboardCanonicalCandidateSupport(
+        generation=generation,
+        canonical_candidates=canonical,
+        candidate_resolver_service=resolver_service,  # type: ignore[arg-type]
+    )
+    player_build = _build()
+
+    support.run_effects(
+        player_build=player_build,
+        generation_request=_request(),
+        evaluator_resolver=None,
+        scorecard_resolver=None,
+        resource=ResourceType.MAGICKA,
+        maximum_amount=32000,
+        trigger_fraction=0.35,
+        demands=("healing-demand",),  # type: ignore[arg-type]
+    )
+
+    assert len(resolver_service.calls) == 1
+    resolver_call = resolver_service.calls[0]
+    assert resolver_call["player_build"] is player_build
+    assert resolver_call["baseline_plan"] is generation.plan
+    assert resolver_call["resource"] is ResourceType.MAGICKA
+    assert resolver_call["context"].demands == ("healing-demand",)
+    canonical_call = canonical.calls[0]
+    assert canonical_call["evaluator_resolver"] is resolver_service.evaluator
+    assert canonical_call["scorecard_resolver"] is resolver_service.scorecard
+
+
+def test_dashboard_rejects_partial_generate_resolver_pair() -> None:
+    generation = _Generation()
+    canonical = _CanonicalCandidates()
+    resolver_service = _CandidateResolverService()
+    support = RotationDashboardCanonicalCandidateSupport(
+        generation=generation,
+        canonical_candidates=canonical,
+        candidate_resolver_service=resolver_service,  # type: ignore[arg-type]
+    )
+
+    with pytest.raises(ValueError, match="both candidate resolvers or neither"):
+        support.run_effects(
+            player_build=_build(),
+            generation_request=_request(),
+            evaluator_resolver=object(),
+            scorecard_resolver=None,
+            resource=ResourceType.MAGICKA,
+            maximum_amount=32000,
+            trigger_fraction=0.35,
+        )
+
+    assert len(generation.calls) == 1
+    assert resolver_service.calls == []
+    assert canonical.calls == []
 
 
 def test_dashboard_path_requires_explicit_priorities_before_candidate_evaluation() -> None:
