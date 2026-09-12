@@ -274,3 +274,28 @@ def test_dashboard_path_does_not_mutate_original_generation_request() -> None:
 
     assert request.stabilize_recovery_heavies is True
     assert request.recovery_pressure_resolver is original_pressure
+
+
+def test_dashboard_forwards_runtime_activation_anchor_evidence_unchanged() -> None:
+    generation = _Generation()
+    canonical = _CanonicalCandidates()
+    support = RotationDashboardCanonicalCandidateSupport(
+        generation=generation,
+        canonical_candidates=canonical,
+    )
+    anchor_evidence = object()
+
+    support.run_effects(
+        player_build=_build(),
+        generation_request=_request(),
+        evaluator_resolver=object(),
+        scorecard_resolver=object(),
+        resource=ResourceType.MAGICKA,
+        maximum_amount=32000,
+        trigger_fraction=0.35,
+        runtime_activation_anchor_evidence=(anchor_evidence,),  # type: ignore[arg-type]
+    )
+
+    assert canonical.calls[0]["runtime_activation_anchor_evidence"] == (
+        anchor_evidence,
+    )
