@@ -100,6 +100,51 @@ def test_conditional_branch_fails_closed_when_required_condition_is_not_active()
     )
 
 
+def test_conditional_bundle_requires_every_runtime_marker() -> None:
+    runtime = _RuntimeProjector(
+        required=("food_buff_active", "armor_ability_slotted"),
+        active=("food_buff_active", "armor_ability_slotted"),
+    )
+    service = ExtremeMaxHealthSpecialNamedGearExecutionService(
+        runtime_condition_service=runtime,
+    )
+    branch = ExtremeMaxHealthSpecialNamedGearBranch(
+        set_id=999,
+        set_name="Synthetic Bundle",
+        piece_count=5,
+        kind=ExtremeMaxHealthSpecialBranchKind.CONDITIONAL_BUNDLE,
+        required_conditions=("food_buff_active", "armor_ability_slotted"),
+    )
+
+    result = service.execute(_classified(branch), build=PlayerBuild(), food="Food")
+
+    assert runtime.calls == 1
+    assert result.denominator_executable is True
+    assert not result.unresolved
+
+
+def test_conditional_bundle_fails_closed_when_any_marker_is_missing() -> None:
+    runtime = _RuntimeProjector(
+        required=("food_buff_active", "armor_ability_slotted"),
+        active=("food_buff_active",),
+    )
+    service = ExtremeMaxHealthSpecialNamedGearExecutionService(
+        runtime_condition_service=runtime,
+    )
+    branch = ExtremeMaxHealthSpecialNamedGearBranch(
+        set_id=999,
+        set_name="Synthetic Bundle",
+        piece_count=5,
+        kind=ExtremeMaxHealthSpecialBranchKind.CONDITIONAL_BUNDLE,
+        required_conditions=("food_buff_active", "armor_ability_slotted"),
+    )
+
+    result = service.execute(_classified(branch), build=PlayerBuild(), food="Food")
+
+    assert result.denominator_executable is False
+    assert any("armor_ability_slotted" in item for item in result.unresolved)
+
+
 def test_twice_born_branch_dispatches_to_existing_two_mundus_executor() -> None:
     runtime = _RuntimeProjector(required=(), active=())
     service = ExtremeMaxHealthSpecialNamedGearExecutionService(
