@@ -28,6 +28,9 @@ from services.rotation_candidate_periodic_damage_runtime_projection_service impo
     RotationCandidatePeriodicDamageRuntimeProjectionService,
     RotationPeriodicDamageRuntimeSemantics,
 )
+from services.rotation_dd_reviewed_skill_component_repository import (
+    RotationDDReviewedSkillComponentRepository,
+)
 from services.rotation_plan_runtime_build_context_service import (
     RotationRuntimeBuildContextResolver,
 )
@@ -38,9 +41,10 @@ class RotationCandidateSkillDamageEvidenceService:
 
     This service is composition only. Canonical lower-snake-case skill identity and
     coefficient resolution remain owned by ``SkillCoefficientRepository`` and
-    ``SkillTooltipCalculator``. Component identity remains owned by
-    ``SkillComponentRepository``. DD stat caps, Damage Done, mitigation, critical
-    handling, and Damage Taken remain owned by their existing combat services.
+    ``SkillTooltipCalculator``. Component identity remains owned by the reviewed DD
+    overlay on top of ``SkillComponentRepository``. DD stat caps, Damage Done,
+    mitigation, critical handling, and Damage Taken remain owned by their existing
+    combat services.
 
     Direct and periodic components share the same combat-routing helper only when
     reviewed runtime evidence permits it. Periodic tick scheduling is owned by the
@@ -56,7 +60,7 @@ class RotationCandidateSkillDamageEvidenceService:
         database_path: str | Path,
         context: BuildCalculationContext,
         calculator: SkillTooltipCalculator | None = None,
-        component_repository: SkillComponentRepository | None = None,
+        component_repository: SkillComponentRepository | object | None = None,
         target_combat_state: CombatState | None = None,
         target_critical_resistance: float = 0.0,
         periodic_runtime_projection_service: (
@@ -71,7 +75,7 @@ class RotationCandidateSkillDamageEvidenceService:
         self.context = context
         repository = SkillCoefficientRepository(self.database_path)
         self.calculator = calculator or SkillTooltipCalculator(repository)
-        self.components = component_repository or SkillComponentRepository(
+        self.components = component_repository or RotationDDReviewedSkillComponentRepository(
             self.database_path
         )
         self.target_combat_state = target_combat_state
