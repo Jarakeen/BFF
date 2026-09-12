@@ -28,18 +28,73 @@ def _existing_named_choices(combo) -> list[str]:
     return sorted(names.values(), key=str.casefold)
 
 
-def _configure_search(combo: QComboBox) -> None:
-    """Match the Build Editor's searchable combo behavior."""
+def _exact_text_index(combo: QComboBox, text: str) -> int:
+    wanted = str(text or "").strip().casefold()
+    for index in range(combo.count()):
+        if str(combo.itemText(index) or "").strip().casefold() == wanted:
+            return index
+    return -1
+
+
+def _configure_search(combo: QComboBox, *, enforce_catalog: bool = False) -> None:
+    """Give a combo the standard Build Editor type-to-filter behavior.
+
+    Existing editable selectors keep their historical free-text behavior. Fixed
+    catalog selectors become editable for searching, but an unfinished or unknown
+    value is restored to the last real catalog choice when editing finishes.
+    """
+    if bool(combo.property("foundrySearchConfigured")):
+        return
+
+    last_valid_index = combo.currentIndex()
+    combo.setProperty("foundryLastValidIndex", last_valid_index)
     combo.setEditable(True)
     combo.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
     combo.setDuplicatesEnabled(False)
+
     completer = QCompleter(combo.model(), combo)
     completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
     completer.setFilterMode(Qt.MatchFlag.MatchContains)
     completer.setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
     combo.setCompleter(completer)
-    if combo.lineEdit() is not None:
-        combo.lineEdit().setClearButtonEnabled(True)
+
+    line_edit = combo.lineEdit()
+    if line_edit is not None:
+        line_edit.setClearButtonEnabled(True)
+
+    if enforce_catalog and line_edit is not None:
+        def remember_valid(index: int) -> None:
+            if index >= 0:
+                combo.setProperty("foundryLastValidIndex", index)
+
+        def restore_catalog_choice() -> None:
+            text = str(combo.currentText() or "").strip()
+            exact = _exact_text_index(combo, text)
+            if exact >= 0:
+                combo.setCurrentIndex(exact)
+                combo.setProperty("foundryLastValidIndex", exact)
+                return
+            if not text:
+                blank = _exact_text_index(combo, "")
+                combo.setCurrentIndex(blank if blank >= 0 else -1)
+                return
+            try:
+                fallback = int(combo.property("foundryLastValidIndex"))
+            except (TypeError, ValueError):
+                fallback = -1
+            combo.setCurrentIndex(fallback if 0 <= fallback < combo.count() else 0)
+
+        combo.currentIndexChanged.connect(remember_valid)
+        line_edit.editingFinished.connect(restore_catalog_choice)
+
+    combo.setProperty("foundrySearchConfigured", True)
+
+
+def _configure_all_build_dropdowns(editor) -> None:
+    """Apply one searchable-combo interaction to every Build Editor dropdown."""
+    for combo in editor.findChildren(QComboBox):
+        was_editable = combo.isEditable()
+        _configure_search(combo, enforce_catalog=not was_editable)
 
 
 def _configure_combo(combo) -> None:
@@ -113,9 +168,14 @@ def install() -> None:
 
     from widgets.build_editor import BuildEditor
 
+    original_init = BuildEditor.__init__
     original_skills_card = BuildEditor._build_skills_card
     original_load = BuildEditor.load
     original_model = BuildEditor.model
+
+    def init_with_searchable_dropdowns(self, *args, **kwargs) -> None:
+        original_init(self, *args, **kwargs)
+        _configure_all_build_dropdowns(self)
 
     def skills_card_with_canonical_potions(self):
         card = original_skills_card(self)
@@ -136,6 +196,7 @@ def install() -> None:
         build.Potion = _persisted_value(self.potion)
         return build
 
+    BuildEditor.__init__ = init_with_searchable_dropdowns
     BuildEditor._build_skills_card = skills_card_with_canonical_potions
     BuildEditor.load = load_with_canonical_potions
     BuildEditor.model = property(model_with_canonical_potions)
