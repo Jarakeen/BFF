@@ -31,6 +31,19 @@ def test_bar_prefixed_non_damage_diagnostics_remain_ambient():
     assert result.ambient == messages
 
 
+def test_potion_static_diagnostic_is_ambient_after_exact_plan_runtime_activation_exists():
+    messages = (
+        "front static context: Potion selected; activation/uptime is not part of static build state: Alliance Battle Draught",
+        "back static context: Potion selected; activation/uptime is not part of static build state: Alliance Battle Draught",
+    )
+
+    result = RotationDDOutputContextRelevanceService().classify(messages)
+
+    assert result.relevant == ()
+    assert result.ambient == messages
+    assert result.output_complete is True
+
+
 def test_offensive_and_runtime_damage_gaps_remain_relevant():
     messages = (
         "front static context: Necklace jewelry trait not yet resolved: Bloodthirsty",
@@ -39,7 +52,6 @@ def test_offensive_and_runtime_damage_gaps_remain_relevant():
         "front static context: Champion Point effect not yet modeled: Biting Aura: area damage",
         "front static context: Champion Point effect not yet modeled: Exploiter: Off Balance damage",
         "front static context: Front Bar Off Hand Charged: requires status-effect chance model",
-        "front static context: Potion selected; activation/uptime is not part of static build state: Alliance Battle Draught",
     )
 
     result = RotationDDOutputContextRelevanceService().classify(messages)
