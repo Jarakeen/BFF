@@ -2,14 +2,10 @@ from __future__ import annotations
 
 """Finite Mundus search for an active Twice-Born Star 5-piece realization.
 
-Ordinary builds keep the established one-Mundus evaluator. This adapter exists
-only for a named gear witness whose active snapshot proves Twice-Born Star at five
-pieces, and delegates every candidate back through canonical build evaluation.
-
-The default path passes ``second_mundus`` directly to the wrapped evaluator. A
-deeper composed evaluator may instead provide ``second_mundus_setter`` so the
-secondary boon can be forwarded through an inner canonical named-gear evaluator
-without duplicating the outer armor/runtime scoring stack.
+Ordinary objectives retain the full legal zero/one/two-Mundus state space. For
+Max Magicka / Max Stamina, the shared resource Mundus proof may collapse that
+space to the unique target-resource witness when every other Mundus is proven
+irrelevant to the requested maximum.
 """
 
 from collections.abc import Callable
@@ -17,11 +13,15 @@ from itertools import combinations
 from typing import Any
 
 from minmax.mundus_repository import MundusRepository
+from services.extreme_resource_mundus_projection_service import (
+    ExtremeResourceMundusProjection,
+    ExtremeResourceMundusProjectionService,
+)
 from services.extreme_structural_global_search_service import ExtremeStructuralCandidate
 
 
 class ExtremeTwiceBornMundusStructuralStatEvaluator:
-    """Score the legal zero/one/two-Mundus state space for Twice-Born Star."""
+    """Score legal TBS Mundus states with exact max-resource reduction."""
 
     def __init__(
         self,
@@ -33,6 +33,17 @@ class ExtremeTwiceBornMundusStructuralStatEvaluator:
         self.evaluator = evaluator
         self.mundus_repository = mundus_repository
         self.second_mundus_setter = second_mundus_setter
+        self._projection_cache: dict[str, ExtremeResourceMundusProjection] = {}
+
+    def mundus_projection(self, objective_key: str) -> ExtremeResourceMundusProjection | None:
+        key = str(objective_key or "").strip().casefold()
+        if key not in ExtremeResourceMundusProjectionService.SUPPORTED_OBJECTIVES:
+            return None
+        cached = self._projection_cache.get(key)
+        if cached is None:
+            cached = ExtremeResourceMundusProjectionService(self.mundus_repository).build(key)
+            self._projection_cache[key] = cached
+        return cached
 
     def mundus_choices(self) -> tuple[str, ...]:
         values: list[str] = []
@@ -45,7 +56,13 @@ class ExtremeTwiceBornMundusStructuralStatEvaluator:
             values.append(name)
         return tuple(values)
 
-    def mundus_states(self) -> tuple[tuple[str, str], ...]:
+    def mundus_states(self, objective_key: str | None = None) -> tuple[tuple[str, str], ...]:
+        key = str(objective_key or "").strip().casefold()
+        if key:
+            projection = self.mundus_projection(key)
+            if projection is not None and projection.projection_complete:
+                return ((str(projection.witness), ""),)
+
         choices = self.mundus_choices()
         states: list[tuple[str, str]] = [("", "")]
         states.extend((name, "") for name in choices)
@@ -72,8 +89,9 @@ class ExtremeTwiceBornMundusStructuralStatEvaluator:
         best_payload: dict[str, Any] | None = None
         best_unresolved: tuple[str, ...] = ()
         best_state: tuple[str, str] | None = None
+        states = self.mundus_states(objective_key)
 
-        for primary, secondary in self.mundus_states():
+        for primary, secondary in states:
             kwargs: dict[str, Any] = {"mundus": primary}
             if self.second_mundus_setter is None:
                 kwargs["second_mundus"] = secondary
@@ -114,7 +132,7 @@ class ExtremeTwiceBornMundusStructuralStatEvaluator:
         if best_value is None or best_payload is None:
             raise ValueError("Twice-Born Star Mundus search produced no legal candidate")
 
-        best_payload["twice_born_mundus_states_scored"] = len(self.mundus_states())
+        best_payload["twice_born_mundus_states_scored"] = len(states)
         return best_value, best_payload, best_unresolved
 
 
