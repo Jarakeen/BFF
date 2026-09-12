@@ -51,6 +51,10 @@ class RotationGenerateApplicationContextProvider:
     raid DPS from the live page; constant raid DPS is represented as an explicit damage
     trajectory rather than inferred from build potency, parse targets, or encounter name.
 
+    DD target resistance is read only from an explicit page policy when that control is
+    installed. Missing resistance remains ``None`` and is left for the DD role composer
+    to reject; non-DD roles do not acquire a fabricated target armor requirement.
+
     Persisted review blockers are converted into canonical blocking knowledge gaps. This
     lets partly researched encounters fail closed with the exact missing policy decision
     instead of collapsing back to a generic "no policy configured" state.
@@ -118,6 +122,16 @@ class RotationGenerateApplicationContextProvider:
         if maximum_amount <= 0:
             raise ValueError("canonical recovery resource maximum must be positive")
 
+        target_resistance = None
+        dd_policy_provider = getattr(page, "canonical_dd_evaluation_policy", None)
+        if callable(dd_policy_provider):
+            dd_policy = dd_policy_provider()
+            raw_resistance = dd_policy.get("target_resistance")
+            if raw_resistance is not None:
+                target_resistance = float(raw_resistance)
+                if target_resistance < 0.0:
+                    raise ValueError("canonical DD target resistance cannot be negative")
+
         demand_policies, threshold_policies, knowledge_gaps = self._demand_policy(
             encounter_id
         )
@@ -155,6 +169,7 @@ class RotationGenerateApplicationContextProvider:
                 threshold_demand_policies=threshold_policies,
                 threshold_damage_segments=threshold_segments,
                 difficulty=difficulty,
+                target_resistance=target_resistance,
                 evaluator_resolver=None,
                 scorecard_resolver=None,
                 resource=resource,
