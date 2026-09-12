@@ -44,11 +44,16 @@ class _TimingService:
         )
 
 
-def _action(time_seconds: float, sequence: int = 0) -> RotationAction:
+def _action(
+    time_seconds: float,
+    sequence: int = 0,
+    *,
+    kind: RotationActionKind = RotationActionKind.SKILL,
+) -> RotationAction:
     return RotationAction(
         time_seconds,
         sequence,
-        RotationActionKind.SKILL,
+        kind,
         name="burning_talons",
         bar="front",
     )
@@ -93,6 +98,26 @@ def test_recast_clips_old_periodic_instance_before_later_ticks() -> None:
     assert tuple(event.time_seconds for event in projection.entries[1].events) == (7.0, 9.0)
     assert projection.entries[0].active_end_time_seconds == 5.0
     assert projection.entries[1].active_end_time_seconds == 10.0
+
+
+def test_ultimate_parent_projects_and_refreshes_periodic_ticks() -> None:
+    projection = RotationCandidatePeriodicDamageRuntimeProjectionService(
+        _TimingService()
+    ).project(
+        plan=_plan(
+            _action(0.0, 0, kind=RotationActionKind.ULTIMATE),
+            _action(5.0, 1, kind=RotationActionKind.ULTIMATE),
+            duration=10.0,
+        ),
+        semantics=(_semantics(),),
+    )
+
+    assert projection.resolved is True
+    assert len(projection.entries) == 2
+    assert all(entry.action.kind is RotationActionKind.ULTIMATE for entry in projection.entries)
+    assert tuple(event.time_seconds for event in projection.entries[0].events) == (2.0, 4.0)
+    assert tuple(event.time_seconds for event in projection.entries[1].events) == (7.0, 9.0)
+    assert projection.entries[0].active_end_time_seconds == 5.0
 
 
 def test_exact_recast_boundary_can_explicitly_allow_old_tick() -> None:
