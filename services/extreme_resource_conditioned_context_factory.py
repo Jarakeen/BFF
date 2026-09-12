@@ -9,7 +9,9 @@ those whose marker is present.
 """
 
 from dataclasses import replace
+from pathlib import Path
 
+from minmax.armor_glyph_repository import ArmorGlyphEffectRepository
 from minmax.context_factory import BuildCalculationContextFactory
 from minmax.derived_stats import StatContribution
 from minmax.gear_stat_inputs import (
@@ -18,9 +20,45 @@ from minmax.gear_stat_inputs import (
     GearCalculationInputs,
     GearStatInputResolver,
 )
+from minmax.jewelry_glyph_repository import JewelryGlyphEffectRepository
+from minmax.jewelry_trait_repository import JewelryTraitRepository
 from minmax.phase5_context_factory import Phase5BuildCalculationContextFactory
 from minmax.stat_ids import StatId
 from models.build_model import PlayerBuild
+
+
+_SHARED_STATIC_GEAR_INPUT_REPOSITORIES: dict[
+    str,
+    tuple[
+        ArmorGlyphEffectRepository,
+        JewelryGlyphEffectRepository,
+        JewelryTraitRepository,
+    ],
+] = {}
+
+
+def _shared_static_gear_input_repositories(database_path: str | Path):
+    """Reuse immutable Extreme gear-input repositories for one audit process.
+
+    Extreme exhaustive scoring constructs many conditioned context factories for the
+    same canonical database. These repositories already own deterministic per-name
+    caches, so recreating them per evaluator discards those caches and reopens SQLite
+    for the same armor/jewelry inputs on every candidate. The cache is intentionally
+    process-local and database-path scoped; a fresh audit process therefore sees a
+    fresh database snapshot.
+    """
+
+    key = str(Path(database_path).resolve())
+    cached = _SHARED_STATIC_GEAR_INPUT_REPOSITORIES.get(key)
+    if cached is not None:
+        return cached
+    repositories = (
+        ArmorGlyphEffectRepository(database_path),
+        JewelryGlyphEffectRepository(database_path),
+        JewelryTraitRepository(database_path),
+    )
+    _SHARED_STATIC_GEAR_INPUT_REPOSITORIES[key] = repositories
+    return repositories
 
 
 class ExtremeResourceConditionedGearStatInputResolver(GearStatInputResolver):
@@ -100,6 +138,16 @@ class ExtremeResourceConditionedPhase5ContextFactory(Phase5BuildCalculationConte
     """Phase 5 context factory carrying one explicit Extreme gear-condition state."""
 
     def __init__(self, *args, **kwargs) -> None:
+        gear_set_repository = kwargs.get("gear_set_repository")
+        database_path = getattr(gear_set_repository, "database_path", None)
+        if database_path is not None:
+            armor_glyph, jewelry_glyph, jewelry_trait = _shared_static_gear_input_repositories(
+                database_path
+            )
+            kwargs.setdefault("armor_glyph_repository", armor_glyph)
+            kwargs.setdefault("jewelry_glyph_repository", jewelry_glyph)
+            kwargs.setdefault("jewelry_trait_repository", jewelry_trait)
+
         super().__init__(*args, **kwargs)
         existing = self.gear_resolver
         if existing is not None and not isinstance(
