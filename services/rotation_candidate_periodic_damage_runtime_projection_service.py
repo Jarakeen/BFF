@@ -20,6 +20,12 @@ from services.rotation_candidate_periodic_damage_timing_evidence_service import 
 )
 
 
+_PERIODIC_PARENT_ACTION_KINDS = {
+    RotationActionKind.SKILL,
+    RotationActionKind.ULTIMATE,
+}
+
+
 class PeriodicDamageRefreshBoundary(str, Enum):
     """Reviewed behavior for an old periodic instance at an exact refresh boundary."""
 
@@ -155,11 +161,11 @@ class RotationCandidatePeriodicDamageRuntimeProjectionService:
 
     Cadence and duration remain owned by the periodic timing evidence service.
     Concrete recurring scheduling remains owned by the shared Phase 7 runtime
-    binder. This layer only binds reviewed activation-anchor/first-tick/refresh
-    facts to one rotation plan and clips occurrences to the next reviewed refresh
-    anchor and plan horizon. Magnitude timing and reviewed successive-hit scaling are
-    preserved on the semantics record for the DD output layer; they do not alter
-    event scheduling.
+    binder. Ordinary skills and Ultimates may both own canonical periodic components;
+    this layer only binds reviewed activation-anchor/first-tick/refresh facts to one
+    rotation plan and clips occurrences to the next reviewed refresh anchor and plan
+    horizon. Magnitude timing and reviewed successive-hit scaling are preserved on
+    the semantics record for the DD output layer; they do not alter event scheduling.
     """
 
     _EPSILON = 1e-9
@@ -186,7 +192,7 @@ class RotationCandidatePeriodicDamageRuntimeProjectionService:
         unresolved: list[str] = []
 
         for action_index, action in enumerate(plan.actions):
-            if action.kind is not RotationActionKind.SKILL:
+            if action.kind not in _PERIODIC_PARENT_ACTION_KINDS:
                 continue
             timing_report = self.timing_service.inspect_action(action)
             unresolved.extend(timing_report.unresolved)
@@ -351,7 +357,7 @@ class RotationCandidatePeriodicDamageRuntimeProjectionService:
     ) -> tuple[float | None, str | None]:
         identity = ability_entity_id(action.name or "")
         for later in plan.actions[action_index + 1 :]:
-            if later.kind is not RotationActionKind.SKILL:
+            if later.kind not in _PERIODIC_PARENT_ACTION_KINDS:
                 continue
             if ability_entity_id(later.name or "") != identity:
                 continue
