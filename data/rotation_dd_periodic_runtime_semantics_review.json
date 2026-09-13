@@ -31,7 +31,9 @@
       "magnitude_policy": null,
       "successive_hit_multiplier": null,
       "evidence": [
-        "Corpsebuster DD coefficient-local tooltip: deals Disease Damage over 20 seconds"
+        "Corpsebuster DD coefficient-local tooltip: deals Disease Damage over 20 seconds",
+        "ESO Logs mystery-era candidate drilldown: evidence ID 118766 was observed on 1196 of 1380 Detonating Siphon cast tracks with 8826 same-track damage events across 22 targets; median first observation was 0.020s after cast, median last observation 2.0835s, and only 4 events occurred within ±0.25s of the reviewed 20-second active-window end",
+        "ESO Logs mystery-era candidate drilldown: same-track intervals clustered primarily around approximately 0.69-0.71s while first offsets clustered around 0.02-0.04s; this topology does not support promoting 118766 as a simple cast-anchored 20-second periodic component without further ownership, refresh, and magnitude review"
       ]
     },
     {
