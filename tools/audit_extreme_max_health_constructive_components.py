@@ -6,10 +6,6 @@ This is the Max Health companion to the Max Magicka constructive audit. It asks 
 existing denominator/projection services for the strongest reviewed witness on each
 independent axis, ranks positive named-set breakpoints, and classifies the remaining
 interaction-sensitive Max Health gear. It does not claim a global record by itself.
-
-Unlike Max Magicka/Stamina, Max Health does not currently have a proof-safe class-route
-dominance reducer. The complete legal class/subclass route universe is therefore
-retained for later canonical scoring rather than being collapsed here.
 """
 
 import argparse
@@ -39,6 +35,9 @@ from services.extreme_gear_set_objective_relevance_service import (
 from services.extreme_global_search_universe_service import ExtremeGlobalSearchUniverseService
 from services.extreme_jewelry_resource_static_trait_state_service import (
     ExtremeJewelryResourceStaticTraitStateService,
+)
+from services.extreme_max_health_class_route_projection_service import (
+    ExtremeMaxHealthClassRouteProjectionService,
 )
 from services.extreme_max_health_special_named_gear_branch_service import (
     ExtremeMaxHealthSpecialNamedGearBranchService,
@@ -109,9 +108,8 @@ def main() -> int:
     race = ExtremeResourceRaceProjectionService(database).build(
         OBJECTIVE, tuple(universe.races)
     )
-    route_count = len(tuple(universe.class_routes))
-    route_denominator_retained = bool(
-        universe.structural_denominator_proven and route_count > 0
+    route = ExtremeMaxHealthClassRouteProjectionService(database).build(
+        tuple(universe.class_routes)
     )
     attributes = ExtremeResourceAttributeProjectionService.build(
         OBJECTIVE, tuple(universe.attribute_allocations)
@@ -208,14 +206,16 @@ def main() -> int:
         f"projection_complete={race.projection_complete}"
     )
     print(
-        f"class_routes_retained={route_count} "
-        f"full_route_denominator_retained={route_denominator_retained} "
-        "dominance_reduction_applied=False"
+        f"class_routes_source={route.source_route_count} "
+        f"class_route_signatures={len(route.signatures)} "
+        f"projection_complete={route.projection_complete}"
     )
-    print(
-        "class_route=<deferred to canonical Max Health scoring; route-sensitive health "
-        "passives/runtime states prevent Magicka/Stamina-style dominance collapse>"
-    )
+    print(f"class_route_axes={route.reviewed_route_axes!r}")
+    for signature, witness in zip(route.signatures, route.routes):
+        print(
+            f"  route_signature={signature!r} witness={witness.base_class.value} "
+            f"subclassed={witness.is_subclassed} lines={tuple(witness.equipped_skill_lines)!r}"
+        )
     print(
         f"attributes={attributes.target_points if attributes.projection_complete else 0} "
         f"points delta={attribute_delta:g} projection_complete={attributes.projection_complete}"
@@ -283,6 +283,7 @@ def main() -> int:
             str(item)
             for item in (
                 *race.unresolved,
+                *route.unresolved,
                 *attributes.unresolved,
                 *mundus.unresolved,
                 *provisioning.unresolved,
@@ -302,7 +303,7 @@ def main() -> int:
         print(f"  unresolved: {item}")
     if len(unresolved) > 30:
         print(f"  ... {len(unresolved) - 30} more")
-    print("NEXT_STEP=construct and canonical-score the strongest legal Max Health gear witnesses across the full retained class-route denominator, then promote the best clean incumbent into exact ordinary + targeted special closure")
+    print("NEXT_STEP=canonical-score the strongest legal Max Health named-gear witnesses across the proof-reduced class-route signatures, then promote the best clean incumbent into exact ordinary + targeted special closure")
     return 0
 
 
