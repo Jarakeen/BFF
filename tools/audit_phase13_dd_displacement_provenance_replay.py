@@ -118,6 +118,12 @@ def main() -> int:
                 else f"{row.last_observed_queue_time_seconds:g}s"
             )
             print(f"{row.bar} | {row.skill_name} | source=unknown | last_seen_queued={last_seen}")
+            if row.plausible_instances:
+                plausible = ", ".join(
+                    f"{item.source_time_seconds:g}s/seq{item.source_sequence}"
+                    for item in row.plausible_instances
+                )
+                print(f"  plausible_sources: {plausible}")
             for message in row.unresolved:
                 print(f"  unresolved: {message}")
     print()
@@ -133,7 +139,7 @@ def main() -> int:
         )
     elif unresolved_count:
         print(
-            "NEXT_STEP=some tails still enter outside the observable queue-selection seam; add narrower provenance only for those exact cases"
+            "NEXT_STEP=remaining unresolved tails are concrete same-skill dedupe ambiguity; inspect their exact plausible source instances before adding any scheduler provenance"
         )
     else:
         print(
