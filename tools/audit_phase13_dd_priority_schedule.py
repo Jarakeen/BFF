@@ -319,9 +319,11 @@ def main() -> int:
     print()
     print(
         "Interpretation: explicit priorities are caller-owned gameplay intent. Cross-bar "
-        "fillers and routes remain diagnostic only. Slot feasibility enforces the current "
-        "1-second BAR_SWAP model, and joint selection additionally prevents overlapping "
-        "routes or stale source-bar assumptions before any plan mutation is attempted."
+        "fillers and routes remain diagnostic only. Slot feasibility models weapon swap "
+        "as outside the one-second skill GCD, so one WAIT skill slot can hold the outbound "
+        "swap, LA/skill weave, and an optional post-skill return swap. Joint selection "
+        "still prevents competing WAIT claims or stale source-bar assumptions before "
+        "plan mutation."
     )
     return 0
 
