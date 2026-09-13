@@ -62,6 +62,7 @@ def test_unconditional_component_is_included_without_runtime_health() -> None:
     )
 
     assert result.status is RotationExecuteComponentDamageStatus.INCLUDE
+    assert result.damage_multiplier == 1.0
     assert result.unresolved == ()
 
 
@@ -92,10 +93,11 @@ def test_threshold_activation_includes_component_below_threshold() -> None:
     )
 
     assert result.status is RotationExecuteComponentDamageStatus.INCLUDE
+    assert result.damage_multiplier == 1.0
     assert result.unresolved == ()
 
 
-def test_active_damage_amplification_fails_closed_without_interpolation() -> None:
+def test_unreviewed_active_damage_amplification_fails_closed() -> None:
     result = RotationExecuteComponentDamageEligibilityService().resolve(
         skill_name="Scaling Execute",
         coefficient_number=2,
@@ -110,9 +112,27 @@ def test_active_damage_amplification_fails_closed_without_interpolation() -> Non
     )
 
     assert result.status is RotationExecuteComponentDamageStatus.UNKNOWN
-    assert result.unresolved == (
-        "Scaling Execute: coefficient 2: target-health damage amplification is active but exact interpolation is unresolved",
+    assert "continuous execute interpolation is not source-reviewed" in result.unresolved[0]
+
+
+def test_reviewed_killers_blade_amplification_returns_linear_multiplier() -> None:
+    result = RotationExecuteComponentDamageEligibilityService().resolve(
+        skill_name="Killer's Blade",
+        coefficient_number=2,
+        consequences=(
+            _consequence(
+                SkillComponentConditionalConsequenceType.AMPLIFIES_DAMAGE,
+                threshold=0.50,
+                maximum_bonus_fraction=4.0,
+            ),
+        ),
+        snapshot=_snapshot(25.0),
+        target_identity="boss",
     )
+
+    assert result.status is RotationExecuteComponentDamageStatus.INCLUDE
+    assert result.damage_multiplier == 3.0
+    assert result.unresolved == ()
 
 
 def test_inactive_damage_amplification_keeps_base_component() -> None:
@@ -130,6 +150,7 @@ def test_inactive_damage_amplification_keeps_base_component() -> None:
     )
 
     assert result.status is RotationExecuteComponentDamageStatus.INCLUDE
+    assert result.damage_multiplier == 1.0
     assert result.unresolved == ()
 
 
