@@ -2,11 +2,12 @@ from __future__ import annotations
 
 """Proof-reduce provisioning choices for Extreme max-resource ceilings.
 
-The full canonical provisioning catalogue is still reviewed. For Max Magicka and
-Max Stamina, static provisioning effects are additive and non-negative, so only the
-strongest witness in each semantic provisioning kind can affect the objective.
-Keeping food and drink separate preserves runtime conditions such as
-``drink_buff_active`` while avoiding repeated scoring of every recipe.
+The full canonical provisioning catalogue is still reviewed. For Max Health,
+Max Magicka, and Max Stamina, static provisioning effects are additive and
+non-negative, so only the strongest witness in each semantic provisioning kind
+can affect the objective. Keeping food and drink separate preserves runtime
+conditions such as ``drink_buff_active`` while avoiding repeated scoring of every
+recipe.
 
 Canonical provisioning entries whose static resolver has no mapped sheet stats are
 not automatically blockers. Their source tooltip may prove objective irrelevance
@@ -30,10 +31,12 @@ from minmax.stat_ids import StatId
 
 
 _OBJECTIVE_STATS = {
+    "max_health": StatId.MAX_HEALTH,
     "max_magicka": StatId.MAX_MAGICKA,
     "max_stamina": StatId.MAX_STAMINA,
 }
 _OBJECTIVE_RESOURCE_WORD = {
+    "max_health": "health",
     "max_magicka": "magicka",
     "max_stamina": "stamina",
 }
@@ -68,8 +71,6 @@ class ExtremeResourceProvisioningProjectionService:
         self._kind_map_error: str | None = None
 
     def _production_cache_key(self, objective_key: str) -> tuple[str, str] | None:
-        # Share only the real canonical repository. Test doubles and injected
-        # repositories keep instance-local behavior and cannot contaminate each other.
         if not isinstance(self.repository, ProvisioningStaticRepository):
             return None
         database_path = str(getattr(self.repository, "database_path", "") or "").strip()
@@ -171,16 +172,13 @@ class ExtremeResourceProvisioningProjectionService:
         if resource not in text:
             return True
 
-        # Any source tooltip that couples the target resource with a Max clause is
-        # potentially relevant and must remain explicit rather than being guessed away.
         if "max" in text:
             return False
 
-        # Remove reviewed recovery-only grammar. This covers both explicit single
-        # recovery clauses and ESO's shared "Magicka and Stamina Recovery" wording.
         recovery_patterns = (
             r"health\s*,?\s*magicka\s*,?\s*(?:and\s*)?stamina\s+recovery",
             r"magicka\s+and\s+stamina\s+recovery",
+            r"health\s+recovery",
             r"magicka\s+recovery",
             r"stamina\s+recovery",
         )
@@ -205,9 +203,6 @@ class ExtremeResourceProvisioningProjectionService:
         names = tuple(self.repository.list_names())
         unresolved: list[str] = []
         best: dict[str, tuple[float, str] | None] = {"food": None, "drink": None}
-
-        # Load canonical food/drink identity evidence once before walking the
-        # provisioning catalogue. _kind() is then an in-memory lookup.
         self._load_kind_map()
 
         for raw_name in names:
