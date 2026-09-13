@@ -124,12 +124,43 @@ def apply_roster_team_context(page, team_name: str, members) -> None:
     )
 
 
+def _send_roster_team_to_comp(page) -> None:
+    from ui import roster_assignment_action_support as assignment_actions
+
+    team_name = assignment_actions._selected_team_name(page)
+    if not team_name:
+        page.status.warning("Choose a team in the Assignments team menu before sending it to Comp Maker.")
+        return
+    members = assignment_actions._team_members(page, team_name)
+    if not members:
+        page.status.warning(f"{team_name} has no roster members to send to Comp Maker.")
+        return
+    if not assignment_actions._show_page(page, "comp_builder"):
+        return
+
+    comp = getattr(page.window(), "pages", {}).get("comp_builder")
+    if comp is None or not hasattr(comp, "apply_roster_team_context"):
+        page.status.warning("Comp Maker opened, but the roster intake bridge is unavailable.")
+        return
+    comp.apply_roster_team_context(team_name, members)
+
+
+def _flatten_attention_card(page) -> None:
+    card = getattr(page, "attention_card", None)
+    if card is None:
+        return
+    card.header.hide()
+    card.setProperty("flatActionCard", True)
+
+
 def install() -> None:
     global _INSTALLED
     if _INSTALLED:
         return
 
     from ui.comp_builder_page import CompBuilderPage
+    from ui.themed_roster_page import RosterPage
+    from ui import roster_assignment_action_support as assignment_actions
 
     original_init = CompBuilderPage.__init__
 
@@ -139,4 +170,17 @@ def install() -> None:
 
     CompBuilderPage.__init__ = init_with_roster_intake
     CompBuilderPage.apply_roster_team_context = apply_roster_team_context
+
+    # Existing buttons resolve this module-level function at click time, so swap
+    # the handler rather than rebuilding yet another button row.
+    assignment_actions._send_to_comp_maker = _send_roster_team_to_comp
+
+    original_refresh_summary_cards = RosterPage._refresh_summary_cards
+
+    def refresh_summary_cards_flat(self):
+        result = original_refresh_summary_cards(self)
+        _flatten_attention_card(self)
+        return result
+
+    RosterPage._refresh_summary_cards = refresh_summary_cards_flat
     _INSTALLED = True
