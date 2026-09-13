@@ -33,8 +33,8 @@ def _plan(*actions: RotationAction) -> RotationPlan:
     )
 
 
-def test_stay_on_target_route_requires_two_consecutive_wait_slots() -> None:
-    plan = _plan(_wait(33), _wait(34), _skill(36, "Venom Skull", "front"))
+def test_stay_on_target_route_uses_one_wait_skill_slot() -> None:
+    plan = _plan(_wait(33), _skill(36, "Venom Skull", "front"))
     proposal = RotationCrossBarRouteProposal(
         wait_time_seconds=33.0,
         source_bar="back",
@@ -49,12 +49,13 @@ def test_stay_on_target_route_requires_two_consecutive_wait_slots() -> None:
     result = RotationCrossBarRouteSlotFeasibilityService().assess(plan, (proposal,))[0]
 
     assert result.feasible is True
-    assert result.required_wait_slots == 2
-    assert result.available_wait_times == (33.0, 34.0)
+    assert result.required_wait_slots == 1
+    assert result.available_wait_times == (33.0,)
+    assert "non-GCD bar swap" in result.reason
 
 
-def test_return_route_fails_when_next_required_action_leaves_no_return_slot() -> None:
-    plan = _plan(_wait(19), _wait(20), _skill(21, "Stampede", "back"))
+def test_return_route_uses_one_wait_slot_before_next_source_bar_skill() -> None:
+    plan = _plan(_wait(19), _skill(20, "Stampede", "back"))
     proposal = RotationCrossBarRouteProposal(
         wait_time_seconds=19.0,
         source_bar="back",
@@ -62,20 +63,20 @@ def test_return_route_fails_when_next_required_action_leaves_no_return_slot() ->
         filler_skill_name="Venom Skull",
         filler_priority=1,
         next_required_bar="back",
-        next_required_time_seconds=21.0,
+        next_required_time_seconds=20.0,
         return_swap_required=True,
     )
 
     result = RotationCrossBarRouteSlotFeasibilityService().assess(plan, (proposal,))[0]
 
-    assert result.feasible is False
-    assert result.required_wait_slots == 3
-    assert result.available_wait_times == (19.0, 20.0)
-    assert "only 2 are available" in result.reason
+    assert result.feasible is True
+    assert result.required_wait_slots == 1
+    assert result.available_wait_times == (19.0,)
+    assert "same-GCD return swap" in result.reason
 
 
-def test_single_wait_cannot_fabricate_same_second_swap_and_filler() -> None:
-    plan = _plan(_wait(10), _skill(12, "Blighted Blastbones", "front"))
+def test_route_fails_closed_without_wait_skill_slot() -> None:
+    plan = _plan(_skill(10, "Scalding Rune", "back"), _skill(12, "Blighted Blastbones", "front"))
     proposal = RotationCrossBarRouteProposal(
         wait_time_seconds=10.0,
         source_bar="back",
@@ -90,4 +91,25 @@ def test_single_wait_cannot_fabricate_same_second_swap_and_filler() -> None:
     result = RotationCrossBarRouteSlotFeasibilityService().assess(plan, (proposal,))[0]
 
     assert result.feasible is False
-    assert result.available_wait_times == (10.0,)
+    assert result.required_wait_slots == 1
+    assert result.available_wait_times == ()
+    assert "none is available" in result.reason
+
+
+def test_route_rejects_same_timestamp_next_skill_obligation() -> None:
+    plan = _plan(_wait(10), _skill(10, "Blighted Blastbones", "front"))
+    proposal = RotationCrossBarRouteProposal(
+        wait_time_seconds=10.0,
+        source_bar="back",
+        target_bar="front",
+        filler_skill_name="Venom Skull",
+        filler_priority=1,
+        next_required_bar="front",
+        next_required_time_seconds=10.0,
+        return_swap_required=False,
+    )
+
+    result = RotationCrossBarRouteSlotFeasibilityService().assess(plan, (proposal,))[0]
+
+    assert result.feasible is False
+    assert "collide" in result.reason
