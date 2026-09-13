@@ -11,6 +11,7 @@ from minmax.combat_damage_modifiers import (
     damage_taken_from_target_state,
 )
 from minmax.combat_state import CombatState
+from minmax.combat_state_snapshot import CombatStateSnapshot
 from minmax.damage_done import DamageDoneModifiers
 from minmax.dd_damage import DDDamageEvent, calculate_dd_damage
 from minmax.dd_mitigation import calculate_dd_mitigation
@@ -21,6 +22,10 @@ from minmax.skill_coefficient_repository import SkillCoefficientRepository, abil
 from minmax.skill_component_classification import (
     SkillComponentClassification,
     SkillEffectKind,
+)
+from minmax.skill_component_condition import SkillComponentConditionType
+from minmax.skill_component_conditional_consequence_repository import (
+    SkillComponentConditionalConsequenceRepository,
 )
 from minmax.skill_component_repository import SkillComponentRepository
 from minmax.skill_tooltip_calculator import SkillTooltipCalculator
@@ -33,6 +38,10 @@ from services.rotation_candidate_periodic_damage_runtime_projection_service impo
 )
 from services.rotation_dd_reviewed_skill_component_repository import (
     RotationDDReviewedSkillComponentRepository,
+)
+from services.rotation_execute_component_damage_eligibility_service import (
+    RotationExecuteComponentDamageEligibilityService,
+    RotationExecuteComponentDamageStatus,
 )
 from services.rotation_plan_runtime_build_context_service import (
     RotationRuntimeBuildContextResolver,
@@ -52,6 +61,10 @@ RotationRuntimeTargetCombatStateResolver = Callable[
 RotationRuntimeTargetResistanceResolver = Callable[
     [float, int | None],
     float,
+]
+RotationRuntimeTargetSnapshotResolver = Callable[
+    [float, int | None],
+    CombatStateSnapshot | None,
 ]
 
 
@@ -99,6 +112,14 @@ class RotationCandidateSkillDamageEvidenceService:
     Toggle lifetime and indirect Damage Done remain separate runtime/scheduler
     responsibilities.
 
+    Direct target-health-conditioned components consult the canonical Phase 6
+    consequence repository plus an exact-time ``CombatStateSnapshot``. Threshold-
+    gated activation can therefore be included or suppressed without changing the
+    damage formula. Continuous ``up to N% more damage`` execute amplification remains
+    unresolved until its runtime interpolation semantics are reviewed. Periodic
+    target-health conditions also remain unresolved rather than assuming cast-time
+    Health governs all future ticks.
+
     Direct and periodic components share the same combat-routing helper only when
     reviewed runtime evidence permits it. Periodic tick scheduling is owned by the
     shared runtime projection. ``snapshot_at_cast`` freezes source magnitude and
@@ -134,6 +155,14 @@ class RotationCandidateSkillDamageEvidenceService:
         runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
         runtime_target_combat_state_resolver: RotationRuntimeTargetCombatStateResolver | None = None,
         runtime_target_resistance_resolver: RotationRuntimeTargetResistanceResolver | None = None,
+        runtime_target_snapshot_resolver: RotationRuntimeTargetSnapshotResolver | None = None,
+        execute_target_identity: str | None = None,
+        conditional_consequence_repository: (
+            SkillComponentConditionalConsequenceRepository | object | None
+        ) = None,
+        execute_component_eligibility_service: (
+            RotationExecuteComponentDamageEligibilityService | None
+        ) = None,
         scribed_damage_semantics: RotationScribedSkillDamageSemanticsService | None = None,
     ) -> None:
         self.database_path = Path(database_path)
@@ -150,6 +179,16 @@ class RotationCandidateSkillDamageEvidenceService:
         self.runtime_build_context_resolver = runtime_build_context_resolver
         self.runtime_target_combat_state_resolver = runtime_target_combat_state_resolver
         self.runtime_target_resistance_resolver = runtime_target_resistance_resolver
+        self.runtime_target_snapshot_resolver = runtime_target_snapshot_resolver
+        self.execute_target_identity = str(execute_target_identity or "").strip()
+        self.conditional_consequences = (
+            conditional_consequence_repository
+            or SkillComponentConditionalConsequenceRepository(self.database_path)
+        )
+        self.execute_component_eligibility = (
+            execute_component_eligibility_service
+            or RotationExecuteComponentDamageEligibilityService()
+        )
         self.scribed_damage_semantics = (
             scribed_damage_semantics or RotationScribedSkillDamageSemanticsService()
         )
@@ -181,6 +220,17 @@ class RotationCandidateSkillDamageEvidenceService:
         if self.runtime_target_combat_state_resolver is None:
             return None
         return self.runtime_target_combat_state_resolver(
+            float(action.time_seconds),
+            int(action.sequence),
+        )
+
+    def _target_snapshot_for_action(
+        self,
+        action: RotationAction,
+    ) -> CombatStateSnapshot | None:
+        if self.runtime_target_snapshot_resolver is None:
+            return None
+        return self.runtime_target_snapshot_resolver(
             float(action.time_seconds),
             int(action.sequence),
         )
@@ -276,6 +326,37 @@ class RotationCandidateSkillDamageEvidenceService:
                 unresolved.append(
                     f"{action.name}: coefficient {component.coefficient_number} damage classification incomplete"
                 )
+                continue
+
+            consequences = tuple(
+                self.conditional_consequences.resolve(
+                    tooltip.skill.skill_rank_id,
+                    component.coefficient_number,
+                )
+            )
+            target_health_consequences = tuple(
+                consequence
+                for consequence in consequences
+                if consequence.condition.condition_type
+                is SkillComponentConditionType.TARGET_HEALTH_BELOW_PERCENT
+            )
+            if classification.is_dot and target_health_consequences:
+                unresolved.append(
+                    f"{action.name}: coefficient {component.coefficient_number} periodic target-health conditional timing is unresolved"
+                )
+                continue
+
+            execute_eligibility = self.execute_component_eligibility.resolve(
+                skill_name=action.name,
+                coefficient_number=component.coefficient_number,
+                consequences=consequences,
+                snapshot=self._target_snapshot_for_action(action),
+                target_identity=self.execute_target_identity,
+            )
+            if execute_eligibility.status is RotationExecuteComponentDamageStatus.UNKNOWN:
+                unresolved.extend(execute_eligibility.unresolved)
+                continue
+            if execute_eligibility.status is RotationExecuteComponentDamageStatus.SUPPRESS:
                 continue
 
             if classification.is_dot:
@@ -585,4 +666,5 @@ __all__ = [
     "RotationCandidateSkillDamageEvidenceService",
     "RotationRuntimeTargetCombatStateResolver",
     "RotationRuntimeTargetResistanceResolver",
+    "RotationRuntimeTargetSnapshotResolver",
 ]
