@@ -294,12 +294,14 @@ class PlayerBuild:
     Potion: str = ""
     Notes: str = ""
     BossLoadouts: list[BossLoadout] = field(default_factory=list)
-    ContextVariants: list[BuildContextVariant] = field(default_factory=list)
     # Appended for positional-constructor compatibility. Normally empty;
     # Twice-Born Star can make a second distinct Mundus boon legal, and the
     # canonical static resolver verifies that 5-piece requirement before use.
     SecondMundus: str = ""
     ReadyForRaid: bool = False
+    # Generalized variants are appended after every pre-existing field so older
+    # positional PlayerBuild constructors retain their historical meaning.
+    ContextVariants: list[BuildContextVariant] = field(default_factory=list)
 
     @property
     def attribute_points_total(self) -> int:
@@ -409,9 +411,9 @@ class PlayerBuild:
             ScribedSkillRecipes=recipes,
             Food=str(data.get("Food", "") or ""), Potion=str(data.get("Potion", "") or ""), Notes=str(data.get("Notes", "") or ""),
             BossLoadouts=legacy_boss_loadouts,
-            ContextVariants=variants,
             SecondMundus=str(data.get("SecondMundus", "") or ""),
             ReadyForRaid=bool(data.get("ReadyForRaid", False)),
+            ContextVariants=variants,
         )
 
     def display_label(self, fallback: str) -> str:
