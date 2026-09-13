@@ -152,6 +152,80 @@ class UltimateSourceRuntimeLegalityService:
                 remaining_ultimate_gap=max(0.0, gap - generated),
             )
 
+        if source_id == "exhilarating_drain" and canonical_records:
+            if not cls._contains(
+                canonical_records,
+                "generating |cffffff5|r ultimate every |cffffff1|r second",
+                "for |cffffff3|r seconds",
+            ):
+                return UltimateSourceRuntimeReview(
+                    source_id,
+                    UltimateSourceRuntimeStatus.CANONICAL_EVIDENCE_REQUIRED,
+                    "The maximum-rank five-per-second channel record is missing.",
+                    remaining_ultimate_gap=gap,
+                )
+            ordered = tuple(sorted(float(value) for value in trigger_seconds))
+            legal_window = all(
+                float(booming_voice_cast_seconds) < value <= float(score_seconds)
+                for value in ordered
+            )
+            one_second_ticks = all(
+                later - earlier >= 1.0 - 1e-9
+                for earlier, later in zip(ordered, ordered[1:])
+            )
+            if not ordered or not legal_window or not one_second_ticks:
+                return UltimateSourceRuntimeReview(
+                    source_id,
+                    UltimateSourceRuntimeStatus.CANONICAL_EVIDENCE_REQUIRED,
+                    "A legal post-cast one-second channel-tick witness is required.",
+                    remaining_ultimate_gap=gap,
+                )
+            generated = 5.0 * float(len(ordered))
+            return UltimateSourceRuntimeReview(
+                source_id,
+                UltimateSourceRuntimeStatus.SEARCH_STATE_MUTATION,
+                "The supplied channel timeline establishes a hard ceiling; Vampire Health Recovery penalties and action occupancy remain unresolved.",
+                generated_ultimate_ceiling=generated,
+                remaining_ultimate_gap=max(0.0, gap - generated),
+            )
+
+        if source_id == "decisive" and canonical_records:
+            if not cls._contains(
+                canonical_records,
+                "effect_type='ultimate_gain_chance'",
+                "value=19.1",
+                "secondary_value=1.0",
+            ):
+                return UltimateSourceRuntimeReview(
+                    source_id,
+                    UltimateSourceRuntimeStatus.CANONICAL_EVIDENCE_REQUIRED,
+                    "The canonical proc chance and one-Ultimate increment are missing.",
+                    remaining_ultimate_gap=gap,
+                )
+            opportunities = tuple(float(value) for value in trigger_seconds)
+            if not opportunities or any(
+                not (
+                    float(booming_voice_cast_seconds)
+                    < value
+                    <= float(score_seconds)
+                )
+                for value in opportunities
+            ):
+                return UltimateSourceRuntimeReview(
+                    source_id,
+                    UltimateSourceRuntimeStatus.CANONICAL_EVIDENCE_REQUIRED,
+                    "Explicit qualifying Ultimate-gain event opportunities are required.",
+                    remaining_ultimate_gap=gap,
+                )
+            generated = float(len(opportunities))
+            return UltimateSourceRuntimeReview(
+                source_id,
+                UltimateSourceRuntimeStatus.SEARCH_STATE_MUTATION,
+                "One extra Ultimate per supplied qualifying event is the all-procs ceiling at 19.1%; it is not deterministic generation.",
+                generated_ultimate_ceiling=generated,
+                remaining_ultimate_gap=max(0.0, gap - generated),
+            )
+
         if source_id in cls._BOUNDED_MUTATIONS and canonical_records:
             amount, cadence, fragments = cls._BOUNDED_MUTATIONS[source_id]
             if not cls._contains(canonical_records, *fragments):

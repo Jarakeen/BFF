@@ -31,6 +31,11 @@ _TRIGGER_WITNESSES = {
     "hide_of_the_werewolf": (1.0, 6.0, 11.0, 16.0, 21.0),
     "arkasis": (1.0,),
     "arkays_charity": (1.0, 10.0, 19.0),
+    "exhilarating_drain": tuple(float(value) for value in range(2, 25)),
+    "decisive": (
+        *(float(value) for value in range(1, 25)),
+        *(1.5 * float(value) for value in range(1, 17)),
+    ),
 }
 
 
@@ -70,6 +75,28 @@ def _canonical_matches(
             matches.extend(
                 f"skill name={name!r} class={class_name!r} line={line!r} description={description!r}"
                 for name, class_name, line, description in rows
+            )
+
+        if source_id == "exhilarating_drain" and {
+            "name", "description"
+        }.issubset(skill_columns):
+            vampire_line = (
+                "LOWER(COALESCE(skill_line, '')) LIKE '%vampire%'"
+                if "skill_line" in skill_columns
+                else "0"
+            )
+            rows = db.execute(
+                f"""
+                SELECT name, {line_expr}, COALESCE(description, '')
+                FROM skill
+                WHERE ({vampire_line})
+                  AND LOWER(COALESCE(description, '')) LIKE '%health recovery%'
+                ORDER BY id
+                """
+            ).fetchall()
+            matches.extend(
+                f"vampire_cost name={name!r} line={line!r} description={description!r}"
+                for name, line, description in rows
             )
 
         ability_columns = _columns(db, "ability")
@@ -187,7 +214,9 @@ def main() -> int:
     )
     exact_counts = Counter(review.status.value for _, review in reviews)
     reviewed_increment = sum(
-        review.generated_ultimate_ceiling for _, review in reviews
+        review.generated_ultimate_ceiling
+        for _, review in reviews
+        if review.status is UltimateSourceRuntimeStatus.COMPATIBLE_INCREMENT
     )
     remaining_gap = max(0.0, 114.0 - reviewed_increment)
 
@@ -223,7 +252,7 @@ def main() -> int:
         print(
             f"  mutation_ceiling: {row.source_id} "
             f"generated_ultimate_ceiling={review.generated_ultimate_ceiling:.3f} "
-            f"individually_closes_gap={review.generated_ultimate_ceiling >= remaining_gap}"
+            f"individually_closes_original_gap={review.generated_ultimate_ceiling >= 114.0}"
         )
     print(f"reviewed_compatible_increment={reviewed_increment:.3f}")
     print(f"remaining_ultimate_gap={remaining_gap:.3f}")
@@ -233,8 +262,8 @@ def main() -> int:
     print("ultimate_source_exact_review_applied=True")
     print("ultimate_source_numeric_legality_proven=False")
     print(
-        "NEXT_STEP=resolve Exhilarating Drain and Decisive canonical identities, then "
-        "search legal multi-source combinations against the Health Recovery incumbent"
+        "NEXT_STEP=apply the canonical Vampire Health Recovery cost, then search "
+        "legal multi-source combinations against the Health Recovery incumbent"
     )
     return 2
 

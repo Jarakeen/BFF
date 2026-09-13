@@ -820,3 +820,22 @@ promise that five procs occur.
 **For BFF:** a window ceiling only permits a candidate to remain in the search.
 Equipment slots, mutually exclusive monster sets, proc evidence, and lost Health
 Recovery still decide whether that candidate improves the actual record.
+
+
+---
+
+## 2026-09-13 — Mutually exclusive source ceilings must not be summed
+
+The first Ultimate-source window report correctly bounded five named gear branches,
+then incorrectly added every branch together. That imaginary character simultaneously
+wore competing five-piece and monster-set states and appeared to erase the Strategic
+Reserve gap with 278 Ultimate.
+
+The corrected shared-route increment remains **Blessing at the Peak's 4 Ultimate**.
+Each equipment, Vampire, and weapon-trait ceiling stays separate until a legal combined
+build witness equips it. Rank-four **Exhilarating Drain** can reach a 115-Ultimate
+window ceiling only by occupying nearly the entire post-cast timeline, while
+**Decisive's** 40-point all-procs ceiling remains stochastic.
+
+**For BFF:** candidate ceilings are comparison bounds, not additive bonuses. Only
+sources proven compatible in one physical build and one action timeline may be summed.

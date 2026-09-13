@@ -101,3 +101,37 @@ def test_named_gear_ceiling_fails_closed_when_cooldown_is_violated():
         trigger_seconds=(1.0, 9.0),
     )
     assert row.status is UltimateSourceRuntimeStatus.CANONICAL_EVIDENCE_REQUIRED
+
+
+
+def test_exhilarating_drain_max_rank_window_ceiling_is_115():
+    row = UltimateSourceRuntimeLegalityService.review(
+        "exhilarating_drain",
+        canonical_records=(
+            "generating |cffffff5|r Ultimate every |cffffff1|r second "
+            "for |cffffff3|r seconds",
+        ),
+        trigger_seconds=tuple(float(value) for value in range(2, 25)),
+    )
+    assert row.status is UltimateSourceRuntimeStatus.SEARCH_STATE_MUTATION
+    assert row.generated_ultimate_ceiling == 115.0
+    assert row.remaining_ultimate_gap == 0.0
+
+
+def test_decisive_all_proc_ceiling_counts_merged_heroism_once():
+    opportunities = (
+        *(float(value) for value in range(1, 25)),
+        *(1.5 * float(value) for value in range(1, 17)),
+    )
+    row = UltimateSourceRuntimeLegalityService.review(
+        "decisive",
+        canonical_records=(
+            "weapon_trait effect_type='ultimate_gain_chance' value=19.1 "
+            "secondary_value=1.0 unit='percent'",
+        ),
+        trigger_seconds=opportunities,
+    )
+    assert row.status is UltimateSourceRuntimeStatus.SEARCH_STATE_MUTATION
+    assert len(opportunities) == 40
+    assert row.generated_ultimate_ceiling == 40.0
+    assert row.remaining_ultimate_gap == 74.0
