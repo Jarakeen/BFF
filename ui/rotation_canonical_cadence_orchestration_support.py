@@ -117,7 +117,7 @@ class RotationCanonicalCadenceOrchestrationSupport:
             evidence_bundle,
         )
 
-        canonical_result = self.canonical_candidates.run_effects(
+        canonical_kwargs = dict(
             player_build=player_build,
             generation_request=generation_request,
             evaluator_resolver=evidence_bundle.evaluator_resolver,
@@ -133,14 +133,17 @@ class RotationCanonicalCadenceOrchestrationSupport:
             requirements=evidence_bundle.requirements,
             passives=evidence_bundle.passives,
             reserve_assessment_resolver=evidence_bundle.reserve_assessment_resolver,
-            runtime_output_condition_context_resolver_factory=(
-                evidence_bundle.runtime_output_condition_context_resolver_factory
-            ),
             max_iterations=evidence_bundle.max_iterations,
             baseline_id=evidence_bundle.baseline_id,
             character_id=character_id,
             coverage_report=evidence_bundle.coverage_report,
         )
+        if evidence_bundle.runtime_output_condition_context_resolver_factory is not None:
+            canonical_kwargs["runtime_output_condition_context_resolver_factory"] = (
+                evidence_bundle.runtime_output_condition_context_resolver_factory
+            )
+
+        canonical_result = self.canonical_candidates.run_effects(**canonical_kwargs)
         canonical_evidence = self.canonical_render.build(canonical_result.candidate_result)
 
         if canonical_evidence is None or not cadence_obligations:
