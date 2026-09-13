@@ -10,6 +10,11 @@ from .character_progression import CharacterProgression
 
 _COLOR = re.compile(r"\|c[0-9a-fA-F]{6}|\|r")
 _NUMBER = r"([0-9]+(?:\.[0-9]+)?)"
+_RACE_SKILL_LINE_ALIASES = {
+    "altmer": "high elf",
+    "bosmer": "wood elf",
+    "dunmer": "dark elf",
+}
 
 
 @dataclass(frozen=True)
@@ -60,10 +65,17 @@ class RacialPassiveStatRepository:
         value = _COLOR.sub("", str(text or ""))
         return " ".join(value.split())
 
+    @classmethod
+    def _canonical_skill_line_race(cls, race_name: str) -> str:
+        race = cls._clean(race_name)
+        if not race:
+            return ""
+        return _RACE_SKILL_LINE_ALIASES.get(race.casefold(), race)
+
     def _racial_passive_rows(self, race_name: str) -> tuple[tuple[str, int, str], ...]:
         if not self.database_path.exists():
             return ()
-        race = self._clean(race_name)
+        race = self._canonical_skill_line_race(race_name)
         if not race:
             return ()
         expected_line = f"{race} Skills".casefold()
