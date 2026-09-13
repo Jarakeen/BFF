@@ -1,12 +1,17 @@
 from __future__ import annotations
 
-"""Measure proof-safe structural scoring equivalence for Extreme max resources.
+"""Measure semantic and production structural frontiers for Extreme max resources.
 
-This diagnostic does not alter production scoring. It keeps the already-proven
-class-route projection, the proof-reduced attribute witness, and active-bar identity,
-then asks the canonical racial progression + racial passive repository for the exact
-requested-resource contribution of each legal race. Races collapse only when that
-canonical target-resource contribution is equal and both resolutions are complete.
+The diagnostic intentionally reports two different layers:
+
+* semantic equivalence classes, which answer how many distinct canonical target-
+  resource race signatures exist; and
+* the production dominance frontier, which uses the proof-owned race projection to
+  retain only the strongest legal racial witness for a scalar maximum objective.
+
+Class routes still use the proof-owned route projection, attributes use the proven
+single maximum allocation, and active-bar identity remains explicit. No production
+scoring rule is reimplemented here.
 """
 
 import argparse
@@ -29,6 +34,9 @@ from services.extreme_resource_attribute_projection_service import (
 )
 from services.extreme_resource_class_route_projection_service import (
     ExtremeResourceClassRouteProjectionService,
+)
+from services.extreme_resource_race_projection_service import (
+    ExtremeResourceRaceProjectionService,
 )
 
 
@@ -69,10 +77,13 @@ def _race_signature(
     except (TypeError, ValueError):
         return ("identity_required", race, "invalid_target_value")
 
-    # Only the requested max-resource contribution is permitted to erase race
-    # identity here. Other racial stats are outside this scalar objective and are
-    # already classified by the canonical passive-coverage path.
     return ("canonical_target_resource", value)
+
+
+def route_projection_service_line(value: object) -> str:
+    from services.extreme_heal_class_route_service import canonical_class_skill_line_id
+
+    return canonical_class_skill_line_id(value)
 
 
 def main() -> int:
@@ -81,6 +92,7 @@ def main() -> int:
     key = str(args.objective).strip().casefold()
 
     universe = ExtremeGlobalSearchUniverseService(database).build()
+
     routes = tuple(universe.class_routes)
     route_projection = None
     if key in ExtremeResourceClassRouteProjectionService.SUPPORTED_OBJECTIVES:
@@ -109,9 +121,27 @@ def main() -> int:
         for race in universe.races
     }
 
-    raw_candidates = [
+    race_projection = ExtremeResourceRaceProjectionService(
+        database,
+        progression_service=progression_service,
+        racial_repository=racial_repository,
+    ).build(key, tuple(universe.races))
+    production_races = (
+        tuple(race_projection.races)
+        if race_projection.projection_complete
+        else tuple(universe.races)
+    )
+
+    semantic_candidates = [
         (race, route, attributes_row, active_bar)
         for race in universe.races
+        for route in routes
+        for attributes_row in attributes
+        for active_bar in universe.active_bars
+    ]
+    production_candidates = [
+        (race, route, attributes_row, active_bar)
+        for race in production_races
         for route in routes
         for attributes_row in attributes
         for active_bar in universe.active_bars
@@ -131,7 +161,7 @@ def main() -> int:
             tuple(route.equipped_skill_lines),
         )
 
-    signatures = Counter(
+    semantic_signatures = Counter(
         (
             race_signatures[race],
             route_signature(route),
@@ -140,12 +170,13 @@ def main() -> int:
             int(attributes_row.stamina),
             str(active_bar),
         )
-        for race, route, attributes_row, active_bar in raw_candidates
+        for race, route, attributes_row, active_bar in semantic_candidates
     )
 
     race_classes = Counter(race_signatures.values())
     unresolved_races = tuple(
-        race for race, signature in race_signatures.items()
+        race
+        for race, signature in race_signatures.items()
         if signature and signature[0] == "identity_required"
     )
 
@@ -157,6 +188,12 @@ def main() -> int:
     print(f"race_unresolved={len(unresolved_races)}")
     if unresolved_races:
         print("race_unresolved_names=" + ",".join(unresolved_races))
+    print(f"race_dominance_projection_complete={race_projection.projection_complete}")
+    print(f"race_production_witnesses={len(production_races)}")
+    if race_projection.projection_complete:
+        print(f"race_production_witness={race_projection.races[0]}")
+        print(f"race_production_target_resource={race_projection.signatures[0]:g}")
+
     print(f"routes_raw={len(universe.class_routes)}")
     print(f"routes_projected={len(routes)}")
     print(
@@ -166,27 +203,42 @@ def main() -> int:
     print(f"attributes_raw={len(universe.attribute_allocations)}")
     print(f"attributes_projected={len(attributes)}")
     print(f"active_bars={len(universe.active_bars)}")
-    print(f"structural_candidates_current={len(raw_candidates)}")
-    print(f"structural_semantic_classes={len(signatures)}")
-    duplicates = len(raw_candidates) - len(signatures)
-    print(f"structural_duplicate_candidates={duplicates}")
-    reduction = 100.0 * duplicates / len(raw_candidates) if raw_candidates else 0.0
-    print(f"structural_equivalence_reduction_percent={reduction:.3f}")
-    print(f"structural_largest_equivalence_class={max(signatures.values(), default=0)}")
+
+    print(f"structural_candidates_semantic_input={len(semantic_candidates)}")
+    print(f"structural_semantic_classes={len(semantic_signatures)}")
+    semantic_duplicates = len(semantic_candidates) - len(semantic_signatures)
+    print(f"structural_semantic_duplicate_candidates={semantic_duplicates}")
+    semantic_reduction = (
+        100.0 * semantic_duplicates / len(semantic_candidates)
+        if semantic_candidates
+        else 0.0
+    )
+    print(f"structural_semantic_equivalence_reduction_percent={semantic_reduction:.3f}")
+    print(
+        "structural_semantic_largest_equivalence_class="
+        f"{max(semantic_signatures.values(), default=0)}"
+    )
+
+    raw_structural = (
+        len(universe.races)
+        * len(routes)
+        * len(attributes)
+        * len(universe.active_bars)
+    )
+    print(f"structural_candidates_before_race_dominance={raw_structural}")
+    print(f"structural_candidates_production={len(production_candidates)}")
+    production_pruned = raw_structural - len(production_candidates)
+    print(f"structural_candidates_pruned_by_race_dominance={production_pruned}")
+    production_reduction = (
+        100.0 * production_pruned / raw_structural if raw_structural else 0.0
+    )
+    print(f"structural_race_dominance_reduction_percent={production_reduction:.3f}")
 
     print("race_signatures=")
     for race in universe.races:
         print(f"  {race}: {race_signatures[race]!r}")
 
     return 0
-
-
-def route_projection_service_line(value: object) -> str:
-    # Keep this import local so the diagnostic shares the same canonical line
-    # normalizer as the route projection service without creating another rule.
-    from services.extreme_heal_class_route_service import canonical_class_skill_line_id
-
-    return canonical_class_skill_line_id(value)
 
 
 if __name__ == "__main__":
