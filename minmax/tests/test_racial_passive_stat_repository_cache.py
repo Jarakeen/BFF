@@ -62,3 +62,47 @@ def test_repeated_racial_resolution_reuses_rows_without_reopening_sqlite(tmp_pat
     assert first.stats == {"max_magicka": 2000.0}
     assert second.stats == first.stats
     assert calls == 1
+
+
+def test_bosmer_alias_resolves_canonical_wood_elf_skill_line(tmp_path) -> None:
+    database = tmp_path / "eso.db"
+    with sqlite3.connect(database) as db:
+        db.executescript(
+            """
+            CREATE TABLE skill (
+                id INTEGER PRIMARY KEY,
+                name TEXT,
+                skill_line TEXT,
+                is_passive INTEGER,
+                is_player INTEGER
+            );
+            CREATE TABLE skill_rank (
+                id INTEGER PRIMARY KEY,
+                skill_id INTEGER,
+                rank INTEGER,
+                ability_id INTEGER
+            );
+            CREATE TABLE ability (
+                ability_id INTEGER PRIMARY KEY,
+                description TEXT
+            );
+            """
+        )
+        db.execute(
+            "INSERT INTO skill(id, name, skill_line, is_passive, is_player) VALUES (1, 'Hunter''s Eye', 'Wood Elf Skills', 1, 1)"
+        )
+        db.execute(
+            "INSERT INTO skill_rank(id, skill_id, rank, ability_id) VALUES (1, 1, 3, 201)"
+        )
+        db.execute(
+            "INSERT INTO ability(ability_id, description) VALUES (201, 'Increases your Max Stamina by 2000')"
+        )
+        db.commit()
+
+    repository = RacialPassiveStatRepository(database)
+    progression = CharacterProgression(passive_ranks={"Hunter's Eye": 3})
+
+    result = repository.resolve("Bosmer", progression)
+
+    assert result.stats == {"max_stamina": 2000.0}
+    assert result.unresolved == ()
