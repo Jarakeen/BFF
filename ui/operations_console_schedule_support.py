@@ -100,6 +100,7 @@ def install() -> None:
     from ui.team_schedule_calendar_support import install as install_team_schedule_calendar_support
     from ui.team_schedule_multi_time_support import install as install_team_schedule_multi_time_support
     from ui.roster_team_merge_support import install as install_roster_team_merge_support
+    from ui.roster_team_merge_visibility_support import install as install_roster_team_merge_visibility_support
     from ui.roster_player_architecture_support import install as install_roster_player_architecture_support
     from ui.scrollable_message_dialog_support import install as install_scrollable_message_dialog_support
     from ui.roster_import_workflow import install as install_roster_import_support
@@ -119,6 +120,9 @@ def install() -> None:
     # renamed team identities can be consolidated without deleting user-owned
     # players, characters, or builds.
     install_roster_team_merge_support()
+    # FoundryCard owns an internal layout hierarchy. Ensure the merge control is
+    # inserted beside Delete Selected Team in that real visible row.
+    install_roster_team_merge_visibility_support()
     # Characters and Teams compose the canonical build catalog with the durable
     # roster/team schedule state after the final Team Schedule patch is known.
     install_roster_player_architecture_support()
