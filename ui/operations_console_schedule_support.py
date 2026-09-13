@@ -111,6 +111,7 @@ def install() -> None:
     from ui.user_workspace_polish_support import install as install_user_workspace_polish_support
     from ui.roster_team_assignment_filter_support import install as install_roster_team_assignment_filter_support
     from ui.roster_characters_header_context_support import install as install_roster_characters_header_context_support
+    from ui.roster_sub_terminology_support import install as install_roster_sub_terminology_support
 
     # Preserve the portable calendar feature, then let the multi-time layer own
     # the final Team Schedule UI so each selected day can use its own start/end.
@@ -153,5 +154,8 @@ def install() -> None:
     # Characters has its own search/tree controls, so assignment-oriented header
     # filters stay visible elsewhere but get out of the way on that tab.
     install_roster_characters_header_context_support()
+    # Raid teams use "Sub" terminology; retain compatibility with any legacy
+    # records that were persisted before the rename from "Bench".
+    install_roster_sub_terminology_support()
     operations_console.OperationsConsole._raid_schedule_card = _raid_schedule_card
     _INSTALLED = True
