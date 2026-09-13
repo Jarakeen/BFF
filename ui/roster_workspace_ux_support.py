@@ -60,6 +60,32 @@ def _open_comp_maker(page) -> None:
     page.status.warning("Comp Maker navigation is unavailable from this window.")
 
 
+def _polish_existing_roster_actions(page) -> None:
+    actions = getattr(page, "actions", None)
+    if actions is not None:
+        if hasattr(actions, "new_button"):
+            actions.new_button.setVisible(False)
+        if hasattr(actions, "save_button"):
+            actions.save_button.setText("Save Player")
+        if hasattr(actions, "delete_button"):
+            actions.delete_button.setText("Remove Player")
+            actions.delete_button.setToolTip("Remove the selected roster member.")
+
+    # Assignment removal previously deleted the underlying roster member, which
+    # is not an assignment-edit action. Keep deletion on the Roster tab instead.
+    remove_assignment = getattr(page, "remove_assignment_button", None)
+    if remove_assignment is not None:
+        remove_assignment.setVisible(False)
+
+    # The importer now has an obvious home on Roster, so hide the duplicate
+    # Assignments header copy after the existing importer has finished wiring it.
+    assignments = _tab_by_text(page.tabs, "ASSIGNMENTS")
+    if assignments is not None:
+        for button in assignments.findChildren(QPushButton):
+            if button.text().strip().casefold() == "import roster":
+                button.setVisible(False)
+
+
 def _install_roster_quick_actions(page, roster_tab: QWidget) -> None:
     layout = roster_tab.layout()
     if layout is None or getattr(page, "roster_quick_actions_card", None) is not None:
@@ -144,6 +170,8 @@ def _restructure_tabs(page) -> None:
     assert personnel is not None
     assert teams is not None
     assert schedule is not None
+
+    _polish_existing_roster_actions(page)
 
     while tabs.count():
         tabs.removeTab(0)
