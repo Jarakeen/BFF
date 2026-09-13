@@ -3,6 +3,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from services.extreme_armor_resource_trait_glyph_state_service import (
+    ExtremeArmorResourceTraitGlyphPieceChoice,
     ExtremeArmorResourceTraitGlyphState,
     ExtremeArmorResourceTraitGlyphStateCatalog,
 )
@@ -48,9 +49,17 @@ def _weight(objective_key: str, count: int) -> ExtremeArmorResourceWeightState:
 
 
 def _trait(objective_key: str, value: int) -> ExtremeArmorResourceTraitGlyphState:
+    trait = "Divines" if value == 1 else "Infused"
     return ExtremeArmorResourceTraitGlyphState(
         objective_key=objective_key,
-        pieces=(),
+        pieces=(
+            ExtremeArmorResourceTraitGlyphPieceChoice(
+                slot="Head",
+                trait=trait,
+                enchant="Magicka",
+                direct_delta=float(value),
+            ),
+        ),
         direct_glyph_delta=float(value),
     )
 
