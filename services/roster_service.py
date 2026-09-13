@@ -21,6 +21,13 @@ from services.eso_database import EsoDatabase
 class RosterService:
     """Roster read/write access, including many-to-many team membership."""
 
+    _ASSIGNMENT_FIELDS = {
+        "primary_assignment",
+        "secondary_assignment",
+        "gear_needed",
+        "notes",
+    }
+
     def __init__(self, database: EsoDatabase):
         self.db = database
         self._ensure_schema()
@@ -71,6 +78,17 @@ class RosterService:
                     REFERENCES team(id)
                     ON DELETE CASCADE,
                 PRIMARY KEY (roster_member_id, team_id)
+            )
+        """)
+        self.db.execute("""
+            CREATE TABLE IF NOT EXISTS roster_member_assignment (
+                roster_member_id INTEGER PRIMARY KEY
+                    REFERENCES roster_member(id)
+                    ON DELETE CASCADE,
+                primary_assignment TEXT NOT NULL DEFAULT '',
+                secondary_assignment TEXT NOT NULL DEFAULT '',
+                gear_needed TEXT NOT NULL DEFAULT '',
+                notes TEXT NOT NULL DEFAULT ''
             )
         """)
         self.db.commit()
@@ -128,6 +146,42 @@ class RosterService:
         if row is None:
             return None
         return self._row_to_member(row)
+
+    def get_member_assignment(self, member_id: int) -> dict[str, str]:
+        row = self.db.execute("""
+            SELECT primary_assignment, secondary_assignment, gear_needed, notes
+            FROM roster_member_assignment
+            WHERE roster_member_id = ?
+        """, (int(member_id),)).fetchone()
+        if row is None:
+            return {
+                "primary_assignment": "",
+                "secondary_assignment": "",
+                "gear_needed": "",
+                "notes": "",
+            }
+        return {
+            "primary_assignment": row["primary_assignment"] or "",
+            "secondary_assignment": row["secondary_assignment"] or "",
+            "gear_needed": row["gear_needed"] or "",
+            "notes": row["notes"] or "",
+        }
+
+    def set_member_assignment_field(self, member_id: int, field: str, value: str) -> None:
+        if field not in self._ASSIGNMENT_FIELDS:
+            raise ValueError(f"unsupported roster assignment field: {field}")
+        member_id = int(member_id)
+        if self.get_member(member_id) is None:
+            raise ValueError(f"roster member {member_id} does not exist")
+        self.db.execute(
+            "INSERT OR IGNORE INTO roster_member_assignment (roster_member_id) VALUES (?)",
+            (member_id,),
+        )
+        self.db.execute(
+            f"UPDATE roster_member_assignment SET {field} = ? WHERE roster_member_id = ?",
+            (str(value or "").strip(), member_id),
+        )
+        self.db.commit()
 
     def ensure_team_name(self, team_name: str) -> str:
         """Ensure one durable Roster team identity exists for ``team_name``."""
@@ -270,6 +324,10 @@ class RosterService:
         self.db.commit()
 
     def delete_member(self, member_id: int):
+        self.db.execute(
+            "DELETE FROM roster_member_assignment WHERE roster_member_id = ?",
+            (member_id,),
+        )
         self.db.execute("DELETE FROM team_member WHERE roster_member_id = ?", (member_id,))
         self.db.execute("DELETE FROM roster_member WHERE id = ?", (member_id,))
         self.db.commit()
