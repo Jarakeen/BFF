@@ -19,7 +19,7 @@ def _resolve_logs_database(explicit: Path | None) -> Path | None:
     if explicit is not None:
         return explicit
     candidates = discover(
-        (
+        roots=(
             Path(get_data_dir()),
             ROOT / "data",
             ROOT / "user_data",
