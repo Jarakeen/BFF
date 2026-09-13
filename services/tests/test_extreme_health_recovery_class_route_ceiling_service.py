@@ -44,12 +44,12 @@ def test_scores_templar_mastery_from_canonical_extreme_semantics():
     assert row.score_complete is True
 
 
-def test_booming_voice_stays_unresolved_until_ultimate_bound_is_proven():
+def test_scores_booming_voice_from_proven_ultimate_cost_frontier():
     row = ExtremeHealthRecoveryClassRouteCeilingService.score_signature(
         _signature("draconic_power", mastery="booming_voice"),
         wellspring_slot_ceiling=6,
     )
 
-    assert row.class_flat_ceiling is None
-    assert row.score_complete is False
-    assert "Ultimate-spend" in row.unresolved[0]
+    assert row.class_flat_ceiling == 700.0 + 250.0 * 5.0
+    assert row.score_complete is True
+    assert row.unresolved == ()
