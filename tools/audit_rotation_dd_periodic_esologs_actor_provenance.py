@@ -35,14 +35,14 @@ def main(argv: list[str] | None = None) -> int:
     print("===============================================")
     print(f"Ability id: {report.ability_id}")
     print(f"Events: {report.event_count}")
-    print(f"Distinct source actor ids: {report.source_actor_count}")
-    print(f"Source actors matched to log_actor metadata: {report.matched_actor_count}")
+    print(f"Distinct report/fight/source actors: {report.source_actor_count}")
+    print(f"Actors matched to log_actor metadata: {report.matched_actor_count}")
 
     for index, row in enumerate(report.rows[: max(0, int(args.max_actors))], start=1):
         print()
         print(
-            f"  [{index}] actor_id={row.actor_id} events={row.event_count} "
-            f"report/fight groups={row.report_fight_groups}"
+            f"  [{index}] report={row.report_code} fight={row.fight_id} "
+            f"actor_id={row.actor_id} events={row.event_count}"
         )
         print(
             "      metadata: "
