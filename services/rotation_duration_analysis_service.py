@@ -16,6 +16,9 @@ from minmax.rotation_recast import (
     RotationRecastRule,
 )
 from minmax.skill_duration_repository import SkillDurationRepository
+from services.rotation_scribed_skill_damage_semantics_service import (
+    RotationScribedSkillDamageSemanticsService,
+)
 
 
 @dataclass(frozen=True)
@@ -31,8 +34,10 @@ class RotationDurationAnalysisService:
 
     Canonical skill duration remains the fallback evidence. When an upstream
     authoritative build/effect resolver supplies an already-resolved effective
-    duration, that value is used for recast and uptime math instead. This service
-    does not calculate gear/passive/armor duration mechanics itself.
+    duration, that value is used for recast and uptime math instead. Reviewed
+    persistent toggles are explicitly excluded from finite-duration resolution:
+    they have no timed refresh obligation, and their activation lifetime belongs to
+    runtime toggle state rather than a fabricated duration row.
     """
 
     def __init__(
@@ -41,9 +46,13 @@ class RotationDurationAnalysisService:
         *,
         duration_repository: SkillDurationRepository | None = None,
         analyzer: RotationRecastAnalyzer | None = None,
+        scribed_skill_semantics: RotationScribedSkillDamageSemanticsService | None = None,
     ) -> None:
         self.duration_repository = duration_repository or SkillDurationRepository(database_path)
         self.analyzer = analyzer or RotationRecastAnalyzer()
+        self.scribed_skill_semantics = (
+            scribed_skill_semantics or RotationScribedSkillDamageSemanticsService()
+        )
 
     def analyze(
         self,
@@ -64,6 +73,15 @@ class RotationDurationAnalysisService:
                 continue
             if not action.name:
                 continue
+
+            scribed = self.scribed_skill_semantics.resolve(action.name)
+            if scribed is not None and scribed.persistent_toggle:
+                # Persistent toggles are deliberately not represented as long fake
+                # durations. Their repeated-activation policy is handled by the
+                # persistent-toggle plan layer, and exact uptime belongs to runtime
+                # combat-state/resource evidence.
+                continue
+
             key = (action.name.casefold(), action.bar)
             if key in seen:
                 continue
