@@ -7,6 +7,7 @@ reference effects are deliberately left Unverified until canonical capability ma
 exists; this support layer does not infer combat evidence from display names.
 """
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QAbstractItemView, QLabel
 
 from services.raid_group_effect_catalog import (
@@ -33,6 +34,7 @@ _ORIGINAL_SNAPSHOT_FOR_BUILDS = None
 REFERENCE_BY_NAME = {**GROUP_COVERAGE_BY_NAME, **UNIQUE_SUPPORT_SET_BY_NAME}
 COVERAGE_NAMES = tuple(dict.fromkeys((*GROUP_COVERAGE_NAMES, *UNIQUE_SUPPORT_SET_NAMES)))
 DEBUFF_NAMES = frozenset((*GROUP_DEBUFF_NAMES, *UNIQUE_SUPPORT_DEBUFF_NAMES))
+UNIQUE_NAMES = frozenset(UNIQUE_SUPPORT_SET_NAMES)
 
 
 def _extend_snapshot(snapshot: RaidCoverageSnapshot) -> RaidCoverageSnapshot:
@@ -73,7 +75,7 @@ def _apply_reference_labels(page) -> None:
         if type_item is not None:
             type_item.setText(getattr(reference, "type_label", "") or reference.category)
             type_item.setToolTip(
-                "Unique support-set effect; see Coverage Notes for the planning description."
+                "Unique support-set effect; see Coverage Notes for source details."
                 if getattr(reference, "type_label", "")
                 else f"Group-relevant {reference.category.lower()}."
             )
@@ -120,7 +122,7 @@ def _refresh_source_notes(page, *_args) -> None:
 
     if reference is None:
         intro = QLabel(
-            "Select a buff, debuff, or unique support-set effect above to see reviewed planning sources."
+            "Select a buff, debuff, or unique support-set effect above to see known sources."
         )
         intro.setWordWrap(True)
         card.addWidget(intro)
@@ -141,12 +143,46 @@ def _refresh_source_notes(page, *_args) -> None:
     source_label.setTextInteractionFlags(source_label.textInteractionFlags())
     card.addWidget(source_label)
 
-    caveat = QLabel(
-        "These are planning references. The Static Sources and Evidence columns still use canonical saved-build audit evidence and remain Unverified where FoundryDock has not proven the effect mapping end to end."
-    )
-    caveat.setWordWrap(True)
-    caveat.setProperty("pageSubtitle", True)
-    card.addWidget(caveat)
+
+def _apply_coverage_filters_with_unique(self, *_args) -> None:
+    effect_type = self.effect_filter.currentText()
+    query = self.search.text().strip().casefold()
+
+    for row in range(self.table.rowCount()):
+        item = self.table.item(row, 0)
+        if item is None:
+            continue
+
+        name = item.text()
+        evidence_item = self.table.item(row, 8)
+        source_item = self.table.item(row, 3)
+        evidence = (
+            evidence_item.data(Qt.ItemDataRole.UserRole)
+            if evidence_item is not None
+            else None
+        )
+        source_count = (
+            source_item.data(Qt.ItemDataRole.UserRole)
+            if source_item is not None
+            else 0
+        ) or 0
+
+        if name in UNIQUE_NAMES:
+            category = "Unique Buffs"
+        elif name in DEBUFF_NAMES:
+            category = "Debuffs"
+        else:
+            category = "Buffs"
+
+        source_text = source_item.text() if source_item is not None else ""
+        searchable = f"{name} {source_text}".casefold()
+        visible = (
+            (effect_type == "All Effects" or effect_type == category)
+            and (not self.missing_only.isChecked() or evidence != "available")
+            and (not self.redundant_only.isChecked() or source_count > 1)
+            and (not query or query in searchable)
+        )
+        self.table.setRowHidden(row, not visible)
 
 
 def _refresh_with_group_catalog(self, *args, **kwargs):
@@ -164,6 +200,9 @@ def _init_with_group_catalog(self, *args, **kwargs):
     utility_index = self.effect_filter.findText("Utility")
     if utility_index >= 0:
         self.effect_filter.removeItem(utility_index)
+
+    if self.effect_filter.findText("Unique Buffs") < 0:
+        self.effect_filter.addItem("Unique Buffs")
 
     self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
     self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
@@ -195,6 +234,7 @@ def install() -> None:
     _ORIGINAL_REFRESH = CoveragePage.refresh
     _ORIGINAL_SNAPSHOT_FOR_BUILDS = CoveragePage.snapshot_for_builds
 
+    CoveragePage._apply_coverage_filters = _apply_coverage_filters_with_unique
     CoveragePage.snapshot_for_builds = _snapshot_with_group_catalog
     CoveragePage.refresh = _refresh_with_group_catalog
     CoveragePage.__init__ = _init_with_group_catalog
