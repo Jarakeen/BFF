@@ -40,6 +40,10 @@ from services.extreme_dual_bar_gear_state_catalog_service import (
 from services.extreme_jewelry_resource_static_trait_state_service import (
     ExtremeJewelryResourceStaticTraitState,
 )
+from services.extreme_max_resource_gear_scoring_frontier_service import (
+    ExtremeMaxResourceGearScoringFrontierResult,
+    ExtremeMaxResourceGearScoringFrontierService,
+)
 from services.extreme_named_gear_canonical_stat_evaluator import (
     ExtremeNamedGearCanonicalStatEvaluator,
 )
@@ -271,7 +275,7 @@ class ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory:
 
 
 class ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator:
-    """Score every dual-bar-admissible named-gear × resource-armor state."""
+    """Score proof-reduced gear semantics across every resource-armor state."""
 
     def __init__(
         self,
@@ -285,6 +289,18 @@ class ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator:
         self.evaluator_factory = evaluator_factory
         self._evaluators: dict[tuple[Any, ...], _FiniteAxisScorer] = {}
         self._dual_bar_catalog: ExtremeDualBarGearStateCatalog | None = None
+        self._scoring_frontiers: dict[
+            tuple[str, str], ExtremeMaxResourceGearScoringFrontierResult
+        ] = {}
+
+        canonical = getattr(evaluator_factory, "canonical_evaluator", None)
+        optimizer = getattr(canonical, "optimizer", None)
+        database_path = getattr(optimizer, "database_path", None)
+        self._scoring_frontier_service = (
+            ExtremeMaxResourceGearScoringFrontierService(database_path)
+            if database_path is not None
+            else None
+        )
 
     @staticmethod
     def _gear_identity(realization: ExtremeNamedGearSetRealization) -> tuple[Any, ...]:
@@ -317,6 +333,27 @@ class ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator:
 
     def gear_realizations(self, *, active_bar: str = "front") -> tuple[ExtremeNamedGearSetRealization, ...]:
         return self.dual_bar_catalog().admissible_realizations(active_bar=active_bar)
+
+    def scoring_frontier(
+        self,
+        objective_key: str,
+        *,
+        active_bar: str = "front",
+    ) -> ExtremeMaxResourceGearScoringFrontierResult | None:
+        if self._scoring_frontier_service is None:
+            return None
+        key = str(objective_key or "").strip().casefold()
+        bar = str(active_bar or "front").strip().casefold()
+        cache_key = (key, bar)
+        cached = self._scoring_frontiers.get(cache_key)
+        if cached is not None:
+            return cached
+        result = self._scoring_frontier_service.build(
+            key,
+            self.gear_realizations(active_bar=bar),
+        )
+        self._scoring_frontiers[cache_key] = result
+        return result
 
     def armor_states(self) -> tuple[ExtremeArmorResourceWeightTraitGlyphState, ...]:
         return tuple(sorted(self.armor_catalog.states, key=self._armor_identity))
@@ -436,7 +473,13 @@ class ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator:
             )
 
         active_bar = str(getattr(candidate, "active_bar", "front") or "front").strip().casefold()
-        gear_rows = self.gear_realizations(active_bar=active_bar)
+        raw_gear_rows = self.gear_realizations(active_bar=active_bar)
+        frontier = self.scoring_frontier(key, active_bar=active_bar)
+        gear_rows = (
+            frontier.representatives
+            if frontier is not None and frontier.reduction_proven
+            else raw_gear_rows
+        )
         armor_rows = self.armor_states()
         if not gear_rows:
             raise ValueError("Extreme named gear search produced no dual-bar-admissible gear candidate")
@@ -447,6 +490,8 @@ class ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator:
         best_payload: dict[str, Any] | None = None
         best_identity: tuple[Any, ...] | None = None
         unresolved: list[str] = list(self.unresolved)
+        if frontier is not None:
+            unresolved.extend(str(item) for item in frontier.unresolved if str(item))
 
         for realization in gear_rows:
             gear_identity = self._gear_identity(realization)
@@ -474,9 +519,22 @@ class ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator:
         trait_glyph = self.armor_catalog.trait_glyph_catalog
         weight = self.armor_catalog.weight_catalog
         dual_catalog = self.dual_bar_catalog()
+        best_payload["gear_candidates_reviewed"] = len(raw_gear_rows)
         best_payload["gear_candidates_scored"] = len(gear_rows)
         best_payload["resource_armor_states_scored"] = len(armor_rows)
         best_payload["gear_resource_armor_candidates_scored"] = len(gear_rows) * len(armor_rows)
+        best_payload["gear_semantic_scoring_classes"] = (
+            frontier.semantic_classes if frontier is not None else len(raw_gear_rows)
+        )
+        best_payload["gear_semantic_duplicate_witnesses_pruned"] = (
+            frontier.duplicate_witnesses_pruned if frontier is not None else 0
+        )
+        best_payload["gear_semantic_largest_equivalence_class"] = (
+            frontier.largest_equivalence_class if frontier is not None else 1
+        )
+        best_payload["gear_semantic_scoring_reduction_proven"] = bool(
+            frontier is not None and frontier.reduction_proven
+        )
         best_payload["dual_bar_gear_states_reviewed"] = len(dual_catalog.states)
         best_payload["dual_bar_compatible_pairs_reviewed"] = dual_catalog.compatible_pairs_reviewed
         best_payload["active_snapshot_gear_candidates_reviewed"] = dual_catalog.active_snapshots_reviewed
