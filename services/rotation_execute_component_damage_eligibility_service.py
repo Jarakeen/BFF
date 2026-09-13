@@ -130,7 +130,7 @@ class RotationExecuteComponentDamageEligibilityService:
                     return self._unknown(
                         skill_name,
                         coefficient_number,
-                        "; ".join(detail),
+                        self._strip_skill_prefix(skill_name, "; ".join(detail)),
                     )
                 damage_multiplier *= float(amplification.damage_multiplier)
                 continue
@@ -155,6 +155,11 @@ class RotationExecuteComponentDamageEligibilityService:
             status=RotationExecuteComponentDamageStatus.INCLUDE,
             damage_multiplier=damage_multiplier,
         )
+
+    @staticmethod
+    def _strip_skill_prefix(skill_name: str, reason: str) -> str:
+        prefix = f"{str(skill_name or '').strip()}: "
+        return reason[len(prefix) :] if reason.startswith(prefix) else reason
 
     @staticmethod
     def _unknown(
