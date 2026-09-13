@@ -3,11 +3,11 @@ from __future__ import annotations
 """Polish Assignments layout and add raid-lead quick actions.
 
 This layer hides the legacy Ready column, gives the assignment table useful
-horizontal breathing room, and adds navigation/evaluation actions to the Needs
-Attention card without introducing another roster/team model.
+horizontal breathing room, and turns the old Needs Attention summary into a
+flat quick-action card without introducing another roster/team model.
 """
 
-from PySide6.QtWidgets import QGridLayout, QHeaderView, QPushButton
+from PySide6.QtWidgets import QGridLayout, QHeaderView, QPushButton, QSizePolicy
 
 from engine.config import get_data_dir
 from services.build_service import BuildService
@@ -61,12 +61,15 @@ def _send_to_comp_maker(page) -> None:
         page.status.warning(f"{team_name} has no roster members to send to Comp Maker.")
         return
 
+    window = page.window()
+    comp = getattr(window, "pages", {}).get("comp_builder")
+    if comp is not None and hasattr(comp, "apply_roster_team_context"):
+        comp.apply_roster_team_context(team_name, members)
+
     if not _show_page(page, "comp_builder"):
         return
 
-    window = page.window()
-    comp = getattr(window, "pages", {}).get("comp_builder")
-    if comp is not None:
+    if comp is not None and not hasattr(comp, "apply_roster_team_context"):
         comp._roster_team_context_name = team_name
         comp._roster_team_context_member_ids = tuple(
             int(member.Id) for member in members if member.Id is not None
@@ -172,14 +175,46 @@ def _open_gear_lookup(page) -> None:
     _show_page(page, "gear_lookup")
 
 
+def _clear_attention_content(card) -> None:
+    """Remove the old readiness summary immediately before adding actions."""
+    while card.body_layout.count():
+        item = card.body_layout.takeAt(0)
+        widget = item.widget()
+        layout = item.layout()
+        if widget is not None:
+            widget.hide()
+            widget.setParent(None)
+            widget.deleteLater()
+        if layout is not None:
+            while layout.count():
+                child = layout.takeAt(0)
+                child_widget = child.widget()
+                if child_widget is not None:
+                    child_widget.hide()
+                    child_widget.setParent(None)
+                    child_widget.deleteLater()
+
+
 def _add_attention_actions(page) -> None:
     card = getattr(page, "attention_card", None)
     if card is None:
         return
 
+    # This is now an action surface, not a readiness-summary card.
+    card.header.hide()
+    card.set_watermark(None)
+    card.set_body_margins(10, 10, 10, 10)
+    card.set_body_spacing(8)
+    _clear_attention_content(card)
+
     actions = QGridLayout()
-    actions.setHorizontalSpacing(6)
-    actions.setVerticalSpacing(6)
+    actions.setContentsMargins(0, 0, 0, 0)
+    actions.setHorizontalSpacing(8)
+    actions.setVerticalSpacing(8)
+    actions.setColumnStretch(0, 1)
+    actions.setColumnStretch(1, 1)
+    actions.setRowStretch(0, 1)
+    actions.setRowStretch(1, 1)
 
     send = QPushButton("Send to Comp Maker")
     send.setProperty("primary", True)
@@ -197,6 +232,10 @@ def _add_attention_actions(page) -> None:
     gear = QPushButton("Gear Lookup")
     gear.setToolTip("Open Gear Lookup.")
     gear.clicked.connect(lambda *_: _open_gear_lookup(page))
+
+    for button in (send, evaluate, encounters, gear):
+        button.setMinimumHeight(52)
+        button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
     actions.addWidget(send, 0, 0)
     actions.addWidget(evaluate, 0, 1)
