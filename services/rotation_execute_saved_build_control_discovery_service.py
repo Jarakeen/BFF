@@ -4,8 +4,8 @@ from __future__ import annotations
 
 This service is read-only. It classifies ordinary slotted skills through the canonical
 execute evidence disposition service and reports whether a saved DD build contains a
-scheduler-supported threshold execute, unresolved continuous amplification, or neither.
-It does not mutate builds, schedule rotations, or reinterpret missing evidence.
+scheduler-supported execute, unresolved continuous amplification, or neither. It does
+not mutate builds, schedule rotations, or reinterpret missing evidence.
 """
 
 from dataclasses import dataclass
@@ -45,6 +45,15 @@ class RotationExecuteSavedBuildControl:
         )
 
     @property
+    def continuous_supported(self) -> tuple[RotationExecuteSavedBuildSkillDisposition, ...]:
+        return tuple(
+            row
+            for row in self.skills
+            if row.result.disposition
+            is RotationExecuteEvidenceDisposition.CONTINUOUS_AMPLIFICATION_SUPPORTED
+        )
+
+    @property
     def continuous_unresolved(self) -> tuple[RotationExecuteSavedBuildSkillDisposition, ...]:
         return tuple(
             row
@@ -54,8 +63,16 @@ class RotationExecuteSavedBuildControl:
         )
 
     @property
+    def supported(self) -> tuple[RotationExecuteSavedBuildSkillDisposition, ...]:
+        return (*self.threshold_supported, *self.continuous_supported)
+
+    @property
     def is_positive_threshold_control(self) -> bool:
         return bool(self.threshold_supported)
+
+    @property
+    def is_positive_execute_control(self) -> bool:
+        return bool(self.supported)
 
 
 class RotationExecuteSavedBuildControlDiscoveryService:
@@ -101,7 +118,7 @@ class RotationExecuteSavedBuildControlDiscoveryService:
             )
         controls.sort(
             key=lambda row: (
-                not row.is_positive_threshold_control,
+                not row.is_positive_execute_control,
                 row.character_name.casefold(),
                 row.build_name.casefold(),
             )
