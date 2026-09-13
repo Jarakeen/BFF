@@ -15,7 +15,7 @@ from ui.components.foundry_card import FoundryCard
 
 
 _INSTALLED = False
-_TEAM_DEFAULT_LABEL = "Team Default"
+_TEAM_DEFAULT_LABEL = "Team Default (most common)"
 
 
 def _encounter_choices() -> tuple[tuple[str, str], ...]:
@@ -57,7 +57,7 @@ def _set_enabled_state(page) -> None:
     team_name = str(getattr(page, "assignment_team_filter", "") or "").strip()
     combo.setEnabled(bool(team_name))
     combo.setToolTip(
-        "Choose a boss only when this team member has a different job for that fight."
+        "Usually leave this on Team Default. Pick a boss only when someone's job changes for that fight."
         if team_name
         else "Choose a team first."
     )
@@ -69,13 +69,13 @@ def _encounter_changed(page, _index: int) -> None:
     encounter = selected_encounter_name(page)
     if encounter:
         page.status.info(
-            f"Assignments showing {encounter}. Changes here become boss-specific overrides."
+            f"Boss override: {encounter}. Only changes you make here differ from the team default."
         )
     else:
         team_name = str(getattr(page, "assignment_team_filter", "") or "").strip()
         if team_name:
             page.status.info(
-                f"Assignments showing {team_name} team defaults. Bosses inherit these unless overridden."
+                f"{team_name} team defaults. Leave Boss here unless someone's job changes for a fight."
             )
 
 
@@ -86,6 +86,15 @@ def _find_assignments_card(page_widget) -> FoundryCard | None:
     return None
 
 
+def _remove_obsolete_override_tab(page) -> None:
+    tabs = getattr(page, "tabs", None)
+    if tabs is None:
+        return
+    for index in range(tabs.count() - 1, -1, -1):
+        if tabs.tabText(index).strip().casefold() == "encounter overrides":
+            tabs.removeTab(index)
+
+
 def install() -> None:
     global _INSTALLED
     if _INSTALLED:
@@ -93,8 +102,14 @@ def install() -> None:
 
     from ui.themed_roster_page import RosterPage
 
+    original_build_ui = RosterPage._build_ui
     original_build_assignments_tab = RosterPage._build_assignments_tab
     original_populate_assignment_table = RosterPage._populate_assignment_table
+
+    def build_ui_without_duplicate_override_tab(self):
+        result = original_build_ui(self)
+        _remove_obsolete_override_tab(self)
+        return result
 
     def build_assignments_tab_with_encounter_context(self):
         page = original_build_assignments_tab(self)
@@ -106,10 +121,10 @@ def install() -> None:
         row = QHBoxLayout(wrapper)
         row.setContentsMargins(0, 0, 0, 0)
         row.setSpacing(6)
-        label = QLabel("Boss")
+        label = QLabel("Boss (optional)")
         label.setProperty("muted", True)
         combo = QComboBox()
-        combo.setMinimumWidth(220)
+        combo.setMinimumWidth(230)
         combo.addItem(_TEAM_DEFAULT_LABEL, "")
         for name, encounter_id in _encounter_choices():
             combo.addItem(name, encounter_id)
@@ -125,6 +140,7 @@ def install() -> None:
         _set_enabled_state(self)
         return original_populate_assignment_table(self, *args, **kwargs)
 
+    RosterPage._build_ui = build_ui_without_duplicate_override_tab
     RosterPage._build_assignments_tab = build_assignments_tab_with_encounter_context
     RosterPage._populate_assignment_table = populate_assignment_table_with_encounter_context
     _INSTALLED = True
