@@ -17,6 +17,7 @@ from services.rotation_dd_whole_plan_damage_coverage_audit_service import (
 class RotationDDDamageBlockerDisposition(str, Enum):
     ACTIONABLE = "actionable"
     PARKED_EVIDENCE = "parked_evidence"
+    RUNTIME_INPUT_REQUIRED = "runtime_input_required"
 
 
 @dataclass(frozen=True)
@@ -47,20 +48,33 @@ class RotationDDWholePlanDamageBlockerTriageReport:
             if item.disposition is RotationDDDamageBlockerDisposition.PARKED_EVIDENCE
         )
 
+    @property
+    def runtime_input_required(self) -> tuple[RotationDDDamageBlockerTriage, ...]:
+        return tuple(
+            item
+            for item in self.blockers
+            if item.disposition is RotationDDDamageBlockerDisposition.RUNTIME_INPUT_REQUIRED
+        )
+
 
 class RotationDDWholePlanDamageBlockerTriageService:
     """Prioritize whole-plan DD blockers without weakening fail-closed evidence.
 
-    Coverage blockers remain authoritative. This service only distinguishes unresolved
-    consequences tied to intentionally parked periodic reviews from blockers whose
-    evidence work is still actionable. It never converts parked damage to zero or marks
-    the underlying coverage audit complete.
+    Coverage blockers remain authoritative. This service distinguishes intentionally
+    parked periodic evidence gaps, caller/runtime-owned exact evidence gaps, and
+    engineering work that is still actionable. No disposition converts unresolved
+    damage to zero or marks the underlying coverage audit complete.
     """
 
     _PERIODIC_REASON_MARKERS = (
         "reviewed periodic runtime semantics are unavailable",
         "periodic magnitude timing policy is unavailable",
         "periodic runtime",
+    )
+    _RUNTIME_INPUT_REASON_MARKERS = (
+        "requires exact runtime anchor evidence",
+        "requires authoritative target combatstate",
+        "requires exact-time runtime",
     )
 
     def __init__(
@@ -86,9 +100,10 @@ class RotationDDWholePlanDamageBlockerTriageService:
         for blocker in audit.blockers:
             action_name = ability_entity_id(blocker.action_name or "")
             reason = str(blocker.reason or "").strip()
+            reason_folded = reason.casefold()
             parked_review = parked_by_skill.get(action_name)
             periodic_reason = any(
-                marker in reason.casefold() for marker in self._PERIODIC_REASON_MARKERS
+                marker in reason_folded for marker in self._PERIODIC_REASON_MARKERS
             )
             if parked_review is not None and periodic_reason:
                 result.append(
@@ -96,6 +111,17 @@ class RotationDDWholePlanDamageBlockerTriageService:
                         blocker=blocker,
                         disposition=RotationDDDamageBlockerDisposition.PARKED_EVIDENCE,
                         disposition_reason=parked_review.reason,
+                    )
+                )
+                continue
+            if any(marker in reason_folded for marker in self._RUNTIME_INPUT_REASON_MARKERS):
+                result.append(
+                    RotationDDDamageBlockerTriage(
+                        blocker=blocker,
+                        disposition=RotationDDDamageBlockerDisposition.RUNTIME_INPUT_REQUIRED,
+                        disposition_reason=(
+                            "reviewed semantics exist, but this run lacks exact caller/runtime evidence"
+                        ),
                     )
                 )
                 continue
