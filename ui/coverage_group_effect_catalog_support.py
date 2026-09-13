@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Expand Coverage with the raid-facing group buff/debuff reference catalog.
+"""Expand Coverage with raid-facing group effects and unique support-set effects.
 
 The existing saved-build capability audit remains authoritative. Newly displayed
 reference effects are deliberately left Unverified until canonical capability mapping
@@ -14,6 +14,11 @@ from services.raid_group_effect_catalog import (
     GROUP_COVERAGE_NAMES,
     GROUP_DEBUFF_NAMES,
 )
+from services.raid_unique_support_set_catalog import (
+    UNIQUE_SUPPORT_DEBUFF_NAMES,
+    UNIQUE_SUPPORT_SET_BY_NAME,
+    UNIQUE_SUPPORT_SET_NAMES,
+)
 from services.saved_build_capability_service import RaidCoverageSnapshot
 from ui.components.foundry_card import FoundryCard
 
@@ -23,13 +28,19 @@ _ORIGINAL_INIT = None
 _ORIGINAL_REFRESH = None
 _ORIGINAL_SNAPSHOT_FOR_BUILDS = None
 
+# Unique-set references deliberately override duplicate planning rows so their Type
+# column can explain the unnamed effect instead of merely saying Buff or Debuff.
+REFERENCE_BY_NAME = {**GROUP_COVERAGE_BY_NAME, **UNIQUE_SUPPORT_SET_BY_NAME}
+COVERAGE_NAMES = tuple(dict.fromkeys((*GROUP_COVERAGE_NAMES, *UNIQUE_SUPPORT_SET_NAMES)))
+DEBUFF_NAMES = frozenset((*GROUP_DEBUFF_NAMES, *UNIQUE_SUPPORT_DEBUFF_NAMES))
+
 
 def _extend_snapshot(snapshot: RaidCoverageSnapshot) -> RaidCoverageSnapshot:
-    status = {name: "unverified" for name in GROUP_COVERAGE_NAMES}
-    providers = {name: [] for name in GROUP_COVERAGE_NAMES}
-    conditional = {name: [] for name in GROUP_COVERAGE_NAMES}
+    status = {name: "unverified" for name in COVERAGE_NAMES}
+    providers = {name: [] for name in COVERAGE_NAMES}
+    conditional = {name: [] for name in COVERAGE_NAMES}
 
-    for name in GROUP_COVERAGE_NAMES:
+    for name in COVERAGE_NAMES:
         if name in snapshot.status:
             status[name] = snapshot.status[name]
         if name in snapshot.providers:
@@ -45,17 +56,29 @@ def _snapshot_with_group_catalog(self, builds):
     return _extend_snapshot(_ORIGINAL_SNAPSHOT_FOR_BUILDS(self, builds))
 
 
-def _apply_required_labels(page) -> None:
+def _apply_reference_labels(page) -> None:
     table = getattr(page, "table", None)
     if table is None:
         return
     for row in range(table.rowCount()):
         name_item = table.item(row, 0)
+        type_item = table.item(row, 1)
         required_item = table.item(row, 2)
-        if name_item is None or required_item is None:
+        if name_item is None:
             continue
-        reference = GROUP_COVERAGE_BY_NAME.get(name_item.text().strip())
-        if reference is not None:
+        reference = REFERENCE_BY_NAME.get(name_item.text().strip())
+        if reference is None:
+            continue
+
+        if type_item is not None:
+            type_item.setText(getattr(reference, "type_label", "") or reference.category)
+            type_item.setToolTip(
+                "Unique support-set effect; see Coverage Notes for the planning description."
+                if getattr(reference, "type_label", "")
+                else f"Group-relevant {reference.category.lower()}."
+            )
+
+        if required_item is not None:
             required_item.setText("Yes" if reference.default_required else "No")
             required_item.setToolTip(
                 "Default raid coverage requirement."
@@ -92,18 +115,19 @@ def _refresh_source_notes(page, *_args) -> None:
         return
 
     name = _selected_effect_name(page)
-    reference = GROUP_COVERAGE_BY_NAME.get(name)
+    reference = REFERENCE_BY_NAME.get(name)
     card.clear()
 
     if reference is None:
         intro = QLabel(
-            "Select a buff or debuff above to see reviewed examples of places a raid lead can look for a group-capable source."
+            "Select a buff, debuff, or unique support-set effect above to see reviewed planning sources."
         )
         intro.setWordWrap(True)
         card.addWidget(intro)
         return
 
-    heading = QLabel(f"{reference.name} • {reference.category}")
+    type_label = getattr(reference, "type_label", "") or reference.category
+    heading = QLabel(f"{reference.name} • {type_label}")
     heading.setProperty("sidebarHeading", True)
     heading.setWordWrap(True)
     card.addWidget(heading)
@@ -128,7 +152,7 @@ def _refresh_source_notes(page, *_args) -> None:
 def _refresh_with_group_catalog(self, *args, **kwargs):
     assert _ORIGINAL_REFRESH is not None
     result = _ORIGINAL_REFRESH(self, *args, **kwargs)
-    _apply_required_labels(self)
+    _apply_reference_labels(self)
     _refresh_source_notes(self)
     return result
 
@@ -146,7 +170,7 @@ def _init_with_group_catalog(self, *args, **kwargs):
     self.table.currentCellChanged.connect(lambda *_: _refresh_source_notes(self))
 
     _coverage_notes_card(self)
-    _apply_required_labels(self)
+    _apply_reference_labels(self)
     if self.table.rowCount() and self.table.currentRow() < 0:
         self.table.selectRow(0)
     _refresh_source_notes(self)
@@ -159,10 +183,11 @@ def install() -> None:
 
     from ui import coverage_page
 
-    # The Buffs & Debuffs tab is a reference/planning surface. Keep mechanic jobs
-    # and ad-hoc utilities out of it; Magickasteal is categorized as a Debuff.
-    coverage_page.CORE_COVERAGE = GROUP_COVERAGE_NAMES
-    coverage_page.DEBUFFS = set(GROUP_DEBUFF_NAMES)
+    # Buffs & Debuffs is a raid-planning surface. Keep mechanic jobs and ad-hoc
+    # utilities out; include group effects and support sets raid leads assign for
+    # their unique effects. Magickasteal remains a Debuff.
+    coverage_page.CORE_COVERAGE = COVERAGE_NAMES
+    coverage_page.DEBUFFS = set(DEBUFF_NAMES)
     coverage_page.UTILITY = set()
 
     CoveragePage = coverage_page.CoveragePage
