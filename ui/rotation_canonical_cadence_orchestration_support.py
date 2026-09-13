@@ -26,6 +26,9 @@ from ui.rotation_dashboard_canonical_candidate_support import (
     RotationDashboardCanonicalCandidateResult,
     RotationDashboardCanonicalCandidateSupport,
 )
+from ui.rotation_dd_dashboard_canonical_candidate_support import (
+    RotationDDDashboardCanonicalCandidateSupport,
+)
 from ui.rotation_generation_support import RotationGenerationRequest
 from ui.rotation_support_cadence_progression_render_support import (
     RotationSupportCadenceProgressionRenderEvidence,
@@ -93,7 +96,9 @@ class RotationCanonicalCadenceOrchestrationSupport:
         cadence_runner: _CadenceRunner | None = None,
         cadence_render: RotationSupportCadenceProgressionRenderSupport | None = None,
     ) -> None:
-        self.canonical_candidates = canonical_candidates or RotationDashboardCanonicalCandidateSupport()
+        self.canonical_candidates = (
+            canonical_candidates or RotationDDDashboardCanonicalCandidateSupport()
+        )
         self.canonical_render = canonical_render or RotationCanonicalCandidateRenderSupport()
         self.cadence_runner = cadence_runner or build_rotation_support_cadence_progression_runner()
         self.cadence_render = cadence_render or RotationSupportCadenceProgressionRenderSupport()
