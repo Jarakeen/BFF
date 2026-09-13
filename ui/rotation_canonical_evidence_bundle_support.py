@@ -29,6 +29,9 @@ from services.rotation_recovery_heavy_candidate_generation_bridge_service import
     RecoveryCandidateEvaluatorResolver,
     RecoveryPressureWaitDecisionFactory,
 )
+from services.rotation_recovery_heavy_candidate_orchestration_service import (
+    RecoveryRuntimeOutputConditionContextResolverFactory,
+)
 from services.rotation_recovery_heavy_final_family_evaluation_service import (
     RecoveryFinalScorecardResolver,
 )
@@ -58,6 +61,9 @@ class RotationCanonicalEvidenceBundle:
     restoration_resolver: VerifiedRecoveryHeavyRestorationResolver | None = None
     wait_decision_factory: RecoveryPressureWaitDecisionFactory | None = None
     reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None
+    runtime_output_condition_context_resolver_factory: (
+        RecoveryRuntimeOutputConditionContextResolverFactory | None
+    ) = None
     max_iterations: int = 6
     baseline_id: str = "baseline"
     unresolved: tuple[str, ...] = ()
@@ -132,6 +138,9 @@ class RotationCanonicalEvidenceBundleSupport:
         passives: tuple[PassiveGrant, ...] = (),
         wait_decision_factory: RecoveryPressureWaitDecisionFactory | None = None,
         reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None,
+        runtime_output_condition_context_resolver_factory: (
+            RecoveryRuntimeOutputConditionContextResolverFactory | None
+        ) = None,
         max_iterations: int = 6,
         baseline_id: str = "baseline",
         knowledge_gaps: tuple[CanonicalKnowledgeGap, ...] = (),
@@ -229,6 +238,9 @@ class RotationCanonicalEvidenceBundleSupport:
             restoration_resolver=restoration_resolver,
             wait_decision_factory=wait_decision_factory,
             reserve_assessment_resolver=reserve_assessment_resolver,
+            runtime_output_condition_context_resolver_factory=(
+                runtime_output_condition_context_resolver_factory
+            ),
             max_iterations=iterations,
             baseline_id=baseline,
             unresolved=tuple(dict.fromkeys(unresolved)),
