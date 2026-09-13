@@ -25,6 +25,16 @@ def test_classifies_conditional_flat_without_borrowing_other_stat_range():
     assert row.can_raise_self
 
 
+def test_classifies_parallel_flat_reward_clause_without_borrowing_damage_range():
+    row = _classify(
+        "When you cast an ability that grants Major or Minor Resolve while in combat, "
+        "you gain 7-341 Weapon and Spell Damage and 7-341 Health Recovery for 15 seconds."
+    )
+    assert row.kind is ExtremeRecoverySpecialBranchKind.CONDITIONAL_FLAT
+    assert row.flat_ceiling == 341.0
+    assert row.can_raise_self
+
+
 def test_classifies_major_fortitude_as_named_buff():
     row = _classify(
         "You gain Major Fortitude, increasing your Health Recovery by 30%."
