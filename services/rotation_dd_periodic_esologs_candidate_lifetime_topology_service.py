@@ -34,18 +34,22 @@ class RotationDDPeriodicEsoLogsCandidateLifetimeTopologyReport:
     unique_event_count: int
     overlapping_window_reuse_count: int
     groups: tuple[RotationDDPeriodicEsoLogsCandidateLifetimeGroup, ...]
+    censored_same_source_observation_count: int
+    censored_same_source_unique_event_count: int
+    censored_same_source_groups: tuple[RotationDDPeriodicEsoLogsCandidateLifetimeGroup, ...]
     unresolved: tuple[str, ...] = ()
 
 
 class RotationDDPeriodicEsoLogsCandidateLifetimeTopologyService:
     """Observe candidate source/track/target topology across one cast lifetime.
 
-    The probe is intentionally observational. Candidate numeric IDs are evidence
-    handles only. Events are compared with each matching canonical skill cast by
-    report/fight and timestamp, then classified by whether they share the cast's
-    source actor and cast-track id. A candidate event may appear in more than one
-    overlapping cast window; the report exposes that reuse rather than silently
-    assigning ownership to one cast.
+    The broad view compares candidate events with every matching canonical skill cast
+    in the reviewed active window and exposes overlap rather than silently assigning
+    ownership. The censored same-source view is stricter: only candidate events emitted
+    by the casting source are admitted, and each cast's ownership window ends at that
+    source's next matching cast or the reviewed active-window end, whichever comes first.
+    This prevents later recasts and other players' events from masquerading as long-lived
+    evidence. Numeric candidate IDs remain observational evidence handles only.
     """
 
     _CAST_TYPES = ("cast", "completecast", "begincast")
@@ -138,12 +142,13 @@ class RotationDDPeriodicEsoLogsCandidateLifetimeTopologyService:
             key = (str(row["report_code"]), int(row["fight_id"]))
             candidate_rows_by_scope.setdefault(key, []).append(row)
 
-        raw_groups: dict[
-            tuple[int, str, str, str],
-            dict[str, object],
-        ] = {}
+        next_cast_time_by_cast = self._next_same_source_cast_times(casts)
+        raw_groups: dict[tuple[int, str, str, str], dict[str, object]] = {}
+        censored_groups: dict[tuple[int, str, str, str], dict[str, object]] = {}
         unique_events: set[tuple[str, int, int]] = set()
+        censored_unique_events: set[tuple[str, int, int]] = set()
         observation_count = 0
+        censored_observation_count = 0
 
         for cast in casts:
             cast_time = float(cast["timestamp"])
@@ -152,6 +157,9 @@ class RotationDDPeriodicEsoLogsCandidateLifetimeTopologyService:
             scope = (str(cast["report_code"]), int(cast["fight_id"]))
             window_end = cast_time + window * 1000.0
             cast_key = (scope[0], scope[1], int(cast["event_index"]))
+            next_cast_time = next_cast_time_by_cast.get(cast_key)
+            censored_end = min(window_end, next_cast_time) if next_cast_time is not None else window_end
+
             for row in candidate_rows_by_scope.get(scope, ()):
                 timestamp = float(row["timestamp"])
                 if timestamp < cast_time or timestamp > window_end:
@@ -160,39 +168,107 @@ class RotationDDPeriodicEsoLogsCandidateLifetimeTopologyService:
                 candidate_id = int(row["ability_game_id"])
                 event_source = self._int_or_none(row["source_id"])
                 event_track = self._int_or_none(row["cast_track_id"])
-                source_relation = "same_source" if cast_source is not None and event_source == cast_source else "other_source"
-                if event_track is None:
-                    track_relation = "missing_track"
-                elif cast_track is not None and event_track == cast_track:
-                    track_relation = "same_track"
-                else:
-                    track_relation = "other_track"
-                band = self._time_band(offset, window)
-                key = (candidate_id, band, source_relation, track_relation)
-                bucket = raw_groups.setdefault(
-                    key,
-                    {
-                        "observations": 0,
-                        "casts": set(),
-                        "sources": set(),
-                        "targets": set(),
-                        "tracks": set(),
-                        "offsets": [],
-                    },
+                source_relation = (
+                    "same_source"
+                    if cast_source is not None and event_source == cast_source
+                    else "other_source"
                 )
-                bucket["observations"] = int(bucket["observations"]) + 1
-                bucket["casts"].add(cast_key)  # type: ignore[union-attr]
-                if event_source is not None:
-                    bucket["sources"].add(event_source)  # type: ignore[union-attr]
-                target = self._int_or_none(row["target_id"])
-                if target is not None:
-                    bucket["targets"].add(target)  # type: ignore[union-attr]
-                if event_track is not None:
-                    bucket["tracks"].add(event_track)  # type: ignore[union-attr]
-                bucket["offsets"].append(offset)  # type: ignore[union-attr]
+                track_relation = self._track_relation(cast_track, event_track)
+                band = self._time_band(offset, window)
+                self._add_observation(
+                    raw_groups,
+                    key=(candidate_id, band, source_relation, track_relation),
+                    cast_key=cast_key,
+                    event_source=event_source,
+                    event_target=self._int_or_none(row["target_id"]),
+                    event_track=event_track,
+                    offset=offset,
+                )
                 observation_count += 1
-                unique_events.add((scope[0], scope[1], int(row["event_index"])))
+                event_key = (scope[0], scope[1], int(row["event_index"]))
+                unique_events.add(event_key)
 
+                if cast_source is None or event_source != cast_source:
+                    continue
+                if next_cast_time is not None and timestamp >= censored_end:
+                    continue
+                if next_cast_time is None and timestamp > censored_end:
+                    continue
+                self._add_observation(
+                    censored_groups,
+                    key=(candidate_id, band, "same_source", track_relation),
+                    cast_key=cast_key,
+                    event_source=event_source,
+                    event_target=self._int_or_none(row["target_id"]),
+                    event_track=event_track,
+                    offset=offset,
+                )
+                censored_observation_count += 1
+                censored_unique_events.add(event_key)
+
+        groups = self._materialize_groups(raw_groups)
+        censored_materialized = self._materialize_groups(censored_groups)
+        if not groups:
+            unresolved.append(f"{identity}: no candidate events observed inside reviewed cast windows")
+        return self._report(
+            identity,
+            candidates,
+            window,
+            cast_count=len(casts),
+            observation_count=observation_count,
+            unique_event_count=len(unique_events),
+            overlapping_window_reuse_count=max(0, observation_count - len(unique_events)),
+            groups=groups,
+            censored_same_source_observation_count=censored_observation_count,
+            censored_same_source_unique_event_count=len(censored_unique_events),
+            censored_same_source_groups=censored_materialized,
+            unresolved=tuple(dict.fromkeys(unresolved)),
+        )
+
+    @staticmethod
+    def _track_relation(cast_track: int | None, event_track: int | None) -> str:
+        if event_track is None:
+            return "missing_track"
+        if cast_track is not None and event_track == cast_track:
+            return "same_track"
+        return "other_track"
+
+    @staticmethod
+    def _add_observation(
+        raw_groups: dict[tuple[int, str, str, str], dict[str, object]],
+        *,
+        key: tuple[int, str, str, str],
+        cast_key: tuple[str, int, int],
+        event_source: int | None,
+        event_target: int | None,
+        event_track: int | None,
+        offset: float,
+    ) -> None:
+        bucket = raw_groups.setdefault(
+            key,
+            {
+                "observations": 0,
+                "casts": set(),
+                "sources": set(),
+                "targets": set(),
+                "tracks": set(),
+                "offsets": [],
+            },
+        )
+        bucket["observations"] = int(bucket["observations"]) + 1
+        bucket["casts"].add(cast_key)  # type: ignore[union-attr]
+        if event_source is not None:
+            bucket["sources"].add(event_source)  # type: ignore[union-attr]
+        if event_target is not None:
+            bucket["targets"].add(event_target)  # type: ignore[union-attr]
+        if event_track is not None:
+            bucket["tracks"].add(event_track)  # type: ignore[union-attr]
+        bucket["offsets"].append(offset)  # type: ignore[union-attr]
+
+    @staticmethod
+    def _materialize_groups(
+        raw_groups: dict[tuple[int, str, str, str], dict[str, object]],
+    ) -> tuple[RotationDDPeriodicEsoLogsCandidateLifetimeGroup, ...]:
         groups: list[RotationDDPeriodicEsoLogsCandidateLifetimeGroup] = []
         for (candidate_id, band, source_relation, track_relation), bucket in sorted(raw_groups.items()):
             offsets = tuple(float(value) for value in bucket["offsets"])  # type: ignore[arg-type]
@@ -211,21 +287,33 @@ class RotationDDPeriodicEsoLogsCandidateLifetimeTopologyService:
                     latest_offset_seconds=max(offsets) if offsets else None,
                 )
             )
+        return tuple(groups)
 
-        if not groups:
-            unresolved.append(f"{identity}: no candidate events observed inside reviewed cast windows")
-        unique_event_count = len(unique_events)
-        return self._report(
-            identity,
-            candidates,
-            window,
-            cast_count=len(casts),
-            observation_count=observation_count,
-            unique_event_count=unique_event_count,
-            overlapping_window_reuse_count=max(0, observation_count - unique_event_count),
-            groups=tuple(groups),
-            unresolved=tuple(dict.fromkeys(unresolved)),
-        )
+    @staticmethod
+    def _next_same_source_cast_times(
+        casts: list[sqlite3.Row],
+    ) -> dict[tuple[str, int, int], float]:
+        grouped: dict[tuple[str, int, int], list[sqlite3.Row]] = {}
+        for cast in casts:
+            source = cast["source_id"]
+            if source is None:
+                continue
+            scope = (str(cast["report_code"]), int(cast["fight_id"]), int(source))
+            grouped.setdefault(scope, []).append(cast)
+        result: dict[tuple[str, int, int], float] = {}
+        for scope_casts in grouped.values():
+            ordered = sorted(
+                scope_casts,
+                key=lambda row: (float(row["timestamp"]), int(row["event_index"])),
+            )
+            for current, following in zip(ordered, ordered[1:]):
+                key = (
+                    str(current["report_code"]),
+                    int(current["fight_id"]),
+                    int(current["event_index"]),
+                )
+                result[key] = float(following["timestamp"])
+        return result
 
     @classmethod
     def _time_band(cls, offset_seconds: float, active_window_seconds: float) -> str:
@@ -338,6 +426,9 @@ class RotationDDPeriodicEsoLogsCandidateLifetimeTopologyService:
             unique_event_count=kwargs.get("unique_event_count", 0),
             overlapping_window_reuse_count=kwargs.get("overlapping_window_reuse_count", 0),
             groups=kwargs.get("groups", ()),
+            censored_same_source_observation_count=kwargs.get("censored_same_source_observation_count", 0),
+            censored_same_source_unique_event_count=kwargs.get("censored_same_source_unique_event_count", 0),
+            censored_same_source_groups=kwargs.get("censored_same_source_groups", ()),
             unresolved=kwargs.get("unresolved", ()),
         )
 
