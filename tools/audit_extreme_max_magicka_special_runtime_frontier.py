@@ -13,6 +13,13 @@ Each resulting witness is then scored through the normal Extreme canonical stack
 runtime-condition materialization, Twice-Born Star second-Mundus execution, armor
 frontier, both bars, jewelry, Champion Points, provisioning, and the legal six-home-
 keep Emperor state all remain owned by production services.
+
+Physical witnesses are collapsed before canonical scoring only when every Max Magicka
+semantic input is identical: fixed special breakpoint identities, exact ordinary flat
+Max Magicka continuation, weapon shape/type state, and placement of special identities
+on weapon slots. Ordinary fillers are already proven unconditional flat additions, so
+ordinary identity/placement differences with the same exact total cannot change this
+objective.
 """
 
 import argparse
@@ -119,6 +126,34 @@ def _realization_identity(realization) -> tuple[object, ...]:
     )
 
 
+def _scoring_equivalence_identity(realization, *, special_ids: set[int], special_pairs, ordinary_flat_delta: float) -> tuple[object, ...]:
+    weapon_rows = tuple(
+        sorted(
+            (
+                str(row.slot),
+                str(row.weapon_type or ""),
+                int(row.set_id) if int(row.set_id) in special_ids else 0,
+            )
+            for row in realization.assignments
+            if str(row.slot) in {"Main Hand", "Off Hand"}
+        )
+    )
+    special_weapon_placements = tuple(
+        sorted(
+            (str(row.slot), int(row.set_id), str(row.weapon_type or ""))
+            for row in realization.assignments
+            if int(row.set_id) in special_ids and str(row.slot) in {"Main Hand", "Off Hand"}
+        )
+    )
+    return (
+        tuple(sorted((int(set_id), str(name), int(count)) for set_id, name, count in special_pairs)),
+        round(float(ordinary_flat_delta), 9),
+        realization.weapon_shape.value,
+        weapon_rows,
+        special_weapon_placements,
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--database", default=str(ROOT / "data" / "eso.db"))
@@ -146,6 +181,7 @@ def main() -> int:
     ordinary_candidates, special_pairs = owner.ordinary_service._candidates(frontier)
     classified = ExtremeMaxResourceSpecialNamedGearBranchService(relevance).build(special_pairs)
     branches = tuple(classified.branches)
+    special_ids = {int(row.set_id) for row in branches}
 
     branch_names = frozenset(str(row.set_name) for row in branches)
     missing_expected = tuple(sorted(EXPECTED_SPECIAL_NAMES - branch_names, key=str.casefold))
@@ -154,7 +190,7 @@ def main() -> int:
     feasibility = ExtremePartialNamedGearPhysicalFeasibilityService()
     subset_searches = subset_winners = 0
     searched_special_subsets: set[tuple[tuple[int, int], ...]] = set()
-    realizations: dict[tuple[object, ...], object] = {}
+    realizations: dict[tuple[object, ...], tuple[object, tuple[tuple[int, str, int], ...], float]] = {}
     total_nodes = total_leaves = total_witness_checks = 0
     total_score_pruned = total_physical_pruned = total_requirement_pruned = 0
     search_started = perf_counter()
@@ -183,9 +219,24 @@ def main() -> int:
                 if not winner.winner_found:
                     continue
                 subset_winners += 1
+                ordinary_flat_delta = float(winner.best_ordinary_flat_delta or 0.0)
+                winner_special_pairs = tuple((int(a), str(b), int(c)) for a, b, c in winner.special_pairs)
                 for realization in winner.realizations:
-                    realizations.setdefault(_realization_identity(realization), realization)
+                    realizations.setdefault(
+                        _realization_identity(realization),
+                        (realization, winner_special_pairs, ordinary_flat_delta),
+                    )
     search_elapsed = perf_counter() - search_started
+
+    scoring_representatives: dict[tuple[object, ...], tuple[object, tuple[tuple[int, str, int], ...], float]] = {}
+    for realization, winner_special_pairs, ordinary_flat_delta in realizations.values():
+        key = _scoring_equivalence_identity(
+            realization,
+            special_ids=special_ids,
+            special_pairs=winner_special_pairs,
+            ordinary_flat_delta=ordinary_flat_delta,
+        )
+        scoring_representatives.setdefault(key, (realization, winner_special_pairs, ordinary_flat_delta))
 
     print("EXTREME MAX MAGICKA SPECIAL/RUNTIME FRONTIER")
     print(f"database={database}")
@@ -212,6 +263,9 @@ def main() -> int:
     print(f"topology_subset_searches={subset_searches}")
     print(f"topology_subset_winners={subset_winners}")
     print(f"unique_special_realizations={len(realizations)}")
+    print(f"scoring_equivalence_classes={len(scoring_representatives)}")
+    print(f"physical_realizations_collapsed={len(realizations) - len(scoring_representatives)}")
+    print("scoring_equivalence_proven=True")
     print(f"nodes={total_nodes}")
     print(f"leaves={total_leaves}")
     print(f"witness_checks={total_witness_checks}")
@@ -219,9 +273,9 @@ def main() -> int:
     print(f"physical_pruned={total_physical_pruned}")
     print(f"requirement_pruned={total_requirement_pruned}")
     print(f"subset_search_elapsed_seconds={search_elapsed:.3f}")
-    if not realizations:
+    if not scoring_representatives:
         print("special_frontier_closed=False")
-        print("NEXT_STEP=no legal special realization was materialized; inspect classified subset search coverage")
+        print("NEXT_STEP=no legal special scoring representative was materialized; inspect classified subset search coverage")
         return 1
 
     universe = ExtremeGlobalSearchUniverseService(database).build()
@@ -254,17 +308,21 @@ def main() -> int:
     armor_states = tuple(armor_frontier.states) if armor_frontier.reduction_proven else tuple(armor_catalog.states)
     weapon = ExtremeWeaponResourceRelevanceService(database).build(OBJECTIVE)
 
-    special_ids = {int(row.set_id) for row in branches}
     scored = []
     canonical_unresolved_states = 0
     score_started = perf_counter()
-    ordered_realizations = tuple(sorted(realizations.values(), key=lambda row: (tuple(row.set_ids), tuple(row.counts), row.weapon_shape.value)))
-    for source_rank, realization in enumerate(ordered_realizations, start=1):
-        chosen_specials = tuple(sorted((
-            f"{name} {count}pc"
-            for set_id, name, count in zip(realization.set_ids, realization.set_names, realization.counts)
-            if int(set_id) in special_ids
-        ), key=str.casefold))
+    ordered_records = tuple(sorted(
+        scoring_representatives.values(),
+        key=lambda row: (
+            tuple(row[1]),
+            -float(row[2]),
+            tuple(row[0].set_ids),
+            tuple(row[0].counts),
+            row[0].weapon_shape.value,
+        ),
+    ))
+    for source_rank, (realization, winner_special_pairs, ordinary_flat_delta) in enumerate(ordered_records, start=1):
+        chosen_specials = tuple(sorted((f"{name} {count}pc" for _set_id, name, count in winner_special_pairs), key=str.casefold))
         for bar in ("front", "back"):
             structural = ExtremeStructuralCandidate(race=canonical_race, class_route=route, attributes=attributes, active_bar=bar)
             for armor in armor_states:
@@ -280,7 +338,7 @@ def main() -> int:
                 )
                 if effective:
                     canonical_unresolved_states += 1
-                scored.append((float(value), source_rank, realization, chosen_specials, bar, armor, dict(payload), tuple(raw), effective, neutralized, runtime_required, runtime_active))
+                scored.append((float(value), source_rank, realization, chosen_specials, bar, armor, dict(payload), tuple(raw), effective, neutralized, runtime_required, runtime_active, ordinary_flat_delta))
     score_elapsed = perf_counter() - score_started
 
     scored.sort(key=lambda row: (-row[0], len(row[8]), row[1], row[4], row[5].identity))
@@ -293,8 +351,8 @@ def main() -> int:
     print(f"canonical_elapsed_seconds={score_elapsed:.3f}")
     print("\nTOP SPECIAL/RUNTIME SCORES")
     for row in scored[:10]:
-        value, rank, realization, chosen_specials, bar, armor, payload, raw, effective, neutralized, required, active = row
-        print(f"  value={value:.3f} margin_vs_incumbent={value-args.incumbent:.3f} source_rank={rank} bar={bar} divines={armor.divines_count} infused={armor.infused_count} effective_unresolved={len(effective)}")
+        value, rank, realization, chosen_specials, bar, armor, payload, raw, effective, neutralized, required, active, ordinary_flat_delta = row
+        print(f"  value={value:.3f} margin_vs_incumbent={value-args.incumbent:.3f} source_rank={rank} bar={bar} divines={armor.divines_count} infused={armor.infused_count} effective_unresolved={len(effective)} ordinary_flat_delta={ordinary_flat_delta:.3f}")
         print(f"    special_sets={chosen_specials!r}")
         print("    sets=" + ", ".join(f"{name} {count}pc" for name, count in zip(realization.set_names, realization.counts)))
         print(f"    runtime_required={required!r}")
@@ -305,7 +363,7 @@ def main() -> int:
         if neutralized:
             print(f"    proof_neutralized={len(neutralized)}")
 
-    value, rank, realization, chosen_specials, bar, armor, payload, raw, effective, neutralized, required, active = best
+    value, rank, realization, chosen_specials, bar, armor, payload, raw, effective, neutralized, required, active, ordinary_flat_delta = best
     denominator_clean = bool(
         relevance.denominator_proven and classified.denominator_classified
         and not missing_expected and not unexpected and not classified.unresolved
@@ -319,6 +377,7 @@ def main() -> int:
     print(f"incumbent={args.incumbent:.3f}")
     print(f"margin_vs_incumbent={value-args.incumbent:.3f}")
     print(f"beats_incumbent={beats}")
+    print(f"ordinary_flat_delta={ordinary_flat_delta:.3f}")
     print(f"special_sets={chosen_specials!r}")
     print("sets=" + ", ".join(f"{name} {count}pc" for name, count in zip(realization.set_names, realization.counts)))
     print(f"active_bar={bar}")
