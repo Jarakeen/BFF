@@ -45,6 +45,7 @@ class PeriodicDamageActivationAnchor(str, Enum):
 
     CAST = "cast"
     IMPACT = "impact"
+    TRIGGER = "trigger"
 
 
 PeriodicDamageActivationAnchorResolver = Callable[
@@ -66,11 +67,13 @@ class RotationPeriodicDamageRuntimeSemantics:
 
     ``activation_anchor`` identifies the reviewed event that owns the periodic
     clock. Most effects begin from the skill cast and therefore use ``CAST``.
-    Travel/impact-triggered effects can instead use ``IMPACT``. Non-cast anchors
-    require an explicit runtime anchor resolver; they never silently fall back to
-    the action timestamp. The same anchor also owns replacement timing on a later
-    recast: an impact-anchored ground effect is replaced at the next reviewed impact,
-    not merely when the player presses the skill again.
+    Travel/impact effects can instead use ``IMPACT``. Armed, delayed, or conditional
+    effects whose periodic clock begins only after a distinct ability-trigger event
+    use ``TRIGGER``. Non-cast anchors require an explicit runtime anchor resolver;
+    they never silently fall back to the action timestamp. The same anchor also owns
+    replacement timing on a later recast: an impact-anchored effect is replaced at
+    the next reviewed impact, and a trigger-anchored effect at the next reviewed
+    trigger, not merely when the player presses the skill again.
 
     ``successive_hit_multiplier`` models explicitly reviewed effects whose later
     occurrences scale from the previous occurrence. The first occurrence is 1.0x,
