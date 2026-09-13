@@ -153,13 +153,13 @@ class BuildContextVariant:
 
     Blank values inherit from the parent build. Gear slots are sparse overrides,
     skill bars overlay only non-empty positions, and a non-empty ChampionPoints
-    list replaces the parent slotted CP set for that context.
+    list replaces the parent slotted CP set for that context. Raid assignments
+    deliberately live in the roster/team assignment authority, not here.
     """
 
     ContextType: str = "Boss"
     TeamName: str = ""
     BossName: str = ""
-    Assignment: str = ""
     Mundus: str = ""
     SecondMundus: str = ""
     Armor: dict[str, dict[str, str]] = field(default_factory=dict)
@@ -182,7 +182,6 @@ class BuildContextVariant:
             "ContextType": self.ContextType,
             "TeamName": self.TeamName,
             "BossName": self.BossName,
-            "Assignment": self.Assignment,
             "Mundus": self.Mundus,
             "SecondMundus": self.SecondMundus,
             "Armor": {slot: dict(values) for slot, values in self.Armor.items()},
@@ -214,7 +213,6 @@ class BuildContextVariant:
             ContextType=str(data.get("ContextType", "Boss") or "Boss"),
             TeamName=str(data.get("TeamName", "") or ""),
             BossName=str(data.get("BossName", data.get("Boss", "")) or ""),
-            Assignment=str(data.get("Assignment", "") or ""),
             Mundus=str(data.get("Mundus", "") or ""),
             SecondMundus=str(data.get("SecondMundus", "") or ""),
             Armor=armor,
