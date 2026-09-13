@@ -802,3 +802,21 @@ score. It reduces the reviewed deficit from **114 to 110**; it does not close it
 **For BFF:** recipient identity, cast legality, and an explicit trigger timeline are
 canonical gates. The remaining Vampire, gear, skill, and weapon-trait sources stay as
 separate whole-build search states.
+
+
+---
+
+## 2026-09-13 — A source ceiling is not a free build bonus
+
+Five named gear sources can now be bounded inside the 24.999-second Strategic
+Reserve window. Their individual ceilings are **Baron Zaudrus 96**, **Bloodspawn
+65**, **Arkasis's Genius 44**, **Arkay's Charity 39**, and **Hide of the Werewolf
+30** Ultimate. None individually fills the remaining 110-point gap.
+
+Bloodspawn's number is especially slippery: 65 is the result if every eligible
+six-percent proc succeeds. It is a hard maximum-proc ceiling, not a deterministic
+promise that five procs occur.
+
+**For BFF:** a window ceiling only permits a candidate to remain in the search.
+Equipment slots, mutually exclusive monster sets, proc evidence, and lost Health
+Recovery still decide whether that candidate improves the actual record.

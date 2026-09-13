@@ -24,6 +24,15 @@ from services.ultimate_source_runtime_legality_service import (
 
 DEFAULT_SOURCE = ROOT / "math" / "ESO Ultimate Generation Calculator _ U50 _ Hyperioxes.htm"
 
+_TRIGGER_WITNESSES = {
+    "blessing_peak": (1.0, 7.0, 13.0, 19.0),
+    "bloodspawn": (1.0, 6.0, 11.0, 16.0, 21.0),
+    "baron_zaudrus": tuple(float(value) for value in range(1, 25)),
+    "hide_of_the_werewolf": (1.0, 6.0, 11.0, 16.0, 21.0),
+    "arkasis": (1.0,),
+    "arkays_charity": (1.0, 10.0, 19.0),
+}
+
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -36,7 +45,11 @@ def _columns(connection: sqlite3.Connection, table: str) -> set[str]:
     return {str(row[1]) for row in connection.execute(f"PRAGMA table_info({table})")}
 
 
-def _canonical_matches(database: Path, label: str) -> tuple[str, ...]:
+def _canonical_matches(
+    database: Path,
+    label: str,
+    source_id: str | None = None,
+) -> tuple[str, ...]:
     if not database.is_file():
         return ()
     matches: list[str] = []
@@ -57,6 +70,44 @@ def _canonical_matches(database: Path, label: str) -> tuple[str, ...]:
             matches.extend(
                 f"skill name={name!r} class={class_name!r} line={line!r} description={description!r}"
                 for name, class_name, line, description in rows
+            )
+
+        ability_columns = _columns(db, "ability")
+        if {"name", "index_name", "description"}.issubset(ability_columns):
+            duration_expr = "COALESCE(duration, 0)" if "duration" in ability_columns else "0"
+            rows = db.execute(
+                f"""
+                SELECT name, index_name, COALESCE(description, ''), {duration_expr}
+                FROM ability
+                WHERE LOWER(COALESCE(name, '')) = LOWER(?)
+                   OR LOWER(COALESCE(index_name, '')) = LOWER(?)
+                ORDER BY ability_id
+                """,
+                (label, source_id or ""),
+            ).fetchall()
+            matches.extend(
+                f"ability name={name!r} index_name={index_name!r} duration={duration!r} description={description!r}"
+                for name, index_name, description, duration in rows
+            )
+
+        trait_columns = _columns(db, "weapon_trait_effect")
+        if source_id == "decisive" and {
+            "material_name", "effect_type", "value", "secondary_value", "unit", "description"
+        }.issubset(trait_columns):
+            rows = db.execute(
+                """
+                SELECT material_name, effect_type, value, secondary_value, unit,
+                       COALESCE(description, '')
+                FROM weapon_trait_effect
+                WHERE effect_type = 'ultimate_gain_chance'
+                ORDER BY id
+                """
+            ).fetchall()
+            matches.extend(
+                f"weapon_trait material={material!r} effect_type={effect_type!r} "
+                f"value={value!r} secondary_value={secondary!r} unit={unit!r} "
+                f"description={description!r}"
+                for material, effect_type, value, secondary, unit, description in rows
             )
 
         gear_columns = _columns(db, "gear_set")
@@ -109,7 +160,7 @@ def main() -> int:
             UltimateSourceRouteStatus.SEARCH_STATE_MUTATION,
             UltimateSourceRouteStatus.EXACT_REVIEW_REQUIRED,
         }:
-            matches = _canonical_matches(database, row.label)
+            matches = _canonical_matches(database, row.label, row.source_id)
             if matches:
                 for match in matches:
                     print(f"  canonical={match}")
@@ -128,10 +179,8 @@ def main() -> int:
             row,
             UltimateSourceRuntimeLegalityService.review(
                 row.source_id,
-                canonical_records=_canonical_matches(database, row.label),
-                trigger_seconds=(1.0, 7.0, 13.0, 19.0)
-                if row.source_id == "blessing_peak"
-                else (),
+                canonical_records=_canonical_matches(database, row.label, row.source_id),
+                trigger_seconds=_TRIGGER_WITNESSES.get(row.source_id, ()),
             ),
         )
         for row in candidates
@@ -161,6 +210,21 @@ def main() -> int:
     unresolved = tuple(
         row for row, review in reviews if review.status in unresolved_statuses
     )
+    bounded_mutations = tuple(
+        (row, review)
+        for row, review in reviews
+        if (
+            review.status is UltimateSourceRuntimeStatus.SEARCH_STATE_MUTATION
+            and review.generated_ultimate_ceiling > 0
+        )
+    )
+    print(f"bounded_mutation_candidates={len(bounded_mutations)}")
+    for row, review in bounded_mutations:
+        print(
+            f"  mutation_ceiling: {row.source_id} "
+            f"generated_ultimate_ceiling={review.generated_ultimate_ceiling:.3f} "
+            f"individually_closes_gap={review.generated_ultimate_ceiling >= remaining_gap}"
+        )
     print(f"reviewed_compatible_increment={reviewed_increment:.3f}")
     print(f"remaining_ultimate_gap={remaining_gap:.3f}")
     print(f"remaining_route_candidates={len(unresolved)}")
@@ -169,8 +233,8 @@ def main() -> int:
     print("ultimate_source_exact_review_applied=True")
     print("ultimate_source_numeric_legality_proven=False")
     print(
-        "NEXT_STEP=score the seven surviving skill, Vampire, equipment, and "
-        "weapon-trait mutations against the Health Recovery incumbent"
+        "NEXT_STEP=resolve Exhilarating Drain and Decisive canonical identities, then "
+        "search legal multi-source combinations against the Health Recovery incumbent"
     )
     return 2
 

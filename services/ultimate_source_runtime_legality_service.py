@@ -38,6 +38,34 @@ class UltimateSourceRuntimeLegalityService:
         }
     )
 
+    _BOUNDED_MUTATIONS = {
+        "bloodspawn": (
+            13.0,
+            5.0,
+            ("6|r% chance", "0-13 ultimate", "once every |cffffff5|r seconds"),
+        ),
+        "baron_zaudrus": (
+            4.0,
+            1.0,
+            ("gain 3 stacks", "gain 4 ultimate", "1|r second"),
+        ),
+        "hide_of_the_werewolf": (
+            6.0,
+            5.0,
+            ("generate 6 ultimate", "once every |cffffff5|r seconds"),
+        ),
+        "arkasis": (
+            44.0,
+            30.0,
+            ("gain |cffffff1-44|r ultimate", "once every |cffffff30|r seconds"),
+        ),
+        "arkays_charity": (
+            13.0,
+            9.0,
+            ("restore |cffffff13|r ultimate", "once every |cffffff9|r seconds"),
+        ),
+    }
+
     @staticmethod
     def _contains(records: tuple[str, ...], *fragments: str) -> bool:
         text = "\n".join(records).casefold()
@@ -120,6 +148,46 @@ class UltimateSourceRuntimeLegalityService:
                 source_id,
                 UltimateSourceRuntimeStatus.COMPATIBLE_INCREMENT,
                 "The pure Dragonknight route can trigger the passive at the supplied legal six-second cadence.",
+                generated_ultimate_ceiling=generated,
+                remaining_ultimate_gap=max(0.0, gap - generated),
+            )
+
+        if source_id in cls._BOUNDED_MUTATIONS and canonical_records:
+            amount, cadence, fragments = cls._BOUNDED_MUTATIONS[source_id]
+            if not cls._contains(canonical_records, *fragments):
+                return UltimateSourceRuntimeReview(
+                    source_id,
+                    UltimateSourceRuntimeStatus.CANONICAL_EVIDENCE_REQUIRED,
+                    "The canonical amount, trigger, or cooldown clause is missing.",
+                    remaining_ultimate_gap=gap,
+                )
+            ordered = tuple(sorted(float(value) for value in trigger_seconds))
+            legal_window = all(
+                float(booming_voice_cast_seconds) < value <= float(score_seconds)
+                for value in ordered
+            )
+            legal_cadence = all(
+                later - earlier >= cadence - 1e-9
+                for earlier, later in zip(ordered, ordered[1:])
+            )
+            if not ordered or not legal_window or not legal_cadence:
+                return UltimateSourceRuntimeReview(
+                    source_id,
+                    UltimateSourceRuntimeStatus.CANONICAL_EVIDENCE_REQUIRED,
+                    "A legal post-cast trigger witness respecting the canonical cooldown is required.",
+                    remaining_ultimate_gap=gap,
+                )
+            generated = float(len(ordered)) * amount
+            chance_note = (
+                " This is a maximum-proc ceiling, not deterministic proc proof."
+                if source_id == "bloodspawn"
+                else ""
+            )
+            return UltimateSourceRuntimeReview(
+                source_id,
+                UltimateSourceRuntimeStatus.SEARCH_STATE_MUTATION,
+                "The supplied timeline establishes a hard window ceiling; whole-build equipment dominance remains unresolved."
+                + chance_note,
                 generated_ultimate_ceiling=generated,
                 remaining_ultimate_gap=max(0.0, gap - generated),
             )
