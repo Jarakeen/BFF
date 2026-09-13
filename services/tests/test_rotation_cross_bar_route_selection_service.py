@@ -65,7 +65,7 @@ def test_selector_rejects_duplicate_route_competing_for_same_wait_slot() -> None
     assert "overlaps WAIT slot" in result.rejected[0].reason
 
 
-def test_selector_tracks_active_bar_after_stay_on_target_route() -> None:
+def test_selector_salvages_later_route_when_already_on_target_bar() -> None:
     plan = RotationPlan(
         character_name="Rylonia",
         build_name="Corpsebuster DD",
@@ -77,17 +77,18 @@ def test_selector_tracks_active_bar_after_stay_on_target_route() -> None:
         ),
     )
     first = _proposal(33.0)
-    stale = _proposal(36.0)
+    later = _proposal(36.0)
 
     result = RotationCrossBarRouteSelectionService().select(
         plan,
-        (first, stale),
+        (first, later),
         (_feasible(33.0), _feasible(36.0)),
     )
 
-    assert [row.proposal.wait_time_seconds for row in result.selected] == [33.0]
-    assert [row.proposal.wait_time_seconds for row in result.rejected] == [36.0]
-    assert "source bar is stale" in result.rejected[0].reason
+    assert [row.proposal.wait_time_seconds for row in result.selected] == [33.0, 36.0]
+    assert result.rejected == ()
+    assert result.selected[0].outbound_swap_required is True
+    assert result.selected[1].outbound_swap_required is False
 
 
 def test_selector_return_route_restores_source_bar_for_next_wait_route() -> None:
@@ -110,6 +111,7 @@ def test_selector_return_route_restores_source_bar_for_next_wait_route() -> None
 
     assert [row.proposal.wait_time_seconds for row in result.selected] == [33.0, 34.0]
     assert result.rejected == ()
+    assert all(row.outbound_swap_required for row in result.selected)
 
 
 def test_selector_honors_original_bar_swap_before_later_route() -> None:
@@ -133,3 +135,4 @@ def test_selector_honors_original_bar_swap_before_later_route() -> None:
 
     assert [row.proposal.wait_time_seconds for row in result.selected] == [33.0, 44.0]
     assert result.rejected == ()
+    assert all(row.outbound_swap_required for row in result.selected)
