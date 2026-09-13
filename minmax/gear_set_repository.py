@@ -27,27 +27,35 @@ class GearSetRepository:
         This is intended for exhaustive Extreme audits where every surviving set
         may be visited repeatedly. It does not change repository semantics; new
         repository instances still observe fresh database state.
+
+        Preloading is an optimization only. Partial/minimal databases used by
+        focused tests or lightweight consumers may not contain the gear tables;
+        in that case leave ordinary repository behavior untouched rather than
+        turning the optimization into a schema requirement.
         """
         if self._preload_complete:
             return
 
-        with sqlite3.connect(self.database_path) as connection:
-            set_rows = connection.execute(
-                """
-                SELECT id, name, category, max_equip_count
-                FROM gear_set
-                WHERE name IS NOT NULL
-                  AND TRIM(name) <> ''
-                ORDER BY name COLLATE NOCASE, id
-                """
-            ).fetchall()
-            bonus_rows = connection.execute(
-                """
-                SELECT id, set_id, piece_count, description
-                FROM gear_set_bonus
-                ORDER BY set_id, piece_count, id
-                """
-            ).fetchall()
+        try:
+            with sqlite3.connect(self.database_path) as connection:
+                set_rows = connection.execute(
+                    """
+                    SELECT id, name, category, max_equip_count
+                    FROM gear_set
+                    WHERE name IS NOT NULL
+                      AND TRIM(name) <> ''
+                    ORDER BY name COLLATE NOCASE, id
+                    """
+                ).fetchall()
+                bonus_rows = connection.execute(
+                    """
+                    SELECT id, set_id, piece_count, description
+                    FROM gear_set_bonus
+                    ORDER BY set_id, piece_count, id
+                    """
+                ).fetchall()
+        except sqlite3.OperationalError:
+            return
 
         sets = tuple(self._to_gear_set(row) for row in set_rows)
         self._all_sets_cache = sets
