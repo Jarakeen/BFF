@@ -88,6 +88,11 @@ class RosterRecord(QWidget):
             result.append(name)
         return ", ".join(result)
 
+    @staticmethod
+    def _display_status(value: str) -> str:
+        status = str(value or "Active").strip()
+        return "Sub" if status.casefold() == "bench" else status
+
     @property
     def model(self) -> RosterMember:
         return RosterMember(
@@ -109,7 +114,7 @@ class RosterRecord(QWidget):
         self.primary_role.setCurrentText(member.PrimaryRole)
         self.secondary_role.setCurrentText(member.SecondaryRole)
         self.team.setCurrentText(member.Team)
-        self.status.setCurrentText(member.Status or "Active")
+        self.status.setCurrentText(self._display_status(member.Status))
 
     def clear(self):
         self.member_id = None
