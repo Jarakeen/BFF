@@ -40,6 +40,10 @@ from services.extreme_dual_bar_gear_state_catalog_service import (
 from services.extreme_jewelry_resource_static_trait_state_service import (
     ExtremeJewelryResourceStaticTraitState,
 )
+from services.extreme_max_resource_armor_scoring_frontier_service import (
+    ExtremeMaxResourceArmorScoringFrontier,
+    ExtremeMaxResourceArmorScoringFrontierService,
+)
 from services.extreme_max_resource_gear_scoring_frontier_service import (
     ExtremeMaxResourceGearScoringFrontierResult,
     ExtremeMaxResourceGearScoringFrontierService,
@@ -292,6 +296,9 @@ class ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator:
         self._scoring_frontiers: dict[
             tuple[str, str], ExtremeMaxResourceGearScoringFrontierResult
         ] = {}
+        self._armor_scoring_frontiers: dict[
+            str, ExtremeMaxResourceArmorScoringFrontier
+        ] = {}
 
         canonical = getattr(evaluator_factory, "canonical_evaluator", None)
         optimizer = getattr(canonical, "optimizer", None)
@@ -357,6 +364,20 @@ class ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator:
 
     def armor_states(self) -> tuple[ExtremeArmorResourceWeightTraitGlyphState, ...]:
         return tuple(sorted(self.armor_catalog.states, key=self._armor_identity))
+
+    def armor_scoring_frontier(
+        self,
+        objective_key: str,
+    ) -> ExtremeMaxResourceArmorScoringFrontier | None:
+        key = str(objective_key or "").strip().casefold()
+        if key not in ExtremeMaxResourceArmorScoringFrontierService.SUPPORTED_OBJECTIVES:
+            return None
+        cached = self._armor_scoring_frontiers.get(key)
+        if cached is not None:
+            return cached
+        result = ExtremeMaxResourceArmorScoringFrontierService.build(key, self.armor_catalog)
+        self._armor_scoring_frontiers[key] = result
+        return result
 
     @property
     def unresolved(self) -> tuple[str, ...]:
@@ -480,7 +501,13 @@ class ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator:
             if frontier is not None and frontier.reduction_proven
             else raw_gear_rows
         )
-        armor_rows = self.armor_states()
+        raw_armor_rows = self.armor_states()
+        armor_frontier = self.armor_scoring_frontier(key)
+        armor_rows = (
+            armor_frontier.states
+            if armor_frontier is not None and armor_frontier.reduction_proven
+            else raw_armor_rows
+        )
         if not gear_rows:
             raise ValueError("Extreme named gear search produced no dual-bar-admissible gear candidate")
         if not armor_rows:
@@ -492,6 +519,8 @@ class ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator:
         unresolved: list[str] = list(self.unresolved)
         if frontier is not None:
             unresolved.extend(str(item) for item in frontier.unresolved if str(item))
+        if armor_frontier is not None:
+            unresolved.extend(str(item) for item in armor_frontier.unresolved if str(item))
 
         for realization in gear_rows:
             gear_identity = self._gear_identity(realization)
@@ -521,7 +550,15 @@ class ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator:
         dual_catalog = self.dual_bar_catalog()
         best_payload["gear_candidates_reviewed"] = len(raw_gear_rows)
         best_payload["gear_candidates_scored"] = len(gear_rows)
+        best_payload["resource_armor_states_reviewed"] = len(raw_armor_rows)
         best_payload["resource_armor_states_scored"] = len(armor_rows)
+        best_payload["resource_armor_states_pruned"] = max(0, len(raw_armor_rows) - len(armor_rows))
+        best_payload["resource_armor_scoring_reduction_proven"] = bool(
+            armor_frontier is not None and armor_frontier.reduction_proven
+        )
+        best_payload["resource_armor_retained_weight_type_count"] = (
+            armor_frontier.retained_weight_type_count if armor_frontier is not None else None
+        )
         best_payload["gear_resource_armor_candidates_scored"] = len(gear_rows) * len(armor_rows)
         best_payload["gear_semantic_scoring_classes"] = (
             frontier.semantic_classes if frontier is not None else len(raw_gear_rows)
