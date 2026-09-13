@@ -53,24 +53,38 @@ def _service(objective="max_health"):
     )
 
 
-def test_combined_catalog_crosses_three_weight_witnesses_with_eight_trait_glyph_witnesses():
+def test_combined_max_health_catalog_crosses_fourteen_weight_signatures_with_eight_trait_glyph_witnesses():
     catalog = _service().build("max_health")
+
+    assert catalog.denominator_proven
+    assert len(catalog.weight_catalog.states) == 14
+    assert len(catalog.trait_glyph_catalog.states) == 8
+    assert len(catalog.states) == 112
+    assert {row.armor_type_count for row in catalog.states} == {1, 2, 3}
+    assert {row.weight_state.heavy_pieces for row in catalog.states} == set(range(8))
+    assert {row.divines_count for row in catalog.states} == set(range(8))
+
+
+def test_each_max_health_weight_signature_preserves_all_divines_counts():
+    catalog = _service().build("max_health")
+
+    for signature in {row.weight_state.max_health_signature for row in catalog.states}:
+        rows = [
+            row
+            for row in catalog.states
+            if row.weight_state.max_health_signature == signature
+        ]
+        assert len(rows) == 8
+        assert {row.divines_count for row in rows} == set(range(8))
+
+
+def test_magicka_catalog_still_crosses_three_weight_witnesses_with_eight_trait_glyph_witnesses():
+    catalog = _service("max_magicka").build("max_magicka")
 
     assert catalog.denominator_proven
     assert len(catalog.weight_catalog.states) == 3
     assert len(catalog.trait_glyph_catalog.states) == 8
     assert len(catalog.states) == 24
-    assert {row.armor_type_count for row in catalog.states} == {1, 2, 3}
-    assert {row.divines_count for row in catalog.states} == set(range(8))
-
-
-def test_each_weight_count_preserves_all_divines_counts():
-    catalog = _service().build("max_health")
-
-    for armor_type_count in (1, 2, 3):
-        rows = [row for row in catalog.states if row.armor_type_count == armor_type_count]
-        assert len(rows) == 8
-        assert {row.divines_count for row in rows} == set(range(8))
 
 
 def test_materialization_preserves_sets_while_applying_weight_trait_and_glyph():
@@ -78,7 +92,7 @@ def test_materialization_preserves_sets_while_applying_weight_trait_and_glyph():
     state = next(
         row
         for row in catalog.states
-        if row.armor_type_count == 3 and row.divines_count == 0
+        if row.weight_state.max_health_signature == (3, 5) and row.divines_count == 0
     )
     build = PlayerBuild()
     for slot in build.Armor:
