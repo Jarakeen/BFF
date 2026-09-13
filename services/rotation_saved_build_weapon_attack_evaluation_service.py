@@ -35,6 +35,15 @@ _WEAPON_TYPE_BY_NAME = {
     "shield": WeaponType.SHIELD,
 }
 
+# Legacy saved builds may retain only the weapon *family*. This representative is
+# permitted only inside the isolated LA/HA weapon-attack bridge. UESP's preserved
+# LAOneHand/LATwoHand equations and the canonical HA routing are family-level here,
+# so no subtype-specific passive, trait, enchant, or penetration mechanic is inferred.
+_LEGACY_ATTACK_FAMILY_REPRESENTATIVE_BY_NAME = {
+    "two-handed": WeaponType.GREATSWORD,
+    "two handed": WeaponType.GREATSWORD,
+}
+
 
 @dataclass(frozen=True)
 class RotationWeaponAttackBuildEvaluationResolution:
@@ -161,11 +170,17 @@ class RotationSavedBuildWeaponAttackEvaluationService:
 
     Static stats remain owned by ``RotationStaticBuildContextService``. The broad
     ``SavedBuildCharacterAdapter`` is still used for canonical character metadata,
-    but weapon attacks deliberately rebuild a weapon-only bar surface from the exact
-    saved main/off-hand weapon identities. Skill legality, weapon-enchantment label
+    but weapon attacks deliberately rebuild a weapon-only bar surface from the saved
+    main/off-hand weapon evidence. Skill legality, weapon-enchantment label
     resolution, and other unrelated canonical-build concerns must not veto a basic
-    LA/HA. Ambiguous legacy aggregate weapon labels remain unresolved by leaving that
-    bar unavailable; no greatsword/battleaxe/maul or dual-wield subtype is guessed.
+    LA/HA.
+
+    Exact weapon identities are preferred. The legacy aggregate ``Two-Handed`` label
+    is accepted only in this isolated weapon-attack bridge because the preserved
+    LAOneHand/LATwoHand arithmetic and canonical HA routing are family-level. A
+    concrete two-handed subtype is used only as an internal carrier here; it is not
+    promoted into saved build state and cannot establish subtype-specific mechanics.
+    Other ambiguous aggregate labels remain unresolved.
     """
 
     def __init__(
@@ -203,7 +218,10 @@ class RotationSavedBuildWeaponAttackEvaluationService:
         if slot.is_empty:
             return None
         key = " ".join(str(slot.WeaponType or "").strip().casefold().split())
-        return _WEAPON_TYPE_BY_NAME.get(key)
+        exact = _WEAPON_TYPE_BY_NAME.get(key)
+        if exact is not None:
+            return exact
+        return _LEGACY_ATTACK_FAMILY_REPRESENTATIVE_BY_NAME.get(key)
 
     @staticmethod
     def _placeholder_slots(bar: str) -> tuple[SlottedSkill, ...]:
