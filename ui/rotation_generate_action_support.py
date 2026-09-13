@@ -3,6 +3,7 @@ from __future__ import annotations
 from types import MethodType
 from typing import Protocol
 
+from minmax.resource_costs import ResourceType
 from ui.rotation_dashboard_page import RotationDashboardPage
 from ui.rotation_generate_canonical_context import RotationGenerateCanonicalContext
 
@@ -22,15 +23,18 @@ class RotationGenerateActionSupport:
     at click time so selected build, encounter, and explicit policy controls cannot go
     stale after the page is constructed.
 
-    Once configured, Generate resolves evidence for the exact selected encounter and
-    either runs the canonical/cadence orchestration path or reports the blocking
-    evidence. Shared bundle readiness is checked before role-specific evidence is
-    composed so missing encounter/build policy cannot be misreported as a role-output
-    failure. Explicit role evidence is forwarded unchanged. When authoritative
-    plan-evidence inputs or a canonical composer are configured, the router composes
-    role evidence from the selected saved build and resolved encounter bundle. It never
-    derives healer reliability or assignment exceptions from display state. It never
-    silently falls back to the plain generator for a configured encounter-aware request.
+    The application provider installed by the Rotation workspace exposes advanced
+    encounter-aware controls for recovery and DD target resistance. Those controls are
+    optional UI policy inputs, not prerequisites for the baseline Rotation Maker. When
+    they are left incomplete, Generate stays on the plain deterministic path. Once the
+    advanced policy is explicitly complete, the strict canonical path remains fail-closed
+    and never invents missing mechanics or evaluation facts.
+
+    Once canonical generation is active, Generate resolves evidence for the exact
+    selected encounter and either runs the canonical/cadence orchestration path or
+    reports the blocking evidence. Shared bundle readiness is checked before
+    role-specific evidence is composed so missing encounter/build policy cannot be
+    misreported as a role-output failure. Explicit role evidence is forwarded unchanged.
     """
 
     def install(self, page) -> None:
@@ -98,10 +102,54 @@ class RotationGenerateActionSupport:
     def clear_context_provider(page) -> None:
         page.rotation_generate_canonical_context_provider = None
 
+    @staticmethod
+    def _advanced_application_context_ready(page, provider) -> bool:
+        """Return whether the workspace explicitly opted into strict canonical Generate.
+
+        Generic/static context providers keep their historical behavior. This guard only
+        applies to the live application provider used by the Rotation workspace, detected
+        by the exact policy seams it consumes. Recovery policy is an optional advanced
+        stabilization feature; DD target resistance is optional advanced damage evidence.
+        Leaving either unset must not disable the baseline Rotation Maker.
+        """
+
+        if provider.__class__.__name__ != "RotationGenerateApplicationContextProvider":
+            return True
+
+        recovery_policy = getattr(page, "canonical_recovery_policy", None)
+        if not callable(recovery_policy):
+            return True
+        policy = recovery_policy() or {}
+        resource = policy.get("resource")
+        trigger_fraction = policy.get("trigger_fraction")
+        if not isinstance(resource, ResourceType) or trigger_fraction is None:
+            return False
+
+        build_getter = getattr(page, "_selected_build", None)
+        build = build_getter() if callable(build_getter) else None
+        role = "_".join(
+            str(getattr(build, "Role", "") or "")
+            .strip()
+            .casefold()
+            .replace("-", " ")
+            .split()
+        )
+        if role in {"dd", "dps", "damage", "damage_dealer"}:
+            dd_policy_provider = getattr(page, "canonical_dd_evaluation_policy", None)
+            if callable(dd_policy_provider):
+                dd_policy = dd_policy_provider() or {}
+                if dd_policy.get("target_resistance") is None:
+                    return False
+
+        return True
+
     def generate(self, page) -> None:
         context = getattr(page, "rotation_generate_canonical_context", None)
         provider = getattr(page, "rotation_generate_canonical_context_provider", None)
         if context is None and provider is not None:
+            if not self._advanced_application_context_ready(page, provider):
+                RotationDashboardPage.generate_rotation(page)
+                return
             try:
                 context = provider.context_for(page)
             except (OSError, ValueError) as exc:
