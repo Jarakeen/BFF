@@ -1,11 +1,11 @@
 from pathlib import Path
 
 
-def test_assignment_actions_remove_ready_and_add_requested_buttons():
+def test_assignment_actions_hide_ready_and_add_requested_buttons():
     source = Path("ui/roster_assignment_action_support.py").read_text(encoding="utf-8")
 
     assert '== "ready"' in source
-    assert "table.removeColumn(ready_column)" in source
+    assert "table.setColumnHidden(ready_column, True)" in source
     assert 'QPushButton("Send to Comp Maker")' in source
     assert 'QPushButton("Evaluate")' in source
     assert 'QPushButton("Encounter")' in source
