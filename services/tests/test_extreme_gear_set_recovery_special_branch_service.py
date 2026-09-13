@@ -69,6 +69,15 @@ def test_classifies_enemy_recovery_reduction_as_non_challenger():
     assert not row.can_raise_self
 
 
+def test_classifies_embedded_thurvokun_reduction_as_non_challenger():
+    row = _classify(
+        "Enemies are afflicted with Minor Maim and the Diseased status, reducing their "
+        "damage done by 5% and healing received and Health Recovery by 6%."
+    )
+    assert row.kind is ExtremeRecoverySpecialBranchKind.NEGATIVE_ONLY
+    assert not row.can_raise_self
+
+
 def test_classifies_cannot_affect_self_as_non_challenger():
     row = _classify(
         "Group members within the zone increase their Health Recovery by 950. "
