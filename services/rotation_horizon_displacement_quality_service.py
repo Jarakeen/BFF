@@ -4,8 +4,14 @@ from __future__ import annotations
 
 The duration scheduler reports any queued skill left beyond the sampled plan horizon.
 That raw diagnostic is useful provenance but not, by itself, evidence of a cadence bug.
-This service distinguishes spillover caused by protected refresh/first-cast obligations
-from spillover that survived despite later ordinary same-bar skill opportunities.
+This service distinguishes proven ordinary-priority starvation from spillover that is
+explained by protected or higher-priority same-bar work, late-window truncation, or
+insufficient provenance.
+
+Skill-name-level horizon messages are not action-instance identities. A skill can be
+cast again while another queued instance with the same name remains displaced. For
+that reason, ordinary cadence debt is proven only when the shared priority displacement
+audit finds an actual lower-priority ordinary survivor after the displacement start.
 """
 
 from dataclasses import dataclass
@@ -14,6 +20,7 @@ from enum import Enum
 from minmax.rotation_ability_priority import AbilityPriorityList
 from minmax.rotation_plan import RotationActionKind, RotationPlan
 from services.rotation_priority_displacement_audit_service import (
+    RotationPriorityDisplacementAudit,
     RotationPriorityDisplacementAuditService,
     RotationPriorityHorizonDisplacement,
 )
@@ -56,7 +63,7 @@ class RotationHorizonDisplacementQualityReport:
 
 
 class RotationHorizonDisplacementQualityService:
-    """Classify horizon spillover using existing displacement/refresh provenance."""
+    """Classify horizon spillover using shared priority/provenance evidence."""
 
     def __init__(
         self,
@@ -78,6 +85,7 @@ class RotationHorizonDisplacementQualityService:
             self._classify_one(
                 plan,
                 displacement=row,
+                audit=audit,
                 refresh_claims=refresh_claims,
                 first_cast=first_cast,
             )
@@ -90,6 +98,7 @@ class RotationHorizonDisplacementQualityService:
         plan: RotationPlan,
         *,
         displacement: RotationPriorityHorizonDisplacement,
+        audit: RotationPriorityDisplacementAudit,
         refresh_claims: dict[tuple[str, str], set[float]],
         first_cast: dict[tuple[str, str], float],
     ) -> RotationHorizonDisplacementQualityRow:
@@ -129,7 +138,26 @@ class RotationHorizonDisplacementQualityService:
             ordinary.append(time_seconds)
         ordinary_times = tuple(sorted(ordinary))
 
-        if ordinary_times:
+        ordinary_inversions = tuple(
+            row
+            for row in audit.ordinary_inversions
+            if row.bar == displacement.bar
+            and row.displaced_skill_name.casefold()
+            == displacement.skill_name.casefold()
+            and abs(
+                float(row.displaced_from_time_seconds) - float(start)
+            )
+            <= 1e-9
+        )
+        if ordinary_inversions:
+            proven_times = tuple(
+                sorted(
+                    {
+                        float(row.lower_priority_last_time_seconds)
+                        for row in ordinary_inversions
+                    }
+                )
+            )
             return RotationHorizonDisplacementQualityRow(
                 bar=displacement.bar,
                 skill_name=displacement.skill_name,
@@ -137,10 +165,11 @@ class RotationHorizonDisplacementQualityService:
                 displaced_from_time_seconds=float(start),
                 quality=RotationHorizonDisplacementQuality.ORDINARY_CADENCE_DEBT,
                 later_same_bar_skill_times=later,
-                later_ordinary_skill_times=ordinary_times,
+                later_ordinary_skill_times=proven_times,
                 reason=(
-                    "later ordinary same-bar skill opportunities existed after displacement, "
-                    "but the queued skill still spilled beyond the horizon"
+                    "a lower-priority ordinary same-bar cast survived after the "
+                    "displacement start while the higher-priority skill still spilled "
+                    "beyond the horizon"
                 ),
             )
 
@@ -152,8 +181,11 @@ class RotationHorizonDisplacementQualityService:
                 displaced_from_time_seconds=float(start),
                 quality=RotationHorizonDisplacementQuality.PROTECTED_OBLIGATION_SATURATION,
                 later_same_bar_skill_times=later,
+                later_ordinary_skill_times=ordinary_times,
                 reason=(
-                    "all later same-bar skill slots were protected refresh/first-cast obligations"
+                    "later same-bar work did not contain a proven lower-priority ordinary "
+                    "survivor; refresh/first-cast obligations, higher/equal-priority work, "
+                    "or same-skill instance ambiguity explain the observed horizon tail"
                 ),
             )
 
