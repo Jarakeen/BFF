@@ -87,6 +87,16 @@ def _set_editable(item: QTableWidgetItem | None, editable: bool) -> None:
     item.setFlags(flags)
 
 
+def _field_tooltip(team_name: str, encounter_id: str, field: str, encounter_fields: set[str]) -> str:
+    if not team_name:
+        return "Choose a team above before editing assignments."
+    if not encounter_id:
+        return "Default for this team. Bosses inherit this unless you change them."
+    if field in encounter_fields:
+        return "Boss-specific override for this team."
+    return "Inherited from this team's default. Change it only if this boss needs something different."
+
+
 def _restore_row(page, row: int) -> None:
     member_id = _member_id_for_row(page, row)
     if member_id is None:
@@ -105,7 +115,11 @@ def _restore_row(page, row: int) -> None:
         saved = page.roster_service.get_member_assignment(member_id)
         saved["_source"] = "overview"
         saved["_inherited"] = False
+        saved["_encounter_fields"] = ()
 
+    encounter_fields = {
+        str(field) for field in (saved.get("_encounter_fields", ()) or ())
+    }
     role_item = page.assignment_table.item(row, 1)
     role = role_item.text().strip() if role_item is not None else ""
     defaults = {
@@ -113,7 +127,6 @@ def _restore_row(page, row: int) -> None:
         "secondary_assignment": page._secondary_assignment(role),
     }
 
-    inherited = bool(saved.get("_inherited", False))
     for column, field in ((4, "primary_assignment"), (5, "secondary_assignment")):
         combo = page.assignment_table.cellWidget(row, column)
         if not isinstance(combo, QComboBox):
@@ -123,16 +136,7 @@ def _restore_row(page, row: int) -> None:
         combo.setCurrentText(value)
         combo.setEnabled(bool(team_name))
         combo.blockSignals(False)
-        if not team_name:
-            combo.setToolTip("Choose a team above before editing assignments.")
-        elif encounter_id and inherited:
-            combo.setToolTip(
-                "Inherited from this team's default. Change it only if this boss needs a different job."
-            )
-        elif encounter_id:
-            combo.setToolTip("Boss-specific override for this team.")
-        else:
-            combo.setToolTip("Default job for this team. Bosses inherit this unless overridden.")
+        combo.setToolTip(_field_tooltip(team_name, encounter_id, field, encounter_fields))
         backing = page.assignment_table.item(row, column)
         if backing is not None:
             backing.setText(value)
@@ -150,14 +154,14 @@ def _restore_row(page, row: int) -> None:
         gear_item.setText(gear or "—")
         _set_editable(gear_item, bool(team_name))
         gear_item.setToolTip(
-            "Boss-specific override" if encounter_id and not inherited
-            else "Inherited from team default" if encounter_id and inherited
-            else "Choose a team before editing" if not team_name
-            else "Team default"
+            _field_tooltip(team_name, encounter_id, "gear_needed", encounter_fields)
         )
     if notes_item is not None:
         notes_item.setText(notes)
         _set_editable(notes_item, bool(team_name))
+        notes_item.setToolTip(
+            _field_tooltip(team_name, encounter_id, "notes", encounter_fields)
+        )
 
 
 def install() -> None:
