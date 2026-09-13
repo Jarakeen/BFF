@@ -77,9 +77,9 @@ def test_topology_normalizes_documented_100x_coordinates_and_measures_endpoints(
         ability_id=500,
         track_id=77,
         source_xy=(0, 0),
-        target_xy=(1000, 0),
+        target_xy=(1200, 0),
     )
-    # 2 units from caster, 8 from cast-target candidate.
+    # 2 units from caster, 10 from cast-target candidate.
     _row(
         path,
         index=2,
@@ -92,7 +92,7 @@ def test_topology_normalizes_documented_100x_coordinates_and_measures_endpoints(
         source_xy=(0, 0),
         target_xy=(200, 0),
     )
-    # 2 units from cast-target candidate, 8 from caster.
+    # 2 units from cast-target candidate, 10 from caster.
     _row(
         path,
         index=3,
@@ -103,9 +103,9 @@ def test_topology_normalizes_documented_100x_coordinates_and_measures_endpoints(
         ability_id=118766,
         track_id=77,
         source_xy=(0, 0),
-        target_xy=(800, 0),
+        target_xy=(1000, 0),
     )
-    # Outside both 5-unit endpoint circles but directly on the segment.
+    # 6 units from both endpoint centers but directly on the segment.
     _row(
         path,
         index=4,
@@ -116,7 +116,7 @@ def test_topology_normalizes_documented_100x_coordinates_and_measures_endpoints(
         ability_id=118766,
         track_id=77,
         source_xy=(0, 0),
-        target_xy=(500, 0),
+        target_xy=(600, 0),
     )
 
     report = RotationDetonatingSiphonEsoLogsSpatialTopologyService(path).inspect(
@@ -127,12 +127,12 @@ def test_topology_normalizes_documented_100x_coordinates_and_measures_endpoints(
     assert report.linked_event_count == 3
     assert report.events_with_actor_positions == 3
     assert report.events_with_cast_target_position == 3
-    assert report.within_radius_of_caster_count == 2
-    assert report.within_radius_of_cast_target_count == 2
+    assert report.within_radius_of_caster_count == 1
+    assert report.within_radius_of_cast_target_count == 1
     assert report.within_radius_of_either_endpoint_count == 2
     assert report.beyond_both_endpoint_radius_count == 1
-    assert report.median_target_to_caster_distance == pytest.approx(5.0)
-    assert report.median_target_to_cast_target_distance == pytest.approx(5.0)
+    assert report.median_target_to_caster_distance == pytest.approx(6.0)
+    assert report.median_target_to_cast_target_distance == pytest.approx(6.0)
     assert report.median_target_to_segment_distance == pytest.approx(0.0)
     assert report.maximum_target_to_segment_distance == pytest.approx(0.0)
     assert report.unresolved == ()
