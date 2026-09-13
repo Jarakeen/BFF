@@ -1,21 +1,21 @@
 from __future__ import annotations
 
-"""Measure a proof-safe objective frontier for Extreme max-resource named gear.
+"""Measure a proof-safe exact-flat objective frontier for Extreme named gear.
 
-This diagnostic starts from the exact-equivalence-reduced breakpoint catalog.  For
-mechanic-complete ordinary max-resource candidates, the canonical objective service
-has already reduced every supported requested-resource effect to an exact flat
-``reviewed_delta``.  Percentage and conditional resource effects remain unresolved
-there and are deliberately excluded from this reduction.
+This diagnostic starts from the exact-equivalence-reduced breakpoint catalog. For
+mechanic-complete ordinary candidates, the canonical objective service has already
+reduced every supported requested-stat effect to an exact flat ``reviewed_delta``.
+Percentage and conditional effects remain unresolved there and are deliberately
+excluded from this reduction.
 
 Within one piece count and one identical physical-slot eligibility shape, a lower
-flat-resource candidate can never beat a higher one.  A legal active snapshot has
+flat-objective candidate can never beat a higher one. A legal active snapshot has
 at most N set parts, so retaining the best N distinct named identities in each such
 class preserves a replacement even when N-1 better identities are already consumed
-elsewhere in the topology.  Unresolved candidates and search-space mutators remain
+elsewhere in the topology. Unresolved candidates and search-space mutators remain
 individually searchable.
 
-This file is diagnostic accounting only.  It does not mutate the production search.
+This file is diagnostic accounting only. It does not mutate the production search.
 """
 
 import argparse
@@ -53,13 +53,13 @@ from services.extreme_objective_named_gear_set_catalog_realization_service impor
 )
 
 
-_OBJECTIVES = ("max_health", "max_magicka", "max_stamina")
+_OBJECTIVES = ("max_health", "max_magicka", "max_stamina", "health_recovery")
 
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Measure a proof-safe exact flat-resource frontier after Extreme named-gear "
+            "Measure a proof-safe exact-flat objective frontier after Extreme named-gear "
             "equivalence reduction. Diagnostic only."
         )
     )
@@ -138,8 +138,8 @@ def _flat_frontier_descriptor(reducer, evidence, eligibility):
     )
     if not target_effects:
         return None
-    # Max-resource percentage/conditional mechanics are not considered exact flat
-    # contributions by ExtremeGearSetObjectiveService.  Refuse them here too.
+    # Percentage/conditional mechanics are not exact flat contributions. Refuse
+    # them here even when the broader objective service can identify relevance.
     if any(effect.operation is not EffectOperation.ADD for effect in target_effects):
         return None
     if any(effect.condition for effect in target_effects):
