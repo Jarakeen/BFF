@@ -78,10 +78,11 @@ class RotationCanonicalCadenceOrchestrationSupport:
     or cadence obligations. Canonical evaluation always runs first. Optional
     ``role_evidence`` is forwarded to the dashboard candidate bridge; when its
     ``content_type`` is blank, the persisted content type already carried by the
-    selected encounter bundle fills that one fact. No healer reliability or assignment
-    exception is inferred here. Cadence progression begins only from the selected final
-    stabilized canonical plan and sustain projection, and only when explicit cadence
-    obligations are supplied.
+    selected encounter bundle fills that one fact. Exact-event conditional output
+    evidence is forwarded only when the bundle carries an explicit resolver factory.
+    No healer reliability, assignment exception, or output condition is inferred here.
+    Cadence progression begins only from the selected final stabilized canonical plan
+    and sustain projection, and only when explicit cadence obligations are supplied.
     """
 
     def __init__(
@@ -132,6 +133,9 @@ class RotationCanonicalCadenceOrchestrationSupport:
             requirements=evidence_bundle.requirements,
             passives=evidence_bundle.passives,
             reserve_assessment_resolver=evidence_bundle.reserve_assessment_resolver,
+            runtime_output_condition_context_resolver_factory=(
+                evidence_bundle.runtime_output_condition_context_resolver_factory
+            ),
             max_iterations=evidence_bundle.max_iterations,
             baseline_id=evidence_bundle.baseline_id,
             character_id=character_id,
