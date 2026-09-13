@@ -5,26 +5,25 @@ from services.rotation_dd_periodic_runtime_semantics_review_service import (
 )
 
 
-def test_unnerving_boneyard_reviews_cast_anchor_and_refresh_but_remains_non_executable() -> None:
+def test_unnerving_boneyard_reviews_cast_anchor_refresh_and_cadence_but_remains_non_executable() -> None:
     entry = RotationDDPeriodicRuntimeSemanticsReviewService().by_component()[
         ("unnerving_boneyard", 1)
     ]
 
     assert entry.duration_seconds == 10.0
     assert entry.activation_anchor == "cast"
-    assert entry.reviewed_interval_seconds is None
+    assert entry.reviewed_interval_seconds == 1.0
     assert entry.first_tick_offset_seconds is None
     assert entry.refresh_boundary == "replace_before_recast_tick"
     assert entry.magnitude_policy is None
     assert entry.executable_complete is False
     assert entry.unresolved_executable_fields == (
-        "reviewed_interval_seconds",
         "first_tick_offset_seconds",
         "magnitude_policy",
     )
 
 
-def test_unnerving_boneyard_review_records_current_anchor_and_refresh_evidence() -> None:
+def test_unnerving_boneyard_review_records_current_anchor_refresh_and_cadence_evidence() -> None:
     entry = RotationDDPeriodicRuntimeSemanticsReviewService().by_component()[
         ("unnerving_boneyard", 1)
     ]
@@ -36,4 +35,8 @@ def test_unnerving_boneyard_review_records_current_anchor_and_refresh_evidence()
     assert "141 consecutive cast pairs" in text
     assert "1 ms after the cast" in text
     assert "replace the old instance before any recast-boundary tick" in text
-    assert "cadence, first-tick offset, and magnitude policy remain" in text
+    assert "1226 adjacent intervals" in text
+    assert "96.3%" in text
+    assert "reviewed recurrence cadence is therefore 1.0 second" in text
+    assert "P90 was 3.3282 seconds" in text
+    assert "exact first-tick offset and magnitude policy remain" in text
