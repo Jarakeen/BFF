@@ -209,6 +209,7 @@ def main() -> int:
     from ui.encounter_board_accessibility import install as install_encounter_board_accessibility
     from ui.rylo_theme_support import install as install_rylo_theme_support
     from ui.rylo_surface_icon_fix import install as install_rylo_surface_icon_fix
+    from ui.rylo_build_surface_theme_refresh import install as install_rylo_build_surface_theme_refresh
     from ui.theme_brand_mark_support import install as install_theme_brand_mark_support
     from ui.rylo_raid_map_support import install as install_rylo_raid_map_support
     from ui.encounter_position_gif_export_support import install as install_encounter_position_gif_export_support
@@ -264,6 +265,10 @@ def main() -> int:
     # Install last among visual-theme layers so legacy Grimoire leather/raw SVG
     # assignments cannot override Rylo's stone surfaces or silver card icons.
     install_rylo_surface_icon_fix(app)
+    # Build workspace surfaces use inline palette/style values, so refresh those
+    # whenever ThemeManager reapplies a visual theme instead of leaving the prior
+    # theme's color stuck on already-created tabs and editor hosts.
+    install_rylo_build_surface_theme_refresh(app)
     install_theme_brand_mark_support()
     # Raid Map owns custom QGraphics painting, so it needs its own theme-aware
     # palette after accessibility and visual-theme support are registered.
