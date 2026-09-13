@@ -8,18 +8,19 @@ from .rotation_plan import RotationActionKind, RotationPlan
 
 @dataclass(frozen=True)
 class RotationRecastRule:
-    """Explicit verified duration evidence for one named scheduled ability.
+    """Explicit verified recast semantics for one named scheduled ability.
 
-    Phase 13 must not derive this value from skill names or tooltip folklore. A
-    caller supplies a duration only after a canonical source has resolved it.
-    ``refresh_lead_seconds`` allows a deliberate pre-expiry refresh window while
-    keeping truly premature recasts distinguishable from intentional overlap.
+    Finite-duration abilities carry ``duration_seconds`` and may optionally use a
+    verified ``refresh_lead_seconds``. Reviewed persistent toggles instead set
+    ``persistent=True`` and deliberately carry no fabricated finite duration. They
+    are valid on first activation and have no timed refresh obligation thereafter.
     """
 
     skill_name: str
-    duration_seconds: float
+    duration_seconds: float | None
     bar: str | None = None
     refresh_lead_seconds: float = 0.0
+    persistent: bool = False
 
     def __post_init__(self) -> None:
         name = str(self.skill_name or "").strip()
@@ -27,17 +28,30 @@ class RotationRecastRule:
             raise ValueError("recast rule requires a skill name")
         object.__setattr__(self, "skill_name", name)
 
-        duration = float(self.duration_seconds)
-        if not math.isfinite(duration) or duration <= 0:
-            raise ValueError("recast rule duration must be finite and greater than zero")
-        object.__setattr__(self, "duration_seconds", duration)
+        persistent = bool(self.persistent)
+        object.__setattr__(self, "persistent", persistent)
 
-        lead = float(self.refresh_lead_seconds)
-        if not math.isfinite(lead) or lead < 0:
-            raise ValueError("recast refresh lead must be finite and non-negative")
-        if lead > duration:
-            raise ValueError("recast refresh lead cannot exceed the effect duration")
-        object.__setattr__(self, "refresh_lead_seconds", lead)
+        if persistent:
+            if self.duration_seconds is not None:
+                raise ValueError("persistent recast rule must not fabricate a finite duration")
+            lead = float(self.refresh_lead_seconds)
+            if not math.isfinite(lead) or abs(lead) > 1e-9:
+                raise ValueError("persistent recast rule cannot have a refresh lead")
+            object.__setattr__(self, "refresh_lead_seconds", 0.0)
+        else:
+            if self.duration_seconds is None:
+                raise ValueError("finite recast rule requires duration_seconds")
+            duration = float(self.duration_seconds)
+            if not math.isfinite(duration) or duration <= 0:
+                raise ValueError("recast rule duration must be finite and greater than zero")
+            object.__setattr__(self, "duration_seconds", duration)
+
+            lead = float(self.refresh_lead_seconds)
+            if not math.isfinite(lead) or lead < 0:
+                raise ValueError("recast refresh lead must be finite and non-negative")
+            if lead > duration:
+                raise ValueError("recast refresh lead cannot exceed the effect duration")
+            object.__setattr__(self, "refresh_lead_seconds", lead)
 
         if self.bar is not None:
             bar = str(self.bar).strip().casefold()
@@ -78,7 +92,12 @@ class RotationRecastAnalysis:
 
 
 class RotationRecastAnalyzer:
-    """Measure duration/recast behavior without changing the authored schedule."""
+    """Measure finite-duration recast behavior without changing the schedule.
+
+    Persistent rules are scheduler semantics rather than finite-duration evidence,
+    so callers should omit them from this analyzer and model exact toggle lifetime in
+    runtime state instead.
+    """
 
     def analyze(
         self,
@@ -87,6 +106,8 @@ class RotationRecastAnalyzer:
     ) -> RotationRecastAnalysis:
         normalized_rules = tuple(rules)
         self._validate_rule_uniqueness(normalized_rules)
+        if any(rule.persistent for rule in normalized_rules):
+            raise ValueError("recast analyzer accepts finite-duration rules only")
 
         windows: list[RotationRecastWindow] = []
         summaries: list[RotationRecastSummary] = []
@@ -109,6 +130,7 @@ class RotationRecastAnalyzer:
                 )
                 continue
 
+            duration = float(rule.duration_seconds)
             intervals: list[tuple[float, float]] = []
             total_gap = 0.0
             total_premature = 0.0
@@ -116,19 +138,17 @@ class RotationRecastAnalyzer:
             for index, cast in enumerate(casts):
                 active_until = min(
                     plan.duration_seconds,
-                    cast.time_seconds + rule.duration_seconds,
+                    cast.time_seconds + duration,
                 )
                 preferred_refresh = max(
                     cast.time_seconds,
-                    cast.time_seconds
-                    + rule.duration_seconds
-                    - rule.refresh_lead_seconds,
+                    cast.time_seconds + duration - rule.refresh_lead_seconds,
                 )
                 next_cast = casts[index + 1].time_seconds if index + 1 < len(casts) else None
                 gap = 0.0
                 premature = 0.0
                 if next_cast is not None:
-                    raw_expiry = cast.time_seconds + rule.duration_seconds
+                    raw_expiry = cast.time_seconds + duration
                     if next_cast > raw_expiry:
                         gap = next_cast - raw_expiry
                     elif next_cast < preferred_refresh:
@@ -160,7 +180,7 @@ class RotationRecastAnalyzer:
                 RotationRecastSummary(
                     skill_name=rule.skill_name,
                     bar=rule.bar,
-                    duration_seconds=rule.duration_seconds,
+                    duration_seconds=duration,
                     cast_count=len(casts),
                     active_seconds=active_seconds,
                     uptime_fraction=uptime_fraction,
