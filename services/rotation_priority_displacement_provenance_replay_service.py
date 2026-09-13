@@ -6,14 +6,28 @@ Production plans intentionally keep the compact historical unresolved diagnostic
 This diagnostic service instead observes the existing priority-aware scheduler's
 selection seam and records the original seed action instance carried by each queued
 skill. It does not change scheduling policy or production plan output.
+
+The scheduler's selection seam exposes the queue immediately after choosing one
+candidate for a decision slot. If a due refresh then claims that same slot, production
+puts the selected candidate back at the front of the queue. Replay reconstructs that
+post-slot state from the existing refresh-claim diagnostic, allowing exact final queue
+provenance without copying or modifying the production ``refine`` implementation.
 """
 
 from dataclasses import dataclass
+import re
 
 from minmax.priority_aware_duration_scheduler import PriorityAwareDurationRotationScheduler
 from minmax.rotation_ability_priority import AbilityPriorityList
 from minmax.rotation_plan import RotationAction, RotationPlan
 from minmax.rotation_recast import RotationRecastRule
+
+
+_REFRESH_CLAIM_PATTERN = re.compile(
+    r"^refresh obligation for '(.+)' claimed the ([0-9]+(?:\.[0-9]+)?)s "
+    r"(front|back)-bar slot from '(.+)'; displaced skill will cascade to the next same-bar skill slot$",
+    re.IGNORECASE,
+)
 
 
 @dataclass(frozen=True)
@@ -40,6 +54,7 @@ class RotationDisplacementSpilloverProvenance:
     source_time_seconds: float | None
     source_sequence: int | None
     last_observed_queue_time_seconds: float | None
+    plausible_instances: tuple[RotationDisplacementQueueInstance, ...] = ()
     unresolved: tuple[str, ...] = ()
 
     @property
@@ -113,72 +128,122 @@ class RotationPriorityDisplacementProvenanceReplayService:
     ) -> RotationPriorityDisplacementProvenanceReplay:
         scheduler = _TracingPriorityAwareDurationRotationScheduler(priorities)
         refined = scheduler.refine(seed_plan, tuple(rules))
+        decisions = tuple(scheduler.decisions)
+        final_queue_by_bar = self._final_queue_by_bar(
+            decisions=decisions,
+            unresolved=tuple(refined.unresolved),
+        )
         spillovers = tuple(
             self._resolve_spillover(
                 text=str(raw or ""),
-                decisions=tuple(scheduler.decisions),
+                final_queue_by_bar=final_queue_by_bar,
+                decisions=decisions,
             )
             for raw in refined.unresolved
             if self._HORIZON_MARKER in str(raw or "")
         )
         return RotationPriorityDisplacementProvenanceReplay(
             plan=refined,
-            decisions=tuple(scheduler.decisions),
+            decisions=decisions,
             spillovers=spillovers,
         )
+
+    @classmethod
+    def _final_queue_by_bar(
+        cls,
+        *,
+        decisions: tuple[RotationDisplacementQueueDecision, ...],
+        unresolved: tuple[str, ...],
+    ) -> dict[str, tuple[RotationDisplacementQueueInstance, ...]]:
+        refresh_claims = cls._refresh_claims(unresolved)
+        result: dict[str, tuple[RotationDisplacementQueueInstance, ...]] = {}
+        for bar in ("front", "back"):
+            bar_decisions = tuple(item for item in decisions if item.bar == bar)
+            if not bar_decisions:
+                continue
+            last = max(bar_decisions, key=lambda item: item.slot_time_seconds)
+            queue = list(last.remaining_queue)
+            claim = refresh_claims.get((last.slot_time_seconds, bar))
+            if claim is not None:
+                displaced_skill = claim[1]
+                if displaced_skill.casefold() == last.selected.skill_name.casefold():
+                    queue.insert(0, last.selected)
+            result[bar] = tuple(queue)
+        return result
+
+    @staticmethod
+    def _refresh_claims(
+        unresolved: tuple[str, ...],
+    ) -> dict[tuple[float, str], tuple[str, str]]:
+        result: dict[tuple[float, str], tuple[str, str]] = {}
+        for raw in unresolved:
+            match = _REFRESH_CLAIM_PATTERN.match(str(raw or "").strip())
+            if match is None:
+                continue
+            refresh_skill = match.group(1).strip()
+            time_seconds = float(match.group(2))
+            bar = match.group(3).casefold()
+            displaced_skill = match.group(4).strip()
+            result[(time_seconds, bar)] = (refresh_skill, displaced_skill)
+        return result
 
     @classmethod
     def _resolve_spillover(
         cls,
         *,
         text: str,
+        final_queue_by_bar: dict[str, tuple[RotationDisplacementQueueInstance, ...]],
         decisions: tuple[RotationDisplacementQueueDecision, ...],
     ) -> RotationDisplacementSpilloverProvenance:
         skill_name, bar = cls._parse_horizon(text)
-        matches: list[tuple[float, RotationDisplacementQueueInstance]] = []
-        for decision in decisions:
-            if decision.bar != bar:
-                continue
-            for instance in decision.remaining_queue:
-                if instance.skill_name.casefold() == skill_name.casefold():
-                    matches.append((decision.slot_time_seconds, instance))
-        if not matches:
+        final_matches = tuple(
+            instance
+            for instance in final_queue_by_bar.get(bar, ())
+            if instance.skill_name.casefold() == skill_name.casefold()
+        )
+        last_observed = max(
+            (
+                decision.slot_time_seconds
+                for decision in decisions
+                if decision.bar == bar
+            ),
+            default=None,
+        )
+
+        if len(final_matches) == 1:
+            instance = final_matches[0]
+            return RotationDisplacementSpilloverProvenance(
+                skill_name=skill_name,
+                bar=bar,
+                source_time_seconds=instance.source_time_seconds,
+                source_sequence=instance.source_sequence,
+                last_observed_queue_time_seconds=last_observed,
+                plausible_instances=final_matches,
+            )
+
+        if len(final_matches) > 1:
             return RotationDisplacementSpilloverProvenance(
                 skill_name=skill_name,
                 bar=bar,
                 source_time_seconds=None,
                 source_sequence=None,
-                last_observed_queue_time_seconds=None,
+                last_observed_queue_time_seconds=last_observed,
+                plausible_instances=final_matches,
                 unresolved=(
-                    "spillover instance was not observed in the queue-selection trace; "
-                    "it may have entered during the final refresh claim or lacks replay provenance",
+                    "multiple same-skill action instances survive in the reconstructed final queue; "
+                    "the deduplicated production horizon diagnostic cannot identify one instance",
                 ),
             )
 
-        latest_time = max(item[0] for item in matches)
-        latest_instances = {
-            (item.source_time_seconds, item.source_sequence): item
-            for time_seconds, item in matches
-            if time_seconds == latest_time
-        }
-        if len(latest_instances) != 1:
-            return RotationDisplacementSpilloverProvenance(
-                skill_name=skill_name,
-                bar=bar,
-                source_time_seconds=None,
-                source_sequence=None,
-                last_observed_queue_time_seconds=latest_time,
-                unresolved=(
-                    "multiple same-skill action instances remain plausible at the last observed queue point",
-                ),
-            )
-        instance = next(iter(latest_instances.values()))
         return RotationDisplacementSpilloverProvenance(
             skill_name=skill_name,
             bar=bar,
-            source_time_seconds=instance.source_time_seconds,
-            source_sequence=instance.source_sequence,
-            last_observed_queue_time_seconds=latest_time,
+            source_time_seconds=None,
+            source_sequence=None,
+            last_observed_queue_time_seconds=last_observed,
+            unresolved=(
+                "spillover skill is absent from the reconstructed final queue; replay provenance is incomplete",
+            ),
         )
 
     @staticmethod
