@@ -124,8 +124,11 @@ class DurationAwareRotationScheduler:
             candidate = action
             queue = displaced_by_bar.get(action.bar or "")
             if queue:
-                candidate = queue.pop(0)
-                queue.append(action)
+                candidate = self._select_displaced_candidate(
+                    queue=queue,
+                    incoming=action,
+                    bar=action.bar,
+                )
 
             candidate_key = (str(candidate.name or "").casefold(), action.bar)
             due_key = self._due_refresh(
@@ -297,6 +300,23 @@ class DurationAwareRotationScheduler:
             assumptions=tuple(self._dedupe(assumptions)),
             unresolved=tuple(self._dedupe(unresolved)),
         )
+
+    @staticmethod
+    def _select_displaced_candidate(
+        *,
+        queue: list[RotationAction],
+        incoming: RotationAction,
+        bar: str | None,
+    ) -> RotationAction:
+        """Choose the next displaced/current action for one same-bar decision slot.
+
+        The compatibility scheduler retains its historical FIFO behavior. Priority-
+        aware subclasses may override this seam to rank only the already-eligible
+        displaced/current actions without changing due-refresh ownership or timing.
+        """
+        candidate = queue.pop(0)
+        queue.append(incoming)
+        return candidate
 
     @staticmethod
     def _next_decision_time(
