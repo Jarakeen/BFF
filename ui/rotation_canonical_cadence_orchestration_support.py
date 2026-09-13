@@ -143,9 +143,14 @@ class RotationCanonicalCadenceOrchestrationSupport:
             character_id=character_id,
             coverage_report=evidence_bundle.coverage_report,
         )
-        if evidence_bundle.runtime_output_condition_context_resolver_factory is not None:
+        runtime_output_factory = getattr(
+            evidence_bundle,
+            "runtime_output_condition_context_resolver_factory",
+            None,
+        )
+        if runtime_output_factory is not None:
             canonical_kwargs["runtime_output_condition_context_resolver_factory"] = (
-                evidence_bundle.runtime_output_condition_context_resolver_factory
+                runtime_output_factory
             )
 
         canonical_result = self.canonical_candidates.run_effects(**canonical_kwargs)
