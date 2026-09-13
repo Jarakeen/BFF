@@ -12,10 +12,14 @@ def test_assignment_actions_hide_ready_and_add_requested_buttons():
     assert 'QPushButton("Gear Lookup")' in source
 
 
-def test_assignment_actions_keep_flat_card_and_use_space_for_buttons():
+def test_assignment_actions_keep_flat_card_and_remove_all_header_content():
     source = Path("ui/roster_assignment_action_support.py").read_text(encoding="utf-8")
 
-    assert "card.header.hide()" in source
+    assert "_clear_card_header(card)" in source
+    assert 'card.set_title("")' in source
+    assert 'card.set_icon("")' in source
+    assert "card.header_action_layout.takeAt(0)" in source
+    assert "card.header.setMaximumHeight(0)" in source
     assert 'card.setProperty("flatActionCard", True)' in source
     assert "_clear_card_body(card)" in source
     assert "button.setMinimumHeight(52)" in source
