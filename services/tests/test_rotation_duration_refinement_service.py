@@ -1,4 +1,5 @@
 from minmax.refresh_cadence_duration_scheduler import RotationRefreshIntervalPolicy
+from minmax.rotation_ability_priority import AbilityPriorityEntry, AbilityPriorityList
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from minmax.rotation_recast import (
     RotationRecastAnalysis,
@@ -159,3 +160,33 @@ def test_refinement_service_deduplicates_unresolved_evidence() -> None:
     result = service.refine(_plan())
 
     assert result.plan.unresolved.count("baseline unresolved") == 1
+
+
+def test_refinement_service_resolves_explicit_priority_filler_diagnostic() -> None:
+    seed_projection = _projection(
+        rules=(RotationRecastRule("Long Buff", 10.0, bar="front"),)
+    )
+    final_projection = _projection(uptime_fraction=1.0)
+    priorities = AbilityPriorityList(
+        character_name="Magrat",
+        build_name="DF Healer",
+        role="Healer",
+        entries=(
+            AbilityPriorityEntry("front", 1, "Long Buff", 2),
+            AbilityPriorityEntry("front", 2, "Filler", 1),
+        ),
+    )
+    service = RotationDurationRefinementService(
+        duration_analysis=_FakeDurationAnalysis(seed_projection, final_projection)
+    )
+
+    result = service.refine(_plan(), priorities=priorities)
+
+    assert not any(
+        "exact priority ranking is unresolved" in item
+        for item in result.plan.unresolved
+    )
+    assert (
+        "same-bar no-duration filler selection uses explicit ability priorities when supplied"
+        in result.plan.assumptions
+    )
