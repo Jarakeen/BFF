@@ -33,6 +33,7 @@ def test_ordinary_slot_after_displacement_is_cadence_debt() -> None:
     plan = _plan(
         actions=(
             RotationAction(0, 0, RotationActionKind.SKILL, name="High", bar="front"),
+            RotationAction(10, 0, RotationActionKind.SKILL, name="Low", bar="front"),
             RotationAction(30, 0, RotationActionKind.SKILL, name="Mid", bar="front"),
             RotationAction(45, 0, RotationActionKind.SKILL, name="Low", bar="front"),
         ),
