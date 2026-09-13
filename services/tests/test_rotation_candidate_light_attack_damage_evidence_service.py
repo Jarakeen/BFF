@@ -34,10 +34,16 @@ def _slots() -> tuple[SlottedSkill, ...]:
 
 
 def _bar(bar_id: BarId, weapon_type: WeaponType) -> Bar:
+    one_handed = {
+        WeaponType.SWORD,
+        WeaponType.AXE,
+        WeaponType.MACE,
+        WeaponType.DAGGER,
+    }
     return Bar(
         bar_id=bar_id,
         main_hand=Weapon(weapon_type),
-        off_hand=None,
+        off_hand=(Weapon(weapon_type) if weapon_type in one_handed else None),
         slots=_slots(),
     )
 
@@ -208,7 +214,7 @@ def test_dagger_light_attack_uses_preserved_uesp_one_hand_formula() -> None:
     assert evidence.damage_value == pytest.approx(3850.0)
 
 
-def test_two_handed_light_attack_uses_preserved_uesp_shared_melee_formula() -> None:
+def test_two_handed_light_attack_uses_preserved_uesp_two_hand_formula() -> None:
     light = RotationAction(0.0, 0, RotationActionKind.LIGHT_ATTACK, bar="front")
     evidence = RotationCandidateLightAttackDamageEvidenceService(
         build=_build(front=WeaponType.GREATSWORD),
