@@ -2,13 +2,17 @@ from __future__ import annotations
 
 """Numeric Health Recovery ceilings for already proof-reduced class-route signatures.
 
-This layer is intentionally narrower than whole-record scoring.  It scores only
+This layer is intentionally narrower than whole-record scoring. It scores only
 reviewed class-line recovery mechanics and refuses to flatten unresolved Class
 Mastery runtime formulas into a fake exact value.
 """
 
 from dataclasses import dataclass
 
+from services.class_mastery_extreme_effect_service import (
+    ClassMasteryExtremeEffectService,
+)
+from services.class_mastery_repository import ClassMasteryPassive
 from services.extreme_health_recovery_class_route_signature_service import (
     ExtremeHealthRecoveryClassRouteSignature,
     ExtremeHealthRecoveryClassRouteSignatureCatalog,
@@ -21,6 +25,10 @@ _LINE_FLAT = {
     "storm_calling": 141.0,         # Capacitor
 }
 _WELLSPRING_PER_SLOTTED = 81.0
+_MASTERY_IDENTITIES = {
+    "sphere_of_influence": ("Sorcerer", "Sphere of Influence"),
+    "devout_guardian": ("Templar", "Devout Guardian"),
+}
 
 
 @dataclass(frozen=True)
@@ -62,6 +70,31 @@ class ExtremeHealthRecoveryRouteCeilingCatalog:
 
 
 class ExtremeHealthRecoveryClassRouteCeilingService:
+    @staticmethod
+    def _reviewed_mastery_health_recovery_flat(mastery_key: str | None) -> float | None:
+        identity = _MASTERY_IDENTITIES.get(str(mastery_key or ""))
+        if identity is None:
+            return None
+        class_name, passive_name = identity
+        passive = ClassMasteryPassive(
+            skill_id=0,
+            base_ability_id=0,
+            name=passive_name,
+            class_name=class_name,
+            description="",
+        )
+        rows = tuple(
+            row
+            for row in ClassMasteryExtremeEffectService.contributions(passive)
+            if row.objective_key == "health_recovery"
+        )
+        if len(rows) != 1:
+            return None
+        row = rows[0]
+        if row.percent or row.additive_ratio:
+            return None
+        return float(row.flat)
+
     @classmethod
     def score_signature(
         cls,
@@ -81,15 +114,6 @@ class ExtremeHealthRecoveryClassRouteCeilingService:
                     "Booming Voice recovery ceiling still requires a proven legal Ultimate-spend bound",
                 ),
             )
-        if signature.class_mastery == "devout_guardian":
-            return ExtremeHealthRecoveryRouteCeiling(
-                signature=signature,
-                class_flat_ceiling=None,
-                wellspring_slots=0,
-                unresolved=(
-                    "Devout Guardian recovery relevance still requires explicit Class Mastery semantic review",
-                ),
-            )
 
         total = 0.0
         slots = 0
@@ -99,8 +123,18 @@ class ExtremeHealthRecoveryClassRouteCeilingService:
                 slots = int(wellspring_slot_ceiling)
                 total += _WELLSPRING_PER_SLOTTED * slots
 
-        if signature.class_mastery == "sphere_of_influence":
-            total += 225.0
+        if signature.class_mastery:
+            mastery_flat = cls._reviewed_mastery_health_recovery_flat(signature.class_mastery)
+            if mastery_flat is None:
+                return ExtremeHealthRecoveryRouteCeiling(
+                    signature=signature,
+                    class_flat_ceiling=None,
+                    wellspring_slots=slots,
+                    unresolved=(
+                        f"Class Mastery Health Recovery semantics unavailable for {signature.class_mastery}",
+                    ),
+                )
+            total += mastery_flat
 
         return ExtremeHealthRecoveryRouteCeiling(
             signature=signature,
