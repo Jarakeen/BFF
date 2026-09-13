@@ -12,6 +12,7 @@ from services.rotation_recovery_heavy_candidate_orchestration_service import (
     RecoveryHeavyCandidateOrchestrationInput,
     RecoveryRuntimeActivationAnchorResolverFactory,
     RecoveryRuntimeCombatStateResolverFactory,
+    RecoveryRuntimeOutputConditionContextResolverFactory,
     RotationRecoveryHeavyCandidateOrchestrationResult,
     RotationRecoveryHeavyCandidateOrchestrationService,
 )
@@ -43,6 +44,8 @@ class RotationRecoveryHeavyCandidateWorkflowService:
     final-family scorecards always query the actual final plan rather than stale
     seed-plan timing. Heavy restoration can likewise be provided as a plan-aware
     resolver factory so each regenerated plan is replayed against matching evidence.
+    Exact-event output-condition context travels through the same final-plan boundary;
+    this workflow carries it but never interprets condition names.
 
     Effect-aware callers may additionally provide final stabilized role evidence.
     When supplied, required-effect uptime remains a hard gate and the surviving
@@ -81,6 +84,9 @@ class RotationRecoveryHeavyCandidateWorkflowService:
         displayed_recovery_resolver_factory: RecoveryDisplayedRecoveryResolverFactory | None = None,
         runtime_combat_state_resolver_factory: RecoveryRuntimeCombatStateResolverFactory | None = None,
         runtime_activation_anchor_resolver_factory: RecoveryRuntimeActivationAnchorResolverFactory | None = None,
+        runtime_output_condition_context_resolver_factory: (
+            RecoveryRuntimeOutputConditionContextResolverFactory | None
+        ) = None,
     ) -> RotationRecoveryHeavyCandidateOrchestrationResult:
         final_evaluator = self.final_family_service.generic_evaluator(
             scorecard_resolver=scorecard_resolver,
@@ -101,6 +107,9 @@ class RotationRecoveryHeavyCandidateWorkflowService:
             displayed_recovery_resolver_factory=displayed_recovery_resolver_factory,
             runtime_combat_state_resolver_factory=runtime_combat_state_resolver_factory,
             runtime_activation_anchor_resolver_factory=runtime_activation_anchor_resolver_factory,
+            runtime_output_condition_context_resolver_factory=(
+                runtime_output_condition_context_resolver_factory
+            ),
         )
 
     def run_effects(
@@ -125,6 +134,9 @@ class RotationRecoveryHeavyCandidateWorkflowService:
         displayed_recovery_resolver_factory: RecoveryDisplayedRecoveryResolverFactory | None = None,
         runtime_combat_state_resolver_factory: RecoveryRuntimeCombatStateResolverFactory | None = None,
         runtime_activation_anchor_resolver_factory: RecoveryRuntimeActivationAnchorResolverFactory | None = None,
+        runtime_output_condition_context_resolver_factory: (
+            RecoveryRuntimeOutputConditionContextResolverFactory | None
+        ) = None,
     ) -> RotationRecoveryHeavyCandidateOrchestrationResult:
         if role_aware_input_resolver is None:
             final_evaluator = self.final_family_service.effect_evaluator(
@@ -156,6 +168,9 @@ class RotationRecoveryHeavyCandidateWorkflowService:
             displayed_recovery_resolver_factory=displayed_recovery_resolver_factory,
             runtime_combat_state_resolver_factory=runtime_combat_state_resolver_factory,
             runtime_activation_anchor_resolver_factory=runtime_activation_anchor_resolver_factory,
+            runtime_output_condition_context_resolver_factory=(
+                runtime_output_condition_context_resolver_factory
+            ),
         )
 
 
