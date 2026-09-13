@@ -107,6 +107,9 @@ COMPONENT_LAYER_BUFFS = frozenset({
     "Major Slayer",
     "Minor Aegis",
     "Major Aegis",
+    # Reviewed persistent scribed toggle. Its 6% Magical Damage Done modifier is
+    # consumed by the DD damage component layer, not by standing character stats.
+    "Magical Banner",
     # Recipient-side healing modifiers. These do not belong on the standing
     # character sheet; healing-event consumers resolve their ratio points.
     "Minor Vitality",
