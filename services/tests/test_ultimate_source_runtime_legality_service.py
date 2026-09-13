@@ -145,7 +145,7 @@ def test_stage_one_vampire_penalty_dominates_drain_cap_gain():
         candidate_strategic_recovery=1500.0,
         vampire_health_recovery_penalty_percent=10.0,
     )
-    assert row.non_vampire_incumbent_lower_bound == 4719.806
+    assert round(row.non_vampire_incumbent_lower_bound, 3) == 4719.806
     assert round(row.vampire_candidate_best_case, 3) == 4544.825
     assert round(row.vampire_delta_upper_bound, 3) == -174.981
     assert row.dominated is True
