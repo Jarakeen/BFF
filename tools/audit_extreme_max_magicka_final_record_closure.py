@@ -5,22 +5,6 @@ from __future__ import annotations
 This audit intentionally does NOT call the legacy exhaustive whole-record search.
 It composes the proof-owned finite/reduced axes with the exact ordinary named-gear
 branch-and-bound and the already-targeted special/runtime denominator search.
-
-The record is published only when all of the following agree:
-
-* canonical structural universe is complete;
-* race, class route, attributes, Mundus, provisioning, armor, jewelry, Champion
-  Points, passives, active skills, equipment traits, runtime conditions, potions,
-  weapons, and Emperor state are proof-closed for Max Magicka;
-* the current 5+3+2+1+1 named-gear witness is physically legal and canonical-scores
-  to the incumbent with no effective unresolved evidence;
-* exact ordinary named gear has no legal topology above the incumbent gear delta;
-* classified special/runtime named gear has no canonical challenger above the
-  incumbent and has no unknown proof warning.
-
-This is the replacement for the old ``audit_extreme_resource_record_closure.py
---full`` Max Magicka path, which intentionally enumerated the complete generic
-named-gear Cartesian space and is not used here.
 """
 
 import argparse
@@ -364,23 +348,15 @@ def main() -> int:
         "class_route_projection": bool(route.projection_complete and not route.unresolved),
         "attribute_projection": bool(attributes.projection_complete and not attributes.unresolved),
         "mundus_projection": bool(mundus.projection_complete and not mundus.unresolved),
-        "provisioning_projection": bool(
-            provisioning.projection_complete and not provisioning.unresolved
-        ),
+        "provisioning_projection": bool(provisioning.projection_complete and not provisioning.unresolved),
         "potion_irrelevance": bool(potion.objective_irrelevance_proven),
         "armor_denominator": bool(armor.denominator_proven and not armor.unresolved),
         "armor_frontier_reduction": bool(armor_frontier.reduction_proven),
         "jewelry_denominator": bool(jewelry.denominator_proven and not jewelry.unresolved),
-        "champion_point_denominator": bool(
-            champion.denominator_proven and not champion.unresolved
-        ),
+        "champion_point_denominator": bool(champion.denominator_proven and not champion.unresolved),
         "passive_projection": bool(passives.projection_complete and not passives.unresolved),
-        "active_skill_projection": bool(
-            active_skills.projection_complete and not active_skills.unresolved
-        ),
-        "equipment_trait_projection": bool(
-            equipment.projection_complete and not equipment.unresolved
-        ),
+        "active_skill_projection": bool(active_skills.projection_complete and not active_skills.unresolved),
+        "equipment_trait_projection": bool(equipment.projection_complete and not equipment.unresolved),
         "runtime_projection": bool(runtime.projection_complete and not runtime.unresolved),
         "weapon_irrelevance": bool(weapon.objective_irrelevance_proven),
         "emperor_monotonic_max": _emperor_axis_proven(),
@@ -456,7 +432,6 @@ def main() -> int:
         dict.fromkeys(
             str(item)
             for item in (
-                *universe.unresolved,
                 *race.unresolved,
                 *route.unresolved,
                 *attributes.unresolved,
@@ -484,12 +459,8 @@ def main() -> int:
     print(f"whole_record_denominator_closed={closed}")
     if closed:
         print(f"PROVEN_MAX_MAGICKA_RECORD={incumbent:.3f}")
-        print(
-            "RECORD_CONTEXT=Update 50 Extreme legal snapshot with active Emperor and 6 Home Keeps"
-        )
-        print(
-            "NEXT_STEP=record proof is closed; expose the proven build and its scenario qualifiers in Extreme Build UI"
-        )
+        print("RECORD_CONTEXT=Update 50 Extreme legal snapshot with active Emperor and 6 Home Keeps")
+        print("NEXT_STEP=record proof is closed; expose the proven build and its scenario qualifiers in Extreme Build UI")
         return 0
 
     print("PROVEN_MAX_MAGICKA_RECORD=<not yet closed>")
