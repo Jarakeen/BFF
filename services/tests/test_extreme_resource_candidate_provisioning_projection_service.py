@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sqlite3
 from types import SimpleNamespace
 
 from minmax.effects import Effect, EffectOperation
@@ -128,6 +129,9 @@ def test_incomplete_runtime_evidence_falls_back_to_global_frontier() -> None:
 
 
 class _FoodRepository:
+    def __init__(self, database_path):
+        self.database_path = database_path
+
     def list_names(self):
         return ("Strong Food", "Weaker Drink")
 
@@ -146,7 +150,18 @@ class _MundusEvaluator:
         return score, {"food": food}, ()
 
 
-def test_food_evaluator_uses_candidate_specific_projection_choices() -> None:
+def test_food_evaluator_uses_candidate_specific_projection_choices(tmp_path) -> None:
+    database_path = tmp_path / "provisioning.db"
+    with sqlite3.connect(database_path) as connection:
+        connection.execute("CREATE TABLE entity (name TEXT, entity_type TEXT)")
+        connection.executemany(
+            "INSERT INTO entity (name, entity_type) VALUES (?, ?)",
+            (
+                ("Strong Food", "food"),
+                ("Weaker Drink", "drink"),
+            ),
+        )
+
     mundus = _MundusEvaluator()
     projection = ExtremeResourceCandidateProvisioningProjection(
         objective_key="max_magicka",
@@ -159,7 +174,7 @@ def test_food_evaluator_uses_candidate_specific_projection_choices() -> None:
     )
     evaluator = ExtremeBestMundusFoodStructuralStatEvaluator(
         mundus_evaluator=mundus,
-        provisioning_repository=_FoodRepository(),
+        provisioning_repository=_FoodRepository(database_path),
         candidate_projection_provider=lambda _key: projection,
     )
 
