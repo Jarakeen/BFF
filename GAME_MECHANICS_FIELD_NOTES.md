@@ -760,3 +760,15 @@ A Champion Bar has a separate four-slot budget for each discipline. Two useful s
 **Layman’s version:** the Champion Bar is three small shelves, not one shared shelf. A full red shelf does not prevent using an available blue slot.
 
 **For BFF:** CP loadout dominance groups candidates by canonical discipline identity and takes only the strongest four additive candidates in each group. Conditional stars keep their runtime requirements; fitting on the bar does not prove their conditions are active.
+
+---
+
+## 2026-09-13 — Maximum stored Ultimate and maximum Ultimate-spend recovery pull in opposite directions
+
+The pure-Dragonknight Health Recovery route uses **Booming Voice** at its maximum **250-Ultimate spend**, while **Strategic Reserve** reaches its own maximum only at **500 stored Ultimate**. Casting the Ultimate leaves 250 stored, and Booming Voice does not start its recovery window until 15 seconds later.
+
+Even an optimistic currently modeled timeline—continuous base combat generation plus both Minor and Major Heroism through the end of Booming Voice’s window—restores **136 Ultimate**, reaching **386**. That leaves a **114-Ultimate proof gap** before Strategic Reserve can honestly claim its 1,500 ceiling at the same moment.
+
+**Layman’s version:** one bonus wants you to spend a very full Ultimate bar, while the other wants the bar full again almost immediately afterward. We cannot award both gold medals just because each wins alone.
+
+**For BFF:** this is unresolved, not proven impossible. Additional legal Ultimate sources may close the 114 gap, but they must be catalogued, timed, and checked against the same class/gear state before the two component maxima are combined.

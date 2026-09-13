@@ -10,7 +10,11 @@ independent component maximum.
 
 from dataclasses import dataclass
 from enum import Enum
+import math
 
+from minmax.ultimate_resource_timeline import UltimateGenerationEvent
+from services.champion_point_loadout_service import ChampionPointLoadoutCandidate
+from services.eso_character_progression_contract import ULTIMATE_RULES
 from services.extreme_gear_set_recovery_special_branch_service import (
     ExtremeRecoverySpecialBranch,
 )
@@ -22,6 +26,7 @@ class ExtremeHealthRecoveryCompatibility(str, Enum):
     REDUNDANT_NAMED_BUFF = "redundant_named_buff"
     SEARCH_STATE_MUTATION = "search_state_mutation"
     NUMERIC_EQUIPMENT_PROOF = "numeric_equipment_proof"
+    RUNTIME_PROOF_REQUIRED = "runtime_proof_required"
     INCOMPATIBLE = "incompatible"
 
 
@@ -39,6 +44,19 @@ class ExtremeHealthRecoveryRuntimeState:
     recent_enemy_death: bool = True
     recent_ultimate_cast: bool = True
     resolve_cast_active: bool = True
+    score_seconds: float = 24.999
+    booming_voice_cast_seconds: float = 0.0
+    booming_voice_delay_seconds: float = 15.0
+    booming_voice_duration_seconds: float = 10.0
+    starting_ultimate: float = 500.0
+    booming_voice_ultimate_spend: float = 250.0
+    ultimate_generation_events: tuple[UltimateGenerationEvent, ...] = ()
+    max_magicka: float | None = None
+    crowd_control_immunity_active: bool = True
+    negative_effect_active: bool = True
+    enlivening_overflow_trigger_seconds: float = 20.0
+    low_health_boundary_seconds: float = 21.0
+    enlivening_overflow_duration_seconds: float = 6.0
 
     @property
     def dominant_shared_state_compatible(self) -> bool:
@@ -60,8 +78,18 @@ class ExtremeHealthRecoveryBranchCompatibility:
     reason: str
 
 
+@dataclass(frozen=True)
+class ExtremeHealthRecoveryChampionPointCompatibility:
+    candidate: ChampionPointLoadoutCandidate
+    status: ExtremeHealthRecoveryCompatibility
+    reason: str
+    available_ultimate_at_score: float | None = None
+    ultimate_shortfall: float | None = None
+    required_max_magicka: float | None = None
+
+
 class ExtremeHealthRecoveryRuntimeCompatibilityService:
-    """Review special gear branches against the dominant shared runtime state."""
+    """Review selected CP stars and special gear against one dominant runtime state."""
 
     _NUMERIC_PROOF_BRANCHES = frozenset(
         {
@@ -162,6 +190,150 @@ class ExtremeHealthRecoveryRuntimeCompatibilityService:
             "Positive branch is not runtime-conflicting, but still requires explicit numeric equipment scoring.",
         )
 
+    @staticmethod
+    def _ultimate_at_score(state: ExtremeHealthRecoveryRuntimeState) -> float:
+        remaining = max(
+            0.0,
+            float(state.starting_ultimate) - float(state.booming_voice_ultimate_spend),
+        )
+        generated = sum(
+            float(event.amount)
+            for event in state.ultimate_generation_events
+            if (
+                float(state.booming_voice_cast_seconds)
+                < event.time_seconds
+                <= float(state.score_seconds)
+            )
+        )
+        return min(float(ULTIMATE_RULES.maximum_resource), remaining + generated)
+
+    @classmethod
+    def assess_champion_point(
+        cls,
+        candidate: ChampionPointLoadoutCandidate,
+        state: ExtremeHealthRecoveryRuntimeState,
+    ) -> ExtremeHealthRecoveryChampionPointCompatibility:
+        name = candidate.name.casefold()
+        if name == "rejuvenation":
+            return ExtremeHealthRecoveryChampionPointCompatibility(
+                candidate,
+                ExtremeHealthRecoveryCompatibility.COMPATIBLE,
+                "Unconditional while legally slotted.",
+            )
+
+        if name == "peace of mind":
+            status = (
+                ExtremeHealthRecoveryCompatibility.COMPATIBLE
+                if state.crowd_control_immunity_active
+                else ExtremeHealthRecoveryCompatibility.INCOMPATIBLE
+            )
+            return ExtremeHealthRecoveryChampionPointCompatibility(
+                candidate,
+                status,
+                "Crowd Control Immunity is active at the scoring moment."
+                if state.crowd_control_immunity_active
+                else "Crowd Control Immunity is absent at the scoring moment.",
+            )
+
+        if name == "sustained by suffering":
+            status = (
+                ExtremeHealthRecoveryCompatibility.COMPATIBLE
+                if state.negative_effect_active
+                else ExtremeHealthRecoveryCompatibility.INCOMPATIBLE
+            )
+            return ExtremeHealthRecoveryChampionPointCompatibility(
+                candidate,
+                status,
+                "A non-crowd-control negative effect can remain active during Crowd Control Immunity."
+                if state.negative_effect_active
+                else "No negative effect is active at the scoring moment.",
+            )
+
+        if name == "enlivening overflow":
+            required_magicka = float(candidate.flat_ceiling) / 0.005
+            if state.max_magicka is None:
+                return ExtremeHealthRecoveryChampionPointCompatibility(
+                    candidate,
+                    ExtremeHealthRecoveryCompatibility.RUNTIME_PROOF_REQUIRED,
+                    "Exact candidate Max Magicka is required to prove the stated Recovery cap.",
+                    required_max_magicka=required_magicka,
+                )
+            timing_compatible = (
+                state.enlivening_overflow_trigger_seconds
+                <= state.low_health_boundary_seconds
+                <= state.score_seconds
+                and state.score_seconds - state.enlivening_overflow_trigger_seconds
+                < state.enlivening_overflow_duration_seconds
+            )
+            cap_reachable = float(state.max_magicka) + 1e-9 >= required_magicka
+            status = (
+                ExtremeHealthRecoveryCompatibility.COMPATIBLE
+                if timing_compatible and cap_reachable
+                else ExtremeHealthRecoveryCompatibility.INCOMPATIBLE
+            )
+            reason = (
+                "Self-overheal can trigger the buff before damage establishes the low-Health scoring state."
+                if status is ExtremeHealthRecoveryCompatibility.COMPATIBLE
+                else "The supplied Max Magicka or trigger-to-score timing cannot reach the 150 Recovery cap."
+            )
+            return ExtremeHealthRecoveryChampionPointCompatibility(
+                candidate,
+                status,
+                reason,
+                required_max_magicka=required_magicka,
+            )
+
+        if name == "strategic reserve":
+            window_start = (
+                float(state.booming_voice_cast_seconds)
+                + float(state.booming_voice_delay_seconds)
+            )
+            window_end = window_start + float(state.booming_voice_duration_seconds)
+            if not (
+                state.booming_voice_window
+                and window_start <= float(state.score_seconds) < window_end
+            ):
+                return ExtremeHealthRecoveryChampionPointCompatibility(
+                    candidate,
+                    ExtremeHealthRecoveryCompatibility.INCOMPATIBLE,
+                    "The scoring moment is outside Booming Voice's delayed active window.",
+                )
+            available = cls._ultimate_at_score(state)
+            shortfall = max(0.0, float(ULTIMATE_RULES.maximum_resource) - available)
+            status = (
+                ExtremeHealthRecoveryCompatibility.COMPATIBLE
+                if math.isclose(shortfall, 0.0, abs_tol=1e-9)
+                else ExtremeHealthRecoveryCompatibility.RUNTIME_PROOF_REQUIRED
+            )
+            return ExtremeHealthRecoveryChampionPointCompatibility(
+                candidate,
+                status,
+                (
+                    "Ultimate has returned to the 500 cap during Booming Voice's active window."
+                    if status is ExtremeHealthRecoveryCompatibility.COMPATIBLE
+                    else (
+                        f"Modeled generation reaches {available:.3f} Ultimate during "
+                        f"Booming Voice; {shortfall:.3f} more requires canonical source proof."
+                    )
+                ),
+                available_ultimate_at_score=available,
+                ultimate_shortfall=shortfall,
+            )
+
+        return ExtremeHealthRecoveryChampionPointCompatibility(
+            candidate,
+            ExtremeHealthRecoveryCompatibility.RUNTIME_PROOF_REQUIRED,
+            "No reviewed Health Recovery runtime compatibility rule owns this CP star.",
+        )
+
+    @classmethod
+    def assess_champion_points(
+        cls,
+        candidates: tuple[ChampionPointLoadoutCandidate, ...],
+        state: ExtremeHealthRecoveryRuntimeState,
+    ) -> tuple[ExtremeHealthRecoveryChampionPointCompatibility, ...]:
+        return tuple(cls.assess_champion_point(candidate, state) for candidate in candidates)
+
     @classmethod
     def build(
         cls,
@@ -173,6 +345,7 @@ class ExtremeHealthRecoveryRuntimeCompatibilityService:
 
 __all__ = [
     "ExtremeHealthRecoveryBranchCompatibility",
+    "ExtremeHealthRecoveryChampionPointCompatibility",
     "ExtremeHealthRecoveryCompatibility",
     "ExtremeHealthRecoveryRuntimeCompatibilityService",
     "ExtremeHealthRecoveryRuntimeState",

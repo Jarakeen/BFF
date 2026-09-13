@@ -1,3 +1,5 @@
+from minmax.ultimate_resource_timeline import UltimateGenerationEvent
+from services.champion_point_loadout_service import ChampionPointLoadoutCandidate
 from services.extreme_gear_set_recovery_special_branch_service import (
     ExtremeGearSetRecoverySpecialBranchService,
 )
@@ -69,3 +71,82 @@ def test_twice_born_star_remains_separate_search_state():
         branch, ExtremeHealthRecoveryRuntimeState()
     )
     assert result.status is ExtremeHealthRecoveryCompatibility.SEARCH_STATE_MUTATION
+
+def _cp(name: str, ceiling: float, condition: str | None = None):
+    return ChampionPointLoadoutCandidate(
+        name=name,
+        discipline_index=3,
+        flat_ceiling=ceiling,
+        condition=condition,
+    )
+
+
+def test_rejuvenation_peace_and_suffering_can_share_one_runtime_state():
+    state = ExtremeHealthRecoveryRuntimeState(
+        crowd_control_immunity_active=True,
+        negative_effect_active=True,
+    )
+    rows = ExtremeHealthRecoveryRuntimeCompatibilityService.assess_champion_points(
+        (
+            _cp("Rejuvenation", 90.0),
+            _cp("Peace of Mind", 200.0),
+            _cp("Sustained by Suffering", 150.0),
+        ),
+        state,
+    )
+
+    assert all(row.status is ExtremeHealthRecoveryCompatibility.COMPATIBLE for row in rows)
+
+
+def test_enlivening_overflow_requires_exact_max_magicka_before_claiming_cap():
+    candidate = _cp("Enlivening Overflow", 150.0)
+    unresolved = ExtremeHealthRecoveryRuntimeCompatibilityService.assess_champion_point(
+        candidate,
+        ExtremeHealthRecoveryRuntimeState(max_magicka=None),
+    )
+    compatible = ExtremeHealthRecoveryRuntimeCompatibilityService.assess_champion_point(
+        candidate,
+        ExtremeHealthRecoveryRuntimeState(max_magicka=30000.0),
+    )
+
+    assert unresolved.status is ExtremeHealthRecoveryCompatibility.RUNTIME_PROOF_REQUIRED
+    assert unresolved.required_max_magicka == 30000.0
+    assert compatible.status is ExtremeHealthRecoveryCompatibility.COMPATIBLE
+
+
+def test_enlivening_overflow_buff_can_precede_low_health_scoring_state():
+    row = ExtremeHealthRecoveryRuntimeCompatibilityService.assess_champion_point(
+        _cp("Enlivening Overflow", 150.0),
+        ExtremeHealthRecoveryRuntimeState(
+            max_magicka=30000.0,
+            enlivening_overflow_trigger_seconds=20.0,
+            low_health_boundary_seconds=21.0,
+            score_seconds=24.999,
+        ),
+    )
+
+    assert row.status is ExtremeHealthRecoveryCompatibility.COMPATIBLE
+
+
+def test_strategic_reserve_reports_ultimate_gap_inside_booming_voice_window():
+    events = (UltimateGenerationEvent(24.0, 136.0, "reviewed modeled generation"),)
+    row = ExtremeHealthRecoveryRuntimeCompatibilityService.assess_champion_point(
+        _cp("Strategic Reserve", 1500.0),
+        ExtremeHealthRecoveryRuntimeState(ultimate_generation_events=events),
+    )
+
+    assert row.status is ExtremeHealthRecoveryCompatibility.RUNTIME_PROOF_REQUIRED
+    assert row.available_ultimate_at_score == 386.0
+    assert row.ultimate_shortfall == 114.0
+
+
+def test_strategic_reserve_is_compatible_when_explicit_generation_refills_cap():
+    events = (UltimateGenerationEvent(24.0, 250.0, "complete reviewed generation"),)
+    row = ExtremeHealthRecoveryRuntimeCompatibilityService.assess_champion_point(
+        _cp("Strategic Reserve", 1500.0),
+        ExtremeHealthRecoveryRuntimeState(ultimate_generation_events=events),
+    )
+
+    assert row.status is ExtremeHealthRecoveryCompatibility.COMPATIBLE
+    assert row.available_ultimate_at_score == 500.0
+    assert row.ultimate_shortfall == 0.0

@@ -508,6 +508,32 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.POLICY,
     ),
     ServiceDescriptor(
+        service_id="extreme.health_recovery_runtime_compatibility",
+        domain="extreme",
+        purpose=(
+            "Prove whether dominant Health Recovery class, Champion Point, and gear "
+            "conditions can coexist at one scoring moment."
+        ),
+        implementation_path=(
+            "services.extreme_health_recovery_runtime_compatibility_service"
+        ),
+        inputs=(
+            "ExtremeHealthRecoveryRuntimeState",
+            "ChampionPointLoadoutCandidate",
+            "ExtremeRecoverySpecialBranch",
+        ),
+        outputs=(
+            "ExtremeHealthRecoveryChampionPointCompatibility",
+            "ExtremeHealthRecoveryBranchCompatibility",
+        ),
+        responsibilities=("health_recovery_runtime_compatibility",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Runtime proof remains separate from legal CP loadout and numeric equipment scoring."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="mechanics.champion_point_loadout",
         domain="mechanics",
         purpose=(
