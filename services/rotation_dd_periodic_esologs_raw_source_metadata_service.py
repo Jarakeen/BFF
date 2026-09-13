@@ -1,0 +1,149 @@
+from __future__ import annotations
+
+from collections import Counter
+from dataclasses import dataclass
+import json
+from pathlib import Path
+import sqlite3
+from typing import Any
+
+
+_SOURCE_TOKENS = (
+    "source",
+    "owner",
+    "master",
+    "parent",
+    "pet",
+    "summon",
+    "instance",
+)
+
+
+@dataclass(frozen=True)
+class RotationDDPeriodicEsoLogsRawSourceMetadataField:
+    path: str
+    rendered_values: tuple[str, ...]
+    occurrence_count: int
+
+
+@dataclass(frozen=True)
+class RotationDDPeriodicEsoLogsRawSourceMetadataReport:
+    ability_id: int
+    event_count: int
+    source_actor_count: int
+    fields: tuple[RotationDDPeriodicEsoLogsRawSourceMetadataField, ...]
+    unresolved: tuple[str, ...] = ()
+
+
+class RotationDDPeriodicEsoLogsRawSourceMetadataService:
+    """Inspect source/owner-like keys preserved in raw ESO Logs event JSON.
+
+    Evidence only. This service never infers ownership from numeric proximity, actor id,
+    source instance, or field naming. It simply inventories owner/source/pet-like raw
+    metadata that survived import for one observed ability id.
+    """
+
+    def __init__(self, logs_database_path: str | Path) -> None:
+        self.logs_database_path = Path(logs_database_path)
+
+    def inspect(self, ability_id: int, *, max_values_per_field: int = 12) -> RotationDDPeriodicEsoLogsRawSourceMetadataReport:
+        requested = int(ability_id)
+        if requested <= 0:
+            raise ValueError("ability_id must be positive")
+        if not self.logs_database_path.is_file():
+            return RotationDDPeriodicEsoLogsRawSourceMetadataReport(
+                ability_id=requested,
+                event_count=0,
+                source_actor_count=0,
+                fields=(),
+                unresolved=(f"ESO Logs database not found: {self.logs_database_path}",),
+            )
+
+        with sqlite3.connect(f"file:{self.logs_database_path.resolve().as_posix()}?mode=ro", uri=True) as db:
+            db.row_factory = sqlite3.Row
+            db.execute("PRAGMA query_only = ON")
+            columns = {str(row[1]) for row in db.execute("PRAGMA table_info(log_event)")}
+            required = {"report_code", "fight_id", "source_id", "ability_game_id", "raw_json"}
+            missing = sorted(required - columns)
+            if missing:
+                return RotationDDPeriodicEsoLogsRawSourceMetadataReport(
+                    ability_id=requested,
+                    event_count=0,
+                    source_actor_count=0,
+                    fields=(),
+                    unresolved=("log_event is missing required columns: " + ", ".join(missing),),
+                )
+            rows = db.execute(
+                """
+                SELECT report_code, fight_id, source_id, raw_json
+                FROM log_event
+                WHERE ability_game_id = ?
+                ORDER BY report_code, fight_id, source_id
+                """,
+                (requested,),
+            ).fetchall()
+
+        source_keys = {
+            (str(row["report_code"]), int(row["fight_id"]), int(row["source_id"]))
+            for row in rows
+            if row["source_id"] is not None
+        }
+        counts: dict[str, Counter[str]] = {}
+        for row in rows:
+            raw = str(row["raw_json"] or "").strip()
+            if not raw:
+                continue
+            try:
+                payload = json.loads(raw)
+            except (TypeError, json.JSONDecodeError):
+                continue
+            self._collect(payload, path="", counts=counts)
+
+        fields = tuple(
+            RotationDDPeriodicEsoLogsRawSourceMetadataField(
+                path=path,
+                rendered_values=tuple(value for value, _count in counter.most_common(max(1, int(max_values_per_field)))),
+                occurrence_count=sum(counter.values()),
+            )
+            for path, counter in sorted(counts.items(), key=lambda item: item[0].casefold())
+        )
+        unresolved: list[str] = []
+        if rows and not fields:
+            unresolved.append(
+                "raw event JSON exposes no source/owner/master/parent/pet/summon/instance-like metadata keys"
+            )
+        return RotationDDPeriodicEsoLogsRawSourceMetadataReport(
+            ability_id=requested,
+            event_count=len(rows),
+            source_actor_count=len(source_keys),
+            fields=fields,
+            unresolved=tuple(unresolved),
+        )
+
+    @classmethod
+    def _collect(cls, value: Any, *, path: str, counts: dict[str, Counter[str]]) -> None:
+        if isinstance(value, dict):
+            for key, child in value.items():
+                key_text = str(key)
+                child_path = f"{path}.{key_text}" if path else key_text
+                normalized = key_text.casefold()
+                if any(token in normalized for token in _SOURCE_TOKENS):
+                    rendered = cls._render(child)
+                    counts.setdefault(child_path, Counter())[rendered] += 1
+                cls._collect(child, path=child_path, counts=counts)
+        elif isinstance(value, list):
+            for child in value:
+                cls._collect(child, path=f"{path}[]" if path else "[]", counts=counts)
+
+    @staticmethod
+    def _render(value: Any) -> str:
+        if isinstance(value, (dict, list)):
+            return json.dumps(value, ensure_ascii=False, sort_keys=True)
+        return json.dumps(value, ensure_ascii=False)
+
+
+__all__ = [
+    "RotationDDPeriodicEsoLogsRawSourceMetadataField",
+    "RotationDDPeriodicEsoLogsRawSourceMetadataReport",
+    "RotationDDPeriodicEsoLogsRawSourceMetadataService",
+]
