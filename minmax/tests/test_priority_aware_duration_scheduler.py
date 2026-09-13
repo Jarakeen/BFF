@@ -71,3 +71,38 @@ def test_equal_priority_keeps_earlier_due_refresh_first() -> None:
     )
 
     assert key == ("earlier due", "front")
+
+
+def test_explicit_priority_orders_same_bar_no_duration_fillers() -> None:
+    plan = RotationPlan(
+        character_name="Rylonia",
+        build_name="Corpsebuster DD",
+        duration_seconds=3.0,
+        actions=(
+            RotationAction(0.0, 0, RotationActionKind.SKILL, "Duration Skill", "front"),
+            RotationAction(1.0, 0, RotationActionKind.SKILL, "Lower Filler", "front"),
+            RotationAction(2.0, 0, RotationActionKind.SKILL, "Higher Filler", "front"),
+            RotationAction(3.0, 0, RotationActionKind.SKILL, "Duration Skill", "front"),
+        ),
+    )
+    rules = (RotationRecastRule("Duration Skill", 10.0, bar="front"),)
+    priorities = AbilityPriorityList(
+        character_name="Rylonia",
+        build_name="Corpsebuster DD",
+        role="DD",
+        entries=(
+            AbilityPriorityEntry("front", 1, "Duration Skill", 2),
+            AbilityPriorityEntry("front", 2, "Lower Filler", 20),
+            AbilityPriorityEntry("front", 3, "Higher Filler", 1),
+        ),
+    )
+
+    refined = PriorityAwareDurationRotationScheduler(priorities).refine(plan, rules)
+
+    at_three = [
+        action
+        for action in refined.actions
+        if action.time_seconds == 3.0 and action.kind is RotationActionKind.SKILL
+    ]
+    assert len(at_three) == 1
+    assert at_three[0].name == "Higher Filler"
