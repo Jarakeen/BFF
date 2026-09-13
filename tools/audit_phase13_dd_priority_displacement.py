@@ -82,8 +82,9 @@ def main() -> int:
     print(f"Build:     {getattr(build, 'BuildName', '') or 'unnamed'}")
     print(f"Duration:  {duration:g}s")
     print(f"Horizon-displaced skills: {len(audit.displaced_beyond_horizon)}")
-    print(f"Priority inversions:      {len(audit.inversions)}")
-    print(f"Priority consistent:      {audit.priority_consistent}")
+    print(f"Post-displacement lower-priority casts: {len(audit.inversions)}")
+    print(f"Ordinary priority inversions:           {len(audit.ordinary_inversions)}")
+    print(f"Priority consistent:                    {audit.priority_consistent}")
     print()
 
     print("HORIZON-DISPLACED SKILLS")
@@ -103,15 +104,30 @@ def main() -> int:
         print("none")
     print()
 
-    print("PRIORITY INVERSIONS")
-    print("-------------------")
+    print("POST-DISPLACEMENT LOWER-PRIORITY CASTS")
+    print("-------------------------------------")
     if audit.inversions:
         for row in audit.inversions:
             print(
                 f"{row.bar} | displaced '{row.displaced_skill_name}' priority={row.displaced_priority} "
                 f"from {row.displaced_from_time_seconds:g}s while lower-priority "
                 f"'{row.lower_priority_skill_name}' priority={row.lower_priority} "
-                f"still cast through {row.lower_priority_last_time_seconds:g}s"
+                f"cast through {row.lower_priority_last_time_seconds:g}s | "
+                f"provenance={row.lower_priority_provenance}"
+            )
+    else:
+        print("none")
+    print()
+
+    print("ORDINARY PRIORITY INVERSIONS")
+    print("----------------------------")
+    if audit.ordinary_inversions:
+        for row in audit.ordinary_inversions:
+            print(
+                f"{row.bar} | displaced '{row.displaced_skill_name}' priority={row.displaced_priority} "
+                f"from {row.displaced_from_time_seconds:g}s lost to ordinary/displaced "
+                f"'{row.lower_priority_skill_name}' priority={row.lower_priority} "
+                f"at {row.lower_priority_last_time_seconds:g}s"
             )
     else:
         print("none")
@@ -119,13 +135,11 @@ def main() -> int:
 
     if audit.priority_consistent:
         print(
-            "NEXT_STEP=no time-proven priority inversion remains; horizon spillover alone does not "
-            "justify further displacement-order rewrites"
+            "NEXT_STEP=no ordinary post-displacement priority inversion remains; protected due-refresh/first-cast survivors do not justify another displacement-order rewrite"
         )
     else:
         print(
-            "NEXT_STEP=time-proven priority inversion remains; inspect the surviving post-displacement "
-            "lower-priority casts before changing scheduler behavior again"
+            "NEXT_STEP=ordinary post-displacement priority inversion remains; inspect those exact slots before changing scheduler behavior again"
         )
     return 0
 
