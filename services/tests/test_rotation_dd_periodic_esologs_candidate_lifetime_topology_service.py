@@ -114,6 +114,8 @@ def test_reports_source_track_target_and_lifetime_bands(tmp_path) -> None:
     assert report.observation_count == 4
     assert report.unique_event_count == 4
     assert report.overlapping_window_reuse_count == 0
+    assert report.censored_same_source_observation_count == 3
+    assert report.censored_same_source_unique_event_count == 3
     assert report.unresolved == ()
 
     groups = {
@@ -138,6 +140,48 @@ def test_reports_source_track_target_and_lifetime_bands(tmp_path) -> None:
     delayed = groups[(123082, "2-5s", "same_source", "same_track")]
     assert delayed.latest_offset_seconds == 2.3
 
+    censored = {
+        (item.candidate_ability_id, item.time_band, item.track_relation): item
+        for item in report.censored_same_source_groups
+    }
+    assert censored[(118766, "0-2s", "same_track")].latest_offset_seconds == 0.02
+    assert censored[(118766, "2-5s", "other_track")].latest_offset_seconds == 2.5
+    assert censored[(123082, "2-5s", "same_track")].latest_offset_seconds == 2.3
+    assert all(item.source_relation == "same_source" for item in report.censored_same_source_groups)
+
+
+def test_censored_same_source_view_stops_at_next_recast_and_does_not_reuse_event(tmp_path) -> None:
+    canonical = tmp_path / "eso.db"
+    logs = tmp_path / "logs.db"
+    _canonical(canonical)
+    _logs(logs)
+
+    _event(logs, index=1, timestamp=1000, event_type="cast", source_id=42, target_id=99, ability_id=500, cast_track_id=77, name="Detonating Siphon")
+    _event(logs, index=2, timestamp=5000, event_type="cast", source_id=42, target_id=99, ability_id=500, cast_track_id=78, name="Detonating Siphon")
+    _event(logs, index=3, timestamp=6000, event_type="damage", source_id=42, target_id=99, ability_id=118766, cast_track_id=78)
+    _event(logs, index=4, timestamp=7000, event_type="damage", source_id=7, target_id=99, ability_id=118766, cast_track_id=91)
+
+    report = _service(canonical, logs).inspect(
+        "detonating_siphon",
+        candidate_ability_ids=(118766,),
+        active_window_seconds=20.0,
+    )
+
+    assert report.cast_count == 2
+    assert report.observation_count == 4
+    assert report.unique_event_count == 2
+    assert report.overlapping_window_reuse_count == 2
+    assert report.censored_same_source_observation_count == 1
+    assert report.censored_same_source_unique_event_count == 1
+
+    censored = report.censored_same_source_groups
+    assert len(censored) == 1
+    assert censored[0].time_band == "0-2s"
+    assert censored[0].source_relation == "same_source"
+    assert censored[0].track_relation == "same_track"
+    assert censored[0].observation_count == 1
+    assert censored[0].latest_offset_seconds == 1.0
+
 
 def test_reports_overlapping_window_reuse_and_does_not_mutate_logs(tmp_path) -> None:
     canonical = tmp_path / "eso.db"
@@ -161,4 +205,6 @@ def test_reports_overlapping_window_reuse_and_does_not_mutate_logs(tmp_path) -> 
     assert report.observation_count == 2
     assert report.unique_event_count == 1
     assert report.overlapping_window_reuse_count == 1
+    assert report.censored_same_source_observation_count == 1
+    assert report.censored_same_source_unique_event_count == 1
     assert before == after
