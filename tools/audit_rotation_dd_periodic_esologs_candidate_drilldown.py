@@ -69,7 +69,9 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Events within ±0.25s of active-window end: {report.near_active_end_count}")
     print("Common first offsets: " + _common(report.first_offsets_seconds))
     print("Common last offsets: " + _common(report.last_offsets_seconds))
-    print("Common same-track intervals: " + _common(report.within_cast_intervals_seconds))
+    print("Common same-track aggregate intervals: " + _common(report.within_cast_intervals_seconds))
+    print(f"Same-target interval sequences: {report.same_target_interval_sequence_count}")
+    print("Common same-track + same-target intervals: " + _common(report.same_target_intervals_seconds))
     if report.unresolved:
         print("Unresolved evidence:")
         for message in report.unresolved:
