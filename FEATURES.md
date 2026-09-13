@@ -78,6 +78,9 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - OCR-assisted build import from ESO screenshots
 - Screenshot recognition support for build fields
 - Import review before applying detected build information
+- Raid roster import from Excel workbooks, CSV, and JSON with a review preview before persistence
+- Raid workbook detection supports player-specific multi-loadout sheets and sectioned team sheets with shared role/build templates
+- Imported builds are matched to gamertags and saved through the canonical Player -> Character -> Build catalog only after character identity is resolved or confirmed
 - Achievement progress import
 
 ---
@@ -194,6 +197,8 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Load roster players into team workflows
 - Preserve roster identity separately from build identity
 - Save generated team builds back to roster characters
+- Import external raid rosters by merge rather than replacement, preserving unrelated players, teams, characters, and saved builds
+- Imported build/team assignments are attached to the canonical gamertag/character/build identities when the import can resolve them uniquely
 
 ---
 
@@ -495,6 +500,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Canonical vs. source/raw data separation
 - Data coverage audits
 - Missing / unresolved data reporting
+- Local raid-workbook import normalizes human spreadsheet layouts into reviewed roster/build candidates without writing source workbooks or resetting the application database
 
 ---
 
