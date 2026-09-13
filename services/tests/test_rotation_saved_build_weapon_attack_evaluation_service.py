@@ -9,10 +9,10 @@ from minmax.character_build.effect_layer import BarId
 from minmax.character_build.saved_build_adapter import SavedBuildAdaptation
 from minmax.character_build.slotted_skill import SlottedSkill
 from minmax.character_build.weapon import Weapon
-from minmax.character_build.weapon_type import WeaponType
+from minmax.character_build.weapon_type import WeaponSkillLine, WeaponType
 from minmax.role import Role
 from minmax.stat_ids import StatId
-from models.build_model import ChampionPointEntry, PlayerBuild
+from models.build_model import ChampionPointEntry, GearSlot, PlayerBuild
 from services.rotation_saved_build_weapon_attack_evaluation_service import (
     RotationSavedBuildWeaponAttackContributionService,
     RotationSavedBuildWeaponAttackEvaluationService,
@@ -184,6 +184,29 @@ def test_evaluation_bridge_projects_bar_specific_stats_and_contributions() -> No
     assert {item.effect_type: item.effective_value for item in front.combat_contributions}[
         "cp_la_damage"
     ] == pytest.approx(0.20)
+
+
+def test_evaluation_bridge_accepts_legacy_two_handed_only_as_attack_family() -> None:
+    build = PlayerBuild(
+        Name="Parse Cat",
+        BuildName="DD",
+        Role="DD",
+        BackBarWeapon=GearSlot(WeaponType="Two-Handed"),
+    )
+    adapter = _Adapter(SavedBuildAdaptation(_canonical_build(), ()))
+    service = RotationSavedBuildWeaponAttackEvaluationService(
+        database_path="unused.db",
+        build_adapter=adapter,  # type: ignore[arg-type]
+    )
+
+    result = service.resolve(player_build=build, static_context=_StaticContext())
+
+    assert result.resolved is True
+    assert result.build is not None
+    assert result.build.back_bar is not None
+    assert result.build.back_bar.weapon_skill_line is WeaponSkillLine.TWO_HANDED
+    # GREATSWORD is an isolated family carrier here, not a persisted subtype claim.
+    assert result.build.back_bar.main_hand.weapon_type is WeaponType.GREATSWORD
 
 
 def test_evaluation_bridge_carries_exploiter_magnitude_without_claiming_uptime() -> None:
