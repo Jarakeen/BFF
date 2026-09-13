@@ -11,6 +11,43 @@ from minmax.skill_line_repository import SkillLineRepository
 from models.build_model import PlayerBuild
 
 
+# Blood Magic is evaluated beneath several finite Extreme axes. Those evaluators may
+# construct many short-lived service instances while all of them read the same
+# immutable canonical database. Reuse one warmed repository per observed database
+# version so ability-line/passive-rank lookups are not repeated for every scorer.
+# The file modification stamp + size keep this cache honest when a canonical DB is
+# replaced during development; explicitly injected repositories remain untouched.
+_BLOOD_MAGIC_SKILL_LINE_REPOSITORIES: dict[
+    tuple[str, int, int], SkillLineRepository
+] = {}
+
+
+def _shared_skill_line_repository(database_path: Path) -> SkillLineRepository:
+    resolved = database_path.resolve()
+    try:
+        stat = resolved.stat()
+        version = (int(stat.st_mtime_ns), int(stat.st_size))
+    except OSError:
+        version = (0, 0)
+    canonical_path = str(resolved)
+    key = (canonical_path, *version)
+
+    cached = _BLOOD_MAGIC_SKILL_LINE_REPOSITORIES.get(key)
+    if cached is not None:
+        return cached
+
+    # Discard stale versions of this same file path. This is process-local only and
+    # never mutates the database or changes canonical lookup behavior.
+    for stale_key in tuple(_BLOOD_MAGIC_SKILL_LINE_REPOSITORIES):
+        if stale_key[0] == canonical_path and stale_key != key:
+            _BLOOD_MAGIC_SKILL_LINE_REPOSITORIES.pop(stale_key, None)
+
+    repository = SkillLineRepository(resolved)
+    repository.preload_all_static()
+    _BLOOD_MAGIC_SKILL_LINE_REPOSITORIES[key] = repository
+    return repository
+
+
 @dataclass(frozen=True)
 class ExtremeSorcererBloodMagicResult:
     branch: str | None
@@ -50,8 +87,10 @@ class ExtremeSorcererBloodMagicService:
         skill_line_repository: SkillLineRepository | None = None,
     ) -> None:
         self.database_path = Path(database_path or get_data_dir() / "eso.db")
-        self.skill_line_repository = skill_line_repository or SkillLineRepository(
-            self.database_path
+        self.skill_line_repository = (
+            skill_line_repository
+            if skill_line_repository is not None
+            else _shared_skill_line_repository(self.database_path)
         )
 
     @staticmethod
