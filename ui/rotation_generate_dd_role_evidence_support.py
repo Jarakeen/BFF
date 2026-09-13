@@ -268,11 +268,33 @@ class _RotationGenerateBarAwareSkillDamageProvider:
                 ),
             )
 
-        resolver = RotationActiveBarContextResolverService(
-            static_context=self.static_context,
-            plan=candidate.plan,
-        )
-        context = resolver.context_at(action.time_seconds, action.sequence)
+        if self.runtime_build_context_resolver is not None:
+            runtime = self.runtime_build_context_resolver(
+                float(action.time_seconds),
+                int(action.sequence),
+            )
+            if not runtime.resolved or runtime.context is None:
+                unresolved = tuple(
+                    dict.fromkeys(
+                        str(message).strip()
+                        for message in runtime.unresolved
+                        if str(message).strip()
+                    )
+                ) or ("runtime skill build context is unresolved",)
+                return RotationActionDamageEvidence(
+                    time_seconds=action.time_seconds,
+                    sequence=action.sequence,
+                    damage_value=None,
+                    unresolved=unresolved,
+                )
+            context = runtime.context
+        else:
+            resolver = RotationActiveBarContextResolverService(
+                static_context=self.static_context,
+                plan=candidate.plan,
+            )
+            context = resolver.context_at(action.time_seconds, action.sequence)
+
         action_target_resistance = _target_resistance_at(
             self.runtime_target_resistance_resolver,
             fallback=self.target_resistance,
