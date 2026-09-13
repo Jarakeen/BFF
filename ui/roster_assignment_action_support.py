@@ -194,14 +194,30 @@ def _clear_card_body(card) -> None:
                     child_widget.deleteLater()
 
 
+def _clear_card_header(card) -> None:
+    """Make this a truly headerless action card, including old header actions."""
+    card.set_title("")
+    card.set_icon("")
+    while card.header_action_layout.count():
+        item = card.header_action_layout.takeAt(0)
+        widget = item.widget()
+        if widget is not None:
+            widget.hide()
+            widget.setParent(None)
+            widget.deleteLater()
+    card.header.hide()
+    card.header.setMinimumHeight(0)
+    card.header.setMaximumHeight(0)
+
+
 def _install_attention_actions(page) -> None:
     card = getattr(page, "attention_card", None)
     if card is None:
         return
 
     # Keep the card shell because it visually belongs with the other lower cards,
-    # but strip the heading/readiness copy so the whole surface is action space.
-    card.header.hide()
+    # but remove every part of the old header/readiness surface.
+    _clear_card_header(card)
     card.setProperty("flatActionCard", True)
     card.set_watermark(None)
     card.set_body_margins(10, 10, 10, 10)
