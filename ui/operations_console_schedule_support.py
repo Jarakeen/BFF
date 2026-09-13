@@ -3,9 +3,9 @@ from __future__ import annotations
 """Use the roster's saved team schedules on the Raid Engine overview.
 
 The overview originally shipped with decorative example raids. This layer
-replaces them with the durable schedules already saved on Roster -> Teams,
-so the overview remains a summary of real user data rather than a second
-pretend calendar.
+replaces them with the durable schedules already saved on Roster -> Team
+Schedule, so the overview remains a summary of real user data rather than a
+second pretend calendar.
 """
 
 from PySide6.QtCore import Qt
@@ -109,7 +109,6 @@ def install() -> None:
     from ui.rotation_dashboard_layout_support import install as install_rotation_dashboard_layout_support
     from ui.build_rotation_artifact_support import install as install_build_rotation_artifact_support
     from ui.user_workspace_polish_support import install as install_user_workspace_polish_support
-    from ui.roster_workspace_ux_support import install as install_roster_workspace_ux_support
 
     # Preserve the portable calendar feature, then let the multi-time layer own
     # the final Team Schedule UI so each selected day can use its own start/end.
@@ -143,10 +142,8 @@ def install() -> None:
     # A completed RotationPlan can then be persisted against the canonical
     # build_id and surfaced as a conditional Build workspace tab.
     install_build_rotation_artifact_support()
-    # Existing final polish is allowed to see the old roster composition first.
+    # Final user-facing polish depends on the completed Rotation/Roster/Main
+    # composition above, so install it last.
     install_user_workspace_polish_support()
-    # The roster workspace is then reorganized last so the visible top-level
-    # tabs match raid-lead workflow without changing any roster/team authority.
-    install_roster_workspace_ux_support()
     operations_console.OperationsConsole._raid_schedule_card = _raid_schedule_card
     _INSTALLED = True
