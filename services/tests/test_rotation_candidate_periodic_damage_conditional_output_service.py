@@ -24,7 +24,7 @@ class _ProjectionService:
         return self.projection
 
 
-def _action(name: str | None = "detonating_siphon") -> RotationAction:
+def _action(name: str = "detonating_siphon") -> RotationAction:
     return RotationAction(
         0.0,
         0,
@@ -45,7 +45,7 @@ def _event(time_seconds: float) -> RuntimeEvent:
 
 def _projection(
     *,
-    name: str | None = "detonating_siphon",
+    name: str = "detonating_siphon",
     times=(1.0, 2.0, 3.0),
     evidence=(),
     unresolved=(),
@@ -139,8 +139,24 @@ def test_existing_projection_evidence_and_unresolved_are_preserved() -> None:
 
 
 def test_missing_parent_skill_identity_fails_closed_before_rule_lookup() -> None:
+    nameless_action = RotationAction(
+        0.0,
+        0,
+        RotationActionKind.LIGHT_ATTACK,
+        bar="front",
+    )
+    projection = RotationPeriodicDamageRuntimeProjection(
+        entries=(
+            RotationPeriodicDamageRuntimeProjectionEntry(
+                action=nameless_action,
+                coefficient_number=1,
+                events=(_event(1.0),),
+                active_end_time_seconds=20.0,
+            ),
+        ),
+    )
     service = RotationCandidatePeriodicDamageConditionalOutputService(
-        _ProjectionService(_projection(name=None, times=(1.0,)))
+        _ProjectionService(projection)
     )
 
     result = service.project(plan=SimpleNamespace(), semantics=())
