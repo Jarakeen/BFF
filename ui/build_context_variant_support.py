@@ -2,6 +2,7 @@ from __future__ import annotations
 
 """Upgrade legacy boss alternates into sparse team/boss context variants."""
 
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QComboBox,
     QFormLayout,
@@ -52,6 +53,8 @@ def _editable_combo(values) -> QComboBox:
 
 class ContextVariantCard(FoundryCard):
     """One sparse override row over a complete parent build."""
+
+    removeRequested = Signal(object)
 
     def __init__(self, editor, parent=None):
         super().__init__("Context Variant", parent=parent)
@@ -145,10 +148,6 @@ class ContextVariantCard(FoundryCard):
         build_form.addRow("Consumables", consumables)
         build_form.addRow("Notes", self.notes)
         self.addLayout(build_form)
-
-    # Added dynamically below because PySide signals belong on QObject subclasses;
-    # the legacy card already established the contract used by BuildEditor.
-    removeRequested = build_editor_module.BossLoadoutCard.removeRequested
 
     def set_class(self, eso_class: str) -> None:
         self.front_bar.set_class(eso_class)
