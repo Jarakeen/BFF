@@ -6,6 +6,7 @@ from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QComboBox,
     QFormLayout,
+    QGridLayout,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -95,38 +96,53 @@ class ContextVariantCard(FoundryCard):
 
         self.gear_rows = {}
         gear_card = FoundryCard("Gear Overrides")
-        gear_form = QFormLayout()
-        for slot in ARMOR_SLOTS:
-            row = build_editor_module.GearSlotRow(
-                editor.set_choices,
-                ARMOR_TRAITS,
-                armor=True,
-            )
-            self.gear_rows[slot] = row
-            gear_form.addRow(slot, row)
+        gear_grid = QGridLayout()
+        gear_grid.setHorizontalSpacing(6)
+        gear_grid.setVerticalSpacing(3)
+        headers = ["Slot", "Set 1", "Set 2", "Quality", "Trait", "Weight / Weapon", "Enchant", "Tier", "Level"]
+        for column, text in enumerate(headers):
+            label = QLabel(text)
+            label.setStyleSheet("font-weight:700;")
+            gear_grid.addWidget(label, 0, column)
 
-        weapon_specs = (
-            ("front_main_hand", "Front Main Hand", None),
-            ("front_off_hand", "Front Off Hand", build_editor_module.OFFHAND_WEAPON_TYPES),
-            ("back_main_hand", "Back Main Hand", None),
-            ("back_off_hand", "Back Off Hand", build_editor_module.OFFHAND_WEAPON_TYPES),
-        )
-        for key, label, weapon_types in weapon_specs:
+        specs = [
+            *((slot, slot, True, False) for slot in ARMOR_SLOTS),
+            ("Neck", "Necklace", False, False),
+            ("Ring1", "Ring 1", False, False),
+            ("Ring2", "Ring 2", False, False),
+            ("front_main_hand", "Front Main Hand", False, True),
+            ("front_off_hand", "Front Off Hand", False, True),
+            ("back_main_hand", "Back Main Hand", False, True),
+            ("back_off_hand", "Back Off Hand", False, True),
+        ]
+        for row_number, (key, label, armor, weapon) in enumerate(specs, 1):
+            traits = ARMOR_TRAITS if armor else JEWELRY_TRAITS if key in {"Neck", "Ring1", "Ring2"} else WEAPON_TRAITS
+            weapon_types = build_editor_module.OFFHAND_WEAPON_TYPES if key.endswith("off_hand") else None
             row = build_editor_module.GearSlotRow(
                 editor.set_choices,
-                WEAPON_TRAITS,
-                weapon=True,
+                traits,
+                armor=armor,
+                weapon=weapon,
                 weapon_types=weapon_types,
             )
             self.gear_rows[key] = row
-            gear_form.addRow(label, row)
+            gear_grid.addWidget(QLabel(label), row_number, 0)
+            for column, widget in enumerate(
+                [
+                    row.set_combo,
+                    row.set2_combo,
+                    row.quality_combo,
+                    row.trait_combo,
+                    row.type_combo,
+                    row.enchant_combo,
+                    row.enchant_tier_combo,
+                    row.level_combo,
+                ],
+                1,
+            ):
+                gear_grid.addWidget(widget, row_number, column)
 
-        for key, label in (("Neck", "Necklace"), ("Ring1", "Ring 1"), ("Ring2", "Ring 2")):
-            row = build_editor_module.GearSlotRow(editor.set_choices, JEWELRY_TRAITS)
-            self.gear_rows[key] = row
-            gear_form.addRow(label, row)
-
-        gear_card.addLayout(gear_form)
+        gear_card.addLayout(gear_grid)
         self.addWidget(gear_card)
 
         build_form = QFormLayout()
@@ -267,6 +283,29 @@ def _add_variant(self, variant=None):
     return card
 
 
+def _variants_summary_card(self, build):
+    card = FoundryCard("Context Variants")
+    variants = list(getattr(build, "ContextVariants", ()) or ())
+    if not variants:
+        variants = [BuildContextVariant.from_boss_loadout(item) for item in build.BossLoadouts]
+    if not variants:
+        card.addWidget(QLabel("No team or boss variants saved."))
+        return card
+
+    for variant in variants:
+        kind = str(variant.ContextType or "Boss").strip()
+        context_bits = []
+        if variant.TeamName:
+            context_bits.append(variant.TeamName)
+        if variant.BossName:
+            context_bits.append(variant.BossName)
+        context = " • ".join(context_bits) or "Unspecified context"
+        assignment = f" • {variant.Assignment}" if variant.Assignment else ""
+        notes = f" — {variant.Notes}" if variant.Notes else ""
+        card.addWidget(QLabel(f"{kind}: {context}{assignment}{notes}"))
+    return card
+
+
 def install() -> None:
     global _INSTALLED
     if _INSTALLED:
@@ -298,6 +337,10 @@ def install() -> None:
     BuildEditor.add_boss_loadout = _add_variant
     BuildEditor.model = property(model_with_context_variants)
     BuildEditor.load = load_with_context_variants
+
+    from ui.builds_page import BuildsPage
+
+    BuildsPage._alternates_card = _variants_summary_card
     _INSTALLED = True
 
 
