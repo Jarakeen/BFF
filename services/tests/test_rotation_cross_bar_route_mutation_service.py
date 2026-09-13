@@ -56,6 +56,7 @@ def _selection(
     target: str = "front",
     filler: str = "Venom Skull",
     return_swap_required: bool = False,
+    outbound_swap_required: bool = True,
 ) -> RotationCrossBarRouteSelection:
     proposal = RotationCrossBarRouteProposal(
         wait_time_seconds=start,
@@ -70,6 +71,7 @@ def _selection(
     return RotationCrossBarRouteSelection(
         proposal=proposal,
         reserved_wait_times=(start,),
+        outbound_swap_required=outbound_swap_required,
     )
 
 
@@ -98,6 +100,56 @@ def test_applies_selected_stay_on_target_route_in_one_skill_gcd_slot() -> None:
     ]
     assert result.consumed_wait_times == (33.0,)
     assert result.plan.unresolved == ("execute-phase behavior is not yet scheduled",)
+
+
+def test_applies_already_on_target_route_without_redundant_outbound_swap() -> None:
+    plan = _plan(
+        _swap(33.0, "front"),
+        _wait(34.0),
+        _skill(36.0, "Blighted Blastbones", "front"),
+        unresolved=(
+            "persistent toggle recast of 'Magical Banner' at 34s had no verified same-bar no-duration filler; scheduled wait instead",
+        ),
+    )
+    selected = _selection(start=34.0, outbound_swap_required=False)
+
+    result = RotationCrossBarRouteMutationService().apply(
+        plan,
+        RotationCrossBarRouteSelectionResult(selected=(selected,), rejected=()),
+    )
+
+    at_34 = [action for action in result.plan.actions if action.time_seconds == 34.0]
+    assert [(action.kind, action.name, action.bar, action.sequence) for action in at_34] == [
+        (RotationActionKind.LIGHT_ATTACK, None, "front", 0),
+        (RotationActionKind.SKILL, "Venom Skull", "front", 1),
+    ]
+    assert result.plan.unresolved == ()
+
+
+def test_already_on_target_route_can_still_return_to_source_after_skill() -> None:
+    plan = _plan(
+        _swap(18.0, "front"),
+        _wait(19.0),
+        _skill(20.0, "Stampede", "back"),
+    )
+    selected = _selection(
+        start=19.0,
+        return_swap_required=True,
+        outbound_swap_required=False,
+    )
+
+    result = RotationCrossBarRouteMutationService().apply(
+        plan,
+        RotationCrossBarRouteSelectionResult(selected=(selected,), rejected=()),
+        initial_bar="front",
+    )
+
+    at_19 = [action for action in result.plan.actions if action.time_seconds == 19.0]
+    assert [(action.kind, action.name, action.bar, action.sequence) for action in at_19] == [
+        (RotationActionKind.LIGHT_ATTACK, None, "front", 0),
+        (RotationActionKind.SKILL, "Venom Skull", "front", 1),
+        (RotationActionKind.BAR_SWAP, None, "back", 2),
+    ]
 
 
 def test_applies_return_route_with_same_timestamp_return_swap() -> None:
