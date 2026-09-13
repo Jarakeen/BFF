@@ -12,10 +12,14 @@ from services.rotation_execute_candidate_evidence_service import (
     RotationExecuteCandidateEvidence,
     RotationExecuteCandidateEvidenceService,
 )
+from services.rotation_reviewed_execute_amplification_service import (
+    RotationReviewedExecuteAmplificationService,
+)
 
 
 class RotationExecuteEvidenceDisposition(str, Enum):
     THRESHOLD_ACTIVATION_SUPPORTED = "threshold_activation_supported"
+    CONTINUOUS_AMPLIFICATION_SUPPORTED = "continuous_amplification_supported"
     CONTINUOUS_AMPLIFICATION_UNRESOLVED = "continuous_amplification_unresolved"
     NO_THRESHOLD_EVIDENCE = "no_threshold_evidence"
     IDENTITY_OR_SOURCE_UNRESOLVED = "identity_or_source_unresolved"
@@ -30,18 +34,23 @@ class RotationExecuteEvidenceDispositionResult:
 
     @property
     def scheduler_supported(self) -> bool:
-        return self.disposition is RotationExecuteEvidenceDisposition.THRESHOLD_ACTIVATION_SUPPORTED
+        return self.disposition in {
+            RotationExecuteEvidenceDisposition.THRESHOLD_ACTIVATION_SUPPORTED,
+            RotationExecuteEvidenceDisposition.CONTINUOUS_AMPLIFICATION_SUPPORTED,
+        }
 
 
 class RotationExecuteEvidenceDispositionService:
-    """Separate supported threshold executes from unresolved continuous scaling."""
+    """Separate runtime-supported execute evidence from unresolved scaling semantics."""
 
     def __init__(
         self,
         *,
         evidence_service: RotationExecuteCandidateEvidenceService | None = None,
+        amplification: RotationReviewedExecuteAmplificationService | None = None,
     ) -> None:
         self.evidence_service = evidence_service or RotationExecuteCandidateEvidenceService()
+        self.amplification = amplification or RotationReviewedExecuteAmplificationService()
 
     def resolve(self, skill_name: str) -> RotationExecuteEvidenceDispositionResult:
         evidence = self.evidence_service.resolve(skill_name)
@@ -67,18 +76,28 @@ class RotationExecuteEvidenceDispositionService:
             is SkillComponentConditionalConsequenceType.AMPLIFIES_DAMAGE
         )
         if amplifications:
-            maximums = tuple(
-                row.maximum_bonus_fraction
-                for row in amplifications
-                if row.maximum_bonus_fraction is not None
+            reviewed = self.amplification.semantics(evidence.resolved_skill_name)
+            complete_maximums = all(
+                row.maximum_bonus_fraction is not None for row in amplifications
             )
+            if reviewed is not None and complete_maximums:
+                return RotationExecuteEvidenceDispositionResult(
+                    skill_name=evidence.resolved_skill_name,
+                    disposition=RotationExecuteEvidenceDisposition.CONTINUOUS_AMPLIFICATION_SUPPORTED,
+                    evidence=evidence,
+                )
+
             detail = (
                 "continuous target-missing-Health damage amplification has positive canonical "
                 "evidence, but exact interpolation from threshold to maximum bonus is not yet "
                 "source-verified; active damage remains fail-closed"
             )
-            if maximums:
-                detail += "; reviewed maximum bonus values are descriptive only"
+            if reviewed is not None and not complete_maximums:
+                detail = (
+                    "continuous target-missing-Health damage amplification has reviewed "
+                    "interpolation semantics, but maximum bonus evidence is incomplete; "
+                    "active damage remains fail-closed"
+                )
             return RotationExecuteEvidenceDispositionResult(
                 skill_name=evidence.resolved_skill_name,
                 disposition=RotationExecuteEvidenceDisposition.CONTINUOUS_AMPLIFICATION_UNRESOLVED,
