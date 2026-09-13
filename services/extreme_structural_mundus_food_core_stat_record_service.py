@@ -2,6 +2,7 @@ from __future__ import annotations
 
 """Add the finite food/drink axis to structural + Mundus Extreme stat search."""
 
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -17,6 +18,9 @@ from services.extreme_record_result import (
     ExtremeRecordProofStatus,
     ExtremeRecordResult,
     ExtremeRecordSearchCoverage,
+)
+from services.extreme_resource_candidate_provisioning_projection_service import (
+    ExtremeResourceCandidateProvisioningProjection,
 )
 from services.extreme_resource_provisioning_projection_service import (
     ExtremeResourceProvisioningProjection,
@@ -50,10 +54,17 @@ class ExtremeBestMundusFoodStructuralStatEvaluator:
         *,
         mundus_evaluator: ExtremeBestMundusStructuralStatEvaluator,
         provisioning_repository: ProvisioningStaticRepository,
+        candidate_projection_provider: Callable[
+            [str], ExtremeResourceCandidateProvisioningProjection | None
+        ] | None = None,
     ) -> None:
         self.mundus_evaluator = mundus_evaluator
         self.provisioning_repository = provisioning_repository
+        self.candidate_projection_provider = candidate_projection_provider
         self._projection_cache: dict[str, ExtremeResourceProvisioningProjection] = {}
+        self._candidate_projection_cache: dict[
+            str, ExtremeResourceCandidateProvisioningProjection | None
+        ] = {}
 
     def _all_food_choices(self) -> tuple[str, ...]:
         values: list[str] = [""]
@@ -81,9 +92,26 @@ class ExtremeBestMundusFoodStructuralStatEvaluator:
             self._projection_cache[key] = cached
         return cached
 
+    def candidate_provisioning_projection(
+        self,
+        objective_key: str,
+    ) -> ExtremeResourceCandidateProvisioningProjection | None:
+        key = str(objective_key or "").strip().casefold()
+        provider = self.candidate_projection_provider
+        if not key or provider is None:
+            return None
+        if key in self._candidate_projection_cache:
+            return self._candidate_projection_cache[key]
+        projection = provider(key)
+        self._candidate_projection_cache[key] = projection
+        return projection
+
     def food_choices(self, objective_key: str | None = None) -> tuple[str, ...]:
         key = str(objective_key or "").strip().casefold()
         if key:
+            candidate_projection = self.candidate_provisioning_projection(key)
+            if candidate_projection is not None and candidate_projection.projection_complete:
+                return tuple(candidate_projection.choices)
             projection = self.provisioning_projection(key)
             if projection is not None and projection.projection_complete:
                 return tuple(projection.choices)
@@ -109,6 +137,10 @@ class ExtremeBestMundusFoodStructuralStatEvaluator:
         best_payload: dict[str, Any] | None = None
         best_food = ""
         unresolved_across_foods: list[str] = []
+
+        candidate_projection = self.candidate_provisioning_projection(objective_key)
+        if candidate_projection is not None and not candidate_projection.projection_complete:
+            unresolved_across_foods.extend(candidate_projection.unresolved)
 
         projection = self.provisioning_projection(objective_key)
         if projection is not None and not projection.projection_complete:
