@@ -8,8 +8,11 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from minmax.rotation_ability_priority import AbilityPriorityEntry
+from minmax.rotation_ability_priority import AbilityPriorityEntry, AbilityPriorityList
 from minmax.rotation_plan import RotationActionKind
+from services.rotation_cross_bar_filler_opportunity_service import (
+    RotationCrossBarFillerOpportunityService,
+)
 from tools.audit_phase13_saved_build_rotation_timing import _load_build
 from ui.rotation_generation_support import RotationGenerationRequest, RotationGenerationSupport
 
@@ -157,6 +160,12 @@ def main() -> int:
         return 0
 
     priorities = _priority_entries(tuple(args.priority or ()), build=build)
+    priority_list = AbilityPriorityList(
+        character_name=_character_name(build),
+        build_name=str(getattr(build, "BuildName", "") or "").strip(),
+        role=str(getattr(build, "Role", "") or "Unspecified").strip(),
+        entries=priorities,
+    )
     generated = RotationGenerationSupport().generate_with_evidence(
         build=build,
         request=RotationGenerationRequest(
@@ -164,6 +173,10 @@ def main() -> int:
             weave_light_attacks=not bool(args.no_weave),
             ability_priorities=priorities,
         ),
+    )
+    cross_bar = RotationCrossBarFillerOpportunityService().find(
+        generated.plan,
+        priorities=priority_list,
     )
 
     print("=" * 72)
@@ -188,6 +201,24 @@ def main() -> int:
     print("--------")
     print(f"Skill actions: {len(skills)}")
     print(f"Wait actions:  {len(waits)}")
+    print(f"Cross-bar filler opportunities: {len(cross_bar)}")
+    print()
+
+    print("CROSS-BAR FILLER OPPORTUNITIES")
+    print("------------------------------")
+    if cross_bar:
+        for item in cross_bar:
+            priority = (
+                f" priority={item.filler_priority}"
+                if item.filler_priority is not None
+                else ""
+            )
+            print(
+                f"{item.wait_time_seconds:g}s | {item.wait_bar} -> {item.target_bar} | "
+                f"{item.filler_skill_name}{priority}"
+            )
+    else:
+        print("none")
     print()
 
     print("PLAN-LEVEL UNRESOLVED")
@@ -199,9 +230,9 @@ def main() -> int:
         print("none")
     print()
     print(
-        "Interpretation: explicit priorities are caller-owned gameplay intent. This audit "
-        "does not infer an optimal rotation; it verifies how the canonical scheduler uses "
-        "a supplied complete ranking across seed order, due refreshes, and persistent-toggle fillers."
+        "Interpretation: explicit priorities are caller-owned gameplay intent. Cross-bar "
+        "filler opportunities are diagnostic only: each reported filler is canonically "
+        "proven immediate, but swap timing and schedule mutation remain unresolved."
     )
     return 0
 
