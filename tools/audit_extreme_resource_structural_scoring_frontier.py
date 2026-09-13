@@ -51,7 +51,8 @@ def _race_signature(
 ) -> tuple[object, ...]:
     try:
         progression = progression_service.normalize(CharacterProgression(), race)
-        resolution = repository.resolve(race, progression)
+        canonical_race = progression_service._canonical_skill_line_race(race)
+        resolution = repository.resolve(canonical_race, progression)
     except Exception as exc:  # diagnostic must fail closed, never merge on error
         return ("identity_required", race, f"exception:{type(exc).__name__}:{exc}")
 
