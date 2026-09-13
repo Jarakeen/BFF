@@ -12,6 +12,9 @@ from services.extreme_runtime_snapshot import ExtremeRuntimeSnapshot
 from services.extreme_runtime_snapshot_combat_state_service import (
     ExtremeRuntimeSnapshotCombatStateService,
 )
+from services.rotation_plan_persistent_toggle_combat_state_service import (
+    RotationPlanPersistentToggleCombatStateService,
+)
 from services.rotation_plan_potion_combat_state_service import (
     RotationPlanPotionCombatStateService,
 )
@@ -46,8 +49,12 @@ class RotationPlanRuntimeCombatStateService:
     generic rotation assessor ESO item semantics. Skill/gear/group buff truth
     remains owned by ``ExtremeRuntimeSnapshotCombatStateService``; explicit final-plan
     POTION actions are layered through ``RotationPlanPotionCombatStateService`` so a
-    saved potion selection never implies standing uptime. The Extreme projector's
-    legacy name is retained for compatibility, but the projector is role-neutral.
+    saved potion selection never implies standing uptime. Reviewed plan-owned
+    persistent toggles are layered last through
+    ``RotationPlanPersistentToggleCombatStateService`` so their activation timing
+    participates in the same exact ordered runtime state without becoming static
+    build truth. The Extreme projector's legacy name is retained for compatibility,
+    but the projector is role-neutral.
 
     The source snapshot must carry unified ``runtime_history``. Legacy one-instant
     ``attempts`` or ``potion_elapsed_seconds`` evidence cannot be stretched across a
@@ -62,6 +69,7 @@ class RotationPlanRuntimeCombatStateService:
         runtime_snapshot_state: ExtremeRuntimeSnapshotCombatStateService | None = None,
         runtime_bar_provenance: RotationRuntimeBarProvenanceService | None = None,
         plan_potion_state: RotationPlanPotionCombatStateService | None = None,
+        plan_persistent_toggle_state: RotationPlanPersistentToggleCombatStateService | None = None,
     ) -> None:
         self.active_bar_assessor = active_bar_assessor or RotationActiveBarAssessor()
         self.runtime_snapshot_state = (
@@ -71,6 +79,9 @@ class RotationPlanRuntimeCombatStateService:
             active_bar_assessor=self.active_bar_assessor
         )
         self.plan_potion_state = plan_potion_state or RotationPlanPotionCombatStateService()
+        self.plan_persistent_toggle_state = (
+            plan_persistent_toggle_state or RotationPlanPersistentToggleCombatStateService()
+        )
 
     def resolve(
         self,
@@ -175,16 +186,39 @@ class RotationPlanRuntimeCombatStateService:
                 if str(message).strip()
             )
         )
+        if potion_unresolved or potion_projected.combat_state is None:
+            return RotationPlanRuntimeCombatStateResult(
+                time_seconds=instant,
+                sequence=boundary_sequence,
+                active_bar=active_bar,
+                combat_state=None,
+                unresolved=potion_unresolved,
+            )
+
+        toggle_projected = self.plan_persistent_toggle_state.resolve(
+            build,
+            plan=plan,
+            time_seconds=instant,
+            sequence=boundary_sequence,
+            base_combat_state=potion_projected.combat_state,
+        )
+        toggle_unresolved = tuple(
+            dict.fromkeys(
+                str(message).strip()
+                for message in toggle_projected.unresolved
+                if str(message).strip()
+            )
+        )
         return RotationPlanRuntimeCombatStateResult(
             time_seconds=instant,
             sequence=boundary_sequence,
             active_bar=active_bar,
             combat_state=(
                 None
-                if potion_unresolved or potion_projected.combat_state is None
-                else potion_projected.combat_state
+                if toggle_unresolved or toggle_projected.combat_state is None
+                else toggle_projected.combat_state
             ),
-            unresolved=potion_unresolved,
+            unresolved=toggle_unresolved,
         )
 
 
