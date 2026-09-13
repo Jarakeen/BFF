@@ -21,6 +21,7 @@ def install() -> None:
     from ui.extreme_blueprint_result_support import install as install_extreme_blueprint_result_support
     from ui.extreme_max_health_record_support import install as install_extreme_max_health_record_support
     from ui.extreme_max_magicka_record_support import install as install_extreme_max_magicka_record_support
+    from ui.extreme_max_stamina_record_support import install as install_extreme_max_stamina_record_support
     from ui.extreme_optimization_page import ExtremeOptimizationPage
 
     install_extreme_critical_profile_support()
@@ -28,6 +29,7 @@ def install() -> None:
     install_extreme_blueprint_result_support()
     install_extreme_max_magicka_record_support()
     install_extreme_max_health_record_support()
+    install_extreme_max_stamina_record_support()
     original_build_ui = main_window.MainWindow.build_ui
 
     def build_ui_with_extreme_lab(self) -> None:
