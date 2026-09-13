@@ -11,6 +11,9 @@ from ui.rotation_generate_action_support import install_rotation_generate_action
 from ui.rotation_generate_application_context_provider import (
     RotationGenerateApplicationContextProvider,
 )
+from ui.rotation_generate_conditional_output_context_provider import (
+    RotationGenerateConditionalOutputContextProvider,
+)
 from ui.rotation_generate_dd_conditional_output_support import (
     RotationGenerateDDConditionalOutputSupport,
 )
@@ -50,8 +53,10 @@ class RotationEncounterSelectorSupport:
     its live application context provider, and role-specific evidence composers that
     already have canonical implementations. Healer and DD roles are routed explicitly;
     DD also receives the canonical saved-build Light Attack bridge and the generic
-    fail-closed runtime output-condition bridge. Unsupported roles remain on the
-    role-neutral path until their own composers exist.
+    fail-closed runtime output-condition bridge. The live context provider may attach
+    exact-event condition evidence only through an explicit page hook; absence remains
+    unknown. Unsupported roles remain on the role-neutral path until their own
+    composers exist.
     """
 
     def __init__(self, guide_service: _EncounterGuideIndex) -> None:
@@ -84,17 +89,18 @@ class RotationEncounterSelectorSupport:
                 )
             )
         )
+        application_context = RotationGenerateApplicationContextProvider(
+            role_evidence_composers={
+                "heal": healer_role_evidence,
+                "healer": healer_role_evidence,
+                "dd": dd_role_evidence,
+                "dps": dd_role_evidence,
+                "damage": dd_role_evidence,
+                "damage dealer": dd_role_evidence,
+            }
+        )
         page.set_rotation_generate_canonical_context_provider(
-            RotationGenerateApplicationContextProvider(
-                role_evidence_composers={
-                    "heal": healer_role_evidence,
-                    "healer": healer_role_evidence,
-                    "dd": dd_role_evidence,
-                    "dps": dd_role_evidence,
-                    "damage": dd_role_evidence,
-                    "damage dealer": dd_role_evidence,
-                }
-            )
+            RotationGenerateConditionalOutputContextProvider(application_context)
         )
 
     def refresh(self, page) -> None:
