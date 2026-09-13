@@ -53,6 +53,29 @@ def test_ordinary_slot_after_displacement_is_cadence_debt() -> None:
     assert row.later_ordinary_skill_times == (45.0,)
 
 
+def test_same_skill_later_cast_does_not_prove_instance_cadence_debt() -> None:
+    plan = _plan(
+        actions=(
+            RotationAction(0, 0, RotationActionKind.SKILL, name="High", bar="front"),
+            RotationAction(30, 0, RotationActionKind.SKILL, name="Mid", bar="front"),
+            RotationAction(45, 0, RotationActionKind.SKILL, name="High", bar="front"),
+        ),
+        unresolved=(
+            "refresh obligation for 'Mid' claimed the 30s front-bar slot from 'High'; displaced skill will cascade to the next same-bar skill slot",
+            "skill 'High' was displaced beyond the 60s plan horizon after same-bar refresh/channel insertion on front bar",
+        ),
+    )
+
+    row = RotationHorizonDisplacementQualityService().classify(
+        plan,
+        priorities=_priorities(),
+    ).rows[0]
+
+    assert row.quality is RotationHorizonDisplacementQuality.PROTECTED_OBLIGATION_SATURATION
+    assert row.later_ordinary_skill_times == (45.0,)
+    assert "same-skill instance ambiguity" in row.reason
+
+
 def test_only_later_due_refreshes_are_protected_obligation_saturation() -> None:
     plan = _plan(
         actions=(
