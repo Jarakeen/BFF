@@ -6,6 +6,8 @@ from pathlib import Path
 import sqlite3
 from statistics import median
 
+from minmax.skill_coefficient_repository import SkillCoefficientRepository, ability_entity_id
+
 
 @dataclass(frozen=True)
 class RotationUnnervingBoneyardRefreshBoundaryReport:
@@ -25,10 +27,25 @@ class RotationUnnervingBoneyardRefreshBoundaryEvidenceService:
 
     Research-only. This service distinguishes cast-time replacement evidence from the
     weaker first-new-event boundary. It never promotes executable semantics itself.
+    Canonical identity plus numeric aliases are used for live cast discovery; raw names
+    remain a fallback for synthetic fixtures and logs that preserve them.
     """
 
-    def __init__(self, logs_database_path: str | Path) -> None:
+    _IDENTITY = "unnerving_boneyard"
+    _CAST_TYPES = {"cast", "begincast", "completecast"}
+
+    def __init__(
+        self,
+        logs_database_path: str | Path,
+        *,
+        canonical_database_path: str | Path | None = None,
+    ) -> None:
         self.logs_database_path = Path(logs_database_path)
+        self.canonical_database_path = (
+            Path(canonical_database_path)
+            if canonical_database_path is not None
+            else Path(__file__).resolve().parents[1] / "data" / "eso.db"
+        )
 
     def inspect(self, *, candidate_ability_id: int = 117809) -> RotationUnnervingBoneyardRefreshBoundaryReport:
         if not self.logs_database_path.is_file():
@@ -37,6 +54,7 @@ class RotationUnnervingBoneyardRefreshBoundaryEvidenceService:
                 (f"ESO Logs database not found: {self.logs_database_path}",),
             )
 
+        aliases = self._cast_aliases()
         with self._open_logs() as db:
             error = self._schema_error(db)
             if error:
@@ -58,7 +76,7 @@ class RotationUnnervingBoneyardRefreshBoundaryEvidenceService:
             fight = int(row["fight_id"])
             source = int(row["source_id"])
             event_type = str(row["event_type"] or "").casefold()
-            if event_type in {"cast", "begincast", "completecast"} and self._ability_name(row["raw_json"]) == "Unnerving Boneyard":
+            if event_type in self._CAST_TYPES and self._matches_boneyard_cast(row, aliases=aliases):
                 casts.setdefault((report, fight, source), []).append(row)
             if (
                 row["ability_game_id"] == candidate_ability_id
@@ -140,6 +158,55 @@ class RotationUnnervingBoneyardRefreshBoundaryEvidenceService:
             ),
             unresolved=tuple(unresolved),
         )
+
+    def _cast_aliases(self) -> set[int]:
+        if not self.canonical_database_path.is_file():
+            return set()
+        try:
+            coefficients = SkillCoefficientRepository(self.canonical_database_path)
+            resolution = coefficients.resolve_entity_id(self._IDENTITY)
+        except (OSError, sqlite3.Error, ValueError):
+            return set()
+        if resolution.rank is None:
+            return set()
+        return set(
+            self._numeric_aliases(
+                resolution.rank.skill_id,
+                resolution.rank.morph,
+                resolution.rank.base_ability_id,
+            )
+        )
+
+    def _numeric_aliases(self, skill_id: int, morph: int, base_ability_id: int) -> tuple[int, ...]:
+        uri = f"file:{self.canonical_database_path.resolve().as_posix()}?mode=ro"
+        aliases = {int(base_ability_id)} if int(base_ability_id) > 0 else set()
+        try:
+            with sqlite3.connect(uri, uri=True) as db:
+                db.row_factory = sqlite3.Row
+                db.execute("PRAGMA query_only = ON")
+                table = db.execute(
+                    "SELECT 1 FROM sqlite_master WHERE type='table' AND name='skill_rank'"
+                ).fetchone()
+                if table is not None:
+                    aliases.update(
+                        int(row["ability_id"])
+                        for row in db.execute(
+                            "SELECT ability_id FROM skill_rank WHERE skill_id=? "
+                            "AND COALESCE(morph,0)=? AND ability_id IS NOT NULL",
+                            (int(skill_id), int(morph)),
+                        ).fetchall()
+                    )
+        except sqlite3.Error:
+            return tuple(sorted(value for value in aliases if value > 0))
+        return tuple(sorted(value for value in aliases if value > 0))
+
+    @classmethod
+    def _matches_boneyard_cast(cls, row: sqlite3.Row, *, aliases: set[int]) -> bool:
+        raw_name = cls._ability_name(row["raw_json"])
+        if raw_name and ability_entity_id(raw_name) == cls._IDENTITY:
+            return True
+        value = row["ability_game_id"]
+        return value is not None and int(value) in aliases
 
     def _open_logs(self) -> sqlite3.Connection:
         uri = f"file:{self.logs_database_path.resolve().as_posix()}?mode=ro"
