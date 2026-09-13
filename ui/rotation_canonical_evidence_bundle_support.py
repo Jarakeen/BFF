@@ -157,7 +157,7 @@ class RotationCanonicalEvidenceBundleSupport:
             raise ValueError("canonical rotation evidence requires a positive maximum_amount")
         trigger = float(trigger_fraction)
         if not 0.0 <= trigger <= 1.0:
-            raise ValueError("canonical rotation evidence trigger_fraction must be between 0% and 100%")
+            raise ValueError("canonical rotation evidence trigger_fraction must be between 0 and 1")
         iterations = int(max_iterations)
         if iterations <= 0:
             raise ValueError("canonical rotation evidence max_iterations must be positive")
