@@ -2,15 +2,18 @@ from __future__ import annotations
 
 """Compose reviewed target-Health damage into the live DD Generate evidence path.
 
-This support is additive over ``RotationGenerateDDRoleEvidenceSupport``.  All existing
+This support is additive over ``RotationGenerateDDRoleEvidenceSupport``. All existing
 LA/HA/Ultimate, periodic-runtime, target-state, resistance, sustain, and role-ranking
-composition remains owned by the base support.  The only changed seam is skill damage:
+composition remains owned by the base support. The only changed seam is skill damage:
 a canonical bar-aware skill evaluator is wrapped with reviewed periodic target-Health
 support when the registry, exact target snapshot resolver, and target identity are all
 explicitly available.
 
-The production registry is empty by default, so installing this support does not make
-any real periodic execute executable until reviewed evidence is added.
+An explicit constructor resolver/identity takes precedence. Otherwise a canonical
+encounter Health trajectory already retained on the evidence bundle is adapted into an
+exact snapshot resolver using the selected encounter id as target identity. The
+production semantics registry remains empty by default, so no real periodic execute is
+made executable until reviewed skill evidence is added.
 """
 
 from dataclasses import replace
@@ -48,6 +51,9 @@ from services.rotation_periodic_target_health_eligibility_service import (
 )
 from services.rotation_periodic_target_health_semantics_service import (
     RotationPeriodicTargetHealthSemanticsService,
+)
+from services.rotation_target_health_trajectory_snapshot_service import (
+    RotationTargetHealthTrajectorySnapshotService,
 )
 from ui import rotation_generate_dd_role_evidence_support as base_support
 
@@ -163,6 +169,22 @@ class RotationGenerateDDTargetHealthRoleEvidenceSupport(
         self.runtime_target_snapshot_resolver = runtime_target_snapshot_resolver
         self.target_identity = str(target_identity or "").strip()
 
+    def _target_health_inputs(self, evidence_bundle):
+        resolver = self.runtime_target_snapshot_resolver
+        identity = self.target_identity
+        trajectory = getattr(evidence_bundle, "target_health_trajectory", None)
+
+        if resolver is None and trajectory is not None:
+            if not identity:
+                identity = str(getattr(evidence_bundle, "encounter_id", "") or "").strip()
+            if identity:
+                resolver = RotationTargetHealthTrajectorySnapshotService(
+                    trajectory=trajectory,
+                    target_identity=identity,
+                ).snapshot_at
+
+        return resolver, identity
+
     def _build_plan_evidence_provider(
         self,
         *,
@@ -176,6 +198,9 @@ class RotationGenerateDDTargetHealthRoleEvidenceSupport(
         runtime_target_resistance_resolver,
         activation_anchor_resolver,
     ):
+        runtime_target_snapshot_resolver, target_identity = self._target_health_inputs(
+            evidence_bundle
+        )
         skill_provider = _RotationGenerateTargetHealthBarAwareSkillDamageProvider(
             database_path=self.database_path,
             static_context=static_context,
@@ -188,8 +213,8 @@ class RotationGenerateDDTargetHealthRoleEvidenceSupport(
             periodic_target_health_semantics=(
                 self.periodic_target_health_semantics_registry.load()
             ),
-            runtime_target_snapshot_resolver=self.runtime_target_snapshot_resolver,
-            target_identity=self.target_identity,
+            runtime_target_snapshot_resolver=runtime_target_snapshot_resolver,
+            target_identity=target_identity,
         )
         ultimate_provider = RotationCandidateUltimateDamageEvidenceService(
             skill_damage_delegate=skill_provider,
