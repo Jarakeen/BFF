@@ -16,7 +16,7 @@ from services.rotation_dd_periodic_esologs_candidate_persistence_service import 
 
 def _pct(count: int, total: int) -> str:
     if total <= 0:
-        return "0.0%"
+        return "n/a"
     return f"{(100.0 * count / total):.1f}%"
 
 
@@ -24,7 +24,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description=(
             "Measure last-observed same-source same-cast-track persistence for DD periodic "
-            "candidate IDs using recast-censored ownership windows."
+            "candidate IDs using exposure-conditioned ownership windows."
         )
     )
     parser.add_argument("--skill", required=True)
@@ -57,7 +57,11 @@ def main(argv: list[str] | None = None) -> int:
     print("Candidate evidence IDs: " + ", ".join(str(value) for value in report.candidate_ability_ids))
     print(f"Reviewed active window: {report.active_window_seconds:g}s")
     print(f"Cast anchors: {report.cast_count}")
-    print("Ownership rule: same source + same cast track; censored at next same-source cast")
+    print(
+        "Ownership rule: same source + same cast track; censored at next same-source cast, "
+        "reviewed window end, or imported fight end"
+    )
+    print("Threshold rates use only casts whose observable ownership window reaches that threshold.")
 
     for summary in report.summaries:
         print()
@@ -73,16 +77,16 @@ def main(argv: list[str] | None = None) -> int:
             )
         else:
             print("  Last-observed offset min/median/max: unresolved")
-        for threshold, count in (
-            (2, summary.observed_at_or_after_2s),
-            (5, summary.observed_at_or_after_5s),
-            (10, summary.observed_at_or_after_10s),
-            (15, summary.observed_at_or_after_15s),
-            (19, summary.observed_at_or_after_19s),
+        for threshold, count, eligible in (
+            (2, summary.observed_at_or_after_2s, summary.eligible_at_or_after_2s),
+            (5, summary.observed_at_or_after_5s, summary.eligible_at_or_after_5s),
+            (10, summary.observed_at_or_after_10s, summary.eligible_at_or_after_10s),
+            (15, summary.observed_at_or_after_15s, summary.eligible_at_or_after_15s),
+            (19, summary.observed_at_or_after_19s, summary.eligible_at_or_after_19s),
         ):
             print(
-                f"  Casts with an observation at/after {threshold:>2}s: "
-                f"{count:<5} ({_pct(count, total)})"
+                f"  At/after {threshold:>2}s: observed={count:<5} eligible={eligible:<5} "
+                f"conditional={_pct(count, eligible)}"
             )
 
     if report.unresolved:
@@ -93,9 +97,10 @@ def main(argv: list[str] | None = None) -> int:
 
     print()
     print(
-        "Result: OBSERVATIONAL ONLY — threshold counts mean a candidate event was observed "
-        "at or after that offset on the original cast track. They do not prove uninterrupted "
-        "uptime, cadence, or executable duration semantics."
+        "Result: OBSERVATIONAL ONLY — conditional rates exclude casts that were not observable "
+        "through the threshold because of recast or fight-end censoring. An observed event at "
+        "or after a threshold still does not prove uninterrupted uptime, cadence, or executable "
+        "duration semantics."
     )
     return 0
 
