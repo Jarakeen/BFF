@@ -35,18 +35,20 @@ class TemplarPassiveInputResolver:
         {AEDRIC_SPEAR_ID, DAWNS_WRATH_ID, RESTORING_LIGHT_ID}
     )
     BALANCED_WARRIOR_POWER_PERCENT = 0.06
+    _LINE_ID_PATTERN = re.compile(r"[^a-z0-9]+")
 
-    @staticmethod
-    def _line_id(value: object) -> str:
+    @classmethod
+    def _line_id(cls, value: object) -> str:
         text = str(value or "").strip().casefold().replace("'", "")
-        return re.sub(r"[^a-z0-9]+", "_", text).strip("_")
+        return cls._LINE_ID_PATTERN.sub("_", text).strip("_")
 
     @classmethod
     def equipped_templar_line_ids(cls, build: PlayerBuild) -> frozenset[str]:
+        explicit_values = tuple(getattr(build, "ClassSkillLines", ()) or ())
         explicit = tuple(
-            cls._line_id(value)
-            for value in tuple(getattr(build, "ClassSkillLines", ()) or ())
-            if cls._line_id(value)
+            line_id
+            for line_id in (cls._line_id(value) for value in explicit_values)
+            if line_id
         )
         if explicit:
             return frozenset(explicit) & cls.TEMPLAR_LINE_IDS
