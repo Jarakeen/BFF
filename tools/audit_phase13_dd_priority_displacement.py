@@ -27,7 +27,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
             "Generate one saved DD plan with explicit priorities and report whether "
-            "fixed-horizon displacement contradicts those priorities."
+            "time-proven fixed-horizon displacement contradicts those priorities."
         )
     )
     parser.add_argument("--character")
@@ -89,8 +89,16 @@ def main() -> int:
     print("HORIZON-DISPLACED SKILLS")
     print("------------------------")
     if audit.displaced_beyond_horizon:
-        for bar, skill_name, priority in audit.displaced_beyond_horizon:
-            print(f"{bar} | priority={priority} | {skill_name}")
+        for row in audit.displaced_beyond_horizon:
+            displaced_from = (
+                f"{row.displaced_from_time_seconds:g}s"
+                if row.displaced_from_time_seconds is not None
+                else "unknown"
+            )
+            print(
+                f"{row.bar} | priority={row.priority} | {row.skill_name} | "
+                f"displaced_from={displaced_from}"
+            )
     else:
         print("none")
     print()
@@ -101,7 +109,8 @@ def main() -> int:
         for row in audit.inversions:
             print(
                 f"{row.bar} | displaced '{row.displaced_skill_name}' priority={row.displaced_priority} "
-                f"while lower-priority '{row.lower_priority_skill_name}' priority={row.lower_priority} "
+                f"from {row.displaced_from_time_seconds:g}s while lower-priority "
+                f"'{row.lower_priority_skill_name}' priority={row.lower_priority} "
                 f"still cast through {row.lower_priority_last_time_seconds:g}s"
             )
     else:
@@ -110,13 +119,13 @@ def main() -> int:
 
     if audit.priority_consistent:
         print(
-            "NEXT_STEP=horizon spillover is not proven to violate explicit priority; "
-            "do not rewrite displacement ordering from this evidence alone"
+            "NEXT_STEP=no time-proven priority inversion remains; horizon spillover alone does not "
+            "justify further displacement-order rewrites"
         )
     else:
         print(
-            "NEXT_STEP=priority-aware displacement ordering is justified; preserve due refreshes "
-            "but choose among displaced/current same-bar actions by explicit priority"
+            "NEXT_STEP=time-proven priority inversion remains; inspect the surviving post-displacement "
+            "lower-priority casts before changing scheduler behavior again"
         )
     return 0
 
