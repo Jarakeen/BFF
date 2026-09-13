@@ -97,6 +97,29 @@ ROTATION_DD_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="rotation.runtime_output_eligibility",
+        domain="rotation",
+        purpose=(
+            "Gate reviewed conditional combat output against explicit runtime ConditionContext "
+            "without interpreting opaque condition names or inventing missing state."
+        ),
+        implementation_path="services.rotation_runtime_output_eligibility_service",
+        inputs=("CanonicalSkillIdentity", "CoefficientNumber", "ConditionContext"),
+        outputs=("RotationRuntimeOutputEligibilityResult",),
+        responsibilities=("rotation_runtime_output_eligibility",),
+        roles=("DD", "DPS", "Healer", "Tank"),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "No reviewed rule means pass-through. A reviewed conditional output with missing "
+            "ConditionContext fails closed as unresolved; a supplied context with an unsatisfied "
+            "condition resolves deterministically to ineligible output. Detonating Siphon is "
+            "represented only by an opaque geometry condition until exact spatial evidence can "
+            "be projected at runtime."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="rotation.dd.output_context_relevance",
         domain="rotation",
         purpose=(
