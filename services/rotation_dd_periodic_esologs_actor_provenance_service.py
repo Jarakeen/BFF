@@ -11,9 +11,10 @@ _OWNER_KEY_TOKENS = ("owner", "master", "pet", "parent", "summon")
 
 @dataclass(frozen=True)
 class RotationDDPeriodicEsoLogsActorProvenanceRow:
+    report_code: str
+    fight_id: int
     actor_id: int
     event_count: int
-    report_fight_groups: int
     name: str | None = None
     display_name: str | None = None
     actor_type: str | None = None
@@ -34,9 +35,10 @@ class RotationDDPeriodicEsoLogsActorProvenanceReport:
 class RotationDDPeriodicEsoLogsActorProvenanceService:
     """Summarize which imported ESO Logs actors emitted one observed ability ID.
 
-    This service is evidence-only. Actor metadata and owner-like raw JSON fields are
-    reported exactly as imported; no pet/summon ownership relationship is inferred
-    when ESO Logs did not preserve one explicitly.
+    ESO Logs actor IDs are report/fight local, so actor provenance is keyed by the
+    exact ``(report_code, fight_id, source_id)`` tuple. Actor metadata and owner-like
+    raw JSON fields are reported exactly as imported; no pet/summon ownership
+    relationship is inferred when ESO Logs did not preserve one explicitly.
     """
 
     def __init__(self, logs_database_path: str | Path) -> None:
@@ -74,29 +76,19 @@ class RotationDDPeriodicEsoLogsActorProvenanceService:
                     unresolved=("missing required tables: " + ", ".join(missing),),
                 )
 
-            totals = db.execute(
-                """
-                SELECT COUNT(*) AS event_count,
-                       COUNT(DISTINCT source_id) AS source_actor_count
-                FROM log_event
-                WHERE ability_game_id = ?
-                  AND source_id IS NOT NULL
-                """,
-                (requested,),
-            ).fetchone()
-
             grouped = db.execute(
                 """
                 SELECT
+                    e.report_code,
+                    e.fight_id,
                     e.source_id AS actor_id,
                     COUNT(*) AS event_count,
-                    COUNT(DISTINCT e.report_code || ':' || e.fight_id) AS report_fight_groups,
                     MAX(a.name) AS name,
                     MAX(a.display_name) AS display_name,
                     MAX(a.actor_type) AS actor_type,
                     MAX(a.role) AS role,
                     MAX(a.raw_json) AS raw_json,
-                    SUM(CASE WHEN a.actor_id IS NOT NULL THEN 1 ELSE 0 END) AS matched_rows
+                    MAX(CASE WHEN a.actor_id IS NOT NULL THEN 1 ELSE 0 END) AS matched_actor
                 FROM log_event e
                 LEFT JOIN log_actor a
                   ON a.report_code = e.report_code
@@ -104,17 +96,18 @@ class RotationDDPeriodicEsoLogsActorProvenanceService:
                  AND a.actor_id = e.source_id
                 WHERE e.ability_game_id = ?
                   AND e.source_id IS NOT NULL
-                GROUP BY e.source_id
-                ORDER BY event_count DESC, actor_id
+                GROUP BY e.report_code, e.fight_id, e.source_id
+                ORDER BY event_count DESC, e.report_code, e.fight_id, actor_id
                 """,
                 (requested,),
             ).fetchall()
 
         rows = tuple(
             RotationDDPeriodicEsoLogsActorProvenanceRow(
+                report_code=str(row["report_code"]),
+                fight_id=int(row["fight_id"]),
                 actor_id=int(row["actor_id"]),
                 event_count=int(row["event_count"] or 0),
-                report_fight_groups=int(row["report_fight_groups"] or 0),
                 name=self._text(row["name"]),
                 display_name=self._text(row["display_name"]),
                 actor_type=self._text(row["actor_type"]),
@@ -123,7 +116,7 @@ class RotationDDPeriodicEsoLogsActorProvenanceService:
             )
             for row in grouped
         )
-        matched_actor_count = sum(1 for row in grouped if int(row["matched_rows"] or 0) > 0)
+        matched_actor_count = sum(1 for row in grouped if int(row["matched_actor"] or 0) > 0)
         unresolved: list[str] = []
         if rows and matched_actor_count == 0:
             unresolved.append("ability sources exist but none matched imported log_actor metadata")
@@ -133,8 +126,8 @@ class RotationDDPeriodicEsoLogsActorProvenanceService:
             )
         return RotationDDPeriodicEsoLogsActorProvenanceReport(
             ability_id=requested,
-            event_count=int(totals["event_count"] or 0) if totals is not None else 0,
-            source_actor_count=int(totals["source_actor_count"] or 0) if totals is not None else 0,
+            event_count=sum(row.event_count for row in rows),
+            source_actor_count=len(rows),
             matched_actor_count=matched_actor_count,
             rows=rows,
             unresolved=tuple(unresolved),
