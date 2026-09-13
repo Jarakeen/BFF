@@ -52,6 +52,7 @@ from ui.rotation_canonical_candidate_support import (
     RotationCanonicalCandidateSupport,
     RotationCanonicalRoleEvidence,
 )
+from ui.rotation_dd_cross_bar_generation_support import RotationDDCrossBarGenerationSupport
 from ui.rotation_generation_support import (
     RotationGenerationRequest,
     RotationGenerationResult,
@@ -137,7 +138,14 @@ class RotationDashboardCanonicalCandidateSupport:
         ) = None,
         candidate_resolver_service: RotationGenerateCandidateResolverService | None = None,
     ) -> None:
-        self.generation = generation or RotationGenerationSupport()
+        base_generation = generation or RotationGenerationSupport()
+        if isinstance(base_generation, RotationDDCrossBarGenerationSupport):
+            self.generation = base_generation
+        elif isinstance(base_generation, RotationGenerationSupport):
+            self.generation = RotationDDCrossBarGenerationSupport(base=base_generation)
+        else:
+            # Preserve explicit test doubles and research/custom generation adapters.
+            self.generation = base_generation
         self.candidate_resolver_service = (
             candidate_resolver_service or RotationGenerateCandidateResolverService()
         )
