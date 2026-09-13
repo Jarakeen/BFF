@@ -106,3 +106,37 @@ def test_explicit_priority_orders_same_bar_no_duration_fillers() -> None:
     ]
     assert len(at_three) == 1
     assert at_three[0].name == "Higher Filler"
+
+
+def test_displaced_and_incoming_same_bar_actions_are_ranked_by_explicit_priority() -> None:
+    priorities = AbilityPriorityList(
+        character_name="Rylonia",
+        build_name="Corpsebuster DD",
+        role="DD",
+        entries=(
+            AbilityPriorityEntry("back", 1, "Stampede", 1),
+            AbilityPriorityEntry("back", 2, "Skeletal Archer", 3),
+            AbilityPriorityEntry("back", 3, "Resolving Vigor", 4),
+        ),
+    )
+    scheduler = PriorityAwareDurationRotationScheduler(priorities)
+    queue = [
+        RotationAction(18.0, 1, RotationActionKind.SKILL, "Stampede", "back"),
+        RotationAction(19.0, 1, RotationActionKind.SKILL, "Resolving Vigor", "back"),
+    ]
+    incoming = RotationAction(
+        20.0,
+        1,
+        RotationActionKind.SKILL,
+        "Skeletal Archer",
+        "back",
+    )
+
+    selected = scheduler._select_displaced_candidate(
+        queue=queue,
+        incoming=incoming,
+        bar="back",
+    )
+
+    assert selected.name == "Stampede"
+    assert [action.name for action in queue] == ["Skeletal Archer", "Resolving Vigor"]
