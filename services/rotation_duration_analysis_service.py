@@ -16,6 +16,7 @@ from minmax.rotation_recast import (
     RotationRecastRule,
 )
 from minmax.skill_coefficient_repository import SkillCoefficientRepository
+from minmax.skill_coefficients import is_inactive_skill_coefficient
 from minmax.skill_component_classification import SkillEffectKind
 from minmax.skill_duration_repository import SkillDurationRepository
 from services.rotation_reviewed_skill_component_repository import (
@@ -44,11 +45,13 @@ class RotationDurationAnalysisService:
     finite duration. Those rules participate in scheduling but are excluded from the
     finite-duration analyzer because exact toggle lifetime belongs to runtime state.
 
-    A reviewed skill whose coefficient-bearing components are all proven immediate
-    non-periodic damage requires no finite-duration recast rule. This distinction is
-    intentionally evidence-driven: an absent/zero canonical duration by itself does
-    not prove that a skill is instantaneous, so unknown, mixed, healing, utility, or
-    periodic component identity continues to fail closed.
+    A reviewed skill whose active coefficient-bearing components are all proven
+    immediate non-periodic damage requires no finite-duration recast rule. This
+    distinction is intentionally evidence-driven: an absent/zero canonical duration
+    by itself does not prove that a skill is instantaneous, so unknown, mixed,
+    healing, utility, or periodic component identity continues to fail closed.
+    Inactive/sentinel coefficient slots are ignored using the same canonical rule as
+    ``SkillTooltipCalculator`` rather than being mistaken for unresolved effects.
     """
 
     def __init__(
@@ -153,7 +156,7 @@ class RotationDurationAnalysisService:
         )
 
     def _is_reviewed_immediate_damage_skill(self, skill_name: str) -> bool:
-        """Return True only for reviewed all-direct, non-periodic damage identity."""
+        """Return True only for reviewed all-direct, non-periodic active damage."""
 
         resolution = self.coefficient_repository.resolve_entity_id(skill_name)
         if resolution.rank is None:
@@ -168,6 +171,7 @@ class RotationDurationAnalysisService:
         coefficient_numbers = {
             int(coefficient.coefficient_number)
             for coefficient in resolution.rank.coefficients
+            if not is_inactive_skill_coefficient(coefficient)
         }
         if not coefficient_numbers:
             return False
