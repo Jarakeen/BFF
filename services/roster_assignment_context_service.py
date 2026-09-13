@@ -50,6 +50,28 @@ class RosterAssignmentContextService:
             )
             """
         )
+        # EsoDatabase does not globally enable SQLite foreign_keys, so keep the
+        # context table tidy even in older/local databases where cascades are inert.
+        self.db.execute(
+            """
+            CREATE TRIGGER IF NOT EXISTS roster_assignment_context_member_cleanup
+            AFTER DELETE ON roster_member
+            BEGIN
+                DELETE FROM roster_assignment_context
+                WHERE roster_member_id = OLD.id;
+            END
+            """
+        )
+        self.db.execute(
+            """
+            CREATE TRIGGER IF NOT EXISTS roster_assignment_context_team_cleanup
+            AFTER DELETE ON team
+            BEGIN
+                DELETE FROM roster_assignment_context
+                WHERE team_id = OLD.id;
+            END
+            """
+        )
         self.db.commit()
 
     @staticmethod
