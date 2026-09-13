@@ -100,7 +100,7 @@ def install() -> None:
     from ui.team_schedule_calendar_support import install as install_team_schedule_calendar_support
     from ui.team_schedule_multi_time_support import install as install_team_schedule_multi_time_support
     from ui.roster_player_architecture_support import install as install_roster_player_architecture_support
-    from ui.roster_import_support import install as install_roster_import_support
+    from ui.roster_import_workflow import install as install_roster_import_support
     from ui.player_build_navigation_support import install as install_player_build_navigation_support
     from ui.rotation_dashboard_layout_support import install as install_rotation_dashboard_layout_support
     from ui.build_rotation_artifact_support import install as install_build_rotation_artifact_support
