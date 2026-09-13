@@ -148,6 +148,105 @@ class BossLoadout:
 
 
 @dataclass
+class BuildContextVariant:
+    """Sparse team/boss overrides layered on one complete saved build.
+
+    Blank values inherit from the parent build. Gear slots are sparse overrides,
+    skill bars overlay only non-empty positions, and a non-empty ChampionPoints
+    list replaces the parent slotted CP set for that context.
+    """
+
+    ContextType: str = "Boss"
+    TeamName: str = ""
+    BossName: str = ""
+    Assignment: str = ""
+    Mundus: str = ""
+    SecondMundus: str = ""
+    Armor: dict[str, dict[str, str]] = field(default_factory=dict)
+    FrontBarWeapon: GearSlot = field(default_factory=GearSlot)
+    FrontBarOffHand: GearSlot = field(default_factory=GearSlot)
+    BackBarWeapon: GearSlot = field(default_factory=GearSlot)
+    BackBarOffHand: GearSlot = field(default_factory=GearSlot)
+    Necklace: GearSlot = field(default_factory=GearSlot)
+    Ring1: GearSlot = field(default_factory=GearSlot)
+    Ring2: GearSlot = field(default_factory=GearSlot)
+    ChampionPoints: list[ChampionPointEntry] = field(default_factory=list)
+    FrontBarSkills: list[str] = field(default_factory=_empty_bar)
+    BackBarSkills: list[str] = field(default_factory=_empty_bar)
+    Food: str = ""
+    Potion: str = ""
+    Notes: str = ""
+
+    def to_dict(self) -> dict:
+        return {
+            "ContextType": self.ContextType,
+            "TeamName": self.TeamName,
+            "BossName": self.BossName,
+            "Assignment": self.Assignment,
+            "Mundus": self.Mundus,
+            "SecondMundus": self.SecondMundus,
+            "Armor": {slot: dict(values) for slot, values in self.Armor.items()},
+            "FrontBarWeapon": self.FrontBarWeapon.to_dict(),
+            "FrontBarOffHand": self.FrontBarOffHand.to_dict(),
+            "BackBarWeapon": self.BackBarWeapon.to_dict(),
+            "BackBarOffHand": self.BackBarOffHand.to_dict(),
+            "Necklace": self.Necklace.to_dict(),
+            "Ring1": self.Ring1.to_dict(),
+            "Ring2": self.Ring2.to_dict(),
+            "ChampionPoints": [cp.to_dict() for cp in self.ChampionPoints],
+            "FrontBarSkills": list(self.FrontBarSkills),
+            "BackBarSkills": list(self.BackBarSkills),
+            "Food": self.Food,
+            "Potion": self.Potion,
+            "Notes": self.Notes,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict | None) -> "BuildContextVariant":
+        data = dict(data or {})
+        armor: dict[str, dict[str, str]] = {}
+        for slot, value in (data.get("Armor") or {}).items():
+            if slot in ARMOR_SLOTS and isinstance(value, dict):
+                normalized = {str(key): str(item or "") for key, item in value.items()}
+                if any(str(item or "").strip() for item in normalized.values()):
+                    armor[slot] = normalized
+        return cls(
+            ContextType=str(data.get("ContextType", "Boss") or "Boss"),
+            TeamName=str(data.get("TeamName", "") or ""),
+            BossName=str(data.get("BossName", data.get("Boss", "")) or ""),
+            Assignment=str(data.get("Assignment", "") or ""),
+            Mundus=str(data.get("Mundus", "") or ""),
+            SecondMundus=str(data.get("SecondMundus", "") or ""),
+            Armor=armor,
+            FrontBarWeapon=GearSlot.from_dict(data.get("FrontBarWeapon")),
+            FrontBarOffHand=GearSlot.from_dict(data.get("FrontBarOffHand")),
+            BackBarWeapon=GearSlot.from_dict(data.get("BackBarWeapon")),
+            BackBarOffHand=GearSlot.from_dict(data.get("BackBarOffHand")),
+            Necklace=GearSlot.from_dict(data.get("Necklace")),
+            Ring1=GearSlot.from_dict(data.get("Ring1")),
+            Ring2=GearSlot.from_dict(data.get("Ring2")),
+            ChampionPoints=[ChampionPointEntry.from_dict(cp) for cp in data.get("ChampionPoints", [])],
+            FrontBarSkills=list(data.get("FrontBarSkills") or _empty_bar()),
+            BackBarSkills=list(data.get("BackBarSkills") or _empty_bar()),
+            Food=str(data.get("Food", "") or ""),
+            Potion=str(data.get("Potion", "") or ""),
+            Notes=str(data.get("Notes", "") or ""),
+        )
+
+    @classmethod
+    def from_boss_loadout(cls, loadout: BossLoadout) -> "BuildContextVariant":
+        return cls(
+            ContextType="Boss",
+            BossName=loadout.BossName,
+            FrontBarSkills=list(loadout.FrontBarSkills),
+            BackBarSkills=list(loadout.BackBarSkills),
+            Food=loadout.Food,
+            Potion=loadout.Potion,
+            Notes=loadout.Notes,
+        )
+
+
+@dataclass
 class PlayerBuild:
     """A single raid member's character build."""
     Name: str = ""
@@ -195,6 +294,7 @@ class PlayerBuild:
     Potion: str = ""
     Notes: str = ""
     BossLoadouts: list[BossLoadout] = field(default_factory=list)
+    ContextVariants: list[BuildContextVariant] = field(default_factory=list)
     # Appended for positional-constructor compatibility. Normally empty;
     # Twice-Born Star can make a second distinct Mundus boon legal, and the
     # canonical static resolver verifies that 5-piece requirement before use.
@@ -245,6 +345,7 @@ class PlayerBuild:
             "ScribedSkills": scribed_names,
             "Food": self.Food, "Potion": self.Potion, "Notes": self.Notes,
             "BossLoadouts": [b.to_dict() for b in self.BossLoadouts],
+            "ContextVariants": [variant.to_dict() for variant in self.ContextVariants],
             "ScribedSkillRecipes": [recipe.to_dict() for recipe in recipes],
             "ReadyForRaid": bool(self.ReadyForRaid),
         }
@@ -269,6 +370,12 @@ class PlayerBuild:
                 for value in raw_recipes
                 if isinstance(value, dict) and ScribedSkillRecipe.from_dict(value).ResultName
             ]
+        raw_variants = data.get("ContextVariants")
+        legacy_boss_loadouts = [BossLoadout.from_dict(b) for b in data.get("BossLoadouts", [])]
+        if raw_variants is None:
+            variants = [BuildContextVariant.from_boss_loadout(b) for b in legacy_boss_loadouts]
+        else:
+            variants = [BuildContextVariant.from_dict(value) for value in raw_variants if isinstance(value, dict)]
         return cls(
             Name=str(data.get("Name", "") or ""), Gamertag=str(data.get("Gamertag", "") or ""),
             BuildName=str(data.get("BuildName", "") or ""), ImagePath=str(data.get("ImagePath", "") or ""),
@@ -301,7 +408,8 @@ class PlayerBuild:
             ScribedSkills=scribed_names,
             ScribedSkillRecipes=recipes,
             Food=str(data.get("Food", "") or ""), Potion=str(data.get("Potion", "") or ""), Notes=str(data.get("Notes", "") or ""),
-            BossLoadouts=[BossLoadout.from_dict(b) for b in data.get("BossLoadouts", [])],
+            BossLoadouts=legacy_boss_loadouts,
+            ContextVariants=variants,
             SecondMundus=str(data.get("SecondMundus", "") or ""),
             ReadyForRaid=bool(data.get("ReadyForRaid", False)),
         )
