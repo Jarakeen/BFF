@@ -2,20 +2,22 @@ from __future__ import annotations
 
 from .duration_aware_rotation_scheduler import DurationAwareRotationScheduler
 from .rotation_ability_priority import AbilityPriorityList
-from .rotation_plan import RotationActionKind
+from .rotation_plan import RotationActionKind, RotationPlan
+from .rotation_recast import RotationRecastRule
 
 
 class PriorityAwareDurationRotationScheduler(DurationAwareRotationScheduler):
-    """Duration-aware scheduler variant that ranks due refreshes by explicit priority.
+    """Duration-aware scheduler variant that ranks due refreshes and fillers by priority.
 
     The base scheduler remains the compatibility path when no AbilityPriorityList
-    is supplied. This variant changes only the choice among same-bar refreshes that
-    are already due. It does not invent timing readiness, bar swaps, resources,
+    is supplied. This variant changes only choices that are already legal: among
+    same-bar refreshes that are due, and among same-bar no-duration fillers that are
+    already eligible. It does not invent timing readiness, bar swaps, resources,
     encounter legality, or refresh lead windows.
 
     Lower numeric ability-priority values are higher priority. For equal priority,
-    the earlier due time wins, followed by deterministic saved-slot presentation
-    order from AbilityPriorityList.resolve().
+    due refreshes prefer the earlier due time, while fillers use deterministic saved
+    slot order from AbilityPriorityList.resolve().
     """
 
     def __init__(self, priorities: AbilityPriorityList) -> None:
@@ -63,3 +65,29 @@ class PriorityAwareDurationRotationScheduler(DurationAwareRotationScheduler):
             return None
         candidates.sort(key=lambda item: (item[0], item[1], item[2], item[3], item[4][0]))
         return candidates[0][4]
+
+    def _fillers(
+        self,
+        plan: RotationPlan,
+        rule_map: dict[tuple[str, str | None], RotationRecastRule],
+    ) -> dict[str, tuple[str, ...]]:
+        fillers = super()._fillers(plan, rule_map)
+        ranked: dict[str, tuple[str, ...]] = {}
+        for bar, values in fillers.items():
+            ranked[bar] = tuple(
+                sorted(
+                    values,
+                    key=lambda skill_name: (
+                        self._priority_by_key.get(
+                            (skill_name.casefold(), bar),
+                            (10**9, 10**9),
+                        )[0],
+                        self._priority_by_key.get(
+                            (skill_name.casefold(), bar),
+                            (10**9, 10**9),
+                        )[1],
+                        skill_name.casefold(),
+                    ),
+                )
+            )
+        return ranked
