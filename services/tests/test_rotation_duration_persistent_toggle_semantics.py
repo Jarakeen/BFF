@@ -1,3 +1,4 @@
+import math
 from types import SimpleNamespace
 
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
@@ -17,7 +18,7 @@ class _DurationRepository:
         )
 
 
-def test_reviewed_persistent_toggle_skips_finite_duration_repository() -> None:
+def test_reviewed_persistent_toggle_emits_scheduler_rules_without_duration_lookup() -> None:
     repository = _DurationRepository()
     service = RotationDurationAnalysisService(
         duration_repository=repository,  # type: ignore[arg-type]
@@ -47,6 +48,12 @@ def test_reviewed_persistent_toggle_skips_finite_duration_repository() -> None:
     projection = service.analyze(plan)
 
     assert repository.calls == []
-    assert projection.rules == ()
+    assert [(rule.skill_name, rule.bar, rule.persistent) for rule in projection.rules] == [
+        ("Magical Banner", "front", True),
+        ("Magical Banner", "back", True),
+    ]
+    assert all(math.isinf(float(rule.duration_seconds)) for rule in projection.rules)
     assert projection.unresolved == ()
+    assert projection.analysis.windows == ()
+    assert projection.analysis.summaries == ()
     assert projection.analysis.unresolved == ()
