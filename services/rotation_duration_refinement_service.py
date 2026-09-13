@@ -55,7 +55,7 @@ class RotationDurationRefinement:
 
 
 class RotationDurationRefinementService:
-    """Resolve canonical durations, refine a plan, then analyze the final schedule."""
+    """Resolve canonical recast semantics, refine a plan, then analyze the result."""
 
     def __init__(
         self,
@@ -84,14 +84,13 @@ class RotationDurationRefinementService:
         demand_action_claims: tuple[DemandActionClaim, ...] = (),
         refresh_cadences: tuple[RotationRefreshIntervalPolicy, ...] = (),
     ) -> RotationDurationRefinement:
-        # Resolve finite-duration evidence from the authored seed first. Reviewed
-        # persistent toggles deliberately contribute no finite-duration rule.
+        # Resolve finite-duration and reviewed persistent recast semantics from the
+        # authored seed before any scheduling decisions are made.
         seed_projection = self.duration_analysis.analyze(plan)
 
         # Persistent toggles must be normalized before ordinary duration scheduling.
-        # Otherwise a repeating seed can offer a toggle such as Magical Banner to the
-        # duration scheduler as a no-duration filler and bake bogus recasts/displacement
-        # diagnostics into the plan before a post-pass ever sees them.
+        # Their explicit persistent recast rules then keep the preserved activation
+        # out of the ordinary no-duration filler pool without fabricating a duration.
         normalized_seed = self.persistent_toggle_plan.normalize(
             plan,
             duration_rules=seed_projection.rules,
@@ -198,22 +197,16 @@ class RotationDurationRefinementService:
                 seed_projection.rules,
             )
 
-        # Keep a defensive final pass because due-refresh displacement can still move
-        # the preserved activation. No new repeated toggle should normally be created
-        # after seed normalization, but this preserves the semantic invariant.
-        refined = self.persistent_toggle_plan.normalize(
-            refined,
-            duration_rules=seed_projection.rules,
-        ).plan
-
         unresolved = self._dedupe(
             tuple(refined.unresolved) + tuple(seed_projection.unresolved)
         )
         if unresolved != refined.unresolved:
             refined = self._with_unresolved(refined, unresolved)
 
-        # Re-analyze the actual refined actions so callers receive duration,
-        # recast, uptime, and gap evidence for the same plan they render/evaluate.
+        # Re-analyze the actual refined actions so callers receive duration, recast,
+        # uptime, and gap evidence for the same plan they render/evaluate. Persistent
+        # rules remain scheduling-only and therefore stay outside finite-duration
+        # analysis while still being present in the returned rule set when matched.
         final_projection = self.duration_analysis.analyze(refined)
         final_unresolved = self._dedupe(
             tuple(refined.unresolved) + tuple(final_projection.unresolved)
