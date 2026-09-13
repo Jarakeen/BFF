@@ -38,6 +38,7 @@ def test_scores_enlivening_overflow_from_stated_cap():
 
     assert row.kind is ExtremeHealthRecoveryChampionPointBranchKind.CAPPED_DYNAMIC_FLAT
     assert row.flat_ceiling == 150.0
+    assert row.condition == "overheal target; Max Magicka high enough to reach stated cap"
 
 
 def test_scores_peace_of_mind_per_stage():
@@ -53,6 +54,7 @@ def test_scores_peace_of_mind_per_stage():
     assert row.kind is ExtremeHealthRecoveryChampionPointBranchKind.PER_STAGE_FLAT
     assert row.stages == 5
     assert row.flat_ceiling == 200.0
+    assert row.condition == "while under Crowd Control Immunity"
 
 
 def test_scores_refreshing_stride_per_stage():

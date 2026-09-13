@@ -738,3 +738,15 @@ someone actually slotted, can cast, or was assigned War Horn.
 **For BFF:** the Main-page War Horn check stays unverified until an exact
 War Horn source and its responsibility are established. Static availability
 never proves that the buff will be active during the pull.
+
+---
+
+## 2026-09-13 — A Champion Point formula can still have a simple hard ceiling
+
+**Enlivening Overflow** describes Recovery as a percentage of Max Magicka, but the same tooltip explicitly caps the granted Recovery at **150**. For a maximum-record search, the percentage tells BFF what input is needed to reach the cap; it does not permit the result to grow beyond 150.
+
+**Peace of Mind** exposes a different trap: “40 per stage” is not “40 per point.” Its Champion Point jump metadata has five unlock thresholds, so its complete ceiling is **5 × 40 = 200** while Crowd Control Immunity is active.
+
+**Layman’s version:** one tooltip has a speedometer with a hard stop; the other has five actual steps even though it accepts 50 points. Reading only the largest number on the record gives the wrong answer in both cases.
+
+**For BFF:** explicit caps outrank uncapped formula projection, and per-stage mechanics use canonical jump thresholds. These are individual-star ceilings only; Champion Bar slot legality must still prove which stars can coexist.

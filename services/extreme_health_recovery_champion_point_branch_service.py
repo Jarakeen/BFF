@@ -15,7 +15,7 @@ from minmax.champion_point_static_repository import ChampionPointRecord
 from services.eso_character_progression_contract import ULTIMATE_RULES
 
 
-_NUMBER = r"([0-9]+(?:\.[0-9]+)?)"
+_NUMBER = r"((?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+))"
 
 
 class ExtremeHealthRecoveryChampionPointBranchKind(str, Enum):
@@ -88,6 +88,7 @@ class ExtremeHealthRecoveryChampionPointBranchService:
 
         per_stage_patterns = (
             rf"Health and Magicka Recovery.*?{_NUMBER}\s+per stage",
+            rf"Magicka and Health Recovery.*?by\s+{_NUMBER}\s+per stage",
             rf"{_NUMBER}\s+Health and Magicka Recovery per stage",
             rf"Health, Magicka, and Stamina Recovery by\s+{_NUMBER}\s+per stage",
         )

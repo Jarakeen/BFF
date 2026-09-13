@@ -508,6 +508,25 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.POLICY,
     ),
     ServiceDescriptor(
+        service_id="extreme.health_recovery_champion_point_branch",
+        domain="extreme",
+        purpose=(
+            "Classify and bound one Health Recovery Champion Point mechanic while "
+            "preserving its runtime condition and deferring legal loadout composition."
+        ),
+        implementation_path=(
+            "services.extreme_health_recovery_champion_point_branch_service"
+        ),
+        inputs=("ChampionPointRecord",),
+        outputs=("ExtremeHealthRecoveryChampionPointBranch",),
+        responsibilities=("health_recovery_champion_point_branch_classification",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Individual-star ceilings are not proof that multiple slottable stars can coexist."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.partial_named_gear_physical_feasibility",
         domain="extreme",
         purpose=(
