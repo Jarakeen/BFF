@@ -5,7 +5,7 @@ def test_coverage_group_effect_support_removes_utility_filter_and_keeps_magickas
     source = Path("ui/coverage_group_effect_catalog_support.py").read_text(encoding="utf-8")
     assert 'coverage_page.UTILITY = set()' in source
     assert 'self.effect_filter.findText("Utility")' in source
-    assert 'coverage_page.DEBUFFS = set(GROUP_DEBUFF_NAMES)' in source
+    assert 'coverage_page.DEBUFFS = set(DEBUFF_NAMES)' in source
 
 
 def test_coverage_group_effect_support_puts_sources_in_coverage_notes():
@@ -17,5 +17,22 @@ def test_coverage_group_effect_support_puts_sources_in_coverage_notes():
 
 def test_coverage_group_effect_support_does_not_promote_unmapped_reference_effects():
     source = Path("ui/coverage_group_effect_catalog_support.py").read_text(encoding="utf-8")
-    assert 'status = {name: "unverified" for name in GROUP_COVERAGE_NAMES}' in source
+    assert 'status = {name: "unverified" for name in COVERAGE_NAMES}' in source
     assert 'if name in snapshot.status:' in source
+
+
+def test_unique_support_sets_extend_coverage_without_duplicate_rows():
+    source = Path("ui/coverage_group_effect_catalog_support.py").read_text(encoding="utf-8")
+    assert 'UNIQUE_SUPPORT_SET_NAMES' in source
+    assert 'tuple(dict.fromkeys((*GROUP_COVERAGE_NAMES, *UNIQUE_SUPPORT_SET_NAMES)))' in source
+    assert 'REFERENCE_BY_NAME = {**GROUP_COVERAGE_BY_NAME, **UNIQUE_SUPPORT_SET_BY_NAME}' in source
+
+
+def test_unique_support_sets_replace_type_with_short_effect_summary():
+    support = Path("ui/coverage_group_effect_catalog_support.py").read_text(encoding="utf-8")
+    catalog = Path("services/raid_unique_support_set_catalog.py").read_text(encoding="utf-8")
+    assert 'getattr(reference, "type_label", "") or reference.category' in support
+    assert '"Powerful Assault", "Buff", "Unique: +307 W/SD"' in catalog
+    assert '"Roar of Alkosh", "Debuff", "Unique: up to -6000 Armor"' in catalog
+    assert '"Elemental Catalyst", "Debuff", "Unique: +crit dmg taken"' in catalog
+    assert '"Pillager\'s Profit", "Buff", "Unique: group Ultimate"' in catalog
