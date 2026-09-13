@@ -115,6 +115,7 @@ def install() -> None:
     from ui.roster_assignment_persistence_support import install as install_roster_assignment_persistence_support
     from ui.roster_assignment_action_support import install as install_roster_assignment_action_support
     from ui.comp_builder_roster_intake_support import install as install_comp_builder_roster_intake_support
+    from ui.build_context_variant_support import install as install_build_context_variant_support
 
     install_team_schedule_calendar_support()
     install_team_schedule_multi_time_support()
@@ -137,5 +138,8 @@ def install() -> None:
     # can hand over actual player/class/role context and the action card can lose
     # the redundant header without creating another parallel workflow.
     install_comp_builder_roster_intake_support()
+    # The build editor's old boss-only alternate surface is generalized last so
+    # all normal BuildEditor constructors now expose Team / Boss / Team+Boss variants.
+    install_build_context_variant_support()
     operations_console.OperationsConsole._raid_schedule_card = _raid_schedule_card
     _INSTALLED = True
