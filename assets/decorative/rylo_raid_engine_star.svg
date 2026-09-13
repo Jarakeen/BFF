@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">
+<defs>
+  <linearGradient id="silver" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d2d5d8"/><stop offset=".22" stop-color="#6b7075"/><stop offset=".5" stop-color="#1a1d20"/><stop offset=".78" stop-color="#8b9095"/><stop offset="1" stop-color="#eceeef"/></linearGradient>
+  <linearGradient id="dark" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#101317"/><stop offset=".5" stop-color="#252a2f"/><stop offset="1" stop-color="#0c0f12"/></linearGradient>
+  <radialGradient id="glow"><stop offset="0" stop-color="#cfe9ff"/><stop offset=".25" stop-color="#7ea7c6"/><stop offset="1" stop-color="#1b2730"/></radialGradient>
+</defs>
+<circle cx="500" cy="500" r="360" fill="none" stroke="#34383d" stroke-width="28"/>
+<circle cx="500" cy="500" r="360" fill="none" stroke="#b8bdc2" stroke-width="5"/>
+<circle cx="500" cy="500" r="340" fill="none" stroke="#6f8faa" stroke-width="6" opacity=".65"/>
+<g stroke="#0b0d10" stroke-width="7" stroke-linejoin="round">
+  <path d="M500 80 L555 430 L500 500 L445 430 Z" fill="url(#silver)"/>
+  <path d="M920 500 L570 555 L500 500 L570 445 Z" fill="url(#silver)"/>
+  <path d="M500 920 L445 570 L500 500 L555 570 Z" fill="url(#silver)"/>
+  <path d="M80 500 L430 445 L500 500 L430 555 Z" fill="url(#silver)"/>
+  <path d="M795 205 L610 445 L500 500 L555 390 Z" fill="url(#dark)"/>
+  <path d="M795 795 L555 610 L500 500 L610 555 Z" fill="url(#dark)"/>
+  <path d="M205 795 L390 555 L500 500 L445 610 Z" fill="url(#dark)"/>
+  <path d="M205 205 L445 390 L500 500 L390 445 Z" fill="url(#dark)"/>
+</g>
+<circle cx="500" cy="500" r="18" fill="url(#glow)"/>
+<path d="M500 120 V880 M120 500 H880" stroke="#8db5d1" stroke-width="5" opacity=".6"/>
+</svg>
