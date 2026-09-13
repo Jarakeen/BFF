@@ -26,6 +26,9 @@ from services.rotation_explicit_target_combat_state_schedule_service import (
 )
 from services.rotation_static_build_context_service import RotationStaticBuildContextService
 from tools.audit_phase13_saved_build_rotation_timing import _load_build
+from tools.dd_audit_runtime_state_support import (
+    build_plan_attacker_runtime_state_resolver,
+)
 from ui.rotation_generate_dd_role_evidence_support import (
     RotationGenerateDDCanonicalWeaponAttackProviderFactory,
     RotationGenerateDDRoleEvidenceSupport,
@@ -193,16 +196,21 @@ def _action_damage_provider(
         ),  # type: ignore[arg-type]
     )
     plan_evidence = role_evidence.plan_evidence_provider
-    if target_state_resolver is not None:
+    attacker_state_resolver = (
+        build_plan_attacker_runtime_state_resolver(build=build, plan=plan)
+        if plan is not None
+        else None
+    )
+    if target_state_resolver is not None or attacker_state_resolver is not None:
         if plan is None:
-            raise ValueError("runtime target-state audit provider requires a rotation plan")
+            raise ValueError("runtime DD audit provider requires a rotation plan")
         binder = getattr(plan_evidence, "for_stabilized_snapshot", None)
         if not callable(binder):
             raise RuntimeError("DD plan evidence does not expose runtime snapshot binding")
         plan_evidence = binder(
             SimpleNamespace(
                 plan=plan,
-                runtime_combat_state_resolver=None,
+                runtime_combat_state_resolver=attacker_state_resolver,
                 runtime_target_combat_state_resolver=target_state_resolver,
                 runtime_target_resistance_resolver=None,
                 runtime_activation_anchor_resolver=None,
@@ -417,6 +425,7 @@ def main() -> int:
     print(f"Role:                  {getattr(build, 'Role', '') or 'unresolved'}")
     print(f"Duration:              {duration:g}s")
     print(f"Target resistance:     {target_resistance:g}")
+    print("Attacker CombatState:  plan-derived reviewed persistent toggles")
     print(
         "Target CombatState:    "
         + ("explicit schedule" if target_state_known else "unresolved")
