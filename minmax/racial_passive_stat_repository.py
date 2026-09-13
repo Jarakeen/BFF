@@ -152,7 +152,15 @@ class RacialPassiveStatRepository:
             (rf"Increases? your Magicka Recovery by {_NUMBER}", ("magicka_recovery",)),
             (rf"Increases? your Stamina Recovery by {_NUMBER}", ("stamina_recovery",)),
             (rf"Increases? your Healing Done by {_NUMBER}%", ("healing_done_percent",)),
+            (
+                rf"Increases? your Critical Damage and Critical Healing by {_NUMBER}%",
+                ("critical_damage_percent", "critical_healing_percent"),
+            ),
             (rf"Increases? your Flame Resistance by {_NUMBER}", ("flame_resistance",)),
+            (
+                rf"Increases? your Physical and Spell Resistance by {_NUMBER}",
+                ("physical_resistance", "spell_resistance"),
+            ),
             (
                 rf"(?:Increases? your|and your) Physical and Spell Penetration by {_NUMBER}",
                 ("physical_penetration", "spell_penetration"),
