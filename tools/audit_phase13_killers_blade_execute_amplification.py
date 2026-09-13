@@ -2,6 +2,13 @@ from __future__ import annotations
 
 """Audit reviewed Killer's Blade continuous execute amplification semantics."""
 
+from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 from services.rotation_reviewed_execute_amplification_service import (
     RotationReviewedExecuteAmplificationService,
 )
