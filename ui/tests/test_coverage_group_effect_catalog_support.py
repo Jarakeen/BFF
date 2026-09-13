@@ -13,6 +13,7 @@ def test_coverage_group_effect_support_puts_sources_in_coverage_notes():
     assert '"Coverage Notes"' in source
     assert '"Known group-capable sources:' in source
     assert 'reference.source_notes' in source
+    assert 'These are planning references.' not in source
 
 
 def test_coverage_group_effect_support_does_not_promote_unmapped_reference_effects():
@@ -28,11 +29,14 @@ def test_unique_support_sets_extend_coverage_without_duplicate_rows():
     assert 'REFERENCE_BY_NAME = {**GROUP_COVERAGE_BY_NAME, **UNIQUE_SUPPORT_SET_BY_NAME}' in source
 
 
-def test_unique_support_sets_replace_type_with_short_effect_summary():
-    support = Path("ui/coverage_group_effect_catalog_support.py").read_text(encoding="utf-8")
-    catalog = Path("services/raid_unique_support_set_catalog.py").read_text(encoding="utf-8")
-    assert 'getattr(reference, "type_label", "") or reference.category' in support
-    assert '"Powerful Assault", "Buff", "Unique: +307 W/SD"' in catalog
-    assert '"Roar of Alkosh", "Debuff", "Unique: up to -6000 Armor"' in catalog
-    assert '"Elemental Catalyst", "Debuff", "Unique: +crit dmg taken"' in catalog
-    assert '"Pillager\'s Profit", "Buff", "Unique: group Ultimate"' in catalog
+def test_unique_support_sets_get_short_type_labels_in_coverage_table():
+    source = Path("ui/coverage_group_effect_catalog_support.py").read_text(encoding="utf-8")
+    assert 'getattr(reference, "type_label", "") or reference.category' in source
+    assert 'Unique support-set effect; see Coverage Notes for source details.' in source
+
+
+def test_unique_support_sets_have_their_own_filter():
+    source = Path("ui/coverage_group_effect_catalog_support.py").read_text(encoding="utf-8")
+    assert 'self.effect_filter.addItem("Unique Buffs")' in source
+    assert 'category = "Unique Buffs"' in source
+    assert 'CoveragePage._apply_coverage_filters = _apply_coverage_filters_with_unique' in source
