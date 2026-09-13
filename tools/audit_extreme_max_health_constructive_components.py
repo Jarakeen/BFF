@@ -6,6 +6,10 @@ This is the Max Health companion to the Max Magicka constructive audit. It asks 
 existing denominator/projection services for the strongest reviewed witness on each
 independent axis, ranks positive named-set breakpoints, and classifies the remaining
 interaction-sensitive Max Health gear. It does not claim a global record by itself.
+
+Unlike Max Magicka/Stamina, Max Health does not currently have a proof-safe class-route
+dominance reducer. The complete legal class/subclass route universe is therefore
+retained for later canonical scoring rather than being collapsed here.
 """
 
 import argparse
@@ -48,9 +52,6 @@ from services.extreme_resource_attribute_projection_service import (
 )
 from services.extreme_resource_champion_point_state_service import (
     ExtremeResourceChampionPointStateService,
-)
-from services.extreme_resource_class_route_dominance_projection_service import (
-    ExtremeResourceClassRouteDominanceProjectionService,
 )
 from services.extreme_resource_mundus_projection_service import (
     ExtremeResourceMundusProjectionService,
@@ -103,8 +104,12 @@ def main() -> int:
     race = ExtremeResourceRaceProjectionService(database).build(
         OBJECTIVE, tuple(universe.races)
     )
-    route = ExtremeResourceClassRouteDominanceProjectionService(database).build(
-        OBJECTIVE, tuple(universe.class_routes)
+    # Max Health intentionally retains every legal class/subclass route. The
+    # Magicka/Stamina dominance reducer rejects max_health by contract because
+    # health-sensitive runtime/passive interactions are route-specific.
+    route_count = len(tuple(universe.class_routes))
+    route_denominator_retained = bool(
+        universe.structural_denominator_proven and route_count > 0
     )
     attributes = ExtremeResourceAttributeProjectionService.build(
         OBJECTIVE, tuple(universe.attribute_allocations)
@@ -172,7 +177,6 @@ def main() -> int:
 
     race_name = race.races[0] if race.projection_complete else None
     race_delta = float(race.signatures[0]) if race.projection_complete else 0.0
-    route_witness = route.routes[0] if route.projection_complete else None
     attribute_delta = (
         float(attributes.target_points) * float(attributes.per_point_value)
         if attributes.projection_complete
@@ -195,13 +199,15 @@ def main() -> int:
         f"race={race_name or '<unresolved>'} delta={race_delta:g} "
         f"projection_complete={race.projection_complete}"
     )
-    if route_witness is not None:
-        print(
-            f"class_route={route_witness.base_class.value} subclassed={route_witness.is_subclassed} "
-            f"lines={route.signature!r} projection_complete=True"
-        )
-    else:
-        print("class_route=<unresolved> projection_complete=False")
+    print(
+        f"class_routes_retained={route_count} "
+        f"full_route_denominator_retained={route_denominator_retained} "
+        "dominance_reduction_applied=False"
+    )
+    print(
+        "class_route=<deferred to canonical Max Health scoring; route-sensitive health "
+        "passives/runtime states prevent Magicka/Stamina-style dominance collapse>"
+    )
     print(
         f"attributes={attributes.target_points if attributes.projection_complete else 0} "
         f"points delta={attribute_delta:g} projection_complete={attributes.projection_complete}"
@@ -265,7 +271,6 @@ def main() -> int:
             str(item)
             for item in (
                 *race.unresolved,
-                *route.unresolved,
                 *attributes.unresolved,
                 *mundus.unresolved,
                 *provisioning.unresolved,
@@ -284,7 +289,7 @@ def main() -> int:
         print(f"  unresolved: {item}")
     if len(unresolved) > 30:
         print(f"  ... {len(unresolved) - 30} more")
-    print("NEXT_STEP=construct and canonical-score the strongest legal Max Health gear witnesses, then promote the best clean incumbent into exact ordinary + targeted special closure")
+    print("NEXT_STEP=construct and canonical-score the strongest legal Max Health gear witnesses across the full retained class-route denominator, then promote the best clean incumbent into exact ordinary + targeted special closure")
     return 0
 
 
