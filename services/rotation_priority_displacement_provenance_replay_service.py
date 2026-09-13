@@ -12,6 +12,12 @@ candidate for a decision slot. If a due refresh then claims that same slot, prod
 puts the selected candidate back at the front of the queue. Replay reconstructs that
 post-slot state from the existing refresh-claim diagnostic, allowing exact final queue
 provenance without copying or modifying the production ``refine`` implementation.
+
+A refresh can also claim a slot while the displacement queue is empty. In that case
+``_select_displaced_candidate`` is never invoked, so there is deliberately no queue
+decision trace for the slot. Replay recovers that one displaced instance from the
+exact seed-plan action at the refresh-claim timestamp. Ambiguous exact seed matches
+remain unresolved rather than being guessed.
 """
 
 from dataclasses import dataclass
@@ -19,7 +25,7 @@ import re
 
 from minmax.priority_aware_duration_scheduler import PriorityAwareDurationRotationScheduler
 from minmax.rotation_ability_priority import AbilityPriorityList
-from minmax.rotation_plan import RotationAction, RotationPlan
+from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from minmax.rotation_recast import RotationRecastRule
 
 
@@ -130,6 +136,7 @@ class RotationPriorityDisplacementProvenanceReplayService:
         refined = scheduler.refine(seed_plan, tuple(rules))
         decisions = tuple(scheduler.decisions)
         final_queue_by_bar = self._final_queue_by_bar(
+            seed_plan=seed_plan,
             decisions=decisions,
             unresolved=tuple(refined.unresolved),
         )
@@ -152,6 +159,7 @@ class RotationPriorityDisplacementProvenanceReplayService:
     def _final_queue_by_bar(
         cls,
         *,
+        seed_plan: RotationPlan,
         decisions: tuple[RotationDisplacementQueueDecision, ...],
         unresolved: tuple[str, ...],
     ) -> dict[str, tuple[RotationDisplacementQueueInstance, ...]]:
@@ -159,17 +167,75 @@ class RotationPriorityDisplacementProvenanceReplayService:
         result: dict[str, tuple[RotationDisplacementQueueInstance, ...]] = {}
         for bar in ("front", "back"):
             bar_decisions = tuple(item for item in decisions if item.bar == bar)
-            if not bar_decisions:
+            bar_claims = tuple(
+                (time_seconds, value)
+                for (time_seconds, claim_bar), value in refresh_claims.items()
+                if claim_bar == bar
+            )
+            last_decision = (
+                max(bar_decisions, key=lambda item: item.slot_time_seconds)
+                if bar_decisions
+                else None
+            )
+            last_claim = max(bar_claims, key=lambda item: item[0]) if bar_claims else None
+
+            if last_decision is None:
+                if last_claim is None:
+                    continue
+                claim_time, (_, displaced_skill) = last_claim
+                exact = cls._seed_instances_at_claim(
+                    seed_plan,
+                    bar=bar,
+                    time_seconds=claim_time,
+                    skill_name=displaced_skill,
+                )
+                if exact:
+                    result[bar] = exact
                 continue
-            last = max(bar_decisions, key=lambda item: item.slot_time_seconds)
-            queue = list(last.remaining_queue)
-            claim = refresh_claims.get((last.slot_time_seconds, bar))
+
+            if last_claim is not None and last_claim[0] > last_decision.slot_time_seconds:
+                claim_time, (_, displaced_skill) = last_claim
+                exact = cls._seed_instances_at_claim(
+                    seed_plan,
+                    bar=bar,
+                    time_seconds=claim_time,
+                    skill_name=displaced_skill,
+                )
+                if exact:
+                    result[bar] = exact
+                continue
+
+            queue = list(last_decision.remaining_queue)
+            claim = refresh_claims.get((last_decision.slot_time_seconds, bar))
             if claim is not None:
                 displaced_skill = claim[1]
-                if displaced_skill.casefold() == last.selected.skill_name.casefold():
-                    queue.insert(0, last.selected)
+                if displaced_skill.casefold() == last_decision.selected.skill_name.casefold():
+                    queue.insert(0, last_decision.selected)
             result[bar] = tuple(queue)
         return result
+
+    @staticmethod
+    def _seed_instances_at_claim(
+        seed_plan: RotationPlan,
+        *,
+        bar: str,
+        time_seconds: float,
+        skill_name: str,
+    ) -> tuple[RotationDisplacementQueueInstance, ...]:
+        return tuple(
+            RotationDisplacementQueueInstance(
+                skill_name=str(action.name or ""),
+                bar=bar,
+                source_time_seconds=float(action.time_seconds),
+                source_sequence=int(action.sequence),
+            )
+            for action in seed_plan.actions
+            if action.kind in {RotationActionKind.SKILL, RotationActionKind.ULTIMATE}
+            and action.name
+            and str(action.bar or "").strip().casefold() == bar
+            and abs(float(action.time_seconds) - float(time_seconds)) <= 1e-9
+            and action.name.casefold() == skill_name.casefold()
+        )
 
     @staticmethod
     def _refresh_claims(
@@ -209,6 +275,11 @@ class RotationPriorityDisplacementProvenanceReplayService:
             ),
             default=None,
         )
+        if final_matches:
+            last_observed = max(
+                float(last_observed) if last_observed is not None else float("-inf"),
+                max(instance.source_time_seconds for instance in final_matches),
+            )
 
         if len(final_matches) == 1:
             instance = final_matches[0]
