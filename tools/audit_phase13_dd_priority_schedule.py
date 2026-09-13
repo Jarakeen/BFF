@@ -16,6 +16,9 @@ from services.rotation_cross_bar_filler_opportunity_service import (
 from services.rotation_cross_bar_route_proposal_service import (
     RotationCrossBarRouteProposalService,
 )
+from services.rotation_cross_bar_route_selection_service import (
+    RotationCrossBarRouteSelectionService,
+)
 from services.rotation_cross_bar_route_slot_feasibility_service import (
     RotationCrossBarRouteSlotFeasibilityService,
 )
@@ -192,6 +195,11 @@ def main() -> int:
         generated.plan,
         routes,
     )
+    route_selection = RotationCrossBarRouteSelectionService().select(
+        generated.plan,
+        routes,
+        route_slots,
+    )
 
     print("=" * 72)
     print(" PHASE 13 DD EXPLICIT-PRIORITY SCHEDULE AUDIT")
@@ -218,6 +226,7 @@ def main() -> int:
     print(f"Cross-bar filler opportunities: {len(cross_bar)}")
     print(f"Cross-bar route proposals: {len(routes)}")
     print(f"Slot-feasible routes: {sum(1 for item in route_slots if item.feasible)}")
+    print(f"Jointly selected routes: {len(route_selection.selected)}")
     print()
 
     print("CROSS-BAR FILLER OPPORTUNITIES")
@@ -277,6 +286,29 @@ def main() -> int:
         print("none")
     print()
 
+    print("CROSS-BAR ROUTE JOINT SELECTION")
+    print("-------------------------------")
+    if route_selection.selected:
+        for row in route_selection.selected:
+            item = row.proposal
+            reserved = ",".join(f"{value:g}" for value in row.reserved_wait_times)
+            print(
+                f"{item.wait_time_seconds:g}s | SELECTED | {item.source_bar} -> {item.target_bar} | "
+                f"{item.filler_skill_name} | reserved={reserved}"
+            )
+    else:
+        print("selected: none")
+    if route_selection.rejected:
+        for row in route_selection.rejected:
+            item = row.proposal
+            print(
+                f"{item.wait_time_seconds:g}s | REJECTED | {item.source_bar} -> {item.target_bar} | "
+                f"{item.filler_skill_name} | {row.reason}"
+            )
+    elif route_selection.selected:
+        print("rejected: none")
+    print()
+
     print("PLAN-LEVEL UNRESOLVED")
     print("---------------------")
     if generated.plan.unresolved:
@@ -287,9 +319,9 @@ def main() -> int:
     print()
     print(
         "Interpretation: explicit priorities are caller-owned gameplay intent. Cross-bar "
-        "fillers and routes are diagnostic only. Slot feasibility additionally enforces "
-        "the current planner rule that BAR_SWAP consumes its own 1-second schedule step; "
-        "no same-second swap+skill timing is fabricated."
+        "fillers and routes remain diagnostic only. Slot feasibility enforces the current "
+        "1-second BAR_SWAP model, and joint selection additionally prevents overlapping "
+        "routes or stale source-bar assumptions before any plan mutation is attempted."
     )
     return 0
 
