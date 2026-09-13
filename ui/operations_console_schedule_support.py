@@ -114,56 +114,28 @@ def install() -> None:
     from ui.roster_sub_terminology_support import install as install_roster_sub_terminology_support
     from ui.roster_assignment_persistence_support import install as install_roster_assignment_persistence_support
     from ui.roster_assignment_action_support import install as install_roster_assignment_action_support
+    from ui.comp_builder_roster_intake_support import install as install_comp_builder_roster_intake_support
 
-    # Preserve the portable calendar feature, then let the multi-time layer own
-    # the final Team Schedule UI so each selected day can use its own start/end.
     install_team_schedule_calendar_support()
     install_team_schedule_multi_time_support()
-    # Long diagnostics must remain readable before workflows start opening
-    # warning/information message boxes.
     install_scrollable_message_dialog_support()
-    # Team merge wraps the completed Team Schedule surface, so duplicate or
-    # renamed team identities can be consolidated without deleting user-owned
-    # players, characters, or builds.
     install_roster_team_merge_support()
-    # Ensure a visible merge control exists on the completed Teams card.
     install_roster_team_merge_visibility_support()
-    # FoundryCard nests the actual action row inside body_layout. Relocate the
-    # existing merge control into that concrete row beside Delete Selected Team
-    # instead of leaving it as a full-width card strip.
     install_roster_team_merge_layout_fix()
-    # Characters and Teams compose the canonical build catalog with the durable
-    # roster/team schedule state after the final Team Schedule patch is known.
     install_roster_player_architecture_support()
-    # The roster importer then attaches its preview/commit workflow to the
-    # existing Import Roster button and reuses canonical roster/build identity.
     install_roster_import_support()
-    # Personnel records can jump directly into the selected player's build
-    # library only after the final Roster/Builds classes have been composed.
     install_player_build_navigation_support()
-    # Rotation layout polish moves the existing canonical controls into their
-    # logical cards without replacing or duplicating the mechanics-owned widgets.
     install_rotation_dashboard_layout_support()
-    # A completed RotationPlan can then be persisted against the canonical
-    # build_id and surfaced as a conditional Build workspace tab.
     install_build_rotation_artifact_support()
-    # Final user-facing polish depends on the completed Rotation/Roster/Main
-    # composition above, so install it last.
     install_user_workspace_polish_support()
-    # Team cards can now scope Assignments after all roster composition layers
-    # have installed, without owning or duplicating team membership state.
     install_roster_team_assignment_filter_support()
-    # Characters has its own search/tree controls, so assignment-oriented header
-    # filters stay visible elsewhere but get out of the way on that tab.
     install_roster_characters_header_context_support()
-    # Raid teams use "Sub" terminology; retain compatibility with any legacy
-    # records that were persisted before the rename from "Bench".
     install_roster_sub_terminology_support()
-    # Assignment edits are durable roster-owned planning state. Install this last
-    # so it wraps the final team-filtered Assignments population path.
     install_roster_assignment_persistence_support()
-    # Final Assignments presentation removes the misleading Ready column, opens
-    # the planning table up, and adds the raid-lead navigation/evaluation tools.
     install_roster_assignment_action_support()
+    # Install after the Assignments action layer so its Send to Comp Maker button
+    # can hand over actual player/class/role context and the action card can lose
+    # the redundant header without creating another parallel workflow.
+    install_comp_builder_roster_intake_support()
     operations_console.OperationsConsole._raid_schedule_card = _raid_schedule_card
     _INSTALLED = True
