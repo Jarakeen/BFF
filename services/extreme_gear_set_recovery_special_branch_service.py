@@ -202,6 +202,16 @@ class ExtremeGearSetRecoverySpecialBranchService:
         if not relevant:
             return None
 
+        target_pattern = re.escape(target_phrase)
+        shared_pattern = r"health,?\s+magicka,?\s+(?:and\s+)?stamina recovery"
+        negative_recovery = re.search(
+            rf"\b(?:reduce|reduces|reduced|reducing|lower|lowers|lowered|lowering)\b"
+            rf"[^.;]{{0,140}}?(?:{target_pattern}|{shared_pattern})\b[^.;]{{0,35}}?\bby\s+\d+(?:\.\d+)?%?",
+            text,
+        ) or re.search(
+            rf"(?:{target_pattern}|{shared_pattern})\b[^.;]{{0,35}}?\b(?:reduced|lowered)\b[^.;]{{0,20}}?\bby\s+\d+(?:\.\d+)?%?",
+            text,
+        )
         negative_markers = (
             "lowers the health recovery",
             "reducing their health recovery",
@@ -210,7 +220,7 @@ class ExtremeGearSetRecoverySpecialBranchService:
             "health recovery reduced by",
             "reduce your health, magicka, and stamina recovery",
         )
-        if any(marker in text for marker in negative_markers):
+        if negative_recovery or any(marker in text for marker in negative_markers):
             return ExtremeRecoverySpecialBranch(
                 set_name=set_name,
                 piece_count=int(piece_count),
