@@ -199,6 +199,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Save generated team builds back to roster characters
 - Import external raid rosters by merge rather than replacement, preserving unrelated players, teams, characters, and saved builds
 - Imported build/team assignments are attached to the canonical gamertag/character/build identities when the import can resolve them uniquely
+- Roster workspace is organized as **Roster / Teams / Assignments / People & Builds**; team schedule and management live under Teams, and the Roster landing tab exposes Add Player, Import Roster, and Comp Maker entry actions
 
 ---
 
