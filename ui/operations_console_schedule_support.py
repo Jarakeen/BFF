@@ -100,6 +100,7 @@ def install() -> None:
     from ui.team_schedule_calendar_support import install as install_team_schedule_calendar_support
     from ui.team_schedule_multi_time_support import install as install_team_schedule_multi_time_support
     from ui.roster_player_architecture_support import install as install_roster_player_architecture_support
+    from ui.roster_import_support import install as install_roster_import_support
     from ui.player_build_navigation_support import install as install_player_build_navigation_support
     from ui.rotation_dashboard_layout_support import install as install_rotation_dashboard_layout_support
     from ui.build_rotation_artifact_support import install as install_build_rotation_artifact_support
@@ -112,6 +113,9 @@ def install() -> None:
     # Characters and Teams compose the canonical build catalog with the durable
     # roster/team schedule state after the final Team Schedule patch is known.
     install_roster_player_architecture_support()
+    # The roster importer then attaches its preview/commit workflow to the
+    # existing Import Roster button and reuses canonical roster/build identity.
+    install_roster_import_support()
     # Personnel records can jump directly into the selected player's build
     # library only after the final Roster/Builds classes have been composed.
     install_player_build_navigation_support()
