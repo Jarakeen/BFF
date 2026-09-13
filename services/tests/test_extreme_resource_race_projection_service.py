@@ -23,7 +23,7 @@ class _Repository:
         return self.rows[race]
 
 
-def test_race_projection_collapses_equal_target_resource_signatures():
+def test_race_projection_keeps_only_strongest_target_resource_witness():
     service = ExtremeResourceRaceProjectionService(
         "unused.db",
         progression_service=_ProgressionService(),
@@ -32,17 +32,27 @@ def test_race_projection_collapses_equal_target_resource_signatures():
                 "Breton": RacialPassiveResolution(stats={"max_magicka": 2000.0}),
                 "Altmer": RacialPassiveResolution(stats={"max_magicka": 2000.0}),
                 "Bosmer": RacialPassiveResolution(stats={"max_magicka": 0.0}),
+                "Dunmer": RacialPassiveResolution(stats={"max_magicka": 1910.0}),
             }
         ),
     )
 
-    result = service.build("max_magicka", ("Breton", "Altmer", "Bosmer"))
+    result = service.build(
+        "max_magicka",
+        ("Breton", "Altmer", "Bosmer", "Dunmer"),
+    )
 
     assert result.projection_complete is True
-    assert result.source_race_count == 3
-    assert result.signatures == (0.0, 2000.0)
-    assert result.races == ("Bosmer", "Altmer")
-    assert "3 legal races -> 2 exact witnesses" in result.scope[0]
+    assert result.source_race_count == 4
+    assert result.signatures == (2000.0,)
+    assert result.races == ("Altmer",)
+    assert result.source_signatures == (
+        ("Breton", 2000.0),
+        ("Altmer", 2000.0),
+        ("Bosmer", 0.0),
+        ("Dunmer", 1910.0),
+    )
+    assert "4 legal races -> 1 maximum witness" in result.scope[0]
 
 
 def test_race_projection_fails_closed_when_any_race_is_unresolved():
@@ -64,4 +74,25 @@ def test_race_projection_fails_closed_when_any_race_is_unresolved():
 
     assert result.projection_complete is False
     assert result.denominator_proven is False
+    assert result.races == ()
     assert result.unresolved == ("Khajiit: unmapped racial passive",)
+
+
+def test_race_projection_fails_closed_on_negative_target_resource_value():
+    service = ExtremeResourceRaceProjectionService(
+        "unused.db",
+        progression_service=_ProgressionService(),
+        racial_repository=_Repository(
+            {
+                "Race A": RacialPassiveResolution(stats={"max_magicka": 1000.0}),
+                "Race B": RacialPassiveResolution(stats={"max_magicka": -100.0}),
+            }
+        ),
+    )
+
+    result = service.build("max_magicka", ("Race A", "Race B"))
+
+    assert result.projection_complete is False
+    assert result.denominator_proven is False
+    assert result.races == ()
+    assert any("negative" in message for message in result.unresolved)
