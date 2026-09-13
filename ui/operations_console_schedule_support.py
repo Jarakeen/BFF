@@ -113,6 +113,7 @@ def install() -> None:
     from ui.roster_characters_header_context_support import install as install_roster_characters_header_context_support
     from ui.roster_sub_terminology_support import install as install_roster_sub_terminology_support
     from ui.roster_assignment_persistence_support import install as install_roster_assignment_persistence_support
+    from ui.roster_assignment_action_support import install as install_roster_assignment_action_support
 
     # Preserve the portable calendar feature, then let the multi-time layer own
     # the final Team Schedule UI so each selected day can use its own start/end.
@@ -161,5 +162,8 @@ def install() -> None:
     # Assignment edits are durable roster-owned planning state. Install this last
     # so it wraps the final team-filtered Assignments population path.
     install_roster_assignment_persistence_support()
+    # Final Assignments presentation removes the misleading Ready column, opens
+    # the planning table up, and adds the raid-lead navigation/evaluation tools.
+    install_roster_assignment_action_support()
     operations_console.OperationsConsole._raid_schedule_card = _raid_schedule_card
     _INSTALLED = True
