@@ -3,9 +3,8 @@ from __future__ import annotations
 """Rylo visual skin and Settings integration.
 
 The persisted ``rylo_grayscale`` preference key stays stable for compatibility,
-but the presentation is intentionally urban rather than military: matte city
-stone, weathered steel, restrained brick-red identity accents, and a separate
-colorblind-safe semantic palette for status meaning.
+but the presentation is intentionally urban rather than military: warm charcoal,
+weathered steel, silver iconography, and a colorblind-safe semantic accent set.
 """
 
 from PySide6.QtWidgets import QApplication, QComboBox, QLabel
@@ -20,35 +19,36 @@ RYLO_URBAN_OVERRIDES = r"""
 /* ============================================================
    RYLO — GUARDIAN / CITY AFTER MIDNIGHT
 
-   Identity: black concrete, worn steel, muted brick red,
-   restrained old-gold details. No glossy surfaces or neon.
+   Identity: warm charcoal, soft black, weathered steel, silver.
+   Branding is deliberately neutral so red/green deficiency never
+   has to carry interface meaning.
 
    Semantic meaning remains independent of branding:
-   blue=safe, orange=danger, gold=warning,
-   purple=special, gray=neutral.
+   blue=safe/primary, orange=danger, gold=warning/focus,
+   purple=special, silver/gray=neutral.
    ============================================================ */
 
 QMainWindow, QDialog, QScrollArea, QStackedWidget,
 QScrollArea > QWidget > QWidget, QStackedWidget > QWidget {
-    background-color: #0B0B0D;
+    background-color: #121315;
     background-image: url("@RYLO_ASSET_PATH@/rylo_stone.svg");
-    color: #D0D3D5;
+    color: #D4D1CB;
 }
 
 QWidget {
-    color: #D0D3D5;
+    color: #D4D1CB;
     font-family: "Segoe UI", "Montserrat", Arial;
 }
 
-/* ---------- Headers: city signage, not fantasy ornament ---------- */
+/* ---------- Headers: quiet city signage ---------- */
 QWidget[foundryHeader="true"] {
-    background-color: rgba(14, 14, 16, 242);
+    background-color: rgba(23, 24, 26, 244);
     background-image: none;
     border: none;
-    border-bottom: 2px solid #34363A;
+    border-bottom: 1px solid #414347;
 }
 QLabel[pageTitle="true"], QLabel[heroTitle="true"] {
-    color: #E0E0DE;
+    color: #E4E1DA;
     font-family: "Bahnschrift SemiCondensed", "Arial Narrow", "Segoe UI Semibold", Arial;
     font-weight: 700;
     font-style: normal;
@@ -56,12 +56,12 @@ QLabel[pageTitle="true"], QLabel[heroTitle="true"] {
 }
 QLabel[pageSubtitle="true"], QLabel[departmentLabel="true"],
 QLabel[heroSubtitle="true"], QLabel[muted="true"] {
-    color: #969A9E;
+    color: #A29F9A;
     font-family: "Segoe UI", "Montserrat", Arial;
     font-style: normal;
 }
 QLabel[departmentLabel="true"] {
-    color: #9C6F70;
+    color: #8FB6D9;
     font-weight: 600;
 }
 
@@ -70,39 +70,36 @@ QLabel[sidebarLogo="true"], QLabel[sidebarOffice="true"], QLabel[sidebarHeading=
     font-style: normal;
 }
 QLabel[sidebarLogo="true"] {
-    color: #D5D3CF;
+    color: #DAD7D1;
     letter-spacing: 1px;
 }
 QLabel[sidebarOffice="true"] {
-    color: #8B1E24;
+    color: #BFC5CB;
     font-weight: 700;
     letter-spacing: 1px;
 }
 QLabel[sidebarHeading="true"] {
-    color: #B8B3AB;
+    color: #C2BEB7;
     font-size: 9px;
     font-weight: 700;
 }
 QLabel[sidebarMeta="true"], QLabel[sidebarFooter="true"] {
-    color: #858A8E;
+    color: #8D9093;
 }
 
-/* ---------- Matte city panels ---------- */
+/* ---------- Warm charcoal city panels ---------- */
 QFrame[foundryCard="true"],
 QFrame[bookPanel="true"], QWidget[bookPanel="true"] {
-    background-color: #151618;
+    background-color: #202124;
     background-image: none;
-    border-left: 2px solid #3B3D40;
-    border-top: 2px solid #3B3D40;
-    border-right: 2px solid #222326;
-    border-bottom: 2px solid #222326;
-    border-radius: 1px;
+    border: 1px solid #3C3E42;
+    border-radius: 2px;
 }
 QWidget[cardHeader="true"] {
-    background-color: #1B1C1F;
+    background-color: #27282B;
     background-image: none;
     border: none;
-    border-bottom: 2px solid #34363A;
+    border-bottom: 1px solid #414347;
     min-height: 30px;
 }
 QWidget[cardBody="true"] {
@@ -110,31 +107,28 @@ QWidget[cardBody="true"] {
     border: none;
 }
 QLabel[cardTitle="true"] {
-    color: #D0CECA;
+    color: #D8D4CD;
     font-family: "Bahnschrift SemiCondensed", "Arial Narrow", "Segoe UI Semibold", Arial;
     font-weight: 700;
     letter-spacing: 0.5px;
 }
-QLabel[cardIcon="true"] { color: #A8ADB1; }
+QLabel[cardIcon="true"] { color: #C4C9CE; }
 QLabel[cardBadge="true"] {
-    background-color: #101113;
-    color: #BABDC0;
-    border: 1px solid #4A4C50;
+    background-color: #18191B;
+    color: #C5C8CB;
+    border: 1px solid #4B4E52;
     border-radius: 2px;
     padding: 1px 6px;
 }
 
-/* Parchment surfaces become raised concrete/steel note plates. */
+/* Parchment surfaces become soft raised charcoal note plates. */
 QFrame[parchment="true"], QWidget[parchment="true"],
 QFrame[foundryNoteCard="true"], QWidget[foundryNoteCard="true"] {
-    background-color: #1A1B1D;
+    background-color: #26272A;
     background-image: none;
-    color: #D2D0CC;
-    border-left: 2px solid #44464A;
-    border-top: 2px solid #44464A;
-    border-right: 2px solid #25272A;
-    border-bottom: 2px solid #25272A;
-    border-radius: 1px;
+    color: #D8D4CD;
+    border: 1px solid #45474B;
+    border-radius: 2px;
 }
 QFrame[parchment="true"] QLabel,
 QWidget[parchment="true"] QLabel,
@@ -144,120 +138,110 @@ QFrame[parchment="true"] QPlainTextEdit,
 QFrame[parchment="true"] QTextEdit,
 QFrame[foundryNoteCard="true"] QPlainTextEdit,
 QFrame[foundryNoteCard="true"] QTextEdit {
-    color: #D2D0CC;
+    color: #D8D4CD;
     font-family: "Segoe UI", "Montserrat", Arial;
     font-style: normal;
 }
 QFrame[parchment="true"] QLabel[cardTitle="true"],
 QFrame[foundryNoteCard="true"] QLabel[cardTitle="true"] {
-    color: #D7D3CC;
+    color: #E0DCD4;
 }
 
-/* ---------- Controls: heavy enough to feel physical, never shiny ---------- */
+/* ---------- Controls: charcoal, silver, restrained accent ---------- */
 QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit, QTimeEdit,
 QPlainTextEdit, QTextEdit {
-    background-color: #101113;
+    background-color: #1A1B1E;
     background-image: none;
-    color: #D5D6D7;
-    selection-background-color: #3A454F;
+    color: #D9D7D2;
+    selection-background-color: #36556F;
     selection-color: #FFFFFF;
-    border-left: 2px solid #282A2D;
-    border-top: 2px solid #282A2D;
-    border-right: 2px solid #505359;
-    border-bottom: 2px solid #505359;
-    border-radius: 1px;
+    border: 1px solid #505257;
+    border-radius: 2px;
     padding: 4px 7px;
 }
 QLineEdit:hover, QComboBox:hover, QSpinBox:hover, QDoubleSpinBox:hover,
 QPlainTextEdit:hover, QTextEdit:hover {
-    border-right-color: #696C70;
-    border-bottom-color: #696C70;
+    border-color: #686B70;
 }
 QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QDoubleSpinBox:focus,
 QPlainTextEdit:focus, QTextEdit:focus {
-    background-color: #17181A;
-    border: 2px solid #B88A3C;
+    background-color: #222326;
+    border: 2px solid #C6A85B;
 }
 QComboBox QAbstractItemView {
-    background-color: #111214;
-    color: #D5D6D7;
-    selection-background-color: #34373B;
+    background-color: #1C1D20;
+    color: #D9D7D2;
+    selection-background-color: #35495B;
     selection-color: #FFFFFF;
-    border: 2px solid #4B4E53;
+    border: 1px solid #55585D;
 }
 
 QPushButton {
-    background-color: #1A1B1D;
+    background-color: #252629;
     background-image: none;
-    color: #D0D1D2;
-    border-left: 2px solid #46484C;
-    border-top: 2px solid #46484C;
-    border-right: 2px solid #26282B;
-    border-bottom: 2px solid #26282B;
-    border-radius: 1px;
+    color: #D5D3CE;
+    border: 1px solid #4C4E52;
+    border-radius: 2px;
     padding: 5px 10px;
     min-height: 22px;
 }
 QPushButton:hover {
-    background-color: #242528;
-    border-left-color: #66686C;
-    border-top-color: #66686C;
+    background-color: #303135;
+    border-color: #66696E;
 }
 QPushButton:pressed {
-    background-color: #101113;
-    border: 2px solid #B88A3C;
+    background-color: #1A1B1E;
+    border: 2px solid #C6A85B;
 }
 QPushButton[primary="true"], QPushButton[variant="primary"] {
-    background-color: #2A1719;
-    color: #F0ECE5;
-    border-left: 3px solid #8B1E24;
-    border-top: 2px solid #5B3336;
-    border-right: 2px solid #211719;
-    border-bottom: 2px solid #211719;
+    background-color: #27323B;
+    color: #F0EEE9;
+    border: 1px solid #56738B;
+    border-left: 3px solid #6FA8D3;
 }
 QPushButton[primary="true"]:hover, QPushButton[variant="primary"]:hover {
-    background-color: #351B1E;
-    border-left-color: #A52B31;
+    background-color: #30404D;
+    border-color: #78A9CF;
 }
 QPushButton[danger="true"], QPushButton[variant="danger"] {
-    background-color: #3A2413;
+    background-color: #3A2C20;
     color: #FFE2C4;
     border: 2px solid #F28C28;
 }
 
 /* ---------- Sidebar: neighborhood field office ---------- */
 QWidget[foundrySidebar="true"], QFrame[settingsRail="true"] {
-    background-color: rgba(8, 8, 10, 246);
+    background-color: rgba(19, 20, 22, 247);
     background-image: url("@RYLO_ASSET_PATH@/rylo_stone.svg");
     border: none;
-    border-right: 2px solid #34363A;
+    border-right: 1px solid #414347;
 }
 QLabel[sidebarBrandMark="true"] {
     background: transparent;
 }
 QFrame[sidebarDivider="true"] {
-    color: #34363A;
-    border-color: #34363A;
+    color: #414347;
+    border-color: #414347;
 }
 QPushButton[nav="true"], QPushButton[settingsNav="true"] {
-    color: #AFB1B3;
-    background-color: rgba(18, 18, 20, 190);
-    border: 1px solid #292A2D;
-    border-radius: 1px;
+    color: #BBBEC1;
+    background-color: rgba(34, 35, 38, 205);
+    border: 1px solid #35373A;
+    border-radius: 2px;
     text-align: left;
 }
 QPushButton[nav="true"]:hover, QPushButton[settingsNav="true"]:hover {
-    background-color: #232427;
-    color: #E0DEDA;
-    border-color: #4D4F53;
+    background-color: #2D2F32;
+    color: #E1DFDA;
+    border-color: #52555A;
 }
 QPushButton[nav="true"]:checked, QPushButton[settingsNav="true"]:checked {
-    background-color: #281719;
-    color: #F0ECE7;
-    border-top: 1px solid #4C3436;
-    border-right: 1px solid #302326;
-    border-bottom: 1px solid #302326;
-    border-left: 4px solid #8B1E24;
+    background-color: #29333C;
+    color: #F0EEE9;
+    border-top: 1px solid #46545F;
+    border-right: 1px solid #39434B;
+    border-bottom: 1px solid #39434B;
+    border-left: 4px solid #6FA8D3;
 }
 QPushButton[navCategoryHeader="true"] {
     font-family: "Bahnschrift SemiCondensed", "Arial Narrow", "Segoe UI Semibold", Arial;
@@ -267,36 +251,36 @@ QPushButton[navCategoryHeader="true"] {
 
 /* ---------- Tabs, lists, tables ---------- */
 QTabWidget::pane {
-    border: 2px solid #34363A;
-    background-color: #111214;
+    border: 1px solid #414347;
+    background-color: #1B1C1F;
 }
 QTabBar::tab {
-    background-color: #18191B;
-    color: #96999C;
-    border: 1px solid #303236;
+    background-color: #252629;
+    color: #A8A6A2;
+    border: 1px solid #3D3F43;
     padding: 6px 11px;
 }
 QTabBar::tab:selected {
-    background-color: #261719;
-    color: #F0ECE7;
-    border-bottom: 3px solid #8B1E24;
+    background-color: #2B343D;
+    color: #F0EEE9;
+    border-bottom: 3px solid #6FA8D3;
 }
 
 QTableWidget, QTableView, QListWidget, QTreeWidget {
-    background-color: #101113;
-    alternate-background-color: #18191B;
-    color: #D2D3D4;
-    gridline-color: #323438;
-    selection-background-color: #34373A;
+    background-color: #1A1B1E;
+    alternate-background-color: #232427;
+    color: #D6D4CF;
+    gridline-color: #3C3E42;
+    selection-background-color: #35495B;
     selection-color: #FFFFFF;
-    border: 2px solid #34363A;
+    border: 1px solid #414347;
 }
 QHeaderView::section {
-    background-color: #202124;
-    color: #C6C4C0;
+    background-color: #292A2D;
+    color: #CCC9C3;
     border: none;
-    border-right: 1px solid #3C3E42;
-    border-bottom: 2px solid #4A4C50;
+    border-right: 1px solid #414347;
+    border-bottom: 1px solid #505257;
     padding: 5px 7px;
     font-family: "Bahnschrift SemiCondensed", "Arial Narrow", "Segoe UI Semibold", Arial;
     font-weight: 700;
@@ -304,7 +288,7 @@ QHeaderView::section {
 QAbstractItemView::item { padding: 4px 6px; }
 
 QCheckBox, QRadioButton {
-    color: #D0D1D2;
+    color: #D5D3CE;
     spacing: 7px;
 }
 QCheckBox::indicator, QRadioButton::indicator {
@@ -312,51 +296,51 @@ QCheckBox::indicator, QRadioButton::indicator {
     height: 15px;
 }
 QCheckBox::indicator:unchecked {
-    background-color: #0D0E10;
-    border: 2px solid #5A5D61;
+    background-color: #17181A;
+    border: 2px solid #62656A;
 }
 QCheckBox::indicator:checked {
-    background-color: #404347;
-    border: 2px solid #D0D2D4;
+    background-color: #4A5966;
+    border: 2px solid #D2D6DA;
 }
 
 QProgressBar {
-    background-color: #101113;
-    color: #D0D1D2;
-    border: 2px solid #34363A;
+    background-color: #1A1B1E;
+    color: #D5D3CE;
+    border: 1px solid #414347;
     text-align: center;
 }
-QProgressBar::chunk { background-color: #6B7075; }
+QProgressBar::chunk { background-color: #6F8293; }
 
-QScrollBar:vertical, QScrollBar:horizontal { background: #090A0B; }
+QScrollBar:vertical, QScrollBar:horizontal { background: #151618; }
 QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
-    background: #424448;
+    background: #4B4D51;
     min-height: 26px;
     min-width: 26px;
 }
-QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover { background: #5C5F63; }
+QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover { background: #65686D; }
 
 QToolTip {
-    background-color: #1C1D20;
-    color: #E0DEDA;
-    border: 2px solid #5B5D61;
+    background-color: #292A2D;
+    color: #E2DFD9;
+    border: 1px solid #62656A;
 }
 
 /* ---------- Colorblind-safe semantic layer ---------- */
-QLabel[successText="true"], QLabel[integrationState="true"] { color: #4EA3FF; }
-QLabel[criticalText="true"] { color: #F28C28; }
-QLabel[warningText="true"] { color: #D9B21F; }
-QLabel[specialText="true"] { color: #B388EB; }
-QLabel[neutralText="true"] { color: #8A939D; }
+QLabel[successText="true"], QLabel[integrationState="true"] { color: #6FB6F1; }
+QLabel[criticalText="true"] { color: #F29B45; }
+QLabel[warningText="true"] { color: #E0BE57; }
+QLabel[specialText="true"] { color: #B99AE8; }
+QLabel[neutralText="true"] { color: #9AA2AA; }
 QLabel[timerValue="true"] {
-    color: #D9D7D2;
+    color: #DCD8D0;
     font-family: "Bahnschrift SemiCondensed", "Arial Narrow", "Segoe UI Semibold", Arial;
 }
 QLabel[bossArtworkPlaceholder="true"], QLabel[positioningMap="true"] {
-    background-color: #111214;
+    background-color: #202124;
     background-image: none;
-    border: 2px solid #3D3F43;
-    color: #8E9296;
+    border: 1px solid #45474B;
+    color: #989B9E;
     font-family: "Segoe UI", "Montserrat", Arial;
 }
 """
@@ -403,17 +387,17 @@ def install(app: QApplication) -> None:
 
         description = QLabel(
             "Foundry Grimoire keeps the field-journal identity. Rylo · Guardian After Dark "
-            "uses matte city stone, worn steel, silver icons, muted brick-red branding, and "
-            "subtle old-gold focus details."
+            "uses warm charcoal, soft black, weathered steel, silver icons, and restrained "
+            "colorblind-safe accents."
         )
         description.setWordWrap(True)
         description.setProperty("muted", True)
         layout.addWidget(description)
 
         accessibility = QLabel(
-            "Rylo keeps brand color separate from status meaning: blue = safe, orange = danger, "
-            "gold = warning, purple = special, gray = neutral. Selection and focus also use "
-            "shape, border weight, and contrast rather than color alone."
+            "Rylo keeps branding neutral and status meaning explicit: blue = safe or primary, "
+            "orange = danger, gold = warning or focus, purple = special, gray = neutral. "
+            "Selection and focus also use shape, border weight, and contrast rather than color alone."
         )
         accessibility.setWordWrap(True)
         accessibility.setProperty("muted", True)
