@@ -17,6 +17,9 @@ from services.rotation_recovery_heavy_candidate_generation_bridge_service import
     RecoveryCandidateEvaluatorResolver,
     RecoveryPressureWaitDecisionFactory,
 )
+from services.rotation_recovery_heavy_candidate_orchestration_service import (
+    RecoveryRuntimeOutputConditionContextResolverFactory,
+)
 from services.rotation_recovery_heavy_final_family_evaluation_service import (
     RecoveryFinalScorecardResolver,
 )
@@ -45,6 +48,8 @@ class RotationSelectedEncounterEvidenceInputs:
 
     DD target resistance is also explicit evaluation evidence. An unset resistance
     remains unknown rather than being interpreted as zero armor or inferred from content.
+    Exact-event conditional output context is likewise optional caller-owned evidence;
+    absence never becomes an assumed false or true geometry/relationship fact.
 
     The evaluator and scorecard resolver pair may both be omitted. The canonical
     dashboard candidate boundary then composes both from the exact generated seed plan
@@ -68,6 +73,9 @@ class RotationSelectedEncounterEvidenceInputs:
     passives: tuple[PassiveGrant, ...] = ()
     wait_decision_factory: RecoveryPressureWaitDecisionFactory | None = None
     reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None
+    runtime_output_condition_context_resolver_factory: (
+        RecoveryRuntimeOutputConditionContextResolverFactory | None
+    ) = None
     max_iterations: int = 6
     baseline_id: str = "baseline"
     knowledge_gaps: tuple[CanonicalKnowledgeGap, ...] = ()
@@ -115,6 +123,9 @@ class RotationSelectedEncounterEvidenceSupport:
             passives=tuple(inputs.passives),
             wait_decision_factory=inputs.wait_decision_factory,
             reserve_assessment_resolver=inputs.reserve_assessment_resolver,
+            runtime_output_condition_context_resolver_factory=(
+                inputs.runtime_output_condition_context_resolver_factory
+            ),
             max_iterations=inputs.max_iterations,
             baseline_id=inputs.baseline_id,
             knowledge_gaps=tuple(inputs.knowledge_gaps),
