@@ -65,7 +65,6 @@ class ContextVariantCard(FoundryCard):
         self.context_type.addItems(["Team", "Boss", "Team + Boss"])
         self.team_name = _editable_combo(_team_names())
         self.boss_name = QLineEdit()
-        self.assignment = QLineEdit()
         self.mundus = _editable_combo(MUNDUS_CHOICES[1:])
         self.second_mundus = _editable_combo(MUNDUS_CHOICES[1:])
         self.front_bar = build_editor_module.SkillBarRow(editor.skill_choices)
@@ -81,7 +80,8 @@ class ContextVariantCard(FoundryCard):
 
         hint = QLabel(
             "Leave fields blank to inherit from the base build. "
-            "Resolution order: Team + Boss → Team → Boss → Base."
+            "Resolution order: Team + Boss → Team → Boss → Base. "
+            "Raid assignments stay on the team Assignments surface."
         )
         hint.setWordWrap(True)
         hint.setProperty("muted", True)
@@ -91,7 +91,6 @@ class ContextVariantCard(FoundryCard):
         context_form.addRow("Variant Type", self.context_type)
         context_form.addRow("Team", self.team_name)
         context_form.addRow("Boss / Encounter", self.boss_name)
-        context_form.addRow("Team Assignment", self.assignment)
         self.addLayout(context_form)
 
         self.gear_rows = {}
@@ -184,7 +183,6 @@ class ContextVariantCard(FoundryCard):
             ContextType=self.context_type.currentText().strip() or "Boss",
             TeamName=self.team_name.currentText().strip(),
             BossName=self.boss_name.text().strip(),
-            Assignment=self.assignment.text().strip(),
             Mundus=self.mundus.currentText().strip(),
             SecondMundus=self.second_mundus.currentText().strip(),
             Armor=self._sparse_armor(self.gear_rows),
@@ -209,7 +207,6 @@ class ContextVariantCard(FoundryCard):
         self.context_type.setCurrentText(variant.ContextType or "Boss")
         self.team_name.setCurrentText(variant.TeamName)
         self.boss_name.setText(variant.BossName)
-        self.assignment.setText(variant.Assignment)
         self.mundus.setCurrentText(variant.Mundus)
         self.second_mundus.setCurrentText(variant.SecondMundus)
 
@@ -300,9 +297,8 @@ def _variants_summary_card(self, build):
         if variant.BossName:
             context_bits.append(variant.BossName)
         context = " • ".join(context_bits) or "Unspecified context"
-        assignment = f" • {variant.Assignment}" if variant.Assignment else ""
         notes = f" — {variant.Notes}" if variant.Notes else ""
-        card.addWidget(QLabel(f"{kind}: {context}{assignment}{notes}"))
+        card.addWidget(QLabel(f"{kind}: {context}{notes}"))
     return card
 
 
