@@ -7,12 +7,10 @@ Every active canonical bonus row is inspected. If the shared gear-set resolver
 cannot interpret an active bonus, the bonus normally remains an explicit blocker
 rather than silently contributing zero.
 
-For Max Health/Magicka/Stamina only, an additional conservative screening layer
-may prove an *unmapped* bonus irrelevant when its description cannot modify the
-requested maximum resource and does not alter the legal equipment search. That
-narrow exception avoids requiring the entire unrelated proc corpus to be mechanic-
-mapped before a max-resource denominator can close while preserving fail-closed
-behavior for resource references and global equipment-state mechanics.
+For max-resource and recovery objectives, narrow conservative screening layers may
+prove an *unmapped* bonus irrelevant when its description cannot modify the requested
+objective and does not alter the legal equipment search. Relevant or ambiguous
+mechanics remain fail-closed for later review.
 """
 
 from dataclasses import dataclass
@@ -24,6 +22,9 @@ from minmax.gear_set_repository import GearSetRepository
 from minmax.gear_sets import GearSet, GearSetBonus
 from minmax.gear_stat_inputs import GearStatInputResolver
 from minmax.stat_ids import StatId
+from services.extreme_gear_set_recovery_objective_screening_service import (
+    ExtremeGearSetRecoveryObjectiveScreeningService,
+)
 from services.extreme_gear_set_resource_objective_screening_service import (
     ExtremeGearSetResourceObjectiveScreeningService,
 )
@@ -69,6 +70,7 @@ class ExtremeGearSetObjectiveService:
         "sneak_cost_reduction",
     )
     _MAX_RESOURCE_OBJECTIVES = frozenset({"max_health", "max_magicka", "max_stamina"})
+    _RECOVERY_OBJECTIVES = frozenset({"health_recovery", "magicka_recovery", "stamina_recovery"})
     _MAX_RESOURCE_RELEVANCE_CONDITIONS = frozenset(
         {
             "armor_ability_slotted",
@@ -218,6 +220,13 @@ class ExtremeGearSetObjectiveService:
                 if description:
                     if objective in cls._MAX_RESOURCE_OBJECTIVES:
                         screening = ExtremeGearSetResourceObjectiveScreeningService.review(
+                            description,
+                            objective,
+                        )
+                        if screening.proven_irrelevant:
+                            continue
+                    elif objective in cls._RECOVERY_OBJECTIVES:
+                        screening = ExtremeGearSetRecoveryObjectiveScreeningService.review(
                             description,
                             objective,
                         )
