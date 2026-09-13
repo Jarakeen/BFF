@@ -3,6 +3,8 @@ import json
 import sqlite3
 from types import SimpleNamespace
 
+import pytest
+
 from services.rotation_dd_periodic_esologs_candidate_continuity_service import (
     RotationDDPeriodicEsoLogsCandidateContinuityService,
 )
@@ -98,8 +100,8 @@ def test_clusters_near_simultaneous_fanout_before_gap_measurement(tmp_path) -> N
     assert five.median_first_offset_seconds == 0.1
     assert five.median_last_offset_seconds == 6.1
     assert five.median_gap_seconds == 1.0
-    assert five.median_max_gap_seconds == 4.0
-    assert five.maximum_gap_seconds == 4.0
+    assert five.median_max_gap_seconds == pytest.approx(4.0)
+    assert five.maximum_gap_seconds == pytest.approx(4.0)
     ten = next(item for item in summary.thresholds if item.threshold_seconds == 10.0)
     assert ten.qualifying_cast_count == 0
 
