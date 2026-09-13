@@ -18,13 +18,11 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from minmax.alchemy_potion_buff_semantics import potion_buff_for_trait
 from minmax.base_character_state import BASE_HEALTH_RECOVERY
 from minmax.combat_effect_semantics import GameUpdate
 from minmax.effects import EffectOperation
 from minmax.gear_set_repository import GearSetRepository
 from minmax.mundus_repository import MundusRepository
-from minmax.named_combat_buffs import effects_for_buff
 from minmax.potion_availability_repository import PotionAvailabilityRepository
 from minmax.provisioning_static_repository import ProvisioningStaticRepository
 from minmax.stat_ids import StatId
@@ -32,6 +30,9 @@ from services.extreme_gear_set_bonus_breakpoint_service import ExtremeGearSetBon
 from services.extreme_gear_set_objective_relevance_service import ExtremeGearSetObjectiveRelevanceService
 from services.extreme_gear_set_recovery_special_branch_service import (
     ExtremeGearSetRecoverySpecialBranchService,
+)
+from services.extreme_recovery_potion_projection_service import (
+    ExtremeRecoveryPotionProjectionService,
 )
 
 OBJECTIVE = "health_recovery"
@@ -142,27 +143,6 @@ def _provisioning_projection(database: Path):
     return best, tuple(relevant), tuple(dict.fromkeys(unresolved)), len(repository.list_names())
 
 
-def _potion_projection(database: Path):
-    repository = PotionAvailabilityRepository(database, game_update=GameUpdate.U50)
-    catalog = repository.catalog()
-    relevant: list[tuple[str, tuple[str, ...]]] = []
-    unresolved: list[str] = [str(item) for item in catalog.unresolved if str(item)]
-
-    for formula in catalog.formulas:
-        buffs: list[str] = []
-        for trait in formula.traits:
-            buff = potion_buff_for_trait(str(trait), game_update=GameUpdate.U50)
-            if not buff:
-                continue
-            effects = effects_for_buff(buff, game_update=GameUpdate.U50)
-            if any(effect.stat is StatId.HEALTH_RECOVERY for effect in effects):
-                buffs.append(buff)
-        if buffs:
-            relevant.append((str(formula.canonical_id or ""), tuple(dict.fromkeys(buffs))))
-
-    return catalog, tuple(relevant), tuple(dict.fromkeys(unresolved))
-
-
 def _special_frontier(repository: GearSetRepository):
     breakpoints = ExtremeGearSetBonusBreakpointService(repository).build()
     relevance = ExtremeGearSetObjectiveRelevanceService(repository).build(OBJECTIVE, breakpoints)
@@ -186,7 +166,8 @@ def main() -> int:
     mundus = MundusRepository(database, initialize=False)
     mundus_rows, mundus_unresolved = _mundus_projection(mundus)
     best_provisioning, provisioning_rows, provisioning_unresolved, provisioning_reviewed = _provisioning_projection(database)
-    potion_catalog, potion_relevant, potion_unresolved = _potion_projection(database)
+    potion_repository = PotionAvailabilityRepository(database, game_update=GameUpdate.U50)
+    potion = ExtremeRecoveryPotionProjectionService(potion_repository).build(OBJECTIVE)
     gear_repository = GearSetRepository(database)
     breakpoints, relevance, special, special_unresolved = _special_frontier(gear_repository)
 
@@ -224,12 +205,15 @@ def main() -> int:
         f"unresolved={len(provisioning_unresolved)}"
     )
     print(
-        f"potion_formulas_reviewed={len(potion_catalog.formulas)} "
-        f"health_recovery_relevant_formulas={len(potion_relevant)} "
-        f"catalog_unresolved={len(potion_unresolved)}"
+        f"potion_formulas_reviewed={potion.formulas_reviewed} "
+        f"health_recovery_relevant_formulas={len(potion.relevant_formulas)} "
+        f"relevant_buffs={potion.relevant_buffs!r} "
+        f"traits_reviewed={len(potion.traits_reviewed)} "
+        f"denominator_proven={potion.denominator_proven} "
+        f"unresolved={len(potion.unresolved)}"
     )
-    for formula_id, buffs in potion_relevant[:12]:
-        print(f"  potion_relevant: {formula_id or '<unnamed>'} buffs={buffs!r}")
+    for formula_id in potion.relevant_formulas[:12]:
+        print(f"  potion_relevant: {formula_id}")
     print("named_buff_major_fortitude=+30%")
     print("named_buff_minor_fortitude=+15%")
     print()
@@ -255,13 +239,8 @@ def main() -> int:
     unresolved: list[str] = []
     unresolved.extend(mundus_unresolved)
     unresolved.extend(provisioning_unresolved)
+    unresolved.extend(potion.unresolved)
     unresolved.extend(special_unresolved)
-    # Potion catalog parser-provenance warnings are reported above but are not yet
-    # neutralized for recovery objectives; keep that axis explicitly open.
-    if potion_unresolved:
-        unresolved.append(
-            f"Potion catalog has {len(potion_unresolved)} unresolved source warning(s) requiring recovery-specific review"
-        )
 
     print("OPEN WHOLE-RECORD AXES")
     print("  race_projection=pending")
