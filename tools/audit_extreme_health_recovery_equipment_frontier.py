@@ -5,8 +5,9 @@ from __future__ import annotations
 This is a proof-frontier audit, not whole-record scoring. It compares the reviewed
 Heavy-Armor trait/Mundus states, resolves the strongest Health Recovery jewelry
 glyph with Gold Infused scaling, and projects canonical Champion Point candidates.
-Unsupported CP mechanics are screened by direct Health Recovery relevance before
-remaining as objective-specific blockers.
+Unsupported CP mechanics are screened by direct Health Recovery relevance, then
+relevant conditional mechanics receive individual numeric ceilings. Champion Bar
+loadout legality remains a separate proof obligation.
 """
 
 import argparse
@@ -28,6 +29,9 @@ from services.extreme_champion_point_objective_service import (
 )
 from services.extreme_divines_mundus_objective_service import (
     ExtremeDivinesMundusObjectiveService,
+)
+from services.extreme_health_recovery_champion_point_branch_service import (
+    ExtremeHealthRecoveryChampionPointBranchService,
 )
 from services.extreme_health_recovery_champion_point_screening_service import (
     ExtremeHealthRecoveryChampionPointScreeningService,
@@ -65,13 +69,24 @@ def _screen_unresolved_cp(repository, candidates):
     return tuple(relevant), tuple(irrelevant), tuple(missing)
 
 
+def _classify_screened(rows):
+    return tuple(
+        (
+            candidate,
+            screening,
+            ExtremeHealthRecoveryChampionPointBranchService.classify(screening.record),
+        )
+        for candidate, screening in rows
+    )
+
+
 def main() -> int:
     args = _parser().parse_args()
     database = Path(args.database)
 
     print("EXTREME HEALTH RECOVERY EQUIPMENT FRONTIER")
     print(f"database={database}")
-    print("mode=canonical_equipment_frontier_plus_cp_relevance_screening")
+    print("mode=canonical_equipment_frontier_plus_cp_semantic_branches")
     print()
 
     print("HEAVY ARMOR / MUNDUS TRAIT FRONTIER")
@@ -94,8 +109,7 @@ def main() -> int:
         mundus_delta = mundus.projected_delta
         if mundus_delta is None:
             print(
-                f"  armor_divines={divines_count} unresolved_mundus="
-                + "; ".join(mundus.mundus.unresolved)
+                f"  armor_divines={divines_count} unresolved_mundus="n                + "; ".join(mundus.mundus.unresolved)
             )
             continue
         invigorating_flat = invigorating_count * float(ARMOR_INVIGORATING_RECOVERY_GOLD)
@@ -164,20 +178,30 @@ def main() -> int:
         cp_repository,
         unresolved_slottable,
     )
+    classified_non_slottable = _classify_screened(relevant_non_slottable)
+    classified_slottable = _classify_screened(relevant_slottable)
+    incomplete_branches = tuple(
+        row
+        for row in (*classified_non_slottable, *classified_slottable)
+        if not row[2].complete
+    )
 
     print(f"non_slottable_candidates_reviewed={len(baseline.resolved_candidates) + len(baseline.unresolved_candidates)}")
     print(f"non_slottable_reviewed_lower_bound={baseline.reviewed_lower_bound:.3f}")
     print(f"non_slottable_raw_unresolved={len(baseline.unresolved_candidates)}")
     print(f"non_slottable_relevance_pruned={len(irrelevant_non_slottable)}")
-    print(f"non_slottable_health_recovery_unresolved={len(relevant_non_slottable)}")
+    print(f"non_slottable_health_recovery_relevant={len(relevant_non_slottable)}")
     for row in baseline.resolved_candidates:
         if float(row.reviewed_delta or 0.0) > 0.0:
             print(f"  non_slottable_positive: {row.name} delta={float(row.reviewed_delta):.3f}")
-    for candidate, screening in relevant_non_slottable:
+    for candidate, screening, branch in classified_non_slottable:
         print(
-            f"  non_slottable_relevant_unresolved: {candidate.name}: "
-            f"evidence={screening.evidence!r}; {'; '.join(candidate.unresolved)}"
+            f"  non_slottable_branch: {candidate.name} kind={branch.kind.value} "
+            f"flat_ceiling={branch.flat_ceiling!r} stages={branch.stages!r} "
+            f"condition={branch.condition or '<none>'} complete={branch.complete}"
         )
+        for problem in branch.unresolved:
+            print(f"    unresolved: {problem}")
     for candidate in missing_non_slottable:
         print(f"  non_slottable_screening_missing_record: {candidate.name}")
 
@@ -187,29 +211,47 @@ def main() -> int:
         print(f"  slottable_positive: {row.name} delta={float(row.reviewed_delta):.3f}")
     print(f"slottable_raw_unresolved={len(unresolved_slottable)}")
     print(f"slottable_relevance_pruned={len(irrelevant_slottable)}")
-    print(f"slottable_health_recovery_unresolved={len(relevant_slottable)}")
-    for candidate, screening in relevant_slottable:
-        record = screening.record
+    print(f"slottable_health_recovery_relevant={len(relevant_slottable)}")
+    for candidate, screening, branch in sorted(
+        classified_slottable,
+        key=lambda row: (-(row[2].flat_ceiling or 0.0), row[0].name.casefold()),
+    ):
         print(
-            f"  slottable_relevant_unresolved: {candidate.name}: max_points={record.max_points} "
-            f"description={record.description!r} evidence={screening.evidence!r}"
+            f"  slottable_branch: {candidate.name} kind={branch.kind.value} "
+            f"flat_ceiling={branch.flat_ceiling!r} stages={branch.stages!r} "
+            f"condition={branch.condition or '<none>'} complete={branch.complete}"
         )
+        for problem in branch.unresolved:
+            print(f"    unresolved: {problem}")
     for candidate in missing_slottable:
         print(f"  slottable_screening_missing_record: {candidate.name}")
     print()
 
+    cp_semantic_relevance_denominator_screened = not missing_non_slottable and not missing_slottable
+    cp_individual_branch_denominator_proven = (
+        cp_semantic_relevance_denominator_screened and not incomplete_branches
+    )
+    cp_loadout_legality_pending = bool(positive_slottable or classified_slottable)
+    print(f"cp_semantic_relevance_denominator_screened={cp_semantic_relevance_denominator_screened}")
+    print(f"cp_individual_branch_denominator_proven={cp_individual_branch_denominator_proven}")
+    print(f"cp_loadout_legality_pending={cp_loadout_legality_pending}")
+
     unresolved_count = (
         len(jewelry.unresolved)
-        + len(relevant_non_slottable)
-        + len(relevant_slottable)
+        + len(incomplete_branches)
         + len(missing_non_slottable)
         + len(missing_slottable)
+        + (1 if cp_loadout_legality_pending else 0)
     )
-    cp_semantic_relevance_denominator_screened = not missing_non_slottable and not missing_slottable
-    print(f"cp_semantic_relevance_denominator_screened={cp_semantic_relevance_denominator_screened}")
     print(f"equipment_frontier_unresolved_count={unresolved_count}")
+    if not cp_individual_branch_denominator_proven:
+        print("NEXT_STEP=close remaining Health Recovery Champion Point branch grammars before loadout scoring")
+        return 2
+    if cp_loadout_legality_pending:
+        print("NEXT_STEP=prove legal Champion Bar loadout dominance across Rejuvenation and the classified conditional recovery stars")
+        return 2
     if unresolved_count:
-        print("NEXT_STEP=classify and score only the surviving Health Recovery Champion Point mechanics, then prove legal CP loadout dominance")
+        print("NEXT_STEP=close remaining equipment proof obligations")
         return 2
     print("NEXT_STEP=compose the ordinary Health Recovery incumbent from closed equipment, CP, class, race, consumable, and ordinary-set layers")
     return 0
