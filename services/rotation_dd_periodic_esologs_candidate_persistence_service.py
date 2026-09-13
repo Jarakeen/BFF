@@ -21,6 +21,11 @@ class RotationDDPeriodicEsoLogsCandidatePersistenceSummary:
     observed_at_or_after_10s: int
     observed_at_or_after_15s: int
     observed_at_or_after_19s: int
+    eligible_at_or_after_2s: int
+    eligible_at_or_after_5s: int
+    eligible_at_or_after_10s: int
+    eligible_at_or_after_15s: int
+    eligible_at_or_after_19s: int
 
 
 @dataclass(frozen=True)
@@ -34,13 +39,18 @@ class RotationDDPeriodicEsoLogsCandidatePersistenceReport:
 
 
 class RotationDDPeriodicEsoLogsCandidatePersistenceService:
-    """Measure last-observed same-track candidate persistence per censored cast.
+    """Measure same-track candidate persistence per observable censored cast.
 
     Candidate numeric IDs remain observational evidence handles only. Each canonical
     skill cast owns same-source, same-cast-track candidate events from cast time until
-    the next same-source cast or the reviewed active-window end, whichever comes first.
-    A threshold count means only that at least one candidate event was observed at or
-    after that offset. It does not prove uninterrupted effect uptime between observations.
+    the next same-source cast, the reviewed active-window end, or the end of imported
+    fight evidence, whichever comes first.
+
+    Threshold counts are conditioned on exposure. A cast is eligible for a threshold
+    only when its observable ownership window actually reaches that offset. This avoids
+    treating recast-censored or fight-end-censored casts as evidence that a candidate
+    failed to persist. Observed-at-or-after counts still do not prove uninterrupted
+    uptime between observations.
     """
 
     _CAST_TYPES = ("cast", "completecast", "begincast")
@@ -139,6 +149,7 @@ class RotationDDPeriodicEsoLogsCandidatePersistenceService:
         )
         casts = [row for row in casts if self._event_type(row) == anchor_type]
         next_cast_times = self._next_same_source_cast_times(casts)
+        fight_end_times = self._fight_end_times(rows)
 
         candidate_set = set(candidates)
         by_scope_source_track: dict[tuple[str, int, int, int], list[sqlite3.Row]] = {}
@@ -152,17 +163,30 @@ class RotationDDPeriodicEsoLogsCandidatePersistenceService:
             by_scope_source_track.setdefault(key, []).append(row)
 
         last_offsets_by_candidate: dict[int, list[float]] = {candidate: [] for candidate in candidates}
+        eligible_counts_by_candidate: dict[int, dict[float, int]] = {
+            candidate: {threshold: 0 for threshold in self._THRESHOLDS}
+            for candidate in candidates
+        }
+
         for cast in casts:
             cast_source = self._int_or_none(cast["source_id"])
             cast_track = self._int_or_none(cast["cast_track_id"])
             if cast_source is None or cast_track is None:
                 continue
             cast_time = float(cast["timestamp"])
-            cast_key = (str(cast["report_code"]), int(cast["fight_id"]), int(cast["event_index"]))
+            report = str(cast["report_code"])
+            fight = int(cast["fight_id"])
+            cast_key = (report, fight, int(cast["event_index"]))
             next_cast_time = next_cast_times.get(cast_key)
+            fight_end_time = fight_end_times.get((report, fight), cast_time)
             window_end = cast_time + window * 1000.0
-            censored_end = min(window_end, next_cast_time) if next_cast_time is not None else window_end
-            scope_key = (str(cast["report_code"]), int(cast["fight_id"]), cast_source, cast_track)
+            observable_end = min(
+                window_end,
+                next_cast_time if next_cast_time is not None else window_end,
+                fight_end_time,
+            )
+            observable_seconds = max(0.0, (observable_end - cast_time) / 1000.0)
+            scope_key = (report, fight, cast_source, cast_track)
             matching = by_scope_source_track.get(scope_key, ())
             by_candidate: dict[int, list[float]] = {}
             for row in matching:
@@ -170,20 +194,29 @@ class RotationDDPeriodicEsoLogsCandidatePersistenceService:
                 if timestamp < cast_time:
                     continue
                 if next_cast_time is not None:
-                    if timestamp >= censored_end:
+                    if timestamp >= observable_end:
                         continue
-                elif timestamp > censored_end:
+                elif timestamp > observable_end:
                     continue
                 candidate_id = int(row["ability_game_id"])
                 by_candidate.setdefault(candidate_id, []).append((timestamp - cast_time) / 1000.0)
-            for candidate_id, offsets in by_candidate.items():
+
+            for candidate_id in candidates:
+                offsets = by_candidate.get(candidate_id, ())
                 if offsets:
                     last_offsets_by_candidate[candidate_id].append(max(offsets))
+                for threshold in self._THRESHOLDS:
+                    if observable_seconds >= threshold:
+                        eligible_counts_by_candidate[candidate_id][threshold] += 1
 
         summaries: list[RotationDDPeriodicEsoLogsCandidatePersistenceSummary] = []
         for candidate_id in candidates:
             offsets = tuple(sorted(last_offsets_by_candidate[candidate_id]))
-            counts = {threshold: sum(1 for value in offsets if value >= threshold) for threshold in self._THRESHOLDS}
+            counts = {
+                threshold: sum(1 for value in offsets if value >= threshold)
+                for threshold in self._THRESHOLDS
+            }
+            eligible = eligible_counts_by_candidate[candidate_id]
             summaries.append(
                 RotationDDPeriodicEsoLogsCandidatePersistenceSummary(
                     candidate_ability_id=candidate_id,
@@ -196,6 +229,11 @@ class RotationDDPeriodicEsoLogsCandidatePersistenceService:
                     observed_at_or_after_10s=counts[10.0],
                     observed_at_or_after_15s=counts[15.0],
                     observed_at_or_after_19s=counts[19.0],
+                    eligible_at_or_after_2s=eligible[2.0],
+                    eligible_at_or_after_5s=eligible[5.0],
+                    eligible_at_or_after_10s=eligible[10.0],
+                    eligible_at_or_after_15s=eligible[15.0],
+                    eligible_at_or_after_19s=eligible[19.0],
                 )
             )
         if not any(item.linked_cast_count for item in summaries):
@@ -235,6 +273,17 @@ class RotationDDPeriodicEsoLogsCandidatePersistenceService:
             for current, following in zip(ordered, ordered[1:]):
                 key = (str(current["report_code"]), int(current["fight_id"]), int(current["event_index"]))
                 result[key] = float(following["timestamp"])
+        return result
+
+    @staticmethod
+    def _fight_end_times(rows: tuple[sqlite3.Row, ...]) -> dict[tuple[str, int], float]:
+        result: dict[tuple[str, int], float] = {}
+        for row in rows:
+            key = (str(row["report_code"]), int(row["fight_id"]))
+            timestamp = float(row["timestamp"])
+            previous = result.get(key)
+            if previous is None or timestamp > previous:
+                result[key] = timestamp
         return result
 
     @classmethod
