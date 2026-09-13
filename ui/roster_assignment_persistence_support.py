@@ -1,14 +1,17 @@
 from __future__ import annotations
 
-"""Persist editable Assignments-tab fields through the existing RosterService.
+"""Persist Assignments-tab planning by team with optional boss overrides.
 
-The Assignments table remains presentation over roster members. This layer only
-stores the user-edited assignment fields keyed by durable roster_member.id; it
-does not create a second player, team, or build identity.
+Team Default is the normal raid job. A selected boss creates or reads an override
+for that fight. Boss rows inherit the team default until the user changes them.
+All Teams remains a safe overview instead of an ambiguous editing surface.
 """
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QComboBox, QTableWidgetItem
+
+from services.roster_assignment_context_service import RosterAssignmentContextService
+from ui.roster_encounter_assignment_context_support import selected_encounter_id
 
 
 _INSTALLED = False
@@ -32,11 +35,33 @@ def _member_id_for_row(page, row: int) -> int | None:
         return None
 
 
+def _team_name(page) -> str:
+    return str(getattr(page, "assignment_team_filter", "") or "").strip()
+
+
+def _context_service(page) -> RosterAssignmentContextService:
+    service = getattr(page, "assignment_context_service", None)
+    if service is None:
+        service = RosterAssignmentContextService(page.database)
+        page.assignment_context_service = service
+    return service
+
+
 def _persist_field(page, member_id: int | None, field: str, value: str) -> None:
     if member_id is None:
         return
+    team_name = _team_name(page)
+    if not team_name:
+        page.status.warning("Choose a team before editing assignments.")
+        return
     try:
-        page.roster_service.set_member_assignment_field(member_id, field, value)
+        _context_service(page).set_field(
+            member_id,
+            team_name=team_name,
+            encounter_id=selected_encounter_id(page),
+            field=field,
+            value=value,
+        )
     except (OSError, ValueError) as exc:
         page.status.error(f"Could not save assignment: {exc}")
 
@@ -51,11 +76,35 @@ def _persist_item_edit(page, item: QTableWidgetItem) -> None:
     _persist_field(page, member_id, field, item.text())
 
 
+def _set_editable(item: QTableWidgetItem | None, editable: bool) -> None:
+    if item is None:
+        return
+    flags = item.flags()
+    if editable:
+        flags |= Qt.ItemFlag.ItemIsEditable
+    else:
+        flags &= ~Qt.ItemFlag.ItemIsEditable
+    item.setFlags(flags)
+
+
 def _restore_row(page, row: int) -> None:
     member_id = _member_id_for_row(page, row)
     if member_id is None:
         return
-    saved = page.roster_service.get_member_assignment(member_id)
+
+    team_name = _team_name(page)
+    encounter_id = selected_encounter_id(page)
+    if team_name:
+        saved = _context_service(page).get_effective_assignment(
+            member_id,
+            team_name=team_name,
+            encounter_id=encounter_id,
+            legacy_service=page.roster_service,
+        )
+    else:
+        saved = page.roster_service.get_member_assignment(member_id)
+        saved["_source"] = "overview"
+        saved["_inherited"] = False
 
     role_item = page.assignment_table.item(row, 1)
     role = role_item.text().strip() if role_item is not None else ""
@@ -64,14 +113,26 @@ def _restore_row(page, row: int) -> None:
         "secondary_assignment": page._secondary_assignment(role),
     }
 
+    inherited = bool(saved.get("_inherited", False))
     for column, field in ((4, "primary_assignment"), (5, "secondary_assignment")):
         combo = page.assignment_table.cellWidget(row, column)
         if not isinstance(combo, QComboBox):
             continue
-        value = saved.get(field, "") or defaults[field]
+        value = str(saved.get(field, "") or defaults[field])
         combo.blockSignals(True)
         combo.setCurrentText(value)
+        combo.setEnabled(bool(team_name))
         combo.blockSignals(False)
+        if not team_name:
+            combo.setToolTip("Choose a team above before editing assignments.")
+        elif encounter_id and inherited:
+            combo.setToolTip(
+                "Inherited from this team's default. Change it only if this boss needs a different job."
+            )
+        elif encounter_id:
+            combo.setToolTip("Boss-specific override for this team.")
+        else:
+            combo.setToolTip("Default job for this team. Bosses inherit this unless overridden.")
         backing = page.assignment_table.item(row, column)
         if backing is not None:
             backing.setText(value)
@@ -81,14 +142,22 @@ def _restore_row(page, row: int) -> None:
             )
         )
 
-    gear = saved.get("gear_needed", "")
-    notes = saved.get("notes", "")
+    gear = str(saved.get("gear_needed", "") or "")
+    notes = str(saved.get("notes", "") or "")
     gear_item = page.assignment_table.item(row, 6)
     notes_item = page.assignment_table.item(row, 7)
     if gear_item is not None:
         gear_item.setText(gear or "—")
+        _set_editable(gear_item, bool(team_name))
+        gear_item.setToolTip(
+            "Boss-specific override" if encounter_id and not inherited
+            else "Inherited from team default" if encounter_id and inherited
+            else "Choose a team before editing" if not team_name
+            else "Team default"
+        )
     if notes_item is not None:
         notes_item.setText(notes)
+        _set_editable(notes_item, bool(team_name))
 
 
 def install() -> None:
@@ -103,6 +172,7 @@ def install() -> None:
 
     def build_assignments_tab_with_persistence(self):
         page = original_build_assignments_tab(self)
+        self.assignment_context_service = RosterAssignmentContextService(self.database)
         self.assignment_table.itemChanged.connect(
             lambda item: _persist_item_edit(self, item)
         )
