@@ -84,16 +84,12 @@ class RotationDurationRefinementService:
         demand_action_claims: tuple[DemandActionClaim, ...] = (),
         refresh_cadences: tuple[RotationRefreshIntervalPolicy, ...] = (),
     ) -> RotationDurationRefinement:
-        # Resolve finite-duration and reviewed persistent recast semantics from the
-        # authored seed before any scheduling decisions are made.
         seed_projection = self.duration_analysis.analyze(plan)
 
-        # Persistent toggles must be normalized before ordinary duration scheduling.
-        # Their explicit persistent recast rules then keep the preserved activation
-        # out of the ordinary no-duration filler pool without fabricating a duration.
         normalized_seed = self.persistent_toggle_plan.normalize(
             plan,
             duration_rules=seed_projection.rules,
+            priorities=priorities,
         ).plan
 
         demand_windows = tuple(demands)
@@ -203,10 +199,6 @@ class RotationDurationRefinementService:
         if unresolved != refined.unresolved:
             refined = self._with_unresolved(refined, unresolved)
 
-        # Re-analyze the actual refined actions so callers receive duration, recast,
-        # uptime, and gap evidence for the same plan they render/evaluate. Persistent
-        # rules remain scheduling-only and therefore stay outside finite-duration
-        # analysis while still being present in the returned rule set when matched.
         final_projection = self.duration_analysis.analyze(refined)
         final_unresolved = self._dedupe(
             tuple(refined.unresolved) + tuple(final_projection.unresolved)
