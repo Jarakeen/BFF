@@ -23,6 +23,8 @@ class RotationDDPeriodicEsoLogsCandidateDrilldownReport:
     first_offsets_seconds: tuple[float, ...]
     last_offsets_seconds: tuple[float, ...]
     within_cast_intervals_seconds: tuple[float, ...]
+    same_target_intervals_seconds: tuple[float, ...]
+    same_target_interval_sequence_count: int
     near_active_end_count: int
     active_window_seconds: float
     unresolved: tuple[str, ...] = ()
@@ -42,9 +44,11 @@ class RotationDDPeriodicEsoLogsCandidateDrilldownService:
     The service keeps canonical skill identity separate from the numeric candidate id,
     requires exact same-cast-track linkage for its strongest observations, and reports
     whether the candidate clusters near the reviewed active-window end. Near-simultaneous
-    multi-target rows are clustered into one observational occurrence before interval
-    calculations so ESO Logs row spacing is not mistaken for game cadence. It never
-    converts observations into executable cadence, anchor, refresh, or magnitude semantics.
+    multi-target rows are clustered into one observational occurrence for the aggregate
+    interval view. A second cadence view groups by exact cast track and target before
+    clustering so staggered AoE fan-out cannot masquerade as one target's game cadence.
+    It never converts observations into executable cadence, anchor, refresh, or magnitude
+    semantics.
     """
 
     _CAST_TYPES = ("cast", "completecast", "begincast")
@@ -127,6 +131,8 @@ class RotationDDPeriodicEsoLogsCandidateDrilldownService:
         first_offsets: list[float] = []
         last_offsets: list[float] = []
         intervals: list[float] = []
+        same_target_intervals: list[float] = []
+        same_target_interval_sequence_count = 0
         linked_event_count = 0
         linked_cast_count = 0
         near_end_count = 0
@@ -145,6 +151,7 @@ class RotationDDPeriodicEsoLogsCandidateDrilldownService:
             if "target_id" in row.keys() and row["target_id"] is not None:
                 targets.add(int(row["target_id"]))
 
+        target_available = bool(rows and "target_id" in rows[0].keys())
         for cast in casts:
             if cast["source_id"] is None or cast["cast_track_id"] is None:
                 continue
@@ -164,6 +171,21 @@ class RotationDDPeriodicEsoLogsCandidateDrilldownService:
             intervals.extend((b - a) / 1000.0 for a, b in zip(times, times[1:]))
             near_end_count += sum(1 for t in times if abs((t - cast_time) - window * 1000.0) <= self._END_TOLERANCE_MS)
 
+            if target_available:
+                by_target: dict[int, list[float]] = {}
+                for row in linked:
+                    if row["target_id"] is None:
+                        continue
+                    by_target.setdefault(int(row["target_id"]), []).append(float(row["timestamp"]))
+                for target_times in by_target.values():
+                    clustered = self._cluster_times(target_times)
+                    if len(clustered) < 2:
+                        continue
+                    same_target_interval_sequence_count += 1
+                    same_target_intervals.extend(
+                        (b - a) / 1000.0 for a, b in zip(clustered, clustered[1:])
+                    )
+
         if not linked_cast_count:
             unresolved.append(f"{identity}: candidate {candidate_id} has no exact same-cast-track observations")
 
@@ -173,9 +195,12 @@ class RotationDDPeriodicEsoLogsCandidateDrilldownService:
             event_count=len(candidate_rows), linked_event_count=linked_event_count,
             ability_names=tuple(sorted(names, key=str.casefold)),
             event_types=tuple(sorted(event_type_counts.items())),
-            target_count=(len(targets) if "target_id" in rows[0].keys() else None) if rows else None,
+            target_count=(len(targets) if target_available else None),
             first_offsets_seconds=tuple(first_offsets), last_offsets_seconds=tuple(last_offsets),
-            within_cast_intervals_seconds=tuple(intervals), near_active_end_count=near_end_count,
+            within_cast_intervals_seconds=tuple(intervals),
+            same_target_intervals_seconds=tuple(same_target_intervals),
+            same_target_interval_sequence_count=same_target_interval_sequence_count,
+            near_active_end_count=near_end_count,
             unresolved=tuple(dict.fromkeys(unresolved)),
         )
 
@@ -221,6 +246,8 @@ class RotationDDPeriodicEsoLogsCandidateDrilldownService:
             ability_names=kwargs.get("ability_names", ()), event_types=kwargs.get("event_types", ()),
             target_count=kwargs.get("target_count"), first_offsets_seconds=kwargs.get("first_offsets_seconds", ()),
             last_offsets_seconds=kwargs.get("last_offsets_seconds", ()), within_cast_intervals_seconds=kwargs.get("within_cast_intervals_seconds", ()),
+            same_target_intervals_seconds=kwargs.get("same_target_intervals_seconds", ()),
+            same_target_interval_sequence_count=kwargs.get("same_target_interval_sequence_count", 0),
             near_active_end_count=kwargs.get("near_active_end_count", 0), active_window_seconds=window,
             unresolved=kwargs.get("unresolved", ()),
         )
