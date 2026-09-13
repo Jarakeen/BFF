@@ -17,6 +17,9 @@ from services.rotation_candidate_generation_service import GeneratedRotationCand
 from services.rotation_dd_output_context_relevance_service import (
     RotationDDOutputContextRelevanceService,
 )
+from services.rotation_dd_whole_plan_damage_blocker_triage_service import (
+    RotationDDWholePlanDamageBlockerTriageService,
+)
 from services.rotation_dd_whole_plan_damage_coverage_audit_service import (
     RotationDDWholePlanDamageCoverageAuditService,
 )
@@ -232,18 +235,45 @@ def _action_damage_provider(
     return provider
 
 
-def _sorted_blockers(audit):
+def _sorted_triage(items):
     return tuple(
         sorted(
-            audit.blockers,
+            items,
             key=lambda item: (
-                -item.occurrence_count,
-                item.action_kind.value,
-                (item.action_name or "").casefold(),
-                item.reason.casefold(),
+                -item.blocker.occurrence_count,
+                item.blocker.action_kind.value,
+                (item.blocker.action_name or "").casefold(),
+                item.blocker.reason.casefold(),
             ),
         )
     )
+
+
+def _print_triage_section(title: str, items) -> None:
+    print(title)
+    print("-" * len(title))
+    rows = _sorted_triage(items)
+    if not rows:
+        print("none")
+        print()
+        return
+    for index, item in enumerate(rows, start=1):
+        blocker = item.blocker
+        label = blocker.action_kind.value
+        if blocker.action_name:
+            label += f" {blocker.action_name}"
+        print(f"{index:2d}. {blocker.occurrence_count:3d}x | {label}")
+        print(f"    {blocker.reason}")
+        if item.disposition_reason:
+            print(f"    disposition: {item.disposition_reason}")
+        print(
+            "    occurrences: "
+            + ", ".join(
+                f"{time_seconds:g}s #{sequence}"
+                for time_seconds, sequence in blocker.occurrences
+            )
+        )
+    print()
 
 
 def _print_static_prerequisite_report(
@@ -444,6 +474,7 @@ def main() -> int:
     audit = RotationDDWholePlanDamageCoverageAuditService(
         action_damage_evidence_provider=provider,
     ).audit(candidate)
+    triage = RotationDDWholePlanDamageBlockerTriageService().classify(audit)
 
     print("=" * 72)
     print(" PHASE 13 DD WHOLE-PLAN DAMAGE COVERAGE AUDIT")
@@ -490,28 +521,12 @@ def main() -> int:
     if audit.total_damage_actions:
         ratio = audit.resolved_damage_actions / audit.total_damage_actions
         print(f"Resolved coverage:     {ratio:.1%}")
+    print(f"Actionable blockers:   {len(triage.actionable)}")
+    print(f"Parked blockers:       {len(triage.parked)}")
     print()
 
-    print("BLOCKERS BY OCCURRENCE")
-    print("----------------------")
-    blockers = _sorted_blockers(audit)
-    if not blockers:
-        print("none")
-    else:
-        for index, blocker in enumerate(blockers, start=1):
-            label = blocker.action_kind.value
-            if blocker.action_name:
-                label += f" {blocker.action_name}"
-            print(f"{index:2d}. {blocker.occurrence_count:3d}x | {label}")
-            print(f"    {blocker.reason}")
-            print(
-                "    occurrences: "
-                + ", ".join(
-                    f"{time_seconds:g}s #{sequence}"
-                    for time_seconds, sequence in blocker.occurrences
-                )
-            )
-    print()
+    _print_triage_section("ACTIONABLE BLOCKERS", triage.actionable)
+    _print_triage_section("PARKED EVIDENCE BLOCKERS", triage.parked)
 
     print("PLAN-LEVEL UNRESOLVED")
     print("---------------------")
@@ -522,9 +537,10 @@ def main() -> int:
         print("none")
     print()
     print(
-        "Interpretation: blocker frequency identifies the highest-yield missing DD "
-        "damage evidence for this exact generated saved-build plan. It does not promote "
-        "observational mechanics or treat unknown damage as zero."
+        "Interpretation: actionable blockers identify the highest-yield missing DD "
+        "damage evidence for this exact generated saved-build plan. Parked evidence "
+        "blockers remain unresolved and continue to fail closed, but are separated so "
+        "known exhausted research lanes do not masquerade as fresh work."
     )
     return 0
 
