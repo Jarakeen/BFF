@@ -64,25 +64,22 @@ def _selection(
         filler_skill_name=filler,
         filler_priority=1,
         next_required_bar=source if return_swap_required else target,
-        next_required_time_seconds=start + (3.0 if return_swap_required else 2.0),
+        next_required_time_seconds=start + 1.0,
         return_swap_required=return_swap_required,
     )
-    count = 3 if return_swap_required else 2
     return RotationCrossBarRouteSelection(
         proposal=proposal,
-        reserved_wait_times=tuple(start + offset for offset in range(count)),
+        reserved_wait_times=(start,),
     )
 
 
-def test_applies_selected_stay_on_target_route_as_swap_and_woven_filler() -> None:
+def test_applies_selected_stay_on_target_route_in_one_skill_gcd_slot() -> None:
     plan = _plan(
         _swap(30.0, "back"),
         _wait(33.0),
-        _wait(34.0),
         _skill(36.0, "Blighted Blastbones", "front"),
         unresolved=(
             "premature recast of 'Stampede' at 33s had no verified same-bar no-duration filler or caller-proven replacement; scheduled wait instead",
-            "persistent toggle recast of 'Magical Banner' at 34s had no verified same-bar no-duration filler; scheduled wait instead",
             "execute-phase behavior is not yet scheduled",
         ),
     )
@@ -94,26 +91,20 @@ def test_applies_selected_stay_on_target_route_as_swap_and_woven_filler() -> Non
     )
 
     at_33 = [action for action in result.plan.actions if action.time_seconds == 33.0]
-    assert [(action.kind, action.bar) for action in at_33] == [
-        (RotationActionKind.BAR_SWAP, "front")
+    assert [(action.kind, action.name, action.bar, action.sequence) for action in at_33] == [
+        (RotationActionKind.BAR_SWAP, None, "front", 0),
+        (RotationActionKind.LIGHT_ATTACK, None, "front", 1),
+        (RotationActionKind.SKILL, "Venom Skull", "front", 2),
     ]
-
-    at_34 = [action for action in result.plan.actions if action.time_seconds == 34.0]
-    assert [(action.kind, action.name, action.bar, action.sequence) for action in at_34] == [
-        (RotationActionKind.LIGHT_ATTACK, None, "front", 0),
-        (RotationActionKind.SKILL, "Venom Skull", "front", 1),
-    ]
-    assert result.consumed_wait_times == (33.0, 34.0)
+    assert result.consumed_wait_times == (33.0,)
     assert result.plan.unresolved == ("execute-phase behavior is not yet scheduled",)
 
 
-def test_applies_return_route_using_third_reserved_wait_slot() -> None:
+def test_applies_return_route_with_same_timestamp_return_swap() -> None:
     plan = _plan(
         _swap(18.0, "back"),
         _wait(19.0),
-        _wait(20.0),
-        _wait(21.0),
-        _skill(22.0, "Stampede", "back"),
+        _skill(20.0, "Stampede", "back"),
     )
     selected = _selection(start=19.0, return_swap_required=True)
 
@@ -122,22 +113,18 @@ def test_applies_return_route_using_third_reserved_wait_slot() -> None:
         RotationCrossBarRouteSelectionResult(selected=(selected,), rejected=()),
     )
 
-    assert any(
-        action.time_seconds == 19.0
-        and action.kind is RotationActionKind.BAR_SWAP
-        and action.bar == "front"
-        for action in result.plan.actions
-    )
+    at_19 = [action for action in result.plan.actions if action.time_seconds == 19.0]
+    assert [(action.kind, action.name, action.bar, action.sequence) for action in at_19] == [
+        (RotationActionKind.BAR_SWAP, None, "front", 0),
+        (RotationActionKind.LIGHT_ATTACK, None, "front", 1),
+        (RotationActionKind.SKILL, "Venom Skull", "front", 2),
+        (RotationActionKind.BAR_SWAP, None, "back", 3),
+    ]
+    assert result.consumed_wait_times == (19.0,)
     assert any(
         action.time_seconds == 20.0
         and action.kind is RotationActionKind.SKILL
-        and action.name == "Venom Skull"
-        and action.bar == "front"
-        for action in result.plan.actions
-    )
-    assert any(
-        action.time_seconds == 21.0
-        and action.kind is RotationActionKind.BAR_SWAP
+        and action.name == "Stampede"
         and action.bar == "back"
         for action in result.plan.actions
     )
@@ -146,8 +133,7 @@ def test_applies_return_route_using_third_reserved_wait_slot() -> None:
 def test_rejects_selected_route_when_reserved_slot_is_no_longer_wait() -> None:
     plan = _plan(
         _swap(30.0, "back"),
-        _wait(33.0),
-        _skill(34.0, "Scalding Rune", "back"),
+        _skill(33.0, "Scalding Rune", "back"),
     )
     selected = _selection(start=33.0)
 
@@ -160,6 +146,34 @@ def test_rejects_selected_route_when_reserved_slot_is_no_longer_wait() -> None:
         assert "no longer maps to WAIT slot" in str(exc)
     else:
         raise AssertionError("expected selected route with stale WAIT evidence to fail closed")
+
+
+def test_rejects_legacy_multi_slot_selection() -> None:
+    plan = _plan(_wait(33.0), _wait(34.0))
+    proposal = RotationCrossBarRouteProposal(
+        wait_time_seconds=33.0,
+        source_bar="back",
+        target_bar="front",
+        filler_skill_name="Venom Skull",
+        filler_priority=1,
+        next_required_bar="front",
+        next_required_time_seconds=36.0,
+        return_swap_required=False,
+    )
+    selected = RotationCrossBarRouteSelection(
+        proposal=proposal,
+        reserved_wait_times=(33.0, 34.0),
+    )
+
+    try:
+        RotationCrossBarRouteMutationService().apply(
+            plan,
+            RotationCrossBarRouteSelectionResult(selected=(selected,), rejected=()),
+        )
+    except ValueError as exc:
+        assert "exactly one WAIT skill slot" in str(exc)
+    else:
+        raise AssertionError("expected legacy multi-slot route evidence to fail closed")
 
 
 def test_no_selection_preserves_plan_identity() -> None:
