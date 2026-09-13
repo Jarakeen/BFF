@@ -38,6 +38,7 @@ MEDIUM_ARMOR_STAMINA_RECOVERY_PERCENT_PER_PIECE = 0.04
 # Heavy Armor, max-rank passive values per equipped piece.
 HEAVY_ARMOR_RESOLVE_RESISTANCE_PER_PIECE = 343.0
 HEAVY_ARMOR_JUGGERNAUT_MAX_HEALTH_PERCENT_PER_PIECE = 0.02
+HEAVY_ARMOR_CONSTITUTION_HEALTH_RECOVERY_PERCENT_PER_PIECE = 0.04
 
 
 def _count(value: int) -> int:
@@ -113,5 +114,10 @@ def heavy_armor_resolve_resistance(piece_count: int) -> float:
 
 
 def heavy_armor_juggernaut_max_health_percent(piece_count: int) -> float:
-    """Return max-rank Juggernaut Max Health bonus from Heavy Armor pieces."""
+    """Return max-rank Juggernaut Max Health bonus from equipped Heavy Armor pieces."""
     return _count(piece_count) * HEAVY_ARMOR_JUGGERNAUT_MAX_HEALTH_PERCENT_PER_PIECE
+
+
+def heavy_armor_constitution_health_recovery_percent(piece_count: int) -> float:
+    """Return max-rank Constitution Health Recovery bonus from Heavy Armor pieces."""
+    return _count(piece_count) * HEAVY_ARMOR_CONSTITUTION_HEALTH_RECOVERY_PERCENT_PER_PIECE
