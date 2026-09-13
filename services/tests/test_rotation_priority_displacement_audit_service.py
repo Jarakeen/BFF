@@ -65,7 +65,7 @@ def test_lower_priority_cast_before_displacement_is_not_inversion() -> None:
     assert result.displaced_beyond_horizon[0].displaced_from_time_seconds == 30.0
 
 
-def test_lower_priority_cast_after_displacement_is_inversion() -> None:
+def test_lower_priority_ordinary_cast_after_displacement_is_real_inversion() -> None:
     plan = RotationPlan(
         character_name="Rylonia",
         build_name="Corpsebuster DD",
@@ -86,14 +86,67 @@ def test_lower_priority_cast_after_displacement_is_inversion() -> None:
     )
 
     assert not result.priority_consistent
-    assert len(result.inversions) == 1
-    inversion = result.inversions[0]
+    assert len(result.ordinary_inversions) == 1
+    inversion = result.ordinary_inversions[0]
     assert inversion.displaced_skill_name == "High"
     assert inversion.displaced_priority == 1
     assert inversion.displaced_from_time_seconds == 30.0
     assert inversion.lower_priority_skill_name == "Low"
     assert inversion.lower_priority == 10
     assert inversion.lower_priority_last_time_seconds == 40.0
+    assert inversion.lower_priority_provenance == "ordinary_or_displaced"
+
+
+def test_due_refresh_survivor_is_classified_but_not_priority_failure() -> None:
+    plan = RotationPlan(
+        character_name="Rylonia",
+        build_name="Corpsebuster DD",
+        duration_seconds=60.0,
+        actions=(
+            RotationAction(10.0, 0, RotationActionKind.SKILL, "Low", "front"),
+            RotationAction(40.0, 0, RotationActionKind.SKILL, "Low", "front"),
+        ),
+        unresolved=(
+            "refresh obligation for 'Mid' claimed the 30s front-bar slot from 'High'; displaced skill will cascade to the next same-bar skill slot",
+            "refresh obligation for 'Low' claimed the 40s front-bar slot from 'Mid'; displaced skill will cascade to the next same-bar skill slot",
+            "skill 'High' was displaced beyond the 60s plan horizon after same-bar refresh/channel insertion on front bar",
+        ),
+    )
+
+    result = RotationPriorityDisplacementAuditService().audit(
+        plan,
+        priorities=_priorities(),
+    )
+
+    assert result.priority_consistent
+    assert len(result.inversions) == 1
+    assert result.inversions[0].lower_priority_provenance == "due_refresh"
+    assert result.ordinary_inversions == ()
+
+
+def test_first_cast_survivor_is_classified_but_not_priority_failure() -> None:
+    plan = RotationPlan(
+        character_name="Rylonia",
+        build_name="Corpsebuster DD",
+        duration_seconds=60.0,
+        actions=(
+            RotationAction(40.0, 0, RotationActionKind.SKILL, "Low", "front"),
+        ),
+        unresolved=(
+            "refresh obligation for 'Mid' claimed the 30s front-bar slot from 'High'; displaced skill will cascade to the next same-bar skill slot",
+            "skill 'High' was displaced beyond the 60s plan horizon after same-bar refresh/channel insertion on front bar",
+        ),
+    )
+
+    result = RotationPriorityDisplacementAuditService().audit(
+        plan,
+        priorities=_priorities(),
+    )
+
+    assert result.priority_consistent
+    assert len(result.inversions) == 1
+    assert result.inversions[0].lower_priority_provenance == "first_cast"
+    assert result.ordinary_inversions == ()
 
 
 def test_earliest_displacement_start_is_used_for_repeated_claims() -> None:
@@ -102,6 +155,7 @@ def test_earliest_displacement_start_is_used_for_repeated_claims() -> None:
         build_name="Corpsebuster DD",
         duration_seconds=60.0,
         actions=(
+            RotationAction(20.0, 0, RotationActionKind.SKILL, "Low", "front"),
             RotationAction(35.0, 0, RotationActionKind.SKILL, "Low", "front"),
         ),
         unresolved=(
@@ -116,5 +170,5 @@ def test_earliest_displacement_start_is_used_for_repeated_claims() -> None:
         priorities=_priorities(),
     )
 
-    assert len(result.inversions) == 1
-    assert result.inversions[0].displaced_from_time_seconds == 30.0
+    assert len(result.ordinary_inversions) == 1
+    assert result.ordinary_inversions[0].displaced_from_time_seconds == 30.0
