@@ -2,12 +2,12 @@ from __future__ import annotations
 
 """Resolve target-health conditional damage components at exact runtime state.
 
-This service owns no damage formula. It decides only whether one damage component
-may contribute its ordinary canonical magnitude for a supplied runtime snapshot.
+This service owns no base damage formula. It decides whether one damage component
+may contribute and, when source-reviewed execute interpolation exists, exposes the
+resulting damage multiplier.
 
 Exact threshold-gated activation is supported. Continuous ``up to N% more damage``
-amplification remains unresolved because Phase 6 records the maximum consequence
-but does not define runtime interpolation across target Health.
+remains unresolved unless a reviewed skill-specific interpolation semantic exists.
 """
 
 from dataclasses import dataclass
@@ -18,6 +18,9 @@ from minmax.skill_component_condition import SkillComponentConditionType
 from minmax.skill_component_conditional_consequence import (
     SkillComponentConditionalConsequence,
     SkillComponentConditionalConsequenceType,
+)
+from services.rotation_reviewed_execute_amplification_service import (
+    RotationReviewedExecuteAmplificationService,
 )
 
 
@@ -30,6 +33,7 @@ class RotationExecuteComponentDamageStatus(str, Enum):
 @dataclass(frozen=True)
 class RotationExecuteComponentDamageEligibility:
     status: RotationExecuteComponentDamageStatus
+    damage_multiplier: float = 1.0
     unresolved: tuple[str, ...] = ()
 
     @property
@@ -39,6 +43,13 @@ class RotationExecuteComponentDamageEligibility:
 
 class RotationExecuteComponentDamageEligibilityService:
     """Evaluate reviewed target-health consequences without inventing scaling."""
+
+    def __init__(
+        self,
+        *,
+        amplification: RotationReviewedExecuteAmplificationService | None = None,
+    ) -> None:
+        self.amplification = amplification or RotationReviewedExecuteAmplificationService()
 
     def resolve(
         self,
@@ -80,7 +91,8 @@ class RotationExecuteComponentDamageEligibilityService:
                 coefficient_number,
                 f"runtime target {target!r} is absent from snapshot",
             )
-        if target_snapshot.health_fraction() is None:
+        health_fraction = target_snapshot.health_fraction()
+        if health_fraction is None:
             return self._unknown(
                 skill_name,
                 coefficient_number,
@@ -88,6 +100,7 @@ class RotationExecuteComponentDamageEligibilityService:
             )
 
         active_activation = False
+        damage_multiplier = 1.0
         for consequence in supported:
             condition = consequence.condition
             state = snapshot.meets_health_threshold(
@@ -102,14 +115,24 @@ class RotationExecuteComponentDamageEligibilityService:
                 )
 
             if consequence.consequence_type is SkillComponentConditionalConsequenceType.AMPLIFIES_DAMAGE:
-                if state:
+                if not state:
+                    continue
+                amplification = self.amplification.resolve_multiplier(
+                    skill_name=skill_name,
+                    health_fraction=float(health_fraction),
+                    threshold=float(condition.threshold),
+                    maximum_bonus_fraction=consequence.maximum_bonus_fraction,
+                )
+                if not amplification.resolved or amplification.damage_multiplier is None:
+                    detail = tuple(amplification.unresolved) or (
+                        "target-health damage amplification interpolation is unresolved",
+                    )
                     return self._unknown(
                         skill_name,
                         coefficient_number,
-                        "target-health damage amplification is active but exact interpolation is unresolved",
+                        "; ".join(detail),
                     )
-                # The amplification is inactive above threshold. The ordinary base
-                # component still exists and is therefore included normally.
+                damage_multiplier *= float(amplification.damage_multiplier)
                 continue
 
             if consequence.consequence_type is SkillComponentConditionalConsequenceType.ACTIVATES_COMPONENT:
@@ -130,6 +153,7 @@ class RotationExecuteComponentDamageEligibilityService:
 
         return RotationExecuteComponentDamageEligibility(
             status=RotationExecuteComponentDamageStatus.INCLUDE,
+            damage_multiplier=damage_multiplier,
         )
 
     @staticmethod
