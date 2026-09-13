@@ -210,6 +210,26 @@ class RosterAssignmentContextService:
         )
         self.db.commit()
 
+    def clear_context(
+        self,
+        member_id: int,
+        *,
+        team_name: str,
+        encounter_id: str = "",
+    ) -> None:
+        """Delete one member's explicit values for exactly this team/context."""
+        team_id = self._team_id(team_name)
+        if team_id is None:
+            return
+        self.db.execute(
+            """
+            DELETE FROM roster_assignment_context
+            WHERE roster_member_id = ? AND team_id = ? AND encounter_id = ?
+            """,
+            (int(member_id), team_id, self._clean(encounter_id)),
+        )
+        self.db.commit()
+
     def clear_encounter_override(
         self,
         member_id: int,
@@ -217,18 +237,14 @@ class RosterAssignmentContextService:
         team_name: str,
         encounter_id: str,
     ) -> None:
-        team_id = self._team_id(team_name)
         encounter = self._clean(encounter_id)
-        if team_id is None or not encounter:
+        if not encounter:
             return
-        self.db.execute(
-            """
-            DELETE FROM roster_assignment_context
-            WHERE roster_member_id = ? AND team_id = ? AND encounter_id = ?
-            """,
-            (int(member_id), team_id, encounter),
+        self.clear_context(
+            member_id,
+            team_name=team_name,
+            encounter_id=encounter,
         )
-        self.db.commit()
 
 
 __all__ = ["RosterAssignmentContextService"]
