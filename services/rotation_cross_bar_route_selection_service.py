@@ -13,6 +13,7 @@ from services.rotation_cross_bar_route_slot_feasibility_service import (
 class RotationCrossBarRouteSelection:
     proposal: RotationCrossBarRouteProposal
     reserved_wait_times: tuple[float, ...]
+    outbound_swap_required: bool = True
 
 
 @dataclass(frozen=True)
@@ -35,9 +36,14 @@ class RotationCrossBarRouteSelectionService:
     change the active bar seen by a later route. This service resolves those joint
     constraints in deterministic timeline order without mutating the plan.
 
+    If an earlier selected route has already placed the player on a later proposal's
+    target bar, that proposal remains usable: its filler can occupy the WAIT skill slot
+    without another outbound swap. The selection records that fact explicitly rather
+    than rejecting the route because its original source-bar assumption became stale.
+
     The current planner starts on the front bar. Original BAR_SWAP actions remain the
-    authority between selected routes; selected routes contribute only their proposed
-    swap-to-target and optional return-swap transitions.
+    authority between selected routes; selected routes contribute their proven target-
+    bar state and optional return-swap transitions.
     """
 
     _EPSILON = 1e-9
@@ -120,13 +126,17 @@ class RotationCrossBarRouteSelectionService:
                 initial_bar=initial,
                 selected=tuple(selected),
             )
-            if active_bar != proposal.source_bar:
+            if active_bar == proposal.source_bar:
+                outbound_swap_required = True
+            elif active_bar == proposal.target_bar:
+                outbound_swap_required = False
+            else:
                 rejected.append(
                     RotationCrossBarRouteRejection(
                         proposal=proposal,
                         reason=(
-                            f"route source bar is stale after earlier selected routing: "
-                            f"expected {proposal.source_bar}, active {active_bar}"
+                            "route active-bar state is neither its reviewed source nor target: "
+                            f"source={proposal.source_bar}, target={proposal.target_bar}, active={active_bar}"
                         ),
                     )
                 )
@@ -135,6 +145,7 @@ class RotationCrossBarRouteSelectionService:
             selected_row = RotationCrossBarRouteSelection(
                 proposal=proposal,
                 reserved_wait_times=route_times,
+                outbound_swap_required=outbound_swap_required,
             )
             selected.append(selected_row)
             reserved.update(route_times)
@@ -163,7 +174,7 @@ class RotationCrossBarRouteSelectionService:
         for row in selected:
             proposal = row.proposal
             start = float(proposal.wait_time_seconds)
-            if start < float(time_seconds) - self._EPSILON:
+            if row.outbound_swap_required and start < float(time_seconds) - self._EPSILON:
                 events.append((start, 1, proposal.target_bar))
             if proposal.return_swap_required:
                 return_time = start + float(len(row.reserved_wait_times) - 1)
