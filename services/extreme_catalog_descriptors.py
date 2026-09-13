@@ -286,6 +286,27 @@ EXTREME_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "canonical runtime or search-axis owner, so the candidate reduction remains optimistic."
         ),
     ),
+    ServiceDescriptor(
+        service_id="extreme.ultimate_source_loadout_combination",
+        domain="extreme",
+        purpose=(
+            "Enumerate finite Ultimate-source subsets and prove exact named-set coexistence "
+            "without promoting stochastic or action-unproven ceilings to runtime truth."
+        ),
+        implementation_path="services.ultimate_source_loadout_combination_service",
+        inputs=(
+            "UltimateSourceLoadoutCandidate",
+            "ExtremeNamedGearSetSlotEligibility",
+        ),
+        outputs=("UltimateSourceLoadoutCombinationCatalog",),
+        responsibilities=("ultimate_source_loadout_combination_search",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Uses the canonical exact named-set realization service for set-slot legality. "
+            "Armor-weight compatibility and whole-build Health Recovery scoring remain later proof gates."
+        ),
+    ),
 )
 
 
