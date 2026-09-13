@@ -19,13 +19,17 @@ class RotationCrossBarRouteSlotFeasibility:
 
 
 class RotationCrossBarRouteSlotFeasibilityService:
-    """Check whether a proposed cross-bar route fits the current 1-second slot model.
+    """Check whether a proposed cross-bar filler route fits one skill-GCD slot.
 
-    The semi-static planner models BAR_SWAP as its own scheduled step. Therefore a
-    cross-bar filler cannot be inserted into a single WAIT slot without inventing
-    sub-GCD swap timing. Under the current model a route requires two consecutive
-    WAIT slots for ``swap -> filler`` and three when a return swap is required before
-    the next explicit skill obligation.
+    ESO weapon swap is not a separate skill global cooldown. A player may swap bars
+    between skill casts without consuming another one-second skill slot, including
+    swap-cancel play that returns to the source bar after the target-bar filler. The
+    semi-static planner therefore needs one WAIT skill slot for either
+    ``swap -> LA/skill`` or ``swap -> LA/skill -> return swap``.
+
+    The next explicit skill obligation must still occur strictly after the filler
+    slot. This service never invents an additional skill cast, refresh timing, or bar
+    route when no WAIT slot exists.
 
     This service is diagnostic only and never mutates the plan.
     """
@@ -46,8 +50,8 @@ class RotationCrossBarRouteSlotFeasibilityService:
 
         for proposal in proposals:
             start = float(proposal.wait_time_seconds)
-            required = 3 if proposal.return_swap_required else 2
-            candidate_times = tuple(start + float(offset) for offset in range(required))
+            required = 1
+            candidate_times = (start,)
             available = tuple(
                 value
                 for value in candidate_times
@@ -56,25 +60,25 @@ class RotationCrossBarRouteSlotFeasibilityService:
 
             before_next_required = True
             if proposal.next_required_time_seconds is not None:
-                final_route_time = candidate_times[-1]
                 before_next_required = (
-                    final_route_time + self._EPSILON
+                    start + self._EPSILON
                     < float(proposal.next_required_time_seconds)
                 )
 
             feasible = len(available) == required and before_next_required
             if len(available) != required:
-                reason = (
-                    f"requires {required} consecutive WAIT slots from {start:g}s but "
-                    f"only {len(available)} are available"
-                )
+                reason = f"requires a WAIT skill slot at {start:g}s but none is available"
             elif not before_next_required:
                 reason = (
-                    "route would consume or collide with the next explicit skill "
+                    "route filler would consume or collide with the next explicit skill "
                     f"obligation at {float(proposal.next_required_time_seconds):g}s"
                 )
             else:
-                reason = "route fits the current 1-second BAR_SWAP/filler timing model"
+                return_note = " with same-GCD return swap" if proposal.return_swap_required else ""
+                reason = (
+                    "route fits one skill-GCD WAIT slot using non-GCD bar swap"
+                    + return_note
+                )
 
             results.append(
                 RotationCrossBarRouteSlotFeasibility(
