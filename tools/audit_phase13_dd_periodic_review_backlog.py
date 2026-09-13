@@ -19,6 +19,9 @@ _PARKED: dict[tuple[str, int], str] = {
     ("detonating_siphon", 1): (
         "production geometry/timing remains fail-closed pending controlled spatial evidence"
     ),
+    ("skeletal_archer", 1): (
+        "current corpus exposes no explicit pet-to-owner linkage for candidate 122774"
+    ),
     ("scalding_rune", 2): (
         "current corpus has no stable-state magnitude controls"
     ),
