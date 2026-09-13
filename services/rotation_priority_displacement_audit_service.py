@@ -12,7 +12,7 @@ _HORIZON_PATTERN = re.compile(
     re.IGNORECASE,
 )
 _REFRESH_DISPLACEMENT_PATTERN = re.compile(
-    r"^refresh obligation for '.+' claimed the ([0-9]+(?:\.[0-9]+)?)s (front|back)-bar slot from '(.+)'; displaced skill will cascade to the next same-bar skill slot$",
+    r"^refresh obligation for '(.+)' claimed the ([0-9]+(?:\.[0-9]+)?)s (front|back)-bar slot from '(.+)'; displaced skill will cascade to the next same-bar skill slot$",
     re.IGNORECASE,
 )
 _CHANNEL_DISPLACEMENT_PATTERN = re.compile(
@@ -38,6 +38,11 @@ class RotationPriorityDisplacementInversion:
     lower_priority_skill_name: str
     lower_priority: int
     lower_priority_last_time_seconds: float
+    lower_priority_provenance: str
+
+    @property
+    def ordinary_competitor(self) -> bool:
+        return self.lower_priority_provenance == "ordinary_or_displaced"
 
 
 @dataclass(frozen=True)
@@ -46,22 +51,28 @@ class RotationPriorityDisplacementAudit:
     inversions: tuple[RotationPriorityDisplacementInversion, ...]
 
     @property
+    def ordinary_inversions(self) -> tuple[RotationPriorityDisplacementInversion, ...]:
+        return tuple(row for row in self.inversions if row.ordinary_competitor)
+
+    @property
     def priority_consistent(self) -> bool:
-        return not self.inversions
+        return not self.ordinary_inversions
 
 
 class RotationPriorityDisplacementAuditService:
-    """Detect time-valid displacement outcomes that contradict explicit priority.
+    """Detect time-valid displacement outcomes that may contradict explicit priority.
 
     A fixed-horizon plan may legitimately leave actions beyond its end. Horizon
-    spillover alone is therefore not a defect. An inversion is reported only when
-    the scheduler provides evidence for when the higher-priority action first entered
-    the displacement queue and a lower-priority ordinary skill on the same bar was
-    still scheduled *after* that point.
+    spillover alone is therefore not a defect. Candidate inversions are time-scoped:
+    the scheduler must provide evidence for when the higher-priority action entered
+    the displacement queue and a lower-priority same-bar skill must still be scheduled
+    after that point.
 
-    Historical casts before displacement do not count. If the plan says that a skill
-    fell beyond the horizon but provides no displacement-start evidence, the audit
-    fails closed and records the spillover without inventing an inversion.
+    Survivor provenance matters. A lower-priority cast that is itself a due refresh or
+    that skill's first cast is protected by the duration scheduler and is not evidence
+    that displaced/current priority ordering failed. Only ``ordinary_or_displaced``
+    survivors count against ``priority_consistent``. Unknown displacement timing fails
+    closed rather than fabricating an inversion.
 
     The service is diagnostic only. It does not mutate cadence, refresh timing, bar
     routing, or the displacement queue.
@@ -84,6 +95,7 @@ class RotationPriorityDisplacementAuditService:
         }
 
         displaced_from = self._displacement_start_times(plan)
+        refresh_claims = self._refresh_claim_times(plan)
         displaced: list[RotationPriorityHorizonDisplacement] = []
         for raw in plan.unresolved:
             match = _HORIZON_PATTERN.match(str(raw or "").strip())
@@ -113,6 +125,8 @@ class RotationPriorityDisplacementAuditService:
                 continue
             key = (action.name.casefold(), bar)
             skill_times.setdefault(key, []).append(float(action.time_seconds))
+        for values in skill_times.values():
+            values.sort()
 
         inversions: list[RotationPriorityDisplacementInversion] = []
         for displacement in displaced:
@@ -128,6 +142,14 @@ class RotationPriorityDisplacementAuditService:
                 later_times = [value for value in times if value > displaced_from_time]
                 if not later_times:
                     continue
+                last_time = max(later_times)
+                first_time = min(times)
+                if last_time in refresh_claims.get((skill_key, skill_bar), set()):
+                    provenance = "due_refresh"
+                elif last_time == first_time:
+                    provenance = "first_cast"
+                else:
+                    provenance = "ordinary_or_displaced"
                 inversions.append(
                     RotationPriorityDisplacementInversion(
                         bar=displacement.bar,
@@ -138,7 +160,8 @@ class RotationPriorityDisplacementAuditService:
                             (skill_key, skill_bar), skill_key
                         ),
                         lower_priority=lower_priority,
-                        lower_priority_last_time_seconds=max(later_times),
+                        lower_priority_last_time_seconds=last_time,
+                        lower_priority_provenance=provenance,
                     )
                 )
 
@@ -148,6 +171,7 @@ class RotationPriorityDisplacementAuditService:
                 row.displaced_priority,
                 row.displaced_skill_name.casefold(),
                 row.displaced_from_time_seconds,
+                0 if row.ordinary_competitor else 1,
                 -row.lower_priority,
                 row.lower_priority_skill_name.casefold(),
             )
@@ -161,6 +185,21 @@ class RotationPriorityDisplacementAuditService:
         )
 
     @staticmethod
+    def _refresh_claim_times(
+        plan: RotationPlan,
+    ) -> dict[tuple[str, str], set[float]]:
+        result: dict[tuple[str, str], set[float]] = {}
+        for raw in plan.unresolved:
+            match = _REFRESH_DISPLACEMENT_PATTERN.match(str(raw or "").strip())
+            if match is None:
+                continue
+            skill_name = match.group(1).strip()
+            time_seconds = float(match.group(2))
+            bar = match.group(3).casefold()
+            result.setdefault((skill_name.casefold(), bar), set()).add(time_seconds)
+        return result
+
+    @staticmethod
     def _displacement_start_times(
         plan: RotationPlan,
     ) -> dict[tuple[str, str], float]:
@@ -169,9 +208,9 @@ class RotationPriorityDisplacementAuditService:
             text = str(raw or "").strip()
             refresh = _REFRESH_DISPLACEMENT_PATTERN.match(text)
             if refresh is not None:
-                time_seconds = float(refresh.group(1))
-                bar = refresh.group(2).casefold()
-                skill_name = refresh.group(3).strip()
+                time_seconds = float(refresh.group(2))
+                bar = refresh.group(3).casefold()
+                skill_name = refresh.group(4).strip()
                 key = (skill_name.casefold(), bar)
                 result[key] = min(result.get(key, time_seconds), time_seconds)
                 continue
