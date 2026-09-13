@@ -2,16 +2,9 @@ from __future__ import annotations
 
 """Measure semantic and production structural frontiers for Extreme max resources.
 
-The diagnostic intentionally reports two different layers:
-
-* semantic equivalence classes, which answer how many distinct canonical target-
-  resource race signatures exist; and
-* the production dominance frontier, which uses the proof-owned race projection to
-  retain only the strongest legal racial witness for a scalar maximum objective.
-
-Class routes still use the proof-owned route projection, attributes use the proven
-single maximum allocation, and active-bar identity remains explicit. No production
-scoring rule is reimplemented here.
+The diagnostic intentionally reports both semantic equivalence and the stronger
+production dominance frontiers. Race and class-route dominance remain proof-owned
+services; this tool only exposes their effect on the structural search size.
 """
 
 import argparse
@@ -31,6 +24,9 @@ from services.extreme_hypothetical_racial_progression_service import (
 )
 from services.extreme_resource_attribute_projection_service import (
     ExtremeResourceAttributeProjectionService,
+)
+from services.extreme_resource_class_route_dominance_projection_service import (
+    ExtremeResourceClassRouteDominanceProjectionService,
 )
 from services.extreme_resource_class_route_projection_service import (
     ExtremeResourceClassRouteProjectionService,
@@ -93,12 +89,25 @@ def main() -> int:
 
     universe = ExtremeGlobalSearchUniverseService(database).build()
 
-    routes = tuple(universe.class_routes)
+    exact_routes = tuple(universe.class_routes)
     route_projection = None
     if key in ExtremeResourceClassRouteProjectionService.SUPPORTED_OBJECTIVES:
-        route_projection = ExtremeResourceClassRouteProjectionService(database).build(key, routes)
+        route_projection = ExtremeResourceClassRouteProjectionService(database).build(
+            key,
+            exact_routes,
+        )
         if route_projection.projection_complete:
-            routes = tuple(route_projection.routes)
+            exact_routes = tuple(route_projection.routes)
+
+    route_dominance = None
+    production_routes = exact_routes
+    if key in ExtremeResourceClassRouteDominanceProjectionService.SUPPORTED_OBJECTIVES:
+        route_dominance = ExtremeResourceClassRouteDominanceProjectionService(database).build(
+            key,
+            tuple(universe.class_routes),
+        )
+        if route_dominance.projection_complete:
+            production_routes = tuple(route_dominance.routes)
 
     attribute_projection = ExtremeResourceAttributeProjectionService.build(
         key, tuple(universe.attribute_allocations)
@@ -135,14 +144,14 @@ def main() -> int:
     semantic_candidates = [
         (race, route, attributes_row, active_bar)
         for race in universe.races
-        for route in routes
+        for route in exact_routes
         for attributes_row in attributes
         for active_bar in universe.active_bars
     ]
     production_candidates = [
         (race, route, attributes_row, active_bar)
         for race in production_races
-        for route in routes
+        for route in production_routes
         for attributes_row in attributes
         for active_bar in universe.active_bars
     ]
@@ -195,11 +204,22 @@ def main() -> int:
         print(f"race_production_target_resource={race_projection.signatures[0]:g}")
 
     print(f"routes_raw={len(universe.class_routes)}")
-    print(f"routes_projected={len(routes)}")
+    print(f"routes_semantic_projected={len(exact_routes)}")
     print(
         "route_projection_complete="
         f"{bool(route_projection is not None and route_projection.projection_complete)}"
     )
+    print(
+        "route_dominance_projection_complete="
+        f"{bool(route_dominance is not None and route_dominance.projection_complete)}"
+    )
+    print(f"route_production_witnesses={len(production_routes)}")
+    if route_dominance is not None and route_dominance.projection_complete:
+        witness = route_dominance.routes[0]
+        print(f"route_production_witness_base_class={witness.base_class.value}")
+        print(f"route_production_witness_subclassed={witness.is_subclassed}")
+        print(f"route_production_witness_signature={route_dominance.signature!r}")
+
     print(f"attributes_raw={len(universe.attribute_allocations)}")
     print(f"attributes_projected={len(attributes)}")
     print(f"active_bars={len(universe.active_bars)}")
@@ -219,20 +239,22 @@ def main() -> int:
         f"{max(semantic_signatures.values(), default=0)}"
     )
 
-    raw_structural = (
+    semantic_frontier_count = (
         len(universe.races)
-        * len(routes)
+        * len(exact_routes)
         * len(attributes)
         * len(universe.active_bars)
     )
-    print(f"structural_candidates_before_race_dominance={raw_structural}")
+    print(f"structural_candidates_before_dominance={semantic_frontier_count}")
     print(f"structural_candidates_production={len(production_candidates)}")
-    production_pruned = raw_structural - len(production_candidates)
-    print(f"structural_candidates_pruned_by_race_dominance={production_pruned}")
+    production_pruned = semantic_frontier_count - len(production_candidates)
+    print(f"structural_candidates_pruned_by_dominance={production_pruned}")
     production_reduction = (
-        100.0 * production_pruned / raw_structural if raw_structural else 0.0
+        100.0 * production_pruned / semantic_frontier_count
+        if semantic_frontier_count
+        else 0.0
     )
-    print(f"structural_race_dominance_reduction_percent={production_reduction:.3f}")
+    print(f"structural_combined_dominance_reduction_percent={production_reduction:.3f}")
 
     print("race_signatures=")
     for race in universe.races:
