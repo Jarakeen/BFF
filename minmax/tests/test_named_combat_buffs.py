@@ -3,6 +3,7 @@ from __future__ import annotations
 import pytest
 
 from minmax.character_progression import CharacterProgression
+from minmax.combat_damage_modifiers import damage_done_from_combat_state
 from minmax.combat_state import CombatState
 from minmax.context_factory import BuildCalculationContextFactory
 from minmax.gear_stat_inputs import GearStatInputResolver
@@ -100,6 +101,20 @@ def test_component_layer_buff_is_known_without_polluting_shared_stat_inputs():
     assert context.unresolved_gear_effects == ()
     assert context.core_state.derived[StatId.WEAPON_DAMAGE].final_value == 1000
     assert context.core_state.derived[StatId.SPELL_DAMAGE].final_value == 1000
+
+
+def test_magical_banner_is_known_component_damage_state_without_polluting_sheet_stats():
+    context = _context("Magical Banner")
+
+    assert context.combat_state.has_buff("Magical Banner")
+    assert context.unresolved_gear_effects == ()
+    assert context.core_state.derived[StatId.WEAPON_DAMAGE].final_value == 1000
+    assert context.core_state.derived[StatId.SPELL_DAMAGE].final_value == 1000
+
+    modifiers = damage_done_from_combat_state(context.combat_state)
+    assert modifiers.generic == 0.0
+    assert modifiers.magic == pytest.approx(0.06)
+    assert modifiers.physical == 0.0
 
 
 def test_slayer_and_aegis_are_known_component_layer_buffs_without_sheet_stat_pollution():
