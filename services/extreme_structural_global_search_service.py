@@ -23,8 +23,8 @@ from services.extreme_global_search_universe_service import (
     ExtremeGlobalSearchUniverseService,
 )
 from services.extreme_heal_class_route_service import ExtremeHealClassRoute
-from services.extreme_resource_class_route_projection_service import (
-    ExtremeResourceClassRouteProjectionService,
+from services.extreme_resource_class_route_dominance_projection_service import (
+    ExtremeResourceClassRouteDominanceProjectionService,
 )
 from services.extreme_resource_race_projection_service import (
     ExtremeResourceRaceProjectionService,
@@ -196,12 +196,12 @@ class ExtremeStructuralGlobalSearchService(Generic[ScorePayload]):
         source_routes: tuple[ExtremeHealClassRoute, ...],
     ):
         key = str(objective_key or "").strip().casefold()
-        if key not in ExtremeResourceClassRouteProjectionService.SUPPORTED_OBJECTIVES:
+        if key not in ExtremeResourceClassRouteDominanceProjectionService.SUPPORTED_OBJECTIVES:
             return None
         database_path = self._discovered_database_path()
         if database_path is None:
             return None
-        return ExtremeResourceClassRouteProjectionService(database_path).build(
+        return ExtremeResourceClassRouteDominanceProjectionService(database_path).build(
             key,
             source_routes,
         )
