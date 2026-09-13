@@ -67,7 +67,10 @@
       "successive_hit_multiplier": 1.15,
       "evidence": [
         "ESO-Hub current tooltip: archer attacks every 2 seconds for a 20-second duration",
-        "ESO-Hub current tooltip: each damaging attack deals 15% more damage than the previous attack"
+        "ESO-Hub current tooltip: each damaging attack deals 15% more damage than the previous attack",
+        "ESO Logs mystery-era candidate drilldown for evidence ID 21929: 238 Skeletal Archer cast anchors were observed but zero exact same-cast-track candidate events; the candidate therefore cannot be promoted through the ordinary player-cast-track ownership path",
+        "ESO Logs mystery-era source-window exclusivity for 21929: 1164 candidate events occurred inside assumed 20-second Archer windows and 372 outside across caster groups, only a 2.000x inside/outside rate ratio; 97 non-caster source/fight groups emitted 4041 additional candidate events, so player-source window concentration is weak and ownership remains unresolved",
+        "ESO Logs mystery-era secondary-effect discovery: several candidates, including 21929, 18084, 38747, 40385, 148801, and 40468, show substantial approximately 2-second interval clustering but zero cast-track linkage. This pattern is compatible with summon-actor attribution and is retained for actor-provenance review rather than promoted into executable timing semantics"
       ]
     },
     {
