@@ -12,6 +12,13 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from services.extreme_named_gear_set_slot_eligibility_service import (
+    ExtremeNamedGearSetSlotEligibilityService,
+)
+from services.ultimate_source_loadout_combination_service import (
+    UltimateSourceLoadoutCandidate,
+    UltimateSourceLoadoutCombinationService,
+)
 from services.ultimate_source_reference_frontier_service import (
     UltimateSourceReferenceFrontierService,
     UltimateSourceRouteStatus,
@@ -37,6 +44,16 @@ _TRIGGER_WITNESSES = {
         *(1.5 * float(value) for value in range(1, 17)),
     ),
 }
+
+_SET_REQUIREMENTS = {
+    "bloodspawn": ("Bloodspawn", 2),
+    "baron_zaudrus": ("Baron Zaudrus", 2),
+    "hide_of_the_werewolf": ("Hide of the Werewolf", 5),
+    "arkasis": ("Arkasis's Genius", 5),
+    "arkays_charity": ("Arkay's Charity", 5),
+}
+_STOCHASTIC_SOURCE_IDS = frozenset({"bloodspawn", "decisive"})
+_ACTION_PROOF_SOURCE_IDS = frozenset({"baron_zaudrus"})
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -258,6 +275,7 @@ def main() -> int:
         for row, review in reviews
         if review.status in unresolved_statuses and row.source_id not in dominated_ids
     )
+    review_by_id = {row.source_id: review for row, review in reviews}
     bounded_mutations = tuple(
         (row, review)
         for row, review in reviews
@@ -266,6 +284,26 @@ def main() -> int:
             and review.generated_ultimate_ceiling > 0
         )
     )
+
+    loadout_candidates = tuple(
+        UltimateSourceLoadoutCandidate(
+            source_id=row.source_id,
+            label=row.label,
+            generated_ultimate_ceiling=review_by_id[row.source_id].generated_ultimate_ceiling,
+            required_set_name=_SET_REQUIREMENTS.get(row.source_id, (None, 0))[0],
+            required_set_pieces=_SET_REQUIREMENTS.get(row.source_id, (None, 0))[1],
+            stochastic=row.source_id in _STOCHASTIC_SOURCE_IDS,
+            action_proof_required=row.source_id in _ACTION_PROOF_SOURCE_IDS,
+        )
+        for row in unresolved
+    )
+    named_set_catalog = ExtremeNamedGearSetSlotEligibilityService(database).build()
+    loadout_catalog = UltimateSourceLoadoutCombinationService.search(
+        loadout_candidates,
+        named_set_catalog.sets,
+        required_ultimate_gap=remaining_gap,
+    )
+
     print()
     print("VAMPIRE HEALTH RECOVERY DOMINANCE")
     print(
@@ -297,12 +335,42 @@ def main() -> int:
     print(f"remaining_ultimate_gap={remaining_gap:.3f}")
     print(f"remaining_route_candidates={len(unresolved)}")
     print("remaining_candidate_ids=" + repr(tuple(row.source_id for row in unresolved)))
+
+    print()
+    print("ULTIMATE SOURCE LOADOUT COMBINATION SEARCH")
+    print(f"raw_combinations={len(loadout_catalog.combinations)}")
+    print(f"legal_combinations={len(loadout_catalog.legal_combinations)}")
+    print(f"rejected_combinations={len(loadout_catalog.rejected_combinations)}")
+    print(f"gap_closing_combinations={len(loadout_catalog.gap_closing_combinations)}")
+    print(
+        "minimal_gap_closing_combinations="
+        f"{len(loadout_catalog.minimal_gap_closing_combinations)}"
+    )
+    for row in loadout_catalog.minimal_gap_closing_combinations:
+        print(
+            "  minimal_closer: "
+            f"sources={row.source_ids!r} "
+            f"ultimate_ceiling={row.total_ultimate_ceiling:.3f} "
+            f"set_units={row.required_set_units} "
+            f"stochastic={row.stochastic} "
+            f"action_proof_required={row.action_proof_required} "
+            f"runtime_proven={row.runtime_proven}"
+        )
+    for unresolved_reason in loadout_catalog.unresolved:
+        print(f"  unresolved={unresolved_reason}")
+
     print("ultimate_source_denominator_discovered=True")
     print("ultimate_source_exact_review_applied=True")
+    print(
+        "physical_set_slot_denominator_proven="
+        f"{loadout_catalog.physical_set_slot_denominator_proven}"
+    )
+    print("armor_weight_legality_pending=True")
+    print("whole_build_health_recovery_scoring_pending=True")
     print("ultimate_source_numeric_legality_proven=False")
     print(
-        "NEXT_STEP=search legal gear and Decisive combinations against the Health "
-        "Recovery incumbent after pruning the dominated Vampire route"
+        "NEXT_STEP=prove seven-Heavy compatibility for surviving exact named-set "
+        "witnesses, then score their whole-build Health Recovery tradeoffs"
     )
     return 2
 
