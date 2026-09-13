@@ -26,6 +26,10 @@ from services.rotation_explicit_target_combat_state_schedule_service import (
 )
 from services.rotation_static_build_context_service import RotationStaticBuildContextService
 from tools.audit_phase13_saved_build_rotation_timing import _load_build
+from tools.dd_audit_activation_anchor_support import (
+    build_explicit_activation_anchor_resolver,
+    parse_explicit_impact_anchor,
+)
 from tools.dd_audit_runtime_state_support import (
     build_plan_attacker_runtime_state_resolver,
 )
@@ -173,6 +177,7 @@ def _action_damage_provider(
     target_resistance: float,
     plan=None,
     target_state_resolver=None,
+    activation_anchor_resolver=None,
 ):
     static_context_service = _DDAuditStaticContextService(
         RotationStaticBuildContextService(
@@ -201,7 +206,11 @@ def _action_damage_provider(
         if plan is not None
         else None
     )
-    if target_state_resolver is not None or attacker_state_resolver is not None:
+    if (
+        target_state_resolver is not None
+        or attacker_state_resolver is not None
+        or activation_anchor_resolver is not None
+    ):
         if plan is None:
             raise ValueError("runtime DD audit provider requires a rotation plan")
         binder = getattr(plan_evidence, "for_stabilized_snapshot", None)
@@ -213,7 +222,7 @@ def _action_damage_provider(
                 runtime_combat_state_resolver=attacker_state_resolver,
                 runtime_target_combat_state_resolver=target_state_resolver,
                 runtime_target_resistance_resolver=None,
-                runtime_activation_anchor_resolver=None,
+                runtime_activation_anchor_resolver=activation_anchor_resolver,
             )
         )
     role_output = plan_evidence.role_output_evidence_provider
@@ -307,6 +316,16 @@ def main() -> int:
             "May be supplied multiple times and implies --target-state-known."
         ),
     )
+    parser.add_argument(
+        "--impact-anchor",
+        action="append",
+        default=[],
+        metavar="SKILL:ACTION_TIME:SEQUENCE:IMPACT_TIME",
+        help=(
+            "Add exact caller-owned impact timing for one final-plan skill action. "
+            "May be repeated. No impact timing is inferred when omitted."
+        ),
+    )
     parser.add_argument("--ultimate-bar", choices=("front", "back"))
     parser.add_argument("--starting-ultimate", type=float, default=0.0)
     parser.add_argument(
@@ -358,6 +377,10 @@ def main() -> int:
         if target_state_known
         else None
     )
+    impact_anchor_evidence = tuple(
+        parse_explicit_impact_anchor(raw)
+        for raw in tuple(args.impact_anchor or ())
+    )
 
     builds_path = Path(args.builds)
     database_path = Path(args.database)
@@ -405,6 +428,10 @@ def main() -> int:
         refresh_leads=(),
         action_claims=(),
     )
+    activation_anchor_resolver = build_explicit_activation_anchor_resolver(
+        plan=candidate.plan,
+        evidence=impact_anchor_evidence,
+    )
     provider = _action_damage_provider(
         build=build,
         database_path=database_path,
@@ -412,6 +439,7 @@ def main() -> int:
         target_resistance=target_resistance,
         plan=candidate.plan,
         target_state_resolver=target_state_resolver,
+        activation_anchor_resolver=activation_anchor_resolver,
     )
     audit = RotationDDWholePlanDamageCoverageAuditService(
         action_damage_evidence_provider=provider,
@@ -426,6 +454,14 @@ def main() -> int:
     print(f"Duration:              {duration:g}s")
     print(f"Target resistance:     {target_resistance:g}")
     print("Attacker CombatState:  plan-derived reviewed persistent toggles")
+    print(
+        "Runtime anchors:       "
+        + (
+            f"{len(impact_anchor_evidence)} explicit impact anchor(s)"
+            if impact_anchor_evidence
+            else "none (non-cast anchors remain unresolved)"
+        )
+    )
     print(
         "Target CombatState:    "
         + ("explicit schedule" if target_state_known else "unresolved")
