@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from functools import lru_cache
+import os
 from pathlib import Path
 import sqlite3
 
@@ -102,6 +103,9 @@ class ExtremeHypotheticalClassProgressionService:
 
     def __init__(self, database_path: str | Path) -> None:
         self.database_path = Path(database_path)
+        self._database_cache_key = os.path.normcase(
+            os.path.abspath(os.fspath(self.database_path))
+        )
 
     def normalize(
         self,
@@ -144,9 +148,7 @@ class ExtremeHypotheticalClassProgressionService:
         )
 
     def _class_passive_max_ranks(self) -> dict[str, dict[str, int]]:
-        evidence = _class_passive_max_ranks_for_database(
-            str(self.database_path.resolve())
-        )
+        evidence = _class_passive_max_ranks_for_database(self._database_cache_key)
         return {
             line: dict(passives)
             for line, passives in evidence
