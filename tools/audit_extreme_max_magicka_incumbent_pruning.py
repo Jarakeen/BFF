@@ -2,18 +2,20 @@ from __future__ import annotations
 
 """Proof-audit ordinary Max Magicka named gear against a legal incumbent.
 
-This is deliberately not a canonical-score search. For Max Magicka, a mechanic-complete
-ordinary gear breakpoint can only contribute exact flat Max Magicka in the current
-reviewed objective adapter. Percentage, unresolved, and search-state-mutating effects
-remain outside this proof bucket.
+This audit deliberately reuses the production ordinary-search classifier instead of
+inventing a parallel definition of "ordinary" gear. For Max Magicka, an ordinary
+breakpoint must be relevant, mechanic-complete, search-state-neutral, composed only
+of flat ADD effects for the requested resource, *and have no runtime condition*.
+Conditional flats such as ``pet_active`` or ``transformed`` are special branches and
+must not inflate the ordinary DP upper bound.
 
 The audit solves the complete ordinary named-set breakpoint universe as a multiple-choice
 0/1 knapsack over the 12 active-snapshot set-count units: each named set may be absent or
 use exactly one reviewed breakpoint. The DP ignores physical slot restrictions, so its
 maximum is an optimistic upper bound. If even that upper bound does not exceed the legal
 incumbent package's exact flat gear contribution, every ordinary omitted package is
-proof-dominated. Special/unresolved rows are reported separately and must be closed by
-later targeted audits.
+proof-dominated. Every non-ordinary relevant/unresolved breakpoint is reported separately
+for targeted special-branch closure.
 """
 
 import argparse
@@ -25,17 +27,17 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from minmax.effects import EffectOperation
 from minmax.gear_set_repository import GearSetRepository
-from minmax.stat_ids import StatId
 from services.extreme_gear_set_bonus_breakpoint_service import ExtremeGearSetBonusBreakpointService
 from services.extreme_gear_set_objective_relevance_service import (
     ExtremeGearSetObjectiveRelevance,
     ExtremeGearSetObjectiveRelevanceService,
 )
+from services.extreme_max_resource_ordinary_named_gear_search_service import (
+    ExtremeMaxResourceOrdinaryNamedGearSearchService,
+)
 
 OBJECTIVE = "max_magicka"
-TARGET = StatId.MAX_MAGICKA
 ACTIVE_UNITS = 12
 INCUMBENT_VALUE = 107574.0
 INCUMBENT_PACKAGE = (
@@ -60,16 +62,37 @@ class State:
     choices: tuple[Choice, ...]
 
 
-def _flat_delta(row) -> float:
-    total = 0.0
-    for effect in row.candidate.source_effects:
-        if effect.stat is TARGET and effect.operation is EffectOperation.ADD:
-            total += float(effect.value)
-    return float(total)
-
-
 def _identity(state: State):
     return tuple((c.set_id, c.count) for c in state.choices)
+
+
+def _ordinary_delta(row) -> float | None:
+    return ExtremeMaxResourceOrdinaryNamedGearSearchService._ordinary_exact_delta(
+        row,
+        OBJECTIVE,
+    )
+
+
+def _special_reason(row) -> str:
+    if row.search_state_rule is not None:
+        return "search_state"
+    if row.candidate.unresolved:
+        return "unresolved"
+    target_effects = tuple(
+        effect
+        for effect in row.candidate.source_effects
+        if str(getattr(effect.stat, "value", effect.stat)) == OBJECTIVE
+    )
+    conditions = tuple(
+        dict.fromkeys(
+            str(effect.condition or "").strip()
+            for effect in target_effects
+            if str(effect.condition or "").strip()
+        )
+    )
+    if conditions:
+        return "conditional:" + ",".join(conditions)
+    return "nonordinary"
 
 
 def main() -> int:
@@ -88,22 +111,14 @@ def main() -> int:
     for row in relevance.evidence:
         if row.status is ExtremeGearSetObjectiveRelevance.PROVEN_IRRELEVANT:
             continue
-        if row.search_state_rule is not None or row.candidate.unresolved:
+        delta = _ordinary_delta(row)
+        if delta is None:
             special_rows.append(row)
             continue
-        # Mechanic-complete Max Magicka rows must be exact flat target-resource effects.
-        target_effects = tuple(e for e in row.candidate.source_effects if e.stat is TARGET)
-        invalid = tuple(e for e in target_effects if e.operation is not EffectOperation.ADD)
-        if invalid:
-            raise RuntimeError(
-                f"Mechanic-complete ordinary Max Magicka row has non-flat effect: "
-                f"{row.set_name} {row.piece_count}pc"
-            )
-        delta = _flat_delta(row)
         if delta <= 0.0:
             continue
         ordinary_by_set.setdefault(int(row.set_id), []).append(
-            Choice(int(row.set_id), row.set_name, int(row.piece_count), delta)
+            Choice(int(row.set_id), row.set_name, int(row.piece_count), float(delta))
         )
 
     for rows in ordinary_by_set.values():
@@ -118,9 +133,13 @@ def main() -> int:
         row = evidence_by_name_count.get((name.casefold(), int(count)))
         if row is None:
             raise RuntimeError(f"Incumbent breakpoint missing: {name} {count}pc")
-        if row.candidate.unresolved or row.search_state_rule is not None:
-            raise RuntimeError(f"Incumbent breakpoint is not ordinary mechanic-complete: {name} {count}pc")
-        incumbent_parts.append(Choice(int(row.set_id), name, int(count), _flat_delta(row)))
+        delta = _ordinary_delta(row)
+        if delta is None:
+            raise RuntimeError(
+                f"Incumbent breakpoint is not production-ordinary Max Magicka gear: "
+                f"{name} {count}pc"
+            )
+        incumbent_parts.append(Choice(int(row.set_id), name, int(count), float(delta)))
     incumbent_gear_delta = sum(c.flat_delta for c in incumbent_parts)
 
     # Multiple-choice 0/1 knapsack: one breakpoint at most per named set.
@@ -161,6 +180,7 @@ def main() -> int:
     print(f"objective={OBJECTIVE}")
     print(f"incumbent_canonical_value={args.incumbent:.3f}")
     print(f"active_snapshot_units={ACTIVE_UNITS}")
+    print("ordinary_classifier=production _ordinary_exact_delta")
     print(f"relevance_denominator_proven={relevance.denominator_proven}")
     print(f"ordinary_named_sets={len(ordinary_by_set)}")
     print(f"ordinary_breakpoints={sum(len(v) for v in ordinary_by_set.values())}")
@@ -188,15 +208,16 @@ def main() -> int:
         rule = getattr(row.search_state_rule, "value", row.search_state_rule)
         print(
             f"  {row.set_name} {row.piece_count}pc reviewed_delta={row.reviewed_delta:g} "
-            f"rule={rule or '<none>'} unresolved={len(row.candidate.unresolved)}"
+            f"rule={rule or '<none>'} reason={_special_reason(row)} "
+            f"unresolved={len(row.candidate.unresolved)}"
         )
     print()
     print(
         "NEXT_STEP="
         + (
-            "ordinary named gear is closed; canonically score only special/unresolved survivors against 107574"
+            "ordinary named gear is closed; canonically close the reported conditional/search-state special survivors against 107574"
             if ordinary_closed
-            else "ordinary abstract upper bound beats incumbent; materialize and canonically score only the DP-winning/frontier ordinary packages"
+            else "production-ordinary abstract upper bound still beats incumbent; materialize only that corrected ordinary frontier"
         )
     )
     return 0
