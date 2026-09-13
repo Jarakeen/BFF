@@ -5,7 +5,7 @@ from pathlib import Path
 
 from engine.config import get_data_dir
 from minmax.character_build.passive_grant import PassiveGrant
-from minmax.fight_damage_trajectory import RaidDamageSegment
+from minmax.fight_damage_trajectory import FightDamageTrajectoryProjection, RaidDamageSegment
 from minmax.resource_costs import ResourceType
 from minmax.rotation_demand_window import RotationDemandWindow
 from services.canonical_knowledge_gap import CanonicalKnowledgeGap
@@ -58,6 +58,7 @@ class RotationCanonicalEvidenceBundle:
     trigger_fraction: float
     content_type: str = ""
     target_resistance: float | None = None
+    target_health_trajectory: FightDamageTrajectoryProjection | None = None
     restoration_resolver: VerifiedRecoveryHeavyRestorationResolver | None = None
     wait_decision_factory: RecoveryPressureWaitDecisionFactory | None = None
     reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None
@@ -96,7 +97,9 @@ class RotationCanonicalEvidenceBundleSupport:
     Health-threshold policies are projected separately through the canonical encounter
     health/raid-damage clock layer, and only when the caller supplies explicit difficulty
     plus raid-damage segments. The two demand families are merged only after each has
-    independently resolved its own evidence.
+    independently resolved its own evidence. A resolved target-Health trajectory is
+    preserved on the bundle so runtime consumers may query the same explicit evidence
+    rather than reconstructing or guessing a burn curve.
     """
 
     def __init__(
@@ -154,7 +157,7 @@ class RotationCanonicalEvidenceBundleSupport:
             raise ValueError("canonical rotation evidence requires a positive maximum_amount")
         trigger = float(trigger_fraction)
         if not 0.0 <= trigger <= 1.0:
-            raise ValueError("canonical rotation evidence trigger_fraction must be between 0 and 1")
+            raise ValueError("canonical rotation evidence trigger_fraction must be between 0% and 100%")
         iterations = int(max_iterations)
         if iterations <= 0:
             raise ValueError("canonical rotation evidence max_iterations must be positive")
@@ -176,6 +179,7 @@ class RotationCanonicalEvidenceBundleSupport:
             for item in projection.unresolved
             if str(item).strip()
         ]
+        target_health_trajectory: FightDamageTrajectoryProjection | None = None
 
         threshold_policies = tuple(threshold_demand_policies)
         if threshold_policies:
@@ -195,6 +199,7 @@ class RotationCanonicalEvidenceBundleSupport:
                     difficulty=difficulty_key,
                     damage_segments=damage_segments,
                 )
+                target_health_trajectory = threshold_projection.trajectory
                 threshold_demands = self.threshold_demand_service.project(
                     thresholds=threshold_projection,
                     policies=threshold_policies,
@@ -235,6 +240,7 @@ class RotationCanonicalEvidenceBundleSupport:
             maximum_amount=int(maximum_amount),
             trigger_fraction=trigger,
             target_resistance=resistance,
+            target_health_trajectory=target_health_trajectory,
             restoration_resolver=restoration_resolver,
             wait_decision_factory=wait_decision_factory,
             reserve_assessment_resolver=reserve_assessment_resolver,
