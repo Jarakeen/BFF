@@ -89,6 +89,17 @@ class RosterAssignmentContextService:
             "notes": row["notes"] or "",
         }
 
+    @staticmethod
+    def _overlay_nonempty(base: dict[str, str], overlay: dict[str, str]) -> tuple[dict[str, str], tuple[str, ...]]:
+        result = dict(base)
+        changed: list[str] = []
+        for field in _ASSIGNMENT_FIELDS:
+            value = str(overlay.get(field, "") or "").strip()
+            if value:
+                result[field] = value
+                changed.append(field)
+        return result, tuple(sorted(changed))
+
     def get_effective_assignment(
         self,
         member_id: int,
@@ -96,40 +107,49 @@ class RosterAssignmentContextService:
         team_name: str,
         encounter_id: str = "",
         legacy_service: RosterService | None = None,
-    ) -> dict[str, str | bool]:
-        """Resolve boss override -> team default -> legacy member assignment.
+    ) -> dict[str, object]:
+        """Resolve each field as boss override -> team default -> legacy value.
 
-        Metadata keys beginning with ``_`` are presentation hints only.
+        Blank override fields mean inherit. Metadata keys beginning with ``_`` are
+        presentation hints only and are never assignment authority.
         """
-        team_id = self._team_id(team_name)
-        encounter = self._clean(encounter_id)
-        if team_id is not None and encounter:
-            row = self._row(member_id, team_id, encounter)
-            if row is not None:
-                payload: dict[str, str | bool] = self._payload(row)
-                payload.update({"_source": "encounter", "_inherited": False})
-                return payload
-
-        if team_id is not None:
-            row = self._row(member_id, team_id, "")
-            if row is not None:
-                payload = self._payload(row)
-                payload.update({
-                    "_source": "team",
-                    "_inherited": bool(encounter),
-                })
-                return payload
-
+        effective = dict(_EMPTY)
         if legacy_service is not None:
             legacy = legacy_service.get_member_assignment(int(member_id))
-            if any(str(legacy.get(field, "") or "").strip() for field in _ASSIGNMENT_FIELDS):
-                payload = dict(legacy)
-                payload.update({"_source": "legacy", "_inherited": bool(encounter)})
-                return payload
+            effective, _ = self._overlay_nonempty(effective, legacy)
 
-        payload = dict(_EMPTY)
-        payload.update({"_source": "none", "_inherited": bool(encounter)})
-        return payload
+        team_id = self._team_id(team_name)
+        team_fields: tuple[str, ...] = ()
+        encounter_fields: tuple[str, ...] = ()
+        if team_id is not None:
+            team_payload = self._payload(self._row(member_id, team_id, ""))
+            effective, team_fields = self._overlay_nonempty(effective, team_payload)
+
+            encounter = self._clean(encounter_id)
+            if encounter:
+                encounter_payload = self._payload(self._row(member_id, team_id, encounter))
+                effective, encounter_fields = self._overlay_nonempty(effective, encounter_payload)
+
+        encounter = self._clean(encounter_id)
+        if encounter_fields:
+            source = "encounter"
+        elif team_fields:
+            source = "team"
+        elif any(effective.values()):
+            source = "legacy"
+        else:
+            source = "none"
+
+        result: dict[str, object] = dict(effective)
+        result.update(
+            {
+                "_source": source,
+                "_inherited": bool(encounter) and not bool(encounter_fields),
+                "_team_fields": team_fields,
+                "_encounter_fields": encounter_fields,
+            }
+        )
+        return result
 
     def set_field(
         self,
