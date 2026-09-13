@@ -2,8 +2,8 @@ from __future__ import annotations
 
 """Classify unresolved recovery-set mechanics into proof-owned semantic branches.
 
-This layer owns classification only.  It does not score a character sheet and does
-not infer that a runtime condition is active.  The purpose is to turn the small set
+This layer owns classification only. It does not score a character sheet and does
+not infer that a runtime condition is active. The purpose is to turn the small set
 of recovery-relevant, mechanic-unmapped descriptions into explicit search branches
 or explicit non-challengers without relying on a set-name allowlist.
 """
@@ -71,9 +71,48 @@ class ExtremeGearSetRecoverySpecialBranchService:
         return " ".join(normalize_eso_markup(str(description or "")).text.casefold().split())
 
     @staticmethod
-    def _max_number(text: str) -> float | None:
-        values = [float(value) for value in re.findall(r"(?<![%\d])\d+(?:\.\d+)?", text)]
-        return max(values) if values else None
+    def _recovery_clause(text: str, resource: str) -> str:
+        """Return the smallest sentence-like clause that owns target recovery text."""
+        candidates = re.split(r"(?<=[.;])\s+|\n+", text)
+        target = f"{resource} recovery"
+        for clause in candidates:
+            if target in clause:
+                return clause
+            if resource in clause and "health" in clause and "magicka" in clause and "stamina recovery" in clause:
+                return clause
+        return text
+
+    @classmethod
+    def _flat_ceiling(cls, text: str, resource: str) -> float | None:
+        clause = cls._recovery_clause(text, resource)
+        target = re.escape(f"{resource} recovery")
+        shared = r"health,?\s+magicka,?\s+(?:and\s+)?stamina recovery"
+
+        # Amount before the stat: "gain 35-1505 Health Recovery" / "adds 1011 Health Recovery".
+        before = re.search(
+            rf"(?:gain|adds?|receive)\s+(?:\d+(?:\.\d+)?-)?(?P<value>\d+(?:\.\d+)?)\s+"
+            rf"(?:{target}|{shared})\b",
+            clause,
+        )
+        if before:
+            return float(before.group("value"))
+
+        # Amount after the stat: "Health Recovery by 8-356" / "increased by 18-800".
+        after = re.search(
+            rf"(?:{target}|{shared})\b[^.;]{{0,45}}?\b(?:by|of)\s+"
+            rf"(?:\d+(?:\.\d+)?-)?(?P<value>\d+(?:\.\d+)?)\b",
+            clause,
+        )
+        if after:
+            return float(after.group("value"))
+
+        # Shared fixed amount often appears before the list: "gain 465 Health, Magicka, and Stamina Recovery".
+        shared_before = re.search(
+            r"(?:gain|adds?|receive)\s+(?P<value>\d+(?:\.\d+)?)\s+"
+            r"health,?\s+magicka,?\s+(?:and\s+)?stamina recovery\b",
+            clause,
+        )
+        return float(shared_before.group("value")) if shared_before else None
 
     @classmethod
     def classify(
@@ -101,6 +140,7 @@ class ExtremeGearSetRecoverySpecialBranchService:
             if phrase in text:
                 can_raise = False
                 percent = None
+                named = None
                 if rule == "one_bar_only":
                     named = {
                         "health": "minor fortitude",
@@ -115,7 +155,7 @@ class ExtremeGearSetRecoverySpecialBranchService:
                     kind=ExtremeRecoverySpecialBranchKind.SEARCH_STATE_MUTATION,
                     can_raise_self=can_raise,
                     percent_ceiling=percent,
-                    condition=named if rule == "one_bar_only" and can_raise else None,
+                    condition=named.replace(" ", "_") if named and can_raise else None,
                     search_state_rule=rule,
                     description=description,
                 )
@@ -130,9 +170,7 @@ class ExtremeGearSetRecoverySpecialBranchService:
             )
 
         target_phrase = f"{resource} recovery"
-        shared_recovery = (
-            "health" in text and "magicka" in text and "stamina recovery" in text
-        )
+        shared_recovery = resource in text and "health" in text and "magicka" in text and "stamina recovery" in text
         relevant = target_phrase in text or shared_recovery
         named_buff = {
             "health": ("major fortitude", "minor fortitude"),
@@ -201,56 +239,36 @@ class ExtremeGearSetRecoverySpecialBranchService:
                 description=description,
             )
 
-        # Repeated stack grammar has to be classified before generic flat grammar.
-        stack_match = re.search(
-            r"(?:up to\s+(\d+)\s+stacks|each stack[^.]{0,100}?(?:increases|increase)[^.]{0,120}?\sby\s+(\d+(?:\.\d+)?))",
-            text,
-        )
         if "stack" in text and relevant:
-            numbers = [float(v) for v in re.findall(r"\b\d+(?:\.\d+)?\b", text)]
-            if numbers:
-                # For reviewed recovery stack descriptions the maximum additive
-                # result is explicitly present either as an "up to" value or as
-                # count x per-stack. Prefer an explicit recovery "up to" ceiling.
-                up_to = re.search(r"recovery[^.]{0,80}?up to\s+(\d+(?:\.\d+)?)", text)
-                ceiling = float(up_to.group(1)) if up_to else None
-                if ceiling is None and stack_match:
-                    counts = [int(v) for v in re.findall(r"up to\s+(\d+)\s+stacks", text)]
-                    per_stack = re.search(r"each stack[^.]{0,120}?by\s+(\d+(?:\.\d+)?)", text)
-                    if counts and per_stack:
-                        ceiling = max(counts) * float(per_stack.group(1))
-                if ceiling is not None:
-                    return ExtremeRecoverySpecialBranch(
-                        set_name=set_name,
-                        piece_count=int(piece_count),
-                        kind=ExtremeRecoverySpecialBranchKind.STACKED_FLAT,
-                        can_raise_self=True,
-                        flat_ceiling=ceiling,
-                        condition="max_stacks",
-                        description=description,
-                    )
-
-        # Flat conditional recovery descriptions typically use a range in the DB
-        # (e.g. 35-1505) or an explicit fixed amount. Take the highest number tied
-        # to the recovery clause as a challenger ceiling; later runtime scoring
-        # owns the activation condition and exact stacking order.
-        if relevant and any(word in text for word in ("gain ", "adds ", "increased by", "increase your", "receive ")):
-            ranges = [float(v) for v in re.findall(r"(?:\d+(?:\.\d+)?)-(?P<hi>\d+(?:\.\d+)?)", text) for v in [v]]
-            flat = max(ranges) if ranges else None
-            if flat is None:
-                nearby = re.findall(r"(?:gain|adds?|increased by|receive)\s+(\d+(?:\.\d+)?)", text)
-                if nearby:
-                    flat = max(float(v) for v in nearby)
-            if flat is not None:
+            up_to = re.search(r"recovery[^.]{0,100}?up to\s+(\d+(?:\.\d+)?)", text)
+            ceiling = float(up_to.group(1)) if up_to else None
+            if ceiling is None:
+                counts = [int(v) for v in re.findall(r"up to\s+(\d+)\s+stacks", text)]
+                per_stack = re.search(r"each stack[^.]{0,140}?recovery[^.]{0,30}?by\s+(\d+(?:\.\d+)?)", text)
+                if counts and per_stack:
+                    ceiling = max(counts) * float(per_stack.group(1))
+            if ceiling is not None:
                 return ExtremeRecoverySpecialBranch(
                     set_name=set_name,
                     piece_count=int(piece_count),
-                    kind=ExtremeRecoverySpecialBranchKind.CONDITIONAL_FLAT,
+                    kind=ExtremeRecoverySpecialBranchKind.STACKED_FLAT,
                     can_raise_self=True,
-                    flat_ceiling=flat,
-                    condition="runtime_condition_required",
+                    flat_ceiling=ceiling,
+                    condition="max_stacks",
                     description=description,
                 )
+
+        flat = cls._flat_ceiling(text, resource)
+        if flat is not None:
+            return ExtremeRecoverySpecialBranch(
+                set_name=set_name,
+                piece_count=int(piece_count),
+                kind=ExtremeRecoverySpecialBranchKind.CONDITIONAL_FLAT,
+                can_raise_self=True,
+                flat_ceiling=flat,
+                condition="runtime_condition_required",
+                description=description,
+            )
 
         return None
 
