@@ -39,6 +39,12 @@ def _blocker(name: str, reason: str) -> RotationDDDamageCoverageBlocker:
     )
 
 
+def _service() -> RotationDDWholePlanDamageBlockerTriageService:
+    return RotationDDWholePlanDamageBlockerTriageService(
+        periodic_status_service=RotationDDPeriodicReviewStatusService(_ReviewService())
+    )
+
+
 def test_triage_marks_known_parked_periodic_gap_from_display_name_without_resolving_it() -> None:
     audit = RotationDDWholePlanDamageCoverageAudit(
         candidate_id="candidate",
@@ -53,15 +59,13 @@ def test_triage_marks_known_parked_periodic_gap_from_display_name_without_resolv
             _blocker("Other Skill", "direct damage coefficient unavailable"),
         ),
     )
-    service = RotationDDWholePlanDamageBlockerTriageService(
-        periodic_status_service=RotationDDPeriodicReviewStatusService(_ReviewService())
-    )
 
-    result = service.classify(audit)
+    result = _service().classify(audit)
 
     assert audit.complete is False
     assert len(result.parked) == 1
     assert len(result.actionable) == 1
+    assert result.runtime_input_required == ()
     assert result.parked[0].blocker.action_name == "Unnerving Boneyard"
     assert result.parked[0].disposition is RotationDDDamageBlockerDisposition.PARKED_EVIDENCE
     assert "first-tick offset" in (result.parked[0].disposition_reason or "")
@@ -78,11 +82,33 @@ def test_same_skill_nonperiodic_blocker_remains_actionable() -> None:
             _blocker("Unnerving Boneyard", "target resistance unavailable"),
         ),
     )
-    service = RotationDDWholePlanDamageBlockerTriageService(
-        periodic_status_service=RotationDDPeriodicReviewStatusService(_ReviewService())
-    )
 
-    result = service.classify(audit)
+    result = _service().classify(audit)
 
     assert result.parked == ()
+    assert result.runtime_input_required == ()
     assert len(result.actionable) == 1
+
+
+def test_exact_impact_anchor_gap_is_runtime_input_not_engineering_work() -> None:
+    audit = RotationDDWholePlanDamageCoverageAudit(
+        candidate_id="candidate",
+        total_damage_actions=1,
+        resolved_damage_actions=0,
+        unresolved_damage_actions=1,
+        blockers=(
+            _blocker(
+                "Stampede",
+                "Stampede coefficient 2: reviewed activation anchor impact requires exact runtime anchor evidence",
+            ),
+        ),
+    )
+
+    result = _service().classify(audit)
+
+    assert result.actionable == ()
+    assert result.parked == ()
+    assert len(result.runtime_input_required) == 1
+    item = result.runtime_input_required[0]
+    assert item.disposition is RotationDDDamageBlockerDisposition.RUNTIME_INPUT_REQUIRED
+    assert "lacks exact caller/runtime evidence" in (item.disposition_reason or "")
