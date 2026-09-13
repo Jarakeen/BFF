@@ -11,6 +11,13 @@ _NAMED_GENERIC_DAMAGE_DONE = {
     "Major Berserk": 0.10,
 }
 
+# Reviewed scribed-result runtime semantics. These belong to the component-layer
+# Damage Done router rather than standing stat math. Magical Banner is the verified
+# Banner Bearer + Magic Damage result and affects only Magic-damage events.
+_NAMED_MAGIC_DAMAGE_DONE = {
+    "Magical Banner": 0.06,
+}
+
 # Sources: math/buff.txt and math/debuff.txt
 # Protection is a target-side reduction; Vulnerability is a target-side increase.
 _NAMED_GENERIC_DAMAGE_TAKEN = {
@@ -34,7 +41,12 @@ def damage_done_from_combat_state(
         for name, value in _NAMED_GENERIC_DAMAGE_DONE.items()
         if combat_state.has_buff(name)
     )
-    return DamageDoneModifiers(generic=generic)
+    magic = sum(
+        value
+        for name, value in _NAMED_MAGIC_DAMAGE_DONE.items()
+        if combat_state.has_buff(name)
+    )
+    return DamageDoneModifiers(generic=generic, magic=magic)
 
 
 def damage_taken_from_target_state(
