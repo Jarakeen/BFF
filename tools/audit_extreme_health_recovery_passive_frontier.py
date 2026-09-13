@@ -3,9 +3,8 @@ from __future__ import annotations
 """Inventory every canonical player passive relevant to Extreme Health Recovery.
 
 This is a proof-frontier audit, not a scorer. It uses the shared passive projector
-and reports every passive that either contributes to ``health_recovery`` or still
-mentions recovery while requiring context/unresolved interpretation. The purpose is
-to identify the exact race/class/shared-passive denominator before route reduction.
+for static/contextual semantics and a narrow Health Recovery special classifier for
+non-static grammars that the generic projector deliberately leaves unresolved.
 """
 
 import argparse
@@ -17,6 +16,9 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from services.extreme_health_recovery_passive_special_branch_service import (
+    ExtremeHealthRecoveryPassiveSpecialBranchService,
+)
 from services.extreme_passive_projection_service import (
     ExtremePassiveProjectionService,
     ExtremePassiveProjectionStatus,
@@ -41,6 +43,7 @@ def main() -> int:
 
     direct = []
     contextual = []
+    special = []
     unresolved = []
     by_domain: dict[str, list] = defaultdict(list)
 
@@ -65,14 +68,18 @@ def main() -> int:
             by_domain[row.domain.value].append((projection, ()))
             continue
         if recovery_text and projection.status is ExtremePassiveProjectionStatus.UNRESOLVED:
-            unresolved.append(projection)
+            branch = ExtremeHealthRecoveryPassiveSpecialBranchService.classify(row)
+            if branch is None:
+                unresolved.append(projection)
+            else:
+                special.append(branch)
             by_domain[row.domain.value].append((projection, ()))
 
     status_counts = Counter(row.status.value for row in projections)
 
     print("EXTREME HEALTH RECOVERY PASSIVE FRONTIER")
     print(f"database={database}")
-    print("mode=canonical_passive_inventory_not_route_scoring")
+    print("mode=canonical_passive_inventory_plus_semantic_special_classification")
     print(f"player_passives_reviewed={len(passives)}")
     print(
         "projection_status_counts="
@@ -80,6 +87,7 @@ def main() -> int:
     )
     print(f"direct_health_recovery_passives={len(direct)}")
     print(f"context_required_health_recovery_passives={len(contextual)}")
+    print(f"special_health_recovery_passives={len(special)}")
     print(f"unresolved_health_recovery_passives={len(unresolved)}")
     print()
 
@@ -121,6 +129,25 @@ def main() -> int:
         )
         for message in projection.unresolved:
             print(f"    context: {message}")
+
+    print()
+    print("SEMANTIC SPECIAL HEALTH RECOVERY PASSIVES")
+    for branch in sorted(
+        special,
+        key=lambda item: (
+            item.passive.domain.value,
+            item.passive.class_type.casefold(),
+            item.passive.skill_line.casefold(),
+            item.passive.name.casefold(),
+        ),
+    ):
+        row = branch.passive
+        print(
+            f"  domain={row.domain.value} class={row.class_type or '<shared>'} "
+            f"line={row.skill_line!r} passive={row.name!r} kind={branch.kind.value} "
+            f"can_raise_self={branch.can_raise_self} flat_ceiling={branch.flat_ceiling!r} "
+            f"percent_ceiling={branch.percent_ceiling!r} condition={branch.condition or '<none>'}"
+        )
 
     print()
     print("UNRESOLVED HEALTH RECOVERY PASSIVES")
