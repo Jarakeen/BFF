@@ -3,13 +3,17 @@ from __future__ import annotations
 """Proof-reduce legal races for Extreme max-resource scoring.
 
 The complete legal race universe remains the denominator.  For a scalar maximum
-resource objective, one legal race may represent another only when the canonical
-racial progression and tooltip resolver completely account for both races and the
-requested max-resource contribution is exactly equal.
+resource objective, every legal race is first resolved through the same canonical
+racial progression and tooltip parser used by final scoring.  When all target-resource
+contributions are complete and non-negative, only the legal race with the largest
+canonical target-resource contribution can win the maximum objective.
 
-Race identity is never erased on unresolved canonical evidence.  Non-target racial
-stats remain outside this scalar projection; they continue to be owned by the
-canonical racial passive resolver and passive coverage audits.
+This is an objective-dominance reduction, not an assertion that races are generally
+equivalent. Non-target racial stats remain owned by the canonical racial resolver and
+cannot make a smaller static target-resource contribution exceed a larger one for the
+instantaneous Max Health/Magicka/Stamina objective. Any unresolved or invalid racial
+evidence disables the reduction so the generic structural search falls back to the
+full race universe.
 """
 
 from dataclasses import dataclass
@@ -31,6 +35,7 @@ class ExtremeResourceRaceProjection:
     source_race_count: int
     races: tuple[str, ...]
     signatures: tuple[float, ...]
+    source_signatures: tuple[tuple[str, float], ...]
     denominator_proven: bool
     unresolved: tuple[str, ...] = ()
 
@@ -39,8 +44,9 @@ class ExtremeResourceRaceProjection:
         return bool(
             self.denominator_proven
             and self.source_race_count > 0
-            and self.races
-            and len(self.races) == len(self.signatures)
+            and len(self.races) == 1
+            and len(self.signatures) == 1
+            and len(self.source_signatures) == self.source_race_count
             and not self.unresolved
         )
 
@@ -48,14 +54,17 @@ class ExtremeResourceRaceProjection:
     def scope(self) -> tuple[str, ...]:
         if not self.projection_complete:
             return ()
+        witness = self.races[0]
+        value = self.signatures[0]
         return (
-            "legal races proof-reduced by complete canonical racial-passive target-resource "
-            f"signature; {self.source_race_count} legal races -> {len(self.races)} exact witnesses",
+            "legal races proof-reduced by complete canonical target-resource dominance; "
+            f"{self.source_race_count} legal races -> 1 maximum witness "
+            f"({witness}: {value:g})",
         )
 
 
 class ExtremeResourceRaceProjectionService:
-    """Collapse legal races by exact canonical target-resource contribution."""
+    """Retain the strongest legal canonical target-resource racial witness."""
 
     SUPPORTED_OBJECTIVES = _SUPPORTED_OBJECTIVES
 
@@ -90,6 +99,10 @@ class ExtremeResourceRaceProjectionService:
             value = float(resolution.stats.get(objective_key, 0.0) or 0.0)
         except (TypeError, ValueError):
             return None, (f"Canonical racial target-resource value is invalid for {race}",)
+        if value < -1e-9:
+            return None, (
+                f"Canonical racial target-resource value is negative and cannot use monotonic dominance for {race}: {value}",
+            )
         return value, ()
 
     def build(
@@ -106,22 +119,31 @@ class ExtremeResourceRaceProjectionService:
         if not races:
             unresolved.append("Canonical legal race universe is empty")
 
-        witnesses: dict[float, str] = {}
+        reviewed: list[tuple[str, float]] = []
         for race in races:
             signature, race_unresolved = self._signature(race, key)
             unresolved.extend(race_unresolved)
-            if signature is None:
-                continue
-            current = witnesses.get(signature)
-            if current is None or race.casefold() < current.casefold():
-                witnesses[signature] = race
+            if signature is not None:
+                reviewed.append((race, signature))
 
         final_unresolved = tuple(dict.fromkeys(item for item in unresolved if item))
-        signatures = tuple(sorted(witnesses))
-        retained = tuple(witnesses[signature] for signature in signatures)
+        retained: tuple[str, ...] = ()
+        signatures: tuple[float, ...] = ()
+        if reviewed and not final_unresolved and len(reviewed) == len(races):
+            best_value = max(value for _, value in reviewed)
+            tied = tuple(
+                race
+                for race, value in reviewed
+                if abs(value - best_value) <= 1e-9
+            )
+            witness = min(tied, key=lambda race: (race.casefold(), race))
+            retained = (witness,)
+            signatures = (float(best_value),)
+
         denominator_proven = bool(
             races
-            and len(witnesses) > 0
+            and len(reviewed) == len(races)
+            and retained
             and not final_unresolved
         )
         return ExtremeResourceRaceProjection(
@@ -129,6 +151,7 @@ class ExtremeResourceRaceProjectionService:
             source_race_count=len(races),
             races=retained,
             signatures=signatures,
+            source_signatures=tuple(reviewed),
             denominator_proven=denominator_proven,
             unresolved=final_unresolved,
         )
