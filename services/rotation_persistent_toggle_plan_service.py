@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from minmax.rotation_ability_priority import AbilityPriorityList
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from minmax.rotation_recast import RotationRecastRule
 from services.rotation_scribed_skill_damage_semantics_service import (
@@ -24,6 +25,11 @@ class RotationPersistentTogglePlanService:
     later scheduled activations are replaced with deterministic same-bar ordinary
     fillers that have no finite-duration recast rule.
 
+    When explicit ability priorities are available, the same priority model used by
+    the duration scheduler orders eligible fillers. Without priorities, seed order is
+    preserved and the unresolved diagnostic remains explicit rather than fabricating
+    a gameplay preference.
+
     A toggle represented on only one bar is left untouched because swapping away may
     deactivate it; that lifecycle needs explicit bar-aware runtime semantics rather
     than a global assumption. Unknown scribed results are ignored and remain owned by
@@ -42,6 +48,7 @@ class RotationPersistentTogglePlanService:
         plan: RotationPlan,
         *,
         duration_rules: tuple[RotationRecastRule, ...] = (),
+        priorities: AbilityPriorityList | None = None,
     ) -> RotationPersistentTogglePlanResult:
         toggle_names: dict[str, str] = {}
         toggle_bars: dict[str, set[str]] = {}
@@ -64,6 +71,7 @@ class RotationPersistentTogglePlanService:
             plan,
             persistent_names=set(toggle_names),
             duration_names=duration_names,
+            priorities=priorities,
         )
         filler_index = {"front": 0, "back": 0}
         activated: set[str] = set()
@@ -132,10 +140,16 @@ class RotationPersistentTogglePlanService:
                     bar=action.bar,
                 )
             )
-            unresolved.append(
-                f"persistent toggle recast of '{semantic.result_name}' at {action.time_seconds:g}s was replaced "
-                f"with same-bar filler '{replacement}'; exact priority ranking is unresolved"
-            )
+            if priorities is None:
+                unresolved.append(
+                    f"persistent toggle recast of '{semantic.result_name}' at {action.time_seconds:g}s was replaced "
+                    f"with same-bar filler '{replacement}'; exact priority ranking is unresolved"
+                )
+            else:
+                assumptions.append(
+                    f"persistent toggle recast of '{semantic.result_name}' at {action.time_seconds:g}s was replaced "
+                    f"with explicit-priority same-bar filler '{replacement}'"
+                )
 
         normalized_plan = RotationPlan(
             character_name=plan.character_name,
@@ -156,6 +170,7 @@ class RotationPersistentTogglePlanService:
         *,
         persistent_names: set[str],
         duration_names: set[str],
+        priorities: AbilityPriorityList | None,
     ) -> dict[str, tuple[str, ...]]:
         result: dict[str, list[str]] = {"front": [], "back": []}
         seen: dict[str, set[str]] = {"front": set(), "back": set()}
@@ -169,7 +184,28 @@ class RotationPersistentTogglePlanService:
                 continue
             seen[action.bar].add(key)
             result[action.bar].append(action.name)
-        return {bar: tuple(values) for bar, values in result.items()}
+
+        if priorities is None:
+            return {bar: tuple(values) for bar, values in result.items()}
+
+        rank: dict[tuple[str, str], tuple[int, int]] = {}
+        for resolved in priorities.resolve():
+            rank[(resolved.entry.bar, resolved.entry.skill_name.casefold())] = (
+                resolved.effective_priority,
+                resolved.entry.slot,
+            )
+        return {
+            bar: tuple(
+                sorted(
+                    values,
+                    key=lambda name: rank.get(
+                        (bar, name.casefold()),
+                        (10**9, 10**9),
+                    ),
+                )
+            )
+            for bar, values in result.items()
+        }
 
     @staticmethod
     def _next_filler(
