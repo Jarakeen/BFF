@@ -7,17 +7,42 @@ from services.extreme_armor_resource_weight_state_service import (
 )
 
 
-def test_catalog_reduces_all_seven_slot_weight_loadouts_to_one_witness_per_type_count():
+def test_max_health_catalog_preserves_type_count_and_heavy_piece_signatures():
     catalog = ExtremeArmorResourceWeightStateService.build("max_health")
 
     assert catalog.denominator_proven
     assert catalog.raw_loadouts_reviewed == 3 ** 7
-    assert catalog.dominated_loadouts_pruned == (3 ** 7) - 3
-    assert tuple(state.armor_type_count for state in catalog.states) == (1, 2, 3)
+    assert catalog.dominated_loadouts_pruned == (3 ** 7) - 14
+    assert tuple(sorted(state.max_health_signature for state in catalog.states)) == (
+        (1, 0),
+        (1, 7),
+        (2, 0),
+        (2, 1),
+        (2, 2),
+        (2, 3),
+        (2, 4),
+        (2, 5),
+        (2, 6),
+        (3, 1),
+        (3, 2),
+        (3, 3),
+        (3, 4),
+        (3, 5),
+    )
+
+
+def test_magicka_and_stamina_still_reduce_to_one_witness_per_type_count():
+    for objective in ("max_magicka", "max_stamina"):
+        catalog = ExtremeArmorResourceWeightStateService.build(objective)
+
+        assert catalog.denominator_proven
+        assert catalog.raw_loadouts_reviewed == 3 ** 7
+        assert catalog.dominated_loadouts_pruned == (3 ** 7) - 3
+        assert tuple(state.armor_type_count for state in catalog.states) == (1, 2, 3)
 
 
 def test_each_reduced_state_is_a_complete_legal_seven_piece_weight_witness():
-    catalog = ExtremeArmorResourceWeightStateService.build("max_magicka")
+    catalog = ExtremeArmorResourceWeightStateService.build("max_health")
 
     for state in catalog.states:
         assert len(state.weights) == 7
