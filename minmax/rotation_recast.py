@@ -12,8 +12,11 @@ class RotationRecastRule:
 
     Finite-duration abilities carry ``duration_seconds`` and may optionally use a
     verified ``refresh_lead_seconds``. Reviewed persistent toggles instead set
-    ``persistent=True`` and deliberately carry no fabricated finite duration. They
-    are valid on first activation and have no timed refresh obligation thereafter.
+    ``persistent=True`` and callers supply no finite duration. Internally the rule
+    uses an infinite due horizon so existing schedulers naturally treat the first
+    activation as valid and never create a timed refresh obligation afterward.
+    Infinity is a scheduling sentinel only; it is not ESO duration evidence and
+    persistent rules are excluded from finite-duration analysis.
     """
 
     skill_name: str
@@ -37,6 +40,7 @@ class RotationRecastRule:
             lead = float(self.refresh_lead_seconds)
             if not math.isfinite(lead) or abs(lead) > 1e-9:
                 raise ValueError("persistent recast rule cannot have a refresh lead")
+            object.__setattr__(self, "duration_seconds", math.inf)
             object.__setattr__(self, "refresh_lead_seconds", 0.0)
         else:
             if self.duration_seconds is None:
