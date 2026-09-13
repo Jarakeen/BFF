@@ -108,14 +108,27 @@ class ExtremeResourceClassRouteDominanceProjectionService:
 
         source = tuple(source_routes or ())
         upstream = self.route_projection_service.build(key, source)
+        routes = tuple(getattr(upstream, "routes", ()) or ())
+        signatures = tuple(getattr(upstream, "signatures", ()) or ())
+        relevant_class_lines = tuple(
+            getattr(upstream, "relevant_class_lines", ()) or ()
+        )
         unresolved: list[str] = list(tuple(getattr(upstream, "unresolved", ()) or ()))
         if not bool(getattr(upstream, "projection_complete", False)):
             unresolved.append(
                 "Class-route dominance requires complete exact route-signature projection"
             )
+            return ExtremeResourceClassRouteDominanceProjection(
+                objective_key=key,
+                source_route_count=len(source),
+                projected_route_count=len(routes),
+                routes=(),
+                signature=(),
+                relevant_class_lines=relevant_class_lines,
+                denominator_proven=False,
+                unresolved=tuple(dict.fromkeys(item for item in unresolved if item)),
+            )
 
-        routes = tuple(getattr(upstream, "routes", ()) or ())
-        signatures = tuple(getattr(upstream, "signatures", ()) or ())
         if len(routes) != len(signatures) or not routes:
             unresolved.append(
                 "Class-route dominance requires one retained legal witness per exact signature"
@@ -156,7 +169,6 @@ class ExtremeResourceClassRouteDominanceProjectionService:
         final_unresolved = tuple(dict.fromkeys(item for item in unresolved if item))
         denominator_proven = bool(
             source
-            and bool(getattr(upstream, "projection_complete", False))
             and retained
             and dominant_signature
             and not final_unresolved
@@ -167,9 +179,7 @@ class ExtremeResourceClassRouteDominanceProjectionService:
             projected_route_count=len(routes),
             routes=retained,
             signature=dominant_signature,
-            relevant_class_lines=tuple(
-                getattr(upstream, "relevant_class_lines", ()) or ()
-            ),
+            relevant_class_lines=relevant_class_lines,
             denominator_proven=denominator_proven,
             unresolved=final_unresolved,
         )
