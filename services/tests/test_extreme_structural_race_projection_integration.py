@@ -44,14 +44,19 @@ class _ProjectedScorer:
         return ExtremeResourceRaceProjection(
             objective_key="max_magicka",
             source_race_count=3,
-            races=("Bosmer", "Altmer"),
-            signatures=(0.0, 2000.0),
+            races=("Altmer",),
+            signatures=(2000.0,),
+            source_signatures=(
+                ("Breton", 2000.0),
+                ("Altmer", 2000.0),
+                ("Bosmer", 0.0),
+            ),
             denominator_proven=True,
             unresolved=(),
         )
 
     def __call__(self, _objective_key, candidate):
-        values = {"Bosmer": 0.0, "Altmer": 2000.0}
+        values = {"Altmer": 2000.0}
         return values[candidate.race], None, ()
 
 
@@ -60,8 +65,9 @@ class _IncompleteProjectedScorer(_ProjectedScorer):
         return ExtremeResourceRaceProjection(
             objective_key="max_magicka",
             source_race_count=3,
-            races=("Altmer",),
-            signatures=(2000.0,),
+            races=(),
+            signatures=(),
+            source_signatures=(("Altmer", 2000.0),),
             denominator_proven=False,
             unresolved=("incomplete proof",),
         )
@@ -77,12 +83,12 @@ def test_complete_race_projection_reduces_only_race_axis_and_preserves_structura
         scorer=_ProjectedScorer(),
     ).search("max_magicka")
 
-    assert result.candidates_scored == 4
+    assert result.candidates_scored == 2
     assert result.structural_denominator_proven is True
     assert result.global_denominator_proven is True
     assert result.best is not None
     assert result.best.candidate.race == "Altmer"
-    assert any("3 legal races -> 2 exact witnesses" in row for row in result.structural_scope)
+    assert any("3 legal races -> 1 maximum witness" in row for row in result.structural_scope)
 
 
 def test_incomplete_race_projection_falls_back_to_full_race_enumeration():
