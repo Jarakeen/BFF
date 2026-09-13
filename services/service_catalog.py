@@ -508,6 +508,25 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.POLICY,
     ),
     ServiceDescriptor(
+        service_id="research.ultimate_source_reference_frontier",
+        domain="research",
+        purpose=(
+            "Discover and route-classify Ultimate-generation candidates from a "
+            "versioned reference snapshot without promoting them to canonical math."
+        ),
+        implementation_path="services.ultimate_source_reference_frontier_service",
+        inputs=("UltimateCalculatorReferenceHtml",),
+        outputs=("UltimateSourceReference",),
+        responsibilities=("ultimate_generation_source_denominator_discovery",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.OBSERVATIONAL,
+        provenance=("math/ESO Ultimate Generation Calculator _ U50 _ Hyperioxes.htm",),
+        notes=(
+            "Displayed rates are discovery evidence only; exact game tooltips, "
+            "targeting, timing, and build legality remain separate proof obligations."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.health_recovery_runtime_compatibility",
         domain="extreme",
         purpose=(

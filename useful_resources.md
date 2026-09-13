@@ -273,3 +273,10 @@ Before a mechanic enters the shared stat/combat pipeline:
 5. Validate against a live character sheet, tooltip, combat log, or another appropriate observable result.
 
 A convenient calculator matching our expected number is evidence, not proof. ESO already provides enough opportunities for accidental folklore without us manufacturing more.
+
+## Hyperioxes — ESO Ultimate Generation Calculator (U50 snapshot)
+
+- **Location:** `math/ESO Ultimate Generation Calculator _ U50 _ Hyperioxes.htm`
+- **Useful for:** Discovering the candidate universe for Ultimate generation, including Class Masteries, passives, skills, gear, base combat generation, Heroism, and Decisive.
+- **Confidence:** **Medium for source discovery; low for hardcoded combat math without corroboration.** Labels and displayed rates still require canonical tooltip, trigger, cooldown, recipient, proc-chance, and build-legality verification.
+- **Version/provenance:** Saved U50 page snapshot reviewed 2026-09-13. Treat it as version-sensitive observational tooling rather than a replacement for canonical ESO mechanics data.

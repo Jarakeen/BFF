@@ -772,3 +772,15 @@ Even an optimistic currently modeled timeline—continuous base combat generatio
 **Layman’s version:** one bonus wants you to spend a very full Ultimate bar, while the other wants the bar full again almost immediately afterward. We cannot award both gold medals just because each wins alone.
 
 **For BFF:** this is unresolved, not proven impossible. Additional legal Ultimate sources may close the 114 gap, but they must be catalogued, timed, and checked against the same class/gear state before the two component maxima are combined.
+
+---
+
+## 2026-09-13 — “Ultimate generation” is not one interchangeable bucket
+
+The U50 calculator snapshot exposes sources from Class Masteries, class and racial passives, active skills, Vampire state, named gear, weapon traits, base combat generation, and Heroism. Similar displayed rates can still have completely different triggers, recipients, cooldowns, proc chances, and build costs.
+
+The snapshot also notes that Minor and Major Heroism share the same 1.5-second event cadence for **Decisive**: their values can stack, but Decisive receives one proc opportunity from that merged event rather than two independent rolls.
+
+**Layman’s version:** “four Ultimate per second” is not a universal Lego brick. One version may require a monster set, another becoming a Vampire, and another may give the Ultimate to everybody except you.
+
+**For BFF:** the calculator discovers the denominator. Every surviving source must still earn canonical timing, self-targeting, and legal-build evidence before it can fill Strategic Reserve’s 114-Ultimate gap.
