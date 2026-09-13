@@ -4,6 +4,10 @@ from __future__ import annotations
 
 Precedence is deliberately narrow and deterministic:
 team + boss > team > boss > base build.
+
+Resolution is field-by-field. Lower-specificity matching variants are applied first,
+so a sparse Team + Boss row can inherit a Team value instead of falling all the way
+back to the base build.
 """
 
 from copy import deepcopy
@@ -28,22 +32,33 @@ def _context_score(variant: BuildContextVariant, team_name: str, boss_name: str)
     return -1
 
 
+def _matching_variants(
+    build: PlayerBuild,
+    *,
+    team_name: str = "",
+    boss_name: str = "",
+) -> tuple[tuple[int, BuildContextVariant], ...]:
+    """Return at most one matching row per specificity, least to most specific."""
+    latest_by_score: dict[int, tuple[int, BuildContextVariant]] = {}
+    for index, variant in enumerate(build.ContextVariants):
+        score = _context_score(variant, team_name, boss_name)
+        if score < 0:
+            continue
+        latest_by_score[score] = (index, variant)
+    return tuple(
+        (score, latest_by_score[score][1])
+        for score in sorted(latest_by_score)
+    )
+
+
 def select_context_variant(
     build: PlayerBuild,
     *,
     team_name: str = "",
     boss_name: str = "",
 ) -> BuildContextVariant | None:
-    ranked: list[tuple[int, int, BuildContextVariant]] = []
-    for index, variant in enumerate(build.ContextVariants):
-        score = _context_score(variant, team_name, boss_name)
-        if score >= 0:
-            ranked.append((score, index, variant))
-    if not ranked:
-        return None
-    # Later variants of equal specificity win so an explicit newer row can replace
-    # an older duplicate without any hidden merge behavior.
-    return max(ranked, key=lambda item: (item[0], item[1]))[2]
+    matches = _matching_variants(build, team_name=team_name, boss_name=boss_name)
+    return matches[-1][1] if matches else None
 
 
 def _overlay_bar(base: list[str], override: list[str]) -> list[str]:
@@ -124,10 +139,11 @@ def resolve_build_context(
     team_name: str = "",
     boss_name: str = "",
 ) -> PlayerBuild:
-    variant = select_context_variant(build, team_name=team_name, boss_name=boss_name)
-    if variant is None:
-        return deepcopy(build)
-    return apply_context_variant(build, variant)
+    matches = _matching_variants(build, team_name=team_name, boss_name=boss_name)
+    result = deepcopy(build)
+    for _score, variant in matches:
+        result = apply_context_variant(result, variant)
+    return result
 
 
 __all__ = [
