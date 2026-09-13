@@ -3,15 +3,18 @@ import json
 import pytest
 
 from minmax.rotation_plan import RotationActionKind
+from services.rotation_dd_whole_plan_damage_blocker_triage_service import (
+    RotationDDDamageBlockerDisposition,
+    RotationDDDamageBlockerTriage,
+)
 from services.rotation_dd_whole_plan_damage_coverage_audit_service import (
     RotationDDDamageCoverageBlocker,
-    RotationDDWholePlanDamageCoverageAudit,
 )
 from tools.audit_phase13_dd_whole_plan_damage_coverage import (
     _group_static_prerequisite_gaps,
     _parse_target_window,
     _saved_dd_builds,
-    _sorted_blockers,
+    _sorted_triage,
 )
 
 
@@ -38,33 +41,36 @@ def test_saved_dd_builds_lists_only_damage_roles_in_stable_order(tmp_path) -> No
     )
 
 
-def test_sorted_blockers_orders_highest_occurrence_count_first() -> None:
-    audit = RotationDDWholePlanDamageCoverageAudit(
-        candidate_id="real-build",
-        total_damage_actions=4,
-        resolved_damage_actions=1,
-        unresolved_damage_actions=3,
-        blockers=(
-            RotationDDDamageCoverageBlocker(
-                action_kind=RotationActionKind.LIGHT_ATTACK,
-                action_name=None,
-                reason="unsupported weapon family",
-                occurrences=((0.0, 0),),
-            ),
-            RotationDDDamageCoverageBlocker(
-                action_kind=RotationActionKind.SKILL,
-                action_name="stampede",
-                reason="impact timing unresolved",
-                occurrences=((1.0, 0), (6.0, 0)),
-            ),
-        ),
+def test_sorted_triage_orders_highest_occurrence_count_first() -> None:
+    light_attack = RotationDDDamageCoverageBlocker(
+        action_kind=RotationActionKind.LIGHT_ATTACK,
+        action_name=None,
+        reason="unsupported weapon family",
+        occurrences=((0.0, 0),),
+    )
+    stampede = RotationDDDamageCoverageBlocker(
+        action_kind=RotationActionKind.SKILL,
+        action_name="stampede",
+        reason="impact timing unresolved",
+        occurrences=((1.0, 0), (6.0, 0)),
     )
 
-    ranked = _sorted_blockers(audit)
+    ranked = _sorted_triage(
+        (
+            RotationDDDamageBlockerTriage(
+                blocker=light_attack,
+                disposition=RotationDDDamageBlockerDisposition.ACTIONABLE,
+            ),
+            RotationDDDamageBlockerTriage(
+                blocker=stampede,
+                disposition=RotationDDDamageBlockerDisposition.ACTIONABLE,
+            ),
+        )
+    )
 
-    assert ranked[0].action_name == "stampede"
-    assert ranked[0].occurrence_count == 2
-    assert ranked[1].action_kind is RotationActionKind.LIGHT_ATTACK
+    assert ranked[0].blocker.action_name == "stampede"
+    assert ranked[0].blocker.occurrence_count == 2
+    assert ranked[1].blocker.action_kind is RotationActionKind.LIGHT_ATTACK
 
 
 def test_static_prerequisite_gaps_collapse_front_back_duplicates() -> None:
