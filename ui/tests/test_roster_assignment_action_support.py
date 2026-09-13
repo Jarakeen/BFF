@@ -12,6 +12,17 @@ def test_assignment_actions_hide_ready_and_add_requested_buttons():
     assert 'QPushButton("Gear Lookup")' in source
 
 
+def test_assignment_action_card_is_flat_and_uses_space_for_large_buttons():
+    source = Path("ui/roster_assignment_action_support.py").read_text(encoding="utf-8")
+
+    assert "card.header.hide()" in source
+    assert "_clear_attention_content(card)" in source
+    assert "button.setMinimumHeight(52)" in source
+    assert "QSizePolicy.Policy.Expanding" in source
+    assert "actions.setRowStretch(0, 1)" in source
+    assert "actions.setRowStretch(1, 1)" in source
+
+
 def test_assignment_actions_route_to_existing_canonical_pages():
     source = Path("ui/roster_assignment_action_support.py").read_text(encoding="utf-8")
 
