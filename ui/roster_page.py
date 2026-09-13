@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
+    QCompleter,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -19,6 +20,7 @@ from PySide6.QtWidgets import (
 from engine.config import get_data_dir
 from models.roster_model import RosterMember
 from services.eso_database import EsoDatabase
+from services.raid_coverage_profile import DEFAULT_RAID_COVERAGE_PROFILE
 from services.roster_service import RosterService
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
@@ -27,6 +29,46 @@ from ui.foundry_page import FoundryPage
 from widgets.roster_actions import RosterActions
 from widgets.roster_record import RosterRecord
 from widgets.roster_table import RosterTable
+
+
+_GENERIC_ASSIGNMENT_CHOICES: tuple[tuple[str, str], ...] = (
+    ("Boss Positioning / Add Control", "mechanic:boss_positioning_add_control"),
+    ("Portal / Backup Control", "mechanic:portal_backup_control"),
+    ("Raid Healing / Support", "role:raid_healing_support"),
+    ("Orbs / Utility", "role:orbs_utility"),
+    ("Boss Damage / Mechanic", "role:boss_damage_mechanic"),
+    ("Execute / Interrupts", "mechanic:execute_interrupts"),
+    ("Interrupts", "mechanic:interrupts"),
+    ("Portal", "mechanic:portal"),
+    ("Add Control", "mechanic:add_control"),
+    ("Boss Positioning", "mechanic:boss_positioning"),
+    ("Mechanic", "mechanic:general"),
+    ("Utility", "role:utility"),
+    ("Backup", "role:backup"),
+    ("Needs assignment", "state:needs_assignment"),
+    ("—", "state:none"),
+)
+
+
+def _assignment_choice_rows() -> tuple[tuple[str, str], ...]:
+    """Return display labels paired with stable assignment identities.
+
+    Raid-support choices reuse the existing canonical coverage requirement IDs.
+    The small generic set covers raid-lead responsibilities that are not provider
+    requirements yet, without pretending those labels are encounter mechanics.
+    """
+    rows: list[tuple[str, str]] = list(_GENERIC_ASSIGNMENT_CHOICES)
+    seen = {label.casefold() for label, _ in rows}
+    for requirement in DEFAULT_RAID_COVERAGE_PROFILE.requirements:
+        label = requirement.display_name.strip()
+        if not label or label.casefold() in seen:
+            continue
+        rows.append((label, f"requirement:{requirement.requirement_id}"))
+        seen.add(label.casefold())
+    return tuple(rows)
+
+
+_ASSIGNMENT_CHOICES = _assignment_choice_rows()
 
 
 class RosterPage(FoundryPage):
@@ -186,30 +228,77 @@ class RosterPage(FoundryPage):
         except Exception as exc:
             self.status.error(f"Failed to load roster: {exc}")
 
+    @staticmethod
+    def _assignment_combo(value: str) -> QComboBox:
+        """Build the same case-insensitive contains autocomplete used in Builds."""
+        combo = QComboBox()
+        combo.setEditable(True)
+        combo.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+        combo.setDuplicatesEnabled(False)
+        combo.setMinimumWidth(190)
+        for label, assignment_id in _ASSIGNMENT_CHOICES:
+            combo.addItem(label, assignment_id)
+
+        completer = QCompleter(combo.model(), combo)
+        completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        completer.setFilterMode(Qt.MatchFlag.MatchContains)
+        completer.setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
+        combo.setCompleter(completer)
+        if combo.lineEdit() is not None:
+            combo.lineEdit().setClearButtonEnabled(True)
+            combo.lineEdit().setPlaceholderText("Type to find assignment…")
+
+        match = combo.findText(value, Qt.MatchFlag.MatchFixedString)
+        if match >= 0:
+            combo.setCurrentIndex(match)
+        else:
+            combo.setCurrentText(value)
+        combo.setToolTip("Start typing any part of an assignment name to filter the list.")
+        return combo
+
+    def _set_assignment_cell(self, row: int, column: int, value: str) -> None:
+        """Keep a backing item for existing CSV/PDF/Discord exporters."""
+        item = QTableWidgetItem(value)
+        item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+        self.assignment_table.setItem(row, column, item)
+
+        combo = self._assignment_combo(value)
+        combo.currentTextChanged.connect(item.setText)
+        self.assignment_table.setCellWidget(row, column, combo)
+
     def _populate_assignment_table(self, *_args):
         if not hasattr(self, "assignment_table"):
             return
         query = self.search.text().strip().lower() if hasattr(self, "search") else ""
         self.assignment_table.setRowCount(0)
         for member in self.members:
-            haystack = f"{member.PlayerName} {member.CharacterName} {member.EsoClass} {member.PrimaryRole} {member.SecondaryRole} {member.Team}".lower()
+            role = member.PrimaryRole or "Unassigned"
+            primary_assignment = self._default_assignment(role)
+            secondary_assignment = self._secondary_assignment(role)
+            haystack = (
+                f"{member.PlayerName} {member.CharacterName} {member.EsoClass} "
+                f"{member.PrimaryRole} {member.SecondaryRole} {member.Team} "
+                f"{primary_assignment} {secondary_assignment}"
+            ).lower()
             if query and query not in haystack:
                 continue
             row = self.assignment_table.rowCount()
             self.assignment_table.insertRow(row)
-            role = member.PrimaryRole or "Unassigned"
             values = [
                 member.PlayerName or member.CharacterName or "Unnamed",
                 role,
                 member.EsoClass or "—",
                 member.CharacterName or "—",
-                self._default_assignment(role),
-                self._secondary_assignment(role),
+                primary_assignment,
+                secondary_assignment,
                 "—",
                 member.Team or "",
                 "✓" if member.Status == "Active" else "•",
             ]
             for col, value in enumerate(values):
+                if col in {4, 5}:
+                    self._set_assignment_cell(row, col, str(value))
+                    continue
                 item = QTableWidgetItem(str(value))
                 if col == 0 and member.Id is not None:
                     item.setData(Qt.ItemDataRole.UserRole, int(member.Id))
