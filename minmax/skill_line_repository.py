@@ -107,12 +107,14 @@ class SkillLineRepository:
 
     def skill_line_for_ability_name(self, ability_name: str, *, class_name: str = "") -> str | None:
         name = str(ability_name or "").strip()
-        if not name or not self.database_path.exists():
+        if not name:
             return None
 
         cache_key = (self._lookup_key(name), self._lookup_key(class_name))
         if cache_key in self._skill_line_cache:
             return self._skill_line_cache[cache_key]
+        if not self.database_path.exists():
+            return None
 
         with sqlite3.connect(self.database_path) as db:
             columns = {str(row[1]) for row in db.execute("PRAGMA table_info(ability)").fetchall()}
@@ -148,12 +150,14 @@ class SkillLineRepository:
     def passive_max_rank(self, passive_name: str) -> int | None:
         """Return the highest canonical rank recorded for one player passive."""
         name = str(passive_name or "").strip()
-        if not name or not self.database_path.exists():
+        if not name:
             return None
 
         cache_key = self._lookup_key(name)
         if cache_key in self._passive_max_rank_cache:
             return self._passive_max_rank_cache[cache_key]
+        if not self.database_path.exists():
+            return None
 
         with sqlite3.connect(self.database_path) as db:
             skill_columns = {str(row[1]) for row in db.execute("PRAGMA table_info(skill)").fetchall()}
