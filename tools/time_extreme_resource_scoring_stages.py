@@ -20,6 +20,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from minmax.combat_effect_semantics import GameUpdate
+from minmax.gear_set_repository import GearSetRepository
 from minmax.mundus_repository import MundusRepository, U50_GAME_UPDATE
 from minmax.potion_availability_repository import PotionAvailabilityRepository
 from minmax.provisioning_static_repository import ProvisioningStaticRepository
@@ -29,9 +30,18 @@ from services.extreme_best_named_gear_resource_armor_mundus_food_potion_structur
     ExtremeBestNamedGearResourceArmorMundusFoodPotionStructuralStatEvaluator,
     ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory,
 )
+from services.extreme_gear_set_bonus_breakpoint_service import ExtremeGearSetBonusBreakpointService
+from services.extreme_gear_set_objective_relevance_service import (
+    ExtremeGearSetObjectiveRelevance,
+    ExtremeGearSetObjectiveRelevanceService,
+)
+from services.extreme_gear_set_objective_service import ExtremeGearSetObjectiveService
 from services.extreme_global_search_universe_service import ExtremeGlobalSearchUniverseService
 from services.extreme_hypothetical_undaunted_progression_service import ExtremeHypotheticalUndauntedProgressionService
 from services.extreme_jewelry_resource_static_trait_state_service import ExtremeJewelryResourceStaticTraitStateService
+from services.extreme_objective_named_gear_set_catalog_realization_service import (
+    ExtremeObjectiveNamedGearSetCatalogRealizationService,
+)
 from services.extreme_resource_class_route_projection_service import ExtremeResourceClassRouteProjectionService
 from services.extreme_structural_core_stat_record_service import ExtremeCanonicalStructuralStatEvaluator
 from services.extreme_structural_global_search_service import ExtremeStructuralCandidate
@@ -85,6 +95,87 @@ def _print_scoring_equivalence(label: str, rows) -> None:
     print(f"gear_scoring_equivalence_reduction_percent_{label}={reduction:.3f}")
 
 
+def _semantic_member_signature(evidence, objective_key: str) -> tuple[object, ...]:
+    """Identity-free only when the relevance layer proves ordinary mechanics complete."""
+
+    if evidence is None:
+        return ("missing_evidence",)
+
+    if (
+        evidence.status is not ExtremeGearSetObjectiveRelevance.RELEVANT
+        or evidence.search_state_rule is not None
+        or evidence.candidate.unresolved
+    ):
+        return (
+            "identity_required",
+            int(evidence.set_id),
+            int(evidence.piece_count),
+            evidence.status.value,
+            repr(evidence.search_state_rule),
+            tuple(evidence.candidate.unresolved),
+        )
+
+    target_stats = ExtremeGearSetObjectiveService._target_stats(objective_key)
+    effects = tuple(
+        sorted(
+            ExtremeObjectiveNamedGearSetCatalogRealizationService._effect_signature(effect)
+            for effect in evidence.candidate.source_effects
+            if effect.stat in target_stats
+        )
+    )
+    if not effects:
+        return ("identity_required", int(evidence.set_id), int(evidence.piece_count), "no_target_effect")
+
+    return (
+        "ordinary_objective_semantics",
+        int(evidence.piece_count),
+        effects,
+        float(evidence.reviewed_delta),
+    )
+
+
+def _semantic_scoring_signature(realization, evidence_by_key, objective_key: str) -> tuple[object, ...]:
+    member_by_set_id: dict[int, tuple[object, ...]] = {}
+    members: list[tuple[object, ...]] = []
+    for set_id, count in zip(realization.set_ids, realization.counts):
+        evidence = evidence_by_key.get((int(set_id), int(count)))
+        member = _semantic_member_signature(evidence, objective_key)
+        member_by_set_id[int(set_id)] = member
+        members.append(member)
+
+    weapon_semantics = tuple(
+        sorted(
+            (
+                str(row.slot),
+                str(row.weapon_type or ""),
+                member_by_set_id.get(int(row.set_id), ("unknown_weapon_set", int(row.set_id))),
+            )
+            for row in realization.assignments
+            if str(row.slot) in {"Main Hand", "Off Hand"}
+        )
+    )
+    return (
+        tuple(sorted(members, key=repr)),
+        realization.weapon_shape.value,
+        weapon_semantics,
+    )
+
+
+def _print_semantic_scoring_equivalence(label: str, rows, evidence_by_key, objective_key: str) -> None:
+    counts = Counter(
+        _semantic_scoring_signature(row, evidence_by_key, objective_key)
+        for row in rows
+    )
+    signatures = len(counts)
+    duplicates = len(rows) - signatures
+    largest = max(counts.values(), default=0)
+    reduction = (100.0 * duplicates / len(rows)) if rows else 0.0
+    print(f"gear_semantic_scoring_signatures_{label}={signatures}")
+    print(f"gear_semantic_scoring_duplicate_witnesses_{label}={duplicates}")
+    print(f"gear_semantic_scoring_largest_equivalence_class_{label}={largest}")
+    print(f"gear_semantic_scoring_equivalence_reduction_percent_{label}={reduction:.3f}")
+
+
 def main() -> int:
     args = _parser().parse_args()
     database = Path(args.database)
@@ -95,6 +186,19 @@ def main() -> int:
     started = perf_counter()
     gear_realization = record_service._gear_realization(key)
     gear_seconds = perf_counter() - started
+
+    # Rebuild only the canonical relevance ledger needed for the diagnostic semantic
+    # signature. Production scoring remains untouched. Ordinary mechanic-complete
+    # rows may lose set identity; unresolved/search-state rows deliberately may not.
+    semantic_repository = GearSetRepository(database)
+    semantic_breakpoints = ExtremeGearSetBonusBreakpointService(semantic_repository).build()
+    semantic_relevance = ExtremeGearSetObjectiveRelevanceService(semantic_repository).build(
+        key, semantic_breakpoints
+    )
+    evidence_by_key = {
+        (int(row.set_id), int(row.piece_count)): row
+        for row in semantic_relevance.evidence
+    }
 
     optimizer = record_service.optimizer
     canonical = ExtremeCanonicalStructuralStatEvaluator(
@@ -154,6 +258,9 @@ def main() -> int:
     print(f"gear_candidates_back={len(gear_rows_back)}")
     _print_scoring_equivalence("front", gear_rows_front)
     _print_scoring_equivalence("back", gear_rows_back)
+    _print_semantic_scoring_equivalence("front", gear_rows_front, evidence_by_key, key)
+    _print_semantic_scoring_equivalence("back", gear_rows_back, evidence_by_key, key)
+    print(f"semantic_relevance_unresolved={len(semantic_relevance.unresolved)}")
     print(f"armor_states={len(armor_rows)}")
     print(f"gear_armor_pairs_front={len(gear_rows_front) * len(armor_rows)}")
     print(f"gear_armor_pairs_back={len(gear_rows_back) * len(armor_rows)}")
