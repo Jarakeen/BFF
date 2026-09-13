@@ -103,6 +103,7 @@ def install() -> None:
     from ui.player_build_navigation_support import install as install_player_build_navigation_support
     from ui.rotation_dashboard_layout_support import install as install_rotation_dashboard_layout_support
     from ui.build_rotation_artifact_support import install as install_build_rotation_artifact_support
+    from ui.user_workspace_polish_support import install as install_user_workspace_polish_support
 
     # Preserve the portable calendar feature, then let the multi-time layer own
     # the final Team Schedule UI so each selected day can use its own start/end.
@@ -120,5 +121,8 @@ def install() -> None:
     # A completed RotationPlan can then be persisted against the canonical
     # build_id and surfaced as a conditional Build workspace tab.
     install_build_rotation_artifact_support()
+    # Final user-facing polish depends on the completed Rotation/Roster/Main
+    # composition above, so install it last.
+    install_user_workspace_polish_support()
     operations_console.OperationsConsole._raid_schedule_card = _raid_schedule_card
     _INSTALLED = True
