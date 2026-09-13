@@ -2,12 +2,14 @@ from __future__ import annotations
 
 """Find a clean Max Health incumbent from the exact ordinary named-gear frontier.
 
-This is incumbent discovery, not the final whole-record proof. It deliberately uses
-only the production exact ordinary named-gear winners, then canonical-scores every
-proof-reduced Max Health class-route signature across the complete reviewed resource
-armor state catalog. Mundus, provisioning, potion, jewelry, Champion Points,
-active-bar witnesses, Max Health runtime passives, and the six-Home-Keep Emperor
-snapshot remain owned by the existing canonical finite-axis evaluator stack.
+This is incumbent discovery, not the final whole-record proof. It starts from the
+production exact ordinary named-gear branch-and-bound, keeps only realizations tied
+at the global best unconditional flat Max Health delta, then canonical-scores those
+witnesses across the proof-reduced Max Health class-route and armor frontiers.
+
+Mundus, provisioning, potion, jewelry, Champion Points, active-bar witnesses,
+Max Health runtime passives, and the six-Home-Keep Emperor snapshot remain owned by
+the existing canonical finite-axis evaluator stack.
 
 Special/runtime named gear is intentionally deferred to the next audit. The point of
 this stage is to establish a strong clean threshold without reopening exhaustive gear
@@ -52,6 +54,9 @@ from services.extreme_hypothetical_undaunted_progression_service import (
 )
 from services.extreme_jewelry_resource_static_trait_state_service import (
     ExtremeJewelryResourceStaticTraitStateService,
+)
+from services.extreme_max_health_armor_scoring_frontier_service import (
+    ExtremeMaxHealthArmorScoringFrontierService,
 )
 from services.extreme_max_health_class_route_projection_service import (
     ExtremeMaxHealthClassRouteProjectionService,
@@ -150,13 +155,24 @@ def main() -> int:
         relevance=relevance,
     )
     ordinary = ordinary_service.search(topology)
+    topology_winners = tuple(row for row in ordinary.topologies if row.winner_found)
+    global_ordinary_delta = max(
+        (float(row.best_exact_flat_delta) for row in topology_winners),
+        default=float("-inf"),
+    )
     ordinary_rows = tuple(
         sorted(
-            ordinary.winning_realizations,
+            (
+                realization
+                for row in topology_winners
+                if row.best_exact_flat_delta is not None
+                and abs(float(row.best_exact_flat_delta) - global_ordinary_delta) <= 1e-9
+                for realization in row.realizations
+            ),
             key=_realization_identity,
         )
     )
-    if not ordinary_rows:
+    if not ordinary_rows or global_ordinary_delta == float("-inf"):
         raise RuntimeError("Exact ordinary Max Health search returned no physical winner")
 
     trait_glyph = ExtremeArmorResourceTraitGlyphStateService(database)
@@ -164,11 +180,17 @@ def main() -> int:
         OBJECTIVE,
         trait_glyph_service=trait_glyph,
     ).build(OBJECTIVE)
-    armor_rows = tuple(sorted(armor_catalog.states, key=_armor_identity))
-    if not armor_catalog.denominator_proven or not armor_rows:
+    if not armor_catalog.denominator_proven:
         raise RuntimeError(
             "Max Health armor denominator is incomplete: "
             + "; ".join(armor_catalog.unresolved)
+        )
+    armor_frontier = ExtremeMaxHealthArmorScoringFrontierService.build(armor_catalog)
+    armor_rows = tuple(sorted(armor_frontier.states, key=_armor_identity))
+    if not armor_frontier.reduction_proven or not armor_rows:
+        raise RuntimeError(
+            "Max Health armor scoring frontier is incomplete: "
+            + "; ".join(armor_frontier.unresolved)
         )
 
     jewelry_catalog = ExtremeJewelryResourceStaticTraitStateService(database).build(OBJECTIVE)
@@ -249,7 +271,7 @@ def main() -> int:
 
     print("EXTREME MAX HEALTH ORDINARY INCUMBENT")
     print(f"database={database}")
-    print("mode=exact_ordinary_gear+proof_reduced_routes+canonical_finite_axes")
+    print("mode=exact_best_ordinary_gear+proof_reduced_routes+proof_reduced_health_armor+canonical_finite_axes")
     print(f"structural_denominator_proven={universe.structural_denominator_proven}")
     print(f"source_class_routes={route_projection.source_route_count}")
     print(f"route_signatures_scored={len(routes)}")
@@ -260,9 +282,14 @@ def main() -> int:
         f"health:{attributes.health} magicka:{attributes.magicka} stamina:{attributes.stamina}"
     )
     print(f"ordinary_denominator_proven={ordinary.ordinary_denominator_proven}")
-    print(f"ordinary_best_exact_flat_delta={ordinary.best_exact_flat_delta}")
-    print(f"ordinary_winning_realizations={len(ordinary_rows)}")
+    print(f"ordinary_best_exact_flat_delta={global_ordinary_delta}")
+    print(f"ordinary_global_winning_realizations={len(ordinary_rows)}")
+    print(f"armor_source_states={len(armor_catalog.states)}")
+    print(f"armor_source_weight_signatures={armor_frontier.source_weight_signature_count}")
+    print(f"armor_retained_weight_signatures={armor_frontier.retained_weight_signatures!r}")
+    print(f"armor_best_reviewed_percent={armor_frontier.best_reviewed_percent:.6f}")
     print(f"armor_states_scored={len(armor_rows)}")
+    print(f"armor_frontier_reduction_proven={armor_frontier.reduction_proven}")
     print(f"canonical_score_calls={score_calls}")
     print(f"canonical_calls_with_unresolved={unresolved_calls}")
     print(f"elapsed_seconds={perf_counter() - started:.3f}")
@@ -274,6 +301,7 @@ def main() -> int:
         print(
             f"  value={value:.3f} route_signature={tuple(signature)!r} "
             f"armor_types={getattr(armor_state, 'armor_type_count', '?')} "
+            f"heavy={getattr(armor_state.weight_state, 'heavy_pieces', '?')} "
             f"divines={getattr(armor_state, 'divines_count', '?')} "
             f"infused={getattr(armor_state, 'infused_count', '?')} "
             f"unresolved={len(unresolved)}"
@@ -294,6 +322,7 @@ def main() -> int:
     print(f"sets={_sets_label(best_gear)}")
     print(
         f"armor_types={getattr(best_armor, 'armor_type_count', '?')} "
+        f"heavy={getattr(best_armor.weight_state, 'heavy_pieces', '?')} "
         f"divines={getattr(best_armor, 'divines_count', '?')} "
         f"infused={getattr(best_armor, 'infused_count', '?')}"
     )
