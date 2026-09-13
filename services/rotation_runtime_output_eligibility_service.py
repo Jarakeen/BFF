@@ -2,9 +2,11 @@ from __future__ import annotations
 
 """Canonical rotation bridge for fail-closed conditional combat output."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from minmax.character_build.effect_relationship import ConditionContext
+from minmax.runtime_event import RuntimeEvent
 from minmax.runtime_output_eligibility import (
     RuntimeOutputEligibilityResult,
     RuntimeOutputEligibilityRule,
@@ -14,6 +16,11 @@ from minmax.skill_coefficient_repository import ability_entity_id
 
 
 DETONATING_SIPHON_GEOMETRY_CONDITION = "target_in_detonating_siphon_geometry"
+
+RotationRuntimeOutputConditionContextResolver = Callable[
+    [RuntimeEvent],
+    ConditionContext | None,
+]
 
 
 @dataclass(frozen=True)
@@ -44,6 +51,17 @@ class RotationRuntimeOutputEligibilityResult:
     unresolved: tuple[str, ...] = ()
 
 
+@dataclass(frozen=True)
+class RotationRuntimeOutputEventFilterResult:
+    events: tuple[RuntimeEvent, ...]
+    evidence: tuple[str, ...] = ()
+    unresolved: tuple[str, ...] = ()
+
+    @property
+    def resolved(self) -> bool:
+        return not self.unresolved
+
+
 _REVIEWED_RULES: tuple[RotationRuntimeOutputConditionRule, ...] = (
     RotationRuntimeOutputConditionRule(
         skill_entity_id="detonating_siphon",
@@ -66,6 +84,10 @@ class RotationRuntimeOutputEligibilityService:
     with no reviewed rule pass through unchanged. A reviewed conditional output fails closed
     when no ``ConditionContext`` is supplied. A supplied context that does not contain every
     required opaque condition resolves deterministically to ineligible output.
+
+    ``filter_events`` evaluates context independently for each exact runtime event. This is
+    the contract required by mechanics whose output can stop and resume during one persistent
+    lifetime. It deliberately does not smear a cast-time condition across later occurrences.
 
     Detonating Siphon is intentionally represented only as an opaque geometry requirement.
     This service does not calculate corpse position, player position, target position, radius,
@@ -145,10 +167,66 @@ class RotationRuntimeOutputEligibilityService:
             unresolved=unresolved,
         )
 
+    def filter_events(
+        self,
+        *,
+        skill_entity_id: str,
+        coefficient_number: int,
+        events: tuple[RuntimeEvent, ...],
+        condition_context_resolver: (
+            RotationRuntimeOutputConditionContextResolver | None
+        ) = None,
+    ) -> RotationRuntimeOutputEventFilterResult:
+        """Filter exact runtime events through reviewed output conditions.
+
+        Unreviewed components pass through unchanged. For a reviewed conditional component,
+        every event requires its own explicit context. Known-unsatisfied events are omitted
+        without becoming unresolved; events lacking context are omitted and preserved as
+        exact-time unresolved evidence.
+        """
+
+        rule = self.rule_for(skill_entity_id, coefficient_number)
+        if rule is None or not events:
+            return RotationRuntimeOutputEventFilterResult(events=tuple(events))
+
+        eligible_events: list[RuntimeEvent] = []
+        evidence = (
+            "required runtime output conditions: "
+            + ", ".join(rule.eligibility.required_conditions),
+            f"condition provenance: {rule.eligibility.source}",
+        )
+        unresolved: list[str] = []
+
+        for event in events:
+            context = (
+                condition_context_resolver(event)
+                if condition_context_resolver is not None
+                else None
+            )
+            result = evaluate_runtime_output_eligibility(rule.eligibility, context)
+            if not result.resolved:
+                unresolved.append(
+                    f"{rule.skill_entity_id} coefficient {rule.coefficient_number} at "
+                    f"{float(event.time_seconds):g}s: runtime output eligibility requires "
+                    "authoritative ConditionContext for "
+                    + ", ".join(result.missing_conditions)
+                )
+                continue
+            if result.eligible:
+                eligible_events.append(event)
+
+        return RotationRuntimeOutputEventFilterResult(
+            events=tuple(eligible_events),
+            evidence=evidence,
+            unresolved=tuple(dict.fromkeys(unresolved)),
+        )
+
 
 __all__ = [
     "DETONATING_SIPHON_GEOMETRY_CONDITION",
+    "RotationRuntimeOutputConditionContextResolver",
     "RotationRuntimeOutputConditionRule",
     "RotationRuntimeOutputEligibilityResult",
     "RotationRuntimeOutputEligibilityService",
+    "RotationRuntimeOutputEventFilterResult",
 ]
