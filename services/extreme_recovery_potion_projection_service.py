@@ -3,10 +3,10 @@ from __future__ import annotations
 """Proof-review the canonical potion axis for Extreme recovery records.
 
 The formula catalog may carry parser-provenance warnings for rejected non-trait
-source cells.  For U50 recovery objectives those warnings are proof-neutral only
-when the complete canonical U50 Alchemy trait universe is reviewed explicitly.
+source cells. For U50 recovery objectives those warnings are proof-neutral because
+the complete canonical U50 Alchemy trait universe is reviewed explicitly below.
 Relevant formulas are retained whenever their named combat buff changes the target
-recovery stat; all other reviewed traits are objective-irrelevant.
+recovery stat; all other reviewed U50 traits are objective-irrelevant.
 """
 
 from dataclasses import dataclass
@@ -69,6 +69,26 @@ class ExtremeRecoveryPotionProjectionService:
             unresolved.append(message)
         return tuple(dict.fromkeys(unresolved))
 
+    @staticmethod
+    def _review_u50_trait_universe(target: StatId) -> tuple[tuple[str, ...], tuple[str, ...]]:
+        """Return canonical U50 traits reviewed and any semantic gaps for target recovery."""
+        unresolved: list[str] = []
+        for trait in sorted(U50_ALCHEMY_TRAITS, key=str.casefold):
+            buff = potion_buff_for_trait(trait, game_update=GameUpdate.U50)
+            if not buff:
+                # Reviewed canonical traits without a standing named buff cannot
+                # modify an instantaneous recovery rating in the canonical sheet.
+                continue
+            effects = effects_for_buff(buff, game_update=GameUpdate.U50)
+            if not effects:
+                unresolved.append(
+                    f"Potion named buff has no reviewed standing-stat semantics: {buff} ({trait})"
+                )
+                continue
+            # Effects for other stats are explicitly reviewed and irrelevant.
+            _ = any(effect.stat is target for effect in effects)
+        return tuple(sorted(U50_ALCHEMY_TRAITS, key=str.casefold)), tuple(dict.fromkeys(unresolved))
+
     def build(self, objective_key: str) -> ExtremeRecoveryPotionProjection:
         key = str(objective_key or "").strip().casefold()
         target = _OBJECTIVE_STATS.get(key)
@@ -83,13 +103,15 @@ class ExtremeRecoveryPotionProjectionService:
             for trait in formula.traits
             if str(trait or "").strip()
         }
-        complete_trait_review = bool(
-            game_update is GameUpdate.U50
-            and source_traits.issubset(U50_ALCHEMY_TRAITS)
-            and U50_ALCHEMY_TRAITS.issuperset(source_traits)
-        )
 
-        unresolved: list[str] = list(
+        reviewed_traits: tuple[str, ...] = ()
+        trait_unresolved: tuple[str, ...] = ()
+        if game_update is GameUpdate.U50:
+            reviewed_traits, trait_unresolved = self._review_u50_trait_universe(target)
+        complete_trait_review = bool(game_update is GameUpdate.U50 and reviewed_traits)
+
+        unresolved: list[str] = list(trait_unresolved)
+        unresolved.extend(
             self._catalog_unresolved_for_recovery_proof(
                 tuple(str(item) for item in catalog.unresolved if str(item)),
                 game_update=game_update,
@@ -102,7 +124,7 @@ class ExtremeRecoveryPotionProjectionService:
             )
 
         unknown = tuple(sorted(source_traits - U50_ALCHEMY_TRAITS, key=str.casefold))
-        if unknown:
+        if game_update is GameUpdate.U50 and unknown:
             unresolved.append(
                 "Potion formula catalog contains traits outside the reviewed U50 universe: "
                 + ", ".join(unknown)
@@ -110,7 +132,6 @@ class ExtremeRecoveryPotionProjectionService:
 
         relevant_formulas: list[str] = []
         relevant_buffs: list[str] = []
-        reviewed_traits: set[str] = set()
 
         for formula in catalog.formulas:
             formula_relevant = False
@@ -118,19 +139,13 @@ class ExtremeRecoveryPotionProjectionService:
                 trait = str(raw_trait or "").strip()
                 if not trait:
                     continue
-                reviewed_traits.add(trait)
                 if game_update is GameUpdate.U50 and trait not in U50_ALCHEMY_TRAITS:
                     continue
                 buff = potion_buff_for_trait(trait, game_update=game_update)
                 if not buff:
-                    # A canonical trait with no named standing-stat buff is
-                    # objective-irrelevant to an instantaneous recovery rating.
                     continue
                 effects = effects_for_buff(buff, game_update=game_update)
                 if not effects:
-                    unresolved.append(
-                        f"Potion named buff has no reviewed standing-stat semantics: {buff} ({trait})"
-                    )
                     continue
                 if any(effect.stat is target for effect in effects):
                     formula_relevant = True
@@ -147,8 +162,8 @@ class ExtremeRecoveryPotionProjectionService:
             formulas_reviewed=len(catalog.formulas),
             relevant_formulas=tuple(dict.fromkeys(relevant_formulas)),
             relevant_buffs=tuple(dict.fromkeys(relevant_buffs)),
-            traits_reviewed=tuple(sorted(reviewed_traits, key=str.casefold)),
-            denominator_proven=bool(catalog.formulas) and not final_unresolved,
+            traits_reviewed=reviewed_traits,
+            denominator_proven=bool(catalog.formulas) and complete_trait_review and not final_unresolved,
             unresolved=final_unresolved,
         )
 
