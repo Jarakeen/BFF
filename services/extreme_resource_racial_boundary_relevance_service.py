@@ -6,8 +6,9 @@ The canonical racial passive repository intentionally emits boundary messages fo
 passives that are outside its combat-stat mapping. Some of those boundaries are
 nevertheless provably irrelevant to Max Health/Magicka/Stamina because the
 repository itself classifies the passive as non-combat, current-resource sustain,
-consumable-duration only, or because the boundary explicitly describes an ability
-cost modifier rather than a maximum-resource modifier.
+consumable-duration only, environmental mitigation only, or because the boundary
+explicitly describes an ability cost modifier rather than a maximum-resource
+modifier.
 
 This service does not suppress arbitrary parser warnings. It accepts a boundary only
 when the message belongs to one of the canonical repository's objective-neutral
@@ -34,6 +35,10 @@ _RESOURCE_SUSTAIN = re.compile(
 )
 _CONSUMABLE_DURATION = re.compile(
     r"^Racial passive changes consumable duration or skill-line experience without changing maximum resources:\s*(.+?)\s*$",
+    re.IGNORECASE,
+)
+_ENVIRONMENTAL_MITIGATION = re.compile(
+    r"^Racial environmental-damage mitigation requires mitigation model:\s*(.+?)\s*$",
     re.IGNORECASE,
 )
 _ABILITY_COST = re.compile(
@@ -100,6 +105,12 @@ class ExtremeResourceRacialBoundaryRelevanceService:
         if match:
             return match.group(1).strip().casefold() in self._canonical_names(
                 self.repository.CONSUMABLE_DURATION_PASSIVE_NAMES
+            )
+
+        match = _ENVIRONMENTAL_MITIGATION.match(message)
+        if match:
+            return match.group(1).strip().casefold() in self._canonical_names(
+                self.repository.MITIGATION_PASSIVE_NAMES
             )
 
         # This boundary is emitted only by RacialPassiveStatRepository when the
