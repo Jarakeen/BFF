@@ -29,6 +29,7 @@ class ExtremeMundusObjectiveService:
 
     REVIEWED_OBJECTIVES = (
         "critical_damage",
+        "health_recovery",
         "magicka_recovery",
         "stamina_recovery",
         "physical_resistance",
@@ -41,6 +42,7 @@ class ExtremeMundusObjectiveService:
 
     _DIRECT_STAT_BY_OBJECTIVE = {
         "critical_damage": StatId.CRITICAL_DAMAGE.value,
+        "health_recovery": StatId.HEALTH_RECOVERY.value,
         "magicka_recovery": StatId.MAGICKA_RECOVERY.value,
         "stamina_recovery": StatId.STAMINA_RECOVERY.value,
         "physical_resistance": StatId.PHYSICAL_RESISTANCE.value,
