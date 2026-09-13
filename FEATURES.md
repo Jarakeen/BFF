@@ -126,6 +126,8 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Scribed Skills interface
 - Build-specific performance information
 - Role-aware build information
+- Context Variants provide sparse **Team**, **Boss**, and **Team + Boss** gear, weapon, Mundus, Champion Point, skill-bar, food, potion, and note overrides while unchanged fields inherit automatically
+- Matching build variants resolve field-by-field as **Team + Boss -> Team -> Boss -> base build**, so a boss-specific tweak does not require cloning an entire build
 - Conditional **Rotation** tab appears only when the selected build owns a saved completed rotation
 
 ---
@@ -199,7 +201,13 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Save generated team builds back to roster characters
 - Import external raid rosters by merge rather than replacement, preserving unrelated players, teams, characters, and saved builds
 - Imported build/team assignments are attached to the canonical gamertag/character/build identities when the import can resolve them uniquely
-- Roster workspace is organized as **Roster / Teams / Assignments / People & Builds**; team schedule and management live under Teams, and the Roster landing tab exposes Add Player, Import Roster, and Comp Maker entry actions
+- Assignments persist separately for each **roster member + team**, so one character can have different normal jobs on different teams
+- Each team's assignment can optionally have a per-boss override; unchanged boss fields inherit the team's default job, gear need, and notes
+- The Assignments surface uses a simple **Boss (optional)** selector with **Team Default (most common)** as the safe starting state; changing teams automatically returns to Team Default
+- The old separate Encounter Overrides placeholder is removed so team defaults and boss overrides live in one Assignments workflow
+- **All Teams** remains an overview rather than an ambiguous assignment-editing context
+- Coverage launched from Assignments resolves the selected team's effective Team/Boss build variant before evaluating saved-build evidence
+- Roster workspace keeps separate Assignments, Characters, Personnel, Teams, and Team Schedule surfaces rather than hiding those jobs behind a combined workspace
 
 ---
 
@@ -230,6 +238,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Provider workload analysis
 - Provider workload frontier analysis
 - Rotation-aware provider workload analysis
+- Roster intake carries selected Team/Boss context and each player's effective raid job while still placing people into Tank/Healer/DD chairs by their roster role
 
 ---
 
