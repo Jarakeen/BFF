@@ -11,6 +11,9 @@ from ui.rotation_generate_action_support import install_rotation_generate_action
 from ui.rotation_generate_application_context_provider import (
     RotationGenerateApplicationContextProvider,
 )
+from ui.rotation_generate_dd_conditional_output_support import (
+    RotationGenerateDDConditionalOutputSupport,
+)
 from ui.rotation_generate_dd_role_evidence_support import (
     RotationGenerateDDCanonicalWeaponAttackProviderFactory,
     RotationGenerateDDRoleEvidenceSupport,
@@ -46,8 +49,9 @@ class RotationEncounterSelectorSupport:
     projection controls, explicit DD target-resistance policy, the Generate router,
     its live application context provider, and role-specific evidence composers that
     already have canonical implementations. Healer and DD roles are routed explicitly;
-    DD also receives the canonical saved-build Light Attack bridge. Unsupported roles
-    remain on the role-neutral path until their own composers exist.
+    DD also receives the canonical saved-build Light Attack bridge and the generic
+    fail-closed runtime output-condition bridge. Unsupported roles remain on the
+    role-neutral path until their own composers exist.
     """
 
     def __init__(self, guide_service: _EncounterGuideIndex) -> None:
@@ -73,9 +77,11 @@ class RotationEncounterSelectorSupport:
         install_rotation_dd_evaluation_policy_controls(page)
         install_rotation_generate_action(page)
         healer_role_evidence = RotationGenerateHealerRoleEvidenceSupport()
-        dd_role_evidence = RotationGenerateDDRoleEvidenceSupport(
-            weapon_attack_provider_factory=(
-                RotationGenerateDDCanonicalWeaponAttackProviderFactory()
+        dd_role_evidence = RotationGenerateDDConditionalOutputSupport(
+            RotationGenerateDDRoleEvidenceSupport(
+                weapon_attack_provider_factory=(
+                    RotationGenerateDDCanonicalWeaponAttackProviderFactory()
+                )
             )
         )
         page.set_rotation_generate_canonical_context_provider(
