@@ -212,6 +212,20 @@ def main() -> int:
         )
         for row in candidates
     )
+    vampire_tradeoff = (
+        UltimateSourceRuntimeLegalityService.assess_vampire_health_recovery_tradeoff(
+            shared_non_strategic_lower_bound=(
+                309.0  # level-50 base Health Recovery
+                + 90.0  # Khajiit
+                + 1950.0  # Elder Dragon plus Booming Voice
+                + 389.606  # seven-Divines Steed
+                + 811.2  # three Gold Infused Health Recovery glyphs
+            ),
+            incumbent_strategic_recovery=1170.0,  # 390 Ultimate, 30 per 10
+            candidate_strategic_recovery=1500.0,
+            vampire_health_recovery_penalty_percent=10.0,
+        )
+    )
     exact_counts = Counter(review.status.value for _, review in reviews)
     reviewed_increment = sum(
         review.generated_ultimate_ceiling
@@ -236,8 +250,13 @@ def main() -> int:
         UltimateSourceRuntimeStatus.SEARCH_STATE_MUTATION,
         UltimateSourceRuntimeStatus.CANONICAL_EVIDENCE_REQUIRED,
     }
+    dominated_ids = (
+        {"exhilarating_drain"} if vampire_tradeoff.dominated else set()
+    )
     unresolved = tuple(
-        row for row, review in reviews if review.status in unresolved_statuses
+        row
+        for row, review in reviews
+        if review.status in unresolved_statuses and row.source_id not in dominated_ids
     )
     bounded_mutations = tuple(
         (row, review)
@@ -247,6 +266,26 @@ def main() -> int:
             and review.generated_ultimate_ceiling > 0
         )
     )
+    print()
+    print("VAMPIRE HEALTH RECOVERY DOMINANCE")
+    print(
+        "shared_non_strategic_lower_bound="
+        f"{vampire_tradeoff.shared_non_strategic_lower_bound:.3f}"
+    )
+    print(
+        "non_vampire_incumbent_lower_bound="
+        f"{vampire_tradeoff.non_vampire_incumbent_lower_bound:.3f}"
+    )
+    print(
+        "vampire_candidate_best_case="
+        f"{vampire_tradeoff.vampire_candidate_best_case:.3f}"
+    )
+    print(
+        "vampire_delta_upper_bound="
+        f"{vampire_tradeoff.vampire_delta_upper_bound:.3f}"
+    )
+    print(f"exhilarating_drain_dominated={vampire_tradeoff.dominated}")
+    print()
     print(f"bounded_mutation_candidates={len(bounded_mutations)}")
     for row, review in bounded_mutations:
         print(
@@ -262,8 +301,8 @@ def main() -> int:
     print("ultimate_source_exact_review_applied=True")
     print("ultimate_source_numeric_legality_proven=False")
     print(
-        "NEXT_STEP=apply the canonical Vampire Health Recovery cost, then search "
-        "legal multi-source combinations against the Health Recovery incumbent"
+        "NEXT_STEP=search legal gear and Decisive combinations against the Health "
+        "Recovery incumbent after pruning the dominated Vampire route"
     )
     return 2
 

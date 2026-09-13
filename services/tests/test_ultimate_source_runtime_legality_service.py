@@ -135,3 +135,31 @@ def test_decisive_all_proc_ceiling_counts_merged_heroism_once():
     assert len(opportunities) == 40
     assert row.generated_ultimate_ceiling == 40.0
     assert row.remaining_ultimate_gap == 74.0
+
+
+
+def test_stage_one_vampire_penalty_dominates_drain_cap_gain():
+    row = UltimateSourceRuntimeLegalityService.assess_vampire_health_recovery_tradeoff(
+        shared_non_strategic_lower_bound=3549.806,
+        incumbent_strategic_recovery=1170.0,
+        candidate_strategic_recovery=1500.0,
+        vampire_health_recovery_penalty_percent=10.0,
+    )
+    assert row.non_vampire_incumbent_lower_bound == 4719.806
+    assert round(row.vampire_candidate_best_case, 3) == 4544.825
+    assert round(row.vampire_delta_upper_bound, 3) == -174.981
+    assert row.dominated is True
+
+
+def test_vampire_penalty_validation_fails_closed():
+    try:
+        UltimateSourceRuntimeLegalityService.assess_vampire_health_recovery_tradeoff(
+            shared_non_strategic_lower_bound=1.0,
+            incumbent_strategic_recovery=1.0,
+            candidate_strategic_recovery=1.0,
+            vampire_health_recovery_penalty_percent=101.0,
+        )
+    except ValueError as exc:
+        assert "between 0 and 100" in str(exc)
+    else:
+        raise AssertionError("invalid Vampire penalty must fail closed")

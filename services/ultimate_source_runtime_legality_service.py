@@ -15,6 +15,15 @@ class UltimateSourceRuntimeStatus(str, Enum):
 
 
 @dataclass(frozen=True)
+class VampireHealthRecoveryTradeoff:
+    shared_non_strategic_lower_bound: float
+    non_vampire_incumbent_lower_bound: float
+    vampire_candidate_best_case: float
+    vampire_delta_upper_bound: float
+    dominated: bool
+
+
+@dataclass(frozen=True)
 class UltimateSourceRuntimeReview:
     source_id: str
     status: UltimateSourceRuntimeStatus
@@ -70,6 +79,31 @@ class UltimateSourceRuntimeLegalityService:
     def _contains(records: tuple[str, ...], *fragments: str) -> bool:
         text = "\n".join(records).casefold()
         return all(fragment.casefold() in text for fragment in fragments)
+
+    @staticmethod
+    def assess_vampire_health_recovery_tradeoff(
+        *,
+        shared_non_strategic_lower_bound: float,
+        incumbent_strategic_recovery: float,
+        candidate_strategic_recovery: float,
+        vampire_health_recovery_penalty_percent: float,
+    ) -> VampireHealthRecoveryTradeoff:
+        shared = max(0.0, float(shared_non_strategic_lower_bound))
+        incumbent = max(0.0, float(incumbent_strategic_recovery))
+        candidate = max(0.0, float(candidate_strategic_recovery))
+        penalty = float(vampire_health_recovery_penalty_percent)
+        if not 0.0 <= penalty <= 100.0:
+            raise ValueError("Vampire Health Recovery penalty must be between 0 and 100")
+        non_vampire = shared + incumbent
+        vampire = (shared + candidate) * (1.0 - penalty / 100.0)
+        delta = vampire - non_vampire
+        return VampireHealthRecoveryTradeoff(
+            shared_non_strategic_lower_bound=shared,
+            non_vampire_incumbent_lower_bound=non_vampire,
+            vampire_candidate_best_case=vampire,
+            vampire_delta_upper_bound=delta,
+            dominated=delta < -1e-9,
+        )
 
     @classmethod
     def review(
@@ -284,6 +318,7 @@ class UltimateSourceRuntimeLegalityService:
 
 __all__ = [
     "UltimateSourceRuntimeLegalityService",
+    "VampireHealthRecoveryTradeoff",
     "UltimateSourceRuntimeReview",
     "UltimateSourceRuntimeStatus",
 ]

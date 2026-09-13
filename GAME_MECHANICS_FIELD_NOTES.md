@@ -839,3 +839,24 @@ window ceiling only by occupying nearly the entire post-cast timeline, while
 
 **For BFF:** candidate ceilings are comparison bounds, not additive bonuses. Only
 sources proven compatible in one physical build and one action timeline may be summed.
+
+
+---
+
+## 2026-09-13 — Filling Strategic Reserve can still lower Health Recovery
+
+Rank-four **Exhilarating Drain** can theoretically generate enough Ultimate to refill
+Strategic Reserve before Booming Voice ends. Becoming even a stage-one Vampire,
+however, applies **−10% Health Recovery** to the whole result.
+
+Using only the already-proven base, Khajiit, Dragonknight, Steed, and jewelry values,
+the non-Strategic shared subtotal is **3,549.806**. Moving Strategic Reserve from
+1,170 at 390 Ultimate to its 1,500 cap adds 330, but the Vampire multiplier reduces
+the conservative candidate to **4,544.825**, below the non-Vampire incumbent's
+**4,719.806**. Food, gear, and other positive sources only widen that loss.
+
+**Layman's version:** Drain fills the Ultimate bar and still makes the green number
+smaller. A fuller bar is not automatically a better Health Recovery build.
+
+**For BFF:** Exhilarating Drain is pruned from this record route by a conservative
+dominance proof. It remains a valid Ultimate-generation mechanic in other objectives.
