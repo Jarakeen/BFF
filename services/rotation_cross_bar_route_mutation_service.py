@@ -24,16 +24,11 @@ class RotationCrossBarRouteMutationResult:
 class RotationCrossBarRouteMutationService:
     """Apply only already-selected cross-bar routes to a rotation plan.
 
-    This layer owns no route discovery, priority inference, or timing relaxation. A
-    selected route already proves that its reserved timestamps are non-overlapping WAIT
-    slots under the current one-second scheduler model. Mutation simply materializes
-    those decisions as explicit BAR_SWAP and woven filler actions, then validates the
-    resulting active-bar progression with the canonical assessor.
-
-    ``swap -> filler`` uses two reserved WAIT timestamps. The filler timestamp contains
-    the normal LA/skill pair (sequence 0/1) when weaving is enabled. A selected route
-    that requires returning to its source bar consumes a third reserved WAIT timestamp
-    for that BAR_SWAP.
+    This layer owns no route discovery or priority inference. A selected route proves
+    that one WAIT timestamp is available for the target-bar filler skill. ESO weapon
+    swap is not a separate skill GCD, so the same timestamp may contain an outbound
+    BAR_SWAP, the normal LA/skill weave, and, when required, a return BAR_SWAP after
+    the skill. The resulting active-bar progression is validated canonically.
     """
 
     _EPSILON = 1e-9
@@ -100,40 +95,36 @@ class RotationCrossBarRouteMutationService:
         for row in selected:
             proposal = row.proposal
             times = tuple(float(value) for value in row.reserved_wait_times)
-            if len(times) not in {2, 3}:
+            if len(times) != 1:
                 raise ValueError(
-                    "selected cross-bar route must reserve exactly 2 or 3 WAIT slots"
+                    "selected cross-bar route must reserve exactly one WAIT skill slot"
                 )
-            if len(times) == 3 and not proposal.return_swap_required:
-                raise ValueError("three-slot cross-bar route is missing return-swap requirement")
-            if len(times) == 2 and proposal.return_swap_required:
-                raise ValueError("return-swap cross-bar route requires three reserved WAIT slots")
 
+            route_time = times[0]
             actions.append(
                 RotationAction(
-                    time_seconds=times[0],
+                    time_seconds=route_time,
                     sequence=0,
                     kind=RotationActionKind.BAR_SWAP,
                     bar=proposal.target_bar,
                 )
             )
 
-            filler_time = times[1]
             if weave_light_attacks:
                 actions.append(
                     RotationAction(
-                        time_seconds=filler_time,
-                        sequence=0,
+                        time_seconds=route_time,
+                        sequence=1,
                         kind=RotationActionKind.LIGHT_ATTACK,
                         bar=proposal.target_bar,
                     )
                 )
-                skill_sequence = 1
+                skill_sequence = 2
             else:
-                skill_sequence = 0
+                skill_sequence = 1
             actions.append(
                 RotationAction(
-                    time_seconds=filler_time,
+                    time_seconds=route_time,
                     sequence=skill_sequence,
                     kind=RotationActionKind.SKILL,
                     name=proposal.filler_skill_name,
@@ -144,8 +135,8 @@ class RotationCrossBarRouteMutationService:
             if proposal.return_swap_required:
                 actions.append(
                     RotationAction(
-                        time_seconds=times[2],
-                        sequence=0,
+                        time_seconds=route_time,
+                        sequence=skill_sequence + 1,
                         kind=RotationActionKind.BAR_SWAP,
                         bar=proposal.source_bar,
                     )
@@ -155,14 +146,14 @@ class RotationCrossBarRouteMutationService:
         assumptions = list(plan.assumptions)
         for row in selected:
             proposal = row.proposal
-            times = row.reserved_wait_times
+            route_time = float(row.reserved_wait_times[0])
             label = (
-                f"selected cross-bar route at {float(times[0]):g}s uses "
-                f"{proposal.source_bar}->{proposal.target_bar} then "
-                f"'{proposal.filler_skill_name}' at {float(times[1]):g}s"
+                f"selected cross-bar route at {route_time:g}s uses non-GCD "
+                f"{proposal.source_bar}->{proposal.target_bar} swap and "
+                f"'{proposal.filler_skill_name}' in the same skill-GCD slot"
             )
             if proposal.return_swap_required:
-                label += f" and returns to {proposal.source_bar} at {float(times[2]):g}s"
+                label += f" then returns to {proposal.source_bar} after the skill"
             assumptions.append(label)
 
         unresolved = tuple(
