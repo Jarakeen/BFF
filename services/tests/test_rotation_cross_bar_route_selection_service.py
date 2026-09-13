@@ -23,12 +23,12 @@ def _proposal(time_seconds: float, *, return_swap: bool = False) -> RotationCros
         filler_skill_name="Venom Skull",
         filler_priority=1,
         next_required_bar="back" if return_swap else "front",
-        next_required_time_seconds=time_seconds + (4.0 if return_swap else 3.0),
+        next_required_time_seconds=time_seconds + 1.0,
         return_swap_required=return_swap,
     )
 
 
-def _feasible(time_seconds: float, *, required: int = 2) -> RotationCrossBarRouteSlotFeasibility:
+def _feasible(time_seconds: float, *, required: int = 1) -> RotationCrossBarRouteSlotFeasibility:
     return RotationCrossBarRouteSlotFeasibility(
         wait_time_seconds=time_seconds,
         source_bar="back",
@@ -41,7 +41,7 @@ def _feasible(time_seconds: float, *, required: int = 2) -> RotationCrossBarRout
     )
 
 
-def test_selector_rejects_overlapping_individually_feasible_routes() -> None:
+def test_selector_rejects_duplicate_route_competing_for_same_wait_slot() -> None:
     plan = RotationPlan(
         character_name="Rylonia",
         build_name="Corpsebuster DD",
@@ -49,21 +49,19 @@ def test_selector_rejects_overlapping_individually_feasible_routes() -> None:
         actions=(
             RotationAction(40.0, 0, RotationActionKind.BAR_SWAP, bar="back"),
             _wait(44.0),
-            _wait(45.0),
-            _wait(46.0),
         ),
     )
-    first = _proposal(44.0)
-    second = _proposal(45.0)
+    first = _proposal(44.0, return_swap=True)
+    second = _proposal(44.0, return_swap=True)
 
     result = RotationCrossBarRouteSelectionService().select(
         plan,
         (first, second),
-        (_feasible(44.0), _feasible(45.0)),
+        (_feasible(44.0),),
     )
 
     assert [row.proposal.wait_time_seconds for row in result.selected] == [44.0]
-    assert [row.proposal.wait_time_seconds for row in result.rejected] == [45.0]
+    assert [row.proposal.wait_time_seconds for row in result.rejected] == [44.0]
     assert "overlaps WAIT slot" in result.rejected[0].reason
 
 
@@ -75,9 +73,7 @@ def test_selector_tracks_active_bar_after_stay_on_target_route() -> None:
         actions=(
             RotationAction(30.0, 0, RotationActionKind.BAR_SWAP, bar="back"),
             _wait(33.0),
-            _wait(34.0),
             _wait(36.0),
-            _wait(37.0),
         ),
     )
     first = _proposal(33.0)
@@ -94,7 +90,7 @@ def test_selector_tracks_active_bar_after_stay_on_target_route() -> None:
     assert "source bar is stale" in result.rejected[0].reason
 
 
-def test_selector_honors_original_bar_swap_before_later_route() -> None:
+def test_selector_return_route_restores_source_bar_for_next_wait_route() -> None:
     plan = RotationPlan(
         character_name="Rylonia",
         build_name="Corpsebuster DD",
@@ -103,9 +99,29 @@ def test_selector_honors_original_bar_swap_before_later_route() -> None:
             RotationAction(30.0, 0, RotationActionKind.BAR_SWAP, bar="back"),
             _wait(33.0),
             _wait(34.0),
+        ),
+    )
+
+    result = RotationCrossBarRouteSelectionService().select(
+        plan,
+        (_proposal(33.0, return_swap=True), _proposal(34.0, return_swap=True)),
+        (_feasible(33.0), _feasible(34.0)),
+    )
+
+    assert [row.proposal.wait_time_seconds for row in result.selected] == [33.0, 34.0]
+    assert result.rejected == ()
+
+
+def test_selector_honors_original_bar_swap_before_later_route() -> None:
+    plan = RotationPlan(
+        character_name="Rylonia",
+        build_name="Corpsebuster DD",
+        duration_seconds=50.0,
+        actions=(
+            RotationAction(30.0, 0, RotationActionKind.BAR_SWAP, bar="back"),
+            _wait(33.0),
             RotationAction(40.0, 0, RotationActionKind.BAR_SWAP, bar="back"),
             _wait(44.0),
-            _wait(45.0),
         ),
     )
 
