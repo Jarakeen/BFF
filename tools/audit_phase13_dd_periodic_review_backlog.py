@@ -7,64 +7,39 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from services.rotation_dd_periodic_runtime_semantics_review_service import (
-    RotationDDPeriodicRuntimeSemanticsReviewService,
+from services.rotation_dd_periodic_review_status_service import (
+    RotationDDPeriodicReviewStatus,
+    RotationDDPeriodicReviewStatusService,
 )
 
 
-_PARKED: dict[tuple[str, int], str] = {
-    ("unnerving_boneyard", 1): (
-        "current corpus cannot resolve exact first-tick offset or magnitude policy"
-    ),
-    ("detonating_siphon", 1): (
-        "production geometry/timing remains fail-closed pending controlled spatial evidence"
-    ),
-    ("flawless_dawnbreaker", 2): (
-        "current corpus has only two casts and no cast-track-linked periodic candidate"
-    ),
-    ("skeletal_archer", 1): (
-        "current corpus exposes no explicit pet-to-owner linkage for candidate 122774"
-    ),
-    ("scalding_rune", 2): (
-        "current corpus has no stable-state magnitude controls"
-    ),
-    ("meteor", 2): (
-        "current corpus has no identifiable Meteor-family cast/damage evidence"
-    ),
-}
-
-
 def audit() -> int:
-    entries = RotationDDPeriodicRuntimeSemanticsReviewService().load()
+    dispositions = RotationDDPeriodicReviewStatusService().dispositions()
     print("=" * 76)
     print(" DD PERIODIC RUNTIME REVIEW BACKLOG")
     print("=" * 76)
-    print(f"Reviewed components: {len(entries)}")
+    print(f"Reviewed components: {len(dispositions)}")
     print()
 
     complete = 0
     parked = 0
     partial = 0
-    for entry in entries:
+    for item in dispositions:
+        entry = item.entry
         unresolved = entry.unresolved_executable_fields
-        key = (entry.skill_entity_id, entry.coefficient_number)
-        if not unresolved:
+        if item.status is RotationDDPeriodicReviewStatus.COMPLETE:
             complete += 1
-            status = "COMPLETE"
-        elif key in _PARKED:
+        elif item.status is RotationDDPeriodicReviewStatus.PARKED:
             parked += 1
-            status = "PARKED"
         else:
             partial += 1
-            status = "PARTIAL"
 
+        status = item.status.value.upper()
         fields = "none" if not unresolved else ", ".join(unresolved)
-        print(
-            f"- {entry.skill_entity_id} coeff={entry.coefficient_number}: {status}"
-        )
+        print(f"- {entry.skill_entity_id} coeff={entry.coefficient_number}: {status}")
         print(f"  unresolved: {fields}")
-        if status == "PARKED":
-            print(f"  park reason: {_PARKED[key]}")
+        if item.status is RotationDDPeriodicReviewStatus.PARKED:
+            print(f"  park reason: {item.reason}")
 
     print()
     print(f"Executable-complete reviews: {complete}")
