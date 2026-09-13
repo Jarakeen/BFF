@@ -110,6 +110,7 @@ def install() -> None:
     from ui.build_rotation_artifact_support import install as install_build_rotation_artifact_support
     from ui.user_workspace_polish_support import install as install_user_workspace_polish_support
     from ui.roster_team_assignment_filter_support import install as install_roster_team_assignment_filter_support
+    from ui.roster_encounter_assignment_context_support import install as install_roster_encounter_assignment_context_support
     from ui.roster_characters_header_context_support import install as install_roster_characters_header_context_support
     from ui.roster_sub_terminology_support import install as install_roster_sub_terminology_support
     from ui.roster_assignment_persistence_support import install as install_roster_assignment_persistence_support
@@ -130,8 +131,13 @@ def install() -> None:
     install_build_rotation_artifact_support()
     install_user_workspace_polish_support()
     install_roster_team_assignment_filter_support()
+    # One simple Boss selector sits beside the team selector. Team Default stays
+    # the normal path; users only touch Boss when somebody's job changes.
+    install_roster_encounter_assignment_context_support()
     install_roster_characters_header_context_support()
     install_roster_sub_terminology_support()
+    # Persistence installs after both selectors so it can save team defaults and
+    # optional per-boss overrides without asking the user to understand the model.
     install_roster_assignment_persistence_support()
     install_roster_assignment_action_support()
     # Install after the Assignments action layer so its Send to Comp Maker button
