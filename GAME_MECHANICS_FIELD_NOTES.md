@@ -860,3 +860,13 @@ smaller. A fuller bar is not automatically a better Health Recovery build.
 
 **For BFF:** Exhilarating Drain is pruned from this record route by a conservative
 dominance proof. It remains a valid Ultimate-generation mechanic in other objectives.
+
+---
+
+## 2026-09-13 — `5+5+2` arithmetic does not prove a real equipment loadout
+
+An Ultimate-source combination can fit the familiar twelve set-count units and still be impossible to equip. Bloodspawn and Baron Zaudrus both need the same Head/Shoulders monster-set slots, so their combined four set-count units are numerically small but physically incompatible. Conversely, a legal `5+5+2` route still needs an exact named-set slot witness.
+
+**Layman's version:** adding the piece counts tells us whether the suitcase is too heavy; it does not prove every item actually fits in the suitcase.
+
+**For BFF:** Ultimate-source combinations now call the canonical named-set realization service instead of trusting piece-count sums. That closes set-slot coexistence only. Seven-Heavy armor compatibility and the Health Recovery lost by equipping Ultimate-generation gear are still separate proof gates.
