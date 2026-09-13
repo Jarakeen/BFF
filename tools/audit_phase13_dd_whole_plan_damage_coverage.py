@@ -522,10 +522,12 @@ def main() -> int:
         ratio = audit.resolved_damage_actions / audit.total_damage_actions
         print(f"Resolved coverage:     {ratio:.1%}")
     print(f"Actionable blockers:   {len(triage.actionable)}")
+    print(f"Runtime-input blockers:{len(triage.runtime_input_required):4d}")
     print(f"Parked blockers:       {len(triage.parked)}")
     print()
 
     _print_triage_section("ACTIONABLE BLOCKERS", triage.actionable)
+    _print_triage_section("RUNTIME INPUT REQUIRED", triage.runtime_input_required)
     _print_triage_section("PARKED EVIDENCE BLOCKERS", triage.parked)
 
     print("PLAN-LEVEL UNRESOLVED")
@@ -537,10 +539,11 @@ def main() -> int:
         print("none")
     print()
     print(
-        "Interpretation: actionable blockers identify the highest-yield missing DD "
-        "damage evidence for this exact generated saved-build plan. Parked evidence "
-        "blockers remain unresolved and continue to fail closed, but are separated so "
-        "known exhausted research lanes do not masquerade as fresh work."
+        "Interpretation: actionable blockers identify missing DD evidence that still "
+        "needs engineering or review. Runtime-input blockers have reviewed semantics "
+        "but require exact caller/runtime observations for this run. Parked evidence "
+        "blockers remain unresolved and fail closed because their current evidence "
+        "source is exhausted or non-discriminating."
     )
     return 0
 
