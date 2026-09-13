@@ -65,6 +65,37 @@ def test_percentage_power_requires_reference_value():
     assert row.projected_delta(reference_value=2000.0) == 80.0
 
 
+def test_flat_health_recovery_passive_is_projected():
+    result = ExtremePassiveProjectionService.project(
+        _passive("Healthy Shadows", "Increases your Health Recovery by 120.")
+    )
+
+    row = next(row for row in result.contributions if row.objective_key == "health_recovery")
+    assert result.status is ExtremePassiveProjectionStatus.REVIEWED_STATIC
+    assert row.flat == 120.0
+
+
+def test_percent_health_recovery_passive_requires_reference_value():
+    result = ExtremePassiveProjectionService.project(
+        _passive("Healthy Blood", "Increases your Health Recovery by 20%.")
+    )
+
+    row = next(row for row in result.contributions if row.objective_key == "health_recovery")
+    assert row.percent_of_reference == 0.20
+    assert row.projected_delta(reference_value=1000.0) == 200.0
+
+
+def test_shared_recovery_passive_projects_all_three_recovery_objectives():
+    result = ExtremePassiveProjectionService.project(
+        _passive("Robust Recovery", "Increases your Health, Magicka, and Stamina Recovery by 90.")
+    )
+
+    by_objective = {row.objective_key: row for row in result.contributions}
+    assert by_objective["health_recovery"].flat == 90.0
+    assert by_objective["magicka_recovery"].flat == 90.0
+    assert by_objective["stamina_recovery"].flat == 90.0
+
+
 def test_conditional_tooltip_is_not_flattened_into_static_score():
     result = ExtremePassiveProjectionService.project(
         _passive(
