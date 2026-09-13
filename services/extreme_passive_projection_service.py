@@ -336,15 +336,6 @@ class ExtremePassiveProjectionService:
                 passive=passive,
                 status=ExtremePassiveProjectionStatus.KNOWN_NONCOMBAT,
             )
-        if (
-            passive.domain is ExtremeSkillDomain.CRAFT
-            and name_key not in _CONTEXTUAL_KNOWN_PASSIVES
-            and not consumable_context
-        ):
-            return ExtremePassiveProjection(
-                passive=passive,
-                status=ExtremePassiveProjectionStatus.KNOWN_NONCOMBAT,
-            )
 
         clauses = cls._clauses(passive.description)
         conditions = tuple(clause for clause in clauses if cls._conditional_clause(clause))
