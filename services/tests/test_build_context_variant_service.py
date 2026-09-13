@@ -73,6 +73,47 @@ def test_team_boss_variant_precedence_is_team_boss_then_team_then_boss() -> None
     assert resolve_build_context(build, team_name="Other", boss_name="Boss A").Mundus == "The Thief"
 
 
+def test_sparse_team_boss_variant_inherits_matching_team_variant_before_base() -> None:
+    build = PlayerBuild(
+        Name="Magrat",
+        Food="Base Food",
+        Mundus="The Ritual",
+        FrontBarSkills=["Base 1", "Base 2", "Base 3", "Base 4", "Base 5", "Base Ult"],
+        ContextVariants=[
+            BuildContextVariant(
+                ContextType="Boss",
+                BossName="Boss A",
+                Food="Boss Food",
+                Mundus="The Thief",
+            ),
+            BuildContextVariant(
+                ContextType="Team",
+                TeamName="SW",
+                Food="SW Food",
+                Mundus="The Atronach",
+            ),
+            BuildContextVariant(
+                ContextType="Team + Boss",
+                TeamName="SW",
+                BossName="Boss A",
+                FrontBarSkills=["Boss-specific skill", "", "", "", "", ""],
+            ),
+        ],
+    )
+
+    resolved = resolve_build_context(build, team_name="SW", boss_name="Boss A")
+    assert resolved.Food == "SW Food"
+    assert resolved.Mundus == "The Atronach"
+    assert resolved.FrontBarSkills == [
+        "Boss-specific skill",
+        "Base 2",
+        "Base 3",
+        "Base 4",
+        "Base 5",
+        "Base Ult",
+    ]
+
+
 def test_sparse_variant_inherits_unchanged_base_fields() -> None:
     build = PlayerBuild(
         Name="Magrat",
