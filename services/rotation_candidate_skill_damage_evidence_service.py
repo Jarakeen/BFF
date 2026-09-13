@@ -40,6 +40,9 @@ from services.rotation_plan_runtime_build_context_service import (
 from services.rotation_saved_build_dd_conditional_damage_done_service import (
     exploiter_damage_done_bonus,
 )
+from services.rotation_scribed_skill_damage_semantics_service import (
+    RotationScribedSkillDamageSemanticsService,
+)
 
 
 RotationRuntimeTargetCombatStateResolver = Callable[
@@ -90,6 +93,12 @@ class RotationCandidateSkillDamageEvidenceService:
     mitigation, critical handling, and Damage Taken remain owned by their existing
     combat services.
 
+    Reviewed scribed result semantics are checked before ordinary coefficient lookup.
+    A proven non-damage activation such as Magical Banner resolves to zero direct
+    damage without pretending its persistent runtime modifier has been applied here.
+    Toggle lifetime and indirect Damage Done remain separate runtime/scheduler
+    responsibilities.
+
     Direct and periodic components share the same combat-routing helper only when
     reviewed runtime evidence permits it. Periodic tick scheduling is owned by the
     shared runtime projection. ``snapshot_at_cast`` freezes source magnitude and
@@ -125,6 +134,7 @@ class RotationCandidateSkillDamageEvidenceService:
         runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
         runtime_target_combat_state_resolver: RotationRuntimeTargetCombatStateResolver | None = None,
         runtime_target_resistance_resolver: RotationRuntimeTargetResistanceResolver | None = None,
+        scribed_damage_semantics: RotationScribedSkillDamageSemanticsService | None = None,
     ) -> None:
         self.database_path = Path(database_path)
         self.context = context
@@ -140,6 +150,9 @@ class RotationCandidateSkillDamageEvidenceService:
         self.runtime_build_context_resolver = runtime_build_context_resolver
         self.runtime_target_combat_state_resolver = runtime_target_combat_state_resolver
         self.runtime_target_resistance_resolver = runtime_target_resistance_resolver
+        self.scribed_damage_semantics = (
+            scribed_damage_semantics or RotationScribedSkillDamageSemanticsService()
+        )
 
     @staticmethod
     def _damage_done_for_context(
@@ -187,6 +200,17 @@ class RotationCandidateSkillDamageEvidenceService:
             return self._unresolved(
                 action,
                 "scheduled skill action has no canonical skill identity",
+            )
+
+        scribed_semantics = self.scribed_damage_semantics.resolve(action.name)
+        if (
+            scribed_semantics is not None
+            and not scribed_semantics.deals_direct_damage_on_activation
+        ):
+            return RotationActionDamageEvidence(
+                time_seconds=action.time_seconds,
+                sequence=action.sequence,
+                damage_value=0.0,
             )
 
         action_target_state = self._target_state_for_action(action)
