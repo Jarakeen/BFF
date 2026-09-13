@@ -69,6 +69,10 @@ class ChampionPointStaticRepository:
         self._record_cache: dict[str, ChampionPointRecord | None] = {}
         self._non_slottable_records_cache: tuple[ChampionPointRecord, ...] | None = None
         self._slottable_records_cache: tuple[ChampionPointRecord, ...] | None = None
+        self._resolve_cache: dict[
+            tuple[str, int],
+            tuple[tuple[Effect, ...], tuple[str, ...]],
+        ] = {}
 
     def _connect(self) -> sqlite3.Connection:
         connection = sqlite3.connect(self.database_path)
@@ -206,17 +210,37 @@ class ChampionPointStaticRepository:
             )
         ]
 
+    def _cache_resolution(
+        self,
+        key: tuple[str, int],
+        effects: list[Effect],
+        unresolved: list[str],
+    ) -> tuple[list[Effect], list[str]]:
+        frozen = (tuple(effects), tuple(unresolved))
+        self._resolve_cache[key] = frozen
+        return list(frozen[0]), list(frozen[1])
+
     def resolve(self, name: str, points: int) -> tuple[list[Effect], list[str]]:
-        record = self.get(name)
+        requested = str(name).strip()
+        cache_key = (requested, int(points))
+        cached = self._resolve_cache.get(cache_key)
+        if cached is not None:
+            return list(cached[0]), list(cached[1])
+
+        record = self.get(requested)
         if record is None:
-            return [], [f"Champion Point not found: {name}"]
+            return self._cache_resolution(
+                cache_key,
+                [],
+                [f"Champion Point not found: {name}"],
+            )
         stages = self._stages(record, points)
         if stages <= 0:
-            return [], []
+            return self._cache_resolution(cache_key, [], [])
 
         source = record.name
         if source.strip().casefold() in EXTERNALLY_MODELED_DYNAMIC_CP_NAMES:
-            return [], []
+            return self._cache_resolution(cache_key, [], [])
 
         first_line = record.description.splitlines()[0].strip()
 
@@ -246,7 +270,7 @@ class ChampionPointStaticRepository:
             effects: list[Effect] = []
             for stat in stats:
                 effects.extend(self._effects_for_simple_stat(source, stat, amount, unit))
-            return effects, []
+            return self._cache_resolution(cache_key, effects, [])
 
         finesse = re.match(
             rf"^Increases your Critical Damage and Critical Healing done by {_VALUE}% per stage\.$",
@@ -255,22 +279,26 @@ class ChampionPointStaticRepository:
         )
         if finesse:
             amount = float(finesse.group(1)) * stages
-            return [
-                Effect(
-                    source=f"Champion Point: {source}",
-                    stat=StatId.CRITICAL_DAMAGE,
-                    operation=EffectOperation.ADD_PERCENT,
-                    value=amount,
-                    unit=EffectUnit.PERCENT,
-                ),
-                Effect(
-                    source=f"Champion Point: {source}",
-                    stat=StatId.CRITICAL_HEALING,
-                    operation=EffectOperation.ADD_PERCENT,
-                    value=amount,
-                    unit=EffectUnit.PERCENT,
-                ),
-            ], []
+            return self._cache_resolution(
+                cache_key,
+                [
+                    Effect(
+                        source=f"Champion Point: {source}",
+                        stat=StatId.CRITICAL_DAMAGE,
+                        operation=EffectOperation.ADD_PERCENT,
+                        value=amount,
+                        unit=EffectUnit.PERCENT,
+                    ),
+                    Effect(
+                        source=f"Champion Point: {source}",
+                        stat=StatId.CRITICAL_HEALING,
+                        operation=EffectOperation.ADD_PERCENT,
+                        value=amount,
+                        unit=EffectUnit.PERCENT,
+                    ),
+                ],
+                [],
+            )
 
         if source.strip().casefold() in {"boundless vitality", "arcane supremacy", "tireless guardian"}:
             stat = {
@@ -278,6 +306,19 @@ class ChampionPointStaticRepository:
                 "arcane supremacy": StatId.MAX_MAGICKA,
                 "tireless guardian": StatId.MAX_STAMINA,
             }[source.strip().casefold()]
-            return self._effects_for_simple_stat(source, stat, float(stages) * 28.0, EffectUnit.FLAT), []
+            return self._cache_resolution(
+                cache_key,
+                self._effects_for_simple_stat(
+                    source,
+                    stat,
+                    float(stages) * 28.0,
+                    EffectUnit.FLAT,
+                ),
+                [],
+            )
 
-        return [], [f"Champion Point effect not yet modeled: {source}: {first_line}"]
+        return self._cache_resolution(
+            cache_key,
+            [],
+            [f"Champion Point effect not yet modeled: {source}: {first_line}"],
+        )
