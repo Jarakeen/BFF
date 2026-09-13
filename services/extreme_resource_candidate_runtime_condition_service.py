@@ -8,6 +8,9 @@ from pathlib import Path
 from minmax.gear_stat_inputs import GearStatInputResolver
 from models.build_model import PlayerBuild
 from services.extreme_heal_class_route_service import ExtremeHealClassRoute
+from services.extreme_resource_canonical_static_snapshot_service import (
+    ExtremeResourceCanonicalStaticSnapshotService,
+)
 from services.extreme_resource_runtime_condition_state_service import (
     ExtremeResourceRuntimeConditionState,
     ExtremeResourceRuntimeConditionStateService,
@@ -65,6 +68,21 @@ class ExtremeResourceCandidateRuntimeConditionProjection:
 class ExtremeResourceCandidateRuntimeConditionService:
     """Resolve only runtime conditions contributed by sets worn by a candidate."""
 
+    # Exhaustive resource scoring creates one canonical gear+armor scorer per finite
+    # equipment pair. The runtime-condition denominator, provisioning-kind cache, and
+    # canonical skill-witness catalog are database-scoped evidence, not pair-scoped
+    # state. Reuse one default dependency graph per Extreme static snapshot so every
+    # pair does not rediscover the same immutable evidence. Explicitly injected test
+    # or alternate services retain their original instance-local semantics.
+    _SHARED_DEFAULT_DEPENDENCIES: dict[
+        str,
+        tuple[
+            ExtremeResourceRuntimeCoverageAuditService,
+            ExtremeResourceRuntimeConditionStateService,
+            ExtremeResourceRuntimeSkillWitnessMaterializationService,
+        ],
+    ] = {}
+
     def __init__(
         self,
         database_path: str | Path | None = None,
@@ -79,6 +97,29 @@ class ExtremeResourceCandidateRuntimeConditionService:
             raise ValueError(
                 "database_path is required unless both runtime audit and condition-state services are supplied"
             )
+
+        if (
+            database_path is not None
+            and coverage_audit_service is None
+            and condition_state_service is None
+            and skill_witness_materialization_service is None
+        ):
+            snapshot_service = ExtremeResourceCanonicalStaticSnapshotService(database_path)
+            cache_key = snapshot_service.cache_key
+            shared = self._SHARED_DEFAULT_DEPENDENCIES.get(cache_key)
+            if shared is None:
+                shared = (
+                    ExtremeResourceRuntimeCoverageAuditService(database_path),
+                    ExtremeResourceRuntimeConditionStateService(database_path),
+                    ExtremeResourceRuntimeSkillWitnessMaterializationService(database_path),
+                )
+                self._SHARED_DEFAULT_DEPENDENCIES[cache_key] = shared
+            (
+                coverage_audit_service,
+                condition_state_service,
+                skill_witness_materialization_service,
+            ) = shared
+
         self.coverage_audit_service = coverage_audit_service or ExtremeResourceRuntimeCoverageAuditService(
             database_path
         )
