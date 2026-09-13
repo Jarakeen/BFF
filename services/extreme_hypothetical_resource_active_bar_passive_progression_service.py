@@ -18,6 +18,9 @@ from services.extreme_heal_class_route_service import ExtremeHealClassRoute
 from services.extreme_hypothetical_resource_armor_passive_progression_service import (
     ExtremeHypotheticalResourceArmorPassiveProgressionService,
 )
+from services.extreme_resource_canonical_static_snapshot_service import (
+    ExtremeResourceCanonicalStaticSnapshotService,
+)
 
 
 class ExtremeHypotheticalResourceActiveBarPassiveProgressionService:
@@ -50,9 +53,11 @@ class ExtremeHypotheticalResourceActiveBarPassiveProgressionService:
             self.database_path,  # type: ignore[arg-type]
             objective_key=key,
         )
-        self.skill_line_repository = skill_line_repository or SkillLineRepository(
-            self.database_path  # type: ignore[arg-type]
-        )
+        if skill_line_repository is None and self.database_path is not None:
+            skill_line_repository = ExtremeResourceCanonicalStaticSnapshotService(
+                self.database_path
+            ).build().skill_line_repository
+        self.skill_line_repository = skill_line_repository  # type: ignore[assignment]
 
     def canonical_max_rank(self) -> int:
         rank = self.skill_line_repository.passive_max_rank(self.PASSIVE_NAME)
