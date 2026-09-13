@@ -26,6 +26,9 @@ from services.extreme_heal_class_route_service import ExtremeHealClassRoute
 from services.extreme_resource_class_route_projection_service import (
     ExtremeResourceClassRouteProjectionService,
 )
+from services.extreme_resource_race_projection_service import (
+    ExtremeResourceRaceProjectionService,
+)
 
 
 ScorePayload = TypeVar("ScorePayload")
@@ -92,18 +95,19 @@ class ExtremeStructuralGlobalSearchService(Generic[ScorePayload]):
 
     Scorers may optionally expose ``closed_dynamic_axes(objective_key)`` and
     ``additional_search_scope(objective_key)``. They may also expose
-    ``structural_attribute_projection(objective_key, source_allocations)`` and
+    ``structural_race_projection(objective_key, source_races)``,
+    ``structural_attribute_projection(objective_key, source_allocations)``, and
     ``structural_class_route_projection(objective_key, source_routes)``. A
     structural projection is honored only when the returned object reports
     ``projection_complete``; otherwise the full canonical source axis is searched.
     This lets an objective-specific scorer own a proof reduction without teaching
     this generic structural layer any ESO formula.
 
-    The production max-resource scorer predates the explicit class-route hook. For
-    that scorer only, the service may discover its canonical database path through
-    the existing evaluator-factory chain and invoke the shared max-resource route
-    projection service. Unsupported objectives and injected scorers without that
-    proof context remain fully exhaustive.
+    The production max-resource scorer predates the explicit race/class-route
+    hooks. For that scorer only, the service may discover its canonical database
+    path through the existing evaluator-factory chain and invoke the shared
+    max-resource projection services. Unsupported objectives and injected scorers
+    without that proof context remain fully exhaustive.
     """
 
     def __init__(
@@ -137,6 +141,55 @@ class ExtremeStructuralGlobalSearchService(Generic[ScorePayload]):
             )
         )
 
+    def _discovered_database_path(self):
+        factory = getattr(self.scorer, "evaluator_factory", None)
+        canonical = getattr(factory, "canonical_evaluator", None)
+        optimizer = getattr(canonical, "optimizer", None)
+        return getattr(optimizer, "database_path", None)
+
+    def _discovered_resource_race_projection(
+        self,
+        objective_key: str,
+        source_races: tuple[str, ...],
+    ):
+        key = str(objective_key or "").strip().casefold()
+        if key not in ExtremeResourceRaceProjectionService.SUPPORTED_OBJECTIVES:
+            return None
+        database_path = self._discovered_database_path()
+        if database_path is None:
+            return None
+        return ExtremeResourceRaceProjectionService(database_path).build(
+            key,
+            source_races,
+        )
+
+    def _projected_races(
+        self,
+        objective_key: str,
+        universe: ExtremeGlobalSearchUniverse,
+    ) -> tuple[tuple[str, ...], tuple[str, ...]]:
+        source_races = tuple(universe.races)
+        resolver = getattr(self.scorer, "structural_race_projection", None)
+        projection = (
+            resolver(objective_key, source_races)
+            if callable(resolver)
+            else self._discovered_resource_race_projection(objective_key, source_races)
+        )
+        if projection is None or not bool(getattr(projection, "projection_complete", False)):
+            return source_races, ()
+
+        races = tuple(getattr(projection, "races", ()) or ())
+        if not races:
+            return source_races, ()
+        scope = tuple(
+            dict.fromkeys(
+                str(value).strip()
+                for value in tuple(getattr(projection, "scope", ()) or ())
+                if str(value).strip()
+            )
+        )
+        return races, scope
+
     def _discovered_resource_route_projection(
         self,
         objective_key: str,
@@ -145,10 +198,7 @@ class ExtremeStructuralGlobalSearchService(Generic[ScorePayload]):
         key = str(objective_key or "").strip().casefold()
         if key not in ExtremeResourceClassRouteProjectionService.SUPPORTED_OBJECTIVES:
             return None
-        factory = getattr(self.scorer, "evaluator_factory", None)
-        canonical = getattr(factory, "canonical_evaluator", None)
-        optimizer = getattr(canonical, "optimizer", None)
-        database_path = getattr(optimizer, "database_path", None)
+        database_path = self._discovered_database_path()
         if database_path is None:
             return None
         return ExtremeResourceClassRouteProjectionService(database_path).build(
@@ -216,6 +266,7 @@ class ExtremeStructuralGlobalSearchService(Generic[ScorePayload]):
             raise ValueError("Extreme structural search objective_key is required")
 
         universe = self.universe_service.build()
+        races_to_score, race_projection_scope = self._projected_races(key, universe)
         routes_to_score, route_projection_scope = self._projected_class_routes(key, universe)
         attributes_to_score, attribute_projection_scope = self._projected_attributes(key, universe)
         best: ExtremeStructuralScore[ScorePayload] | None = None
@@ -224,7 +275,7 @@ class ExtremeStructuralGlobalSearchService(Generic[ScorePayload]):
         scored = 0
         unresolved: list[str] = []
 
-        for race in universe.races:
+        for race in races_to_score:
             for route in routes_to_score:
                 for attributes in attributes_to_score:
                     for active_bar in universe.active_bars:
@@ -255,7 +306,7 @@ class ExtremeStructuralGlobalSearchService(Generic[ScorePayload]):
                                 best = score
 
         expected = (
-            len(universe.races)
+            len(races_to_score)
             * len(routes_to_score)
             * len(attributes_to_score)
             * len(universe.active_bars)
@@ -276,6 +327,7 @@ class ExtremeStructuralGlobalSearchService(Generic[ScorePayload]):
                 dict.fromkeys(
                     (
                         *universe.structural_scope,
+                        *race_projection_scope,
                         *route_projection_scope,
                         *attribute_projection_scope,
                         *additional_scope,
