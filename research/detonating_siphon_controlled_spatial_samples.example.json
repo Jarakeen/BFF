@@ -1,0 +1,39 @@
+{
+  "samples": [
+    {
+      "label": "caster_only_hit_example",
+      "caster": [0.0, 0.0],
+      "corpse_candidate": [20.0, 0.0],
+      "target": [2.0, 0.0],
+      "damage_observed": true
+    },
+    {
+      "label": "corpse_only_hit_example",
+      "caster": [0.0, 0.0],
+      "corpse_candidate": [20.0, 0.0],
+      "target": [18.0, 0.0],
+      "damage_observed": true
+    },
+    {
+      "label": "interior_tether_hit_example",
+      "caster": [0.0, 0.0],
+      "corpse_candidate": [20.0, 0.0],
+      "target": [10.0, 1.0],
+      "damage_observed": true
+    },
+    {
+      "label": "interior_tether_no_hit_example",
+      "caster": [0.0, 0.0],
+      "corpse_candidate": [20.0, 0.0],
+      "target": [10.0, 3.0],
+      "damage_observed": false
+    },
+    {
+      "label": "outside_all_no_hit_example",
+      "caster": [0.0, 0.0],
+      "corpse_candidate": [20.0, 0.0],
+      "target": [10.0, 10.0],
+      "damage_observed": false
+    }
+  ]
+}
