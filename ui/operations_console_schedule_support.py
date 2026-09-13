@@ -59,7 +59,7 @@ def _raid_schedule_card(self, _build=None) -> FoundryCard:
         for row, schedule in enumerate(schedules[:6]):
             team = QLabel(schedule.TeamName)
             team.setProperty("overviewGoalName", True)
-            grid.addWidget(team, row, 0)
+            card.addWidget(team)
 
             slots = list(schedule.effective_slots)
             day_text = "\n".join(slot.Day for slot in slots)
@@ -99,6 +99,7 @@ def install() -> None:
     from ui import operations_console
     from ui.team_schedule_calendar_support import install as install_team_schedule_calendar_support
     from ui.team_schedule_multi_time_support import install as install_team_schedule_multi_time_support
+    from ui.roster_team_merge_support import install as install_roster_team_merge_support
     from ui.roster_player_architecture_support import install as install_roster_player_architecture_support
     from ui.scrollable_message_dialog_support import install as install_scrollable_message_dialog_support
     from ui.roster_import_workflow import install as install_roster_import_support
@@ -111,12 +112,16 @@ def install() -> None:
     # the final Team Schedule UI so each selected day can use its own start/end.
     install_team_schedule_calendar_support()
     install_team_schedule_multi_time_support()
+    # Long diagnostics must remain readable before workflows start opening
+    # warning/information message boxes.
+    install_scrollable_message_dialog_support()
+    # Team merge wraps the completed Team Schedule surface, so duplicate or
+    # renamed team identities can be consolidated without deleting user-owned
+    # players, characters, or builds.
+    install_roster_team_merge_support()
     # Characters and Teams compose the canonical build catalog with the durable
     # roster/team schedule state after the final Team Schedule patch is known.
     install_roster_player_architecture_support()
-    # Long diagnostics must remain readable before import/audit workflows start
-    # opening message boxes. Short messages retain ordinary QMessageBox behavior.
-    install_scrollable_message_dialog_support()
     # The roster importer then attaches its preview/commit workflow to the
     # existing Import Roster button and reuses canonical roster/build identity.
     install_roster_import_support()
