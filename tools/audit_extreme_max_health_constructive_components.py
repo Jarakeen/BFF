@@ -20,9 +20,11 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from minmax.combat_effect_semantics import GameUpdate
 from minmax.effects import EffectOperation
 from minmax.gear_set_repository import GearSetRepository
 from minmax.mundus_repository import MundusRepository, U50_GAME_UPDATE
+from minmax.potion_availability_repository import PotionAvailabilityRepository
 from minmax.provisioning_static_repository import ProvisioningStaticRepository
 from minmax.stat_ids import StatId
 from services.extreme_armor_resource_trait_glyph_state_service import (
@@ -55,6 +57,9 @@ from services.extreme_resource_champion_point_state_service import (
 )
 from services.extreme_resource_mundus_projection_service import (
     ExtremeResourceMundusProjectionService,
+)
+from services.extreme_resource_potion_projection_service import (
+    ExtremeResourcePotionProjectionService,
 )
 from services.extreme_resource_provisioning_projection_service import (
     ExtremeResourceProvisioningProjectionService,
@@ -104,9 +109,6 @@ def main() -> int:
     race = ExtremeResourceRaceProjectionService(database).build(
         OBJECTIVE, tuple(universe.races)
     )
-    # Max Health intentionally retains every legal class/subclass route. The
-    # Magicka/Stamina dominance reducer rejects max_health by contract because
-    # health-sensitive runtime/passive interactions are route-specific.
     route_count = len(tuple(universe.class_routes))
     route_denominator_retained = bool(
         universe.structural_denominator_proven and route_count > 0
@@ -124,6 +126,12 @@ def main() -> int:
     provisioning = ExtremeResourceProvisioningProjectionService(
         provisioning_repository
     ).build(OBJECTIVE)
+
+    potion_repository = PotionAvailabilityRepository(
+        database,
+        game_update=GameUpdate.U50,
+    )
+    potion = ExtremeResourcePotionProjectionService(potion_repository).build(OBJECTIVE)
 
     armor = ExtremeArmorResourceTraitGlyphStateService(database).build(OBJECTIVE)
     best_armor = max(
@@ -219,7 +227,11 @@ def main() -> int:
     print(f"food={provisioning.food_witness or '<none>'} delta={food_delta:g}")
     print(f"drink={provisioning.drink_witness or '<none>'} delta={drink_delta:g}")
     print(f"provisioning_projection_complete={provisioning.projection_complete}")
-    print("potion_axis=max_health_not_owned_by_resource_potion_projection; retain final canonical no-invention check")
+    print(
+        f"potion_formulas_reviewed={potion.formulas_reviewed} "
+        f"relevant_formulas={len(potion.relevant_formulas)} "
+        f"objective_irrelevance_proven={potion.objective_irrelevance_proven}"
+    )
     print(
         f"armor_best_direct_glyph_delta={armor_delta:g} "
         f"divines={best_armor.divines_count if best_armor else 0} "
@@ -274,6 +286,7 @@ def main() -> int:
                 *attributes.unresolved,
                 *mundus.unresolved,
                 *provisioning.unresolved,
+                *potion.unresolved,
                 *armor.unresolved,
                 *jewelry.unresolved,
                 *champion.unresolved,
