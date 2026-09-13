@@ -115,10 +115,11 @@ class RotationCandidateSkillDamageEvidenceService:
     Direct target-health-conditioned components consult the canonical Phase 6
     consequence repository plus an exact-time ``CombatStateSnapshot``. Threshold-
     gated activation can therefore be included or suppressed without changing the
-    damage formula. Continuous ``up to N% more damage`` execute amplification remains
-    unresolved until its runtime interpolation semantics are reviewed. Periodic
-    target-health conditions also remain unresolved rather than assuming cast-time
-    Health governs all future ticks.
+    damage formula. Source-reviewed continuous execute amplification is applied only
+    to the exact damage component that owns the reviewed consequence; unreviewed
+    ``up to N% more damage`` interpolation remains unresolved. Periodic target-health
+    conditions also remain unresolved rather than assuming cast-time Health governs
+    all future ticks.
 
     Direct and periodic components share the same combat-routing helper only when
     reviewed runtime evidence permits it. Periodic tick scheduling is owned by the
@@ -449,6 +450,7 @@ class RotationCandidateSkillDamageEvidenceService:
                 damage_done=damage_done,
                 damage_taken=damage_taken,
             )
+            component_damage *= float(execute_eligibility.damage_multiplier)
             total_damage += component_damage
 
         if unresolved:
