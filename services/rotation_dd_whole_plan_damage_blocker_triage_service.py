@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 
+from minmax.skill_coefficient_repository import ability_entity_id
 from services.rotation_dd_periodic_review_status_service import (
     RotationDDPeriodicReviewStatus,
     RotationDDPeriodicReviewStatusService,
@@ -76,14 +77,14 @@ class RotationDDWholePlanDamageBlockerTriageService:
     ) -> RotationDDWholePlanDamageBlockerTriageReport:
         dispositions = self.periodic_status_service.dispositions()
         parked_by_skill = {
-            item.entry.skill_entity_id.casefold(): item
+            item.entry.skill_entity_id: item
             for item in dispositions
             if item.status is RotationDDPeriodicReviewStatus.PARKED
         }
 
         result: list[RotationDDDamageBlockerTriage] = []
         for blocker in audit.blockers:
-            action_name = str(blocker.action_name or "").strip().casefold()
+            action_name = ability_entity_id(blocker.action_name or "")
             reason = str(blocker.reason or "").strip()
             parked_review = parked_by_skill.get(action_name)
             periodic_reason = any(
