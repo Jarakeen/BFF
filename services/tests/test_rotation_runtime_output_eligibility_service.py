@@ -1,11 +1,20 @@
 import pytest
 
+from minmax.runtime_event import RuntimeEvent
 from minmax.runtime_output_eligibility import RuntimeOutputEligibilityRule
 from services.rotation_runtime_output_eligibility_service import (
     DETONATING_SIPHON_GEOMETRY_CONDITION,
     RotationRuntimeOutputConditionRule,
     RotationRuntimeOutputEligibilityService,
 )
+
+
+def _event(time_seconds: float) -> RuntimeEvent:
+    return RuntimeEvent(
+        time_seconds=time_seconds,
+        trigger="damage_dealt",
+        source="test",
+    )
 
 
 def test_unreviewed_component_passes_through_without_condition_context() -> None:
@@ -62,6 +71,58 @@ def test_detonating_siphon_known_inside_geometry_is_eligible() -> None:
     assert result.resolved is True
     assert result.missing_conditions == ()
     assert result.unresolved == ()
+
+
+def test_unreviewed_component_event_filter_passes_every_event_through() -> None:
+    events = (_event(1.0), _event(2.0))
+
+    result = RotationRuntimeOutputEligibilityService().filter_events(
+        skill_entity_id="stampede",
+        coefficient_number=2,
+        events=events,
+    )
+
+    assert result.events == events
+    assert result.resolved is True
+    assert result.unresolved == ()
+
+
+def test_reviewed_conditional_events_require_exact_event_context() -> None:
+    events = (_event(1.0), _event(2.0), _event(3.0))
+
+    def context_for(event: RuntimeEvent):
+        if event.time_seconds == 1.0:
+            return frozenset({DETONATING_SIPHON_GEOMETRY_CONDITION})
+        if event.time_seconds == 2.0:
+            return frozenset()
+        return None
+
+    result = RotationRuntimeOutputEligibilityService().filter_events(
+        skill_entity_id="detonating_siphon",
+        coefficient_number=1,
+        events=events,
+        condition_context_resolver=context_for,
+    )
+
+    assert result.events == (events[0],)
+    assert result.resolved is False
+    assert len(result.unresolved) == 1
+    assert "at 3s" in result.unresolved[0]
+    assert "authoritative ConditionContext" in result.unresolved[0]
+
+
+def test_reviewed_conditional_event_filter_without_resolver_fails_closed() -> None:
+    events = (_event(4.0),)
+
+    result = RotationRuntimeOutputEligibilityService().filter_events(
+        skill_entity_id="detonating_siphon",
+        coefficient_number=1,
+        events=events,
+    )
+
+    assert result.events == ()
+    assert result.resolved is False
+    assert "at 4s" in result.unresolved[0]
 
 
 def test_custom_rules_are_canonicalized_and_duplicates_fail_closed_at_configuration() -> None:
