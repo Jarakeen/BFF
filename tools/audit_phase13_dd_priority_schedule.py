@@ -13,6 +13,9 @@ from minmax.rotation_plan import RotationActionKind
 from services.rotation_cross_bar_filler_opportunity_service import (
     RotationCrossBarFillerOpportunityService,
 )
+from services.rotation_cross_bar_route_proposal_service import (
+    RotationCrossBarRouteProposalService,
+)
 from tools.audit_phase13_saved_build_rotation_timing import _load_build
 from ui.rotation_generation_support import RotationGenerationRequest, RotationGenerationSupport
 
@@ -178,6 +181,10 @@ def main() -> int:
         generated.plan,
         priorities=priority_list,
     )
+    routes = RotationCrossBarRouteProposalService().propose(
+        generated.plan,
+        cross_bar,
+    )
 
     print("=" * 72)
     print(" PHASE 13 DD EXPLICIT-PRIORITY SCHEDULE AUDIT")
@@ -202,6 +209,7 @@ def main() -> int:
     print(f"Skill actions: {len(skills)}")
     print(f"Wait actions:  {len(waits)}")
     print(f"Cross-bar filler opportunities: {len(cross_bar)}")
+    print(f"Cross-bar route proposals: {len(routes)}")
     print()
 
     print("CROSS-BAR FILLER OPPORTUNITIES")
@@ -221,6 +229,31 @@ def main() -> int:
         print("none")
     print()
 
+    print("CROSS-BAR ROUTE PROPOSALS")
+    print("-------------------------")
+    if routes:
+        for item in routes:
+            priority = (
+                f" priority={item.filler_priority}"
+                if item.filler_priority is not None
+                else ""
+            )
+            next_required = (
+                f"next required {item.next_required_bar} skill at "
+                f"{item.next_required_time_seconds:g}s"
+                if item.next_required_bar is not None
+                and item.next_required_time_seconds is not None
+                else "no later explicit skill obligation"
+            )
+            return_state = "return swap required" if item.return_swap_required else "stay on target bar"
+            print(
+                f"{item.wait_time_seconds:g}s | {item.source_bar} -> {item.target_bar} | "
+                f"{item.filler_skill_name}{priority} | {next_required} | {return_state}"
+            )
+    else:
+        print("none")
+    print()
+
     print("PLAN-LEVEL UNRESOLVED")
     print("---------------------")
     if generated.plan.unresolved:
@@ -231,8 +264,9 @@ def main() -> int:
     print()
     print(
         "Interpretation: explicit priorities are caller-owned gameplay intent. Cross-bar "
-        "filler opportunities are diagnostic only: each reported filler is canonically "
-        "proven immediate, but swap timing and schedule mutation remain unresolved."
+        "filler opportunities and route proposals are diagnostic only: each filler is "
+        "canonically proven immediate, while exact swap timing and plan mutation remain "
+        "owned by a later routing scheduler."
     )
     return 0
 
