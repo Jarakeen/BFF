@@ -12,7 +12,7 @@ ROLES = [
 
 STATUSES = [
     "Active",
-    "Bench",
+    "Sub",
     "Inactive",
 ]
 
