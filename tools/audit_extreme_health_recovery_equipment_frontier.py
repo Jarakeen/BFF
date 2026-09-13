@@ -109,7 +109,8 @@ def main() -> int:
         mundus_delta = mundus.projected_delta
         if mundus_delta is None:
             print(
-                f"  armor_divines={divines_count} unresolved_mundus="n                + "; ".join(mundus.mundus.unresolved)
+                f"  armor_divines={divines_count} unresolved_mundus="
+                + "; ".join(mundus.mundus.unresolved)
             )
             continue
         invigorating_flat = invigorating_count * float(ARMOR_INVIGORATING_RECOVERY_GOLD)
