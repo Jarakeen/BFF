@@ -3,7 +3,7 @@ from __future__ import annotations
 """Explicitly merge one roster team into another without deleting player/build identity.
 
 This is a UI workflow over the existing roster/team SQLite state and canonical
-Player -> Character -> Build catalog.  The destination team survives.  Source
+Player -> Character -> Build catalog. The destination team survives. Source
 memberships and build assignments move to it, duplicate memberships/assignments
 collapse, destination schedule/focus values win conflicts, and only the source
 team record is retired.
@@ -160,7 +160,12 @@ def _assignment_conflicts(catalog: dict[str, Any], source_team: str, destination
     return conflicts
 
 
-def preview_team_merge(roster_service, build_service: BuildService, source_team: str, destination_team: str) -> TeamMergePreview:
+def preview_team_merge(
+    roster_service,
+    build_service: BuildService,
+    source_team: str,
+    destination_team: str,
+) -> TeamMergePreview:
     source_name = _text(source_team)
     destination_name = _text(destination_team)
     if not source_name or not destination_name:
@@ -211,7 +216,11 @@ def preview_team_merge(roster_service, build_service: BuildService, source_team:
     )
 
 
-def _merge_assignment_rows(catalog: dict[str, Any], source_team: str, destination_team: str) -> tuple[dict[str, Any], int, int]:
+def _merge_assignment_rows(
+    catalog: dict[str, Any],
+    source_team: str,
+    destination_team: str,
+) -> tuple[dict[str, Any], int, int]:
     source_key = source_team.casefold()
     destination_key = destination_team.casefold()
     updated = deepcopy(catalog)
@@ -250,7 +259,7 @@ def _merge_assignment_rows(catalog: dict[str, Any], source_team: str, destinatio
 
         moved_row = deepcopy(source)
         moved_row["team_name"] = destination_team
-        # Let the canonical catalog recompute the team/build-derived assignment id.
+        # Canonical assignment identity is derived from destination team + build.
         moved_row["assignment_id"] = ""
         kept.append(moved_row)
         if build_id:
@@ -261,7 +270,36 @@ def _merge_assignment_rows(catalog: dict[str, Any], source_team: str, destinatio
     return updated, moved, collapsed
 
 
-def merge_teams(roster_service, build_service: BuildService, source_team: str, destination_team: str) -> TeamMergeResult:
+def _merged_destination_values(roster_service, source_row, destination_row) -> dict[str, str]:
+    """Keep destination schedule as one coherent unit; fill only missing state."""
+    source_schedule = roster_service.get_team_schedule(str(source_row["name"]))
+    destination_schedule = roster_service.get_team_schedule(str(destination_row["name"]))
+    destination_has_schedule = bool(destination_schedule and destination_schedule.effective_slots)
+
+    if destination_has_schedule:
+        raid_days = _text(destination_row["raid_days"])
+        raid_time = _text(destination_row["raid_time"])
+        raid_schedule_json = _text(destination_row["raid_schedule_json"])
+    else:
+        raid_days = _text(source_row["raid_days"])
+        raid_time = _text(source_row["raid_time"])
+        raid_schedule_json = _text(source_row["raid_schedule_json"])
+
+    return {
+        "raid_days": raid_days,
+        "raid_time": raid_time,
+        "raid_schedule_json": raid_schedule_json,
+        "timezone": _text(destination_row["timezone"]) or _text(source_row["timezone"]),
+        "current_focus": _text(destination_row["current_focus"]) or _text(source_row["current_focus"]),
+    }
+
+
+def merge_teams(
+    roster_service,
+    build_service: BuildService,
+    source_team: str,
+    destination_team: str,
+) -> TeamMergeResult:
     preview = preview_team_merge(roster_service, build_service, source_team, destination_team)
     source_name = preview.source_team
     destination_name = preview.destination_team
@@ -281,20 +319,15 @@ def merge_teams(roster_service, build_service: BuildService, source_team: str, d
         source_name,
         destination_name,
     )
+    destination_values = _merged_destination_values(roster_service, source_row, destination_row)
 
     connection = roster_service.db.connection
     connection.execute("SAVEPOINT bff_team_merge")
     try:
-        # Save the canonical build assignment move first.  If SQLite fails, the
-        # exact prior catalog file is restored below, keeping the workflow retryable.
+        # Save canonical build-assignment movement first. If SQLite fails, the
+        # exact prior catalog file is restored below so the merge is retryable.
         if updated_catalog != catalog:
             catalog_service.save(updated_catalog)
-
-        destination_values: dict[str, str] = {}
-        for field in ("raid_days", "raid_time", "timezone", "raid_schedule_json", "current_focus"):
-            source_value = _text(source_row[field])
-            destination_value = _text(destination_row[field])
-            destination_values[field] = destination_value or source_value
 
         connection.execute(
             """
@@ -320,7 +353,10 @@ def merge_teams(roster_service, build_service: BuildService, source_team: str, d
                 int(destination_row["id"]),
             ),
         )
-        connection.execute("DELETE FROM team_member WHERE team_id = ?", (int(source_row["id"]),))
+        connection.execute(
+            "DELETE FROM team_member WHERE team_id = ?",
+            (int(source_row["id"]),),
+        )
         connection.execute("DELETE FROM team WHERE id = ?", (int(source_row["id"]),))
         connection.execute("RELEASE SAVEPOINT bff_team_merge")
     except Exception:
@@ -345,7 +381,14 @@ def merge_teams(roster_service, build_service: BuildService, source_team: str, d
 
 
 class TeamMergeDialog(QDialog):
-    def __init__(self, roster_service, build_service: BuildService, *, preferred_source: str = "", parent=None) -> None:
+    def __init__(
+        self,
+        roster_service,
+        build_service: BuildService,
+        *,
+        preferred_source: str = "",
+        parent=None,
+    ) -> None:
         super().__init__(parent)
         self.roster_service = roster_service
         self.build_service = build_service
@@ -414,7 +457,10 @@ class TeamMergeDialog(QDialog):
                 return
 
     def _selection_changed(self, *_args) -> None:
-        if self.source_combo.currentText().strip().casefold() == self.destination_combo.currentText().strip().casefold():
+        if (
+            self.source_combo.currentText().strip().casefold()
+            == self.destination_combo.currentText().strip().casefold()
+        ):
             self._choose_different_destination()
         self._refresh_preview()
 
@@ -466,7 +512,11 @@ def _open_merge_dialog(page) -> None:
 
     build_service = BuildService(get_data_dir() / "builds.json")
     build_service.load()
-    preferred = page.schedule_team_combo.currentText().strip() if hasattr(page, "schedule_team_combo") else ""
+    preferred = (
+        page.schedule_team_combo.currentText().strip()
+        if hasattr(page, "schedule_team_combo")
+        else ""
+    )
     dialog = TeamMergeDialog(
         page.roster_service,
         build_service,
@@ -558,8 +608,13 @@ def install() -> None:
                 merge_button.setToolTip(
                     "Merge one named team into another while preserving people, characters, builds, and canonical build ownership."
                 )
-                merge_button.clicked.connect(lambda _checked=False: _open_merge_dialog(self))
-                row_layout.insertWidget(max(0, row_layout.indexOf(delete_button)), merge_button)
+                merge_button.clicked.connect(
+                    lambda _checked=False: _open_merge_dialog(self)
+                )
+                row_layout.insertWidget(
+                    max(0, row_layout.indexOf(delete_button)),
+                    merge_button,
+                )
                 self.merge_teams_button = merge_button
         return page
 
