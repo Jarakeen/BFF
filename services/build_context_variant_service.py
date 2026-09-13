@@ -1,0 +1,137 @@
+from __future__ import annotations
+
+"""Resolve sparse team/boss build variants over one canonical saved build.
+
+Precedence is deliberately narrow and deterministic:
+team + boss > team > boss > base build.
+"""
+
+from copy import deepcopy
+
+from models.build_model import ARMOR_SLOTS, BuildContextVariant, GearSlot, PlayerBuild
+
+
+def _key(value: object) -> str:
+    return " ".join(str(value or "").strip().casefold().split())
+
+
+def _context_score(variant: BuildContextVariant, team_name: str, boss_name: str) -> int:
+    kind = _key(variant.ContextType)
+    team_matches = bool(_key(team_name)) and _key(variant.TeamName) == _key(team_name)
+    boss_matches = bool(_key(boss_name)) and _key(variant.BossName) == _key(boss_name)
+    if kind in {"team + boss", "team+boss", "team boss"}:
+        return 30 if team_matches and boss_matches else -1
+    if kind == "team":
+        return 20 if team_matches else -1
+    if kind == "boss":
+        return 10 if boss_matches else -1
+    return -1
+
+
+def select_context_variant(
+    build: PlayerBuild,
+    *,
+    team_name: str = "",
+    boss_name: str = "",
+) -> BuildContextVariant | None:
+    ranked: list[tuple[int, int, BuildContextVariant]] = []
+    for index, variant in enumerate(build.ContextVariants):
+        score = _context_score(variant, team_name, boss_name)
+        if score >= 0:
+            ranked.append((score, index, variant))
+    if not ranked:
+        return None
+    # Later variants of equal specificity win so an explicit newer row can replace
+    # an older duplicate without any hidden merge behavior.
+    return max(ranked, key=lambda item: (item[0], item[1]))[2]
+
+
+def _overlay_bar(base: list[str], override: list[str]) -> list[str]:
+    result = list(base)
+    if len(result) < 6:
+        result.extend([""] * (6 - len(result)))
+    for index, value in enumerate(list(override or [])[:6]):
+        text = str(value or "").strip()
+        if text:
+            result[index] = text
+    return result[:6]
+
+
+def _overlay_gear(base: GearSlot, override: GearSlot) -> GearSlot:
+    if override.is_empty:
+        return deepcopy(base)
+    result = deepcopy(base)
+    for field in (
+        "Set",
+        "Set2",
+        "Trait",
+        "Enchant",
+        "Weight",
+        "Quality",
+        "EnchantTier",
+        "Level",
+        "WeaponType",
+    ):
+        value = str(getattr(override, field, "") or "").strip()
+        if value:
+            setattr(result, field, value)
+    return result
+
+
+def apply_context_variant(build: PlayerBuild, variant: BuildContextVariant) -> PlayerBuild:
+    result = deepcopy(build)
+    result.ContextVariants = deepcopy(build.ContextVariants)
+
+    if str(variant.Mundus or "").strip():
+        result.Mundus = variant.Mundus
+    if str(variant.SecondMundus or "").strip():
+        result.SecondMundus = variant.SecondMundus
+
+    for slot in ARMOR_SLOTS:
+        override = variant.Armor.get(slot)
+        if not override:
+            continue
+        current = dict(result.Armor.get(slot) or {})
+        for key, value in override.items():
+            text = str(value or "").strip()
+            if text:
+                current[str(key)] = text
+        result.Armor[slot] = current
+
+    result.FrontBarWeapon = _overlay_gear(result.FrontBarWeapon, variant.FrontBarWeapon)
+    result.FrontBarOffHand = _overlay_gear(result.FrontBarOffHand, variant.FrontBarOffHand)
+    result.BackBarWeapon = _overlay_gear(result.BackBarWeapon, variant.BackBarWeapon)
+    result.BackBarOffHand = _overlay_gear(result.BackBarOffHand, variant.BackBarOffHand)
+    result.Necklace = _overlay_gear(result.Necklace, variant.Necklace)
+    result.Ring1 = _overlay_gear(result.Ring1, variant.Ring1)
+    result.Ring2 = _overlay_gear(result.Ring2, variant.Ring2)
+
+    if variant.ChampionPoints:
+        result.ChampionPoints = deepcopy(variant.ChampionPoints)
+    result.FrontBarSkills = _overlay_bar(result.FrontBarSkills, variant.FrontBarSkills)
+    result.BackBarSkills = _overlay_bar(result.BackBarSkills, variant.BackBarSkills)
+
+    if str(variant.Food or "").strip():
+        result.Food = variant.Food
+    if str(variant.Potion or "").strip():
+        result.Potion = variant.Potion
+    return result
+
+
+def resolve_build_context(
+    build: PlayerBuild,
+    *,
+    team_name: str = "",
+    boss_name: str = "",
+) -> PlayerBuild:
+    variant = select_context_variant(build, team_name=team_name, boss_name=boss_name)
+    if variant is None:
+        return deepcopy(build)
+    return apply_context_variant(build, variant)
+
+
+__all__ = [
+    "apply_context_variant",
+    "resolve_build_context",
+    "select_context_variant",
+]
