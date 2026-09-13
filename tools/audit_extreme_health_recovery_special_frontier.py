@@ -60,16 +60,22 @@ def main() -> int:
     )
     unresolved = tuple(dict.fromkeys((*parse_unresolved, *catalog.unresolved)))
     kinds = Counter(row.kind.value for row in catalog.branches)
+    semantic_denominator_proven = bool(
+        relevance.breakpoints_reviewed
+        and not unresolved
+        and len(rows) == len(catalog.branches)
+    )
 
     print("EXTREME HEALTH RECOVERY SPECIAL FRONTIER")
     print(f"database={database}")
     print("mode=description_driven_semantic_classification_not_scoring")
-    print(f"relevance_denominator_proven={relevance.denominator_proven}")
+    print(f"base_relevance_denominator_proven={relevance.denominator_proven}")
     print(f"relevance_unresolved_rows={len(relevance.unresolved)}")
     print(f"parsed_recovery_rows={len(rows)}")
     print(f"classified_branches={len(catalog.branches)}")
     print(f"positive_challengers={len(catalog.positive_challengers)}")
     print(f"reviewed_non_challengers={len(catalog.reviewed_non_challengers)}")
+    print(f"semantic_denominator_proven={semantic_denominator_proven}")
     print(f"denominator_classified={not unresolved and len(rows) == len(catalog.branches)}")
     print("branch_kinds=" + ", ".join(f"{key}:{value}" for key, value in sorted(kinds.items())))
     print()
@@ -95,7 +101,7 @@ def main() -> int:
     for item in unresolved:
         print(f"  unresolved: {item}")
 
-    if unresolved:
+    if unresolved or not semantic_denominator_proven:
         print("NEXT_STEP=close the remaining recovery semantic grammars before any record scoring")
         return 2
     print(
