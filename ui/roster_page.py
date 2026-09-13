@@ -40,6 +40,7 @@ _GENERIC_ASSIGNMENT_CHOICES: tuple[tuple[str, str], ...] = (
     ("Execute / Interrupts", "mechanic:execute_interrupts"),
     ("Interrupts", "mechanic:interrupts"),
     ("Portal", "mechanic:portal"),
+    ("Kite", "mechanic:kite"),
     ("Add Control", "mechanic:add_control"),
     ("Boss Positioning", "mechanic:boss_positioning"),
     ("Mechanic", "mechanic:general"),
@@ -108,7 +109,13 @@ class RosterPage(FoundryPage):
         self.tabs = QTabWidget()
         self.tabs.addTab(self._build_assignments_tab(), "ASSIGNMENTS")
         self.tabs.addTab(self._build_roster_records_tab(), "ROSTER RECORDS")
-        self.tabs.addTab(self._placeholder_tab("Encounter Overrides", "Per-boss assignment overrides will live here."), "ENCOUNTER OVERRIDES")
+        self.tabs.addTab(
+            self._placeholder_tab(
+                "Encounter Overrides",
+                "Per-boss assignment overrides will live here.",
+            ),
+            "ENCOUNTER OVERRIDES",
+        )
         self.add_workspace(self.tabs)
 
         self.status = FoundryStatusBar()
@@ -146,12 +153,26 @@ class RosterPage(FoundryPage):
 
         self.assignment_table = QTableWidget(0, 9)
         self.assignment_table.setHorizontalHeaderLabels([
-            "Player", "Role", "Class", "Build", "Primary Assignment",
-            "Secondary Assignment", "Gear Needed", "Notes", "Ready",
+            "Player",
+            "Role",
+            "Class",
+            "Build",
+            "Primary Assignment",
+            "Secondary Assignment",
+            "Gear Needed",
+            "Notes",
+            "Ready",
         ])
-        self.assignment_table.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked | QAbstractItemView.EditTrigger.EditKeyPressed)
-        self.assignment_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.assignment_table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.assignment_table.setEditTriggers(
+            QAbstractItemView.EditTrigger.DoubleClicked
+            | QAbstractItemView.EditTrigger.EditKeyPressed
+        )
+        self.assignment_table.setSelectionBehavior(
+            QAbstractItemView.SelectionBehavior.SelectRows
+        )
+        self.assignment_table.setSelectionMode(
+            QAbstractItemView.SelectionMode.SingleSelection
+        )
         self.assignment_table.verticalHeader().setVisible(False)
         self.assignment_table.horizontalHeader().setStretchLastSection(True)
         self.assignment_table.setMinimumHeight(430)
@@ -160,15 +181,25 @@ class RosterPage(FoundryPage):
 
         lower = QHBoxLayout()
         lower.setSpacing(8)
-        self.attention_card = FoundryCard("Needs Attention", "⚠").set_watermark("compass", 0.04)
-        self.team_card = FoundryCard("Team Summary", "◈").set_watermark("compass", 0.055)
-        self.notes_card = FoundryCard("Assignment Notes", "✎").make_parchment().set_watermark("feather", 0.12)
-        self.notes_card.addWidget(QLabel(
-            "• Everyone knows portal.\n"
-            "• Focus on survival at 25%.\n"
-            "• Execute clean.\n"
-            "• Put quick player notes here during prog."
-        ))
+        self.attention_card = FoundryCard("Needs Attention", "⚠").set_watermark(
+            "compass", 0.04
+        )
+        self.team_card = FoundryCard("Team Summary", "◈").set_watermark(
+            "compass", 0.055
+        )
+        self.notes_card = (
+            FoundryCard("Assignment Notes", "✎")
+            .make_parchment()
+            .set_watermark("feather", 0.12)
+        )
+        self.notes_card.addWidget(
+            QLabel(
+                "• Everyone knows portal.\n"
+                "• Focus on survival at 25%.\n"
+                "• Execute clean.\n"
+                "• Put quick player notes here during prog."
+            )
+        )
         self.notes_card.addWidget(QPushButton("Add Note"))
         lower.addWidget(self.attention_card, 2)
         lower.addWidget(self.team_card, 2)
@@ -224,7 +255,9 @@ class RosterPage(FoundryPage):
                 self.table.select_member_id(selected_id)
             self._populate_assignment_table()
             self._refresh_summary_cards()
-            self.status.info(f"{len(self.members)} roster member(s) loaded into Assignments.")
+            self.status.info(
+                f"{len(self.members)} roster member(s) loaded into Assignments."
+            )
         except Exception as exc:
             self.status.error(f"Failed to load roster: {exc}")
 
@@ -253,7 +286,9 @@ class RosterPage(FoundryPage):
             combo.setCurrentIndex(match)
         else:
             combo.setCurrentText(value)
-        combo.setToolTip("Start typing any part of an assignment name to filter the list.")
+        combo.setToolTip(
+            "Start typing any part of an assignment name to filter the list."
+        )
         return combo
 
     def _set_assignment_cell(self, row: int, column: int, value: str) -> None:
@@ -334,24 +369,32 @@ class RosterPage(FoundryPage):
         inactive = [m for m in self.members if m.Status != "Active"]
         unassigned = [m for m in self.members if not m.PrimaryRole]
         if not inactive and not unassigned:
-            self.attention_card.addWidget(QLabel("✓  No roster-level readiness issues detected."))
+            self.attention_card.addWidget(
+                QLabel("✓  No roster-level readiness issues detected.")
+            )
         else:
             for member in unassigned[:3]:
-                self.attention_card.addWidget(QLabel(f"⚠  {member.PlayerName}: role / assignment needed"))
+                self.attention_card.addWidget(
+                    QLabel(f"⚠  {member.PlayerName}: role / assignment needed")
+                )
             for member in inactive[:3]:
-                self.attention_card.addWidget(QLabel(f"⚠  {member.PlayerName}: {member.Status}"))
+                self.attention_card.addWidget(
+                    QLabel(f"⚠  {member.PlayerName}: {member.Status}")
+                )
 
         tanks = sum(1 for m in self.members if "tank" in m.PrimaryRole.lower())
         healers = sum(1 for m in self.members if "heal" in m.PrimaryRole.lower())
         dds = max(0, len(self.members) - tanks - healers)
         active = sum(1 for m in self.members if m.Status == "Active")
-        self.team_card.addWidget(QLabel(
-            f"Tanks      {tanks}\n"
-            f"Healers    {healers}\n"
-            f"Damage     {dds}\n"
-            f"Active     {active}/{len(self.members)}\n\n"
-            "Gear needs and build readiness will appear here as those systems are connected."
-        ))
+        self.team_card.addWidget(
+            QLabel(
+                f"Tanks      {tanks}\n"
+                f"Healers    {healers}\n"
+                f"Damage     {dds}\n"
+                f"Active     {active}/{len(self.members)}\n\n"
+                "Gear needs and build readiness will appear here as those systems are connected."
+            )
+        )
 
     def remove_selected_assignment(self):
         row = self.assignment_table.currentRow()
@@ -369,7 +412,9 @@ class RosterPage(FoundryPage):
             self.status.warning("The selected assignment is not linked to a roster record.")
             return
 
-        player_name = player_item.text().strip() if player_item is not None else "this player"
+        player_name = (
+            player_item.text().strip() if player_item is not None else "this player"
+        )
         confirm = QMessageBox.question(
             self,
             "Remove Assignment",
@@ -387,7 +432,9 @@ class RosterPage(FoundryPage):
             if self.record.model.Id == int(member_id):
                 self.record.clear()
             self.refresh()
-            self.status.success(f"Removed {player_name or 'player'} from Assignments.")
+            self.status.success(
+                f"Removed {player_name or 'player'} from Assignments."
+            )
         except Exception as exc:
             self.status.error(f"Remove failed: {exc}")
 
