@@ -2,14 +2,21 @@ from __future__ import annotations
 
 """Keep Rotation controls beside the concepts they configure.
 
-The canonical controls are created by their existing owners.  This layer only
-moves those exact widgets after page construction so canonical Generate keeps
-reading the same objects and values rather than a presentation-layer copy.
+The canonical controls are created by their existing owners. This layer moves
+those exact widgets after page construction so canonical Generate keeps reading
+the same objects and values rather than a presentation-layer copy. It also keeps
+Rotation consumables synchronized with the selected saved build while using the
+same canonical crafted/named potion catalogs as the Build Editor.
 """
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QGridLayout, QLabel
 
+from engine.config import get_data_dir
+from services.eso_database import EsoDatabase
+from services.reference_data_service import ReferenceDataService
 from ui.components.foundry_card import FoundryCard
+from ui.phase5_potion_picker_support import _choices, _configure_search
 
 _INSTALLED = False
 
@@ -128,13 +135,15 @@ def _rebuild_consumables(page) -> None:
         return
 
     # The potion selector is the exact control consumed by rotation_settings()
-    # and canonical_generation_request().  Food remains the saved build's food;
-    # rotation generation evaluates the selected saved build rather than a fake
-    # presentation-only food override.
+    # and canonical_generation_request(). Food remains the selected saved build's
+    # canonical food rather than becoming a presentation-only override.
     _clear_layout(card.body_layout, preserve=(page.potion_combo, page.potion_on_cooldown))
-    card.setMaximumHeight(205)
+    card.setMaximumHeight(225)
 
     page.food_value = page._value_label()
+    page.food_value.setToolTip(
+        "Food saved on the selected build. Rotation generation evaluates the selected build as-is."
+    )
     page.potion_value = page._value_label()  # compatibility mirror; not a second input
 
     card.addWidget(page._labelled_value("SAVED FOOD", page.food_value))
@@ -143,7 +152,8 @@ def _rebuild_consumables(page) -> None:
     potion_label.setProperty("sidebarHeading", True)
     card.addWidget(potion_label)
     page.potion_combo.setToolTip(
-        "Potion selection used by Generate Rotation. It initializes from the selected saved build."
+        "Potion used by Generate Rotation. Search crafted effect families or named/non-crafted potions. "
+        "The selected build's saved potion is selected automatically."
     )
     card.addWidget(page.potion_combo)
     page.potion_on_cooldown.setToolTip(
@@ -151,10 +161,87 @@ def _rebuild_consumables(page) -> None:
     )
     card.addWidget(page.potion_on_cooldown)
 
-    hint = QLabel("Food follows the selected saved build; potion use is configured here for the generated rotation.")
+    hint = QLabel(
+        "Food follows the selected saved build. Potion may be changed here for this generated rotation."
+    )
     hint.setWordWrap(True)
     hint.setProperty("muted", True)
     card.addWidget(hint)
+
+
+def _named_potion_choices() -> list[str]:
+    try:
+        reference = ReferenceDataService(EsoDatabase(get_data_dir() / "eso.db"))
+        return sorted(
+            {
+                str(name or "").strip()
+                for name in reference.list_potion_names()
+                if str(name or "").strip()
+            },
+            key=str.casefold,
+        )
+    except Exception:
+        return []
+
+
+def _select_combo_data(combo, value: str) -> None:
+    wanted = str(value or "").strip()
+    if not wanted:
+        combo.setCurrentIndex(0)
+        return
+    for index in range(combo.count()):
+        if str(combo.itemData(index) or "").strip().casefold() == wanted.casefold():
+            combo.setCurrentIndex(index)
+            return
+    # Preserve a legacy/free-text build value without pretending it came from a
+    # current canonical catalog.
+    combo.addItem(wanted, wanted)
+    combo.setCurrentIndex(combo.count() - 1)
+
+
+def _refresh_consumables(page) -> None:
+    build = page._selected_build()
+    food = str(getattr(build, "Food", "") or "Not selected") if build is not None else "—"
+    saved_potion = str(getattr(build, "Potion", "") or "").strip() if build is not None else ""
+
+    if hasattr(page, "food_value"):
+        page.food_value.setText(food)
+    if hasattr(page, "potion_value"):
+        page.potion_value.setText(saved_potion or "Not selected")
+
+    combo = page.potion_combo
+    combo.blockSignals(True)
+    combo.clear()
+    combo.addItem("None", "")
+
+    for choice in _choices():
+        combo.addItem(f"Crafted · {choice.label}", choice.canonical_id)
+        index = combo.count() - 1
+        combo.setItemData(
+            index,
+            f"Crafted potion effect family · {choice.formula_count} verified reagent formula(s)",
+            Qt.ItemDataRole.ToolTipRole,
+        )
+
+    crafted_ids = {
+        str(combo.itemData(index) or "").strip().casefold()
+        for index in range(combo.count())
+        if str(combo.itemData(index) or "").strip()
+    }
+    for name in _named_potion_choices():
+        if name.casefold() in crafted_ids:
+            continue
+        combo.addItem(f"Named · {name}", name)
+        index = combo.count() - 1
+        combo.setItemData(
+            index,
+            "Named/non-crafted potion from the canonical ESO entity catalog.",
+            Qt.ItemDataRole.ToolTipRole,
+        )
+
+    _select_combo_data(combo, saved_potion)
+    _configure_search(combo)
+    combo.blockSignals(False)
 
 
 def install() -> None:
@@ -165,15 +252,21 @@ def install() -> None:
     from ui.rotation_dashboard_canonical_page import CanonicalRotationDashboardPage
 
     original_init = CanonicalRotationDashboardPage.__init__
+    original_refresh_build_context = CanonicalRotationDashboardPage._refresh_build_context
+
+    def refresh_build_context_with_consumables(self, *args, **kwargs) -> None:
+        original_refresh_build_context(self, *args, **kwargs)
+        _refresh_consumables(self)
 
     def init_with_consolidated_controls(self, *args, **kwargs) -> None:
         original_init(self, *args, **kwargs)
         _rebuild_rotation_setup(self)
         _rebuild_consumables(self)
         # Re-apply the selected build after replacing the consumable display
-        # labels.  This also initializes the real potion generation selector.
+        # labels and populate the full canonical potion catalog.
         self._refresh_build_context()
 
+    CanonicalRotationDashboardPage._refresh_build_context = refresh_build_context_with_consumables
     CanonicalRotationDashboardPage.__init__ = init_with_consolidated_controls
     _INSTALLED = True
 
