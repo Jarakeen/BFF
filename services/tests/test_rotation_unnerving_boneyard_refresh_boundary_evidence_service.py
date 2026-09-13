@@ -88,6 +88,22 @@ def test_exact_timestamp_old_event_is_reported_separately(tmp_path: Path) -> Non
     assert report.exact_timestamp_old_events_at_new_cast == 1
 
 
+def test_numeric_alias_matches_cast_when_raw_name_is_missing(tmp_path: Path) -> None:
+    path = _database(tmp_path)
+    _event(path, index=1, timestamp=1000, event_type="cast", ability_id=115252, track=10)
+    _event(path, index=2, timestamp=1300, event_type="damage", ability_id=117809, track=10)
+    _event(path, index=3, timestamp=9000, event_type="damage", ability_id=117809, track=10)
+    _event(path, index=4, timestamp=10000, event_type="cast", ability_id=115252, track=20)
+    _event(path, index=5, timestamp=10350, event_type="damage", ability_id=117809, track=20)
+
+    service = RotationUnnervingBoneyardRefreshBoundaryEvidenceService(path)
+    service._cast_aliases = lambda: {115252}  # type: ignore[method-assign]
+    report = service.inspect()
+
+    assert report.consecutive_pairs == 1
+    assert report.comparable_pairs == 1
+
+
 def test_fails_closed_without_comparable_pairs(tmp_path: Path) -> None:
     path = _database(tmp_path)
     _event(path, index=1, timestamp=1000, event_type="cast", ability_id=1, track=10, name="Unnerving Boneyard")
