@@ -89,8 +89,33 @@ def test_reports_exact_same_track_offsets_and_active_end_clustering(tmp_path) ->
     assert report.first_offsets_seconds == (0.02,)
     assert report.last_offsets_seconds == (20.0,)
     assert report.within_cast_intervals_seconds == (1.0, 18.98)
+    assert report.same_target_intervals_seconds == (1.0, 18.98)
+    assert report.same_target_interval_sequence_count == 1
     assert report.near_active_end_count == 1
     assert report.unresolved == ()
+
+
+def test_same_target_intervals_do_not_mix_staggered_aoe_targets(tmp_path) -> None:
+    canonical = tmp_path / "eso.db"
+    logs = tmp_path / "logs.db"
+    _canonical(canonical)
+    _logs(logs)
+
+    _event(logs, index=1, timestamp=0, event_type="cast", ability_id=500, name="Detonating Siphon", cast_track_id=77)
+    _event(logs, index=2, timestamp=1000, event_type="damage", ability_id=118766, name="Siphon Damage", cast_track_id=77, target_id=99)
+    _event(logs, index=3, timestamp=1500, event_type="damage", ability_id=118766, name="Siphon Damage", cast_track_id=77, target_id=100)
+    _event(logs, index=4, timestamp=2000, event_type="damage", ability_id=118766, name="Siphon Damage", cast_track_id=77, target_id=99)
+    _event(logs, index=5, timestamp=2500, event_type="damage", ability_id=118766, name="Siphon Damage", cast_track_id=77, target_id=100)
+
+    report = _service(canonical, logs).inspect(
+        "detonating_siphon",
+        candidate_ability_id=118766,
+        active_window_seconds=20.0,
+    )
+
+    assert report.within_cast_intervals_seconds == (0.5, 0.5, 0.5)
+    assert report.same_target_intervals_seconds == (1.0, 1.0)
+    assert report.same_target_interval_sequence_count == 2
 
 
 def test_unlinked_candidate_remains_unresolved(tmp_path) -> None:
@@ -110,4 +135,6 @@ def test_unlinked_candidate_remains_unresolved(tmp_path) -> None:
 
     assert report.linked_cast_count == 0
     assert report.linked_event_count == 0
+    assert report.same_target_intervals_seconds == ()
+    assert report.same_target_interval_sequence_count == 0
     assert any("no exact same-cast-track observations" in message for message in report.unresolved)
