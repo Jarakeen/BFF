@@ -63,7 +63,7 @@ GROUP_COVERAGE_EFFECTS: tuple[RaidGroupEffectReference, ...] = (
     ),
     RaidGroupEffectReference(
         "Major Berserk", "Buff",
-        ("Ability/ultimate sources: Summon Storm Atronach, Lead From the Front", "Set sources include Kinras's Wrath and Tharriker's Strike"),
+        ("Ally-granting synergy: Charged Lightning from Summon Storm Atronach",),
         True,
     ),
     RaidGroupEffectReference(
