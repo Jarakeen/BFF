@@ -84,10 +84,19 @@ class RotationDurationRefinementService:
         demand_action_claims: tuple[DemandActionClaim, ...] = (),
         refresh_cadences: tuple[RotationRefreshIntervalPolicy, ...] = (),
     ) -> RotationDurationRefinement:
-        # The first projection supplies canonical duration rules used to refine
-        # the seed schedule. It is not returned as final evidence because its
-        # uptime/gap measurements describe the pre-refinement plan.
+        # Resolve finite-duration evidence from the authored seed first. Reviewed
+        # persistent toggles deliberately contribute no finite-duration rule.
         seed_projection = self.duration_analysis.analyze(plan)
+
+        # Persistent toggles must be normalized before ordinary duration scheduling.
+        # Otherwise a repeating seed can offer a toggle such as Magical Banner to the
+        # duration scheduler as a no-duration filler and bake bogus recasts/displacement
+        # diagnostics into the plan before a post-pass ever sees them.
+        normalized_seed = self.persistent_toggle_plan.normalize(
+            plan,
+            duration_rules=seed_projection.rules,
+        ).plan
+
         demand_windows = tuple(demands)
         refresh_leads = tuple(demand_refresh_leads)
         action_claims = tuple(demand_action_claims)
@@ -131,7 +140,7 @@ class RotationDurationRefinementService:
             else:
                 scheduler = PriorityAwareSoftActionDurationRotationScheduler(priorities)
             refined = scheduler.refine(
-                plan,
+                normalized_seed,
                 seed_projection.rules,
                 wait_decision=wait_decision,
                 soft_decision=wait_decision,
@@ -143,7 +152,7 @@ class RotationDurationRefinementService:
                 else SoftActionDurationRotationScheduler()
             )
             refined = scheduler.refine(
-                plan,
+                normalized_seed,
                 seed_projection.rules,
                 wait_decision=wait_decision,
                 soft_decision=wait_decision,
@@ -185,13 +194,13 @@ class RotationDurationRefinementService:
             else:
                 scheduler = self.scheduler
             refined = scheduler.refine(
-                plan,
+                normalized_seed,
                 seed_projection.rules,
             )
 
-        # Persistent toggles are not finite-duration refresh skills. Normalize the
-        # already-refined plan so the scheduler keeps its authoritative refresh and
-        # displacement work, then replace only repeated reviewed toggle activations.
+        # Keep a defensive final pass because due-refresh displacement can still move
+        # the preserved activation. No new repeated toggle should normally be created
+        # after seed normalization, but this preserves the semantic invariant.
         refined = self.persistent_toggle_plan.normalize(
             refined,
             duration_rules=seed_projection.rules,
