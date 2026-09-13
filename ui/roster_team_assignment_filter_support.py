@@ -24,33 +24,44 @@ def _legacy_team_names(value: str) -> set[str]:
     }
 
 
-def _canonical_team_players(page, team_name: str) -> set[str]:
+def _canonical_team_members(page, team_name: str) -> set[tuple[str, str]]:
     build_library = getattr(page, "build_library", None)
     if build_library is None:
         return set()
 
     catalog = build_library.canonical.catalog_service
-    players: set[str] = set()
+    members: set[tuple[str, str]] = set()
     for assignment in catalog.assignments_for_team(team_name):
         build = catalog.get_build(str(assignment.get("build_id") or "").strip()) or {}
         character_id = str(build.get("character_id") or "").strip()
         if not character_id:
             continue
+        character = catalog.get_character(character_id) or {}
         player = catalog.player_for_character(character_id) or {}
-        gamertag = str(player.get("gamertag") or "").strip()
+        gamertag = str(player.get("gamertag") or "").strip().casefold()
+        character_name = str(character.get("name") or "").strip().casefold()
         if gamertag:
-            players.add(gamertag.casefold())
-    return players
+            members.add((gamertag, character_name))
+    return members
 
 
-def _member_belongs_to_team(page, member, team_name: str, canonical_players: set[str]) -> bool:
+def _member_belongs_to_team(page, member, team_name: str, canonical_members: set[tuple[str, str]]) -> bool:
     team_key = team_name.strip().casefold()
     if not team_key:
         return True
     if team_key in _legacy_team_names(getattr(member, "Team", "")):
         return True
+
     player_name = str(getattr(member, "PlayerName", "") or "").strip().casefold()
-    return bool(player_name and player_name in canonical_players)
+    character_name = str(getattr(member, "CharacterName", "") or "").strip().casefold()
+    if not player_name:
+        return False
+
+    # Prefer exact Player + Character identity. A player-only fallback is kept
+    # for older personnel records that predate character identity persistence.
+    if (player_name, character_name) in canonical_members:
+        return True
+    return not character_name and any(player == player_name for player, _ in canonical_members)
 
 
 def _assignment_tab_index(page) -> int:
@@ -159,13 +170,13 @@ def install() -> None:
         if not team_name:
             return original_populate_assignment_table(self, *args, **kwargs)
 
-        canonical_players = _canonical_team_players(self, team_name)
+        canonical_members = _canonical_team_members(self, team_name)
         original_members = self.members
         try:
             self.members = [
                 member
                 for member in original_members
-                if _member_belongs_to_team(self, member, team_name, canonical_players)
+                if _member_belongs_to_team(self, member, team_name, canonical_members)
             ]
             return original_populate_assignment_table(self, *args, **kwargs)
         finally:
