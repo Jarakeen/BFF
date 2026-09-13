@@ -12,6 +12,22 @@ from services.rotation_dd_periodic_runtime_semantics_review_service import (
 )
 
 
+_PARKED: dict[tuple[str, int], str] = {
+    ("unnerving_boneyard", 1): (
+        "current corpus cannot resolve exact first-tick offset or magnitude policy"
+    ),
+    ("detonating_siphon", 1): (
+        "production geometry/timing remains fail-closed pending controlled spatial evidence"
+    ),
+    ("scalding_rune", 2): (
+        "current corpus has no stable-state magnitude controls"
+    ),
+    ("meteor", 2): (
+        "current corpus has no identifiable Meteor-family cast/damage evidence"
+    ),
+}
+
+
 def audit() -> int:
     entries = RotationDDPeriodicRuntimeSemanticsReviewService().load()
     print("=" * 76)
@@ -21,23 +37,37 @@ def audit() -> int:
     print()
 
     complete = 0
+    parked = 0
+    partial = 0
     for entry in entries:
         unresolved = entry.unresolved_executable_fields
+        key = (entry.skill_entity_id, entry.coefficient_number)
         if not unresolved:
             complete += 1
-        status = "COMPLETE" if not unresolved else "PARTIAL"
+            status = "COMPLETE"
+        elif key in _PARKED:
+            parked += 1
+            status = "PARKED"
+        else:
+            partial += 1
+            status = "PARTIAL"
+
         fields = "none" if not unresolved else ", ".join(unresolved)
         print(
             f"- {entry.skill_entity_id} coeff={entry.coefficient_number}: {status}"
         )
         print(f"  unresolved: {fields}")
+        if status == "PARKED":
+            print(f"  park reason: {_PARKED[key]}")
 
     print()
     print(f"Executable-complete reviews: {complete}")
-    print(f"Partial reviews: {len(entries) - complete}")
+    print(f"Active partial reviews: {partial}")
+    print(f"Parked reviews: {parked}")
     print(
-        "Guardrail: PARTIAL means reviewed evidence is intentionally incomplete; "
-        "this audit does not infer or promote missing mechanics."
+        "Guardrail: PARTIAL means evidence work remains active; PARKED means the "
+        "current evidence source has been exhausted or is non-discriminating. Neither "
+        "status infers or promotes missing mechanics."
     )
     return 0
 
