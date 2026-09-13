@@ -2,11 +2,12 @@ from __future__ import annotations
 
 """Inspect canonical evidence needed to bound Booming Voice Health Recovery.
 
-This audit intentionally does not guess a recovery ceiling. It prints the canonical
-Class Mastery tooltip, the shared Ultimate resource contract, and every matching
-skill/ability/rank row for Booming Voice / The Storm Voice so the Extreme engine can
-separate maximum stored Ultimate from the maximum amount actually spent by one
-qualifying activation.
+Booming Voice inherits The Storm Voice's ``Ultimate spent`` event.  This audit keeps
+stored Ultimate separate from the cost of the Ultimate ability actually cast, prints
+the canonical passive evidence, and enumerates the base-cost frontier of Ultimates a
+pure Dragonknight can legally own from native or shared combat skill lines.
+
+It deliberately does not treat the 500 stored-Ultimate cap as the spend value.
 """
 
 import argparse
@@ -20,6 +21,21 @@ if str(ROOT) not in sys.path:
 
 from services.class_mastery_repository import ClassMasteryRepository
 from services.eso_character_progression_contract import ULTIMATE_RULES
+
+
+_DK_NATIVE_LINES = frozenset({"ardent flame", "draconic power", "earthen heart"})
+_EXCLUDED_SHARED_LINES = frozenset(
+    {
+        "class mastery",
+        "crafting",
+        "racial",
+        "excavation",
+        "legerdemain",
+        "scrying",
+        "thieves guild",
+        "dark brotherhood",
+    }
+)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -41,6 +57,18 @@ def _select_existing(columns: set[str], names: tuple[str, ...], *, prefix: str =
     return result
 
 
+def _key(value: object) -> str:
+    return " ".join(str(value or "").strip().casefold().split())
+
+
+def _pure_dk_ultimate_candidate(row: sqlite3.Row) -> bool:
+    owner = _key(row["s_class_type"] if "s_class_type" in row.keys() else "")
+    line = _key(row["s_skill_line"] if "s_skill_line" in row.keys() else "")
+    if owner:
+        return owner == "dragonknight" and line in _DK_NATIVE_LINES
+    return bool(line and line not in _EXCLUDED_SHARED_LINES)
+
+
 def main() -> int:
     args = _parser().parse_args()
     database = Path(args.database)
@@ -53,12 +81,13 @@ def main() -> int:
 
     print("EXTREME HEALTH RECOVERY BOOMING VOICE CEILING EVIDENCE")
     print(f"database={database}")
-    print("mode=canonical_evidence_not_assumed_numeric_ceiling")
+    print("mode=canonical_cost_frontier_not_stored_ultimate_assumption")
     print()
     print("ULTIMATE CONTRACT")
     print(f"maximum_resource={ULTIMATE_RULES.maximum_resource}")
     print(f"one_ultimate_per_bar={ULTIMATE_RULES.one_ultimate_per_bar}")
     print(f"normal_cast_consumes_accumulated_resource={ULTIMATE_RULES.normal_cast_consumes_accumulated_resource}")
+    print("stored_resource_is_not_assumed_spend_value=True")
     print()
 
     print("CLASS MASTERY ROW")
@@ -76,6 +105,7 @@ def main() -> int:
         print("database_missing=True")
         return 2
 
+    ultimate_candidates: list[sqlite3.Row] = []
     with sqlite3.connect(database) as db:
         db.row_factory = sqlite3.Row
         skill_cols = _columns(db, "skill")
@@ -147,9 +177,58 @@ def main() -> int:
                 print("  " + repr(dict(row)))
         else:
             print("  <rank schema unavailable>")
+        print()
+
+        print("PURE DRAGONKNIGHT ULTIMATE BASE-COST FRONTIER")
+        required_rank = {"skill_id", "ability_id", "cost"}
+        if required_rank.issubset(rank_cols) and {"id", "class_type", "skill_line", "is_passive", "is_player"}.issubset(skill_cols) and {"ability_id", "base_mechanic"}.issubset(ability_cols):
+            rows = db.execute(
+                """
+                SELECT
+                    s.id AS s_id,
+                    s.name AS s_name,
+                    s.class_type AS s_class_type,
+                    s.skill_line AS s_skill_line,
+                    s.base_ability_id AS s_base_ability_id,
+                    sr.ability_id AS sr_ability_id,
+                    sr.rank AS sr_rank,
+                    COALESCE(sr.morph, 0) AS sr_morph,
+                    sr.cost AS sr_cost,
+                    COALESCE(NULLIF(sr.raw_name, ''), NULLIF(a.name, ''), s.name) AS resolved_name,
+                    a.base_mechanic AS a_base_mechanic
+                FROM skill_rank sr
+                JOIN skill s ON s.id = sr.skill_id
+                JOIN ability a ON a.ability_id = sr.ability_id
+                WHERE COALESCE(s.is_player, 0) != 0
+                  AND COALESCE(s.is_passive, 0) = 0
+                  AND COALESCE(a.base_mechanic, 0) = 8
+                  AND sr.cost IS NOT NULL
+                ORDER BY CAST(sr.cost AS REAL) DESC, LOWER(COALESCE(NULLIF(sr.raw_name, ''), NULLIF(a.name, ''), s.name)), sr.ability_id
+                """
+            ).fetchall()
+            ultimate_candidates = [row for row in rows if _pure_dk_ultimate_candidate(row)]
+            if not ultimate_candidates:
+                print("  <no cost-bearing ultimate candidates>")
+            for row in ultimate_candidates:
+                print("  " + repr(dict(row)))
+        else:
+            print("  <ultimate cost schema unavailable>")
 
     print()
-    print("NEXT_STEP=determine whether Booming Voice scales from stored Ultimate, actual cast cost, or another explicit spend value; only then assign its numeric ceiling")
+    numeric_costs: list[float] = []
+    for row in ultimate_candidates:
+        try:
+            numeric_costs.append(float(row["sr_cost"]))
+        except (TypeError, ValueError):
+            continue
+    max_cost = max(numeric_costs) if numeric_costs else None
+    print(f"ultimate_candidates_reviewed={len(ultimate_candidates)}")
+    print(f"maximum_legal_base_ultimate_cost={max_cost if max_cost is not None else '<unresolved>'}")
+    if max_cost is not None:
+        print(f"booming_voice_flat_ceiling_if_cost_semantics={max_cost * 5.0:.3f}")
+        print("NEXT_STEP=confirm cost semantics against The Storm Voice event contract, then wire this proven cost ceiling into route dominance")
+    else:
+        print("NEXT_STEP=resolve missing Ultimate cost evidence before assigning Booming Voice a numeric ceiling")
     return 0
 
 
