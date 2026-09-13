@@ -56,6 +56,7 @@ class ExtremeGearSetObjectiveService:
         "max_health",
         "max_magicka",
         "max_stamina",
+        "health_recovery",
         "magicka_recovery",
         "stamina_recovery",
         "physical_resistance",
@@ -68,10 +69,6 @@ class ExtremeGearSetObjectiveService:
         "sneak_cost_reduction",
     )
     _MAX_RESOURCE_OBJECTIVES = frozenset({"max_health", "max_magicka", "max_stamina"})
-    # These conditions are explicit legal states.  For objective *relevance* we
-    # only need to know that a positive resource bonus can exist under the state;
-    # the later structural/runtime scorer still owns proving the state is active
-    # for any winning candidate.
     _MAX_RESOURCE_RELEVANCE_CONDITIONS = frozenset(
         {
             "armor_ability_slotted",
@@ -90,6 +87,7 @@ class ExtremeGearSetObjectiveService:
         "max_health": StatId.MAX_HEALTH,
         "max_magicka": StatId.MAX_MAGICKA,
         "max_stamina": StatId.MAX_STAMINA,
+        "health_recovery": StatId.HEALTH_RECOVERY,
         "magicka_recovery": StatId.MAGICKA_RECOVERY,
         "stamina_recovery": StatId.STAMINA_RECOVERY,
         "physical_resistance": StatId.PHYSICAL_RESISTANCE,
