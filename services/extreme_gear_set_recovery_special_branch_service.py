@@ -97,6 +97,14 @@ class ExtremeGearSetRecoverySpecialBranchService:
         if before:
             return float(before.group("value"))
 
+        # Parallel reward clauses: "gain 7-341 Weapon and Spell Damage and 7-341 Health Recovery".
+        parallel = re.search(
+            rf"\band\s+(?:\d+(?:\.\d+)?-)?(?P<value>\d+(?:\.\d+)?)\s+(?:{target}|{shared})\b",
+            clause,
+        )
+        if parallel:
+            return float(parallel.group("value"))
+
         # Amount after the stat: "Health Recovery by 8-356" / "increased by 18-800".
         after = re.search(
             rf"(?:{target}|{shared})\b[^.;]{{0,45}}?\b(?:by|of)\s+"
@@ -199,6 +207,7 @@ class ExtremeGearSetRecoverySpecialBranchService:
             "reducing their health recovery",
             "health recovery are reduced",
             "health recovery is reduced",
+            "health recovery reduced by",
             "reduce your health, magicka, and stamina recovery",
         )
         if any(marker in text for marker in negative_markers):
