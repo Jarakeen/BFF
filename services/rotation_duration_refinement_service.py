@@ -57,6 +57,11 @@ class RotationDurationRefinement:
 class RotationDurationRefinementService:
     """Resolve canonical recast semantics, refine a plan, then analyze the result."""
 
+    _PRIORITY_FILLER_UNRESOLVED = "exact priority ranking is unresolved"
+    _PRIORITY_FILLER_ASSUMPTION = (
+        "same-bar no-duration filler selection uses explicit ability priorities when supplied"
+    )
+
     def __init__(
         self,
         database_path: Path = DEFAULT_DATABASE,
@@ -193,6 +198,9 @@ class RotationDurationRefinementService:
                 seed_projection.rules,
             )
 
+        if priorities is not None:
+            refined = self._resolve_priority_filler_diagnostics(refined)
+
         unresolved = self._dedupe(
             tuple(refined.unresolved) + tuple(seed_projection.unresolved)
         )
@@ -209,6 +217,32 @@ class RotationDurationRefinementService:
         return RotationDurationRefinement(
             plan=refined,
             duration_projection=final_projection,
+        )
+
+    @classmethod
+    def _resolve_priority_filler_diagnostics(cls, plan: RotationPlan) -> RotationPlan:
+        removed = tuple(
+            item
+            for item in plan.unresolved
+            if cls._PRIORITY_FILLER_UNRESOLVED in str(item).casefold()
+        )
+        if not removed:
+            return plan
+        unresolved = tuple(
+            item
+            for item in plan.unresolved
+            if cls._PRIORITY_FILLER_UNRESOLVED not in str(item).casefold()
+        )
+        assumptions = cls._dedupe(
+            tuple(plan.assumptions) + (cls._PRIORITY_FILLER_ASSUMPTION,)
+        )
+        return RotationPlan(
+            character_name=plan.character_name,
+            build_name=plan.build_name,
+            duration_seconds=plan.duration_seconds,
+            actions=plan.actions,
+            assumptions=assumptions,
+            unresolved=unresolved,
         )
 
     @staticmethod
