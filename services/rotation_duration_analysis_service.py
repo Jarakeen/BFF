@@ -30,14 +30,14 @@ class RotationDurationProjection:
 
 
 class RotationDurationAnalysisService:
-    """Resolve build-effective skill durations and audit rotation recasts.
+    """Resolve build-effective recast semantics and audit finite durations.
 
     Canonical skill duration remains the fallback evidence. When an upstream
     authoritative build/effect resolver supplies an already-resolved effective
     duration, that value is used for recast and uptime math instead. Reviewed
-    persistent toggles are explicitly excluded from finite-duration resolution:
-    they have no timed refresh obligation, and their activation lifetime belongs to
-    runtime toggle state rather than a fabricated duration row.
+    persistent toggles emit explicit persistent recast rules with no fabricated
+    finite duration. Those rules participate in scheduling but are excluded from the
+    finite-duration analyzer because exact toggle lifetime belongs to runtime state.
     """
 
     def __init__(
@@ -74,18 +74,22 @@ class RotationDurationAnalysisService:
             if not action.name:
                 continue
 
-            scribed = self.scribed_skill_semantics.resolve(action.name)
-            if scribed is not None and scribed.persistent_toggle:
-                # Persistent toggles are deliberately not represented as long fake
-                # durations. Their repeated-activation policy is handled by the
-                # persistent-toggle plan layer, and exact uptime belongs to runtime
-                # combat-state/resource evidence.
-                continue
-
             key = (action.name.casefold(), action.bar)
             if key in seen:
                 continue
             seen.add(key)
+
+            scribed = self.scribed_skill_semantics.resolve(action.name)
+            if scribed is not None and scribed.persistent_toggle:
+                rules.append(
+                    RotationRecastRule(
+                        skill_name=scribed.result_name,
+                        duration_seconds=None,
+                        bar=action.bar,
+                        persistent=True,
+                    )
+                )
+                continue
 
             resolution = self.duration_repository.resolve_name(action.name)
             if resolution.duration_seconds is None:
@@ -115,7 +119,8 @@ class RotationDurationAnalysisService:
                 )
             )
 
-        analysis = self.analyzer.analyze(plan, tuple(rules))
+        finite_rules = tuple(rule for rule in rules if not rule.persistent)
+        analysis = self.analyzer.analyze(plan, finite_rules)
         unresolved.extend(analysis.unresolved)
         return RotationDurationProjection(
             analysis=analysis,
