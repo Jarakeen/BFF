@@ -32,7 +32,7 @@ FOCUS_COMPATIBILITY: dict[str, tuple[str, ...]] = {
     'Flame Damage': ('Elemental Explosion', 'Vault', 'Wield Soul', 'Soul Burst', 'Torchbearer', "Ulfsild's Contingency", 'Banner Bearer'),
     'Frost Damage': ('Elemental Explosion', 'Shield Throw', 'Traveling Knife', 'Wield Soul', 'Soul Burst', 'Torchbearer', "Ulfsild's Contingency", 'Trample'),
     'Generate Ultimate': ("Mender's Bond", 'Torchbearer'),
-    'Healing': ("Mender's Bond", 'Smash', 'Vault', 'Wield Soul', 'Soul Burst', 'Torchbearer', "Ulfsild's Contingency"),
+    'Healing': ("Mender's Bond", 'Smash', 'Vault', 'Wield Soul', 'Torchbearer', "Ulfsild's Contingency"),
     'Immobilize': ("Mender's Bond", 'Shield Throw', 'Vault', 'Soul Burst', "Ulfsild's Contingency", 'Banner Bearer'),
     'Knockback': ('Elemental Explosion', 'Shield Throw', 'Smash', 'Torchbearer', "Ulfsild's Contingency", 'Trample'),
     'Magic Damage': ('Elemental Explosion', "Mender's Bond", 'Shield Throw', 'Smash', 'Traveling Knife', 'Wield Soul', 'Soul Burst', "Ulfsild's Contingency", 'Banner Bearer', 'Trample'),
@@ -73,7 +73,7 @@ SIGNATURE_COMPATIBILITY: dict[str, tuple[str, ...]] = {
 
 AFFIX_COMPATIBILITY: dict[str, tuple[str, ...]] = {
     'Berserk': ('Smash', 'Traveling Knife', 'Banner Bearer'),
-    'Breach': ("Mender's Bond", 'Smash', 'Wield Soul', 'Soul Burst', 'Torchbearer', "Ulfsild's Contingency"),
+    'Breach': ("Mender's Bond", 'Smash', 'Wield Soul', 'Torchbearer', "Ulfsild's Contingency"),
     'Brittle': ('Elemental Explosion', "Mender's Bond"),
     'Brutality and Sorcery': ('Elemental Explosion', 'Wield Soul', 'Banner Bearer'),
     'Courage': ("Mender's Bond", 'Soul Burst', 'Banner Bearer'),
@@ -127,6 +127,24 @@ def compatible_affix(grimoire: str) -> list[str]:
 
 def result_name(grimoire: str, focus: str) -> str:
     return RESULT_NAMES.get((str(grimoire).strip(), str(focus).strip()), '')
+
+
+def result_identity(result_name_value: str) -> tuple[str, str] | None:
+    """Return the verified ``(Grimoire, Focus)`` identity for a result name.
+
+    Result-name reverse lookup is exact against explicitly reviewed catalogue rows.
+    It never tries to synthesize a Grimoire or Focus from arbitrary display text.
+    """
+
+    target = " ".join(str(result_name_value or "").strip().casefold().split())
+    if not target:
+        return None
+    matches = tuple(
+        identity
+        for identity, display_name in RESULT_NAMES.items()
+        if " ".join(str(display_name or "").strip().casefold().split()) == target
+    )
+    return matches[0] if len(matches) == 1 else None
 
 
 def skill_line_for_grimoire(grimoire: str) -> str:
