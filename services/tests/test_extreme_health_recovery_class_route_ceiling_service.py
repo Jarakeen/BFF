@@ -24,13 +24,23 @@ def test_scores_mastery_free_class_line_ceiling():
     assert row.score_complete is True
 
 
-def test_scores_sorcerer_mastery_when_semantics_are_exact():
+def test_scores_sorcerer_mastery_from_canonical_extreme_semantics():
     row = ExtremeHealthRecoveryClassRouteCeilingService.score_signature(
         _signature("storm_calling", mastery="sphere_of_influence"),
         wellspring_slot_ceiling=6,
     )
 
-    assert row.class_flat_ceiling == 366.0
+    assert row.class_flat_ceiling == 141.0 + 225.0
+    assert row.score_complete is True
+
+
+def test_scores_templar_mastery_from_canonical_extreme_semantics():
+    row = ExtremeHealthRecoveryClassRouteCeilingService.score_signature(
+        _signature(mastery="devout_guardian"),
+        wellspring_slot_ceiling=6,
+    )
+
+    assert row.class_flat_ceiling == 300.0
     assert row.score_complete is True
 
 
