@@ -59,7 +59,7 @@ def _raid_schedule_card(self, _build=None) -> FoundryCard:
         for row, schedule in enumerate(schedules[:6]):
             team = QLabel(schedule.TeamName)
             team.setProperty("overviewGoalName", True)
-            card.addWidget(team)
+            grid.addWidget(team, row, 0)
 
             slots = list(schedule.effective_slots)
             day_text = "\n".join(slot.Day for slot in slots)
