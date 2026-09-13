@@ -784,3 +784,21 @@ The snapshot also notes that Minor and Major Heroism share the same 1.5-second e
 **Layman’s version:** “four Ultimate per second” is not a universal Lego brick. One version may require a monster set, another becoming a Vampire, and another may give the Ultimate to everybody except you.
 
 **For BFF:** the calculator discovers the denominator. Every surviving source must still earn canonical timing, self-targeting, and legal-build evidence before it can fill Strategic Reserve’s 114-Ultimate gap.
+
+
+---
+
+## 2026-09-13 — Ultimate recipient and cast clauses outrank headline generation
+
+**Pillager's Profit** grants its Ultimate to other group members, so the caster cannot
+use it to refill their own **Strategic Reserve**. **Cryptcanon Vestments** prevents
+the normal Ultimate cast required by the Booming Voice route. Neither source belongs
+in the self-refill sum merely because its tooltip contains the word “Ultimate.”
+
+**Blessing at the Peak** is legal on the pure Dragonknight route, but its one Ultimate
+per six seconds yields only four witnessed post-cast triggers before the 24.999-second
+score. It reduces the reviewed deficit from **114 to 110**; it does not close it.
+
+**For BFF:** recipient identity, cast legality, and an explicit trigger timeline are
+canonical gates. The remaining Vampire, gear, skill, and weapon-trait sources stay as
+separate whole-build search states.

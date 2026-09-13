@@ -16,6 +16,10 @@ from services.ultimate_source_reference_frontier_service import (
     UltimateSourceReferenceFrontierService,
     UltimateSourceRouteStatus,
 )
+from services.ultimate_source_runtime_legality_service import (
+    UltimateSourceRuntimeLegalityService,
+    UltimateSourceRuntimeStatus,
+)
 
 
 DEFAULT_SOURCE = ROOT / "math" / "ESO Ultimate Generation Calculator _ U50 _ Hyperioxes.htm"
@@ -119,14 +123,54 @@ def main() -> int:
             UltimateSourceRouteStatus.EXACT_REVIEW_REQUIRED,
         }
     )
+    reviews = tuple(
+        (
+            row,
+            UltimateSourceRuntimeLegalityService.review(
+                row.source_id,
+                canonical_records=_canonical_matches(database, row.label),
+                trigger_seconds=(1.0, 7.0, 13.0, 19.0)
+                if row.source_id == "blessing_peak"
+                else (),
+            ),
+        )
+        for row in candidates
+    )
+    exact_counts = Counter(review.status.value for _, review in reviews)
+    reviewed_increment = sum(
+        review.generated_ultimate_ceiling for _, review in reviews
+    )
+    remaining_gap = max(0.0, 114.0 - reviewed_increment)
+
     print()
-    print(f"remaining_route_candidates={len(candidates)}")
-    print("remaining_candidate_ids=" + repr(tuple(row.source_id for row in candidates)))
+    print("EXACT CANONICAL RUNTIME REVIEW")
+    print(
+        "exact_status_counts="
+        + ", ".join(f"{key}:{value}" for key, value in sorted(exact_counts.items()))
+    )
+    for row, review in reviews:
+        print(
+            f"  {row.source_id}: status={review.status.value} "
+            f"generated_ultimate_ceiling={review.generated_ultimate_ceiling:.3f} "
+            f"reason={review.reason}"
+        )
+    unresolved_statuses = {
+        UltimateSourceRuntimeStatus.SEARCH_STATE_MUTATION,
+        UltimateSourceRuntimeStatus.CANONICAL_EVIDENCE_REQUIRED,
+    }
+    unresolved = tuple(
+        row for row, review in reviews if review.status in unresolved_statuses
+    )
+    print(f"reviewed_compatible_increment={reviewed_increment:.3f}")
+    print(f"remaining_ultimate_gap={remaining_gap:.3f}")
+    print(f"remaining_route_candidates={len(unresolved)}")
+    print("remaining_candidate_ids=" + repr(tuple(row.source_id for row in unresolved)))
     print("ultimate_source_denominator_discovered=True")
+    print("ultimate_source_exact_review_applied=True")
     print("ultimate_source_numeric_legality_proven=False")
     print(
-        "NEXT_STEP=review exact canonical trigger/cadence/self-targeting and "
-        "equipment or Vampire tradeoffs for the remaining route candidates"
+        "NEXT_STEP=score the seven surviving skill, Vampire, equipment, and "
+        "weapon-trait mutations against the Health Recovery incumbent"
     )
     return 2
 

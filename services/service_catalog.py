@@ -527,6 +527,24 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="mechanics.ultimate_source_runtime_legality",
+        domain="mechanics",
+        purpose=(
+            "Apply exact recipient, cast, cadence, and route-legality review to "
+            "Ultimate-generation candidates."
+        ),
+        implementation_path="services.ultimate_source_runtime_legality_service",
+        inputs=("UltimateSourceId", "CanonicalSourceRecord", "UltimateTriggerWitness"),
+        outputs=("UltimateSourceRuntimeReview",),
+        responsibilities=("ultimate_source_runtime_legality",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Equipment, Vampire, and weapon-trait mutations remain explicit search "
+            "states until whole-build scoring proves them."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.health_recovery_runtime_compatibility",
         domain="extreme",
         purpose=(
