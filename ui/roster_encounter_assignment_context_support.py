@@ -50,6 +50,17 @@ def selected_encounter_name(page) -> str:
     return str(combo.currentText() or "").strip()
 
 
+def _reset_encounter_to_default(page) -> None:
+    combo = getattr(page, "assignment_encounter_combo", None)
+    if combo is None or combo.currentIndex() == 0:
+        return
+    combo.blockSignals(True)
+    try:
+        combo.setCurrentIndex(0)
+    finally:
+        combo.blockSignals(False)
+
+
 def _set_enabled_state(page) -> None:
     combo = getattr(page, "assignment_encounter_combo", None)
     if combo is None:
@@ -101,10 +112,13 @@ def install() -> None:
         return
 
     from ui.themed_roster_page import RosterPage
+    from ui import roster_team_assignment_filter_support as team_filter
 
     original_build_ui = RosterPage._build_ui
     original_build_assignments_tab = RosterPage._build_assignments_tab
     original_populate_assignment_table = RosterPage._populate_assignment_table
+    original_team_selector_changed = team_filter._team_selector_changed
+    original_select_team_for_assignments = team_filter._select_team_for_assignments
 
     def build_ui_without_duplicate_override_tab(self):
         result = original_build_ui(self)
@@ -140,9 +154,21 @@ def install() -> None:
         _set_enabled_state(self)
         return original_populate_assignment_table(self, *args, **kwargs)
 
+    def team_selector_changed_with_safe_default(page, index: int) -> None:
+        _reset_encounter_to_default(page)
+        original_team_selector_changed(page, index)
+        _set_enabled_state(page)
+
+    def select_team_for_assignments_with_safe_default(page, team_name: str) -> None:
+        _reset_encounter_to_default(page)
+        original_select_team_for_assignments(page, team_name)
+        _set_enabled_state(page)
+
     RosterPage._build_ui = build_ui_without_duplicate_override_tab
     RosterPage._build_assignments_tab = build_assignments_tab_with_encounter_context
     RosterPage._populate_assignment_table = populate_assignment_table_with_encounter_context
+    team_filter._team_selector_changed = team_selector_changed_with_safe_default
+    team_filter._select_team_for_assignments = select_team_for_assignments_with_safe_default
     _INSTALLED = True
 
 
