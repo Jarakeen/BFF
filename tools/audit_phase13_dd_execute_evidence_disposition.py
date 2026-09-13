@@ -72,6 +72,7 @@ def main() -> int:
     print("-------")
     for key in (
         "threshold_activation_supported",
+        "continuous_amplification_supported",
         "continuous_amplification_unresolved",
         "no_threshold_evidence",
         "identity_or_source_unresolved",
@@ -80,7 +81,11 @@ def main() -> int:
     print()
     if counts.get("continuous_amplification_unresolved", 0):
         print(
-            "NEXT_STEP=positive continuous execute evidence exists, but interpolation semantics remain source-unverified; do not award maximum bonus"
+            "NEXT_STEP=some continuous execute evidence remains source-unverified; keep only those exact skills fail-closed"
+        )
+    elif counts.get("continuous_amplification_supported", 0):
+        print(
+            "NEXT_STEP=reviewed continuous execute evidence is runtime-supported; validate exact component damage and Generate-time replacement with explicit target Health"
         )
     elif counts.get("threshold_activation_supported", 0):
         print(
