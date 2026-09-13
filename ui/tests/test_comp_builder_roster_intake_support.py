@@ -12,6 +12,16 @@ def test_roster_intake_carries_players_classes_and_roles_into_comp_maker():
     assert "CompBuilderPage.apply_roster_team_context = apply_roster_team_context" in source
 
 
+def test_roster_intake_matches_dd_and_places_known_roles_before_unresolved():
+    source = Path("ui/comp_builder_roster_intake_support.py").read_text(encoding="utf-8")
+
+    assert 'if "dd" in words:' in source
+    assert 'return "damage"' in source
+    assert "known = [member for member in members" in source
+    assert "unknown = [member for member in members" in source
+    assert "if _row_role(page, r) == wanted" in source
+
+
 def test_send_to_comp_maker_uses_roster_intake_bridge():
     source = Path("ui/comp_builder_roster_intake_support.py").read_text(encoding="utf-8")
 
