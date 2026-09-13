@@ -46,11 +46,13 @@ class RotationDDPeriodicEsoLogsCandidatePersistenceService:
     the next same-source cast, the reviewed active-window end, or the end of imported
     fight evidence, whichever comes first.
 
-    Threshold counts are conditioned on exposure. A cast is eligible for a threshold
-    only when its observable ownership window actually reaches that offset. This avoids
-    treating recast-censored or fight-end-censored casts as evidence that a candidate
-    failed to persist. Observed-at-or-after counts still do not prove uninterrupted
-    uptime between observations.
+    Threshold rates are conditioned on exposure within the linked-candidate cohort.
+    A cast enters a candidate's cohort only when that candidate is observed on the same
+    source and cast track during the censored ownership window. It is eligible for a
+    threshold only when that ownership window remains observable through the threshold.
+    This avoids treating recast-censored, fight-end-censored, or candidate-absent casts
+    as evidence that an already-observed candidate failed to persist. Observed-at-or-
+    after counts still do not prove uninterrupted uptime between observations.
     """
 
     _CAST_TYPES = ("cast", "completecast", "begincast")
@@ -203,8 +205,9 @@ class RotationDDPeriodicEsoLogsCandidatePersistenceService:
 
             for candidate_id in candidates:
                 offsets = by_candidate.get(candidate_id, ())
-                if offsets:
-                    last_offsets_by_candidate[candidate_id].append(max(offsets))
+                if not offsets:
+                    continue
+                last_offsets_by_candidate[candidate_id].append(max(offsets))
                 for threshold in self._THRESHOLDS:
                     if observable_seconds >= threshold:
                         eligible_counts_by_candidate[candidate_id][threshold] += 1
