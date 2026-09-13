@@ -196,6 +196,29 @@ EXTREME_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.max_resource_gear_scoring_frontier",
+        domain="extreme",
+        purpose=(
+            "Collapse dual-bar-admissible active gear witnesses only when canonical objective semantics "
+            "prove that they must score identically for a max-resource objective."
+        ),
+        implementation_path="services.extreme_max_resource_gear_scoring_frontier_service",
+        inputs=(
+            "ExtremeNamedGearSetRealization",
+            "ExtremeGearSetObjectiveRelevanceCatalog",
+        ),
+        outputs=("ExtremeMaxResourceGearScoringFrontierResult",),
+        dependencies=("extreme.max_resource_named_gear_candidate_realization_adapter",),
+        responsibilities=("extreme_max_resource_gear_scoring_frontier",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "The full legality denominator remains reviewed upstream. Ordinary mechanic-complete identities "
+            "may share one scorer representative; unresolved, conditional, search-state, and weapon semantics "
+            "remain explicit and fail closed."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.max_health_special_named_gear_branches",
         domain="extreme",
         purpose=(
