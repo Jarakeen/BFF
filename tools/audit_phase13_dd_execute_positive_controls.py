@@ -50,24 +50,36 @@ def main() -> int:
     print(f"Saved DD builds reviewed: {len(controls)}")
     print()
 
-    positive_builds = 0
-    continuous_builds = 0
+    supported_builds = 0
+    threshold_builds = 0
+    continuous_supported_builds = 0
+    continuous_unresolved_builds = 0
     counts: Counter[str] = Counter()
     for control in controls:
-        positives = control.threshold_supported
-        continuous = control.continuous_unresolved
-        if not args.show_all and not positives and not continuous:
+        threshold = control.threshold_supported
+        continuous_supported = control.continuous_supported
+        continuous_unresolved = control.continuous_unresolved
+        if (
+            not args.show_all
+            and not threshold
+            and not continuous_supported
+            and not continuous_unresolved
+        ):
             continue
-        if positives:
-            positive_builds += 1
-        if continuous:
-            continuous_builds += 1
+        if control.is_positive_execute_control:
+            supported_builds += 1
+        if threshold:
+            threshold_builds += 1
+        if continuous_supported:
+            continuous_supported_builds += 1
+        if continuous_unresolved:
+            continuous_unresolved_builds += 1
         print(
             f"{control.character_name or 'unnamed'} | {control.build_name or 'unnamed'} "
             f"| role={control.role or 'unresolved'}"
         )
-        if positives:
-            for row in positives:
+        if threshold:
+            for row in threshold:
                 thresholds = sorted(
                     {
                         component.threshold
@@ -77,35 +89,46 @@ def main() -> int:
                 )
                 threshold_text = ",".join(f"{value * 100:g}%" for value in thresholds) or "reviewed"
                 print(
-                    f"  POSITIVE {row.bar}:{row.slot} | {row.skill_name} "
+                    f"  THRESHOLD-SUPPORTED {row.bar}:{row.slot} | {row.skill_name} "
                     f"| threshold={threshold_text}"
                 )
                 counts["threshold_activation_supported"] += 1
-        if continuous:
-            for row in continuous:
+        if continuous_supported:
+            for row in continuous_supported:
+                print(
+                    f"  CONTINUOUS-SUPPORTED {row.bar}:{row.slot} | {row.skill_name}"
+                )
+                counts["continuous_amplification_supported"] += 1
+        if continuous_unresolved:
+            for row in continuous_unresolved:
                 print(
                     f"  CONTINUOUS-UNRESOLVED {row.bar}:{row.slot} | {row.skill_name}"
                 )
                 counts["continuous_amplification_unresolved"] += 1
-        if not positives and not continuous:
+        if not threshold and not continuous_supported and not continuous_unresolved:
             print("  execute_control_evidence=none")
         print()
 
     print("SUMMARY")
     print("-------")
-    print(f"positive_threshold_builds={positive_builds}")
-    print(f"continuous_unresolved_builds={continuous_builds}")
+    print(f"positive_execute_builds={supported_builds}")
+    print(f"positive_threshold_builds={threshold_builds}")
+    print(f"continuous_supported_builds={continuous_supported_builds}")
+    print(f"continuous_unresolved_builds={continuous_unresolved_builds}")
     print(f"threshold_activation_supported_skills={counts['threshold_activation_supported']}")
+    print(
+        f"continuous_amplification_supported_skills={counts['continuous_amplification_supported']}"
+    )
     print(
         f"continuous_amplification_unresolved_skills={counts['continuous_amplification_unresolved']}"
     )
-    if positive_builds:
+    if supported_builds:
         print(
-            "NEXT_STEP=use one listed positive saved DD as the production Generate execute control with an explicit target-Health timeline"
+            "NEXT_STEP=use one listed supported saved DD as a production Generate execute control with an explicit target-Health timeline"
         )
     else:
         print(
-            "NEXT_STEP=no saved DD positive threshold control exists; add a synthetic production-boundary fixture rather than altering a real saved build"
+            "NEXT_STEP=no saved DD supported execute control exists; retain synthetic production-boundary fixtures rather than altering a real saved build"
         )
     return 0
 
