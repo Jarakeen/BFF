@@ -3,8 +3,8 @@ from __future__ import annotations
 """Numeric Health Recovery ceilings for already proof-reduced class-route signatures.
 
 This layer is intentionally narrower than whole-record scoring. It scores only
-reviewed class-line recovery mechanics and refuses to flatten unresolved Class
-Mastery runtime formulas into a fake exact value.
+reviewed class-line recovery mechanics and Class Mastery ceilings whose legal
+runtime maxima have been independently proven.
 """
 
 from dataclasses import dataclass
@@ -25,6 +25,17 @@ _LINE_FLAT = {
     "storm_calling": 141.0,         # Capacitor
 }
 _WELLSPRING_PER_SLOTTED = 81.0
+
+# U50 canonical Ultimate-cost frontier for a pure Dragonknight. The dedicated
+# Booming Voice audit proves that all 46 legal Ultimate choices with canonical
+# costs top out at 250 Ultimate (Aggressive Horn / Barrier / Destruction Staff
+# family), while the passive grants 5 recovery for every Ultimate spent.
+_BOOMING_VOICE_MAX_ULTIMATE_COST = 250.0
+_BOOMING_VOICE_RECOVERY_PER_ULTIMATE = 5.0
+_BOOMING_VOICE_FLAT_CEILING = (
+    _BOOMING_VOICE_MAX_ULTIMATE_COST * _BOOMING_VOICE_RECOVERY_PER_ULTIMATE
+)
+
 _MASTERY_IDENTITIES = {
     "sphere_of_influence": ("Sorcerer", "Sphere of Influence"),
     "devout_guardian": ("Templar", "Devout Guardian"),
@@ -105,16 +116,6 @@ class ExtremeHealthRecoveryClassRouteCeilingService:
         if wellspring_slot_ceiling < 0 or wellspring_slot_ceiling > 6:
             raise ValueError("Wellspring slot ceiling must be between 0 and 6")
 
-        if signature.class_mastery == "booming_voice":
-            return ExtremeHealthRecoveryRouteCeiling(
-                signature=signature,
-                class_flat_ceiling=None,
-                wellspring_slots=0,
-                unresolved=(
-                    "Booming Voice recovery ceiling still requires a proven legal Ultimate-spend bound",
-                ),
-            )
-
         total = 0.0
         slots = 0
         for line in signature.relevant_skill_lines:
@@ -123,7 +124,9 @@ class ExtremeHealthRecoveryClassRouteCeilingService:
                 slots = int(wellspring_slot_ceiling)
                 total += _WELLSPRING_PER_SLOTTED * slots
 
-        if signature.class_mastery:
+        if signature.class_mastery == "booming_voice":
+            total += _BOOMING_VOICE_FLAT_CEILING
+        elif signature.class_mastery:
             mastery_flat = cls._reviewed_mastery_health_recovery_flat(signature.class_mastery)
             if mastery_flat is None:
                 return ExtremeHealthRecoveryRouteCeiling(
