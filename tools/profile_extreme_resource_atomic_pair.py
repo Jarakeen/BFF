@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-"""Profile one warmed Extreme max-resource gear+armor atomic score.
+"""Profile one truly warmed Extreme max-resource gear+armor atomic score.
 
-This intentionally profiles only a single post-warmup finite-axis score so cProfile
-reports canonical scoring cost without the massive distortion seen when profiling the
-full combinatorial search.
+This intentionally profiles only a single finite-axis score after both the shared
+canonical stack and the exact target scorer have been warmed. That separates steady-
+state pair cost from one-time lazy construction of condition-family evidence.
 """
 
 import argparse
@@ -112,13 +112,14 @@ def main() -> int:
     gear_index = max(0, min(int(args.gear_index), len(gear_rows) - 1))
     armor_index = max(0, min(int(args.armor_index), len(armor_rows) - 1))
 
-    # Warm the exact canonical stack using one neighboring pair. This excludes lazy
-    # repository/service initialization from the measured pair while retaining the
-    # ordinary steady-state code path.
-    warm_scorer = factory(gear_rows[0], armor_rows[0])
-    warm_scorer(key, candidate)
-
+    # Warm one ordinary pair first so shared repositories/services have their normal
+    # process-level initialization. Then warm the exact target scorer once so the
+    # measured call excludes lazy construction specific to its runtime-condition
+    # family while preserving the same canonical scoring path.
+    factory(gear_rows[0], armor_rows[0])(key, candidate)
     scorer = factory(gear_rows[gear_index], armor_rows[armor_index])
+    scorer(key, candidate)
+
     profile = cProfile.Profile()
     started = perf_counter()
     profile.enable()
@@ -130,6 +131,7 @@ def main() -> int:
     print(f"objective={key}")
     print(f"gear_index={gear_index}")
     print(f"armor_index={armor_index}")
+    print("warm_mode=exact_target")
     print(f"elapsed_seconds={elapsed:.6f}")
     print(f"value={float(value):.3f}")
     print(f"unresolved={len(unresolved)}")
