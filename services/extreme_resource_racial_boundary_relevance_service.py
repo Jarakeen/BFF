@@ -3,14 +3,16 @@ from __future__ import annotations
 """Proof-classify racial parser boundaries for Extreme max-resource objectives.
 
 The canonical racial passive repository intentionally emits boundary messages for
-passives that are outside its combat-stat mapping.  Some of those boundaries are
+passives that are outside its combat-stat mapping. Some of those boundaries are
 nevertheless provably irrelevant to Max Health/Magicka/Stamina because the
 repository itself classifies the passive as non-combat, current-resource sustain,
-or consumable-duration only.
+consumable-duration only, or because the boundary explicitly describes an ability
+cost modifier rather than a maximum-resource modifier.
 
-This service does not suppress arbitrary parser warnings.  It accepts a boundary
-only when its passive name belongs to one of the canonical repository's explicit
-objective-neutral classifications.  Everything else remains unresolved.
+This service does not suppress arbitrary parser warnings. It accepts a boundary only
+when the message belongs to one of the canonical repository's objective-neutral
+classifications, or to the repository's explicit ability-cost boundary contract.
+Everything else remains unresolved.
 """
 
 from dataclasses import dataclass
@@ -32,6 +34,10 @@ _RESOURCE_SUSTAIN = re.compile(
 )
 _CONSUMABLE_DURATION = re.compile(
     r"^Racial passive changes consumable duration or skill-line experience without changing maximum resources:\s*(.+?)\s*$",
+    re.IGNORECASE,
+)
+_ABILITY_COST = re.compile(
+    r"^Racial ability-cost reduction requires cost-stat model:\s*(.+?)\s*$",
     re.IGNORECASE,
 )
 
@@ -71,7 +77,11 @@ class ExtremeResourceRacialBoundaryRelevanceService:
 
     @staticmethod
     def _canonical_names(values) -> frozenset[str]:
-        return frozenset(str(value or "").strip().casefold() for value in values if str(value or "").strip())
+        return frozenset(
+            str(value or "").strip().casefold()
+            for value in values
+            if str(value or "").strip()
+        )
 
     def _proven_irrelevant(self, message: str) -> bool:
         match = _NONCOMBAT.match(message)
@@ -92,6 +102,13 @@ class ExtremeResourceRacialBoundaryRelevanceService:
                 self.repository.CONSUMABLE_DURATION_PASSIVE_NAMES
             )
 
+        # This boundary is emitted only by RacialPassiveStatRepository when the
+        # canonical tooltip explicitly reduces Magicka/Stamina/general ability
+        # cost. Cost changes can affect sustain, but cannot change a maximum
+        # Health/Magicka/Stamina snapshot, so they are objective-neutral here.
+        if _ABILITY_COST.match(message):
+            return True
+
         return False
 
     def build(
@@ -104,7 +121,11 @@ class ExtremeResourceRacialBoundaryRelevanceService:
             raise KeyError(f"unreviewed Extreme racial boundary objective: {objective_key!r}")
 
         reviewed = tuple(
-            dict.fromkeys(str(item or "").strip() for item in boundaries if str(item or "").strip())
+            dict.fromkeys(
+                str(item or "").strip()
+                for item in boundaries
+                if str(item or "").strip()
+            )
         )
         irrelevant: list[str] = []
         unresolved: list[str] = []
