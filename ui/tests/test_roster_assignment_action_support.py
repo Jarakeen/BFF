@@ -1,15 +1,26 @@
 from pathlib import Path
 
 
-def test_assignment_actions_hide_ready_and_add_requested_buttons():
+def test_assignment_actions_hide_ready_and_add_simplified_buttons():
     source = Path("ui/roster_assignment_action_support.py").read_text(encoding="utf-8")
 
     assert '== "ready"' in source
     assert "table.setColumnHidden(ready_column, True)" in source
+    assert 'QPushButton("Save")' in source
+    assert 'QPushButton("Clear")' in source
     assert 'QPushButton("Send to Comp Maker")' in source
     assert 'QPushButton("Evaluate")' in source
-    assert 'QPushButton("Encounter")' in source
-    assert 'QPushButton("Gear Lookup")' in source
+    assert 'QPushButton("Encounter")' not in source
+    assert 'QPushButton("Gear Lookup")' not in source
+
+
+def test_assignment_actions_use_requested_two_by_two_order():
+    source = Path("ui/roster_assignment_action_support.py").read_text(encoding="utf-8")
+
+    assert "actions.addWidget(save, 0, 0)" in source
+    assert "actions.addWidget(clear, 0, 1)" in source
+    assert "actions.addWidget(send, 1, 0)" in source
+    assert "actions.addWidget(evaluate, 1, 1)" in source
 
 
 def test_assignment_actions_keep_flat_card_and_remove_all_header_content():
@@ -18,7 +29,8 @@ def test_assignment_actions_keep_flat_card_and_remove_all_header_content():
     assert "_clear_card_header(card)" in source
     assert 'card.set_title("")' in source
     assert 'card.set_icon("")' in source
-    assert "card.header_action_layout.takeAt(0)" in source
+    assert 'card.set_badge("")' in source
+    assert "_clear_layout(card.header_action_layout)" in source
     assert "card.header.setMaximumHeight(0)" in source
     assert 'card.setProperty("flatActionCard", True)' in source
     assert "_clear_card_body(card)" in source
@@ -28,13 +40,23 @@ def test_assignment_actions_keep_flat_card_and_remove_all_header_content():
     assert "actions.setRowStretch(1, 1)" in source
 
 
-def test_assignment_actions_route_to_existing_canonical_pages():
+def test_save_and_clear_use_selected_team_and_optional_boss_context():
+    source = Path("ui/roster_assignment_action_support.py").read_text(encoding="utf-8")
+
+    assert "selected_encounter_id(page)" in source
+    assert "service.set_field(" in source
+    assert "service.clear_context(" in source
+    assert "page._populate_assignment_table()" in source
+    assert "now inherits" in source
+
+
+def test_assignment_actions_route_only_to_comp_maker_and_coverage():
     source = Path("ui/roster_assignment_action_support.py").read_text(encoding="utf-8")
 
     assert '_show_page(page, "comp_builder")' in source
     assert '_show_page(page, "console:7")' in source
-    assert '_show_page(page, "console:1")' in source
-    assert '_show_page(page, "gear_lookup")' in source
+    assert '_show_page(page, "console:1")' not in source
+    assert '_show_page(page, "gear_lookup")' not in source
     assert "coverage.set_team_scope(team_name, selected, total_slots=len(members))" in source
 
 
