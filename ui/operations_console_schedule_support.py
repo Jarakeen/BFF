@@ -110,6 +110,7 @@ def install() -> None:
     from ui.build_rotation_artifact_support import install as install_build_rotation_artifact_support
     from ui.user_workspace_polish_support import install as install_user_workspace_polish_support
     from ui.roster_team_assignment_filter_support import install as install_roster_team_assignment_filter_support
+    from ui.roster_characters_header_context_support import install as install_roster_characters_header_context_support
 
     # Preserve the portable calendar feature, then let the multi-time layer own
     # the final Team Schedule UI so each selected day can use its own start/end.
@@ -149,5 +150,8 @@ def install() -> None:
     # Team cards can now scope Assignments after all roster composition layers
     # have installed, without owning or duplicating team membership state.
     install_roster_team_assignment_filter_support()
+    # Characters has its own search/tree controls, so assignment-oriented header
+    # filters stay visible elsewhere but get out of the way on that tab.
+    install_roster_characters_header_context_support()
     operations_console.OperationsConsole._raid_schedule_card = _raid_schedule_card
     _INSTALLED = True
