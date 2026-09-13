@@ -39,7 +39,7 @@ def _blocker(name: str, reason: str) -> RotationDDDamageCoverageBlocker:
     )
 
 
-def test_triage_marks_known_parked_periodic_gap_without_resolving_it() -> None:
+def test_triage_marks_known_parked_periodic_gap_from_display_name_without_resolving_it() -> None:
     audit = RotationDDWholePlanDamageCoverageAudit(
         candidate_id="candidate",
         total_damage_actions=2,
@@ -47,10 +47,10 @@ def test_triage_marks_known_parked_periodic_gap_without_resolving_it() -> None:
         unresolved_damage_actions=2,
         blockers=(
             _blocker(
-                "unnerving_boneyard",
-                "unnerving_boneyard: coefficient 1 reviewed periodic runtime semantics are unavailable",
+                "Unnerving Boneyard",
+                "Unnerving Boneyard: coefficient 1 reviewed periodic runtime semantics are unavailable",
             ),
-            _blocker("other_skill", "direct damage coefficient unavailable"),
+            _blocker("Other Skill", "direct damage coefficient unavailable"),
         ),
     )
     service = RotationDDWholePlanDamageBlockerTriageService(
@@ -62,10 +62,10 @@ def test_triage_marks_known_parked_periodic_gap_without_resolving_it() -> None:
     assert audit.complete is False
     assert len(result.parked) == 1
     assert len(result.actionable) == 1
-    assert result.parked[0].blocker.action_name == "unnerving_boneyard"
+    assert result.parked[0].blocker.action_name == "Unnerving Boneyard"
     assert result.parked[0].disposition is RotationDDDamageBlockerDisposition.PARKED_EVIDENCE
     assert "first-tick offset" in (result.parked[0].disposition_reason or "")
-    assert result.actionable[0].blocker.action_name == "other_skill"
+    assert result.actionable[0].blocker.action_name == "Other Skill"
 
 
 def test_same_skill_nonperiodic_blocker_remains_actionable() -> None:
@@ -75,7 +75,7 @@ def test_same_skill_nonperiodic_blocker_remains_actionable() -> None:
         resolved_damage_actions=0,
         unresolved_damage_actions=1,
         blockers=(
-            _blocker("unnerving_boneyard", "target resistance unavailable"),
+            _blocker("Unnerving Boneyard", "target resistance unavailable"),
         ),
     )
     service = RotationDDWholePlanDamageBlockerTriageService(
