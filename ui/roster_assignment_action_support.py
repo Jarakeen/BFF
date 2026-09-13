@@ -2,7 +2,7 @@ from __future__ import annotations
 
 """Polish Assignments layout and add raid-lead quick actions.
 
-This layer removes the legacy Ready column, gives the assignment table useful
+This layer hides the legacy Ready column, gives the assignment table useful
 horizontal breathing room, and adds navigation/evaluation actions to the Needs
 Attention card without introducing another roster/team model.
 """
@@ -222,7 +222,9 @@ def _configure_assignment_table(page) -> None:
             ready_column = column
             break
     if ready_column >= 0:
-        table.removeColumn(ready_column)
+        # Hide rather than physically removing the model column so older export
+        # and persistence code that still references column indices remains safe.
+        table.setColumnHidden(ready_column, True)
 
     table.setMinimumHeight(500)
     header = table.horizontalHeader()
@@ -230,6 +232,8 @@ def _configure_assignment_table(page) -> None:
     header.setStretchLastSection(False)
 
     for column in range(table.columnCount()):
+        if column == ready_column:
+            continue
         if column in {0, 1, 2}:
             header.setSectionResizeMode(column, QHeaderView.ResizeMode.ResizeToContents)
         else:
