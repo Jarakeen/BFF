@@ -19,15 +19,17 @@ class _EvidenceService:
         return self.result
 
 
-def _component(kind):
+def _component(kind, *, skill_name="Execute", maximum_bonus_fraction=None):
+    if maximum_bonus_fraction is None and kind is SkillComponentConditionalConsequenceType.AMPLIFIES_DAMAGE:
+        maximum_bonus_fraction = 3.0
     return RotationExecuteComponentEvidence(
-        skill_name="Execute",
+        skill_name=skill_name,
         entity_id="skill:1",
         skill_rank_id=1,
         coefficient_number=1,
         threshold=0.5,
         consequence_type=kind,
-        maximum_bonus_fraction=(3.0 if kind is SkillComponentConditionalConsequenceType.AMPLIFIES_DAMAGE else None),
+        maximum_bonus_fraction=maximum_bonus_fraction,
         condition_evidence="target below 50% Health",
         consequence_evidence="reviewed",
     )
@@ -49,7 +51,29 @@ def test_threshold_activation_is_scheduler_supported() -> None:
     assert result.unresolved == ()
 
 
-def test_continuous_amplification_is_positive_but_unresolved() -> None:
+def test_reviewed_continuous_amplification_is_scheduler_supported() -> None:
+    evidence = RotationExecuteCandidateEvidence(
+        requested_skill_name="Killer's Blade",
+        resolved_skill_name="Killer's Blade",
+        entity_id="skill:1",
+        components=(
+            _component(
+                SkillComponentConditionalConsequenceType.AMPLIFIES_DAMAGE,
+                skill_name="Killer's Blade",
+                maximum_bonus_fraction=4.0,
+            ),
+        ),
+    )
+    result = RotationExecuteEvidenceDispositionService(
+        evidence_service=_EvidenceService(evidence)
+    ).resolve("Killer's Blade")
+
+    assert result.disposition is RotationExecuteEvidenceDisposition.CONTINUOUS_AMPLIFICATION_SUPPORTED
+    assert result.scheduler_supported is True
+    assert result.unresolved == ()
+
+
+def test_unreviewed_continuous_amplification_is_positive_but_unresolved() -> None:
     evidence = RotationExecuteCandidateEvidence(
         requested_skill_name="Execute",
         resolved_skill_name="Execute",
@@ -62,7 +86,34 @@ def test_continuous_amplification_is_positive_but_unresolved() -> None:
 
     assert result.disposition is RotationExecuteEvidenceDisposition.CONTINUOUS_AMPLIFICATION_UNRESOLVED
     assert result.scheduler_supported is False
-    assert "interpolation" in result.unresolved[0]
+    assert "source-verified" in result.unresolved[0]
+
+
+def test_reviewed_continuous_amplification_without_maximum_stays_unresolved() -> None:
+    component = RotationExecuteComponentEvidence(
+        skill_name="Killer's Blade",
+        entity_id="skill:1",
+        skill_rank_id=1,
+        coefficient_number=1,
+        threshold=0.5,
+        consequence_type=SkillComponentConditionalConsequenceType.AMPLIFIES_DAMAGE,
+        maximum_bonus_fraction=None,
+        condition_evidence="target below 50% Health",
+        consequence_evidence="reviewed",
+    )
+    evidence = RotationExecuteCandidateEvidence(
+        requested_skill_name="Killer's Blade",
+        resolved_skill_name="Killer's Blade",
+        entity_id="skill:1",
+        components=(component,),
+    )
+    result = RotationExecuteEvidenceDispositionService(
+        evidence_service=_EvidenceService(evidence)
+    ).resolve("Killer's Blade")
+
+    assert result.disposition is RotationExecuteEvidenceDisposition.CONTINUOUS_AMPLIFICATION_UNRESOLVED
+    assert result.scheduler_supported is False
+    assert "maximum bonus evidence is incomplete" in result.unresolved[0]
 
 
 def test_no_threshold_evidence_is_not_negative_execute_classification() -> None:
