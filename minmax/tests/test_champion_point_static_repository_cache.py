@@ -169,3 +169,27 @@ def test_catalog_lists_are_cached_and_shared_with_get(tmp_path) -> None:
     assert repository.get("Eldritch Insight") is first_non_slottable[0]
     assert repository.get("Arcane Supremacy") is first_slottable[0]
     assert repository.connect_calls == 2
+
+def test_static_record_preserves_discipline_identity_when_schema_provides_it(tmp_path) -> None:
+    path = tmp_path / "eso.db"
+    _write_db(path)
+    with sqlite3.connect(path) as db:
+        db.execute("ALTER TABLE champion_point ADD COLUMN discipline_index INTEGER")
+        db.execute(
+            "UPDATE champion_point SET discipline_index=2 WHERE name='Boundless Vitality'"
+        )
+
+    record = ChampionPointStaticRepository(path).get("Boundless Vitality")
+
+    assert record is not None
+    assert record.discipline_index == 2
+
+
+def test_static_record_keeps_legacy_schema_without_discipline_identity_readable(tmp_path) -> None:
+    path = tmp_path / "eso.db"
+    _write_db(path)
+
+    record = ChampionPointStaticRepository(path).get("Boundless Vitality")
+
+    assert record is not None
+    assert record.discipline_index is None

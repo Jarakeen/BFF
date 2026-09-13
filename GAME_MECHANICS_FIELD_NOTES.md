@@ -750,3 +750,13 @@ never proves that the buff will be active during the pull.
 **Layman’s version:** one tooltip has a speedometer with a hard stop; the other has five actual steps even though it accepts 50 points. Reading only the largest number on the record gives the wrong answer in both cases.
 
 **For BFF:** explicit caps outrank uncapped formula projection, and per-stage mechanics use canonical jump thresholds. These are individual-star ceilings only; Champion Bar slot legality must still prove which stars can coexist.
+
+---
+
+## 2026-09-13 — Champion Point slots are four per discipline, not four total
+
+A Champion Bar has a separate four-slot budget for each discipline. Two useful stars in different disciplines do not compete for the same slot, while a fifth useful star in one discipline must displace one of that discipline’s other four.
+
+**Layman’s version:** the Champion Bar is three small shelves, not one shared shelf. A full red shelf does not prevent using an available blue slot.
+
+**For BFF:** CP loadout dominance groups candidates by canonical discipline identity and takes only the strongest four additive candidates in each group. Conditional stars keep their runtime requirements; fitting on the bar does not prove their conditions are active.

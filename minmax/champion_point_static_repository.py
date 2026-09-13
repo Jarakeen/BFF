@@ -43,6 +43,7 @@ class ChampionPointRecord:
     max_points: int
     jump_points: tuple[int, ...]
     description: str
+    discipline_index: int | None = None
 
     @property
     def is_slottable(self) -> bool:
@@ -84,6 +85,24 @@ class ChampionPointStaticRepository:
         return _COLOR.sub("", str(text or "")).strip()
 
     @staticmethod
+    def _record_projection(connection: sqlite3.Connection) -> str:
+        columns = {
+            str(row["name"])
+            for row in connection.execute("PRAGMA table_info(champion_point)")
+        }
+        if "discipline_index" in columns:
+            discipline = "discipline_index"
+        elif "discipline_id" in columns:
+            discipline = "discipline_id"
+        else:
+            discipline = "NULL"
+        return (
+            "name, skill_type, max_points, jump_points, "
+            f"{discipline} AS discipline_index, "
+            "COALESCE(min_description, max_description, description, '') AS description"
+        )
+
+    @staticmethod
     def _record_from_row(row: sqlite3.Row) -> ChampionPointRecord:
         jumps = tuple(
             int(value)
@@ -96,6 +115,11 @@ class ChampionPointStaticRepository:
             max_points=int(row["max_points"] or 0),
             jump_points=jumps,
             description=ChampionPointStaticRepository._clean(row["description"]),
+            discipline_index=(
+                None
+                if row["discipline_index"] is None
+                else int(row["discipline_index"])
+            ),
         )
 
     def _cache_records(
@@ -112,10 +136,10 @@ class ChampionPointStaticRepository:
             return self._record_cache[requested]
 
         with self._connect() as connection:
+            projection = self._record_projection(connection)
             row = connection.execute(
-                """
-                SELECT name, skill_type, max_points, jump_points,
-                       COALESCE(min_description, max_description, description, '') AS description
+                f"""
+                SELECT {projection}
                 FROM champion_point
                 WHERE name = ?
                 """,
@@ -132,10 +156,10 @@ class ChampionPointStaticRepository:
             return self._non_slottable_records_cache
 
         with self._connect() as connection:
+            projection = self._record_projection(connection)
             rows = connection.execute(
-                """
-                SELECT name, skill_type, max_points, jump_points,
-                       COALESCE(min_description, max_description, description, '') AS description
+                f"""
+                SELECT {projection}
                 FROM champion_point
                 WHERE skill_type = ?
                   AND name IS NOT NULL
@@ -155,10 +179,10 @@ class ChampionPointStaticRepository:
             return self._slottable_records_cache
 
         with self._connect() as connection:
+            projection = self._record_projection(connection)
             rows = connection.execute(
-                """
-                SELECT name, skill_type, max_points, jump_points,
-                       COALESCE(min_description, max_description, description, '') AS description
+                f"""
+                SELECT {projection}
                 FROM champion_point
                 WHERE skill_type IN (?, ?)
                   AND name IS NOT NULL

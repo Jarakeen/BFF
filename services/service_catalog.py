@@ -508,6 +508,24 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.POLICY,
     ),
     ServiceDescriptor(
+        service_id="mechanics.champion_point_loadout",
+        domain="mechanics",
+        purpose=(
+            "Prove additive Champion Bar legality under the canonical four-slot "
+            "limit for each discipline."
+        ),
+        implementation_path="services.champion_point_loadout_service",
+        inputs=("ChampionPointLoadoutCandidate",),
+        outputs=("ChampionPointLoadoutResult",),
+        responsibilities=("champion_point_loadout_legality",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Runtime conditions remain evidence on selected candidates and are not "
+            "made true by structural slot legality."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.health_recovery_champion_point_branch",
         domain="extreme",
         purpose=(
