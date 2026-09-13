@@ -24,6 +24,7 @@ from minmax.stat_ids import StatId
 
 
 _OBJECTIVE_STATS = {
+    "max_health": StatId.MAX_HEALTH.value,
     "max_magicka": StatId.MAX_MAGICKA.value,
     "max_stamina": StatId.MAX_STAMINA.value,
 }
@@ -43,7 +44,7 @@ class ExtremeResourceMundusProjection:
 
 
 class ExtremeResourceMundusProjectionService:
-    """Prove the unique best Mundus witness for Max Magicka / Max Stamina."""
+    """Prove the unique best Mundus witness for Max Health/Magicka/Stamina."""
 
     SUPPORTED_OBJECTIVES = frozenset(_OBJECTIVE_STATS)
     _production_projection_cache: dict[
