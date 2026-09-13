@@ -4,9 +4,11 @@ from dataclasses import dataclass
 from typing import Callable
 
 from minmax.build_calculation_context import BuildCalculationContext
+from minmax.character_build.effect_relationship import ConditionContext
 from minmax.combat_state import CombatState
 from minmax.resource_costs import ResourceType
 from minmax.rotation_plan import RotationPlan
+from minmax.runtime_event import RuntimeEvent
 from models.build_model import PlayerBuild
 from services.rotation_plan_runtime_combat_state_service import (
     RotationPlanRuntimeCombatStateResult,
@@ -59,6 +61,14 @@ RecoveryRuntimeActivationAnchorResolverFactory = Callable[
     [RotationPlan],
     RecoveryRuntimeActivationAnchorResolver,
 ]
+RecoveryRuntimeOutputConditionContextResolver = Callable[
+    [RuntimeEvent],
+    ConditionContext | None,
+]
+RecoveryRuntimeOutputConditionContextResolverFactory = Callable[
+    [RotationPlan],
+    RecoveryRuntimeOutputConditionContextResolver,
+]
 
 
 @dataclass(frozen=True)
@@ -82,8 +92,9 @@ class RecoveryHeavyStabilizedCandidateSnapshot:
 
     Runtime resolvers are bound only after the candidate plan reaches its final
     stabilized form. Family-level scorecards and role-output evaluators may therefore
-    query exact attacker state, target state, target resistance, or activation anchors
-    without consulting the seed schedule or rebuilding timing evidence independently.
+    query exact attacker state, target state, target resistance, activation anchors,
+    or explicit output-condition context without consulting the seed schedule or
+    rebuilding timing evidence independently.
     """
 
     candidate_id: str
@@ -94,6 +105,9 @@ class RecoveryHeavyStabilizedCandidateSnapshot:
     runtime_target_combat_state_resolver: RecoveryRuntimeTargetCombatStateResolver | None = None
     runtime_target_resistance_resolver: RecoveryRuntimeTargetResistanceResolver | None = None
     runtime_activation_anchor_resolver: RecoveryRuntimeActivationAnchorResolver | None = None
+    runtime_output_condition_context_resolver: (
+        RecoveryRuntimeOutputConditionContextResolver | None
+    ) = None
 
 
 RecoveryFinalFamilyEvaluator = Callable[
@@ -145,6 +159,9 @@ class RotationRecoveryHeavyCandidateOrchestrationService:
         runtime_target_combat_state_resolver_factory: RecoveryRuntimeTargetCombatStateResolverFactory | None = None,
         runtime_target_resistance_resolver_factory: RecoveryRuntimeTargetResistanceResolverFactory | None = None,
         runtime_activation_anchor_resolver_factory: RecoveryRuntimeActivationAnchorResolverFactory | None = None,
+        runtime_output_condition_context_resolver_factory: (
+            RecoveryRuntimeOutputConditionContextResolverFactory | None
+        ) = None,
     ) -> RotationRecoveryHeavyCandidateOrchestrationResult:
         if not candidates:
             return RotationRecoveryHeavyCandidateOrchestrationResult(
@@ -225,6 +242,11 @@ class RotationRecoveryHeavyCandidateOrchestrationService:
                 if runtime_activation_anchor_resolver_factory is None
                 else runtime_activation_anchor_resolver_factory(stabilization.plan)
             )
+            output_condition_context_resolver = (
+                None
+                if runtime_output_condition_context_resolver_factory is None
+                else runtime_output_condition_context_resolver_factory(stabilization.plan)
+            )
             stabilized.append(
                 RecoveryHeavyStabilizedCandidateSnapshot(
                     candidate_id=candidate.candidate_id,
@@ -235,6 +257,7 @@ class RotationRecoveryHeavyCandidateOrchestrationService:
                     runtime_target_combat_state_resolver=target_runtime_resolver,
                     runtime_target_resistance_resolver=target_resistance_runtime_resolver,
                     runtime_activation_anchor_resolver=activation_anchor_resolver,
+                    runtime_output_condition_context_resolver=output_condition_context_resolver,
                 )
             )
 
@@ -302,6 +325,8 @@ __all__ = [
     "RecoveryRuntimeActivationAnchorResolverFactory",
     "RecoveryRuntimeCombatStateResolver",
     "RecoveryRuntimeCombatStateResolverFactory",
+    "RecoveryRuntimeOutputConditionContextResolver",
+    "RecoveryRuntimeOutputConditionContextResolverFactory",
     "RecoveryRuntimeTargetCombatStateResolver",
     "RecoveryRuntimeTargetCombatStateResolverFactory",
     "RecoveryRuntimeTargetResistanceResolver",
