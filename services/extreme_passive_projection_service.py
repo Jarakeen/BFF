@@ -2,7 +2,7 @@ from __future__ import annotations
 
 """Project canonical passive-skill tooltips into reviewed Extreme objective units.
 
-Every player passive belongs in the Extreme coverage universe.  This service
+Every player passive belongs in the Extreme coverage universe. This service
 projects only simple unconditional max-rank stat clauses whose units can be
 mapped losslessly. Conditional, slot-dependent, equipment-dependent, runtime,
 and otherwise unresolved passives remain explicit results rather than being
@@ -93,9 +93,6 @@ _CONDITION_PHRASES = (
     " stacks",
 )
 
-# These passives already have reviewed purpose-built formulas. Their actual
-# contribution depends on bars, armor composition, or another dynamic input and
-# therefore must not be duplicated as a static tooltip score here.
 _CONTEXTUAL_KNOWN_PASSIVES = frozenset(
     {
         "advanced species",
@@ -115,8 +112,6 @@ _CONTEXTUAL_KNOWN_PASSIVES = frozenset(
         "dexterity",
         "constitution",
         "undaunted mettle",
-        # Crafting passives can alter combat consumable duration/effects and
-        # therefore remain context-bearing rather than being discarded.
         "medicinal use",
         "snakeblood",
         "gourmand",
@@ -141,6 +136,7 @@ class ExtremePassiveProjectionService:
         "max_magicka",
         "max_stamina",
         "critical_damage",
+        "health_recovery",
         "magicka_recovery",
         "stamina_recovery",
         "physical_resistance",
@@ -251,8 +247,13 @@ class ExtremePassiveProjectionService:
             )
             flat(rf"Increases your Physical Resistance by {_NUMBER}", ("physical_resistance",))
             flat(rf"Increases your Spell Resistance by {_NUMBER}", ("spell_resistance",))
+            flat(rf"Increases your Health Recovery by {_NUMBER}", ("health_recovery",))
             flat(rf"Increases your Magicka Recovery by {_NUMBER}", ("magicka_recovery",))
             flat(rf"Increases your Stamina Recovery by {_NUMBER}", ("stamina_recovery",))
+            flat(
+                rf"Increases your Health,? Magicka,? and Stamina Recovery by {_NUMBER}",
+                ("health_recovery", "magicka_recovery", "stamina_recovery"),
+            )
 
         percent_reference(rf"Increases your Max Health by {_PERCENT}", ("max_health",))
         percent_reference(rf"Increases your Max Magicka by {_PERCENT}", ("max_magicka",))
@@ -267,8 +268,13 @@ class ExtremePassiveProjectionService:
         )
         percent_reference(rf"Increases your Weapon Damage by {_PERCENT}", ("weapon_damage",))
         percent_reference(rf"Increases your Spell Damage by {_PERCENT}", ("spell_damage",))
+        percent_reference(rf"Increases your Health Recovery by {_PERCENT}", ("health_recovery",))
         percent_reference(rf"Increases your Magicka Recovery by {_PERCENT}", ("magicka_recovery",))
         percent_reference(rf"Increases your Stamina Recovery by {_PERCENT}", ("stamina_recovery",))
+        percent_reference(
+            rf"Increases your Health,? Magicka,? and Stamina Recovery by {_PERCENT}",
+            ("health_recovery", "magicka_recovery", "stamina_recovery"),
+        )
 
         critical_rating_patterns = (
             rf"Increases your (?:Weapon and Spell|Spell and Weapon) Critical(?: Chance| Rating)? by {_NUMBER}",
@@ -325,10 +331,6 @@ class ExtremePassiveProjectionService:
         description_key = cls._clean(passive.description).casefold()
         consumable_context = any(term in description_key for term in _CONSUMABLE_CONTEXT_TERMS)
 
-        # Utility skill lines are account/world interaction systems rather than
-        # character-sheet combat stat sources. Crafting passives are likewise
-        # noncombat unless they explicitly affect consumables, which remain a
-        # runtime/static-consumable dependency handled elsewhere.
         if passive.domain is ExtremeSkillDomain.UTILITY:
             return ExtremePassiveProjection(
                 passive=passive,
