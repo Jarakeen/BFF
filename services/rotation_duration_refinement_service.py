@@ -41,6 +41,9 @@ from services.rotation_duration_analysis_service import (
     RotationDurationAnalysisService,
     RotationDurationProjection,
 )
+from services.rotation_persistent_toggle_plan_service import (
+    RotationPersistentTogglePlanService,
+)
 
 
 @dataclass(frozen=True)
@@ -60,11 +63,15 @@ class RotationDurationRefinementService:
         *,
         duration_analysis: RotationDurationAnalysisService | None = None,
         scheduler: DurationAwareRotationScheduler | None = None,
+        persistent_toggle_plan: RotationPersistentTogglePlanService | None = None,
     ) -> None:
         self.duration_analysis = duration_analysis or RotationDurationAnalysisService(
             database_path
         )
         self.scheduler = scheduler or DurationAwareRotationScheduler()
+        self.persistent_toggle_plan = (
+            persistent_toggle_plan or RotationPersistentTogglePlanService()
+        )
 
     def refine(
         self,
@@ -181,6 +188,14 @@ class RotationDurationRefinementService:
                 plan,
                 seed_projection.rules,
             )
+
+        # Persistent toggles are not finite-duration refresh skills. Normalize the
+        # already-refined plan so the scheduler keeps its authoritative refresh and
+        # displacement work, then replace only repeated reviewed toggle activations.
+        refined = self.persistent_toggle_plan.normalize(
+            refined,
+            duration_rules=seed_projection.rules,
+        ).plan
 
         unresolved = self._dedupe(
             tuple(refined.unresolved) + tuple(seed_projection.unresolved)
