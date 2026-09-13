@@ -16,6 +16,9 @@ from services.rotation_cross_bar_filler_opportunity_service import (
 from services.rotation_cross_bar_route_proposal_service import (
     RotationCrossBarRouteProposalService,
 )
+from services.rotation_cross_bar_route_slot_feasibility_service import (
+    RotationCrossBarRouteSlotFeasibilityService,
+)
 from tools.audit_phase13_saved_build_rotation_timing import _load_build
 from ui.rotation_generation_support import RotationGenerationRequest, RotationGenerationSupport
 
@@ -185,6 +188,10 @@ def main() -> int:
         generated.plan,
         cross_bar,
     )
+    route_slots = RotationCrossBarRouteSlotFeasibilityService().assess(
+        generated.plan,
+        routes,
+    )
 
     print("=" * 72)
     print(" PHASE 13 DD EXPLICIT-PRIORITY SCHEDULE AUDIT")
@@ -210,6 +217,7 @@ def main() -> int:
     print(f"Wait actions:  {len(waits)}")
     print(f"Cross-bar filler opportunities: {len(cross_bar)}")
     print(f"Cross-bar route proposals: {len(routes)}")
+    print(f"Slot-feasible routes: {sum(1 for item in route_slots if item.feasible)}")
     print()
 
     print("CROSS-BAR FILLER OPPORTUNITIES")
@@ -254,6 +262,21 @@ def main() -> int:
         print("none")
     print()
 
+    print("CROSS-BAR ROUTE SLOT FEASIBILITY")
+    print("--------------------------------")
+    if route_slots:
+        for item in route_slots:
+            state = "FEASIBLE" if item.feasible else "BLOCKED"
+            available = ",".join(f"{value:g}" for value in item.available_wait_times) or "none"
+            print(
+                f"{item.wait_time_seconds:g}s | {state} | {item.source_bar} -> {item.target_bar} | "
+                f"{item.filler_skill_name} | required_wait_slots={item.required_wait_slots} | "
+                f"available={available} | {item.reason}"
+            )
+    else:
+        print("none")
+    print()
+
     print("PLAN-LEVEL UNRESOLVED")
     print("---------------------")
     if generated.plan.unresolved:
@@ -264,9 +287,9 @@ def main() -> int:
     print()
     print(
         "Interpretation: explicit priorities are caller-owned gameplay intent. Cross-bar "
-        "filler opportunities and route proposals are diagnostic only: each filler is "
-        "canonically proven immediate, while exact swap timing and plan mutation remain "
-        "owned by a later routing scheduler."
+        "fillers and routes are diagnostic only. Slot feasibility additionally enforces "
+        "the current planner rule that BAR_SWAP consumes its own 1-second schedule step; "
+        "no same-second swap+skill timing is fabricated."
     )
     return 0
 
