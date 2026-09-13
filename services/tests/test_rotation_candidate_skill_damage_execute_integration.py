@@ -209,7 +209,7 @@ def test_active_continuous_execute_amplification_fails_closed() -> None:
 
     assert evidence.damage_value is None
     assert evidence.unresolved == (
-        "execute_skill: coefficient 1: target-health damage amplification is active but exact interpolation is unresolved",
+        "execute_skill: coefficient 1: continuous execute interpolation is not source-reviewed",
     )
 
 
