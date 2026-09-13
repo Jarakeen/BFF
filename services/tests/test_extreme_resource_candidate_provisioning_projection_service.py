@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from minmax.effects import EffectOperation, StaticEffect
+from minmax.effects import Effect, EffectOperation
 from minmax.stat_ids import StatId
 from services.extreme_resource_candidate_provisioning_projection_service import (
     ExtremeResourceCandidateProvisioningProjection,
@@ -29,7 +29,7 @@ class _Repository:
         value = self.values[str(name)]
         return (
             (
-                StaticEffect(
+                Effect(
                     stat=StatId.MAX_MAGICKA,
                     operation=EffectOperation.ADD,
                     value=value,
