@@ -13,7 +13,6 @@ def test_context_variants_round_trip_with_full_override_shape() -> None:
             BuildContextVariant(
                 ContextType="Team",
                 TeamName="Swine & Punishment",
-                Assignment="Slayer Healer",
                 Mundus="The Atronach",
                 Armor={"Head": {"Set": "Pearls of Ehlnofey", "Trait": "Divines"}},
                 FrontBarWeapon=GearSlot(Set="Roaring Opportunist", Trait="Powered"),
@@ -27,7 +26,6 @@ def test_context_variants_round_trip_with_full_override_shape() -> None:
     assert len(restored.ContextVariants) == 1
     variant = restored.ContextVariants[0]
     assert variant.TeamName == "Swine & Punishment"
-    assert variant.Assignment == "Slayer Healer"
     assert variant.Armor["Head"]["Set"] == "Pearls of Ehlnofey"
     assert variant.FrontBarWeapon.Set == "Roaring Opportunist"
 
