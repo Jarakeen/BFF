@@ -70,6 +70,10 @@ from services.extreme_resource_attribute_projection_service import (
 from services.extreme_resource_blood_magic_canonical_stat_evaluator import (
     ExtremeResourceBloodMagicCanonicalStatEvaluator,
 )
+from services.extreme_resource_candidate_provisioning_projection_service import (
+    ExtremeResourceCandidateProvisioningProjection,
+    ExtremeResourceCandidateProvisioningProjectionService,
+)
 from services.extreme_resource_champion_point_state_service import (
     ExtremeResourceChampionPointStateService,
 )
@@ -162,6 +166,7 @@ class ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory:
         active_skill_coverage_audit_service: ExtremeResourceActiveSkillCoverageAuditService | None = None,
         equipment_trait_projection_coverage_service: ExtremeResourceEquipmentTraitProjectionCoverageService | None = None,
         runtime_projection_coverage_service: ExtremeResourceRuntimeProjectionCoverageService | None = None,
+        candidate_provisioning_projection_service: ExtremeResourceCandidateProvisioningProjectionService | None = None,
     ) -> None:
         self.canonical_evaluator = canonical_evaluator
         self.mundus_repository = mundus_repository
@@ -198,6 +203,21 @@ class ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory:
             )
         self.runtime_projection_coverage_service = runtime_projection_coverage_service
 
+        if candidate_provisioning_projection_service is None and database_path is not None:
+            candidate_provisioning_projection_service = (
+                ExtremeResourceCandidateProvisioningProjectionService(
+                    self.provisioning_repository,
+                    database_path=database_path,
+                )
+            )
+        self.candidate_provisioning_projection_service = (
+            candidate_provisioning_projection_service
+        )
+        self._candidate_provisioning_projection_cache: dict[
+            tuple[str, tuple[str, ...], tuple[int, ...]],
+            ExtremeResourceCandidateProvisioningProjection,
+        ] = {}
+
     @classmethod
     def _has_active_twice_born_star(
         cls,
@@ -227,6 +247,27 @@ class ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory:
         if self.runtime_projection_coverage_service is None:
             return None
         return self.runtime_projection_coverage_service.build(objective_key)
+
+    def candidate_provisioning_projection(
+        self,
+        objective_key: str,
+        realization: ExtremeNamedGearSetRealization,
+    ) -> ExtremeResourceCandidateProvisioningProjection | None:
+        service = self.candidate_provisioning_projection_service
+        key = str(objective_key or "").strip().casefold()
+        if service is None or key not in service.SUPPORTED_OBJECTIVES:
+            return None
+        cache_key = (
+            key,
+            tuple(str(name) for name in realization.set_names),
+            tuple(int(count) for count in realization.counts),
+        )
+        cached = self._candidate_provisioning_projection_cache.get(cache_key)
+        if cached is not None:
+            return cached
+        result = service.build(key, realization)
+        self._candidate_provisioning_projection_cache[cache_key] = result
+        return result
 
     def __call__(
         self,
@@ -270,6 +311,12 @@ class ExtremeNamedGearResourceArmorFiniteAxisEvaluatorFactory:
         food = ExtremeBestMundusFoodStructuralStatEvaluator(
             mundus_evaluator=mundus,
             provisioning_repository=self.provisioning_repository,
+            candidate_projection_provider=(
+                lambda objective_key, realization=realization: self.candidate_provisioning_projection(
+                    objective_key,
+                    realization,
+                )
+            ),
         )
         return ExtremeBestMundusFoodPotionStructuralStatEvaluator(
             food_evaluator=food,
