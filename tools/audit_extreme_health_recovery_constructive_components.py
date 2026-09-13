@@ -190,8 +190,9 @@ def main() -> int:
     gear_repository = GearSetRepository(database)
     breakpoints, relevance, special, special_unresolved = _special_frontier(gear_repository)
 
+    relevance_evidence_count = len(relevance.evidence)
     semantic_denominator_proven = bool(
-        relevance.breakpoints_reviewed
+        relevance_evidence_count
         and not special_unresolved
         and len(relevance.unresolved) == len(special.branches)
     )
@@ -234,7 +235,7 @@ def main() -> int:
     print()
 
     print("GEAR SEMANTIC FRONTIER")
-    print(f"gear_breakpoints_reviewed={relevance.breakpoints_reviewed}")
+    print(f"gear_relevance_evidence_rows={relevance_evidence_count}")
     print(f"base_relevance_denominator_proven={relevance.denominator_proven}")
     print(f"special_rows_reviewed={len(special.branches)}")
     print(f"positive_special_challengers={len(special.positive_challengers)}")
