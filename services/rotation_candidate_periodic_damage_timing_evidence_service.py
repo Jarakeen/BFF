@@ -16,6 +16,9 @@ from minmax.skill_component_runtime_timing import (
     extract_skill_component_runtime_timing,
 )
 from minmax.skill_component_text_evidence import extract_component_text_evidence
+from services.rotation_reviewed_skill_component_repository import (
+    RotationReviewedSkillComponentRepository,
+)
 
 
 _PERIODIC_SKILL_ACTION_KINDS = {
@@ -84,11 +87,11 @@ class RotationCandidatePeriodicDamageTimingEvidenceService:
     Ordinary skill and Ultimate actions both carry canonical skill identities and may
     own coefficient-bearing periodic damage. This is a composition helper over
     existing shared mechanics. Canonical skill identity remains owned by
-    ``SkillCoefficientRepository``; component identity by
-    ``SkillComponentRepository``; coefficient-local cadence by
-    ``extract_skill_component_runtime_timing``; and duration by the existing
-    rotation-duration evidence resolver. The service does not invent first-tick
-    timing, refresh semantics, or concrete tick events.
+    ``SkillCoefficientRepository``; component identity by the canonical reviewed
+    component overlay backed by ``SkillComponentRepository``; coefficient-local
+    cadence by ``extract_skill_component_runtime_timing``; and duration by the
+    existing rotation-duration evidence resolver. The service does not invent
+    first-tick timing, refresh semantics, or concrete tick events.
     """
 
     def __init__(
@@ -96,13 +99,13 @@ class RotationCandidatePeriodicDamageTimingEvidenceService:
         database_path: str | Path,
         *,
         coefficient_repository: SkillCoefficientRepository | None = None,
-        component_repository: SkillComponentRepository | None = None,
+        component_repository: SkillComponentRepository | object | None = None,
     ) -> None:
         self.database_path = Path(database_path)
         self.coefficients = coefficient_repository or SkillCoefficientRepository(
             self.database_path
         )
-        self.components = component_repository or SkillComponentRepository(
+        self.components = component_repository or RotationReviewedSkillComponentRepository(
             self.database_path
         )
 
