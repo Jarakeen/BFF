@@ -10,12 +10,17 @@ PLAYER_COLUMN = 11
 
 
 def _role_key(value: object) -> str:
-    text = str(value or "").strip().casefold()
+    text = " ".join(str(value or "").strip().casefold().split())
     if "tank" in text:
         return "tank"
     if "heal" in text:
         return "healer"
     if "damage" in text or "dps" in text:
+        return "damage"
+    # Comp Maker's canonical flexible damage chairs are labelled simply "DD".
+    # Roster roles can also be things like "Support DD" or "Zenkosh DD".
+    words = text.replace("/", " ").replace("-", " ").split()
+    if "dd" in words:
         return "damage"
     return ""
 
@@ -77,21 +82,37 @@ def _clear_player_rows(page) -> None:
 
 
 def _match_rows(page, members) -> list[tuple[int, object]]:
+    """Place roster members into matching Comp Maker role chairs.
+
+    Known-role players are placed first so an unresolved roster role cannot steal
+    a Tank/Healer chair before a real Tank/Healer is processed. Within each role,
+    roster order is preserved.
+    """
     available = list(range(page.matrix_table.rowCount()))
     matches: list[tuple[int, object]] = []
+    members = list(members)
 
-    # Prefer primary-role-compatible chairs so tanks/healers/DDs land where a raid
-    # lead would expect. Unresolved roles fill the next open chair rather than being
-    # dropped silently.
-    for member in members:
+    known = [member for member in members if _role_key(getattr(member, "PrimaryRole", ""))]
+    unknown = [member for member in members if not _role_key(getattr(member, "PrimaryRole", ""))]
+
+    for member in known:
         wanted = _role_key(getattr(member, "PrimaryRole", ""))
-        row = next((r for r in available if wanted and _row_role(page, r) == wanted), None)
-        if row is None and available:
-            row = available[0]
+        row = next((r for r in available if _row_role(page, r) == wanted), None)
+        if row is None:
+            # More players of a role than the 2/2/8 skeleton supports: keep the
+            # player visible in the next open chair rather than silently dropping them.
+            row = available[0] if available else None
         if row is None:
             break
         available.remove(row)
         matches.append((row, member))
+
+    for member in unknown:
+        if not available:
+            break
+        row = available.pop(0)
+        matches.append((row, member))
+
     return matches
 
 
@@ -118,9 +139,15 @@ def apply_roster_team_context(page, team_name: str, members) -> None:
     if hasattr(page, "_refresh_coverage"):
         page._refresh_coverage()
 
+    role_counts = {"tank": 0, "healer": 0, "damage": 0, "unresolved": 0}
+    for member in members:
+        key = _role_key(getattr(member, "PrimaryRole", "")) or "unresolved"
+        role_counts[key] += 1
     page.status.info(
         f"Loaded {len(matched)} roster player(s) from {page._roster_team_context_name or 'selected team'} "
-        "into Comp Maker. Player, role and class are known; empty builds remain intentionally unresolved."
+        f"into Comp Maker: {role_counts['tank']} tank, {role_counts['healer']} healer, "
+        f"{role_counts['damage']} DD, {role_counts['unresolved']} unresolved. "
+        "Classes are carried over; empty builds remain intentionally unresolved."
     )
 
 
