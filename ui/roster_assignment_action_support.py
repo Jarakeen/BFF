@@ -3,11 +3,11 @@ from __future__ import annotations
 """Polish Assignments layout and add raid-lead quick actions.
 
 This layer hides the legacy Ready column, gives the assignment table useful
-horizontal breathing room, and turns the old Needs Attention summary into a
-flat quick-action card without introducing another roster/team model.
+horizontal breathing room, and replaces the old Needs Attention card with a
+bare quick-action button grid without introducing another roster/team model.
 """
 
-from PySide6.QtWidgets import QGridLayout, QHeaderView, QPushButton, QSizePolicy
+from PySide6.QtWidgets import QGridLayout, QHeaderView, QPushButton, QSizePolicy, QWidget
 
 from engine.config import get_data_dir
 from services.build_service import BuildService
@@ -175,39 +175,28 @@ def _open_gear_lookup(page) -> None:
     _show_page(page, "gear_lookup")
 
 
-def _clear_attention_content(card) -> None:
-    """Remove the old readiness summary immediately before adding actions."""
-    while card.body_layout.count():
-        item = card.body_layout.takeAt(0)
-        widget = item.widget()
-        layout = item.layout()
-        if widget is not None:
-            widget.hide()
-            widget.setParent(None)
-            widget.deleteLater()
-        if layout is not None:
-            while layout.count():
-                child = layout.takeAt(0)
-                child_widget = child.widget()
-                if child_widget is not None:
-                    child_widget.hide()
-                    child_widget.setParent(None)
-                    child_widget.deleteLater()
+def _replace_widget_in_layout(layout, old_widget, new_widget) -> bool:
+    if layout is None:
+        return False
+    for index in range(layout.count()):
+        item = layout.itemAt(index)
+        if item.widget() is old_widget:
+            layout.replaceWidget(old_widget, new_widget)
+            old_widget.hide()
+            old_widget.setParent(None)
+            return True
+        child_layout = item.layout()
+        if child_layout is not None and _replace_widget_in_layout(child_layout, old_widget, new_widget):
+            return True
+    return False
 
 
-def _add_attention_actions(page) -> None:
-    card = getattr(page, "attention_card", None)
-    if card is None:
-        return
+def _build_action_surface(page) -> QWidget:
+    host = QWidget()
+    host.setProperty("assignmentQuickActions", True)
+    host.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
-    # This is now an action surface, not a readiness-summary card.
-    card.header.hide()
-    card.set_watermark(None)
-    card.set_body_margins(10, 10, 10, 10)
-    card.set_body_spacing(8)
-    _clear_attention_content(card)
-
-    actions = QGridLayout()
+    actions = QGridLayout(host)
     actions.setContentsMargins(0, 0, 0, 0)
     actions.setHorizontalSpacing(8)
     actions.setVerticalSpacing(8)
@@ -234,19 +223,37 @@ def _add_attention_actions(page) -> None:
     gear.clicked.connect(lambda *_: _open_gear_lookup(page))
 
     for button in (send, evaluate, encounters, gear):
-        button.setMinimumHeight(52)
+        button.setMinimumHeight(58)
         button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
     actions.addWidget(send, 0, 0)
     actions.addWidget(evaluate, 0, 1)
     actions.addWidget(encounters, 1, 0)
     actions.addWidget(gear, 1, 1)
-    card.addLayout(actions)
 
     page.send_to_comp_maker_button = send
     page.evaluate_team_button = evaluate
     page.open_encounter_button = encounters
     page.open_gear_lookup_button = gear
+    return host
+
+
+def _install_attention_actions(page) -> None:
+    if getattr(page, "assignment_quick_actions_host", None) is not None:
+        return
+
+    card = getattr(page, "attention_card", None)
+    if card is None:
+        return
+
+    host = _build_action_surface(page)
+    parent = card.parentWidget()
+    root_layout = parent.layout() if parent is not None else None
+    if not _replace_widget_in_layout(root_layout, card, host):
+        host.deleteLater()
+        return
+
+    page.assignment_quick_actions_host = host
 
 
 def _configure_assignment_table(page) -> None:
@@ -296,7 +303,7 @@ def install() -> None:
 
     def refresh_summary_cards_with_actions(self):
         result = original_refresh_summary_cards(self)
-        _add_attention_actions(self)
+        _install_attention_actions(self)
         return result
 
     RosterPage._build_assignments_tab = build_assignments_tab_with_actions
