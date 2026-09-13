@@ -26,6 +26,9 @@ from services.rotation_recovery_heavy_candidate_generation_bridge_service import
     RecoveryCandidateEvaluatorResolver,
     RecoveryPressureWaitDecisionFactory,
 )
+from services.rotation_recovery_heavy_candidate_orchestration_service import (
+    RecoveryRuntimeOutputConditionContextResolverFactory,
+)
 from services.rotation_recovery_heavy_final_family_evaluation_service import (
     RecoveryFinalScorecardResolver,
 )
@@ -40,6 +43,9 @@ from services.rotation_static_build_context_service import RotationStaticBuildCo
 from ui.rotation_automatic_potion_cadence_candidate_support import (
     RotationAutomaticPotionCadenceCandidateSupport,
     RotationPotionCooldownScenarioEvidence,
+)
+from ui.rotation_canonical_candidate_conditional_output_support import (
+    RotationCanonicalCandidateConditionalOutputSupport,
 )
 from ui.rotation_canonical_candidate_support import (
     RotationCanonicalCandidateApplicationResult,
@@ -104,13 +110,16 @@ class RotationDashboardCanonicalCandidateSupport:
     evidence is present, the lower canonical bridge owns role/policy composition.
 
     Production defaults compose final-candidate evidence adapters for weapon attacks,
-    saved-build targets, automatic potion cadence, Ultimate affordability, and shared
-    runtime snapshot state. Weapon attack evidence projects final light/heavy attacks
-    through the same canonical saved-build weapon adapter and promotes unresolved
-    weapon identity to candidate-specific evidence; wrong-bar attacks remain the
-    existing active-bar hard obligation. Saved-build target evidence enforces
-    unambiguous Enemy, Self, and Ground identities only when explicit target-state
-    windows are supplied. Missing evidence preserves the existing no-guess behavior.
+    saved-build targets, automatic potion cadence, Ultimate affordability, shared
+    runtime snapshot state, and exact-event conditional output context. Conditional
+    output still requires caller-owned evidence; this layer only forwards its resolver
+    factory into the stabilized runtime path. Weapon attack evidence projects final
+    light/heavy attacks through the same canonical saved-build weapon adapter and
+    promotes unresolved weapon identity to candidate-specific evidence; wrong-bar
+    attacks remain the existing active-bar hard obligation. Saved-build target evidence
+    enforces unambiguous Enemy, Self, and Ground identities only when explicit
+    target-state windows are supplied. Missing evidence preserves the existing
+    no-guess behavior.
     """
 
     def __init__(
@@ -135,7 +144,7 @@ class RotationDashboardCanonicalCandidateSupport:
         if canonical_candidates is not None:
             self.canonical_candidates = canonical_candidates
         else:
-            canonical = RotationCanonicalCandidateSupport(
+            canonical = RotationCanonicalCandidateConditionalOutputSupport(
                 static_context_service=RotationStaticBuildContextService(),
             )
             weapon_aware = RotationWeaponAttackCandidateSupport(
@@ -174,6 +183,9 @@ class RotationDashboardCanonicalCandidateSupport:
         runtime_activation_anchor_evidence: tuple[
             RotationRuntimeActivationAnchorEvidence, ...
         ] = (),
+        runtime_output_condition_context_resolver_factory: (
+            RecoveryRuntimeOutputConditionContextResolverFactory | None
+        ) = None,
         demands: Iterable[RotationDemandWindow] = (),
         options: Iterable[RotationRefreshLeadCandidateOption] = (),
         wait_decision_factory: RecoveryPressureWaitDecisionFactory | None = None,
@@ -248,6 +260,10 @@ class RotationDashboardCanonicalCandidateSupport:
         anchor_evidence_tuple = tuple(runtime_activation_anchor_evidence)
         if anchor_evidence_tuple:
             candidate_kwargs["runtime_activation_anchor_evidence"] = anchor_evidence_tuple
+        if runtime_output_condition_context_resolver_factory is not None:
+            candidate_kwargs["runtime_output_condition_context_resolver_factory"] = (
+                runtime_output_condition_context_resolver_factory
+            )
         target_state_tuple = tuple(target_state_windows)
         if target_state_tuple:
             candidate_kwargs["target_state_windows"] = target_state_tuple
