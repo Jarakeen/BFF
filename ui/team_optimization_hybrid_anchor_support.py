@@ -168,3 +168,8 @@ def install() -> None:
         install as install_team_provider_workload_support,
     )
     install_team_provider_workload_support()
+
+    from ui.coverage_group_effect_catalog_support import (
+        install as install_coverage_group_effect_catalog_support,
+    )
+    install_coverage_group_effect_catalog_support()
