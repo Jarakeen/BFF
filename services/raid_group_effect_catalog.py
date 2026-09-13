@@ -1,14 +1,16 @@
 from __future__ import annotations
 
-"""Raid-facing named buff/debuff reference catalog.
+"""Raid-facing buff/debuff and unique support-effect reference catalog.
 
 This is intentionally a human planning catalog, not a capability-resolution shortcut.
-It lists group-relevant named effects and reviewed example sources so the Coverage UI
+It lists group-relevant named effects and reviewed support-set effects so the Coverage UI
 can help a raid lead answer "where can this come from?" without guessing canonical
 EffectVariant mappings for systems that have not been proven end to end yet.
 
 Mechanic jobs and situational raid utilities (kite, portal, interrupts, orbs, purify,
 etc.) do not belong here. Magickasteal remains because it is itself a named debuff.
+Unique raid-support set effects are included when raid leads commonly plan around the
+effect itself rather than only around the set name.
 """
 
 from dataclasses import dataclass
@@ -161,6 +163,22 @@ GROUP_COVERAGE_EFFECTS: tuple[RaidGroupEffectReference, ...] = (
         ("Group-capable ability: Empowering Grasp", "Scribing: Empower on Mender's Bond"),
     ),
     RaidGroupEffectReference(
+        "Powerful Assault", "Buff",
+        ("Set: Powerful Assault", "Unique group Weapon and Spell Damage support effect; not a Major/Minor named buff."),
+    ),
+    RaidGroupEffectReference(
+        "Spaulder of Ruin", "Buff",
+        ("Mythic: Spaulder of Ruin", "Aura of Pride grants nearby group members a unique Weapon and Spell Damage increase."),
+    ),
+    RaidGroupEffectReference(
+        "Symphony of Blades", "Buff",
+        ("Monster set: Symphony of Blades", "Unique ally resource-restoration support proc; not a Major/Minor named buff."),
+    ),
+    RaidGroupEffectReference(
+        "Ozezan the Inferno", "Buff",
+        ("Monster set: Ozezan the Inferno", "Provides Minor Vitality plus its own support-set defensive effect."),
+    ),
+    RaidGroupEffectReference(
         "Major Vulnerability", "Debuff",
         ("Ultimate: Frozen Colossus", "Sets: Turning Tide, Archdruid Devyric"),
         True,
@@ -204,9 +222,37 @@ GROUP_COVERAGE_EFFECTS: tuple[RaidGroupEffectReference, ...] = (
         ("Status/ability: Diseased, Lethal Arrow", "Sets: Fasalla's Guile, Thurvokun", "Scribing: Defile scripts"),
     ),
     RaidGroupEffectReference(
+        "Major Brittle", "Debuff",
+        ("Ability: Tundra's Maw", "Set: Nunatak"),
+    ),
+    RaidGroupEffectReference(
         "Minor Brittle", "Debuff",
         ("Status/ability: Chilled while using an Ice Staff, Rune of the Colorless Pool", "Sets: Glittering Goad, The Saint and the Seducer", "Scribing: Brittle scripts"),
         True,
+    ),
+    RaidGroupEffectReference(
+        "Off Balance", "Debuff",
+        ("Combat status: Off Balance", "Provider abilities are maintained in Combat Reference; the effect is cycle-limited rather than a permanent debuff."),
+    ),
+    RaidGroupEffectReference(
+        "Roar of Alkosh", "Debuff",
+        ("Set: Roar of Alkosh", "Unique synergy-triggered enemy resistance reduction; not Major/Minor Breach."),
+    ),
+    RaidGroupEffectReference(
+        "Touch of Z'en", "Debuff",
+        ("Set: Z'en's Redress", "Unique enemy damage-taken support effect maintained from the wearer's damage-over-time pressure."),
+    ),
+    RaidGroupEffectReference(
+        "Way of Martial Knowledge", "Debuff",
+        ("Set: Way of Martial Knowledge", "Unique enemy damage-taken support effect; not Major/Minor Vulnerability."),
+    ),
+    RaidGroupEffectReference(
+        "Nazaray", "Debuff",
+        ("Monster set: Nazaray", "Unique support proc that extends eligible negative effects already active on enemies."),
+    ),
+    RaidGroupEffectReference(
+        "Encratis's Behemoth", "Debuff",
+        ("Monster set: Encratis's Behemoth", "Unique flame-support effect affecting enemy flame damage taken and group flame mitigation."),
     ),
     RaidGroupEffectReference(
         "Minor Lifesteal", "Debuff",
