@@ -26,17 +26,6 @@ _GLOBAL_EQUIPMENT_HAZARDS = (
     "two mundus stone boons",
 )
 
-# Named buffs that directly modify recovery and may appear without spelling out
-# the numeric stat in the same clause.
-_RECOVERY_BUFF_HAZARDS = (
-    "minor fortitude",
-    "major fortitude",
-    "minor intellect",
-    "major intellect",
-    "minor endurance",
-    "major endurance",
-)
-
 
 @dataclass(frozen=True)
 class ExtremeGearSetRecoveryObjectiveScreeningResult:
@@ -77,15 +66,20 @@ class ExtremeGearSetRecoveryObjectiveScreeningService:
         if re.search(rf"\b{re.escape(resource)}\s+recovery\b", text):
             hazards.append(f"{resource.title()} Recovery reference")
 
-        # ESO often writes shared recovery lists such as "Health, Magicka, and
-        # Stamina Recovery". The regex above only sees the final resource, so
-        # explicitly detect list grammar for the requested member.
+        # ESO also compresses a shared stat list into one trailing noun, for
+        # example "Health, Magicka, and Stamina Recovery".  Accept ordinary,
+        # Oxford-comma, and/or list grammar, then retain the row if the requested
+        # resource is one of the members governed by the trailing "Recovery".
         shared_recovery = re.search(
-            r"\b(?P<body>(?:health|magicka|stamina)(?:\s*,\s*|\s+and\s+|\s+or\s+)){1,3}"
-            r"(?:health|magicka|stamina)\s+recovery\b",
+            r"\b(?P<body>(?:health|magicka|stamina)"
+            r"(?:(?:\s*,\s*|\s*,?\s+(?:and|or)\s+)(?:health|magicka|stamina)){1,2})"
+            r"\s+recovery\b",
             text,
         )
-        if shared_recovery is not None and re.search(rf"\b{re.escape(resource)}\b", shared_recovery.group(0)):
+        if (
+            shared_recovery is not None
+            and re.search(rf"\b{re.escape(resource)}\b", shared_recovery.group("body"))
+        ):
             hazards.append(f"shared {resource.title()} Recovery list reference")
 
         # Fortitude/Intellect/Endurance are named recovery modifiers. Retain only
