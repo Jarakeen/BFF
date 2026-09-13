@@ -30,6 +30,28 @@ def test_food_and_potions_card_owns_real_potion_generation_control() -> None:
     assert 'self._refresh_build_context()' in source
 
 
+def test_rotation_potion_picker_reuses_full_canonical_catalogs_on_every_build_refresh() -> None:
+    source = Path(rotation_dashboard_layout_support.__file__).read_text(encoding="utf-8")
+
+    assert 'from ui.phase5_potion_picker_support import _choices, _configure_search' in source
+    assert 'ReferenceDataService(EsoDatabase(get_data_dir() / "eso.db"))' in source
+    assert 'for choice in _choices():' in source
+    assert 'f"Crafted · {choice.label}"' in source
+    assert 'for name in _named_potion_choices():' in source
+    assert 'f"Named · {name}"' in source
+    assert '_select_combo_data(combo, saved_potion)' in source
+    assert '_configure_search(combo)' in source
+    assert 'CanonicalRotationDashboardPage._refresh_build_context = refresh_build_context_with_consumables' in source
+
+
+def test_rotation_food_display_refreshes_from_selected_saved_build() -> None:
+    source = Path(rotation_dashboard_layout_support.__file__).read_text(encoding="utf-8")
+
+    assert 'getattr(build, "Food", "")' in source
+    assert 'page.food_value.setText(food)' in source
+    assert 'Food follows the selected saved build.' in source
+
+
 def test_layout_support_moves_existing_widgets_instead_of_creating_duplicates() -> None:
     source = Path(rotation_dashboard_layout_support.__file__).read_text(encoding="utf-8")
 
