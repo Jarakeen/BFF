@@ -8,12 +8,13 @@ or assignment persistence is introduced here.
 """
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QPushButton
+from PySide6.QtWidgets import QComboBox
 
 from ui.components.foundry_card import FoundryCard
 
 
 _INSTALLED = False
+_ALL_TEAMS_LABEL = "All Teams"
 
 
 def _legacy_team_names(value: str) -> set[str]:
@@ -71,25 +72,71 @@ def _assignment_tab_index(page) -> int:
     return -1
 
 
-def _set_clear_filter_visibility(page) -> None:
-    button = getattr(page, "assignment_all_teams_button", None)
-    if button is not None:
-        button.setVisible(bool(getattr(page, "assignment_team_filter", "")))
+def _team_names(page) -> list[str]:
+    names = {
+        str(name or "").strip()
+        for name in page.roster_service.list_team_names()
+        if str(name or "").strip()
+    }
+
+    build_library = getattr(page, "build_library", None)
+    if build_library is not None:
+        catalog = build_library.canonical.catalog_service.load()
+        for assignment in catalog.get("team_assignments", []):
+            if not isinstance(assignment, dict):
+                continue
+            name = str(assignment.get("team_name") or "").strip()
+            if name:
+                names.add(name)
+
+    return sorted(names, key=str.casefold)
 
 
-def _clear_team_filter(page) -> None:
-    page.assignment_team_filter = ""
-    _set_clear_filter_visibility(page)
+def _refresh_team_selector(page) -> None:
+    combo = getattr(page, "assignment_team_combo", None)
+    if combo is None:
+        return
+
+    selected = str(getattr(page, "assignment_team_filter", "") or "").strip()
+    combo.blockSignals(True)
+    try:
+        combo.clear()
+        combo.addItem(_ALL_TEAMS_LABEL, "")
+        for team_name in _team_names(page):
+            combo.addItem(team_name, team_name)
+        if selected:
+            index = combo.findData(selected)
+            if index < 0:
+                combo.addItem(selected, selected)
+                index = combo.count() - 1
+            combo.setCurrentIndex(index)
+        else:
+            combo.setCurrentIndex(0)
+    finally:
+        combo.blockSignals(False)
+
+
+def _team_selector_changed(page, index: int) -> None:
+    combo = getattr(page, "assignment_team_combo", None)
+    if combo is None or index < 0:
+        return
+
+    team_name = str(combo.itemData(index) or "").strip()
+    page.assignment_team_filter = team_name
     page._populate_assignment_table()
-    page.status.info("Assignments showing all roster members.")
+    if team_name:
+        page.status.info(f"Assignments filtered to {team_name}.")
+    else:
+        page.status.info("Assignments showing all roster members.")
 
 
 def _select_team_for_assignments(page, team_name: str) -> None:
     team_name = str(team_name or "").strip()
     if not team_name:
         return
+
     page.assignment_team_filter = team_name
-    _set_clear_filter_visibility(page)
+    _refresh_team_selector(page)
     page._populate_assignment_table()
 
     index = _assignment_tab_index(page)
@@ -157,12 +204,15 @@ def install() -> None:
             None,
         )
         if card is not None:
-            button = QPushButton("All Teams")
-            button.setToolTip("Clear the selected team and show every roster member.")
-            button.clicked.connect(lambda _checked=False: _clear_team_filter(self))
-            button.setVisible(False)
-            card.header_action_layout.addWidget(button)
-            self.assignment_all_teams_button = button
+            combo = QComboBox()
+            combo.setMinimumWidth(180)
+            combo.setToolTip("Show assignments for one saved team, or all teams.")
+            combo.currentIndexChanged.connect(
+                lambda index: _team_selector_changed(self, index)
+            )
+            card.header_action_layout.addWidget(combo)
+            self.assignment_team_combo = combo
+            _refresh_team_selector(self)
         return page
 
     def populate_assignment_table_with_team_scope(self, *args, **kwargs):
@@ -184,6 +234,7 @@ def install() -> None:
 
     def refresh_team_cards_with_assignment_filter(self):
         result = original_refresh_team_cards(self)
+        _refresh_team_selector(self)
         _wire_team_cards(self)
         return result
 
