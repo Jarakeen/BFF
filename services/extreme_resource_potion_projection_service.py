@@ -28,6 +28,7 @@ from minmax.stat_ids import StatId
 
 
 _OBJECTIVE_STATS = {
+    "max_health": StatId.MAX_HEALTH,
     "max_magicka": StatId.MAX_MAGICKA,
     "max_stamina": StatId.MAX_STAMINA,
 }
