@@ -71,6 +71,34 @@ def test_combined_recovery_and_non_resource_combat_stats_are_mapped(tmp_path):
     assert hunters_eye_unresolved == []
 
 
+def test_nord_and_khajiit_combat_passives_are_mapped(tmp_path):
+    repository = _repository(tmp_path)
+
+    rugged, rugged_boundaries, rugged_unresolved = repository._parse_description(
+        "Rugged",
+        "Increases your Physical and Spell Resistance by 2600.",
+    )
+    feline, feline_boundaries, feline_unresolved = repository._parse_description(
+        "Feline Ambush",
+        "Increases your Critical Damage and Critical Healing by 12%. "
+        "Decreases your detection radius in Stealth by 3 meters.",
+    )
+
+    assert rugged == {
+        "physical_resistance": 2600.0,
+        "spell_resistance": 2600.0,
+    }
+    assert rugged_boundaries == []
+    assert rugged_unresolved == []
+
+    assert feline == {
+        "critical_damage_percent": 12.0,
+        "critical_healing_percent": 12.0,
+    }
+    assert feline_boundaries == []
+    assert feline_unresolved == []
+
+
 def test_pure_utility_racial_passives_use_existing_noncombat_boundary(tmp_path):
     repository = _repository(tmp_path)
 
