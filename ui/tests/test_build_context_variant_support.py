@@ -17,7 +17,8 @@ def test_context_variant_editor_supports_full_team_build_changes() -> None:
     assert 'build_form.addRow("Mundus", self.mundus)' in source
     assert 'build_form.addRow("CP Override", cp_wrap)' in source
     assert 'build_form.addRow("Front Bar Overrides", self.front_bar)' in source
-    assert 'context_form.addRow("Team Assignment", self.assignment)' in source
+    assert "Raid assignments stay on the team Assignments surface." in source
+    assert "self.assignment" not in source
     assert "model.ContextVariants = [card.value for card in self._boss_cards]" in source
     assert "model.BossLoadouts = []" in source
 
