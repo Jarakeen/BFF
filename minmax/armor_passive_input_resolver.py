@@ -9,6 +9,7 @@ from .block_stats import BlockCostModifier
 from .derived_stats import StatContribution
 from .gear_stat_inputs import GearCalculationInputs, GearStatInputResolver
 from .passive_math import (
+    heavy_armor_constitution_health_recovery_percent,
     heavy_armor_juggernaut_max_health_percent,
     light_armor_critical_rating,
     light_armor_magicka_recovery_percent,
@@ -58,6 +59,7 @@ class ArmorPassiveInputResolver:
         agility_owned: bool | None = None,
         dexterity_owned: bool | None = None,
         juggernaut_owned: bool | None = None,
+        constitution_owned: bool | None = None,
     ) -> GearCalculationInputs:
         light_count, medium_count, heavy_count = self._armor_counts(build)
         applied = result.applied_effect_count
@@ -97,6 +99,7 @@ class ArmorPassiveInputResolver:
         agility = medium_armor_passives_owned if agility_owned is None else agility_owned
         dexterity = medium_armor_passives_owned if dexterity_owned is None else dexterity_owned
         juggernaut = heavy_armor_passives_owned if juggernaut_owned is None else juggernaut_owned
+        constitution = heavy_armor_passives_owned if constitution_owned is None else constitution_owned
 
         if evocation and light_count:
             magicka_recovery = light_armor_magicka_recovery_percent(light_count)
@@ -229,6 +232,19 @@ class ArmorPassiveInputResolver:
                     health=replace(
                         result.health,
                         skill_percent_contributions=result.health.skill_percent_contributions + (source,),
+                    ),
+                )
+                applied += 1
+
+        if constitution and heavy_count:
+            health_recovery = heavy_armor_constitution_health_recovery_percent(heavy_count)
+            if health_recovery:
+                source = PercentContribution("Heavy Armor: Constitution", health_recovery)
+                result = replace(
+                    result,
+                    health_recovery=replace(
+                        result.health_recovery,
+                        skill_percent_contributions=result.health_recovery.skill_percent_contributions + (source,),
                     ),
                 )
                 applied += 1
