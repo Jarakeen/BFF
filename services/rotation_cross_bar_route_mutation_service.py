@@ -28,7 +28,10 @@ class RotationCrossBarRouteMutationService:
     that one WAIT timestamp is available for the target-bar filler skill. ESO weapon
     swap is not a separate skill GCD, so the same timestamp may contain an outbound
     BAR_SWAP, the normal LA/skill weave, and, when required, a return BAR_SWAP after
-    the skill. The resulting active-bar progression is validated canonically.
+    the skill. If earlier selected routing has already placed the player on the target
+    bar, selection marks the outbound swap unnecessary and mutation emits only the
+    filler weave plus any genuinely required return swap. The resulting active-bar
+    progression is validated canonically.
     """
 
     _EPSILON = 1e-9
@@ -101,42 +104,44 @@ class RotationCrossBarRouteMutationService:
                 )
 
             route_time = times[0]
-            actions.append(
-                RotationAction(
-                    time_seconds=route_time,
-                    sequence=0,
-                    kind=RotationActionKind.BAR_SWAP,
-                    bar=proposal.target_bar,
+            next_sequence = 0
+            if row.outbound_swap_required:
+                actions.append(
+                    RotationAction(
+                        time_seconds=route_time,
+                        sequence=next_sequence,
+                        kind=RotationActionKind.BAR_SWAP,
+                        bar=proposal.target_bar,
+                    )
                 )
-            )
+                next_sequence += 1
 
             if weave_light_attacks:
                 actions.append(
                     RotationAction(
                         time_seconds=route_time,
-                        sequence=1,
+                        sequence=next_sequence,
                         kind=RotationActionKind.LIGHT_ATTACK,
                         bar=proposal.target_bar,
                     )
                 )
-                skill_sequence = 2
-            else:
-                skill_sequence = 1
+                next_sequence += 1
             actions.append(
                 RotationAction(
                     time_seconds=route_time,
-                    sequence=skill_sequence,
+                    sequence=next_sequence,
                     kind=RotationActionKind.SKILL,
                     name=proposal.filler_skill_name,
                     bar=proposal.target_bar,
                 )
             )
+            next_sequence += 1
 
             if proposal.return_swap_required:
                 actions.append(
                     RotationAction(
                         time_seconds=route_time,
-                        sequence=skill_sequence + 1,
+                        sequence=next_sequence,
                         kind=RotationActionKind.BAR_SWAP,
                         bar=proposal.source_bar,
                     )
@@ -147,11 +152,17 @@ class RotationCrossBarRouteMutationService:
         for row in selected:
             proposal = row.proposal
             route_time = float(row.reserved_wait_times[0])
-            label = (
-                f"selected cross-bar route at {route_time:g}s uses non-GCD "
-                f"{proposal.source_bar}->{proposal.target_bar} swap and "
-                f"'{proposal.filler_skill_name}' in the same skill-GCD slot"
-            )
+            if row.outbound_swap_required:
+                label = (
+                    f"selected cross-bar route at {route_time:g}s uses non-GCD "
+                    f"{proposal.source_bar}->{proposal.target_bar} swap and "
+                    f"'{proposal.filler_skill_name}' in the same skill-GCD slot"
+                )
+            else:
+                label = (
+                    f"selected route at {route_time:g}s was already on {proposal.target_bar} "
+                    f"after earlier routing and uses '{proposal.filler_skill_name}' in that skill-GCD slot"
+                )
             if proposal.return_swap_required:
                 label += f" then returns to {proposal.source_bar} after the skill"
             assumptions.append(label)
