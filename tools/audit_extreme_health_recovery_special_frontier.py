@@ -60,8 +60,9 @@ def main() -> int:
     )
     unresolved = tuple(dict.fromkeys((*parse_unresolved, *catalog.unresolved)))
     kinds = Counter(row.kind.value for row in catalog.branches)
+    relevance_evidence_count = len(relevance.evidence)
     semantic_denominator_proven = bool(
-        relevance.breakpoints_reviewed
+        relevance_evidence_count
         and not unresolved
         and len(rows) == len(catalog.branches)
     )
@@ -70,6 +71,7 @@ def main() -> int:
     print(f"database={database}")
     print("mode=description_driven_semantic_classification_not_scoring")
     print(f"base_relevance_denominator_proven={relevance.denominator_proven}")
+    print(f"relevance_evidence_rows={relevance_evidence_count}")
     print(f"relevance_unresolved_rows={len(relevance.unresolved)}")
     print(f"parsed_recovery_rows={len(rows)}")
     print(f"classified_branches={len(catalog.branches)}")
