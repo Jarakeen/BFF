@@ -2,12 +2,13 @@ from __future__ import annotations
 
 """Inspect canonical evidence needed to bound Booming Voice Health Recovery.
 
-Booming Voice inherits The Storm Voice's ``Ultimate spent`` event.  This audit keeps
-stored Ultimate separate from the cost of the Ultimate ability actually cast, prints
-the canonical passive evidence, and enumerates the base-cost frontier of Ultimates a
-pure Dragonknight can legally own from native or shared combat skill lines.
+Booming Voice inherits The Storm Voice's ``Ultimate spent`` event. This audit keeps
+stored Ultimate separate from the base cost of the Ultimate ability actually cast,
+prints the canonical passive evidence, and enumerates the canonical base-cost
+frontier of Ultimates that a pure Dragonknight can legally slot.
 
-It deliberately does not treat the 500 stored-Ultimate cap as the spend value.
+The cost authority is ``ability.base_cost`` via the same canonical model used by
+``AbilityCostRepository``; ``skill_rank.cost`` is not used as a substitute.
 """
 
 import argparse
@@ -19,23 +20,11 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from minmax.resource_costs import ResourceType, decode_resource_mechanic
 from services.class_mastery_repository import ClassMasteryRepository
 from services.eso_character_progression_contract import ULTIMATE_RULES
-
-
-_DK_NATIVE_LINES = frozenset({"ardent flame", "draconic power", "earthen heart"})
-_EXCLUDED_SHARED_LINES = frozenset(
-    {
-        "class mastery",
-        "crafting",
-        "racial",
-        "excavation",
-        "legerdemain",
-        "scrying",
-        "thieves guild",
-        "dark brotherhood",
-    }
-)
+from services.skill_bar_eligibility import is_eligible
+from services.skill_choice_service import load_skill_choices
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -57,18 +46,6 @@ def _select_existing(columns: set[str], names: tuple[str, ...], *, prefix: str =
     return result
 
 
-def _key(value: object) -> str:
-    return " ".join(str(value or "").strip().casefold().split())
-
-
-def _pure_dk_ultimate_candidate(row: sqlite3.Row) -> bool:
-    owner = _key(row["s_class_type"] if "s_class_type" in row.keys() else "")
-    line = _key(row["s_skill_line"] if "s_skill_line" in row.keys() else "")
-    if owner:
-        return owner == "dragonknight" and line in _DK_NATIVE_LINES
-    return bool(line and line not in _EXCLUDED_SHARED_LINES)
-
-
 def main() -> int:
     args = _parser().parse_args()
     database = Path(args.database)
@@ -81,7 +58,7 @@ def main() -> int:
 
     print("EXTREME HEALTH RECOVERY BOOMING VOICE CEILING EVIDENCE")
     print(f"database={database}")
-    print("mode=canonical_cost_frontier_not_stored_ultimate_assumption")
+    print("mode=canonical_ability_base_cost_frontier_not_stored_ultimate_assumption")
     print()
     print("ULTIMATE CONTRACT")
     print(f"maximum_resource={ULTIMATE_RULES.maximum_resource}")
@@ -105,7 +82,6 @@ def main() -> int:
         print("database_missing=True")
         return 2
 
-    ultimate_candidates: list[sqlite3.Row] = []
     with sqlite3.connect(database) as db:
         db.row_factory = sqlite3.Row
         skill_cols = _columns(db, "skill")
@@ -123,10 +99,8 @@ def main() -> int:
         )
         if skill_select:
             text_parts = [
-                part for part in (
-                    "LOWER(COALESCE(s.name, ''))",
-                    "LOWER(COALESCE(s.description, ''))" if "description" in skill_cols else "''",
-                )
+                "LOWER(COALESCE(s.name, ''))",
+                "LOWER(COALESCE(s.description, ''))" if "description" in skill_cols else "''",
             ]
             rows = db.execute(
                 f"SELECT {', '.join(skill_select)} FROM skill s "
@@ -147,7 +121,7 @@ def main() -> int:
             select = []
             select.extend(_select_existing(skill_cols, ("id", "name", "class_type", "skill_line"), prefix="s"))
             select.extend(_select_existing(rank_cols, ("ability_id", "rank", "morph", "cost", "raw_name", "raw_description"), prefix="sr"))
-            select.extend(_select_existing(ability_cols, ("name", "base_mechanic", "description"), prefix="a"))
+            select.extend(_select_existing(ability_cols, ("name", "base_cost", "base_mechanic", "description"), prefix="a"))
             ability_join = "LEFT JOIN ability a ON a.ability_id = sr.ability_id" if "ability_id" in ability_cols else ""
             predicates = ["LOWER(COALESCE(s.name, '')) LIKE ?"]
             params: list[str] = ["%storm voice%"]
@@ -180,55 +154,65 @@ def main() -> int:
         print()
 
         print("PURE DRAGONKNIGHT ULTIMATE BASE-COST FRONTIER")
-        required_rank = {"skill_id", "ability_id", "cost"}
-        if required_rank.issubset(rank_cols) and {"id", "class_type", "skill_line", "is_passive", "is_player"}.issubset(skill_cols) and {"ability_id", "base_mechanic"}.issubset(ability_cols):
+        choices = tuple(
+            row
+            for row in load_skill_choices(database)
+            if is_eligible(row, character_class="dragonknight", slot_index=5)
+        )
+        ability_ids = tuple(
+            sorted({int(row.get("ability_id") or 0) for row in choices if int(row.get("ability_id") or 0) > 0})
+        )
+        cost_rows: list[dict[str, object]] = []
+        if ability_ids and {"ability_id", "base_cost", "base_mechanic"}.issubset(ability_cols):
+            placeholders = ",".join("?" for _ in ability_ids)
             rows = db.execute(
-                """
-                SELECT
-                    s.id AS s_id,
-                    s.name AS s_name,
-                    s.class_type AS s_class_type,
-                    s.skill_line AS s_skill_line,
-                    s.base_ability_id AS s_base_ability_id,
-                    sr.ability_id AS sr_ability_id,
-                    sr.rank AS sr_rank,
-                    COALESCE(sr.morph, 0) AS sr_morph,
-                    sr.cost AS sr_cost,
-                    COALESCE(NULLIF(sr.raw_name, ''), NULLIF(a.name, ''), s.name) AS resolved_name,
-                    a.base_mechanic AS a_base_mechanic
-                FROM skill_rank sr
-                JOIN skill s ON s.id = sr.skill_id
-                JOIN ability a ON a.ability_id = sr.ability_id
-                WHERE COALESCE(s.is_player, 0) != 0
-                  AND COALESCE(s.is_passive, 0) = 0
-                  AND COALESCE(a.base_mechanic, 0) = 8
-                  AND sr.cost IS NOT NULL
-                ORDER BY CAST(sr.cost AS REAL) DESC, LOWER(COALESCE(NULLIF(sr.raw_name, ''), NULLIF(a.name, ''), s.name)), sr.ability_id
-                """
+                f"SELECT ability_id, name, skill_line, base_cost, base_mechanic "
+                f"FROM ability WHERE ability_id IN ({placeholders})",
+                ability_ids,
             ).fetchall()
-            ultimate_candidates = [row for row in rows if _pure_dk_ultimate_candidate(row)]
-            if not ultimate_candidates:
-                print("  <no cost-bearing ultimate candidates>")
-            for row in ultimate_candidates:
-                print("  " + repr(dict(row)))
-        else:
-            print("  <ultimate cost schema unavailable>")
+            choice_by_id = {int(row.get("ability_id") or 0): row for row in choices}
+            for row in rows:
+                ability_id = int(row["ability_id"] or 0)
+                base_cost = row["base_cost"]
+                base_mechanic = row["base_mechanic"]
+                if base_cost is None or float(base_cost) <= 0 or base_mechanic is None:
+                    continue
+                try:
+                    resources = decode_resource_mechanic(int(base_mechanic))
+                except ValueError:
+                    continue
+                if ResourceType.ULTIMATE not in resources:
+                    continue
+                choice = choice_by_id.get(ability_id, {})
+                cost_rows.append(
+                    {
+                        "ability_id": ability_id,
+                        "name": str(choice.get("name") or row["name"] or ""),
+                        "class_type": str(choice.get("class_type") or ""),
+                        "skill_line": str(choice.get("skill_line") or row["skill_line"] or ""),
+                        "rank": int(choice.get("rank") or 0),
+                        "morph": int(choice.get("morph") or 0),
+                        "base_cost": float(base_cost),
+                        "base_mechanic": int(base_mechanic),
+                    }
+                )
+        cost_rows.sort(key=lambda row: (-float(row["base_cost"]), str(row["name"]).casefold(), int(row["ability_id"])))
+        if not cost_rows:
+            print("  <no canonical cost-bearing ultimate candidates>")
+        for row in cost_rows:
+            print("  " + repr(row))
 
     print()
-    numeric_costs: list[float] = []
-    for row in ultimate_candidates:
-        try:
-            numeric_costs.append(float(row["sr_cost"]))
-        except (TypeError, ValueError):
-            continue
-    max_cost = max(numeric_costs) if numeric_costs else None
-    print(f"ultimate_candidates_reviewed={len(ultimate_candidates)}")
+    max_cost = max((float(row["base_cost"]) for row in cost_rows), default=None)
+    print(f"ultimate_choices_eligible={len(choices)}")
+    print(f"ultimate_candidates_with_canonical_cost={len(cost_rows)}")
     print(f"maximum_legal_base_ultimate_cost={max_cost if max_cost is not None else '<unresolved>'}")
     if max_cost is not None:
         print(f"booming_voice_flat_ceiling_if_cost_semantics={max_cost * 5.0:.3f}")
-        print("NEXT_STEP=confirm cost semantics against The Storm Voice event contract, then wire this proven cost ceiling into route dominance")
+        print("cost_authority=ability.base_cost")
+        print("NEXT_STEP=wire the proven canonical Ultimate-cost ceiling into Booming Voice route scoring and compare against the 1341 subclass incumbent")
     else:
-        print("NEXT_STEP=resolve missing Ultimate cost evidence before assigning Booming Voice a numeric ceiling")
+        print("NEXT_STEP=resolve missing ability.base_cost Ultimate evidence before assigning Booming Voice a numeric ceiling")
     return 0
 
 
