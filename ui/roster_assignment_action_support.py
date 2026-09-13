@@ -1,16 +1,20 @@
 from __future__ import annotations
 
-"""Polish Assignments layout and add raid-lead quick actions.
+"""Polish Assignments layout and add simple raid-lead actions.
 
-This layer hides the legacy Ready column, gives the assignment table useful
-horizontal breathing room, and turns the old Needs Attention summary into a
-flat quick-action card without introducing another roster/team model.
+The action card deliberately stays small: Save, Clear, Send to Comp Maker, and
+Evaluate. Assignment context comes from the selected Team + optional Boss.
 """
 
-from PySide6.QtWidgets import QGridLayout, QHeaderView, QPushButton, QSizePolicy
+from PySide6.QtWidgets import QComboBox, QGridLayout, QHeaderView, QPushButton, QSizePolicy
 
 from engine.config import get_data_dir
 from services.build_service import BuildService
+from services.roster_assignment_context_service import RosterAssignmentContextService
+from ui.roster_encounter_assignment_context_support import (
+    selected_encounter_id,
+    selected_encounter_name,
+)
 
 
 _INSTALLED = False
@@ -50,10 +54,103 @@ def _show_page(page, key: str) -> bool:
     return True
 
 
+def _member_id_for_row(page, row: int) -> int | None:
+    item = page.assignment_table.item(row, 0)
+    if item is None:
+        return None
+    try:
+        value = item.data(256)  # Qt.UserRole without importing another enum surface.
+        return int(value) if value is not None else None
+    except (TypeError, ValueError):
+        return None
+
+
+def _row_field_text(page, row: int, column: int) -> str:
+    widget = page.assignment_table.cellWidget(row, column)
+    if isinstance(widget, QComboBox):
+        return widget.currentText().strip()
+    item = page.assignment_table.item(row, column)
+    if item is None:
+        return ""
+    text = item.text().strip()
+    return "" if text == "—" else text
+
+
+def _save_assignments(page) -> None:
+    team_name = _selected_team_name(page)
+    if not team_name:
+        page.status.warning("Choose a team before saving assignments.")
+        return
+
+    service = getattr(page, "assignment_context_service", None)
+    if service is None:
+        service = RosterAssignmentContextService(page.database)
+        page.assignment_context_service = service
+    encounter_id = selected_encounter_id(page)
+
+    saved_rows = 0
+    for row in range(page.assignment_table.rowCount()):
+        member_id = _member_id_for_row(page, row)
+        if member_id is None:
+            continue
+        for column, field in (
+            (4, "primary_assignment"),
+            (5, "secondary_assignment"),
+            (6, "gear_needed"),
+            (7, "notes"),
+        ):
+            service.set_field(
+                member_id,
+                team_name=team_name,
+                encounter_id=encounter_id,
+                field=field,
+                value=_row_field_text(page, row, column),
+            )
+        saved_rows += 1
+
+    context = selected_encounter_name(page) or "Team Default"
+    page.status.success(f"Saved {saved_rows} assignment row(s) for {team_name} • {context}.")
+
+
+def _clear_assignments(page) -> None:
+    team_name = _selected_team_name(page)
+    if not team_name:
+        page.status.warning("Choose a team before clearing assignments.")
+        return
+
+    service = getattr(page, "assignment_context_service", None)
+    if service is None:
+        service = RosterAssignmentContextService(page.database)
+        page.assignment_context_service = service
+    encounter_id = selected_encounter_id(page)
+
+    cleared = 0
+    for row in range(page.assignment_table.rowCount()):
+        member_id = _member_id_for_row(page, row)
+        if member_id is None:
+            continue
+        service.clear_context(
+            member_id,
+            team_name=team_name,
+            encounter_id=encounter_id,
+        )
+        cleared += 1
+
+    page._populate_assignment_table()
+    if encounter_id:
+        page.status.success(
+            f"Cleared {cleared} boss override row(s). {selected_encounter_name(page)} now inherits {team_name}'s defaults."
+        )
+    else:
+        page.status.success(
+            f"Cleared {cleared} saved team-default row(s) for {team_name}."
+        )
+
+
 def _send_to_comp_maker(page) -> None:
     team_name = _selected_team_name(page)
     if not team_name:
-        page.status.warning("Choose a team in the Assignments team menu before sending it to Comp Maker.")
+        page.status.warning("Choose a team before sending it to Comp Maker.")
         return
 
     members = _team_members(page, team_name)
@@ -132,7 +229,7 @@ def _coverage_builds_for_team(page, members):
 def _evaluate_team(page) -> None:
     team_name = _selected_team_name(page)
     if not team_name:
-        page.status.warning("Choose a team in the Assignments team menu before evaluating coverage.")
+        page.status.warning("Choose a team before evaluating coverage.")
         return
 
     members = _team_members(page, team_name)
@@ -167,44 +264,29 @@ def _evaluate_team(page) -> None:
         )
 
 
-def _open_encounters(page) -> None:
-    _show_page(page, "console:1")
-
-
-def _open_gear_lookup(page) -> None:
-    _show_page(page, "gear_lookup")
+def _clear_layout(layout) -> None:
+    while layout.count():
+        item = layout.takeAt(0)
+        widget = item.widget()
+        child_layout = item.layout()
+        if widget is not None:
+            widget.hide()
+            widget.setParent(None)
+            widget.deleteLater()
+        elif child_layout is not None:
+            _clear_layout(child_layout)
 
 
 def _clear_card_body(card) -> None:
-    while card.body_layout.count():
-        item = card.body_layout.takeAt(0)
-        widget = item.widget()
-        layout = item.layout()
-        if widget is not None:
-            widget.hide()
-            widget.setParent(None)
-            widget.deleteLater()
-        if layout is not None:
-            while layout.count():
-                child = layout.takeAt(0)
-                child_widget = child.widget()
-                if child_widget is not None:
-                    child_widget.hide()
-                    child_widget.setParent(None)
-                    child_widget.deleteLater()
+    _clear_layout(card.body_layout)
 
 
 def _clear_card_header(card) -> None:
-    """Make this a truly headerless action card, including old header actions."""
+    """Make the action card truly headerless, including any stale header button."""
     card.set_title("")
     card.set_icon("")
-    while card.header_action_layout.count():
-        item = card.header_action_layout.takeAt(0)
-        widget = item.widget()
-        if widget is not None:
-            widget.hide()
-            widget.setParent(None)
-            widget.deleteLater()
+    card.set_badge("")
+    _clear_layout(card.header_action_layout)
     card.header.hide()
     card.header.setMinimumHeight(0)
     card.header.setMaximumHeight(0)
@@ -215,8 +297,6 @@ def _install_attention_actions(page) -> None:
     if card is None:
         return
 
-    # Keep the card shell because it visually belongs with the other lower cards,
-    # but remove every part of the old header/readiness surface.
     _clear_card_header(card)
     card.setProperty("flatActionCard", True)
     card.set_watermark(None)
@@ -233,37 +313,39 @@ def _install_attention_actions(page) -> None:
     actions.setRowStretch(0, 1)
     actions.setRowStretch(1, 1)
 
+    save = QPushButton("Save")
+    save.setProperty("primary", True)
+    save.setToolTip("Save the visible assignments for the selected team and optional boss.")
+    save.clicked.connect(lambda *_: _save_assignments(page))
+
+    clear = QPushButton("Clear")
+    clear.setToolTip(
+        "Clear this context. On a boss, this restores the team's default assignments."
+    )
+    clear.clicked.connect(lambda *_: _clear_assignments(page))
+
     send = QPushButton("Send to Comp Maker")
-    send.setProperty("primary", True)
-    send.setToolTip("Carry the selected roster team into the Comp Maker workflow.")
+    send.setToolTip("Carry the selected roster team into Comp Maker.")
     send.clicked.connect(lambda *_: _send_to_comp_maker(page))
 
     evaluate = QPushButton("Evaluate")
-    evaluate.setToolTip("Open Coverage and run a quick static buff/debuff scan for the selected team's saved builds.")
+    evaluate.setToolTip("Run Coverage for the selected team's saved builds.")
     evaluate.clicked.connect(lambda *_: _evaluate_team(page))
 
-    encounters = QPushButton("Encounter")
-    encounters.setToolTip("Open the Encounters workspace.")
-    encounters.clicked.connect(lambda *_: _open_encounters(page))
-
-    gear = QPushButton("Gear Lookup")
-    gear.setToolTip("Open Gear Lookup.")
-    gear.clicked.connect(lambda *_: _open_gear_lookup(page))
-
-    for button in (send, evaluate, encounters, gear):
+    for button in (save, clear, send, evaluate):
         button.setMinimumHeight(52)
         button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
-    actions.addWidget(send, 0, 0)
-    actions.addWidget(evaluate, 0, 1)
-    actions.addWidget(encounters, 1, 0)
-    actions.addWidget(gear, 1, 1)
+    actions.addWidget(save, 0, 0)
+    actions.addWidget(clear, 0, 1)
+    actions.addWidget(send, 1, 0)
+    actions.addWidget(evaluate, 1, 1)
     card.addLayout(actions)
 
+    page.save_assignments_button = save
+    page.clear_assignments_button = clear
     page.send_to_comp_maker_button = send
     page.evaluate_team_button = evaluate
-    page.open_encounter_button = encounters
-    page.open_gear_lookup_button = gear
 
 
 def _configure_assignment_table(page) -> None:
@@ -278,8 +360,6 @@ def _configure_assignment_table(page) -> None:
             ready_column = column
             break
     if ready_column >= 0:
-        # Hide rather than physically removing the model column so older export
-        # and persistence code that still references column indices remains safe.
         table.setColumnHidden(ready_column, True)
 
     table.setMinimumHeight(500)
