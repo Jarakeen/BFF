@@ -51,6 +51,7 @@ class _Page:
     def __init__(self, result, *, build=object()) -> None:
         self.build = build
         self.request = object()
+        self.generation_builds = []
         self.rotation_canonical_cadence_orchestration = _Orchestrator(result)
         self.last_canonical_cadence_orchestration_result = None
         self.last_canonical_candidate_result = None
@@ -66,7 +67,8 @@ class _Page:
     def _selected_build(self):
         return self.build
 
-    def canonical_generation_request(self):
+    def canonical_generation_request(self, *, player_build=None):
+        self.generation_builds.append(player_build)
         return self.request
 
     def set_rotation_plan(self, plan) -> None:
@@ -118,6 +120,7 @@ def test_page_renders_final_cadence_evidence_from_orchestrated_run() -> None:
     )
 
     assert returned is result
+    assert page.generation_builds == [page.build]
     assert page.rotation_canonical_cadence_orchestration.calls == [
         {
             "player_build": page.build,
@@ -163,6 +166,7 @@ def test_page_renders_canonical_winner_when_cadence_is_not_applied() -> None:
     )
 
     assert returned is result
+    assert page.generation_builds == [page.build]
     assert page.plans == ["canonical-plan"]
     assert page.duration_evidence_card.values == ["canonical-duration"]
     assert page.sustain == ["canonical-sustain"]
@@ -187,6 +191,7 @@ def test_page_keeps_existing_display_when_orchestration_has_no_selectable_winner
     )
 
     assert returned is result
+    assert page.generation_builds == [page.build]
     assert page.plans == []
     assert page.duration_evidence_card.values == []
     assert page.sustain == []
@@ -198,10 +203,11 @@ def test_page_keeps_existing_display_when_orchestration_has_no_selectable_winner
 def test_page_requires_selected_build_before_orchestration() -> None:
     page = _Page(object(), build=None)
 
-    with pytest.raises(ValueError, match="select a saved build"):
+    with pytest.raises(ValueError, match="select or supply a build"):
         CanonicalRotationDashboardPage.run_canonical_cadence_orchestration(
             page,
             object(),  # type: ignore[arg-type]
         )
 
+    assert page.generation_builds == []
     assert page.rotation_canonical_cadence_orchestration.calls == []
