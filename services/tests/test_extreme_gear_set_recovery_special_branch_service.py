@@ -89,6 +89,21 @@ def test_classifies_wrathsun_grants_per_stack_ceiling():
     assert row.can_raise_self
 
 
+def test_classifies_max_resource_scaled_recovery_formula():
+    row = _classify(
+        "Gain 1 Magicka Recovery for every 100 Max Magicka you have. Current Increase: 120 Magicka Recovery.",
+        name="Three Queens Wellspring",
+        objective_key="magicka_recovery",
+    )
+    assert row.kind is ExtremeRecoverySpecialBranchKind.FORMULA
+    assert row.flat_ceiling is None
+    assert row.formula_numerator == 1.0
+    assert row.formula_denominator == 100.0
+    assert row.formula_resource == "max_magicka"
+    assert row.condition == "max_magicka_scaled"
+    assert row.can_raise_self
+
+
 def test_classifies_enemy_recovery_reduction_as_non_challenger():
     row = _classify("Enemies in the area have their healing received and Health Recovery reduced by 6%.")
     assert row.kind is ExtremeRecoverySpecialBranchKind.NEGATIVE_ONLY
