@@ -8,14 +8,21 @@ from services.extreme_recovery_class_route_frontier_service import (
 from tools.audit_extreme_magicka_recovery_same_build_enlivening import (
     exact_enlivening_value,
     prove_route_lock,
+    route_line_ids,
 )
 
 
-def _candidate(name: str, *, delta: float, slope: float):
+def _candidate(
+    name: str,
+    *,
+    delta: float,
+    slope: float,
+    equipped_skill_lines: tuple[str, ...] | None = None,
+):
     return ExtremeRecoveryClassRouteCandidate(
         objective_key="magicka_recovery",
         base_class=name,
-        equipped_skill_lines=(name,),
+        equipped_skill_lines=equipped_skill_lines or (name,),
         is_pure_class=False,
         static_flat=0.0,
         static_percent=slope,
@@ -56,9 +63,26 @@ def test_exact_enlivening_value_scales_below_cap():
     assert exact_enlivening_value(25932.744) == pytest.approx(129.66372)
 
 
+def test_exact_enlivening_value_accepts_same_build_value_below_cap():
+    assert exact_enlivening_value(26924.736) == pytest.approx(134.62368)
+
+
 def test_exact_enlivening_value_caps_at_thirty_thousand_magicka():
     assert exact_enlivening_value(30000.0) == 150.0
     assert exact_enlivening_value(50000.0) == 150.0
+
+
+def test_route_line_ids_normalize_canonical_route_names():
+    row = _candidate(
+        "warden",
+        delta=1.0,
+        slope=0.53,
+        equipped_skill_lines=("Animal Companions", "Curative Runeforms", "Shadow"),
+    )
+
+    assert route_line_ids(row) == frozenset(
+        {"animal_companions", "curative_runeforms", "shadow"}
+    )
 
 
 def test_route_lock_accepts_winner_that_starts_ahead_and_has_higher_slope():
