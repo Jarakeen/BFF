@@ -1,3 +1,4 @@
+from pathlib import Path
 from types import SimpleNamespace
 
 from models.scribing_recipe import ScribedSkillRecipe
@@ -84,3 +85,16 @@ def test_standalone_scribing_route_is_removed(monkeypatch) -> None:
 
     assert sections[0]["children"] == [("Other Tool", "other_tool")]
     assert sections[1]["children"] == [("Builds", "builds")]
+
+
+def test_permanent_build_workspace_uses_u51_scribing_service_with_static_fallback() -> None:
+    source = Path("ui/build_workspace_edit_fix.py").read_text(encoding="utf-8")
+
+    assert "from services.scribing_u51_service import U51ScribingService" in source
+    assert "U51ScribingService(DEFAULT_DATABASE)" in source
+    assert "service.compatible_focus(grimoire)" in source
+    assert "service.compatible_signature(grimoire)" in source
+    assert "service.compatible_affix(grimoire)" in source
+    assert "service.result_name(grimoire, focus)" in source
+    assert "service.combined_description(grimoire, focus, signature, affix)" in source
+    assert "static_result_name(grimoire, focus)" in source
