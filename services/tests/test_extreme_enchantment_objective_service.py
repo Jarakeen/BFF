@@ -46,6 +46,38 @@ class _JewelryRepo:
         ]
 
 
+class _SemanticJewelryRepo:
+    def list_names(self):
+        return ("Glyph of Bracing", "Glyph of Magicka Recovery")
+
+    def get_jewelry_glyph_effect_types_by_name(self, name):
+        if name == "Glyph of Bracing":
+            return ("block_cost_reduction",)
+        return ("magicka_recovery",)
+
+    def get_jewelry_glyph_effect_by_name(self, name, *, use_max_value=True):
+        assert use_max_value is True
+        if name == "Glyph of Bracing":
+            raise ValueError("Unsupported engine stat effect type: 'block_cost_reduction'")
+        return [
+            Effect(
+                source=name,
+                stat=StatId.MAGICKA_RECOVERY,
+                operation=EffectOperation.ADD,
+                value=169.0,
+                unit=EffectUnit.FLAT,
+            )
+        ]
+
+
+class _RelevantUnmappedJewelryRepo:
+    def get_jewelry_glyph_effect_types_by_name(self, name):
+        return ("magicka_recovery", "future_unmapped_semantic")
+
+    def get_jewelry_glyph_effect_by_name(self, name, *, use_max_value=True):
+        raise ValueError("Unsupported engine stat effect type: 'future_unmapped_semantic'")
+
+
 class _ArmorRepo:
     def list_names(self):
         return ("Glyph of Health", "Glyph of Magicka")
@@ -73,6 +105,30 @@ def test_best_jewelry_glyph_projects_static_recovery():
     assert best.glyph_name == "Glyph of Magicka Recovery"
     assert best.projected_delta == pytest.approx(169.0)
     assert best.unresolved == ()
+
+
+def test_irrelevant_unmapped_jewelry_semantics_do_not_poison_recovery_search():
+    rows = ExtremeEnchantmentObjectiveService.jewelry_candidates_for_objective(
+        _SemanticJewelryRepo(),
+        "magicka_recovery",
+    )
+    by_name = {row.glyph_name: row for row in rows}
+
+    assert by_name["Glyph of Bracing"].projected_delta == 0.0
+    assert by_name["Glyph of Bracing"].unresolved == ()
+    assert by_name["Glyph of Magicka Recovery"].projected_delta == pytest.approx(169.0)
+
+
+def test_relevant_unmapped_jewelry_semantic_remains_explicit_blocker():
+    row = ExtremeEnchantmentObjectiveService.jewelry_candidate(
+        _RelevantUnmappedJewelryRepo(),
+        "Future Mixed Glyph",
+        "magicka_recovery",
+    )
+
+    assert row.projected_delta is None
+    assert row.unresolved
+    assert "future_unmapped_semantic" in row.unresolved[0]
 
 
 def test_jewelry_multiplier_applies_to_static_damage_glyph():
