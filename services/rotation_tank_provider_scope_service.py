@@ -7,9 +7,10 @@ Phase 10/11 provider-scope authority for the exact selected roster builds and se
 encounter, then asks ``RotationAssignmentPolicyResolver`` whether every assignment
 owned by the selected Tank has an explicit executable disposition.
 
-The result is deliberately not a Generate obligation bundle. Provider ownership and
-rotation policy are separate truths. A caller may only treat the result as
-Rotation-ready when ``ready`` is true.
+When callers do not supply explicit policy tuples, reviewed policy is loaded from the
+shared read-only assignment-policy registry. Provider ownership and rotation policy
+remain separate truths. A caller may only treat the result as Rotation-ready when
+``ready`` is true.
 """
 
 from dataclasses import dataclass
@@ -23,6 +24,9 @@ from services.build_service import BuildService
 from services.encounter_build_capability_adapter import SavedBuildEncounterCapabilityAdapter
 from services.encounter_provider_assignment import ProviderAssignment
 from services.rotation_assignment_effect_obligation_service import RotationAssignmentEffectPolicy
+from services.rotation_assignment_policy_registry_service import (
+    RotationAssignmentPolicyRegistryService,
+)
 from services.rotation_assignment_policy_resolver import (
     RotationAssignmentNonEffectPolicy,
     RotationAssignmentPolicyResolution,
@@ -83,6 +87,7 @@ class RotationTankProviderScopeService:
         capability_service: SavedBuildCapabilityService | object | None = None,
         scope_factory: ProviderScopeFactory | None = None,
         policy_resolver: RotationAssignmentPolicyResolver | object | None = None,
+        policy_registry: RotationAssignmentPolicyRegistryService | object | None = None,
     ) -> None:
         self.data_root = Path(data_root) if data_root is not None else get_data_dir()
         self.database_path = (
@@ -97,6 +102,9 @@ class RotationTankProviderScopeService:
         )
         self.scope_factory = scope_factory or build_default_raid_provider_scope
         self.policy_resolver = policy_resolver or RotationAssignmentPolicyResolver()
+        self.policy_registry = policy_registry or RotationAssignmentPolicyRegistryService(
+            self.data_root / "rotation_assignment_policy" / "reviewed.json"
+        )
 
     def resolve(
         self,
@@ -135,13 +143,34 @@ class RotationTankProviderScopeService:
             database_path=self.database_path,
         )
         assignments = tuple(getattr(scope, "baseline_assignments", ()))
+
+        explicit_policy = bool(
+            effect_policies
+            or taunt_policies
+            or taunt_maintenance_policies
+            or non_effect_policies
+        )
+        if explicit_policy:
+            resolved_effect_policies = tuple(effect_policies)
+            resolved_taunt_policies = tuple(taunt_policies)
+            resolved_taunt_maintenance_policies = tuple(taunt_maintenance_policies)
+            resolved_non_effect_policies = tuple(non_effect_policies)
+        else:
+            reviewed = self.policy_registry.for_encounter(resolved_encounter)
+            resolved_effect_policies = tuple(reviewed.effect_policies)
+            resolved_taunt_policies = tuple(reviewed.taunt_policies)
+            resolved_taunt_maintenance_policies = tuple(
+                reviewed.taunt_maintenance_policies
+            )
+            resolved_non_effect_policies = tuple(reviewed.non_effect_policies)
+
         policy_resolution = self.policy_resolver.resolve(
             member_id=member_id,
             assignments=assignments,
-            effect_policies=tuple(effect_policies),
-            taunt_policies=tuple(taunt_policies),
-            taunt_maintenance_policies=tuple(taunt_maintenance_policies),
-            non_effect_policies=tuple(non_effect_policies),
+            effect_policies=resolved_effect_policies,
+            taunt_policies=resolved_taunt_policies,
+            taunt_maintenance_policies=resolved_taunt_maintenance_policies,
+            non_effect_policies=resolved_non_effect_policies,
         )
         if policy_resolution.member_id.casefold() != member_id.casefold():
             raise ValueError(
