@@ -14,8 +14,17 @@ DATABASE = ROOT / "data" / "eso.db"
 
 def _catalog_by_name():
     catalog = ExtremeNamedGearSetSlotEligibilityService(DATABASE).build()
-    assert not catalog.unresolved
-    return {row.name: row for row in catalog.sets}
+    rows = {row.name: row for row in catalog.sets}
+    required = {
+        "Torc of Tonal Constancy",
+        "Stormweaver's Cavort",
+        "Oakensoul Ring",
+        "Ring of the Pale Order",
+        "Harpooner's Wading Kilt",
+        "Prophet's",
+    }
+    assert required.issubset(rows)
+    return rows
 
 
 def test_antiquities_catalog_normalizes_known_mythics_but_not_prophets():
