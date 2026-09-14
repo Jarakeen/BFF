@@ -151,6 +151,25 @@ class ExtremeRecoveryPassiveSpecialBranchService:
                 condition="runtime_condition_required",
             )
 
+        # Conditional shared-Recovery passives may put the amount after the noun
+        # phrase rather than before it, e.g. Undead Confederate: "your Health,
+        # Magicka, and Stamina Recovery is increased by 155".  Capture the proven
+        # ceiling while preserving the runtime condition instead of flattening it
+        # into an always-on static contribution.
+        conditional_increased_by = re.search(
+            r"recovery\s+(?:is|are)\s+increased by\s+(\d+(?:\.\d+)?)",
+            text,
+        )
+        if conditional_increased_by:
+            return ExtremeRecoveryPassiveBranch(
+                passive=passive,
+                objective_key=objective,
+                kind=ExtremeRecoveryPassiveBranchKind.CONDITIONAL_FLAT,
+                can_raise_self=True,
+                flat_ceiling=float(conditional_increased_by.group(1)),
+                condition="runtime_condition_required",
+            )
+
         shared_fixed = re.search(
             r"(?:and\s+)?(\d+(?:\.\d+)?)\s+(?:health|magicka|stamina)(?:\s*,\s*|\s+and\s+|\s*,\s*and\s+)(?:health|magicka|stamina)(?:(?:\s*,\s*|\s+and\s+|\s*,\s*and\s+)(?:health|magicka|stamina))?\s+recovery",
             text,
