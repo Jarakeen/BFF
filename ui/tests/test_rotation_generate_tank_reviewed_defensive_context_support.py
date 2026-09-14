@@ -45,8 +45,12 @@ def _bundle(encounter_id="taleria_hm"):
     return SimpleNamespace(encounter_id=encounter_id)
 
 
-def _obligation(obligation_id="block-heavy"):
-    return SimpleNamespace(obligation_id=obligation_id)
+def _obligation(obligation_id="block-heavy", *, start=10.0, end=11.0):
+    return SimpleNamespace(
+        obligation_id=obligation_id,
+        window_start_seconds=start,
+        window_end_seconds=end,
+    )
 
 
 def test_reviewed_defensive_fact_and_timing_inputs_are_derived_at_generate_time():
