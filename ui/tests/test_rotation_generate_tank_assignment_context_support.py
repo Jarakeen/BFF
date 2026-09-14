@@ -133,15 +133,17 @@ def test_multiple_members_for_same_encounter_fail_closed_until_member_selection_
         support.context_for(object(), _bundle())
 
 
-def test_install_exposes_assignment_evidence_setter_and_context_provider():
+def test_explicit_page_hooks_expose_assignment_evidence_setter_and_context_provider():
     support = RotationGenerateTankAssignmentContextSupport(
         build_adapter=_Adapter(SimpleNamespace(build=object(), unresolved=())),
         bundle_service=_BundleService(_derived()),
         database_path="eso.db",
     )
     page = SimpleNamespace()
+    page._rotation_generate_tank_assignment_context_support = support
+    page.set_rotation_generate_tank_assignment_evidence = support.set_evidence
+    page.rotation_generate_tank_assignment_context = support.context_for
 
-    support.install(page)
     page.set_rotation_generate_tank_assignment_evidence((_row(),))
     result = page.rotation_generate_tank_assignment_context(object(), _bundle())
 
