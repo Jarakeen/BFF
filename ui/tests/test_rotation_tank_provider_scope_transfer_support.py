@@ -40,25 +40,43 @@ def _tank():
     return SimpleNamespace(Name="Tank A", BuildName="MT", Role="Tank")
 
 
-def _window(rotation_page):
+def _assignment(build, slot_name):
+    return SimpleNamespace(
+        slot_name=slot_name,
+        player_name=build.Name,
+        source_build_name=build.BuildName,
+    )
+
+
+def _optimization_page(*builds, assignments=None):
+    rows = (
+        tuple(assignments)
+        if assignments is not None
+        else tuple(
+            _assignment(build, f"Slot {index}")
+            for index, build in enumerate(builds, start=1)
+        )
+    )
+    return SimpleNamespace(
+        roster=SimpleNamespace(Members=list(builds)),
+        current_prescription=SimpleNamespace(assignments=rows),
+    )
+
+
+def _window(rotation_page, optimization_page=None):
     return SimpleNamespace(
         pages={
             "rotations": rotation_page,
-            "console:6": SimpleNamespace(),
+            "console:6": optimization_page or SimpleNamespace(),
         }
     )
 
 
-def test_transfer_delivers_provider_scope_and_symbolic_policy_to_rotation(monkeypatch):
+def test_transfer_delivers_provider_scope_and_symbolic_policy_to_rotation():
     tank = _tank()
     teammate = SimpleNamespace(Name="Healer A", BuildName="Heal", Role="Healer")
     rotation_page = _RotationPage(tank)
-    window = _window(rotation_page)
-    monkeypatch.setattr(
-        support_module,
-        "_optimization_selected_saved_builds",
-        lambda _page: (tank, teammate),
-    )
+    window = _window(rotation_page, _optimization_page(tank, teammate))
     policy_resolution = SimpleNamespace(
         taunt_policies=("apply",),
         taunt_maintenance_policies=("maintain",),
@@ -93,17 +111,41 @@ def test_transfer_delivers_provider_scope_and_symbolic_policy_to_rotation(monkey
     assert service.calls[0]["roster_builds"] == (tank, teammate)
 
 
-def test_non_tank_rotation_selection_clears_stale_tank_evidence(monkeypatch):
+def test_transfer_uses_authoritative_prescription_without_team_table():
+    tank = _tank()
+    teammate = SimpleNamespace(Name="Healer A", BuildName="Heal", Role="Healer")
+    rotation_page = _RotationPage(tank)
+    optimization_page = _optimization_page(tank, teammate)
+    assert not hasattr(optimization_page, "team_table")
+    window = _window(rotation_page, optimization_page)
+    service = _ProviderScopeService(
+        SimpleNamespace(
+            encounter_id="taleria_hm",
+            member_id="tank-a",
+            assignments=(),
+            policy_resolution=SimpleNamespace(
+                taunt_policies=(), taunt_maintenance_policies=()
+            ),
+            taunt_maintenance_horizon_policies=(),
+            unresolved=(),
+        )
+    )
+
+    result = refresh_rotation_tank_provider_scope(
+        window,
+        provider_scope_service=service,
+    )
+
+    assert result.transferred is True
+    assert service.calls[0]["roster_builds"] == (tank, teammate)
+
+
+def test_non_tank_rotation_selection_clears_stale_tank_evidence():
     rotation_page = _RotationPage(
         SimpleNamespace(Name="DD A", BuildName="Parse", Role="Damage Dealer")
     )
     rotation_page.received = ("stale",)
     window = _window(rotation_page)
-    monkeypatch.setattr(
-        support_module,
-        "_optimization_selected_saved_builds",
-        lambda _page: (_tank(),),
-    )
 
     result = refresh_rotation_tank_provider_scope(window, provider_scope_service=object())
 
@@ -112,32 +154,52 @@ def test_non_tank_rotation_selection_clears_stale_tank_evidence(monkeypatch):
     assert rotation_page.received == ()
 
 
-def test_missing_exact_selected_team_fails_closed_and_clears_evidence(monkeypatch):
-    rotation_page = _RotationPage(_tank())
+def test_missing_authoritative_prescription_fails_closed_and_clears_evidence():
+    tank = _tank()
+    rotation_page = _RotationPage(tank)
     rotation_page.received = ("stale",)
-    window = _window(rotation_page)
-    monkeypatch.setattr(
-        support_module,
-        "_optimization_selected_saved_builds",
-        lambda _page: (),
+    optimization_page = SimpleNamespace(
+        roster=SimpleNamespace(Members=[tank]),
+        current_prescription=None,
     )
+    window = _window(rotation_page, optimization_page)
 
     result = refresh_rotation_tank_provider_scope(window, provider_scope_service=object())
 
     assert result.transferred is False
-    assert "no exact selected saved-build team" in result.unresolved[0]
+    assert "no authoritative current prescription" in result.unresolved[0]
     assert rotation_page.received == ()
 
 
-def test_provider_scope_resolution_failure_does_not_leave_stale_evidence(monkeypatch):
-    rotation_page = _RotationPage(_tank())
+def test_open_prescription_chair_fails_closed_and_clears_evidence():
+    tank = _tank()
+    rotation_page = _RotationPage(tank)
     rotation_page.received = ("stale",)
-    window = _window(rotation_page)
-    monkeypatch.setattr(
-        support_module,
-        "_optimization_selected_saved_builds",
-        lambda _page: (_tank(),),
+    open_chair = SimpleNamespace(
+        slot_name="Off Tank",
+        player_name=None,
+        source_build_name=None,
     )
+    optimization_page = _optimization_page(
+        tank,
+        assignments=(_assignment(tank, "Main Tank"), open_chair),
+    )
+    window = _window(rotation_page, optimization_page)
+
+    result = refresh_rotation_tank_provider_scope(window, provider_scope_service=object())
+
+    assert result.transferred is False
+    assert result.unresolved == (
+        "Off Tank: prescription does not identify an exact saved player",
+    )
+    assert rotation_page.received == ()
+
+
+def test_provider_scope_resolution_failure_does_not_leave_stale_evidence():
+    tank = _tank()
+    rotation_page = _RotationPage(tank)
+    rotation_page.received = ("stale",)
+    window = _window(rotation_page, _optimization_page(tank))
     service = _ProviderScopeService(error=ValueError("selected Tank is not on selected team"))
 
     result = refresh_rotation_tank_provider_scope(
