@@ -30,10 +30,18 @@ class _AssignmentBundleService:
         )
 
 
+def _obligation(obligation_id="threshold-block", *, start=20.0, end=21.0):
+    return SimpleNamespace(
+        obligation_id=obligation_id,
+        window_start_seconds=start,
+        window_end_seconds=end,
+    )
+
+
 class _ThresholdDefensiveBundleService:
     def __init__(self, *, obligations=None, unresolved=()):
         self.obligations = (
-            (SimpleNamespace(obligation_id="threshold-block"),)
+            (_obligation(),)
             if obligations is None
             else tuple(obligations)
         )
