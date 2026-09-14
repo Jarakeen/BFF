@@ -7,6 +7,11 @@ mechanics. This layer permits reviewed policy to say that continuous taunt owner
 lasts until the projected encounter end without persisting a brittle absolute second.
 Only a resolved RotationTankEncounterHorizon may turn that symbolic endpoint into the
 existing numeric RotationAssignmentTauntMaintenancePolicy consumed downstream.
+
+A symbolic encounter policy may deliberately omit ``source_skill_name`` and bar. Those
+are saved-build/provider facts, not encounter facts. Generate may bind the policy to an
+exact canonical taunt skill/bar supplied by the selected provider scope. The materializer
+fails closed if neither the reviewed policy nor provider evidence supplies a unique skill.
 """
 
 from dataclasses import dataclass
@@ -60,16 +65,15 @@ class RotationAssignmentTauntMaintenanceHorizonPolicy:
     requirement_id: str
     encounter_id: str
     requirement_type: str
-    source_skill_name: str
     windows: tuple[RotationAssignmentTauntMaintenanceHorizonWindow, ...]
     source: str
+    source_skill_name: str | None = None
 
     def __post_init__(self) -> None:
         for field_name in (
             "requirement_id",
             "encounter_id",
             "requirement_type",
-            "source_skill_name",
             "source",
         ):
             value = str(getattr(self, field_name) or "").strip()
@@ -78,6 +82,13 @@ class RotationAssignmentTauntMaintenanceHorizonPolicy:
                     f"symbolic taunt maintenance policy {field_name} must be non-empty"
                 )
             object.__setattr__(self, field_name, value)
+        if self.source_skill_name is not None:
+            source_skill_name = str(self.source_skill_name or "").strip()
+            if not source_skill_name:
+                raise ValueError(
+                    "symbolic taunt maintenance policy source_skill_name must be non-empty when supplied"
+                )
+            object.__setattr__(self, "source_skill_name", source_skill_name)
         windows = tuple(self.windows)
         if not windows:
             raise ValueError(
@@ -107,6 +118,8 @@ class RotationAssignmentTauntMaintenanceHorizonPolicyService:
         *,
         policy: RotationAssignmentTauntMaintenanceHorizonPolicy,
         horizon: RotationTankEncounterHorizon,
+        provider_source_skill_name: str | None = None,
+        provider_source_bar: str | None = None,
     ) -> RotationAssignmentTauntMaintenanceHorizonMaterialization:
         if horizon.encounter_id != policy.encounter_id:
             raise ValueError(
@@ -120,6 +133,34 @@ class RotationAssignmentTauntMaintenanceHorizonPolicyService:
                 or ("Tank encounter horizon is unresolved",),
             )
 
+        reviewed_skill = (
+            None
+            if policy.source_skill_name is None
+            else str(policy.source_skill_name or "").strip()
+        )
+        provider_skill = str(provider_source_skill_name or "").strip() or None
+        if reviewed_skill and provider_skill and reviewed_skill.casefold() != provider_skill.casefold():
+            return RotationAssignmentTauntMaintenanceHorizonMaterialization(
+                policy=None,
+                resolved=False,
+                unresolved=(
+                    f"{policy.requirement_id}: reviewed taunt skill {reviewed_skill!r} does not match canonical provider taunt {provider_skill!r}",
+                ),
+            )
+        source_skill_name = reviewed_skill or provider_skill
+        if not source_skill_name:
+            return RotationAssignmentTauntMaintenanceHorizonMaterialization(
+                policy=None,
+                resolved=False,
+                unresolved=(
+                    f"{policy.requirement_id}: symbolic taunt-maintenance policy has no exact canonical provider taunt skill",
+                ),
+            )
+
+        provider_bar = str(provider_source_bar or "").strip().casefold() or None
+        if provider_bar is not None and provider_bar not in {"front", "back"}:
+            raise ValueError("provider_source_bar must be front or back when supplied")
+
         end = float(horizon.end_seconds)
         windows: list[RotationAssignmentTauntMaintenanceWindow] = []
         for window in policy.windows:
@@ -132,13 +173,21 @@ class RotationAssignmentTauntMaintenanceHorizonPolicyService:
                         "does not occur after the reviewed maintenance start",
                     ),
                 )
+            if window.bar and provider_bar and window.bar != provider_bar:
+                return RotationAssignmentTauntMaintenanceHorizonMaterialization(
+                    policy=None,
+                    resolved=False,
+                    unresolved=(
+                        f"{policy.requirement_id}:{window.occurrence_id}: reviewed taunt bar {window.bar!r} does not match canonical provider bar {provider_bar!r}",
+                    ),
+                )
             windows.append(
                 RotationAssignmentTauntMaintenanceWindow(
                     occurrence_id=window.occurrence_id,
                     target_key=window.target_key,
                     active_start_seconds=window.active_start_seconds,
                     active_end_seconds=end,
-                    bar=window.bar,
+                    bar=window.bar or provider_bar,
                 )
             )
 
@@ -146,7 +195,7 @@ class RotationAssignmentTauntMaintenanceHorizonPolicyService:
             requirement_id=policy.requirement_id,
             encounter_id=policy.encounter_id,
             requirement_type=policy.requirement_type,
-            source_skill_name=policy.source_skill_name,
+            source_skill_name=source_skill_name,
             windows=tuple(windows),
             source=policy.source,
         )
@@ -156,6 +205,8 @@ class RotationAssignmentTauntMaintenanceHorizonPolicyService:
             evidence=(
                 *tuple(horizon.evidence),
                 f"symbolic_endpoint=encounter_end:{end:g}",
+                f"provider_taunt={source_skill_name}",
+                *(() if provider_bar is None else (f"provider_taunt_bar={provider_bar}",)),
             ),
         )
 
