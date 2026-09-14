@@ -45,7 +45,7 @@ def _player_build_from_catalog_record(record: object) -> PlayerBuild | None:
         return None
 
 
-def _canonical_team_builds(page, team_name: str):
+def _canonical_team_builds(page, team_name: str, boss_name: str = ""):
     """Load exact build assignments for a team from the canonical build catalog."""
     bridge = getattr(getattr(page, "build_service", None), "canonical", None)
     catalog = getattr(bridge, "catalog_service", None)
@@ -72,7 +72,11 @@ def _canonical_team_builds(page, team_name: str):
                 str(assignment.get("slot_name") or assignment.get("raid_role") or build_id)
             )
             continue
-        resolved = resolve_build_context(build, team_name=team_name, boss_name="")
+        resolved = resolve_build_context(
+            build,
+            team_name=team_name,
+            boss_name=boss_name,
+        )
         slot = str(
             assignment.get("slot_name")
             or assignment.get("raid_role")
@@ -85,7 +89,7 @@ def _canonical_team_builds(page, team_name: str):
     return tuple(selected), tuple(unresolved)
 
 
-def select_team_builds(builds, members, team_name: str):
+def select_team_builds(builds, members, team_name: str, boss_name: str = ""):
     """Fallback selection for teams without canonical build assignments.
 
     A unique Ready-for-Raid build wins; otherwise a sole candidate wins. Any
@@ -123,7 +127,11 @@ def select_team_builds(builds, members, team_name: str):
             )
             continue
 
-        resolved = resolve_build_context(chosen, team_name=team_name, boss_name="")
+        resolved = resolve_build_context(
+            chosen,
+            team_name=team_name,
+            boss_name=boss_name,
+        )
         slot = str(
             getattr(member, "PrimaryRole", "")
             or getattr(member, "PlayerName", "")
@@ -154,7 +162,12 @@ def _clear_empty_team_result(page, team_name: str, member_count: int, unresolved
     )
 
 
-def run_team_health_check(page, team_name: str | None = None) -> None:
+def run_team_health_check(
+    page,
+    team_name: str | None = None,
+    *,
+    boss_name: str = "",
+) -> None:
     """Run one diagnostic health check, optionally selecting ``team_name`` first."""
     combo = getattr(page, "health_check_team_combo", None)
     if combo is None:
@@ -200,7 +213,7 @@ def run_team_health_check(page, team_name: str | None = None) -> None:
 
     # Exact canonical team->build assignments are authoritative. Only fall back
     # to player/character inference when a team has no canonical build mapping.
-    selected, unresolved = _canonical_team_builds(page, selected_team)
+    selected, unresolved = _canonical_team_builds(page, selected_team, boss_name)
     source = "canonical team assignments"
     if not selected:
         try:
@@ -208,7 +221,12 @@ def run_team_health_check(page, team_name: str | None = None) -> None:
         except Exception as exc:
             page.status.error(f"Could not load saved builds for {selected_team}: {exc}")
             return
-        selected, unresolved = select_team_builds(builds, members, selected_team)
+        selected, unresolved = select_team_builds(
+            builds,
+            members,
+            selected_team,
+            boss_name,
+        )
         source = "roster member matching"
 
     if not selected:
@@ -218,9 +236,10 @@ def run_team_health_check(page, team_name: str | None = None) -> None:
     page.set_team_scope(selected_team, selected, total_slots=RAID_TEAM_SLOTS)
     loaded = len(selected)
     member_count = len(members)
+    context_note = f" • encounter {boss_name}" if boss_name else ""
     lines = [
         f"Direct roster health check • {member_count}/{RAID_TEAM_SLOTS} roster slots populated • "
-        f"{loaded} saved team build(s) resolved via {source}."
+        f"{loaded} saved team build(s) resolved via {source}{context_note}."
     ]
     if unresolved:
         lines.append(f"Build selection unresolved for: {', '.join(unresolved[:8])}")
