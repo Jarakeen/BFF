@@ -58,8 +58,6 @@ def _member_belongs_to_team(page, member, team_name: str, canonical_members: set
     if not player_name:
         return False
 
-    # Prefer exact Player + Character identity. A player-only fallback is kept
-    # for older personnel records that predate character identity persistence.
     if (player_name, character_name) in canonical_members:
         return True
     return not character_name and any(player == player_name for player, _ in canonical_members)
@@ -159,12 +157,9 @@ def _wire_team_cards(page) -> None:
             continue
 
         widget.setCursor(Qt.CursorShape.PointingHandCursor)
-        widget.setToolTip(f"Show {team_name} members in Assignments")
+        widget.setToolTip("")
         widget.setProperty("teamAssignmentFilterCard", True)
 
-        # QLabel children normally ignore mouse presses, allowing the event to
-        # reach the card. Making that explicit keeps the whole visual card click
-        # target consistent without swallowing future buttons or controls.
         for label in widget.findChildren(type(widget.title_label)):
             label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
 
@@ -206,7 +201,7 @@ def install() -> None:
         if card is not None:
             combo = QComboBox()
             combo.setMinimumWidth(180)
-            combo.setToolTip("Show assignments for one saved team, or all teams.")
+            combo.setToolTip("")
             combo.currentIndexChanged.connect(
                 lambda index: _team_selector_changed(self, index)
             )
