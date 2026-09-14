@@ -119,6 +119,26 @@ EXTREME_HEALTH_RECOVERY_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "mechanics remain owned and scored by the external semantic service."
         ),
     ),
+    ServiceDescriptor(
+        service_id="extreme.recovery_provisioning_projection",
+        domain="extreme",
+        purpose=(
+            "Reduce the canonical provisioning catalogue to the strongest mapped food "
+            "and drink for one Recovery objective without choosing a whole build."
+        ),
+        implementation_path=(
+            "services.extreme_recovery_provisioning_projection_service"
+        ),
+        inputs=("CanonicalEsoDatabase", "RecoveryObjective"),
+        outputs=("ExtremeRecoveryProvisioningProjection",),
+        responsibilities=("extreme_recovery_provisioning_projection",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Only canonical static additive Recovery effects are projected; unsupported "
+            "operations and ambiguous food/drink identities fail closed."
+        ),
+    ),
 )
 
 
