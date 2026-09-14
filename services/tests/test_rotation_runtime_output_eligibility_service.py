@@ -1,9 +1,12 @@
+import json
+
 import pytest
 
 from minmax.runtime_event import RuntimeEvent
 from minmax.runtime_output_eligibility import RuntimeOutputEligibilityRule
 from services.rotation_runtime_output_eligibility_service import (
     DETONATING_SIPHON_GEOMETRY_CONDITION,
+    RotationRuntimeOutputConditionRegistryService,
     RotationRuntimeOutputConditionRule,
     RotationRuntimeOutputEligibilityService,
 )
@@ -140,3 +143,48 @@ def test_custom_rules_are_canonicalized_and_duplicates_fail_closed_at_configurat
 
     with pytest.raises(ValueError):
         RotationRuntimeOutputEligibilityService((rule, rule))
+
+
+def test_registry_loads_reviewed_rules_and_canonicalizes_identity(tmp_path) -> None:
+    path = tmp_path / "runtime_conditions.json"
+    path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "entries": [
+                    {
+                        "skill_entity_id": "Example Skill",
+                        "coefficient_number": 2,
+                        "required_conditions": ["condition_a"],
+                        "source": "reviewed fixture",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    rules = RotationRuntimeOutputConditionRegistryService(path).load()
+
+    assert len(rules) == 1
+    assert rules[0].skill_entity_id == "example_skill"
+    assert rules[0].coefficient_number == 2
+    assert rules[0].eligibility.required_conditions == ("condition_a",)
+    assert rules[0].eligibility.source == "reviewed fixture"
+
+
+def test_registry_rejects_duplicate_component_rules(tmp_path) -> None:
+    path = tmp_path / "runtime_conditions.json"
+    row = {
+        "skill_entity_id": "Example Skill",
+        "coefficient_number": 2,
+        "required_conditions": ["condition_a"],
+        "source": "reviewed fixture",
+    }
+    path.write_text(
+        json.dumps({"schema_version": 1, "entries": [row, row]}),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="duplicate runtime output condition registry rule"):
+        RotationRuntimeOutputConditionRegistryService(path).load()
