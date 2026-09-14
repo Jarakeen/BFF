@@ -76,6 +76,29 @@ def test_static_shared_percent_accepts_health_magicka_stamina_word_order():
     assert row.percent_ceiling == pytest.approx(12.0)
 
 
+def test_static_paired_percent_accepts_magicka_and_stamina_recovery():
+    passive = _passive(
+        "Erudition",
+        "Increases your Magicka and Stamina Recovery by 18%.",
+    )
+    assert ExtremeRecoveryPassiveSpecialBranchService.mentions_objective_recovery(
+        passive.description,
+        "magicka_recovery",
+    )
+    assert ExtremeRecoveryPassiveSpecialBranchService.mentions_objective_recovery(
+        passive.description,
+        "stamina_recovery",
+    )
+    assert not ExtremeRecoveryPassiveSpecialBranchService.mentions_objective_recovery(
+        passive.description,
+        "health_recovery",
+    )
+    row = ExtremeRecoveryPassiveSpecialBranchService.classify(passive, "magicka_recovery")
+    assert row is not None
+    assert row.kind is ExtremeRecoveryPassiveBranchKind.STATIC_PERCENT
+    assert row.percent_ceiling == pytest.approx(18.0)
+
+
 def test_slot_scaled_recovery_is_semantically_classified_without_invented_ceiling():
     row = ExtremeRecoveryPassiveSpecialBranchService.classify(
         _passive("Wellspring of the Abyss", "Increases your Health, Magicka, and Stamina Recovery by 129 for each Soldier of Apocrypha ability slotted."),
