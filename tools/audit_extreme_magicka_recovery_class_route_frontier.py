@@ -17,6 +17,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from services.extreme_recovery_class_route_frontier_service import (
+    ExtremeRecoveryClassRouteCandidate,
     ExtremeRecoveryClassRouteFrontierService,
 )
 
@@ -33,6 +34,33 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--top", type=int, default=8)
     return parser
+
+
+def _best_for_lines(
+    service: ExtremeRecoveryClassRouteFrontierService,
+    lines: tuple[str, ...],
+    reference: float,
+) -> ExtremeRecoveryClassRouteCandidate | None:
+    result = service.frontier("magicka_recovery", reference_value=reference)
+    rows = [row for row in result.candidates if row.equipped_skill_lines == lines]
+    return rows[0] if rows else None
+
+
+def _stable_linear_formula(
+    service: ExtremeRecoveryClassRouteFrontierService,
+    lines: tuple[str, ...],
+    reference_a: float,
+    reference_b: float,
+) -> tuple[float, float, tuple[tuple[str, int], ...]] | None:
+    if reference_a == reference_b:
+        return None
+    first = _best_for_lines(service, lines, reference_a)
+    second = _best_for_lines(service, lines, reference_b)
+    if first is None or second is None or first.slot_counts != second.slot_counts:
+        return None
+    slope = (second.projected_delta - first.projected_delta) / (reference_b - reference_a)
+    intercept = first.projected_delta - slope * reference_a
+    return intercept, slope, first.slot_counts
 
 
 def main() -> int:
@@ -81,6 +109,15 @@ def main() -> int:
             for obligation in best.runtime_obligations:
                 print(f"    runtime: {obligation}")
 
+        obligation_rows = tuple(row for row in result.candidates if row.runtime_obligations)
+        if obligation_rows:
+            challenger = obligation_rows[0]
+            print(
+                f"  best_runtime_obligation_route_delta={challenger.projected_delta:.3f} "
+                f"gap_to_reviewed_best={best.projected_delta - challenger.projected_delta:.3f} "
+                f"lines={challenger.equipped_skill_lines} obligations={challenger.runtime_obligations}"
+            )
+
         print("  top reviewed routes:")
         for index, row in enumerate(result.candidates[: max(1, args.top)], start=1):
             print(
@@ -99,13 +136,39 @@ def main() -> int:
     for obligation in sorted(union_obligations, key=str.casefold):
         print(f"  runtime_obligation={obligation}")
 
+    if len(args.references) >= 2 and len(distinct_winner_lines) >= 2:
+        reference_a = float(args.references[0])
+        reference_b = float(args.references[1])
+        formulas: list[tuple[tuple[str, ...], float, float, tuple[tuple[str, int], ...]]] = []
+        print("\nREVIEWED WINNER FORMULAS")
+        for lines in distinct_winner_lines:
+            formula = _stable_linear_formula(service, lines, reference_a, reference_b)
+            if formula is None:
+                print(f"  lines={lines} formula=<piecewise_or_unresolved_between_samples>")
+                continue
+            intercept, slope, slot_counts = formula
+            formulas.append((lines, intercept, slope, slot_counts))
+            print(
+                f"  lines={lines} delta={intercept:.3f}+({slope:.6f}*reference) "
+                f"slot_counts={slot_counts}"
+            )
+        if len(formulas) == 2:
+            first, second = formulas
+            denominator = first[2] - second[2]
+            if abs(denominator) > 1e-12:
+                crossover = (second[1] - first[1]) / denominator
+                print(
+                    f"  reviewed_crossover_reference={crossover:.3f} "
+                    f"between={first[0]} and {second[0]}"
+                )
+
     reference_stable = len(distinct_winner_lines) <= 1 and bool(winners)
     print(f"reviewed_winner_reference_stable={reference_stable}")
     print("class_route_record_closed=False")
     if union_obligations:
-        print("NEXT_STEP=close runtime obligations on competitive Magicka Recovery class routes before route dominance proof")
+        print("NEXT_STEP=prove or dominance-prune the reported runtime obligation against the corrected reviewed frontier")
     elif not reference_stable:
-        print("NEXT_STEP=derive crossover bounds and compose the class frontier with the whole-build Recovery subtotal")
+        print("NEXT_STEP=compose the crossover-aware class frontier with the whole-build Recovery subtotal")
     else:
         print("NEXT_STEP=compose the stable reviewed class route with the whole-build Magicka Recovery frontier")
     return 0
