@@ -57,6 +57,9 @@ from services.extreme_health_recovery_runtime_compatibility_service import (
     ExtremeHealthRecoveryRuntimeCompatibilityService,
     ExtremeHealthRecoveryRuntimeState,
 )
+from services.extreme_named_gear_set_realization_service import (
+    ExtremeNamedGearSetRealizationService,
+)
 from services.extreme_named_gear_set_slot_eligibility_service import (
     ExtremeNamedGearSetSlotEligibilityService,
 )
@@ -76,7 +79,6 @@ from tools.audit_extreme_health_recovery_final_record import (
     _armor_magicka_glyph_flat,
     _armor_witness,
     _class_witness,
-    _destro_compatible,
     _provisioning_magicka,
     _race_witness,
     _set_magicka_effects,
@@ -85,6 +87,7 @@ from tools.audit_extreme_health_recovery_final_record import (
 
 
 OBJECTIVE = "health_recovery"
+DESTRO_TYPES = frozenset({"Inferno Staff", "Ice Staff", "Lightning Staff"})
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -155,6 +158,42 @@ def _shared_passives(database: Path):
     return flat, percent, tuple(sources), domination
 
 
+def _destro_realisations(realizations, topology_catalog, eligibility_by_id):
+    topology_by_signature = {row.signature: row for row in topology_catalog.topologies}
+    winners = []
+    unresolved = []
+    for realization in realizations:
+        topology = topology_by_signature.get(realization.topology_signature)
+        if topology is None:
+            unresolved.append(
+                f"winning named-gear topology missing from canonical catalog: {realization.topology_signature}"
+            )
+            continue
+        try:
+            named_sets = tuple(eligibility_by_id[int(set_id)] for set_id in realization.set_ids)
+        except KeyError as exc:
+            unresolved.append(f"winning named-set eligibility missing for set id {exc.args[0]}")
+            continue
+        witness = ExtremeNamedGearSetRealizationService.find_witness(
+            topology,
+            named_sets,
+            required_weapon_types=DESTRO_TYPES,
+        )
+        if witness is not None:
+            winners.append(witness)
+    unique = {}
+    for witness in winners:
+        key = (
+            witness.topology_signature,
+            witness.set_ids,
+            witness.counts,
+            witness.weapon_shape.value,
+            tuple((row.slot, row.set_id, row.weapon_type) for row in witness.assignments),
+        )
+        unique[key] = witness
+    return tuple(unique[key] for key in sorted(unique, key=repr)), tuple(dict.fromkeys(unresolved))
+
+
 def main() -> int:
     args = _parser().parse_args()
     database = Path(args.database)
@@ -219,7 +258,11 @@ def main() -> int:
     )
     eligibility_by_id = {int(row.set_id): row for row in filtered.catalog.sets}
     realizations = () if gear_search.search is None else gear_search.search.realizations
-    destro_realizations = tuple(row for row in realizations if _destro_compatible(row, eligibility_by_id))
+    destro_realizations, destro_unresolved = _destro_realisations(
+        realizations,
+        topology,
+        eligibility_by_id,
+    )
     ordinary_gear_flat = float(gear_search.search.best_exact_flat_delta or 0.0) if gear_search.search else 0.0
     adamant_flat = float(adamant.flat_ceiling or 0.0) if adamant else 0.0
     adamant_runtime = bool(
@@ -237,6 +280,7 @@ def main() -> int:
     ))
     unresolved.extend(special_unresolved)
     unresolved.extend(gear_search.unresolved)
+    unresolved.extend(destro_unresolved)
 
     race_map = RaceRepository(database).get_stat_map_by_name(race_name) if race_name else {}
     race_magicka = float(race_map.get("max_magicka", 0.0))
@@ -361,6 +405,10 @@ def main() -> int:
     if best_realization is not None:
         print(f"named_sets={tuple(zip(best_realization.set_names, best_realization.counts))!r}")
         print(f"weapon_shape={best_realization.weapon_shape.value}")
+        if best_realization.weapon_assignments:
+            print(f"weapon_type={best_realization.weapon_assignments[0].weapon_type!r}")
+        else:
+            print("weapon_type='<free non-set Destruction Staff>'")
         print("destruction_staff_compatible=True")
     print()
 
