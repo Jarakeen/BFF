@@ -22,6 +22,7 @@ def test_pierce_armor_resolves_real_database_taunt_application() -> None:
                 kind=RotationActionKind.SKILL,
                 name="Pierce Armor",
                 bar="front",
+                target_key="boss",
             ),
         ),
     )
@@ -32,6 +33,7 @@ def test_pierce_armor_resolves_real_database_taunt_application() -> None:
         window_end_seconds=6.0,
         minimum_applications=1,
         bar="front",
+        target_key="boss",
         provenance=("canonical eso.db",),
     )
 
@@ -48,7 +50,43 @@ def test_pierce_armor_resolves_real_database_taunt_application() -> None:
     assert result.applications[0].source_skill_name == "Pierce Armor"
     assert result.applications[0].time_seconds == 5.0
     assert result.applications[0].bar == "front"
+    assert result.applications[0].target_key == "boss"
     assert any("Pierce Armor coefficient" in item for item in result.evidence)
+
+
+def test_real_database_taunt_identity_does_not_make_wrong_target_count() -> None:
+    plan = RotationPlan(
+        character_name="Database Tank",
+        build_name="Taunt Integration",
+        duration_seconds=10.0,
+        actions=(
+            RotationAction(
+                time_seconds=5.0,
+                sequence=0,
+                kind=RotationActionKind.SKILL,
+                name="Pierce Armor",
+                bar="front",
+                target_key="add",
+            ),
+        ),
+    )
+    requirement = RotationTankTauntApplicationRequirement(
+        requirement_id="boss_target_taunt",
+        source_skill_name="Pierce Armor",
+        window_start_seconds=4.0,
+        window_end_seconds=6.0,
+        target_key="boss",
+    )
+
+    result = RotationTankTauntObligationService(DEFAULT_DATABASE).assess(
+        plan=plan,
+        requirement=requirement,
+    )
+
+    assert result.resolved is True, result.unresolved
+    assert result.satisfied is False
+    assert result.applications == ()
+    assert result.taunt_component_numbers
 
 
 def test_real_database_taunt_identity_does_not_create_maintenance_semantics() -> None:
