@@ -10,8 +10,9 @@ Tank has an explicit executable disposition.
 
 When callers do not supply explicit policy tuples, reviewed policy is loaded from the
 shared read-only assignment-policy registry. Provider ownership and rotation policy
-remain separate truths. A caller may only treat the result as Rotation-ready when
-``ready`` is true.
+remain separate truths. Symbolic encounter-end maintenance policy is preserved on the
+resolution but deliberately does not make ``ready`` true until Generate-time horizon
+materialization produces an ordinary executable maintenance policy.
 """
 
 from dataclasses import dataclass
@@ -32,6 +33,9 @@ from services.rotation_assignment_policy_resolver import (
     RotationAssignmentNonEffectPolicy,
     RotationAssignmentPolicyResolution,
     RotationAssignmentPolicyResolver,
+)
+from services.rotation_assignment_taunt_maintenance_horizon_policy_service import (
+    RotationAssignmentTauntMaintenanceHorizonPolicy,
 )
 from services.rotation_assignment_taunt_maintenance_service import (
     RotationAssignmentTauntMaintenancePolicy,
@@ -55,6 +59,9 @@ class RotationTankProviderScopeResolution:
     member_id: str
     assignments: tuple[ProviderAssignment, ...]
     policy_resolution: RotationAssignmentPolicyResolution
+    taunt_maintenance_horizon_policies: tuple[
+        RotationAssignmentTauntMaintenanceHorizonPolicy, ...
+    ] = ()
 
     def __post_init__(self) -> None:
         encounter_id = str(self.encounter_id or "").strip()
@@ -66,6 +73,11 @@ class RotationTankProviderScopeResolution:
         object.__setattr__(self, "encounter_id", encounter_id)
         object.__setattr__(self, "member_id", member_id)
         object.__setattr__(self, "assignments", tuple(self.assignments))
+        object.__setattr__(
+            self,
+            "taunt_maintenance_horizon_policies",
+            tuple(self.taunt_maintenance_horizon_policies),
+        )
 
     @property
     def ready(self) -> bool:
@@ -118,6 +130,9 @@ class RotationTankProviderScopeService:
         taunt_maintenance_policies: tuple[
             RotationAssignmentTauntMaintenancePolicy, ...
         ] = (),
+        taunt_maintenance_horizon_policies: tuple[
+            RotationAssignmentTauntMaintenanceHorizonPolicy, ...
+        ] = (),
         non_effect_policies: tuple[RotationAssignmentNonEffectPolicy, ...] = (),
     ) -> RotationTankProviderScopeResolution:
         resolved_encounter = str(encounter_id or "").strip()
@@ -149,18 +164,23 @@ class RotationTankProviderScopeService:
             effect_policies
             or taunt_policies
             or taunt_maintenance_policies
+            or taunt_maintenance_horizon_policies
             or non_effect_policies
         )
         if explicit_policy:
             resolved_effect_policies = tuple(effect_policies)
             resolved_taunt_policies = tuple(taunt_policies)
             resolved_taunt_maintenance_policies = tuple(taunt_maintenance_policies)
+            resolved_horizon_policies = tuple(taunt_maintenance_horizon_policies)
             resolved_non_effect_policies = tuple(non_effect_policies)
         else:
             reviewed = self.policy_registry.for_encounter(resolved_encounter)
             resolved_effect_policies = tuple(reviewed.effect_policies)
             resolved_taunt_policies = tuple(reviewed.taunt_policies)
             resolved_taunt_maintenance_policies = tuple(reviewed.taunt_maintenance_policies)
+            resolved_horizon_policies = tuple(
+                getattr(reviewed, "taunt_maintenance_horizon_policies", ())
+            )
             resolved_non_effect_policies = tuple(reviewed.non_effect_policies)
 
         policy_resolution = self.policy_resolver.resolve(
@@ -182,6 +202,7 @@ class RotationTankProviderScopeService:
             member_id=member_id,
             assignments=assignments,
             policy_resolution=policy_resolution,
+            taunt_maintenance_horizon_policies=resolved_horizon_policies,
         )
 
 
