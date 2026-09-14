@@ -37,10 +37,7 @@ def _symbolic_row():
 
 
 def test_registry_keeps_symbolic_encounter_end_policy_separate_from_numeric_policy(tmp_path):
-    service = RotationAssignmentPolicyRegistryService(
-        _write(tmp_path, [_symbolic_row()])
-    )
-
+    service = RotationAssignmentPolicyRegistryService(_write(tmp_path, [_symbolic_row()]))
     bundle = service.for_encounter("XALVAKKA")
 
     assert bundle.empty is False
@@ -50,6 +47,7 @@ def test_registry_keeps_symbolic_encounter_end_policy_separate_from_numeric_poli
     assert policy.requirement_id == "xalvakka:tank:boss_taunt"
     assert policy.windows[0].end_reference == "encounter_end"
     assert policy.windows[0].active_start_seconds == 0.0
+    assert policy.windows[0].start_reference is None
 
 
 def test_registry_accepts_reviewed_health_threshold_symbolic_endpoint(tmp_path):
@@ -61,6 +59,29 @@ def test_registry_accepts_reviewed_health_threshold_symbolic_endpoint(tmp_path):
     policy = service.for_encounter("xalvakka").taunt_maintenance_horizon_policies[0]
 
     assert policy.windows[0].end_reference == "health_threshold:70%"
+
+
+def test_registry_accepts_reviewed_transition_resume_symbolic_start(tmp_path):
+    row = _symbolic_row()
+    window = row["windows"][0]
+    window.pop("active_start_seconds")
+    window["start_reference"] = "transition_resume:70%"
+    window["end_reference"] = "health_threshold:40%"
+
+    service = RotationAssignmentPolicyRegistryService(_write(tmp_path, [row]))
+    policy = service.for_encounter("xalvakka").taunt_maintenance_horizon_policies[0]
+
+    assert policy.windows[0].active_start_seconds is None
+    assert policy.windows[0].start_reference == "transition_resume:70%"
+    assert policy.windows[0].end_reference == "health_threshold:40%"
+
+
+def test_registry_rejects_window_with_numeric_and_symbolic_start(tmp_path):
+    row = _symbolic_row()
+    row["windows"][0]["start_reference"] = "transition_resume:70%"
+
+    with pytest.raises(ValueError, match="exactly one"):
+        RotationAssignmentPolicyRegistryService(_write(tmp_path, [row]))
 
 
 def test_registry_allows_symbolic_policy_to_leave_build_owned_taunt_source_unbound(tmp_path):
@@ -94,9 +115,7 @@ def test_symbolic_policy_still_counts_as_disposition_for_registry_duplicate_guar
     }
 
     with pytest.raises(ValueError, match="multiple dispositions"):
-        RotationAssignmentPolicyRegistryService(
-            _write(tmp_path, [_symbolic_row(), numeric])
-        )
+        RotationAssignmentPolicyRegistryService(_write(tmp_path, [_symbolic_row(), numeric]))
 
 
 def test_registry_rejects_unrecognized_symbolic_end_reference(tmp_path):
