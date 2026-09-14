@@ -13,6 +13,11 @@ shared read-only assignment-policy registry. Provider ownership and rotation pol
 remain separate truths. Symbolic encounter-end maintenance policy is preserved on the
 resolution but deliberately does not make ``ready`` true until Generate-time horizon
 materialization produces an ordinary executable maintenance policy.
+
+Exact taunt skill/bar identity is build evidence, not encounter policy. The selected
+Tank's canonical structural-utility source is therefore carried separately so Generate
+can bind a skill-agnostic reviewed ownership window to the actual saved build without
+reconstructing mechanics from explanatory strings.
 """
 
 from dataclasses import dataclass
@@ -42,6 +47,10 @@ from services.rotation_assignment_taunt_maintenance_service import (
 )
 from services.rotation_assignment_taunt_obligation_service import RotationAssignmentTauntPolicy
 from services.saved_build_capability_service import SavedBuildCapabilityService
+from services.saved_build_utility_capability_service import (
+    SavedBuildUtilityCapabilityService,
+    SavedBuildUtilityProviderSource,
+)
 
 
 ProviderScopeFactory = Callable[..., object]
@@ -62,6 +71,8 @@ class RotationTankProviderScopeResolution:
     taunt_maintenance_horizon_policies: tuple[
         RotationAssignmentTauntMaintenanceHorizonPolicy, ...
     ] = ()
+    taunt_provider_sources: tuple[SavedBuildUtilityProviderSource, ...] = ()
+    taunt_provider_source_unresolved: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         encounter_id = str(self.encounter_id or "").strip()
@@ -78,14 +89,31 @@ class RotationTankProviderScopeResolution:
             "taunt_maintenance_horizon_policies",
             tuple(self.taunt_maintenance_horizon_policies),
         )
+        object.__setattr__(self, "taunt_provider_sources", tuple(self.taunt_provider_sources))
+        object.__setattr__(
+            self,
+            "taunt_provider_source_unresolved",
+            tuple(
+                str(value).strip()
+                for value in self.taunt_provider_source_unresolved
+                if str(value).strip()
+            ),
+        )
 
     @property
     def ready(self) -> bool:
-        return bool(self.policy_resolution.ready)
+        return bool(self.policy_resolution.ready) and not self.taunt_provider_source_unresolved
 
     @property
     def unresolved(self) -> tuple[str, ...]:
-        return tuple(self.policy_resolution.unresolved)
+        return tuple(
+            dict.fromkeys(
+                (
+                    *tuple(self.policy_resolution.unresolved),
+                    *self.taunt_provider_source_unresolved,
+                )
+            )
+        )
 
 
 class RotationTankProviderScopeService:
@@ -98,6 +126,7 @@ class RotationTankProviderScopeService:
         database_path: str | Path | None = None,
         build_service: BuildService | None = None,
         capability_service: SavedBuildCapabilityService | object | None = None,
+        utility_capability_service: SavedBuildUtilityCapabilityService | object | None = None,
         scope_factory: ProviderScopeFactory | None = None,
         policy_resolver: RotationAssignmentPolicyResolver | object | None = None,
         policy_registry: RotationAssignmentPolicyRegistryService | object | None = None,
@@ -112,6 +141,10 @@ class RotationTankProviderScopeService:
         self.capability_service = capability_service or SavedBuildCapabilityService(
             self.build_service,
             self.database_path,
+        )
+        self.utility_capability_service = (
+            utility_capability_service
+            or SavedBuildUtilityCapabilityService(self.database_path)
         )
         self.scope_factory = scope_factory or build_default_raid_tank_provider_scope
         self.policy_resolver = policy_resolver or RotationAssignmentPolicyResolver()
@@ -197,12 +230,20 @@ class RotationTankProviderScopeService:
                 f"expected {member_id!r}, got {policy_resolution.member_id!r}"
             )
 
+        taunt_sources = self.utility_capability_service.provider_sources_for(
+            build=player_build,
+            capability_type="taunt",
+        )
         return RotationTankProviderScopeResolution(
             encounter_id=resolved_encounter,
             member_id=member_id,
             assignments=assignments,
             policy_resolution=policy_resolution,
             taunt_maintenance_horizon_policies=resolved_horizon_policies,
+            taunt_provider_sources=tuple(getattr(taunt_sources, "sources", ())),
+            taunt_provider_source_unresolved=tuple(
+                getattr(taunt_sources, "unresolved", ())
+            ),
         )
 
 
