@@ -116,7 +116,7 @@ def _build_ui_with_raid_engine_dashboard(self) -> None:
     _ORIGINAL_BUILD_UI(self)
 
     from ui.raid_engine_dashboard_page import RaidEngineDashboardPage
-    from ui.raid_plan_page import RaidPlanPage
+    from ui.raid_plan_character_selection_page import RaidPlanCharacterSelectionPage
 
     dashboard = RaidEngineDashboardPage()
     dashboard.set_sources(
@@ -131,7 +131,7 @@ def _build_ui_with_raid_engine_dashboard(self) -> None:
     dashboard.helpRequested.connect(lambda: _open_dashboard_help(self))
     _register_page(self, "raid_engine_dashboard", dashboard)
 
-    raid_plans = RaidPlanPage()
+    raid_plans = RaidPlanCharacterSelectionPage()
     raid_plans.pageRequested.connect(self.show_page)
     _register_page(self, "raid_plans", raid_plans)
 
