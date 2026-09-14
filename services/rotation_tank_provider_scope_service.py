@@ -293,23 +293,27 @@ class RotationTankProviderScopeService:
                 f"expected {member_id!r}, got {policy_resolution.member_id!r}"
             )
 
-        taunt_source_resolution = self.utility_capability_service.provider_sources_for(
-            build=player_build,
-            capability_type="taunt",
-        )
-        taunt_sources = tuple(getattr(taunt_source_resolution, "sources", ()))
-        bound_horizon_policies, binding_unresolved = (
-            _bind_horizon_policies_to_taunt_source(
-                resolved_horizon_policies,
-                taunt_sources,
+        taunt_sources: tuple[SavedBuildUtilityProviderSource, ...] = ()
+        bound_horizon_policies: tuple[
+            RotationAssignmentTauntMaintenanceHorizonPolicy, ...
+        ] = ()
+        source_unresolved: tuple[str, ...] = ()
+        binding_unresolved: tuple[str, ...] = ()
+        if resolved_horizon_policies:
+            taunt_source_resolution = self.utility_capability_service.provider_sources_for(
+                build=player_build,
+                capability_type="taunt",
             )
-        )
-        source_unresolved = tuple(getattr(taunt_source_resolution, "unresolved", ()))
-        if not resolved_horizon_policies:
-            # A Tank may legitimately have unresolved unrelated slotted skills. Do not
-            # turn those into a provider-policy failure until symbolic policy actually
-            # needs a concrete taunt source.
-            source_unresolved = ()
+            taunt_sources = tuple(getattr(taunt_source_resolution, "sources", ()))
+            source_unresolved = tuple(
+                getattr(taunt_source_resolution, "unresolved", ())
+            )
+            bound_horizon_policies, binding_unresolved = (
+                _bind_horizon_policies_to_taunt_source(
+                    resolved_horizon_policies,
+                    taunt_sources,
+                )
+            )
 
         return RotationTankProviderScopeResolution(
             encounter_id=resolved_encounter,
