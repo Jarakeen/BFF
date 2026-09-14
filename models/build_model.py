@@ -303,6 +303,9 @@ class PlayerBuild:
     # Generalized variants are appended after every pre-existing field so older
     # positional PlayerBuild constructors retain their historical meaning.
     ContextVariants: list[BuildContextVariant] = field(default_factory=list)
+    # Empty means the ordinary mortal bar. Context resolution may set this when
+    # an explicit variant selects a transformed skill-bar state.
+    TransformedForm: str = ""
 
     @property
     def attribute_points_total(self) -> int:
@@ -317,6 +320,13 @@ class PlayerBuild:
         errors: list[str] = []
         if self.Vampire and self.Werewolf:
             errors.append("A character cannot be both Vampire and Werewolf.")
+        transformed_form = str(self.TransformedForm or "").strip().casefold()
+        if transformed_form not in {"", "vampire", "werewolf"}:
+            errors.append("Transformed form must be blank, Vampire, or Werewolf.")
+        if transformed_form == "vampire" and not self.Vampire:
+            errors.append("Vampire form requires Vampire affiliation.")
+        if transformed_form == "werewolf" and not self.Werewolf:
+            errors.append("Werewolf form requires Werewolf affiliation.")
         if any(value < 0 for value in (self.AttributeHealth, self.AttributeMagicka, self.AttributeStamina)):
             errors.append("Attribute points cannot be negative.")
         if self.attribute_points_total > MAX_ATTRIBUTE_POINTS:
@@ -354,6 +364,8 @@ class PlayerBuild:
         }
         if str(self.SecondMundus or "").strip():
             payload["SecondMundus"] = self.SecondMundus
+        if str(self.TransformedForm or "").strip():
+            payload["TransformedForm"] = str(self.TransformedForm).strip().casefold()
         return payload
 
     @classmethod
@@ -415,6 +427,7 @@ class PlayerBuild:
             SecondMundus=str(data.get("SecondMundus", "") or ""),
             ReadyForRaid=bool(data.get("ReadyForRaid", False)),
             ContextVariants=variants,
+            TransformedForm=str(data.get("TransformedForm", "") or "").strip().casefold(),
         )
 
     def display_label(self, fallback: str) -> str:
