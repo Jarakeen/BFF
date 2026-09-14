@@ -228,10 +228,13 @@ def _resolve_assignments(
     assignment_service: EncounterProviderAssignmentService,
     additional_capability_evidence: tuple[RosterCapabilityEvidence, ...] = (),
 ) -> tuple[ProviderAssignment, ...]:
-    report = roster_evaluator.evaluate_saved_build_audits(
-        encounter_id,
-        audits,
-        additional_capability_evidence=tuple(additional_capability_evidence),
-    )
+    if additional_capability_evidence:
+        report = roster_evaluator.evaluate_saved_build_audits(
+            encounter_id,
+            audits,
+            additional_capability_evidence=tuple(additional_capability_evidence),
+        )
+    else:
+        report = roster_evaluator.evaluate_saved_build_audits(encounter_id, audits)
     candidate_sets = candidate_service.candidates(report, audits)
     return assignment_service.assign(candidate_sets)
