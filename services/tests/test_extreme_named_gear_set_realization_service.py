@@ -205,3 +205,48 @@ def test_paired_one_handed_shape_can_split_weapon_set_units_between_named_sets()
         ("Main Hand", "Sword"),
         ("Off Hand", "Shield"),
     ]
+
+
+def test_required_destruction_staff_searches_past_arbitrary_weapon_choices():
+    topology = ExtremeGearSetCountTopology(counts=(5, 5, 2), unused_units=0)
+
+    witness = ExtremeNamedGearSetRealizationService.find_witness(
+        topology,
+        (_ordinary(10, "Five A"), _ordinary(20, "Five B"), _monster()),
+        required_weapon_types=frozenset({"Inferno Staff", "Ice Staff", "Lightning Staff"}),
+    )
+
+    assert witness is not None
+    assert witness.weapon_shape is ExtremeWeaponSlotShape.TWO_HANDED
+    assert len(witness.weapon_assignments) == 1
+    assert witness.weapon_assignments[0].weapon_type in {
+        "Inferno Staff",
+        "Ice Staff",
+        "Lightning Staff",
+    }
+
+
+def test_required_two_handed_weapon_family_rejects_one_handed_only_topology():
+    topology = ExtremeGearSetCountTopology(counts=(1, 1), unused_units=10)
+    main = ExtremeNamedGearSetSlotEligibility(
+        set_id=60,
+        name="Main Only",
+        category="Arena",
+        max_equip_count=1,
+        weapon_types=("Sword",),
+    )
+    off = ExtremeNamedGearSetSlotEligibility(
+        set_id=61,
+        name="Off Only",
+        category="Arena",
+        max_equip_count=1,
+        weapon_types=("Shield",),
+    )
+
+    witness = ExtremeNamedGearSetRealizationService.find_witness(
+        topology,
+        (main, off),
+        required_weapon_types=frozenset({"Inferno Staff", "Ice Staff", "Lightning Staff"}),
+    )
+
+    assert witness is None
