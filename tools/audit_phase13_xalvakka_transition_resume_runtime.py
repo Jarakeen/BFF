@@ -55,18 +55,67 @@ def _default_roots() -> tuple[Path, ...]:
     return (get_data_dir(), ROOT / "data", ROOT / "user_data", ROOT / "research")
 
 
-def _resolve_database(path: Path | None) -> Path:
+def _xalvakka_fight_count(path: Path) -> int:
+    """Return imported Xalvakka fight count for a schema-compatible runtime DB.
+
+    Database discovery is intentionally content-aware here. A backup/test database can
+    contain the ESO Logs tables while containing no Xalvakka evidence at all; selecting
+    such a file merely because its schema matches produces a misleading zero-observation
+    audit.
+    """
+    try:
+        db = _open_read_only(path)
+    except (OSError, sqlite3.Error):
+        return 0
+    try:
+        row = db.execute(
+            "SELECT COUNT(*) FROM log_fight WHERE lower(name) LIKE '%xalvakka%'"
+        ).fetchone()
+        return 0 if row is None else int(row[0] or 0)
+    except sqlite3.Error:
+        return 0
+    finally:
+        db.close()
+
+
+def _resolve_database(
+    path: Path | None,
+    *,
+    roots: tuple[Path, ...] | None = None,
+) -> Path:
     if path is not None:
         return path
-    matches = discover(roots=_default_roots())
+
+    matches = discover(roots=roots or _default_roots())
     if not matches:
         raise ValueError("no ESO Logs runtime database was found")
-    if len(matches) > 1:
-        raise ValueError(
-            "multiple ESO Logs runtime databases were found; pass --database explicitly: "
-            + ", ".join(str(item) for item in matches)
+
+    candidates = tuple(
+        (item, _xalvakka_fight_count(item))
+        for item in matches
+    )
+    xalvakka_candidates = tuple(
+        (item, count) for item, count in candidates if count > 0
+    )
+    if not xalvakka_candidates:
+        details = ", ".join(
+            f"{item} (xalvakka_fights={count})" for item, count in candidates
         )
-    return matches[0]
+        raise ValueError(
+            "ESO Logs runtime database(s) were found, but none contains an imported "
+            "Xalvakka fight; import Xalvakka ESO Logs evidence or pass --database "
+            f"explicitly. Discovered: {details}"
+        )
+    if len(xalvakka_candidates) > 1:
+        choices = ", ".join(
+            f"{item} (xalvakka_fights={count})"
+            for item, count in xalvakka_candidates
+        )
+        raise ValueError(
+            "multiple ESO Logs runtime databases contain Xalvakka fights; pass "
+            f"--database explicitly: {choices}"
+        )
+    return xalvakka_candidates[0][0]
 
 
 def _tables(db: sqlite3.Connection) -> set[str]:
@@ -254,6 +303,7 @@ def audit(
     lines = [
         "PHASE 13 XALVAKKA TRANSITION RESUME RUNTIME AUDIT",
         f"DATABASE: {database_path}",
+        f"XALVAKKA_FIGHTS: {_xalvakka_fight_count(database_path)}",
         f"MINIMUM_DAMAGE_GAP_MS: {minimum_gap_ms:g}",
         f"MAXIMUM_GAP_START_DELAY_MS: {maximum_gap_start_delay_ms:g}",
         f"OBSERVATIONS: {len(observations)}",
@@ -274,7 +324,7 @@ def audit(
         )
     if not observations:
         lines.append(
-            "UNRESOLVED: no threshold-crossing plus substantial post-threshold Xalvakka damage gap was observed"
+            "UNRESOLVED: imported Xalvakka fights were found, but no threshold-crossing plus substantial post-threshold Xalvakka damage gap was observed"
         )
     else:
         lines.append(
