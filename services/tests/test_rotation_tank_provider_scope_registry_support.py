@@ -97,6 +97,16 @@ def _taunt_source(skill="Pierce Armor", bar="front"):
     )
 
 
+def _symbolic_bundle():
+    return SimpleNamespace(
+        effect_policies=(),
+        taunt_policies=(),
+        taunt_maintenance_policies=(),
+        taunt_maintenance_horizon_policies=(_symbolic(),),
+        non_effect_policies=(),
+    )
+
+
 def test_provider_scope_uses_reviewed_registry_when_explicit_policy_is_absent():
     bundle = SimpleNamespace(
         effect_policies=("effect",),
@@ -137,15 +147,7 @@ def test_provider_scope_uses_reviewed_registry_when_explicit_policy_is_absent():
 
 
 def test_provider_scope_binds_symbolic_registry_policy_to_exact_saved_build_taunt():
-    symbolic = _symbolic()
-    bundle = SimpleNamespace(
-        effect_policies=(),
-        taunt_policies=(),
-        taunt_maintenance_policies=(),
-        taunt_maintenance_horizon_policies=(symbolic,),
-        non_effect_policies=(),
-    )
-    registry = _PolicyRegistry(bundle)
+    registry = _PolicyRegistry(_symbolic_bundle())
     resolver = _PolicyResolver(
         ready=False,
         unresolved=("assignment awaits executable maintenance policy",),
@@ -178,15 +180,37 @@ def test_provider_scope_binds_symbolic_registry_policy_to_exact_saved_build_taun
     assert resolver.calls[0]["taunt_maintenance_policies"] == ()
 
 
-def test_provider_scope_keeps_ambiguous_saved_build_taunt_source_unresolved():
-    bundle = SimpleNamespace(
-        effect_policies=(),
-        taunt_policies=(),
-        taunt_maintenance_policies=(),
-        taunt_maintenance_horizon_policies=(_symbolic(),),
-        non_effect_policies=(),
+def test_exact_taunt_source_is_not_poisoned_by_unrelated_unresolved_skill():
+    registry = _PolicyRegistry(_symbolic_bundle())
+    resolver = _PolicyResolver(ready=False, unresolved=("awaiting horizon",))
+    utility = _UtilityCapabilityService(
+        (_taunt_source(),),
+        unresolved=("Mystery Utility: canonical skill rank is unresolved",),
     )
-    registry = _PolicyRegistry(bundle)
+    service = RotationTankProviderScopeService(
+        data_root="data",
+        database_path="data/eso.db",
+        build_service=object(),
+        capability_service=_CapabilityService(),
+        utility_capability_service=utility,
+        scope_factory=_ScopeFactory(),
+        policy_resolver=resolver,
+        policy_registry=registry,
+    )
+
+    result = service.resolve(
+        player_build=_tank(),
+        roster_builds=(_tank(),),
+        encounter_id="taleria_hm",
+    )
+
+    assert len(result.taunt_maintenance_horizon_policies) == 1
+    assert result.taunt_maintenance_horizon_policies[0].source_skill_name == "Pierce Armor"
+    assert result.unresolved == ("awaiting horizon",)
+
+
+def test_provider_scope_keeps_ambiguous_saved_build_taunt_source_unresolved():
+    registry = _PolicyRegistry(_symbolic_bundle())
     resolver = _PolicyResolver(ready=False, unresolved=("awaiting horizon",))
     utility = _UtilityCapabilityService(
         (_taunt_source(), _taunt_source("Inner Rage", "back"))
