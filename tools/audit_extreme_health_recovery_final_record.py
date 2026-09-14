@@ -593,7 +593,7 @@ def main() -> int:
         print(f"  percent: {row.name}={row.value:.3f}%")
     print(f"total_percent={score.total_percent:.3f}%")
     print(f"extreme_health_recovery_raw={score.final_value:.3f}")
-    print(f"extreme_health_recovery_eso_ceil={int(-(-score.final_value // 1)))}")
+    print(f"extreme_health_recovery_eso_ceil={int(-(-score.final_value // 1))}")
     print()
 
     print("PROOF GATES")
