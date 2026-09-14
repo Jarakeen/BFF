@@ -98,7 +98,13 @@ class RotationEncounterSelectorSupport:
         install_rotation_generate_action(page)
         install_rotation_generate_tank_obligation_context(page)
         tank_assignment_context = RotationGenerateTankAssignmentContextSupport()
-        tank_assignment_context.install(page)
+        page._rotation_generate_tank_assignment_context_support = tank_assignment_context
+        page.set_rotation_generate_tank_assignment_evidence = (
+            tank_assignment_context.set_evidence
+        )
+        page.rotation_generate_tank_assignment_context = (
+            tank_assignment_context.context_for
+        )
         healer_role_evidence = RotationGenerateHealerRoleEvidenceSupport()
 
         def tank_obligation_context(build, bundle):
