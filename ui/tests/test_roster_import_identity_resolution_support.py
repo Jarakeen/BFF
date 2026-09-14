@@ -34,12 +34,24 @@ def test_roster_import_generates_concise_character_names_when_no_saved_toon_exis
     assert "Character name auto-filled as" in source
 
 
-def test_roster_import_accepts_short_role_aliases():
+def test_roster_import_accepts_class_and_role_shorthand_aliases():
     source = Path("ui/roster_import_identity_resolution_support.py").read_text(encoding="utf-8")
 
-    assert '"tnk": "Tank"' in source
-    assert '"hlz": "Healer"' in source
-    assert '"dd": "Damage Dealer"' in source
+    for shorthand, full_name in (
+        ("arc", "Arcanist"),
+        ("dk", "Dragonknight"),
+        ("cro", "Necromancer"),
+        ("nb", "Nightblade"),
+        ("sorc", "Sorcerer"),
+        ("plar", "Templar"),
+        ("den", "Warden"),
+        ("tnk", "Tank"),
+        ("hlz", "Healer"),
+        ("dd", "Damage Dealer"),
+    ):
+        assert f'"{shorthand}": "{full_name}"' in source
+
+    assert "roster_import_workflow._normalize_class = _normalize_class_with_shorthand" in source
     assert "roster_import_workflow._normalize_role = _normalize_role_with_shorthand" in source
 
 
