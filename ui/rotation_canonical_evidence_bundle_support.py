@@ -12,6 +12,7 @@ from services.canonical_knowledge_gap import CanonicalKnowledgeGap
 from services.canonical_mechanics_coverage_audit import CanonicalMechanicsCoverageReport
 from services.encounter_boss_guide import EncounterBossGuideService
 from services.encounter_health_threshold_projection_service import (
+    EncounterHealthThresholdProjection,
     EncounterHealthThresholdProjectionService,
 )
 from services.encounter_rotation_demand_service import (
@@ -59,6 +60,7 @@ class RotationCanonicalEvidenceBundle:
     content_type: str = ""
     target_resistance: float | None = None
     target_health_trajectory: FightDamageTrajectoryProjection | None = None
+    health_threshold_projection: EncounterHealthThresholdProjection | None = None
     restoration_resolver: VerifiedRecoveryHeavyRestorationResolver | None = None
     wait_decision_factory: RecoveryPressureWaitDecisionFactory | None = None
     reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None
@@ -97,9 +99,9 @@ class RotationCanonicalEvidenceBundleSupport:
     Health-threshold policies are projected separately through the canonical encounter
     health/raid-damage clock layer, and only when the caller supplies explicit difficulty
     plus raid-damage segments. The two demand families are merged only after each has
-    independently resolved its own evidence. A resolved target-Health trajectory is
-    preserved on the bundle so runtime consumers may query the same explicit evidence
-    rather than reconstructing or guessing a burn curve.
+    independently resolved its own evidence. The canonical threshold projection and its
+    resolved target-Health trajectory are preserved on the bundle so downstream consumers
+    may reuse the same clock evidence rather than reconstructing or guessing a burn curve.
     """
 
     def __init__(
@@ -180,6 +182,7 @@ class RotationCanonicalEvidenceBundleSupport:
             if str(item).strip()
         ]
         target_health_trajectory: FightDamageTrajectoryProjection | None = None
+        health_threshold_projection: EncounterHealthThresholdProjection | None = None
 
         threshold_policies = tuple(threshold_demand_policies)
         if threshold_policies:
@@ -199,6 +202,7 @@ class RotationCanonicalEvidenceBundleSupport:
                     difficulty=difficulty_key,
                     damage_segments=damage_segments,
                 )
+                health_threshold_projection = threshold_projection
                 target_health_trajectory = threshold_projection.trajectory
                 threshold_demands = self.threshold_demand_service.project(
                     thresholds=threshold_projection,
@@ -241,6 +245,7 @@ class RotationCanonicalEvidenceBundleSupport:
             trigger_fraction=trigger,
             target_resistance=resistance,
             target_health_trajectory=target_health_trajectory,
+            health_threshold_projection=health_threshold_projection,
             restoration_resolver=restoration_resolver,
             wait_decision_factory=wait_decision_factory,
             reserve_assessment_resolver=reserve_assessment_resolver,
