@@ -10,6 +10,10 @@ from services.rotation_healer_action_healing_service import (
     RotationHealerChannelHealSeed,
     RotationHealerResolvedHealEvent,
 )
+from services.rotation_runtime_output_eligibility_service import (
+    RotationRuntimeOutputConditionContextResolver,
+    RotationRuntimeOutputEligibilityService,
+)
 
 
 class RotationHealerChannelMagnitudePolicy(str, Enum):
@@ -105,8 +109,22 @@ class RotationHealerChannelRuntimeService:
 
     The service owns only channel tick scheduling. It does not infer cadence from
     channel duration, does not infer duration from generic action occupancy, and does
-    not guess snapshot-vs-recalculation magnitude semantics.
+    not guess snapshot-vs-recalculation magnitude semantics. Reviewed conditional
+    output is checked independently at each exact tick through the shared runtime
+    eligibility authority, so a condition that held when the channel began is not
+    silently smeared across later ticks.
     """
+
+    def __init__(
+        self,
+        *,
+        output_eligibility_service: RotationRuntimeOutputEligibilityService | None = None,
+        condition_context_resolver: RotationRuntimeOutputConditionContextResolver | None = None,
+    ) -> None:
+        self.output_eligibility_service = (
+            output_eligibility_service or RotationRuntimeOutputEligibilityService()
+        )
+        self.condition_context_resolver = condition_context_resolver
 
     def project(
         self,
@@ -115,6 +133,9 @@ class RotationHealerChannelRuntimeService:
         evidence: tuple[RotationHealerChannelRuntimeEvidence, ...],
         horizon_seconds: float,
         runtime_magnitude_resolver: RotationHealerChannelMagnitudeResolver | None = None,
+        condition_context_resolver: (
+            RotationRuntimeOutputConditionContextResolver | None
+        ) = None,
     ) -> RotationHealerChannelRuntimeProjection:
         horizon = float(horizon_seconds)
         if not math.isfinite(horizon) or horizon < 0:
@@ -126,6 +147,11 @@ class RotationHealerChannelRuntimeService:
         }
         events: list[RotationHealerResolvedHealEvent] = []
         unresolved: list[str] = []
+        condition_resolver = (
+            condition_context_resolver
+            if condition_context_resolver is not None
+            else self.condition_context_resolver
+        )
 
         for seed in seeds:
             key = (seed.source_name.casefold(), int(seed.coefficient_number))
@@ -169,6 +195,29 @@ class RotationHealerChannelRuntimeService:
                     abs_tol=1e-9,
                 )
                 if not runtime.tick_on_channel_end_boundary and at_channel_end:
+                    continue
+
+                condition_context = (
+                    condition_resolver(event)
+                    if condition_resolver is not None
+                    else None
+                )
+                eligibility = self.output_eligibility_service.evaluate(
+                    skill_entity_id=seed.source_name,
+                    coefficient_number=seed.coefficient_number,
+                    condition_context=condition_context,
+                )
+                if not eligibility.resolved:
+                    messages = eligibility.unresolved or (
+                        "channel healing tick output eligibility is unresolved",
+                    )
+                    unresolved.extend(
+                        f"{seed.source_name} coefficient {seed.coefficient_number} "
+                        f"at {event.time_seconds:g}s: {message}"
+                        for message in messages
+                    )
+                    continue
+                if not eligibility.eligible:
                     continue
 
                 modeled_heal = float(seed.modeled_heal)
