@@ -12,13 +12,20 @@ def _section(label: str):
     )
 
 
-def test_roster_menu_prioritizes_saved_build_workflow():
+def test_roster_menu_is_people_and_team_workspace():
     section = _section("Roster")
     assert section.get("page") == "roster_page"
+    assert section["children"] == []
+
+
+def test_builds_gets_its_own_top_level_workspace():
+    section = _section("Builds")
+    assert section.get("page") == "console:2"
     assert section["children"] == [
-        ("Builds", "console:2"),
         ("Rotations", "rotations"),
+        ("Extreme Build Lab", "extreme_optimization"),
     ]
+    assert ("Extreme Build Lab", "extreme_optimization") not in _section("Tool")["children"]
 
 
 def test_raid_engine_menu_matches_raid_lead_workflow():
