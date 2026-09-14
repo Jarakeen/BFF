@@ -227,6 +227,13 @@ class ExtremePassiveProjectionService:
                 )
             )
 
+        shared_recovery_all = (
+            rf"Increases your Health,? (?:Magicka,? and Stamina|Stamina,? and Magicka) Recovery by {{value}}"
+        )
+        paired_recovery = (
+            rf"Increases your (?:Magicka and Stamina|Stamina and Magicka) Recovery by {{value}}"
+        )
+
         if "%" not in clause:
             flat(rf"Increases your Max Health by {_NUMBER}", ("max_health",))
             flat(rf"Increases your Max Magicka by {_NUMBER}", ("max_magicka",))
@@ -251,8 +258,12 @@ class ExtremePassiveProjectionService:
             flat(rf"Increases your Magicka Recovery by {_NUMBER}", ("magicka_recovery",))
             flat(rf"Increases your Stamina Recovery by {_NUMBER}", ("stamina_recovery",))
             flat(
-                rf"Increases your Health,? Magicka,? and Stamina Recovery by {_NUMBER}",
+                shared_recovery_all.format(value=_NUMBER),
                 ("health_recovery", "magicka_recovery", "stamina_recovery"),
+            )
+            flat(
+                paired_recovery.format(value=_NUMBER),
+                ("magicka_recovery", "stamina_recovery"),
             )
 
         percent_reference(rf"Increases your Max Health by {_PERCENT}", ("max_health",))
@@ -272,8 +283,12 @@ class ExtremePassiveProjectionService:
         percent_reference(rf"Increases your Magicka Recovery by {_PERCENT}", ("magicka_recovery",))
         percent_reference(rf"Increases your Stamina Recovery by {_PERCENT}", ("stamina_recovery",))
         percent_reference(
-            rf"Increases your Health,? Magicka,? and Stamina Recovery by {_PERCENT}",
+            shared_recovery_all.format(value=_PERCENT),
             ("health_recovery", "magicka_recovery", "stamina_recovery"),
+        )
+        percent_reference(
+            paired_recovery.format(value=_PERCENT),
+            ("magicka_recovery", "stamina_recovery"),
         )
 
         critical_rating_patterns = (
