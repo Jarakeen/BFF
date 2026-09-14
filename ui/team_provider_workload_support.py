@@ -4,6 +4,11 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel
 
 from engine.config import get_data_dir
+from services.btv_benchmark_evidence_service import (
+    BTVBenchmarkCorpus,
+    BTVBenchmarkEvidenceService,
+    UPTIME_DENOMINATOR_UNKNOWN,
+)
 from services.build_service import BuildService
 from services.team_provider_rotation_workload_service import (
     TeamProviderRotationWorkload,
@@ -53,10 +58,64 @@ def _install_workload_card(page) -> None:
     page._provider_workload_decision_result = None
     page._provider_workload_policy = None
     page._provider_workload_policy_result = None
+    page._provider_btv_benchmark_corpus = None
+    page._provider_btv_uptime_denominator_basis = UPTIME_DENOMINATOR_UNKNOWN
     page._provider_workload_candidate_service = TeamProviderWorkloadCandidateService(
         get_data_dir() / "eso.db"
     )
     _render_provider_workload(page)
+
+
+def _select_btv_calibration_observation(corpus: BTVBenchmarkCorpus, effect_key: str):
+    target = BTVBenchmarkEvidenceService.select_target_observation(
+        corpus,
+        effect_key=effect_key,
+        page="insights",
+    )
+    if target is not None:
+        return target
+
+    candidates = tuple(
+        row
+        for row in corpus.find(effect_key=effect_key, page="insights")
+        if row.player_role is None and row.theoretical_max_ratio is not None
+    )
+    if not candidates:
+        return None
+    if len(candidates) > 1:
+        sources = ", ".join(row.source_file for row in candidates)
+        raise ValueError(
+            f"ambiguous BTV theoretical calibration for {effect_key!r}: {sources}"
+        )
+    return candidates[0]
+
+
+def _provider_btv_assessments(page, workloads):
+    corpus = getattr(page, "_provider_btv_benchmark_corpus", None)
+    if corpus is None:
+        return {}
+
+    denominator = getattr(
+        page,
+        "_provider_btv_uptime_denominator_basis",
+        UPTIME_DENOMINATOR_UNKNOWN,
+    )
+    assessments = {}
+    for workload in tuple(workloads or ()):
+        temporal = workload.temporal_coverage_result
+        if temporal is None:
+            continue
+        observation = _select_btv_calibration_observation(corpus, workload.effect_key)
+        if observation is None:
+            continue
+        assessments[workload.alternative_id] = (
+            BTVBenchmarkEvidenceService.assess_temporal_result(
+                observation,
+                temporal,
+                temporal_uptime_denominator_basis=denominator,
+            )
+        )
+    return assessments
 
 
 def _render_materialized_provider_workload_decision(
@@ -65,16 +124,19 @@ def _render_materialized_provider_workload_decision(
     candidate_result: TeamProviderWorkloadCandidateResult,
     policy_result: TeamProviderWorkloadPolicyResult | None = None,
     comparison: TeamProviderRotationWorkloadComparison | None = None,
+    benchmark_assessments=None,
 ) -> str:
     if not decision_result.decisions:
         return TeamProviderWorkloadExplanationService.render_panel(())
 
+    calibration_by_id = dict(benchmark_assessments or {})
     selected_ids = set(policy_result.preferred_ids if policy_result is not None else ())
     sections = [
         TeamProviderWorkloadExplanationService._render_decision(
             item,
             policy_applied=policy_result is not None,
             selected_by_policy=item.alternative_id in selected_ids,
+            benchmark_assessment=calibration_by_id.get(item.alternative_id),
         )
         for item in decision_result.decisions
     ]
@@ -106,23 +168,30 @@ def _render_provider_workload(page) -> None:
             raise ValueError(
                 "provider workload candidates require a materialized decision result"
             )
+        benchmark_assessments = _provider_btv_assessments(
+            page,
+            candidate_result.workloads,
+        )
         label.setText(
             _render_materialized_provider_workload_decision(
                 decision_result,
                 candidate_result=candidate_result,
                 policy_result=getattr(page, "_provider_workload_policy_result", None),
                 comparison=getattr(page, "_provider_rotation_workload_comparison", None),
+                benchmark_assessments=benchmark_assessments,
             )
         )
     else:
+        workloads = tuple(getattr(page, "_provider_rotation_workloads", ()) or ())
         label.setText(
             TeamProviderWorkloadExplanationService.render_panel(
-                tuple(getattr(page, "_provider_rotation_workloads", ()) or ()),
+                workloads,
                 comparison=getattr(
                     page,
                     "_provider_rotation_workload_comparison",
                     None,
                 ),
+                benchmark_assessments=_provider_btv_assessments(page, workloads),
             )
         )
 
@@ -196,6 +265,25 @@ def _set_provider_workload_policy(
         if policy is not None
         else None
     )
+    _render_provider_workload(page)
+
+
+def _set_provider_btv_benchmark_corpus(
+    page,
+    corpus: BTVBenchmarkCorpus | None,
+    *,
+    uptime_denominator_basis: str = UPTIME_DENOMINATOR_UNKNOWN,
+) -> None:
+    if corpus is not None and not isinstance(corpus, BTVBenchmarkCorpus):
+        raise TypeError("provider BTV benchmark evidence requires a BTVBenchmarkCorpus")
+    page._provider_btv_benchmark_corpus = corpus
+    page._provider_btv_uptime_denominator_basis = uptime_denominator_basis
+    _render_provider_workload(page)
+
+
+def _clear_provider_btv_benchmark_corpus(page) -> None:
+    page._provider_btv_benchmark_corpus = None
+    page._provider_btv_uptime_denominator_basis = UPTIME_DENOMINATOR_UNKNOWN
     _render_provider_workload(page)
 
 
@@ -342,6 +430,8 @@ def install() -> None:
     CompBuilderPage.set_provider_workload_evidence = _set_provider_workload_evidence
     CompBuilderPage.set_provider_workload_candidates = _set_provider_workload_candidates
     CompBuilderPage.set_provider_workload_policy = _set_provider_workload_policy
+    CompBuilderPage.set_provider_btv_benchmark_corpus = _set_provider_btv_benchmark_corpus
+    CompBuilderPage.clear_provider_btv_benchmark_corpus = _clear_provider_btv_benchmark_corpus
     CompBuilderPage.generate_provider_workload_candidates = (
         _generate_comp_provider_workload_candidates
     )
@@ -354,6 +444,8 @@ def install() -> None:
     OptimizationPage.set_provider_workload_evidence = _set_provider_workload_evidence
     OptimizationPage.set_provider_workload_candidates = _set_provider_workload_candidates
     OptimizationPage.set_provider_workload_policy = _set_provider_workload_policy
+    OptimizationPage.set_provider_btv_benchmark_corpus = _set_provider_btv_benchmark_corpus
+    OptimizationPage.clear_provider_btv_benchmark_corpus = _clear_provider_btv_benchmark_corpus
     OptimizationPage.generate_provider_workload_candidates = (
         _generate_optimization_provider_workload_candidates
     )
