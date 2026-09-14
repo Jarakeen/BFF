@@ -5,6 +5,7 @@ import pytest
 from minmax.demand_anticipatory_duration_scheduler import DemandRefreshLead
 from minmax.rotation_plan import RotationPlan
 from services.rotation_candidate_generation_service import (
+    GeneratedRotationCandidate,
     RotationCandidateGenerationService,
     RotationRefreshLeadCandidateOption,
 )
@@ -14,8 +15,9 @@ from services.rotation_recovery_heavy_candidate_generation_bridge_service import
 
 
 class _GenerationService:
-    def __init__(self, max_candidates=32):
+    def __init__(self, max_candidates=32, *, generated_candidate=False):
         self.max_candidates = max_candidates
+        self.generated_candidate = generated_candidate
         self.calls = []
 
     _dedupe_options = staticmethod(RotationCandidateGenerationService._dedupe_options)
@@ -42,15 +44,23 @@ class _GenerationService:
                 "provider": provider,
             }
         )
+        if self.generated_candidate:
+            return GeneratedRotationCandidate(
+                candidate_id=candidate_id,
+                plan=seed_plan,
+                refresh_leads=tuple(refresh_leads),
+                action_claims=(),
+            )
         return SimpleNamespace(candidate_id=candidate_id, plan=seed_plan)
 
 
-def _seed() -> RotationPlan:
+def _seed(*, assumption="seed") -> RotationPlan:
     return RotationPlan(
         character_name="Rotation Test",
         build_name="Role Neutral",
         duration_seconds=30.0,
         actions=(),
+        assumptions=(assumption,),
     )
 
 
@@ -138,6 +148,76 @@ def test_bridge_preserves_semantic_option_deduplication_and_candidate_identity()
     assert [item.candidate_id for item in result.candidates] == ["baseline", "first"]
     evaluation = result.candidates[1].evaluate_candidate(_seed(), object())
     assert evaluation.candidate_id == "first"
+
+
+def test_bridge_reprojects_every_recovery_regeneration_before_stabilization() -> None:
+    generation = _GenerationService(generated_candidate=True)
+    service = RotationRecoveryHeavyCandidateGenerationBridgeService(generation)
+    projected_ids = []
+
+    def projector(candidate):
+        projected_ids.append(candidate.candidate_id)
+        return GeneratedRotationCandidate(
+            candidate_id=candidate.candidate_id,
+            plan=_seed(assumption=f"projected:{len(projected_ids)}"),
+            refresh_leads=candidate.refresh_leads,
+            action_claims=candidate.action_claims,
+        )
+
+    result = service.build(
+        seed_plan=_seed(),
+        priorities=object(),
+        evaluator_resolver=_evaluator,
+        candidate_projector=projector,
+    )
+
+    first = result.candidates[0].generate(object())
+    second = result.candidates[0].generate(object())
+
+    assert projected_ids == ["baseline", "baseline"]
+    assert first.assumptions == ("projected:1",)
+    assert second.assumptions == ("projected:2",)
+
+
+def test_bridge_projector_must_preserve_generated_candidate_contract_and_identity() -> None:
+    generation = _GenerationService(generated_candidate=True)
+    service = RotationRecoveryHeavyCandidateGenerationBridgeService(generation)
+
+    wrong_type = service.build(
+        seed_plan=_seed(),
+        priorities=object(),
+        evaluator_resolver=_evaluator,
+        candidate_projector=lambda _candidate: object(),
+    )
+    with pytest.raises(TypeError, match="must return GeneratedRotationCandidate"):
+        wrong_type.candidates[0].generate(None)
+
+    wrong_identity = service.build(
+        seed_plan=_seed(),
+        priorities=object(),
+        evaluator_resolver=_evaluator,
+        candidate_projector=lambda candidate: GeneratedRotationCandidate(
+            candidate_id="other",
+            plan=candidate.plan,
+            refresh_leads=candidate.refresh_leads,
+            action_claims=candidate.action_claims,
+        ),
+    )
+    with pytest.raises(ValueError, match="preserve candidate identity"):
+        wrong_identity.candidates[0].generate(None)
+
+
+def test_bridge_rejects_projector_when_generation_adapter_does_not_expose_candidate_shape() -> None:
+    service = RotationRecoveryHeavyCandidateGenerationBridgeService(_GenerationService())
+    result = service.build(
+        seed_plan=_seed(),
+        priorities=object(),
+        evaluator_resolver=_evaluator,
+        candidate_projector=lambda candidate: candidate,
+    )
+
+    with pytest.raises(TypeError, match="requires GeneratedRotationCandidate"):
+        result.candidates[0].generate(None)
 
 
 def test_bridge_rejects_duplicate_baseline_identity_and_family_overflow() -> None:
