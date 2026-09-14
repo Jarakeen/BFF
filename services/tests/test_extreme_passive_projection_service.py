@@ -96,6 +96,33 @@ def test_shared_recovery_passive_projects_all_three_recovery_objectives():
     assert by_objective["stamina_recovery"].flat == 90.0
 
 
+def test_shared_recovery_percent_accepts_health_stamina_magicka_order():
+    result = ExtremePassiveProjectionService.project(
+        _passive(
+            "Refreshing Shadows",
+            "Increases your Health, Stamina, and Magicka Recovery by |cffffff15|r%.",
+        )
+    )
+
+    assert result.status is ExtremePassiveProjectionStatus.REVIEWED_STATIC
+    by_objective = {row.objective_key: row for row in result.contributions}
+    assert by_objective["health_recovery"].percent_of_reference == 0.15
+    assert by_objective["magicka_recovery"].percent_of_reference == 0.15
+    assert by_objective["stamina_recovery"].percent_of_reference == 0.15
+
+
+def test_paired_magicka_stamina_recovery_percent_projects_both_resources():
+    result = ExtremePassiveProjectionService.project(
+        _passive("Erudition", "Increases your Magicka and Stamina Recovery by 18%.")
+    )
+
+    assert result.status is ExtremePassiveProjectionStatus.REVIEWED_STATIC
+    by_objective = {row.objective_key: row for row in result.contributions}
+    assert by_objective["magicka_recovery"].percent_of_reference == 0.18
+    assert by_objective["stamina_recovery"].percent_of_reference == 0.18
+    assert "health_recovery" not in by_objective
+
+
 def test_conditional_tooltip_is_not_flattened_into_static_score():
     result = ExtremePassiveProjectionService.project(
         _passive(
