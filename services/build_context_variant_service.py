@@ -111,6 +111,13 @@ def apply_context_variant(build: PlayerBuild, variant: BuildContextVariant) -> P
     result = deepcopy(build)
     result.ContextVariants = deepcopy(build.ContextVariants)
 
+    transformed_form = _key(getattr(variant, "TransformedForm", ""))
+    if transformed_form in {"werewolf", "vampire"}:
+        # TransformedForm is context runtime state, not affiliation. Keep it on
+        # the resolved build snapshot so downstream eligibility consumers can
+        # distinguish "can transform" from "this context is transformed".
+        result.TransformedForm = transformed_form
+
     if str(variant.Mundus or "").strip():
         result.Mundus = variant.Mundus
     if str(variant.SecondMundus or "").strip():
