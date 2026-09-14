@@ -130,7 +130,9 @@ def main() -> int:
         connection = sqlite3.connect(args.db)
         try:
             persist_report_metadata(connection, report_code=code, fights=selected)
-            result = EsoLogsCombatImporter(connection, client).import_report(
+            importer = EsoLogsCombatImporter(connection, client)
+            report_actors = importer.import_report_actors(code)
+            result = importer.import_report(
                 code,
                 fight_ids=[int(fight["id"]) for fight in selected],
                 gap_threshold_ms=args.gap_ms,
@@ -144,7 +146,8 @@ def main() -> int:
         print("FIGHTS: " + ", ".join(str(int(fight["id"])) for fight in selected))
         print(
             f"IMPORTED: fights={result['fights']} actors={result['actors']} "
-            f"events={result['events']} observed_windows={result['observed_windows']}"
+            f"report_actors={report_actors} events={result['events']} "
+            f"observed_windows={result['observed_windows']}"
         )
         for line in audit(args.db, minimum_gap_ms=args.gap_ms):
             print(line)
