@@ -157,10 +157,10 @@ def test_cost_relevant_armor_progression_uncertainty_stays_blocking() -> None:
         result.as_requirement()
 
 
-def test_canonical_progression_compatibility_fallback_stays_blocking() -> None:
+def test_missing_canonical_progression_stays_blocking_without_reconstruction() -> None:
     message = (
         "canonical character progression has no owned skill lines; "
-        "rotation sustain used equipped-armor inference as a compatibility fallback"
+        "rotation sustain will not infer character-owned progression from equipped armor"
     )
     service = RotationRequiredActionReserveService(
         _StubSustainService(
