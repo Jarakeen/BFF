@@ -11,10 +11,9 @@ and is used only to build a candidate-family projector when the caller supplied 
 taunt, refresh, or defensive placement policy. This bridge never infers
 responsibilities or strategy from role, boss name, UI labels, or timing windows.
 
-Reviewed add-activity triggers are contextual metadata derived from already-bound Tank
-responsibilities plus reviewed runtime boundary semantics. They mark when an add
-responsibility becomes active in observed combat evidence; they are not exact spawn or
-exact taunt clocks and therefore do not become hard pass/fail obligations here.
+Reviewed add-activity triggers and reviewed actor-specific add-taunt handling are
+contextual metadata derived from already-bound Tank responsibilities. They do not become
+hard pass/fail obligations or exact timing/uptime floors here.
 """
 
 from dataclasses import dataclass
@@ -40,6 +39,9 @@ from services.rotation_tank_defensive_obligation_service import (
 )
 from services.rotation_tank_encounter_add_activity_trigger_service import (
     RotationTankEncounterAddActivityTriggerService,
+)
+from services.rotation_tank_encounter_add_taunt_handling_context_service import (
+    RotationTankEncounterAddTauntHandlingContextService,
 )
 from services.rotation_tank_family_projector_service import (
     RotationTankFamilyProjectorService,
@@ -149,6 +151,9 @@ class RotationGenerateTankRoleEvidenceSupport:
         add_activity_trigger_service: (
             RotationTankEncounterAddActivityTriggerService | object | None
         ) = None,
+        add_taunt_handling_context_service: (
+            RotationTankEncounterAddTauntHandlingContextService | object | None
+        ) = None,
         reliable_group_healing: bool | None = None,
         exception_contexts: tuple[str, ...] = (),
         role_output_label: str = "tank role output unresolved",
@@ -174,6 +179,10 @@ class RotationGenerateTankRoleEvidenceSupport:
         self.action_slot_service = action_slot_service or RotationSavedBuildActionSlotService()
         self.add_activity_trigger_service = (
             add_activity_trigger_service or RotationTankEncounterAddActivityTriggerService()
+        )
+        self.add_taunt_handling_context_service = (
+            add_taunt_handling_context_service
+            or RotationTankEncounterAddTauntHandlingContextService()
         )
         self.reliable_group_healing = reliable_group_healing
         self.exception_contexts = tuple(
@@ -230,20 +239,18 @@ class RotationGenerateTankRoleEvidenceSupport:
 
         if context.has_contextual_responsibilities:
             try:
-                setattr(
-                    plan_evidence,
-                    "tank_encounter_responsibilities",
-                    tuple(context.encounter_responsibilities),
-                )
+                responsibilities = tuple(context.encounter_responsibilities)
+                setattr(plan_evidence, "tank_encounter_responsibilities", responsibilities)
                 add_activity_triggers = self.add_activity_trigger_service.for_responsibilities(
                     encounter_id=context.encounter_id,
-                    responsibilities=tuple(context.encounter_responsibilities),
+                    responsibilities=responsibilities,
                 )
-                setattr(
-                    plan_evidence,
-                    "tank_add_activity_triggers",
-                    tuple(add_activity_triggers),
+                setattr(plan_evidence, "tank_add_activity_triggers", tuple(add_activity_triggers))
+                handling_context = self.add_taunt_handling_context_service.for_responsibilities(
+                    encounter_id=context.encounter_id,
+                    responsibilities=responsibilities,
                 )
+                setattr(plan_evidence, "tank_add_taunt_handling_context", tuple(handling_context))
             except (AttributeError, TypeError) as exc:
                 raise TypeError(
                     "Tank plan evidence provider cannot carry encounter responsibility metadata"
