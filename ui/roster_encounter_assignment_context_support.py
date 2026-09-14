@@ -67,11 +67,7 @@ def _set_enabled_state(page) -> None:
         return
     team_name = str(getattr(page, "assignment_team_filter", "") or "").strip()
     combo.setEnabled(bool(team_name))
-    combo.setToolTip(
-        "Usually leave this on Team Default. Pick a boss only when someone's job changes for that fight."
-        if team_name
-        else "Choose a team first."
-    )
+    combo.setToolTip("")
 
 
 def _encounter_changed(page, _index: int) -> None:
@@ -139,6 +135,7 @@ def install() -> None:
         label.setProperty("muted", True)
         combo = QComboBox()
         combo.setMinimumWidth(230)
+        combo.setToolTip("")
         combo.addItem(_TEAM_DEFAULT_LABEL, "")
         for name, encounter_id in _encounter_choices():
             combo.addItem(name, encounter_id)
