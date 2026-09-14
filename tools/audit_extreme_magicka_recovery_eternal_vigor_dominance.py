@@ -2,12 +2,13 @@ from __future__ import annotations
 
 """Exact physical dominance check for Eternal Vigor against the legal Willow witness.
 
-Eternal Vigor survives the Willow-rebased capacity screen. This audit requires
-Eternal Vigor 5pc physically, externalizes its Recovery mechanic, finds the best
-legal seven-Light ordinary companion package, then adds the full proof-safe flat
-ceiling. If that final upper bound is below the constructive Willow's Path lower
-bound, Eternal Vigor is globally dominated and its runtime condition no longer
-matters.
+Eternal Vigor survives the Willow-rebased capacity screen only when the generic
+proof-safe direct-flat helper is allowed to overcount overlapping mapped and
+description-derived Recovery. This audit requires Eternal Vigor 5pc physically,
+externalizes the 5pc mechanic, finds the best legal seven-Light ordinary companion
+package, then scores the exact incremental Magicka Recovery ceiling from the active
+set-bonus descriptions. The ordinary 2pc +129 Magicka Recovery remains structural;
+the 5pc special contributes +337 Magicka Recovery while Health is above 50%.
 """
 
 import argparse
@@ -29,6 +30,7 @@ from services.extreme_armor_weight_filtered_slot_eligibility_service import Extr
 from services.extreme_divines_mundus_objective_service import ExtremeDivinesMundusObjectiveService
 from services.extreme_gear_set_bonus_breakpoint_service import ExtremeGearSetBonusBreakpointService
 from services.extreme_gear_set_objective_relevance_service import ExtremeGearSetObjectiveRelevanceService
+from services.extreme_gear_set_recovery_special_branch_service import ExtremeGearSetRecoverySpecialBranchService
 from services.extreme_gear_set_topology_catalog_service import ExtremeGearSetTopologyCatalogService
 from services.extreme_max_resource_special_named_gear_branch_service import ExtremeMaxResourceSpecialNamedGearBranchService
 from services.extreme_named_gear_set_slot_eligibility_service import ExtremeNamedGearSetSlotEligibilityService
@@ -71,6 +73,32 @@ def _parser() -> argparse.ArgumentParser:
 
 def final_upper(*, shared_flat: float, structural: float, special: float) -> float:
     return (float(shared_flat) + float(structural) + float(special)) * RECOVERY_MULTIPLIER
+
+
+def exact_eternal_vigor_special_flat(evidence) -> float | None:
+    """Return the exact incremental special Recovery ceiling for Eternal Vigor 5pc.
+
+    The candidate's source bonuses include the ordinary 2pc +129 Recovery and the
+    conditional 5pc +337 Magicka/Stamina Recovery. The constrained structural search
+    already retains ordinary breakpoints, so summing all positive descriptions here
+    would double count the 2pc bonus. The special increment is therefore the largest
+    positive description-classified flat Recovery bonus at this breakpoint.
+    """
+
+    ceilings: list[float] = []
+    for bonus in getattr(evidence.candidate, "source_bonuses", ()):
+        description = str(getattr(bonus, "description", "") or "").strip()
+        if not description:
+            continue
+        branch = ExtremeGearSetRecoverySpecialBranchService.classify(
+            set_name=str(evidence.set_name),
+            piece_count=int(evidence.piece_count),
+            description=description,
+            objective_key=OBJECTIVE,
+        )
+        if branch is not None and branch.can_raise_self and branch.flat_ceiling is not None:
+            ceilings.append(max(0.0, float(branch.flat_ceiling)))
+    return max(ceilings) if ceilings else None
 
 
 def main() -> int:
@@ -132,13 +160,19 @@ def main() -> int:
         if target_evidence is None:
             unresolved.append("Eternal Vigor canonical Recovery evidence missing")
 
+    generic_special_ceiling = 0.0
     special_ceiling = 0.0
     target_realization = None
     target_structural = 0.0
     if target is not None and target_evidence is not None:
         upper = direct_flat_upper_bound(target, target_evidence)
         unresolved.extend(upper.pending_nonflat)
-        special_ceiling = float(upper.total_special_ceiling)
+        generic_special_ceiling = float(upper.total_special_ceiling)
+        exact_special = exact_eternal_vigor_special_flat(target_evidence)
+        if exact_special is None:
+            unresolved.append("Eternal Vigor exact conditional Magicka Recovery ceiling unresolved")
+        else:
+            special_ceiling = float(exact_special)
         constrained, messages = _constrained_effective_recovery_search(
             challenger=target,
             topology=topology,
@@ -262,7 +296,8 @@ def main() -> int:
     print(f"database={database}")
     print(f"shared_flat_floor={shared_flat:.3f}")
     print(f"willow_constructive_final={willow_final:.3f}")
-    print(f"eternal_vigor_special_flat_ceiling={special_ceiling:.3f}")
+    print(f"eternal_vigor_generic_special_ceiling={generic_special_ceiling:.3f}")
+    print(f"eternal_vigor_exact_special_flat_ceiling={special_ceiling:.3f}")
     print(f"eternal_vigor_physical_structural_upper={target_structural:.3f}")
     print(f"eternal_vigor_optimistic_prepercent={target_structural + special_ceiling:.3f}")
     print(f"eternal_vigor_final_upper={target_final_upper:.3f}")
