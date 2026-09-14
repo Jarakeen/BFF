@@ -3,6 +3,7 @@ from __future__ import annotations
 """Read-only audit of canonical Mythic identity evidence in eso.db."""
 
 import argparse
+from collections import Counter
 from pathlib import Path
 import sqlite3
 
@@ -44,6 +45,30 @@ def main() -> int:
             values = {key: row[key] for key in row.keys()}
             print(repr(values))
 
+        print("\nALL MAX_EQUIP_COUNT=1 SETS")
+        one_piece_rows = connection.execute(
+            """
+            SELECT id, name, COALESCE(category, '') AS category, max_equip_count
+            FROM gear_set
+            WHERE max_equip_count = 1
+            ORDER BY name COLLATE NOCASE, id
+            """
+        ).fetchall()
+        for row in one_piece_rows:
+            print(
+                repr(
+                    {
+                        "id": int(row["id"]),
+                        "name": str(row["name"] or ""),
+                        "category": str(row["category"] or ""),
+                        "max_equip_count": int(row["max_equip_count"]),
+                    }
+                )
+            )
+        category_counts = Counter(str(row["category"] or "") for row in one_piece_rows)
+        print(f"one_piece_set_count={len(one_piece_rows)}")
+        print(f"one_piece_category_counts={dict(sorted(category_counts.items()))!r}")
+
         print("\nTABLE/COLUMN NAME REFERENCES")
         tables = tuple(
             str(row[0])
@@ -66,14 +91,17 @@ def main() -> int:
             for column in candidate_columns:
                 try:
                     query = (
-                        f"SELECT rowid, {_quote(column)} AS value FROM {_quote(table)} "
+                        f"SELECT rowid AS _rowid, {_quote(column)} AS value FROM {_quote(table)} "
                         f"WHERE CAST({_quote(column)} AS TEXT) IN ({placeholders}) LIMIT 20"
                     )
                     matches = connection.execute(query, TARGETS).fetchall()
                 except sqlite3.Error:
                     continue
                 for match in matches:
-                    print(f"table={table!r} column={column!r} rowid={match['rowid']!r} value={match['value']!r}")
+                    print(
+                        f"table={table!r} column={column!r} "
+                        f"rowid={match['_rowid']!r} value={match['value']!r}"
+                    )
 
         print("\nMYTHIC/ANTIQUITY-LIKE SCHEMA")
         for table in tables:
@@ -83,7 +111,10 @@ def main() -> int:
             if "mythic" in folded or "antiqu" in folded:
                 print(f"table={table!r} columns={names!r}")
 
-    print("\nNEXT_STEP=use the printed canonical marker to fix shared one-Mythic legality, then rerun Torc")
+    print(
+        "\nNEXT_STEP=prove whether max_equip_count=1 is the canonical Mythic identity "
+        "for the full gear_set denominator before changing shared legality"
+    )
     return 0
 
 
