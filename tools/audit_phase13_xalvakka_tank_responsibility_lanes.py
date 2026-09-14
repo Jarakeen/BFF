@@ -24,7 +24,11 @@ def main() -> int:
     print(f"encounter={plan.encounter_id}")
     for lane in plan.lanes:
         distinct = ", ".join(lane.distinct_from) or "none"
-        print(f"\n{lane.lane_id} | {lane.display_name} | distinct_from={distinct}")
+        slots = ", ".join(lane.prescription_slot_names) or "unmapped"
+        print(
+            f"\n{lane.lane_id} | {lane.display_name} | "
+            f"distinct_from={distinct} | prescription_slots={slots}"
+        )
         for responsibility in lane.responsibilities:
             capability = responsibility.required_capability_type or "none"
             print(
@@ -32,9 +36,9 @@ def main() -> int:
                 f"| action={responsibility.action_type} | capability={capability}"
             )
 
-    print("\nSTATUS=REVIEWED_LANES_UNBOUND")
+    print("\nSTATUS=REVIEWED_LANES_PRESCRIPTION_MAPPED")
     print(
-        "NEXT_STEP=bind explicit roster strategy to boss_holder/add_handler and validate canonical capability evidence"
+        "NEXT_STEP=field-test authoritative Team Optimization Main Tank/Off Tank binding and Generate transfer"
     )
     return 0
 
