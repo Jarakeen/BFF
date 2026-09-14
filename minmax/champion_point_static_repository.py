@@ -305,30 +305,41 @@ class ChampionPointStaticRepository:
             amount = float(finesse.group(1)) * stages
             return self._cache_resolution(
                 cache_key,
-                [
-                    Effect(
-                        source=f"Champion Point: {source}",
-                        stat=StatId.CRITICAL_DAMAGE,
-                        operation=EffectOperation.ADD_PERCENT,
-                        value=amount,
-                        unit=EffectUnit.PERCENT,
-                    ),
-                    Effect(
-                        source=f"Champion Point: {source}",
-                        stat=StatId.CRITICAL_HEALING,
-                        operation=EffectOperation.ADD_PERCENT,
-                        value=amount,
-                        unit=EffectUnit.PERCENT,
-                    ),
-                ],
+                self._effects_for_simple_stat(source, StatId.CRITICAL_DAMAGE, amount, EffectUnit.PERCENT)
+                + self._effects_for_simple_stat(source, StatId.CRITICAL_HEALING, amount, EffectUnit.PERCENT),
                 [],
             )
 
-        if source.strip().casefold() in {"boundless vitality", "arcane supremacy", "tireless guardian"}:
+        tireless = re.match(
+            rf"^Reduces the cost of Block by {_VALUE} Stamina per stage\.$",
+            first_line,
+            flags=re.IGNORECASE,
+        )
+        if tireless:
+            amount = float(tireless.group(1)) * stages
+            return self._cache_resolution(
+                cache_key,
+                self._effects_for_simple_stat(source, StatId.BLOCK_COST, amount, EffectUnit.FLAT),
+                [],
+            )
+
+        fortification = re.match(
+            rf"^Increases the amount of damage you can block by {_VALUE}% per stage\.$",
+            first_line,
+            flags=re.IGNORECASE,
+        )
+        if fortification:
+            amount = float(fortification.group(1)) * stages
+            return self._cache_resolution(
+                cache_key,
+                self._effects_for_simple_stat(source, StatId.BLOCK_MITIGATION, amount, EffectUnit.PERCENT),
+                [],
+            )
+
+        if source.strip().casefold() in {"boundless vitality", "arcane supremacy"}:
             stat = {
                 "boundless vitality": StatId.MAX_HEALTH,
                 "arcane supremacy": StatId.MAX_MAGICKA,
-                "tireless guardian": StatId.MAX_STAMINA,
             }[source.strip().casefold()]
             return self._cache_resolution(
                 cache_key,
@@ -344,5 +355,5 @@ class ChampionPointStaticRepository:
         return self._cache_resolution(
             cache_key,
             [],
-            [f"Champion Point effect not yet modeled: {source}: {first_line}"],
+            [f"Champion Point is dynamic or not yet stat-mapped: {source}"],
         )
