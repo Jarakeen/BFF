@@ -122,6 +122,37 @@ ROTATION_TANK_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="rotation.tank.encounter_threshold_defensive_timing_binding",
+        domain="rotation",
+        purpose=(
+            "Reuse projected canonical health-threshold clock windows to bind tank defensive "
+            "occurrences without duplicating raid-damage trajectory or threshold timing truth."
+        ),
+        implementation_path=(
+            "services.rotation_tank_encounter_threshold_defensive_timing_service"
+        ),
+        inputs=(
+            "EncounterHealthThresholdProjection",
+            "RotationTankEncounterThresholdDefensiveTimingPolicy",
+            "EncounterThresholdRotationDemandService",
+        ),
+        outputs=("RotationTankEncounterDefensiveTimingProjection",),
+        dependencies=("rotation.tank.encounter_defensive_projection",),
+        responsibilities=(
+            "rotation_tank_projected_threshold_defensive_timing_binding",
+        ),
+        roles=("Tank",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Reviewed health thresholds are converted to seconds only by the existing explicit "
+            "raid-damage trajectory projection. Missing, ambiguous, or unreachable threshold "
+            "clock points remain unresolved; this adapter only binds resolved windows to the "
+            "separately reviewed defensive mechanic fact."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="rotation.tank.defensive_candidate_claim",
         domain="rotation",
         purpose=(
