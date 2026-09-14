@@ -122,6 +122,34 @@ ROTATION_RUNTIME_INTEGRATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] 
             "bar-swap policy, multiple same-bar legal candidates remain ambiguous, and no output is yet a RotationAction."
         ),
     ),
+    ServiceDescriptor(
+        service_id="rotation.runtime.action_materialization",
+        domain="rotation",
+        purpose=(
+            "Materialize one already-proven immediately executable runtime choice as an immutable "
+            "RotationPlan skill action at the authoritative activation time with deterministic sequence ordering."
+        ),
+        implementation_path="services.rotation_runtime_action_materialization_service",
+        inputs=(
+            "RotationPlan",
+            "RotationRuntimeExecutableChoice",
+        ),
+        outputs=(
+            "RotationRuntimeActionMaterialization",
+            "RotationAction",
+            "RotationPlan",
+        ),
+        dependencies=("rotation.runtime.executable_choice_resolution",),
+        responsibilities=("rotation_runtime_action_materialization",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "This is the first runtime-triggered boundary allowed to emit RotationAction. It preserves the "
+            "authoritative activation timestamp, exact proven skill/bar/target, and existing plan evidence; "
+            "it does not invent bar swaps, timing, strategy, or legality. Exact repeated materialization is idempotent."
+        ),
+    ),
 )
 
 
