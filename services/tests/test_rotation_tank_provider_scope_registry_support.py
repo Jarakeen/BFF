@@ -1,6 +1,14 @@
 from types import SimpleNamespace
 
 from models.build_model import PlayerBuild
+from services.encounter_provider_assignment import (
+    ProviderAssignment,
+    ProviderAssignmentStatus,
+)
+from services.encounter_provider_candidate import (
+    ProviderCandidate,
+    ProviderCandidateStatus,
+)
 from services.rotation_assignment_taunt_maintenance_horizon_policy_service import (
     RotationAssignmentTauntMaintenanceHorizonPolicy,
     RotationAssignmentTauntMaintenanceHorizonWindow,
@@ -36,9 +44,33 @@ class _UtilityCapabilityService:
         )
 
 
+def _baseline_assignment():
+    candidate = ProviderCandidate(
+        requirement_id="taleria_hm:tank:boss_taunt",
+        encounter_id="taleria_hm",
+        requirement_type="taunt",
+        member_id="tank-a",
+        character_name="Tank A",
+        build_name="MT",
+        status=ProviderCandidateStatus.VIABLE,
+        evidence_sources=("canonical taunt",),
+    )
+    return ProviderAssignment(
+        requirement_id="taleria_hm:tank:boss_taunt",
+        encounter_id="taleria_hm",
+        requirement_type="taunt",
+        status=ProviderAssignmentStatus.ASSIGNED,
+        primary_providers=(candidate,),
+        backup_providers=(),
+        unresolved_candidates=(),
+        conflicting_candidates=(),
+        explanation="fixture canonical Tank provider assignment",
+    )
+
+
 class _ScopeFactory:
     def __call__(self, **kwargs):
-        return SimpleNamespace(baseline_assignments=("assignment",))
+        return SimpleNamespace(baseline_assignments=(_baseline_assignment(),))
 
 
 class _PolicyRegistry:
