@@ -42,6 +42,10 @@ RotationCandidateEvidenceEvaluator = Callable[
     [GeneratedRotationCandidate, GeneratedRotationCandidate],
     RotationCandidateRoleEvidence,
 ]
+RotationCandidateFamilyProjector = Callable[
+    [GeneratedRotationCandidate],
+    GeneratedRotationCandidate,
+]
 
 
 @dataclass(frozen=True)
@@ -69,14 +73,15 @@ class RotationCandidateFamilyRecommendation:
 
 
 class RotationCandidateFamilyRecommendationService:
-    """Run candidate generation, whole-plan evaluation, and role-aware ranking.
+    """Run candidate generation, optional projection, whole-plan evaluation, and ranking.
 
     This is deliberately a thin orchestration layer. Candidate generation still owns
-    schedule variants, the supplied evaluator still owns shared mechanics/scorecard
-    truth, and the role-aware ranker still owns policy. The coordinator does not
-    duplicate ESO calculations or invent a weighted score.
+    schedule variants, an optional caller-supplied projector may transform each whole
+    candidate without changing its identity, the supplied evaluator still owns shared
+    mechanics/scorecard truth, and the role-aware ranker still owns policy. The
+    coordinator does not duplicate ESO calculations or invent a weighted score.
 
-    The first generated candidate is the family baseline and is supplied to every
+    The first projected candidate is the family baseline and is supplied to every
     evaluation so consequence services can make like-for-like comparisons. Shared
     encounter action claims are forwarded unchanged into family generation. If no
     generated candidate survives the shared hard gates, ``recommended`` is ``None``
@@ -103,6 +108,7 @@ class RotationCandidateFamilyRecommendationService:
         demands: tuple[RotationDemandWindow, ...] = (),
         options: tuple[RotationRefreshLeadCandidateOption, ...] = (),
         action_claims: tuple[DemandActionClaim, ...] = (),
+        candidate_projector: RotationCandidateFamilyProjector | None = None,
         wait_decision: PrematureRecastDecisionProvider | None = None,
         wait_decision_factory: RotationCandidateWaitDecisionFactory | None = None,
         baseline_id: str = "baseline",
@@ -119,6 +125,22 @@ class RotationCandidateFamilyRecommendationService:
         )
         if not candidates:
             return RotationCandidateFamilyRecommendation(entries=(), recommended=None)
+
+        if candidate_projector is not None:
+            projected: list[GeneratedRotationCandidate] = []
+            for candidate in candidates:
+                transformed = candidate_projector(candidate)
+                if not isinstance(transformed, GeneratedRotationCandidate):
+                    raise TypeError(
+                        "rotation candidate family projector must return GeneratedRotationCandidate"
+                    )
+                if transformed.candidate_id.casefold() != candidate.candidate_id.casefold():
+                    raise ValueError(
+                        "rotation candidate family projector must preserve candidate identity: "
+                        f"expected {candidate.candidate_id!r}, got {transformed.candidate_id!r}"
+                    )
+                projected.append(transformed)
+            candidates = tuple(projected)
 
         baseline = candidates[0]
         evidence_by_id: dict[str, RotationCandidateRoleEvidence] = {}
@@ -181,6 +203,7 @@ class RotationCandidateFamilyRecommendationService:
 
 __all__ = [
     "RotationCandidateEvidenceEvaluator",
+    "RotationCandidateFamilyProjector",
     "RotationCandidateFamilyRecommendation",
     "RotationCandidateFamilyRecommendationService",
     "RotationCandidateRecommendationEntry",
