@@ -83,8 +83,8 @@ def test_tank_generate_composes_canonical_hard_obligation_provider():
     assert result.content_type == "trial"
     assert len(hard.calls) == 1
     assert hard.calls[0].defensive_obligations == (_defensive(),)
-    assert plan.calls[0]["role_hard_obligation_evidence_provider"] is hard.calls[0]
-    assert plan.calls[0]["resource"] is ResourceType.MAGICKA
+    assert plan.calls[0].role_hard_obligation_evidence_provider is hard.calls[0]
+    assert plan.calls[0].resource is ResourceType.MAGICKA
 
 
 def test_tank_generate_fails_closed_without_explicit_obligation_context():
