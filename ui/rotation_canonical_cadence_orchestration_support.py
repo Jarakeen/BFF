@@ -6,6 +6,9 @@ from typing import Protocol
 from minmax.rotation_ability_priority import AbilityPriorityList
 from minmax.rotation_plan import RotationPlan
 from models.build_model import PlayerBuild
+from services.rotation_runtime_triggered_intent_service import (
+    RotationRuntimeTriggeredIntent,
+)
 from services.rotation_support_cadence_evaluation_service import (
     RotationSupportCadenceEvaluationContext,
 )
@@ -45,12 +48,26 @@ class _CadenceRunner(Protocol):
 
 @dataclass(frozen=True)
 class RotationCanonicalCadenceOrchestrationResult:
-    """One canonical rotation run plus optional cadence progression evidence."""
+    """One canonical rotation run plus optional cadence and runtime-triggered intent.
+
+    ``runtime_triggered_intents`` remain outside ``final_plan`` because they have no
+    authoritative wall-clock timestamp yet. They travel with the selected result so a
+    later runtime-condition resolver can materialize them without rewriting Raid Plan
+    ownership or pretending conditional intent is already scheduled execution.
+    """
 
     canonical_result: RotationDashboardCanonicalCandidateResult
     canonical_evidence: RotationCanonicalCandidateRenderEvidence | None
     cadence_run: RotationSupportCadenceProgressionRun | None = None
     cadence_evidence: RotationSupportCadenceProgressionRenderEvidence | None = None
+    runtime_triggered_intents: tuple[RotationRuntimeTriggeredIntent, ...] = ()
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "runtime_triggered_intents",
+            tuple(self.runtime_triggered_intents),
+        )
 
     @property
     def cadence_applied(self) -> bool:
@@ -78,14 +95,16 @@ class RotationCanonicalCadenceOrchestrationSupport:
 
     The caller must supply a ready canonical evidence bundle. This service never
     invents encounter demands, uptime requirements, restoration evidence, role facts,
-    or cadence obligations. Canonical evaluation always runs first. Optional
-    ``role_evidence`` is forwarded to the dashboard candidate bridge; when its
-    ``content_type`` is blank, the persisted content type already carried by the
-    selected encounter bundle fills that one fact. Exact-event conditional output
+    cadence obligations, or runtime-triggered timing. Canonical evaluation always runs
+    first. Optional ``role_evidence`` is forwarded to the dashboard candidate bridge;
+    when its ``content_type`` is blank, the persisted content type already carried by
+    the selected encounter bundle fills that one fact. Exact-event conditional output
     evidence is forwarded only when the bundle carries an explicit resolver factory.
-    No healer reliability, assignment exception, or output condition is inferred here.
-    Cadence progression begins only from the selected final stabilized canonical plan
-    and sustain projection, and only when explicit cadence obligations are supplied.
+    No healer reliability, assignment exception, output condition, or trigger timestamp
+    is inferred here. Cadence progression begins only from the selected final stabilized
+    canonical plan and sustain projection, and only when explicit cadence obligations are
+    supplied. Runtime-triggered intents remain attached as pending execution evidence and
+    never participate in clock scheduling or cadence optimization at this boundary.
     """
 
     def __init__(
@@ -115,8 +134,10 @@ class RotationCanonicalCadenceOrchestrationSupport:
         cadence_evaluation_context: RotationSupportCadenceEvaluationContext | None = None,
         cadence_max_iterations: int = 8,
         character_id: str | None = None,
+        runtime_triggered_intents: tuple[RotationRuntimeTriggeredIntent, ...] = (),
     ) -> RotationCanonicalCadenceOrchestrationResult:
         self._require_ready_bundle(evidence_bundle)
+        pending_intents = tuple(runtime_triggered_intents)
         effective_role_evidence = self._role_evidence_for_bundle(
             role_evidence,
             evidence_bundle,
@@ -160,6 +181,7 @@ class RotationCanonicalCadenceOrchestrationSupport:
             return RotationCanonicalCadenceOrchestrationResult(
                 canonical_result=canonical_result,
                 canonical_evidence=canonical_evidence,
+                runtime_triggered_intents=pending_intents,
             )
 
         cadence_run = self.cadence_runner.run(
@@ -180,6 +202,7 @@ class RotationCanonicalCadenceOrchestrationSupport:
             canonical_evidence=canonical_evidence,
             cadence_run=cadence_run,
             cadence_evidence=cadence_evidence,
+            runtime_triggered_intents=pending_intents,
         )
 
     @staticmethod
