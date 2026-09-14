@@ -119,6 +119,52 @@ class EffectiveBuildSnapshot:
             provenance=provenance,
         )
 
+    @classmethod
+    def from_candidate_build(
+        cls,
+        build: PlayerBuild,
+        *,
+        character_id: str | None = None,
+        trial_id: str | None = None,
+        encounter_id: str | None = None,
+        provenance: tuple[str, ...] = (),
+    ) -> "EffectiveBuildSnapshot":
+        """Freeze one exact researched/generated candidate without saving it globally."""
+        return cls(
+            build,
+            source_kind="candidate_build",
+            character_id=character_id,
+            trial_id=trial_id,
+            encounter_id=encounter_id,
+            provenance=provenance,
+        )
+
+    @classmethod
+    def from_raid_plan_build(
+        cls,
+        build: PlayerBuild,
+        *,
+        character_id: str | None,
+        trial_id: str,
+        encounter_id: str | None = None,
+        team_name: str | None = None,
+        adjustment_labels: tuple[str, ...] = (),
+        provenance: tuple[str, ...] = (),
+    ) -> "EffectiveBuildSnapshot":
+        """Freeze a caller-resolved Raid Plan build for exact downstream evaluation."""
+        if not str(trial_id or "").strip():
+            raise ValueError("raid plan effective build requires trial_id")
+        return cls(
+            build,
+            source_kind="raid_plan",
+            character_id=character_id,
+            trial_id=trial_id,
+            encounter_id=encounter_id,
+            team_name=team_name,
+            adjustment_labels=adjustment_labels,
+            provenance=provenance,
+        )
+
     def materialize(self) -> PlayerBuild:
         """Return an isolated copy of the exact frozen build configuration."""
         return deepcopy(self._player_build)
