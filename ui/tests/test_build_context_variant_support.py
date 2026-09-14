@@ -14,6 +14,7 @@ def test_context_variant_editor_supports_full_team_build_changes() -> None:
     source = Path("ui/build_context_variant_support.py").read_text(encoding="utf-8")
 
     assert 'FoundryCard("Gear Overrides")' in source
+    assert 'context_form.addRow("Form Override", self.form_override)' in source
     assert 'build_form.addRow("Mundus", self.mundus)' in source
     assert 'build_form.addRow("CP Override", cp_wrap)' in source
     assert 'build_form.addRow("Front Bar Overrides", self.front_bar)' in source
@@ -23,15 +24,27 @@ def test_context_variant_editor_supports_full_team_build_changes() -> None:
     assert "model.BossLoadouts = []" in source
 
 
-def test_context_variant_bars_inherit_werewolf_skill_eligibility() -> None:
+def test_context_variant_bars_require_explicit_transformed_form() -> None:
     source = Path("ui/build_context_variant_support.py").read_text(encoding="utf-8")
 
-    assert "def _sync_skill_context" in source
+    assert "def _refresh_form_choices" in source
+    assert 'self.form_override.addItem("Base / Normal", "")' in source
+    assert 'self.form_override.addItem("Werewolf", "werewolf")' in source
+    assert 'self.form_override.addItem("Vampire", "vampire")' in source
     assert 'bar.set_affiliation(vampire=vampire, werewolf=werewolf)' in source
-    assert 'bar.set_form("werewolf" if werewolf else None)' in source
-    assert "self._sync_skill_context()" in source
-    assert "toggle.toggled.connect(lambda *_: self._sync_skill_context())" in source
-    assert "Werewolf skills are available here when the base character is marked WW." in source
+    assert "bar.set_form(transformed_form)" in source
+    assert 'TransformedForm=str(self.form_override.currentData() or "").strip().casefold()' in source
+    assert 'bar.set_form("werewolf" if werewolf else None)' not in source
+    assert "Form Override is separate from affiliation" in source
+
+
+def test_context_variant_form_choices_follow_base_affiliation() -> None:
+    source = Path("ui/build_context_variant_support.py").read_text(encoding="utf-8")
+
+    assert "if werewolf:" in source
+    assert "if vampire:" in source
+    assert "toggle.toggled.connect(lambda *_: self._on_affiliation_changed())" in source
+    assert "self._refresh_form_choices(getattr(variant, \"TransformedForm\", \"\"))" in source
 
 
 def test_context_variant_support_is_installed_by_main_ui_composition() -> None:
