@@ -96,6 +96,9 @@ class RotationTankDefensiveCandidateService:
     may be added only from explicit exact action claims. A claim never displaces an
     existing action at the same ``(time_seconds, sequence)`` slot, because deciding
     what should move is strategy/scheduler policy rather than evidence projection.
+    Claims for obligations that the candidate already satisfies are ignored: shared
+    family policy must not invalidate a plan merely because it solved the mechanic
+    at a different legal response slot.
     """
 
     def __init__(
@@ -127,6 +130,15 @@ class RotationTankDefensiveCandidateService:
                 )
             obligation_by_id[obligation.obligation_id] = obligation
 
+        already_satisfied = {
+            obligation.obligation_id
+            for obligation in obligations
+            if self.obligation_service.assess(
+                plan=candidate.plan,
+                obligation=obligation,
+            ).satisfied
+        }
+
         existing_slots = {
             (float(action.time_seconds), int(action.sequence)): action
             for action in candidate.plan.actions
@@ -141,6 +153,9 @@ class RotationTankDefensiveCandidateService:
                 unresolved.append(
                     f"{claim.obligation_id}: defensive action claim references unknown obligation"
                 )
+                continue
+
+            if claim.obligation_id in already_satisfied:
                 continue
 
             validation_error = self._claim_validation_error(
@@ -218,7 +233,8 @@ class RotationTankDefensiveCandidateService:
         preserved = tuple(
             obligation.obligation_id
             for obligation in obligations
-            if not any(
+            if obligation.obligation_id in already_satisfied
+            or not any(
                 claim.obligation_id == obligation.obligation_id for claim in inserted
             )
         )
