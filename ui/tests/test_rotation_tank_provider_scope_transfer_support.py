@@ -1,3 +1,4 @@
+from pathlib import Path
 from types import SimpleNamespace
 
 import ui.rotation_tank_provider_scope_transfer_support as support_module
@@ -147,3 +148,32 @@ def test_provider_scope_resolution_failure_does_not_leave_stale_evidence(monkeyp
     assert result.transferred is False
     assert result.unresolved == ("selected Tank is not on selected team",)
     assert rotation_page.received == ()
+
+
+def test_generate_refreshes_provider_scope_before_canonical_generation(monkeypatch):
+    calls = []
+    owner = object()
+    page = SimpleNamespace(_rotation_tank_provider_scope_transfer_owner=owner)
+
+    monkeypatch.setattr(
+        support_module,
+        "refresh_rotation_tank_provider_scope",
+        lambda window: calls.append(("refresh", window)),
+    )
+    monkeypatch.setattr(
+        support_module,
+        "_ORIGINAL_GENERATE",
+        lambda _self, generated_page: calls.append(("generate", generated_page)),
+    )
+
+    support_module._generate_with_fresh_tank_provider_scope(object(), page)
+
+    assert calls == [("refresh", owner), ("generate", page)]
+
+
+def test_transfer_support_is_installed_before_main_window_construction():
+    installer = Path("ui/team_optimization_hybrid_anchor_support.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "install_rotation_tank_provider_scope_transfer_support()" in installer
