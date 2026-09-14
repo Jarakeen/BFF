@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "encounters": [
+    {
+      "encounter_id": "xalvakka",
+      "evidence_scope": "single_report_empirical_strategy",
+      "source_report": "XVMgLdq6GpQ7bhKN",
+      "observed_taunt_sources": [
+        "Fulcinator"
+      ],
+      "interpretation": "Observed ESO Logs behavior from one report/player strategy. Suitable for empirical candidate-ranking context only; not universal encounter timing, exact taunt-required timing, or continuous aggro ownership.",
+      "actors": [
+        {
+          "actor_name": "Iron Atronach",
+          "observed_instances": 18,
+          "taunted_instances": 16,
+          "untaunted_instances": 2,
+          "acquisition_lag_seconds": {
+            "samples": 16,
+            "median": 4.581,
+            "minimum": 3.351,
+            "maximum": 14.022
+          },
+          "repeat_taunt_interval_seconds": {
+            "samples": 61,
+            "median": 7.902,
+            "minimum": 0.981,
+            "maximum": 51.811
+          },
+          "candidate_ranking_context": true,
+          "hard_timing_policy": false,
+          "continuous_ownership_proven": false
+        },
+        {
+          "actor_name": "Daedroth",
+          "observed_instances": 27,
+          "taunted_instances": 17,
+          "untaunted_instances": 10,
+          "acquisition_lag_seconds": {
+            "samples": 17,
+            "median": 13.727,
+            "minimum": 4.580,
+            "maximum": 35.113
+          },
+          "repeat_taunt_interval_seconds": {
+            "samples": 18,
+            "median": 8.863,
+            "minimum": 1.235,
+            "maximum": 19.289
+          },
+          "candidate_ranking_context": true,
+          "hard_timing_policy": false,
+          "continuous_ownership_proven": false
+        }
+      ]
+    }
+  ]
+}
