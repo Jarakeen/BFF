@@ -8,10 +8,18 @@ The authoritative Team Optimization prescription is resolved back to exact saved
 builds through its structured assignment identities; UI tables are not scraped.
 Provider ownership remains service-layer truth; this module only transfers that result
 into RotationGenerateTankAssignmentEvidence.
+
+Reviewed encounter Tank responsibility lanes are bound only through exact prescription
+slot identities declared by the reviewed lane registry. Main/Off Tank is never inferred
+from roster order, build names, or role labels.
 """
 
 from dataclasses import dataclass
 
+from services.encounter_build_capability_adapter import SavedBuildEncounterCapabilityAdapter
+from services.raid_tank_encounter_responsibility_binding_service import (
+    RaidTankEncounterResponsibilityBindingService,
+)
 from services.rotation_tank_provider_scope_service import RotationTankProviderScopeService
 from ui.rotation_generate_tank_assignment_context_support import (
     RotationGenerateTankAssignmentEvidence,
@@ -34,24 +42,22 @@ def _saved_build_player_identity(build) -> str:
     ).casefold()
 
 
-def _prescription_saved_builds(optimization_page) -> tuple[tuple, tuple[str, ...]]:
-    """Resolve the authoritative prescription to exact persisted saved builds.
-
-    A prescription may contain recruit/open chairs or an ambiguous saved-player source.
-    Either case is unresolved for provider ownership: Phase 11 must see the exact team,
-    not a favorable partial reconstruction.
-    """
+def _prescription_slot_saved_builds(
+    optimization_page,
+) -> tuple[dict[str, object], tuple, tuple[str, ...]]:
+    """Resolve authoritative prescription slots to exact persisted saved builds."""
 
     prescription = getattr(optimization_page, "current_prescription", None)
     if prescription is None:
-        return (), ("Team Optimization has no authoritative current prescription",)
+        return {}, (), ("Team Optimization has no authoritative current prescription",)
 
     roster = tuple(
         getattr(getattr(optimization_page, "roster", None), "Members", ()) or ()
     )
     if not roster:
-        return (), ("Team Optimization has no saved builds available for the prescription",)
+        return {}, (), ("Team Optimization has no saved builds available for the prescription",)
 
+    by_slot: dict[str, object] = {}
     resolved = []
     unresolved: list[str] = []
     seen: set[tuple[str, str]] = set()
@@ -96,14 +102,25 @@ def _prescription_saved_builds(optimization_page) -> tuple[tuple, tuple[str, ...
                 f"{slot_name}: saved build {player_name} / {getattr(build, 'BuildName', '')} is assigned more than once"
             )
             continue
+        if slot_name.casefold() in {value.casefold() for value in by_slot}:
+            unresolved.append(f"{slot_name}: prescription slot identity is duplicated")
+            continue
         seen.add(key)
+        by_slot[slot_name] = build
         resolved.append(build)
 
     if unresolved:
-        return (), tuple(unresolved)
+        return {}, (), tuple(unresolved)
     if not resolved:
-        return (), ("Team Optimization prescription contains no exact saved-build team",)
-    return tuple(resolved), ()
+        return {}, (), ("Team Optimization prescription contains no exact saved-build team",)
+    return by_slot, tuple(resolved), ()
+
+
+def _prescription_saved_builds(optimization_page) -> tuple[tuple, tuple[str, ...]]:
+    """Resolve the authoritative prescription to exact persisted saved builds."""
+
+    _by_slot, resolved, unresolved = _prescription_slot_saved_builds(optimization_page)
+    return resolved, unresolved
 
 
 @dataclass(frozen=True)
@@ -120,10 +137,75 @@ def _clear_tank_assignment_evidence(rotation_page) -> None:
         setter(())
 
 
+def _bind_encounter_responsibilities(
+    *,
+    encounter_id: str,
+    optimization_page,
+    provider_scope_service,
+    binding_service: RaidTankEncounterResponsibilityBindingService,
+):
+    plan = binding_service.lane_service.for_encounter(encounter_id)
+    if plan is None:
+        return None, ()
+
+    slot_builds, _roster, unresolved = _prescription_slot_saved_builds(optimization_page)
+    if unresolved:
+        return None, unresolved
+
+    required_capabilities = tuple(
+        dict.fromkeys(
+            responsibility.required_capability_type
+            for lane in plan.lanes
+            for responsibility in lane.responsibilities
+            if responsibility.required_capability_type is not None
+        )
+    )
+    slot_members: dict[str, str] = {}
+    member_capabilities: dict[str, tuple[str, ...]] = {}
+    capability_unresolved: list[str] = []
+
+    for slot_name, build in slot_builds.items():
+        lane = plan.lane_for_prescription_slot(slot_name)
+        if lane is None:
+            continue
+        audit = provider_scope_service.capability_service.audit_build(build)
+        member_id = SavedBuildEncounterCapabilityAdapter.member_id(audit)
+        slot_members[slot_name] = member_id
+        supported: list[str] = []
+        for capability_type in required_capabilities:
+            resolution = provider_scope_service.utility_capability_service.provider_sources_for(
+                build=build,
+                capability_type=capability_type,
+            )
+            if tuple(getattr(resolution, "sources", ())):
+                supported.append(capability_type)
+            elif tuple(getattr(resolution, "unresolved", ())):
+                detail = "; ".join(str(item) for item in resolution.unresolved)
+                capability_unresolved.append(
+                    f"{encounter_id}:{lane.lane_id}:{member_id}: canonical {capability_type} capability is unresolved: {detail}"
+                )
+        member_capabilities[member_id] = tuple(supported)
+
+    if capability_unresolved:
+        return None, tuple(dict.fromkeys(capability_unresolved))
+
+    binding = binding_service.bind(
+        encounter_id=encounter_id,
+        prescription_slot_members=slot_members,
+        member_capabilities=member_capabilities,
+    )
+    if not binding.resolved:
+        return binding, tuple(binding.unresolved)
+    return binding, ()
+
+
 def refresh_rotation_tank_provider_scope(
     window,
     *,
     provider_scope_service: RotationTankProviderScopeService | object | None = None,
+    responsibility_binding_service: (
+        RaidTankEncounterResponsibilityBindingService | object | None
+    ) = None,
 ) -> RotationTankProviderScopeTransferResult:
     """Refresh Rotation Builder's Tank assignment evidence from the selected team.
 
@@ -211,11 +293,43 @@ def refresh_rotation_tank_provider_scope(
             unresolved=(str(exc),),
         )
 
+    binding_service = responsibility_binding_service
+    if binding_service is None:
+        binding_service = getattr(
+            window,
+            "_rotation_tank_responsibility_binding_service",
+            None,
+        )
+        if binding_service is None:
+            binding_service = RaidTankEncounterResponsibilityBindingService()
+            window._rotation_tank_responsibility_binding_service = binding_service
+
+    try:
+        binding, lane_unresolved = _bind_encounter_responsibilities(
+            encounter_id=encounter_id,
+            optimization_page=optimization_page,
+            provider_scope_service=service,
+            binding_service=binding_service,
+        )
+    except (LookupError, ValueError) as exc:
+        binding = None
+        lane_unresolved = (str(exc),)
+    if lane_unresolved:
+        _clear_tank_assignment_evidence(rotation_page)
+        return RotationTankProviderScopeTransferResult(
+            False,
+            encounter_id=encounter_id,
+            member_id=scope.member_id,
+            unresolved=lane_unresolved,
+        )
+
+    contextual = () if binding is None else binding.for_member(scope.member_id)
     policy = scope.policy_resolution
     evidence = RotationGenerateTankAssignmentEvidence(
         encounter_id=scope.encounter_id,
         member_id=scope.member_id,
         assignments=tuple(scope.assignments),
+        encounter_responsibilities=tuple(contextual),
         taunt_policies=tuple(getattr(policy, "taunt_policies", ())),
         taunt_maintenance_policies=tuple(
             getattr(policy, "taunt_maintenance_policies", ())
