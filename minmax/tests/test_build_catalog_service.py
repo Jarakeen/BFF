@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from models.build_model import BuildRoster, PlayerBuild
-from services.build_catalog_service import BuildCatalogService
+from services.build_catalog_service import BuildCatalogService, SCHEMA_VERSION
 
 
 def test_legacy_roster_migrates_to_one_character_per_identity(tmp_path: Path):
@@ -16,7 +16,7 @@ def test_legacy_roster_migrates_to_one_character_per_identity(tmp_path: Path):
     service = BuildCatalogService(tmp_path / "characters.json")
     catalog = service.import_legacy_roster(roster)
 
-    assert catalog["schema_version"] == 3
+    assert catalog["schema_version"] == SCHEMA_VERSION
     assert len(catalog["characters"]) == 2
     assert len(catalog["builds"]) == 3
 
@@ -49,4 +49,4 @@ def test_catalog_round_trip_is_versioned(tmp_path: Path):
 
     loaded = service.load()
     assert loaded == catalog
-    assert loaded["schema_version"] == 3
+    assert loaded["schema_version"] == SCHEMA_VERSION
