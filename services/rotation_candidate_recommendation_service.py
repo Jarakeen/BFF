@@ -172,6 +172,11 @@ class RotationCandidateRecommendationService:
     and explanation. For Tank candidates only, optional reviewed encounter-priority
     context may reorder candidates that are already eligible. That soft context cannot
     rescue an ineligible plan and does not alter the universal role-aware ranker.
+
+    When callers use the canonical recommendation-evidence adapter, Tank priority
+    context already attached to its plan-evidence provider is reused automatically.
+    An explicit ``tank_priority_context`` argument remains available as an override and
+    test seam, so production callers do not need to shuttle the same context twice.
     """
 
     def __init__(
@@ -204,7 +209,7 @@ class RotationCandidateRecommendationService:
         wait_decision: PrematureRecastDecisionProvider | None = None,
         wait_decision_factory: RotationCandidateWaitDecisionFactory | None = None,
         baseline_id: str = "baseline",
-        tank_priority_context: tuple[RotationTankEncounterPriorityCue, ...] = (),
+        tank_priority_context: tuple[RotationTankEncounterPriorityCue, ...] | None = None,
     ) -> RotationCandidateRecommendationResult:
         candidates = self.generation_service.generate(
             seed_plan=seed_plan,
@@ -233,7 +238,7 @@ class RotationCandidateRecommendationService:
         role_key: str,
         role_output_label: str,
         assigned_support_label: str,
-        tank_priority_context: tuple[RotationTankEncounterPriorityCue, ...] = (),
+        tank_priority_context: tuple[RotationTankEncounterPriorityCue, ...] | None = None,
     ) -> RotationCandidateRecommendationResult:
         candidates = tuple(candidates)
         if not candidates:
@@ -290,7 +295,10 @@ class RotationCandidateRecommendationService:
         ranking_by_id = {item.candidate_id.casefold(): item for item in ranked}
 
         tank_assessment_by_id: dict[str, RotationTankPriorityCandidateAssessment] = {}
-        tank_context = tuple(tank_priority_context)
+        tank_context = self._resolved_tank_priority_context(
+            evidence_provider=evidence_provider,
+            explicit_context=tank_priority_context,
+        )
         if _canonical(role_key) == "tank" and tank_context:
             for candidate in candidates:
                 assessment = self.tank_priority_assessment_service.assess(
@@ -357,6 +365,31 @@ class RotationCandidateRecommendationService:
             entries=entries,
             recommended=recommended,
         )
+
+    @staticmethod
+    def _resolved_tank_priority_context(
+        *,
+        evidence_provider: RotationCandidateRecommendationEvidenceProvider,
+        explicit_context: tuple[RotationTankEncounterPriorityCue, ...] | None,
+    ) -> tuple[RotationTankEncounterPriorityCue, ...]:
+        if explicit_context is not None:
+            return tuple(explicit_context)
+
+        plan_evidence_provider = getattr(evidence_provider, "plan_evidence_provider", None)
+        if plan_evidence_provider is None:
+            return ()
+        raw_context = getattr(plan_evidence_provider, "tank_priority_context", ())
+        if raw_context is None:
+            return ()
+        try:
+            resolved = tuple(raw_context)
+        except TypeError as exc:
+            raise TypeError("canonical Tank priority context must be iterable") from exc
+        if any(not isinstance(row, RotationTankEncounterPriorityCue) for row in resolved):
+            raise TypeError(
+                "canonical Tank priority context must contain RotationTankEncounterPriorityCue rows"
+            )
+        return resolved
 
     @staticmethod
     def _validate_candidate_ids(
