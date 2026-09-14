@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+import math
+
+from minmax.ultimate_resource_timeline import UltimateGenerationEvent
 
 
 class UltimateSourceRuntimeStatus(str, Enum):
@@ -21,6 +24,35 @@ class VampireHealthRecoveryTradeoff:
     vampire_candidate_best_case: float
     vampire_delta_upper_bound: float
     dominated: bool
+
+
+@dataclass(frozen=True)
+class DecisiveUltimateOpportunitySummary:
+    generation_events_reviewed: int
+    non_heroism_opportunities: int
+    heroism_events_reviewed: int
+    merged_heroism_opportunities: int
+    total_opportunities: int
+    proc_chance_percent: float
+    all_procs_ultimate_ceiling: float
+    expected_extra_ultimate: float
+
+
+@dataclass(frozen=True)
+class BaronZaudrusGapRequirement:
+    required_ultimate_gap: float
+    decisive_all_procs_ceiling: float
+    residual_gap_after_decisive: float
+    ultimate_per_baron_proc: float
+    stacks_per_baron_proc: int
+    minimum_baron_procs: int
+    minimum_status_applications: int
+    baron_ultimate_at_minimum_procs: float
+    combined_ultimate_ceiling: float
+    surplus_over_gap: float
+    score_window_seconds: float
+    minimum_average_status_applications_per_second: float
+    closes_gap_at_all_procs_ceiling: bool
 
 
 @dataclass(frozen=True)
@@ -103,6 +135,105 @@ class UltimateSourceRuntimeLegalityService:
             vampire_candidate_best_case=vampire,
             vampire_delta_upper_bound=delta,
             dominated=delta < -1e-9,
+        )
+
+    @staticmethod
+    def decisive_opportunities_from_generation_events(
+        events: tuple[UltimateGenerationEvent, ...],
+        *,
+        booming_voice_cast_seconds: float = 0.0,
+        score_seconds: float = 24.999,
+        proc_chance_percent: float = 19.1,
+    ) -> DecisiveUltimateOpportunitySummary:
+        """Derive Decisive proc opportunities from explicit Ultimate-gain events.
+
+        Minor and Major Heroism on the same timestamp are one merged Heroism gain
+        opportunity for Decisive. Other source events remain separate opportunities,
+        even when they happen to share that timestamp with Heroism.
+        """
+
+        cast = float(booming_voice_cast_seconds)
+        score = float(score_seconds)
+        chance = float(proc_chance_percent)
+        if not math.isfinite(cast) or cast < 0.0:
+            raise ValueError("Booming Voice cast time must be finite and non-negative")
+        if not math.isfinite(score) or score <= cast:
+            raise ValueError("score time must be finite and after the Booming Voice cast")
+        if not 0.0 <= chance <= 100.0:
+            raise ValueError("Decisive proc chance must be between 0 and 100")
+
+        in_window = tuple(
+            event
+            for event in events
+            if cast < float(event.time_seconds) <= score
+        )
+        heroism = tuple(
+            event for event in in_window if "heroism" in event.source.casefold()
+        )
+        non_heroism = tuple(
+            event for event in in_window if "heroism" not in event.source.casefold()
+        )
+        heroism_times = tuple(
+            sorted({round(float(event.time_seconds), 9) for event in heroism})
+        )
+        total = len(non_heroism) + len(heroism_times)
+        ceiling = float(total)
+        return DecisiveUltimateOpportunitySummary(
+            generation_events_reviewed=len(in_window),
+            non_heroism_opportunities=len(non_heroism),
+            heroism_events_reviewed=len(heroism),
+            merged_heroism_opportunities=len(heroism_times),
+            total_opportunities=total,
+            proc_chance_percent=chance,
+            all_procs_ultimate_ceiling=ceiling,
+            expected_extra_ultimate=ceiling * chance / 100.0,
+        )
+
+    @staticmethod
+    def baron_zaudrus_requirement_after_decisive(
+        *,
+        required_ultimate_gap: float,
+        decisive_all_procs_ceiling: float,
+        score_window_seconds: float,
+        ultimate_per_baron_proc: float = 4.0,
+        stacks_per_baron_proc: int = 3,
+    ) -> BaronZaudrusGapRequirement:
+        """Reduce the remaining Ultimate gap to Baron proc/status requirements."""
+
+        gap = max(0.0, float(required_ultimate_gap))
+        decisive = max(0.0, float(decisive_all_procs_ceiling))
+        window = float(score_window_seconds)
+        per_proc = float(ultimate_per_baron_proc)
+        stacks = int(stacks_per_baron_proc)
+        if not math.isfinite(window) or window <= 0.0:
+            raise ValueError("score window must be finite and greater than zero")
+        if not math.isfinite(per_proc) or per_proc <= 0.0:
+            raise ValueError("Baron Ultimate per proc must be finite and greater than zero")
+        if stacks <= 0:
+            raise ValueError("Baron stacks per proc must be greater than zero")
+
+        residual = max(0.0, gap - decisive)
+        minimum_procs = int(math.ceil(residual / per_proc - 1e-12)) if residual > 0.0 else 0
+        applications = minimum_procs * stacks
+        baron_ultimate = float(minimum_procs) * per_proc
+        combined = decisive + baron_ultimate
+        surplus = combined - gap
+        return BaronZaudrusGapRequirement(
+            required_ultimate_gap=gap,
+            decisive_all_procs_ceiling=decisive,
+            residual_gap_after_decisive=residual,
+            ultimate_per_baron_proc=per_proc,
+            stacks_per_baron_proc=stacks,
+            minimum_baron_procs=minimum_procs,
+            minimum_status_applications=applications,
+            baron_ultimate_at_minimum_procs=baron_ultimate,
+            combined_ultimate_ceiling=combined,
+            surplus_over_gap=surplus,
+            score_window_seconds=window,
+            minimum_average_status_applications_per_second=(
+                float(applications) / window
+            ),
+            closes_gap_at_all_procs_ceiling=combined >= gap - 1e-9,
         )
 
     @classmethod
@@ -317,6 +448,8 @@ class UltimateSourceRuntimeLegalityService:
 
 
 __all__ = [
+    "BaronZaudrusGapRequirement",
+    "DecisiveUltimateOpportunitySummary",
     "UltimateSourceRuntimeLegalityService",
     "VampireHealthRecoveryTradeoff",
     "UltimateSourceRuntimeReview",
