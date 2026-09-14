@@ -69,6 +69,19 @@ def test_template_keeps_role_base_and_class_overlay_separate(tmp_path: Path) -> 
     assert service.load_templates()[0].name == "Core Healer"
 
 
+def test_same_role_template_name_accumulates_class_overlays(tmp_path: Path) -> None:
+    service = BuildReuseService(tmp_path / "build_templates.json")
+    service.save_template_from_build(_healer(), template_name="Core Healer")
+    arcanist = _healer()
+    arcanist.Name = "Arc Healer"
+    arcanist.EsoClass = "Arcanist"
+    arcanist.FrontBarSkills = ["Combat Prayer", "Arcanist Skill", "Energy Orb", "", "", ""]
+    template = service.save_template_from_build(arcanist, template_name="Core Healer")
+    assert set(template.class_overlays) == {"Warden", "Arcanist"}
+    assert template.class_overlays["Arcanist"]["FrontBarSkills"][1] == "Arcanist Skill"
+    assert template.base_payload["Food"] == "Clockwork Citrus Filet"
+
+
 def test_cross_class_template_application_fails_closed_on_skill_state(tmp_path: Path) -> None:
     service = BuildReuseService(tmp_path / "build_templates.json")
     template = service.save_template_from_build(_healer(), template_name="Core Healer")
@@ -83,6 +96,24 @@ def test_cross_class_template_application_fails_closed_on_skill_state(tmp_path: 
     assert result.build.FrontBarSkills == [""] * 6
     assert result.build.Food == "Clockwork Citrus Filet"
     assert result.warnings
+
+
+def test_template_uses_matching_class_overlay_when_available(tmp_path: Path) -> None:
+    service = BuildReuseService(tmp_path / "build_templates.json")
+    service.save_template_from_build(_healer(), template_name="Core Healer")
+    arcanist = _healer()
+    arcanist.EsoClass = "Arcanist"
+    arcanist.FrontBarSkills = ["Combat Prayer", "Arcanist Skill", "Energy Orb", "", "", ""]
+    template = service.save_template_from_build(arcanist, template_name="Core Healer")
+    result = service.apply_template(
+        template,
+        destination_name="Other Arc",
+        destination_gamertag="OtherPlayer",
+        destination_class="Arcanist",
+        destination_role="Healer",
+    )
+    assert result.warnings == ()
+    assert result.build.FrontBarSkills[1] == "Arcanist Skill"
 
 
 def test_replace_or_append_is_keyed_by_player_character_build_name() -> None:
