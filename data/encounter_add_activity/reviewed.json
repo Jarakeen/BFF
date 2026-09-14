@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "encounters": [
+    {
+      "encounter_id": "xalvakka",
+      "source": "Reviewed 2026-09-14 from dedicated ESO Logs runtime research for report XVMgLdq6GpQ7bhKN. Report-level actor identities proved Iron Atronach (actor 104) and Daedroth (actor 112). Across 45 observed instances, the earliest event involving the NPC and the earliest source event were present for every instance and occurred before first friendly damage; cast coverage was incomplete and frequently occurred after friendly damage. Therefore the earliest NPC source/involving event is accepted as an observed add-active boundary for research/planning, not as proof of exact spawn or taunt-required time.",
+      "actors": [
+        {
+          "actor_name": "Iron Atronach",
+          "activity_boundary": "earliest_source_or_involving_event",
+          "observed_instances": 18,
+          "signal_coverage": {
+            "involving": 18,
+            "source": 18,
+            "cast": 17
+          },
+          "interpretation": "Observed active boundary only. Do not treat as exact spawn time without stronger event semantics."
+        },
+        {
+          "actor_name": "Daedroth",
+          "activity_boundary": "earliest_source_or_involving_event",
+          "observed_instances": 27,
+          "signal_coverage": {
+            "involving": 27,
+            "source": 27,
+            "cast": 26
+          },
+          "interpretation": "Observed active boundary only. Daedroth arrivals may form waves; do not treat as a fixed recurrence timer."
+        }
+      ]
+    }
+  ]
+}
