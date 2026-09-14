@@ -5,6 +5,7 @@ from typing import Mapping, Protocol
 from engine.config import get_data_dir
 from minmax.fight_damage_trajectory import RaidDamageSegment
 from minmax.resource_costs import ResourceType
+from models.effective_build_snapshot import EffectiveBuildSnapshot
 from services.canonical_knowledge_gap import (
     CanonicalKnowledgeDomain,
     CanonicalKnowledgeGap,
@@ -73,6 +74,11 @@ class RotationGenerateApplicationContextProvider:
     role-keyed composer map. The saved build's persisted role selects from the map at
     Generate time. Missing role-specific composition is allowed so roles without a
     canonical composer remain on the existing role-neutral path instead of being guessed.
+
+    The selected build is frozen into an ``EffectiveBuildSnapshot`` after all live
+    application facts used by this provider have been resolved. Downstream Rotation code
+    evaluates that exact configuration and does not re-read or re-resolve contextual build
+    ownership from mutable UI state.
     """
 
     def __init__(
@@ -180,6 +186,14 @@ class RotationGenerateApplicationContextProvider:
             getattr(static_context.progression, "character_id", "") or ""
         ).strip() or None
         role_evidence_composer = self._role_evidence_composer_for(build)
+        effective_build = EffectiveBuildSnapshot.from_saved_build(
+            build,
+            character_id=character_id,
+            encounter_id=encounter_id,
+            provenance=(
+                "RotationGenerateApplicationContextProvider live saved-build selection",
+            ),
+        )
 
         return RotationGenerateCanonicalContext(
             evidence_inputs=RotationSelectedEncounterEvidenceInputs(
@@ -197,6 +211,7 @@ class RotationGenerateApplicationContextProvider:
             ),
             role_evidence_composer=role_evidence_composer,
             character_id=character_id,
+            effective_build=effective_build,
         )
 
     def _dd_periodic_semantics_gaps(
