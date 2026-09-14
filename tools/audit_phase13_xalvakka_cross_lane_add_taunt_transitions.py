@@ -8,8 +8,10 @@ identities into generic MT/OT truth. It asks a narrower question: when both revi
 lane sources touch the same Iron Atronach or Daedroth instance, do their observed
 ability-38254 Taunt-state intervals overlap, or does one begin after the other ends?
 
-No maximum handoff delay is invented. Sequential transitions report their exact gap so
-later review can decide whether a repeated shape deserves strategy semantics.
+No maximum handoff delay is invented. Sequential transitions report their exact gap;
+overlap transitions report how far before the prior lane's observed Taunt-state end the
+incoming lane began. Later review can decide whether a repeated shape deserves strategy
+semantics.
 """
 
 import argparse
@@ -132,13 +134,12 @@ def observe(database: Path) -> tuple[CrossLaneObservation, ...]:
             ]
             for other in other_rows:
                 other_end = other.end_ms
-                current_end = current.end_ms
                 if other_end is not None and other.start_ms <= current.start_ms < other_end:
-                    overlap_end = min(
-                        other_end,
-                        current_end if current_end is not None else other_end,
-                    )
-                    overlap = max(0.0, overlap_end - current.start_ms)
+                    # Negative delta means the incoming lane began before the prior
+                    # lane's observed Taunt-state interval ended. This is intentionally
+                    # start-to-prior-end timing, not the shorter simultaneous interval
+                    # when the incoming state itself ends first.
+                    delta = current.start_ms - other_end
                     key = (
                         fight_id,
                         actor_name,
@@ -148,7 +149,7 @@ def observe(database: Path) -> tuple[CrossLaneObservation, ...]:
                         current.start_ms,
                         "overlap",
                     )
-                    if overlap > 0 and key not in seen_pairs:
+                    if delta < 0 and key not in seen_pairs:
                         seen_pairs.add(key)
                         observations.append(
                             CrossLaneObservation(
@@ -158,7 +159,7 @@ def observe(database: Path) -> tuple[CrossLaneObservation, ...]:
                                 from_lane=source_lane[int(other.source_id)],
                                 to_lane=source_lane[int(current.source_id)],
                                 relation="overlap",
-                                delta_ms=-overlap,
+                                delta_ms=delta,
                             )
                         )
                     break
@@ -210,7 +211,7 @@ def audit(database: Path) -> tuple[str, ...]:
         f"DATABASE: {database}",
         f"REPORT={assignment.report_code}",
         f"TAUNT_STATE_EFFECT_ID={assignment.taunt_state_effect_id}",
-        "SEMANTICS=negative_delta_means_observed_overlap; nonnegative_delta_is_gap_after_other_lane_interval_end",
+        "SEMANTICS=negative_delta_means_incoming_start_before_prior_lane_state_end; nonnegative_delta_is_gap_after_prior_lane_state_end",
         f"CROSS_LANE_OBSERVATIONS={len(observations)}",
     ]
     for actor_name in _TARGETS:
@@ -239,7 +240,7 @@ def audit(database: Path) -> tuple[str, ...]:
             )
             lines.append(
                 f"DIRECTION: actor={actor_name} from={from_lane} to={to_lane} "
-                f"sequential_gap=[{gap_text}] overlap_duration=[{overlap_text}]"
+                f"sequential_gap=[{gap_text}] incoming_lead_before_prior_end=[{overlap_text}]"
             )
     for row in observations:
         lines.append(
