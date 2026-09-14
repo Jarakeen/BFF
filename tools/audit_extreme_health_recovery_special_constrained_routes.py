@@ -6,11 +6,10 @@ The ordinary exact-flat audit leaves one positive Ultimate challenger:
 Baron Zaudrus + Decisive. This diagnostic compares the best seven-Heavy incumbent
 and that challenger across the same classified recovery-special named-set frontier.
 
-Flat-compatible branches are composed directly. Formula branches with a reviewed
-hard ceiling are proof-pruned when even that ceiling cannot catch the existing
-frontier. Alternate provisioning branches use the shared canonical Recovery
-provisioning projection. Percentage and search-state branches remain explicit proof
-obligations until their whole-state math is owned by a reviewed contract.
+Flat-compatible branches are composed directly. Formula and percentage branches
+with safe numeric ceilings are proof-pruned when even those ceilings cannot catch the
+existing frontier. Alternate provisioning branches use the shared canonical Recovery
+provisioning projection. Search-state branches remain explicit proof obligations.
 """
 
 import argparse
@@ -23,14 +22,22 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from minmax.base_character_state import BASE_HEALTH_RECOVERY
+from minmax.champion_point_static_repository import ChampionPointStaticRepository
 from minmax.gear_set_repository import GearSetRepository
+from minmax.item_base_stats import ARMOR_INVIGORATING_RECOVERY_GOLD
+from minmax.jewelry_glyph_repository import JewelryGlyphEffectRepository
+from minmax.jewelry_trait_repository import JewelryTraitRepository
+from minmax.mundus_repository import MundusRepository
 from services.extreme_armor_weight_filtered_slot_eligibility_service import (
     ExtremeArmorWeightFilteredSlotEligibilityService,
 )
+from services.extreme_champion_point_objective_service import ExtremeChampionPointObjectiveService
 from services.extreme_constrained_named_gear_exact_flat_search_service import (
     ExtremeConstrainedNamedGearExactFlatSearchService,
     ExtremeNamedGearRequirement,
 )
+from services.extreme_divines_mundus_objective_service import ExtremeDivinesMundusObjectiveService
 from services.extreme_externalized_named_gear_constraint_search_service import (
     ExtremeExternalizedNamedGearConstraintSearchService,
     ExtremeExternalizedNamedGearSemantic,
@@ -42,6 +49,15 @@ from services.extreme_gear_set_recovery_special_branch_service import (
     ExtremeRecoverySpecialBranch,
 )
 from services.extreme_gear_set_topology_catalog_service import ExtremeGearSetTopologyCatalogService
+from services.extreme_health_recovery_champion_point_branch_service import (
+    ExtremeHealthRecoveryChampionPointBranchService,
+)
+from services.extreme_health_recovery_champion_point_screening_service import (
+    ExtremeHealthRecoveryChampionPointScreeningService,
+)
+from services.extreme_health_recovery_jewelry_projection_service import (
+    ExtremeHealthRecoveryJewelryProjectionService,
+)
 from services.extreme_health_recovery_runtime_compatibility_service import (
     ExtremeHealthRecoveryCompatibility,
     ExtremeHealthRecoveryRuntimeCompatibilityService,
@@ -49,6 +65,9 @@ from services.extreme_health_recovery_runtime_compatibility_service import (
 )
 from services.extreme_named_gear_set_slot_eligibility_service import (
     ExtremeNamedGearSetSlotEligibilityService,
+)
+from services.extreme_percent_vs_flat_dominance_service import (
+    ExtremePercentVsFlatDominanceService,
 )
 from services.extreme_recovery_provisioning_projection_service import (
     ExtremeRecoveryProvisioningProjectionService,
@@ -145,6 +164,110 @@ def _structural_reason(branch: ExtremeRecoverySpecialBranch, *, survivor: bool) 
             "current topology/slot eligibility; the constrained 2pc allocations compete"
         )
     return "no legal constrained physical witness under the current topology/slot eligibility"
+
+
+def _cp_flat_upper_bound(database: Path) -> tuple[float | None, tuple[str, ...]]:
+    repository = ChampionPointStaticRepository(database)
+    unresolved: list[str] = []
+    total = 0.0
+
+    baseline = ExtremeChampionPointObjectiveService.non_slottable_baseline_for_objective(
+        repository, OBJECTIVE
+    )
+    for row in baseline.resolved_candidates:
+        if row.reviewed_delta is not None:
+            total += max(0.0, float(row.reviewed_delta))
+    baseline_pending = baseline.unresolved_candidates
+
+    slottable = ExtremeChampionPointObjectiveService.slottable_candidates_for_objective(
+        repository, OBJECTIVE
+    )
+    slottable_pending = tuple(row for row in slottable if row.reviewed_delta is None)
+    for row in slottable:
+        if row.reviewed_delta is not None:
+            total += max(0.0, float(row.reviewed_delta))
+
+    for candidate in (*baseline_pending, *slottable_pending):
+        record = repository.get(candidate.name)
+        if record is None:
+            unresolved.append(f"CP upper-bound record missing: {candidate.name}")
+            continue
+        screening = ExtremeHealthRecoveryChampionPointScreeningService.screen(record)
+        if not screening.relevant:
+            continue
+        branch = ExtremeHealthRecoveryChampionPointBranchService.classify(record)
+        if not branch.complete or branch.flat_ceiling is None:
+            unresolved.extend(
+                branch.unresolved
+                or (f"CP upper-bound branch incomplete: {candidate.name}",)
+            )
+            continue
+        total += max(0.0, float(branch.flat_ceiling))
+
+    return (None if unresolved else total), tuple(dict.fromkeys(unresolved))
+
+
+def _willow_prepercent_upper_bound(
+    database: Path,
+    *,
+    structural_named_gear: float,
+    provisioning,
+) -> tuple[float | None, tuple[tuple[str, float], ...], tuple[str, ...]]:
+    unresolved: list[str] = []
+    components: list[tuple[str, float]] = [
+        ("base_health_recovery", float(BASE_HEALTH_RECOVERY)),
+        ("khajiit_racial_flat", 90.0),
+        ("dragonknight_booming_voice_class_flat", 1950.0),
+        ("willow_structural_named_gear", max(0.0, float(structural_named_gear))),
+    ]
+
+    steed = ExtremeDivinesMundusObjectiveService.candidate_for_name(
+        MundusRepository(database),
+        "The Steed",
+        OBJECTIVE,
+        armor_divines_count=7,
+        shield_divines=False,
+    )
+    if steed.projected_delta is None:
+        unresolved.extend(steed.mundus.unresolved or ("Seven-Divines Steed projection unresolved",))
+    else:
+        # Deliberately impossible overcount: allow seven Divines and seven Invigorating
+        # armor traits simultaneously. This is safe for an upper-bound dominance proof.
+        components.append(
+            (
+                "armor_mundus_impossible_upper",
+                float(steed.projected_delta) + 7.0 * float(ARMOR_INVIGORATING_RECOVERY_GOLD),
+            )
+        )
+
+    jewelry = ExtremeHealthRecoveryJewelryProjectionService(
+        JewelryGlyphEffectRepository(database),
+        JewelryTraitRepository(database),
+    ).build()
+    if not jewelry.denominator_proven or jewelry.three_slot_infused_flat is None:
+        unresolved.extend(jewelry.unresolved or ("Health Recovery jewelry upper bound unresolved",))
+    else:
+        components.append(("three_gold_infused_recovery_glyphs", float(jewelry.three_slot_infused_flat)))
+
+    if not provisioning.comparison_proven or provisioning.food is None or provisioning.drink is None:
+        unresolved.extend(provisioning.unresolved or ("Provisioning upper bound unresolved",))
+    else:
+        components.append(
+            (
+                "best_food_or_drink_recovery",
+                max(float(provisioning.food.delta), float(provisioning.drink.delta)),
+            )
+        )
+
+    cp_upper, cp_unresolved = _cp_flat_upper_bound(database)
+    if cp_upper is None:
+        unresolved.extend(cp_unresolved)
+    else:
+        components.append(("all_positive_cp_impossible_upper", float(cp_upper)))
+
+    if unresolved:
+        return None, tuple(components), tuple(dict.fromkeys(unresolved))
+    return sum(value for _, value in components), tuple(components), ()
 
 
 def main() -> int:
@@ -353,6 +476,43 @@ def main() -> int:
             )
             continue
 
+        if branch.set_name == "Willow's Path" and branch.percent_ceiling is not None:
+            best_incumbent_so_far, best_survivor_so_far = _best_scores(scored)
+            displaced_incumbent = max(0.0, best_incumbent_so_far - incumbent_ordinary)
+            displaced_survivor = max(
+                0.0,
+                best_survivor_so_far - (survivor_ordinary + STRATEGIC_RESERVE_GAIN),
+            )
+            displaced_flat = min(displaced_incumbent, displaced_survivor)
+            subtotal_upper, components, willow_unresolved = _willow_prepercent_upper_bound(
+                database,
+                structural_named_gear=max(incumbent_ordinary, survivor_ordinary),
+                provisioning=provisioning,
+            )
+            if subtotal_upper is not None and not willow_unresolved:
+                dominance = ExtremePercentVsFlatDominanceService.assess(
+                    pre_percent_subtotal_upper_bound=subtotal_upper,
+                    percent_ceiling=float(branch.percent_ceiling),
+                    displaced_flat_value=displaced_flat,
+                )
+                print(
+                    "  willow_prepercent_upper_components="
+                    + repr(tuple((name, round(value, 3)) for name, value in components))
+                )
+                if dominance.dominated:
+                    pruned.append(label)
+                    print(
+                        f"  percent_ceiling_pruned: {label} "
+                        f"pre_percent_subtotal_upper={dominance.pre_percent_subtotal_upper_bound:.3f} "
+                        f"percent_gain_upper={dominance.percent_gain_upper_bound:.3f} "
+                        f"displaced_flat={dominance.displaced_flat_value:.3f} "
+                        f"required_subtotal_to_match={dominance.required_subtotal_to_match:.3f}"
+                    )
+                    continue
+            else:
+                for item in willow_unresolved:
+                    print(f"  willow_upper_bound_unresolved={item}")
+
         pending.append(label)
         print(
             f"  pending: {label} kind={branch.kind.value} "
@@ -387,8 +547,8 @@ def main() -> int:
 
     if pending:
         print(
-            "NEXT_STEP=resolve only the remaining percentage/search-state special branches "
-            "that can still challenge the scored frontier"
+            "NEXT_STEP=resolve the remaining search-state special branch before "
+            "closing Baron action volume and Decisive stochastic/numeric Ultimate proof"
         )
         return 2
     print(
