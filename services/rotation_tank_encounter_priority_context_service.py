@@ -107,12 +107,31 @@ class RotationTankEncounterPriorityContextService:
             )
         )
         responsibility_ids = {row.responsibility.responsibility_id for row in responsibilities}
-        if any(row.responsibility_id not in responsibility_ids for row in handling):
-            raise ValueError("Tank encounter priority handling context references unknown responsibility")
 
-        handling_by_responsibility: dict[str, list[RotationTankAddTauntHandlingContext]] = {}
+        # Older callers/tests may provide the pre-priority handling shape containing
+        # only actor_name + handling_class. Preserve that contract only when the
+        # responsibility mapping is unambiguous. Production handling rows already carry
+        # responsibility_id and still fail closed on unknown references.
+        normalized_handling: list[tuple[str, object]] = []
         for row in handling:
-            handling_by_responsibility.setdefault(row.responsibility_id, []).append(row)
+            raw_responsibility_id = getattr(row, "responsibility_id", None)
+            if raw_responsibility_id is None:
+                if len(responsibility_ids) != 1:
+                    raise ValueError(
+                        "Tank encounter priority legacy handling context is ambiguous without responsibility_id"
+                    )
+                responsibility_id = next(iter(responsibility_ids))
+            else:
+                responsibility_id = str(raw_responsibility_id or "").strip()
+                if not responsibility_id or responsibility_id not in responsibility_ids:
+                    raise ValueError(
+                        "Tank encounter priority handling context references unknown responsibility"
+                    )
+            normalized_handling.append((responsibility_id, row))
+
+        handling_by_responsibility: dict[str, list[object]] = {}
+        for responsibility_id, row in normalized_handling:
+            handling_by_responsibility.setdefault(responsibility_id, []).append(row)
 
         cues: list[RotationTankEncounterPriorityCue] = []
         for bound in responsibilities:
@@ -140,7 +159,7 @@ class RotationTankEncounterPriorityContextService:
             actor_context = tuple(handling_by_responsibility.get(responsibility_id, ()))
             if actor_context:
                 for actor in actor_context:
-                    handling_class = _key(actor.handling_class)
+                    handling_class = _key(getattr(actor, "handling_class", ""))
                     if handling_class == "strong_taunt_maintenance_target":
                         priority = 20
                         directive = "acquire_and_maintain_owned_add_when_active"
@@ -155,10 +174,17 @@ class RotationTankEncounterPriorityContextService:
                         self._cue(
                             bound=bound,
                             priority=priority,
-                            actor_name=actor.actor_name,
+                            actor_name=str(getattr(actor, "actor_name", "")).strip() or None,
                             directive=directive,
                             trigger=trigger,
-                            interpretation=actor.interpretation,
+                            interpretation=str(
+                                getattr(
+                                    actor,
+                                    "interpretation",
+                                    "Reviewed actor-specific add handling context.",
+                                )
+                            ).strip()
+                            or "Reviewed actor-specific add handling context.",
                         )
                     )
                 continue
