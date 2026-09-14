@@ -38,3 +38,4 @@ def test_quick_actions_resolve_selected_build_variant() -> None:
     assert "resolve_build_context(" in source
     assert "team_name=team_name" in source
     assert "boss_name=boss_name" in source
+    assert "use_context=True" in source
