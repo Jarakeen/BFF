@@ -169,19 +169,42 @@ class RotationAssignmentTauntMaintenanceHorizonPolicyService:
                 abs_tol=1e-9,
             )
         )
-        if len(matches) != 1:
+        if not matches:
             return None, (), (
-                f"{policy.requirement_id}:{window.occurrence_id}: expected exactly one canonical {fraction * 100:g}% health-threshold clock point; found {len(matches)}",
+                f"{policy.requirement_id}:{window.occurrence_id}: no canonical {fraction * 100:g}% health-threshold clock point is available",
             )
-        point = matches[0]
-        if not point.resolved or point.time_seconds is None:
+
+        unresolved_matches = tuple(
+            point for point in matches if not point.resolved or point.time_seconds is None
+        )
+        if unresolved_matches:
+            reasons = "; ".join(
+                dict.fromkeys(str(point.reason or "unresolved threshold") for point in unresolved_matches)
+            )
             return None, (), (
-                f"{policy.requirement_id}:{window.occurrence_id}: canonical {fraction * 100:g}% health-threshold clock point is unresolved: {point.reason}",
+                f"{policy.requirement_id}:{window.occurrence_id}: canonical {fraction * 100:g}% health-threshold clock point is unresolved: {reasons}",
             )
-        end = float(point.time_seconds)
+
+        end = float(matches[0].time_seconds)
+        disagreeing = tuple(
+            point
+            for point in matches[1:]
+            if not math.isclose(
+                float(point.time_seconds),
+                end,
+                rel_tol=0.0,
+                abs_tol=1e-9,
+            )
+        )
+        if disagreeing:
+            return None, (), (
+                f"{policy.requirement_id}:{window.occurrence_id}: corroborating {fraction * 100:g}% health-threshold facts disagree on projected clock time",
+            )
+
+        fact_keys = tuple(dict.fromkeys(str(point.fact_key) for point in matches))
         return end, (
             f"symbolic_endpoint=health_threshold:{fraction * 100:g}%:{end:g}",
-            f"threshold_fact={point.fact_key}",
+            *(f"threshold_fact={fact_key}" for fact_key in fact_keys),
         ), ()
 
     def materialize(
