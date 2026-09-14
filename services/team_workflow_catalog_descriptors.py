@@ -26,6 +26,23 @@ TEAM_WORKFLOW_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         notes="Roster persistence owns real people and team membership; recruitment-only chairs must not fabricate roster members.",
     ),
     ServiceDescriptor(
+        service_id="team.roster.player_identity",
+        domain="team",
+        purpose="Persist explicit player aliases and merge two user-confirmed Personnel identities without guessing equivalence.",
+        implementation_path="services.roster_player_identity_service",
+        inputs=("EsoDatabase", "RosterMember", "BuildCatalog", "ExplicitPlayerMergeDecision"),
+        outputs=("PlayerAlias", "PlayerIdentityMergeResult"),
+        dependencies=("team.roster.persistence", "build.catalog.persistence"),
+        responsibilities=("roster_player_alias_history", "roster_player_identity_merge"),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        ui_safe=True,
+        evidence_class=EvidenceClass.NONE,
+        notes=(
+            "Aliases are exact user-owned identity evidence learned only from explicit merge/rename/manual entry. "
+            "The service never infers that unrelated names belong to the same human."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="team.generated_plan.persistence",
         domain="team",
         purpose="Persist generated roster assignments and explicit recruitment requirements under one durable team identity.",
