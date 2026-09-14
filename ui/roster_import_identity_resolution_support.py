@@ -1,17 +1,22 @@
 from __future__ import annotations
 
-"""Resolve roster-import character identity with practical raid-sheet fallbacks.
+"""Resolve roster-import identity with forgiving player and character handling.
 
 Real raid sheets usually know a gamertag, class, and role, but not the actual toon
 name. FoundryDock first reuses any character identity it can prove from saved data.
 Only when no saved character exists for that player does it generate a compact,
 editable character name such as ``Rik DK Tnk`` so build import can proceed without
 forcing ordinary users to invent database-perfect identity by hand.
+
+Roster personnel identity remains player-level during import: a different/new
+character name for an already-known gamertag must not create a second copy of that
+person in Personnel. The imported character/build can still be saved canonically.
 """
 
 _INSTALLED = False
 _ORIGINAL_NORMALIZE_ROLE = None
 _ORIGINAL_NORMALIZE_CLASS = None
+_ORIGINAL_APPLY_ROSTER_IMPORT = None
 
 _CLASS_SHORT = {
     "arcanist": "Arc",
@@ -197,8 +202,95 @@ def resolve_import_characters(plan, roster_service, build_service) -> None:
                 member.warnings.append(warning)
 
 
+def _merge_team_names(existing: object, incoming: object) -> str:
+    values: list[str] = []
+    seen: set[str] = set()
+    for raw in f"{existing or ''},{incoming or ''}".split(","):
+        name = raw.strip()
+        key = name.casefold()
+        if name and key not in seen:
+            seen.add(key)
+            values.append(name)
+    return ", ".join(values)
+
+
+class _PlayerUniqueRosterImportFacade:
+    """Prevent a new toon/build from cloning an existing Personnel player row."""
+
+    def __init__(self, roster_service):
+        self._service = roster_service
+        self._known_members = list(roster_service.list_members())
+        self.merged_existing_count = 0
+
+    def __getattr__(self, name):
+        return getattr(self._service, name)
+
+    def list_members(self):
+        return list(self._known_members)
+
+    def create_member(self, member):
+        matches = [
+            existing
+            for existing in self._known_members
+            if _identity_key(getattr(existing, "PlayerName", ""))
+            == _identity_key(getattr(member, "PlayerName", ""))
+        ]
+        if len(matches) != 1:
+            created_id = self._service.create_member(member)
+            member.Id = created_id
+            self._known_members.append(member)
+            return created_id
+
+        # Same gamertag means same person. Preserve the existing Personnel row's
+        # character label instead of replacing it with a newly imported toon name;
+        # the canonical Player -> Character -> Build catalog still receives the
+        # imported character/build through the normal import path.
+        target = matches[0]
+        target.Team = _merge_team_names(getattr(target, "Team", ""), getattr(member, "Team", ""))
+        if not str(getattr(target, "EsoClass", "") or "").strip():
+            target.EsoClass = getattr(member, "EsoClass", "")
+        if not str(getattr(target, "PrimaryRole", "") or "").strip():
+            target.PrimaryRole = getattr(member, "PrimaryRole", "")
+        if not str(getattr(target, "SecondaryRole", "") or "").strip():
+            target.SecondaryRole = getattr(member, "SecondaryRole", "")
+        if not str(getattr(target, "Status", "") or "").strip():
+            target.Status = getattr(member, "Status", "") or "Active"
+        self._service.update_member(target)
+        self.merged_existing_count += 1
+        return target.Id
+
+
+def apply_roster_import_player_unique(plan, roster_service, build_service, *, import_builds: bool = True):
+    """Run the normal importer while treating gamertag as the Personnel identity."""
+    if not callable(_ORIGINAL_APPLY_ROSTER_IMPORT):
+        raise RuntimeError("Roster import bridge is not installed.")
+
+    facade = _PlayerUniqueRosterImportFacade(roster_service)
+    result = _ORIGINAL_APPLY_ROSTER_IMPORT(
+        plan,
+        facade,
+        build_service,
+        import_builds=import_builds,
+    )
+    merged = facade.merged_existing_count
+    if not merged:
+        return result
+
+    # The underlying importer counts every create_member call as "created". The
+    # facade may have turned that call into a merge, so correct the user-facing
+    # result without touching the importer's canonical build/team work.
+    return type(result)(
+        created_roster_members=max(0, result.created_roster_members - merged),
+        updated_roster_members=result.updated_roster_members + merged,
+        imported_builds=result.imported_builds,
+        skipped_builds=result.skipped_builds,
+        warnings=result.warnings,
+    )
+
+
 def install() -> None:
     global _INSTALLED, _ORIGINAL_NORMALIZE_ROLE, _ORIGINAL_NORMALIZE_CLASS
+    global _ORIGINAL_APPLY_ROSTER_IMPORT
     if _INSTALLED:
         return
 
@@ -206,15 +298,18 @@ def install() -> None:
 
     _ORIGINAL_NORMALIZE_ROLE = roster_import_workflow._normalize_role
     _ORIGINAL_NORMALIZE_CLASS = roster_import_workflow._normalize_class
+    _ORIGINAL_APPLY_ROSTER_IMPORT = roster_import_workflow.apply_roster_import
     roster_import_workflow._normalize_role = _normalize_role_with_shorthand
     roster_import_workflow._normalize_class = _normalize_class_with_shorthand
     roster_import_workflow.resolve_import_characters = resolve_import_characters
+    roster_import_workflow.apply_roster_import = apply_roster_import_player_unique
     _INSTALLED = True
 
 
 __all__ = [
     "install",
     "resolve_import_characters",
+    "apply_roster_import_player_unique",
     "_normalize_class_with_shorthand",
     "_normalize_role_with_shorthand",
     "_generated_character_name",
