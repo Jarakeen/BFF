@@ -119,6 +119,7 @@ def test_projects_assigned_provider_and_real_plan_casts_into_workload_request():
     assert binding.build_name == "DF Healer"
     assert binding.action_name == "Aggressive Horn"
     assert binding.primary_role_displacement_seconds == 0.25
+    assert binding.bar == "front"
 
 
 def test_unresolved_phase11_assignment_fails_closed_instead_of_choosing_backup():
