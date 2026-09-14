@@ -65,6 +65,7 @@ class ContextVariantCard(FoundryCard):
         self.context_type.addItems(["Team", "Boss", "Team + Boss"])
         self.team_name = _editable_combo(_team_names())
         self.boss_name = QLineEdit()
+        self.form_override = QComboBox()
         self.mundus = _editable_combo(MUNDUS_CHOICES[1:])
         self.second_mundus = _editable_combo(MUNDUS_CHOICES[1:])
         self.front_bar = build_editor_module.SkillBarRow(editor.skill_choices)
@@ -74,16 +75,12 @@ class ContextVariantCard(FoundryCard):
         self.potion = _editable_combo(editor.potion_choices)
         self.notes = QLineEdit()
 
-        # Context bars inherit the character's affiliation eligibility. A base
-        # build marked Werewolf still represents the normal/mortal bar, while a
-        # context variant is where raid leads can intentionally author the
-        # transformed boss bar. Without this handoff, the centralized skill
-        # eligibility filter hides the entire Werewolf line from the variant.
-        self._sync_skill_context()
+        self._refresh_form_choices()
+        self.form_override.currentIndexChanged.connect(lambda *_: self._sync_skill_context())
         for toggle_name in ("werewolf", "vampire"):
             toggle = getattr(editor, toggle_name, None)
             if toggle is not None and hasattr(toggle, "toggled"):
-                toggle.toggled.connect(lambda *_: self._sync_skill_context())
+                toggle.toggled.connect(lambda *_: self._on_affiliation_changed())
 
         remove = FoundryButton("Remove", role=ButtonRole.DANGER, compact=True)
         remove.clicked.connect(lambda: self.removeRequested.emit(self))
@@ -92,7 +89,7 @@ class ContextVariantCard(FoundryCard):
         hint = QLabel(
             "Leave fields blank to inherit from the base build. "
             "Resolution order: Team + Boss → Team → Boss → Base. "
-            "Werewolf skills are available here when the base character is marked WW. "
+            "Form Override is separate from affiliation: Werewolf/Vampire choices only appear when the base character has that affiliation. "
             "Raid assignments stay on the team Assignments surface."
         )
         hint.setWordWrap(True)
@@ -103,6 +100,7 @@ class ContextVariantCard(FoundryCard):
         context_form.addRow("Variant Type", self.context_type)
         context_form.addRow("Team", self.team_name)
         context_form.addRow("Boss / Encounter", self.boss_name)
+        context_form.addRow("Form Override", self.form_override)
         self.addLayout(context_form)
 
         self.gear_rows = {}
@@ -176,16 +174,39 @@ class ContextVariantCard(FoundryCard):
         build_form.addRow("Notes", self.notes)
         self.addLayout(build_form)
 
-    def _sync_skill_context(self, eso_class: str | None = None) -> None:
-        """Give variant bars the parent character's skill-line eligibility."""
-        selected_class = (
-            str(eso_class or "").strip()
-            or str(getattr(getattr(self.editor, "eso_class", None), "currentText", lambda: "")()).strip()
-        )
+    def _affiliations(self) -> tuple[bool, bool]:
         vampire_toggle = getattr(self.editor, "vampire", None)
         werewolf_toggle = getattr(self.editor, "werewolf", None)
         vampire = bool(vampire_toggle is not None and vampire_toggle.isChecked())
         werewolf = bool(werewolf_toggle is not None and werewolf_toggle.isChecked())
+        return vampire, werewolf
+
+    def _refresh_form_choices(self, preferred: str | None = None) -> None:
+        current = str(preferred if preferred is not None else self.form_override.currentData() or "").strip().casefold()
+        vampire, werewolf = self._affiliations()
+        self.form_override.blockSignals(True)
+        self.form_override.clear()
+        self.form_override.addItem("Base / Normal", "")
+        if werewolf:
+            self.form_override.addItem("Werewolf", "werewolf")
+        if vampire:
+            self.form_override.addItem("Vampire", "vampire")
+        index = self.form_override.findData(current)
+        self.form_override.setCurrentIndex(index if index >= 0 else 0)
+        self.form_override.blockSignals(False)
+
+    def _on_affiliation_changed(self) -> None:
+        self._refresh_form_choices()
+        self._sync_skill_context()
+
+    def _sync_skill_context(self, eso_class: str | None = None) -> None:
+        """Give variant bars explicit parent affiliation and transformed-form state."""
+        selected_class = (
+            str(eso_class or "").strip()
+            or str(getattr(getattr(self.editor, "eso_class", None), "currentText", lambda: "")()).strip()
+        )
+        vampire, werewolf = self._affiliations()
+        transformed_form = str(self.form_override.currentData() or "").strip().casefold() or None
 
         for bar in (self.front_bar, self.back_bar):
             if hasattr(bar, "set_class"):
@@ -193,10 +214,7 @@ class ContextVariantCard(FoundryCard):
             if hasattr(bar, "set_affiliation"):
                 bar.set_affiliation(vampire=vampire, werewolf=werewolf)
             if hasattr(bar, "set_form"):
-                # Werewolf actives exist only on the transformed bar. Variants
-                # are the intended place to author that boss-only bar while the
-                # base build remains the normal form.
-                bar.set_form("werewolf" if werewolf else None)
+                bar.set_form(transformed_form)
 
     def set_class(self, eso_class: str) -> None:
         self._sync_skill_context(eso_class)
@@ -216,6 +234,7 @@ class ContextVariantCard(FoundryCard):
             ContextType=self.context_type.currentText().strip() or "Boss",
             TeamName=self.team_name.currentText().strip(),
             BossName=self.boss_name.text().strip(),
+            TransformedForm=str(self.form_override.currentData() or "").strip().casefold(),
             Mundus=self.mundus.currentText().strip(),
             SecondMundus=self.second_mundus.currentText().strip(),
             Armor=self._sparse_armor(self.gear_rows),
@@ -240,6 +259,7 @@ class ContextVariantCard(FoundryCard):
         self.context_type.setCurrentText(variant.ContextType or "Boss")
         self.team_name.setCurrentText(variant.TeamName)
         self.boss_name.setText(variant.BossName)
+        self._refresh_form_choices(getattr(variant, "TransformedForm", ""))
         self.mundus.setCurrentText(variant.Mundus)
         self.second_mundus.setCurrentText(variant.SecondMundus)
 
@@ -253,8 +273,6 @@ class ContextVariantCard(FoundryCard):
         self.gear_rows["Ring1"].load(variant.Ring1)
         self.gear_rows["Ring2"].load(variant.Ring2)
 
-        # Reapply the parent affiliation before loading saved context bars so a
-        # persisted Werewolf skill can be selected instead of silently dropped.
         self._sync_skill_context()
         self.cp_grid.load_entries(variant.ChampionPoints)
         self.front_bar.load(variant.FrontBarSkills)
@@ -339,8 +357,10 @@ def _variants_summary_card(self, build):
         if variant.BossName:
             context_bits.append(variant.BossName)
         context = " • ".join(context_bits) or "Unspecified context"
+        form = str(getattr(variant, "TransformedForm", "") or "").strip().title()
+        form_note = f" • {form} form" if form else ""
         notes = f" — {variant.Notes}" if variant.Notes else ""
-        card.addWidget(QLabel(f"{kind}: {context}{notes}"))
+        card.addWidget(QLabel(f"{kind}: {context}{form_note}{notes}"))
     return card
 
 
