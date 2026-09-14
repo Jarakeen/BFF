@@ -8,9 +8,9 @@ that require additional encounter context remain unresolved until that context i
 by a stronger planning/runtime layer.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
-from models.raid_plan import RaidPlanTriggeredResponsibility
+from models.raid_plan import RaidPlan, RaidPlanTriggeredResponsibility
 from services.rotation_tank_encounter_add_activity_trigger_service import (
     RotationTankEncounterAddActivityTrigger,
 )
@@ -28,6 +28,19 @@ def _key(value: object) -> str:
 @dataclass(frozen=True)
 class RaidPlanTankTriggeredResponsibilityProjection:
     responsibilities: tuple[RaidPlanTriggeredResponsibility, ...] = ()
+    unresolved: tuple[str, ...] = ()
+
+    @property
+    def resolved(self) -> bool:
+        return not self.unresolved
+
+
+@dataclass(frozen=True)
+class RaidPlanTankTriggeredResponsibilityApplication:
+    """One immutable Raid Plan update plus any fail-closed projection conflicts."""
+
+    plan: RaidPlan
+    applied: tuple[RaidPlanTriggeredResponsibility, ...] = ()
     unresolved: tuple[str, ...] = ()
 
     @property
@@ -131,8 +144,68 @@ class RaidPlanTankTriggeredResponsibilityService:
             unresolved=tuple(dict.fromkeys(unresolved)),
         )
 
+    def apply_to_plan(
+        self,
+        *,
+        plan: RaidPlan,
+        seat_id: str,
+        add_activity_triggers: tuple[RotationTankEncounterAddActivityTrigger, ...],
+        priority_context: tuple[RotationTankEncounterPriorityCue, ...],
+    ) -> RaidPlanTankTriggeredResponsibilityApplication:
+        """Apply reviewed Tank runtime intent without overwriting raid-lead decisions.
+
+        Existing identical responsibility rows are idempotent. A responsibility identity
+        already present with different intent remains untouched and is reported unresolved;
+        projection is not authority to rewrite an existing Raid Plan decision.
+        """
+
+        if not isinstance(plan, RaidPlan):
+            raise TypeError("Tank triggered responsibility application requires RaidPlan")
+        resolved_seat = str(seat_id or "").strip()
+        if not resolved_seat:
+            raise ValueError("Tank triggered responsibility application requires seat_id")
+        if plan.member(resolved_seat) is None:
+            raise ValueError(
+                f"Tank triggered responsibility application references unknown Raid Plan seat {resolved_seat!r}"
+            )
+
+        projection = self.project(
+            seat_id=resolved_seat,
+            add_activity_triggers=add_activity_triggers,
+            priority_context=priority_context,
+        )
+        existing_by_id = {
+            row.responsibility_id.casefold(): row
+            for row in plan.triggered_responsibilities
+        }
+        merged = list(plan.triggered_responsibilities)
+        applied: list[RaidPlanTriggeredResponsibility] = []
+        unresolved = list(projection.unresolved)
+
+        for row in projection.responsibilities:
+            existing = existing_by_id.get(row.responsibility_id.casefold())
+            if existing is None:
+                merged.append(row)
+                existing_by_id[row.responsibility_id.casefold()] = row
+                applied.append(row)
+                continue
+            if existing == row:
+                applied.append(existing)
+                continue
+            unresolved.append(
+                f"{row.responsibility_id}: Raid Plan already contains different triggered responsibility intent; existing plan decision preserved"
+            )
+
+        updated = replace(plan, triggered_responsibilities=tuple(merged))
+        return RaidPlanTankTriggeredResponsibilityApplication(
+            plan=updated,
+            applied=tuple(applied),
+            unresolved=tuple(dict.fromkeys(unresolved)),
+        )
+
 
 __all__ = [
+    "RaidPlanTankTriggeredResponsibilityApplication",
     "RaidPlanTankTriggeredResponsibilityProjection",
     "RaidPlanTankTriggeredResponsibilityService",
 ]
