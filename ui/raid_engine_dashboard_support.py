@@ -6,6 +6,8 @@ Kept as a support layer so the dashboard can be added without duplicating or
 replacing the long-lived Raid Engine pages it summarizes.
 """
 
+import warnings
+
 _INSTALLED = False
 _ORIGINAL_BUILD_UI = None
 _DASHBOARD_REFRESH_PATCHED = False
@@ -57,6 +59,31 @@ def _install_read_only_dashboard_refresh() -> None:
     _DASHBOARD_REFRESH_PATCHED = True
 
 
+def _install_safe_dashboard_rewire() -> None:
+    """Avoid PySide's noisy RuntimeWarning when a button has no slots to remove.
+
+    Disconnecting an unconnected signal is harmless, but libpyside emits a warning
+    before the Python exception guard can handle it. Keep the existing rewire
+    semantics while suppressing only that specific warning.
+    """
+    from ui import raid_engine_dashboard_polish_support as polish
+
+    def safe_rewire(button, callback) -> None:
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                message=r"libpyside: Failed to disconnect.*",
+                category=RuntimeWarning,
+            )
+            try:
+                button.clicked.disconnect()
+            except (RuntimeError, TypeError):
+                pass
+        button.clicked.connect(lambda *_: callback())
+
+    polish._rewire_button = safe_rewire
+
+
 def _open_dashboard_help(window) -> None:
     settings = window.pages.get("settings")
     if settings is None:
@@ -106,6 +133,7 @@ def install() -> None:
     _install_read_only_dashboard_refresh()
     from ui.raid_engine_dashboard_polish_support import install as install_dashboard_polish
     install_dashboard_polish()
+    _install_safe_dashboard_rewire()
     _ORIGINAL_BUILD_UI = MainWindow.build_ui
     MainWindow.build_ui = _build_ui_with_raid_engine_dashboard
     _INSTALLED = True
