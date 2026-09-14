@@ -7,11 +7,11 @@ reviewed rotation semantics keyed by exact encounter + requirement identity. It 
 not infer strategy from role names, roster labels, requirement prose, or capability
 presence.
 
-Numeric taunt-maintenance policy remains directly executable. Symbolic encounter-end
-maintenance policy is retained separately until canonical encounter-horizon evidence
-materializes it into the existing numeric policy type. Symbolic maintenance may omit
-its taunt skill/bar so Generate can bind those build-owned facts from the selected
-canonical provider rather than hardcoding one skill into encounter policy.
+Numeric taunt-maintenance policy remains directly executable. Symbolic maintenance
+policy is retained separately until canonical encounter timing materializes it into the
+existing numeric policy type. Symbolic maintenance may omit its taunt skill/bar so
+Generate can bind those build-owned facts from the selected canonical provider rather
+than hardcoding one skill into encounter policy.
 """
 
 from dataclasses import dataclass
@@ -47,9 +47,7 @@ class RotationAssignmentPolicyBundle:
     encounter_id: str
     effect_policies: tuple[RotationAssignmentEffectPolicy, ...] = ()
     taunt_policies: tuple[RotationAssignmentTauntPolicy, ...] = ()
-    taunt_maintenance_policies: tuple[
-        RotationAssignmentTauntMaintenancePolicy, ...
-    ] = ()
+    taunt_maintenance_policies: tuple[RotationAssignmentTauntMaintenancePolicy, ...] = ()
     taunt_maintenance_horizon_policies: tuple[
         RotationAssignmentTauntMaintenanceHorizonPolicy, ...
     ] = ()
@@ -171,6 +169,12 @@ class RotationAssignmentPolicyRegistryService:
         return value
 
     @staticmethod
+    def _optional_float(raw: dict, key: str) -> float | None:
+        if raw.get(key) is None:
+            return None
+        return float(raw.get(key))
+
+    @staticmethod
     def _optional_bar(raw: dict) -> str | None:
         value = raw.get("bar")
         return None if value is None else str(value)
@@ -216,9 +220,7 @@ class RotationAssignmentPolicyRegistryService:
                     minimum_applications=int(window.get("minimum_applications", 1)),
                     bar=cls._optional_bar(window),
                     target_key=(
-                        None
-                        if window.get("target_key") is None
-                        else str(window.get("target_key"))
+                        None if window.get("target_key") is None else str(window.get("target_key"))
                     ),
                 )
                 for window in windows
@@ -262,7 +264,8 @@ class RotationAssignmentPolicyRegistryService:
                 RotationAssignmentTauntMaintenanceHorizonWindow(
                     occurrence_id=cls._required_text(window, "occurrence_id"),
                     target_key=cls._required_text(window, "target_key"),
-                    active_start_seconds=float(window.get("active_start_seconds")),
+                    active_start_seconds=cls._optional_float(window, "active_start_seconds"),
+                    start_reference=cls._optional_text(window, "start_reference"),
                     end_reference=cls._required_text(window, "end_reference"),
                     bar=cls._optional_bar(window),
                 )
@@ -285,8 +288,7 @@ class RotationAssignmentPolicyRegistryService:
         if not resolved:
             raise ValueError("rotation assignment policy lookup requires encounter_id")
         return self._bundles.get(
-            resolved.casefold(),
-            RotationAssignmentPolicyBundle(encounter_id=resolved),
+            resolved.casefold(), RotationAssignmentPolicyBundle(encounter_id=resolved)
         )
 
 
