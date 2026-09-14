@@ -2,10 +2,13 @@ from __future__ import annotations
 
 """Audit the combined class / Support / Mages Guild active-bar frontier for Extreme Magicka Recovery.
 
-The earlier class-route proof optimized all six active-bar slots only across equipped
-class lines. ESO does not require every active-bar slot to contain a class ability.
-This audit therefore recomputes the legal six-slot frontier while allowing Alliance
-War Support and Mages Guild abilities to compete for bar space.
+The earlier class-route proof optimized all six active-bar positions only across equipped
+class lines. ESO does not require every active-bar position to contain a class ability,
+but the bar topology is also not six interchangeable skill slots: it is five normal
+ability slots plus one Ultimate slot. This audit therefore recomputes the legal frontier
+while allowing Alliance War Support and Mages Guild abilities to compete for the five
+normal slots and admitting an objective-relevant sixth counted ability only when a
+canonical Ultimate from that same counted line exists.
 
 It deliberately treats the previously proven Torc named-gear result as an input
 checkpoint and reuses canonical passive math, same-build Max Magicka, Champion Point,
@@ -47,6 +50,8 @@ from tools.audit_extreme_magicka_recovery_same_build_enlivening import (
 
 OBJECTIVE = "magicka_recovery"
 EXPECTED_ROUTE_IDS = frozenset({"animal_companions", "curative_runeforms", "shadow"})
+NORMAL_BAR_SLOTS = 5
+ULTIMATE_BAR_SLOTS = 1
 
 
 @dataclass(frozen=True)
@@ -57,7 +62,7 @@ class LineCapacity:
 
     @property
     def total(self) -> int:
-        return min(5, self.normal) + min(1, self.ultimate)
+        return min(NORMAL_BAR_SLOTS, self.normal) + min(ULTIMATE_BAR_SLOTS, self.ultimate)
 
 
 @dataclass(frozen=True)
@@ -107,6 +112,45 @@ def _capacity(universe: ExtremeSkillUniverseService, line_id: str) -> LineCapaci
     return LineCapacity(wanted, len(normal), len(ultimate))
 
 
+def _bar_shape_legal(
+    counted: tuple[tuple[int, LineCapacity], ...],
+) -> bool:
+    """Return whether counted objective skills fit 5 normal slots + 1 Ultimate.
+
+    Uncounted filler skills are allowed. A counted category may consume the Ultimate
+    slot only when its canonical line actually exposes an Ultimate family. This is an
+    existence proof over slot *types*, not merely a six-position cardinality check.
+    """
+
+    rows = tuple((max(0, int(count)), capacity) for count, capacity in counted)
+    total = sum(count for count, _ in rows)
+    if total > NORMAL_BAR_SLOTS + ULTIMATE_BAR_SLOTS:
+        return False
+    if any(count > capacity.total for count, capacity in rows):
+        return False
+
+    # Try an all-normal realization first. This is sufficient whenever every
+    # counted category fits its normal family supply and at most five are counted.
+    if total <= NORMAL_BAR_SLOTS and all(count <= capacity.normal for count, capacity in rows):
+        return True
+
+    # Otherwise exactly one counted category must own the single Ultimate slot.
+    for index, (count, capacity) in enumerate(rows):
+        if count <= 0 or capacity.ultimate <= 0:
+            continue
+        normal_required = 0
+        legal = True
+        for other_index, (other_count, other_capacity) in enumerate(rows):
+            required = other_count - 1 if other_index == index else other_count
+            if required < 0 or required > other_capacity.normal:
+                legal = False
+                break
+            normal_required += required
+        if legal and normal_required <= NORMAL_BAR_SLOTS:
+            return True
+    return False
+
+
 def _same_build_max_magicka(base_witness, mages_slots: int) -> float:
     trace = BaseCharacterCalculator().max_magicka(
         ResourceInputs(
@@ -120,10 +164,6 @@ def _same_build_max_magicka(base_witness, mages_slots: int) -> float:
         )
     )
     return float(trace.raw_value)
-
-
-def _max_line_slots(capacity: LineCapacity, *, ultimate_claimed: bool) -> int:
-    return min(5, capacity.normal) + (0 if ultimate_claimed else min(1, capacity.ultimate))
 
 
 def main() -> int:
@@ -191,16 +231,38 @@ def main() -> int:
     animal_capacity = _capacity(universe, "Animal Companions")
     soldier_capacity = _capacity(universe, "Soldier of Apocrypha")
 
-    if support_capacity.total < 5:
+    if support_capacity.normal < 4:
         unresolved.append(
-            f"Support line exposes only {support_capacity.total} distinct reviewed bar slots; five-slot Magicka Aid witness unavailable"
+            f"Support line exposes only {support_capacity.normal} distinct reviewed normal slots; four-slot Magicka Aid witness unavailable"
         )
+
+    six_normal_rejected = not _bar_shape_legal(
+        (
+            (1, animal_capacity),
+            (0, soldier_capacity),
+            (5, support_capacity),
+            (0, mages_capacity),
+        )
+    )
+    one_animal_four_support_legal = _bar_shape_legal(
+        (
+            (1, animal_capacity),
+            (0, soldier_capacity),
+            (4, support_capacity),
+            (0, mages_capacity),
+        )
+    )
+    if not six_normal_rejected:
+        unresolved.append("Six-normal-skill state was not rejected by active-bar topology")
+    if not one_animal_four_support_legal:
+        unresolved.append("One-Animal/four-Support normal-slot witness is not physically legal")
 
     route_service = ExtremeRecoveryClassRouteFrontierService(database)
     rows: list[ActiveBarCandidate] = []
 
-    # Enumerate counts first; exact skill identities are unnecessary once the
-    # canonical universe proves enough distinct normal/Ultimate families exist.
+    # Enumerate all objective-relevant counted skills. Any unused normal or Ultimate
+    # position may hold an irrelevant filler skill; objective score never assumes that
+    # filler contributes Recovery.
     for mages_slots in range(0, min(6, mages_capacity.total) + 1):
         max_magicka = _same_build_max_magicka(base_witness, mages_slots) if base_witness else 0.0
         enlivening = exact_enlivening_value(max_magicka)
@@ -214,88 +276,93 @@ def main() -> int:
             line_ids = frozenset(_line_id(line) for line in route.equipped_skill_lines)
             has_animal = "animal_companions" in line_ids
             has_soldier = "soldier_of_apocrypha" in line_ids
+            animal_limit = min(6, animal_capacity.total if has_animal else 0)
+            soldier_limit = min(6, soldier_capacity.total if has_soldier else 0)
 
-            for animal_slots in range(0, min(6, animal_capacity.total if has_animal else 0) + 1):
-                for soldier_slots in range(0, min(6 - animal_slots, soldier_capacity.total if has_soldier else 0) + 1):
-                    remaining = 6 - animal_slots - soldier_slots - mages_slots
-                    if remaining < 0:
-                        continue
-                    support_slots = remaining
-                    if support_slots > support_capacity.total:
-                        continue
-
-                    # At most one Ultimate may appear across all counted categories.
-                    # If a category count exceeds its normal capacity it must consume
-                    # the Ultimate slot. Reject states that require two such claims.
-                    ultimate_claims = sum(
-                        int(count > capacity.normal)
-                        for count, capacity in (
+            for animal_slots in range(0, animal_limit + 1):
+                for soldier_slots in range(0, soldier_limit + 1):
+                    for support_slots in range(0, min(6, support_capacity.total) + 1):
+                        counted = (
                             (animal_slots, animal_capacity),
                             (soldier_slots, soldier_capacity),
                             (support_slots, support_capacity),
                             (mages_slots, mages_capacity),
                         )
-                        if count > 0
-                    )
-                    if ultimate_claims > 1:
-                        continue
-                    if any(
-                        count > capacity.total
-                        for count, capacity in (
-                            (animal_slots, animal_capacity),
-                            (soldier_slots, soldier_capacity),
-                            (support_slots, support_capacity),
-                            (mages_slots, mages_capacity),
-                        )
-                    ):
-                        continue
+                        if not _bar_shape_legal(counted):
+                            continue
 
-                    class_flat = float(route.static_flat)
-                    class_percent = float(route.static_percent)
-                    class_flat += arcanist_wellspring_recovery(soldier_slots)
-                    class_percent += warden_flourish_recovery_percent(animal_slots)
-                    support_percent = support_magicka_aid_recovery_percent(support_slots)
-                    light_percent = light_armor_magicka_recovery_percent(7)
+                        class_flat = float(route.static_flat)
+                        class_percent = float(route.static_percent)
+                        class_flat += arcanist_wellspring_recovery(soldier_slots)
+                        class_percent += warden_flourish_recovery_percent(animal_slots)
+                        support_percent = support_magicka_aid_recovery_percent(support_slots)
+                        light_percent = light_armor_magicka_recovery_percent(7)
 
-                    # Class Mastery is already projected by the canonical route owner.
-                    # For current reviewed Recovery masteries this is a flat projected
-                    # runtime ceiling; retain it as additive for candidate comparison.
-                    mastery = float(route.mastery_projected_delta)
-                    pre_percent = reference + class_flat + mastery
-                    total_percent = light_percent + class_percent + support_percent
-                    final_value = pre_percent * (1.0 + total_percent)
-                    rows.append(
-                        ActiveBarCandidate(
-                            base_class=route.base_class,
-                            equipped_skill_lines=route.equipped_skill_lines,
-                            is_pure_class=route.is_pure_class,
-                            animal_slots=animal_slots,
-                            soldier_slots=soldier_slots,
-                            support_slots=support_slots,
-                            mages_slots=mages_slots,
-                            max_magicka=max_magicka,
-                            enlivening=enlivening,
-                            cp_total=cp_total,
-                            pre_percent_total=pre_percent,
-                            total_percent=total_percent,
-                            final_value=final_value,
-                            mastery_projected_delta=mastery,
+                        # Class Mastery is already projected by the canonical route owner.
+                        # For current reviewed Recovery masteries this is a flat projected
+                        # runtime ceiling; retain it as additive for candidate comparison.
+                        mastery = float(route.mastery_projected_delta)
+                        pre_percent = reference + class_flat + mastery
+                        total_percent = light_percent + class_percent + support_percent
+                        final_value = pre_percent * (1.0 + total_percent)
+                        rows.append(
+                            ActiveBarCandidate(
+                                base_class=route.base_class,
+                                equipped_skill_lines=route.equipped_skill_lines,
+                                is_pure_class=route.is_pure_class,
+                                animal_slots=animal_slots,
+                                soldier_slots=soldier_slots,
+                                support_slots=support_slots,
+                                mages_slots=mages_slots,
+                                max_magicka=max_magicka,
+                                enlivening=enlivening,
+                                cp_total=cp_total,
+                                pre_percent_total=pre_percent,
+                                total_percent=total_percent,
+                                final_value=final_value,
+                                mastery_projected_delta=mastery,
+                            )
                         )
-                    )
 
     ranked = tuple(sorted(rows, key=lambda row: (-row.final_value, row.base_class, row.equipped_skill_lines)))
     winner = ranked[0] if ranked else None
-    runner_up = ranked[1] if len(ranked) > 1 else None
+
+    # Base-class identity can tie for a subclassed route with no pure-class Mastery.
+    # Report the next distinct objective state rather than treating that harmless
+    # identity tie as a zero proof margin.
+    distinct_rows: list[ActiveBarCandidate] = []
+    seen_states: set[tuple[object, ...]] = set()
+    for row in ranked:
+        state = (
+            tuple(_line_id(line) for line in row.equipped_skill_lines),
+            row.is_pure_class,
+            row.animal_slots,
+            row.soldier_slots,
+            row.support_slots,
+            row.mages_slots,
+            round(row.max_magicka, 9),
+            round(row.pre_percent_total, 9),
+            round(row.total_percent, 9),
+            round(row.mastery_projected_delta, 9),
+        )
+        if state in seen_states:
+            continue
+        seen_states.add(state)
+        distinct_rows.append(row)
+    runner_up = distinct_rows[1] if len(distinct_rows) > 1 else None
+
     winner_ids = frozenset(_line_id(line) for line in winner.equipped_skill_lines) if winner else frozenset()
     winner_expected_route = bool(winner and winner_ids == EXPECTED_ROUTE_IDS)
-    winner_uses_five_support = bool(winner and winner.support_slots == 5 and winner.animal_slots == 1)
-    support_capacity_proven = support_capacity.total >= 5
+    winner_uses_four_support = bool(winner and winner.support_slots == 4 and winner.animal_slots == 1)
+    support_capacity_proven = support_capacity.normal >= 4
     unique_unresolved = tuple(dict.fromkeys(unresolved))
     closed = bool(
         winner is not None
         and winner_expected_route
-        and winner_uses_five_support
+        and winner_uses_four_support
         and support_capacity_proven
+        and six_normal_rejected
+        and one_animal_four_support_legal
         and not unique_unresolved
     )
 
@@ -303,6 +370,7 @@ def main() -> int:
     print(f"database={database}")
     print(f"torc_structural_checkpoint={args.torc_structural:.3f}")
     print(f"torc_special_checkpoint={args.torc_special:.3f}")
+    print(f"normal_bar_slots={NORMAL_BAR_SLOTS} ultimate_bar_slots={ULTIMATE_BAR_SLOTS}")
     print(f"support_capacity_normal={support_capacity.normal} ultimate={support_capacity.ultimate} total={support_capacity.total}")
     print(f"mages_capacity_normal={mages_capacity.normal} ultimate={mages_capacity.ultimate} total={mages_capacity.total}")
     print(f"animal_capacity_normal={animal_capacity.normal} ultimate={animal_capacity.ultimate} total={animal_capacity.total}")
@@ -320,19 +388,22 @@ def main() -> int:
         )
     print()
     print("PROOF GATES")
-    print(f"support_five_slot_witness_available={support_capacity_proven}")
+    print(f"five_normal_plus_one_ultimate_topology=True")
+    print(f"six_normal_state_rejected={six_normal_rejected}")
+    print(f"one_animal_four_support_legal={one_animal_four_support_legal}")
+    print(f"support_four_slot_witness_available={support_capacity_proven}")
     print(f"winner_expected_class_route={winner_expected_route}")
-    print(f"winner_one_animal_five_support={winner_uses_five_support}")
+    print(f"winner_one_animal_four_support={winner_uses_four_support}")
     print(f"winner_mages_slots={winner.mages_slots if winner else -1}")
     print(f"winner_final={winner.final_value if winner else 0.0:.3f}")
-    print(f"runner_up_final={runner_up.final_value if runner_up else 0.0:.3f}")
-    print(f"minimum_top_margin={(winner.final_value - runner_up.final_value) if winner and runner_up else 0.0:.3f}")
+    print(f"runner_up_distinct_final={runner_up.final_value if runner_up else 0.0:.3f}")
+    print(f"minimum_distinct_margin={(winner.final_value - runner_up.final_value) if winner and runner_up else 0.0:.3f}")
     print(f"audit_unresolved_count={len(unique_unresolved)}")
     for item in unique_unresolved:
         print(f"  unresolved: {item}")
     print(f"combined_active_bar_frontier_closed={closed}")
     if closed:
-        print("NEXT_STEP=recompose contextual Recovery percentages and final score using the corrected five-Support-slot winner")
+        print("NEXT_STEP=add legal named-buff skill sources and contextual Recovery states to the corrected five-normal-slot winner")
     else:
         print("NEXT_STEP=close only the reported combined active-bar blockers")
     return 0 if closed else 2
