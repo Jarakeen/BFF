@@ -137,6 +137,33 @@ class ExtremeRecoveryPassiveSpecialBranchService:
                 condition=None,
             )
 
+        # Percentage Recovery clauses can also be conditional runtime branches.
+        # Continuous Attack is the canonical example: Recovery rises by a fixed
+        # percentage for a finite window after capturing an Alliance War objective.
+        # Keep the exact numeric ceiling while preserving the condition instead of
+        # dropping the passive from the denominator or flattening it into static state.
+        conditional_percent = re.search(
+            r"recovery by\s+(\d+(?:\.\d+)?)%",
+            text,
+        )
+        if conditional_percent and any(
+            marker in text
+            for marker in (
+                "while ",
+                "when ",
+                "whenever ",
+                "after ",
+            )
+        ):
+            return ExtremeRecoveryPassiveBranch(
+                passive=passive,
+                objective_key=objective,
+                kind=ExtremeRecoveryPassiveBranchKind.CONDITIONAL_PERCENT,
+                can_raise_self=True,
+                percent_ceiling=float(conditional_percent.group(1)),
+                condition="runtime_condition_required",
+            )
+
         target_up_to = re.search(
             rf"{re.escape(label)} by up to\s+(\d+(?:\.\d+)?)",
             text,
