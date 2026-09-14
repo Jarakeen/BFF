@@ -91,6 +91,12 @@ def test_bundle_projects_reviewed_threshold_policy_from_explicit_raid_dps() -> N
 
     assert bundle.ready is True
     assert bundle.unresolved == ()
+    assert bundle.health_threshold_projection is not None
+    assert bundle.health_threshold_projection.encounter_id == "xalvakka"
+    assert bundle.health_threshold_projection.points[0].fact_key == "phase_2"
+    assert bundle.health_threshold_projection.points[0].threshold_fraction == pytest.approx(0.70)
+    assert bundle.health_threshold_projection.points[0].time_seconds == pytest.approx(15.0)
+    assert bundle.target_health_trajectory is bundle.health_threshold_projection.trajectory
     assert len(bundle.demands) == 1
     demand = bundle.demands[0]
     assert demand.name == "Xalvakka Phase 2 healing prep"
@@ -119,6 +125,7 @@ def test_bundle_keeps_missing_threshold_projection_inputs_unresolved() -> None:
 
     assert bundle.ready is False
     assert bundle.demands == ()
+    assert bundle.health_threshold_projection is None
     assert bundle.unresolved == (
         "health-threshold encounter demands require explicit normal, veteran, or hardmode difficulty",
     )
