@@ -5,8 +5,13 @@ from __future__ import annotations
 The Rotation Builder now installs ``RotationGenerateDDTargetHealthRoleEvidenceSupport``.
 When no reviewed periodic target-Health semantics or Health trajectory are active, its
 canonical action-damage evidence must remain identical to the pre-target-Health DD
-support.  This read-only audit proves that additive production adoption did not change
+support. This read-only audit proves that additive production adoption did not change
 ordinary saved-build DD output merely by installing the new wrapper.
+
+Audit composition uses the same DD relevance-filtered static-context adapter as the
+whole-plan damage coverage audit. Ambient non-damage diagnostics therefore do not
+prevent the parity comparison, while unknown or DD-relevant offensive diagnostics
+remain unresolved and fail closed.
 """
 
 import argparse
@@ -20,6 +25,7 @@ if str(ROOT) not in sys.path:
 from minmax.resource_costs import ResourceType
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 from services.rotation_static_build_context_service import RotationStaticBuildContextService
+from tools.audit_phase13_dd_whole_plan_damage_coverage import _DDAuditStaticContextService
 from tools.dd_audit_priority_fixture_support import resolve_audit_priorities
 from tools.audit_phase13_saved_build_rotation_timing import _load_build
 from ui.rotation_generate_dd_role_evidence_support import (
@@ -110,21 +116,23 @@ def main() -> int:
         refresh_leads=(),
     )
 
-    static_context_service = RotationStaticBuildContextService(
-        database_path=Path(args.database),
-        builds_path=Path(args.builds),
+    static_context_service = _DDAuditStaticContextService(
+        RotationStaticBuildContextService(
+            database_path=Path(args.database),
+            builds_path=Path(args.builds),
+        )
     )
     weapon_factory = RotationGenerateDDCanonicalWeaponAttackProviderFactory(
         database_path=Path(args.database),
     )
     legacy = RotationGenerateDDRoleEvidenceSupport(
         database_path=Path(args.database),
-        static_context_service=static_context_service,
+        static_context_service=static_context_service,  # type: ignore[arg-type]
         weapon_attack_provider_factory=weapon_factory,
     )
     live = RotationGenerateDDTargetHealthRoleEvidenceSupport(
         database_path=Path(args.database),
-        static_context_service=static_context_service,
+        static_context_service=static_context_service,  # type: ignore[arg-type]
         weapon_attack_provider_factory=weapon_factory,
     )
 
@@ -155,6 +163,7 @@ def main() -> int:
             else "explicit --priority input"
         )
     )
+    print("Static context: DD relevance-filtered audit composition")
     print(f"Actions compared: {compared}")
     print(f"Mismatches:       {len(mismatches)}")
     print()
