@@ -13,6 +13,7 @@ labels, encounter names, or Raid Plan prose.
 """
 
 from dataclasses import dataclass
+from types import MethodType
 
 from engine.config import get_data_dir
 from minmax.rotation_action_target_legality import RotationTargetStateWindow
@@ -74,6 +75,14 @@ class RotationRuntimeApplicationSupport:
             raise TypeError("runtime application support requires a target service with resolve(...)")
         self.pipeline = pipeline
         self.target_service = target_service
+
+    def install(self, page) -> None:
+        page.rotation_runtime_application_support = self
+        page.last_rotation_runtime_application_result = None
+        page.apply_runtime_trigger_observations = MethodType(
+            lambda bound_page, **kwargs: self.apply(bound_page, **kwargs),
+            page,
+        )
 
     def apply(
         self,
@@ -155,7 +164,14 @@ class RotationRuntimeApplicationSupport:
         return result
 
 
+def install_rotation_runtime_application(page) -> RotationRuntimeApplicationSupport:
+    support = RotationRuntimeApplicationSupport()
+    support.install(page)
+    return support
+
+
 __all__ = [
     "RotationRuntimeApplicationSupport",
     "RotationRuntimeApplicationSupportResult",
+    "install_rotation_runtime_application",
 ]
