@@ -126,6 +126,7 @@ def test_page_renders_final_cadence_evidence_from_orchestrated_run() -> None:
             "player_build": page.build,
             "generation_request": page.request,
             "evidence_bundle": bundle,
+            "role_evidence": None,
             "cadence_obligations": obligations,
             "cadence_priorities": priorities,
             "cadence_evaluation_context": context,
