@@ -9,6 +9,7 @@ from minmax.rotation_plan import RotationPlan
 from minmax.rotation_wait_decision import PrematureRecastDecisionProvider
 from minmax.runtime_healer_wait_decision_provider import RecoveryHeavyPressureResolver
 from services.rotation_candidate_generation_service import (
+    GeneratedRotationCandidate,
     RotationCandidateGenerationService,
     RotationRefreshLeadCandidateOption,
 )
@@ -25,6 +26,10 @@ RecoveryPressureWaitDecisionFactory = Callable[
 RecoveryCandidateEvaluatorResolver = Callable[
     [str],
     RecoveryCandidateEvaluator,
+]
+RecoveryCandidateFamilyProjector = Callable[
+    [GeneratedRotationCandidate],
+    GeneratedRotationCandidate,
 ]
 
 
@@ -48,6 +53,13 @@ class RotationRecoveryHeavyCandidateGenerationBridgeService:
     regeneration, preventing runtime state from leaking across candidates or fixed-
     point iterations.
 
+    A caller may also supply one role-neutral ``candidate_projector``. The projector
+    receives the freshly generated whole candidate on *every* recovery regeneration,
+    before replay/stabilization, and must preserve candidate identity. Applying the
+    projector here keeps any inserted role/encounter actions inside the same plan that
+    recovery replay and final-family evidence will evaluate. The bridge does not infer
+    projector policy or construct role-specific claims.
+
     Candidate judgment remains explicit through ``evaluator_resolver``. No scorecard,
     encounter obligation, effect target, recovery threshold, restore amount, or role
     convention is inferred here.
@@ -68,6 +80,7 @@ class RotationRecoveryHeavyCandidateGenerationBridgeService:
         demands: tuple[RotationDemandWindow, ...] = (),
         options: tuple[RotationRefreshLeadCandidateOption, ...] = (),
         wait_decision_factory: RecoveryPressureWaitDecisionFactory | None = None,
+        candidate_projector: RecoveryCandidateFamilyProjector | None = None,
         baseline_id: str = "baseline",
     ) -> RotationRecoveryHeavyCandidateGenerationBridgeResult:
         baseline = str(baseline_id or "").strip()
@@ -123,7 +136,24 @@ class RotationRecoveryHeavyCandidateGenerationBridgeService:
                         "recovery candidate generation changed candidate_id: "
                         f"expected {_candidate_id!r}, got {generated.candidate_id!r}"
                     )
-                return generated.plan
+
+                projected = generated
+                if candidate_projector is not None:
+                    if not isinstance(generated, GeneratedRotationCandidate):
+                        raise TypeError(
+                            "recovery candidate family projection requires GeneratedRotationCandidate"
+                        )
+                    projected = candidate_projector(generated)
+                    if not isinstance(projected, GeneratedRotationCandidate):
+                        raise TypeError(
+                            "recovery candidate family projector must return GeneratedRotationCandidate"
+                        )
+                    if projected.candidate_id.casefold() != _candidate_id.casefold():
+                        raise ValueError(
+                            "recovery candidate family projector must preserve candidate identity: "
+                            f"expected {_candidate_id!r}, got {projected.candidate_id!r}"
+                        )
+                return projected.plan
 
             candidates.append(
                 RecoveryHeavyCandidateOrchestrationInput(
@@ -140,6 +170,7 @@ class RotationRecoveryHeavyCandidateGenerationBridgeService:
 
 __all__ = [
     "RecoveryCandidateEvaluatorResolver",
+    "RecoveryCandidateFamilyProjector",
     "RecoveryPressureWaitDecisionFactory",
     "RotationRecoveryHeavyCandidateGenerationBridgeResult",
     "RotationRecoveryHeavyCandidateGenerationBridgeService",
