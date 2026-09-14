@@ -45,6 +45,9 @@ from services.rotation_tank_encounter_threshold_defensive_bundle_service import 
 from services.rotation_tank_encounter_threshold_defensive_timing_service import (
     RotationTankEncounterThresholdDefensiveTimingPolicy,
 )
+from services.rotation_tank_encounter_transition_timing_service import (
+    RotationTankEncounterTransitionTimingService,
+)
 from services.rotation_tank_taunt_candidate_service import (
     RotationTankTauntActionClaim,
 )
@@ -67,10 +70,10 @@ class RotationGenerateTankAssignmentEvidence:
     those fields are empty.
 
     Concrete taunt-maintenance policies retain exact numeric windows. Reviewed symbolic
-    taunt-maintenance policies may instead end at ``encounter_end`` or an exact reviewed
-    health threshold; they are materialized only at Generate time from the canonical
-    fight-damage trajectory in the selected evidence bundle. A symbolic policy is never
-    treated as executable before that point.
+    taunt-maintenance policies may end at ``encounter_end`` or an exact reviewed health
+    threshold, and may start at a reviewed post-transition resume boundary. They are
+    materialized only at Generate time from canonical encounter timing. A symbolic policy
+    is never treated as executable before that point.
 
     Defensive obligations may be supplied directly for explicit audit/test callers, or
     derived from reviewed encounter facts through explicit-clock and/or canonical
@@ -82,9 +85,7 @@ class RotationGenerateTankAssignmentEvidence:
     member_id: str
     assignments: tuple[ProviderAssignment, ...] = ()
     taunt_policies: tuple[RotationAssignmentTauntPolicy, ...] = ()
-    taunt_maintenance_policies: tuple[
-        RotationAssignmentTauntMaintenancePolicy, ...
-    ] = ()
+    taunt_maintenance_policies: tuple[RotationAssignmentTauntMaintenancePolicy, ...] = ()
     taunt_maintenance_horizon_policies: tuple[
         RotationAssignmentTauntMaintenanceHorizonPolicy, ...
     ] = ()
@@ -96,9 +97,7 @@ class RotationGenerateTankAssignmentEvidence:
     defensive_obligations: tuple[RotationTankDefensiveObligation, ...] = ()
     defensive_guide: EncounterBossGuide | None = None
     defensive_facts: tuple[ReconciledEncounterFact, ...] = ()
-    defensive_timing_policies: tuple[
-        RotationTankEncounterDefensiveTimingPolicy, ...
-    ] = ()
+    defensive_timing_policies: tuple[RotationTankEncounterDefensiveTimingPolicy, ...] = ()
     defensive_threshold_timing_policies: tuple[
         RotationTankEncounterThresholdDefensiveTimingPolicy, ...
     ] = ()
@@ -114,38 +113,22 @@ class RotationGenerateTankAssignmentEvidence:
         object.__setattr__(self, "member_id", member_id)
         object.__setattr__(self, "assignments", tuple(self.assignments))
         object.__setattr__(self, "taunt_policies", tuple(self.taunt_policies))
-        object.__setattr__(
-            self,
-            "taunt_maintenance_policies",
-            tuple(self.taunt_maintenance_policies),
-        )
+        object.__setattr__(self, "taunt_maintenance_policies", tuple(self.taunt_maintenance_policies))
         object.__setattr__(
             self,
             "taunt_maintenance_horizon_policies",
             tuple(self.taunt_maintenance_horizon_policies),
         )
-        object.__setattr__(
-            self,
-            "taunt_application_claims",
-            tuple(self.taunt_application_claims),
-        )
+        object.__setattr__(self, "taunt_application_claims", tuple(self.taunt_application_claims))
         object.__setattr__(
             self,
             "taunt_maintenance_refresh_policies",
             tuple(self.taunt_maintenance_refresh_policies),
         )
         object.__setattr__(self, "defensive_claims", tuple(self.defensive_claims))
-        object.__setattr__(
-            self,
-            "defensive_obligations",
-            tuple(self.defensive_obligations),
-        )
+        object.__setattr__(self, "defensive_obligations", tuple(self.defensive_obligations))
         object.__setattr__(self, "defensive_facts", tuple(self.defensive_facts))
-        object.__setattr__(
-            self,
-            "defensive_timing_policies",
-            tuple(self.defensive_timing_policies),
-        )
+        object.__setattr__(self, "defensive_timing_policies", tuple(self.defensive_timing_policies))
         object.__setattr__(
             self,
             "defensive_threshold_timing_policies",
@@ -154,29 +137,21 @@ class RotationGenerateTankAssignmentEvidence:
 
         has_clock_inputs = bool(self.defensive_guide or self.defensive_timing_policies)
         has_threshold_inputs = bool(self.defensive_threshold_timing_policies)
-        has_projection_inputs = bool(
-            has_clock_inputs or has_threshold_inputs or self.defensive_facts
-        )
+        has_projection_inputs = bool(has_clock_inputs or has_threshold_inputs or self.defensive_facts)
         if self.defensive_obligations and has_projection_inputs:
             raise ValueError(
                 "Tank Generate defensive evidence must use either explicit obligations or reviewed encounter projection, not both"
             )
         if has_clock_inputs:
             if self.defensive_guide is None:
-                raise ValueError(
-                    "Tank Generate reviewed clock defensive evidence requires defensive_guide"
-                )
-            guide_encounter = str(
-                getattr(self.defensive_guide, "encounter_id", "") or ""
-            ).strip()
+                raise ValueError("Tank Generate reviewed clock defensive evidence requires defensive_guide")
+            guide_encounter = str(getattr(self.defensive_guide, "encounter_id", "") or "").strip()
             if guide_encounter.casefold() != encounter_id.casefold():
                 raise ValueError(
                     "Tank Generate defensive guide encounter does not match assignment evidence encounter"
                 )
             if not self.defensive_timing_policies:
-                raise ValueError(
-                    "Tank Generate reviewed clock defensive evidence requires timing policies"
-                )
+                raise ValueError("Tank Generate reviewed clock defensive evidence requires timing policies")
         if self.defensive_facts and not (
             self.defensive_timing_policies or self.defensive_threshold_timing_policies
         ):
@@ -199,33 +174,25 @@ class RotationGenerateTankAssignmentContextSupport:
             RotationTankEncounterThresholdDefensiveBundleService | object | None
         ) = None,
         encounter_horizon_service: RotationTankEncounterHorizonService | object | None = None,
+        encounter_transition_timing_service: (
+            RotationTankEncounterTransitionTimingService | object | None
+        ) = None,
         horizon_policy_service: (
             RotationAssignmentTauntMaintenanceHorizonPolicyService | object | None
         ) = None,
     ) -> None:
-        self.database_path = (
-            Path(database_path)
-            if database_path is not None
-            else get_data_dir() / "eso.db"
-        )
+        self.database_path = Path(database_path) if database_path is not None else get_data_dir() / "eso.db"
         self.build_adapter = build_adapter or SavedBuildCharacterAdapter(self.database_path)
-        self.bundle_service = (
-            bundle_service or RotationTankAssignmentObligationBundleService()
-        )
-        self.defensive_bundle_service = (
-            defensive_bundle_service or RotationTankEncounterDefensiveBundleService()
-        )
+        self.bundle_service = bundle_service or RotationTankAssignmentObligationBundleService()
+        self.defensive_bundle_service = defensive_bundle_service or RotationTankEncounterDefensiveBundleService()
         self.threshold_defensive_bundle_service = (
-            threshold_defensive_bundle_service
-            or RotationTankEncounterThresholdDefensiveBundleService()
+            threshold_defensive_bundle_service or RotationTankEncounterThresholdDefensiveBundleService()
         )
-        self.encounter_horizon_service = (
-            encounter_horizon_service or RotationTankEncounterHorizonService()
+        self.encounter_horizon_service = encounter_horizon_service or RotationTankEncounterHorizonService()
+        self.encounter_transition_timing_service = (
+            encounter_transition_timing_service or RotationTankEncounterTransitionTimingService()
         )
-        self.horizon_policy_service = (
-            horizon_policy_service
-            or RotationAssignmentTauntMaintenanceHorizonPolicyService()
-        )
+        self.horizon_policy_service = horizon_policy_service or RotationAssignmentTauntMaintenanceHorizonPolicyService()
         self._evidence: tuple[RotationGenerateTankAssignmentEvidence, ...] = ()
 
     def set_evidence(
@@ -237,8 +204,7 @@ class RotationGenerateTankAssignmentContextSupport:
         for row in rows:
             if not isinstance(row, RotationGenerateTankAssignmentEvidence):
                 raise TypeError(
-                    "Tank Generate assignment evidence rows must be "
-                    "RotationGenerateTankAssignmentEvidence"
+                    "Tank Generate assignment evidence rows must be RotationGenerateTankAssignmentEvidence"
                 )
             key = (row.encounter_id.casefold(), row.member_id.casefold())
             if key in seen:
@@ -256,16 +222,13 @@ class RotationGenerateTankAssignmentContextSupport:
     ) -> RotationGenerateTankObligationContext | None:
         encounter_id = str(evidence_bundle.encounter_id or "").strip()
         matches = tuple(
-            row
-            for row in self._evidence
-            if row.encounter_id.casefold() == encounter_id.casefold()
+            row for row in self._evidence if row.encounter_id.casefold() == encounter_id.casefold()
         )
         if not matches:
             return None
         if len(matches) > 1:
             raise ValueError(
-                "multiple Tank assignment evidence rows match selected encounter; "
-                "member identity must be unambiguous"
+                "multiple Tank assignment evidence rows match selected encounter; member identity must be unambiguous"
             )
         row = matches[0]
 
@@ -279,15 +242,12 @@ class RotationGenerateTankAssignmentContextSupport:
         if build is None or unresolved:
             detail = "; ".join(unresolved) or "canonical build unavailable"
             raise ValueError(
-                "cannot derive Tank assignment obligations because saved-build adaptation "
-                "is unresolved: " + detail
+                "cannot derive Tank assignment obligations because saved-build adaptation is unresolved: "
+                + detail
             )
 
         defensive_obligations = self._defensive_obligations(row, evidence_bundle)
-        taunt_maintenance_policies = self._taunt_maintenance_policies(
-            row,
-            evidence_bundle,
-        )
+        taunt_maintenance_policies = self._taunt_maintenance_policies(row, evidence_bundle)
         bundle = self.bundle_service.compose(
             build=build,
             member_id=row.member_id,
@@ -322,18 +282,20 @@ class RotationGenerateTankAssignmentContextSupport:
             encounter_id=row.encounter_id,
             health_threshold_projection=thresholds,
         )
+        transition_timing = self.encounter_transition_timing_service.project(
+            encounter_id=row.encounter_id,
+            health_threshold_projection=thresholds,
+            horizon=horizon,
+        )
         unresolved: list[str] = []
         for policy in symbolic:
             materialized = self.horizon_policy_service.materialize(
                 policy=policy,
                 horizon=horizon,
                 health_threshold_projection=thresholds,
+                transition_timing=transition_timing,
             )
-            if not getattr(materialized, "resolved", False) or getattr(
-                materialized,
-                "policy",
-                None,
-            ) is None:
+            if not getattr(materialized, "resolved", False) or getattr(materialized, "policy", None) is None:
                 unresolved.extend(
                     str(item).strip()
                     for item in getattr(materialized, "unresolved", ())
@@ -390,9 +352,7 @@ class RotationGenerateTankAssignmentContextSupport:
                     "canonical health-threshold projection is unavailable for Tank defensive timing"
                 )
             else:
-                threshold_encounter = str(
-                    getattr(thresholds, "encounter_id", "") or ""
-                ).strip()
+                threshold_encounter = str(getattr(thresholds, "encounter_id", "") or "").strip()
                 if threshold_encounter.casefold() != row.encounter_id.casefold():
                     unresolved.append(
                         "canonical health-threshold projection encounter does not match Tank assignment evidence"
