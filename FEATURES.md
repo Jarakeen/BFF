@@ -204,6 +204,9 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Save generated team builds back to roster characters
 - Import external raid rosters by merge rather than replacement, preserving unrelated players, teams, characters, and saved builds
 - Imported build/team assignments are attached to the canonical gamertag/character/build identities when the import can resolve them uniquely
+- Personnel keeps explicit **Known Aliases** for old gamertags, Discord names, and raid-sheet names; aliases are learned from manual entry, renames, or explicit merges rather than guessed from similarity
+- **Merge Players…** consolidates two user-confirmed Personnel identities, preserves their teams and assignment state, moves canonical characters/builds under the kept player identity, creates backups, and remembers discarded names as future import aliases
+- Future roster imports reuse exact learned aliases as player identity evidence, including all canonical characters already known for that player
 - Assignments persist separately for each **roster member + team**, so one character can have different normal jobs on different teams
 - Each team's assignment can optionally have a per-boss override; unchanged boss fields inherit the team's default job, gear need, and notes
 - The Assignments surface uses a simple **Boss (optional)** selector with **Team Default (most common)** as the safe starting state; changing teams automatically returns to Team Default
@@ -346,7 +349,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Separate attacker Damage Done stage
 - Critical eligibility and expected-critical handling
 - Critical resistance handling
-- Resistance and penetration mitigation
+- Resistance / penetration mitigation
 - Target Damage Taken stage
 - Final damage calculation
 - Healing calculations
