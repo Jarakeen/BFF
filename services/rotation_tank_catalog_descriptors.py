@@ -49,7 +49,7 @@ ROTATION_TANK_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         domain="rotation",
         purpose=(
             "Resolve source-backed tank taunt duration only when canonical TAUNT identity and "
-            "canonical duration evidence agree unambiguously, without creating refresh policy."
+            "canonical temporal evidence agree unambiguously, without creating refresh policy."
         ),
         implementation_path="services.rotation_tank_taunt_duration_service",
         inputs=(
@@ -64,11 +64,41 @@ ROTATION_TANK_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=False,
         evidence_class=EvidenceClass.MIXED,
         notes=(
-            "The service promotes a duration only when the named source has a canonical TAUNT "
-            "utility component and every positive canonical duration exposed for that source "
-            "collapses to one value. Distinct durations fail closed pending component-specific "
-            "temporal binding. A resolved duration is evidence only and does not imply recast "
-            "cadence, safety margin, continuous ownership, immunity, or overtaunt semantics."
+            "The strongest path binds duration directly to coefficient-owned text that also proves "
+            "TAUNT identity; generic duration evidence is only a conservative fallback. A resolved "
+            "duration is evidence only and does not imply recast cadence, safety margin, continuous "
+            "ownership, immunity, or overtaunt semantics."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="rotation.tank.taunt_maintenance_obligation",
+        domain="rotation",
+        purpose=(
+            "Assess continuous target-specific tank taunt ownership across an explicit reviewed "
+            "responsibility window using canonical taunt duration and exact scheduled casts."
+        ),
+        implementation_path="services.rotation_tank_taunt_maintenance_service",
+        inputs=(
+            "GeneratedRotationCandidate",
+            "RotationTankTauntMaintenanceRequirement",
+            "RotationTankTauntDurationResolution",
+            "RotationAction.target_key",
+        ),
+        outputs=(
+            "RotationTankTauntMaintenanceAssessment",
+            "RotationCandidateRoleHardObligationEvidence",
+        ),
+        dependencies=("rotation.tank.taunt_duration",),
+        responsibilities=("rotation_tank_target_specific_taunt_maintenance_hard_obligation",),
+        roles=("Tank",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "The requirement explicitly owns target identity and the active responsibility window. "
+            "Only exact matching source-skill casts on that target contribute canonical-duration "
+            "coverage. Any uncovered interval fails the obligation. The service does not choose "
+            "refresh lead, target swaps, overtaunt/immunity behavior, or survivability policy."
         ),
     ),
     ServiceDescriptor(
@@ -98,6 +128,33 @@ ROTATION_TANK_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "an exact caller-owned target_key. The adapter emits application requirements only; "
             "it does not infer target identity, taunt duration, refresh cadence, continuous "
             "maintenance, or overtaunt/immunity semantics."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="rotation.tank.assignment_taunt_maintenance",
+        domain="rotation",
+        purpose=(
+            "Translate explicit provider-assignment ownership plus reviewed continuous target "
+            "ownership windows into tank taunt-maintenance requirements."
+        ),
+        implementation_path="services.rotation_assignment_taunt_maintenance_service",
+        inputs=(
+            "CharacterBuild",
+            "ProviderAssignment",
+            "RotationAssignmentTauntMaintenancePolicy",
+            "RotationAssignmentTauntMaintenanceWindow",
+        ),
+        outputs=("RotationAssignmentTauntMaintenanceProjection",),
+        dependencies=("rotation.tank.taunt_maintenance_obligation",),
+        responsibilities=("rotation_assignment_tank_taunt_maintenance_projection",),
+        roles=("Tank",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.POLICY,
+        notes=(
+            "Provider assignment proves who owns the target responsibility. Policy supplies the "
+            "source-backed taunt skill, exact target_key, and reviewed active windows. Duration "
+            "remains canonical mechanic evidence and refresh lead remains separate strategy policy."
         ),
     ),
     ServiceDescriptor(
@@ -134,6 +191,36 @@ ROTATION_TANK_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="rotation.tank.taunt_maintenance_candidate",
+        domain="rotation",
+        purpose=(
+            "Fill only real target-specific taunt-maintenance gaps by deriving exact application "
+            "claims from canonical duration plus explicit caller-owned refresh strategy."
+        ),
+        implementation_path="services.rotation_tank_taunt_maintenance_candidate_service",
+        inputs=(
+            "GeneratedRotationCandidate",
+            "RotationTankTauntMaintenanceRequirement",
+            "RotationTankTauntMaintenanceRefreshPolicy",
+            "RotationActionSlotRequirement",
+        ),
+        outputs=("RotationTankTauntMaintenanceCandidateProjection",),
+        dependencies=(
+            "rotation.tank.taunt_maintenance_obligation",
+            "rotation.tank.taunt_candidate_claim",
+        ),
+        responsibilities=("rotation_tank_taunt_maintenance_candidate_generation",),
+        roles=("Tank",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.POLICY,
+        notes=(
+            "Existing target-correct coverage is preserved. The caller explicitly owns refresh "
+            "lead and any required initial application timestamp. Derived claims never displace "
+            "occupied slots and are re-assessed against continuous maintenance after insertion."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="rotation.tank.taunt_family_projection",
         domain="rotation",
         purpose=(
@@ -160,6 +247,34 @@ ROTATION_TANK_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "Saved-build slot evidence and any explicit action target identity are carried through. "
             "Candidate-specific projection failures remain on that plan's unresolved channel "
             "instead of aborting otherwise valid sibling candidates."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="rotation.tank.taunt_maintenance_family_projection",
+        domain="rotation",
+        purpose=(
+            "Apply target-specific taunt-maintenance requirements and explicit refresh strategy "
+            "to each generated candidate through the role-neutral family projection hook."
+        ),
+        implementation_path="services.rotation_tank_taunt_maintenance_family_projector_service",
+        inputs=(
+            "GeneratedRotationCandidate",
+            "RotationTankTauntMaintenanceRequirement",
+            "RotationTankTauntMaintenanceRefreshPolicy",
+            "RotationActionSlotRequirement",
+            "RotationCandidateFamilyProjector",
+        ),
+        outputs=("GeneratedRotationCandidate",),
+        dependencies=("rotation.tank.taunt_maintenance_candidate",),
+        responsibilities=("rotation_tank_taunt_maintenance_family_projection",),
+        roles=("Tank",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.POLICY,
+        notes=(
+            "Maintenance is projected independently per sibling candidate before evaluation. "
+            "Candidates that already satisfy ownership are preserved; projection failures stay "
+            "candidate-local instead of aborting otherwise valid siblings."
         ),
     ),
     ServiceDescriptor(
