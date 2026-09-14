@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from services.btv_benchmark_evidence_service import BTVBenchmarkTemporalAssessment
 from services.team_provider_rotation_workload_service import (
     TeamProviderRotationWorkload,
     TeamProviderRotationWorkloadComparison,
@@ -30,6 +31,7 @@ class TeamProviderWorkloadExplanation:
     coverage: tuple[str, ...]
     workload: tuple[str, ...]
     blockers: tuple[str, ...]
+    calibration: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -43,10 +45,16 @@ class TeamProviderWorkloadComparisonExplanation:
 class TeamProviderWorkloadExplanationService:
     """Translate provider evidence for Comp Maker / Optimization surfaces."""
 
+    @staticmethod
+    def _canonical(value: object) -> str:
+        return "_".join(str(value or "").strip().casefold().replace("-", " ").split())
+
     @classmethod
     def describe(
         cls,
         result: TeamProviderRotationWorkload,
+        *,
+        benchmark_assessment: BTVBenchmarkTemporalAssessment | None = None,
     ) -> TeamProviderWorkloadExplanation:
         coverage: list[str] = []
         recipient = result.recipient_coverage_result
@@ -111,12 +119,18 @@ class TeamProviderWorkloadExplanationService:
         if result.ultimate_spent:
             workload.append(f"Ultimate spend: {result.ultimate_spent:g}.")
 
+        calibration = cls._render_benchmark_calibration(
+            result,
+            benchmark_assessment,
+        )
+
         return TeamProviderWorkloadExplanation(
             alternative_id=result.alternative_id,
             effect_key=result.effect_key,
             coverage=tuple(coverage),
             workload=tuple(workload),
             blockers=result.unresolved,
+            calibration=calibration,
         )
 
     @classmethod
@@ -166,6 +180,7 @@ class TeamProviderWorkloadExplanationService:
         workloads: tuple[TeamProviderRotationWorkload, ...],
         *,
         comparison: TeamProviderRotationWorkloadComparison | None = None,
+        benchmark_assessments: dict[str, BTVBenchmarkTemporalAssessment] | None = None,
     ) -> str:
         """Render exact workload evidence for shared Comp/Optimization cards."""
 
@@ -177,14 +192,29 @@ class TeamProviderWorkloadExplanationService:
                 "perform the job with the least disruption."
             )
 
+        calibration_by_id = dict(benchmark_assessments or {})
+        displayed_ids = {item.alternative_id for item in workloads}
+        hidden_calibration = sorted(set(calibration_by_id) - displayed_ids)
+        if hidden_calibration:
+            raise ValueError(
+                "BTV benchmark assessment references hidden workload alternatives: "
+                + ", ".join(hidden_calibration)
+            )
+
         sections: list[str] = []
         for workload in workloads:
-            explanation = cls.describe(workload)
+            explanation = cls.describe(
+                workload,
+                benchmark_assessment=calibration_by_id.get(workload.alternative_id),
+            )
             lines = [
                 explanation.alternative_id.upper(),
                 *explanation.coverage,
                 *explanation.workload,
             ]
+            if explanation.calibration:
+                lines.append("BTV benchmark calibration:")
+                lines.extend(f"• {item}" for item in explanation.calibration)
             if explanation.blockers:
                 lines.append("Blocked / unresolved:")
                 lines.extend(f"• {item}" for item in explanation.blockers)
@@ -206,12 +236,22 @@ class TeamProviderWorkloadExplanationService:
         *,
         comparison: TeamProviderRotationWorkloadComparison | None = None,
         policy: TeamProviderWorkloadPolicy | None = None,
+        benchmark_assessments: dict[str, BTVBenchmarkTemporalAssessment] | None = None,
     ) -> str:
         """Render projected candidates with explicit frontier and policy state."""
 
         analysis = TeamProviderWorkloadDecisionService.analyze(result)
         if not analysis.decisions:
             return cls.render_panel(())
+
+        calibration_by_id = dict(benchmark_assessments or {})
+        displayed_ids = {item.alternative_id for item in analysis.decisions}
+        hidden_calibration = sorted(set(calibration_by_id) - displayed_ids)
+        if hidden_calibration:
+            raise ValueError(
+                "BTV benchmark assessment references hidden candidate alternatives: "
+                + ", ".join(hidden_calibration)
+            )
 
         policy_result = (
             TeamProviderWorkloadPolicyService.select(analysis, policy)
@@ -224,6 +264,7 @@ class TeamProviderWorkloadExplanationService:
                 item,
                 policy_applied=policy is not None,
                 selected_by_policy=item.alternative_id in selected_ids,
+                benchmark_assessment=calibration_by_id.get(item.alternative_id),
             )
             for item in analysis.decisions
         ]
@@ -288,6 +329,7 @@ class TeamProviderWorkloadExplanationService:
         *,
         policy_applied: bool = False,
         selected_by_policy: bool = False,
+        benchmark_assessment: BTVBenchmarkTemporalAssessment | None = None,
     ) -> str:
         status = decision.status.value.upper()
         if selected_by_policy:
@@ -295,6 +337,10 @@ class TeamProviderWorkloadExplanationService:
         lines = [f"{decision.alternative_id.upper()} • {decision.effect_key} • {status}"]
 
         if decision.status is TeamProviderWorkloadDecisionStatus.REJECTED:
+            if benchmark_assessment is not None:
+                raise ValueError(
+                    "BTV benchmark assessment cannot attach to an unprojected candidate"
+                )
             lines.append("Candidate not projected:")
             lines.extend(f"• {item}" for item in decision.blockers)
             return "\n".join(lines)
@@ -302,9 +348,15 @@ class TeamProviderWorkloadExplanationService:
         if decision.workload is None:
             raise ValueError("projected provider decision is missing workload evidence")
 
-        explanation = cls.describe(decision.workload)
+        explanation = cls.describe(
+            decision.workload,
+            benchmark_assessment=benchmark_assessment,
+        )
         lines.extend(explanation.coverage)
         lines.extend(explanation.workload)
+        if explanation.calibration:
+            lines.append("BTV benchmark calibration:")
+            lines.extend(f"• {item}" for item in explanation.calibration)
 
         if decision.status is TeamProviderWorkloadDecisionStatus.FRONTIER:
             lines.append(
@@ -334,6 +386,39 @@ class TeamProviderWorkloadExplanationService:
             lines.extend(f"• {item}" for item in decision.blockers)
 
         return "\n".join(lines)
+
+    @classmethod
+    def _render_benchmark_calibration(
+        cls,
+        workload: TeamProviderRotationWorkload,
+        assessment: BTVBenchmarkTemporalAssessment | None,
+    ) -> tuple[str, ...]:
+        if assessment is None:
+            return ()
+        if cls._canonical(assessment.observation.effect_key) != cls._canonical(
+            workload.effect_key
+        ):
+            raise ValueError("BTV benchmark effect does not match provider workload effect")
+        temporal = workload.temporal_coverage_result
+        if temporal is None:
+            raise ValueError(
+                "BTV benchmark temporal assessment requires workload temporal coverage evidence"
+            )
+        if assessment.temporal_result != temporal:
+            raise ValueError(
+                "BTV benchmark assessment does not match the displayed workload timeline"
+            )
+
+        observation = assessment.observation
+        lines = [
+            f"{observation.encounter_label} • {observation.page} • {observation.source_file}",
+            *assessment.feedback,
+        ]
+        lines.extend(f"Unresolved calibration: {item}" for item in assessment.unresolved)
+        lines.append(
+            "Calibration evidence guides encounter policy; it does not redefine canonical ESO mechanics."
+        )
+        return tuple(lines)
 
     @classmethod
     def _render_comparison(
