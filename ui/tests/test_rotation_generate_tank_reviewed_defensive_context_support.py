@@ -45,10 +45,15 @@ def _bundle(encounter_id="taleria_hm"):
     return SimpleNamespace(encounter_id=encounter_id)
 
 
+def _obligation(obligation_id="block-heavy"):
+    return SimpleNamespace(obligation_id=obligation_id)
+
+
 def test_reviewed_defensive_fact_and_timing_inputs_are_derived_at_generate_time():
     assignment_bundle = _AssignmentBundleService()
+    obligation = _obligation()
     defensive_bundle = _DefensiveBundleService(
-        SimpleNamespace(obligations=("block-heavy",), unresolved=())
+        SimpleNamespace(obligations=(obligation,), unresolved=())
     )
     support = RotationGenerateTankAssignmentContextSupport(
         database_path="eso.db",
@@ -73,7 +78,7 @@ def test_reviewed_defensive_fact_and_timing_inputs_are_derived_at_generate_time(
 
     result = support.context_for(object(), _bundle())
 
-    assert result.defensive_obligations == ("block-heavy",)
+    assert result.defensive_obligations == (obligation,)
     assert defensive_bundle.calls == [
         {
             "guide": guide,
@@ -81,7 +86,7 @@ def test_reviewed_defensive_fact_and_timing_inputs_are_derived_at_generate_time(
             "policies": (policy,),
         }
     ]
-    assert assignment_bundle.calls[0]["defensive_obligations"] == ("block-heavy",)
+    assert assignment_bundle.calls[0]["defensive_obligations"] == (obligation,)
 
 
 def test_unresolved_reviewed_defensive_projection_fails_closed_before_assignment_bundle():
@@ -121,7 +126,7 @@ def test_explicit_and_reviewed_defensive_paths_cannot_compete():
         RotationGenerateTankAssignmentEvidence(
             encounter_id="taleria_hm",
             member_id="tank-a",
-            defensive_obligations=(object(),),
+            defensive_obligations=(_obligation(),),
             defensive_guide=_guide(),
             defensive_facts=(object(),),
             defensive_timing_policies=(object(),),
