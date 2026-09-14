@@ -37,6 +37,9 @@ class ExtremeRecoverySpecialBranch:
     condition: str | None = None
     search_state_rule: str | None = None
     description: str = ""
+    formula_numerator: float | None = None
+    formula_denominator: float | None = None
+    formula_resource: str | None = None
 
 
 @dataclass(frozen=True)
@@ -159,8 +162,6 @@ class ExtremeGearSetRecoverySpecialBranchService:
                     percent = 15.0 if can_raise else None
                     condition = named.replace(" ", "_") if can_raise else None
                 elif rule == "allows_two_mundus":
-                    # A second Mundus can directly raise any Recovery objective; exact
-                    # value belongs to the Mundus composer, not this classifier.
                     can_raise = True
                     condition = "second_mundus"
                 return ExtremeRecoverySpecialBranch(
@@ -216,6 +217,23 @@ class ExtremeGearSetRecoverySpecialBranchService:
             cap_match = re.search(r"maximum of\s+(\d+(?:\.\d+)?)", text)
             ceiling = float(cap_match.group(1)) if cap_match else None
             return ExtremeRecoverySpecialBranch(set_name, int(piece_count), ExtremeRecoverySpecialBranchKind.FORMULA, True, flat_ceiling=ceiling, condition="resistance_scaled", description=description)
+
+        scaled_resource = re.search(
+            rf"(?:gain|adds?|receive)\s+(?P<numerator>\d+(?:\.\d+)?)\s+{target_pattern}\s+for every\s+(?P<denominator>\d+(?:\.\d+)?)\s+max\s+{resource}\b",
+            text,
+        )
+        if scaled_resource:
+            return ExtremeRecoverySpecialBranch(
+                set_name=set_name,
+                piece_count=int(piece_count),
+                kind=ExtremeRecoverySpecialBranchKind.FORMULA,
+                can_raise_self=True,
+                condition=f"max_{resource}_scaled",
+                description=description,
+                formula_numerator=float(scaled_resource.group("numerator")),
+                formula_denominator=float(scaled_resource.group("denominator")),
+                formula_resource=f"max_{resource}",
+            )
 
         percent_match = re.search(
             r"(?:increase(?:s|d)?|increasing)\s+(?:your\s+)?(?:" + shared_pattern + "|" + re.escape(target_phrase) + r")\s+by\s+(\d+(?:\.\d+)?)%",
