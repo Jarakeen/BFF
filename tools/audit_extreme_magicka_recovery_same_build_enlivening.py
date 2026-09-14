@@ -325,9 +325,9 @@ def _build_max_magicka_witness(
     if not arcane_slot_legal:
         unresolved.append("Arcane Supremacy cannot coexist with the selected Recovery CP loadout")
 
-    # The locked high-reference Recovery route consumes all six active-bar slots.
-    # Magicka Controller therefore contributes exactly zero in this same-build
-    # witness. Zero is a resolved legal state, not an unresolved mechanic.
+    # This historical Enlivening witness intentionally uses zero Mages Guild slots.
+    # Later combined-bar proofs established the actual Recovery-maximizing active bar
+    # separately, so this existence witness must not be read as a global six-slot claim.
     mages_guild_slots = 0
     mages_guild_percent = 0.0
 
