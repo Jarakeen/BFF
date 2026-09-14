@@ -4,6 +4,10 @@ import sys
 from types import SimpleNamespace
 
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
+from services.team_provider_workload_candidate_service import (
+    TeamProviderWorkloadCandidateRejection,
+    TeamProviderWorkloadCandidateResult,
+)
 import ui.team_provider_saved_rotation_support as support
 
 
@@ -153,6 +157,61 @@ def test_explicit_rotation_plans_bypass_saved_plan_discovery(monkeypatch):
 
     assert result == "result"
     assert captured["rotation_plans"] == ()
+
+
+def test_assigned_provider_bridge_merges_adapter_blockers_into_shared_candidate_result(monkeypatch):
+    selected = (object(),)
+    saved = (_plan("Magrat", "DF Healer"),)
+    adapter_rejection = TeamProviderWorkloadCandidateRejection(
+        alternative_id="major_slayer_provider",
+        effect_key="major_slayer",
+        blockers=("provider assignment is unresolved_selection, not assigned",),
+    )
+    generated_rejection = TeamProviderWorkloadCandidateRejection(
+        alternative_id="other",
+        effect_key="minor_courage",
+        blockers=("generated blocker",),
+    )
+    projection = SimpleNamespace(alternatives=(), rejected=(adapter_rejection,))
+
+    class _Adapter:
+        @classmethod
+        def project(cls, **kwargs):
+            assert kwargs["rotation_plans"] == saved
+            return projection
+
+    class _Page:
+        def __init__(self):
+            self.set_calls = []
+
+        def generate_provider_workload_candidates(self, **kwargs):
+            assert kwargs["rotation_plans"] == saved
+            assert kwargs["alternatives"] == ()
+            return TeamProviderWorkloadCandidateResult(
+                projections=(),
+                rejected=(generated_rejection,),
+            )
+
+        def set_provider_workload_candidates(self, result, *, policy=None):
+            self.set_calls.append((result, policy))
+
+    monkeypatch.setattr(support, "TeamProviderAssignmentWorkloadAdapterService", _Adapter)
+    monkeypatch.setattr(support, "_saved_rotation_plans", lambda builds: saved if builds == selected else ())
+    page = _Page()
+
+    result = support._generate_assigned_provider_workload_candidates(
+        page,
+        selected_builds=selected,
+        assignments=(),
+        effect_policies=(),
+        workload_policies=(),
+        progression_by_identity={},
+        rotation_plans=None,
+        policy="raid policy",
+    )
+
+    assert result.rejected == (adapter_rejection, generated_rejection)
+    assert page.set_calls == [(result, "raid policy")]
 
 
 def test_installer_orders_saved_rotation_bridge_after_workload_support():
