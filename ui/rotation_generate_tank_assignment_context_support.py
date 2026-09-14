@@ -11,6 +11,9 @@ from models.build_model import PlayerBuild
 from services.encounter_boss_guide import EncounterBossGuide
 from services.encounter_evidence import ReconciledEncounterFact
 from services.encounter_provider_assignment import ProviderAssignment
+from services.raid_tank_encounter_responsibility_binding_service import (
+    RaidTankEncounterBoundResponsibility,
+)
 from services.rotation_assignment_taunt_maintenance_horizon_policy_service import (
     RotationAssignmentTauntMaintenanceHorizonPolicy,
     RotationAssignmentTauntMaintenanceHorizonPolicyService,
@@ -69,6 +72,11 @@ class RotationGenerateTankAssignmentEvidence:
     caller has chosen to schedule those responsibilities. No strategy is inferred when
     those fields are empty.
 
+    Encounter responsibility lanes may additionally carry reviewed non-rotation actions
+    such as add positioning/facing. Those responsibilities remain contextual Generate
+    evidence unless a dedicated rotation-evaluable obligation service exists; carrying
+    them must not pretend a skill sequence can prove spatial mechanic execution.
+
     Concrete taunt-maintenance policies retain exact numeric windows. Reviewed symbolic
     taunt-maintenance policies may end at ``encounter_end`` or an exact reviewed health
     threshold, and may start at a reviewed post-transition resume boundary. They are
@@ -84,6 +92,7 @@ class RotationGenerateTankAssignmentEvidence:
     encounter_id: str
     member_id: str
     assignments: tuple[ProviderAssignment, ...] = ()
+    encounter_responsibilities: tuple[RaidTankEncounterBoundResponsibility, ...] = ()
     taunt_policies: tuple[RotationAssignmentTauntPolicy, ...] = ()
     taunt_maintenance_policies: tuple[RotationAssignmentTauntMaintenancePolicy, ...] = ()
     taunt_maintenance_horizon_policies: tuple[
@@ -112,6 +121,17 @@ class RotationGenerateTankAssignmentEvidence:
         object.__setattr__(self, "encounter_id", encounter_id)
         object.__setattr__(self, "member_id", member_id)
         object.__setattr__(self, "assignments", tuple(self.assignments))
+        responsibilities = tuple(self.encounter_responsibilities)
+        for row in responsibilities:
+            if row.encounter_id.casefold() != encounter_id.casefold():
+                raise ValueError(
+                    "Tank Generate encounter responsibility does not match assignment evidence encounter"
+                )
+            if row.member_id.casefold() != member_id.casefold():
+                raise ValueError(
+                    "Tank Generate encounter responsibility does not match assignment evidence member"
+                )
+        object.__setattr__(self, "encounter_responsibilities", responsibilities)
         object.__setattr__(self, "taunt_policies", tuple(self.taunt_policies))
         object.__setattr__(self, "taunt_maintenance_policies", tuple(self.taunt_maintenance_policies))
         object.__setattr__(
@@ -259,6 +279,7 @@ class RotationGenerateTankAssignmentContextSupport:
         )
         return RotationGenerateTankObligationContext(
             encounter_id=bundle.encounter_id,
+            encounter_responsibilities=row.encounter_responsibilities,
             taunt_application_requirements=bundle.taunt_application_requirements,
             taunt_maintenance_requirements=bundle.taunt_maintenance_requirements,
             defensive_obligations=bundle.defensive_obligations,
