@@ -10,15 +10,27 @@ from services.rotation_tank_defensive_obligation_service import (
 )
 
 
+_TANK_TARGETS = frozenset(
+    {
+        "tank",
+        "main tank",
+        "off tank",
+        "taunt target",
+    }
+)
+
+
 @dataclass(frozen=True)
 class RotationTankEncounterDefensiveWindowBinding:
     """Clock placement for one already-reviewed encounter mechanic occurrence.
 
-    Encounter evidence owns what responses are supported. This binding owns only
-    where one reviewed occurrence lands on the rotation timeline. It does not
+    Encounter evidence owns what responses are supported and who they apply to.
+    This binding owns only which reviewed fact is being scheduled, the identity of
+    this occurrence, and where it lands on the rotation timeline. It does not
     reinterpret mechanic prose or manufacture timing from encounter descriptions.
     """
 
+    occurrence_id: str
     fact_type: str
     fact_key: str
     window_start_seconds: float
@@ -27,12 +39,16 @@ class RotationTankEncounterDefensiveWindowBinding:
     bar: str | None = None
 
     def __post_init__(self) -> None:
+        occurrence_id = str(self.occurrence_id or "").strip()
         fact_type = str(self.fact_type or "").strip().casefold()
         fact_key = str(self.fact_key or "").strip().casefold()
+        if not occurrence_id:
+            raise ValueError("tank encounter defensive binding occurrence_id is required")
         if not fact_type:
             raise ValueError("tank encounter defensive binding fact_type is required")
         if not fact_key:
             raise ValueError("tank encounter defensive binding fact_key is required")
+        object.__setattr__(self, "occurrence_id", occurrence_id)
         object.__setattr__(self, "fact_type", fact_type)
         object.__setattr__(self, "fact_key", fact_key)
 
@@ -68,12 +84,13 @@ class RotationTankEncounterDefensiveProjection:
 
 
 class RotationTankEncounterDefensiveObligationService:
-    """Project structured reviewed encounter evidence into defensive obligations.
+    """Project structured reviewed encounter evidence into tank obligations.
 
-    This service deliberately accepts only structured block/dodge fields. Free-form
-    prose remains presentation/research evidence until separately reviewed into a
-    structured fact. Timing remains caller-bound because many encounter facts prove
-    mechanic behavior without proving an exact clock occurrence.
+    Only explicit structured fields may prove block/dodge response semantics and
+    tank applicability. Free-form prose remains presentation/research evidence until
+    separately reviewed into structured facts. Timing remains caller-bound because
+    many encounter facts prove mechanic behavior without proving an exact clock
+    occurrence.
     """
 
     @staticmethod
@@ -109,7 +126,15 @@ class RotationTankEncounterDefensiveObligationService:
                 ),
             )
 
-        allowed = cls_allowed_actions(value)
+        if not _explicit_tank_applicability(value):
+            return RotationTankEncounterDefensiveProjection(
+                obligation=None,
+                unresolved=(
+                    f"{fact.fact_key}: structured encounter evidence does not explicitly apply the response to a tank",
+                ),
+            )
+
+        allowed = _explicit_defensive_actions(value)
         if not allowed:
             return RotationTankEncounterDefensiveProjection(
                 obligation=None,
@@ -129,7 +154,9 @@ class RotationTankEncounterDefensiveObligationService:
                 if item
             )
         )
-        obligation_id = f"{fact.encounter_id}:{fact_type}:{fact_key}"
+        obligation_id = (
+            f"{fact.encounter_id}:{fact_type}:{fact_key}:{binding.occurrence_id}"
+        )
         return RotationTankEncounterDefensiveProjection(
             obligation=RotationTankDefensiveObligation(
                 obligation_id=obligation_id,
@@ -143,7 +170,38 @@ class RotationTankEncounterDefensiveObligationService:
         )
 
 
-def cls_allowed_actions(value: dict) -> tuple[RotationActionKind, ...]:
+def _normalize_token(value: object) -> str:
+    return str(value or "").strip().casefold().replace("_", " ").replace("-", " ")
+
+
+def _explicit_tank_applicability(value: dict) -> bool:
+    """Accept only structured fields that explicitly include a tank recipient."""
+
+    if value.get("targets_every_player") is True:
+        return True
+
+    scalar_fields = (
+        "target",
+        "target_role",
+        "tracking_target",
+        "veteran_tracking_target",
+        "hardmode_additional_tracking_target",
+    )
+    for field in scalar_fields:
+        if _normalize_token(value.get(field)) in _TANK_TARGETS:
+            return True
+
+    for field in ("targets", "target_roles", "tracking_targets"):
+        raw_values = value.get(field)
+        if not isinstance(raw_values, (list, tuple)):
+            continue
+        if any(_normalize_token(item) in _TANK_TARGETS for item in raw_values):
+            return True
+
+    return False
+
+
+def _explicit_defensive_actions(value: dict) -> tuple[RotationActionKind, ...]:
     """Read only explicit structured defensive response fields."""
 
     actions: list[RotationActionKind] = []
@@ -151,7 +209,7 @@ def cls_allowed_actions(value: dict) -> tuple[RotationActionKind, ...]:
     responses = value.get("responses")
     if isinstance(responses, (list, tuple)):
         for raw in responses:
-            response = str(raw or "").strip().casefold().replace("_", " ")
+            response = _normalize_token(raw)
             if response == "block" and RotationActionKind.BLOCK not in actions:
                 actions.append(RotationActionKind.BLOCK)
             elif response in {"dodge", "roll dodge"} and RotationActionKind.DODGE not in actions:
