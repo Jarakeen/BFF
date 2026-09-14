@@ -40,6 +40,29 @@ def test_assignment_actions_keep_flat_card_and_remove_all_header_content():
     assert "actions.setRowStretch(1, 1)" in source
 
 
+def test_team_summary_uses_plain_body_heading_not_button_like_header_strip():
+    source = Path("ui/roster_assignment_action_support.py").read_text(encoding="utf-8")
+
+    assert "_flatten_team_summary_header(self)" in source
+    assert 'title = QLabel("Team Summary")' in source
+    assert 'title.setProperty("cardTitle", True)' in source
+    assert "card.body_layout.insertWidget(0, title)" in source
+    assert "card.header.setMaximumHeight(0)" in source
+
+
+def test_assignment_actions_do_not_show_hover_panels_over_the_table():
+    action_source = Path("ui/roster_assignment_action_support.py").read_text(encoding="utf-8")
+    persistence_source = Path("ui/roster_assignment_persistence_support.py").read_text(encoding="utf-8")
+    encounter_source = Path("ui/roster_encounter_assignment_context_support.py").read_text(encoding="utf-8")
+    team_source = Path("ui/roster_team_assignment_filter_support.py").read_text(encoding="utf-8")
+
+    assert 'button.setToolTip("")' in action_source
+    assert '_field_tooltip' not in persistence_source
+    assert 'combo.setToolTip("")' in persistence_source
+    assert 'combo.setToolTip("")' in encounter_source
+    assert 'combo.setToolTip("")' in team_source
+
+
 def test_save_and_clear_use_selected_team_and_optional_boss_context():
     source = Path("ui/roster_assignment_action_support.py").read_text(encoding="utf-8")
 
