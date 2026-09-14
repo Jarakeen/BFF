@@ -99,3 +99,28 @@ def test_runtime_action_materialization_is_catalogued() -> None:
     assert "RotationRuntimeActionMaterialization" in descriptor.outputs
     assert "RotationAction" in descriptor.outputs
     assert "RotationPlan" in descriptor.outputs
+
+
+def test_runtime_application_pipeline_is_catalogued() -> None:
+    descriptor = SERVICE_CATALOG.get("rotation.runtime.application_pipeline")
+
+    assert descriptor is not None
+    assert descriptor.implementation_path == (
+        "services.rotation_runtime_application_pipeline_service"
+    )
+    assert descriptor.dependencies == (
+        "rotation.runtime.triggered_intent_projection",
+        "rotation.runtime.trigger_condition_resolution",
+        "rotation.runtime.execution_strategy_resolution",
+        "rotation.runtime.executable_choice_resolution",
+        "rotation.runtime.action_materialization",
+    )
+    assert descriptor.responsibilities == (
+        "rotation_runtime_triggered_application_orchestration",
+    )
+    assert descriptor.encounter_aware is True
+    assert "RotationRuntimeTriggeredIntent" in descriptor.inputs
+    assert "RotationRuntimeTriggerObservation" in descriptor.inputs
+    assert "RotationRuntimeApplicationPipelineResult" in descriptor.outputs
+    assert "RotationRuntimeIntentApplication" in descriptor.outputs
+    assert "RotationPlan" in descriptor.outputs
