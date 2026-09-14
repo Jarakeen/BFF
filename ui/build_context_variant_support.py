@@ -249,8 +249,12 @@ def _build_variants_card(self):
         "QPushButton:pressed { background-color: #B98027; }"
     )
     add_build = FoundryButton("+ Add New Build", role=ButtonRole.SECONDARY, compact=True)
-    save = FoundryButton("Save This Build", role=ButtonRole.PRIMARY, compact=True)
-    cancel = FoundryButton("Cancel", role=ButtonRole.SECONDARY, compact=True)
+    save = FoundryButton("Save This Build", role=ButtonRole.SUCCESS, compact=False)
+    cancel = FoundryButton("Cancel", role=ButtonRole.DANGER, compact=False)
+    save.setMinimumWidth(150)
+    cancel.setMinimumWidth(110)
+    save.setToolTip("Save all changes to this build.")
+    cancel.setToolTip("Discard unsaved changes and reload the saved build.")
 
     add_variant.clicked.connect(self.add_boss_loadout)
     add_build.clicked.connect(self._handle_add_build)
@@ -266,6 +270,8 @@ def _build_variants_card(self):
     card.addLayout(body)
 
     self.add_context_variant_button = add_variant
+    self.save_build_button = save
+    self.cancel_build_button = cancel
     return card
 
 
@@ -314,8 +320,6 @@ def install() -> None:
     def model_with_context_variants(self):
         model = original_model(self)
         model.ContextVariants = [card.value for card in self._boss_cards]
-        # New saves use the generalized variant authority. Legacy BossLoadouts are
-        # still read/migrated by PlayerBuild.from_dict, but we do not dual-write.
         model.BossLoadouts = []
         return model
 
