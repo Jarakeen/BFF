@@ -1,4 +1,20 @@
 {
   "schema_version": 1,
-  "policies": []
+  "policies": [
+    {
+      "kind": "taunt_maintenance_horizon",
+      "requirement_id": "taleria_hm:tank:boss_taunt",
+      "encounter_id": "taleria_hm",
+      "requirement_type": "taunt",
+      "source": "Reviewed 2026-09-14: The Tank Club Dreadsail Reef Trial Tank Guide says Tideborn Taleria Boss 3 Basics: taunt the boss and stand to the right of the group; ESO-Hub Dreadsail Reef Tideborn Taleria guide says Taleria attacks the player with aggro (the tank, ideally), Sea Behemoths spawn on the main tank/player with Taleria aggro, and Crashing Wave tracks the main tank. Sources: https://thetankclub.com/eso-dreadsail-reef-trial-tank-guide/ ; https://eso-hub.com/en/guides/Dreadsail-Reef-Guide/boss-3-tideborn-taleria",
+      "windows": [
+        {
+          "occurrence_id": "boss_ownership",
+          "target_key": "tideborn_taleria",
+          "active_start_seconds": 0.0,
+          "end_reference": "encounter_end"
+        }
+      ]
+    }
+  ]
 }
