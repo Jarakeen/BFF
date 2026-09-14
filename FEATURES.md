@@ -69,6 +69,9 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Build comparison
 - Build performance information
 - Save generated or modified builds for later reuse
+- **Copy Build To...** creates an independent same-class build for another canonical character without copying player identity, character progression, team assignments, or Ready state
+- **Save as Template** stores reusable role-level build setup with explicit class overlays; Templates are browsable from the Builds view and can be applied to another character
+- Cross-class template application keeps shared role setup but fails closed on class/skill state when no matching class overlay exists, leaving those slots for review instead of guessing
 
 ---
 
@@ -517,7 +520,6 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Data coverage audits
 - Missing / unresolved data reporting
 - Local raid-workbook import normalizes human spreadsheet layouts into reviewed roster/build candidates without writing source workbooks or resetting the application database
-
 ---
 
 ## ESO Logs / Real Combat Validation
