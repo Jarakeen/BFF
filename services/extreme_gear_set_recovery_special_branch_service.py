@@ -76,7 +76,9 @@ class ExtremeGearSetRecoverySpecialBranchService:
     @staticmethod
     def _shared_recovery_pattern() -> str:
         resource = r"(?:health|magicka|stamina)"
-        return rf"{resource}(?:,\s+{resource})*(?:,?\s+and\s+{resource})\s+recovery"
+        grouped = rf"{resource}(?:,\s+{resource})*(?:,?\s+and\s+{resource})\s+recovery"
+        repeated = rf"{resource}\s+recovery(?:,\s+{resource}\s+recovery)*(?:,?\s+and\s+{resource}\s+recovery)"
+        return rf"(?:{grouped}|{repeated})"
 
     @classmethod
     def _has_shared_recovery(cls, text: str, resource: str) -> bool:
@@ -102,11 +104,19 @@ class ExtremeGearSetRecoverySpecialBranchService:
         target = re.escape(f"{resource} recovery")
         shared = cls._shared_recovery_pattern()
         before = re.search(
-            rf"(?:gain|adds?|receive)\s+(?:\d+(?:\.\d+)?-)?(?P<value>\d+(?:\.\d+)?)\s+(?:{target}|{shared})\b",
+            rf"(?:gain|gains|grant|grants|granting|adds?|receive)\s+(?:\d+(?:\.\d+)?-)?(?P<value>\d+(?:\.\d+)?)\s+(?:{target}|{shared})\b",
             clause,
         )
         if before:
             return float(before.group("value"))
+        adjacent = re.search(
+            rf"(?P<value>\d+(?:\.\d+)?)\s+(?:{target}|{shared})\b",
+            clause,
+        )
+        if adjacent:
+            prefix = clause[: adjacent.start()]
+            if re.search(r"\b(?:gain|gains|grant|grants|granting|adds?|receive)\b", prefix):
+                return float(adjacent.group("value"))
         parallel = re.search(
             rf"\band\s+(?:\d+(?:\.\d+)?-)?(?P<value>\d+(?:\.\d+)?)\s+(?:{target}|{shared})\b",
             clause,
@@ -120,7 +130,7 @@ class ExtremeGearSetRecoverySpecialBranchService:
         if after:
             return float(after.group("value"))
         shared_before = re.search(
-            rf"(?:gain|adds?|receive)\s+(?P<value>\d+(?:\.\d+)?)\s+{shared}\b",
+            rf"(?:gain|gains|grant|grants|granting|adds?|receive)\s+(?P<value>\d+(?:\.\d+)?)\s+{shared}\b",
             clause,
         )
         return float(shared_before.group("value")) if shared_before else None
@@ -176,7 +186,13 @@ class ExtremeGearSetRecoverySpecialBranchService:
                 )
 
         if "cannot affect yourself" in text or "cannot affect self" in text:
-            return ExtremeRecoverySpecialBranch(set_name, int(piece_count), ExtremeRecoverySpecialBranchKind.SELF_INELIGIBLE, False, description=description)
+            return ExtremeRecoverySpecialBranch(
+                set_name,
+                int(piece_count),
+                ExtremeRecoverySpecialBranchKind.SELF_INELIGIBLE,
+                False,
+                description=description,
+            )
 
         target_phrase = f"{resource} recovery"
         shared_recovery = cls._has_shared_recovery(text, resource)
@@ -189,7 +205,15 @@ class ExtremeGearSetRecoverySpecialBranchService:
         for phrase in named_buff:
             if phrase in text:
                 percent = 30.0 if phrase.startswith("major") else 15.0
-                return ExtremeRecoverySpecialBranch(set_name, int(piece_count), ExtremeRecoverySpecialBranchKind.NAMED_BUFF, True, percent_ceiling=percent, condition=phrase.replace(" ", "_"), description=description)
+                return ExtremeRecoverySpecialBranch(
+                    set_name,
+                    int(piece_count),
+                    ExtremeRecoverySpecialBranchKind.NAMED_BUFF,
+                    True,
+                    percent_ceiling=percent,
+                    condition=phrase.replace(" ", "_"),
+                    description=description,
+                )
         if not relevant:
             return None
 
@@ -211,12 +235,26 @@ class ExtremeGearSetRecoverySpecialBranchService:
             "reduce your health, magicka, and stamina recovery",
         )
         if negative_recovery or any(marker in text for marker in negative_markers):
-            return ExtremeRecoverySpecialBranch(set_name, int(piece_count), ExtremeRecoverySpecialBranchKind.NEGATIVE_ONLY, False, description=description)
+            return ExtremeRecoverySpecialBranch(
+                set_name,
+                int(piece_count),
+                ExtremeRecoverySpecialBranchKind.NEGATIVE_ONLY,
+                False,
+                description=description,
+            )
 
         if "sum total physical resistance and spell resistance" in text:
             cap_match = re.search(r"maximum of\s+(\d+(?:\.\d+)?)", text)
             ceiling = float(cap_match.group(1)) if cap_match else None
-            return ExtremeRecoverySpecialBranch(set_name, int(piece_count), ExtremeRecoverySpecialBranchKind.FORMULA, True, flat_ceiling=ceiling, condition="resistance_scaled", description=description)
+            return ExtremeRecoverySpecialBranch(
+                set_name,
+                int(piece_count),
+                ExtremeRecoverySpecialBranchKind.FORMULA,
+                True,
+                flat_ceiling=ceiling,
+                condition="resistance_scaled",
+                description=description,
+            )
 
         scaled_resource = re.search(
             rf"(?:gain|adds?|receive)\s+(?P<numerator>\d+(?:\.\d+)?)\s+{target_pattern}\s+for every\s+(?P<denominator>\d+(?:\.\d+)?)\s+max\s+{resource}\b",
@@ -236,18 +274,34 @@ class ExtremeGearSetRecoverySpecialBranchService:
             )
 
         percent_match = re.search(
-            r"(?:increase(?:s|d)?|increasing)\s+(?:your\s+)?(?:" + shared_pattern + "|" + re.escape(target_phrase) + r")\s+by\s+(\d+(?:\.\d+)?)%",
+            r"(?:increase(?:s|d)?|increasing)\s+(?:your\s+)?(?:"
+            + shared_pattern
+            + "|"
+            + re.escape(target_phrase)
+            + r")\s+by\s+(\d+(?:\.\d+)?)%",
             text,
         )
         if percent_match:
-            return ExtremeRecoverySpecialBranch(set_name, int(piece_count), ExtremeRecoverySpecialBranchKind.CONDITIONAL_PERCENT, True, percent_ceiling=float(percent_match.group(1)), description=description)
+            return ExtremeRecoverySpecialBranch(
+                set_name,
+                int(piece_count),
+                ExtremeRecoverySpecialBranchKind.CONDITIONAL_PERCENT,
+                True,
+                percent_ceiling=float(percent_match.group(1)),
+                description=description,
+            )
 
         if "stack" in text and relevant:
             up_to = re.search(r"recovery[^.]{0,100}?up to\s+(\d+(?:\.\d+)?)", text)
             ceiling = float(up_to.group(1)) if up_to else None
             per_stack = None
             if ceiling is None:
-                counts = [int(v) for v in re.findall(r"up to\s+(\d+)\s+(?:stacks(?:\s+max)?|times)", text)]
+                counts = [
+                    int(v)
+                    for v in re.findall(
+                        r"up to\s+(\d+)\s+(?:stacks(?:\s+max)?|times)", text
+                    )
+                ]
                 per_stack_after = re.search(
                     rf"(?:each stack[^.]*?|(?:{target_pattern}|{shared_pattern})[^.]*?)(?:{target_pattern}|{shared_pattern})?[^.]*?\bby\s+(?P<value>\d+(?:\.\d+)?)\s+per stack\b",
                     text,
@@ -264,7 +318,15 @@ class ExtremeGearSetRecoverySpecialBranchService:
                 if counts and per_stack:
                     ceiling = max(counts) * float(per_stack.group("value"))
             if ceiling is not None:
-                return ExtremeRecoverySpecialBranch(set_name, int(piece_count), ExtremeRecoverySpecialBranchKind.STACKED_FLAT, True, flat_ceiling=ceiling, condition="max_stacks", description=description)
+                return ExtremeRecoverySpecialBranch(
+                    set_name,
+                    int(piece_count),
+                    ExtremeRecoverySpecialBranchKind.STACKED_FLAT,
+                    True,
+                    flat_ceiling=ceiling,
+                    condition="max_stacks",
+                    description=description,
+                )
             if "per stack" in text or per_stack is not None:
                 return ExtremeRecoverySpecialBranch(
                     set_name=set_name,
@@ -277,21 +339,43 @@ class ExtremeGearSetRecoverySpecialBranchService:
 
         flat = cls._flat_ceiling(text, resource)
         if flat is not None:
-            return ExtremeRecoverySpecialBranch(set_name, int(piece_count), ExtremeRecoverySpecialBranchKind.CONDITIONAL_FLAT, True, flat_ceiling=flat, condition="runtime_condition_required", description=description)
+            return ExtremeRecoverySpecialBranch(
+                set_name,
+                int(piece_count),
+                ExtremeRecoverySpecialBranchKind.CONDITIONAL_FLAT,
+                True,
+                flat_ceiling=flat,
+                condition="runtime_condition_required",
+                description=description,
+            )
         return None
 
     @classmethod
-    def build(cls, rows, *, objective_key: str = "health_recovery") -> ExtremeRecoverySpecialBranchCatalog:
+    def build(
+        cls,
+        rows,
+        *,
+        objective_key: str = "health_recovery",
+    ) -> ExtremeRecoverySpecialBranchCatalog:
         branches: list[ExtremeRecoverySpecialBranch] = []
         unresolved: list[str] = []
         for set_name, piece_count, description in rows:
-            branch = cls.classify(set_name=str(set_name), piece_count=int(piece_count), description=str(description), objective_key=objective_key)
+            branch = cls.classify(
+                set_name=str(set_name),
+                piece_count=int(piece_count),
+                description=str(description),
+                objective_key=objective_key,
+            )
             if branch is None:
-                unresolved.append(f"{set_name} ({piece_count}): unclassified recovery mechanic")
+                unresolved.append(
+                    f"{set_name} ({piece_count}): unclassified recovery mechanic"
+                )
             else:
                 branches.append(branch)
         return ExtremeRecoverySpecialBranchCatalog(
-            branches=tuple(sorted(branches, key=lambda row: (row.set_name.casefold(), row.piece_count))),
+            branches=tuple(
+                sorted(branches, key=lambda row: (row.set_name.casefold(), row.piece_count))
+            ),
             unresolved=tuple(dict.fromkeys(unresolved)),
         )
 
