@@ -27,6 +27,7 @@ _RESOURCE_LIST_RECOVERY = re.compile(
 
 
 class ExtremeRecoveryPassiveBranchKind(str, Enum):
+    STATIC_FLAT = "static_flat"
     STATIC_PERCENT = "static_percent"
     CONDITIONAL_FLAT = "conditional_flat"
     CONDITIONAL_PERCENT = "conditional_percent"
@@ -107,10 +108,6 @@ class ExtremeRecoveryPassiveSpecialBranchService:
                     condition="home_keeps",
                 )
 
-        # Canonical Recovery passives use several resource-list orderings, including
-        # "Health, Stamina, and Magicka Recovery" and "Magicka and Stamina Recovery".
-        # Unconditional percentage clauses are static semantics even when the generic
-        # projector has not yet normalized that exact wording.
         static_percent = re.search(
             r"increases your .*recovery by\s+(\d+(?:\.\d+)?)%",
             text,
@@ -137,11 +134,36 @@ class ExtremeRecoveryPassiveSpecialBranchService:
                 condition=None,
             )
 
-        # Percentage Recovery clauses can also be conditional runtime branches.
-        # Continuous Attack is the canonical example: Recovery rises by a fixed
-        # percentage for a finite window after capturing an Alliance War objective.
-        # Keep the exact numeric ceiling while preserving the condition instead of
-        # dropping the passive from the denominator or flattening it into static state.
+        # Simple unconditional flat Recovery passives are common on races/classes,
+        # e.g. "Increases your Stamina Recovery by 258".  Keep them distinct from
+        # runtime conditional flat branches so the Extreme denominator can reuse
+        # the same classifier without pretending an always-on racial value needs a proc.
+        static_flat = re.search(
+            rf"{re.escape(label)}(?:\s+is)?\s+(?:increased\s+)?by\s+(\d+(?:\.\d+)?)\b",
+            text,
+        )
+        if static_flat and not any(
+            marker in text
+            for marker in (
+                "while ",
+                "when ",
+                "whenever ",
+                "after ",
+                "for each ",
+                "for every ",
+                "per slotted",
+                "home keeps",
+            )
+        ):
+            return ExtremeRecoveryPassiveBranch(
+                passive=passive,
+                objective_key=objective,
+                kind=ExtremeRecoveryPassiveBranchKind.STATIC_FLAT,
+                can_raise_self=True,
+                flat_ceiling=float(static_flat.group(1)),
+                condition=None,
+            )
+
         conditional_percent = re.search(
             r"recovery by\s+(\d+(?:\.\d+)?)%",
             text,
@@ -178,11 +200,6 @@ class ExtremeRecoveryPassiveSpecialBranchService:
                 condition="runtime_condition_required",
             )
 
-        # Conditional shared-Recovery passives may put the amount after the noun
-        # phrase rather than before it, e.g. Undead Confederate: "your Health,
-        # Magicka, and Stamina Recovery is increased by 155".  Capture the proven
-        # ceiling while preserving the runtime condition instead of flattening it
-        # into an always-on static contribution.
         conditional_increased_by = re.search(
             r"recovery\s+(?:is|are)\s+increased by\s+(\d+(?:\.\d+)?)",
             text,
@@ -211,9 +228,6 @@ class ExtremeRecoveryPassiveSpecialBranchService:
                 condition="runtime_condition_required",
             )
 
-        # Known Recovery semantics whose maximum depends on another canonical owner
-        # (slot count, Ultimate spend, Max Resource, etc.). Semantic identity is
-        # proven here, but no numeric ceiling is invented.
         scaling_markers = (
             "per slotted",
             "for each",
