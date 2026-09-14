@@ -4,12 +4,18 @@ from services.extreme_gear_set_recovery_special_branch_service import (
 )
 
 
-def _classify(description: str, *, name: str = "Fixture", pieces: int = 5):
+def _classify(
+    description: str,
+    *,
+    name: str = "Fixture",
+    pieces: int = 5,
+    objective_key: str = "health_recovery",
+):
     row = ExtremeGearSetRecoverySpecialBranchService.classify(
         set_name=name,
         piece_count=pieces,
         description=description,
-        objective_key="health_recovery",
+        objective_key=objective_key,
     )
     assert row is not None
     return row
@@ -61,6 +67,32 @@ def test_classifies_roksa_stack_ceiling():
     assert row.flat_ceiling == 240.0
 
 
+def test_classifies_bastion_per_stack_ceiling():
+    row = _classify(
+        "Blocking an attack grants you a stack of Inflection for 10 seconds, up to 3 stacks max. "
+        "You can gain up to 1 stack every 0.5 seconds. Increase your Magicka and Stamina Recovery "
+        "by 106 per stack of Inflection.",
+        name="Bastion of the Draoife",
+        objective_key="magicka_recovery",
+    )
+    assert row.kind is ExtremeRecoverySpecialBranchKind.STACKED_FLAT
+    assert row.flat_ceiling == 318.0
+    assert row.can_raise_self
+
+
+def test_classifies_wrathsun_grants_per_stack_ceiling():
+    row = _classify(
+        "When you deal damage with a Dawn's Wrath ability, you gain a stack of Sunlight for 15 seconds, "
+        "once per attack and up to 30 times. Each stack grants 21 Magicka Recovery. When at max stacks, "
+        "stacks no longer refresh.",
+        name="Wrathsun",
+        objective_key="magicka_recovery",
+    )
+    assert row.kind is ExtremeRecoverySpecialBranchKind.STACKED_FLAT
+    assert row.flat_ceiling == 630.0
+    assert row.can_raise_self
+
+
 def test_classifies_enemy_recovery_reduction_as_non_challenger():
     row = _classify(
         "Enemies in the area have their healing received and Health Recovery reduced by 6%."
@@ -73,6 +105,17 @@ def test_classifies_embedded_thurvokun_reduction_as_non_challenger():
     row = _classify(
         "Enemies are afflicted with Minor Maim and the Diseased status, reducing their "
         "damage done by 5% and healing received and Health Recovery by 6%."
+    )
+    assert row.kind is ExtremeRecoverySpecialBranchKind.NEGATIVE_ONLY
+    assert not row.can_raise_self
+
+
+def test_classifies_reordered_shared_recovery_reduction_as_non_challenger():
+    row = _classify(
+        "When max Skirmish ends, your Stamina, Magicka, and Health Recovery are reduced by 422 for 10 seconds.",
+        name="The Ruckus",
+        pieces=2,
+        objective_key="magicka_recovery",
     )
     assert row.kind is ExtremeRecoverySpecialBranchKind.NEGATIVE_ONLY
     assert not row.can_raise_self
