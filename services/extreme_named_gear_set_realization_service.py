@@ -86,6 +86,17 @@ class ExtremeNamedGearSetRealizationService:
     MYTHIC_CATEGORY = "mythic"
 
     @classmethod
+    def is_mythic_category(cls, category: object) -> bool:
+        """Return whether canonical category text denotes a Mythic item/set.
+
+        UESP/ESO source imports have used labels such as ``Mythic`` and
+        ``Mythic Item``.  Global one-Mythic legality must therefore depend on the
+        semantic category token, not an exact spelling of one importer label.
+        """
+        normalized = " ".join(str(category or "").strip().casefold().split())
+        return cls.MYTHIC_CATEGORY in normalized
+
+    @classmethod
     def _violates_global_set_legality(
         cls,
         counts: tuple[int, ...],
@@ -94,7 +105,7 @@ class ExtremeNamedGearSetRealizationService:
         equipped_mythics = sum(
             1
             for count, item in zip(counts, named_sets)
-            if count > 0 and item.category.strip().casefold() == cls.MYTHIC_CATEGORY
+            if count > 0 and cls.is_mythic_category(item.category)
         )
         return equipped_mythics > 1
 
@@ -121,8 +132,6 @@ class ExtremeNamedGearSetRealizationService:
         if len(required) > len(_BODY_JEWELRY_SLOTS):
             return None
 
-        # Most constrained set-units first makes the tiny ten-slot backtracking
-        # deterministic and avoids exploring obviously impossible broad sets first.
         required.sort(
             key=lambda index: (
                 sum(
@@ -210,14 +219,8 @@ class ExtremeNamedGearSetRealizationService:
     ) -> bool:
         if not required_weapon_types:
             return True
-        # No named set claims the active weapon in this topology, so any legal
-        # non-set weapon type may occupy the free weapon slot without changing
-        # the proved named-set counts.
         if realization.weapon_shape is ExtremeWeaponSlotShape.NONE:
             return True
-        # A required two-handed family such as Destruction Staff must be the
-        # actual named-set weapon when the topology spends two set-count units
-        # on the active weapon. One-handed/paired shapes cannot satisfy it.
         if realization.weapon_shape is ExtremeWeaponSlotShape.TWO_HANDED:
             return bool(len(weapon_types) == 1 and weapon_types[0] in required_weapon_types)
         return False
