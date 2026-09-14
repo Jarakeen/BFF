@@ -42,6 +42,34 @@ ROTATION_TANK_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="rotation.tank.assignment_taunt_obligation",
+        domain="rotation",
+        purpose=(
+            "Translate explicit provider-assignment ownership plus reviewed taunt application "
+            "policy into exact tank taunt-application requirements without inventing uptime."
+        ),
+        implementation_path="services.rotation_assignment_taunt_obligation_service",
+        inputs=(
+            "CharacterBuild",
+            "ProviderAssignment",
+            "RotationAssignmentTauntPolicy",
+            "RotationAssignmentTauntApplicationWindow",
+        ),
+        outputs=("RotationAssignmentTauntObligationProjection",),
+        dependencies=("rotation.tank.taunt_application_obligation",),
+        responsibilities=("rotation_assignment_tank_taunt_application_projection",),
+        roles=("Tank",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.POLICY,
+        notes=(
+            "Provider assignment proves who owns the responsibility. Policy supplies the exact "
+            "source taunt skill and one or more explicit occurrence windows. The adapter emits "
+            "application requirements only; it does not derive taunt duration, refresh cadence, "
+            "continuous maintenance, target ownership, or overtaunt/immunity semantics."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="rotation.tank.taunt_candidate_claim",
         domain="rotation",
         purpose=(
