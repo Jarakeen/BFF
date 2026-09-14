@@ -15,6 +15,33 @@
           "end_reference": "encounter_end"
         }
       ]
+    },
+    {
+      "kind": "taunt_maintenance_horizon",
+      "requirement_id": "xalvakka:tank:boss_taunt",
+      "encounter_id": "xalvakka",
+      "requirement_type": "taunt",
+      "source": "Reviewed 2026-09-14: Xynode and Alcast Rockgrove guides establish Xalvakka's 100-70%, 70-40%, and 40-0% active boss phases with retreats at 70% and 40%; ESOAZ describes Xalvakka waiting on the next platform and resuming at the phase boundary. Public ESO Logs report XVMgLdq6GpQ7bhKN provided repeated runtime corroboration: four 70% transition observations resumed at approximately 70% HP and three 40% transition observations resumed at approximately 40% HP. Reviewed empirical transition timing is stored separately in data/encounter_transition_timing/reviewed.json and is a planning estimate, not a fixed game constant.",
+      "windows": [
+        {
+          "occurrence_id": "phase_1_boss_ownership",
+          "target_key": "xalvakka",
+          "active_start_seconds": 0.0,
+          "end_reference": "health_threshold:70%"
+        },
+        {
+          "occurrence_id": "phase_2_boss_ownership",
+          "target_key": "xalvakka",
+          "start_reference": "transition_resume:70%",
+          "end_reference": "health_threshold:40%"
+        },
+        {
+          "occurrence_id": "phase_3_boss_ownership",
+          "target_key": "xalvakka",
+          "start_reference": "transition_resume:40%",
+          "end_reference": "encounter_end"
+        }
+      ]
     }
   ]
 }
