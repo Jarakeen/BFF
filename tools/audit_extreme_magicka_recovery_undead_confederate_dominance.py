@@ -2,14 +2,18 @@ from __future__ import annotations
 
 """Prove Undead Confederate cannot win the Extreme Magicka Recovery class frontier.
 
-The proof is deliberately split around the exact reference crossover.  Above the
-crossover, the reviewed route beats the best runtime-obligation route at the same
-class-independent Recovery reference even when Undead Confederate receives its full
-conditional +155 ceiling.  Below the crossover, a small feasible reviewed package
-(base Recovery + unboosted Atronach + three ordinary-strength Recovery glyphs)
-produces an absolute total above the entire low-reference runtime upper bound.
+The proof avoids assuming one route owns the reviewed or runtime frontier near
+reference zero.  Instead it bounds every legal Living Death configuration using
+its canonical static Recovery contribution plus the only reviewed active-bar
+Recovery mechanics that can coexist with it: Flourish and Wellspring of the Abyss.
 
-This closes the class-route runtime obligation without claiming Spirit Mender uptime.
+For references at or above one conservative common-build witness, the reviewed
+Animal Companions + Curative Runeforms + Shadow route has at least as much slope
+as every Living Death upper-bound branch and is already ahead at the witness.
+For references below that witness, the runtime envelope is monotone, so its value
+at the witness upper-bounds the entire lower region.  The same feasible reviewed
+build beats that upper bound.  Undead Confederate receives its full conditional
++155 ceiling throughout; no Spirit Mender uptime assumption is needed.
 """
 
 import argparse
@@ -23,6 +27,7 @@ if str(ROOT) not in sys.path:
 from minmax.base_character_state import BASE_MAGICKA_RECOVERY
 from minmax.jewelry_glyph_repository import JewelryGlyphEffectRepository
 from minmax.mundus_repository import MundusRepository
+from minmax.passive_math import WARDEN_FLOURISH_RECOVERY_PERCENT
 from services.extreme_enchantment_objective_service import ExtremeEnchantmentObjectiveService
 from services.extreme_mundus_objective_service import ExtremeMundusObjectiveService
 from services.extreme_recovery_class_route_frontier_service import (
@@ -34,8 +39,17 @@ from services.extreme_recovery_passive_special_branch_service import (
     ExtremeRecoveryPassiveSpecialBranchService,
 )
 from services.extreme_skill_universe_service import ExtremeSkillUniverseService
+from services.extreme_subclass_slot_allocation_service import (
+    ExtremeSubclassSlotAllocationService,
+)
 
 OBJECTIVE = "magicka_recovery"
+LIVING_DEATH = "living_death"
+ANIMAL_COMPANIONS = "animal_companions"
+CURATIVE_RUNEFORMS = "curative_runeforms"
+SHADOW = "shadow"
+SOLDIER_OF_APOCRYPHA = "soldier_of_apocrypha"
+REVIEWED_WITNESS_LINES = frozenset({ANIMAL_COMPANIONS, CURATIVE_RUNEFORMS, SHADOW})
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -44,50 +58,82 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _candidate_key(row: ExtremeRecoveryClassRouteCandidate) -> tuple[object, ...]:
-    return (
-        row.base_class,
-        row.equipped_skill_lines,
-        row.slot_counts,
-        row.runtime_obligations,
+def _find_reviewed_witness(
+    candidates: tuple[ExtremeRecoveryClassRouteCandidate, ...],
+) -> ExtremeRecoveryClassRouteCandidate | None:
+    rows = [
+        row
+        for row in candidates
+        if not row.runtime_obligations
+        and frozenset(row.equipped_skill_lines) == REVIEWED_WITNESS_LINES
+    ]
+    return max(rows, key=lambda row: row.projected_delta, default=None)
+
+
+def _living_death_rows(
+    candidates: tuple[ExtremeRecoveryClassRouteCandidate, ...],
+) -> tuple[ExtremeRecoveryClassRouteCandidate, ...]:
+    return tuple(
+        row
+        for row in candidates
+        if LIVING_DEATH in row.equipped_skill_lines
+        and any("Undead Confederate" in item for item in row.runtime_obligations)
     )
 
 
-def _best_runtime_candidate(result) -> ExtremeRecoveryClassRouteCandidate | None:
-    rows = [row for row in result.candidates if row.runtime_obligations]
-    return max(rows, key=lambda row: row.projected_delta, default=None)
+def _runtime_slot_upper(
+    lines: tuple[str, ...],
+    reference: float,
+) -> float:
+    """Exact reviewed slot-mechanic upper bound for one Living Death line set."""
+
+    line_set = set(lines)
+    flourish = (
+        float(reference) * float(WARDEN_FLOURISH_RECOVERY_PERCENT)
+        if ANIMAL_COMPANIONS in line_set
+        else 0.0
+    )
+    if SOLDIER_OF_APOCRYPHA not in line_set:
+        return flourish
+
+    per_slot = float(ExtremeSubclassSlotAllocationService.ARCANIST_WELLSPRING_RECOVERY_PER_SLOT)
+    all_soldier = per_slot * float(ExtremeSubclassSlotAllocationService.ACTIVE_BAR_SLOTS)
+    if ANIMAL_COMPANIONS not in line_set:
+        return all_soldier
+
+    # Flourish needs one Animal Companions ability represented.  The remaining
+    # five active-bar slots can then carry Soldier abilities for Wellspring.
+    flourish_plus_soldier = flourish + per_slot * float(
+        ExtremeSubclassSlotAllocationService.ACTIVE_BAR_SLOTS - 1
+    )
+    return max(all_soldier, flourish_plus_soldier)
+
+
+def _runtime_upper_total(
+    row: ExtremeRecoveryClassRouteCandidate,
+    reference: float,
+    undead_ceiling: float,
+) -> float:
+    static = float(row.static_flat) + float(row.static_percent) * float(reference)
+    slot = _runtime_slot_upper(row.equipped_skill_lines, reference)
+    return float(reference) + static + slot + float(undead_ceiling)
+
+
+def _runtime_slope_upper(row: ExtremeRecoveryClassRouteCandidate) -> float:
+    line_set = set(row.equipped_skill_lines)
+    slot_slope = (
+        float(WARDEN_FLOURISH_RECOVERY_PERCENT)
+        if ANIMAL_COMPANIONS in line_set
+        else 0.0
+    )
+    # Whole-build total contains the common reference itself.
+    return 1.0 + float(row.static_percent) + slot_slope
 
 
 def main() -> int:
     database = Path(_parser().parse_args().database)
     frontier = ExtremeRecoveryClassRouteFrontierService(database)
-
-    at_zero = frontier.frontier(OBJECTIVE, reference_value=0.0)
-    at_one = frontier.frontier(OBJECTIVE, reference_value=1.0)
-    reviewed_zero = at_zero.best_reviewed_candidate
-    reviewed_one = at_one.best_reviewed_candidate
-    runtime_zero = _best_runtime_candidate(at_zero)
-    runtime_one = _best_runtime_candidate(at_one)
-
     unresolved: list[str] = []
-    if reviewed_zero is None or reviewed_one is None:
-        unresolved.append("reviewed class frontier unavailable at reference 0/1")
-    if runtime_zero is None or runtime_one is None:
-        unresolved.append("runtime-obligation class route unavailable at reference 0/1")
-
-    reviewed_intercept = float(reviewed_zero.projected_delta) if reviewed_zero else 0.0
-    reviewed_slope = (
-        float(reviewed_one.projected_delta) - reviewed_intercept if reviewed_one else 0.0
-    )
-    runtime_intercept = float(runtime_zero.projected_delta) if runtime_zero else 0.0
-    runtime_slope = (
-        float(runtime_one.projected_delta) - runtime_intercept if runtime_one else 0.0
-    )
-
-    if reviewed_zero and reviewed_one and _candidate_key(reviewed_zero) != _candidate_key(reviewed_one):
-        unresolved.append("reviewed near-zero affine route identity changes between reference 0 and 1")
-    if runtime_zero and runtime_one and _candidate_key(runtime_zero) != _candidate_key(runtime_one):
-        unresolved.append("runtime near-zero affine route identity changes between reference 0 and 1")
 
     skills = ExtremeSkillUniverseService(database).all_player_skills()
     undead_rows = tuple(
@@ -110,17 +156,6 @@ def main() -> int:
         unresolved.append("Undead Confederate conditional flat Recovery ceiling unresolved")
     else:
         undead_ceiling = float(undead_branch.flat_ceiling)
-
-    slope_advantage = reviewed_slope - runtime_slope
-    crossover_reference = float("inf")
-    if slope_advantage <= 0.0:
-        unresolved.append("reviewed near-zero route does not gain reference faster than runtime route")
-    else:
-        crossover_reference = (
-            runtime_intercept + undead_ceiling - reviewed_intercept
-        ) / slope_advantage
-        if crossover_reference < 0.0:
-            unresolved.append("computed Undead Confederate crossover reference is negative")
 
     mundus = ExtremeMundusObjectiveService.best_for_objective(
         MundusRepository(database, initialize=False),
@@ -151,49 +186,54 @@ def main() -> int:
 
     feasible_reference = float(BASE_MAGICKA_RECOVERY) + mundus_delta + jewelry_delta
     feasible_result = frontier.frontier(OBJECTIVE, reference_value=feasible_reference)
-    feasible_reviewed = feasible_result.best_reviewed_candidate
-    feasible_runtime = _best_runtime_candidate(feasible_result)
+    reviewed_witness = _find_reviewed_witness(feasible_result.candidates)
+    runtime_rows = _living_death_rows(feasible_result.candidates)
 
-    if feasible_reviewed is None:
-        unresolved.append("reviewed route unavailable at feasible class-independent reference")
-    if feasible_runtime is None:
-        unresolved.append("runtime route unavailable at feasible class-independent reference")
+    if reviewed_witness is None:
+        unresolved.append("reviewed Animal Companions + Curative Runeforms + Shadow witness unavailable")
+    if not runtime_rows:
+        unresolved.append("no Living Death + Undead Confederate route candidates found")
 
-    feasible_reviewed_total = (
-        feasible_reference + float(feasible_reviewed.projected_delta)
-        if feasible_reviewed is not None
+    reviewed_total = (
+        feasible_reference + float(reviewed_witness.projected_delta)
+        if reviewed_witness is not None
         else 0.0
     )
-    feasible_runtime_ceiling_total = (
-        feasible_reference + float(feasible_runtime.projected_delta) + undead_ceiling
-        if feasible_runtime is not None
-        else 0.0
-    )
-
-    low_reference_runtime_upper_total = 0.0
-    if crossover_reference != float("inf"):
-        low_reference_runtime_upper_total = (
-            crossover_reference
-            + runtime_intercept
-            + runtime_slope * crossover_reference
-            + undead_ceiling
+    reviewed_slope = 0.0
+    if reviewed_witness is not None:
+        reviewed_slope = (
+            1.0
+            + float(reviewed_witness.static_percent)
+            + float(WARDEN_FLOURISH_RECOVERY_PERCENT)
         )
 
-    same_reference_dominated = (
-        feasible_reviewed is not None
-        and feasible_runtime is not None
-        and feasible_reviewed_total > feasible_runtime_ceiling_total + 1e-9
+    runtime_bounds = tuple(
+        (
+            row,
+            _runtime_upper_total(row, feasible_reference, undead_ceiling),
+            _runtime_slope_upper(row),
+        )
+        for row in runtime_rows
     )
-    low_reference_region_dominated = (
-        feasible_reviewed is not None
-        and feasible_reviewed_total > low_reference_runtime_upper_total + 1e-9
-    )
-    feasible_reference_above_crossover = feasible_reference > crossover_reference + 1e-9
+    worst_runtime = max(runtime_bounds, key=lambda item: item[1], default=None)
+    runtime_upper_at_witness = float(worst_runtime[1]) if worst_runtime else 0.0
+    maximum_runtime_slope = max((item[2] for item in runtime_bounds), default=0.0)
+
+    same_reference_margin = reviewed_total - runtime_upper_at_witness
+    same_reference_dominated = reviewed_total > runtime_upper_at_witness + 1e-9
+    high_reference_slope_dominated = reviewed_slope >= maximum_runtime_slope - 1e-12
+
+    # Every component in the runtime upper bound is non-negative and non-decreasing
+    # in the common reference.  Therefore the value at feasible_reference bounds the
+    # entire [0, feasible_reference] region.  A fixed feasible reviewed build above
+    # that ceiling globally dominates every lower-reference runtime build.
+    low_reference_region_dominated = reviewed_total > runtime_upper_at_witness + 1e-9
+
     globally_dominated = all(
         (
             not unresolved,
-            feasible_reference_above_crossover,
             same_reference_dominated,
+            high_reference_slope_dominated,
             low_reference_region_dominated,
         )
     )
@@ -202,41 +242,36 @@ def main() -> int:
     print(f"database={database}")
     print(f"objective={OBJECTIVE}")
     print()
-    print("NEAR-ZERO AFFINE ROUTES")
-    if reviewed_zero is not None:
-        print(f"reviewed_lines={reviewed_zero.equipped_skill_lines}")
-    print(f"reviewed_formula={reviewed_intercept:.3f}+({reviewed_slope:.6f}*reference)")
-    if runtime_zero is not None:
-        print(f"runtime_lines={runtime_zero.equipped_skill_lines}")
-        print(f"runtime_obligations={runtime_zero.runtime_obligations}")
-    print(f"runtime_formula_before_condition={runtime_intercept:.3f}+({runtime_slope:.6f}*reference)")
-    print(f"undead_confederate_flat_ceiling={undead_ceiling:.3f}")
-    print(f"same_reference_crossover={crossover_reference:.3f}")
-    print()
     print("CLASS-INDEPENDENT REVIEWED WITNESS")
     print(f"base_magicka_recovery={BASE_MAGICKA_RECOVERY:.3f}")
     print(f"mundus={mundus_name!r} ordinary_delta={mundus_delta:.3f}")
     print(f"jewelry_glyph={jewelry_name!r} three_slot_ordinary_delta={jewelry_delta:.3f}")
     print(f"feasible_common_reference={feasible_reference:.3f}")
-    if feasible_reviewed is not None:
-        print(f"feasible_reviewed_lines={feasible_reviewed.equipped_skill_lines}")
-        print(f"feasible_reviewed_class_delta={feasible_reviewed.projected_delta:.3f}")
-    if feasible_runtime is not None:
-        print(f"feasible_runtime_lines={feasible_runtime.equipped_skill_lines}")
-        print(f"feasible_runtime_class_delta_before_condition={feasible_runtime.projected_delta:.3f}")
-    print(f"feasible_reviewed_total_before_shared_percent={feasible_reviewed_total:.3f}")
-    print(f"feasible_runtime_total_with_full_undead_ceiling={feasible_runtime_ceiling_total:.3f}")
-    print(f"same_reference_margin={feasible_reviewed_total - feasible_runtime_ceiling_total:.3f}")
+    if reviewed_witness is not None:
+        print(f"reviewed_lines={reviewed_witness.equipped_skill_lines}")
+        print(f"reviewed_class_delta={reviewed_witness.projected_delta:.3f}")
+        print(f"reviewed_whole_total={reviewed_total:.3f}")
+        print(f"reviewed_whole_slope={reviewed_slope:.6f}")
     print()
-    print("LOW-REFERENCE REGION")
-    print(f"runtime_total_upper_bound_at_crossover={low_reference_runtime_upper_total:.3f}")
-    print(f"reviewed_feasible_total={feasible_reviewed_total:.3f}")
-    print(f"low_reference_margin={feasible_reviewed_total - low_reference_runtime_upper_total:.3f}")
+    print("LIVING DEATH ENVELOPE")
+    print(f"undead_confederate_flat_ceiling={undead_ceiling:.3f}")
+    print(f"runtime_route_count={len(runtime_bounds)}")
+    for row, upper, slope in sorted(
+        runtime_bounds,
+        key=lambda item: (-item[1], item[0].base_class, item[0].equipped_skill_lines),
+    )[:8]:
+        print(
+            f"  upper_at_witness={upper:.3f} whole_slope_upper={slope:.6f} "
+            f"base={row.base_class} lines={row.equipped_skill_lines}"
+        )
+    print(f"runtime_envelope_upper_at_witness={runtime_upper_at_witness:.3f}")
+    print(f"maximum_runtime_whole_slope={maximum_runtime_slope:.6f}")
+    print(f"same_reference_margin={same_reference_margin:.3f}")
     print()
     print("PROOF GATES")
-    print(f"feasible_reference_above_crossover={feasible_reference_above_crossover}")
-    print(f"same_reference_runtime_route_dominated={same_reference_dominated}")
-    print(f"low_reference_runtime_region_dominated={low_reference_region_dominated}")
+    print(f"same_reference_runtime_envelope_dominated={same_reference_dominated}")
+    print(f"high_reference_slope_dominated={high_reference_slope_dominated}")
+    print(f"low_reference_monotone_envelope_dominated={low_reference_region_dominated}")
     print(f"unresolved_count={len(unresolved)}")
     for item in unresolved:
         print(f"  unresolved: {item}")
