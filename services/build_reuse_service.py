@@ -23,7 +23,7 @@ _IDENTITY_FIELDS = {
 }
 _CLASS_OVERLAY_FIELDS = {
     "FrontBarSkills", "BackBarSkills", "ClassSkillLines", "ClassMasteryAbilityIds",
-    "ScribedSkills", "ScribedSkillRecipes",
+    "ScribedSkills", "ScribedSkillRecipes", "ContextVariants", "BossLoadouts",
 }
 _SKILL_BAR_FIELDS = ("FrontBarSkills", "BackBarSkills")
 
@@ -308,6 +308,8 @@ class BuildReuseService:
             payload["ClassMasteryAbilityIds"] = []
             payload["ScribedSkills"] = []
             payload["ScribedSkillRecipes"] = []
+            payload["ContextVariants"] = []
+            payload["BossLoadouts"] = []
             warnings.append(
                 f"No {class_name or 'destination-class'} overlay exists yet; shared role skills/setup were copied and class-specific slots need review."
             )
