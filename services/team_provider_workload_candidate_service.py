@@ -39,6 +39,7 @@ class TeamProviderActionBinding:
     build_name: str
     action_name: str
     primary_role_displacement_seconds: float | None = None
+    bar: str | None = None
 
     def __post_init__(self) -> None:
         for field_name in ("character_name", "build_name", "action_name"):
@@ -55,6 +56,11 @@ class TeamProviderActionBinding:
             object.__setattr__(
                 self, "primary_role_displacement_seconds", displacement
             )
+        if self.bar is not None:
+            normalized_bar = str(self.bar).strip().casefold()
+            if normalized_bar not in {"front", "back"}:
+                raise ValueError("provider action binding bar must be front or back")
+            object.__setattr__(self, "bar", normalized_bar)
 
 
 @dataclass(frozen=True)
@@ -117,6 +123,8 @@ class TeamProviderWorkloadCandidateService:
     A requested contributor must be an exact selected saved build with one exact
     matching RotationPlan. Every matching scheduled cast is retained so refresh
     workload is measured from the plan rather than from a single representative cast.
+    When a binding supplies an explicit bar, same-named casts on the other bar are
+    not silently counted as provider work.
     """
 
     def __init__(
@@ -172,10 +180,12 @@ class TeamProviderWorkloadCandidateService:
                     if action.kind in {RotationActionKind.SKILL, RotationActionKind.ULTIMATE}
                     and str(action.name or "").strip().casefold()
                     == binding.action_name.casefold()
+                    and (binding.bar is None or action.bar == binding.bar)
                 )
                 if not matches:
+                    bar_note = f" on {binding.bar} bar" if binding.bar else ""
                     blockers.append(
-                        f"{label}: {binding.action_name!r} is not scheduled in the attached plan"
+                        f"{label}: {binding.action_name!r}{bar_note} is not scheduled in the attached plan"
                     )
                     continue
                 references_by_identity.setdefault(key, []).extend(
