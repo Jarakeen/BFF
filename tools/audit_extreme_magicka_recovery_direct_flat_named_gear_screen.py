@@ -2,13 +2,21 @@ from __future__ import annotations
 
 """Screen direct-flat Magicka Recovery named gear without physical brute force.
 
-This pass is deliberately an upper-bound screen. It reuses the closed ordinary
-Recovery frontier, classifies direct-flat special challengers, and for each one
-computes an impossible-best abstract topology score that ignores physical slot
-conflicts and may reuse the same best ordinary set identity across multiple count
-slots. A challenger below the incumbent under that generous bound is globally
-dominated. A challenger at or above the incumbent is carried forward as an exact
-survivor; this screen does not attempt the expensive constrained physical search.
+This pass is deliberately an optimistic upper-bound screen. It reuses the closed
+ordinary Recovery frontier, classifies direct-flat special challengers, and for
+each one reserves the challenger's active-snapshot set units, then solves a tiny
+distinct-set capacity knapsack over the remaining ordinary named-set breakpoints.
+
+The knapsack enforces only two facts that any legal loadout must obey: one breakpoint
+per set identity, and no more than the remaining active-snapshot set-count units.
+It deliberately ignores armor/jewelry/weapon slot compatibility, exact count-topology
+shape, and all other physical conflicts. Those omissions can only increase the
+ordinary coexistence score, so the result remains a proof-safe upper bound while
+avoiding the previous absurdity of reusing the same best set identity repeatedly.
+
+A challenger below the incumbent under this generous bound is globally dominated.
+A challenger at or above the incumbent is carried forward for exact follow-up. This
+screen performs no constrained physical brute force.
 """
 
 import argparse
@@ -25,7 +33,10 @@ from services.extreme_armor_weight_filtered_slot_eligibility_service import (
 )
 from services.extreme_gear_set_bonus_breakpoint_service import ExtremeGearSetBonusBreakpointService
 from services.extreme_gear_set_objective_relevance_service import ExtremeGearSetObjectiveRelevanceService
-from services.extreme_gear_set_topology_catalog_service import ExtremeGearSetTopologyCatalogService
+from services.extreme_gear_set_topology_catalog_service import (
+    ACTIVE_SNAPSHOT_SET_UNITS,
+    ExtremeGearSetTopologyCatalogService,
+)
 from services.extreme_max_resource_special_named_gear_branch_service import (
     ExtremeMaxResourceSpecialNamedGearBranchService,
 )
@@ -36,7 +47,6 @@ from tools.audit_extreme_magicka_recovery_armor_mundus_frontier import (
     _same_build_max_magicka_for_weight_types,
 )
 from tools.audit_extreme_magicka_recovery_direct_flat_named_gear_dominance import (
-    abstract_topology_structural_upper_bound,
     direct_flat_upper_bound,
     dominance_row,
 )
@@ -55,6 +65,54 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--database", default=str(ROOT / "data" / "eso.db"))
     return parser
+
+
+def distinct_set_capacity_upper_bound(
+    challenger,
+    pair_scores,
+    *,
+    active_snapshot_units: int = ACTIVE_SNAPSHOT_SET_UNITS,
+) -> float | None:
+    """Optimistic ordinary score with the challenger reserving its set-count units.
+
+    Each ordinary set identity may contribute at most one breakpoint. The search
+    ignores physical slot legality and does not require every remaining unit to be
+    consumed, so its maximum is at least as large as any legal ordinary coexistence
+    score for the same challenger.
+    """
+    required = int(challenger.piece_count)
+    capacity = int(active_snapshot_units) - required
+    if required <= 0 or capacity < 0:
+        return None
+
+    challenger_id = int(challenger.set_id)
+    choices_by_set: dict[int, dict[int, float]] = {}
+    for (set_id, count), score in pair_scores.items():
+        set_id = int(set_id)
+        count = int(count)
+        if set_id == challenger_id or not score.ordinary or count <= 0 or count > capacity:
+            continue
+        value = max(0.0, float(score.optimistic_effective_recovery))
+        if value <= 0.0:
+            continue
+        choices = choices_by_set.setdefault(set_id, {})
+        if value > choices.get(count, float("-inf")):
+            choices[count] = value
+
+    # Multiple-choice 0/1 knapsack: skip a set or choose exactly one of its
+    # ordinary breakpoints. Physical eligibility is intentionally ignored.
+    dp = [0.0] * (capacity + 1)
+    for choices in choices_by_set.values():
+        previous = tuple(dp)
+        updated = list(previous)
+        for used in range(capacity + 1):
+            base = previous[used]
+            for count, value in choices.items():
+                target = used + count
+                if target <= capacity:
+                    updated[target] = max(updated[target], base + value)
+        dp = updated
+    return max(dp, default=0.0)
 
 
 def main() -> int:
@@ -121,14 +179,14 @@ def main() -> int:
         if upper.pending_nonflat:
             pending.append((challenger, upper.pending_nonflat))
             continue
-        structural = abstract_topology_structural_upper_bound(challenger, pair_scores, topology)
+        structural = distinct_set_capacity_upper_bound(challenger, pair_scores)
         rows.append(
             dominance_row(
                 challenger=challenger,
                 structural_score=structural,
                 special_ceiling=upper.total_special_ceiling,
                 incumbent=incumbent,
-                bound_kind="abstract_topology_upper",
+                bound_kind="distinct_set_capacity_upper",
             )
         )
 
@@ -158,11 +216,11 @@ def main() -> int:
     print(f"flat_upper_bound_candidates={len(rows)}")
     print(f"nonflat_or_search_state_pending={len(pending)}")
     print()
-    print("ABSTRACT TOPOLOGY UPPER BOUNDS")
+    print("DISTINCT-SET CAPACITY UPPER BOUNDS")
     for row in rows:
         if row.optimistic_total is None or row.margin is None:
             print(
-                f"set={row.set_name!r} pieces={row.piece_count} compatible_count_topology=False dominated=True"
+                f"set={row.set_name!r} pieces={row.piece_count} compatible_capacity=False dominated=True"
             )
             continue
         print(
@@ -189,11 +247,11 @@ def main() -> int:
     print(f"ordinary_denominator_prerequisite_proven={ordinary_search.ordinary_denominator_proven}")
     print(f"triage_unresolved_count={len(unresolved_triage)}")
     print(f"max_magicka_witness_unresolved_count={len(max_magicka_unresolved)}")
-    print(f"flat_candidates_dominated_by_abstract_bound={len(dominated)}")
-    print(f"flat_candidates_surviving_abstract_bound={len(survivors)}")
+    print(f"flat_candidates_dominated_by_capacity_bound={len(dominated)}")
+    print(f"flat_candidates_surviving_capacity_bound={len(survivors)}")
     print(f"direct_flat_screen_closed={screen_closed}")
     if screen_closed:
-        print("NEXT_STEP=exactly resolve only abstract-flat survivors plus pending non-flat/search-state branches")
+        print("NEXT_STEP=exactly resolve only capacity-bound flat survivors plus pending non-flat/search-state branches")
     else:
         print("NEXT_STEP=close only the reported screen prerequisites")
     return 0 if screen_closed else 2
