@@ -58,6 +58,12 @@ class RotationRecoveryFinalRoleEvidenceService:
     after stabilization, so exact-time role output never consults a seed schedule.
     Ordinary providers keep the existing static path unchanged.
 
+    A plan-evidence provider may also carry explicit ``candidate_projector`` metadata.
+    ``resolver()`` preserves that callable on the returned resolver so the recovery
+    candidate pipeline can apply role strategy before every regeneration. This service
+    does not inspect or construct the projector; it only carries already-authorized
+    strategy metadata across the final-role evidence boundary.
+
     This adapter never recalculates the final scorecard. The caller supplies the
     same final scorecard resolver used by the recovery pipeline, and the pipeline
     still replaces the scorecard once more with its saved-build legality-decorated
@@ -93,7 +99,13 @@ class RotationRecoveryFinalRoleEvidenceService:
         )
 
     def resolver(self) -> RecoveryFinalRoleAwareInputResolver:
-        return self.resolve
+        def resolve(snapshot: RecoveryHeavyStabilizedCandidateSnapshot):
+            return self.resolve(snapshot)
+
+        projector = getattr(self.plan_evidence_provider, "candidate_projector", None)
+        if projector is not None:
+            setattr(resolve, "candidate_projector", projector)
+        return resolve
 
     def resolve(
         self,
