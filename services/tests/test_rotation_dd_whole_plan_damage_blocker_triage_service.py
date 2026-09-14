@@ -112,3 +112,41 @@ def test_exact_impact_anchor_gap_is_runtime_input_not_engineering_work() -> None
     item = result.runtime_input_required[0]
     assert item.disposition is RotationDDDamageBlockerDisposition.RUNTIME_INPUT_REQUIRED
     assert "lacks exact caller/runtime evidence" in (item.disposition_reason or "")
+
+
+def test_saved_build_stampede_impact_gaps_remain_grouped_runtime_dependency() -> None:
+    blocker = RotationDDDamageCoverageBlocker(
+        action_kind=RotationActionKind.SKILL,
+        action_name="Stampede",
+        reason=(
+            "Stampede coefficient 2: reviewed activation anchor impact "
+            "requires exact runtime anchor evidence"
+        ),
+        occurrences=((10.0, 10), (31.0, 31), (46.0, 46)),
+    )
+    audit = RotationDDWholePlanDamageCoverageAudit(
+        candidate_id="saved-build-generated",
+        total_damage_actions=3,
+        resolved_damage_actions=0,
+        unresolved_damage_actions=3,
+        blockers=(blocker,),
+    )
+
+    result = _service().classify(audit)
+
+    assert audit.complete is False
+    assert result.actionable == ()
+    assert result.parked == ()
+    assert len(result.runtime_input_required) == 1
+    runtime_dependency = result.runtime_input_required[0]
+    assert runtime_dependency.disposition is RotationDDDamageBlockerDisposition.RUNTIME_INPUT_REQUIRED
+    assert runtime_dependency.blocker.action_name == "Stampede"
+    assert runtime_dependency.blocker.occurrence_count == 3
+    assert runtime_dependency.blocker.occurrences == (
+        (10.0, 10),
+        (31.0, 31),
+        (46.0, 46),
+    )
+    assert "lacks exact caller/runtime evidence" in (
+        runtime_dependency.disposition_reason or ""
+    )
