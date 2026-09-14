@@ -3,7 +3,7 @@ from __future__ import annotations
 """Persist completed Rotation Builder plans as build-owned user artifacts.
 
 Rotation artifacts are user state, not ESO reference data, so they live beside
-builds.json rather than in eso.db.  Records are keyed by the canonical build_id;
+builds.json rather than in eso.db. Records are keyed by the canonical build_id;
 character names and build names are display metadata only.
 """
 
@@ -13,6 +13,8 @@ from dataclasses import asdict, is_dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Any
+
+from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 
 SCHEMA_VERSION = 1
 
@@ -32,10 +34,55 @@ def jsonable(value: Any) -> Any:
     return value
 
 
+def rotation_plan_from_artifact(artifact: dict[str, Any]) -> RotationPlan:
+    """Restore one saved artifact into the canonical immutable RotationPlan.
+
+    Saved artifacts are not repaired or reinterpreted here. Every required plan and
+    action field must still satisfy the canonical RotationPlan contract. Invalid or
+    stale artifacts fail closed instead of being massaged into executable evidence.
+    """
+    if not isinstance(artifact, dict):
+        raise ValueError("rotation artifact must be an object")
+    raw_actions = artifact.get("actions")
+    if not isinstance(raw_actions, list) or not raw_actions:
+        raise ValueError("rotation artifact requires saved actions")
+
+    actions: list[RotationAction] = []
+    for index, raw in enumerate(raw_actions):
+        if not isinstance(raw, dict):
+            raise ValueError(f"rotation artifact action {index} must be an object")
+        try:
+            actions.append(
+                RotationAction(
+                    time_seconds=raw.get("time_seconds"),
+                    sequence=int(raw.get("sequence")),
+                    kind=RotationActionKind(str(raw.get("kind") or "")),
+                    name=raw.get("name"),
+                    bar=raw.get("bar"),
+                )
+            )
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"rotation artifact action {index} is invalid: {exc}"
+            ) from exc
+
+    try:
+        return RotationPlan(
+            character_name=str(artifact.get("character_name") or "").strip(),
+            build_name=str(artifact.get("build_name") or "").strip(),
+            duration_seconds=artifact.get("duration_seconds"),
+            actions=tuple(actions),
+            assumptions=tuple(artifact.get("assumptions") or ()),
+            unresolved=tuple(artifact.get("unresolved") or ()),
+        )
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"saved rotation artifact is not a valid RotationPlan: {exc}") from exc
+
+
 def resolve_canonical_build_id(catalog_service, build) -> str | None:
     """Resolve one compatibility PlayerBuild to its canonical build identity.
 
-    Exact Gamertag + character + build-name ownership is preferred.  A fallback
+    Exact Gamertag + character + build-name ownership is preferred. A fallback
     without Gamertag is allowed only when it identifies exactly one canonical
     build, so ambiguous human-readable labels never silently pick a record.
     """
@@ -128,6 +175,13 @@ class BuildRotationArtifactService:
         artifact = self.load()["rotations"].get(identity)
         return copy.deepcopy(artifact) if isinstance(artifact, dict) else None
 
+    def get_rotation_plan(self, build_id: str) -> RotationPlan | None:
+        """Return the exact saved RotationPlan for one canonical build identity."""
+        artifact = self.get_rotation(build_id)
+        if artifact is None:
+            return None
+        return rotation_plan_from_artifact(artifact)
+
     def has_rotation(self, build_id: str) -> bool:
         artifact = self.get_rotation(build_id)
         return bool(artifact and artifact.get("actions"))
@@ -155,4 +209,5 @@ __all__ = [
     "SCHEMA_VERSION",
     "jsonable",
     "resolve_canonical_build_id",
+    "rotation_plan_from_artifact",
 ]
