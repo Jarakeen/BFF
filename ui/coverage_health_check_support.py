@@ -10,6 +10,7 @@ team, assignments, or build configuration.
 from PySide6.QtWidgets import QComboBox, QPushButton
 
 from engine.config import get_data_dir
+from models.build_model import PlayerBuild
 from services.build_context_variant_service import resolve_build_context
 from services.eso_database import EsoDatabase
 from services.roster_service import RosterService
@@ -24,15 +25,71 @@ def _clean(value: object) -> str:
 
 def _member_belongs_to_team(member, team_name: str) -> bool:
     wanted = _clean(team_name)
-    return any(_clean(name) == wanted for name in str(getattr(member, "Team", "") or "").split(","))
+    return any(
+        _clean(name) == wanted
+        for name in str(getattr(member, "Team", "") or "").split(",")
+    )
+
+
+def _player_build_from_catalog_record(record: object) -> PlayerBuild | None:
+    if not isinstance(record, dict):
+        return None
+    payload = record.get("legacy")
+    if not isinstance(payload, dict):
+        payload = record.get("payload")
+    if not isinstance(payload, dict):
+        return None
+    try:
+        return PlayerBuild.from_dict(payload)
+    except Exception:
+        return None
+
+
+def _canonical_team_builds(page, team_name: str):
+    """Load exact build assignments for a team from the canonical build catalog."""
+    bridge = getattr(getattr(page, "build_service", None), "canonical", None)
+    catalog = getattr(bridge, "catalog_service", None)
+    if catalog is None:
+        return (), ()
+
+    selected = []
+    unresolved = []
+    seen_build_ids: set[str] = set()
+    try:
+        assignments = tuple(catalog.assignments_for_team(team_name))
+    except Exception:
+        return (), ()
+
+    for assignment in assignments:
+        build_id = str(assignment.get("build_id") or "").strip()
+        if not build_id or build_id in seen_build_ids:
+            continue
+        seen_build_ids.add(build_id)
+        record = catalog.get_build(build_id)
+        build = _player_build_from_catalog_record(record)
+        if build is None:
+            unresolved.append(
+                str(assignment.get("slot_name") or assignment.get("raid_role") or build_id)
+            )
+            continue
+        resolved = resolve_build_context(build, team_name=team_name, boss_name="")
+        slot = str(
+            assignment.get("slot_name")
+            or assignment.get("raid_role")
+            or getattr(build, "Role", "")
+            or getattr(build, "Gamertag", "")
+            or "Roster"
+        )
+        selected.append((slot, resolved))
+
+    return tuple(selected), tuple(unresolved)
 
 
 def select_team_builds(builds, members, team_name: str):
-    """Return unambiguous saved builds for roster members plus unresolved names.
+    """Fallback selection for teams without canonical build assignments.
 
-    Selection is intentionally conservative. A Ready-for-Raid build wins only
-    when it is unique; otherwise a sole candidate wins. Ambiguous players stay
-    unresolved instead of Coverage silently choosing the wrong character/build.
+    A unique Ready-for-Raid build wins; otherwise a sole candidate wins. Any
+    ambiguous player remains unresolved rather than silently choosing a build.
     """
     selected = []
     unresolved = []
@@ -88,21 +145,37 @@ def _clear_empty_team_result(page, team_name: str, member_count: int, unresolved
     page.scope_note.setText(detail)
     page.summary_card.clear()
     page.summary_card.addWidget(page._review_label(
-        "TEAM HEALTH CHECK\nNo unambiguous saved builds are available for this team yet."
+        "TEAM HEALTH CHECK\nNo saved team builds could be resolved."
     ))
     page.providers_card.clear()
     page.providers_card.addWidget(page._review_label("No build evidence loaded."))
     page.status.warning(
-        f"{team_name}: no unambiguous saved builds could be loaded for the health check."
+        f"{team_name}: no saved team builds could be loaded for the health check."
     )
 
 
-def _run_team_health_check(page) -> None:
+def run_team_health_check(page, team_name: str | None = None) -> None:
+    """Run one diagnostic health check, optionally selecting ``team_name`` first."""
     combo = getattr(page, "health_check_team_combo", None)
     if combo is None:
+        enhance_coverage_page(page)
+        combo = getattr(page, "health_check_team_combo", None)
+    if combo is None:
+        page.status.error("Team Health Check controls could not be initialized.")
         return
-    team_name = str(combo.currentData() or "").strip()
-    if not team_name:
+
+    if team_name is not None:
+        _sync_team_choices(page)
+        index = combo.findData(str(team_name or "").strip())
+        if index < 0:
+            page.status.warning(f"Roster team not found: {team_name}")
+            return
+        combo.blockSignals(True)
+        combo.setCurrentIndex(index)
+        combo.blockSignals(False)
+
+    selected_team = str(combo.currentData() or "").strip()
+    if not selected_team:
         page._team_scope = ()
         page._team_scope_name = ""
         old_scope = page.scope_combo.findData("all")
@@ -122,25 +195,32 @@ def _run_team_health_check(page) -> None:
 
     members = tuple(
         member for member in roster_service.list_members()
-        if _member_belongs_to_team(member, team_name)
+        if _member_belongs_to_team(member, selected_team)
     )
-    try:
-        builds = tuple(page.build_service.load().Members)
-    except Exception as exc:
-        page.status.error(f"Could not load saved builds for {team_name}: {exc}")
-        return
 
-    selected, unresolved = select_team_builds(builds, members, team_name)
+    # Exact canonical team->build assignments are authoritative. Only fall back
+    # to player/character inference when a team has no canonical build mapping.
+    selected, unresolved = _canonical_team_builds(page, selected_team)
+    source = "canonical team assignments"
     if not selected:
-        _clear_empty_team_result(page, team_name, len(members), unresolved)
+        try:
+            builds = tuple(page.build_service.load().Members)
+        except Exception as exc:
+            page.status.error(f"Could not load saved builds for {selected_team}: {exc}")
+            return
+        selected, unresolved = select_team_builds(builds, members, selected_team)
+        source = "roster member matching"
+
+    if not selected:
+        _clear_empty_team_result(page, selected_team, len(members), unresolved)
         return
 
-    page.set_team_scope(team_name, selected, total_slots=RAID_TEAM_SLOTS)
+    page.set_team_scope(selected_team, selected, total_slots=RAID_TEAM_SLOTS)
     loaded = len(selected)
     member_count = len(members)
     lines = [
         f"Direct roster health check • {member_count}/{RAID_TEAM_SLOTS} roster slots populated • "
-        f"{loaded}/{member_count or RAID_TEAM_SLOTS} saved builds resolved."
+        f"{loaded} saved team build(s) resolved via {source}."
     ]
     if unresolved:
         lines.append(f"Build selection unresolved for: {', '.join(unresolved[:8])}")
@@ -148,10 +228,10 @@ def _run_team_health_check(page) -> None:
     page.scope_note.setText("\n".join(lines))
     if unresolved:
         page.status.warning(
-            f"{team_name}: health check loaded {loaded} build(s); unresolved: {', '.join(unresolved[:6])}."
+            f"{selected_team}: health check loaded {loaded} build(s); unresolved: {', '.join(unresolved[:6])}."
         )
     else:
-        page.status.success(f"{team_name}: health check loaded {loaded} saved build(s).")
+        page.status.success(f"{selected_team}: health check loaded {loaded} saved build(s).")
 
 
 def _sync_team_choices(page) -> None:
@@ -199,15 +279,15 @@ def enhance_coverage_page(page) -> None:
 
     run = QPushButton("Run Health Check")
     run.setProperty("primary", True)
-    run.clicked.connect(lambda *_: _run_team_health_check(page))
+    run.clicked.connect(lambda *_: run_team_health_check(page))
     page.health_check_run_button = run
     page.header.add_context_widget(run)
 
     _sync_team_choices(page)
-    combo.currentIndexChanged.connect(lambda *_: _run_team_health_check(page))
+    combo.currentIndexChanged.connect(lambda *_: run_team_health_check(page))
     page.scope_note.setText(
         "Choose a raid team above for a direct health check, or leave All Saved Builds selected for a library-wide audit."
     )
 
 
-__all__ = ["enhance_coverage_page", "select_team_builds"]
+__all__ = ["enhance_coverage_page", "run_team_health_check", "select_team_builds"]
