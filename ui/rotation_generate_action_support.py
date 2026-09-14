@@ -39,6 +39,7 @@ class RotationGenerateActionSupport:
     When the context owns an effective-build snapshot, that exact frozen build is used
     for role composition and orchestration. Rotation never re-resolves Team/Boss/Raid
     Plan build ownership; those decisions belong to the caller that produced the snapshot.
+    Legacy/static contexts preserve their historical orchestration call shape.
     """
 
     def install(self, page) -> None:
@@ -187,15 +188,19 @@ class RotationGenerateActionSupport:
                 evidence_bundle=bundle,
                 content_type=getattr(bundle, "content_type", ""),
             )
+            orchestration_kwargs = {
+                "role_evidence": role_evidence,
+                "cadence_obligations": context.cadence_obligations,
+                "cadence_priorities": context.cadence_priorities,
+                "cadence_evaluation_context": context.cadence_evaluation_context,
+                "cadence_max_iterations": context.cadence_max_iterations,
+                "character_id": context.character_id,
+            }
+            if context.effective_build is not None:
+                orchestration_kwargs["player_build"] = player_build
             result = page.run_canonical_cadence_orchestration(
                 bundle,
-                player_build=player_build,
-                role_evidence=role_evidence,
-                cadence_obligations=context.cadence_obligations,
-                cadence_priorities=context.cadence_priorities,
-                cadence_evaluation_context=context.cadence_evaluation_context,
-                cadence_max_iterations=context.cadence_max_iterations,
-                character_id=context.character_id,
+                **orchestration_kwargs,
             )
         except (OSError, ValueError) as exc:
             page.status.warning(f"Encounter-aware rotation generation blocked: {exc}")
@@ -254,7 +259,6 @@ class RotationGenerateActionSupport:
         raise ValueError(
             "canonical rotation evidence bundle is not ready for Generate: " + detail
         )
-
 
 
 def install_rotation_generate_action(page) -> RotationGenerateActionSupport:
