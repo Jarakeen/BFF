@@ -338,6 +338,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Build comparison for extreme outcomes
 - Read-only optimization audits against canonical game data
 - Explain the sources of an extreme result rather than returning only a number
+- Proven U50 Magicka Recovery record is published in Extreme Build Lab with its winning build, active-bar realization, runtime prerequisites, and external conditions
 
 ---
 
