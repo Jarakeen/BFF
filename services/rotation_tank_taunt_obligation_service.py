@@ -4,8 +4,9 @@ from __future__ import annotations
 
 This service deliberately proves only scheduled taunt *applications*. Canonical
 Phase 6 utility semantics identify whether the requested source skill actually
-taunts. Taunt duration, refresh cadence, overtaunt/immunity behavior, target
-ownership, and encounter-specific maintenance policy remain separate evidence.
+taunts. Taunt duration, refresh cadence, overtaunt/immunity behavior, and continuous
+maintenance remain separate evidence. Optional target identity is caller-owned and
+must match exactly when supplied.
 """
 
 from dataclasses import dataclass
@@ -28,6 +29,7 @@ class RotationTankTauntApplicationRequirement:
     window_end_seconds: float
     minimum_applications: int = 1
     bar: str | None = None
+    target_key: str | None = None
     provenance: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
@@ -60,6 +62,12 @@ class RotationTankTauntApplicationRequirement:
                 raise ValueError("tank taunt requirement bar must be front or back")
             object.__setattr__(self, "bar", bar)
 
+        if self.target_key is not None:
+            target_key = str(self.target_key or "").strip()
+            if not target_key:
+                raise ValueError("tank taunt requirement target_key must be non-empty when supplied")
+            object.__setattr__(self, "target_key", target_key)
+
         provenance = tuple(
             dict.fromkeys(
                 str(item).strip() for item in self.provenance if str(item).strip()
@@ -74,6 +82,7 @@ class RotationTankTauntApplication:
     sequence: int
     source_skill_name: str
     bar: str | None
+    target_key: str | None = None
 
 
 @dataclass(frozen=True)
@@ -92,7 +101,8 @@ class RotationTankTauntObligationService:
 
     The requirement names the exact source skill and timing window. The service
     verifies that skill's canonical rank contains an explicit TAUNT utility component,
-    then counts only exact matching scheduled casts in the requested window and bar.
+    then counts only exact matching scheduled casts in the requested window, bar, and
+    optional target identity.
 
     No taunt duration or continuous-uptime claim is made here.
     """
@@ -174,19 +184,28 @@ class RotationTankTauntObligationService:
             action_bar = str(action.bar or "").strip().casefold() or None
             if requirement.bar is not None and action_bar != requirement.bar:
                 continue
+            action_target = str(action.target_key or "").strip() or None
+            if requirement.target_key is not None and action_target != requirement.target_key:
+                continue
             applications.append(
                 RotationTankTauntApplication(
                     time_seconds=time_seconds,
                     sequence=int(action.sequence),
                     source_skill_name=requirement.source_skill_name,
                     bar=action_bar,
+                    target_key=action_target,
                 )
             )
 
         ordered = tuple(
             sorted(
                 applications,
-                key=lambda item: (item.time_seconds, item.sequence, item.bar or ""),
+                key=lambda item: (
+                    item.time_seconds,
+                    item.sequence,
+                    item.bar or "",
+                    item.target_key or "",
+                ),
             )
         )
         satisfied = len(ordered) >= requirement.minimum_applications
