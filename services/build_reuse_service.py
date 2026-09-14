@@ -134,16 +134,47 @@ class BuildReuseService:
         payload = self._clean_payload(build, include_variants=include_variants, include_notes=include_notes)
         source_class = build.EsoClass.strip()
         overlay = {field: deepcopy(payload.pop(field, None)) for field in _CLASS_OVERLAY_FIELDS if field in payload}
-        record = BuildTemplateRecord(
-            template_id=self._stable_id(name),
-            name=name,
-            role=build.Role.strip(),
-            source_class=source_class,
-            base_payload=payload,
-            class_overlays={source_class: overlay} if source_class else {},
-            notes=(f"Created from {build.Name or build.Gamertag} • {build.BuildName}".strip(" •")),
-        )
-        rows = [row for row in self.load_templates() if row.template_id != record.template_id]
+        template_id = self._stable_id(name)
+        rows = list(self.load_templates())
+        existing = next((row for row in rows if row.template_id == template_id), None)
+
+        # Reusing the same template name with another class adds/replaces that
+        # class overlay while preserving the first role-level base. This lets a
+        # healer template accumulate Warden, Arcanist, Templar, etc. overlays
+        # without turning them into unrelated templates.
+        if existing is not None:
+            if existing.role and build.Role.strip() and existing.role.casefold() != build.Role.strip().casefold():
+                raise ValueError(
+                    f"Template {name!r} is already a {existing.role} template; choose a different name for {build.Role.strip() or 'this role'}."
+                )
+            overlays = deepcopy(existing.class_overlays)
+            if source_class:
+                overlays[source_class] = overlay
+            notes = existing.notes
+            source_text = f"{build.Name or build.Gamertag} • {build.BuildName}".strip(" •")
+            if source_text and source_text not in notes:
+                notes = " | ".join(piece for piece in (notes, f"Overlay from {source_text}") if piece)
+            record = BuildTemplateRecord(
+                template_id=existing.template_id,
+                name=existing.name,
+                role=existing.role or build.Role.strip(),
+                source_class=existing.source_class or source_class,
+                base_payload=deepcopy(existing.base_payload),
+                class_overlays=overlays,
+                notes=notes,
+            )
+            rows = [row for row in rows if row.template_id != template_id]
+        else:
+            record = BuildTemplateRecord(
+                template_id=template_id,
+                name=name,
+                role=build.Role.strip(),
+                source_class=source_class,
+                base_payload=payload,
+                class_overlays={source_class: overlay} if source_class else {},
+                notes=(f"Created from {build.Name or build.Gamertag} • {build.BuildName}".strip(" •")),
+            )
+
         rows.append(record)
         self._save_templates(rows)
         return record
