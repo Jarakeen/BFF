@@ -10,8 +10,10 @@ proof-safe pre-percent upper bound into final Recovery using the locked ordinary
 1.81 multiplier, and prunes any branch that still cannot reach Willow's legal final
 Recovery lower bound.
 
-Only flat branches are handled here. Percentage, named-buff, formula, and search-state
-branches remain separate obligations.
+Only the already-proven special/non-flat named-gear queue is reconsidered here.
+Ordinary named gear remains closed and is never regenerated from the full Recovery
+evidence universe. Percentage, named-buff, formula, and search-state mechanics remain
+separate obligations.
 """
 
 import argparse
@@ -50,6 +52,7 @@ from tools.audit_extreme_magicka_recovery_ordinary_named_gear_frontier import (
     OBJECTIVE,
     RESOURCE_OBJECTIVE,
     RECOVERY_MULTIPLIER,
+    _EffectiveRecoveryOrdinarySearch,
     build_pair_scores,
 )
 from tools.audit_extreme_magicka_recovery_same_build_enlivening import (
@@ -75,6 +78,17 @@ def _parser() -> argparse.ArgumentParser:
 
 def prepercent_threshold(*, shared_flat: float, incumbent_final: float, multiplier: float) -> float:
     return max(0.0, float(incumbent_final) / float(multiplier) - float(shared_flat))
+
+
+def canonical_special_triage_pairs(special_or_nonflat_pairs) -> tuple[tuple[int, str, int], ...]:
+    """Preserve the closed ordinary-search special queue as canonical triage triples."""
+    rows: list[tuple[int, str, int]] = []
+    for pair in special_or_nonflat_pairs:
+        if len(pair) != 3:
+            raise ValueError(f"special named-gear queue pair must have 3 fields, got {pair!r}")
+        set_id, set_name, piece_count = pair
+        rows.append((int(set_id), str(set_name), int(piece_count)))
+    return tuple(rows)
 
 
 def main() -> int:
@@ -103,6 +117,12 @@ def main() -> int:
         max_magicka,
         max_magicka_to_recovery=conversion,
     )
+    ordinary_search = _EffectiveRecoveryOrdinarySearch(
+        breakpoints=breakpoints,
+        eligibility=filtered.catalog,
+        relevance=merged,
+        pair_scores=pair_scores,
+    ).search(topology)
 
     recovery_by = {(int(row.set_id), int(row.piece_count)): row for row in recovery.evidence}
     magicka_by = {(int(row.set_id), int(row.piece_count)): row for row in max_magicka.evidence}
@@ -209,15 +229,7 @@ def main() -> int:
     )
 
     max_magicka_service = ExtremeMaxResourceSpecialNamedGearBranchService(max_magicka)
-    pair_keys = tuple(sorted(set(recovery_by) | set(magicka_by)))
-    triage_pairs = tuple(
-        (
-            int(set_id),
-            str((recovery_by.get((set_id, piece_count)) or magicka_by[(set_id, piece_count)]).set_name),
-            int(piece_count),
-        )
-        for set_id, piece_count in pair_keys
-    )
+    triage_pairs = canonical_special_triage_pairs(ordinary_search.special_or_nonflat_pairs)
     triage = tuple(
         _triage_pair(
             pair,
@@ -228,6 +240,7 @@ def main() -> int:
         )
         for pair in triage_pairs
     )
+    unresolved_triage = tuple(row for row in triage if row.unresolved)
     direct = tuple(row for row in triage if row.direct_recovery_challenger and not row.unresolved)
 
     rows: list[tuple[str, int, float, float, bool]] = []
@@ -272,8 +285,13 @@ def main() -> int:
     rows.sort(key=lambda row: (-row[2], row[0].casefold()))
     dominated_rows = tuple(row for row in rows if row[4])
     survivors = tuple(row for row in rows if not row[4])
-    unique_unresolved = tuple(dict.fromkeys(unresolved))
-    closed = bool(not unique_unresolved and willow_realization is not None)
+    unique_unresolved = tuple(dict.fromkeys((*unresolved, *(item for row in unresolved_triage for item in row.unresolved))))
+    closed = bool(
+        not unique_unresolved
+        and willow_realization is not None
+        and filtered.denominator_proven
+        and ordinary_search.ordinary_denominator_proven
+    )
 
     print("EXTREME MAGICKA RECOVERY WILLOW-REBASED FLAT SCREEN")
     print(f"database={database}")
@@ -281,6 +299,8 @@ def main() -> int:
     print(f"willow_constructive_final={willow_final:.3f}")
     print(f"ordinary_flat_multiplier={RECOVERY_MULTIPLIER:.6f}")
     print(f"flat_prepercent_tie_threshold={threshold:.3f}")
+    print(f"special_queue_pair_count={len(triage_pairs)}")
+    print(f"direct_recovery_challengers={len(direct)}")
     print()
     print("FLAT CHALLENGER FINAL UPPER BOUNDS")
     for name, pieces, prepercent, final_upper, dominated in rows:
@@ -296,6 +316,8 @@ def main() -> int:
     print()
     print("PROOF GATES")
     print(f"willow_physical_witness={willow_realization is not None}")
+    print(f"ordinary_denominator_prerequisite_proven={ordinary_search.ordinary_denominator_proven}")
+    print(f"triage_unresolved_count={len(unresolved_triage)}")
     print(f"rebased_flat_dominated_count={len(dominated_rows)}")
     print(f"rebased_flat_survivor_count={len(survivors)}")
     print(f"pending_nonflat_count={len(set(pending))}")
