@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from minmax.rotation_action_slot_legality import RotationActionSlotRequirement
 from minmax.rotation_plan import RotationPlan
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 from services.rotation_tank_taunt_candidate_service import (
@@ -21,11 +22,13 @@ class RotationTankTauntFamilyProjectorService:
         *,
         requirements: tuple[RotationTankTauntApplicationRequirement, ...],
         claims: tuple[RotationTankTauntActionClaim, ...] = (),
+        slot_requirements: tuple[RotationActionSlotRequirement, ...] = (),
         database_path: str | Path | None = None,
         candidate_service: RotationTankTauntCandidateService | None = None,
     ) -> None:
         self.requirements = tuple(requirements)
         self.claims = tuple(claims)
+        self.slot_requirements = tuple(slot_requirements)
         if candidate_service is not None:
             self.candidate_service = candidate_service
         else:
@@ -40,6 +43,7 @@ class RotationTankTauntFamilyProjectorService:
             candidate=candidate,
             requirements=self.requirements,
             claims=self.claims,
+            slot_requirements=self.slot_requirements,
         )
         if projection.candidate is not None and not projection.unresolved:
             return projection.candidate
