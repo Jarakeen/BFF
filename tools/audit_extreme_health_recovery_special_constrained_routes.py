@@ -3,15 +3,14 @@ from __future__ import annotations
 """Compose reviewed Health Recovery special gear with the surviving Ultimate route.
 
 The ordinary exact-flat audit leaves one positive Ultimate challenger:
-Baron Zaudrus + Decisive.  This diagnostic compares the best seven-Heavy incumbent
+Baron Zaudrus + Decisive. This diagnostic compares the best seven-Heavy incumbent
 and that challenger across the same classified recovery-special named-set frontier.
 
-Only branch semantics that already expose a reviewed flat ceiling and whose runtime
-compatibility is proven COMPATIBLE are numerically composed here. Percentage,
-formula/numeric-equipment, alternate-provisioning, and search-state branches remain
-explicit proof obligations.  Structural set placement is proven through the shared
-externalized-semantics constraint search; special mechanics are never rewritten as
-ordinary exact-flat effects.
+Flat-compatible branches are composed directly. Formula branches with a reviewed
+hard ceiling are proof-pruned when even that ceiling cannot catch the existing
+frontier. Alternate provisioning branches use the shared canonical Recovery
+provisioning projection. Percentage and search-state branches remain explicit proof
+obligations until their whole-state math is owned by a reviewed contract.
 """
 
 import argparse
@@ -50,6 +49,9 @@ from services.extreme_health_recovery_runtime_compatibility_service import (
 )
 from services.extreme_named_gear_set_slot_eligibility_service import (
     ExtremeNamedGearSetSlotEligibilityService,
+)
+from services.extreme_recovery_provisioning_projection_service import (
+    ExtremeRecoveryProvisioningProjectionService,
 )
 
 
@@ -129,6 +131,22 @@ def _externalized_search(
     )
 
 
+def _best_scores(scored: list[_ScoredBranch]) -> tuple[float, float]:
+    return (
+        max(row.incumbent_score for row in scored),
+        max(row.survivor_score for row in scored),
+    )
+
+
+def _structural_reason(branch: ExtremeRecoverySpecialBranch, *, survivor: bool) -> str:
+    if survivor and branch.piece_count == 2:
+        return (
+            "no legal shared 2pc witness with required Baron Zaudrus 2pc under the "
+            "current topology/slot eligibility; the constrained 2pc allocations compete"
+        )
+    return "no legal constrained physical witness under the current topology/slot eligibility"
+
+
 def main() -> int:
     args = _parser().parse_args()
     database = Path(args.database)
@@ -146,6 +164,10 @@ def main() -> int:
         breakpoints,
     )
     catalog, semantic_unresolved = _special_catalog(relevance)
+    provisioning = ExtremeRecoveryProvisioningProjectionService.build(
+        database,
+        objective_key=OBJECTIVE,
+    )
 
     print("EXTREME HEALTH RECOVERY SPECIAL CONSTRAINED ROUTE AUDIT")
     print(f"database={database}")
@@ -156,6 +178,17 @@ def main() -> int:
     print(f"classified_special_branches={len(catalog.branches)}")
     print(f"positive_special_challengers={len(catalog.positive_challengers)}")
     print(f"special_semantic_unresolved={len(semantic_unresolved)}")
+    print(f"provisioning_comparison_proven={provisioning.comparison_proven}")
+    if provisioning.food is not None:
+        print(
+            f"best_food={provisioning.food.name!r} "
+            f"health_recovery_delta={provisioning.food.delta:.3f}"
+        )
+    if provisioning.drink is not None:
+        print(
+            f"best_drink={provisioning.drink.name!r} "
+            f"health_recovery_delta={provisioning.drink.delta:.3f}"
+        )
 
     if not filtered.denominator_proven or semantic_unresolved:
         for item in filtered.unresolved:
@@ -233,15 +266,15 @@ def main() -> int:
             relevance=relevance,
         )
         if not incumbent_search.winner_found or incumbent_search.search is None:
+            reason = incumbent_search.unresolved or (_structural_reason(branch, survivor=False),)
             print(
-                f"  structurally_unavailable_incumbent: {label} "
-                f"reasons={incumbent_search.unresolved!r}"
+                f"  structurally_unavailable_incumbent: {label} reasons={reason!r}"
             )
             continue
         if not survivor_search.winner_found or survivor_search.search is None:
+            reason = survivor_search.unresolved or (_structural_reason(branch, survivor=True),)
             print(
-                f"  structurally_unavailable_survivor: {label} "
-                f"reasons={survivor_search.unresolved!r}"
+                f"  structurally_unavailable_survivor: {label} reasons={reason!r}"
             )
             continue
 
@@ -266,6 +299,55 @@ def main() -> int:
                 f"incumbent_ordinary={incumbent_ordinary:.3f} "
                 f"incumbent_effective={incumbent_effective:.3f} "
                 f"survivor_ordinary={survivor_ordinary:.3f} "
+                f"survivor_effective={survivor_effective:.3f} "
+                f"survivor_margin_same_branch={survivor_effective - incumbent_effective:.3f}"
+            )
+            continue
+
+        if (
+            compatibility.status is ExtremeHealthRecoveryCompatibility.NUMERIC_EQUIPMENT_PROOF
+            and branch.flat_ceiling is not None
+            and branch.percent_ceiling is None
+        ):
+            incumbent_ceiling = incumbent_ordinary + float(branch.flat_ceiling)
+            survivor_ceiling = survivor_ordinary + float(branch.flat_ceiling) + STRATEGIC_RESERVE_GAIN
+            best_incumbent_so_far, best_survivor_so_far = _best_scores(scored)
+            if (
+                incumbent_ceiling <= best_incumbent_so_far + 1e-9
+                and survivor_ceiling <= best_survivor_so_far + 1e-9
+            ):
+                pruned.append(label)
+                print(
+                    f"  ceiling_pruned: {label} kind={branch.kind.value} "
+                    f"incumbent_ceiling={incumbent_ceiling:.3f} "
+                    f"best_incumbent={best_incumbent_so_far:.3f} "
+                    f"survivor_ceiling={survivor_ceiling:.3f} "
+                    f"best_survivor={best_survivor_so_far:.3f}"
+                )
+                continue
+
+        if (
+            branch.set_name == "Green Pact"
+            and compatibility.status is ExtremeHealthRecoveryCompatibility.ALTERNATE_PROVISIONING
+            and branch.flat_ceiling is not None
+            and provisioning.comparison_proven
+            and provisioning.food is not None
+            and provisioning.drink is not None
+        ):
+            provisioning_adjustment = provisioning.food.delta - provisioning.drink.delta
+            special = float(branch.flat_ceiling)
+            incumbent_effective = incumbent_ordinary + special + provisioning_adjustment
+            survivor_effective = (
+                survivor_ordinary
+                + special
+                + provisioning_adjustment
+                + STRATEGIC_RESERVE_GAIN
+            )
+            scored.append(_ScoredBranch(branch, incumbent_effective, survivor_effective))
+            print(
+                f"  scored_alternate_provisioning: {label} special_flat={special:.3f} "
+                f"food_minus_drink={provisioning_adjustment:.3f} "
+                f"incumbent_effective={incumbent_effective:.3f} "
                 f"survivor_effective={survivor_effective:.3f} "
                 f"survivor_margin_same_branch={survivor_effective - incumbent_effective:.3f}"
             )
@@ -305,8 +387,8 @@ def main() -> int:
 
     if pending:
         print(
-            "NEXT_STEP=resolve only the remaining percentage/formula/provisioning/search-state "
-            "special branches that can still challenge the directly composable frontier"
+            "NEXT_STEP=resolve only the remaining percentage/search-state special branches "
+            "that can still challenge the scored frontier"
         )
         return 2
     print(
