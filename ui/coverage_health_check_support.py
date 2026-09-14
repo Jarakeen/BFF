@@ -10,6 +10,8 @@ builds. Team/Boss context variants are only applied when another workflow (for
 example Assignments -> Evaluate) explicitly supplies an encounter context.
 """
 
+from copy import deepcopy
+
 from PySide6.QtWidgets import QComboBox, QPushButton
 
 from engine.config import get_data_dir
@@ -56,7 +58,7 @@ def _resolved_or_base(
     use_context: bool,
 ) -> PlayerBuild:
     if not use_context:
-        return PlayerBuild.from_dict(build.to_dict())
+        return deepcopy(build)
     return resolve_build_context(
         build,
         team_name=team_name,
