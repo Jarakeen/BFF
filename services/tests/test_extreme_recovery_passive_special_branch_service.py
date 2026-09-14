@@ -99,6 +99,20 @@ def test_static_paired_percent_accepts_magicka_and_stamina_recovery():
     assert row.percent_ceiling == pytest.approx(18.0)
 
 
+def test_conditional_recovery_is_increased_by_clause_preserves_flat_ceiling():
+    row = ExtremeRecoveryPassiveSpecialBranchService.classify(
+        _passive(
+            "Undead Confederate",
+            "While you have a Sacrificial Bones, SkeletalMage, or Spirit Mender active, your Health, Magicka, and Stamina Recovery is increased by 155.",
+        ),
+        "magicka_recovery",
+    )
+    assert row is not None
+    assert row.kind is ExtremeRecoveryPassiveBranchKind.CONDITIONAL_FLAT
+    assert row.flat_ceiling == pytest.approx(155.0)
+    assert row.condition == "runtime_condition_required"
+
+
 def test_slot_scaled_recovery_is_semantically_classified_without_invented_ceiling():
     row = ExtremeRecoveryPassiveSpecialBranchService.classify(
         _passive("Wellspring of the Abyss", "Increases your Health, Magicka, and Stamina Recovery by 129 for each Soldier of Apocrypha ability slotted."),
