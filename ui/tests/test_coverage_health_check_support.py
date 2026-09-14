@@ -1,6 +1,10 @@
 from types import SimpleNamespace
 
-from ui.coverage_health_check_support import select_team_builds
+from models.build_model import PlayerBuild
+from ui.coverage_health_check_support import (
+    _canonical_team_builds,
+    select_team_builds,
+)
 
 
 def _build(player, character, build_name, *, ready=False):
@@ -60,3 +64,43 @@ def test_health_check_refuses_to_guess_between_ambiguous_builds():
 
     assert selected == ()
     assert unresolved == ("Jarakeen",)
+
+
+def test_health_check_prefers_exact_canonical_team_build_assignments():
+    build = PlayerBuild(
+        Name="Magrat",
+        Gamertag="Jarakeen",
+        BuildName="DF Healer",
+        EsoClass="Warden",
+        Role="Healer",
+    )
+    record = {
+        "build_id": "build-1",
+        "legacy": build.to_dict(),
+    }
+
+    class Catalog:
+        def assignments_for_team(self, team_name):
+            assert team_name == "Performance Mode"
+            return [{
+                "build_id": "build-1",
+                "raid_role": "Healer",
+                "slot_name": "Healer 1",
+            }]
+
+        def get_build(self, build_id):
+            assert build_id == "build-1"
+            return record
+
+    page = SimpleNamespace(
+        build_service=SimpleNamespace(
+            canonical=SimpleNamespace(catalog_service=Catalog())
+        )
+    )
+
+    selected, unresolved = _canonical_team_builds(page, "Performance Mode")
+
+    assert unresolved == ()
+    assert len(selected) == 1
+    assert selected[0][0] == "Healer 1"
+    assert selected[0][1].BuildName == "DF Healer"
