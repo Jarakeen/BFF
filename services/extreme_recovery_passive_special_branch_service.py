@@ -18,6 +18,7 @@ _LABEL = {
 
 
 class ExtremeRecoveryPassiveBranchKind(str, Enum):
+    STATIC_PERCENT = "static_percent"
     CONDITIONAL_FLAT = "conditional_flat"
     CONDITIONAL_PERCENT = "conditional_percent"
     SCALING_RECOVERY = "scaling_recovery"
@@ -52,7 +53,12 @@ class ExtremeRecoveryPassiveSpecialBranchService:
 
         text = cls._text(passive.description)
         label = _LABEL[objective]
-        shared = "health" in text and "magicka" in text and "stamina recovery" in text
+        shared = (
+            "health" in text
+            and "magicka" in text
+            and "stamina" in text
+            and "recovery" in text
+        )
         if label not in text and not shared:
             return None
 
@@ -77,6 +83,38 @@ class ExtremeRecoveryPassiveSpecialBranchService:
                     can_raise_self=True,
                     percent_ceiling=max(percents),
                     condition="home_keeps",
+                )
+
+        # Some canonical Recovery passives state an unconditional shared percentage
+        # with the three resources in different orders, e.g. Refreshing Shadows:
+        # "Health, Stamina, and Magicka Recovery by 15%." The generic passive
+        # projector currently recognizes only one resource ordering, so classify
+        # this semantic shape here without inventing any runtime condition.
+        if shared:
+            shared_percent = re.search(
+                r"increases your .*recovery by\s+(\d+(?:\.\d+)?)%",
+                text,
+            )
+            if shared_percent and not any(
+                marker in text
+                for marker in (
+                    "while ",
+                    "when ",
+                    "whenever ",
+                    "after ",
+                    "for each ",
+                    "for every ",
+                    "per slotted",
+                    "home keeps",
+                )
+            ):
+                return ExtremeRecoveryPassiveBranch(
+                    passive=passive,
+                    objective_key=objective,
+                    kind=ExtremeRecoveryPassiveBranchKind.STATIC_PERCENT,
+                    can_raise_self=True,
+                    percent_ceiling=float(shared_percent.group(1)),
+                    condition=None,
                 )
 
         target_up_to = re.search(
