@@ -123,10 +123,19 @@ def _known_characters(roster_service, build_service) -> dict[str, list[tuple[str
 
     identity_service = RosterPlayerIdentityService(roster_service.db)
     for member in roster_service.list_members():
+        current_key = _identity_key(member.PlayerName)
+        canonical_pairs = tuple(result.get(current_key, ()))
         add(member.PlayerName, member.CharacterName, member.EsoClass)
+        current_pairs = tuple(result.get(current_key, ())) or canonical_pairs
         if member.Id is None:
             continue
         for alias in identity_service.aliases_for_member(int(member.Id)):
+            # An alias belongs to the human, not only to the single Personnel
+            # character label currently shown. Carry every known canonical toon
+            # for that player across the alias so future imports can resolve the
+            # correct class/build family without manufacturing a new character.
+            for character_name, eso_class in current_pairs:
+                add(alias.alias, character_name, eso_class)
             add(alias.alias, member.CharacterName, member.EsoClass)
 
     return result
