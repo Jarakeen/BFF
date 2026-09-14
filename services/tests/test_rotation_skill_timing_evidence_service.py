@@ -112,6 +112,31 @@ def test_instant_skill_does_not_invent_gcd_occupancy(tmp_path) -> None:
     assert unresolved == ()
 
 
+def test_nonchanneled_negative_one_channel_sentinel_is_absent_timing(tmp_path) -> None:
+    service = RotationSkillTimingEvidenceService(
+        _database(tmp_path, cast_time=0.0, channel_time=-1.0, is_channeled=False)
+    )
+
+    resolution = service.resolve_skill("test_skill")
+
+    assert resolution.unresolved == ()
+    assert resolution.evidence is not None
+    assert resolution.evidence.cast_time_seconds == 0.0
+    assert resolution.evidence.channel_time_seconds is None
+    assert resolution.evidence.occupancy_seconds is None
+
+
+def test_channeled_negative_one_channel_time_still_fails_closed(tmp_path) -> None:
+    service = RotationSkillTimingEvidenceService(
+        _database(tmp_path, cast_time=0.0, channel_time=-1.0, is_channeled=True)
+    )
+
+    resolution = service.resolve_skill("test_skill")
+
+    assert resolution.evidence is None
+    assert resolution.unresolved == ("canonical channel_time is invalid: -1.0",)
+
+
 def test_occupancy_bridge_preserves_explicit_blocking_policy(tmp_path) -> None:
     service = RotationSkillTimingEvidenceService(
         _database(tmp_path, cast_time=1250.0, channel_time=0.0, is_channeled=False)
