@@ -27,7 +27,10 @@ if str(ROOT) not in sys.path:
 from minmax.base_character_state import BASE_MAGICKA_RECOVERY
 from minmax.jewelry_glyph_repository import JewelryGlyphEffectRepository
 from minmax.mundus_repository import MundusRepository
-from minmax.passive_math import WARDEN_FLOURISH_RECOVERY_PERCENT
+from minmax.passive_math import (
+    ARCANIST_WELLSPRING_RECOVERY_PER_SLOTTED,
+    WARDEN_FLOURISH_RECOVERY_PERCENT,
+)
 from services.extreme_enchantment_objective_service import ExtremeEnchantmentObjectiveService
 from services.extreme_mundus_objective_service import ExtremeMundusObjectiveService
 from services.extreme_recovery_class_route_frontier_service import (
@@ -96,7 +99,7 @@ def _runtime_slot_upper(
     if SOLDIER_OF_APOCRYPHA not in line_set:
         return flourish
 
-    per_slot = float(ExtremeSubclassSlotAllocationService.ARCANIST_WELLSPRING_RECOVERY_PER_SLOT)
+    per_slot = float(ARCANIST_WELLSPRING_RECOVERY_PER_SLOTTED)
     all_soldier = per_slot * float(ExtremeSubclassSlotAllocationService.ACTIVE_BAR_SLOTS)
     if ANIMAL_COMPANIONS not in line_set:
         return all_soldier
