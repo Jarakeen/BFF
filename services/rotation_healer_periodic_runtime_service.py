@@ -10,6 +10,10 @@ from services.rotation_healer_action_healing_service import (
     RotationHealerPeriodicHealSeed,
     RotationHealerResolvedHealEvent,
 )
+from services.rotation_runtime_output_eligibility_service import (
+    RotationRuntimeOutputConditionContextResolver,
+    RotationRuntimeOutputEligibilityService,
+)
 
 
 class RotationHealerPeriodicRefreshPolicy(str, Enum):
@@ -115,8 +119,19 @@ class RotationHealerPeriodicRuntimeService:
     Healer-specific logic owns duration evidence and refresh legality. Actual cadence
     expansion is delegated to the shared Phase 7 periodic runtime scheduler so DD,
     healing, proc, and other recurring consequences do not grow separate clock
-    arithmetic.
+    arithmetic. Reviewed output conditions are delegated to the same shared runtime
+    eligibility service used by DD output; healer runtime never invents condition
+    names or treats cast-time truth as proof for later ticks.
     """
+
+    def __init__(
+        self,
+        *,
+        output_eligibility_service: RotationRuntimeOutputEligibilityService | None = None,
+    ) -> None:
+        self.output_eligibility_service = (
+            output_eligibility_service or RotationRuntimeOutputEligibilityService()
+        )
 
     def project(
         self,
@@ -125,6 +140,9 @@ class RotationHealerPeriodicRuntimeService:
         evidence: tuple[RotationHealerPeriodicRuntimeEvidence, ...],
         horizon_seconds: float,
         runtime_magnitude_resolver: RotationHealerPeriodicMagnitudeResolver | None = None,
+        condition_context_resolver: (
+            RotationRuntimeOutputConditionContextResolver | None
+        ) = None,
     ) -> RotationHealerPeriodicRuntimeProjection:
         horizon = float(horizon_seconds)
         if not math.isfinite(horizon) or horizon < 0:
@@ -218,6 +236,29 @@ class RotationHealerPeriodicRuntimeService:
                         )
                     )
                     if at_or_after_restart:
+                        continue
+
+                    condition_context = (
+                        condition_context_resolver(event)
+                        if condition_context_resolver is not None
+                        else None
+                    )
+                    eligibility = self.output_eligibility_service.evaluate(
+                        skill_entity_id=seed.source_name,
+                        coefficient_number=seed.coefficient_number,
+                        condition_context=condition_context,
+                    )
+                    if not eligibility.resolved:
+                        messages = eligibility.unresolved or (
+                            "periodic healing tick output eligibility is unresolved",
+                        )
+                        unresolved.extend(
+                            f"{seed.source_name} coefficient {seed.coefficient_number} "
+                            f"at {event.time_seconds:g}s: {message}"
+                            for message in messages
+                        )
+                        continue
+                    if not eligibility.eligible:
                         continue
 
                     modeled_heal = seed.modeled_heal
