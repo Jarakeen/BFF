@@ -76,3 +76,26 @@ def test_runtime_executable_choice_resolution_is_catalogued() -> None:
     assert "RotationActionOccupancyRequirement" in descriptor.inputs
     assert "RotationRuntimeExecutableChoice" in descriptor.outputs
     assert "RotationRuntimeExecutableChoiceResolution" in descriptor.outputs
+
+
+def test_runtime_action_materialization_is_catalogued() -> None:
+    descriptor = SERVICE_CATALOG.get("rotation.runtime.action_materialization")
+
+    assert descriptor is not None
+    assert descriptor.implementation_path == (
+        "services.rotation_runtime_action_materialization_service"
+    )
+    assert descriptor.dependencies == (
+        "rotation.runtime.executable_choice_resolution",
+    )
+    assert descriptor.responsibilities == (
+        "rotation_runtime_action_materialization",
+    )
+    assert descriptor.encounter_aware is True
+    assert descriptor.inputs == (
+        "RotationPlan",
+        "RotationRuntimeExecutableChoice",
+    )
+    assert "RotationRuntimeActionMaterialization" in descriptor.outputs
+    assert "RotationAction" in descriptor.outputs
+    assert "RotationPlan" in descriptor.outputs
