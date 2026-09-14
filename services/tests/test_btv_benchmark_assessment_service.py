@@ -2,7 +2,6 @@ from pathlib import Path
 
 import pytest
 
-from services.btv_benchmark_assessment_service import BTVBenchmarkAssessmentService
 from services.btv_benchmark_evidence_service import (
     BTVBenchmarkEvidenceService,
     BTVBenchmarkObservation,
@@ -45,7 +44,7 @@ def _temporal_result(
 def test_selects_group_insights_target_without_using_player_scoped_buff_row():
     corpus = BTVBenchmarkEvidenceService.load(_FIXTURE)
 
-    row = BTVBenchmarkAssessmentService.select_target_observation(
+    row = BTVBenchmarkEvidenceService.select_target_observation(
         corpus,
         effect_key="major_slayer",
     )
@@ -59,7 +58,7 @@ def test_selects_group_insights_target_without_using_player_scoped_buff_row():
 
 def test_temporal_assessment_reports_target_shortfall_gaps_and_overlap():
     corpus = BTVBenchmarkEvidenceService.load(_FIXTURE)
-    row = BTVBenchmarkAssessmentService.select_target_observation(
+    row = BTVBenchmarkEvidenceService.select_target_observation(
         corpus,
         effect_key="major_berserk",
     )
@@ -84,7 +83,7 @@ def test_temporal_assessment_reports_target_shortfall_gaps_and_overlap():
         ),
     )
 
-    assessment = BTVBenchmarkAssessmentService.assess_temporal_result(row, result)
+    assessment = BTVBenchmarkEvidenceService.assess_temporal_result(row, result)
 
     assert result.coverage_ratio == pytest.approx(0.75)
     assert result.uncovered_intervals == ((75.0, 100.0),)
@@ -126,7 +125,7 @@ def test_temporal_assessment_can_compare_observed_when_denominator_is_proven_equ
         ),
     )
 
-    assessment = BTVBenchmarkAssessmentService.assess_temporal_result(
+    assessment = BTVBenchmarkEvidenceService.assess_temporal_result(
         row,
         result,
         temporal_uptime_denominator_basis=UPTIME_DENOMINATOR_DAMAGEABLE_BOSS_TIME,
@@ -157,7 +156,7 @@ def test_off_balance_fixture_stays_ceiling_only_without_inventing_target():
             ),
         ),
     )
-    assessment = BTVBenchmarkAssessmentService.assess_temporal_result(row, result)
+    assessment = BTVBenchmarkEvidenceService.assess_temporal_result(row, result)
 
     assert assessment.target_met is None
     assert any("provides no target" in line for line in assessment.feedback)
