@@ -34,6 +34,7 @@ def _requirement(
     end: float = 12.0,
     minimum: int = 1,
     bar: str | None = "front",
+    target_key: str | None = None,
 ) -> RotationTankTauntApplicationRequirement:
     return RotationTankTauntApplicationRequirement(
         requirement_id=requirement_id,
@@ -42,6 +43,7 @@ def _requirement(
         window_end_seconds=end,
         minimum_applications=minimum,
         bar=bar,
+        target_key=target_key,
     )
 
 
@@ -63,6 +65,10 @@ class _FakeTauntObligationService:
             == requirement.source_skill_name.casefold()
             and requirement.window_start_seconds <= action.time_seconds <= requirement.window_end_seconds
             and (requirement.bar is None or action.bar == requirement.bar)
+            and (
+                requirement.target_key is None
+                or action.target_key == requirement.target_key
+            )
         )
         return SimpleNamespace(
             resolved=True,
@@ -117,6 +123,67 @@ def test_inserts_exact_source_skill_claim_when_saved_build_proves_slot() -> None
     assert action.name == "Pierce Armor"
     assert action.time_seconds == 10.5
     assert action.bar == "front"
+
+
+def test_target_specific_requirement_is_inherited_by_inserted_taunt_claim() -> None:
+    requirement = _requirement(target_key="reef_guardian_left")
+    projection = _service().project(
+        candidate=_candidate(),
+        requirements=(requirement,),
+        claims=(RotationTankTauntActionClaim("taunt_01", 10.5, 0, bar="front"),),
+        slot_requirements=(_slot("front"),),
+    )
+
+    assert projection.resolved is True
+    assert projection.candidate is not None
+    assert projection.candidate.plan.actions[0].target_key == "reef_guardian_left"
+
+
+def test_claim_target_cannot_contradict_required_target_identity() -> None:
+    requirement = _requirement(target_key="reef_guardian_left")
+    projection = _service().project(
+        candidate=_candidate(),
+        requirements=(requirement,),
+        claims=(
+            RotationTankTauntActionClaim(
+                "taunt_01",
+                10.5,
+                0,
+                bar="front",
+                target_key="reef_guardian_right",
+            ),
+        ),
+        slot_requirements=(_slot("front"),),
+    )
+
+    assert projection.candidate is None
+    assert projection.unresolved == (
+        "taunt_01: taunt claim target reef_guardian_right does not match required target reef_guardian_left",
+    )
+
+
+def test_existing_wrong_target_does_not_preserve_target_specific_requirement() -> None:
+    candidate = _candidate(
+        RotationAction(
+            10.5,
+            0,
+            RotationActionKind.SKILL,
+            name="Pierce Armor",
+            bar="front",
+            target_key="reef_guardian_right",
+        )
+    )
+    requirement = _requirement(target_key="reef_guardian_left")
+    projection = _service().project(
+        candidate=candidate,
+        requirements=(requirement,),
+        claims=(),
+    )
+
+    assert projection.candidate is None
+    assert projection.unresolved == (
+        "taunt_01: scheduled 0 of 1 required taunt applications",
+    )
 
 
 def test_missing_saved_build_slot_evidence_blocks_new_taunt_cast() -> None:
