@@ -203,6 +203,26 @@ class ExtremeNamedGearSetRealizationService:
         return tuple(product(mains, offs))
 
     @staticmethod
+    def _weapon_requirement_satisfied(
+        realization: ExtremeGearPhysicalRealization,
+        weapon_types: tuple[str, ...],
+        required_weapon_types: frozenset[str],
+    ) -> bool:
+        if not required_weapon_types:
+            return True
+        # No named set claims the active weapon in this topology, so any legal
+        # non-set weapon type may occupy the free weapon slot without changing
+        # the proved named-set counts.
+        if realization.weapon_shape is ExtremeWeaponSlotShape.NONE:
+            return True
+        # A required two-handed family such as Destruction Staff must be the
+        # actual named-set weapon when the topology spends two set-count units
+        # on the active weapon. One-handed/paired shapes cannot satisfy it.
+        if realization.weapon_shape is ExtremeWeaponSlotShape.TWO_HANDED:
+            return bool(len(weapon_types) == 1 and weapon_types[0] in required_weapon_types)
+        return False
+
+    @staticmethod
     def _weapon_assignments(
         realization: ExtremeGearPhysicalRealization,
         named_sets: tuple[ExtremeNamedGearSetSlotEligibility, ...],
@@ -254,6 +274,8 @@ class ExtremeNamedGearSetRealizationService:
         cls,
         topology: ExtremeGearSetCountTopology,
         named_sets: tuple[ExtremeNamedGearSetSlotEligibility, ...],
+        *,
+        required_weapon_types: frozenset[str] = frozenset(),
     ) -> ExtremeNamedGearSetRealization | None:
         counts = tuple(int(value) for value in topology.counts)
         if len(named_sets) != len(counts):
@@ -268,12 +290,15 @@ class ExtremeNamedGearSetRealizationService:
         if cls._violates_global_set_legality(counts, named_sets):
             return None
 
+        required = frozenset(str(item).strip() for item in required_weapon_types if str(item).strip())
         physical_rows = ExtremeGearPhysicalSlotRealizationService._witnesses_for_topology(topology)
         for physical in physical_rows:
             body = cls._body_assignments(physical.body_jewelry_counts, named_sets)
             if body is None:
                 continue
             for weapon_types in cls._weapon_type_options(physical, named_sets):
+                if not cls._weapon_requirement_satisfied(physical, weapon_types, required):
+                    continue
                 weapons = cls._weapon_assignments(physical, named_sets, weapon_types)
                 return ExtremeNamedGearSetRealization(
                     topology_signature=topology.signature,
@@ -290,5 +315,11 @@ class ExtremeNamedGearSetRealizationService:
         cls,
         topology: ExtremeGearSetCountTopology,
         named_sets: tuple[ExtremeNamedGearSetSlotEligibility, ...],
+        *,
+        required_weapon_types: frozenset[str] = frozenset(),
     ) -> bool:
-        return cls.find_witness(topology, named_sets) is not None
+        return cls.find_witness(
+            topology,
+            named_sets,
+            required_weapon_types=required_weapon_types,
+        ) is not None
