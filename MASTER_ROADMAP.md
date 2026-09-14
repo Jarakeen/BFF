@@ -898,9 +898,26 @@ Active next work:
 
 Fight-horizon policy: most raid fights are expected to finish within roughly six minutes in the user's working context, so **360 seconds may be used only as an overrideable fallback planning ceiling when encounter-specific timing is unavailable**. It is not a canonical encounter duration. Optimization should prioritize important burn/mechanic windows over meaningless attempts to force every support effect to 100% global uptime.
 
+### Phase 13 / current Phase 13.5 closeout structural audit
+
+Before the current Phase 13 line is considered ready to close, and before Phase 14 begins building on top of it, perform a deliberate repository-wide structural audit. This is a stabilization gate, not a feature-expansion pass.
+
+The audit must cover:
+
+- **dead and obsolete code:** identify unreachable services, unused helpers, stale imports, abandoned flags, superseded adapters, and compatibility paths that no longer have a supported caller;
+- **duplicate or competing authority:** find multiple services, repositories, factories, registries, dictionaries, or UI paths that claim ownership of the same concept and resolve them to one authoritative implementation where appropriate;
+- **semantic conflicts:** trace important ESO concepts across the codebase to catch two active implementations that encode different rules even when both are individually tested. Priority examples include penetration, buff/debuff duration, periodic classification, execute scaling, potion effects, resource costs, proc timing, bar ownership, healing modifiers, and target/recipient semantics;
+- **architecture drift:** identify code that works but bypasses canonical Character → Build → Team identity, canonical effect/runtime services, repositories, source/provenance boundaries, or other rules defined by the architecture documents;
+- **stale tests and shims:** remove or rewrite tests that protect obsolete behavior, and review temporary wrappers, feature flags, migration shims, compatibility aliases, and fallback paths to determine whether they are still intentionally required;
+- **dependency and configuration cruft:** review unused dependencies, duplicated configuration, stale data files, logging/debug leftovers, exception-swallowing fallbacks, and documentation that no longer describes the actual authoritative path;
+- **recorded disposition:** every material finding must be fixed, explicitly retained with a reason, or recorded as a countable deferred item with an owner/phase boundary. Unknown or conflicting behavior may not be cleaned up by silently choosing whichever implementation is convenient;
+- **post-cleanup validation:** rerun the affected focused suites and an appropriate full regression checkpoint after removals or consolidations so cleanup cannot become an untested behavior change.
+
+The purpose is not to minimize line count. The purpose is to prove that the architecture BFF intends to carry into simulation has one coherent set of authorities and that historical implementation layers are not quietly contradicting the canonical engine.
+
 **Prerequisite / integration gate:** Phase 12.5 must be green before Phase 13 is closed. Rotation evaluation must consume the canonical Character → Build → Team assignment path rather than introducing another page-specific build/team identity model.
 
-**Hardened exit criteria:** BFF can produce and evaluate a realistic damage, support, or healing rotation from verified skill behavior and resource constraints; action timing is deterministic from identical inputs; class passives and build-derived effect-duration modifiers are respected; provider recipient and temporal obligations can be represented where relevant; unsupported mechanics remain explicit; at least one real build is validated end-to-end; focused and appropriate regression gates pass.
+**Hardened exit criteria:** BFF can produce and evaluate a realistic damage, support, or healing rotation from verified skill behavior and resource constraints; action timing is deterministic from identical inputs; class passives and build-derived effect-duration modifiers are respected; provider recipient and temporal obligations can be represented where relevant; unsupported mechanics remain explicit; at least one real build is validated end-to-end; the Phase 13 structural audit above is completed with findings dispositioned; focused and appropriate regression gates pass.
 
 ---
 
