@@ -54,9 +54,13 @@ ROTATION_TANK_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "GeneratedRotationCandidate",
             "RotationTankTauntApplicationRequirement",
             "RotationTankTauntActionClaim",
+            "RotationActionSlotRequirement",
         ),
         outputs=("RotationTankTauntCandidateProjection",),
-        dependencies=("rotation.tank.taunt_application_obligation",),
+        dependencies=(
+            "rotation.tank.taunt_application_obligation",
+            "rotation.saved_build.action_slot",
+        ),
         responsibilities=("rotation_tank_taunt_candidate_generation",),
         roles=("Tank",),
         behavior=ServiceBehavior.DETERMINISTIC,
@@ -65,8 +69,11 @@ ROTATION_TANK_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         notes=(
             "The requirement owns the exact source skill and application window; the claim owns "
             "only action kind, exact time, sequence, and optional bar. Existing legal applications "
-            "are preserved. Conflicting slots and missing applications fail closed. This remains "
-            "application-only and does not imply duration, maintenance, target ownership, or overtaunt."
+            "are preserved. New casts require saved-build structural evidence proving the exact "
+            "skill/Ultimate is slotted on the selected bar; a two-bar source without an explicit "
+            "bar remains unresolved. Conflicting slots and missing applications fail closed. "
+            "This remains application-only and does not imply duration, maintenance, target "
+            "ownership, or overtaunt."
         ),
     ),
     ServiceDescriptor(
@@ -81,6 +88,7 @@ ROTATION_TANK_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "GeneratedRotationCandidate",
             "RotationTankTauntApplicationRequirement",
             "RotationTankTauntActionClaim",
+            "RotationActionSlotRequirement",
             "RotationCandidateFamilyProjector",
         ),
         outputs=("GeneratedRotationCandidate",),
@@ -92,8 +100,9 @@ ROTATION_TANK_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.POLICY,
         notes=(
             "Resolved candidates preserve/insert exact taunt applications before family evaluation. "
-            "Candidate-specific projection failures remain on that plan's unresolved channel "
-            "instead of aborting otherwise valid sibling candidates."
+            "Saved-build slot evidence is carried through unchanged. Candidate-specific projection "
+            "failures remain on that plan's unresolved channel instead of aborting otherwise valid "
+            "sibling candidates."
         ),
     ),
     ServiceDescriptor(
