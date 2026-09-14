@@ -305,8 +305,13 @@ class RotationTankProviderScopeService:
                 capability_type="taunt",
             )
             taunt_sources = tuple(getattr(taunt_source_resolution, "sources", ()))
-            source_unresolved = tuple(
-                getattr(taunt_source_resolution, "unresolved", ())
+            # Once a concrete taunt source is proven, unrelated unresolved slotted
+            # skills must not poison that exact utility identity. If no taunt source
+            # is proven, the unresolved discovery evidence remains a blocker.
+            source_unresolved = (
+                ()
+                if taunt_sources
+                else tuple(getattr(taunt_source_resolution, "unresolved", ()))
             )
             bound_horizon_policies, binding_unresolved = (
                 _bind_horizon_policies_to_taunt_source(
