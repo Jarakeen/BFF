@@ -47,7 +47,7 @@ def _plan(name="Magrat", build_name="Trial Healer"):
     )
 
 
-def _request(action="Combat Prayer"):
+def _request(action="Combat Prayer", *, bar=None):
     recipient = TeamProviderCoverageService.evaluate(
         TeamProviderCoverageProfile("minor_berserk", 12),
         required_recipients=12,
@@ -66,7 +66,7 @@ def _request(action="Combat Prayer"):
         temporal_coverage_result=temporal,
         action_bindings=(
             TeamProviderActionBinding(
-                "Magrat", "Trial Healer", action, 0.25
+                "Magrat", "Trial Healer", action, 0.25, bar
             ),
         ),
         gcd_seconds_per_application=1.0,
@@ -94,6 +94,34 @@ def test_projects_every_exact_scheduled_provider_cast_for_selected_build():
         (item.time_seconds, item.sequence, item.primary_role_displacement_seconds)
         for item in contribution.provider_actions
     ) == ((0.0, 0, 0.25), (20.0, 1, 0.25))
+
+
+def test_explicit_bar_binding_does_not_count_same_named_cast_on_other_bar():
+    plan = RotationPlan(
+        character_name="Magrat",
+        build_name="Trial Healer",
+        duration_seconds=60.0,
+        actions=(
+            RotationAction(0.0, 0, RotationActionKind.SKILL, "Combat Prayer", "front"),
+            RotationAction(10.0, 0, RotationActionKind.SKILL, "Combat Prayer", "back"),
+        ),
+    )
+    spy = _CanonicalWorkloadSpy()
+
+    result = TeamProviderWorkloadCandidateService(canonical_workload=spy).generate(
+        selected_builds=(_build(),),
+        rotation_plans=(plan,),
+        progression_by_identity={
+            ("Magrat", "Trial Healer"): CharacterProgression()
+        },
+        alternatives=(_request(bar="front"),),
+    )
+
+    assert result.rejected == ()
+    contribution = spy.calls[0]["contributions"][0]
+    assert tuple((item.time_seconds, item.sequence) for item in contribution.provider_actions) == (
+        (0.0, 0),
+    )
 
 
 def test_rejects_missing_plan_instead_of_treating_static_build_as_uptime():
