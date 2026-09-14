@@ -18,6 +18,10 @@ from services.rotation_assignment_policy_resolver import (
     RotationAssignmentNonEffectPolicy,
     RotationAssignmentPolicyResolver,
 )
+from services.rotation_assignment_taunt_maintenance_service import (
+    RotationAssignmentTauntMaintenancePolicy,
+    RotationAssignmentTauntMaintenanceWindow,
+)
 from services.rotation_assignment_taunt_obligation_service import (
     RotationAssignmentTauntApplicationWindow,
     RotationAssignmentTauntPolicy,
@@ -88,6 +92,27 @@ def _taunt_policy(requirement_id: str = "boss_taunt") -> RotationAssignmentTaunt
     )
 
 
+def _taunt_maintenance_policy(
+    requirement_id: str = "boss_taunt_maintenance",
+) -> RotationAssignmentTauntMaintenancePolicy:
+    return RotationAssignmentTauntMaintenancePolicy(
+        requirement_id=requirement_id,
+        encounter_id="xalvakka_hm",
+        requirement_type=requirement_id,
+        source_skill_name="Pierce Armor",
+        windows=(
+            RotationAssignmentTauntMaintenanceWindow(
+                occurrence_id="main_phase",
+                target_key="xalvakka",
+                active_start_seconds=0.0,
+                active_end_seconds=45.0,
+                bar="front",
+            ),
+        ),
+        source="reviewed continuous taunt ownership",
+    )
+
+
 def _non_effect_policy(requirement_id: str = "portal_position") -> RotationAssignmentNonEffectPolicy:
     return RotationAssignmentNonEffectPolicy(
         requirement_id=requirement_id,
@@ -98,22 +123,27 @@ def _non_effect_policy(requirement_id: str = "portal_position") -> RotationAssig
     )
 
 
-def test_resolves_effect_taunt_and_explicit_non_effect_dispositions() -> None:
+def test_resolves_effect_taunt_maintenance_and_explicit_non_effect_dispositions() -> None:
     resolution = RotationAssignmentPolicyResolver().resolve(
         member_id="char-a",
         assignments=(
             _assignment(requirement_id="major_brittle"),
             _assignment(requirement_id="boss_taunt"),
+            _assignment(requirement_id="boss_taunt_maintenance"),
             _assignment(requirement_id="portal_position"),
         ),
         effect_policies=(_effect_policy(),),
         taunt_policies=(_taunt_policy(),),
+        taunt_maintenance_policies=(_taunt_maintenance_policy(),),
         non_effect_policies=(_non_effect_policy(),),
     )
 
     assert resolution.ready is True
     assert [item.requirement_id for item in resolution.effect_policies] == ["major_brittle"]
     assert [item.requirement_id for item in resolution.taunt_policies] == ["boss_taunt"]
+    assert [item.requirement_id for item in resolution.taunt_maintenance_policies] == [
+        "boss_taunt_maintenance"
+    ]
     assert [item.requirement_id for item in resolution.non_effect_policies] == ["portal_position"]
     assert resolution.knowledge_gaps == ()
 
@@ -132,6 +162,7 @@ def test_owned_assignment_without_disposition_becomes_shared_research_gap() -> N
     assert gap.consumers == ("comp_maker", "rotation_maker", "optimizer")
     assert "effect identity" in gap.needed_evidence
     assert "taunt skill" in gap.needed_evidence
+    assert "continuous taunt ownership" in gap.needed_evidence
     assert "non-effect disposition" in gap.needed_evidence
 
 
@@ -144,6 +175,7 @@ def test_assignment_owned_by_another_member_does_not_block_requested_member() ->
     assert resolution.ready is True
     assert resolution.effect_policies == ()
     assert resolution.taunt_policies == ()
+    assert resolution.taunt_maintenance_policies == ()
     assert resolution.non_effect_policies == ()
     assert resolution.knowledge_gaps == ()
 
@@ -174,6 +206,18 @@ def test_requirement_cannot_have_multiple_policy_dispositions() -> None:
                     reason="not actually appropriate",
                     source="test",
                 ),
+            ),
+        )
+
+
+def test_discrete_and_continuous_taunt_dispositions_cannot_overlap() -> None:
+    with pytest.raises(ValueError, match="multiple policy dispositions"):
+        RotationAssignmentPolicyResolver().resolve(
+            member_id="char-a",
+            assignments=(_assignment(requirement_id="boss_taunt"),),
+            taunt_policies=(_taunt_policy(),),
+            taunt_maintenance_policies=(
+                _taunt_maintenance_policy(requirement_id="boss_taunt"),
             ),
         )
 
