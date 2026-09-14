@@ -51,8 +51,8 @@ def test_persist_report_metadata_keeps_only_selected_xalvakka_rows(tmp_path):
             "SELECT fight_id, name, kill, boss_percentage FROM log_fight ORDER BY fight_id"
         ).fetchall()
 
-    assert report == ("ABC123", "https://www.esologs.com/reports/ABC123")
-    assert rows == [
+    assert tuple(report) == ("ABC123", "https://www.esologs.com/reports/ABC123")
+    assert [tuple(row) for row in rows] == [
         (8, "Xalvakka", 0, 3912.0),
         (11, "Xalvakka", 1, 0.0),
     ]
