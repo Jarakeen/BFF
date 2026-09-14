@@ -187,6 +187,28 @@ ROTATION_TANK_INTEGRATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "silently overwritten, and no output from this service carries time_seconds or hard policy."
         ),
     ),
+    ServiceDescriptor(
+        service_id="raid_plan.saved_build_resolution",
+        domain="raid_plan",
+        purpose=(
+            "Resolve one Raid Plan chair's selected reusable build to exactly one saved PlayerBuild "
+            "before downstream evaluation freezes an effective build snapshot."
+        ),
+        implementation_path="services.raid_plan_saved_build_resolution_service",
+        inputs=(
+            "RaidPlan",
+            "RaidPlanSeatId",
+            "SavedPlayerBuilds",
+        ),
+        outputs=("RaidPlanSavedBuildResolution", "PlayerBuild"),
+        responsibilities=("raid_plan_exact_saved_build_resolution",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.POLICY,
+        notes=(
+            "Matching uses exact selected build, character, and gamertag identity when present. "
+            "Missing or duplicate matches fail closed; no fuzzy build ownership is inferred."
+        ),
+    ),
 )
 
 
