@@ -19,7 +19,7 @@ if str(ROOT) not in sys.path:
 
 from minmax.combat_state_snapshot import CombatantSnapshot, CombatStateSnapshot
 from services.rotation_candidate_dd_role_output_service import RotationActionDamageEvidence
-from tools.audit_phase13_dd_priority_schedule import _priority_entries
+from tools.dd_audit_priority_fixture_support import resolve_audit_priorities
 from tools.audit_phase13_saved_build_rotation_timing import _load_build
 from ui.rotation_dd_cross_bar_generation_support import RotationDDCrossBarGenerationSupport
 from ui.rotation_dd_execute_generation_context import RotationDDExecuteGenerationContext
@@ -79,7 +79,10 @@ def main() -> int:
         action="append",
         default=[],
         metavar="BAR:SLOT:PRIORITY",
-        help="Rank every occupied ordinary saved-bar slot.",
+        help=(
+            "Rank every occupied ordinary saved-bar slot. If omitted entirely, this "
+            "regression audit uses a deterministic audit-only saved-slot fixture."
+        ),
     )
     args = parser.parse_args()
 
@@ -95,7 +98,10 @@ def main() -> int:
             f"got role={getattr(build, 'Role', '')!r}"
         )
 
-    priorities = _priority_entries(tuple(args.priority or ()), build=build)
+    priorities, used_priority_fixture = resolve_audit_priorities(
+        tuple(args.priority or ()),
+        build=build,
+    )
     request = RotationGenerationRequest(
         duration_seconds=duration,
         weave_light_attacks=True,
@@ -132,6 +138,14 @@ def main() -> int:
     print(f"Build:     {getattr(build, 'BuildName', '') or 'unnamed'}")
     print(f"Duration:  {duration:g}s")
     print("Execute target Health: 20%")
+    print(
+        "Priority source: "
+        + (
+            "deterministic audit-only saved-slot fixture"
+            if used_priority_fixture
+            else "explicit --priority input"
+        )
+    )
     print()
     print("PLAN COMPARISON")
     print("---------------")
