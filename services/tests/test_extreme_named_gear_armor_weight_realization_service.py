@@ -175,7 +175,11 @@ def test_non_heavy_five_piece_set_can_avoid_armor_via_jewelry_and_two_handed_wea
     assert not any(
         row.slot in _ALL_ARMOR for row in result.witness.body_jewelry_assignments
     )
-    assert len(result.witness.weapon_assignments) == 1
+    assert len(result.witness.weapon_assignments) == 2
+    assert {row.slot for row in result.witness.weapon_assignments} == {
+        "Main Hand",
+        "Off Hand",
+    }
 
 
 def test_missing_database_evidence_fails_closed(tmp_path):
