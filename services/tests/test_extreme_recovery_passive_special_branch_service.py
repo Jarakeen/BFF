@@ -1,0 +1,73 @@
+import pytest
+
+from services.extreme_recovery_passive_special_branch_service import (
+    ExtremeRecoveryPassiveBranchKind,
+    ExtremeRecoveryPassiveSpecialBranchService,
+)
+from services.extreme_skill_universe_service import ExtremePlayerSkillRecord, ExtremeSkillDomain
+
+
+def _passive(name: str, description: str, *, domain=ExtremeSkillDomain.CLASS):
+    return ExtremePlayerSkillRecord(
+        skill_id=1,
+        name=name,
+        class_type="Test Class" if domain is ExtremeSkillDomain.CLASS else "",
+        skill_line="Test Line",
+        skill_type="Passive",
+        is_passive=True,
+        is_player=True,
+        is_crafted=False,
+        base_ability_id=100,
+        max_rank=2,
+        max_rank_ability_id=200,
+        description=description,
+        domain=domain,
+    )
+
+
+def test_shared_fixed_recovery_applies_to_magicka():
+    row = ExtremeRecoveryPassiveSpecialBranchService.classify(
+        _passive("Sphere of Influence", "Casting a damage shield grants 225 Health, Magicka, and Stamina Recovery for 12 seconds."),
+        "magicka_recovery",
+    )
+    assert row is not None
+    assert row.kind is ExtremeRecoveryPassiveBranchKind.CONDITIONAL_FLAT
+    assert row.flat_ceiling == pytest.approx(225.0)
+
+
+def test_home_keep_percent_applies_to_all_recovery_objectives():
+    row = ExtremeRecoveryPassiveSpecialBranchService.classify(
+        _passive(
+            "Domination",
+            "Increases your Health, Magicka, and Stamina Recovery depending on Home Keeps. 5 Keeps: 90% 6 Keeps: 100%",
+            domain=ExtremeSkillDomain.OTHER,
+        ),
+        "magicka_recovery",
+    )
+    assert row is not None
+    assert row.kind is ExtremeRecoveryPassiveBranchKind.CONDITIONAL_PERCENT
+    assert row.percent_ceiling == pytest.approx(100.0)
+
+
+def test_slot_scaled_recovery_is_semantically_classified_without_invented_ceiling():
+    row = ExtremeRecoveryPassiveSpecialBranchService.classify(
+        _passive("Wellspring of the Abyss", "Increases your Health, Magicka, and Stamina Recovery by 129 for each Soldier of Apocrypha ability slotted."),
+        "magicka_recovery",
+    )
+    assert row is not None
+    assert row.kind is ExtremeRecoveryPassiveBranchKind.SCALING_RECOVERY
+    assert row.flat_ceiling is None
+    assert row.condition == "external_ceiling_required"
+
+
+def test_health_only_vampire_penalty_does_not_poison_magicka_recovery():
+    passive = _passive("Feed", "Stage 1/2/3/4 Health Recovery: -10%/-30%/-60%/-100%", domain=ExtremeSkillDomain.WORLD)
+    assert ExtremeRecoveryPassiveSpecialBranchService.classify(passive, "magicka_recovery") is None
+
+
+def test_unknown_objective_fails_closed():
+    with pytest.raises(KeyError):
+        ExtremeRecoveryPassiveSpecialBranchService.classify(
+            _passive("Mystery", "Increases Magicka Recovery by 10."),
+            "spell_damage",
+        )
