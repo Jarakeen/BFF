@@ -6,9 +6,9 @@ The preceding runtime audit reduces the surviving route to 18 Baron Zaudrus proc
 therefore 54 status applications, when all 40 reviewed Decisive opportunities proc.
 This diagnostic reserves four one-second action slots for the already-reviewed
 Blessing-at-the-Peak Earthen Heart cadence and uses Force Shock for the remaining
-18 explicit skill actions.  Each Force Shock has Flame/Frost/Shock direct-damage
+18 explicit skill actions. Each Force Shock has Flame/Frost/Shock direct-damage
 components, so the shared status-opportunity service exposes three stochastic status
-rolls per cast.  The audit proves only the theoretical all-procs ceiling, never a
+rolls per cast. The audit proves only the theoretical all-procs ceiling, never a
 reliable or expected rotation outcome.
 """
 
@@ -94,6 +94,59 @@ def _exact_skill_row(database: Path, name: str) -> tuple[dict | None, tuple[str,
     return rows[0], ()
 
 
+def _max_rank_skill_row(database: Path, name: str) -> tuple[dict | None, tuple[str, ...]]:
+    """Resolve the highest imported rank for one exact skill name.
+
+    ``load_skill_choices`` deliberately exposes one representative UI row, which is
+    not sufficient evidence for rank-scaled passives such as Elemental Force. This
+    helper stays audit-local and reads the canonical maximum rank without changing UI
+    selection semantics.
+    """
+
+    if not database.is_file():
+        return None, (f"canonical skill database is unavailable: {database}",)
+    with sqlite3.connect(database) as db:
+        db.row_factory = sqlite3.Row
+        skill_columns = _columns(db, "skill")
+        rank_columns = _columns(db, "skill_rank")
+        ability_columns = _columns(db, "ability")
+        required_skill = {"id", "name", "skill_line", "is_passive"}
+        required_rank = {"id", "skill_id", "ability_id", "rank", "raw_name", "raw_description", "raw_tooltip"}
+        required_ability = {"ability_id", "name", "description"}
+        missing = tuple(sorted(
+            (required_skill - skill_columns)
+            | (required_rank - rank_columns)
+            | (required_ability - ability_columns)
+        ))
+        if missing:
+            return None, ("canonical max-rank skill evidence columns missing: " + ", ".join(missing),)
+        rows = db.execute(
+            """
+            SELECT
+                sr.ability_id,
+                COALESCE(NULLIF(sr.raw_name, ''), NULLIF(a.name, ''), s.name) AS name,
+                COALESCE(NULLIF(sr.raw_description, ''), NULLIF(a.description, ''), '') AS description,
+                COALESCE(sr.raw_tooltip, '') AS raw_tooltip,
+                s.skill_line,
+                s.is_passive,
+                COALESCE(sr.rank, 0) AS rank
+            FROM skill_rank sr
+            JOIN skill s ON s.id = sr.skill_id
+            LEFT JOIN ability a ON a.ability_id = sr.ability_id
+            WHERE LOWER(TRIM(COALESCE(NULLIF(sr.raw_name, ''), NULLIF(a.name, ''), s.name))) = LOWER(?)
+            ORDER BY COALESCE(sr.rank, 0) DESC, sr.id DESC
+            """,
+            (name.strip(),),
+        ).fetchall()
+    if not rows:
+        return None, (f"expected canonical max-rank {name!r} row, found 0",)
+    top_rank = int(rows[0]["rank"] or 0)
+    top = tuple(row for row in rows if int(row["rank"] or 0) == top_rank)
+    if len(top) != 1:
+        return None, (f"expected one max-rank canonical {name!r} row at rank {top_rank}, found {len(top)}",)
+    return dict(top[0]), ()
+
+
 def _contains(row: dict | None, *fragments: str) -> bool:
     if row is None:
         return False
@@ -118,7 +171,7 @@ def main() -> int:
     database = Path(args.database)
 
     force_shock, force_unresolved = _exact_skill_row(database, "Force Shock")
-    elemental_force, passive_unresolved = _exact_skill_row(database, "Elemental Force")
+    elemental_force, passive_unresolved = _max_rank_skill_row(database, "Elemental Force")
     force_semantics_proven = bool(
         force_shock
         and str(force_shock.get("skill_line") or "").strip().casefold() == "destruction staff"
@@ -183,6 +236,9 @@ def main() -> int:
     print(f"score_seconds={SCORE_SECONDS:.3f}")
     print(f"force_shock_canonical_row_proven={force_semantics_proven}")
     print(f"elemental_force_100_percent_increase_proven={elemental_force_proven}")
+    if elemental_force is not None:
+        print(f"elemental_force_max_rank={int(elemental_force.get('rank') or 0)}")
+        print(f"elemental_force_ability_id={int(elemental_force.get('ability_id') or 0)}")
     print(f"force_shock_canonical_instant_timing_proven={force_timing_proven}")
     if timing.evidence is not None:
         print(f"force_shock_ability_id={timing.evidence.ability_id}")
