@@ -74,6 +74,79 @@ ROTATION_TANK_INTEGRATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "alone never invents taunt timing, refresh lead, bar, target identity, or block/dodge timing."
         ),
     ),
+    ServiceDescriptor(
+        service_id="rotation.tank.encounter_add_activity_context",
+        domain="rotation",
+        purpose=(
+            "Project reviewed encounter add-activity boundaries onto already-bound Tank "
+            "responsibilities as contextual Generate triggers without inventing wall-clock timing."
+        ),
+        implementation_path="services.rotation_tank_encounter_add_activity_trigger_service",
+        inputs=(
+            "RaidTankEncounterBoundResponsibility",
+            "ReviewedEncounterAddActivity",
+        ),
+        outputs=("RotationTankEncounterAddActivityTrigger",),
+        responsibilities=("rotation_tank_reviewed_add_activity_context",),
+        roles=("Tank",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "These rows indicate when reviewed add responsibility becomes relevant from observed "
+            "actor activity. They do not create spawn timestamps, taunt timestamps, uptime floors, "
+            "or hard rotation obligations."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="rotation.tank.encounter_add_taunt_handling_context",
+        domain="rotation",
+        purpose=(
+            "Project reviewed actor-specific add-taunt handling classifications onto exact bound "
+            "Tank responsibilities for ranking/context consumers."
+        ),
+        implementation_path=(
+            "services.rotation_tank_encounter_add_taunt_handling_context_service"
+        ),
+        inputs=(
+            "RaidTankEncounterBoundResponsibility",
+            "ReviewedAddTauntHandlingActor",
+        ),
+        outputs=("RotationTankAddTauntHandlingContext",),
+        responsibilities=("rotation_tank_reviewed_add_taunt_handling_context",),
+        roles=("Tank",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.OBSERVATIONAL,
+        notes=(
+            "Actor handling classes remain contextual evidence only. Single-report behavior is not "
+            "promoted into hard maintenance obligations, exact timing, or canonical mechanic truth."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="rotation.tank.encounter_priority_context",
+        domain="rotation",
+        purpose=(
+            "Order already-reviewed, already-bound Tank responsibilities into soft rotation-facing "
+            "priority cues while preserving ownership, actor context, and trigger semantics."
+        ),
+        implementation_path="services.rotation_tank_encounter_priority_context_service",
+        inputs=(
+            "RaidTankEncounterBoundResponsibility",
+            "RotationTankAddTauntHandlingContext",
+        ),
+        outputs=("RotationTankEncounterPriorityCue",),
+        dependencies=("rotation.tank.encounter_add_taunt_handling_context",),
+        responsibilities=("rotation_tank_encounter_priority_context",),
+        roles=("Tank",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.POLICY,
+        notes=(
+            "Priority cues are consumer-owned strategy context. They never become hard policy, "
+            "cross-lane taunt permission, timing windows, or uptime floors by themselves."
+        ),
+    ),
 )
 
 
