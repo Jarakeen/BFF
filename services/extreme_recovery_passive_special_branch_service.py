@@ -10,11 +10,20 @@ from minmax.eso_markup import normalize_eso_markup
 from services.extreme_skill_universe_service import ExtremePlayerSkillRecord
 
 _SUPPORTED = {"health_recovery", "magicka_recovery", "stamina_recovery"}
+_RESOURCE_BY_OBJECTIVE = {
+    "health_recovery": "health",
+    "magicka_recovery": "magicka",
+    "stamina_recovery": "stamina",
+}
 _LABEL = {
     "health_recovery": "health recovery",
     "magicka_recovery": "magicka recovery",
     "stamina_recovery": "stamina recovery",
 }
+_RESOURCE_LIST_RECOVERY = re.compile(
+    r"(?P<resources>(?:health|magicka|stamina)(?:(?:\s*,\s*|\s+and\s+|\s*,\s*and\s+)(?:health|magicka|stamina)){1,2})\s+recovery",
+    flags=re.IGNORECASE,
+)
 
 
 class ExtremeRecoveryPassiveBranchKind(str, Enum):
@@ -42,6 +51,25 @@ class ExtremeRecoveryPassiveSpecialBranchService:
         return " ".join(normalize_eso_markup(str(value or "")).text.casefold().split())
 
     @classmethod
+    def mentions_objective_recovery(cls, value: str, objective_key: str) -> bool:
+        objective = str(objective_key or "").strip().casefold()
+        if objective not in _SUPPORTED:
+            raise KeyError(f"unsupported Recovery objective: {objective_key!r}")
+        text = cls._text(value)
+        label = _LABEL[objective]
+        if label in text:
+            return True
+        resource = _RESOURCE_BY_OBJECTIVE[objective]
+        for match in _RESOURCE_LIST_RECOVERY.finditer(text):
+            resources = {
+                token
+                for token in re.findall(r"health|magicka|stamina", match.group("resources"), flags=re.IGNORECASE)
+            }
+            if resource in {item.casefold() for item in resources}:
+                return True
+        return False
+
+    @classmethod
     def classify(
         cls,
         passive: ExtremePlayerSkillRecord,
@@ -53,13 +81,7 @@ class ExtremeRecoveryPassiveSpecialBranchService:
 
         text = cls._text(passive.description)
         label = _LABEL[objective]
-        shared = (
-            "health" in text
-            and "magicka" in text
-            and "stamina" in text
-            and "recovery" in text
-        )
-        if label not in text and not shared:
+        if not cls.mentions_objective_recovery(text, objective):
             return None
 
         if objective == "health_recovery" and re.search(r"health recovery\s*:\s*-[0-9%/\-]+", text):
@@ -85,37 +107,35 @@ class ExtremeRecoveryPassiveSpecialBranchService:
                     condition="home_keeps",
                 )
 
-        # Some canonical Recovery passives state an unconditional shared percentage
-        # with the three resources in different orders, e.g. Refreshing Shadows:
-        # "Health, Stamina, and Magicka Recovery by 15%." The generic passive
-        # projector currently recognizes only one resource ordering, so classify
-        # this semantic shape here without inventing any runtime condition.
-        if shared:
-            shared_percent = re.search(
-                r"increases your .*recovery by\s+(\d+(?:\.\d+)?)%",
-                text,
+        # Canonical Recovery passives use several resource-list orderings, including
+        # "Health, Stamina, and Magicka Recovery" and "Magicka and Stamina Recovery".
+        # Unconditional percentage clauses are static semantics even when the generic
+        # projector has not yet normalized that exact wording.
+        static_percent = re.search(
+            r"increases your .*recovery by\s+(\d+(?:\.\d+)?)%",
+            text,
+        )
+        if static_percent and not any(
+            marker in text
+            for marker in (
+                "while ",
+                "when ",
+                "whenever ",
+                "after ",
+                "for each ",
+                "for every ",
+                "per slotted",
+                "home keeps",
             )
-            if shared_percent and not any(
-                marker in text
-                for marker in (
-                    "while ",
-                    "when ",
-                    "whenever ",
-                    "after ",
-                    "for each ",
-                    "for every ",
-                    "per slotted",
-                    "home keeps",
-                )
-            ):
-                return ExtremeRecoveryPassiveBranch(
-                    passive=passive,
-                    objective_key=objective,
-                    kind=ExtremeRecoveryPassiveBranchKind.STATIC_PERCENT,
-                    can_raise_self=True,
-                    percent_ceiling=float(shared_percent.group(1)),
-                    condition=None,
-                )
+        ):
+            return ExtremeRecoveryPassiveBranch(
+                passive=passive,
+                objective_key=objective,
+                kind=ExtremeRecoveryPassiveBranchKind.STATIC_PERCENT,
+                can_raise_self=True,
+                percent_ceiling=float(static_percent.group(1)),
+                condition=None,
+            )
 
         target_up_to = re.search(
             rf"{re.escape(label)} by up to\s+(\d+(?:\.\d+)?)",
@@ -132,7 +152,7 @@ class ExtremeRecoveryPassiveSpecialBranchService:
             )
 
         shared_fixed = re.search(
-            r"(?:and\s+)?(\d+(?:\.\d+)?)\s+health,?\s+magicka,?\s+(?:and\s+)?stamina recovery",
+            r"(?:and\s+)?(\d+(?:\.\d+)?)\s+(?:health|magicka|stamina)(?:\s*,\s*|\s+and\s+|\s*,\s*and\s+)(?:health|magicka|stamina)(?:(?:\s*,\s*|\s+and\s+|\s*,\s*and\s+)(?:health|magicka|stamina))?\s+recovery",
             text,
         )
         if shared_fixed:
@@ -146,7 +166,7 @@ class ExtremeRecoveryPassiveSpecialBranchService:
             )
 
         # Known Recovery semantics whose maximum depends on another canonical owner
-        # (slot count, Ultimate spend, Max Resource, etc.).  Semantic identity is
+        # (slot count, Ultimate spend, Max Resource, etc.). Semantic identity is
         # proven here, but no numeric ceiling is invented.
         scaling_markers = (
             "per slotted",
