@@ -80,17 +80,17 @@ TEAM_PROVIDER_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
     ServiceDescriptor(
         service_id="team.provider.workload_explanation",
         domain="team",
-        purpose="Render UI-safe coverage, workload, frontier, blocker, and policy facts for Comp Maker and Team Optimization.",
+        purpose="Render UI-safe coverage, workload, frontier, blocker, policy, and scoped benchmark-calibration facts for Comp Maker and Team Optimization.",
         implementation_path="services.team_provider_workload_explanation_service",
-        inputs=("TeamProviderRotationWorkload", "TeamProviderWorkloadCandidateResult", "TeamProviderWorkloadPolicyResult"),
+        inputs=("TeamProviderRotationWorkload", "TeamProviderWorkloadCandidateResult", "TeamProviderWorkloadPolicyResult", "BTVBenchmarkTemporalAssessment"),
         outputs=("TeamProviderWorkloadExplanation", "TeamProviderWorkloadComparisonExplanation"),
-        dependencies=("team.provider.rotation_workload", "team.provider.workload_decision", "team.provider.workload_policy"),
+        dependencies=("team.provider.rotation_workload", "team.provider.workload_decision", "team.provider.workload_policy", "calibration.btv.benchmark_evidence"),
         responsibilities=("team_provider_workload_explanation",),
         behavior=ServiceBehavior.DETERMINISTIC,
         ui_safe=True,
         encounter_aware=True,
         evidence_class=EvidenceClass.MIXED,
-        notes="Explanations expose separate tradeoffs and policy state without declaring unlike workload dimensions universally equivalent.",
+        notes="Explanations expose separate tradeoffs and scoped benchmark calibration without declaring unlike workload dimensions universally equivalent or promoting calibration into canonical ESO mechanics.",
     ),
 )
 
