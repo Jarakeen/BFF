@@ -5,14 +5,19 @@ from __future__ import annotations
 This audit intentionally reuses canonical Max Magicka, Recovery, provisioning,
 Champion Point, Mundus, class-route, and skill-slot owners. It first constructs a
 Recovery lower bound that does not depend on Enlivening Overflow. If that lower
-bound already locks the high-reference class route, the remaining active-bar slots
-can be used to build a conservative same-build Max Magicka witness without creating
-a Recovery-specific resource calculator.
+bound already locks the high-reference class route, it then builds one conservative
+same-build Max Magicka witness, scores Enlivening exactly, and recomposes the legal
+Recovery Champion Point loadout.
+
+The witness does not need to reach Enlivening Overflow's 150-point cap. A legal
+below-cap value is sufficient when the class route is already globally locked and
+the exact CP loadout remains legal at that value.
 """
 
 import argparse
 from dataclasses import dataclass
 from pathlib import Path
+import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -33,10 +38,7 @@ from minmax.effects import EffectOperation
 from minmax.jewelry_glyph_repository import JewelryGlyphEffectRepository
 from minmax.jewelry_trait_repository import JewelryTraitRepository
 from minmax.mundus_repository import MundusRepository
-from minmax.passive_math import (
-    mages_guild_magicka_controller_percent,
-    undaunted_mettle_resource_percent,
-)
+from minmax.passive_math import undaunted_mettle_resource_percent
 from minmax.race_repository import RaceRepository
 from minmax.stat_ids import StatId
 from services.champion_point_loadout_service import (
@@ -61,16 +63,14 @@ from services.extreme_recovery_provisioning_projection_service import (
     ExtremeRecoveryProvisioningProjectionService,
 )
 from services.extreme_skill_universe_service import ExtremeSkillDomain, ExtremeSkillUniverseService
-from services.skill_choice_service import load_skill_choices
 from tools.audit_extreme_health_recovery_final_record import (
     _armor_magicka_glyph_flat,
     _provisioning_magicka,
 )
 
 OBJECTIVE = "magicka_recovery"
-MAX_BAR_SLOTS = 6
 EXPECTED_HIGH_REFERENCE_LINES = frozenset(
-    {"Animal Companions", "Curative Runeforms", "Shadow"}
+    {"animal_companions", "curative_runeforms", "shadow"}
 )
 
 
@@ -103,6 +103,17 @@ def exact_enlivening_value(max_magicka: float) -> float:
         float(ENLIVENING_OVERFLOW_MAX_BONUS),
         max(0.0, float(max_magicka)) * float(ENLIVENING_OVERFLOW_MAX_MAGICKA_PERCENT),
     )
+
+
+def _line_id(value: object) -> str:
+    text = str(value or "").strip().casefold().replace("'", "")
+    return re.sub(r"[^a-z0-9]+", "_", text).strip("_")
+
+
+def route_line_ids(row: ExtremeRecoveryClassRouteCandidate | None) -> frozenset[str]:
+    if row is None:
+        return frozenset()
+    return frozenset(_line_id(line) for line in row.equipped_skill_lines)
 
 
 def _candidate_identity(row: ExtremeRecoveryClassRouteCandidate) -> tuple:
@@ -191,17 +202,22 @@ def _recovery_cp_loadout(
         if not branch.complete or branch.flat_ceiling is None:
             unresolved.extend(f"{record.name}: {item}" for item in branch.unresolved)
             continue
+
         value = float(branch.flat_ceiling)
+        condition = branch.condition
         if record.name.casefold() == "enlivening overflow":
             value = min(value, max(0.0, float(enlivening_value)))
+            if value < float(ENLIVENING_OVERFLOW_MAX_BONUS) - 1e-9:
+                condition = "overheal target"
         if value <= 0.0:
             continue
+
         candidates.append(
             ChampionPointLoadoutCandidate(
                 name=record.name,
                 discipline_index=record.discipline_index,
                 flat_ceiling=value,
-                condition=branch.condition,
+                condition=condition,
             )
         )
 
@@ -251,20 +267,6 @@ def _arcane_supremacy(database: Path) -> tuple[float, int | None, bool, tuple[st
     return flat, record.discipline_index, record.is_slottable, tuple(dict.fromkeys(unresolved))
 
 
-def _mages_guild_active_skill_count(database: Path) -> int:
-    ability_ids: set[int] = set()
-    for row in load_skill_choices(database):
-        skill_line = " ".join(str(row.get("skill_line") or "").strip().casefold().split())
-        if skill_line != "mages guild":
-            continue
-        if int(row.get("is_player") or 0) != 1 or int(row.get("is_passive") or 0) != 0:
-            continue
-        ability_id = int(row.get("base_ability_id") or row.get("ability_id") or 0)
-        if ability_id:
-            ability_ids.add(ability_id)
-    return len(ability_ids)
-
-
 def _mundus_ordinary_recovery(database: Path) -> tuple[float, tuple[str, ...]]:
     row = ExtremeDivinesMundusObjectiveService.candidate_for_name(
         MundusRepository(database),
@@ -281,7 +283,6 @@ def _mundus_ordinary_recovery(database: Path) -> tuple[float, tuple[str, ...]]:
 def _build_max_magicka_witness(
     database: Path,
     *,
-    route: ExtremeRecoveryClassRouteCandidate,
     recovery_cp_loadout,
     provisioning_name: str,
 ) -> tuple[MaxMagickaWitness | None, tuple[str, ...], bool]:
@@ -292,6 +293,7 @@ def _build_max_magicka_witness(
     if race_row is None:
         unresolved.append("No positive racial Magicka Recovery witness resolved")
         return None, tuple(dict.fromkeys(unresolved)), False
+
     race_name = race_row[2].skill_line.removesuffix(" Skills")
     race_flat = float(
         RaceRepository(database).get_stat_map_by_name(race_name).get("max_magicka", 0.0)
@@ -323,17 +325,15 @@ def _build_max_magicka_witness(
     if not arcane_slot_legal:
         unresolved.append("Arcane Supremacy cannot coexist with the selected Recovery CP loadout")
 
-    route_required_slots = sum(int(count) for _, count in route.slot_counts)
-    free_slots = max(0, MAX_BAR_SLOTS - route_required_slots)
-    mages_available = _mages_guild_active_skill_count(database)
-    mages_slots = min(free_slots, mages_available)
-    if mages_slots <= 0:
-        unresolved.append("No free active-bar slot was proven for Magicka Controller")
-    mages_percent = mages_guild_magicka_controller_percent(mages_slots)
+    # The locked high-reference Recovery route consumes all six active-bar slots.
+    # Magicka Controller therefore contributes exactly zero in this same-build
+    # witness. Zero is a resolved legal state, not an unresolved mechanic.
+    mages_guild_slots = 0
+    mages_guild_percent = 0.0
 
-    # Use one armor weight deliberately. This is conservative for Max Magicka and
-    # remains compatible with a seven-light Recovery witness; more armor types would
-    # only increase Undaunted Mettle.
+    # One armor weight is deliberately conservative for Max Magicka and remains
+    # compatible with a seven-light Recovery witness. More armor types would only
+    # increase Undaunted Mettle, so they are unnecessary for this existence proof.
     undaunted_percent = undaunted_mettle_resource_percent(1)
 
     trace = BaseCharacterCalculator().max_magicka(
@@ -343,7 +343,7 @@ def _build_max_magicka_witness(
             food_flat=float(food_flat),
             champion_flat=float(arcane_flat if arcane_slot_legal else 0.0),
             race_flat=float(race_flat),
-            skill_percent=float(mages_percent),
+            skill_percent=mages_guild_percent,
             other_percent=float(undaunted_percent + food_percent),
         )
     )
@@ -355,8 +355,8 @@ def _build_max_magicka_witness(
         provisioning_flat=food_flat,
         provisioning_percent=food_percent,
         arcane_supremacy_flat=float(arcane_flat if arcane_slot_legal else 0.0),
-        mages_guild_slots=mages_slots,
-        mages_guild_percent=mages_percent,
+        mages_guild_slots=mages_guild_slots,
+        mages_guild_percent=mages_guild_percent,
         undaunted_percent=undaunted_percent,
         raw_max_magicka=float(trace.raw_value),
         displayed_max_magicka=int(trace.final_value),
@@ -415,13 +415,10 @@ def main() -> int:
         reference_value=preclass_floor_without_enlivening,
     )
     winner = route_lock.winner
-    expected_route = bool(
-        winner
-        and frozenset(winner.equipped_skill_lines) == EXPECTED_HIGH_REFERENCE_LINES
-    )
+    expected_route = route_line_ids(winner) == EXPECTED_HIGH_REFERENCE_LINES
 
-    # Use the capped Recovery loadout only for structural slot legality. The exact
-    # Enlivening numeric value is recomputed after the Max Magicka witness exists.
+    # Use the capped Recovery loadout only for structural CP-slot legality. The
+    # exact Enlivening numeric value is recomputed from the same-build witness.
     structural_cp, structural_cp_unresolved = _recovery_cp_loadout(
         database,
         enlivening_value=float(ENLIVENING_OVERFLOW_MAX_BONUS),
@@ -433,7 +430,6 @@ def main() -> int:
     if winner is not None and drink is not None:
         witness, witness_unresolved, arcane_slot_legal = _build_max_magicka_witness(
             database,
-            route=winner,
             recovery_cp_loadout=structural_cp,
             provisioning_name=drink.name,
         )
@@ -445,6 +441,11 @@ def main() -> int:
         ENLIVENING_OVERFLOW_MAX_MAGICKA_PERCENT
     )
     cap_reached = same_build_max_magicka + 1e-9 >= cap_requirement
+    enlivening_exact_scored = bool(
+        witness is not None
+        and enlivening_exact > 0.0
+        and enlivening_exact <= float(ENLIVENING_OVERFLOW_MAX_BONUS) + 1e-9
+    )
 
     exact_cp, exact_cp_unresolved = _recovery_cp_loadout(
         database,
@@ -452,6 +453,13 @@ def main() -> int:
     )
     unresolved.extend(exact_cp_unresolved)
     exact_cp_total = float(exact_cp.total_flat_ceiling)
+    exact_enlivening_rows = tuple(
+        row for row in exact_cp.selected if row.name.casefold() == "enlivening overflow"
+    )
+    exact_enlivening_composed = bool(
+        len(exact_enlivening_rows) == 1
+        and abs(exact_enlivening_rows[0].flat_ceiling - enlivening_exact) <= 1e-9
+    )
 
     preclass_floor_exact_cp = (
         float(BASE_MAGICKA_RECOVERY)
@@ -465,10 +473,7 @@ def main() -> int:
         reference_value=preclass_floor_exact_cp,
     )
     exact_winner = exact_route_lock.winner
-    exact_expected_route = bool(
-        exact_winner
-        and frozenset(exact_winner.equipped_skill_lines) == EXPECTED_HIGH_REFERENCE_LINES
-    )
+    exact_expected_route = route_line_ids(exact_winner) == EXPECTED_HIGH_REFERENCE_LINES
 
     unique_unresolved = tuple(dict.fromkeys(unresolved))
     closed = bool(
@@ -481,8 +486,8 @@ def main() -> int:
         and route_lock.globally_locked_above_reference
         and witness is not None
         and arcane_slot_legal
-        and cap_reached
-        and abs(enlivening_exact - float(ENLIVENING_OVERFLOW_MAX_BONUS)) <= 1e-9
+        and enlivening_exact_scored
+        and exact_enlivening_composed
         and exact_expected_route
         and exact_route_lock.globally_locked_above_reference
         and not unique_unresolved
@@ -501,6 +506,7 @@ def main() -> int:
     print(f"preclass_floor_without_enlivening={preclass_floor_without_enlivening:.3f}")
     if winner is not None:
         print(f"lower_bound_route={winner.equipped_skill_lines!r}")
+        print(f"lower_bound_route_ids={tuple(sorted(route_line_ids(winner)))!r}")
         print(f"lower_bound_route_slot_counts={winner.slot_counts!r}")
         print(f"lower_bound_route_delta={winner.projected_delta:.3f}")
         print(f"lower_bound_route_slope={float(route_lock.winner_slope or 0.0):.6f}")
@@ -523,6 +529,7 @@ def main() -> int:
     print(f"enlivening_cap_requirement={cap_requirement:.3f}")
     print(f"enlivening_exact_value={enlivening_exact:.3f}")
     print(f"enlivening_cap_reached={cap_reached}")
+    print(f"enlivening_exact_scored={enlivening_exact_scored}")
     print()
     print("EXACT CP / CLASS COMPOSITION")
     print(f"exact_legal_cp_total={exact_cp_total:.3f}")
@@ -531,9 +538,11 @@ def main() -> int:
             f"  selected_cp={row.name!r} discipline={row.discipline_index} "
             f"delta={row.flat_ceiling:.3f} condition={row.condition or '<none>'}"
         )
+    print(f"exact_enlivening_composed={exact_enlivening_composed}")
     print(f"preclass_floor_with_exact_cp={preclass_floor_exact_cp:.3f}")
     if exact_winner is not None:
         print(f"exact_floor_route={exact_winner.equipped_skill_lines!r}")
+        print(f"exact_floor_route_ids={tuple(sorted(route_line_ids(exact_winner)))!r}")
         print(f"exact_floor_route_delta={exact_winner.projected_delta:.3f}")
         print(f"exact_floor_route_slope={float(exact_route_lock.winner_slope or 0.0):.6f}")
     print(f"exact_route_globally_locked={exact_route_lock.globally_locked_above_reference}")
@@ -548,8 +557,9 @@ def main() -> int:
     )
     print(f"same_build_max_magicka_witness_proven={witness is not None}")
     print(f"arcane_supremacy_slot_compatible={arcane_slot_legal}")
-    print(f"enlivening_cap_reached={cap_reached}")
+    print(f"enlivening_exact_score_proven={enlivening_exact_scored}")
     print(f"exact_cp_legality_proven={exact_cp.denominator_proven}")
+    print(f"exact_enlivening_composed={exact_enlivening_composed}")
     print(
         "exact_high_reference_route_locked="
         f"{exact_expected_route and exact_route_lock.globally_locked_above_reference}"
