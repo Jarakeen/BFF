@@ -3,8 +3,8 @@ from __future__ import annotations
 """Prove a three-Infused same-build Enlivening witness for Extreme Magicka Recovery.
 
 This audit intentionally reuses canonical Max Magicka, Recovery, provisioning,
-Champion Point, Mundus, class-route, and skill-slot owners.  It first constructs a
-Recovery lower bound that does not depend on Enlivening Overflow.  If that lower
+Champion Point, Mundus, class-route, and skill-slot owners. It first constructs a
+Recovery lower bound that does not depend on Enlivening Overflow. If that lower
 bound already locks the high-reference class route, the remaining active-bar slots
 can be used to build a conservative same-build Max Magicka witness without creating
 a Recovery-specific resource calculator.
@@ -19,7 +19,6 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from minmax.armor_glyph_repository import ArmorGlyphEffectRepository
 from minmax.base_character_state import (
     BASE_MAGICKA_RECOVERY,
     BaseCharacterCalculator,
@@ -38,7 +37,6 @@ from minmax.passive_math import (
     mages_guild_magicka_controller_percent,
     undaunted_mettle_resource_percent,
 )
-from minmax.provisioning_static_repository import ProvisioningStaticRepository
 from minmax.race_repository import RaceRepository
 from minmax.stat_ids import StatId
 from services.champion_point_loadout_service import (
@@ -64,6 +62,10 @@ from services.extreme_recovery_provisioning_projection_service import (
 )
 from services.extreme_skill_universe_service import ExtremeSkillDomain, ExtremeSkillUniverseService
 from services.skill_choice_service import load_skill_choices
+from tools.audit_extreme_health_recovery_final_record import (
+    _armor_magicka_glyph_flat,
+    _provisioning_magicka,
+)
 
 OBJECTIVE = "magicka_recovery"
 MAX_BAR_SLOTS = 6
@@ -156,7 +158,7 @@ def _recovery_cp_loadout(
     database: Path,
     *,
     enlivening_value: float,
-) -> tuple[object, tuple[str, ...]]:
+):
     repository = ChampionPointStaticRepository(database)
     candidates: list[ChampionPointLoadoutCandidate] = []
     unresolved: list[str] = []
@@ -233,41 +235,6 @@ def _best_racial_recovery_witness(database: Path):
     return (rows[0] if rows else None), tuple(dict.fromkeys(unresolved)), tuple(rows)
 
 
-def _armor_magicka_glyph_flat(database: Path) -> float | None:
-    effects = ArmorGlyphEffectRepository(database).get_armor_glyph_effect_by_name(
-        "Glyph of Magicka",
-        use_max_value=True,
-    )
-    values = [
-        float(effect.value)
-        for effect in effects
-        if effect.stat is StatId.MAX_MAGICKA and effect.operation is EffectOperation.ADD
-    ]
-    if not values:
-        return None
-    base = max(values)
-    # Head/chest/legs are major armor slots; shoulders/hands/waist/feet are 40%.
-    return base * (3.0 + 4.0 * 0.4)
-
-
-def _provisioning_magicka(database: Path, name: str) -> tuple[float, float, tuple[str, ...]]:
-    effects, unresolved = ProvisioningStaticRepository(database).resolve(name)
-    flat = 0.0
-    percent = 0.0
-    for effect in effects:
-        if effect.stat is not StatId.MAX_MAGICKA:
-            continue
-        if effect.operation is EffectOperation.ADD:
-            flat += float(effect.value)
-        elif effect.operation is EffectOperation.ADD_PERCENT:
-            percent += float(effect.value) / (100.0 if abs(float(effect.value)) > 1.0 else 1.0)
-        else:
-            unresolved.append(
-                f"{name}: unsupported Max Magicka provisioning operation {effect.operation.value}"
-            )
-    return flat, percent, tuple(dict.fromkeys(unresolved))
-
-
 def _arcane_supremacy(database: Path) -> tuple[float, int | None, bool, tuple[str, ...]]:
     repository = ChampionPointStaticRepository(database)
     record = repository.get("Arcane Supremacy")
@@ -326,17 +293,24 @@ def _build_max_magicka_witness(
         unresolved.append("No positive racial Magicka Recovery witness resolved")
         return None, tuple(dict.fromkeys(unresolved)), False
     race_name = race_row[2].skill_line.removesuffix(" Skills")
-    race_flat = float(RaceRepository(database).get_stat_map_by_name(race_name).get("max_magicka", 0.0))
+    race_flat = float(
+        RaceRepository(database).get_stat_map_by_name(race_name).get("max_magicka", 0.0)
+    )
 
     armor_glyph_flat = _armor_magicka_glyph_flat(database)
     if armor_glyph_flat is None:
         unresolved.append("Canonical seven-piece Max Magicka armor glyph value unresolved")
         armor_glyph_flat = 0.0
 
-    food_flat, food_percent, food_unresolved = _provisioning_magicka(database, provisioning_name)
+    food_flat, food_percent, food_unresolved = _provisioning_magicka(
+        database,
+        provisioning_name,
+    )
     unresolved.extend(food_unresolved)
 
-    arcane_flat, arcane_discipline, arcane_slottable, arcane_unresolved = _arcane_supremacy(database)
+    arcane_flat, arcane_discipline, arcane_slottable, arcane_unresolved = _arcane_supremacy(
+        database
+    )
     unresolved.extend(arcane_unresolved)
 
     recovery_counts = dict(recovery_cp_loadout.discipline_slot_counts)
@@ -357,7 +331,7 @@ def _build_max_magicka_witness(
         unresolved.append("No free active-bar slot was proven for Magicka Controller")
     mages_percent = mages_guild_magicka_controller_percent(mages_slots)
 
-    # Use one armor weight deliberately.  This is conservative for Max Magicka and
+    # Use one armor weight deliberately. This is conservative for Max Magicka and
     # remains compatible with a seven-light Recovery witness; more armor types would
     # only increase Undaunted Mettle.
     undaunted_percent = undaunted_mettle_resource_percent(1)
@@ -446,7 +420,7 @@ def main() -> int:
         and frozenset(winner.equipped_skill_lines) == EXPECTED_HIGH_REFERENCE_LINES
     )
 
-    # Use the capped Recovery loadout only for structural slot legality.  The exact
+    # Use the capped Recovery loadout only for structural slot legality. The exact
     # Enlivening numeric value is recomputed after the Max Magicka witness exists.
     structural_cp, structural_cp_unresolved = _recovery_cp_loadout(
         database,
@@ -568,18 +542,27 @@ def main() -> int:
     print(f"three_infused_jewelry_denominator_proven={jewelry.denominator_proven}")
     print(f"provisioning_denominator_proven={provisioning.comparison_proven}")
     print(f"non_enlivening_cp_legality_proven={cp_without_enlivening.denominator_proven}")
-    print(f"high_reference_route_locked_without_enlivening={expected_route and route_lock.globally_locked_above_reference}")
+    print(
+        "high_reference_route_locked_without_enlivening="
+        f"{expected_route and route_lock.globally_locked_above_reference}"
+    )
     print(f"same_build_max_magicka_witness_proven={witness is not None}")
     print(f"arcane_supremacy_slot_compatible={arcane_slot_legal}")
     print(f"enlivening_cap_reached={cap_reached}")
     print(f"exact_cp_legality_proven={exact_cp.denominator_proven}")
-    print(f"exact_high_reference_route_locked={exact_expected_route and exact_route_lock.globally_locked_above_reference}")
+    print(
+        "exact_high_reference_route_locked="
+        f"{exact_expected_route and exact_route_lock.globally_locked_above_reference}"
+    )
     print(f"unresolved_count={len(unique_unresolved)}")
     for item in unique_unresolved:
         print(f"  unresolved: {item}")
     print(f"magicka_recovery_same_build_enlivening_closed={closed}")
     if closed:
-        print("NEXT_STEP=compose armor/Mundus and ordinary named-gear Recovery frontiers onto the locked high-reference class route")
+        print(
+            "NEXT_STEP=compose armor/Mundus and ordinary named-gear Recovery frontiers "
+            "onto the locked high-reference class route"
+        )
     else:
         print("NEXT_STEP=close only the reported same-build Enlivening blockers")
     return 0 if closed else 2
