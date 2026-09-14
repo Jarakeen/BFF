@@ -84,17 +84,24 @@ class SkillComponentUtilityEffectRepository:
             (name,),
         ).fetchone() is not None
 
-    def resolve(
+    def resolve_component_text(
         self,
         skill_rank_id: int,
         coefficient_number: int,
-    ) -> tuple[SkillComponentUtilityEffect, ...]:
+    ) -> str:
+        """Return the canonical coefficient-owned utility text segment.
+
+        This exposes the exact text boundary already used by ``resolve`` so
+        downstream temporal evidence can stay attached to the same component
+        instead of reparsing whole-skill prose or borrowing neighboring effects.
+        """
+
         if not self.database_path.exists():
-            return ()
+            return ""
 
         with sqlite3.connect(self.database_path) as db:
             if not all(self._table_exists(db, name) for name in ("skill_rank", "ability")):
-                return ()
+                return ""
             row = db.execute(
                 """
                 SELECT a.coef_description
@@ -105,13 +112,22 @@ class SkillComponentUtilityEffectRepository:
                 (int(skill_rank_id),),
             ).fetchone()
             if row is None:
-                return ()
+                return ""
 
         evidence = extract_component_text_evidence(row[0], int(coefficient_number))
         if not evidence.fragment:
-            return ()
+            return ""
+        return _owned_component_segment(evidence.fragment, int(coefficient_number))
 
-        component_text = _owned_component_segment(evidence.fragment, int(coefficient_number))
+    def resolve(
+        self,
+        skill_rank_id: int,
+        coefficient_number: int,
+    ) -> tuple[SkillComponentUtilityEffect, ...]:
+        component_text = self.resolve_component_text(
+            skill_rank_id,
+            coefficient_number,
+        )
         if not component_text:
             return ()
 
