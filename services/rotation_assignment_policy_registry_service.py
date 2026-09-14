@@ -6,6 +6,10 @@ ProviderAssignment remains authoritative for ownership. This registry supplies o
 reviewed rotation semantics keyed by exact encounter + requirement identity. It does
 not infer strategy from role names, roster labels, requirement prose, or capability
 presence.
+
+Numeric taunt-maintenance policy remains directly executable. Symbolic encounter-end
+maintenance policy is retained separately until canonical encounter-horizon evidence
+materializes it into the existing numeric policy type.
 """
 
 from dataclasses import dataclass
@@ -17,6 +21,10 @@ from services.rotation_assignment_effect_obligation_service import (
     RotationAssignmentEffectPolicy,
 )
 from services.rotation_assignment_policy_resolver import RotationAssignmentNonEffectPolicy
+from services.rotation_assignment_taunt_maintenance_horizon_policy_service import (
+    RotationAssignmentTauntMaintenanceHorizonPolicy,
+    RotationAssignmentTauntMaintenanceHorizonWindow,
+)
 from services.rotation_assignment_taunt_maintenance_service import (
     RotationAssignmentTauntMaintenancePolicy,
     RotationAssignmentTauntMaintenanceWindow,
@@ -40,6 +48,9 @@ class RotationAssignmentPolicyBundle:
     taunt_maintenance_policies: tuple[
         RotationAssignmentTauntMaintenancePolicy, ...
     ] = ()
+    taunt_maintenance_horizon_policies: tuple[
+        RotationAssignmentTauntMaintenanceHorizonPolicy, ...
+    ] = ()
     non_effect_policies: tuple[RotationAssignmentNonEffectPolicy, ...] = ()
 
     def __post_init__(self) -> None:
@@ -51,6 +62,7 @@ class RotationAssignmentPolicyBundle:
             "effect_policies",
             "taunt_policies",
             "taunt_maintenance_policies",
+            "taunt_maintenance_horizon_policies",
             "non_effect_policies",
         ):
             object.__setattr__(self, field_name, tuple(getattr(self, field_name)))
@@ -62,6 +74,7 @@ class RotationAssignmentPolicyBundle:
                 self.effect_policies,
                 self.taunt_policies,
                 self.taunt_maintenance_policies,
+                self.taunt_maintenance_horizon_policies,
                 self.non_effect_policies,
             )
         )
@@ -104,6 +117,7 @@ class RotationAssignmentPolicyRegistryService:
                     "effect": [],
                     "taunt": [],
                     "taunt_maintenance": [],
+                    "taunt_maintenance_horizon": [],
                     "non_effect": [],
                 },
             )
@@ -113,6 +127,10 @@ class RotationAssignmentPolicyRegistryService:
                 groups["taunt"].append(cls._taunt(raw))
             elif kind == "taunt_maintenance":
                 groups["taunt_maintenance"].append(cls._taunt_maintenance(raw))
+            elif kind == "taunt_maintenance_horizon":
+                groups["taunt_maintenance_horizon"].append(
+                    cls._taunt_maintenance_horizon(raw)
+                )
             elif kind == "non_effect":
                 groups["non_effect"].append(cls._non_effect(raw))
             else:
@@ -125,6 +143,9 @@ class RotationAssignmentPolicyRegistryService:
                 effect_policies=tuple(groups["effect"]),
                 taunt_policies=tuple(groups["taunt"]),
                 taunt_maintenance_policies=tuple(groups["taunt_maintenance"]),
+                taunt_maintenance_horizon_policies=tuple(
+                    groups["taunt_maintenance_horizon"]
+                ),
                 non_effect_policies=tuple(groups["non_effect"]),
             )
         return result
@@ -206,6 +227,30 @@ class RotationAssignmentPolicyRegistryService:
                     target_key=cls._required_text(window, "target_key"),
                     active_start_seconds=float(window.get("active_start_seconds")),
                     active_end_seconds=float(window.get("active_end_seconds")),
+                    bar=cls._optional_bar(window),
+                )
+                for window in windows
+            ),
+        )
+
+    @classmethod
+    def _taunt_maintenance_horizon(
+        cls,
+        raw: dict,
+    ) -> RotationAssignmentTauntMaintenanceHorizonPolicy:
+        windows = cls._windows(raw, kind="taunt maintenance horizon")
+        return RotationAssignmentTauntMaintenanceHorizonPolicy(
+            requirement_id=cls._required_text(raw, "requirement_id"),
+            encounter_id=cls._required_text(raw, "encounter_id"),
+            requirement_type=cls._required_text(raw, "requirement_type"),
+            source_skill_name=cls._required_text(raw, "source_skill_name"),
+            source=cls._required_text(raw, "source"),
+            windows=tuple(
+                RotationAssignmentTauntMaintenanceHorizonWindow(
+                    occurrence_id=cls._required_text(window, "occurrence_id"),
+                    target_key=cls._required_text(window, "target_key"),
+                    active_start_seconds=float(window.get("active_start_seconds")),
+                    end_reference=cls._required_text(window, "end_reference"),
                     bar=cls._optional_bar(window),
                 )
                 for window in windows
