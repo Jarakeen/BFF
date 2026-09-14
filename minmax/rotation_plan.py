@@ -20,6 +20,8 @@ class RotationActionKind(str, Enum):
     ULTIMATE = "ultimate"
     POTION = "potion"
     BAR_SWAP = "bar_swap"
+    BLOCK = "block"
+    DODGE = "dodge"
     WAIT = "wait"
 
 
