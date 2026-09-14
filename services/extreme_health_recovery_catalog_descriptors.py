@@ -91,6 +91,34 @@ EXTREME_HEALTH_RECOVERY_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "set semantics fail closed."
         ),
     ),
+    ServiceDescriptor(
+        service_id="extreme.externalized_named_gear_constraint_search",
+        domain="extreme",
+        purpose=(
+            "Prove named-set structural placement while an external mechanic owner "
+            "retains the set's conditional, percentage, formula, or runtime semantics."
+        ),
+        implementation_path=(
+            "services.extreme_externalized_named_gear_constraint_search_service"
+        ),
+        inputs=(
+            "ExtremeGearSetTopologyCatalog",
+            "ExtremeGearSetBonusBreakpointCatalog",
+            "ExtremeNamedGearSetSlotEligibilityCatalog",
+            "ExtremeGearSetObjectiveRelevanceCatalog",
+            "ExtremeNamedGearRequirement",
+            "ExtremeExternalizedNamedGearSemantic",
+        ),
+        outputs=("ExtremeExternalizedNamedGearConstraintSearchResult",),
+        dependencies=("extreme.constrained_named_gear_exact_flat_search",),
+        responsibilities=("extreme_externalized_named_gear_constraint_search",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "The derived zero-delta relevance view is search-only. Canonical objective "
+            "mechanics remain owned and scored by the external semantic service."
+        ),
+    ),
 )
 
 
