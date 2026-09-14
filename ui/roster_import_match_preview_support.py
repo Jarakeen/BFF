@@ -142,6 +142,13 @@ def install() -> None:
         return
 
     from ui import roster_import_workflow
+    from ui.roster_import_variant_persistence_guard_support import (
+        install as install_variant_persistence_guard,
+    )
+
+    # Install after the context/sparse import layers so this is the final write
+    # guard: any variants prepared by those layers must survive the save boundary.
+    install_variant_persistence_guard()
 
     dialog_type = roster_import_workflow.RosterImportPreviewDialog
     original_init = dialog_type.__init__
