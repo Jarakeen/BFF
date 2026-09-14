@@ -204,6 +204,8 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Assignments persist separately for each **roster member + team**, so one character can have different normal jobs on different teams
 - Each team's assignment can optionally have a per-boss override; unchanged boss fields inherit the team's default job, gear need, and notes
 - The Assignments surface uses a simple **Boss (optional)** selector with **Team Default (most common)** as the safe starting state; changing teams automatically returns to Team Default
+- **Player**, **Role**, and **Class** headers on Assignments sort alphabetically by click and keep the chosen sort through table refreshes
+- **Boss (optional)** uses case-insensitive contains autocomplete and reviewed raid-planning encounter identities; paired fights such as **Lylanar and Turlassil** appear as one encounter while their member-specific mechanics remain separate underneath
 - The old separate Encounter Overrides placeholder is removed so team defaults and boss overrides live in one Assignments workflow
 - **All Teams** remains an overview rather than an ambiguous assignment-editing context
 - Coverage launched from Assignments resolves the selected team's effective Team/Boss build variant before evaluating saved-build evidence
