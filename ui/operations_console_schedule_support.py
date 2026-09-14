@@ -105,6 +105,7 @@ def install() -> None:
     from ui.roster_player_architecture_support import install as install_roster_player_architecture_support
     from ui.scrollable_message_dialog_support import install as install_scrollable_message_dialog_support
     from ui.roster_import_workflow import install as install_roster_import_support
+    from ui.roster_import_identity_resolution_support import install as install_roster_import_identity_resolution_support
     from ui.player_build_navigation_support import install as install_player_build_navigation_support
     from ui.rotation_dashboard_layout_support import install as install_rotation_dashboard_layout_support
     from ui.build_rotation_artifact_support import install as install_build_rotation_artifact_support
@@ -127,6 +128,10 @@ def install() -> None:
     install_roster_team_merge_layout_fix()
     install_roster_player_architecture_support()
     install_roster_import_support()
+    # Workbooks often omit character names and use gamertags without the leading
+    # @ stored by FoundryDock. Resolve equivalent existing identities before the
+    # preview asks the user to do anything manually.
+    install_roster_import_identity_resolution_support()
     install_player_build_navigation_support()
     install_rotation_dashboard_layout_support()
     install_build_rotation_artifact_support()
