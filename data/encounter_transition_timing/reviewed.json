@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "transitions": [
+    {
+      "encounter_id": "xalvakka",
+      "threshold_fraction": 0.7,
+      "median_delay_seconds": 48.8095,
+      "observed_min_delay_seconds": 44.437,
+      "observed_max_delay_seconds": 65.064,
+      "sample_count": 4,
+      "source": "Reviewed 2026-09-14 runtime evidence from public ESO Logs report XVMgLdq6GpQ7bhKN. Xalvakka 70% transition observations were fights 31, 32, 33, and 34 with threshold-to-resume delays 65.064s, 51.802s, 45.817s, and 44.437s. Resume health remained approximately 70% (69.996%, 69.996%, 69.997%, 69.996%). The median is a planning estimate, not a fixed game constant."
+    },
+    {
+      "encounter_id": "xalvakka",
+      "threshold_fraction": 0.4,
+      "median_delay_seconds": 64.561,
+      "observed_min_delay_seconds": 62.266,
+      "observed_max_delay_seconds": 66.376,
+      "sample_count": 3,
+      "source": "Reviewed 2026-09-14 runtime evidence from public ESO Logs report XVMgLdq6GpQ7bhKN. Xalvakka 40% transition observations were fights 32, 33, and 34 with threshold-to-resume delays 64.561s, 62.266s, and 66.376s. Resume health remained approximately 40% (39.997%, 39.992%, 39.992%). The median is a planning estimate, not a fixed game constant."
+    }
+  ]
+}
