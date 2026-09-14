@@ -12,6 +12,9 @@ def test_rotation_assignment_policy_and_tank_integration_services_are_catalogued
         "rotation.tank.encounter_add_taunt_handling_context"
     )
     priority_context = SERVICE_CATALOG.get("rotation.tank.encounter_priority_context")
+    raid_plan_projection = SERVICE_CATALOG.get(
+        "raid_plan.tank.triggered_responsibility_projection"
+    )
 
     assert assignment_policy is not None
     assert assignment_policy.implementation_path == (
@@ -39,4 +42,12 @@ def test_rotation_assignment_policy_and_tank_integration_services_are_catalogued
     )
     assert priority_context.dependencies == (
         "rotation.tank.encounter_add_taunt_handling_context",
+    )
+    assert raid_plan_projection is not None
+    assert raid_plan_projection.implementation_path == (
+        "services.raid_plan_tank_triggered_responsibility_service"
+    )
+    assert raid_plan_projection.dependencies == (
+        "rotation.tank.encounter_add_activity_context",
+        "rotation.tank.encounter_priority_context",
     )
