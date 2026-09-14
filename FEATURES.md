@@ -28,6 +28,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Coverage can load any saved Roster team directly and audit its assigned **base builds** for static buff/debuff coverage without requiring a Boss, Assignments, Comp Maker, or Optimization; contextual Team/Boss variants are only applied when a contextual workflow explicitly requests them
 - Raid Engine dashboard sends explicit Team Optimization slot/build selections into a labeled Coverage scope; Coverage can switch between that team snapshot and all saved builds without inferring provider assignments
 - Raid Engine dashboard summarizes static coverage evidence with distinct available, conditional, not-identified, and unverified labels rather than treating an unknown effect as missing
+- Raid Plans provides a visible 12-chair trial-planning workspace where gamertag can be known before character, role, class, or build, and saved builds can be assigned without mutating existing Roster persistence
 - Empty boss, mechanic, positioning, and Raid Map panels use distinct compact field-art placeholders for Foundry and Rylo, with visible labels that distinguish decorative art from reviewed encounter evidence
 - Main character overview dashboard
 - Role-aware application surfaces
@@ -78,10 +79,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 
 ## Build Import
 
-- Screenshot-based build import
-- OCR-assisted build import from ESO screenshots
-- Screenshot recognition support for build fields
-- Import review before applying detected build information
+- Screenshot/OCR-assisted build and character intake implementation is retained, but its user-facing control is temporarily disabled while raid-planning intake ownership is being stabilized
 - Raid roster import from Excel workbooks, CSV, and JSON with a review preview before persistence
 - Raid workbook detection supports player-specific multi-loadout sheets and sectioned team sheets with shared role/build templates
 - Imported builds are matched to gamertags and saved through the canonical Player -> Character -> Build catalog only after character identity is resolved or confirmed
@@ -560,6 +558,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Trial-specific build planning
 - Trial-specific rotation planning
 - Trial-specific optimization
+- Raid Plans session workspace for 12 standard trial chairs with partial player identity, saved-build assignment, and direct links to Build Research, Comp Maker, Coverage, and Optimization
 - Animated raid maps
 - Asylum Sanctorium Perfecta timer / utility page
 - Encounter evidence and mechanic reference tools
@@ -603,7 +602,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 
 These are easy to lose in the size of the project because they are not necessarily entire pages of their own.
 
-- A build can be imported from screenshots using OCR assistance.
+- Screenshot/OCR build import code remains available for later work, but the normal Builds-page import control is temporarily disabled.
 - CSV exports can use custom BFF themes instead of being generic raw tables.
 - Raid maps can be animated.
 - Team construction can reason about builds, roles, providers, support coverage, and encounter needs rather than only arranging names in slots.
