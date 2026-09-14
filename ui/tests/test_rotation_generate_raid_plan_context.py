@@ -8,7 +8,6 @@ from ui.rotation_generate_canonical_context import RotationGenerateCanonicalCont
 def _build() -> PlayerBuild:
     return PlayerBuild(
         Name="Rylonia",
-        CharacterName="Rylonia",
         BuildName="Tank Build",
         Role="Tank",
         EsoClass="Dragonknight",
@@ -111,7 +110,6 @@ def test_raid_plan_member_binding_rejects_wrong_character() -> None:
         evidence_inputs=object(),  # type: ignore[arg-type]
     )
     wrong = _build()
-    wrong.CharacterName = "Not Rylonia"
     wrong.Name = "Not Rylonia"
 
     with pytest.raises(ValueError, match="member character does not match"):
