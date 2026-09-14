@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "encounters": [
+    {
+      "encounter_id": "xalvakka_hm",
+      "evidence_scope": "single_report_reviewed_behavior",
+      "source_report": "XVMgLdq6GpQ7bhKN",
+      "active_window_semantics": "earliest_to_latest_raw_event_involving_same_add_instance",
+      "taunt_state_semantics": "ability_38254_applydebuff_to_removedebuff",
+      "actors": [
+        {
+          "actor_name": "Iron Atronach",
+          "observed_instances": 18,
+          "untaunted_instances": 2,
+          "multi_source_instances": 3,
+          "median_coverage_fraction": 0.717,
+          "minimum_coverage_fraction": 0.0,
+          "maximum_coverage_fraction": 0.897,
+          "handling_class": "strong_taunt_maintenance_target",
+          "ranking_context": true,
+          "hard_maintenance_policy": false,
+          "interpretation": "Observed play strongly favors maintaining Taunt on Iron Atronachs, but one report is insufficient to define an exact universal uptime floor."
+        },
+        {
+          "actor_name": "Daedroth",
+          "observed_instances": 27,
+          "untaunted_instances": 7,
+          "multi_source_instances": 4,
+          "median_coverage_fraction": 0.282,
+          "minimum_coverage_fraction": 0.0,
+          "maximum_coverage_fraction": 0.884,
+          "handling_class": "selective_contextual_taunt_target",
+          "ranking_context": true,
+          "hard_maintenance_policy": false,
+          "interpretation": "Observed play taunts Daedroths selectively rather than maintaining continuous Taunt across every observed instance."
+        }
+      ],
+      "interpretation": "The reviewed Xalvakka report supports actor-specific add handling behavior. Iron Atronachs are strong taunt-maintenance targets; Daedroths are selective/contextual taunt targets. These are encounter-specific reviewed behavior semantics, not universal ESO mechanic law or exact hard uptime thresholds."
+    }
+  ]
+}
