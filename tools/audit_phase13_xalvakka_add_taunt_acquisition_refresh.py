@@ -125,13 +125,16 @@ def observe(research_db: Path, game_db: Path) -> tuple[AddTauntActionObservation
 
 
 def _source_labels(db: sqlite3.Connection) -> dict[tuple[str, int], str]:
+    """Return report-scoped actor labels using the actual log_report_actor schema."""
+
     rows = db.execute(
-        "SELECT report_code, actor_id, name, display_name FROM log_report_actor"
+        "SELECT report_code, actor_id, name FROM log_report_actor"
     ).fetchall()
     result: dict[tuple[str, int], str] = {}
     for row in rows:
-        label = str(row["name"] or row["display_name"] or f"actor-{row['actor_id']}").strip()
-        result[(str(row["report_code"]), int(row["actor_id"]))] = label
+        actor_id = int(row["actor_id"])
+        label = str(row["name"] or f"actor-{actor_id}").strip()
+        result[(str(row["report_code"]), actor_id)] = label
     return result
 
 
