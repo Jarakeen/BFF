@@ -3,13 +3,16 @@ from __future__ import annotations
 """Load reviewed ESO Logs cast/impact observations for DD audit replay.
 
 This audit-only bridge turns an explicit, versioned JSON observation file into the
-existing canonical runtime activation-anchor evidence.  It preserves report/fight/
-source/event provenance and delegates all action matching to
+existing canonical runtime activation-anchor evidence. It preserves report/fight/
+source/event provenance and delegates exact action matching to
 ``RotationDDPeriodicEsoLogsReplayAnchorMappingService``.
 
 The bridge deliberately does not infer impact timestamps from aggregate delay
-statistics.  Unlinked observations, stale action times, conflicting observations, and
-other mapper gaps remain unresolved and therefore fail closed.
+statistics. Unlinked observations, stale action times, conflicting observations, and
+other mapper gaps remain unresolved and therefore fail closed. For every skill
+identity present in the reviewed file, audit mapping is additionally all-or-nothing:
+all final-plan occurrences of that skill must receive exact mapped evidence or none of
+that skill's partial evidence is returned.
 """
 
 from dataclasses import dataclass
@@ -17,7 +20,8 @@ import json
 import math
 from pathlib import Path
 
-from minmax.rotation_plan import RotationPlan
+from minmax.rotation_plan import RotationActionKind, RotationPlan
+from minmax.skill_coefficient_repository import ability_entity_id
 from services.rotation_dd_periodic_esologs_anchor_correlation_service import (
     RotationDDPeriodicEsoLogsCastImpactObservation,
 )
@@ -81,10 +85,57 @@ class DDAuditEsoLogsAnchorEvidenceSupport:
         plan: RotationPlan,
     ) -> RotationDDPeriodicEsoLogsReplayAnchorMappingResult:
         loaded = self.load(path)
-        return self.mapping_service.map(
+        mapped = self.mapping_service.map(
             plan=plan,
             observations=loaded.observations,
             replay_origin_timestamp_ms=loaded.replay_origin_timestamp_ms,
+        )
+        return self._require_complete_observed_skill_coverage(
+            plan=plan,
+            observations=loaded.observations,
+            mapped=mapped,
+        )
+
+    def _require_complete_observed_skill_coverage(
+        self,
+        *,
+        plan: RotationPlan,
+        observations: tuple[RotationDDPeriodicEsoLogsCastImpactObservation, ...],
+        mapped: RotationDDPeriodicEsoLogsReplayAnchorMappingResult,
+    ) -> RotationDDPeriodicEsoLogsReplayAnchorMappingResult:
+        identities = tuple(
+            dict.fromkeys(
+                identity
+                for item in observations
+                if (identity := ability_entity_id(item.skill_entity_id))
+            )
+        )
+        evidence = list(mapped.evidence)
+        unresolved = list(mapped.unresolved)
+
+        for identity in identities:
+            plan_count = sum(
+                1
+                for action in plan.actions
+                if action.kind is RotationActionKind.SKILL
+                and ability_entity_id(action.name or "") == identity
+            )
+            evidence_count = sum(
+                1 for row in evidence if row.skill_entity_id == identity
+            )
+            if evidence_count == plan_count and plan_count > 0:
+                continue
+
+            evidence = [row for row in evidence if row.skill_entity_id != identity]
+            unresolved.append(
+                f"{identity}: reviewed ESO Logs impact evidence covers "
+                f"{evidence_count} of {plan_count} final-plan occurrence(s); "
+                "partial audit anchor coverage is not executable"
+            )
+
+        return RotationDDPeriodicEsoLogsReplayAnchorMappingResult(
+            evidence=tuple(evidence),
+            unresolved=tuple(dict.fromkeys(unresolved)),
         )
 
     def _observation(
