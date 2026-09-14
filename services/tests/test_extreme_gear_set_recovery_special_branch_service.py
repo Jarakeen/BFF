@@ -195,3 +195,27 @@ def test_classifies_alessian_formula_cap():
     )
     assert row.kind is ExtremeRecoverySpecialBranchKind.FORMULA
     assert row.flat_ceiling == 1320.0
+
+
+def test_classifies_scorions_compact_shared_recovery_grant():
+    row = _classify(
+        "When you deal damage with a fully-charged Heavy Attack, you gain an Imbued Aura for 10 seconds, "
+        "granting you and up to 3 other group members 307 Magicka and Stamina Recovery.",
+        name="Scorion's Feast",
+        objective_key="stamina_recovery",
+    )
+    assert row.kind is ExtremeRecoverySpecialBranchKind.CONDITIONAL_FLAT
+    assert row.flat_ceiling == 307.0
+    assert row.can_raise_self
+
+
+def test_classifies_lustrous_repeated_shared_recovery_grant():
+    row = _classify(
+        "When you use an Ultimate ability while in combat, you and the closest 3 group members within 28 meters of you "
+        "gain 465 Health Recovery, Magicka Recovery, and Stamina Recovery that lasts for 2 seconds for each 20 Ultimate spent.",
+        name="Lustrous Soulwell",
+        objective_key="stamina_recovery",
+    )
+    assert row.kind is ExtremeRecoverySpecialBranchKind.CONDITIONAL_FLAT
+    assert row.flat_ceiling == 465.0
+    assert row.can_raise_self
