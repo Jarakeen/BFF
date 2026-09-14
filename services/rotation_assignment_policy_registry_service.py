@@ -9,7 +9,9 @@ presence.
 
 Numeric taunt-maintenance policy remains directly executable. Symbolic encounter-end
 maintenance policy is retained separately until canonical encounter-horizon evidence
-materializes it into the existing numeric policy type.
+materializes it into the existing numeric policy type. Symbolic maintenance may omit
+its taunt skill/bar so Generate can bind those build-owned facts from the selected
+canonical provider rather than hardcoding one skill into encounter policy.
 """
 
 from dataclasses import dataclass
@@ -158,6 +160,17 @@ class RotationAssignmentPolicyRegistryService:
         return value
 
     @staticmethod
+    def _optional_text(raw: dict, key: str) -> str | None:
+        if raw.get(key) is None:
+            return None
+        value = str(raw.get(key) or "").strip()
+        if not value:
+            raise ValueError(
+                f"rotation assignment policy {key} must be non-empty when supplied"
+            )
+        return value
+
+    @staticmethod
     def _optional_bar(raw: dict) -> str | None:
         value = raw.get("bar")
         return None if value is None else str(value)
@@ -243,7 +256,7 @@ class RotationAssignmentPolicyRegistryService:
             requirement_id=cls._required_text(raw, "requirement_id"),
             encounter_id=cls._required_text(raw, "encounter_id"),
             requirement_type=cls._required_text(raw, "requirement_type"),
-            source_skill_name=cls._required_text(raw, "source_skill_name"),
+            source_skill_name=cls._optional_text(raw, "source_skill_name"),
             source=cls._required_text(raw, "source"),
             windows=tuple(
                 RotationAssignmentTauntMaintenanceHorizonWindow(
