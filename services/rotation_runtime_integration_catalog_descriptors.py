@@ -150,6 +150,46 @@ ROTATION_RUNTIME_INTEGRATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] 
             "it does not invent bar swaps, timing, strategy, or legality. Exact repeated materialization is idempotent."
         ),
     ),
+    ServiceDescriptor(
+        service_id="rotation.runtime.application_pipeline",
+        domain="rotation",
+        purpose=(
+            "Compose the canonical runtime-triggered intent, trigger-condition, execution-strategy, "
+            "executable-choice, and action-materialization boundaries into one ordered application pass."
+        ),
+        implementation_path="services.rotation_runtime_application_pipeline_service",
+        inputs=(
+            "RotationPlan",
+            "PlayerBuild",
+            "RotationRuntimeTriggeredIntent",
+            "RotationRuntimeTriggerObservation",
+            "RotationActionSlotRequirement",
+            "RotationActionTargetRequirement",
+            "RotationTargetStateWindow",
+            "RotationActionOccupancyRequirement",
+        ),
+        outputs=(
+            "RotationRuntimeApplicationPipelineResult",
+            "RotationRuntimeIntentApplication",
+            "RotationPlan",
+        ),
+        dependencies=(
+            "rotation.runtime.triggered_intent_projection",
+            "rotation.runtime.trigger_condition_resolution",
+            "rotation.runtime.execution_strategy_resolution",
+            "rotation.runtime.executable_choice_resolution",
+            "rotation.runtime.action_materialization",
+        ),
+        responsibilities=("rotation_runtime_triggered_application_orchestration",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Composition only. Each dependency retains authority for its own evidence boundary. "
+            "Activated intents are applied in deterministic activation order and each successful "
+            "immutable plan becomes the input plan for later intents. Unresolved evidence remains explicit."
+        ),
+    ),
 )
 
 
