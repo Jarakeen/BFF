@@ -76,6 +76,18 @@ def test_classifies_bastion_per_stack_ceiling():
     assert row.can_raise_self
 
 
+def test_incomplete_per_stack_recovery_text_fails_closed_without_stack_count():
+    row = _classify(
+        "Increase your Magicka and Stamina Recovery by 106 per stack of Inflection.",
+        name="Incomplete Stack Fixture",
+        objective_key="magicka_recovery",
+    )
+    assert row.kind is ExtremeRecoverySpecialBranchKind.FORMULA
+    assert row.flat_ceiling is None
+    assert row.condition == "stack_count_required"
+    assert row.can_raise_self
+
+
 def test_classifies_wrathsun_grants_per_stack_ceiling():
     row = _classify(
         "When you deal damage with a Dawn's Wrath ability, you gain a stack of Sunlight for 15 seconds, "
