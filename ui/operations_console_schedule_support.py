@@ -125,6 +125,7 @@ def install() -> None:
     from ui.roster_assignment_usability_support import install as install_roster_assignment_usability_support
     from ui.comp_builder_roster_intake_support import install as install_comp_builder_roster_intake_support
     from ui.build_context_variant_support import install as install_build_context_variant_support
+    from ui.build_reuse_template_support import install as install_build_reuse_template_support
 
     # Personnel is player-level identity. Repair duplicates left by older imports
     # before any roster page reads them. The merge unions teams and moves legacy
@@ -185,5 +186,8 @@ def install() -> None:
     # The build editor's old boss-only alternate surface is generalized last so
     # all normal BuildEditor constructors now expose Team / Boss / Team+Boss variants.
     install_build_context_variant_support()
+    # Build reuse belongs on the Builds page above the editor. Install after the
+    # variant layer so copies and templates preserve the final canonical model.
+    install_build_reuse_template_support()
     operations_console.OperationsConsole._raid_schedule_card = _raid_schedule_card
     _INSTALLED = True
