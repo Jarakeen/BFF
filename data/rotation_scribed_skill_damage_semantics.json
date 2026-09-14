@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {
+      "result_name": "Magical Banner",
+      "grimoire": "Banner Bearer",
+      "focus": "Magic Damage",
+      "deals_direct_damage_on_activation": false,
+      "persistent_toggle": true,
+      "active_damage_done": {
+        "magic": 0.06
+      },
+      "source": "reviewed Banner Bearer + Magic Damage focus semantics: activation is a persistent toggle and grants 6% Magical Damage Done while active"
+    }
+  ]
+}
