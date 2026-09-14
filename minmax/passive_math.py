@@ -9,6 +9,10 @@ WARDEN_PIERCING_COLD_BLOCK_MITIGATION_PERCENT = 0.08
 WARDEN_PIERCING_COLD_FROST_DAMAGE_PERCENT = 0.15
 
 
+# Arcanist class passives, max rank, current values from canonical passive data.
+ARCANIST_WELLSPRING_RECOVERY_PER_SLOTTED = 81.0
+
+
 # Undaunted Mettle, max rank.
 UNDAUNTED_METTLE_RESOURCE_PERCENT_PER_ARMOR_TYPE = 0.02
 
@@ -52,6 +56,11 @@ def warden_flourish_recovery_percent(slotted_animal_companion_abilities: int) ->
     least one Animal Companions ability is slotted on the active bar.
     """
     return WARDEN_FLOURISH_RECOVERY_PERCENT if _count(slotted_animal_companion_abilities) > 0 else 0.0
+
+
+def arcanist_wellspring_recovery(slotted_soldier_of_apocrypha_abilities: int) -> float:
+    """Return Wellspring of the Abyss Recovery from active-bar Soldier slots."""
+    return _count(slotted_soldier_of_apocrypha_abilities) * ARCANIST_WELLSPRING_RECOVERY_PER_SLOTTED
 
 
 def warden_advanced_species_crit_damage(slotted_animal_companion_abilities: int) -> float:
