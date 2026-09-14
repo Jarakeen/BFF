@@ -74,12 +74,7 @@ def _candidate(
 
 
 def test_externalized_special_set_is_structural_zero_delta_and_keeps_ordinary_score() -> None:
-    special = _candidate(
-        10,
-        "Special Set",
-        delta=0.0,
-        unresolved=("runtime special semantic",),
-    )
+    special = _candidate(10, "Special Set", delta=0.0, unresolved=("runtime special semantic",))
     ordinary = _candidate(20, "Ordinary Set", delta=100.0)
     relevance = ExtremeGearSetObjectiveRelevanceCatalog(
         objective_key="health_recovery",
@@ -131,19 +126,18 @@ def test_externalized_special_set_is_structural_zero_delta_and_keeps_ordinary_sc
     )
 
     assert result.unresolved == ()
+    assert result.upstream_unresolved == relevance.unresolved
     assert result.winner_found is True
     assert result.search is not None
     assert result.search.best_exact_flat_delta == 100.0
-    assert any(set(witness.set_names) == {"Special Set", "Ordinary Set"} for witness in result.search.realizations)
-
-
-def test_externalization_does_not_hide_unrelated_unresolved_semantics() -> None:
-    special = _candidate(
-        10,
-        "Special Set",
-        delta=0.0,
-        unresolved=("runtime special semantic",),
+    assert any(
+        set(witness.set_names) == {"Special Set", "Ordinary Set"}
+        for witness in result.search.realizations
     )
+
+
+def test_externalization_keeps_unrelated_diagnostics_out_of_local_structural_gate() -> None:
+    special = _candidate(10, "Special Set", delta=0.0, unresolved=("runtime special semantic",))
     relevance = ExtremeGearSetObjectiveRelevanceCatalog(
         objective_key="health_recovery",
         evidence=(
@@ -162,9 +156,7 @@ def test_externalization_does_not_hide_unrelated_unresolved_semantics() -> None:
             "Different Set (5): active set bonus is not yet mechanic-mapped: still pending",
         ),
     )
-    eligibility = ExtremeNamedGearSetSlotEligibilityCatalog(
-        sets=(_eligibility(10, "Special Set"),)
-    )
+    eligibility = ExtremeNamedGearSetSlotEligibilityCatalog(sets=(_eligibility(10, "Special Set"),))
 
     derived, unresolved = ExtremeExternalizedNamedGearConstraintSearchService._derived_relevance(
         relevance,
@@ -174,8 +166,67 @@ def test_externalization_does_not_hide_unrelated_unresolved_semantics() -> None:
 
     assert unresolved == ()
     assert derived is not None
-    assert derived.unresolved == (
-        "Different Set (5): active set bonus is not yet mechanic-mapped: still pending",
-    )
+    assert derived.unresolved == ()
     assert derived.evidence[0].status is ExtremeGearSetObjectiveRelevance.PROVEN_IRRELEVANT
     assert derived.evidence[0].candidate.source_effects == ()
+
+
+def test_search_preserves_upstream_diagnostics_without_blocking_local_structure() -> None:
+    special = _candidate(10, "Special Set", delta=0.0, unresolved=("runtime special semantic",))
+    ordinary = _candidate(20, "Ordinary Set", delta=100.0)
+    upstream = (
+        "Special Set (5): active set bonus is not yet mechanic-mapped: runtime special semantic",
+        "Different Set (5): active set bonus is not yet mechanic-mapped: still pending",
+    )
+    relevance = ExtremeGearSetObjectiveRelevanceCatalog(
+        objective_key="health_recovery",
+        evidence=(
+            ExtremeGearSetObjectiveBreakpointEvidence(
+                set_id=10,
+                set_name="Special Set",
+                piece_count=5,
+                objective_key="health_recovery",
+                status=ExtremeGearSetObjectiveRelevance.UNRESOLVED,
+                reviewed_delta=0.0,
+                candidate=special,
+            ),
+            ExtremeGearSetObjectiveBreakpointEvidence(
+                set_id=20,
+                set_name="Ordinary Set",
+                piece_count=5,
+                objective_key="health_recovery",
+                status=ExtremeGearSetObjectiveRelevance.RELEVANT,
+                reviewed_delta=100.0,
+                candidate=ordinary,
+            ),
+        ),
+        unresolved=upstream,
+    )
+    breakpoints = ExtremeGearSetBonusBreakpointCatalog(
+        sets=(
+            ExtremeGearSetBonusBreakpoints(10, "Special Set", 5, (5,)),
+            ExtremeGearSetBonusBreakpoints(20, "Ordinary Set", 5, (5,)),
+        )
+    )
+    eligibility = ExtremeNamedGearSetSlotEligibilityCatalog(
+        sets=(_eligibility(10, "Special Set"), _eligibility(20, "Ordinary Set"))
+    )
+    topology = ExtremeGearSetTopologyCatalog(
+        sets=(),
+        topologies=(ExtremeGearSetCountTopology(counts=(5, 5), unused_units=2),),
+    )
+
+    result = ExtremeExternalizedNamedGearConstraintSearchService.search(
+        topology_catalog=topology,
+        breakpoints=breakpoints,
+        eligibility=eligibility,
+        relevance=relevance,
+        requirements=(ExtremeNamedGearRequirement("Special Set", 5),),
+        externalized=(ExtremeExternalizedNamedGearSemantic("Special Set", 5),),
+    )
+
+    assert result.unresolved == ()
+    assert result.upstream_unresolved == upstream
+    assert result.winner_found is True
+    assert result.search is not None
+    assert result.search.best_exact_flat_delta == 100.0
