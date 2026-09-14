@@ -74,6 +74,55 @@ def test_frontier_composes_static_line_and_slot_recovery(tmp_path, monkeypatch):
     assert result.route_denominator_closed
 
 
+def test_flourish_is_not_counted_as_both_static_and_slot_recovery(tmp_path, monkeypatch):
+    service = ExtremeRecoveryClassRouteFrontierService(tmp_path / "missing.db")
+    service.passives = (
+        _passive(
+            "Flourish",
+            "Animal Companions",
+            "Increases your Magicka and Stamina Recovery by 20% while an Animal Companions ability is slotted.",
+        ),
+        _passive(
+            "Erudition",
+            "Curative Runeforms",
+            "Increases your Magicka and Stamina Recovery by 18%.",
+        ),
+    )
+    config = SimpleNamespace(
+        base_class=CharacterClass.ARCANIST,
+        equipped_skill_lines=("animal_companions", "curative_runeforms", "soldier_of_apocrypha"),
+        is_pure_class=False,
+    )
+    monkeypatch.setattr(
+        "services.extreme_recovery_class_route_frontier_service.ExtremeClassConfigurationService.all_candidates",
+        lambda: (config,),
+    )
+    monkeypatch.setattr(
+        "services.extreme_recovery_class_route_frontier_service.ExtremeSubclassSlotAllocationService.best_allocation",
+        lambda *args, **kwargs: SimpleNamespace(
+            projected_delta=605.0,
+            reviewed_sources=(
+                "Flourish (Animal Companions represented)",
+                "Wellspring of the Abyss (5 Soldier of Apocrypha slots)",
+            ),
+            slot_counts=(
+                ("animal_companions", 1),
+                ("curative_runeforms", 0),
+                ("soldier_of_apocrypha", 5),
+            ),
+        ),
+    )
+
+    result = service.frontier("magicka_recovery", reference_value=1000.0)
+    best = result.best_reviewed_candidate
+
+    assert best is not None
+    assert best.static_percent == pytest.approx(0.18)
+    assert best.slot_projected_delta == pytest.approx(605.0)
+    assert best.projected_delta == pytest.approx(785.0)
+    assert sum("Flourish" in source for source in best.reviewed_sources) == 1
+
+
 def test_contextual_recovery_stays_runtime_obligation(tmp_path, monkeypatch):
     service = ExtremeRecoveryClassRouteFrontierService(tmp_path / "missing.db")
     service.passives = (
