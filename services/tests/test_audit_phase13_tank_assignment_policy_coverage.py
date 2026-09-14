@@ -85,7 +85,6 @@ def test_audit_marks_symbolic_horizon_policy_as_reviewed_but_not_yet_executable(
                 "requirement_id": "xalvakka:tank:boss_taunt",
                 "encounter_id": "xalvakka",
                 "requirement_type": "taunt",
-                "source_skill_name": "Pierce Armor",
                 "source": "reviewed fixture",
                 "windows": [
                     {
@@ -105,3 +104,21 @@ def test_audit_marks_symbolic_horizon_policy_as_reviewed_but_not_yet_executable(
     assert rows[0].disposition == "taunt_maintenance_horizon"
     assert rows[0].reviewed is True
     assert rows[0].executable_before_horizon_materialization is False
+
+
+def test_production_registry_reviews_taleria_ownership_without_pretending_xalvakka_is_resolved():
+    registry = RotationAssignmentPolicyRegistryService()
+
+    taleria = audit_encounter("taleria_hm", registry=registry)
+    xalvakka = audit_encounter("xalvakka", registry=registry)
+
+    assert len(taleria) == 1
+    assert taleria[0].requirement_id == "taleria_hm:tank:boss_taunt"
+    assert taleria[0].disposition == "taunt_maintenance_horizon"
+    assert taleria[0].reviewed is True
+    assert taleria[0].executable_before_horizon_materialization is False
+
+    assert len(xalvakka) == 1
+    assert xalvakka[0].requirement_id == "xalvakka:tank:boss_taunt"
+    assert xalvakka[0].disposition == "missing"
+    assert xalvakka[0].reviewed is False
