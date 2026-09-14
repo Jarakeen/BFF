@@ -5,9 +5,11 @@ import pytest
 from minmax.effects import Effect, EffectOperation, EffectUnit
 from minmax.stat_ids import StatId
 from tools.audit_extreme_magicka_recovery_direct_flat_named_gear_dominance import (
+    abstract_topology_structural_upper_bound,
     direct_flat_upper_bound,
     dominance_row,
 )
+from tools.audit_extreme_magicka_recovery_ordinary_named_gear_frontier import PairScore
 
 
 def _challenger(**overrides):
@@ -45,6 +47,15 @@ def _evidence(*, description: str, mapped_flat: float = 0.0):
         set_name="Fixture",
         piece_count=5,
         candidate=candidate,
+    )
+
+
+def _pair(value: float, *, ordinary: bool = True) -> PairScore:
+    return PairScore(
+        direct_recovery=value,
+        max_magicka_flat=0.0,
+        optimistic_effective_recovery=value,
+        ordinary=ordinary,
     )
 
 
@@ -91,6 +102,43 @@ def test_max_magicka_cross_stat_headroom_is_granted_to_direct_flat_challenger():
 
     assert upper.max_magicka_recovery_ceiling == pytest.approx(15.376)
     assert upper.total_special_ceiling >= 175.376
+
+
+def test_abstract_topology_bound_can_reuse_same_best_identity_and_stays_optimistic():
+    challenger = _challenger(set_id=99, piece_count=5)
+    topology = SimpleNamespace(
+        topologies=(
+            SimpleNamespace(counts=(5, 3, 3, 1)),
+            SimpleNamespace(counts=(5, 5, 2)),
+        )
+    )
+    scores = {
+        (10, 3): _pair(300.0),
+        (11, 3): _pair(250.0),
+        (12, 1): _pair(100.0),
+        (13, 5): _pair(400.0),
+        (14, 2): _pair(80.0),
+    }
+
+    upper = abstract_topology_structural_upper_bound(challenger, scores, topology)
+
+    # The 5+3+3+1 topology is allowed to reuse the same 300-point 3pc score twice.
+    # That is intentionally impossible/optimistic and therefore safe for pruning.
+    assert upper == pytest.approx(700.0)
+
+
+def test_abstract_topology_bound_excludes_challenger_ordinary_identity():
+    challenger = _challenger(set_id=99, piece_count=5)
+    topology = SimpleNamespace(topologies=(SimpleNamespace(counts=(5, 3, 1)),))
+    scores = {
+        (99, 3): _pair(9999.0),
+        (10, 3): _pair(300.0),
+        (11, 1): _pair(100.0),
+    }
+
+    upper = abstract_topology_structural_upper_bound(challenger, scores, topology)
+
+    assert upper == pytest.approx(400.0)
 
 
 def test_dominance_row_preserves_survivor_at_or_above_incumbent():
