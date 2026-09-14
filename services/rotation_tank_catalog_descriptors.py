@@ -57,10 +57,7 @@ ROTATION_TANK_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "RotationActionSlotRequirement",
         ),
         outputs=("RotationTankTauntCandidateProjection",),
-        dependencies=(
-            "rotation.tank.taunt_application_obligation",
-            "rotation.saved_build.action_slot",
-        ),
+        dependencies=("rotation.tank.taunt_application_obligation",),
         responsibilities=("rotation_tank_taunt_candidate_generation",),
         roles=("Tank",),
         behavior=ServiceBehavior.DETERMINISTIC,
