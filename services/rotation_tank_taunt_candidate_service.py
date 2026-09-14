@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import math
 from pathlib import Path
 
+from minmax.rotation_action_slot_legality import RotationActionSlotRequirement
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 from services.rotation_tank_taunt_obligation_service import (
@@ -88,6 +89,10 @@ class RotationTankTauntCandidateService:
     This service never chooses a taunt skill, timing, refresh cadence, target, or
     replacement action. The requirement owns the exact source skill and application
     window; an optional claim may place that exact skill only in an unoccupied slot.
+
+    New casts also require structural saved-build slot evidence. A claim cannot make
+    a build cast a skill or Ultimate that is not actually slotted, and an ambiguous
+    two-bar source remains unresolved unless the requirement/claim selects a bar.
     """
 
     def __init__(
@@ -106,6 +111,7 @@ class RotationTankTauntCandidateService:
         candidate: GeneratedRotationCandidate,
         requirements: tuple[RotationTankTauntApplicationRequirement, ...],
         claims: tuple[RotationTankTauntActionClaim, ...] = (),
+        slot_requirements: tuple[RotationActionSlotRequirement, ...] = (),
     ) -> RotationTankTauntCandidateProjection:
         if not requirements:
             return RotationTankTauntCandidateProjection(
@@ -135,6 +141,19 @@ class RotationTankTauntCandidateService:
             and bool(getattr(assessment, "satisfied", False))
         }
 
+        slot_by_key: dict[tuple[RotationActionKind, str], RotationActionSlotRequirement] = {}
+        for slot_requirement in slot_requirements:
+            key = (
+                slot_requirement.action_kind,
+                slot_requirement.action_name.casefold(),
+            )
+            if key in slot_by_key:
+                raise ValueError(
+                    "duplicate saved-build slot requirement for "
+                    f"{slot_requirement.action_name!r}"
+                )
+            slot_by_key[key] = slot_requirement
+
         existing_slots = {
             (float(action.time_seconds), int(action.sequence)): action
             for action in candidate.plan.actions
@@ -162,7 +181,34 @@ class RotationTankTauntCandidateService:
                 unresolved.append(validation_error)
                 continue
 
-            claim_bar = claim.bar if claim.bar is not None else requirement.bar
+            slot_requirement = slot_by_key.get(
+                (claim.action_kind, requirement.source_skill_name.casefold())
+            )
+            if slot_requirement is None:
+                unresolved.append(
+                    f"{claim.requirement_id}: saved-build slot evidence does not prove "
+                    f"{requirement.source_skill_name} is slotted as {claim.action_kind.value}"
+                )
+                continue
+
+            requested_bar = claim.bar if claim.bar is not None else requirement.bar
+            if requested_bar is None:
+                if len(slot_requirement.allowed_bars) != 1:
+                    unresolved.append(
+                        f"{claim.requirement_id}: {requirement.source_skill_name} is slotted on "
+                        "multiple bars and no exact taunt claim bar was supplied"
+                    )
+                    continue
+                claim_bar = slot_requirement.allowed_bars[0]
+            else:
+                claim_bar = requested_bar
+                if claim_bar not in slot_requirement.allowed_bars:
+                    unresolved.append(
+                        f"{claim.requirement_id}: {requirement.source_skill_name} is not slotted "
+                        f"on the claimed {claim_bar} bar"
+                    )
+                    continue
+
             slot = (float(claim.action_time_seconds), int(claim.action_sequence))
             occupied = existing_slots.get(slot)
             if occupied is not None:
@@ -170,7 +216,7 @@ class RotationTankTauntCandidateService:
                     occupied.kind is claim.action_kind
                     and str(occupied.name or "").strip().casefold()
                     == requirement.source_skill_name.casefold()
-                    and (claim_bar is None or occupied.bar == claim_bar)
+                    and occupied.bar == claim_bar
                 )
                 if same_action:
                     continue
@@ -205,7 +251,7 @@ class RotationTankTauntCandidateService:
             actions=tuple(working_actions),
             assumptions=tuple(candidate.plan.assumptions)
             + (
-                "explicit tank taunt action claims may add exact source-backed taunt applications without displacing occupied rotation slots",
+                "explicit tank taunt action claims may add exact source-backed taunt applications only when saved-build slot evidence proves the source is executable on that bar",
             ),
             unresolved=candidate.plan.unresolved,
         )
