@@ -106,7 +106,7 @@ def test_audit_marks_symbolic_horizon_policy_as_reviewed_but_not_yet_executable(
     assert rows[0].executable_before_horizon_materialization is False
 
 
-def test_production_registry_reviews_taleria_ownership_without_pretending_xalvakka_is_resolved():
+def test_production_registry_reviews_taleria_and_xalvakka_ownership_symbolically():
     registry = RotationAssignmentPolicyRegistryService()
 
     taleria = audit_encounter("taleria_hm", registry=registry)
@@ -120,5 +120,7 @@ def test_production_registry_reviews_taleria_ownership_without_pretending_xalvak
 
     assert len(xalvakka) == 1
     assert xalvakka[0].requirement_id == "xalvakka:tank:boss_taunt"
-    assert xalvakka[0].disposition == "missing"
-    assert xalvakka[0].reviewed is False
+    assert xalvakka[0].disposition == "taunt_maintenance_horizon"
+    assert xalvakka[0].reviewed is True
+    assert xalvakka[0].executable_before_horizon_materialization is False
+    assert "XVMgLdq6GpQ7bhKN" in xalvakka[0].source
