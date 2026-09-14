@@ -122,6 +122,35 @@ ROTATION_TANK_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "claims, and unsupported response kinds fail closed rather than moving actions."
         ),
     ),
+    ServiceDescriptor(
+        service_id="rotation.tank.defensive_family_projection",
+        domain="rotation",
+        purpose=(
+            "Apply one explicit tank defensive obligation/claim policy to each generated "
+            "candidate through the role-neutral family projection hook before evaluation."
+        ),
+        implementation_path=(
+            "services.rotation_tank_defensive_family_projector_service"
+        ),
+        inputs=(
+            "GeneratedRotationCandidate",
+            "RotationTankDefensiveObligation",
+            "RotationTankDefensiveActionClaim",
+            "RotationCandidateFamilyProjector",
+        ),
+        outputs=("GeneratedRotationCandidate",),
+        dependencies=("rotation.tank.defensive_candidate_claim",),
+        responsibilities=("rotation_tank_defensive_family_projection",),
+        roles=("Tank",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.POLICY,
+        notes=(
+            "Resolved candidates preserve/insert exact responses before family evaluation. "
+            "Candidate-specific projection failures remain on that plan's unresolved channel "
+            "instead of aborting otherwise valid sibling candidates."
+        ),
+    ),
 )
 
 
