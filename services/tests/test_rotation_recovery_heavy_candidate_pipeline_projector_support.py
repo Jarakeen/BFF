@@ -10,10 +10,11 @@ from services.rotation_recovery_heavy_candidate_pipeline_service import (
 class _Bridge:
     def __init__(self):
         self.calls = []
+        self.candidate = object()
 
     def build(self, **kwargs):
         self.calls.append(kwargs)
-        return SimpleNamespace(candidates=(object(),))
+        return SimpleNamespace(candidates=(self.candidate,))
 
 
 class _Workflow:
@@ -66,8 +67,9 @@ def test_generic_pipeline_forwards_candidate_projector_to_generation_bridge():
     )
 
     assert result is workflow.result
+    assert len(bridge.calls) == 1
     assert bridge.calls[0]["candidate_projector"] is projector
-    assert workflow.generic_calls[0]["candidates"] == (bridge.build(**bridge.calls[0]).candidates[0],)
+    assert workflow.generic_calls[0]["candidates"] == (bridge.candidate,)
 
 
 def test_effect_pipeline_forwards_candidate_projector_to_generation_bridge():
@@ -94,5 +96,6 @@ def test_effect_pipeline_forwards_candidate_projector_to_generation_bridge():
     )
 
     assert result is workflow.result
+    assert len(bridge.calls) == 1
     assert bridge.calls[0]["candidate_projector"] is projector
-    assert len(workflow.effect_calls) == 1
+    assert workflow.effect_calls[0]["candidates"] == (bridge.candidate,)
