@@ -50,10 +50,58 @@ class HealthThresholdProjection:
 
 
 @dataclass(frozen=True)
+class FightEndProjection:
+    damage_required: float
+    time_seconds: float | None
+    resolved: bool
+    reason: str
+
+
+@dataclass(frozen=True)
 class FightDamageTrajectoryProjection:
     maximum_health: float
     segments: tuple[RaidDamageSegment, ...]
     thresholds: tuple[HealthThresholdProjection, ...]
+
+
+def _ordered_segments(
+    segments: tuple[RaidDamageSegment, ...],
+) -> tuple[RaidDamageSegment, ...]:
+    ordered = tuple(sorted(segments, key=lambda item: item.start_seconds))
+    previous_end: float | None = 0.0
+    for index, segment in enumerate(ordered):
+        if index == 0 and segment.start_seconds != 0:
+            raise ValueError("raid damage trajectory must begin at 0 seconds")
+        if previous_end is None:
+            raise ValueError("an open-ended raid damage segment must be the final segment")
+        if not math.isclose(segment.start_seconds, previous_end, rel_tol=0.0, abs_tol=1e-9):
+            raise ValueError("raid damage trajectory segments must be contiguous")
+        previous_end = segment.end_seconds
+    return ordered
+
+
+def _project_damage_time(
+    *,
+    damage_required: float,
+    segments: tuple[RaidDamageSegment, ...],
+) -> float | None:
+    required = float(damage_required)
+    if not math.isfinite(required) or required < 0:
+        raise ValueError("required damage must be finite and non-negative")
+    if required == 0:
+        return 0.0
+
+    remaining = required
+    for segment in segments:
+        if segment.end_seconds is None:
+            return segment.start_seconds + remaining / segment.damage_per_second
+
+        duration = segment.end_seconds - segment.start_seconds
+        capacity = duration * segment.damage_per_second
+        if remaining <= capacity + 1e-9:
+            return segment.start_seconds + remaining / segment.damage_per_second
+        remaining -= capacity
+    return None
 
 
 def project_health_threshold_times(
@@ -74,16 +122,7 @@ def project_health_threshold_times(
     if not math.isfinite(health) or health <= 0:
         raise ValueError("maximum encounter health must be finite and positive")
 
-    ordered_segments = tuple(sorted(segments, key=lambda item: item.start_seconds))
-    previous_end: float | None = 0.0
-    for index, segment in enumerate(ordered_segments):
-        if index == 0 and segment.start_seconds != 0:
-            raise ValueError("raid damage trajectory must begin at 0 seconds")
-        if previous_end is None:
-            raise ValueError("an open-ended raid damage segment must be the final segment")
-        if not math.isclose(segment.start_seconds, previous_end, rel_tol=0.0, abs_tol=1e-9):
-            raise ValueError("raid damage trajectory segments must be contiguous")
-        previous_end = segment.end_seconds
+    ordered_segments = _ordered_segments(tuple(segments))
 
     projected = []
     for raw_threshold in thresholds:
@@ -92,23 +131,10 @@ def project_health_threshold_times(
             raise ValueError("health threshold fraction must be between 0 and 1")
 
         damage_required = health * (1.0 - fraction)
-        remaining = damage_required
-        resolved_time: float | None = None
-
-        for segment in ordered_segments:
-            if segment.end_seconds is None:
-                resolved_time = segment.start_seconds + remaining / segment.damage_per_second
-                remaining = 0.0
-                break
-
-            duration = segment.end_seconds - segment.start_seconds
-            capacity = duration * segment.damage_per_second
-            if remaining <= capacity + 1e-9:
-                resolved_time = segment.start_seconds + remaining / segment.damage_per_second
-                remaining = 0.0
-                break
-            remaining -= capacity
-
+        resolved_time = _project_damage_time(
+            damage_required=damage_required,
+            segments=ordered_segments,
+        )
         projected.append(
             HealthThresholdProjection(
                 threshold_fraction=fraction,
@@ -128,4 +154,30 @@ def project_health_threshold_times(
         maximum_health=health,
         segments=ordered_segments,
         thresholds=tuple(projected),
+    )
+
+
+def project_fight_end_time(
+    trajectory: FightDamageTrajectoryProjection,
+) -> FightEndProjection:
+    """Project the encounter end from the same explicit raid-damage trajectory.
+
+    This is the 0-Health endpoint of the already-reviewed trajectory, not a default
+    fight length. Finite evidence that ends before maximum Health is exhausted stays
+    unresolved rather than extending the final DPS rate or inventing a fallback horizon.
+    """
+
+    time_seconds = _project_damage_time(
+        damage_required=float(trajectory.maximum_health),
+        segments=tuple(trajectory.segments),
+    )
+    return FightEndProjection(
+        damage_required=float(trajectory.maximum_health),
+        time_seconds=time_seconds,
+        resolved=time_seconds is not None,
+        reason=(
+            "projected encounter end from explicit piecewise raid DPS trajectory"
+            if time_seconds is not None
+            else "supplied raid DPS trajectory ends before encounter Health reaches zero"
+        ),
     )
