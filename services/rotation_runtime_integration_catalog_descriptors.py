@@ -91,6 +91,37 @@ ROTATION_RUNTIME_INTEGRATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] 
             "an occupied action, or emit RotationAction timing/sequence/action-kind state."
         ),
     ),
+    ServiceDescriptor(
+        service_id="rotation.runtime.executable_choice_resolution",
+        domain="rotation",
+        purpose=(
+            "Choose exactly one immediately executable runtime strategy candidate only when the "
+            "current active bar and explicit slot, target-state, and occupancy evidence prove it legal."
+        ),
+        implementation_path="services.rotation_runtime_executable_choice_service",
+        inputs=(
+            "RotationPlan",
+            "RotationRuntimeExecutionStrategyResolution",
+            "RotationActionSlotRequirement",
+            "RotationActionTargetRequirement",
+            "RotationTargetStateWindow",
+            "RotationActionOccupancyRequirement",
+        ),
+        outputs=(
+            "RotationRuntimeExecutableChoice",
+            "RotationRuntimeExecutableChoiceResolution",
+        ),
+        dependencies=("rotation.runtime.execution_strategy_resolution",),
+        responsibilities=("rotation_runtime_executable_choice_resolution",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Reuses the canonical RotationActiveBarAssessor plus existing slot, target, and occupancy "
+            "legality assessors. Missing evidence fails closed. Inactive-bar candidates require explicit "
+            "bar-swap policy, multiple same-bar legal candidates remain ambiguous, and no output is yet a RotationAction."
+        ),
+    ),
 )
 
 
