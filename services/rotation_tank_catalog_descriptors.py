@@ -95,6 +95,33 @@ ROTATION_TANK_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "placement. Free-form prose, conflicting facts, and unproven timing fail closed."
         ),
     ),
+    ServiceDescriptor(
+        service_id="rotation.tank.defensive_candidate_claim",
+        domain="rotation",
+        purpose=(
+            "Preserve already-satisfied tank defensive obligations or insert exact caller-"
+            "owned block/dodge action claims without choosing timing or displacing occupied "
+            "rotation slots."
+        ),
+        implementation_path="services.rotation_tank_defensive_candidate_service",
+        inputs=(
+            "GeneratedRotationCandidate",
+            "RotationTankDefensiveObligation",
+            "RotationTankDefensiveActionClaim",
+        ),
+        outputs=("RotationTankDefensiveCandidateProjection",),
+        dependencies=("rotation.tank.defensive_response_obligation",),
+        responsibilities=("rotation_tank_defensive_candidate_generation",),
+        roles=("Tank",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.POLICY,
+        notes=(
+            "Claims must supply exact action kind, time, sequence, and optional bar. Existing "
+            "matching responses are preserved. Conflicting occupied slots, out-of-window "
+            "claims, and unsupported response kinds fail closed rather than moving actions."
+        ),
+    ),
 )
 
 
