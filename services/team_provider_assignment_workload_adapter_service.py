@@ -238,6 +238,7 @@ class TeamProviderAssignmentWorkloadAdapterService:
                         primary_role_displacement_seconds=(
                             workload_policy.primary_role_displacement_seconds
                         ),
+                        bar=effect_policy.bar,
                     )
                 )
                 profiles.append(
