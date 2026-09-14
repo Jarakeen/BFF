@@ -112,6 +112,7 @@ def install() -> None:
     from ui.roster_import_sparse_alternate_support import install as install_roster_import_sparse_alternate_support
     from ui.roster_import_match_preview_support import install as install_roster_import_match_preview_support
     from ui.roster_import_build_confirmation_support import install as install_roster_import_build_confirmation_support
+    from ui.coverage_capability_gap_visibility_support import install as install_coverage_capability_gap_visibility_support
     from ui.player_build_navigation_support import install as install_player_build_navigation_support
     from ui.rotation_dashboard_layout_support import install as install_rotation_dashboard_layout_support
     from ui.build_rotation_artifact_support import install as install_build_rotation_artifact_support
@@ -166,6 +167,9 @@ def install() -> None:
     # recipe rows. Preserve that evidence and make the raid lead explicitly confirm
     # anything Foundry cannot safely promote into canonical build state.
     install_roster_import_build_confirmation_support()
+    # Coverage should never collapse every unresolved build into a mysterious wall
+    # of "Unverified". Surface the exact per-build capability gaps behind that state.
+    install_coverage_capability_gap_visibility_support()
     install_player_build_navigation_support()
     install_rotation_dashboard_layout_support()
     install_build_rotation_artifact_support()
