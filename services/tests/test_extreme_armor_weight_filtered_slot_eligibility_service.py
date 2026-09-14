@@ -102,6 +102,25 @@ def test_medium_only_set_can_still_use_jewelry_and_weapons_in_heavy_search(tmp_p
     assert filtered.weapon_types == ("Axe", "Restoration Staff")
 
 
+def test_upstream_catalog_diagnostic_does_not_poison_filter_proof(tmp_path):
+    path = tmp_path / "eso.db"
+    _database(path, tuple((10, _EQUIP_IDS[slot], 3, 0) for slot in _BODY))
+    catalog = ExtremeNamedGearSetSlotEligibilityCatalog(
+        sets=(_row(10, "Heavy Set"),),
+        unresolved=("unrelated upstream slot-catalog diagnostic",),
+    )
+
+    result = ExtremeArmorWeightFilteredSlotEligibilityService.build(
+        path,
+        catalog,
+        required_armor_weight="Heavy",
+    )
+
+    assert result.denominator_proven is True
+    assert result.unresolved == ()
+    assert result.catalog.unresolved == ("unrelated upstream slot-catalog diagnostic",)
+
+
 def test_missing_armor_weight_evidence_fails_closed(tmp_path):
     path = tmp_path / "eso.db"
     _database(path, ())
