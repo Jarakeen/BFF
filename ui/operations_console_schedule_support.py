@@ -109,6 +109,7 @@ def install() -> None:
     from ui.roster_import_identity_resolution_support import install as install_roster_import_identity_resolution_support
     from ui.roster_gear_set_alias_import_support import install as install_roster_gear_set_alias_import_support
     from ui.roster_import_context_variant_support import install as install_roster_import_context_variant_support
+    from ui.roster_import_sparse_alternate_support import install as install_roster_import_sparse_alternate_support
     from ui.roster_import_match_preview_support import install as install_roster_import_match_preview_support
     from ui.player_build_navigation_support import install as install_player_build_navigation_support
     from ui.rotation_dashboard_layout_support import install as install_rotation_dashboard_layout_support
@@ -150,6 +151,10 @@ def install() -> None:
     # selected players, then folds boss/loadout columns into sparse Context Variants.
     # Personnel's current character is preferred over historical accidental toons.
     install_roster_import_context_variant_support()
+    # Human alternate columns routinely omit unchanged attributes, skills, CP,
+    # food, Mundus, and similar values. Treat those blanks as inheritance and
+    # separate mixed class/role families before Context Variant consolidation.
+    install_roster_import_sparse_alternate_support()
     # The preview should make repeat imports obvious: existing identities are
     # reused, while new characters/builds and genuinely ambiguous rows are labeled.
     install_roster_import_match_preview_support()
