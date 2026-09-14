@@ -1,27 +1,52 @@
 from __future__ import annotations
 
-"""Materialize reviewed symbolic taunt-maintenance policy from canonical encounter horizon.
+"""Materialize reviewed symbolic taunt-maintenance policy from canonical encounter timing.
 
 Provider ownership and reviewed strategy policy remain separate from fight-duration
 mechanics. This layer permits reviewed policy to say that continuous taunt ownership
-lasts until the projected encounter end without persisting a brittle absolute second.
-Only a resolved RotationTankEncounterHorizon may turn that symbolic endpoint into the
-existing numeric RotationAssignmentTauntMaintenancePolicy consumed downstream.
+lasts until either the projected encounter end or a reviewed health-threshold boundary
+without persisting a brittle absolute second.
 
 A symbolic encounter policy may deliberately omit ``source_skill_name`` and bar. Those
 are saved-build/provider facts, not encounter facts. Generate may bind the policy to an
 exact canonical taunt skill/bar supplied by the selected provider scope. The materializer
 fails closed if neither the reviewed policy nor provider evidence supplies a unique skill.
+
+Threshold references deliberately model only a boundary already proven by canonical
+health-threshold evidence. Reaching 70% can honestly end a phase window; it does not by
+itself prove when a relocating boss becomes targetable again on the next floor.
 """
 
 from dataclasses import dataclass
 import math
+import re
 
+from services.encounter_health_threshold_projection_service import (
+    EncounterHealthThresholdProjection,
+)
 from services.rotation_assignment_taunt_maintenance_service import (
     RotationAssignmentTauntMaintenancePolicy,
     RotationAssignmentTauntMaintenanceWindow,
 )
 from services.rotation_tank_encounter_horizon_service import RotationTankEncounterHorizon
+
+
+_THRESHOLD_REFERENCE = re.compile(
+    r"^health_threshold:(100|[1-9]?\d(?:\.\d+)?)%$",
+    re.IGNORECASE,
+)
+
+
+def _threshold_fraction(reference: str) -> float | None:
+    match = _THRESHOLD_REFERENCE.fullmatch(str(reference or "").strip())
+    if match is None:
+        return None
+    percent = float(match.group(1))
+    if percent <= 0 or percent >= 100:
+        raise ValueError(
+            "symbolic taunt maintenance health-threshold reference must be between 0% and 100%"
+        )
+    return percent / 100.0
 
 
 @dataclass(frozen=True)
@@ -41,9 +66,11 @@ class RotationAssignmentTauntMaintenanceHorizonWindow:
         if not target_key:
             raise ValueError("symbolic taunt maintenance target_key is required")
         if end_reference != "encounter_end":
-            raise ValueError(
-                "symbolic taunt maintenance end_reference must be 'encounter_end'"
-            )
+            _threshold_fraction(end_reference)
+            if _THRESHOLD_REFERENCE.fullmatch(end_reference) is None:
+                raise ValueError(
+                    "symbolic taunt maintenance end_reference must be 'encounter_end' or 'health_threshold:<percent>%'"
+                )
         start = float(self.active_start_seconds)
         if not math.isfinite(start) or start < 0:
             raise ValueError(
@@ -111,26 +138,64 @@ class RotationAssignmentTauntMaintenanceHorizonMaterialization:
 
 
 class RotationAssignmentTauntMaintenanceHorizonPolicyService:
-    """Resolve symbolic encounter-end windows into existing numeric maintenance policy."""
+    """Resolve symbolic encounter/threshold endpoints into numeric maintenance policy."""
+
+    @staticmethod
+    def _threshold_end(
+        *,
+        policy: RotationAssignmentTauntMaintenanceHorizonPolicy,
+        window: RotationAssignmentTauntMaintenanceHorizonWindow,
+        health_threshold_projection: EncounterHealthThresholdProjection | None,
+    ) -> tuple[float | None, tuple[str, ...], tuple[str, ...]]:
+        fraction = _threshold_fraction(window.end_reference)
+        if fraction is None:
+            raise ValueError("threshold endpoint resolver requires a health-threshold reference")
+        projection = health_threshold_projection
+        if projection is None:
+            return None, (), (
+                f"{policy.requirement_id}:{window.occurrence_id}: canonical health-threshold projection is unavailable for {fraction * 100:g}% endpoint",
+            )
+        if projection.encounter_id != policy.encounter_id:
+            raise ValueError(
+                "Tank health-threshold projection encounter does not match symbolic taunt maintenance policy encounter"
+            )
+        matches = tuple(
+            point
+            for point in projection.points
+            if math.isclose(
+                float(point.threshold_fraction),
+                fraction,
+                rel_tol=0.0,
+                abs_tol=1e-9,
+            )
+        )
+        if len(matches) != 1:
+            return None, (), (
+                f"{policy.requirement_id}:{window.occurrence_id}: expected exactly one canonical {fraction * 100:g}% health-threshold clock point; found {len(matches)}",
+            )
+        point = matches[0]
+        if not point.resolved or point.time_seconds is None:
+            return None, (), (
+                f"{policy.requirement_id}:{window.occurrence_id}: canonical {fraction * 100:g}% health-threshold clock point is unresolved: {point.reason}",
+            )
+        end = float(point.time_seconds)
+        return end, (
+            f"symbolic_endpoint=health_threshold:{fraction * 100:g}%:{end:g}",
+            f"threshold_fact={point.fact_key}",
+        ), ()
 
     def materialize(
         self,
         *,
         policy: RotationAssignmentTauntMaintenanceHorizonPolicy,
         horizon: RotationTankEncounterHorizon,
+        health_threshold_projection: EncounterHealthThresholdProjection | None = None,
         provider_source_skill_name: str | None = None,
         provider_source_bar: str | None = None,
     ) -> RotationAssignmentTauntMaintenanceHorizonMaterialization:
         if horizon.encounter_id != policy.encounter_id:
             raise ValueError(
                 "Tank encounter horizon does not match symbolic taunt maintenance policy encounter"
-            )
-        if not horizon.resolved or horizon.end_seconds is None:
-            return RotationAssignmentTauntMaintenanceHorizonMaterialization(
-                policy=None,
-                resolved=False,
-                unresolved=tuple(horizon.unresolved)
-                or ("Tank encounter horizon is unresolved",),
             )
 
         reviewed_skill = (
@@ -161,16 +226,38 @@ class RotationAssignmentTauntMaintenanceHorizonPolicyService:
         if provider_bar is not None and provider_bar not in {"front", "back"}:
             raise ValueError("provider_source_bar must be front or back when supplied")
 
-        end = float(horizon.end_seconds)
         windows: list[RotationAssignmentTauntMaintenanceWindow] = []
+        endpoint_evidence: list[str] = []
         for window in policy.windows:
+            if window.end_reference == "encounter_end":
+                if not horizon.resolved or horizon.end_seconds is None:
+                    return RotationAssignmentTauntMaintenanceHorizonMaterialization(
+                        policy=None,
+                        resolved=False,
+                        unresolved=tuple(horizon.unresolved)
+                        or ("Tank encounter horizon is unresolved",),
+                    )
+                end = float(horizon.end_seconds)
+                window_evidence = (f"symbolic_endpoint=encounter_end:{end:g}",)
+            else:
+                end, window_evidence, unresolved = self._threshold_end(
+                    policy=policy,
+                    window=window,
+                    health_threshold_projection=health_threshold_projection,
+                )
+                if unresolved or end is None:
+                    return RotationAssignmentTauntMaintenanceHorizonMaterialization(
+                        policy=None,
+                        resolved=False,
+                        unresolved=unresolved,
+                    )
+
             if end <= window.active_start_seconds:
                 return RotationAssignmentTauntMaintenanceHorizonMaterialization(
                     policy=None,
                     resolved=False,
                     unresolved=(
-                        f"{policy.requirement_id}:{window.occurrence_id}: projected encounter end "
-                        "does not occur after the reviewed maintenance start",
+                        f"{policy.requirement_id}:{window.occurrence_id}: projected symbolic endpoint does not occur after the reviewed maintenance start",
                     ),
                 )
             if window.bar and provider_bar and window.bar != provider_bar:
@@ -190,6 +277,7 @@ class RotationAssignmentTauntMaintenanceHorizonPolicyService:
                     bar=window.bar or provider_bar,
                 )
             )
+            endpoint_evidence.extend(window_evidence)
 
         materialized = RotationAssignmentTauntMaintenancePolicy(
             requirement_id=policy.requirement_id,
@@ -204,7 +292,7 @@ class RotationAssignmentTauntMaintenanceHorizonPolicyService:
             resolved=True,
             evidence=(
                 *tuple(horizon.evidence),
-                f"symbolic_endpoint=encounter_end:{end:g}",
+                *tuple(endpoint_evidence),
                 f"provider_taunt={source_skill_name}",
                 *(() if provider_bar is None else (f"provider_taunt_bar={provider_bar}",)),
             ),
