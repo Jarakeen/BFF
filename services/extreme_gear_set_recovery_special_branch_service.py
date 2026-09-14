@@ -72,20 +72,19 @@ class ExtremeGearSetRecoverySpecialBranchService:
 
     @staticmethod
     def _shared_recovery_pattern() -> str:
-        # ESO tooltips use several list orders, for example
-        # "Health, Magicka, and Stamina Recovery" and
-        # "Stamina, Magicka, and Health Recovery". Match the three-resource list
-        # without assigning semantic meaning to the order.
+        # ESO tooltips group two or three resource names before one trailing
+        # "Recovery", and the resource order varies by set.
         resource = r"(?:health|magicka|stamina)"
-        return rf"{resource},?\s+{resource},?\s+(?:and\s+)?{resource}\s+recovery"
+        return rf"{resource}(?:,\s+{resource})*(?:,?\s+and\s+{resource})\s+recovery"
 
     @classmethod
     def _has_shared_recovery(cls, text: str, resource: str) -> bool:
-        match = re.search(cls._shared_recovery_pattern(), text)
-        if match is None:
-            return False
-        phrase = match.group(0)
-        return all(name in phrase for name in ("health", "magicka", "stamina")) and resource in phrase
+        for match in re.finditer(cls._shared_recovery_pattern(), text):
+            phrase = match.group(0)
+            resources = set(re.findall(r"health|magicka|stamina", phrase))
+            if resource in resources and len(resources) >= 2:
+                return True
+        return False
 
     @classmethod
     def _recovery_clause(cls, text: str, resource: str) -> str:
