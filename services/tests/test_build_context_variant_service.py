@@ -161,10 +161,11 @@ def test_werewolf_form_override_is_context_state_not_affiliation() -> None:
     base_context = resolve_build_context(build, boss_name="Other")
     werewolf_context = resolve_build_context(build, boss_name="Boss A")
 
-    assert not hasattr(base_context, "TransformedForm")
+    assert base_context.TransformedForm == ""
     assert werewolf_context.Werewolf is True
     assert werewolf_context.TransformedForm == "werewolf"
     assert werewolf_context.FrontBarSkills[0] == "Howl of Agony"
+    assert werewolf_context.validate() == []
 
 
 def test_blank_form_override_does_not_transform_werewolf_enabled_character() -> None:
@@ -179,5 +180,10 @@ def test_blank_form_override_does_not_transform_werewolf_enabled_character() -> 
     resolved = resolve_build_context(build, boss_name="Boss A")
 
     assert resolved.Werewolf is True
-    assert not hasattr(resolved, "TransformedForm")
+    assert resolved.TransformedForm == ""
     assert resolved.Food == "Boss Food"
+
+
+def test_transformed_form_requires_matching_affiliation() -> None:
+    build = PlayerBuild(TransformedForm="werewolf")
+    assert "Werewolf form requires Werewolf affiliation." in build.validate()
