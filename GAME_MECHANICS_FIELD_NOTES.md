@@ -870,3 +870,15 @@ An Ultimate-source combination can fit the familiar twelve set-count units and s
 **Layman's version:** adding the piece counts tells us whether the suitcase is too heavy; it does not prove every item actually fits in the suitcase.
 
 **For BFF:** Ultimate-source combinations now call the canonical named-set realization service instead of trusting piece-count sums. That closes set-slot coexistence only. Seven-Heavy armor compatibility and the Health Recovery lost by equipping Ultimate-generation gear are still separate proof gates.
+
+---
+
+## 2026-09-13 — A provider skill name is not enough when the assignment is bar-specific
+
+A provider assignment can require an exact source skill on an exact bar. During the assignment-to-workload bridge, BFF could correctly identify only the front-bar casts, then the downstream workload matcher rediscovered every same-named cast without remembering the bar.
+
+**Layman's version:** if the raid plan says “this front-bar cast is the provider action,” a same-named back-bar cast is not automatically another copy of the assigned job.
+
+**What it means in actual play:** bar ownership can change the true refresh count, GCD burden, resource cost, and timing of a support responsibility even when the skill name is identical.
+
+**For BFF:** provider action bindings now preserve optional front/back bar identity end to end. Bar-agnostic assignments still match either bar, but an explicit bar requirement survives candidate generation instead of being broadened downstream.
