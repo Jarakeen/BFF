@@ -4,15 +4,16 @@ from __future__ import annotations
 
 Player, Role, and Class headers sort alphabetically without enabling live sorting
 while rows are being populated. The optional Boss selector is upgraded to the
-same searchable contains-matching combo behavior used elsewhere in FoundryDock,
-and its choices come from reviewed raid-planning encounter identities so paired
-fights are presented as one encounter.
+same searchable contains-matching combo behavior used elsewhere in FoundryDock.
+Reviewed raid-planning identities replace their raw member bosses, while unrelated
+encounters remain available.
 """
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QComboBox, QCompleter
 
 from engine.config import get_data_dir
+from services.encounter_repository import EncounterRepository
 from services.raid_encounter_identity_service import load_raid_encounter_identities
 
 
@@ -20,17 +21,44 @@ _INSTALLED = False
 _SORTABLE_COLUMNS = {0: "Player", 1: "Role", 2: "Class"}
 
 
-def _raid_encounter_choices() -> tuple[tuple[str, str], ...]:
+def _encounter_choices() -> tuple[tuple[str, str], ...]:
+    data_root = get_data_dir()
     try:
-        identities = load_raid_encounter_identities(get_data_dir())
+        identities = load_raid_encounter_identities(data_root)
     except Exception:
-        return ()
-    return tuple(
-        sorted(
-            ((row.display_name, row.encounter_id) for row in identities),
-            key=lambda item: item[0].casefold(),
-        )
-    )
+        identities = ()
+
+    choices: list[tuple[str, str]] = [
+        (row.display_name, row.encounter_id) for row in identities
+    ]
+    represented_ids = {
+        encounter_id
+        for row in identities
+        for encounter_id in (row.encounter_id, *row.member_ids)
+    }
+
+    # Keep dungeon/add-pull/other canonical encounters that do not have reviewed
+    # raid-planning identities. Reviewed grouped identities replace only their own
+    # member records, so Lylanar/Turlassil (for example) appear once as a fight.
+    try:
+        repository = EncounterRepository.from_data_root(data_root)
+        for encounter_id in repository.encounter_ids():
+            if encounter_id in represented_ids:
+                continue
+            try:
+                definition = repository.get(encounter_id)
+            except Exception:
+                continue
+            name = str(definition.name or encounter_id).strip()
+            if name:
+                choices.append((name, encounter_id))
+    except Exception:
+        pass
+
+    unique: dict[str, tuple[str, str]] = {}
+    for name, encounter_id in choices:
+        unique.setdefault(str(encounter_id).casefold(), (name, encounter_id))
+    return tuple(sorted(unique.values(), key=lambda item: item[0].casefold()))
 
 
 def _configure_boss_combo(page) -> None:
@@ -43,7 +71,7 @@ def _configure_boss_combo(page) -> None:
     try:
         combo.clear()
         combo.addItem("Team Default (most common)", "")
-        for name, encounter_id in _raid_encounter_choices():
+        for name, encounter_id in _encounter_choices():
             combo.addItem(name, encounter_id)
         index = combo.findData(current_id) if current_id else 0
         combo.setCurrentIndex(index if index >= 0 else 0)
