@@ -53,6 +53,17 @@ class VerifiedSkillEffect:
 # - Combat Prayer base 37243 / morph 2: Minor Resolve, 2974 resistance, 10s.
 # - Expansive Frost Cloak base 86122 / morph 1: Major Resolve, 5948 resistance, 20s.
 # - Overflowing Altar base 39489 / morph 2: Minor Lifesteal, 600 Health per second, 30s.
+#
+# Current U50 source review also confirms the following self-applicable Minor Intellect
+# effects are present in the ability tooltips but absent from ability_effect_link:
+# - Arcanist's Domain base 183555 / morph 0: Minor Intellect, 20s.
+# - Enchanted Growth base 85536 / morph 1: Minor Intellect, 20s after healing self.
+# - Refreshing Path base 33195 / morph 2: Minor Intellect, 10s area with 4s linger.
+# - Regenerative Ward base 28418 / morph 2: Minor Intellect, 10s.
+# - Restoring Aura base 26209 / morph 0: Minor Intellect, 20s and while slotted.
+#
+# These supplemental variants model the caster-side application used by Extreme
+# self-stat snapshots. Group/ally coverage remains owned by encounter/support layers.
 _VERIFIED: tuple[VerifiedSkillEffect, ...] = (
     VerifiedSkillEffect(
         base_ability_id=37243,
@@ -90,6 +101,66 @@ _VERIFIED: tuple[VerifiedSkillEffect, ...] = (
         stacking=StackingBehavior.UNIQUE,
         exclusivity_group="minor_lifesteal",
         condition="damage_affected_enemy",
+    ),
+    VerifiedSkillEffect(
+        base_ability_id=183555,
+        morph=0,
+        name="minor_intellect",
+        source="Arcanist's Domain",
+        magnitude=0.15,
+        duration=20.0,
+        target_type=SupportTargetType.SELF,
+        category=SupportEffectCategory.BUFF,
+        stacking=StackingBehavior.UNIQUE,
+        exclusivity_group="minor_intellect",
+    ),
+    VerifiedSkillEffect(
+        base_ability_id=85536,
+        morph=1,
+        name="minor_intellect",
+        source="Enchanted Growth",
+        magnitude=0.15,
+        duration=20.0,
+        target_type=SupportTargetType.SELF,
+        category=SupportEffectCategory.BUFF,
+        stacking=StackingBehavior.UNIQUE,
+        exclusivity_group="minor_intellect",
+    ),
+    VerifiedSkillEffect(
+        base_ability_id=33195,
+        morph=2,
+        name="minor_intellect",
+        source="Refreshing Path",
+        magnitude=0.15,
+        duration=10.0,
+        target_type=SupportTargetType.SELF,
+        category=SupportEffectCategory.BUFF,
+        stacking=StackingBehavior.UNIQUE,
+        exclusivity_group="minor_intellect",
+    ),
+    VerifiedSkillEffect(
+        base_ability_id=28418,
+        morph=2,
+        name="minor_intellect",
+        source="Regenerative Ward",
+        magnitude=0.15,
+        duration=10.0,
+        target_type=SupportTargetType.SELF,
+        category=SupportEffectCategory.BUFF,
+        stacking=StackingBehavior.UNIQUE,
+        exclusivity_group="minor_intellect",
+    ),
+    VerifiedSkillEffect(
+        base_ability_id=26209,
+        morph=0,
+        name="minor_intellect",
+        source="Restoring Aura",
+        magnitude=0.15,
+        duration=20.0,
+        target_type=SupportTargetType.SELF,
+        category=SupportEffectCategory.BUFF,
+        stacking=StackingBehavior.UNIQUE,
+        exclusivity_group="minor_intellect",
     ),
 )
 
