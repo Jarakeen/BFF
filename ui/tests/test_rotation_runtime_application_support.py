@@ -50,6 +50,7 @@ def _context() -> RotationGenerateCanonicalContext:
         members=(
             RaidPlanMember(
                 seat_id="off-tank",
+                gamertag="TankPlayer",
                 character_id="ryl-id",
                 character_name="Rylonia",
                 role="Tank",
