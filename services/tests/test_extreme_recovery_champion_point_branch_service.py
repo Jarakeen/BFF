@@ -82,6 +82,42 @@ def test_conditional_paired_per_stage_recovery_keeps_runtime_condition():
     assert row.condition == "while Sprinting"
 
 
+def test_conditional_recovery_by_value_per_stage_applies_to_magicka():
+    row = ExtremeRecoveryChampionPointBranchService.classify(
+        _record(
+            "Peace of Mind",
+            "Increases Magicka and Health Recovery while under the effects of Crowd Control Immunity by 40 per stage.",
+            max_points=50,
+            jump_points=(10, 20, 30, 40, 50),
+        ),
+        "magicka_recovery",
+    )
+
+    assert row.complete
+    assert row.kind is ExtremeRecoveryChampionPointBranchKind.PER_STAGE_FLAT
+    assert row.stages == 5
+    assert row.flat_ceiling == pytest.approx(200.0)
+    assert row.condition == "while under Crowd Control Immunity"
+
+
+def test_shared_recovery_by_value_per_stage_applies_to_magicka():
+    row = ExtremeRecoveryChampionPointBranchService.classify(
+        _record(
+            "Sustained by Suffering",
+            "Increases your Health, Magicka, and Stamina Recovery by 30 per stage while under the effects of a negative effect.",
+            max_points=5,
+            jump_points=(),
+        ),
+        "magicka_recovery",
+    )
+
+    assert row.complete
+    assert row.kind is ExtremeRecoveryChampionPointBranchKind.PER_STAGE_FLAT
+    assert row.stages == 5
+    assert row.flat_ceiling == pytest.approx(150.0)
+    assert row.condition == "while under a negative effect"
+
+
 def test_recovery_used_only_as_input_is_not_objective_relevant():
     text = (
         "Healing yourself or an ally under 50% Health grants them Minor Heroism for 1 second "
