@@ -35,6 +35,10 @@ class RotationGenerateActionSupport:
     reports the blocking evidence. Shared bundle readiness is checked before
     role-specific evidence is composed so missing encounter/build policy cannot be
     misreported as a role-output failure. Explicit role evidence is forwarded unchanged.
+
+    When the context owns an effective-build snapshot, that exact frozen build is used
+    for role composition and orchestration. Rotation never re-resolves Team/Boss/Raid
+    Plan build ownership; those decisions belong to the caller that produced the snapshot.
     """
 
     def install(self, page) -> None:
@@ -169,16 +173,15 @@ class RotationGenerateActionSupport:
         try:
             bundle = page.selected_encounter_evidence_bundle(context.evidence_inputs)
             self._require_ready_bundle(bundle)
-            player_build = None
-            if (
-                context.role_evidence_inputs is not None
-                or context.role_evidence_composer is not None
-            ):
-                player_build = page._selected_build()
-                if player_build is None:
-                    raise ValueError(
-                        "select a saved build before composing canonical role evidence"
-                    )
+            fallback_build = None
+            build_getter = getattr(page, "_selected_build", None)
+            if callable(build_getter):
+                fallback_build = build_getter()
+            player_build = context.player_build_for(fallback_build)
+            if player_build is None:
+                raise ValueError(
+                    "select a saved build or supply an effective build snapshot before canonical rotation generation"
+                )
             role_evidence = context.role_evidence_for(
                 player_build=player_build,
                 evidence_bundle=bundle,
@@ -186,6 +189,7 @@ class RotationGenerateActionSupport:
             )
             result = page.run_canonical_cadence_orchestration(
                 bundle,
+                player_build=player_build,
                 role_evidence=role_evidence,
                 cadence_obligations=context.cadence_obligations,
                 cadence_priorities=context.cadence_priorities,
