@@ -97,7 +97,16 @@ class _EffectRefinementService:
 
 class _StableReplayService:
     @staticmethod
-    def replay(*, build, plan, resource, restoration_resolver):
+    def replay(
+        *,
+        build,
+        plan,
+        resource,
+        restoration_resolver,
+        maximum_events=(),
+        calculation_context=None,
+        displayed_recovery_at=None,
+    ):
         timeline = SimpleNamespace(
             resource=resource,
             starting_amount=30_000,
