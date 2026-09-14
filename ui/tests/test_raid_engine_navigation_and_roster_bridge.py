@@ -12,17 +12,16 @@ def _section(label: str):
     )
 
 
-def test_roster_menu_owns_rotation_workflow():
+def test_roster_menu_prioritizes_saved_build_workflow():
     section = _section("Roster")
-    assert section.get("page") == "operations_console"
+    assert section.get("page") == "roster_page"
     assert section["children"] == [
-        ("Characters", "characters"),
         ("Builds", "console:2"),
         ("Rotations", "rotations"),
     ]
 
 
-def test_raid_engine_menu_matches_dashboard_workflow():
+def test_raid_engine_menu_matches_raid_lead_workflow():
     section = _section("Raid Engine")
     assert section.get("page") == "raid_engine_dashboard"
     assert section["children"] == [
@@ -30,21 +29,15 @@ def test_raid_engine_menu_matches_dashboard_workflow():
         ("Optimization", "console:6"),
         ("Coverage", "console:7"),
         ("Encounters", "console:1"),
-        ("Performance", "console:3"),
         ("Mechanics", "console:4"),
+        ("Top Gear", "console:3"),
     ]
 
 
-def test_mechanics_is_not_a_top_level_sidebar_section():
-    assert not any(
-        isinstance(item, dict) and item.get("label") == "Mechanics"
-        for item in CORE_NAV_SECTIONS
-    )
-    assert not any(
-        isinstance(item, dict)
-        and any(page == "console:8" for _label, page in item.get("children", []))
-        for item in CORE_NAV_SECTIONS
-    )
+def test_mechanics_and_reference_data_remain_separate_destinations():
+    raid = _section("Raid Engine")
+    assert ("Mechanics", "console:4") in raid["children"]
+    assert not any(page == "tools:reference_data" for _label, page in raid["children"])
     assert ("Reference Data", "tools:reference_data") in _section("Tool")["children"]
 
 
