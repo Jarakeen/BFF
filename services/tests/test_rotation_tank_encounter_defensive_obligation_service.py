@@ -215,3 +215,53 @@ def test_projected_encounter_obligation_flows_into_existing_tank_hard_gate() -> 
     assert result.reasons == (
         "test_boss:mechanic_detail:heavy_attack_response:heavy_01: scheduled 1 defensive responses",
     )
+
+
+def test_multiple_projected_occurrences_fail_candidate_when_one_response_is_missing() -> None:
+    fact = _fact(value={"target": "main_tank", "responses": ["block"]})
+    first = RotationTankEncounterDefensiveObligationService.project(
+        fact=fact,
+        binding=_binding(
+            occurrence_id="heavy_01",
+            window_start_seconds=10.0,
+            window_end_seconds=10.8,
+        ),
+    )
+    second = RotationTankEncounterDefensiveObligationService.project(
+        fact=fact,
+        binding=_binding(
+            occurrence_id="heavy_02",
+            window_start_seconds=20.0,
+            window_end_seconds=20.8,
+        ),
+    )
+    assert first.obligation is not None
+    assert second.obligation is not None
+
+    candidate = GeneratedRotationCandidate(
+        candidate_id="candidate",
+        plan=RotationPlan(
+            character_name="Tank",
+            build_name="Main Tank",
+            duration_seconds=30.0,
+            actions=(
+                RotationAction(
+                    time_seconds=10.4,
+                    sequence=0,
+                    kind=RotationActionKind.BLOCK,
+                    bar="front",
+                ),
+            ),
+        ),
+        refresh_leads=(),
+    )
+
+    result = RotationTankDefensiveObligationService().evaluate_candidate(
+        candidate=candidate,
+        obligations=(first.obligation, second.obligation),
+    )
+
+    assert result.satisfied is False
+    assert result.reasons == (
+        "test_boss:mechanic_detail:heavy_attack_response:heavy_02: scheduled 0 of 1 required defensive responses",
+    )
