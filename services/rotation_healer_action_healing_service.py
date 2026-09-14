@@ -6,6 +6,7 @@ from pathlib import Path
 
 from minmax.build_calculation_context import BuildCalculationContext
 from minmax.rotation_plan import RotationActionKind, RotationPlan
+from minmax.runtime_event import RuntimeEvent
 from minmax.saved_build_skill_tooltip_service import SavedBuildSkillTooltipService
 from minmax.skill_component_classification import HealTemporalScope, SkillEffectKind
 from models.build_model import PlayerBuild
@@ -21,6 +22,10 @@ from services.rotation_healer_u50_skill_component_repository import (
 )
 from services.rotation_plan_runtime_build_context_service import (
     RotationRuntimeBuildContextResolver,
+)
+from services.rotation_runtime_output_eligibility_service import (
+    RotationRuntimeOutputConditionContextResolver,
+    RotationRuntimeOutputEligibilityService,
 )
 
 
@@ -119,6 +124,10 @@ class RotationHealerActionHealingService:
     build-context resolver is supplied, each healing action is evaluated against the
     rebuilt canonical context for its actual active bar and runtime CombatState.
     This avoids applying a new CombatState to stale derived character/core stats.
+
+    Reviewed direct-output conditions are evaluated only after canonical healing
+    classification and bar/runtime context resolution. Externally triggered healing
+    remains on its separate evidence path and is never reinterpreted as direct output.
     """
 
     def __init__(
@@ -130,6 +139,10 @@ class RotationHealerActionHealingService:
         | None = None,
         external_conditional_healing_service: RotationHealerExternalConditionalHealingService
         | None = None,
+        output_eligibility_service: RotationRuntimeOutputEligibilityService | None = None,
+        condition_context_resolver: (
+            RotationRuntimeOutputConditionContextResolver | None
+        ) = None,
     ) -> None:
         self.database_path = Path(database_path)
         self.tooltip_service = tooltip_service or SavedBuildSkillTooltipService(
@@ -146,6 +159,10 @@ class RotationHealerActionHealingService:
             external_conditional_healing_service
             or RotationHealerExternalConditionalHealingService()
         )
+        self.output_eligibility_service = (
+            output_eligibility_service or RotationRuntimeOutputEligibilityService()
+        )
+        self.condition_context_resolver = condition_context_resolver
 
     def resolve_component_magnitude(
         self,
@@ -266,6 +283,9 @@ class RotationHealerActionHealingService:
         context: BuildCalculationContext,
         contexts_by_bar: Mapping[str, BuildCalculationContext] | None = None,
         runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
+        condition_context_resolver: (
+            RotationRuntimeOutputConditionContextResolver | None
+        ) = None,
     ) -> RotationHealerActionHealingProjection:
         direct_events: list[RotationHealerResolvedHealEvent] = []
         periodic_seeds: list[RotationHealerPeriodicHealSeed] = []
@@ -274,6 +294,11 @@ class RotationHealerActionHealingService:
         external_conditional_seeds: list[RotationHealerExternalConditionalHealSeed] = []
         unresolved: list[str] = []
         bar_contexts = self._normalize_bar_contexts(contexts_by_bar)
+        direct_condition_resolver = (
+            condition_context_resolver
+            if condition_context_resolver is not None
+            else self.condition_context_resolver
+        )
 
         for action in plan.actions:
             if action.kind not in {
@@ -464,6 +489,34 @@ class RotationHealerActionHealingService:
                 if temporal is HealTemporalScope.DIRECT or (
                     temporal is None and classification.is_dot is False
                 ):
+                    direct_runtime_event = RuntimeEvent(
+                        time_seconds=float(action.time_seconds),
+                        trigger="direct_heal",
+                        source=action.name,
+                        sequence=int(action.sequence),
+                    )
+                    condition_context = (
+                        direct_condition_resolver(direct_runtime_event)
+                        if direct_condition_resolver is not None
+                        else None
+                    )
+                    eligibility = self.output_eligibility_service.evaluate(
+                        skill_entity_id=skill_id,
+                        coefficient_number=number,
+                        condition_context=condition_context,
+                    )
+                    if not eligibility.resolved:
+                        messages = eligibility.unresolved or (
+                            "direct healing output eligibility is unresolved",
+                        )
+                        unresolved.extend(
+                            f"{action.name} coefficient {number} at {action.time_seconds:g}s: {message}"
+                            for message in messages
+                        )
+                        continue
+                    if not eligibility.eligible:
+                        continue
+
                     direct_events.append(
                         RotationHealerResolvedHealEvent(
                             time_seconds=float(action.time_seconds),
