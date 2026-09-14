@@ -23,6 +23,7 @@ from services.rotation_heavy_sustain_projection_service import (
 )
 from services.rotation_recovery_heavy_candidate_generation_bridge_service import (
     RecoveryCandidateEvaluatorResolver,
+    RecoveryCandidateFamilyProjector,
     RecoveryPressureWaitDecisionFactory,
     RotationRecoveryHeavyCandidateGenerationBridgeService,
 )
@@ -67,6 +68,12 @@ class RotationRecoveryHeavyCandidatePipelineService:
     combat-state, runtime activation-anchor, and exact-event output-condition context
     resolvers through the complete candidate pipeline. Those inputs stay explicit so
     legacy callers do not acquire invented mechanics.
+
+    A caller may additionally provide one role-neutral candidate-family projector.
+    The projector is applied by the generation bridge on every recovery regeneration,
+    before replay/stabilization, so role/encounter actions and sustain evidence always
+    describe the same plan. This pipeline only forwards that callable; it does not
+    infer role strategy or construct projector policy.
 
     Effect-aware callers may instead supply plan-specific Heavy Attack completion
     evidence. The pipeline then builds the restoration resolver for each regenerated
@@ -152,6 +159,7 @@ class RotationRecoveryHeavyCandidatePipelineService:
         demands: Iterable[RotationDemandWindow] = (),
         options: Iterable[RotationRefreshLeadCandidateOption] = (),
         wait_decision_factory: RecoveryPressureWaitDecisionFactory | None = None,
+        candidate_projector: RecoveryCandidateFamilyProjector | None = None,
         reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None,
         max_iterations: int = 6,
         baseline_id: str = "baseline",
@@ -173,6 +181,7 @@ class RotationRecoveryHeavyCandidatePipelineService:
             demands=demand_tuple,
             options=option_tuple,
             wait_decision_factory=wait_decision_factory,
+            candidate_projector=candidate_projector,
             baseline_id=baseline_id,
         )
         return self.workflow.run_generic(
@@ -219,6 +228,7 @@ class RotationRecoveryHeavyCandidatePipelineService:
         demands: Iterable[RotationDemandWindow] = (),
         options: Iterable[RotationRefreshLeadCandidateOption] = (),
         wait_decision_factory: RecoveryPressureWaitDecisionFactory | None = None,
+        candidate_projector: RecoveryCandidateFamilyProjector | None = None,
         requirements: Iterable[RotationEffectUptimeRequirement] = (),
         passives: Iterable[PassiveGrant] = (),
         reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None,
@@ -244,6 +254,7 @@ class RotationRecoveryHeavyCandidatePipelineService:
             demands=demand_tuple,
             options=option_tuple,
             wait_decision_factory=wait_decision_factory,
+            candidate_projector=candidate_projector,
             baseline_id=baseline_id,
         )
 
