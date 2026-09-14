@@ -210,8 +210,10 @@ def test_refresh_lead_must_be_smaller_than_canonical_duration():
 def test_wrong_target_existing_cast_does_not_count_as_maintenance():
     projection = _service().project(
         candidate=_candidate(_cast(0.0, target="add")),
-        requirements=(_requirement(),),
-        policies=(_policy(),),
+        requirements=(
+            _requirement(active_start_seconds=1.0, active_end_seconds=30.0),
+        ),
+        policies=(_policy(initial_application_time_seconds=0.5),),
         slot_requirements=(_slot("front"),),
     )
 
