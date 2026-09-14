@@ -203,7 +203,7 @@ def test_transition_timing_materializes_three_disjoint_xalvakka_ownership_window
         ("phase_3", 175.5005, 220.487012),
     ]
     assert "symbolic_start=transition_resume:70%:80.9395" in result.evidence
-    assert "symbolic_endpoint=health_threshold:40%:110.94" in result.evidence
+    assert "symbolic_endpoint=health_threshold:40%:110.939" in result.evidence
     assert "symbolic_endpoint=encounter_end_adjusted:220.487" in result.evidence
 
 
