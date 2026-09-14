@@ -17,7 +17,10 @@ from services.rotation_saved_build_action_target_service import RotationSavedBui
 from services.rotation_saved_build_action_slot_service import RotationSavedBuildActionSlotEvidence
 from services.rotation_saved_build_action_timing_service import RotationSavedBuildActionTimingEvidence
 from ui.rotation_generate_canonical_context import RotationGenerateCanonicalContext
-from ui.rotation_runtime_application_support import RotationRuntimeApplicationSupport
+from ui.rotation_runtime_application_support import (
+    RotationRuntimeApplicationSupport,
+    install_rotation_runtime_application,
+)
 
 
 def _build() -> PlayerBuild:
@@ -247,3 +250,13 @@ def test_runtime_application_requires_frozen_effective_build_context() -> None:
             observations=(),
             target_windows=(),
         )
+
+
+def test_installer_exposes_stable_runtime_observation_application_method() -> None:
+    page = _Page(_orchestration(_plan()), rotation_plan=_plan())
+
+    support = install_rotation_runtime_application(page)
+
+    assert page.rotation_runtime_application_support is support
+    assert page.last_rotation_runtime_application_result is None
+    assert callable(page.apply_runtime_trigger_observations)
