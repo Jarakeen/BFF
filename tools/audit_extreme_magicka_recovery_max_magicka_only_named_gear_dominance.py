@@ -3,9 +3,9 @@ from __future__ import annotations
 """Prove Max-Magicka-only special named gear cannot beat the ordinary Recovery winner.
 
 The ordinary Extreme Magicka Recovery gear frontier is already closed at an
-optimistic effective pre-percent Recovery gain.  This audit takes only special
+optimistic effective pre-percent Recovery gain. This audit takes only special
 pairs whose sole positive Recovery route is through Max Magicka -> Enlivening
-Overflow.  For each pair it requires that set physically, externalizes the special
+Overflow. For each pair it requires that set physically, externalizes the special
 mechanic, searches the best ordinary effective-Recovery loadout that can coexist
 with it, then grants the branch the *entire remaining Enlivening headroom*.
 
@@ -29,6 +29,10 @@ from minmax.gear_set_repository import GearSetRepository
 from services.extreme_armor_weight_filtered_slot_eligibility_service import (
     ExtremeArmorWeightFilteredSlotEligibilityService,
 )
+from services.extreme_constrained_named_gear_exact_flat_search_service import (
+    ExtremeConstrainedNamedGearExactFlatSearchService,
+    ExtremeNamedGearRequirement,
+)
 from services.extreme_externalized_named_gear_constraint_search_service import (
     ExtremeExternalizedNamedGearConstraintSearchService,
     ExtremeExternalizedNamedGearSemantic,
@@ -36,11 +40,11 @@ from services.extreme_externalized_named_gear_constraint_search_service import (
 from services.extreme_gear_set_bonus_breakpoint_service import ExtremeGearSetBonusBreakpointService
 from services.extreme_gear_set_objective_relevance_service import ExtremeGearSetObjectiveRelevanceService
 from services.extreme_gear_set_topology_catalog_service import ExtremeGearSetTopologyCatalogService
+from services.extreme_max_resource_special_named_gear_branch_service import (
+    ExtremeMaxResourceSpecialNamedGearBranchService,
+)
 from services.extreme_named_gear_set_slot_eligibility_service import (
     ExtremeNamedGearSetSlotEligibilityService,
-)
-from services.extreme_constrained_named_gear_exact_flat_search_service import (
-    ExtremeNamedGearRequirement,
 )
 from tools.audit_extreme_magicka_recovery_armor_mundus_frontier import (
     _same_build_max_magicka_for_weight_types,
@@ -49,16 +53,37 @@ from tools.audit_extreme_magicka_recovery_ordinary_named_gear_frontier import (
     OBJECTIVE,
     RESOURCE_OBJECTIVE,
     RECOVERY_MULTIPLIER,
+    PairScore,
     _EffectiveRecoveryOrdinarySearch,
     build_pair_scores,
 )
 from tools.audit_extreme_magicka_recovery_same_build_enlivening import exact_enlivening_value
-from tools.audit_extreme_magicka_recovery_special_named_gear_triage import (
-    _triage_pair,
-)
-from services.extreme_max_resource_special_named_gear_branch_service import (
-    ExtremeMaxResourceSpecialNamedGearBranchService,
-)
+from tools.audit_extreme_magicka_recovery_special_named_gear_triage import _triage_pair
+
+
+class _EffectiveRecoveryConstrainedSearch(ExtremeConstrainedNamedGearExactFlatSearchService):
+    """Audit-local constrained adapter for the merged Recovery + Max Magicka score."""
+
+    SUPPORTED_OBJECTIVES = frozenset((*ExtremeConstrainedNamedGearExactFlatSearchService.SUPPORTED_OBJECTIVES, OBJECTIVE))
+
+    def __init__(self, *, pair_scores: dict[tuple[int, int], PairScore], **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.pair_scores = dict(pair_scores)
+
+    def _ordinary_exact_delta(self, evidence, objective_key: str) -> float | None:  # type: ignore[override]
+        row = self.pair_scores.get((int(evidence.set_id), int(evidence.piece_count)))
+        if row is None or not row.ordinary:
+            return None
+        return float(row.optimistic_effective_recovery)
+
+    def _objective_effect_signature(self, evidence, objective_key: str):  # type: ignore[override]
+        row = self.pair_scores.get((int(evidence.set_id), int(evidence.piece_count)))
+        if row is None or not row.ordinary:
+            return ()
+        return (
+            ("magicka_recovery", round(row.direct_recovery, 9)),
+            ("max_magicka", round(row.max_magicka_flat, 9)),
+        )
 
 
 @dataclass(frozen=True)
@@ -112,6 +137,34 @@ def dominance_row(
         incumbent=float(incumbent),
         physically_available=available,
     )
+
+
+def _constrained_effective_recovery_search(
+    *,
+    challenger,
+    topology,
+    breakpoints,
+    eligibility,
+    merged,
+    pair_scores,
+):
+    requirement = ExtremeNamedGearRequirement(challenger.set_name, challenger.piece_count)
+    external = ExtremeExternalizedNamedGearSemantic(challenger.set_name, challenger.piece_count)
+    derived, unresolved = ExtremeExternalizedNamedGearConstraintSearchService._derived_relevance(
+        merged,
+        eligibility,
+        (external,),
+    )
+    if derived is None:
+        return None, tuple(unresolved)
+    search = _EffectiveRecoveryConstrainedSearch(
+        breakpoints=breakpoints,
+        eligibility=eligibility,
+        relevance=derived,
+        requirements=(requirement,),
+        pair_scores=pair_scores,
+    ).search(topology)
+    return search, tuple(search.unresolved)
 
 
 def main() -> int:
@@ -174,24 +227,22 @@ def main() -> int:
     rows: list[DominanceRow] = []
     search_unresolved: list[str] = []
     for challenger in max_only:
-        requirement = ExtremeNamedGearRequirement(challenger.set_name, challenger.piece_count)
-        external = ExtremeExternalizedNamedGearSemantic(challenger.set_name, challenger.piece_count)
-        constrained = ExtremeExternalizedNamedGearConstraintSearchService.search(
-            topology_catalog=topology,
+        constrained, unresolved = _constrained_effective_recovery_search(
+            challenger=challenger,
+            topology=topology,
             breakpoints=breakpoints,
             eligibility=filtered.catalog,
-            relevance=merged,
-            requirements=(requirement,),
-            externalized=(external,),
+            merged=merged,
+            pair_scores=pair_scores,
         )
-        if constrained.unresolved:
+        if unresolved:
             search_unresolved.extend(
                 f"{challenger.set_name} ({challenger.piece_count}): {item}"
-                for item in constrained.unresolved
+                for item in unresolved
             )
         structural = None
-        if constrained.search is not None and constrained.winner_found:
-            structural = constrained.search.best_exact_flat_delta
+        if constrained is not None and constrained.winner_found:
+            structural = constrained.best_exact_flat_delta
         rows.append(
             dominance_row(
                 set_id=challenger.set_id,
