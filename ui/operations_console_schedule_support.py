@@ -111,6 +111,7 @@ def install() -> None:
     from ui.roster_import_context_variant_support import install as install_roster_import_context_variant_support
     from ui.roster_import_sparse_alternate_support import install as install_roster_import_sparse_alternate_support
     from ui.roster_import_match_preview_support import install as install_roster_import_match_preview_support
+    from ui.roster_import_build_confirmation_support import install as install_roster_import_build_confirmation_support
     from ui.player_build_navigation_support import install as install_player_build_navigation_support
     from ui.rotation_dashboard_layout_support import install as install_rotation_dashboard_layout_support
     from ui.build_rotation_artifact_support import install as install_build_rotation_artifact_support
@@ -161,6 +162,10 @@ def install() -> None:
     # The preview should make repeat imports obvious: existing identities are
     # reused, while new characters/builds and genuinely ambiguous rows are labeled.
     install_roster_import_match_preview_support()
+    # Workbooks can contain useful-but-ambiguous potion choices and partial scribed
+    # recipe rows. Preserve that evidence and make the raid lead explicitly confirm
+    # anything Foundry cannot safely promote into canonical build state.
+    install_roster_import_build_confirmation_support()
     install_player_build_navigation_support()
     install_rotation_dashboard_layout_support()
     install_build_rotation_artifact_support()
