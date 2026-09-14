@@ -1,18 +1,66 @@
 from __future__ import annotations
 
-"""Make roster-build import identity matching forgiving without inventing characters.
+"""Resolve roster-import character identity with practical raid-sheet fallbacks.
 
-Raid spreadsheets commonly use Xbox/gamertag names while FoundryDock may store the
-same player with a leading ``@``.  Character identity is still canonical and must
-exist already or be chosen in the import preview; this layer only fixes equivalent
-player-name matching and auto-fills a character when the match is unambiguous.
+Real raid sheets usually know a gamertag, class, and role, but not the actual toon
+name. FoundryDock first reuses any character identity it can prove from saved data.
+Only when no saved character exists for that player does it generate a compact,
+editable character name such as ``Rik DK Tnk`` so build import can proceed without
+forcing ordinary users to invent database-perfect identity by hand.
 """
 
 _INSTALLED = False
+_ORIGINAL_NORMALIZE_ROLE = None
+
+_CLASS_SHORT = {
+    "arcanist": "Arc",
+    "dragonknight": "DK",
+    "necromancer": "Cro",
+    "nightblade": "NB",
+    "sorcerer": "Sorc",
+    "templar": "Plar",
+    "warden": "Den",
+}
+
+_ROLE_SHORT = {
+    "tank": "Tnk",
+    "healer": "Hlz",
+    "damage dealer": "DD",
+    "damage": "DD",
+    "dps": "DD",
+    "dd": "DD",
+}
+
+_ROLE_INPUT_ALIASES = {
+    "tnk": "Tank",
+    "tank": "Tank",
+    "hlz": "Healer",
+    "heal": "Healer",
+    "heals": "Healer",
+    "healer": "Healer",
+    "dd": "Damage Dealer",
+    "dps": "Damage Dealer",
+    "damage": "Damage Dealer",
+    "damage dealer": "Damage Dealer",
+}
 
 
 def _identity_key(value: object) -> str:
     return " ".join(str(value or "").strip().split()).lstrip("@").casefold()
+
+
+def _display_gamertag(value: object) -> str:
+    return " ".join(str(value or "").strip().split()).lstrip("@")
+
+
+def _normalize_role_with_shorthand(value: object) -> str:
+    raw = " ".join(str(value or "").strip().split())
+    alias = _ROLE_INPUT_ALIASES.get(raw.casefold())
+    if alias:
+        return alias
+    if callable(_ORIGINAL_NORMALIZE_ROLE):
+        return _ORIGINAL_NORMALIZE_ROLE(value)
+    return raw
 
 
 def _known_characters(roster_service, build_service) -> dict[str, list[tuple[str, str]]]:
@@ -51,9 +99,27 @@ def _known_characters(roster_service, build_service) -> dict[str, list[tuple[str
     return result
 
 
+def _generated_character_name(member) -> str:
+    from ui.roster_import_workflow import _normalize_class
+
+    player = _display_gamertag(member.gamertag)
+    eso_class = _normalize_class(member.eso_class)
+    role = _normalize_role_with_shorthand(member.primary_role)
+    class_short = _CLASS_SHORT.get(str(eso_class or "").strip().casefold(), "")
+    role_short = _ROLE_SHORT.get(str(role or "").strip().casefold(), "")
+    pieces = [piece for piece in (player, class_short, role_short) if piece]
+    return " ".join(pieces) if len(pieces) > 1 else ""
+
+
 def resolve_import_characters(plan, roster_service, build_service) -> None:
-    """Resolve only identities FoundryDock can prove from existing saved data."""
+    """Reuse known toon identity first; otherwise generate a concise editable name."""
     known = _known_characters(roster_service, build_service)
+    generated_names: set[str] = {
+        str(member.character_name or "").strip().casefold()
+        for member in plan.members
+        if str(member.character_name or "").strip()
+    }
+
     for member in plan.members:
         if str(member.character_name or "").strip():
             continue
@@ -77,24 +143,57 @@ def resolve_import_characters(plan, roster_service, build_service) -> None:
             member.character_name = unique_names[0]
             continue
 
+        # If Foundry already knows multiple possible toons for this player, do not
+        # create a third synthetic identity. The preview should let the user choose.
+        if candidates:
+            if member.builds:
+                warning = (
+                    "Multiple saved characters could own this build. Choose the Character cell "
+                    "in the import preview before importing builds."
+                )
+                if warning not in member.warnings:
+                    member.warnings.append(warning)
+            continue
+
+        base_name = _generated_character_name(member)
+        if base_name:
+            generated = base_name
+            suffix = 2
+            while generated.casefold() in generated_names:
+                generated = f"{base_name} {suffix}"
+                suffix += 1
+            member.character_name = generated
+            generated_names.add(generated.casefold())
+            note = f"Character name auto-filled as {generated}; edit it in the preview if you know the toon name."
+            if note not in member.warnings:
+                member.warnings.append(note)
+            continue
+
         if member.builds:
             warning = (
-                "Build detected, but FoundryDock does not know which character owns it yet. "
-                "Choose the Character cell in the import preview before importing builds."
+                "Build detected, but there is not enough class/role information to create a safe "
+                "character name. Choose the Character cell in the import preview first."
             )
             if warning not in member.warnings:
                 member.warnings.append(warning)
 
 
 def install() -> None:
-    global _INSTALLED
+    global _INSTALLED, _ORIGINAL_NORMALIZE_ROLE
     if _INSTALLED:
         return
 
     from ui import roster_import_workflow
 
+    _ORIGINAL_NORMALIZE_ROLE = roster_import_workflow._normalize_role
+    roster_import_workflow._normalize_role = _normalize_role_with_shorthand
     roster_import_workflow.resolve_import_characters = resolve_import_characters
     _INSTALLED = True
 
 
-__all__ = ["install", "resolve_import_characters"]
+__all__ = [
+    "install",
+    "resolve_import_characters",
+    "_normalize_role_with_shorthand",
+    "_generated_character_name",
+]
