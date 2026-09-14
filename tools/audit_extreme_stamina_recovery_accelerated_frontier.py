@@ -16,6 +16,7 @@ Endurance carrier.
 
 import argparse
 from pathlib import Path
+import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -48,6 +49,12 @@ OBJECTIVE = "stamina_recovery"
 MAGICKA_ROUTE_LOCK_REFERENCE = 2700.0
 ENLIVENING_CONDITIONAL_FLOOR = float(enlivening_overflow_recovery_bonus(int(BASE_MAX_MAGICKA)))
 CP_OTHER_FLOOR = 150.0 + 90.0  # Sustained by Suffering + Rejuvenation
+EXPECTED_LINES = ("animal_companions", "curative_runeforms", "shadow")
+
+
+def _line_id(value: object) -> str:
+    text = str(value or "").strip().casefold().replace("'", "")
+    return re.sub(r"[^a-z0-9]+", "_", text).strip("_")
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -103,8 +110,9 @@ def main() -> int:
     route_service = ExtremeRecoveryClassRouteFrontierService(database)
     frontier = route_service.frontier(OBJECTIVE, reference_value=preclass_floor)
     best = frontier.best_reviewed_candidate
-    expected_lines = {"Animal Companions", "Curative Runeforms", "Shadow"}
-    winner_expected_lines = bool(best and set(best.equipped_skill_lines) == expected_lines)
+    winner_line_ids = tuple(sorted(_line_id(line) for line in best.equipped_skill_lines)) if best else ()
+    expected_line_ids = tuple(sorted(EXPECTED_LINES))
+    winner_expected_lines = winner_line_ids == expected_line_ids
 
     carrier_effects = verified_skill_effects(183555, 0)
     endurance = tuple(
@@ -174,11 +182,13 @@ def main() -> int:
         print(f"best_mastery_delta={best.mastery_projected_delta:.3f}")
         print(f"best_projected_delta={best.projected_delta:.3f}")
         print(f"best_slot_counts={best.slot_counts!r}")
+    print(f"winner_line_ids={winner_line_ids!r}")
+    print(f"expected_line_ids={expected_line_ids!r}")
     print(f"route_runtime_obligations={frontier.unresolved_runtime_obligations!r}")
     print()
     print("MINOR ENDURANCE")
     print("carrier=\"Arcanist's Domain\"")
-    print(f"carrier_in_expected_route={'Curative Runeforms' in expected_lines}")
+    print(f"carrier_in_expected_route={'curative_runeforms' in EXPECTED_LINES}")
     print(f"carrier_self_usable={carrier_proven}")
     if endurance:
         print(f"carrier_duration={float(endurance[0].duration or 0.0):.3f}")
