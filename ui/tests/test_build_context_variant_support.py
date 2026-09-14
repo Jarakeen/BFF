@@ -23,6 +23,17 @@ def test_context_variant_editor_supports_full_team_build_changes() -> None:
     assert "model.BossLoadouts = []" in source
 
 
+def test_context_variant_bars_inherit_werewolf_skill_eligibility() -> None:
+    source = Path("ui/build_context_variant_support.py").read_text(encoding="utf-8")
+
+    assert "def _sync_skill_context" in source
+    assert 'bar.set_affiliation(vampire=vampire, werewolf=werewolf)' in source
+    assert 'bar.set_form("werewolf" if werewolf else None)' in source
+    assert "self._sync_skill_context()" in source
+    assert "toggle.toggled.connect(lambda *_: self._sync_skill_context())" in source
+    assert "Werewolf skills are available here when the base character is marked WW." in source
+
+
 def test_context_variant_support_is_installed_by_main_ui_composition() -> None:
     source = Path("ui/operations_console_schedule_support.py").read_text(encoding="utf-8")
 
