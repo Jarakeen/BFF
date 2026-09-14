@@ -29,13 +29,6 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _mentions_recovery(text: str) -> bool:
-    value = " ".join(str(text or "").casefold().split())
-    return "magicka recovery" in value or (
-        "health" in value and "magicka" in value and "stamina recovery" in value
-    )
-
-
 def main() -> int:
     database = Path(_parser().parse_args().database)
     passives = tuple(
@@ -54,7 +47,10 @@ def main() -> int:
         contributions = tuple(
             item for item in projection.contributions if item.objective_key == OBJECTIVE
         )
-        relevant_text = _mentions_recovery(f"{row.name} {row.description}")
+        relevant_text = ExtremeRecoveryPassiveSpecialBranchService.mentions_objective_recovery(
+            f"{row.name} {row.description}",
+            OBJECTIVE,
+        )
         if contributions:
             direct.append((projection, contributions))
             by_domain[row.domain.value].append(row.name)
