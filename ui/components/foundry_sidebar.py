@@ -36,15 +36,13 @@ BROADCAST_NAV_SECTION = {
     ],
 }
 
-# Raid-lead-first navigation.
-#
-# This is deliberately a presentation-only simplification. Existing pages and
-# routes remain registered in MainWindow so the layout can be reverted without
-# removing features or changing persisted data.
+# Raid-lead-first navigation. Existing routes remain registered in MainWindow;
+# this is a workspace simplification, not feature deletion.
 CORE_NAV_SECTIONS = [
-    {"label": "Roster", "page": "roster_page", "children": [
-        ("Builds", "console:2"),
+    {"label": "Roster", "page": "roster_page", "children": []},
+    {"label": "Builds", "page": "console:2", "children": [
         ("Rotations", "rotations"),
+        ("Extreme Build Lab", "extreme_optimization"),
     ]},
     {"label": "Raid Engine", "page": "raid_engine_dashboard", "children": [
         ("Comp Maker", "comp_builder"),
@@ -82,7 +80,6 @@ CORE_NAV_SECTIONS = [
         ("Tools & Upgrades", "collectibles:Tools & Upgrades"),
     ]},
     {"label": "Tool", "children": [
-        ("Extreme Build Lab", "extreme_optimization"),
         ("Reference Data", "tools:reference_data"),
         ("Gear Lookup", "gear_lookup"),
         ("vAS2 Timer", "timers"),
@@ -273,6 +270,9 @@ class FoundrySidebar(QWidget):
 
         coverage_page = pages.get("console:7")
         if coverage_page is not None:
+            from ui.coverage_health_check_support import enhance_coverage_page
+
+            enhance_coverage_page(coverage_page)
             self._hide_named_tabs(
                 getattr(coverage_page, "tabs", None),
                 HIDDEN_WORKSPACE_TABS["console:7"],
