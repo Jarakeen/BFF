@@ -16,12 +16,14 @@ from typing import Any
 from PySide6.QtWidgets import QLabel, QMessageBox, QTableWidgetItem
 
 from engine.config import DEFAULT_DATABASE
+from minmax.potion_availability_repository import PotionAvailabilityRepository
 
 
 _INSTALLED = False
 _ORIGINAL_PARSE_PERSONAL_LOADOUT = None
 _ORIGINAL_PREVIEW_INIT = None
 _ORIGINAL_PREVIEW_ACCEPT = None
+_POTION_REPOSITORY: PotionAvailabilityRepository | None = None
 
 _SCRIPT_ALIASES = {
     "bleed dmg": "Bleed Damage",
@@ -196,6 +198,19 @@ def _ability_is_crafted(name: str, eso_class: str) -> bool:
         return False
 
 
+def _potion_resolves(label: str) -> bool:
+    global _POTION_REPOSITORY
+    if not _text(label):
+        return False
+    if _POTION_REPOSITORY is None:
+        _POTION_REPOSITORY = PotionAvailabilityRepository(DEFAULT_DATABASE)
+    try:
+        resolved = _POTION_REPOSITORY.resolve(label)
+    except Exception:
+        return False
+    return bool(getattr(resolved, "capability_resolved", False) or getattr(resolved, "resolved", False))
+
+
 def _candidate_issues(candidate) -> tuple[str, ...]:
     payload = getattr(candidate, "payload", {}) or {}
     issues: list[str] = []
@@ -205,6 +220,8 @@ def _candidate_issues(candidate) -> tuple[str, ...]:
         issues.append("choose potion: " + " / ".join(str(value) for value in potion_options))
     elif not potion:
         issues.append("potion not confirmed")
+    elif not _potion_resolves(potion):
+        issues.append(f"confirm canonical potion label: {potion}")
 
     recipes = {
         _key(row.get("ResultName")): row
