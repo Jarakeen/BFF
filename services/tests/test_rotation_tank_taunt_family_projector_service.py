@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 
+from minmax.rotation_action_slot_legality import RotationActionSlotRequirement
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 from services.rotation_tank_taunt_candidate_service import RotationTankTauntActionClaim
@@ -35,8 +36,17 @@ def _requirement() -> RotationTankTauntApplicationRequirement:
     )
 
 
+def _slot_requirement() -> RotationActionSlotRequirement:
+    return RotationActionSlotRequirement(
+        action_name="Pierce Armor",
+        allowed_bars=("front",),
+        action_kind=RotationActionKind.SKILL,
+    )
+
+
 class _FakeCandidateService:
-    def project(self, *, candidate, requirements, claims):
+    def project(self, *, candidate, requirements, claims, slot_requirements):
+        assert slot_requirements == (_slot_requirement(),)
         requirement = requirements[0]
         satisfied = any(
             action.kind is RotationActionKind.SKILL
@@ -99,6 +109,7 @@ def _projector() -> RotationTankTauntFamilyProjectorService:
                 bar="front",
             ),
         ),
+        slot_requirements=(_slot_requirement(),),
         candidate_service=_FakeCandidateService(),
     )
 
