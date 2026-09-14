@@ -97,6 +97,36 @@ def test_flourish_requires_reference_value_for_percent_projection():
     assert _counts(result)["animal_companions"] >= 1
 
 
+def test_wellspring_scores_81_recovery_per_soldier_slot():
+    result = ExtremeSubclassSlotAllocationService.best_allocation(
+        ("soldier_of_apocrypha", "shadow", "storm_calling"),
+        "magicka_recovery",
+        reference_value=1000.0,
+    )
+
+    assert result is not None
+    assert result.projected_delta == pytest.approx(486.0)
+    assert _counts(result)["soldier_of_apocrypha"] == 6
+    assert result.reviewed_sources == (
+        "Wellspring of the Abyss (6 Soldier of Apocrypha slots)",
+    )
+
+
+def test_flourish_and_wellspring_compete_over_same_six_active_bar_slots():
+    result = ExtremeSubclassSlotAllocationService.best_allocation(
+        ("animal_companions", "soldier_of_apocrypha", "shadow"),
+        "magicka_recovery",
+        reference_value=1000.0,
+    )
+
+    assert result is not None
+    # One Animal Companions slot activates Flourish (+200 at this reference),
+    # leaving five Soldier slots (+405), which beats six Soldier slots (+486).
+    assert result.projected_delta == pytest.approx(605.0)
+    assert _counts(result)["animal_companions"] == 1
+    assert _counts(result)["soldier_of_apocrypha"] == 5
+
+
 def test_unreviewed_objective_returns_no_fake_zero_score():
     assert (
         ExtremeSubclassSlotAllocationService.best_allocation(
