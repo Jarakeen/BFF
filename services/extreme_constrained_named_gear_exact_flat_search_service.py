@@ -207,16 +207,19 @@ class ExtremeConstrainedNamedGearExactFlatSearchService(
             if base_delta is None:
                 continue
             rows = mutable.setdefault(count, [])
+            base_signature = (
+                ()
+                if evidence.status is ExtremeGearSetObjectiveRelevance.PROVEN_IRRELEVANT
+                else self._objective_effect_signature(evidence, self.relevance.objective_key)
+            )
             replacement = _Candidate(
                 set_id=set_id,
                 name=physical.name,
                 piece_count=count,
                 exact_delta=float(base_delta) + self._constraint_bonus,
                 eligibility=physical,
-                objective_effect_signature=(
-                    ()
-                    if evidence.status is ExtremeGearSetObjectiveRelevance.PROVEN_IRRELEVANT
-                    else self._objective_effect_signature(evidence, self.relevance.objective_key)
+                objective_effect_signature=tuple(
+                    (*base_signature, ("__required_named_set__", set_id, count))
                 ),
             )
             rows[:] = [row for row in rows if int(row.set_id) != set_id]
