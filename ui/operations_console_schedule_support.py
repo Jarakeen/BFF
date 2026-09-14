@@ -97,6 +97,7 @@ def install() -> None:
         return
 
     from ui import operations_console
+    from services.roster_duplicate_player_merge_service import merge_duplicate_roster_players
     from ui.team_schedule_calendar_support import install as install_team_schedule_calendar_support
     from ui.team_schedule_multi_time_support import install as install_team_schedule_multi_time_support
     from ui.roster_team_merge_support import install as install_roster_team_merge_support
@@ -122,6 +123,11 @@ def install() -> None:
     from ui.roster_assignment_usability_support import install as install_roster_assignment_usability_support
     from ui.comp_builder_roster_intake_support import install as install_comp_builder_roster_intake_support
     from ui.build_context_variant_support import install as install_build_context_variant_support
+
+    # Personnel is player-level identity. Repair duplicates left by older imports
+    # before any roster page reads them. The merge unions teams and moves legacy
+    # plus Team/Boss assignments before deleting only the redundant Personnel row.
+    merge_duplicate_roster_players(EsoDatabase(get_data_dir() / "eso.db"))
 
     install_team_schedule_calendar_support()
     install_team_schedule_multi_time_support()
