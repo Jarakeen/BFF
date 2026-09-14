@@ -24,14 +24,12 @@ class _EncounterService:
         )
 
     def get(self, encounter_id):
-        return SimpleNamespace(
-            encounter_id=encounter_id,
-            mechanics=(),
-            phases=(),
-        )
+        return SimpleNamespace(encounter_id=encounter_id, mechanics=(), phases=())
 
 
 class _EffectAdapter:
+    mapped_capability_types = ()
+
     @staticmethod
     def member_id(audit):
         return audit.character_id
