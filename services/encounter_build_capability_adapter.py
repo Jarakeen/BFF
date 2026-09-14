@@ -44,6 +44,11 @@ class SavedBuildEncounterCapabilityAdapter:
             raise ValueError("identity_maps cannot duplicate capability_type")
         self._maps = {entry.capability_type: entry.effect_names for entry in identity_maps}
 
+    @property
+    def mapped_capability_types(self) -> tuple[str, ...]:
+        """Capability types this EffectVariant adapter is authoritative for."""
+        return tuple(self._maps)
+
     @staticmethod
     def member_id(audit: SavedBuildCapabilityAudit) -> str:
         """Return stable roster identity, falling back only for legacy fixtures."""
