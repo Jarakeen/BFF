@@ -15,6 +15,7 @@ reliable or expected rotation outcome.
 import argparse
 from collections import Counter
 from pathlib import Path
+import re
 import sqlite3
 import sys
 
@@ -111,7 +112,10 @@ def _max_rank_skill_row(database: Path, name: str) -> tuple[dict | None, tuple[s
         rank_columns = _columns(db, "skill_rank")
         ability_columns = _columns(db, "ability")
         required_skill = {"id", "name", "skill_line", "is_passive"}
-        required_rank = {"id", "skill_id", "ability_id", "rank", "raw_name", "raw_description", "raw_tooltip"}
+        required_rank = {
+            "id", "skill_id", "ability_id", "rank", "raw_name",
+            "raw_description", "raw_tooltip", "raw_coef", "coef_types",
+        }
         required_ability = {"ability_id", "name", "description"}
         missing = tuple(sorted(
             (required_skill - skill_columns)
@@ -127,6 +131,8 @@ def _max_rank_skill_row(database: Path, name: str) -> tuple[dict | None, tuple[s
                 COALESCE(NULLIF(sr.raw_name, ''), NULLIF(a.name, ''), s.name) AS name,
                 COALESCE(NULLIF(sr.raw_description, ''), NULLIF(a.description, ''), '') AS description,
                 COALESCE(sr.raw_tooltip, '') AS raw_tooltip,
+                COALESCE(sr.raw_coef, '') AS raw_coef,
+                COALESCE(sr.coef_types, '') AS coef_types,
                 s.skill_line,
                 s.is_passive,
                 COALESCE(sr.rank, 0) AS rank
@@ -147,14 +153,29 @@ def _max_rank_skill_row(database: Path, name: str) -> tuple[dict | None, tuple[s
     return dict(top[0]), ()
 
 
-def _contains(row: dict | None, *fragments: str) -> bool:
+def _normalize_eso_text(value: object) -> str:
+    """Remove ESO color markup so numeric tooltip evidence remains searchable."""
+
+    text = str(value or "")
+    text = re.sub(r"\|c[0-9a-fA-F]{6}", "", text)
+    text = text.replace("|r", "")
+    return " ".join(text.split()).casefold()
+
+
+def _evidence_text(row: dict | None) -> str:
     if row is None:
-        return False
-    text = " ".join(
-        str(row.get(key) or "")
-        for key in ("name", "description", "raw_tooltip")
-    ).casefold()
-    return all(fragment.casefold() in text for fragment in fragments)
+        return ""
+    return _normalize_eso_text(
+        " ".join(
+            str(row.get(key) or "")
+            for key in ("name", "description", "raw_tooltip", "raw_coef", "coef_types")
+        )
+    )
+
+
+def _contains(row: dict | None, *fragments: str) -> bool:
+    text = _evidence_text(row)
+    return bool(text) and all(_normalize_eso_text(fragment) in text for fragment in fragments)
 
 
 def _action_schedule_proven() -> bool:
@@ -239,6 +260,8 @@ def main() -> int:
     if elemental_force is not None:
         print(f"elemental_force_max_rank={int(elemental_force.get('rank') or 0)}")
         print(f"elemental_force_ability_id={int(elemental_force.get('ability_id') or 0)}")
+        if not elemental_force_proven:
+            print(f"elemental_force_normalized_evidence={_evidence_text(elemental_force)!r}")
     print(f"force_shock_canonical_instant_timing_proven={force_timing_proven}")
     if timing.evidence is not None:
         print(f"force_shock_ability_id={timing.evidence.ability_id}")
