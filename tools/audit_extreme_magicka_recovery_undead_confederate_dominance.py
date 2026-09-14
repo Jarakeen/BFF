@@ -3,7 +3,7 @@ from __future__ import annotations
 """Prove Undead Confederate cannot win the Extreme Magicka Recovery class frontier.
 
 The proof avoids assuming one route owns the reviewed or runtime frontier near
-reference zero.  Instead it bounds every legal Living Death configuration using
+reference zero. Instead it bounds every legal Living Death configuration using
 its canonical static Recovery contribution plus the only reviewed active-bar
 Recovery mechanics that can coexist with it: Flourish and Wellspring of the Abyss.
 
@@ -11,9 +11,14 @@ For references at or above one conservative common-build witness, the reviewed
 Animal Companions + Curative Runeforms + Shadow route has at least as much slope
 as every Living Death upper-bound branch and is already ahead at the witness.
 For references below that witness, the runtime envelope is monotone, so its value
-at the witness upper-bounds the entire lower region.  The same feasible reviewed
-build beats that upper bound.  Undead Confederate receives its full conditional
+at the witness upper-bounds the entire lower region. The same feasible reviewed
+build beats that upper bound. Undead Confederate receives its full conditional
 +155 ceiling throughout; no Spirit Mender uptime assumption is needed.
+
+The common witness intentionally uses only class-independent reviewed sources:
+base Recovery, an unboosted Atronach, ordinary-strength Recovery jewelry glyphs,
+and the strongest reviewed Magicka Recovery drink. It does not depend on race,
+Divines, Infused, Champion Points, named gear, potion buffs, or Emperor state.
 """
 
 import argparse
@@ -40,6 +45,9 @@ from services.extreme_recovery_class_route_frontier_service import (
 from services.extreme_recovery_passive_special_branch_service import (
     ExtremeRecoveryPassiveBranchKind,
     ExtremeRecoveryPassiveSpecialBranchService,
+)
+from services.extreme_recovery_provisioning_projection_service import (
+    ExtremeRecoveryProvisioningProjectionService,
 )
 from services.extreme_skill_universe_service import ExtremeSkillUniverseService
 from services.extreme_subclass_slot_allocation_service import (
@@ -104,7 +112,7 @@ def _runtime_slot_upper(
     if ANIMAL_COMPANIONS not in line_set:
         return all_soldier
 
-    # Flourish needs one Animal Companions ability represented.  The remaining
+    # Flourish needs one Animal Companions ability represented. The remaining
     # five active-bar slots can then carry Soldier abilities for Wellspring.
     flourish_plus_soldier = flourish + per_slot * float(
         ExtremeSubclassSlotAllocationService.ACTIVE_BAR_SLOTS - 1
@@ -170,6 +178,10 @@ def main() -> int:
         OBJECTIVE,
         slot_multipliers=(1.0, 1.0, 1.0),
     )
+    provisioning = ExtremeRecoveryProvisioningProjectionService.build(
+        database,
+        objective_key=OBJECTIVE,
+    )
 
     if mundus is None or mundus.projected_delta is None or mundus.unresolved:
         unresolved.append("ordinary-strength Magicka Recovery Mundus witness unresolved")
@@ -187,7 +199,24 @@ def main() -> int:
         jewelry_delta = float(jewelry.projected_delta)
         jewelry_name = jewelry.glyph_name
 
-    feasible_reference = float(BASE_MAGICKA_RECOVERY) + mundus_delta + jewelry_delta
+    if (
+        not provisioning.comparison_proven
+        or provisioning.drink is None
+        or provisioning.drink.delta <= 0.0
+    ):
+        unresolved.append("reviewed Magicka Recovery drink witness unresolved")
+        provisioning_delta = 0.0
+        provisioning_name = "<unresolved>"
+    else:
+        provisioning_delta = float(provisioning.drink.delta)
+        provisioning_name = provisioning.drink.name
+
+    feasible_reference = (
+        float(BASE_MAGICKA_RECOVERY)
+        + mundus_delta
+        + jewelry_delta
+        + provisioning_delta
+    )
     feasible_result = frontier.frontier(OBJECTIVE, reference_value=feasible_reference)
     reviewed_witness = _find_reviewed_witness(feasible_result.candidates)
     runtime_rows = _living_death_rows(feasible_result.candidates)
@@ -227,8 +256,8 @@ def main() -> int:
     high_reference_slope_dominated = reviewed_slope >= maximum_runtime_slope - 1e-12
 
     # Every component in the runtime upper bound is non-negative and non-decreasing
-    # in the common reference.  Therefore the value at feasible_reference bounds the
-    # entire [0, feasible_reference] region.  A fixed feasible reviewed build above
+    # in the common reference. Therefore the value at feasible_reference bounds the
+    # entire [0, feasible_reference] region. A fixed feasible reviewed build above
     # that ceiling globally dominates every lower-reference runtime build.
     low_reference_region_dominated = reviewed_total > runtime_upper_at_witness + 1e-9
 
@@ -249,6 +278,7 @@ def main() -> int:
     print(f"base_magicka_recovery={BASE_MAGICKA_RECOVERY:.3f}")
     print(f"mundus={mundus_name!r} ordinary_delta={mundus_delta:.3f}")
     print(f"jewelry_glyph={jewelry_name!r} three_slot_ordinary_delta={jewelry_delta:.3f}")
+    print(f"provisioning={provisioning_name!r} reviewed_delta={provisioning_delta:.3f}")
     print(f"feasible_common_reference={feasible_reference:.3f}")
     if reviewed_witness is not None:
         print(f"reviewed_lines={reviewed_witness.equipped_skill_lines}")
