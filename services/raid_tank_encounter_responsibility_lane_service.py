@@ -6,6 +6,10 @@ This layer describes what distinct Tank responsibility lanes exist for an encoun
 It deliberately does not assign players to those lanes. Provider assignment remains a
 separate step so roster order, role labels, or arbitrary tie-breaks never become hidden
 strategy truth.
+
+A lane may declare exact Team Optimization prescription slot names when that mapping is
+itself reviewed strategy. This is not a generic Main/Off Tank inference: callers may
+only bind a prescription slot through an explicit reviewed slot identity stored here.
 """
 
 from dataclasses import dataclass
@@ -50,6 +54,7 @@ class RaidTankEncounterResponsibilityLane:
     display_name: str
     responsibilities: tuple[RaidTankEncounterResponsibility, ...]
     distinct_from: tuple[str, ...] = ()
+    prescription_slot_names: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         lane_id = str(self.lane_id or "").strip()
@@ -69,10 +74,19 @@ class RaidTankEncounterResponsibilityLane:
             raise ValueError("Tank encounter responsibility distinct_from values must be non-empty")
         if lane_id in distinct_from:
             raise ValueError("Tank encounter responsibility lane cannot be distinct from itself")
+        slot_names = tuple(
+            dict.fromkeys(
+                str(value or "").strip()
+                for value in self.prescription_slot_names
+            )
+        )
+        if any(not value for value in slot_names):
+            raise ValueError("Tank encounter responsibility prescription_slot_names must be non-empty")
         object.__setattr__(self, "lane_id", lane_id)
         object.__setattr__(self, "display_name", display_name)
         object.__setattr__(self, "responsibilities", responsibilities)
         object.__setattr__(self, "distinct_from", distinct_from)
+        object.__setattr__(self, "prescription_slot_names", slot_names)
 
 
 @dataclass(frozen=True)
@@ -95,6 +109,7 @@ class RaidTankEncounterResponsibilityPlan:
         if len(lane_ids) != len(set(lane_ids)):
             raise ValueError("Tank encounter responsibility plan cannot duplicate lane_id")
         known = set(lane_ids)
+        slot_owner: dict[str, str] = {}
         for lane in lanes:
             unknown = tuple(value for value in lane.distinct_from if value not in known)
             if unknown:
@@ -108,6 +123,15 @@ class RaidTankEncounterResponsibilityPlan:
                         "Tank encounter responsibility distinctness must be symmetric: "
                         f"{lane.lane_id!r} / {other_id!r}"
                     )
+            for slot_name in lane.prescription_slot_names:
+                key = slot_name.casefold()
+                prior = slot_owner.get(key)
+                if prior is not None and prior != lane.lane_id:
+                    raise ValueError(
+                        "Tank encounter responsibility prescription slot cannot map to multiple lanes: "
+                        f"{slot_name!r} -> {prior!r}, {lane.lane_id!r}"
+                    )
+                slot_owner[key] = lane.lane_id
         object.__setattr__(self, "encounter_id", encounter_id)
         object.__setattr__(self, "source", source)
         object.__setattr__(self, "lanes", lanes)
@@ -118,6 +142,25 @@ class RaidTankEncounterResponsibilityPlan:
             if lane.lane_id.casefold() == key:
                 return lane
         return None
+
+    def lane_for_prescription_slot(
+        self,
+        slot_name: str,
+    ) -> RaidTankEncounterResponsibilityLane | None:
+        key = str(slot_name or "").strip().casefold()
+        if not key:
+            raise ValueError("Tank encounter responsibility prescription slot lookup requires slot_name")
+        matches = tuple(
+            lane
+            for lane in self.lanes
+            if any(value.casefold() == key for value in lane.prescription_slot_names)
+        )
+        if len(matches) > 1:
+            raise ValueError(
+                "reviewed Tank responsibility prescription slot mapping is ambiguous: "
+                + str(slot_name)
+            )
+        return matches[0] if matches else None
 
 
 class RaidTankEncounterResponsibilityLaneService:
@@ -175,6 +218,9 @@ class RaidTankEncounterResponsibilityLaneService:
                         lane_id=cls._required_text(lane_raw, "lane_id"),
                         display_name=cls._required_text(lane_raw, "display_name"),
                         distinct_from=tuple(lane_raw.get("distinct_from") or ()),
+                        prescription_slot_names=tuple(
+                            lane_raw.get("prescription_slot_names") or ()
+                        ),
                         responsibilities=responsibilities,
                     )
                 )
