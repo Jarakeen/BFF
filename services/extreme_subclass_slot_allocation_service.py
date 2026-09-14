@@ -6,6 +6,7 @@ from itertools import product
 from minmax.character_build.character_class import CLASS_SKILL_LINES, CharacterClass
 from minmax.gear_stat_inputs import GearStatInputResolver
 from minmax.passive_math import (
+    ARCANIST_WELLSPRING_RECOVERY_PER_SLOTTED,
     WARDEN_ADVANCED_SPECIES_CRIT_DAMAGE_PER_SLOTTED,
     WARDEN_FLOURISH_RECOVERY_PERCENT,
     WARDEN_FROZEN_ARMOR_RESISTANCE_PER_SLOTTED,
@@ -39,7 +40,8 @@ class ExtremeSubclassSlotAllocationService:
     Pressure Points and Expert Mage are class-scoped even though the passives
     live in one class skill line: once the passive's line is equipped, abilities
     from any equipped line of that same class can satisfy the slot count.
-    Advanced Species, Flourish, and Frozen Armor are line-scoped.
+    Advanced Species, Flourish, Frozen Armor, and Wellspring of the Abyss are
+    line-scoped.
 
     ``reviewed_allocations`` exposes every numerically reviewed distribution so
     callers that also understand concrete skill standing effects can jointly
@@ -193,6 +195,15 @@ class ExtremeSubclassSlotAllocationService:
                     return 0.0, (), True
                 percent += WARDEN_FLOURISH_RECOVERY_PERCENT
                 sources.append("Flourish (Animal Companions represented)")
+
+        soldier_slots = allocation.get("soldier_of_apocrypha", 0)
+        if (
+            "soldier_of_apocrypha" in lines
+            and objective_key in {"health_recovery", "magicka_recovery", "stamina_recovery"}
+            and soldier_slots
+        ):
+            flat += ARCANIST_WELLSPRING_RECOVERY_PER_SLOTTED * soldier_slots
+            sources.append(f"Wellspring of the Abyss ({soldier_slots} Soldier of Apocrypha slots)")
 
         winter_slots = allocation.get("winters_embrace", 0)
         if (
