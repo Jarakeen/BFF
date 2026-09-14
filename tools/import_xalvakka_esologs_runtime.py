@@ -16,6 +16,7 @@ if str(ROOT) not in sys.path:
 from services.esologs_client import EsoLogsClient
 from services.esologs_combat_importer import EsoLogsCombatImporter
 from services.esologs_importer import EsoLogsImporter
+from services.esologs_player_details_import_service import EsoLogsPlayerDetailsImportService
 from services.settings_service import SettingsService
 from tools.audit_phase13_xalvakka_transition_resume_runtime import audit
 
@@ -137,6 +138,15 @@ def main() -> int:
                 fight_ids=[int(fight["id"]) for fight in selected],
                 gap_threshold_ms=args.gap_ms,
             )
+            # The generic combat importer historically expected only grouped
+            # playerDetails. Re-import fight-scoped player identity through the robust
+            # normalizer so valid flat/wrapped ESO Logs responses do not silently
+            # erase role evidence in this research database.
+            player_detail_actors = EsoLogsPlayerDetailsImportService(
+                connection,
+                client._query,
+            ).import_fights(report_code=code, fights=selected)
+            result["actors"] = player_detail_actors
         finally:
             connection.close()
 
