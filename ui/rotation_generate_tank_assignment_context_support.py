@@ -20,6 +20,9 @@ from services.rotation_assignment_taunt_obligation_service import (
 from services.rotation_tank_assignment_obligation_bundle_service import (
     RotationTankAssignmentObligationBundleService,
 )
+from services.rotation_tank_defensive_candidate_service import (
+    RotationTankDefensiveActionClaim,
+)
 from services.rotation_tank_defensive_obligation_service import (
     RotationTankDefensiveObligation,
 )
@@ -35,6 +38,12 @@ from services.rotation_tank_encounter_threshold_defensive_bundle_service import 
 from services.rotation_tank_encounter_threshold_defensive_timing_service import (
     RotationTankEncounterThresholdDefensiveTimingPolicy,
 )
+from services.rotation_tank_taunt_candidate_service import (
+    RotationTankTauntActionClaim,
+)
+from services.rotation_tank_taunt_maintenance_candidate_service import (
+    RotationTankTauntMaintenanceRefreshPolicy,
+)
 from ui.rotation_canonical_evidence_bundle_support import RotationCanonicalEvidenceBundle
 from ui.rotation_generate_tank_role_evidence_support import (
     RotationGenerateTankObligationContext,
@@ -43,7 +52,12 @@ from ui.rotation_generate_tank_role_evidence_support import (
 
 @dataclass(frozen=True)
 class RotationGenerateTankAssignmentEvidence:
-    """Exact assignment and reviewed defensive evidence for one member/encounter.
+    """Exact assignment, strategy, and reviewed defensive evidence for one member/encounter.
+
+    Obligations and strategy remain separate. Assignment and reviewed encounter evidence
+    prove what the Tank must do; optional action claims / refresh policy prove how the
+    caller has chosen to schedule those responsibilities. No strategy is inferred when
+    those fields are empty.
 
     Defensive obligations may be supplied directly for explicit audit/test callers, or
     derived from reviewed encounter facts through explicit-clock and/or canonical
@@ -58,6 +72,11 @@ class RotationGenerateTankAssignmentEvidence:
     taunt_maintenance_policies: tuple[
         RotationAssignmentTauntMaintenancePolicy, ...
     ] = ()
+    taunt_application_claims: tuple[RotationTankTauntActionClaim, ...] = ()
+    taunt_maintenance_refresh_policies: tuple[
+        RotationTankTauntMaintenanceRefreshPolicy, ...
+    ] = ()
+    defensive_claims: tuple[RotationTankDefensiveActionClaim, ...] = ()
     defensive_obligations: tuple[RotationTankDefensiveObligation, ...] = ()
     defensive_guide: EncounterBossGuide | None = None
     defensive_facts: tuple[ReconciledEncounterFact, ...] = ()
@@ -84,6 +103,17 @@ class RotationGenerateTankAssignmentEvidence:
             "taunt_maintenance_policies",
             tuple(self.taunt_maintenance_policies),
         )
+        object.__setattr__(
+            self,
+            "taunt_application_claims",
+            tuple(self.taunt_application_claims),
+        )
+        object.__setattr__(
+            self,
+            "taunt_maintenance_refresh_policies",
+            tuple(self.taunt_maintenance_refresh_policies),
+        )
+        object.__setattr__(self, "defensive_claims", tuple(self.defensive_claims))
         object.__setattr__(
             self,
             "defensive_obligations",
@@ -135,7 +165,7 @@ class RotationGenerateTankAssignmentEvidence:
 
 
 class RotationGenerateTankAssignmentContextSupport:
-    """Resolve the selected Tank build/encounter into exact hard obligations."""
+    """Resolve the selected Tank build/encounter into exact hard obligations and strategy."""
 
     def __init__(
         self,
@@ -236,6 +266,9 @@ class RotationGenerateTankAssignmentContextSupport:
             taunt_application_requirements=bundle.taunt_application_requirements,
             taunt_maintenance_requirements=bundle.taunt_maintenance_requirements,
             defensive_obligations=bundle.defensive_obligations,
+            taunt_application_claims=row.taunt_application_claims,
+            taunt_maintenance_policies=row.taunt_maintenance_refresh_policies,
+            defensive_claims=row.defensive_claims,
         )
 
     def _defensive_obligations(
