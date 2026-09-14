@@ -2,7 +2,13 @@ import json
 import sqlite3
 from pathlib import Path
 
-from tools.audit_phase13_xalvakka_transition_resume_runtime import audit, observe
+import pytest
+
+from tools.audit_phase13_xalvakka_transition_resume_runtime import (
+    _resolve_database,
+    audit,
+    observe,
+)
 
 
 def _event(raw_fraction: float):
@@ -25,6 +31,9 @@ def _database(tmp_path: Path) -> Path:
                 report_code TEXT, fight_id INTEGER, name TEXT, kill INTEGER,
                 difficulty INTEGER, boss_percentage REAL, start_time REAL,
                 end_time REAL, encounter_id INTEGER
+            );
+            CREATE TABLE log_actor (
+                report_code TEXT, fight_id INTEGER, actor_id INTEGER
             );
             CREATE TABLE log_event (
                 report_code TEXT, fight_id INTEGER, event_index INTEGER,
@@ -84,6 +93,36 @@ def _database(tmp_path: Path) -> Path:
     return path
 
 
+def _schema_only_database(path: Path) -> Path:
+    with sqlite3.connect(path) as db:
+        db.executescript(
+            """
+            CREATE TABLE log_fight (
+                report_code TEXT, fight_id INTEGER, name TEXT, kill INTEGER,
+                difficulty INTEGER, boss_percentage REAL, start_time REAL,
+                end_time REAL, encounter_id INTEGER
+            );
+            CREATE TABLE log_actor (
+                report_code TEXT, fight_id INTEGER, actor_id INTEGER
+            );
+            CREATE TABLE log_event (
+                report_code TEXT, fight_id INTEGER, event_index INTEGER,
+                timestamp REAL, event_type TEXT, source_id INTEGER,
+                source_is_friendly INTEGER, target_id INTEGER,
+                target_instance INTEGER, target_is_friendly INTEGER,
+                ability_game_id INTEGER, extra_ability_game_id INTEGER,
+                amount REAL, hit_type INTEGER, tick INTEGER,
+                cast_track_id INTEGER, resource_change REAL,
+                resource_change_type INTEGER, other_resource_change REAL,
+                max_resource_amount REAL, waste REAL, overheal REAL,
+                absorbed REAL, stack INTEGER, raw_json TEXT
+            );
+            INSERT INTO log_fight VALUES ('R', 1, 'Some Other Boss', 1, 121, 0, 0, 10000, 1);
+            """
+        )
+    return path
+
+
 def test_observes_70_and_40_percent_transition_resume_gaps(tmp_path):
     rows = observe(_database(tmp_path))
 
@@ -103,6 +142,7 @@ def test_observes_70_and_40_percent_transition_resume_gaps(tmp_path):
 def test_audit_marks_runtime_observations_as_review_required(tmp_path):
     lines = audit(_database(tmp_path))
 
+    assert any("XALVAKKA_FIGHTS: 1" in line for line in lines)
     assert any("threshold=70%" in line and "resume=12.000s" in line for line in lines)
     assert any("threshold=40%" in line and "resume=33.000s" in line for line in lines)
     assert lines[-1].startswith("REVIEW_REQUIRED:")
@@ -145,3 +185,20 @@ def test_audit_stays_unresolved_without_substantial_transition_gap(tmp_path):
 
     lines = audit(path)
     assert any(line.startswith("UNRESOLVED:") for line in lines)
+
+
+def test_discovery_ignores_schema_only_decoy_and_selects_xalvakka_database(tmp_path):
+    _schema_only_database(tmp_path / "backup_test.db")
+    actual = _database(tmp_path)
+
+    assert _resolve_database(None, roots=(tmp_path,)) == actual.resolve()
+
+
+def test_discovery_fails_closed_when_only_schema_compatible_decoy_exists(tmp_path):
+    decoy = _schema_only_database(tmp_path / "backup_test.db")
+
+    with pytest.raises(ValueError, match="none contains an imported Xalvakka fight") as exc:
+        _resolve_database(None, roots=(tmp_path,))
+
+    assert str(decoy.resolve()) in str(exc.value)
+    assert "xalvakka_fights=0" in str(exc.value)
