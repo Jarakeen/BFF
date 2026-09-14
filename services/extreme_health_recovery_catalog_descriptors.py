@@ -139,6 +139,28 @@ EXTREME_HEALTH_RECOVERY_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "operations and ambiguous food/drink identities fail closed."
         ),
     ),
+    ServiceDescriptor(
+        service_id="extreme.percent_vs_flat_dominance",
+        domain="extreme",
+        purpose=(
+            "Conservatively prove that an objective percentage branch cannot recover "
+            "enough value to beat a displaced flat contribution."
+        ),
+        implementation_path="services.extreme_percent_vs_flat_dominance_service",
+        inputs=(
+            "PrePercentSubtotalUpperBound",
+            "PercentCeiling",
+            "DisplacedFlatValue",
+        ),
+        outputs=("ExtremePercentVsFlatDominanceResult",),
+        responsibilities=("extreme_percent_vs_flat_dominance",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.NONE,
+        notes=(
+            "Shared non-negative percentage modifiers are intentionally omitted from "
+            "the comparison; that makes a domination result conservative."
+        ),
+    ),
 )
 
 
