@@ -7,16 +7,22 @@ ordinary Recovery frontier, classifies direct-flat special challengers, and for
 each one reserves the challenger's active-snapshot set units, then solves a tiny
 distinct-set capacity knapsack over the remaining ordinary named-set breakpoints.
 
+Before any branch is declared dominated, the screen also reclassifies the aggregate
+canonical bonus text through the shared Recovery special-branch semantic owner. This
+prevents mapped partial evidence from collapsing a stacked mechanic to one stack or
+a resource-scaled formula to its literal coefficient.
+
 The knapsack enforces only two facts that any legal loadout must obey: one breakpoint
 per set identity, and no more than the remaining active-snapshot set-count units.
 It deliberately ignores armor/jewelry/weapon slot compatibility, exact count-topology
 shape, and all other physical conflicts. Those omissions can only increase the
 ordinary coexistence score, so the result remains a proof-safe upper bound while
-avoiding the previous absurdity of reusing the same best set identity repeatedly.
+avoiding physical brute force.
 
 A challenger below the incumbent under this generous bound is globally dominated.
-A challenger at or above the incumbent is carried forward for exact follow-up. This
-screen performs no constrained physical brute force.
+A challenger at or above the incumbent is carried forward for exact follow-up.
+Formula, percentage, named-buff, and search-state mechanics remain explicit pending
+branches rather than being flattened into fake Recovery values.
 """
 
 import argparse
@@ -33,6 +39,10 @@ from services.extreme_armor_weight_filtered_slot_eligibility_service import (
 )
 from services.extreme_gear_set_bonus_breakpoint_service import ExtremeGearSetBonusBreakpointService
 from services.extreme_gear_set_objective_relevance_service import ExtremeGearSetObjectiveRelevanceService
+from services.extreme_gear_set_recovery_special_branch_service import (
+    ExtremeGearSetRecoverySpecialBranchService,
+    ExtremeRecoverySpecialBranchKind,
+)
 from services.extreme_gear_set_topology_catalog_service import (
     ACTIVE_SNAPSHOT_SET_UNITS,
     ExtremeGearSetTopologyCatalogService,
@@ -61,10 +71,43 @@ from tools.audit_extreme_magicka_recovery_same_build_enlivening import exact_enl
 from tools.audit_extreme_magicka_recovery_special_named_gear_triage import _triage_pair
 
 
+_NONFLAT_KINDS = frozenset(
+    {
+        ExtremeRecoverySpecialBranchKind.CONDITIONAL_PERCENT,
+        ExtremeRecoverySpecialBranchKind.FORMULA,
+        ExtremeRecoverySpecialBranchKind.NAMED_BUFF,
+        ExtremeRecoverySpecialBranchKind.SEARCH_STATE_MUTATION,
+    }
+)
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--database", default=str(ROOT / "data" / "eso.db"))
     return parser
+
+
+def aggregate_recovery_semantic_branch(evidence):
+    """Classify the aggregate canonical set text before pruning a challenger."""
+    descriptions = [
+        str(getattr(row, "description", "") or "").strip()
+        for row in getattr(evidence.candidate, "source_bonuses", ())
+        if str(getattr(row, "description", "") or "").strip()
+    ]
+    descriptions.extend(
+        str(item).split("active set bonus is not yet mechanic-mapped:", 1)[-1].strip()
+        for item in getattr(evidence.candidate, "unresolved", ())
+        if "active set bonus is not yet mechanic-mapped:" in str(item)
+    )
+    description = " ".join(dict.fromkeys(item for item in descriptions if item))
+    if not description:
+        return None
+    return ExtremeGearSetRecoverySpecialBranchService.classify(
+        set_name=str(evidence.set_name),
+        piece_count=int(evidence.piece_count),
+        description=description,
+        objective_key=OBJECTIVE,
+    )
 
 
 def distinct_set_capacity_upper_bound(
@@ -99,8 +142,6 @@ def distinct_set_capacity_upper_bound(
         if value > choices.get(count, float("-inf")):
             choices[count] = value
 
-    # Multiple-choice 0/1 knapsack: skip a set or choose exactly one of its
-    # ordinary breakpoints. Physical eligibility is intentionally ignored.
     dp = [0.0] * (capacity + 1)
     for choices in choices_by_set.values():
         previous = tuple(dp)
@@ -175,16 +216,34 @@ def main() -> int:
         if evidence is None:
             pending.append((challenger, ("missing canonical Recovery evidence",)))
             continue
+
         upper = direct_flat_upper_bound(challenger, evidence)
-        if upper.pending_nonflat:
-            pending.append((challenger, upper.pending_nonflat))
+        reasons = list(upper.pending_nonflat)
+        special_ceiling = float(upper.total_special_ceiling)
+        aggregate = aggregate_recovery_semantic_branch(evidence)
+        if aggregate is not None:
+            if aggregate.kind in _NONFLAT_KINDS or aggregate.percent_ceiling is not None or aggregate.search_state_rule:
+                reasons.append(
+                    f"aggregate semantic kind={aggregate.kind.value} condition={aggregate.condition or aggregate.search_state_rule}"
+                )
+            elif aggregate.can_raise_self and aggregate.flat_ceiling is not None:
+                semantic_ceiling = (
+                    float(upper.mapped_flat)
+                    + max(0.0, float(aggregate.flat_ceiling))
+                    + float(upper.max_magicka_recovery_ceiling)
+                )
+                special_ceiling = max(special_ceiling, semantic_ceiling)
+
+        if reasons:
+            pending.append((challenger, tuple(dict.fromkeys(reasons))))
             continue
+
         structural = distinct_set_capacity_upper_bound(challenger, pair_scores)
         rows.append(
             dominance_row(
                 challenger=challenger,
                 structural_score=structural,
-                special_ceiling=upper.total_special_ceiling,
+                special_ceiling=special_ceiling,
                 incumbent=incumbent,
                 bound_kind="distinct_set_capacity_upper",
             )
@@ -251,7 +310,7 @@ def main() -> int:
     print(f"flat_candidates_surviving_capacity_bound={len(survivors)}")
     print(f"direct_flat_screen_closed={screen_closed}")
     if screen_closed:
-        print("NEXT_STEP=exactly resolve only capacity-bound flat survivors plus pending non-flat/search-state branches")
+        print("NEXT_STEP=exactly resolve only capacity-bound flat survivors plus pending formula/percent/named-buff/search-state branches")
     else:
         print("NEXT_STEP=close only the reported screen prerequisites")
     return 0 if screen_closed else 2
