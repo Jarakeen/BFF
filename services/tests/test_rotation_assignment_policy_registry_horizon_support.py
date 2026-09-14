@@ -52,6 +52,18 @@ def test_registry_keeps_symbolic_encounter_end_policy_separate_from_numeric_poli
     assert policy.windows[0].active_start_seconds == 0.0
 
 
+def test_registry_allows_symbolic_policy_to_leave_build_owned_taunt_source_unbound(tmp_path):
+    row = _symbolic_row()
+    row.pop("source_skill_name")
+    row["windows"][0].pop("bar")
+
+    service = RotationAssignmentPolicyRegistryService(_write(tmp_path, [row]))
+    policy = service.for_encounter("xalvakka").taunt_maintenance_horizon_policies[0]
+
+    assert policy.source_skill_name is None
+    assert policy.windows[0].bar is None
+
+
 def test_symbolic_policy_still_counts_as_disposition_for_registry_duplicate_guard(tmp_path):
     numeric = {
         "kind": "taunt_maintenance",
