@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from minmax.rotation_ability_priority import AbilityPriorityList
+from models.effective_build_snapshot import EffectiveBuildSnapshot
 from services.rotation_candidate_recommendation_evidence_service import (
     RotationCandidatePlanEvidenceProvider,
 )
@@ -93,13 +94,18 @@ class RotationGenerateRoleEvidenceInputs:
 
 @dataclass(frozen=True)
 class RotationGenerateCanonicalContext:
-    """Explicit encounter-aware inputs used by the dashboard Generate action.
+    """Explicit build/encounter inputs used by the dashboard Generate action.
 
     Presence of this object opts Generate Rotation into canonical encounter-aware
     orchestration. Absence preserves the legacy/plain generation path. The context
     contains explicit evidence/runtime inputs only; it does not infer them from role,
     class, encounter display names, or UI labels. Optional ``role_evidence`` carries
     already-resolved application facts into the canonical role-aware ranking path.
+
+    ``effective_build`` freezes the exact build configuration used when this context was
+    composed. Rotation consumes that snapshot instead of re-resolving Team/Boss/Raid Plan
+    state or re-reading a mutable UI selection. Legacy/static test contexts may omit the
+    snapshot and continue supplying the page-selected build explicitly at execution time.
     """
 
     evidence_inputs: RotationSelectedEncounterEvidenceInputs
@@ -111,6 +117,7 @@ class RotationGenerateCanonicalContext:
     cadence_evaluation_context: RotationSupportCadenceEvaluationContext | None = None
     cadence_max_iterations: int = 8
     character_id: str | None = None
+    effective_build: EffectiveBuildSnapshot | None = None
 
     def __post_init__(self) -> None:
         role_sources = tuple(
@@ -132,6 +139,16 @@ class RotationGenerateCanonicalContext:
             raise ValueError("cadence_max_iterations must be positive")
         object.__setattr__(self, "cadence_max_iterations", iterations)
         object.__setattr__(self, "cadence_obligations", tuple(self.cadence_obligations))
+        if self.effective_build is not None and not isinstance(
+            self.effective_build, EffectiveBuildSnapshot
+        ):
+            raise TypeError("effective_build must be an EffectiveBuildSnapshot")
+
+    def player_build_for(self, fallback=None):
+        """Materialize the exact build this context owns, or use a legacy fallback."""
+        if self.effective_build is not None:
+            return self.effective_build.materialize()
+        return fallback
 
     def role_evidence_for(
         self,
