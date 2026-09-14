@@ -54,3 +54,25 @@ def test_runtime_execution_strategy_resolution_is_catalogued() -> None:
     assert "PlayerBuild" in descriptor.inputs
     assert "RotationRuntimeExecutionStrategyCandidate" in descriptor.outputs
     assert "RotationRuntimeExecutionStrategyResolution" in descriptor.outputs
+
+
+def test_runtime_executable_choice_resolution_is_catalogued() -> None:
+    descriptor = SERVICE_CATALOG.get("rotation.runtime.executable_choice_resolution")
+
+    assert descriptor is not None
+    assert descriptor.implementation_path == (
+        "services.rotation_runtime_executable_choice_service"
+    )
+    assert descriptor.dependencies == (
+        "rotation.runtime.execution_strategy_resolution",
+    )
+    assert descriptor.responsibilities == (
+        "rotation_runtime_executable_choice_resolution",
+    )
+    assert descriptor.encounter_aware is True
+    assert "RotationPlan" in descriptor.inputs
+    assert "RotationActionSlotRequirement" in descriptor.inputs
+    assert "RotationActionTargetRequirement" in descriptor.inputs
+    assert "RotationActionOccupancyRequirement" in descriptor.inputs
+    assert "RotationRuntimeExecutableChoice" in descriptor.outputs
+    assert "RotationRuntimeExecutableChoiceResolution" in descriptor.outputs
