@@ -56,6 +56,35 @@ def matching_saved_build_indices(saved_builds, gamertag: str, character_name: st
     return tuple(matches)
 
 
+def known_character_classes(saved_builds, personnel_members, gamertag: str, character_name: str) -> tuple[str, ...]:
+    """Return source-backed class identities for one exact player/character pair."""
+    player_key = _clean(gamertag).casefold()
+    character_key = _clean(character_name).casefold()
+    if not player_key or not character_key:
+        return ()
+
+    by_key: dict[str, str] = {}
+    for build in tuple(saved_builds or ()):
+        if _clean(getattr(build, "Gamertag", "")).casefold() != player_key:
+            continue
+        if _clean(getattr(build, "Name", "")).casefold() != character_key:
+            continue
+        eso_class = _clean(getattr(build, "EsoClass", ""))
+        if eso_class:
+            by_key.setdefault(eso_class.casefold(), eso_class)
+
+    for member in tuple(personnel_members or ()):
+        if _clean(getattr(member, "PlayerName", "")).casefold() != player_key:
+            continue
+        if _clean(getattr(member, "CharacterName", "")).casefold() != character_key:
+            continue
+        eso_class = _clean(getattr(member, "EsoClass", ""))
+        if eso_class:
+            by_key.setdefault(eso_class.casefold(), eso_class)
+
+    return tuple(sorted(by_key.values(), key=str.casefold))
+
+
 class RaidPlanCharacterSelectionPage(RaidPlanPage):
     """Raid Plan page with player-scoped character and build selectors."""
 
@@ -107,6 +136,11 @@ class RaidPlanCharacterSelectionPage(RaidPlanPage):
             self.personnel_members,
             self._player_text(row),
         )
+        known_player = self._personnel_match(self._player_text(row)) is not None
+        name_keys = {name.casefold() for name in names}
+        if current and known_player and current.casefold() not in name_keys:
+            current = ""
+
         combo.blockSignals(True)
         combo.clear()
         combo.addItem("")
@@ -167,18 +201,14 @@ class RaidPlanCharacterSelectionPage(RaidPlanPage):
 
     def _apply_character_class(self, row: int) -> None:
         character = self._item_text(self.team_table, row, 2)
-        indices = matching_saved_build_indices(
+        classes = known_character_classes(
             self.saved_builds,
+            self.personnel_members,
             self._player_text(row),
             character,
         )
-        classes = {
-            _clean(getattr(self.saved_builds[index], "EsoClass", ""))
-            for index in indices
-            if _clean(getattr(self.saved_builds[index], "EsoClass", ""))
-        }
         if len(classes) == 1:
-            super()._set_item_text(row, 4, next(iter(classes)))
+            super()._set_item_text(row, 4, classes[0])
         elif character:
             # Do not preserve a class from the prior player's character when the
             # selected identity has no single source-backed class.
@@ -220,6 +250,7 @@ class RaidPlanCharacterSelectionPage(RaidPlanPage):
 
 __all__ = [
     "RaidPlanCharacterSelectionPage",
+    "known_character_classes",
     "known_character_names",
     "matching_saved_build_indices",
 ]
