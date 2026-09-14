@@ -26,6 +26,9 @@ from ui.rotation_generate_dd_target_health_role_evidence_support import (
 from ui.rotation_generate_healer_role_evidence_support import (
     RotationGenerateHealerRoleEvidenceSupport,
 )
+from ui.rotation_generate_tank_assignment_context_support import (
+    RotationGenerateTankAssignmentContextSupport,
+)
 from ui.rotation_generate_tank_role_evidence_support import (
     RotationGenerateTankRoleEvidenceSupport,
     install_rotation_generate_tank_obligation_context,
@@ -58,15 +61,17 @@ class RotationEncounterSelectorSupport:
     projection controls, explicit DD target-resistance policy, the Generate router,
     its live application context provider, and role-specific evidence composers that
     already have canonical implementations. Healer, Tank, and DD roles are routed
-    explicitly. Tank Generate consumes only encounter-scoped obligations supplied
-    through the explicit page context and therefore fails closed when assignment or
-    mechanic evidence has not been attached. DD also receives the canonical saved-
-    build Light Attack bridge, reviewed target-Health-aware skill-damage seam, and the
-    generic fail-closed runtime output-condition bridge. The target-Health seam remains
-    inert until reviewed semantics, an exact target snapshot resolver, and target
-    identity are supplied. The live context provider may attach exact-event condition
-    evidence only through an explicit page hook; absence remains unknown. Unsupported
-    roles remain on the role-neutral path until their own composers exist.
+    explicitly. Tank Generate can derive encounter-scoped hard obligations from exact
+    provider assignment evidence attached to the page; a direct explicit Tank context
+    remains an override for audits/tests. Missing assignment/mechanic evidence fails
+    closed rather than inventing responsibilities from boss names or role labels. DD
+    also receives the canonical saved-build Light Attack bridge, reviewed target-
+    Health-aware skill-damage seam, and the generic fail-closed runtime output-
+    condition bridge. The target-Health seam remains inert until reviewed semantics,
+    an exact target snapshot resolver, and target identity are supplied. The live
+    context provider may attach exact-event condition evidence only through an
+    explicit page hook; absence remains unknown. Unsupported roles remain on the
+    role-neutral path until their own composers exist.
     """
 
     def __init__(self, guide_service: _EncounterGuideIndex) -> None:
@@ -92,11 +97,18 @@ class RotationEncounterSelectorSupport:
         install_rotation_dd_evaluation_policy_controls(page)
         install_rotation_generate_action(page)
         install_rotation_generate_tank_obligation_context(page)
+        tank_assignment_context = RotationGenerateTankAssignmentContextSupport()
+        tank_assignment_context.install(page)
         healer_role_evidence = RotationGenerateHealerRoleEvidenceSupport()
+
+        def tank_obligation_context(build, bundle):
+            explicit = page.rotation_generate_tank_obligation_context()
+            if explicit is not None:
+                return explicit
+            return page.rotation_generate_tank_assignment_context(build, bundle)
+
         tank_role_evidence = RotationGenerateTankRoleEvidenceSupport(
-            obligation_context_provider=(
-                lambda _build, _bundle: page.rotation_generate_tank_obligation_context()
-            )
+            obligation_context_provider=tank_obligation_context
         )
         dd_role_evidence = RotationGenerateDDConditionalOutputSupport(
             RotationGenerateDDTargetHealthRoleEvidenceSupport(
