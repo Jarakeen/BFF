@@ -20,7 +20,7 @@ if str(ROOT) not in sys.path:
 from minmax.resource_costs import ResourceType
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 from services.rotation_static_build_context_service import RotationStaticBuildContextService
-from tools.audit_phase13_dd_priority_schedule import _priority_entries
+from tools.dd_audit_priority_fixture_support import resolve_audit_priorities
 from tools.audit_phase13_saved_build_rotation_timing import _load_build
 from ui.rotation_generate_dd_role_evidence_support import (
     RotationGenerateDDCanonicalWeaponAttackProviderFactory,
@@ -74,6 +74,10 @@ def main() -> int:
         action="append",
         default=[],
         metavar="BAR:SLOT:PRIORITY",
+        help=(
+            "Rank every occupied ordinary saved-bar slot. If omitted entirely, this "
+            "regression audit uses a deterministic audit-only saved-slot fixture."
+        ),
     )
     args = parser.parse_args()
 
@@ -88,7 +92,10 @@ def main() -> int:
     duration = float(args.duration)
     if duration <= 0.0:
         raise ValueError("duration must be positive")
-    priorities = _priority_entries(tuple(args.priority or ()), build=build)
+    priorities, used_priority_fixture = resolve_audit_priorities(
+        tuple(args.priority or ()),
+        build=build,
+    )
     generated = RotationGenerationSupport().generate_with_evidence(
         build=build,
         request=RotationGenerationRequest(
@@ -140,6 +147,14 @@ def main() -> int:
     print("=" * 72)
     print(f"Character: {_character_name(build) or 'unnamed'}")
     print(f"Build:     {getattr(build, 'BuildName', '') or 'unnamed'}")
+    print(
+        "Priority source: "
+        + (
+            "deterministic audit-only saved-slot fixture"
+            if used_priority_fixture
+            else "explicit --priority input"
+        )
+    )
     print(f"Actions compared: {compared}")
     print(f"Mismatches:       {len(mismatches)}")
     print()
