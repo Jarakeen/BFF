@@ -36,9 +36,13 @@ BROADCAST_NAV_SECTION = {
     ],
 }
 
+# Raid-lead-first navigation.
+#
+# This is deliberately a presentation-only simplification. Existing pages and
+# routes remain registered in MainWindow so the layout can be reverted without
+# removing features or changing persisted data.
 CORE_NAV_SECTIONS = [
-    {"label": "Roster", "page": "operations_console", "children": [
-        ("Characters", "characters"),
+    {"label": "Roster", "page": "roster_page", "children": [
         ("Builds", "console:2"),
         ("Rotations", "rotations"),
     ]},
@@ -47,8 +51,8 @@ CORE_NAV_SECTIONS = [
         ("Optimization", "console:6"),
         ("Coverage", "console:7"),
         ("Encounters", "console:1"),
-        ("Performance", "console:3"),
         ("Mechanics", "console:4"),
+        ("Top Gear", "console:3"),
     ]},
     ("Achievements", "achievements"),
     {"label": "Collectibles", "page": "collectibles", "children": [
@@ -79,8 +83,8 @@ CORE_NAV_SECTIONS = [
     ]},
     {"label": "Tool", "children": [
         ("Extreme Build Lab", "extreme_optimization"),
-        ("Gear Lookup", "gear_lookup"),
         ("Reference Data", "tools:reference_data"),
+        ("Gear Lookup", "gear_lookup"),
         ("vAS2 Timer", "timers"),
     ]},
     ("Community News", "community_news"),
