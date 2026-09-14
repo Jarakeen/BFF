@@ -2,9 +2,12 @@ from __future__ import annotations
 
 """Make Coverage a self-loading raid-team health check.
 
-Coverage remains diagnostic: it reads saved roster/team/build state, resolves the
-selected team's effective builds, and audits those builds without changing the
-team, assignments, or build configuration.
+Coverage remains diagnostic: it reads saved roster/team/build state and audits
+those builds without changing the team, assignments, or build configuration.
+
+The direct Coverage workflow intentionally audits the team's assigned *base*
+builds. Team/Boss context variants are only applied when another workflow (for
+example Assignments -> Evaluate) explicitly supplies an encounter context.
 """
 
 from PySide6.QtWidgets import QComboBox, QPushButton
@@ -45,8 +48,35 @@ def _player_build_from_catalog_record(record: object) -> PlayerBuild | None:
         return None
 
 
-def _canonical_team_builds(page, team_name: str, boss_name: str = ""):
-    """Load exact build assignments for a team from the canonical build catalog."""
+def _resolved_or_base(
+    build: PlayerBuild,
+    *,
+    team_name: str,
+    boss_name: str,
+    use_context: bool,
+) -> PlayerBuild:
+    if not use_context:
+        return PlayerBuild.from_dict(build.to_dict())
+    return resolve_build_context(
+        build,
+        team_name=team_name,
+        boss_name=boss_name,
+    )
+
+
+def _canonical_team_builds(
+    page,
+    team_name: str,
+    boss_name: str = "",
+    *,
+    use_context: bool = False,
+):
+    """Load exact build assignments for a team from the canonical build catalog.
+
+    Team membership identifies *which* saved builds belong in the check. It does
+    not itself imply that Team or Boss ContextVariants should be applied. Direct
+    Coverage checks therefore return base builds unless ``use_context`` is true.
+    """
     bridge = getattr(getattr(page, "build_service", None), "canonical", None)
     catalog = getattr(bridge, "catalog_service", None)
     if catalog is None:
@@ -72,10 +102,11 @@ def _canonical_team_builds(page, team_name: str, boss_name: str = ""):
                 str(assignment.get("slot_name") or assignment.get("raid_role") or build_id)
             )
             continue
-        resolved = resolve_build_context(
+        effective = _resolved_or_base(
             build,
             team_name=team_name,
             boss_name=boss_name,
+            use_context=use_context,
         )
         slot = str(
             assignment.get("slot_name")
@@ -84,16 +115,25 @@ def _canonical_team_builds(page, team_name: str, boss_name: str = ""):
             or getattr(build, "Gamertag", "")
             or "Roster"
         )
-        selected.append((slot, resolved))
+        selected.append((slot, effective))
 
     return tuple(selected), tuple(unresolved)
 
 
-def select_team_builds(builds, members, team_name: str, boss_name: str = ""):
+def select_team_builds(
+    builds,
+    members,
+    team_name: str,
+    boss_name: str = "",
+    *,
+    use_context: bool = False,
+):
     """Fallback selection for teams without canonical build assignments.
 
     A unique Ready-for-Raid build wins; otherwise a sole candidate wins. Any
     ambiguous player remains unresolved rather than silently choosing a build.
+    Direct Coverage returns the base build. Context variants are applied only
+    when an explicit contextual caller requests them.
     """
     selected = []
     unresolved = []
@@ -127,17 +167,18 @@ def select_team_builds(builds, members, team_name: str, boss_name: str = ""):
             )
             continue
 
-        resolved = resolve_build_context(
+        effective = _resolved_or_base(
             chosen,
             team_name=team_name,
             boss_name=boss_name,
+            use_context=use_context,
         )
         slot = str(
             getattr(member, "PrimaryRole", "")
             or getattr(member, "PlayerName", "")
             or "Roster"
         )
-        selected.append((slot, resolved))
+        selected.append((slot, effective))
 
     return tuple(selected), tuple(unresolved)
 
@@ -167,8 +208,14 @@ def run_team_health_check(
     team_name: str | None = None,
     *,
     boss_name: str = "",
+    use_context: bool | None = None,
 ) -> None:
-    """Run one diagnostic health check, optionally selecting ``team_name`` first."""
+    """Run one diagnostic health check, optionally selecting ``team_name`` first.
+
+    Direct Coverage calls omit ``boss_name`` and therefore audit base builds only.
+    Contextual callers can provide a Boss and/or ``use_context=True`` to audit the
+    effective Team/Boss build instead.
+    """
     combo = getattr(page, "health_check_team_combo", None)
     if combo is None:
         enhance_coverage_page(page)
@@ -197,7 +244,7 @@ def run_team_health_check(
         page.refresh()
         page.scope_card.set_title("All Saved Builds")
         page.scope_note.setText(
-            "Library-wide build audit. Choose a raid team above to run a direct team health check."
+            "Library-wide build audit. Choose a raid team above to check that team's base builds."
         )
         return
 
@@ -211,9 +258,17 @@ def run_team_health_check(
         if _member_belongs_to_team(member, selected_team)
     )
 
-    # Exact canonical team->build assignments are authoritative. Only fall back
-    # to player/character inference when a team has no canonical build mapping.
-    selected, unresolved = _canonical_team_builds(page, selected_team, boss_name)
+    contextual = bool(boss_name) if use_context is None else bool(use_context)
+
+    # Exact canonical team->build assignments are authoritative for identity.
+    # Direct Coverage audits the assigned base build. Context variants are only
+    # resolved when a caller explicitly requests contextual evaluation.
+    selected, unresolved = _canonical_team_builds(
+        page,
+        selected_team,
+        boss_name,
+        use_context=contextual,
+    )
     source = "canonical team assignments"
     if not selected:
         try:
@@ -226,6 +281,7 @@ def run_team_health_check(
             members,
             selected_team,
             boss_name,
+            use_context=contextual,
         )
         source = "roster member matching"
 
@@ -236,7 +292,11 @@ def run_team_health_check(
     page.set_team_scope(selected_team, selected, total_slots=RAID_TEAM_SLOTS)
     loaded = len(selected)
     member_count = len(members)
-    context_note = f" • encounter {boss_name}" if boss_name else ""
+    context_note = (
+        f" • effective context: {boss_name}"
+        if contextual and boss_name
+        else " • base builds only"
+    )
     lines = [
         f"Direct roster health check • {member_count}/{RAID_TEAM_SLOTS} roster slots populated • "
         f"{loaded} saved team build(s) resolved via {source}{context_note}."
@@ -250,7 +310,10 @@ def run_team_health_check(
             f"{selected_team}: health check loaded {loaded} build(s); unresolved: {', '.join(unresolved[:6])}."
         )
     else:
-        page.status.success(f"{selected_team}: health check loaded {loaded} saved build(s).")
+        mode = f"{boss_name} context" if contextual and boss_name else "base builds"
+        page.status.success(
+            f"{selected_team}: health check loaded {loaded} saved {mode}."
+        )
 
 
 def _sync_team_choices(page) -> None:
@@ -283,7 +346,7 @@ def enhance_coverage_page(page) -> None:
         page.header.title.setText("Team Health Check")
     if hasattr(page.header, "subtitle"):
         page.header.subtitle.setText(
-            "Load any saved raid team directly and check build/capability coverage without changing it."
+            "Choose a saved raid team to check its base-build buff/debuff coverage. Boss context is optional and only applied when explicitly supplied."
         )
 
     old_scope_parent = page.scope_combo.parentWidget()
@@ -292,20 +355,25 @@ def enhance_coverage_page(page) -> None:
 
     combo = QComboBox()
     combo.setMinimumWidth(190)
-    combo.setToolTip("Choose a saved Roster team. Coverage loads it directly; Optimization is not required.")
+    combo.setToolTip(
+        "Choose a saved Roster team. Coverage audits its assigned base builds directly; no Boss selection or Optimization step is required."
+    )
     page.health_check_team_combo = combo
     page.header.add_context_widget(page._context_field("TEAM", combo))
 
-    run = QPushButton("Run Health Check")
+    run = QPushButton("Check Base Builds")
     run.setProperty("primary", True)
-    run.clicked.connect(lambda *_: run_team_health_check(page))
+    run.setToolTip("Audit the selected team's assigned base builds for static buff/debuff coverage.")
+    run.clicked.connect(lambda *_: run_team_health_check(page, use_context=False))
     page.health_check_run_button = run
     page.header.add_context_widget(run)
 
     _sync_team_choices(page)
-    combo.currentIndexChanged.connect(lambda *_: run_team_health_check(page))
+    combo.currentIndexChanged.connect(
+        lambda *_: run_team_health_check(page, use_context=False)
+    )
     page.scope_note.setText(
-        "Choose a raid team above for a direct health check, or leave All Saved Builds selected for a library-wide audit."
+        "Choose a raid team above to audit its assigned base builds. Boss and Team/Boss Context Variants are ignored in this direct Coverage view."
     )
 
 
