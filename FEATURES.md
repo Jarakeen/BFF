@@ -240,6 +240,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Provider workload analysis
 - Provider workload frontier analysis
 - Rotation-aware provider workload analysis
+- Optional encounter-scoped BTV benchmark calibration can annotate provider uptime, gaps, overlap, and unresolved denominator differences without becoming canonical ESO mechanics
 - Roster intake carries selected Team/Boss context and each player's effective raid job while still placing people into Tank/Healer/DD chairs by their roster role
 
 ---
@@ -260,6 +261,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Explainable optimization results
 - Candidate build modification / injection
 - Preview optimization changes before applying them
+- Shared provider workload explanations can include explicitly attached encounter-scoped BTV benchmark calibration while preserving calibration/mechanics boundaries
 
 ---
 
