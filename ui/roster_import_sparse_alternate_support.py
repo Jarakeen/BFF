@@ -23,6 +23,10 @@ def _text(value: object) -> str:
     return " ".join(str(value or "").strip().split())
 
 
+def _identity_key(value: object) -> str:
+    return _text(value).lstrip("@").casefold()
+
+
 def _family_key(candidate, member) -> tuple[str, str]:
     eso_class = _text(getattr(candidate, "eso_class", "") or getattr(member, "eso_class", "")).casefold()
     role = _text(getattr(candidate, "role", "") or getattr(member, "primary_role", "")).casefold()
@@ -109,7 +113,7 @@ def _split_multi_family_members(plan) -> None:
         original_class = _text(getattr(member, "eso_class", "")).casefold()
         original_character = _text(getattr(member, "character_name", ""))
         first = True
-        for (eso_class_key, role_key), family_builds in groups.items():
+        for (eso_class_key, _role_key), family_builds in groups.items():
             clone = member if first else deepcopy(member)
             first = False
             clone.builds = family_builds
@@ -133,6 +137,54 @@ def _prepare_plan(plan) -> None:
         _inherit_family_alternates(member)
 
 
+def _repair_team_assignments(plan, build_service) -> set[str]:
+    """Attach imported builds by exact legacy identity when duplicate character rows exist."""
+    team_name = _text(getattr(plan, "team_name", ""))
+    if not team_name:
+        return set()
+
+    catalog_service = build_service.canonical.catalog_service
+    catalog = catalog_service.load()
+    repaired_build_names: set[str] = set()
+
+    for member in getattr(plan, "members", ()):
+        if not bool(getattr(member, "selected", True)):
+            continue
+        gamertag = _identity_key(getattr(member, "gamertag", ""))
+        character_name = _text(getattr(member, "character_name", "")).casefold()
+        if not gamertag or not character_name:
+            continue
+
+        for candidate in getattr(member, "builds", ()) or ():
+            build_name = _text(getattr(candidate, "build_name", ""))
+            if not build_name:
+                continue
+            matches = []
+            for record in catalog.get("builds", []):
+                if not isinstance(record, dict):
+                    continue
+                legacy = record.get("legacy") if isinstance(record.get("legacy"), dict) else record.get("payload")
+                legacy = legacy if isinstance(legacy, dict) else {}
+                if (
+                    _identity_key(legacy.get("Gamertag")) == gamertag
+                    and _text(legacy.get("Name")).casefold() == character_name
+                    and _text(record.get("name") or legacy.get("BuildName")).casefold() == build_name.casefold()
+                ):
+                    matches.append(record)
+            if len(matches) != 1:
+                continue
+            catalog_service.assign_build_to_team(
+                build_id=_text(matches[0].get("build_id")),
+                team_name=team_name,
+                raid_role=_text(getattr(member, "primary_role", "") or getattr(candidate, "role", "")),
+                slot_name=_text(getattr(candidate, "assignment", "") or getattr(member, "assignment", "")),
+                notes="Imported from roster workbook",
+            )
+            repaired_build_names.add(build_name.casefold())
+
+    return repaired_build_names
+
+
 def resolve_import_characters_sparse(plan, roster_service, build_service) -> None:
     if not callable(_ORIGINAL_RESOLVE_IMPORT_CHARACTERS):
         raise RuntimeError("Sparse alternate roster import bridge is not installed.")
@@ -146,11 +198,35 @@ def apply_roster_import_sparse(plan, roster_service, build_service, *, import_bu
     # resolve_import_characters normally prepared the plan already. Re-running is
     # safe and makes direct/non-UI callers deterministic too.
     _prepare_plan(plan)
-    return _ORIGINAL_APPLY_ROSTER_IMPORT(
+    result = _ORIGINAL_APPLY_ROSTER_IMPORT(
         plan,
         roster_service,
         build_service,
         import_builds=import_builds,
+    )
+    if not import_builds:
+        return result
+
+    repaired = _repair_team_assignments(plan, build_service)
+    if not repaired:
+        return result
+
+    warnings = tuple(
+        warning
+        for warning in result.warnings
+        if not (
+            "could not uniquely attach its team assignment" in warning.casefold()
+            and any(name in warning.casefold() for name in repaired)
+        )
+    )
+    if warnings == result.warnings:
+        return result
+    return type(result)(
+        created_roster_members=result.created_roster_members,
+        updated_roster_members=result.updated_roster_members,
+        imported_builds=result.imported_builds,
+        skipped_builds=result.skipped_builds,
+        warnings=warnings,
     )
 
 
