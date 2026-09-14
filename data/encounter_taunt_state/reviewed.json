@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "states": [
+    {
+      "state_id": "taunt",
+      "ability_id": 38254,
+      "effect_name": "Taunt",
+      "scope": "source_target_debuff_state",
+      "reviewed": true,
+      "evidence": [
+        "ESO Logs Xalvakka add research: ability 38254 repeatedly applies/removes on named Iron Atronach and Daedroth instances",
+        "Observed closed intervals repeatedly cluster near 15 seconds while shorter intervals remain explicit early removals/replacements",
+        "LUI Extended current changelog identifies debuff id 38254 as the player taunt debuff on the reticle target"
+      ],
+      "interpretation": "Ability 38254 is reviewed as the logged Taunt debuff state. Its target/source-scoped apply/remove lifecycle can prove observed taunt-state intervals. The state does not by itself prove exclusive AI aggro behavior outside the logged debuff lifecycle."
+    }
+  ]
+}
