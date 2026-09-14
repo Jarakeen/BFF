@@ -25,6 +25,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Main overview keeps four cards in each dashboard row at desktop widths; compact labeled attribute meters use red Health, green Stamina, and blue Magicka in both visual themes
 - Current Gear also lists the active profile's bookmarked sets, keeping the main dashboard's detail and goal rows at four cards each
 - Main and Coverage share canonical saved-build effect evidence: available static sources, conditional sources, effects not identified, and unmapped or unaudited effects remain distinct; Coverage filters work without inferring assignments or uptime
+- Coverage can load any saved Roster team directly and audit its assigned **base builds** for static buff/debuff coverage without requiring a Boss, Assignments, Comp Maker, or Optimization; contextual Team/Boss variants are only applied when a contextual workflow explicitly requests them
 - Raid Engine dashboard sends explicit Team Optimization slot/build selections into a labeled Coverage scope; Coverage can switch between that team snapshot and all saved builds without inferring provider assignments
 - Raid Engine dashboard summarizes static coverage evidence with distinct available, conditional, not-identified, and unverified labels rather than treating an unknown effect as missing
 - Empty boss, mechanic, positioning, and Raid Map panels use distinct compact field-art placeholders for Foundry and Rylo, with visible labels that distinguish decorative art from reviewed encounter evidence
@@ -523,6 +524,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Data coverage audits
 - Missing / unresolved data reporting
 - Local raid-workbook import normalizes human spreadsheet layouts into reviewed roster/build candidates without writing source workbooks or resetting the application database
+
 ---
 
 ## ESO Logs / Real Combat Validation
