@@ -106,6 +106,7 @@ def install() -> None:
     from ui.scrollable_message_dialog_support import install as install_scrollable_message_dialog_support
     from ui.roster_import_workflow import install as install_roster_import_support
     from ui.roster_import_identity_resolution_support import install as install_roster_import_identity_resolution_support
+    from ui.roster_gear_set_alias_import_support import install as install_roster_gear_set_alias_import_support
     from ui.roster_import_match_preview_support import install as install_roster_import_match_preview_support
     from ui.player_build_navigation_support import install as install_player_build_navigation_support
     from ui.rotation_dashboard_layout_support import install as install_rotation_dashboard_layout_support
@@ -134,6 +135,10 @@ def install() -> None:
     # @ stored by FoundryDock. Resolve equivalent existing identities before the
     # preview asks the user to do anything manually.
     install_roster_import_identity_resolution_support()
+    # Normalize roster shorthand such as RO/Pill/SoB/LE/Oz through the canonical
+    # gear-set table, preferring Perfected variants when one exists. This layer
+    # also repairs recognized shorthand left behind by older imports.
+    install_roster_gear_set_alias_import_support()
     # The preview should make repeat imports obvious: existing identities are
     # reused, while new characters/builds and genuinely ambiguous rows are labeled.
     install_roster_import_match_preview_support()
