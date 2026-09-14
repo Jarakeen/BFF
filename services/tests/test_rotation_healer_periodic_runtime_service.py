@@ -1,3 +1,4 @@
+from minmax.runtime_output_eligibility import RuntimeOutputEligibilityRule
 from services.rotation_healer_action_healing_service import RotationHealerPeriodicHealSeed
 from services.rotation_healer_periodic_runtime_service import (
     RotationHealerPeriodicMagnitudePolicy,
@@ -5,6 +6,10 @@ from services.rotation_healer_periodic_runtime_service import (
     RotationHealerPeriodicRefreshPolicy,
     RotationHealerPeriodicRuntimeEvidence,
     RotationHealerPeriodicRuntimeService,
+)
+from services.rotation_runtime_output_eligibility_service import (
+    RotationRuntimeOutputConditionRule,
+    RotationRuntimeOutputEligibilityService,
 )
 
 
@@ -31,6 +36,23 @@ def _evidence(**overrides):
     )
     values.update(overrides)
     return RotationHealerPeriodicRuntimeEvidence(**values)
+
+
+def _conditional_service():
+    return RotationHealerPeriodicRuntimeService(
+        output_eligibility_service=RotationRuntimeOutputEligibilityService(
+            rules=(
+                RotationRuntimeOutputConditionRule(
+                    skill_entity_id="healing_spring",
+                    coefficient_number=2,
+                    eligibility=RuntimeOutputEligibilityRule(
+                        required_conditions=("target_in_heal_area",),
+                        source="reviewed test healing-area condition",
+                    ),
+                ),
+            )
+        )
+    )
 
 
 def test_single_periodic_application_expands_from_explicit_timing_evidence():
@@ -224,3 +246,45 @@ def test_unresolved_tick_magnitude_fails_closed_for_that_occurrence():
     assert result.unresolved == (
         "Healing Spring coefficient 2 at 2s: runtime build context unavailable",
     )
+
+
+def test_reviewed_conditional_heal_tick_requires_exact_runtime_context():
+    result = _conditional_service().project(
+        seeds=(_seed(),),
+        evidence=(_evidence(),),
+        horizon_seconds=10.0,
+    )
+
+    assert result.events == ()
+    assert len(result.unresolved) == 4
+    assert all("authoritative ConditionContext" in item for item in result.unresolved)
+    assert "at 1s" in result.unresolved[0]
+    assert "at 4s" in result.unresolved[-1]
+
+
+def test_reviewed_conditional_heal_tick_drops_known_unsatisfied_occurrences_only():
+    result = _conditional_service().project(
+        seeds=(_seed(),),
+        evidence=(_evidence(),),
+        horizon_seconds=10.0,
+        condition_context_resolver=lambda event: (
+            frozenset({"target_in_heal_area"})
+            if event.time_seconds in {1.0, 3.0}
+            else frozenset()
+        ),
+    )
+
+    assert result.unresolved == ()
+    assert [event.time_seconds for event in result.events] == [1.0, 3.0]
+
+
+def test_reviewed_conditional_heal_tick_allows_satisfied_runtime_context():
+    result = _conditional_service().project(
+        seeds=(_seed(),),
+        evidence=(_evidence(),),
+        horizon_seconds=10.0,
+        condition_context_resolver=lambda _event: frozenset({"target_in_heal_area"}),
+    )
+
+    assert result.unresolved == ()
+    assert [event.time_seconds for event in result.events] == [1.0, 2.0, 3.0, 4.0]
