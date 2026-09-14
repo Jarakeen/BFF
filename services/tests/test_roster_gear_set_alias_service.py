@@ -42,6 +42,7 @@ def test_user_requested_roster_aliases_resolve(tmp_path: Path) -> None:
     db = _database(tmp_path)
     expected = {
         "Pill": "Pillager's Profit",
+        "Pilly": "Pillager's Profit",
         "SoB": "Symphony of Blades",
         "Oz": "Ozezan the Inferno",
         "LE": "Lucent Echoes",
