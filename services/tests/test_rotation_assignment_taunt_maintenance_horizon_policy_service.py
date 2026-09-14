@@ -1,3 +1,7 @@
+from services.encounter_health_threshold_projection_service import (
+    EncounterHealthThresholdProjection,
+    EncounterThresholdClockPoint,
+)
 from services.rotation_assignment_taunt_maintenance_horizon_policy_service import (
     RotationAssignmentTauntMaintenanceHorizonPolicy,
     RotationAssignmentTauntMaintenanceHorizonPolicyService,
@@ -6,7 +10,13 @@ from services.rotation_assignment_taunt_maintenance_horizon_policy_service impor
 from services.rotation_tank_encounter_horizon_service import RotationTankEncounterHorizon
 
 
-def _policy(*, start: float = 0.0, source_skill_name="Pierce Armor", bar="front"):
+def _policy(
+    *,
+    start: float = 0.0,
+    source_skill_name="Pierce Armor",
+    bar="front",
+    end_reference="encounter_end",
+):
     return RotationAssignmentTauntMaintenanceHorizonPolicy(
         requirement_id="xalvakka:tank:boss_taunt",
         encounter_id="xalvakka",
@@ -18,7 +28,7 @@ def _policy(*, start: float = 0.0, source_skill_name="Pierce Armor", bar="front"
                 occurrence_id="boss_ownership",
                 target_key="boss",
                 active_start_seconds=start,
-                end_reference="encounter_end",
+                end_reference=end_reference,
                 bar=bar,
             ),
         ),
@@ -31,6 +41,26 @@ def _horizon(end=107.116512):
         end_seconds=end,
         resolved=True,
         evidence=("projected fight end",),
+    )
+
+
+def _threshold_projection(*, fraction=0.70, seconds=32.13, resolved=True):
+    return EncounterHealthThresholdProjection(
+        encounter_id="xalvakka",
+        difficulty="hardmode",
+        maximum_health=214233024,
+        trajectory=None,
+        points=(
+            EncounterThresholdClockPoint(
+                fact_key="retreat_thresholds",
+                label="Retreat Thresholds",
+                threshold_fraction=fraction,
+                time_seconds=seconds if resolved else None,
+                resolved=resolved,
+                reason="projected from caller-supplied raid damage trajectory",
+            ),
+        ),
+        unresolved=(),
     )
 
 
@@ -49,6 +79,70 @@ def test_resolved_horizon_materializes_existing_numeric_maintenance_policy():
     assert result.policy.windows[0].target_key == "boss"
     assert result.policy.windows[0].bar == "front"
     assert any("symbolic_endpoint=encounter_end" in row for row in result.evidence)
+
+
+def test_health_threshold_endpoint_materializes_from_canonical_threshold_clock_point():
+    unresolved_fight_end = RotationTankEncounterHorizon(
+        encounter_id="xalvakka",
+        end_seconds=None,
+        resolved=False,
+        unresolved=("fight end intentionally unavailable",),
+    )
+
+    result = RotationAssignmentTauntMaintenanceHorizonPolicyService().materialize(
+        policy=_policy(end_reference="health_threshold:70%"),
+        horizon=unresolved_fight_end,
+        health_threshold_projection=_threshold_projection(),
+    )
+
+    assert result.resolved is True
+    assert result.policy is not None
+    assert result.policy.windows[0].active_end_seconds == 32.13
+    assert "symbolic_endpoint=health_threshold:70%:32.13" in result.evidence
+    assert "threshold_fact=retreat_thresholds" in result.evidence
+
+
+def test_health_threshold_endpoint_requires_exactly_one_matching_clock_point():
+    projection = EncounterHealthThresholdProjection(
+        encounter_id="xalvakka",
+        difficulty="hardmode",
+        maximum_health=214233024,
+        trajectory=None,
+        points=(),
+        unresolved=(),
+    )
+
+    result = RotationAssignmentTauntMaintenanceHorizonPolicyService().materialize(
+        policy=_policy(end_reference="health_threshold:70%"),
+        horizon=_horizon(),
+        health_threshold_projection=projection,
+    )
+
+    assert result.resolved is False
+    assert result.policy is None
+    assert "expected exactly one canonical 70%" in result.unresolved[0]
+
+
+def test_unresolved_health_threshold_endpoint_fails_closed():
+    result = RotationAssignmentTauntMaintenanceHorizonPolicyService().materialize(
+        policy=_policy(end_reference="health_threshold:70%"),
+        horizon=_horizon(),
+        health_threshold_projection=_threshold_projection(resolved=False),
+    )
+
+    assert result.resolved is False
+    assert result.policy is None
+    assert "clock point is unresolved" in result.unresolved[0]
+
+
+def test_unknown_symbolic_endpoint_is_rejected():
+    try:
+        _policy(end_reference="phase_2_probably")
+    except ValueError as exc:
+        assert "encounter_end" in str(exc)
+        assert "health_threshold" in str(exc)
+    else:
+        raise AssertionError("unreviewed symbolic endpoint must fail closed")
 
 
 def test_skill_agnostic_symbolic_policy_binds_canonical_provider_skill_and_bar():
