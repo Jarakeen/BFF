@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from types import SimpleNamespace
 
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
@@ -45,6 +46,10 @@ def test_saved_rotation_loader_uses_canonical_build_id_and_rebinds_display_ident
             assert build_id == "canonical-magrat-df"
             return _plan()
 
+    class _DataDir:
+        def __truediv__(self, _name):
+            return _name
+
     monkeypatch.setattr(support, "BuildService", _BuildService)
     monkeypatch.setattr(support, "BuildRotationArtifactService", _Artifacts)
     monkeypatch.setattr(
@@ -56,13 +61,6 @@ def test_saved_rotation_loader_uses_canonical_build_id_and_rebinds_display_ident
             else None
         ),
     )
-    monkeypatch.setattr(support, "get_data_dir", lambda: SimpleNamespace(__truediv__=None))
-
-    # Path composition only needs an object supporting `/`; avoid touching disk.
-    class _DataDir:
-        def __truediv__(self, _name):
-            return _name
-
     monkeypatch.setattr(support, "get_data_dir", lambda: _DataDir())
 
     plans = support._saved_rotation_plans((selected,))
@@ -100,6 +98,35 @@ def test_saved_rotation_loader_ignores_selected_build_without_saved_artifact(mon
     monkeypatch.setattr(support, "get_data_dir", lambda: _DataDir())
 
     assert support._saved_rotation_plans((selected,)) == ()
+
+
+def test_unspecified_rotation_plans_auto_load_saved_team_plans(monkeypatch):
+    selected = object()
+    saved = (_plan("Magrat", "DF Healer"),)
+    captured = {}
+
+    def _original(page, **kwargs):
+        captured.update(kwargs)
+        return "result"
+
+    support._ORIGINAL_COMP_GENERATE = _original
+    monkeypatch.setattr(support, "_saved_rotation_plans", lambda builds: saved if builds == (selected,) else ())
+    monkeypatch.setitem(
+        sys.modules,
+        "ui.team_provider_workload_support",
+        SimpleNamespace(_comp_selected_saved_builds=lambda page: (selected,)),
+    )
+
+    result = support._comp_generate_with_saved_rotations(
+        object(),
+        rotation_plans=None,
+        progression_by_identity={},
+        alternatives=(),
+        policy=None,
+    )
+
+    assert result == "result"
+    assert captured["rotation_plans"] == saved
 
 
 def test_explicit_rotation_plans_bypass_saved_plan_discovery(monkeypatch):
