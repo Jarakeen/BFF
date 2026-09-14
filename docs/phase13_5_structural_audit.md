@@ -73,16 +73,39 @@ Audit in progress.
 
 ---
 
+### F004 — Rotation sustain and provider workload calculate action costs independently
+
+**Category:** duplicate/competing action-cost and resource authority
+
+**Files reviewed:**
+- `services/rotation_sustain_service.py`
+- Phase 4 `evaluate_named_build_sustain` path
+- `services/team_provider_canonical_workload_service.py`
+- `minmax/ability_cost_repository.py`
+- `minmax/build_action_cost_modifiers.py`
+- `minmax/build_final_action_cost.py`
+
+**Finding:** rotation sustain and provider workload expose separate consumer services and both resolve scheduled action costs, so the audit checked whether they maintain independent cost arithmetic.
+
+**Authority review:** no competing cost formula was found. Both paths resolve canonical base costs through `AbilityCostRepository` and reuse build cost-modifier/final-action-cost mechanics rather than maintaining role-local numeric rules. Provider workload directly composes `BuildFinalActionCostResolver`; rotation sustain delegates through the Phase 4 sustain engine using the same base-cost and modifier authorities. Provider-specific handling of secondary paid Ultimate activations remains an explicit semantic branch, not an alternative ordinary skill-cost formula.
+
+**Identity review:** `TeamProviderCanonicalWorkloadService` validates `PlayerBuild.Name` + `BuildName`; this matches the canonical `PlayerBuild` model, which does not own a separate `CharacterName` field. The broader defensive identity fallback used by rotation sustain is compatibility around injected/legacy-shaped objects, not a competing canonical field.
+
+**Disposition:** REVIEWED / NO CONFLICT FOUND.
+
+**Closeout boundary:** new rotation/provider consumers must reuse the canonical base-cost and final build-modifier services. Role-local hard-coded costs or duplicate cost modifier tables are not permitted.
+
+---
+
 ## Audit queue
 
 The remaining Phase 13.5 audit will review, in order:
 
-1. action-cost/resource authority and legacy helpers;
-2. taunt/target/recipient semantics across tank services;
-3. effect/proc/runtime-condition authority and hard-coded dictionaries;
-4. Character -> Build -> Team identity reconstruction or fallback paths;
-5. stale rotation tests, aliases, wrappers, temporary shims, and feature flags;
-6. unused/dead Phase 13 services and catalog entries;
-7. documentation/configuration drift;
-8. focused regression after each material cleanup;
-9. full regression checkpoint before Phase 13.5 closeout.
+1. taunt/target/recipient semantics across tank services;
+2. effect/proc/runtime-condition authority and hard-coded dictionaries;
+3. Character -> Build -> Team identity reconstruction or fallback paths;
+4. stale rotation tests, aliases, wrappers, temporary shims, and feature flags;
+5. unused/dead Phase 13 services and catalog entries;
+6. documentation/configuration drift;
+7. focused regression after each material cleanup;
+8. full regression checkpoint before Phase 13.5 closeout.
