@@ -10,7 +10,8 @@ forcing ordinary users to invent database-perfect identity by hand.
 
 Roster personnel identity remains player-level during import: a different/new
 character name for an already-known gamertag must not create a second copy of that
-person in Personnel. The imported character/build can still be saved canonically.
+person in Personnel. Explicitly learned player aliases are also accepted as exact
+identity evidence; aliases are never guessed from similarity.
 """
 
 _INSTALLED = False
@@ -90,6 +91,7 @@ def _normalize_role_with_shorthand(value: object) -> str:
 
 
 def _known_characters(roster_service, build_service) -> dict[str, list[tuple[str, str]]]:
+    from services.roster_player_identity_service import RosterPlayerIdentityService
     from ui.roster_import_workflow import _text
 
     result: dict[str, list[tuple[str, str]]] = {}
@@ -119,8 +121,13 @@ def _known_characters(roster_service, build_service) -> dict[str, list[tuple[str
         )
         add(gamertag, character.get("name"), character.get("eso_class"))
 
+    identity_service = RosterPlayerIdentityService(roster_service.db)
     for member in roster_service.list_members():
         add(member.PlayerName, member.CharacterName, member.EsoClass)
+        if member.Id is None:
+            continue
+        for alias in identity_service.aliases_for_member(int(member.Id)):
+            add(alias.alias, member.CharacterName, member.EsoClass)
 
     return result
 
@@ -215,11 +222,14 @@ def _merge_team_names(existing: object, incoming: object) -> str:
 
 
 class _PlayerUniqueRosterImportFacade:
-    """Prevent a new toon/build from cloning an existing Personnel player row."""
+    """Prevent a known current name or learned alias from cloning Personnel."""
 
     def __init__(self, roster_service):
+        from services.roster_player_identity_service import RosterPlayerIdentityService
+
         self._service = roster_service
         self._known_members = list(roster_service.list_members())
+        self._identity_service = RosterPlayerIdentityService(roster_service.db)
         self.merged_existing_count = 0
 
     def __getattr__(self, name):
@@ -229,22 +239,18 @@ class _PlayerUniqueRosterImportFacade:
         return list(self._known_members)
 
     def create_member(self, member):
-        matches = [
-            existing
-            for existing in self._known_members
-            if _identity_key(getattr(existing, "PlayerName", ""))
-            == _identity_key(getattr(member, "PlayerName", ""))
-        ]
+        matches = self._identity_service.matching_members(
+            getattr(member, "PlayerName", "")
+        )
         if len(matches) != 1:
             created_id = self._service.create_member(member)
             member.Id = created_id
             self._known_members.append(member)
             return created_id
 
-        # Same gamertag means same person. Preserve the existing Personnel row's
-        # character label instead of replacing it with a newly imported toon name;
-        # the canonical Player -> Character -> Build catalog still receives the
-        # imported character/build through the normal import path.
+        # Exact current-name or explicit alias evidence means same human. Preserve
+        # the existing Personnel row while canonical build import receives the
+        # imported character/build through the normal path.
         target = matches[0]
         target.Team = _merge_team_names(getattr(target, "Team", ""), getattr(member, "Team", ""))
         if not str(getattr(target, "EsoClass", "") or "").strip():
@@ -261,7 +267,7 @@ class _PlayerUniqueRosterImportFacade:
 
 
 def apply_roster_import_player_unique(plan, roster_service, build_service, *, import_builds: bool = True):
-    """Run the normal importer while treating gamertag as the Personnel identity."""
+    """Run the normal importer while treating known player aliases as identity."""
     if not callable(_ORIGINAL_APPLY_ROSTER_IMPORT):
         raise RuntimeError("Roster import bridge is not installed.")
 
