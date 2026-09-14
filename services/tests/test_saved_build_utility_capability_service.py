@@ -65,6 +65,35 @@ def test_slotted_canonical_taunt_utility_is_supported():
     assert "Pierce Armor (front)" in result.source
 
 
+def test_structured_provider_source_preserves_exact_skill_and_bar_without_parsing_prose():
+    service = SavedBuildUtilityCapabilityService(
+        "eso.db",
+        coefficient_repository=_Coefficients(
+            {
+                "Pierce Armor": SimpleNamespace(rank=_rank(10), unresolved=()),
+                "Inner Rage": SimpleNamespace(rank=_rank(11), unresolved=()),
+            }
+        ),
+        utility_repository=_Utility(
+            {
+                (10, 1): (_effect(SkillComponentUtilityEffectType.TAUNT),),
+                (11, 1): (_effect(SkillComponentUtilityEffectType.TAUNT),),
+            }
+        ),
+    )
+
+    result = service.provider_sources_for(
+        build=_build(front=("Pierce Armor",), back=("Inner Rage",)),
+        capability_type="taunt",
+    )
+
+    assert result.unresolved == ()
+    assert [(row.skill_name, row.bar) for row in result.sources] == [
+        ("Pierce Armor", "front"),
+        ("Inner Rage", "back"),
+    ]
+
+
 def test_all_resolved_slotted_skills_without_taunt_are_unsupported():
     service = SavedBuildUtilityCapabilityService(
         "eso.db",
@@ -118,11 +147,19 @@ def test_unknown_utility_capability_mapping_stays_unknown():
 def test_real_database_pierce_armor_saved_build_proves_taunt_capability():
     assert DEFAULT_DATABASE.is_file(), f"canonical ESO database is missing: {DEFAULT_DATABASE}"
     build = _build(front=("Pierce Armor",))
+    service = SavedBuildUtilityCapabilityService(DEFAULT_DATABASE)
 
-    result = SavedBuildUtilityCapabilityService(DEFAULT_DATABASE).evidence_for(
+    result = service.evidence_for(
         build=build,
         capability_types=("taunt",),
     )[0]
+    structured = service.provider_sources_for(
+        build=build,
+        capability_type="taunt",
+    )
 
     assert result.assessment is CapabilityAssessment.SUPPORTED, result.source
     assert "Pierce Armor (front)" in result.source
+    assert len(structured.sources) == 1
+    assert structured.sources[0].skill_name == "Pierce Armor"
+    assert structured.sources[0].bar == "front"
