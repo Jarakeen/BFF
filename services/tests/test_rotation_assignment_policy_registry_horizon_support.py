@@ -52,6 +52,17 @@ def test_registry_keeps_symbolic_encounter_end_policy_separate_from_numeric_poli
     assert policy.windows[0].active_start_seconds == 0.0
 
 
+def test_registry_accepts_reviewed_health_threshold_symbolic_endpoint(tmp_path):
+    row = _symbolic_row()
+    row["windows"][0]["occurrence_id"] = "phase_1_boss_ownership"
+    row["windows"][0]["end_reference"] = "health_threshold:70%"
+
+    service = RotationAssignmentPolicyRegistryService(_write(tmp_path, [row]))
+    policy = service.for_encounter("xalvakka").taunt_maintenance_horizon_policies[0]
+
+    assert policy.windows[0].end_reference == "health_threshold:70%"
+
+
 def test_registry_allows_symbolic_policy_to_leave_build_owned_taunt_source_unbound(tmp_path):
     row = _symbolic_row()
     row.pop("source_skill_name")
