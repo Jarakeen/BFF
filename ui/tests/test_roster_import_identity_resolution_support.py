@@ -55,6 +55,19 @@ def test_roster_import_accepts_class_and_role_shorthand_aliases():
     assert "roster_import_workflow._normalize_role = _normalize_role_with_shorthand" in source
 
 
+def test_roster_import_keeps_personnel_unique_by_gamertag_when_character_differs():
+    source = Path("ui/roster_import_identity_resolution_support.py").read_text(encoding="utf-8")
+
+    assert "class _PlayerUniqueRosterImportFacade" in source
+    assert "Same gamertag means same person" in source
+    assert "target.Team = _merge_team_names" in source
+    assert "self._service.update_member(target)" in source
+    assert "self.merged_existing_count += 1" in source
+    assert "roster_import_workflow.apply_roster_import = apply_roster_import_player_unique" in source
+    assert "created_roster_members=max(0, result.created_roster_members - merged)" in source
+    assert "updated_roster_members=result.updated_roster_members + merged" in source
+
+
 def test_roster_import_identity_support_is_installed_after_import_workflow():
     source = Path("ui/operations_console_schedule_support.py").read_text(encoding="utf-8")
 
