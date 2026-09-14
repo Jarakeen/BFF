@@ -29,6 +29,9 @@ from services.rotation_observation_catalog_descriptors import (
     ROTATION_OBSERVATION_SERVICE_DESCRIPTORS,
 )
 from services.rotation_tank_catalog_descriptors import ROTATION_TANK_SERVICE_DESCRIPTORS
+from services.rotation_tank_integration_catalog_descriptors import (
+    ROTATION_TANK_INTEGRATION_SERVICE_DESCRIPTORS,
+)
 from services.team_prescription_catalog_descriptors import (
     TEAM_PRESCRIPTION_SERVICE_DESCRIPTORS,
 )
@@ -148,6 +151,7 @@ COMP_MAKER_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
     *ROTATION_GAMEPLAY_POLICY_SERVICE_DESCRIPTORS,
     *ROTATION_OBSERVATION_SERVICE_DESCRIPTORS,
     *ROTATION_TANK_SERVICE_DESCRIPTORS,
+    *ROTATION_TANK_INTEGRATION_SERVICE_DESCRIPTORS,
     *TEAM_PRESCRIPTION_SERVICE_DESCRIPTORS,
     *TEAM_PROVIDER_SERVICE_DESCRIPTORS,
     *TEAM_WORKFLOW_SERVICE_DESCRIPTORS,
