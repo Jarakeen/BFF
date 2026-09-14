@@ -152,23 +152,30 @@ ROTATION_TANK_INTEGRATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         domain="raid_plan",
         purpose=(
             "Project reviewed Tank add-activity and soft priority context into seat-owned "
-            "runtime-triggered Raid Plan responsibilities without manufacturing Rotation timestamps."
+            "runtime-triggered Raid Plan responsibilities, and apply non-conflicting projected "
+            "intent to an immutable Raid Plan without manufacturing Rotation timestamps."
         ),
         implementation_path="services.raid_plan_tank_triggered_responsibility_service",
         inputs=(
+            "RaidPlan",
             "RaidPlanSeatId",
             "RotationTankEncounterAddActivityTrigger",
             "RotationTankEncounterPriorityCue",
         ),
         outputs=(
             "RaidPlanTankTriggeredResponsibilityProjection",
+            "RaidPlanTankTriggeredResponsibilityApplication",
             "RaidPlanTriggeredResponsibility",
+            "RaidPlan",
         ),
         dependencies=(
             "rotation.tank.encounter_add_activity_context",
             "rotation.tank.encounter_priority_context",
         ),
-        responsibilities=("raid_plan_tank_runtime_triggered_responsibility_projection",),
+        responsibilities=(
+            "raid_plan_tank_runtime_triggered_responsibility_projection",
+            "raid_plan_tank_runtime_triggered_responsibility_application",
+        ),
         roles=("Tank",),
         behavior=ServiceBehavior.DETERMINISTIC,
         encounter_aware=True,
@@ -176,7 +183,8 @@ ROTATION_TANK_INTEGRATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         notes=(
             "Only reviewed add activity paired with unambiguous reviewed_add_activity priority "
             "context becomes plan intent. Responsibilities requiring additional encounter context "
-            "remain unresolved, and no output from this service carries time_seconds or hard policy."
+            "remain unresolved. Existing conflicting Raid Plan intent is preserved rather than "
+            "silently overwritten, and no output from this service carries time_seconds or hard policy."
         ),
     ),
 )
