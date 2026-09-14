@@ -1,6 +1,10 @@
 import pytest
 
-from models.raid_plan import RaidPlan, RaidPlanMember
+from models.raid_plan import (
+    RaidPlan,
+    RaidPlanMember,
+    RaidPlanTriggeredResponsibility,
+)
 
 
 def test_raid_plan_allows_gamertag_before_character_role_or_build() -> None:
@@ -106,3 +110,101 @@ def test_duplicate_seat_ids_are_rejected_case_insensitively() -> None:
                 RaidPlanMember(seat_id="dd-1", gamertag="Two"),
             ),
         )
+
+
+def test_raid_plan_can_own_runtime_triggered_responsibility_without_timestamp() -> None:
+    off_tank = RaidPlanMember(
+        seat_id="off-tank",
+        gamertag="TankTwo",
+        role="Tank",
+    )
+    responsibility = RaidPlanTriggeredResponsibility(
+        responsibility_id="xalvakka-iron-atronach-pickup",
+        seat_id="off-tank",
+        encounter_id="xalvakka",
+        trigger_key="iron_atronach_active",
+        directive="acquire_and_maintain_owned_add_when_active",
+        target_key="Iron Atronach",
+        required_capability_type="TAUNT",
+        source="reviewed add-activity boundary",
+    )
+
+    plan = RaidPlan(
+        plan_id="rg-plan",
+        trial_id="rockgrove",
+        name="Rockgrove Plan",
+        members=(off_tank,),
+        triggered_responsibilities=(responsibility,),
+    )
+
+    rows = plan.triggered_for_seat("OFF-TANK", encounter_id="XALVAKKA")
+    assert rows == (responsibility,)
+    assert rows[0].trigger_key == "iron_atronach_active"
+    assert rows[0].required_capability_type == "taunt"
+    assert not hasattr(rows[0], "time_seconds")
+
+
+def test_triggered_responsibility_cannot_reference_unknown_seat() -> None:
+    responsibility = RaidPlanTriggeredResponsibility(
+        responsibility_id="orphaned-add-pickup",
+        seat_id="off-tank",
+        encounter_id="xalvakka",
+        trigger_key="iron_atronach_active",
+        directive="acquire_add",
+    )
+
+    with pytest.raises(ValueError, match="references unknown seat_id"):
+        RaidPlan(
+            plan_id="rg-plan",
+            trial_id="rockgrove",
+            name="Rockgrove Plan",
+            triggered_responsibilities=(responsibility,),
+        )
+
+
+def test_triggered_responsibility_ids_are_unique_case_insensitively() -> None:
+    tank = RaidPlanMember(seat_id="off-tank", gamertag="TankTwo")
+    first = RaidPlanTriggeredResponsibility(
+        responsibility_id="Iron-Pickup",
+        seat_id="off-tank",
+        encounter_id="xalvakka",
+        trigger_key="iron_atronach_active",
+        directive="acquire_add",
+    )
+    duplicate = RaidPlanTriggeredResponsibility(
+        responsibility_id="iron-pickup",
+        seat_id="off-tank",
+        encounter_id="xalvakka",
+        trigger_key="iron_atronach_active",
+        directive="maintain_add",
+    )
+
+    with pytest.raises(ValueError, match="responsibility_id values must be unique"):
+        RaidPlan(
+            plan_id="rg-plan",
+            trial_id="rockgrove",
+            name="Rockgrove Plan",
+            members=(tank,),
+            triggered_responsibilities=(first, duplicate),
+        )
+
+
+def test_member_with_triggered_responsibility_cannot_be_removed_until_unassigned() -> None:
+    tank = RaidPlanMember(seat_id="off-tank", gamertag="TankTwo")
+    responsibility = RaidPlanTriggeredResponsibility(
+        responsibility_id="iron-pickup",
+        seat_id="off-tank",
+        encounter_id="xalvakka",
+        trigger_key="iron_atronach_active",
+        directive="acquire_add",
+    )
+    plan = RaidPlan(
+        plan_id="rg-plan",
+        trial_id="rockgrove",
+        name="Rockgrove Plan",
+        members=(tank,),
+        triggered_responsibilities=(responsibility,),
+    )
+
+    with pytest.raises(ValueError, match="triggered responsibilities still reference"):
+        plan.without_member("OFF-TANK")
