@@ -27,13 +27,21 @@ class RotationActionKind(str, Enum):
 
 @dataclass(frozen=True)
 class RotationAction:
-    """One deterministic action scheduled by the rotation engine."""
+    """One deterministic action scheduled by the rotation engine.
+
+    ``target_key`` is an optional caller-owned planning identity for the exact
+    encounter target of the action. It is deliberately opaque: the schedule contract
+    does not infer NPC identity, convert ESO Logs target IDs, or decide which target
+    a mechanic should use. That semantic evidence remains with the encounter/strategy
+    layer that supplied the key.
+    """
 
     time_seconds: float
     sequence: int
     kind: RotationActionKind
     name: str | None = None
     bar: str | None = None
+    target_key: str | None = None
 
     def __post_init__(self) -> None:
         time_seconds = float(self.time_seconds)
@@ -72,6 +80,12 @@ class RotationAction:
             object.__setattr__(self, "name", normalized_name)
         else:
             object.__setattr__(self, "name", None)
+
+        if self.target_key is not None:
+            target_key = str(self.target_key or "").strip()
+            if not target_key:
+                raise ValueError("rotation action target_key must be non-empty when supplied")
+            object.__setattr__(self, "target_key", target_key)
 
         if kind is RotationActionKind.BAR_SWAP and self.bar is None:
             raise ValueError("bar-swap rotation action requires the destination bar")
@@ -121,6 +135,7 @@ class RotationPlan:
                     action.kind.value,
                     action.name or "",
                     action.bar or "",
+                    action.target_key or "",
                 ),
             )
         )
