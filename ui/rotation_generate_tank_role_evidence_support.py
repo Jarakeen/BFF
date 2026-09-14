@@ -4,11 +4,12 @@ from __future__ import annotations
 
 The selected saved build proves role/build identity. Encounter-specific Tank
 responsibilities remain explicit caller-owned context: source-backed taunt
-applications, continuous target-specific taunt maintenance, and reviewed defensive
-responses. Optional strategy evidence is kept separate from those obligations and is
-used only to build a candidate-family projector when the caller supplied exact taunt,
-refresh, or defensive placement policy. This bridge never infers responsibilities or
-strategy from role, boss name, UI labels, or timing windows.
+applications, continuous target-specific taunt maintenance, reviewed defensive
+responses, and reviewed encounter actions that may be contextual rather than directly
+rotation-evaluable. Optional strategy evidence is kept separate from those obligations
+and is used only to build a candidate-family projector when the caller supplied exact
+taunt, refresh, or defensive placement policy. This bridge never infers
+responsibilities or strategy from role, boss name, UI labels, or timing windows.
 """
 
 from dataclasses import dataclass
@@ -17,6 +18,9 @@ from typing import Callable
 
 from engine.config import get_data_dir
 from models.build_model import PlayerBuild
+from services.raid_tank_encounter_responsibility_binding_service import (
+    RaidTankEncounterBoundResponsibility,
+)
 from services.rotation_candidate_canonical_plan_evidence_service import (
     RotationCandidateCanonicalPlanEvidenceService,
 )
@@ -64,6 +68,7 @@ class RotationGenerateTankObligationContext:
     """Exact encounter-scoped Tank obligations plus optional explicit strategy."""
 
     encounter_id: str
+    encounter_responsibilities: tuple[RaidTankEncounterBoundResponsibility, ...] = ()
     taunt_application_requirements: tuple[RotationTankTauntApplicationRequirement, ...] = ()
     taunt_maintenance_requirements: tuple[RotationTankTauntMaintenanceRequirement, ...] = ()
     defensive_obligations: tuple[RotationTankDefensiveObligation, ...] = ()
@@ -77,6 +82,7 @@ class RotationGenerateTankObligationContext:
             raise ValueError("Tank Generate obligation context requires encounter_id")
         object.__setattr__(self, "encounter_id", encounter_id)
         for field_name in (
+            "encounter_responsibilities",
             "taunt_application_requirements",
             "taunt_maintenance_requirements",
             "defensive_obligations",
@@ -85,6 +91,13 @@ class RotationGenerateTankObligationContext:
             "defensive_claims",
         ):
             object.__setattr__(self, field_name, tuple(getattr(self, field_name)))
+        if any(
+            row.encounter_id.casefold() != encounter_id.casefold()
+            for row in self.encounter_responsibilities
+        ):
+            raise ValueError(
+                "Tank Generate contextual responsibility encounter does not match obligation context"
+            )
 
     @property
     def has_obligations(self) -> bool:
@@ -93,6 +106,10 @@ class RotationGenerateTankObligationContext:
             or self.taunt_maintenance_requirements
             or self.defensive_obligations
         )
+
+    @property
+    def has_contextual_responsibilities(self) -> bool:
+        return bool(self.encounter_responsibilities)
 
     @property
     def has_strategy(self) -> bool:
@@ -196,6 +213,18 @@ class RotationGenerateTankRoleEvidenceSupport:
             resource=evidence_bundle.resource,
             role_hard_obligation_evidence_provider=hard_obligation,
         )
+
+        if context.has_contextual_responsibilities:
+            try:
+                setattr(
+                    plan_evidence,
+                    "tank_encounter_responsibilities",
+                    tuple(context.encounter_responsibilities),
+                )
+            except (AttributeError, TypeError) as exc:
+                raise TypeError(
+                    "Tank plan evidence provider cannot carry encounter responsibility metadata"
+                ) from exc
 
         if context.has_strategy:
             slot_evidence = self.action_slot_service.resolve(player_build)
