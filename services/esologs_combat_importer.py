@@ -32,6 +32,25 @@ query ImportPlayers(
 }
 """
 
+MASTER_DATA_QUERY = """
+query ImportReportActors($code: String!) {
+  reportData {
+    report(code: $code) {
+      masterData(translate: true) {
+        actors {
+          id
+          gameID
+          name
+          type
+          subType
+          petOwner
+        }
+      }
+    }
+  }
+}
+"""
+
 EVENT_QUERY = """
 query ImportEvents(
   $code: String!
@@ -74,6 +93,21 @@ class EsoLogsCombatImporter:
     def ensure_schema(self) -> None:
         self.connection.executescript(
             """
+            CREATE TABLE IF NOT EXISTS log_report_actor (
+                report_code TEXT NOT NULL,
+                actor_id INTEGER NOT NULL,
+                game_id INTEGER,
+                name TEXT,
+                actor_type TEXT,
+                actor_subtype TEXT,
+                pet_owner_id INTEGER,
+                raw_json TEXT NOT NULL,
+                PRIMARY KEY (report_code, actor_id)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_log_report_actor_name
+                ON log_report_actor(report_code, name);
+
             CREATE TABLE IF NOT EXISTS log_actor (
                 report_code TEXT NOT NULL,
                 fight_id INTEGER NOT NULL,
@@ -174,6 +208,57 @@ class EsoLogsCombatImporter:
 
     def _query(self, query: str, variables: dict[str, Any]) -> dict[str, Any]:
         return self.client._query(query, variables)
+
+    def import_report_actors(self, report_code: str) -> int:
+        """Persist report-level actor identities used by raw event source/target IDs.
+
+        ``playerDetails`` is intentionally kept as the fight-scoped player/build table.
+        Master-data actors are separate because their IDs are report-scoped and include
+        NPCs and pets as well as players. This identity layer lets runtime research name
+        hostile event targets without reconstructing names from tooltip or encounter
+        prose.
+        """
+
+        code = self.client.normalize_report_code(report_code)
+        data = self._query(MASTER_DATA_QUERY, {"code": code})
+        report = (data.get("reportData") or {}).get("report") or {}
+        master_data = report.get("masterData") or {}
+        actors = master_data.get("actors") or []
+        if not isinstance(actors, list):
+            actors = [actors]
+
+        self.connection.execute(
+            "DELETE FROM log_report_actor WHERE report_code = ?",
+            (code,),
+        )
+        count = 0
+        for actor in actors:
+            if not isinstance(actor, dict):
+                continue
+            actor_id = actor.get("id")
+            if actor_id is None:
+                continue
+            self.connection.execute(
+                """
+                INSERT INTO log_report_actor (
+                    report_code, actor_id, game_id, name, actor_type,
+                    actor_subtype, pet_owner_id, raw_json
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    code,
+                    int(actor_id),
+                    actor.get("gameID"),
+                    actor.get("name"),
+                    actor.get("type"),
+                    actor.get("subType"),
+                    actor.get("petOwner"),
+                    self._json(actor),
+                ),
+            )
+            count += 1
+        self.connection.commit()
+        return count
 
     def _fetch_events(
         self,
