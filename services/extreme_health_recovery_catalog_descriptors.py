@@ -1,6 +1,10 @@
 from __future__ import annotations
 
-"""Service-catalog descriptors for Extreme Health Recovery proof slices."""
+"""Service-catalog descriptors for Extreme Health Recovery proof slices.
+
+This module also registers shared Extreme gear-search responsibilities first needed
+by the Health Recovery closure work.  Their implementations remain objective-neutral.
+"""
 
 from services.service_catalog import (
     EvidenceClass,
@@ -33,6 +37,58 @@ EXTREME_HEALTH_RECOVERY_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         notes=(
             "Named-set armor pieces must support the requested weight; jewelry, "
             "weapons, and unassigned ordinary armor remain distinct physical slots."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.named_gear_armor_weight_filter",
+        domain="extreme",
+        purpose=(
+            "Project canonical named-set slot eligibility through a required armor "
+            "weight so ordinary shared realization/search can enforce that weight."
+        ),
+        implementation_path=(
+            "services.extreme_armor_weight_filtered_slot_eligibility_service"
+        ),
+        inputs=(
+            "ExtremeNamedGearSetSlotEligibilityCatalog",
+            "CanonicalEsoDatabase",
+            "RequiredArmorWeight",
+        ),
+        outputs=("ExtremeArmorWeightFilteredSlotEligibilityResult",),
+        dependencies=("extreme.named_gear_armor_weight_realization",),
+        responsibilities=("extreme_named_gear_armor_weight_eligibility_filter",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Armor eligibility is narrowed by canonical armor_type evidence while "
+            "jewelry and weapon eligibility remain unchanged."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.constrained_named_gear_exact_flat_search",
+        domain="extreme",
+        purpose=(
+            "Reuse canonical exact-flat named-gear branch-and-bound while requiring "
+            "one or more exact named-set breakpoints in every winning witness."
+        ),
+        implementation_path=(
+            "services.extreme_constrained_named_gear_exact_flat_search_service"
+        ),
+        inputs=(
+            "ExtremeGearSetTopologyCatalog",
+            "ExtremeGearSetBonusBreakpointCatalog",
+            "ExtremeNamedGearSetSlotEligibilityCatalog",
+            "ExtremeGearSetObjectiveRelevanceCatalog",
+            "ExtremeNamedGearRequirement",
+        ),
+        outputs=("ExtremeConstrainedNamedGearExactFlatSearchResult",),
+        responsibilities=("extreme_constrained_named_gear_exact_flat_search",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Constraint bonuses are derived search-order devices only and are removed "
+            "before objective scores leave the service; unresolved/non-flat required "
+            "set semantics fail closed."
         ),
     ),
 )
