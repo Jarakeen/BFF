@@ -9,7 +9,7 @@ import re
 from minmax.champion_point_static_repository import ChampionPointRecord
 from services.eso_character_progression_contract import ULTIMATE_RULES
 
-_NUMBER = r"((?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+))"
+_NUMBER = r"(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)"
 _SUPPORTED = {"health_recovery", "magicka_recovery", "stamina_recovery"}
 _RESOURCE = {
     "health_recovery": "health",
@@ -17,6 +17,7 @@ _RESOURCE = {
     "stamina_recovery": "stamina",
 }
 _RESOURCE_LIST = r"(?:health|magicka|stamina)(?:(?:\s*,\s*|\s+and\s+|\s*,\s*and\s+)(?:health|magicka|stamina)){0,2}"
+_REFERENCE_ONLY_TEMPLATE = r"for every\s+\d+(?:\.\d+)?\s+{resource}\s+recovery\s+you have"
 
 
 class ExtremeRecoveryChampionPointBranchKind(str, Enum):
@@ -58,22 +59,16 @@ class ExtremeRecoveryChampionPointBranchService:
         resource = _RESOURCE[objective]
         lowered = " ".join(str(text or "").casefold().split())
 
-        # Some CP stars use Recovery only as an input/threshold, e.g. Hope Infusion:
-        # "for every 300 Magicka Recovery you have."  Those do not raise Recovery and
-        # therefore must not enter a Recovery-objective denominator.
-        reference_only = re.search(
-            rf"for every\s+\d+(?:\.\d+)?\s+{resource}\s+recovery\s+you have",
+        # Recovery can appear only as an input/threshold to another effect. Remove
+        # those clauses before deciding whether the star actually raises Recovery.
+        # Hope Infusion is the canonical example: Minor Heroism scales with the
+        # player's Magicka Recovery but does not itself grant Magicka Recovery.
+        lowered = re.sub(
+            _REFERENCE_ONLY_TEMPLATE.format(resource=re.escape(resource)),
+            "",
             lowered,
             flags=re.IGNORECASE,
         )
-        if reference_only:
-            grant_clause = re.search(
-                rf"(?:gain|gains|grant|grants|increase|increases|add|adds)\b[^.]*\b{resource}\s+recovery",
-                lowered,
-                flags=re.IGNORECASE,
-            )
-            if grant_clause is None:
-                return False
 
         if f"{resource} recovery" in lowered:
             return True
@@ -95,7 +90,7 @@ class ExtremeRecoveryChampionPointBranchService:
 
         if objective == "health_recovery":
             strategic = re.search(
-                rf"Gain\s+{_NUMBER}\s+Health Recovery for every\s+{_NUMBER}\s+Ultimate you have",
+                rf"Gain\s+({_NUMBER})\s+Health Recovery for every\s+({_NUMBER})\s+Ultimate you have",
                 text,
                 flags=re.IGNORECASE,
             )
@@ -114,7 +109,7 @@ class ExtremeRecoveryChampionPointBranchService:
                 )
 
         capped = re.search(
-            rf"Health, Magicka, and Stamina Recovery equal to\s+{_NUMBER}% of your Max Magicka, up to a cap of\s+{_NUMBER}",
+            rf"Health, Magicka, and Stamina Recovery equal to\s+({_NUMBER})% of your Max Magicka, up to a cap of\s+({_NUMBER})",
             text,
             flags=re.IGNORECASE,
         )
@@ -128,14 +123,30 @@ class ExtremeRecoveryChampionPointBranchService:
             )
 
         if cls.mentions_objective_recovery(text, objective) and "per stage" in text.casefold():
-            values = [
+            values: list[float] = []
+
+            # "Grants 18 Health, Magicka, and Stamina Recovery per stage."
+            # "While Sprinting you gain 100 Health and Magicka Recovery per stage."
+            values.extend(
                 float(value)
                 for value in re.findall(
-                    rf"([0-9]+(?:\.[0-9]+)?)\s+{_RESOURCE_LIST}\s+recovery\s+per stage",
+                    rf"({_NUMBER})\s+{_RESOURCE_LIST}\s+recovery\s+per stage",
                     text,
                     flags=re.IGNORECASE,
                 )
-            ]
+            )
+
+            # "Increases Magicka and Health Recovery while ... by 40 per stage."
+            # "Increases your Health, Magicka, and Stamina Recovery by 30 per stage while ..."
+            values.extend(
+                float(value)
+                for value in re.findall(
+                    rf"{_RESOURCE_LIST}\s+recovery\b[^.]*?\bby\s+({_NUMBER})\s+per stage",
+                    text,
+                    flags=re.IGNORECASE,
+                )
+            )
+
             if values:
                 stages = cls._stages(record)
                 return ExtremeRecoveryChampionPointBranch(
