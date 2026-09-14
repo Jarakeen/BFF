@@ -50,17 +50,39 @@ Audit in progress.
 
 ---
 
+### F003 — DD and healer periodic runtime maintain separate clocks/duration authorities
+
+**Category:** duplicate/competing duration and periodic-runtime authority
+
+**Files reviewed:**
+- `services/rotation_duration_analysis_service.py`
+- `services/rotation_candidate_periodic_damage_timing_evidence_service.py`
+- `services/rotation_candidate_periodic_damage_runtime_projection_service.py`
+- `services/rotation_healer_canonical_periodic_timing_service.py`
+- `services/rotation_healer_periodic_runtime_evidence_service.py`
+- `services/rotation_healer_periodic_runtime_service.py`
+- shared `minmax.runtime_event` periodic scheduler
+
+**Finding:** review was required because DD and healer periodic paths expose role-specific services and runtime evidence objects that each carry duration/cadence fields.
+
+**Authority review:** no competing runtime clock was found. DD periodic timing delegates canonical duration resolution to the shared rotation-duration evidence path and delegates concrete recurring event expansion to the shared Phase 7 periodic scheduler. Healer runtime evidence is assembled from canonical healer cadence/duration plus a narrow reviewed observation overlay for first-tick offset, expiry-boundary behavior, repeated-application refresh semantics, and magnitude timing; its concrete recurring event expansion also delegates to the shared scheduler. `RotationDurationAnalysisService` remains the recast/effective-duration analyzer rather than a second periodic tick scheduler.
+
+**Disposition:** REVIEWED / NO CONFLICT FOUND.
+
+**Closeout boundary:** role-specific services may own role-specific evidence binding and legality, but concrete periodic clock arithmetic must continue to delegate to the shared runtime scheduler. Reviewed overlays may not replace canonical component identity/cadence/duration.
+
+---
+
 ## Audit queue
 
 The remaining Phase 13.5 audit will review, in order:
 
-1. duplicate/competing duration and periodic-runtime authority;
-2. action-cost/resource authority and legacy helpers;
-3. taunt/target/recipient semantics across tank services;
-4. effect/proc/runtime-condition authority and hard-coded dictionaries;
-5. Character -> Build -> Team identity reconstruction or fallback paths;
-6. stale rotation tests, aliases, wrappers, temporary shims, and feature flags;
-7. unused/dead Phase 13 services and catalog entries;
-8. documentation/configuration drift;
-9. focused regression after each material cleanup;
-10. full regression checkpoint before Phase 13.5 closeout.
+1. action-cost/resource authority and legacy helpers;
+2. taunt/target/recipient semantics across tank services;
+3. effect/proc/runtime-condition authority and hard-coded dictionaries;
+4. Character -> Build -> Team identity reconstruction or fallback paths;
+5. stale rotation tests, aliases, wrappers, temporary shims, and feature flags;
+6. unused/dead Phase 13 services and catalog entries;
+7. documentation/configuration drift;
+8. focused regression after each material cleanup;
+9. full regression checkpoint before Phase 13.5 closeout.
