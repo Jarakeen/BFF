@@ -1,3 +1,5 @@
+import pytest
+
 from tools.audit_phase13_xalvakka_add_phase_alignment import (
     PhaseBoundaries,
     classify_phase,
@@ -30,8 +32,6 @@ def test_daedroth_wave_clustering_groups_near_simultaneous_first_damage_only():
 
 
 def test_recurrence_intervals_are_sorted_and_preserve_observed_variance():
-    assert recurrence_intervals((320.171, 18.178, 137.395, 440.974)) == (
-        119.217,
-        182.77599999999998,
-        120.803,
+    assert recurrence_intervals((320.171, 18.178, 137.395, 440.974)) == pytest.approx(
+        (119.217, 182.776, 120.803)
     )
