@@ -1,4 +1,11 @@
-from ui.raid_plan_page import RAID_PLAN_SEATS, raid_plan_member_from_values
+from types import SimpleNamespace
+
+from ui.raid_plan_page import (
+    RAID_PLAN_SEATS,
+    new_personnel_member,
+    personnel_player_names,
+    raid_plan_member_from_values,
+)
 
 
 def test_raid_plan_workspace_exposes_twelve_standard_trial_chairs() -> None:
@@ -58,3 +65,35 @@ def test_selected_character_and_build_remain_plan_references() -> None:
     assert member.role == "Healer"
     assert member.eso_class == "Warden"
     assert member.selected_build_name == "DF Healer"
+
+
+def test_personnel_autocomplete_names_are_player_level_and_deduplicated() -> None:
+    members = (
+        SimpleNamespace(PlayerName="Jarakeen", CharacterName="Magrat"),
+        SimpleNamespace(PlayerName="jarakeen", CharacterName="Another Character"),
+        SimpleNamespace(PlayerName="Rylo", CharacterName="Rylonia"),
+        SimpleNamespace(PlayerName="", CharacterName="Character Without Player"),
+    )
+
+    assert personnel_player_names(members) == ("Jarakeen", "Rylo")
+
+
+def test_raid_plan_new_personnel_record_creates_player_identity_only() -> None:
+    member = new_personnel_member("  NewFriend  ")
+
+    assert member.PlayerName == "NewFriend"
+    assert member.CharacterName == ""
+    assert member.EsoClass == ""
+    assert member.PrimaryRole == ""
+    assert member.SecondaryRole == ""
+    assert member.Team == ""
+    assert member.Status == "Active"
+
+
+def test_raid_plan_new_personnel_record_requires_gamertag() -> None:
+    try:
+        new_personnel_member("   ")
+    except ValueError as exc:
+        assert "gamertag" in str(exc).casefold()
+    else:
+        raise AssertionError("empty gamertag should not create a Personnel record")
