@@ -15,6 +15,13 @@ from services.build_rotation_artifact_service import (
     resolve_canonical_build_id,
 )
 from services.build_service import BuildService
+from services.team_provider_assignment_workload_adapter_service import (
+    TeamProviderAssignedWorkloadPolicy,
+    TeamProviderAssignmentWorkloadAdapterService,
+)
+from services.team_provider_workload_candidate_service import (
+    TeamProviderWorkloadCandidateResult,
+)
 
 
 _INSTALLED = False
@@ -74,6 +81,18 @@ def _saved_rotation_plans(selected_builds) -> tuple[RotationPlan, ...]:
     return tuple(plans)
 
 
+def _comp_selected_builds(page):
+    from ui.team_provider_workload_support import _comp_selected_saved_builds
+
+    return _comp_selected_saved_builds(page)
+
+
+def _optimization_selected_builds(page):
+    from ui.team_provider_workload_support import _optimization_selected_saved_builds
+
+    return _optimization_selected_saved_builds(page)
+
+
 def _comp_generate_with_saved_rotations(
     page,
     *,
@@ -84,9 +103,7 @@ def _comp_generate_with_saved_rotations(
 ):
     assert _ORIGINAL_COMP_GENERATE is not None
     if rotation_plans is None:
-        from ui.team_provider_workload_support import _comp_selected_saved_builds
-
-        rotation_plans = _saved_rotation_plans(_comp_selected_saved_builds(page))
+        rotation_plans = _saved_rotation_plans(_comp_selected_builds(page))
     return _ORIGINAL_COMP_GENERATE(
         page,
         rotation_plans=rotation_plans,
@@ -106,14 +123,97 @@ def _optimization_generate_with_saved_rotations(
 ):
     assert _ORIGINAL_OPTIMIZATION_GENERATE is not None
     if rotation_plans is None:
-        from ui.team_provider_workload_support import _optimization_selected_saved_builds
-
-        rotation_plans = _saved_rotation_plans(_optimization_selected_saved_builds(page))
+        rotation_plans = _saved_rotation_plans(_optimization_selected_builds(page))
     return _ORIGINAL_OPTIMIZATION_GENERATE(
         page,
         rotation_plans=rotation_plans,
         progression_by_identity=progression_by_identity,
         alternatives=alternatives,
+        policy=policy,
+    )
+
+
+def _generate_assigned_provider_workload_candidates(
+    page,
+    *,
+    selected_builds,
+    assignments,
+    effect_policies,
+    workload_policies: tuple[TeamProviderAssignedWorkloadPolicy, ...],
+    progression_by_identity,
+    rotation_plans=None,
+    policy=None,
+) -> TeamProviderWorkloadCandidateResult:
+    """Generate workload candidates from exact assignment and saved-plan evidence."""
+    plans = (
+        _saved_rotation_plans(selected_builds)
+        if rotation_plans is None
+        else tuple(rotation_plans)
+    )
+    projection = TeamProviderAssignmentWorkloadAdapterService.project(
+        assignments=tuple(assignments),
+        effect_policies=tuple(effect_policies),
+        workload_policies=tuple(workload_policies),
+        rotation_plans=plans,
+    )
+
+    generated = page.generate_provider_workload_candidates(
+        rotation_plans=plans,
+        progression_by_identity=progression_by_identity,
+        alternatives=projection.alternatives,
+        policy=policy,
+    )
+    if not projection.rejected:
+        return generated
+
+    merged = TeamProviderWorkloadCandidateResult(
+        projections=generated.projections,
+        rejected=projection.rejected + generated.rejected,
+    )
+    page.set_provider_workload_candidates(merged, policy=policy)
+    return merged
+
+
+def _generate_comp_assigned_provider_workload_candidates(
+    page,
+    *,
+    assignments,
+    effect_policies,
+    workload_policies,
+    progression_by_identity,
+    rotation_plans=None,
+    policy=None,
+) -> TeamProviderWorkloadCandidateResult:
+    return _generate_assigned_provider_workload_candidates(
+        page,
+        selected_builds=_comp_selected_builds(page),
+        assignments=assignments,
+        effect_policies=effect_policies,
+        workload_policies=workload_policies,
+        progression_by_identity=progression_by_identity,
+        rotation_plans=rotation_plans,
+        policy=policy,
+    )
+
+
+def _generate_optimization_assigned_provider_workload_candidates(
+    page,
+    *,
+    assignments,
+    effect_policies,
+    workload_policies,
+    progression_by_identity,
+    rotation_plans=None,
+    policy=None,
+) -> TeamProviderWorkloadCandidateResult:
+    return _generate_assigned_provider_workload_candidates(
+        page,
+        selected_builds=_optimization_selected_builds(page),
+        assignments=assignments,
+        effect_policies=effect_policies,
+        workload_policies=workload_policies,
+        progression_by_identity=progression_by_identity,
+        rotation_plans=rotation_plans,
         policy=policy,
     )
 
@@ -135,6 +235,12 @@ def install() -> None:
     )
     OptimizationPage.generate_provider_workload_candidates = (
         _optimization_generate_with_saved_rotations
+    )
+    CompBuilderPage.generate_assigned_provider_workload_candidates = (
+        _generate_comp_assigned_provider_workload_candidates
+    )
+    OptimizationPage.generate_assigned_provider_workload_candidates = (
+        _generate_optimization_assigned_provider_workload_candidates
     )
     _INSTALLED = True
 
