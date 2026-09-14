@@ -74,12 +74,14 @@ def _policy() -> RotationAssignmentTauntPolicy:
                 window_start_seconds=0.0,
                 window_end_seconds=2.0,
                 bar="front",
+                target_key="taleria",
             ),
             RotationAssignmentTauntApplicationWindow(
                 occurrence_id="return_from_portal",
                 window_start_seconds=45.0,
                 window_end_seconds=47.0,
                 bar="front",
+                target_key="taleria",
             ),
         ),
         source="reviewed encounter strategy",
@@ -106,11 +108,25 @@ def test_assigned_taunt_policy_projects_each_explicit_occurrence() -> None:
     ]
     assert result.requirements[0].window_start_seconds == 0.0
     assert result.requirements[1].window_start_seconds == 45.0
+    assert [row.target_key for row in result.requirements] == ["taleria", "taleria"]
     assert result.requirements[0].provenance == (
         "assignment=boss_taunt",
         "encounter=taleria_hm",
         "source=reviewed encounter strategy",
     )
+
+
+def test_target_identity_is_optional_but_normalized_when_supplied() -> None:
+    targeted = RotationAssignmentTauntApplicationWindow(
+        "add_spawn",
+        10.0,
+        12.0,
+        target_key="  reef_guardian_left  ",
+    )
+    untargeted = RotationAssignmentTauntApplicationWindow("generic", 20.0, 22.0)
+
+    assert targeted.target_key == "reef_guardian_left"
+    assert untargeted.target_key is None
 
 
 def test_assignment_owned_by_other_member_does_not_create_taunt_obligation() -> None:
