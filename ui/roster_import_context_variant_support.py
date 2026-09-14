@@ -8,7 +8,6 @@ reviewed base loadout remains a normal saved build; boss-specific alternates bec
 sparse Team + Boss Context Variants when that conversion is lossless.
 """
 
-from copy import deepcopy
 from pathlib import Path
 import shutil
 
@@ -104,7 +103,11 @@ def _build_key_from_payload(payload: dict) -> tuple[str, str, str]:
     )
 
 
-def _replaceable_prior_import_keys(build_service, team_name: str, selected_players: set[str]) -> tuple[set[tuple[str, str, str]], tuple[str, ...]]:
+def _replaceable_prior_import_keys(
+    build_service,
+    team_name: str,
+    selected_players: set[str],
+) -> tuple[set[tuple[str, str, str]], tuple[str, ...], set[str]]:
     catalog = build_service.canonical.catalog_service.load()
     assignments = [row for row in catalog.get("team_assignments", []) if isinstance(row, dict)]
     team_key = str(team_name or "").strip().casefold()
@@ -115,7 +118,7 @@ def _replaceable_prior_import_keys(build_service, team_name: str, selected_playe
         and str(row.get("notes") or "").strip().casefold().startswith("imported from roster")
     }
     if not target_ids:
-        return set(), ()
+        return set(), (), set()
 
     protected_ids = {
         build_id
@@ -128,6 +131,7 @@ def _replaceable_prior_import_keys(build_service, team_name: str, selected_playe
     }
 
     keys: set[tuple[str, str, str]] = set()
+    candidate_character_ids: set[str] = set()
     protected_names: list[str] = []
     for build in catalog.get("builds", []):
         if not isinstance(build, dict):
@@ -143,13 +147,77 @@ def _replaceable_prior_import_keys(build_service, team_name: str, selected_playe
             protected_names.append(str(build.get("name") or legacy.get("BuildName") or build_id))
             continue
         keys.add(_build_key_from_payload(legacy))
-    return keys, tuple(protected_names)
+        character_id = str(build.get("character_id") or "").strip()
+        if character_id:
+            candidate_character_ids.add(character_id)
+    return keys, tuple(protected_names), candidate_character_ids
 
 
-def _remove_prior_imported_builds(build_service, *, team_name: str, selected_players: set[str]) -> tuple[int, tuple[str, ...]]:
-    keys, protected_names = _replaceable_prior_import_keys(build_service, team_name, selected_players)
+def _prune_empty_replaced_characters(
+    build_service,
+    *,
+    candidate_character_ids: set[str],
+    protected_characters: set[tuple[str, str]],
+) -> int:
+    if not candidate_character_ids:
+        return 0
+
+    catalog_service = build_service.canonical.catalog_service
+    catalog = catalog_service.load()
+    remaining_character_ids = {
+        str(build.get("character_id") or "").strip()
+        for build in catalog.get("builds", [])
+        if isinstance(build, dict)
+    }
+    players = {
+        str(player.get("player_id") or "").strip(): _identity_key(player.get("gamertag"))
+        for player in catalog.get("players", [])
+        if isinstance(player, dict)
+    }
+
+    kept = []
+    removed = 0
+    for character in catalog.get("characters", []):
+        if not isinstance(character, dict):
+            kept.append(character)
+            continue
+        character_id = str(character.get("character_id") or "").strip()
+        if character_id not in candidate_character_ids or character_id in remaining_character_ids:
+            kept.append(character)
+            continue
+        player_key = players.get(str(character.get("player_id") or "").strip(), "")
+        name_key = str(character.get("name") or "").strip().casefold()
+        if (player_key, name_key) in protected_characters:
+            kept.append(character)
+            continue
+        has_progression = bool(
+            character.get("owned_skill_lines")
+            or character.get("passive_ranks")
+            or character.get("passive_cp_points")
+        )
+        if has_progression:
+            kept.append(character)
+            continue
+        removed += 1
+
+    if removed:
+        catalog["characters"] = kept
+        catalog_service.save(catalog)
+    return removed
+
+
+def _remove_prior_imported_builds(
+    build_service,
+    *,
+    team_name: str,
+    selected_players: set[str],
+    protected_characters: set[tuple[str, str]],
+) -> tuple[int, int, tuple[str, ...]]:
+    keys, protected_names, candidate_character_ids = _replaceable_prior_import_keys(
+        build_service, team_name, selected_players
+    )
     if not keys:
-        return 0, protected_names
+        return 0, 0, protected_names
 
     roster = build_service.load()
     kept = []
@@ -165,10 +233,16 @@ def _remove_prior_imported_builds(build_service, *, team_name: str, selected_pla
             continue
         kept.append(build)
 
+    pruned_characters = 0
     if removed:
         _backup_import_state(build_service)
         build_service.save(BuildRoster(Members=kept))
-    return removed, protected_names
+        pruned_characters = _prune_empty_replaced_characters(
+            build_service,
+            candidate_character_ids=candidate_character_ids,
+            protected_characters=protected_characters,
+        )
+    return removed, pruned_characters, protected_names
 
 
 def _consolidate_plan(plan) -> tuple[str, ...]:
@@ -194,19 +268,35 @@ def apply_roster_import_with_context_variants(plan, roster_service, build_servic
         raise RuntimeError("Roster context-variant import bridge is not installed.")
 
     team_name = str(getattr(plan, "team_name", "") or "").strip()
+    selected_members = [
+        member
+        for member in getattr(plan, "members", ())
+        if bool(getattr(member, "selected", True))
+    ]
     selected_players = {
         _identity_key(getattr(member, "gamertag", ""))
-        for member in getattr(plan, "members", ())
-        if bool(getattr(member, "selected", True)) and _identity_key(getattr(member, "gamertag", ""))
+        for member in selected_members
+        if _identity_key(getattr(member, "gamertag", ""))
+    }
+    protected_characters = {
+        (
+            _identity_key(getattr(member, "gamertag", "")),
+            str(getattr(member, "character_name", "") or "").strip().casefold(),
+        )
+        for member in selected_members
+        if _identity_key(getattr(member, "gamertag", ""))
+        and str(getattr(member, "character_name", "") or "").strip()
     }
 
     replaced = 0
+    pruned_characters = 0
     protected_names: tuple[str, ...] = ()
     if import_builds and team_name and selected_players:
-        replaced, protected_names = _remove_prior_imported_builds(
+        replaced, pruned_characters, protected_names = _remove_prior_imported_builds(
             build_service,
             team_name=team_name,
             selected_players=selected_players,
+            protected_characters=protected_characters,
         )
 
     consolidation_warnings = _consolidate_plan(plan) if import_builds else ()
@@ -219,9 +309,12 @@ def apply_roster_import_with_context_variants(plan, roster_service, build_servic
 
     extra_warnings = list(result.warnings)
     if replaced:
-        extra_warnings.append(
+        message = (
             f"Replaced {replaced} build(s) from the previous {team_name} roster import before saving the new import."
         )
+        if pruned_characters:
+            message += f" Removed {pruned_characters} empty character record(s) created only by that prior import."
+        extra_warnings.append(message)
     if protected_names:
         extra_warnings.append(
             "Kept prior imported build(s) that are also assigned to another team: "
