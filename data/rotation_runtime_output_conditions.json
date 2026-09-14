@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {
+      "skill_entity_id": "detonating_siphon",
+      "coefficient_number": 1,
+      "required_conditions": [
+        "target_in_detonating_siphon_geometry"
+      ],
+      "source": "reviewed Detonating Siphon tooltip geometry: enemies around the corpse and between the caster and corpse"
+    }
+  ]
+}
