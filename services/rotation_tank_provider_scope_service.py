@@ -15,12 +15,12 @@ resolution but deliberately does not make ``ready`` true until Generate-time hor
 materialization produces an ordinary executable maintenance policy.
 
 Exact taunt skill/bar identity is build evidence, not encounter policy. The selected
-Tank's canonical structural-utility source is therefore carried separately so Generate
-can bind a skill-agnostic reviewed ownership window to the actual saved build without
-reconstructing mechanics from explanatory strings.
+Tank's canonical structural-utility source is therefore carried separately and used to
+bind skill-agnostic reviewed symbolic ownership policy before it crosses into Generate.
+No mechanic is reconstructed from explanatory strings.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Callable
 
@@ -58,6 +58,69 @@ ProviderScopeFactory = Callable[..., object]
 
 def _canonical_role(value: object) -> str:
     return "_".join(str(value or "").strip().casefold().replace("-", " ").split())
+
+
+def _bind_horizon_policies_to_taunt_source(
+    policies: tuple[RotationAssignmentTauntMaintenanceHorizonPolicy, ...],
+    sources: tuple[SavedBuildUtilityProviderSource, ...],
+) -> tuple[
+    tuple[RotationAssignmentTauntMaintenanceHorizonPolicy, ...],
+    tuple[str, ...],
+]:
+    """Bind build-owned taunt source identity into reviewed symbolic encounter policy."""
+
+    bound: list[RotationAssignmentTauntMaintenanceHorizonPolicy] = []
+    unresolved: list[str] = []
+    taunt_sources = tuple(source for source in sources if source.capability_type == "taunt")
+
+    for policy in policies:
+        reviewed_skill = str(policy.source_skill_name or "").strip()
+        candidates = taunt_sources
+        if reviewed_skill:
+            candidates = tuple(
+                source
+                for source in taunt_sources
+                if source.skill_name.casefold() == reviewed_skill.casefold()
+            )
+            if len(candidates) != 1:
+                unresolved.append(
+                    f"{policy.requirement_id}: reviewed taunt skill {reviewed_skill!r} is not exactly one canonical slotted taunt source"
+                )
+                continue
+        elif len(candidates) != 1:
+            detail = (
+                "none"
+                if not candidates
+                else ", ".join(f"{row.skill_name} ({row.bar})" for row in candidates)
+            )
+            unresolved.append(
+                f"{policy.requirement_id}: symbolic taunt-maintenance policy requires exactly one canonical saved-build taunt source; found {detail}"
+            )
+            continue
+
+        source = candidates[0]
+        windows = []
+        mismatch = False
+        for window in policy.windows:
+            if window.bar is not None and window.bar != source.bar:
+                unresolved.append(
+                    f"{policy.requirement_id}:{window.occurrence_id}: reviewed taunt bar {window.bar!r} does not match canonical saved-build taunt bar {source.bar!r}"
+                )
+                mismatch = True
+                break
+            windows.append(replace(window, bar=window.bar or source.bar))
+        if mismatch:
+            continue
+
+        bound.append(
+            replace(
+                policy,
+                source_skill_name=source.skill_name,
+                windows=tuple(windows),
+            )
+        )
+
+    return tuple(bound), tuple(dict.fromkeys(unresolved))
 
 
 @dataclass(frozen=True)
@@ -230,19 +293,33 @@ class RotationTankProviderScopeService:
                 f"expected {member_id!r}, got {policy_resolution.member_id!r}"
             )
 
-        taunt_sources = self.utility_capability_service.provider_sources_for(
+        taunt_source_resolution = self.utility_capability_service.provider_sources_for(
             build=player_build,
             capability_type="taunt",
         )
+        taunt_sources = tuple(getattr(taunt_source_resolution, "sources", ()))
+        bound_horizon_policies, binding_unresolved = (
+            _bind_horizon_policies_to_taunt_source(
+                resolved_horizon_policies,
+                taunt_sources,
+            )
+        )
+        source_unresolved = tuple(getattr(taunt_source_resolution, "unresolved", ()))
+        if not resolved_horizon_policies:
+            # A Tank may legitimately have unresolved unrelated slotted skills. Do not
+            # turn those into a provider-policy failure until symbolic policy actually
+            # needs a concrete taunt source.
+            source_unresolved = ()
+
         return RotationTankProviderScopeResolution(
             encounter_id=resolved_encounter,
             member_id=member_id,
             assignments=assignments,
             policy_resolution=policy_resolution,
-            taunt_maintenance_horizon_policies=resolved_horizon_policies,
-            taunt_provider_sources=tuple(getattr(taunt_sources, "sources", ())),
+            taunt_maintenance_horizon_policies=bound_horizon_policies,
+            taunt_provider_sources=taunt_sources,
             taunt_provider_source_unresolved=tuple(
-                getattr(taunt_sources, "unresolved", ())
+                dict.fromkeys((*source_unresolved, *binding_unresolved))
             ),
         )
 
