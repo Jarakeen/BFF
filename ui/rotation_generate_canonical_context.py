@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Protocol
 
 from minmax.rotation_ability_priority import AbilityPriorityList
+from models.build_model import PlayerBuild
 from models.effective_build_snapshot import EffectiveBuildSnapshot
+from models.raid_plan import RaidPlan, RaidPlanTriggeredResponsibility
 from services.rotation_candidate_recommendation_evidence_service import (
     RotationCandidatePlanEvidenceProvider,
 )
@@ -18,6 +20,18 @@ from ui.rotation_canonical_candidate_support import RotationCanonicalRoleEvidenc
 from ui.rotation_selected_encounter_evidence_support import (
     RotationSelectedEncounterEvidenceInputs,
 )
+
+
+def _clean(value: object) -> str:
+    return str(value or "").strip()
+
+
+def _build_character_name(build: PlayerBuild) -> str:
+    return _clean(getattr(build, "CharacterName", None) or getattr(build, "Name", None))
+
+
+def _build_name(build: PlayerBuild) -> str:
+    return _clean(getattr(build, "BuildName", None) or getattr(build, "Name", None))
 
 
 class RotationGenerateRoleEvidenceComposer(Protocol):
@@ -106,6 +120,10 @@ class RotationGenerateCanonicalContext:
     composed. Rotation consumes that snapshot instead of re-resolving Team/Boss/Raid Plan
     state or re-reading a mutable UI selection. Legacy/static test contexts may omit the
     snapshot and continue supplying the page-selected build explicitly at execution time.
+
+    Raid Plan triggered responsibilities remain planning intent. They travel beside the
+    exact Raid Plan build snapshot so downstream consumers can resolve runtime conditions,
+    but they are never converted here into clock-scheduled Rotation actions.
     """
 
     evidence_inputs: RotationSelectedEncounterEvidenceInputs
@@ -118,6 +136,11 @@ class RotationGenerateCanonicalContext:
     cadence_max_iterations: int = 8
     character_id: str | None = None
     effective_build: EffectiveBuildSnapshot | None = None
+    raid_plan_id: str | None = None
+    raid_plan_seat_id: str | None = None
+    raid_plan_triggered_responsibilities: tuple[
+        RaidPlanTriggeredResponsibility, ...
+    ] = ()
 
     def __post_init__(self) -> None:
         role_sources = tuple(
@@ -143,6 +166,107 @@ class RotationGenerateCanonicalContext:
             self.effective_build, EffectiveBuildSnapshot
         ):
             raise TypeError("effective_build must be an EffectiveBuildSnapshot")
+
+        raid_plan_id = _clean(self.raid_plan_id) or None
+        raid_plan_seat_id = _clean(self.raid_plan_seat_id) or None
+        triggered = tuple(self.raid_plan_triggered_responsibilities)
+        object.__setattr__(self, "raid_plan_id", raid_plan_id)
+        object.__setattr__(self, "raid_plan_seat_id", raid_plan_seat_id)
+        object.__setattr__(self, "raid_plan_triggered_responsibilities", triggered)
+
+        has_raid_plan_context = bool(raid_plan_id or raid_plan_seat_id or triggered)
+        if has_raid_plan_context:
+            if not raid_plan_id or not raid_plan_seat_id:
+                raise ValueError(
+                    "Raid Plan Generate context requires both raid_plan_id and raid_plan_seat_id"
+                )
+            if self.effective_build is None or self.effective_build.source_kind != "raid_plan":
+                raise ValueError(
+                    "Raid Plan Generate context requires a raid_plan EffectiveBuildSnapshot"
+                )
+            snapshot_encounter = _clean(self.effective_build.encounter_id).casefold()
+            for responsibility in triggered:
+                if responsibility.seat_id.casefold() != raid_plan_seat_id.casefold():
+                    raise ValueError(
+                        "Raid Plan triggered responsibility does not belong to the bound seat"
+                    )
+                if (
+                    snapshot_encounter
+                    and responsibility.encounter_id.casefold() != snapshot_encounter
+                ):
+                    raise ValueError(
+                        "Raid Plan triggered responsibility encounter does not match effective build snapshot"
+                    )
+
+    def with_raid_plan_member(
+        self,
+        *,
+        raid_plan: RaidPlan,
+        seat_id: str,
+        build: PlayerBuild,
+        encounter_id: str,
+        adjustment_labels: tuple[str, ...] = (),
+        provenance: tuple[str, ...] = (),
+    ) -> "RotationGenerateCanonicalContext":
+        """Bind one exact Raid Plan chair and build without inventing execution timing."""
+        if not isinstance(raid_plan, RaidPlan):
+            raise TypeError("raid_plan must be a RaidPlan")
+        if not isinstance(build, PlayerBuild):
+            raise TypeError("Raid Plan Generate binding requires a PlayerBuild")
+
+        resolved_seat_id = _clean(seat_id)
+        resolved_encounter_id = _clean(encounter_id)
+        if not resolved_seat_id:
+            raise ValueError("Raid Plan Generate binding requires seat_id")
+        if not resolved_encounter_id:
+            raise ValueError("Raid Plan Generate binding requires encounter_id")
+
+        member = raid_plan.member(resolved_seat_id)
+        if member is None:
+            raise ValueError(f"Raid Plan has no member for seat_id {resolved_seat_id!r}")
+
+        build_character_name = _build_character_name(build)
+        if member.character_name and (
+            not build_character_name
+            or member.character_name.casefold() != build_character_name.casefold()
+        ):
+            raise ValueError(
+                "Raid Plan member character does not match the supplied effective build"
+            )
+
+        build_name = _build_name(build)
+        if member.selected_build_name and (
+            not build_name
+            or member.selected_build_name.casefold() != build_name.casefold()
+        ):
+            raise ValueError(
+                "Raid Plan member selected build does not match the supplied effective build"
+            )
+
+        triggered = raid_plan.triggered_for_seat(
+            resolved_seat_id,
+            encounter_id=resolved_encounter_id,
+        )
+        snapshot = EffectiveBuildSnapshot.from_raid_plan_build(
+            build,
+            character_id=member.character_id,
+            trial_id=raid_plan.trial_id,
+            encounter_id=resolved_encounter_id,
+            team_name=raid_plan.team_name,
+            adjustment_labels=adjustment_labels,
+            provenance=(
+                f"Raid Plan {raid_plan.plan_id} seat {member.seat_id}",
+                *provenance,
+            ),
+        )
+        return replace(
+            self,
+            character_id=member.character_id,
+            effective_build=snapshot,
+            raid_plan_id=raid_plan.plan_id,
+            raid_plan_seat_id=member.seat_id,
+            raid_plan_triggered_responsibilities=triggered,
+        )
 
     def player_build_for(self, fallback=None):
         """Materialize the exact build this context owns, or use a legacy fallback."""
