@@ -51,3 +51,9 @@ def test_rotation_assignment_policy_and_tank_integration_services_are_catalogued
         "rotation.tank.encounter_add_activity_context",
         "rotation.tank.encounter_priority_context",
     )
+    assert "RaidPlanTankTriggeredResponsibilityApplication" in raid_plan_projection.outputs
+    assert "RaidPlan" in raid_plan_projection.inputs
+    assert (
+        "raid_plan_tank_runtime_triggered_responsibility_application"
+        in raid_plan_projection.responsibilities
+    )
