@@ -141,8 +141,7 @@ class ExtremeNamedGearSetCatalogRealizationService:
     @staticmethod
     def _eligibility_shape(row: ExtremeNamedGearSetSlotEligibility) -> _EligibilityShape:
         return _EligibilityShape(
-            mythic=row.category.strip().casefold()
-            == ExtremeNamedGearSetRealizationService.MYTHIC_CATEGORY,
+            mythic=ExtremeNamedGearSetRealizationService.is_mythic_category(row.category),
             max_equip_count=int(row.max_equip_count),
             armor_slots=tuple(row.armor_slots),
             jewelry_slots=tuple(row.jewelry_slots),
@@ -280,7 +279,6 @@ class ExtremeNamedGearSetCatalogRealizationService:
         counts = tuple(int(value) for value in topology.counts)
         candidate_rows = tuple(self._candidates_for_count(count) for count in counts)
 
-        # The no-set baseline has exactly one named assignment: the empty tuple.
         if not counts:
             witness = self._find_witness_cached(topology, ())
             return ExtremeNamedGearSetTopologyRealizationResult(
@@ -333,9 +331,6 @@ class ExtremeNamedGearSetCatalogRealizationService:
                 set_id = int(row.set_id)
                 if set_id in used_ids:
                     continue
-                # Equal-count topology parts are indistinguishable. Canonical
-                # ascending set ids remove permutation duplicates without removing
-                # any unique named equipment state.
                 if previous_equal_id is not None and set_id <= previous_equal_id:
                     continue
                 selected.append(row)
