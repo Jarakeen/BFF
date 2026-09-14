@@ -43,6 +43,24 @@ EXTREME_RECOVERY_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "convert semantic classification into free score or declare a whole-build record."
         ),
     ),
+    ServiceDescriptor(
+        service_id="extreme.recovery_jewelry_projection",
+        domain="extreme",
+        purpose=(
+            "Project canonical Health, Magicka, or Stamina Recovery jewelry glyphs through "
+            "reviewed Gold Infused enchantment scaling without choosing the whole build."
+        ),
+        implementation_path="services.extreme_recovery_jewelry_projection_service",
+        inputs=("JewelryGlyphEffectRepository", "JewelryTraitRepository", "RecoveryObjective"),
+        outputs=("ExtremeRecoveryJewelryProjection",),
+        responsibilities=("extreme_recovery_jewelry_trait_projection",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "The projection proves glyph and Infused arithmetic only. Whole-build opportunity cost "
+            "against alternate jewelry traits remains a higher-level optimization concern."
+        ),
+    ),
 )
 
 
