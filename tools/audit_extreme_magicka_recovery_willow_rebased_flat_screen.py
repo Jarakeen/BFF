@@ -209,6 +209,15 @@ def main() -> int:
     )
 
     max_magicka_service = ExtremeMaxResourceSpecialNamedGearBranchService(max_magicka)
+    pair_keys = tuple(sorted(set(recovery_by) | set(magicka_by)))
+    triage_pairs = tuple(
+        (
+            int(set_id),
+            str((recovery_by.get((set_id, piece_count)) or magicka_by[(set_id, piece_count)]).set_name),
+            int(piece_count),
+        )
+        for set_id, piece_count in pair_keys
+    )
     triage = tuple(
         _triage_pair(
             pair,
@@ -217,7 +226,7 @@ def main() -> int:
             max_magicka_service=max_magicka_service,
             remaining_enlivening_headroom=remaining_headroom,
         )
-        for pair in tuple(sorted(set(recovery_by) | set(magicka_by)))
+        for pair in triage_pairs
     )
     direct = tuple(row for row in triage if row.direct_recovery_challenger and not row.unresolved)
 
