@@ -162,6 +162,30 @@ EXTREME_HEALTH_RECOVERY_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.recovery_final_score",
+        domain="extreme",
+        purpose=(
+            "Compose already-proven flat and percentage Recovery contributions into one "
+            "final record value while preserving explicit closure proof gates."
+        ),
+        implementation_path="services.extreme_recovery_final_score_service",
+        inputs=(
+            "RecoveryObjective",
+            "BaseRecovery",
+            "AdditiveRecoveryComponents",
+            "PercentRecoveryComponents",
+            "ProofGates",
+        ),
+        outputs=("ExtremeRecoveryFinalScore",),
+        responsibilities=("extreme_recovery_final_score_composition",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.NONE,
+        notes=(
+            "This service owns arithmetic only. Source discovery, physical legality, runtime "
+            "conditions, and stochastic witnesses stay with their existing canonical owners."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="mechanics.status_application_opportunity",
         domain="mechanics",
         purpose=(
