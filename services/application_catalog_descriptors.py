@@ -95,6 +95,19 @@ APPLICATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.GAME_MECHANIC,
         notes="Representative numeric ability ids identify exact imported source rows for downstream lookup; they are aliases/evidence only and never replace BFF's canonical semantic lower_snake_case skill identity. Eligibility remains an explicit projection over database facts and transformation state.",
     ),
+    ServiceDescriptor(
+        service_id="build.reuse.template",
+        domain="build",
+        purpose="Copy saved build configuration between same-class characters and persist reusable role templates with explicit class overlays.",
+        implementation_path="services.build_reuse_service",
+        inputs=("PlayerBuild", "DestinationCharacter", "BuildTemplateRecord"),
+        outputs=("PlayerBuild", "BuildTemplateRecord", "BuildReuseResult"),
+        responsibilities=("saved_build_reuse_and_role_templates",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        ui_safe=True,
+        evidence_class=EvidenceClass.NONE,
+        notes="Never copies player identity, character progression, team assignment, or readiness. Cross-class template application fails closed on class-specific skill state unless a matching class overlay exists.",
+    ),
 )
 
 
