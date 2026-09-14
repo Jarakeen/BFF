@@ -6,9 +6,10 @@ This service orders already-reviewed, already-bound encounter responsibilities f
 specific Tank member. It is strategy/context metadata only: priority rows do not create
 new hard obligations, timing windows, uptime floors, or cross-lane taunt permissions.
 
-Actor-specific add handling comes from the reviewed add-taunt handling context. This
-lets Generate distinguish sustained Iron Atronach ownership from selective/contextual
-Daedroth handling without turning single-report behavior into mechanic truth.
+Actor-specific add handling comes from already-resolved reviewed add-taunt handling
+context whenever the caller supplies it. This lets Generate distinguish sustained Iron
+Atronach ownership from selective/contextual Daedroth handling without duplicating
+encounter-id normalization or turning single-report behavior into mechanic truth.
 """
 
 from dataclasses import dataclass
@@ -86,6 +87,7 @@ class RotationTankEncounterPriorityContextService:
         *,
         encounter_id: str,
         responsibilities: tuple[RaidTankEncounterBoundResponsibility, ...],
+        handling_context: tuple[RotationTankAddTauntHandlingContext, ...] | None = None,
     ) -> tuple[RotationTankEncounterPriorityCue, ...]:
         encounter_id = str(encounter_id or "").strip()
         if not encounter_id:
@@ -94,10 +96,20 @@ class RotationTankEncounterPriorityContextService:
         if any(row.encounter_id.casefold() != encounter_id.casefold() for row in responsibilities):
             raise ValueError("Tank encounter priority responsibility encounter mismatch")
 
-        handling = self.add_taunt_handling_context_service.for_responsibilities(
-            encounter_id=encounter_id,
-            responsibilities=responsibilities,
+        handling = (
+            tuple(handling_context)
+            if handling_context is not None
+            else tuple(
+                self.add_taunt_handling_context_service.for_responsibilities(
+                    encounter_id=encounter_id,
+                    responsibilities=responsibilities,
+                )
+            )
         )
+        responsibility_ids = {row.responsibility.responsibility_id for row in responsibilities}
+        if any(row.responsibility_id not in responsibility_ids for row in handling):
+            raise ValueError("Tank encounter priority handling context references unknown responsibility")
+
         handling_by_responsibility: dict[str, list[RotationTankAddTauntHandlingContext]] = {}
         for row in handling:
             handling_by_responsibility.setdefault(row.responsibility_id, []).append(row)
@@ -106,7 +118,6 @@ class RotationTankEncounterPriorityContextService:
         for bound in responsibilities:
             responsibility = bound.responsibility
             responsibility_id = responsibility.responsibility_id
-            target_key = responsibility.target_key
             action = _key(responsibility.action_type)
             lane = _key(bound.lane_id)
 
