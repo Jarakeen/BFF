@@ -9,7 +9,9 @@ uses the page's existing scroll surface, caches heavy editor widgets, and places
 the saved-build selector inside the Identity card instead of in a detached row.
 
 The Scribed Skills tab reads and edits the canonical configured recipe data
-rather than scanning unrelated crafted-skill database rows.
+rather than scanning unrelated crafted-skill database rows. It uses the normalized
+U51 scribing catalog in eso.db when available, with the reviewed static catalog as
+an explicit compatibility fallback for older databases.
 """
 
 from PySide6.QtCore import QTimer, Qt
@@ -24,14 +26,16 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from engine.config import DEFAULT_DATABASE
 from models.scribing_recipe import ScribedSkillRecipe
 from services.scribing_catalog import (
-    compatible_affix,
-    compatible_focus,
-    compatible_signature,
-    grimoire_names,
-    result_name,
+    compatible_affix as static_compatible_affix,
+    compatible_focus as static_compatible_focus,
+    compatible_signature as static_compatible_signature,
+    grimoire_names as static_grimoire_names,
+    result_name as static_result_name,
 )
+from services.scribing_u51_service import U51ScribingService
 from ui.components.foundry_button import ButtonRole, FoundryButton
 from ui.scribing_support import _recipes_for, _store_recipes
 
@@ -72,6 +76,47 @@ def _replace_combo(combo: QComboBox, values: list[str], current: str = "") -> No
     combo.blockSignals(False)
 
 
+def _scribing_service(page) -> U51ScribingService:
+    service = getattr(page, "_u51_scribing_service", None)
+    if service is None:
+        service = U51ScribingService(DEFAULT_DATABASE)
+        page._u51_scribing_service = service
+    return service
+
+
+def _grimoire_names(page) -> list[str]:
+    service = _scribing_service(page)
+    return service.grimoire_names() if service.available else static_grimoire_names()
+
+
+def _compatible(page, kind: str, grimoire: str) -> list[str]:
+    service = _scribing_service(page)
+    if service.available:
+        if kind == "focus":
+            return service.compatible_focus(grimoire)
+        if kind == "signature":
+            return service.compatible_signature(grimoire)
+        return service.compatible_affix(grimoire)
+    if kind == "focus":
+        return static_compatible_focus(grimoire)
+    if kind == "signature":
+        return static_compatible_signature(grimoire)
+    return static_compatible_affix(grimoire)
+
+
+def _result_name(page, grimoire: str, focus: str) -> str:
+    service = _scribing_service(page)
+    mapped = service.result_name(grimoire, focus) if service.available else ""
+    return mapped or static_result_name(grimoire, focus)
+
+
+def _description(page, grimoire: str, focus: str, signature: str, affix: str) -> str:
+    service = _scribing_service(page)
+    if not service.available:
+        return ""
+    return service.combined_description(grimoire, focus, signature, affix)
+
+
 def install() -> None:
     global _INSTALLED
     if _INSTALLED:
@@ -88,8 +133,6 @@ def install() -> None:
         edit_tab = self.build_tabs.widget(1)
         edit_layout = edit_tab.layout()
 
-        # Remove the detached selector row. Keep the combo alive so it can be
-        # placed directly in the active editor's Identity card.
         selector_row_item = edit_layout.takeAt(0)
         selector_row = selector_row_item.layout() if selector_row_item is not None else None
         if selector_row is not None:
@@ -102,8 +145,6 @@ def install() -> None:
                 elif widget is not None:
                     widget.deleteLater()
 
-        # Remove Edit's private QScrollArea. FoundryPage already owns the page
-        # scroll surface, so a second one only creates competing scroll ranges.
         old_scroll = self.edit_build_scroll
         edit_layout.removeWidget(old_scroll)
         old_child = old_scroll.takeWidget()
@@ -128,9 +169,6 @@ def install() -> None:
         self._build_editor_index = None
         self._pending_edit_index = None
 
-        # Replace the old checkbox-style Scribed Skills controls with an inline
-        # recipe builder using the canonical Grimoire/Focus/Signature/Affix
-        # representation. No native dialog is needed.
         self.save_scribed_button.hide()
         scribed_tab = self.build_tabs.widget(3)
         scribed_layout = scribed_tab.layout()
@@ -145,7 +183,7 @@ def install() -> None:
         recipe_form = QFormLayout()
         self.scribed_grimoire = QComboBox(recipe_editor)
         self.scribed_grimoire.addItem("")
-        self.scribed_grimoire.addItems(grimoire_names())
+        self.scribed_grimoire.addItems(_grimoire_names(self))
         self.scribed_focus = QComboBox(recipe_editor)
         self.scribed_signature = QComboBox(recipe_editor)
         self.scribed_affix = QComboBox(recipe_editor)
@@ -178,7 +216,6 @@ def install() -> None:
         recipe_actions.addWidget(self.save_scribed_recipe_button)
         recipe_root.addLayout(recipe_actions)
 
-        # Insert directly after the recipe list and before the old action row.
         scribed_layout.insertWidget(3, recipe_editor)
         self.scribed_recipe_editor = recipe_editor
         self._scribed_recipes: list[ScribedSkillRecipe] = []
@@ -188,6 +225,12 @@ def install() -> None:
             lambda *_: self._refresh_scribed_recipe_options()
         )
         self.scribed_focus.currentTextChanged.connect(
+            lambda *_: self._refresh_scribed_result_name()
+        )
+        self.scribed_signature.currentTextChanged.connect(
+            lambda *_: self._refresh_scribed_result_name()
+        )
+        self.scribed_affix.currentTextChanged.connect(
             lambda *_: self._refresh_scribed_result_name()
         )
         self.scribed_skill_choices.currentRowChanged.connect(
@@ -222,13 +265,9 @@ def install() -> None:
             self.edit_build_host.layout().insertWidget(0, editor, 1)
         editor.load(build)
 
-        # Hide every cached editor except the one currently in use.
         for cached in self._build_editor_cache.values():
             cached.setVisible(cached is editor)
 
-        # The dropdown now occupies the Identity card itself. The original
-        # character-name line edit remains hidden model state so save semantics
-        # remain unchanged.
         if hasattr(editor, "name"):
             editor.name.hide()
         for label in editor.findChildren(QLabel):
@@ -239,7 +278,6 @@ def install() -> None:
             self.edit_build_selector.show()
             identity_card.set_header_action(self.edit_build_selector)
 
-        # Remove the one-time placeholder once an editor exists.
         placeholder = self.edit_build_host.findChild(QLabel, "editBuildLoadingLabel")
         if placeholder is not None:
             placeholder.hide()
@@ -258,9 +296,6 @@ def install() -> None:
             return
 
         self._pending_edit_index = index
-        # Let Qt paint the already-dark Edit tab first, then do the expensive
-        # editor construction. This prevents the tab click itself from waiting
-        # on hundreds of child controls before anything appears onscreen.
         QTimer.singleShot(0, lambda selected=index: _show_editor(self, selected))
 
     def clear_scribed_recipe_form(self) -> None:
@@ -273,6 +308,7 @@ def install() -> None:
         _replace_combo(self.scribed_signature, [])
         _replace_combo(self.scribed_affix, [])
         self.scribed_result.clear()
+        self.scribed_result.setReadOnly(False)
         self.scribed_recipe_note.setText("Choose a Grimoire to begin a new scribed skill.")
 
     def refresh_scribed_recipe_options(self) -> None:
@@ -280,28 +316,42 @@ def install() -> None:
         old_focus = self.scribed_focus.currentText().strip()
         old_signature = self.scribed_signature.currentText().strip()
         old_affix = self.scribed_affix.currentText().strip()
-        _replace_combo(self.scribed_focus, compatible_focus(grimoire), old_focus)
-        _replace_combo(self.scribed_signature, compatible_signature(grimoire), old_signature)
-        _replace_combo(self.scribed_affix, compatible_affix(grimoire), old_affix)
+        _replace_combo(self.scribed_focus, _compatible(self, "focus", grimoire), old_focus)
+        _replace_combo(self.scribed_signature, _compatible(self, "signature", grimoire), old_signature)
+        _replace_combo(self.scribed_affix, _compatible(self, "affix", grimoire), old_affix)
         self._refresh_scribed_result_name()
 
     def refresh_scribed_result_name(self) -> None:
-        mapped = result_name(
-            self.scribed_grimoire.currentText(), self.scribed_focus.currentText()
-        )
+        grimoire = self.scribed_grimoire.currentText().strip()
+        focus = self.scribed_focus.currentText().strip()
+        signature = self.scribed_signature.currentText().strip()
+        affix = self.scribed_affix.currentText().strip()
+        mapped = _result_name(self, grimoire, focus)
+        detail = _description(self, grimoire, focus, signature, affix)
+        using_u51 = _scribing_service(self).available
+
         if mapped:
             self.scribed_result.setText(mapped)
-            self.scribed_recipe_note.setText(
-                "Result name verified for this Grimoire + Focus pair."
+            self.scribed_result.setReadOnly(True)
+            prefix = (
+                "Update 51 result resolved from the canonical scribing catalog."
+                if using_u51
+                else "Result name verified by the reviewed fallback catalog."
             )
         else:
-            if self.scribed_focus.currentText().strip():
-                self.scribed_recipe_note.setText(
-                    "This Grimoire + Focus result name is not normalized yet. "
+            self.scribed_result.setReadOnly(False)
+            if focus:
+                prefix = (
+                    "Update 51 compatibility resolved, but this result name is not available. "
+                    "Enter the exact name shown in ESO; the recipe will still be preserved."
+                    if using_u51
+                    else "This Grimoire + Focus result name is not normalized yet. "
                     "Enter the exact name shown in ESO; the recipe will still be preserved."
                 )
             else:
-                self.scribed_recipe_note.setText("Choose a Focus script to resolve the result skill.")
+                prefix = "Choose a Focus script to resolve the result skill."
+
+        self.scribed_recipe_note.setText(prefix + (("\n\n" + detail) if detail else ""))
 
     def select_scribed_recipe(self, row: int) -> None:
         if row < 0 or row >= len(self._scribed_recipes):
@@ -311,15 +361,15 @@ def install() -> None:
         self.scribed_grimoire.blockSignals(True)
         self.scribed_grimoire.setCurrentText(recipe.Grimoire)
         self.scribed_grimoire.blockSignals(False)
-        _replace_combo(self.scribed_focus, compatible_focus(recipe.Grimoire), recipe.Focus)
+        _replace_combo(self.scribed_focus, _compatible(self, "focus", recipe.Grimoire), recipe.Focus)
         _replace_combo(
             self.scribed_signature,
-            compatible_signature(recipe.Grimoire),
+            _compatible(self, "signature", recipe.Grimoire),
             recipe.Signature,
         )
-        _replace_combo(self.scribed_affix, compatible_affix(recipe.Grimoire), recipe.Affix)
+        _replace_combo(self.scribed_affix, _compatible(self, "affix", recipe.Grimoire), recipe.Affix)
         self.scribed_result.setText(recipe.ResultName)
-        self.scribed_recipe_note.setText("Editing the selected configured scribed skill.")
+        self._refresh_scribed_result_name()
 
     def save_scribed_recipe_form(self) -> None:
         index = self._scribed_index
@@ -363,8 +413,6 @@ def install() -> None:
             self.scribed_skill_choices.setCurrentRow(row)
         self.status.success(f"Saved scribed skill: {recipe.ResultName}.")
 
-        # Scribed recipes change which synthetic skills are available in Edit.
-        # Force a fresh editor selection the next time Edit is activated.
         if self._build_editor_index == index:
             self._build_editor = None
             self._build_editor_index = None
