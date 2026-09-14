@@ -29,7 +29,10 @@ from services.extreme_divines_mundus_objective_service import ExtremeDivinesMund
 from services.extreme_gear_set_bonus_breakpoint_service import ExtremeGearSetBonusBreakpointService
 from services.extreme_gear_set_objective_relevance_service import ExtremeGearSetObjectiveRelevanceService
 from tools.audit_extreme_magicka_recovery_armor_mundus_frontier import _same_build_max_magicka_for_weight_types
-from tools.audit_extreme_magicka_recovery_direct_flat_named_gear_screen import distinct_set_capacity_upper_bound
+from tools.audit_extreme_magicka_recovery_direct_flat_named_gear_screen import (
+    aggregate_recovery_semantic_branch,
+    distinct_set_capacity_upper_bound,
+)
 from tools.audit_extreme_magicka_recovery_ordinary_named_gear_frontier import (
     OBJECTIVE,
     RESOURCE_OBJECTIVE,
@@ -41,6 +44,7 @@ TARGET_NAME = "Twice-Born Star"
 TARGET_PIECES = 5
 LOCKED_PRIMARY_MUNDUS = "The Atronach"
 ORDINARY_INCUMBENT = 1332.0
+EXPECTED_SEARCH_STATE_RULE = "allows_two_mundus"
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -74,6 +78,14 @@ def second_mundus_direct_recovery_ceiling(repository: MundusRepository) -> tuple
     return best_value, best_name, tuple(dict.fromkeys(unresolved))
 
 
+def recovery_search_state_rule(evidence) -> str | None:
+    """Resolve the target set mutation through the shared Recovery semantic owner."""
+    branch = aggregate_recovery_semantic_branch(evidence)
+    if branch is None:
+        return None
+    return branch.search_state_rule
+
+
 def main() -> int:
     database = Path(_parser().parse_args().database)
     unresolved: list[str] = []
@@ -99,14 +111,17 @@ def main() -> int:
         for row in recovery.evidence
         if row.set_name.casefold() == TARGET_NAME.casefold() and int(row.piece_count) == TARGET_PIECES
     )
+    resolved_rule = None
     if len(target_rows) != 1:
         unresolved.append(f"expected one {TARGET_NAME} Recovery 5pc row, found {len(target_rows)}")
         target_set_id = -1
     else:
         target_set_id = int(target_rows[0].set_id)
-        rule = str(target_rows[0].search_state_rule or "")
-        if rule != "allows_two_mundus":
-            unresolved.append(f"{TARGET_NAME} 5pc search-state rule unresolved: {rule!r}")
+        resolved_rule = recovery_search_state_rule(target_rows[0])
+        if resolved_rule != EXPECTED_SEARCH_STATE_RULE:
+            unresolved.append(
+                f"{TARGET_NAME} 5pc search-state rule unresolved: {resolved_rule!r}"
+            )
 
     challenger = SimpleNamespace(set_id=target_set_id, piece_count=TARGET_PIECES)
     ordinary_capacity_upper = (
@@ -149,7 +164,7 @@ def main() -> int:
     print(f"dominated={dominated}")
     print()
     print("PROOF GATES")
-    print(f"search_state_rule_resolved={len(target_rows) == 1 and str(target_rows[0].search_state_rule or '') == 'allows_two_mundus'}")
+    print(f"search_state_rule_resolved={resolved_rule == EXPECTED_SEARCH_STATE_RULE}")
     print(f"max_magicka_witness_unresolved_count={len(max_magicka_unresolved)}")
     print(f"audit_unresolved_count={len(unique_unresolved)}")
     for item in unique_unresolved:
