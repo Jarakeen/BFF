@@ -196,11 +196,11 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
             inputs=inputs,
         )
 
-    def canonical_generation_request(self) -> RotationGenerationRequest:
-        """Capture the dashboard's current saved-build generation inputs exactly once."""
-        build = self._selected_build()
+    def canonical_generation_request(self, *, player_build=None) -> RotationGenerationRequest:
+        """Capture current generation policy for one already-resolved exact build."""
+        build = player_build if player_build is not None else self._selected_build()
         if build is None:
-            raise ValueError("select a saved build before canonical candidate evaluation")
+            raise ValueError("select or supply a build before canonical candidate evaluation")
 
         priorities = self.ability_priorities()
         if not priorities:
@@ -243,13 +243,14 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
         baseline_id: str = "baseline",
         character_id: str | None = None,
         coverage_report: CanonicalMechanicsCoverageReport | None = None,
+        player_build=None,
     ) -> RotationDashboardCanonicalCandidateResult:
-        """Run the page's current saved build through the canonical candidate path."""
-        build = self._selected_build()
+        """Run one exact build through the canonical candidate path."""
+        build = player_build if player_build is not None else self._selected_build()
         if build is None:
-            raise ValueError("select a saved build before canonical candidate evaluation")
+            raise ValueError("select or supply a build before canonical candidate evaluation")
 
-        request = self.canonical_generation_request()
+        request = self.canonical_generation_request(player_build=build)
         result = self.rotation_canonical_candidates.run_effects(
             player_build=build,
             generation_request=request,
@@ -285,6 +286,7 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
         *,
         role_evidence: RotationCanonicalRoleEvidence | None = None,
         character_id: str | None = None,
+        player_build=None,
     ) -> RotationDashboardCanonicalCandidateResult:
         """Evaluate one already-assembled canonical encounter/build evidence bundle."""
         if not bundle.ready:
@@ -337,6 +339,7 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
             baseline_id=bundle.baseline_id,
             character_id=character_id,
             coverage_report=getattr(bundle, "coverage_report", None),
+            player_build=player_build,
         )
 
     def run_canonical_cadence_orchestration(
@@ -349,15 +352,16 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
         cadence_evaluation_context: RotationSupportCadenceEvaluationContext | None = None,
         cadence_max_iterations: int = 8,
         character_id: str | None = None,
+        player_build=None,
     ) -> RotationCanonicalCadenceOrchestrationResult:
-        """Run one ready encounter bundle through canonical and optional cadence stages."""
-        build = self._selected_build()
+        """Run one exact build and ready encounter bundle through canonical stages."""
+        build = player_build if player_build is not None else self._selected_build()
         if build is None:
-            raise ValueError("select a saved build before canonical cadence orchestration")
+            raise ValueError("select or supply a build before canonical cadence orchestration")
 
         result = self.rotation_canonical_cadence_orchestration.run(
             player_build=build,
-            generation_request=self.canonical_generation_request(),
+            generation_request=self.canonical_generation_request(player_build=build),
             evidence_bundle=bundle,
             role_evidence=role_evidence,
             cadence_obligations=tuple(cadence_obligations),
