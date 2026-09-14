@@ -245,6 +245,7 @@ class ExtremeGearSetRecoverySpecialBranchService:
         if "stack" in text and relevant:
             up_to = re.search(r"recovery[^.]{0,100}?up to\s+(\d+(?:\.\d+)?)", text)
             ceiling = float(up_to.group(1)) if up_to else None
+            per_stack = None
             if ceiling is None:
                 counts = [int(v) for v in re.findall(r"up to\s+(\d+)\s+(?:stacks(?:\s+max)?|times)", text)]
                 per_stack_after = re.search(
@@ -264,6 +265,15 @@ class ExtremeGearSetRecoverySpecialBranchService:
                     ceiling = max(counts) * float(per_stack.group("value"))
             if ceiling is not None:
                 return ExtremeRecoverySpecialBranch(set_name, int(piece_count), ExtremeRecoverySpecialBranchKind.STACKED_FLAT, True, flat_ceiling=ceiling, condition="max_stacks", description=description)
+            if "per stack" in text or per_stack is not None:
+                return ExtremeRecoverySpecialBranch(
+                    set_name=set_name,
+                    piece_count=int(piece_count),
+                    kind=ExtremeRecoverySpecialBranchKind.FORMULA,
+                    can_raise_self=True,
+                    condition="stack_count_required",
+                    description=description,
+                )
 
         flat = cls._flat_ceiling(text, resource)
         if flat is not None:
