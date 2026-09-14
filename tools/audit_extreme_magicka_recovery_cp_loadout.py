@@ -6,6 +6,11 @@ Static Recovery stars come from the canonical CP objective adapter. Dynamic or
 conditional Recovery stars are bounded by the shared Recovery CP branch classifier.
 The canonical ChampionPointLoadoutService then enforces four slots per discipline.
 Runtime conditions remain explicit and are not treated as proven by slot legality.
+
+Generic unresolved CP mechanics only block this audit when their own tooltip is
+semantically capable of raising Magicka Recovery. Unrelated crafting, mitigation,
+movement, loot, and other CP mechanics remain visible through the generic CP layer
+but do not poison the Recovery objective denominator.
 """
 
 import argparse
@@ -43,7 +48,10 @@ def main() -> int:
     candidates: list[ChampionPointLoadoutCandidate] = []
     evidence: dict[str, str] = {}
 
-    for record in repository.slottable_records():
+    slottable_records = tuple(repository.slottable_records())
+    non_slottable_records = tuple(repository.non_slottable_records())
+
+    for record in slottable_records:
         projected = ExtremeChampionPointObjectiveService.candidate_for_record(
             repository,
             record,
@@ -89,11 +97,24 @@ def main() -> int:
         repository,
         OBJECTIVE,
     )
-    if not baseline.mechanic_complete:
-        unresolved.extend(
+    non_slottable_by_name = {record.name.casefold(): record for record in non_slottable_records}
+    relevant_non_slottable_unresolved: list[str] = []
+    for row in baseline.unresolved_candidates:
+        record = non_slottable_by_name.get(row.name.casefold())
+        if record is None:
+            relevant_non_slottable_unresolved.append(
+                f"non-slottable {row.name}: canonical record identity unavailable"
+            )
+            continue
+        if not ExtremeRecoveryChampionPointBranchService.mentions_objective_recovery(
+            record.description,
+            OBJECTIVE,
+        ):
+            continue
+        relevant_non_slottable_unresolved.append(
             f"non-slottable {row.name}: {'; '.join(row.unresolved)}"
-            for row in baseline.unresolved_candidates
         )
+    unresolved.extend(relevant_non_slottable_unresolved)
 
     print("EXTREME MAGICKA RECOVERY CHAMPION POINT LOADOUT")
     print(f"database={database}")
@@ -133,23 +154,34 @@ def main() -> int:
     print()
     print("NON-SLOTTABLE BASELINE")
     print(f"reviewed_lower_bound={baseline.reviewed_lower_bound:.3f}")
-    print(f"mechanic_complete={baseline.mechanic_complete}")
+    print(f"generic_mechanic_complete={baseline.mechanic_complete}")
+    print(f"generic_unresolved_count={len(baseline.unresolved_candidates)}")
+    print(f"recovery_relevant_unresolved_count={len(relevant_non_slottable_unresolved)}")
+    print(f"recovery_relevant_mechanic_complete={not relevant_non_slottable_unresolved}")
     print()
     selected_enlivening = next(
         (row for row in loadout.selected if row.name.casefold() == "enlivening overflow"),
         None,
     )
+    unique_unresolved = tuple(dict.fromkeys(unresolved))
     print("PROOF GATES")
     print(f"four_slot_loadout_denominator_proven={loadout.denominator_proven}")
     print(f"selected_enlivening_overflow={selected_enlivening is not None}")
-    print(f"unresolved_count={len(tuple(dict.fromkeys(unresolved)))}")
-    for item in tuple(dict.fromkeys(unresolved)):
+    print(f"non_slottable_recovery_denominator_proven={not relevant_non_slottable_unresolved}")
+    print(f"unresolved_count={len(unique_unresolved)}")
+    for item in unique_unresolved:
         print(f"  unresolved: {item}")
 
-    closed = loadout.denominator_proven and not unresolved
+    closed = (
+        loadout.denominator_proven
+        and not relevant_non_slottable_unresolved
+        and not unique_unresolved
+    )
     print(f"magicka_recovery_cp_loadout_closed={closed}")
-    if selected_enlivening is not None:
+    if selected_enlivening is not None and closed:
         print("NEXT_STEP=prove same-build Max Magicka reaches Enlivening Overflow's selected ceiling, then compose CP with the whole-build Recovery reference")
+    elif selected_enlivening is not None:
+        print("NEXT_STEP=close only the reported Recovery-relevant CP blockers, then prove Enlivening same-build Max Magicka")
     elif closed:
         print("NEXT_STEP=compose the legal CP loadout with the whole-build Magicka Recovery reference")
     else:
