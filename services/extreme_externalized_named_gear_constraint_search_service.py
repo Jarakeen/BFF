@@ -4,14 +4,18 @@ from __future__ import annotations
 
 Some objective-relevant named sets are intentionally classified outside the ordinary
 exact-flat gear scorer because their effects are conditional, percentage based,
-formula driven, or otherwise runtime-sensitive.  Higher proof layers still need to
+formula driven, or otherwise runtime-sensitive. Higher proof layers still need to
 ask a purely structural question: can this exact named set occupy a legal loadout
 alongside the ordinary objective winner?
 
 This adapter derives a search-only relevance view in which explicitly externalized
-set breakpoints are zero-delta structural carriers.  It never rewrites canonical
-mechanics and never exposes that zero as the set's real objective contribution.  The
+set breakpoints are zero-delta structural carriers. It never rewrites canonical
+mechanics and never exposes that zero as the set's real objective contribution. The
 caller remains responsible for applying the owning special-mechanic service afterward.
+
+Upstream relevance diagnostics are preserved on the result, but they do not poison
+the local structural proof. Unexternalized special rows remain special/non-flat
+candidate pairs and therefore stay excluded from the exact-flat search itself.
 """
 
 from dataclasses import dataclass, replace
@@ -43,6 +47,7 @@ class ExtremeExternalizedNamedGearConstraintSearchResult:
     search: ExtremeConstrainedNamedGearExactFlatSearchResult | None
     externalized: tuple[ExtremeExternalizedNamedGearSemantic, ...]
     unresolved: tuple[str, ...] = ()
+    upstream_unresolved: tuple[str, ...] = ()
 
     @property
     def winner_found(self) -> bool:
@@ -63,7 +68,6 @@ class ExtremeExternalizedNamedGearConstraintSearchService:
             by_name.setdefault(row.name.strip().casefold(), []).append(int(row.set_id))
 
         targets: set[tuple[int, int]] = set()
-        prefixes: set[str] = set()
         unresolved: list[str] = []
         for item in externalized:
             name = str(item.set_name or "").strip()
@@ -75,7 +79,6 @@ class ExtremeExternalizedNamedGearConstraintSearchService:
                 )
                 continue
             targets.add((matches[0], count))
-            prefixes.add(f"{name} ({count}):")
 
         if unresolved:
             return None, tuple(dict.fromkeys(unresolved))
@@ -112,16 +115,11 @@ class ExtremeExternalizedNamedGearConstraintSearchService:
                 )
             )
 
-        retained_unresolved = tuple(
-            item
-            for item in relevance.unresolved
-            if not any(str(item).startswith(prefix) for prefix in prefixes)
-        )
         return (
             ExtremeGearSetObjectiveRelevanceCatalog(
                 objective_key=relevance.objective_key,
                 evidence=tuple(rows),
-                unresolved=retained_unresolved,
+                unresolved=(),
             ),
             (),
         )
@@ -143,6 +141,7 @@ class ExtremeExternalizedNamedGearConstraintSearchService:
                 search=None,
                 externalized=externalized,
                 unresolved=unresolved,
+                upstream_unresolved=tuple(relevance.unresolved),
             )
         search = ExtremeConstrainedNamedGearExactFlatSearchService(
             breakpoints=breakpoints,
@@ -154,6 +153,7 @@ class ExtremeExternalizedNamedGearConstraintSearchService:
             search=search,
             externalized=externalized,
             unresolved=tuple(search.unresolved),
+            upstream_unresolved=tuple(relevance.unresolved),
         )
 
 
