@@ -34,6 +34,7 @@ _ALIAS_TARGETS: dict[str, str] = {
     "jorvulds": "Jorvuld's Guidance",
     "spc": "Spell Power Cure",
     "pill": "Pillager's Profit",
+    "pilly": "Pillager's Profit",
     "pills": "Pillager's Profit",
     "pillager": "Pillager's Profit",
     "pillagers": "Pillager's Profit",
