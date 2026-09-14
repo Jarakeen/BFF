@@ -2,20 +2,19 @@ from __future__ import annotations
 
 """Resolve source-backed taunt duration without inventing maintenance policy.
 
-The service deliberately requires two independent facts to line up:
+The strongest path binds duration directly to the same coefficient-owned canonical
+text that proves TAUNT identity. Generic rotation-duration evidence remains a
+fallback only when the taunt component text does not itself expose a duration.
 
-* canonical component utility evidence proves that the named source actually TAUNTs;
-* canonical rotation-duration evidence collapses to one unambiguous positive duration.
-
-A duration is promoted only when every positive canonical duration exposed for the
-source agrees on the same value. This is intentionally conservative: a skill with
-multiple distinct durations needs component-specific temporal binding before Tank
-rotation code may use any one of them as taunt duration.
+A duration is promoted only when the source-backed taunt evidence and temporal
+evidence are unambiguous. Refresh cadence, maintenance policy, overtaunt/immunity,
+and safety margins remain separate concerns.
 """
 
 from dataclasses import dataclass
 import math
 from pathlib import Path
+import re
 from typing import Callable
 
 from minmax.rotation_duration_evidence import resolve_rotation_duration_evidence
@@ -23,6 +22,13 @@ from minmax.skill_coefficient_repository import SkillCoefficientRepository
 from minmax.skill_component_utility_effect import SkillComponentUtilityEffectType
 from minmax.skill_component_utility_effect_repository import (
     SkillComponentUtilityEffectRepository,
+)
+
+
+_TAUNT_DURATION_RE = re.compile(
+    r"\btaunt(?:s|ed|ing)?\b[^.;]{0,120}?\bfor\s+"
+    r"(?P<seconds>\d+(?:\.\d+)?)\s+seconds?\b",
+    re.IGNORECASE,
 )
 
 
@@ -93,15 +99,36 @@ class RotationTankTauntDurationService:
 
         taunt_components: list[int] = []
         evidence: list[str] = []
+        component_durations: list[tuple[int, float, str]] = []
+        resolve_component_text = getattr(self.utility, "resolve_component_text", None)
+
         for coefficient in tuple(getattr(rank, "coefficients", ())):
             number = int(getattr(coefficient, "coefficient_number"))
-            for utility in self.utility.resolve(rank.skill_rank_id, number):
-                if utility.effect_type is not SkillComponentUtilityEffectType.TAUNT:
-                    continue
-                taunt_components.append(number)
-                evidence.append(
-                    f"{rank.name} coefficient {number}: {utility.evidence}"
-                )
+            utilities = tuple(self.utility.resolve(rank.skill_rank_id, number))
+            if not any(
+                utility.effect_type is SkillComponentUtilityEffectType.TAUNT
+                for utility in utilities
+            ):
+                continue
+
+            taunt_components.append(number)
+            for utility in utilities:
+                if utility.effect_type is SkillComponentUtilityEffectType.TAUNT:
+                    evidence.append(
+                        f"{rank.name} coefficient {number}: {utility.evidence}"
+                    )
+
+            if callable(resolve_component_text):
+                component_text = str(
+                    resolve_component_text(rank.skill_rank_id, number) or ""
+                ).strip()
+                match = _TAUNT_DURATION_RE.search(component_text)
+                if match is not None:
+                    duration = float(match.group("seconds"))
+                    if math.isfinite(duration) and duration > 0:
+                        component_durations.append(
+                            (number, duration, match.group(0).strip())
+                        )
 
         taunt_components = list(dict.fromkeys(taunt_components))
         evidence = list(dict.fromkeys(evidence))
@@ -114,6 +141,41 @@ class RotationTankTauntDurationService:
                 unresolved=(
                     f"{rank.name} has no source-backed canonical taunt utility component",
                 ),
+            )
+
+        if component_durations:
+            distinct_component_durations = sorted(
+                {duration for _, duration, _ in component_durations}
+            )
+            if len(distinct_component_durations) > 1:
+                rendered = ", ".join(
+                    f"{value:g}s" for value in distinct_component_durations
+                )
+                return RotationTankTauntDurationResolution(
+                    source_skill_name=rank.name,
+                    skill_rank_id=rank.skill_rank_id,
+                    ability_id=rank.ability_id,
+                    duration_seconds=None,
+                    taunt_component_numbers=tuple(taunt_components),
+                    evidence=tuple(evidence),
+                    unresolved=(
+                        f"{rank.name}: conflicting coefficient-owned taunt durations ({rendered})",
+                    ),
+                )
+
+            duration = distinct_component_durations[0]
+            for number, value, text in component_durations:
+                if math.isclose(value, duration, abs_tol=1e-9):
+                    evidence.append(
+                        f"{rank.name} coefficient {number} taunt duration {duration:g}s: {text}"
+                    )
+            return RotationTankTauntDurationResolution(
+                source_skill_name=rank.name,
+                skill_rank_id=rank.skill_rank_id,
+                ability_id=rank.ability_id,
+                duration_seconds=duration,
+                taunt_component_numbers=tuple(taunt_components),
+                evidence=tuple(dict.fromkeys(evidence)),
             )
 
         duration_resolution = self.duration_resolver(rank.name)
