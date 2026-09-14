@@ -169,6 +169,11 @@ def install() -> None:
     )
     install_team_provider_workload_support()
 
+    from ui.team_provider_saved_rotation_support import (
+        install as install_team_provider_saved_rotation_support,
+    )
+    install_team_provider_saved_rotation_support()
+
     from ui.coverage_group_effect_catalog_support import (
         install as install_coverage_group_effect_catalog_support,
     )
