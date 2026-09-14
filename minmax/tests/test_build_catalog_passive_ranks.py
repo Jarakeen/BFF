@@ -27,7 +27,7 @@ def test_character_defaults_to_unknown_passive_ranks(tmp_path: Path) -> None:
     assert character["passive_ranks"] == {}
     assert character["passive_cp_points"] == {}
     assert service.get_passive_rank(character_id, "Medicinal Use") is None
-    assert service.load()["schema_version"] == SCHEMA_VERSION == 3
+    assert service.load()["schema_version"] == SCHEMA_VERSION
 
 
 def test_set_passive_rank_is_character_scoped_and_case_insensitive(tmp_path: Path) -> None:
