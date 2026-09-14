@@ -2,16 +2,16 @@ from __future__ import annotations
 
 """Resolve human raid-roster gear shorthand to canonical FoundryDock set names.
 
-Raid sheets routinely use short names such as RO, Pill, SoB, LE, and Oz.  This
+Raid sheets routinely use short names such as RO, Pill, SoB, LE, and Oz. This
 service owns that vocabulary in one place so workbook import, JSON/CSV import,
 and one-time repair of older imported builds all make the same decision.
 
-Aliases are exact after punctuation/whitespace normalization.  We deliberately do
+Aliases are exact after punctuation/whitespace normalization. We deliberately do
 not use prefix/fuzzy matching: ``Pill`` means Pillager's Profit while ``Pillar``
 means Pillar of Nirn, and silently confusing those would be spectacularly unhelpful.
 
 When a roster alias resolves to a set that has a canonical ``Perfected ...`` row,
-the Perfected row is preferred.  A source can explicitly opt out with ``normal``,
+the Perfected row is preferred. A source can explicitly opt out with ``normal``,
 ``regular``, ``non-perfected``, or ``non perfected`` before the set name.
 """
 
@@ -24,7 +24,7 @@ import unicodedata
 from minmax.gear_set_repository import GearSetRepository
 
 
-# Keep this deliberately human-facing.  Values are canonical-name hints; the
+# Keep this deliberately human-facing. Values are canonical-name hints; the
 # resolver validates them against the shipped gear_set table before returning.
 _ALIAS_TARGETS: dict[str, str] = {
     # Healer / support
@@ -50,8 +50,6 @@ _ALIAS_TARGETS: dict[str, str] = {
     "echoes": "Lucent Echoes",
     "pearls": "Pearls of Ehlnofey",
     "spauld": "Spaulder of Ruin",
-    "spauld er": "Spaulder of Ruin",
-    "spauld erofruin": "Spaulder of Ruin",
     "spaulder": "Spaulder of Ruin",
 
     # Tank / support
@@ -80,7 +78,7 @@ _ALIAS_TARGETS: dict[str, str] = {
     "morag": "The Morag Tong",
     "mgt": "The Morag Tong",
     "wm": "War Machine",
-    "ma": "Master Architect",
+    # Deliberately no bare "MA": it is too easy to confuse with Maelstrom shorthand.
 
     # DD staples
     "rele": "Arms of Relequen",
@@ -110,14 +108,6 @@ _ALIAS_TARGETS: dict[str, str] = {
     "briarheart": "Briarheart",
 }
 
-_EXPLICIT_NON_PERFECTED_PREFIXES = (
-    "normal ",
-    "regular ",
-    "non perfected ",
-    "non-perfected ",
-    "nonperfected ",
-)
-
 
 def _normalize(value: object) -> str:
     text = unicodedata.normalize("NFKD", str(value or ""))
@@ -125,8 +115,6 @@ def _normalize(value: object) -> str:
     return re.sub(r"[^a-z0-9]+", "", text.casefold())
 
 
-# Normalize keys once; this also turns variants such as Z'en / Zens into the same
-# stable comparison form where appropriate.
 _ALIAS_BY_KEY = {_normalize(key): value for key, value in _ALIAS_TARGETS.items()}
 
 
@@ -154,14 +142,13 @@ def _canonical_name_index(database_path: str) -> tuple[dict[str, str], frozenset
 
 
 def _strip_explicit_non_perfected(raw: str) -> tuple[str, bool]:
-    folded = " ".join(raw.casefold().replace("_", " ").split())
-    for prefix in _EXPLICIT_NON_PERFECTED_PREFIXES:
-        if folded.startswith(prefix):
-            # Preserve the original spelling after the prefix length as closely as
-            # possible by removing the same number of whitespace-separated words.
-            prefix_words = len(prefix.strip().replace("-", " ").split())
-            words = raw.replace("_", " ").split()
-            return " ".join(words[prefix_words:]).strip(), True
+    match = re.match(
+        r"^\s*(?:normal|regular|non[\s-]*perfected)\s+(.+?)\s*$",
+        raw,
+        flags=re.IGNORECASE,
+    )
+    if match:
+        return match.group(1).strip(), True
     return raw, False
 
 
@@ -173,7 +160,7 @@ def resolve_roster_gear_set_name(
 ) -> GearSetAliasResolution:
     """Resolve one roster-facing set name.
 
-    ``aliases_only`` is used by the historical repair pass.  It changes only
+    ``aliases_only`` is used by the historical repair pass. It changes only
     recognized shorthand, so an intentionally saved full non-Perfected name is
     never upgraded merely because a Perfected sibling exists.
     """
@@ -203,8 +190,7 @@ def resolve_roster_gear_set_name(
     else:
         base_name = by_key.get(key, raw)
 
-    # If the database does not recognize the alias target, fail closed and retain
-    # the source text rather than inventing a set identity.
+    # Fail closed if the shipped set table cannot verify the target.
     if _normalize(base_name) not in by_key:
         return GearSetAliasResolution(
             raw=raw,
