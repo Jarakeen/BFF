@@ -56,6 +56,28 @@ def test_rotation_action_normalizes_names_bars_kinds_and_time() -> None:
     assert action.bar == "front"
 
 
+def test_rotation_contract_supports_role_neutral_defensive_actions() -> None:
+    block = RotationAction(
+        time_seconds=3.0,
+        sequence=0,
+        kind="block",
+        bar="front",
+    )
+    dodge = RotationAction(
+        time_seconds=4.0,
+        sequence=0,
+        kind=RotationActionKind.DODGE,
+        bar="back",
+    )
+
+    assert block.kind is RotationActionKind.BLOCK
+    assert block.name is None
+    assert block.bar == "front"
+    assert dodge.kind is RotationActionKind.DODGE
+    assert dodge.name is None
+    assert dodge.bar == "back"
+
+
 def test_rotation_plan_rejects_ambiguous_same_time_ordering() -> None:
     actions = (
         RotationAction(
