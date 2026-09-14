@@ -97,15 +97,37 @@ Audit in progress.
 
 ---
 
+### F005 — Tank assignment, taunt obligation, maintenance, and priority layers duplicate target semantics
+
+**Category:** target/recipient authority and layered Tank responsibility
+
+**Files reviewed:**
+- `minmax/rotation_plan.py`
+- `services/rotation_assignment_taunt_obligation_service.py`
+- `services/rotation_tank_taunt_obligation_service.py`
+- `services/rotation_assignment_taunt_maintenance_service.py`
+- `services/rotation_tank_taunt_maintenance_service.py`
+- `services/rotation_tank_encounter_priority_context_service.py`
+- `services/rotation_tank_priority_candidate_assessment_service.py`
+
+**Finding:** several Tank services carry `target_key`, and the new priority assessor additionally accepts reviewed actor-name identity as a soft match. The audit checked whether those layers compete over target truth or allow soft aliases to satisfy hard obligations.
+
+**Authority review:** no hard-semantic conflict was found. Assignment services translate provider/lane ownership into explicit caller-owned planning targets. Taunt application and maintenance services require exact target-key matching when a hard target is supplied; canonical TAUNT skill semantics remain source-backed through utility-component evidence. The Tank priority assessor is a soft ranking layer only: it may recognize either the reviewed responsibility target key or reviewed actor name when assessing explicit scheduled targets, but that alias cannot satisfy a hard taunt application/maintenance requirement or rescue an ineligible candidate.
+
+**Disposition:** REVIEWED / NO CONFLICT FOUND.
+
+**Closeout boundary:** hard taunt legality and maintenance must continue to use exact caller-owned target identity. Actor-name aliases are permitted only in reviewed soft-priority comparison and may not flow backward into mechanic truth, taunt duration, immunity/overtaunt behavior, or hard target legality.
+
+---
+
 ## Audit queue
 
 The remaining Phase 13.5 audit will review, in order:
 
-1. taunt/target/recipient semantics across tank services;
-2. effect/proc/runtime-condition authority and hard-coded dictionaries;
-3. Character -> Build -> Team identity reconstruction or fallback paths;
-4. stale rotation tests, aliases, wrappers, temporary shims, and feature flags;
-5. unused/dead Phase 13 services and catalog entries;
-6. documentation/configuration drift;
-7. focused regression after each material cleanup;
-8. full regression checkpoint before Phase 13.5 closeout.
+1. effect/proc/runtime-condition authority and hard-coded dictionaries;
+2. Character -> Build -> Team identity reconstruction or fallback paths;
+3. stale rotation tests, aliases, wrappers, temporary shims, and feature flags;
+4. unused/dead Phase 13 services and catalog entries;
+5. documentation/configuration drift;
+6. focused regression after each material cleanup;
+7. full regression checkpoint before Phase 13.5 closeout.
