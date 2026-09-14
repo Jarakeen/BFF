@@ -61,7 +61,8 @@ def test_context_is_derived_from_selected_encounter_and_current_saved_build():
         bundle_service=bundle_service,
         database_path="eso.db",
     )
-    support.set_evidence((_row(),))
+    evidence = _row()
+    support.set_evidence((evidence,))
     saved_build = object()
 
     result = support.context_for(saved_build, _bundle())
@@ -75,7 +76,10 @@ def test_context_is_derived_from_selected_encounter_and_current_saved_build():
     assert call["build"] is canonical_build
     assert call["member_id"] == "tank-a"
     assert call["encounter_id"] == "taleria_hm"
-    assert call["assignments"] == _row().assignments
+    assert call["assignments"] == evidence.assignments
+    assert call["taunt_policies"] == evidence.taunt_policies
+    assert call["taunt_maintenance_policies"] == evidence.taunt_maintenance_policies
+    assert call["defensive_obligations"] == evidence.defensive_obligations
 
 
 def test_other_encounter_evidence_is_not_reused_for_selected_boss():
