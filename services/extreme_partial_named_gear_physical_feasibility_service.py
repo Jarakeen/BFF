@@ -68,17 +68,13 @@ class ExtremePartialNamedGearPhysicalFeasibilityService:
             tuple[tuple[int, ...], tuple[tuple[object, ...], ...]],
             bool,
         ] = {}
-        # Topology objects are immutable during one exact search. Their derived
-        # signature/count tuple used to be rebuilt millions of times in the hot
-        # feasibility path, despite never changing for that object.
         self._topology_signature_cache: dict[int, str] = {}
         self._topology_counts_cache: dict[int, tuple[int, ...]] = {}
 
     @staticmethod
     def _shape(row: ExtremeNamedGearSetSlotEligibility) -> tuple[object, ...]:
         return (
-            row.category.strip().casefold()
-            == ExtremeNamedGearSetRealizationService.MYTHIC_CATEGORY,
+            ExtremeNamedGearSetRealizationService.is_mythic_category(row.category),
             int(row.max_equip_count),
             tuple(row.armor_slots),
             tuple(row.jewelry_slots),
@@ -195,18 +191,6 @@ class ExtremePartialNamedGearPhysicalFeasibilityService:
         *,
         candidates: tuple[ExtremeGearPhysicalRealization, ...] | None = None,
     ) -> tuple[ExtremeGearPhysicalRealization, ...]:
-        """Return exact compatible topology witnesses for a prevalidated prefix.
-
-        Compatibility is monotone as a prefix grows: adding a named-set constraint
-        cannot make a physical realization that already failed the parent prefix
-        become legal again. Exact DFS callers may therefore pass the parent's
-        compatible witnesses as ``candidates`` and filter only that shrinking set.
-
-        Results are still cached by the full semantic prefix, so a repeated state
-        receives the same complete compatible set regardless of which parent path
-        reached it. Global named-set legality remains authoritative here.
-        """
-
         counts = self._topology_counts(topology)
         key = (
             self._topology_signature(topology),
@@ -238,15 +222,6 @@ class ExtremePartialNamedGearPhysicalFeasibilityService:
         topology: ExtremeGearSetCountTopology,
         selected: tuple[ExtremeNamedGearSetSlotEligibility, ...],
     ) -> ExtremePartialNamedGearPhysicalFeasibilityResult:
-        """Evaluate a prefix whose exact-search caller already proved local guards.
-
-        This is intentionally private to exact branch-and-bound callers. They already
-        enforce distinct set identities and construct candidates only from rows with
-        sufficient breakpoint count and physical-slot evidence. Skipping those three
-        repeated guards changes no legality rule; global named-set legality and the
-        canonical physical witness-space test below remain authoritative.
-        """
-
         key = (
             self._topology_signature(topology),
             tuple(self._cached_shape(row) for row in selected),
