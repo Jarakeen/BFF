@@ -113,7 +113,11 @@ class RotationSkillTimingEvidenceService:
             )
 
         cast = self._source_milliseconds_to_seconds(row["cast_time"], label="cast_time")
-        channel = self._source_milliseconds_to_seconds(row["channel_time"], label="channel_time")
+        channel = self._source_milliseconds_to_seconds(
+            row["channel_time"],
+            label="channel_time",
+            negative_one_is_missing=not bool(row["is_channeled"]),
+        )
         unresolved = tuple(message for _value, message in (cast, channel) if message)
         if unresolved:
             return RotationSkillTimingResolution(None, unresolved)
@@ -164,6 +168,7 @@ class RotationSkillTimingEvidenceService:
         value: object,
         *,
         label: str,
+        negative_one_is_missing: bool = False,
     ) -> tuple[float | None, str | None]:
         if value is None:
             return None, None
@@ -171,6 +176,8 @@ class RotationSkillTimingEvidenceService:
             number = float(value)
         except (TypeError, ValueError):
             return None, f"canonical {label} is not numeric: {value!r}"
+        if negative_one_is_missing and abs(number + 1.0) <= 1e-9:
+            return None, None
         if not math.isfinite(number) or number < 0.0:
             return None, f"canonical {label} is invalid: {value!r}"
         return number / cls._MILLISECONDS_PER_SECOND, None
