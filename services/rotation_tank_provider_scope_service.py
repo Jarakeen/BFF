@@ -4,8 +4,9 @@ from __future__ import annotations
 
 This service does not invent assignment or rotation policy. It reuses the existing
 Phase 10/11 provider-scope authority for the exact selected roster builds and selected
-encounter, then asks ``RotationAssignmentPolicyResolver`` whether every assignment
-owned by the selected Tank has an explicit executable disposition.
+encounter, including the configured raid Tank responsibility overlay, then asks
+``RotationAssignmentPolicyResolver`` whether every assignment owned by the selected
+Tank has an explicit executable disposition.
 
 When callers do not supply explicit policy tuples, reviewed policy is loaded from the
 shared read-only assignment-policy registry. Provider ownership and rotation policy
@@ -18,7 +19,7 @@ from pathlib import Path
 from typing import Callable
 
 from engine.config import get_data_dir
-from minmax.build_candidate_provider_scope import build_default_raid_provider_scope
+from minmax.build_candidate_provider_scope import build_default_raid_tank_provider_scope
 from models.build_model import PlayerBuild
 from services.build_service import BuildService
 from services.encounter_build_capability_adapter import SavedBuildEncounterCapabilityAdapter
@@ -100,7 +101,7 @@ class RotationTankProviderScopeService:
             self.build_service,
             self.database_path,
         )
-        self.scope_factory = scope_factory or build_default_raid_provider_scope
+        self.scope_factory = scope_factory or build_default_raid_tank_provider_scope
         self.policy_resolver = policy_resolver or RotationAssignmentPolicyResolver()
         self.policy_registry = policy_registry or RotationAssignmentPolicyRegistryService(
             self.data_root / "rotation_assignment_policy" / "reviewed.json"
@@ -159,9 +160,7 @@ class RotationTankProviderScopeService:
             reviewed = self.policy_registry.for_encounter(resolved_encounter)
             resolved_effect_policies = tuple(reviewed.effect_policies)
             resolved_taunt_policies = tuple(reviewed.taunt_policies)
-            resolved_taunt_maintenance_policies = tuple(
-                reviewed.taunt_maintenance_policies
-            )
+            resolved_taunt_maintenance_policies = tuple(reviewed.taunt_maintenance_policies)
             resolved_non_effect_policies = tuple(reviewed.non_effect_policies)
 
         policy_resolution = self.policy_resolver.resolve(
