@@ -15,6 +15,9 @@ def test_rotation_assignment_policy_and_tank_integration_services_are_catalogued
     raid_plan_projection = SERVICE_CATALOG.get(
         "raid_plan.tank.triggered_responsibility_projection"
     )
+    raid_plan_saved_build_resolution = SERVICE_CATALOG.get(
+        "raid_plan.saved_build_resolution"
+    )
 
     assert assignment_policy is not None
     assert assignment_policy.implementation_path == (
@@ -56,4 +59,11 @@ def test_rotation_assignment_policy_and_tank_integration_services_are_catalogued
     assert (
         "raid_plan_tank_runtime_triggered_responsibility_application"
         in raid_plan_projection.responsibilities
+    )
+    assert raid_plan_saved_build_resolution is not None
+    assert raid_plan_saved_build_resolution.implementation_path == (
+        "services.raid_plan_saved_build_resolution_service"
+    )
+    assert raid_plan_saved_build_resolution.responsibilities == (
+        "raid_plan_exact_saved_build_resolution",
     )
