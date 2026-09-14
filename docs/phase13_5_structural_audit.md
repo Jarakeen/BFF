@@ -120,14 +120,52 @@ Audit in progress.
 
 ---
 
+### F006 — Conditional runtime-output truth was embedded in a Python reviewed-rule tuple
+
+**Category:** hard-coded runtime-condition authority
+
+**Files:**
+- `services/rotation_runtime_output_eligibility_service.py`
+- `data/rotation_runtime_output_conditions.json`
+- `services/tests/test_rotation_runtime_output_eligibility_service.py`
+
+**Finding:** Detonating Siphon's reviewed geometry condition was stored in a module-level `_REVIEWED_RULES` tuple. Although narrow, provenance-bearing, and delegated to the shared runtime eligibility evaluator, the source file itself was acting as the persistence layer for reviewed runtime-condition evidence.
+
+**Disposition:** FIXED.
+
+**Resolution:** reviewed runtime-output conditions now live in versioned repository data (`data/rotation_runtime_output_conditions.json`). `RotationRuntimeOutputConditionRegistryService` validates schema, canonicalizes skill identity, rejects duplicate component rules, and constructs the existing shared runtime eligibility rules. `RotationRuntimeOutputEligibilityService` loads the registry by default while retaining explicit rule injection for focused tests. Runtime state/geometry remains caller-owned through exact-time `ConditionContext`; the registry does not calculate geometry or output.
+
+**Closeout boundary:** new reviewed conditional-output rules must be added to the versioned registry with provenance rather than embedded in role-local Python dictionaries. Runtime truth still requires exact event-time context.
+
+---
+
+### F007 — Reviewed scribed rotation semantics were embedded as a Python constant
+
+**Category:** hard-coded reviewed effect/runtime semantics
+
+**Files:**
+- `services/rotation_scribed_skill_damage_semantics_service.py`
+- `data/rotation_scribed_skill_damage_semantics.json`
+- `services/tests/test_rotation_scribed_skill_damage_semantics_service.py`
+- `services/scribing_catalog.py`
+
+**Finding:** Magical Banner's reviewed rotation-facing semantics (non-damaging activation, persistent toggle, and 6% Magic Damage Done while active) were stored as `_MAGICAL_BANNER` in Python. Canonical result identity already belonged to `services.scribing_catalog`, but reviewed runtime/effect semantics used source code as persistence.
+
+**Disposition:** FIXED.
+
+**Resolution:** reviewed scribed rotation semantics now live in versioned repository data. The loader validates schema, validates damage-modifier fields through `DamageDoneModifiers`, and requires each reviewed result name to resolve to the exact Grimoire + Focus identity owned by the canonical scribing catalog. Unknown/unreviewed results remain fail-closed.
+
+**Closeout boundary:** `services.scribing_catalog` remains authoritative for result identity and legal naming. Reviewed rotation semantics may supplement that identity from versioned evidence data but may not infer unreviewed Signature/Affix behavior or become a second scribing-identity catalog.
+
+---
+
 ## Audit queue
 
 The remaining Phase 13.5 audit will review, in order:
 
-1. effect/proc/runtime-condition authority and hard-coded dictionaries;
-2. Character -> Build -> Team identity reconstruction or fallback paths;
-3. stale rotation tests, aliases, wrappers, temporary shims, and feature flags;
-4. unused/dead Phase 13 services and catalog entries;
-5. documentation/configuration drift;
-6. focused regression after each material cleanup;
-7. full regression checkpoint before Phase 13.5 closeout.
+1. Character -> Build -> Team identity reconstruction or fallback paths;
+2. stale rotation tests, aliases, wrappers, temporary shims, and feature flags;
+3. unused/dead Phase 13 services and catalog entries;
+4. documentation/configuration drift;
+5. focused regression after each material cleanup;
+6. full regression checkpoint before Phase 13.5 closeout.
