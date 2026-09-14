@@ -3,12 +3,13 @@
   "encounters": [
     {
       "encounter_id": "xalvakka",
-      "source": "Reviewed 2026-09-14. ESOAZ Xalvakka guidance explicitly assigns encounter adds to the Offtank and says to pack them on the main boss. It further says the Iron Atronach should first be positioned away from the group and especially away from the main tank for its large lava AoE, then brought near the boss; the Daedroth should be faced away from the group. Alcast independently says Xalvakka adds should be pulled close to the main boss so they die in AoE. Boss-holder ownership is already reviewed separately by the Xalvakka boss-taunt policy. Sources: https://esoaz.com/2020/01/27/raid-rochebosque-teso/ ; https://alcasthq.com/eso-rockgrove-trial-guide/",
+      "source": "Reviewed 2026-09-14. ESOAZ Xalvakka guidance explicitly assigns encounter adds to the Offtank and says to pack them on the main boss. It further says the Iron Atronach should first be positioned away from the group and especially away from the main tank for its large lava AoE, then brought near the boss; the Daedroth should be faced away from the group. Alcast independently says Xalvakka adds should be pulled close to the main boss so they die in AoE. Boss-holder ownership is already reviewed separately by the Xalvakka boss-taunt policy. The Team Optimization prescription uses explicit Main Tank / Off Tank slot identities; for this reviewed encounter strategy those exact slots bind boss_holder / add_handler respectively. Sources: https://esoaz.com/2020/01/27/raid-rochebosque-teso/ ; https://alcasthq.com/eso-rockgrove-trial-guide/",
       "lanes": [
         {
           "lane_id": "boss_holder",
           "display_name": "Boss Holder",
           "distinct_from": ["add_handler"],
+          "prescription_slot_names": ["Main Tank"],
           "responsibilities": [
             {
               "responsibility_id": "boss_taunt",
@@ -23,6 +24,7 @@
           "lane_id": "add_handler",
           "display_name": "Add Handler",
           "distinct_from": ["boss_holder"],
+          "prescription_slot_names": ["Off Tank"],
           "responsibilities": [
             {
               "responsibility_id": "pack_encounter_adds",
