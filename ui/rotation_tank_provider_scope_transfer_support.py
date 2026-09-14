@@ -4,9 +4,10 @@ from __future__ import annotations
 
 MainWindow owns both Team Optimization and Rotation Builder, so this bridge reuses
 those existing stateful pages instead of creating another global selected-team store.
-Exact saved builds are resolved through the same Team Optimization helper already used
-by provider workload analysis. Provider ownership remains service-layer truth; this
-module only transfers that result into RotationGenerateTankAssignmentEvidence.
+The authoritative Team Optimization prescription is resolved back to exact saved
+builds through its structured assignment identities; UI tables are not scraped.
+Provider ownership remains service-layer truth; this module only transfers that result
+into RotationGenerateTankAssignmentEvidence.
 """
 
 from dataclasses import dataclass
@@ -15,7 +16,6 @@ from services.rotation_tank_provider_scope_service import RotationTankProviderSc
 from ui.rotation_generate_tank_assignment_context_support import (
     RotationGenerateTankAssignmentEvidence,
 )
-from ui.team_provider_workload_support import _optimization_selected_saved_builds
 
 
 _INSTALLED = False
@@ -25,6 +25,85 @@ _ORIGINAL_GENERATE = None
 
 def _canonical_role(value: object) -> str:
     return "_".join(str(value or "").strip().casefold().replace("-", " ").split())
+
+
+def _saved_build_player_identity(build) -> str:
+    return (
+        str(getattr(build, "Name", "") or "").strip()
+        or str(getattr(build, "Gamertag", "") or "").strip()
+    ).casefold()
+
+
+def _prescription_saved_builds(optimization_page) -> tuple[tuple, tuple[str, ...]]:
+    """Resolve the authoritative prescription to exact persisted saved builds.
+
+    A prescription may contain recruit/open chairs or an ambiguous saved-player source.
+    Either case is unresolved for provider ownership: Phase 11 must see the exact team,
+    not a favorable partial reconstruction.
+    """
+
+    prescription = getattr(optimization_page, "current_prescription", None)
+    if prescription is None:
+        return (), ("Team Optimization has no authoritative current prescription",)
+
+    roster = tuple(
+        getattr(getattr(optimization_page, "roster", None), "Members", ()) or ()
+    )
+    if not roster:
+        return (), ("Team Optimization has no saved builds available for the prescription",)
+
+    resolved = []
+    unresolved: list[str] = []
+    seen: set[tuple[str, str]] = set()
+    for assignment in tuple(getattr(prescription, "assignments", ()) or ()):
+        slot_name = str(getattr(assignment, "slot_name", "") or "Unnamed slot").strip()
+        player_name = str(getattr(assignment, "player_name", "") or "").strip()
+        source_build_name = str(
+            getattr(assignment, "source_build_name", "") or ""
+        ).strip()
+        if not player_name:
+            unresolved.append(
+                f"{slot_name}: prescription does not identify an exact saved player"
+            )
+            continue
+
+        target_player = player_name.casefold()
+        target_build = source_build_name.casefold()
+        matches = [
+            build
+            for build in roster
+            if _saved_build_player_identity(build) == target_player
+            and (
+                not target_build
+                or str(getattr(build, "BuildName", "") or "").strip().casefold()
+                == target_build
+            )
+        ]
+        if len(matches) != 1:
+            detail = source_build_name or "an unambiguous saved build"
+            unresolved.append(
+                f"{slot_name}: could not resolve {player_name} / {detail} to exactly one saved build"
+            )
+            continue
+
+        build = matches[0]
+        key = (
+            _saved_build_player_identity(build),
+            str(getattr(build, "BuildName", "") or "").strip().casefold(),
+        )
+        if key in seen:
+            unresolved.append(
+                f"{slot_name}: saved build {player_name} / {getattr(build, 'BuildName', '')} is assigned more than once"
+            )
+            continue
+        seen.add(key)
+        resolved.append(build)
+
+    if unresolved:
+        return (), tuple(unresolved)
+    if not resolved:
+        return (), ("Team Optimization prescription contains no exact saved-build team",)
+    return tuple(resolved), ()
 
 
 @dataclass(frozen=True)
@@ -102,13 +181,13 @@ def refresh_rotation_tank_provider_scope(
             unresolved=("Team Optimization page is unavailable",),
         )
 
-    roster_builds = tuple(_optimization_selected_saved_builds(optimization_page))
-    if not roster_builds:
+    roster_builds, team_unresolved = _prescription_saved_builds(optimization_page)
+    if team_unresolved:
         _clear_tank_assignment_evidence(rotation_page)
         return RotationTankProviderScopeTransferResult(
             False,
             encounter_id=encounter_id,
-            unresolved=("Team Optimization has no exact selected saved-build team",),
+            unresolved=team_unresolved,
         )
 
     service = provider_scope_service
