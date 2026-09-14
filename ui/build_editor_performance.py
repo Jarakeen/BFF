@@ -7,14 +7,15 @@ for photosensitive-user safety. This layer keeps the safer architecture while
 removing the largest avoidable cost from the Edit tab:
 
 * one Build Editor widget is reused across saved builds;
-* build-specific synthetic scribed skills are refreshed before each load.
+* build-specific synthetic scribed skills are refreshed before each load;
+* bulk endgame-gear finishing suppresses per-field signal/repaint storms.
 
 Skill-bar eligibility setters and icon resolution intentionally remain on their
 canonical implementations. Earlier attempts to monkeypatch those hot paths
 caused skill-bar population regressions, so correctness wins there.
 """
 
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import QSignalBlocker, QTimer
 from PySide6.QtWidgets import QLabel
 
 _INSTALLED = False
@@ -44,11 +45,13 @@ def install() -> None:
     from ui.operations_console_focus_support import install as install_operations_console_focus
     install_operations_console_focus()
 
+    from ui import phase5_build_ui_support
     from ui.builds_page import BuildsPage
     from ui.build_editor_inline_compat import _force_dark_surface, _set_combo_index
     from ui.build_workspace_edit_fix import _identity_card_for
     from ui.scribing_editor_compat import _configured_skill
     from ui.scribing_support import _recipes_for
+    from widgets.build_editor import BuildEditor
 
     # ---- Persistent Edit widget ------------------------------------------
     def refresh_scribed_choices(editor, build) -> None:
@@ -166,6 +169,62 @@ def install() -> None:
         # Paint the already-dark Edit tab before the unavoidable first editor
         # construction begins. Later visits reuse the same widget.
         QTimer.singleShot(0, lambda selected=index: show_persistent_editor(self, selected))
+
+    # ---- Bulk gear finishing ---------------------------------------------
+    def finish_endgame_gear_batched(editor) -> None:
+        """Apply endgame level/quality/glyph tier as one quiet UI transaction."""
+        rows = [
+            row
+            for row in getattr(editor, "gear_rows", {}).values()
+            if not row.value.is_empty
+        ]
+        if not rows:
+            return
+
+        combos = [
+            combo
+            for row in rows
+            for combo in (
+                row.quality_combo,
+                row.level_combo,
+                row.enchant_tier_combo,
+            )
+        ]
+        blockers = [QSignalBlocker(combo) for combo in combos]
+        editor.setUpdatesEnabled(False)
+        try:
+            for row in rows:
+                row.quality_combo.setCurrentText("Gold")
+                row.level_combo.setCurrentText("CP160")
+                row.enchant_tier_combo.setCurrentText("Truly Superb")
+
+                # Searchable fixed-catalog combos remember the last valid
+                # selection. Keep that guard in sync even though signals are
+                # intentionally blocked during this bulk action.
+                for combo in (
+                    row.quality_combo,
+                    row.level_combo,
+                    row.enchant_tier_combo,
+                ):
+                    if bool(combo.property("foundrySearchConfigured")):
+                        combo.setProperty("foundryLastValidIndex", combo.currentIndex())
+
+                # Quality styling normally rides currentTextChanged. Apply it
+                # once explicitly because that signal is suppressed here.
+                style_quality = getattr(row, "_style_quality", None)
+                if callable(style_quality):
+                    style_quality("Gold")
+        finally:
+            blockers.clear()
+            editor.setUpdatesEnabled(True)
+            editor.updateGeometry()
+            editor.update()
+
+    # The Phase 5 gear-card button resolves this module-level function when it
+    # is clicked, so replace that hot path after all earlier BuildEditor layers
+    # have installed. Keep the method alias in sync for direct callers/tests.
+    phase5_build_ui_support._finish_endgame_gear = finish_endgame_gear_batched
+    BuildEditor.finish_endgame_gear = finish_endgame_gear_batched
 
     BuildsPage._load_edit_tab = load_edit_tab_persistent
     _INSTALLED = True
