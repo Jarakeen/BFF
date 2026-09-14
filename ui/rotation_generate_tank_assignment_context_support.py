@@ -11,6 +11,10 @@ from models.build_model import PlayerBuild
 from services.encounter_boss_guide import EncounterBossGuide
 from services.encounter_evidence import ReconciledEncounterFact
 from services.encounter_provider_assignment import ProviderAssignment
+from services.rotation_assignment_taunt_maintenance_horizon_policy_service import (
+    RotationAssignmentTauntMaintenanceHorizonPolicy,
+    RotationAssignmentTauntMaintenanceHorizonPolicyService,
+)
 from services.rotation_assignment_taunt_maintenance_service import (
     RotationAssignmentTauntMaintenancePolicy,
 )
@@ -31,6 +35,9 @@ from services.rotation_tank_encounter_defensive_bundle_service import (
 )
 from services.rotation_tank_encounter_defensive_timing_service import (
     RotationTankEncounterDefensiveTimingPolicy,
+)
+from services.rotation_tank_encounter_horizon_service import (
+    RotationTankEncounterHorizonService,
 )
 from services.rotation_tank_encounter_threshold_defensive_bundle_service import (
     RotationTankEncounterThresholdDefensiveBundleService,
@@ -59,6 +66,11 @@ class RotationGenerateTankAssignmentEvidence:
     caller has chosen to schedule those responsibilities. No strategy is inferred when
     those fields are empty.
 
+    Concrete taunt-maintenance policies retain exact numeric windows. Reviewed symbolic
+    taunt-maintenance policies may instead end at ``encounter_end``; they are materialized
+    only at Generate time from the canonical fight-damage trajectory in the selected
+    evidence bundle. A symbolic policy is never treated as executable before that point.
+
     Defensive obligations may be supplied directly for explicit audit/test callers, or
     derived from reviewed encounter facts through explicit-clock and/or canonical
     health-threshold timing policies. Direct obligations and reviewed projection inputs
@@ -71,6 +83,9 @@ class RotationGenerateTankAssignmentEvidence:
     taunt_policies: tuple[RotationAssignmentTauntPolicy, ...] = ()
     taunt_maintenance_policies: tuple[
         RotationAssignmentTauntMaintenancePolicy, ...
+    ] = ()
+    taunt_maintenance_horizon_policies: tuple[
+        RotationAssignmentTauntMaintenanceHorizonPolicy, ...
     ] = ()
     taunt_application_claims: tuple[RotationTankTauntActionClaim, ...] = ()
     taunt_maintenance_refresh_policies: tuple[
@@ -102,6 +117,11 @@ class RotationGenerateTankAssignmentEvidence:
             self,
             "taunt_maintenance_policies",
             tuple(self.taunt_maintenance_policies),
+        )
+        object.__setattr__(
+            self,
+            "taunt_maintenance_horizon_policies",
+            tuple(self.taunt_maintenance_horizon_policies),
         )
         object.__setattr__(
             self,
@@ -177,6 +197,10 @@ class RotationGenerateTankAssignmentContextSupport:
         threshold_defensive_bundle_service: (
             RotationTankEncounterThresholdDefensiveBundleService | object | None
         ) = None,
+        encounter_horizon_service: RotationTankEncounterHorizonService | object | None = None,
+        horizon_policy_service: (
+            RotationAssignmentTauntMaintenanceHorizonPolicyService | object | None
+        ) = None,
     ) -> None:
         self.database_path = (
             Path(database_path)
@@ -193,6 +217,13 @@ class RotationGenerateTankAssignmentContextSupport:
         self.threshold_defensive_bundle_service = (
             threshold_defensive_bundle_service
             or RotationTankEncounterThresholdDefensiveBundleService()
+        )
+        self.encounter_horizon_service = (
+            encounter_horizon_service or RotationTankEncounterHorizonService()
+        )
+        self.horizon_policy_service = (
+            horizon_policy_service
+            or RotationAssignmentTauntMaintenanceHorizonPolicyService()
         )
         self._evidence: tuple[RotationGenerateTankAssignmentEvidence, ...] = ()
 
@@ -252,13 +283,17 @@ class RotationGenerateTankAssignmentContextSupport:
             )
 
         defensive_obligations = self._defensive_obligations(row, evidence_bundle)
+        taunt_maintenance_policies = self._taunt_maintenance_policies(
+            row,
+            evidence_bundle,
+        )
         bundle = self.bundle_service.compose(
             build=build,
             member_id=row.member_id,
             encounter_id=encounter_id,
             assignments=row.assignments,
             taunt_policies=row.taunt_policies,
-            taunt_maintenance_policies=row.taunt_maintenance_policies,
+            taunt_maintenance_policies=taunt_maintenance_policies,
             defensive_obligations=defensive_obligations,
         )
         return RotationGenerateTankObligationContext(
@@ -270,6 +305,57 @@ class RotationGenerateTankAssignmentContextSupport:
             taunt_maintenance_policies=row.taunt_maintenance_refresh_policies,
             defensive_claims=row.defensive_claims,
         )
+
+    def _taunt_maintenance_policies(
+        self,
+        row: RotationGenerateTankAssignmentEvidence,
+        evidence_bundle: RotationCanonicalEvidenceBundle,
+    ) -> tuple[RotationAssignmentTauntMaintenancePolicy, ...]:
+        concrete = list(row.taunt_maintenance_policies)
+        symbolic = tuple(row.taunt_maintenance_horizon_policies)
+        if not symbolic:
+            return tuple(concrete)
+
+        thresholds = getattr(evidence_bundle, "health_threshold_projection", None)
+        horizon = self.encounter_horizon_service.resolve(
+            encounter_id=row.encounter_id,
+            health_threshold_projection=thresholds,
+        )
+        unresolved: list[str] = []
+        for policy in symbolic:
+            materialized = self.horizon_policy_service.materialize(
+                policy=policy,
+                horizon=horizon,
+            )
+            if not getattr(materialized, "resolved", False) or getattr(
+                materialized,
+                "policy",
+                None,
+            ) is None:
+                unresolved.extend(
+                    str(item).strip()
+                    for item in getattr(materialized, "unresolved", ())
+                    if str(item).strip()
+                )
+                continue
+            concrete.append(materialized.policy)
+
+        if unresolved:
+            raise ValueError(
+                "cannot materialize Tank symbolic taunt-maintenance policy: "
+                + "; ".join(dict.fromkeys(unresolved))
+            )
+
+        seen: set[str] = set()
+        for policy in concrete:
+            key = str(policy.requirement_id or "").strip().casefold()
+            if key in seen:
+                raise ValueError(
+                    "Tank Generate taunt-maintenance policy cannot duplicate requirement identity after horizon materialization: "
+                    f"{policy.requirement_id}"
+                )
+            seen.add(key)
+        return tuple(concrete)
 
     def _defensive_obligations(
         self,
