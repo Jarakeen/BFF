@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "assignments": [
+    {
+      "encounter_id": "xalvakka",
+      "report_code": "XVMgLdq6GpQ7bhKN",
+      "evidence_scope": "single_report_reviewed_observed_lane_assignment",
+      "taunt_state_effect_id": 38254,
+      "fights": [30, 31, 32, 33, 34],
+      "lanes": [
+        {
+          "lane_id": "boss_holder",
+          "source_id": 5,
+          "character_name": "Dualtalons",
+          "account_name": "@Cerberuss123",
+          "actor_type": "Arcanist",
+          "eso_logs_role": "tank",
+          "role_fights": 5,
+          "boss_taunt_events": 358,
+          "boss_fights": 5,
+          "add_taunt_events": 28,
+          "add_instances": 10,
+          "interpretation": "Observed tank source 5 overwhelmingly owns Xalvakka Taunt state across all five reviewed fights and only occasionally taunts encounter adds; this report-scoped behavior matches the reviewed boss_holder lane."
+        },
+        {
+          "lane_id": "add_handler",
+          "source_id": 1,
+          "character_name": "Fulcinator",
+          "account_name": "@FulciLives",
+          "actor_type": "DragonKnight",
+          "eso_logs_role": "tank",
+          "role_fights": 5,
+          "boss_taunt_events": 82,
+          "boss_fights": 5,
+          "add_taunt_events": 210,
+          "add_instances": 33,
+          "interpretation": "Observed tank source 1 overwhelmingly owns encounter-add Taunt state across 33 add instances while contributing less boss Taunt ownership; this report-scoped behavior matches the reviewed add_handler lane."
+        }
+      ],
+      "interpretation": "This is reviewed observational evidence for one ESO Logs report. It maps the two observed Tank players to Xalvakka responsibility lanes for this report only. It does not make character names, account names, classes, or source IDs universal Main Tank / Off Tank rules and does not replace the encounter's reviewed prescription-slot mapping."
+    }
+  ]
+}
