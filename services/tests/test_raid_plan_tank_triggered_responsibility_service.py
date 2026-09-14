@@ -1,3 +1,4 @@
+from models.raid_plan import RaidPlan, RaidPlanMember, RaidPlanTriggeredResponsibility
 from services.raid_plan_tank_triggered_responsibility_service import (
     RaidPlanTankTriggeredResponsibilityService,
 )
@@ -43,6 +44,22 @@ def _priority(
         trigger=trigger,
         hard_policy=False,
         interpretation="reviewed actor-specific handling",
+    )
+
+
+def _plan(*, triggered=()) -> RaidPlan:
+    return RaidPlan(
+        plan_id="performance-mode-rockgrove",
+        trial_id="rockgrove",
+        name="Performance Mode - Rockgrove",
+        members=(
+            RaidPlanMember(
+                seat_id="off-tank",
+                gamertag="TankTwo",
+                role="Tank",
+            ),
+        ),
+        triggered_responsibilities=tuple(triggered),
     )
 
 
@@ -135,3 +152,122 @@ def test_projection_never_promotes_soft_priority_to_hard_policy() -> None:
 
     assert result.responsibilities
     assert not hasattr(result.responsibilities[0], "hard_policy")
+
+
+def test_apply_to_plan_adds_resolved_intent_without_mutating_original_plan() -> None:
+    original = _plan()
+    result = RaidPlanTankTriggeredResponsibilityService().apply_to_plan(
+        plan=original,
+        seat_id="off-tank",
+        add_activity_triggers=(
+            _activity("Iron Atronach", "pack_encounter_adds"),
+        ),
+        priority_context=(
+            _priority(
+                "Iron Atronach",
+                "pack_encounter_adds",
+                directive="acquire_and_maintain_owned_add_when_active",
+                trigger="reviewed_add_activity",
+                priority=20,
+            ),
+        ),
+    )
+
+    assert original.triggered_responsibilities == ()
+    assert result.resolved is True
+    assert len(result.applied) == 1
+    assert result.plan.triggered_for_seat("off-tank", encounter_id="xalvakka") == result.applied
+
+
+def test_apply_to_plan_is_idempotent_for_identical_existing_intent() -> None:
+    service = RaidPlanTankTriggeredResponsibilityService()
+    projection = service.project(
+        seat_id="off-tank",
+        add_activity_triggers=(
+            _activity("Iron Atronach", "pack_encounter_adds"),
+        ),
+        priority_context=(
+            _priority(
+                "Iron Atronach",
+                "pack_encounter_adds",
+                directive="acquire_and_maintain_owned_add_when_active",
+                trigger="reviewed_add_activity",
+                priority=20,
+            ),
+        ),
+    )
+    existing = projection.responsibilities[0]
+
+    result = service.apply_to_plan(
+        plan=_plan(triggered=(existing,)),
+        seat_id="off-tank",
+        add_activity_triggers=(
+            _activity("Iron Atronach", "pack_encounter_adds"),
+        ),
+        priority_context=(
+            _priority(
+                "Iron Atronach",
+                "pack_encounter_adds",
+                directive="acquire_and_maintain_owned_add_when_active",
+                trigger="reviewed_add_activity",
+                priority=20,
+            ),
+        ),
+    )
+
+    assert result.resolved is True
+    assert result.plan.triggered_responsibilities == (existing,)
+    assert result.applied == (existing,)
+
+
+def test_apply_to_plan_preserves_conflicting_existing_raid_lead_intent() -> None:
+    existing = RaidPlanTriggeredResponsibility(
+        responsibility_id="xalvakka:pack_encounter_adds:iron_atronach",
+        seat_id="off-tank",
+        encounter_id="xalvakka",
+        trigger_key="encounter_actor_active:iron_atronach",
+        directive="raid_lead_custom_iron_atronach_plan",
+        target_key="Iron Atronach",
+        required_capability_type="taunt",
+        source="explicit raid lead plan",
+    )
+
+    result = RaidPlanTankTriggeredResponsibilityService().apply_to_plan(
+        plan=_plan(triggered=(existing,)),
+        seat_id="off-tank",
+        add_activity_triggers=(
+            _activity("Iron Atronach", "pack_encounter_adds"),
+        ),
+        priority_context=(
+            _priority(
+                "Iron Atronach",
+                "pack_encounter_adds",
+                directive="acquire_and_maintain_owned_add_when_active",
+                trigger="reviewed_add_activity",
+                priority=20,
+            ),
+        ),
+    )
+
+    assert result.resolved is False
+    assert result.applied == ()
+    assert result.plan.triggered_responsibilities == (existing,)
+    assert result.unresolved == (
+        "xalvakka:pack_encounter_adds:iron_atronach: Raid Plan already contains different triggered responsibility intent; existing plan decision preserved",
+    )
+
+
+def test_apply_to_plan_rejects_unknown_seat() -> None:
+    service = RaidPlanTankTriggeredResponsibilityService()
+
+    try:
+        service.apply_to_plan(
+            plan=_plan(),
+            seat_id="main-tank",
+            add_activity_triggers=(),
+            priority_context=(),
+        )
+    except ValueError as exc:
+        assert "unknown Raid Plan seat" in str(exc)
+    else:
+        raise AssertionError("expected unknown Raid Plan seat to fail closed")
