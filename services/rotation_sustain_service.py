@@ -9,7 +9,7 @@ from minmax.ability_cost_repository import AbilityCostRepository
 from minmax.build_action_cost_modifiers import BuildActionCostModifierResolver
 from minmax.build_calculation_context import BuildCalculationContext
 from minmax.build_sustain import BuildSustainRun, NamedBuildAction, evaluate_named_build_sustain
-from minmax.character_progression import AttributeAllocation, CharacterProgression
+from minmax.character_progression import CharacterProgression
 from minmax.context_factory import BuildCalculationContextFactory
 from minmax.gear_set_repository import GearSetRepository
 from minmax.jewelry_cost_modifier_repository import JewelryCostModifierRepository
@@ -160,37 +160,30 @@ class RotationSustainService:
             raise ValueError("rotation plan build identity does not match selected build")
 
     def _progression(self, build: PlayerBuild) -> tuple[CharacterProgression, tuple[str, ...]]:
+        """Return only canonical Character progression; never reconstruct ownership from gear.
+
+        Rotation sustain may still evaluate with an incomplete progression object so
+        downstream diagnostics can explain the gap, but missing owned skill lines are
+        not inferred from currently equipped armor. Character-owned progression is an
+        identity fact and must come from the canonical Character -> Build path.
+        """
         resolved = self.progression_adapter.resolve(build)
-        if resolved.resolved and resolved.progression.owned_skill_lines:
-            return resolved.progression, tuple(resolved.unresolved)
-
-        armor_lines = {
-            f"{str(entry.get('Weight', '') or '').strip().title()} Armor"
-            for entry in build.Armor.values()
-            if str(entry.get("Weight", "") or "").strip().casefold()
-            in {"light", "medium", "heavy"}
-        }
-        fallback = CharacterProgression(
-            attributes=AttributeAllocation(
-                health=build.AttributeHealth,
-                magicka=build.AttributeMagicka,
-                stamina=build.AttributeStamina,
-            ),
-            owned_skill_lines=tuple(sorted(armor_lines)),
-        )
-
         unresolved = list(resolved.unresolved)
-        if resolved.resolved and not resolved.progression.owned_skill_lines:
+
+        if resolved.resolved and resolved.progression.owned_skill_lines:
+            return resolved.progression, self._dedupe(tuple(unresolved))
+
+        if resolved.resolved:
             unresolved.append(
                 "canonical character progression has no owned skill lines; rotation sustain "
-                "used equipped-armor inference as a compatibility fallback"
+                "will not infer character-owned progression from equipped armor"
             )
         else:
             unresolved.append(
-                "rotation sustain could not use canonical character progression; equipped-armor "
-                "skill-line ownership was inferred as a compatibility fallback"
+                "rotation sustain could not use canonical character progression; "
+                "character-owned skill-line ownership remains unresolved"
             )
-        return fallback, self._dedupe(tuple(unresolved))
+        return resolved.progression, self._dedupe(tuple(unresolved))
 
     @staticmethod
     def _character_name(build: PlayerBuild) -> str:
