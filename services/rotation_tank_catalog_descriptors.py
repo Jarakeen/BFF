@@ -67,6 +67,34 @@ ROTATION_TANK_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "blockable/dodgeable, calculate mitigation, or manufacture timing from guide prose."
         ),
     ),
+    ServiceDescriptor(
+        service_id="rotation.tank.encounter_defensive_projection",
+        domain="rotation",
+        purpose=(
+            "Project structured, non-conflicting reviewed encounter evidence into exact "
+            "tank block/dodge obligations when a separately supplied occurrence binding "
+            "places the mechanic on the rotation clock."
+        ),
+        implementation_path=(
+            "services.rotation_tank_encounter_defensive_obligation_service"
+        ),
+        inputs=(
+            "ReconciledEncounterFact",
+            "RotationTankEncounterDefensiveWindowBinding",
+        ),
+        outputs=("RotationTankEncounterDefensiveProjection",),
+        dependencies=("rotation.tank.defensive_response_obligation",),
+        responsibilities=("rotation_tank_reviewed_encounter_defensive_projection",),
+        roles=("Tank",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Structured fact fields must explicitly prove both tank applicability and block/"
+            "dodge response semantics. The binding owns only occurrence identity and clock "
+            "placement. Free-form prose, conflicting facts, and unproven timing fail closed."
+        ),
+    ),
 )
 
 
