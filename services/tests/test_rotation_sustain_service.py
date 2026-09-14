@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 
+from minmax.character_progression import AttributeAllocation, CharacterProgression
 from minmax.resource_costs import ResourceType
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from models.build_model import PlayerBuild
@@ -65,7 +66,7 @@ def test_timeline_series_includes_initial_state_and_applied_event_states() -> No
     )
 
 
-def test_progression_infers_only_visibly_equipped_armor_lines_and_marks_boundary() -> None:
+def test_progression_keeps_empty_canonical_ownership_unresolved_without_gear_inference() -> None:
     build = PlayerBuild(
         Name="Magrat",
         BuildName="DF Healer",
@@ -77,9 +78,13 @@ def test_progression_infers_only_visibly_equipped_armor_lines_and_marks_boundary
     build.Armor["Chest"]["Weight"] = "Heavy"
     build.Armor["Hands"]["Weight"] = ""
 
+    canonical_progression = CharacterProgression(
+        attributes=AttributeAllocation(magicka=64),
+        owned_skill_lines=(),
+    )
     canonical_without_owned_lines = SimpleNamespace(
         resolved=True,
-        progression=SimpleNamespace(owned_skill_lines=()),
+        progression=canonical_progression,
         unresolved=(),
     )
     progression_adapter = SimpleNamespace(
@@ -89,11 +94,12 @@ def test_progression_infers_only_visibly_equipped_armor_lines_and_marks_boundary
 
     progression, unresolved = service._progression(build)
 
+    assert progression is canonical_progression
     assert progression.attributes.magicka == 64
-    assert progression.owned_skill_lines == ("Heavy Armor", "Light Armor")
+    assert progression.owned_skill_lines == ()
     assert len(unresolved) == 1
     assert "canonical character progression has no owned skill lines" in unresolved[0]
-    assert "equipped-armor inference" in unresolved[0]
+    assert "will not infer character-owned progression from equipped armor" in unresolved[0]
 
 
 def test_rotation_sustain_forwards_time_aware_displayed_recovery() -> None:
