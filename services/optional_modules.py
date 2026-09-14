@@ -19,17 +19,17 @@ def broadcast_installed() -> bool:
 def broadcast_enabled() -> bool:
     """Return whether the installed optional Broadcast module is enabled.
 
-    An installed Broadcast module is enabled by default for backwards
-    compatibility. The environment override can explicitly disable it, but it
-    cannot enable a module whose manifest is absent from the installation.
+    Broadcast stays installed but is disabled by default. Set the environment
+    override explicitly to a true value to re-enable it. A missing Broadcast
+    manifest always wins and keeps the module disabled.
     """
 
     if not broadcast_installed():
         return False
 
-    raw = os.environ.get("BFF_BROADCAST_ENABLED", "1").strip().lower()
+    raw = os.environ.get("BFF_BROADCAST_ENABLED", "0").strip().lower()
     if raw in _FALSE_VALUES:
         return False
     if raw in _TRUE_VALUES:
         return True
-    return True
+    return False
