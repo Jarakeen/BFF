@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from models.build_model import PlayerBuild
+from models.build_model import BuildContextVariant, PlayerBuild
 from ui.coverage_health_check_support import (
     _canonical_team_builds,
     select_team_builds,
@@ -66,14 +66,7 @@ def test_health_check_refuses_to_guess_between_ambiguous_builds():
     assert unresolved == ("Jarakeen",)
 
 
-def test_health_check_prefers_exact_canonical_team_build_assignments():
-    build = PlayerBuild(
-        Name="Magrat",
-        Gamertag="Jarakeen",
-        BuildName="DF Healer",
-        EsoClass="Warden",
-        Role="Healer",
-    )
+def _catalog_page(build: PlayerBuild):
     record = {
         "build_id": "build-1",
         "legacy": build.to_dict(),
@@ -92,15 +85,81 @@ def test_health_check_prefers_exact_canonical_team_build_assignments():
             assert build_id == "build-1"
             return record
 
-    page = SimpleNamespace(
+    return SimpleNamespace(
         build_service=SimpleNamespace(
             canonical=SimpleNamespace(catalog_service=Catalog())
         )
     )
 
-    selected, unresolved = _canonical_team_builds(page, "Performance Mode")
+
+def test_health_check_prefers_exact_canonical_team_build_assignments():
+    build = PlayerBuild(
+        Name="Magrat",
+        Gamertag="Jarakeen",
+        BuildName="DF Healer",
+        EsoClass="Warden",
+        Role="Healer",
+    )
+
+    selected, unresolved = _canonical_team_builds(
+        _catalog_page(build),
+        "Performance Mode",
+    )
 
     assert unresolved == ()
     assert len(selected) == 1
     assert selected[0][0] == "Healer 1"
     assert selected[0][1].BuildName == "DF Healer"
+
+
+def test_direct_coverage_uses_base_build_even_when_team_variant_exists():
+    build = PlayerBuild(
+        Name="Magrat",
+        Gamertag="Jarakeen",
+        BuildName="DF Healer",
+        EsoClass="Warden",
+        Role="Healer",
+        Food="Base Food",
+        ContextVariants=[
+            BuildContextVariant(
+                ContextType="Team",
+                TeamName="Performance Mode",
+                Food="Team Food",
+            )
+        ],
+    )
+
+    selected, unresolved = _canonical_team_builds(
+        _catalog_page(build),
+        "Performance Mode",
+    )
+
+    assert unresolved == ()
+    assert selected[0][1].Food == "Base Food"
+
+
+def test_contextual_coverage_can_apply_team_variant_explicitly():
+    build = PlayerBuild(
+        Name="Magrat",
+        Gamertag="Jarakeen",
+        BuildName="DF Healer",
+        EsoClass="Warden",
+        Role="Healer",
+        Food="Base Food",
+        ContextVariants=[
+            BuildContextVariant(
+                ContextType="Team",
+                TeamName="Performance Mode",
+                Food="Team Food",
+            )
+        ],
+    )
+
+    selected, unresolved = _canonical_team_builds(
+        _catalog_page(build),
+        "Performance Mode",
+        use_context=True,
+    )
+
+    assert unresolved == ()
+    assert selected[0][1].Food == "Team Food"
