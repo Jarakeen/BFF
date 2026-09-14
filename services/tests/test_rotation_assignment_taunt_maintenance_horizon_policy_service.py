@@ -6,12 +6,12 @@ from services.rotation_assignment_taunt_maintenance_horizon_policy_service impor
 from services.rotation_tank_encounter_horizon_service import RotationTankEncounterHorizon
 
 
-def _policy(*, start: float = 0.0):
+def _policy(*, start: float = 0.0, source_skill_name="Pierce Armor", bar="front"):
     return RotationAssignmentTauntMaintenanceHorizonPolicy(
         requirement_id="xalvakka:tank:boss_taunt",
         encounter_id="xalvakka",
         requirement_type="taunt",
-        source_skill_name="Pierce Armor",
+        source_skill_name=source_skill_name,
         source="reviewed raid Tank responsibility",
         windows=(
             RotationAssignmentTauntMaintenanceHorizonWindow(
@@ -19,23 +19,25 @@ def _policy(*, start: float = 0.0):
                 target_key="boss",
                 active_start_seconds=start,
                 end_reference="encounter_end",
-                bar="front",
+                bar=bar,
             ),
         ),
     )
 
 
-def test_resolved_horizon_materializes_existing_numeric_maintenance_policy():
-    horizon = RotationTankEncounterHorizon(
+def _horizon(end=107.116512):
+    return RotationTankEncounterHorizon(
         encounter_id="xalvakka",
-        end_seconds=107.116512,
+        end_seconds=end,
         resolved=True,
         evidence=("projected fight end",),
     )
 
+
+def test_resolved_horizon_materializes_existing_numeric_maintenance_policy():
     result = RotationAssignmentTauntMaintenanceHorizonPolicyService().materialize(
         policy=_policy(),
-        horizon=horizon,
+        horizon=_horizon(),
     )
 
     assert result.resolved is True
@@ -47,6 +49,46 @@ def test_resolved_horizon_materializes_existing_numeric_maintenance_policy():
     assert result.policy.windows[0].target_key == "boss"
     assert result.policy.windows[0].bar == "front"
     assert any("symbolic_endpoint=encounter_end" in row for row in result.evidence)
+
+
+def test_skill_agnostic_symbolic_policy_binds_canonical_provider_skill_and_bar():
+    result = RotationAssignmentTauntMaintenanceHorizonPolicyService().materialize(
+        policy=_policy(source_skill_name=None, bar=None),
+        horizon=_horizon(),
+        provider_source_skill_name="Inner Rage",
+        provider_source_bar="back",
+    )
+
+    assert result.resolved is True
+    assert result.policy is not None
+    assert result.policy.source_skill_name == "Inner Rage"
+    assert result.policy.windows[0].bar == "back"
+    assert "provider_taunt=Inner Rage" in result.evidence
+    assert "provider_taunt_bar=back" in result.evidence
+
+
+def test_skill_agnostic_symbolic_policy_fails_closed_without_provider_skill():
+    result = RotationAssignmentTauntMaintenanceHorizonPolicyService().materialize(
+        policy=_policy(source_skill_name=None, bar=None),
+        horizon=_horizon(),
+    )
+
+    assert result.resolved is False
+    assert result.policy is None
+    assert "no exact canonical provider taunt skill" in result.unresolved[0]
+
+
+def test_reviewed_skill_and_provider_skill_must_not_conflict():
+    result = RotationAssignmentTauntMaintenanceHorizonPolicyService().materialize(
+        policy=_policy(),
+        horizon=_horizon(),
+        provider_source_skill_name="Inner Rage",
+        provider_source_bar="back",
+    )
+
+    assert result.resolved is False
+    assert result.policy is None
+    assert "does not match canonical provider taunt" in result.unresolved[0]
 
 
 def test_unresolved_horizon_fails_closed_without_numeric_policy():
@@ -86,15 +128,9 @@ def test_horizon_encounter_identity_must_match_policy():
 
 
 def test_projected_end_must_follow_reviewed_maintenance_start():
-    horizon = RotationTankEncounterHorizon(
-        encounter_id="xalvakka",
-        end_seconds=20.0,
-        resolved=True,
-    )
-
     result = RotationAssignmentTauntMaintenanceHorizonPolicyService().materialize(
         policy=_policy(start=20.0),
-        horizon=horizon,
+        horizon=_horizon(end=20.0),
     )
 
     assert result.resolved is False
