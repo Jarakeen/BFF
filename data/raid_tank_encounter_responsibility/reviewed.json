@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "encounters": [
+    {
+      "encounter_id": "xalvakka",
+      "source": "Reviewed 2026-09-14. ESOAZ Xalvakka guidance explicitly assigns encounter adds to the Offtank and says to pack them on the main boss. It further says the Iron Atronach should first be positioned away from the group and especially away from the main tank for its large lava AoE, then brought near the boss; the Daedroth should be faced away from the group. Alcast independently says Xalvakka adds should be pulled close to the main boss so they die in AoE. Boss-holder ownership is already reviewed separately by the Xalvakka boss-taunt policy. Sources: https://esoaz.com/2020/01/27/raid-rochebosque-teso/ ; https://alcasthq.com/eso-rockgrove-trial-guide/",
+      "lanes": [
+        {
+          "lane_id": "boss_holder",
+          "display_name": "Boss Holder",
+          "distinct_from": ["add_handler"],
+          "responsibilities": [
+            {
+              "responsibility_id": "boss_taunt",
+              "target_key": "xalvakka",
+              "action_type": "maintain_taunt",
+              "required_capability_type": "taunt",
+              "source": "Reviewed Xalvakka boss-taunt ownership policy."
+            }
+          ]
+        },
+        {
+          "lane_id": "add_handler",
+          "display_name": "Add Handler",
+          "distinct_from": ["boss_holder"],
+          "responsibilities": [
+            {
+              "responsibility_id": "pack_encounter_adds",
+              "target_key": "encounter_adds",
+              "action_type": "gather_and_stack_on_boss",
+              "required_capability_type": "taunt",
+              "source": "ESOAZ explicitly assigns adds to the Offtank and instructs that they be packed on the main boss; Alcast independently recommends pulling Xalvakka adds close to the main boss."
+            },
+            {
+              "responsibility_id": "iron_atronach_opening_position",
+              "target_key": "iron_atronach",
+              "action_type": "place_away_then_stack",
+              "source": "ESOAZ says the Iron Atronach should initially be placed away from the group, especially away from the main tank, for its large lava AoE, then moved near the boss."
+            },
+            {
+              "responsibility_id": "daedroth_facing",
+              "target_key": "daedroth",
+              "action_type": "face_away_from_group",
+              "source": "ESOAZ says the Daedroth should be turned away from the group to avoid its fire breath."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
