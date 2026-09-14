@@ -67,9 +67,10 @@ class RotationGenerateTankAssignmentEvidence:
     those fields are empty.
 
     Concrete taunt-maintenance policies retain exact numeric windows. Reviewed symbolic
-    taunt-maintenance policies may instead end at ``encounter_end``; they are materialized
-    only at Generate time from the canonical fight-damage trajectory in the selected
-    evidence bundle. A symbolic policy is never treated as executable before that point.
+    taunt-maintenance policies may instead end at ``encounter_end`` or an exact reviewed
+    health threshold; they are materialized only at Generate time from the canonical
+    fight-damage trajectory in the selected evidence bundle. A symbolic policy is never
+    treated as executable before that point.
 
     Defensive obligations may be supplied directly for explicit audit/test callers, or
     derived from reviewed encounter facts through explicit-clock and/or canonical
@@ -326,6 +327,7 @@ class RotationGenerateTankAssignmentContextSupport:
             materialized = self.horizon_policy_service.materialize(
                 policy=policy,
                 horizon=horizon,
+                health_threshold_projection=thresholds,
             )
             if not getattr(materialized, "resolved", False) or getattr(
                 materialized,
@@ -439,12 +441,34 @@ class RotationGenerateTankAssignmentContextSupport:
         )
         return tuple(obligations)
 
-    def install(self, page) -> None:
-        page.set_rotation_generate_tank_assignment_evidence = self.set_evidence
-        page.rotation_generate_tank_assignment_context = self.context_for
+
+def rotation_generate_tank_assignment_context(
+    *,
+    page,
+    player_build: PlayerBuild,
+    evidence_bundle: RotationCanonicalEvidenceBundle,
+) -> RotationGenerateTankObligationContext | None:
+    support = getattr(page, "_rotation_generate_tank_assignment_context_support", None)
+    if support is None:
+        support = RotationGenerateTankAssignmentContextSupport()
+        page._rotation_generate_tank_assignment_context_support = support
+    return support.context_for(player_build, evidence_bundle)
+
+
+def set_rotation_generate_tank_assignment_evidence(
+    page,
+    evidence: tuple[RotationGenerateTankAssignmentEvidence, ...],
+) -> None:
+    support = getattr(page, "_rotation_generate_tank_assignment_context_support", None)
+    if support is None:
+        support = RotationGenerateTankAssignmentContextSupport()
+        page._rotation_generate_tank_assignment_context_support = support
+    support.set_evidence(evidence)
 
 
 __all__ = [
     "RotationGenerateTankAssignmentContextSupport",
     "RotationGenerateTankAssignmentEvidence",
+    "rotation_generate_tank_assignment_context",
+    "set_rotation_generate_tank_assignment_evidence",
 ]
