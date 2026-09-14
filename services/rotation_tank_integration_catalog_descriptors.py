@@ -147,6 +147,38 @@ ROTATION_TANK_INTEGRATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "cross-lane taunt permission, timing windows, or uptime floors by themselves."
         ),
     ),
+    ServiceDescriptor(
+        service_id="raid_plan.tank.triggered_responsibility_projection",
+        domain="raid_plan",
+        purpose=(
+            "Project reviewed Tank add-activity and soft priority context into seat-owned "
+            "runtime-triggered Raid Plan responsibilities without manufacturing Rotation timestamps."
+        ),
+        implementation_path="services.raid_plan_tank_triggered_responsibility_service",
+        inputs=(
+            "RaidPlanSeatId",
+            "RotationTankEncounterAddActivityTrigger",
+            "RotationTankEncounterPriorityCue",
+        ),
+        outputs=(
+            "RaidPlanTankTriggeredResponsibilityProjection",
+            "RaidPlanTriggeredResponsibility",
+        ),
+        dependencies=(
+            "rotation.tank.encounter_add_activity_context",
+            "rotation.tank.encounter_priority_context",
+        ),
+        responsibilities=("raid_plan_tank_runtime_triggered_responsibility_projection",),
+        roles=("Tank",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Only reviewed add activity paired with unambiguous reviewed_add_activity priority "
+            "context becomes plan intent. Responsibilities requiring additional encounter context "
+            "remain unresolved, and no output from this service carries time_seconds or hard policy."
+        ),
+    ),
 )
 
 
