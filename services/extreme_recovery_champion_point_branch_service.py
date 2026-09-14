@@ -49,10 +49,13 @@ class ExtremeRecoveryChampionPointBranchService:
             return sum(1 for value in thresholds if points >= int(value))
         return points
 
-    @staticmethod
-    def _mentions_resource(text: str, objective_key: str) -> bool:
-        resource = _RESOURCE[objective_key]
-        lowered = text.casefold()
+    @classmethod
+    def mentions_objective_recovery(cls, text: str, objective_key: str) -> bool:
+        objective = str(objective_key or "").strip().casefold()
+        if objective not in _SUPPORTED:
+            raise KeyError(f"unsupported Recovery Champion Point objective: {objective_key!r}")
+        resource = _RESOURCE[objective]
+        lowered = " ".join(str(text or "").casefold().split())
         if f"{resource} recovery" in lowered:
             return True
         if resource not in lowered or "recovery" not in lowered:
@@ -96,7 +99,7 @@ class ExtremeRecoveryChampionPointBranchService:
             text,
             flags=re.IGNORECASE,
         )
-        if capped and cls._mentions_resource(text, objective):
+        if capped and cls.mentions_objective_recovery(text, objective):
             return ExtremeRecoveryChampionPointBranch(
                 name=record.name,
                 objective_key=objective,
@@ -105,7 +108,7 @@ class ExtremeRecoveryChampionPointBranchService:
                 condition="overheal target; Max Magicka high enough to reach stated cap",
             )
 
-        if cls._mentions_resource(text, objective) and "per stage" in text.casefold():
+        if cls.mentions_objective_recovery(text, objective) and "per stage" in text.casefold():
             values = [float(value) for value in re.findall(r"([0-9]+(?:\.[0-9]+)?)\s+per stage", text, flags=re.IGNORECASE)]
             if values:
                 stages = cls._stages(record)
