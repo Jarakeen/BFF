@@ -14,6 +14,12 @@ remain separate truths. Symbolic encounter-end maintenance policy is preserved o
 resolution but deliberately does not make ``ready`` true until Generate-time horizon
 materialization produces an ordinary executable maintenance policy.
 
+An optional explicit requirement-to-member preference may resolve a Phase 11
+``UNRESOLVED_SELECTION`` only when that member is already a proven viable provider.
+This is the seam used by reviewed encounter responsibility-lane binding; it never turns
+an unsupported or unresolved candidate into a provider and never uses roster order as a
+tie-break.
+
 Exact taunt skill/bar identity is build evidence, not encounter policy. The selected
 Tank's canonical structural-utility source is therefore carried separately and used to
 bind skill-agnostic reviewed symbolic ownership policy before it crosses into Generate.
@@ -29,7 +35,10 @@ from minmax.build_candidate_provider_scope import build_default_raid_tank_provid
 from models.build_model import PlayerBuild
 from services.build_service import BuildService
 from services.encounter_build_capability_adapter import SavedBuildEncounterCapabilityAdapter
-from services.encounter_provider_assignment import ProviderAssignment
+from services.encounter_provider_assignment import (
+    ProviderAssignment,
+    ProviderAssignmentStatus,
+)
 from services.rotation_assignment_effect_obligation_service import RotationAssignmentEffectPolicy
 from services.rotation_assignment_policy_registry_service import (
     RotationAssignmentPolicyRegistryService,
@@ -58,6 +67,88 @@ ProviderScopeFactory = Callable[..., object]
 
 def _canonical_role(value: object) -> str:
     return "_".join(str(value or "").strip().casefold().replace("-", " ").split())
+
+
+def _apply_preferred_assignments(
+    assignments: tuple[ProviderAssignment, ...],
+    preferred_member_by_requirement: dict[str, str],
+) -> tuple[ProviderAssignment, ...]:
+    """Resolve only evidence-backed provider-selection ambiguity from explicit strategy."""
+
+    preferences = {
+        str(requirement_id or "").strip().casefold(): str(member_id or "").strip()
+        for requirement_id, member_id in preferred_member_by_requirement.items()
+    }
+    if any(not key or not member for key, member in preferences.items()):
+        raise ValueError("Tank provider assignment preferences require non-empty identities")
+    if not preferences:
+        return tuple(assignments)
+
+    known = {assignment.requirement_id.casefold() for assignment in assignments}
+    unknown = tuple(sorted(key for key in preferences if key not in known))
+    if unknown:
+        raise ValueError(
+            "Tank provider assignment preference references unknown requirement(s): "
+            + ", ".join(unknown)
+        )
+
+    resolved: list[ProviderAssignment] = []
+    for assignment in assignments:
+        preferred = preferences.get(assignment.requirement_id.casefold())
+        if preferred is None:
+            resolved.append(assignment)
+            continue
+
+        if assignment.status not in {
+            ProviderAssignmentStatus.ASSIGNED,
+            ProviderAssignmentStatus.UNRESOLVED_SELECTION,
+        }:
+            raise ValueError(
+                f"{assignment.requirement_id}: explicit Tank responsibility cannot override provider state {assignment.status.value!r}"
+            )
+
+        viable = tuple(
+            dict.fromkeys((*assignment.primary_providers, *assignment.backup_providers))
+        )
+        matches = tuple(
+            candidate
+            for candidate in viable
+            if str(candidate.member_id).casefold() == preferred.casefold()
+        )
+        if len(matches) != 1:
+            raise ValueError(
+                f"{assignment.requirement_id}: reviewed Tank responsibility member {preferred!r} is not exactly one proven viable provider"
+            )
+        chosen = matches[0]
+
+        if assignment.status is ProviderAssignmentStatus.ASSIGNED:
+            if len(assignment.primary_providers) != 1:
+                raise ValueError(
+                    f"{assignment.requirement_id}: reviewed Tank responsibility currently supports one explicit primary provider"
+                )
+            existing = assignment.primary_providers[0]
+            if existing.member_id.casefold() != preferred.casefold():
+                raise ValueError(
+                    f"{assignment.requirement_id}: existing evidence-backed provider {existing.member_id!r} conflicts with reviewed Tank responsibility member {preferred!r}"
+                )
+            resolved.append(assignment)
+            continue
+
+        backups = tuple(candidate for candidate in viable if candidate != chosen)
+        resolved.append(
+            replace(
+                assignment,
+                status=ProviderAssignmentStatus.ASSIGNED,
+                primary_providers=(chosen,),
+                backup_providers=backups,
+                explanation=(
+                    "Reviewed encounter Tank responsibility lane explicitly selects this "
+                    "already-proven viable provider; no roster-order tie-break is used."
+                ),
+            )
+        )
+
+    return tuple(resolved)
 
 
 def _bind_horizon_policies_to_taunt_source(
@@ -230,6 +321,7 @@ class RotationTankProviderScopeService:
             RotationAssignmentTauntMaintenanceHorizonPolicy, ...
         ] = (),
         non_effect_policies: tuple[RotationAssignmentNonEffectPolicy, ...] = (),
+        preferred_member_by_requirement: dict[str, str] | None = None,
     ) -> RotationTankProviderScopeResolution:
         resolved_encounter = str(encounter_id or "").strip()
         if not resolved_encounter:
@@ -254,7 +346,10 @@ class RotationTankProviderScopeService:
             data_root=self.data_root,
             database_path=self.database_path,
         )
-        assignments = tuple(getattr(scope, "baseline_assignments", ()))
+        assignments = _apply_preferred_assignments(
+            tuple(getattr(scope, "baseline_assignments", ())),
+            preferred_member_by_requirement or {},
+        )
 
         explicit_policy = bool(
             effect_policies
@@ -292,6 +387,21 @@ class RotationTankProviderScopeService:
                 "Tank provider-scope policy resolution member mismatch: "
                 f"expected {member_id!r}, got {policy_resolution.member_id!r}"
             )
+
+        owned_requirement_ids = {
+            assignment.requirement_id.casefold()
+            for assignment in assignments
+            if assignment.status is ProviderAssignmentStatus.ASSIGNED
+            and any(
+                candidate.member_id.casefold() == member_id.casefold()
+                for candidate in assignment.primary_providers
+            )
+        }
+        resolved_horizon_policies = tuple(
+            policy
+            for policy in resolved_horizon_policies
+            if policy.requirement_id.casefold() in owned_requirement_ids
+        )
 
         taunt_sources: tuple[SavedBuildUtilityProviderSource, ...] = ()
         bound_horizon_policies: tuple[
