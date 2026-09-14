@@ -1,3 +1,5 @@
+import pytest
+
 from services.encounter_health_threshold_projection_service import (
     EncounterHealthThresholdProjection,
     EncounterThresholdClockPoint,
@@ -60,21 +62,21 @@ def test_xalvakka_transition_projection_shifts_later_thresholds_and_fight_end():
     assert len(result.boundaries) == 2
 
     first, second = result.boundaries
-    assert first.threshold_fraction == 0.70
-    assert first.crossing_time_seconds == 30.0
-    assert first.resume_time_seconds == 78.8095
+    assert first.threshold_fraction == pytest.approx(0.70)
+    assert first.crossing_time_seconds == pytest.approx(30.0)
+    assert first.resume_time_seconds == pytest.approx(78.8095)
     assert first.sample_count == 4
-    assert first.observed_min_delay_seconds == 44.437
-    assert first.observed_max_delay_seconds == 65.064
+    assert first.observed_min_delay_seconds == pytest.approx(44.437)
+    assert first.observed_max_delay_seconds == pytest.approx(65.064)
 
-    assert second.threshold_fraction == 0.40
-    assert second.crossing_time_seconds == 108.8095
-    assert second.resume_time_seconds == 173.3705
+    assert second.threshold_fraction == pytest.approx(0.40)
+    assert second.crossing_time_seconds == pytest.approx(108.8095)
+    assert second.resume_time_seconds == pytest.approx(173.3705)
     assert second.sample_count == 3
 
-    assert result.adjusted_end_seconds == 213.3705
-    assert result.crossing_time_for(0.40) == 108.8095
-    assert result.resume_time_for(0.40) == 173.3705
+    assert result.adjusted_end_seconds == pytest.approx(213.3705)
+    assert result.crossing_time_for(0.40) == pytest.approx(108.8095)
+    assert result.resume_time_for(0.40) == pytest.approx(173.3705)
     assert any("samples=4" in row for row in result.evidence)
     assert any("XVMgLdq6GpQ7bhKN" in row for row in result.evidence)
 
@@ -88,7 +90,7 @@ def test_encounter_without_reviewed_transition_timing_keeps_canonical_horizon():
 
     assert result.resolved is True
     assert result.boundaries == ()
-    assert result.adjusted_end_seconds == 100.0
+    assert result.adjusted_end_seconds == pytest.approx(100.0)
 
 
 def test_reviewed_transition_projection_fails_closed_when_required_threshold_is_missing():
