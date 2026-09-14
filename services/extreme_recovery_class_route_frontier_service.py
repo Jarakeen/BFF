@@ -24,6 +24,9 @@ from services.extreme_skill_universe_service import ExtremeSkillDomain, ExtremeS
 from services.extreme_subclass_slot_allocation_service import ExtremeSubclassSlotAllocationService
 
 _SUPPORTED = {"health_recovery", "magicka_recovery", "stamina_recovery"}
+# These passives are numerically owned by the active-bar slot-allocation service.
+# They must not also be included through static tooltip projection, even when the
+# projector can losslessly recognize the percentage clause.
 _REVIEWED_SLOT_CONTEXT = {"flourish", "wellspring of the abyss"}
 
 
@@ -98,6 +101,13 @@ class ExtremeRecoveryClassRouteFrontierService:
         for passive in self.passives:
             if _line_id(passive.skill_line) not in legal:
                 continue
+
+            # Slot-scaled mechanics have one numeric owner. Skip them before
+            # static projection so Flourish cannot be counted once from its
+            # tooltip percentage and again from the active-bar slot witness.
+            if passive.name.casefold() in _REVIEWED_SLOT_CONTEXT:
+                continue
+
             projection = ExtremePassiveProjectionService.project(passive)
             relevant = tuple(
                 row for row in projection.contributions if row.objective_key == objective_key
@@ -117,8 +127,6 @@ class ExtremeRecoveryClassRouteFrontierService:
                 continue
 
             if not _mentions_objective_recovery(passive.description, objective_key):
-                continue
-            if passive.name.casefold() in _REVIEWED_SLOT_CONTEXT:
                 continue
             if projection.status in {
                 ExtremePassiveProjectionStatus.CONTEXT_REQUIRED,
