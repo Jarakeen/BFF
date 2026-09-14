@@ -69,4 +69,7 @@ def install() -> None:
     # Optimization deliberately stays free of the extra progress furniture. Its
     # job is to operate on the selected team, while Comp Builder owns the planning
     # coverage scoreboard and composition-detail surfaces.
+    from ui.team_optimization_gap_guidance_support import install as install_gap_guidance
+
+    install_gap_guidance()
     _INSTALLED = True
