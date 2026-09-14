@@ -77,13 +77,21 @@ def _plan(*actions):
     )
 
 
-def _cast(time_seconds, *, name="Pierce Armor", bar="front", sequence=0):
+def _cast(
+    time_seconds,
+    *,
+    name="Pierce Armor",
+    bar="front",
+    sequence=0,
+    target_key=None,
+):
     return RotationAction(
         time_seconds=time_seconds,
         sequence=sequence,
         kind=RotationActionKind.SKILL,
         name=name,
         bar=bar,
+        target_key=target_key,
     )
 
 
@@ -148,6 +156,37 @@ def test_bar_specific_taunt_requirement_counts_only_exact_bar_casts():
     assert [(item.time_seconds, item.bar) for item in result.applications] == [
         (14.0, "front")
     ]
+
+
+def test_target_specific_taunt_requirement_counts_only_exact_target_identity():
+    service = _service(rank=_rank(2), effects={2: (_taunt(2),)})
+
+    result = service.assess(
+        plan=_plan(
+            _cast(11.0),
+            _cast(12.0, target_key="reef_guardian_right"),
+            _cast(13.0, target_key="reef_guardian_left"),
+        ),
+        requirement=_requirement(target_key="reef_guardian_left"),
+    )
+
+    assert result.resolved is True
+    assert result.satisfied is True
+    assert [item.time_seconds for item in result.applications] == [13.0]
+    assert result.applications[0].target_key == "reef_guardian_left"
+
+
+def test_unbound_taunt_does_not_satisfy_target_specific_requirement():
+    service = _service(rank=_rank(2), effects={2: (_taunt(2),)})
+
+    result = service.assess(
+        plan=_plan(_cast(12.0)),
+        requirement=_requirement(target_key="boss"),
+    )
+
+    assert result.resolved is True
+    assert result.satisfied is False
+    assert result.applications == ()
 
 
 def test_same_named_cast_outside_explicit_window_does_not_satisfy_requirement():
