@@ -13,6 +13,9 @@ from services.encounter_provider_assignment import (
 from services.rotation_assignment_effect_obligation_service import (
     RotationAssignmentEffectPolicy,
 )
+from services.rotation_assignment_taunt_maintenance_service import (
+    RotationAssignmentTauntMaintenancePolicy,
+)
 from services.rotation_assignment_taunt_obligation_service import (
     RotationAssignmentTauntPolicy,
 )
@@ -54,6 +57,7 @@ class RotationAssignmentPolicyResolution:
     member_id: str
     effect_policies: tuple[RotationAssignmentEffectPolicy, ...]
     taunt_policies: tuple[RotationAssignmentTauntPolicy, ...]
+    taunt_maintenance_policies: tuple[RotationAssignmentTauntMaintenancePolicy, ...]
     non_effect_policies: tuple[RotationAssignmentNonEffectPolicy, ...]
     knowledge_gaps: tuple[CanonicalKnowledgeGap, ...]
 
@@ -75,10 +79,12 @@ class RotationAssignmentPolicyResolver:
 
     * RotationAssignmentEffectPolicy: timed cast-produced effect uptime;
     * RotationAssignmentTauntPolicy: exact taunt applications in explicit windows;
+    * RotationAssignmentTauntMaintenancePolicy: continuous target ownership windows;
     * RotationAssignmentNonEffectPolicy: another verified mechanic model owns it.
 
-    Taunt is separate from effect uptime because a source-backed taunt application
-    does not by itself prove duration or continuous maintenance semantics.
+    Taunt application and continuous taunt maintenance remain separate because an
+    application proves one cast while maintenance requires canonical duration plus
+    continuous target-specific coverage. Refresh strategy remains downstream policy.
     """
 
     def resolve(
@@ -88,6 +94,9 @@ class RotationAssignmentPolicyResolver:
         assignments: tuple[ProviderAssignment, ...],
         effect_policies: tuple[RotationAssignmentEffectPolicy, ...] = (),
         taunt_policies: tuple[RotationAssignmentTauntPolicy, ...] = (),
+        taunt_maintenance_policies: tuple[
+            RotationAssignmentTauntMaintenancePolicy, ...
+        ] = (),
         non_effect_policies: tuple[RotationAssignmentNonEffectPolicy, ...] = (),
     ) -> RotationAssignmentPolicyResolution:
         resolved_member_id = str(member_id or "").strip()
@@ -106,6 +115,10 @@ class RotationAssignmentPolicyResolver:
             taunt_policies,
             kind="rotation assignment taunt policy",
         )
+        taunt_maintenance_by_id = self._unique_by_requirement(
+            taunt_maintenance_policies,
+            kind="rotation assignment taunt maintenance policy",
+        )
         non_effect_by_id = self._unique_by_requirement(
             non_effect_policies,
             kind="rotation assignment non-effect policy",
@@ -114,6 +127,7 @@ class RotationAssignmentPolicyResolver:
         dispositions = (
             ("effect", effect_by_id),
             ("taunt", taunt_by_id),
+            ("taunt-maintenance", taunt_maintenance_by_id),
             ("non-effect", non_effect_by_id),
         )
         for index, (left_name, left) in enumerate(dispositions):
@@ -126,7 +140,12 @@ class RotationAssignmentPolicyResolver:
                         f"({left_name}, {right_name}): {requirement_id!r}"
                     )
 
-        for policy in (*effect_policies, *taunt_policies, *non_effect_policies):
+        for policy in (
+            *effect_policies,
+            *taunt_policies,
+            *taunt_maintenance_policies,
+            *non_effect_policies,
+        ):
             assignment = assignment_by_id.get(policy.requirement_id.casefold())
             if assignment is None:
                 raise ValueError(
@@ -137,6 +156,7 @@ class RotationAssignmentPolicyResolver:
 
         resolved_effects: list[RotationAssignmentEffectPolicy] = []
         resolved_taunts: list[RotationAssignmentTauntPolicy] = []
+        resolved_taunt_maintenance: list[RotationAssignmentTauntMaintenancePolicy] = []
         resolved_non_effects: list[RotationAssignmentNonEffectPolicy] = []
         gaps: list[CanonicalKnowledgeGap] = []
 
@@ -159,12 +179,16 @@ class RotationAssignmentPolicyResolver:
             key = assignment.requirement_id.casefold()
             effect_policy = effect_by_id.get(key)
             taunt_policy = taunt_by_id.get(key)
+            taunt_maintenance_policy = taunt_maintenance_by_id.get(key)
             non_effect_policy = non_effect_by_id.get(key)
             if effect_policy is not None:
                 resolved_effects.append(effect_policy)
                 continue
             if taunt_policy is not None:
                 resolved_taunts.append(taunt_policy)
+                continue
+            if taunt_maintenance_policy is not None:
+                resolved_taunt_maintenance.append(taunt_maintenance_policy)
                 continue
             if non_effect_policy is not None:
                 resolved_non_effects.append(non_effect_policy)
@@ -181,8 +205,10 @@ class RotationAssignmentPolicyResolver:
                     needed_evidence=(
                         "Determine the assignment's executable mechanic model. For effect uptime, "
                         "provide exact effect identity, source skill, bar if required, minimum uptime, "
-                        "and provenance. For taunt responsibility, provide the exact source-backed "
-                        "taunt skill and explicit application windows without inferring duration. "
+                        "and provenance. For discrete taunt responsibility, provide the exact source-backed "
+                        "taunt skill and explicit application windows. For continuous taunt ownership, "
+                        "provide the source-backed taunt skill, exact target identity, and reviewed active "
+                        "windows; canonical duration and refresh strategy remain separate evidence/policy. "
                         "Otherwise provide a verified non-effect disposition identifying the mechanic "
                         "model that owns it."
                     ),
@@ -199,6 +225,7 @@ class RotationAssignmentPolicyResolver:
             member_id=resolved_member_id,
             effect_policies=tuple(resolved_effects),
             taunt_policies=tuple(resolved_taunts),
+            taunt_maintenance_policies=tuple(resolved_taunt_maintenance),
             non_effect_policies=tuple(resolved_non_effects),
             knowledge_gaps=tuple(gaps),
         )
