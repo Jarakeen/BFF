@@ -51,12 +51,6 @@ class NarratorPanel(QWidget):
 
         layout.setContentsMargins(0, 0, 0, 0)
 
-        columns = 4
-
-        categories = self.narrator_service.categories()
-
-        print("Building buttons for:", categories)
-
         narrator_buttons = [
             ("General Observations", "General"),
             ("Healers", "Healers"),
