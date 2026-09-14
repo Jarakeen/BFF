@@ -178,3 +178,8 @@ def install() -> None:
         install as install_coverage_group_effect_catalog_support,
     )
     install_coverage_group_effect_catalog_support()
+
+    from ui.rotation_tank_provider_scope_transfer_support import (
+        install as install_rotation_tank_provider_scope_transfer_support,
+    )
+    install_rotation_tank_provider_scope_transfer_support()
