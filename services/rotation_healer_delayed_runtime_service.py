@@ -10,6 +10,10 @@ from services.rotation_healer_action_healing_service import (
     RotationHealerDelayedHealSeed,
     RotationHealerResolvedHealEvent,
 )
+from services.rotation_runtime_output_eligibility_service import (
+    RotationRuntimeOutputConditionContextResolver,
+    RotationRuntimeOutputEligibilityService,
+)
 
 
 _AFTER_SECONDS_RE = re.compile(
@@ -99,11 +103,27 @@ class RotationHealerDelayedRuntimeService:
     have a reviewed ``magnitude_policy``. Unknown cast-snapshot-vs-landing semantics
     fail closed rather than being inferred merely because the heal is delayed.
 
+    Reviewed output conditions are evaluated at the exact landing event through the
+    same shared runtime eligibility authority used by DD and periodic healer output.
+    Cast-time condition truth is never treated as proof that a delayed consequence is
+    still eligible when it lands.
+
     This service intentionally models one delayed consequence per activation.
     Reapplication topology such as Budding Seeds' second-activation bloom remains
     a separate concern because a second button press may terminate or transform
     the original pending/periodic state rather than create another ordinary copy.
     """
+
+    def __init__(
+        self,
+        *,
+        output_eligibility_service: RotationRuntimeOutputEligibilityService | None = None,
+        condition_context_resolver: RotationRuntimeOutputConditionContextResolver | None = None,
+    ) -> None:
+        self.output_eligibility_service = (
+            output_eligibility_service or RotationRuntimeOutputEligibilityService()
+        )
+        self.condition_context_resolver = condition_context_resolver
 
     def project(
         self,
@@ -112,6 +132,9 @@ class RotationHealerDelayedRuntimeService:
         evidence: tuple[RotationHealerDelayedRuntimeEvidence, ...],
         horizon_seconds: float,
         runtime_magnitude_resolver: RotationHealerDelayedMagnitudeResolver | None = None,
+        condition_context_resolver: (
+            RotationRuntimeOutputConditionContextResolver | None
+        ) = None,
     ) -> RotationHealerDelayedRuntimeProjection:
         horizon = float(horizon_seconds)
         if not math.isfinite(horizon) or horizon < 0:
@@ -123,6 +146,11 @@ class RotationHealerDelayedRuntimeService:
         }
         events: list[RotationHealerResolvedHealEvent] = []
         unresolved: list[str] = []
+        condition_resolver = (
+            condition_context_resolver
+            if condition_context_resolver is not None
+            else self.condition_context_resolver
+        )
 
         for seed in seeds:
             key = (seed.source_name.casefold(), int(seed.coefficient_number))
@@ -142,6 +170,36 @@ class RotationHealerDelayedRuntimeService:
 
             event_time = float(seed.time_seconds) + runtime.delay_seconds
             if event_time > horizon:
+                continue
+
+            eligibility_event = RotationHealerResolvedHealEvent(
+                time_seconds=event_time,
+                sequence=int(seed.sequence),
+                source_name=seed.source_name,
+                coefficient_number=int(seed.coefficient_number),
+                modeled_heal=float(seed.modeled_heal),
+            )
+            condition_context = (
+                condition_resolver(eligibility_event)
+                if condition_resolver is not None
+                else None
+            )
+            eligibility = self.output_eligibility_service.evaluate(
+                skill_entity_id=seed.source_name,
+                coefficient_number=seed.coefficient_number,
+                condition_context=condition_context,
+            )
+            if not eligibility.resolved:
+                messages = eligibility.unresolved or (
+                    "delayed healing landing output eligibility is unresolved",
+                )
+                unresolved.extend(
+                    f"{seed.source_name} coefficient {seed.coefficient_number} "
+                    f"at {event_time:g}s: {message}"
+                    for message in messages
+                )
+                continue
+            if not eligibility.eligible:
                 continue
 
             modeled_heal = float(seed.modeled_heal)
