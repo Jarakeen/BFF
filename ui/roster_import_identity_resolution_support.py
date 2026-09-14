@@ -11,6 +11,7 @@ forcing ordinary users to invent database-perfect identity by hand.
 
 _INSTALLED = False
 _ORIGINAL_NORMALIZE_ROLE = None
+_ORIGINAL_NORMALIZE_CLASS = None
 
 _CLASS_SHORT = {
     "arcanist": "Arc",
@@ -20,6 +21,16 @@ _CLASS_SHORT = {
     "sorcerer": "Sorc",
     "templar": "Plar",
     "warden": "Den",
+}
+
+_CLASS_INPUT_ALIASES = {
+    "arc": "Arcanist",
+    "dk": "Dragonknight",
+    "cro": "Necromancer",
+    "nb": "Nightblade",
+    "sorc": "Sorcerer",
+    "plar": "Templar",
+    "den": "Warden",
 }
 
 _ROLE_SHORT = {
@@ -53,6 +64,16 @@ def _display_gamertag(value: object) -> str:
     return " ".join(str(value or "").strip().split()).lstrip("@")
 
 
+def _normalize_class_with_shorthand(value: object) -> str:
+    raw = " ".join(str(value or "").strip().split())
+    alias = _CLASS_INPUT_ALIASES.get(raw.casefold())
+    if alias:
+        return alias
+    if callable(_ORIGINAL_NORMALIZE_CLASS):
+        return _ORIGINAL_NORMALIZE_CLASS(value)
+    return raw
+
+
 def _normalize_role_with_shorthand(value: object) -> str:
     raw = " ".join(str(value or "").strip().split())
     alias = _ROLE_INPUT_ALIASES.get(raw.casefold())
@@ -64,7 +85,7 @@ def _normalize_role_with_shorthand(value: object) -> str:
 
 
 def _known_characters(roster_service, build_service) -> dict[str, list[tuple[str, str]]]:
-    from ui.roster_import_workflow import _normalize_class, _text
+    from ui.roster_import_workflow import _text
 
     result: dict[str, list[tuple[str, str]]] = {}
     catalog = build_service.canonical.catalog_service.load()
@@ -79,7 +100,7 @@ def _known_characters(roster_service, build_service) -> dict[str, list[tuple[str
         character_name = _text(name)
         if not key or not character_name:
             return
-        pair = (character_name, _normalize_class(eso_class))
+        pair = (character_name, _normalize_class_with_shorthand(eso_class))
         bucket = result.setdefault(key, [])
         if pair not in bucket:
             bucket.append(pair)
@@ -100,10 +121,8 @@ def _known_characters(roster_service, build_service) -> dict[str, list[tuple[str
 
 
 def _generated_character_name(member) -> str:
-    from ui.roster_import_workflow import _normalize_class
-
     player = _display_gamertag(member.gamertag)
-    eso_class = _normalize_class(member.eso_class)
+    eso_class = _normalize_class_with_shorthand(member.eso_class)
     role = _normalize_role_with_shorthand(member.primary_role)
     class_short = _CLASS_SHORT.get(str(eso_class or "").strip().casefold(), "")
     role_short = _ROLE_SHORT.get(str(role or "").strip().casefold(), "")
@@ -125,7 +144,7 @@ def resolve_import_characters(plan, roster_service, build_service) -> None:
             continue
 
         candidates = known.get(_identity_key(member.gamertag), [])
-        wanted_class = str(member.eso_class or "").strip().casefold()
+        wanted_class = _normalize_class_with_shorthand(member.eso_class).casefold()
         same_class = sorted(
             {
                 name
@@ -179,14 +198,16 @@ def resolve_import_characters(plan, roster_service, build_service) -> None:
 
 
 def install() -> None:
-    global _INSTALLED, _ORIGINAL_NORMALIZE_ROLE
+    global _INSTALLED, _ORIGINAL_NORMALIZE_ROLE, _ORIGINAL_NORMALIZE_CLASS
     if _INSTALLED:
         return
 
     from ui import roster_import_workflow
 
     _ORIGINAL_NORMALIZE_ROLE = roster_import_workflow._normalize_role
+    _ORIGINAL_NORMALIZE_CLASS = roster_import_workflow._normalize_class
     roster_import_workflow._normalize_role = _normalize_role_with_shorthand
+    roster_import_workflow._normalize_class = _normalize_class_with_shorthand
     roster_import_workflow.resolve_import_characters = resolve_import_characters
     _INSTALLED = True
 
@@ -194,6 +215,7 @@ def install() -> None:
 __all__ = [
     "install",
     "resolve_import_characters",
+    "_normalize_class_with_shorthand",
     "_normalize_role_with_shorthand",
     "_generated_character_name",
 ]
