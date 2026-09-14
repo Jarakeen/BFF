@@ -186,6 +186,26 @@ EXTREME_HEALTH_RECOVERY_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.health_recovery_record",
+        domain="extreme",
+        purpose=(
+            "Expose the closed U50 theoretical Health Recovery maximum through the "
+            "canonical ExtremeRecordResult contract for UI and downstream consumers."
+        ),
+        implementation_path="services.extreme_health_recovery_record_service",
+        inputs=("ClosedHealthRecoveryProof",),
+        outputs=("ExtremeRecordResult",),
+        dependencies=("extreme.recovery_final_score",),
+        responsibilities=("extreme_health_recovery_record_projection",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        ui_safe=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "The published result preserves the stochastic/runtime prerequisites and "
+            "does not reinterpret the theoretical maximum as a deterministic build recommendation."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="mechanics.status_application_opportunity",
         domain="mechanics",
         purpose=(
