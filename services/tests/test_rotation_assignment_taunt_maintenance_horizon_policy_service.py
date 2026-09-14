@@ -8,6 +8,10 @@ from services.rotation_assignment_taunt_maintenance_horizon_policy_service impor
     RotationAssignmentTauntMaintenanceHorizonWindow,
 )
 from services.rotation_tank_encounter_horizon_service import RotationTankEncounterHorizon
+from services.rotation_tank_encounter_transition_timing_service import (
+    RotationTankEncounterTransitionBoundary,
+    RotationTankEncounterTransitionTiming,
+)
 
 
 def _policy(
@@ -30,6 +34,39 @@ def _policy(
                 active_start_seconds=start,
                 end_reference=end_reference,
                 bar=bar,
+            ),
+        ),
+    )
+
+
+def _three_phase_policy():
+    return RotationAssignmentTauntMaintenanceHorizonPolicy(
+        requirement_id="xalvakka:tank:boss_taunt",
+        encounter_id="xalvakka",
+        requirement_type="taunt",
+        source_skill_name="Pierce Armor",
+        source="reviewed Xalvakka phase ownership",
+        windows=(
+            RotationAssignmentTauntMaintenanceHorizonWindow(
+                occurrence_id="phase_1",
+                target_key="xalvakka",
+                active_start_seconds=0.0,
+                end_reference="health_threshold:70%",
+                bar="front",
+            ),
+            RotationAssignmentTauntMaintenanceHorizonWindow(
+                occurrence_id="phase_2",
+                target_key="xalvakka",
+                start_reference="transition_resume:70%",
+                end_reference="health_threshold:40%",
+                bar="front",
+            ),
+            RotationAssignmentTauntMaintenanceHorizonWindow(
+                occurrence_id="phase_3",
+                target_key="xalvakka",
+                start_reference="transition_resume:40%",
+                end_reference="encounter_end",
+                bar="front",
             ),
         ),
     )
@@ -72,6 +109,37 @@ def _threshold_projection(*, points=None):
     )
 
 
+def _transition_timing():
+    return RotationTankEncounterTransitionTiming(
+        encounter_id="xalvakka",
+        boundaries=(
+            RotationTankEncounterTransitionBoundary(
+                threshold_fraction=0.70,
+                crossing_time_seconds=32.13,
+                resume_time_seconds=80.9395,
+                reviewed_delay_seconds=48.8095,
+                observed_min_delay_seconds=44.437,
+                observed_max_delay_seconds=65.064,
+                sample_count=4,
+                source="reviewed 70% runtime evidence",
+            ),
+            RotationTankEncounterTransitionBoundary(
+                threshold_fraction=0.40,
+                crossing_time_seconds=110.9395,
+                resume_time_seconds=175.5005,
+                reviewed_delay_seconds=64.561,
+                observed_min_delay_seconds=62.266,
+                observed_max_delay_seconds=66.376,
+                sample_count=3,
+                source="reviewed 40% runtime evidence",
+            ),
+        ),
+        adjusted_end_seconds=220.487012,
+        resolved=True,
+        evidence=("reviewed transition timing",),
+    )
+
+
 def test_resolved_horizon_materializes_existing_numeric_maintenance_policy():
     result = RotationAssignmentTauntMaintenanceHorizonPolicyService().materialize(
         policy=_policy(),
@@ -108,6 +176,53 @@ def test_health_threshold_endpoint_materializes_from_canonical_threshold_clock_p
     assert result.policy.windows[0].active_end_seconds == 32.13
     assert "symbolic_endpoint=health_threshold:70%:32.13" in result.evidence
     assert "threshold_fact=retreat_thresholds" in result.evidence
+
+
+def test_transition_timing_materializes_three_disjoint_xalvakka_ownership_windows():
+    projection = _threshold_projection(
+        points=(
+            _point(fact_key="retreat_70", fraction=0.70, seconds=32.13),
+            _point(fact_key="retreat_40", fraction=0.40, seconds=62.13),
+        )
+    )
+    result = RotationAssignmentTauntMaintenanceHorizonPolicyService().materialize(
+        policy=_three_phase_policy(),
+        horizon=_horizon(),
+        health_threshold_projection=projection,
+        transition_timing=_transition_timing(),
+    )
+
+    assert result.resolved is True
+    assert result.policy is not None
+    assert [
+        (window.occurrence_id, window.active_start_seconds, window.active_end_seconds)
+        for window in result.policy.windows
+    ] == [
+        ("phase_1", 0.0, 32.13),
+        ("phase_2", 80.9395, 110.9395),
+        ("phase_3", 175.5005, 220.487012),
+    ]
+    assert "symbolic_start=transition_resume:70%:80.9395" in result.evidence
+    assert "symbolic_endpoint=health_threshold:40%:110.94" in result.evidence
+    assert "symbolic_endpoint=encounter_end_adjusted:220.487" in result.evidence
+
+
+def test_transition_resume_start_fails_closed_without_reviewed_transition_timing():
+    projection = _threshold_projection(
+        points=(
+            _point(fact_key="retreat_70", fraction=0.70, seconds=32.13),
+            _point(fact_key="retreat_40", fraction=0.40, seconds=62.13),
+        )
+    )
+    result = RotationAssignmentTauntMaintenanceHorizonPolicyService().materialize(
+        policy=_three_phase_policy(),
+        horizon=_horizon(),
+        health_threshold_projection=projection,
+    )
+
+    assert result.resolved is False
+    assert result.policy is None
+    assert "transition timing is unavailable" in result.unresolved[0]
 
 
 def test_corroborating_same_threshold_facts_may_share_one_projected_endpoint():
@@ -168,9 +283,7 @@ def test_unresolved_health_threshold_endpoint_fails_closed():
     result = RotationAssignmentTauntMaintenanceHorizonPolicyService().materialize(
         policy=_policy(end_reference="health_threshold:70%"),
         horizon=_horizon(),
-        health_threshold_projection=_threshold_projection(
-            points=(_point(resolved=False),)
-        ),
+        health_threshold_projection=_threshold_projection(points=(_point(resolved=False),)),
     )
 
     assert result.resolved is False
@@ -186,6 +299,20 @@ def test_unknown_symbolic_endpoint_is_rejected():
         assert "health_threshold" in str(exc)
     else:
         raise AssertionError("unreviewed symbolic endpoint must fail closed")
+
+
+def test_unknown_symbolic_start_reference_is_rejected():
+    try:
+        RotationAssignmentTauntMaintenanceHorizonWindow(
+            occurrence_id="phase_2",
+            target_key="xalvakka",
+            start_reference="after_stairs_probably",
+            end_reference="encounter_end",
+        )
+    except ValueError as exc:
+        assert "transition_resume" in str(exc)
+    else:
+        raise AssertionError("unreviewed symbolic start must fail closed")
 
 
 def test_skill_agnostic_symbolic_policy_binds_canonical_provider_skill_and_bar():
