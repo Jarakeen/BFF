@@ -3,11 +3,11 @@ from __future__ import annotations
 """Resolve sparse team/boss build variants over one canonical saved build.
 
 Precedence is deliberately narrow and deterministic:
-team + boss > team > boss > base build.
+exact team + boss > wildcard team + any boss > team > exact boss > wildcard boss > base.
 
 Resolution is field-by-field. Lower-specificity matching variants are applied first,
-so a sparse Team + Boss row can inherit a Team value instead of falling all the way
-back to the base build.
+so a sparse exact Team + Boss row can inherit from a generic Bosses setup instead of
+falling all the way back to the base build.
 """
 
 from copy import deepcopy
@@ -19,16 +19,30 @@ def _key(value: object) -> str:
     return " ".join(str(value or "").strip().casefold().split())
 
 
+def _is_boss_wildcard(value: object) -> bool:
+    return _key(value) in {"*", "any boss", "all bosses", "bosses"}
+
+
 def _context_score(variant: BuildContextVariant, team_name: str, boss_name: str) -> int:
     kind = _key(variant.ContextType)
     team_matches = bool(_key(team_name)) and _key(variant.TeamName) == _key(team_name)
-    boss_matches = bool(_key(boss_name)) and _key(variant.BossName) == _key(boss_name)
+    has_boss_context = bool(_key(boss_name))
+    boss_matches = has_boss_context and _key(variant.BossName) == _key(boss_name)
+    boss_wildcard = has_boss_context and _is_boss_wildcard(variant.BossName)
     if kind in {"team + boss", "team+boss", "team boss"}:
-        return 30 if team_matches and boss_matches else -1
+        if team_matches and boss_matches:
+            return 30
+        if team_matches and boss_wildcard:
+            return 25
+        return -1
     if kind == "team":
         return 20 if team_matches else -1
     if kind == "boss":
-        return 10 if boss_matches else -1
+        if boss_matches:
+            return 10
+        if boss_wildcard:
+            return 5
+        return -1
     return -1
 
 
