@@ -16,6 +16,7 @@ _RESOURCE = {
     "magicka_recovery": "magicka",
     "stamina_recovery": "stamina",
 }
+_RESOURCE_LIST = r"(?:health|magicka|stamina)(?:(?:\s*,\s*|\s+and\s+|\s*,\s*and\s+)(?:health|magicka|stamina)){0,2}"
 
 
 class ExtremeRecoveryChampionPointBranchKind(str, Enum):
@@ -56,6 +57,24 @@ class ExtremeRecoveryChampionPointBranchService:
             raise KeyError(f"unsupported Recovery Champion Point objective: {objective_key!r}")
         resource = _RESOURCE[objective]
         lowered = " ".join(str(text or "").casefold().split())
+
+        # Some CP stars use Recovery only as an input/threshold, e.g. Hope Infusion:
+        # "for every 300 Magicka Recovery you have."  Those do not raise Recovery and
+        # therefore must not enter a Recovery-objective denominator.
+        reference_only = re.search(
+            rf"for every\s+\d+(?:\.\d+)?\s+{resource}\s+recovery\s+you have",
+            lowered,
+            flags=re.IGNORECASE,
+        )
+        if reference_only:
+            grant_clause = re.search(
+                rf"(?:gain|gains|grant|grants|increase|increases|add|adds)\b[^.]*\b{resource}\s+recovery",
+                lowered,
+                flags=re.IGNORECASE,
+            )
+            if grant_clause is None:
+                return False
+
         if f"{resource} recovery" in lowered:
             return True
         if resource not in lowered or "recovery" not in lowered:
@@ -109,7 +128,14 @@ class ExtremeRecoveryChampionPointBranchService:
             )
 
         if cls.mentions_objective_recovery(text, objective) and "per stage" in text.casefold():
-            values = [float(value) for value in re.findall(r"([0-9]+(?:\.[0-9]+)?)\s+per stage", text, flags=re.IGNORECASE)]
+            values = [
+                float(value)
+                for value in re.findall(
+                    rf"([0-9]+(?:\.[0-9]+)?)\s+{_RESOURCE_LIST}\s+recovery\s+per stage",
+                    text,
+                    flags=re.IGNORECASE,
+                )
+            ]
             if values:
                 stages = cls._stages(record)
                 return ExtremeRecoveryChampionPointBranch(
