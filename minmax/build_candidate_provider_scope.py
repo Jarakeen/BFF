@@ -156,6 +156,15 @@ class BuildCandidateProviderScope:
         )
 
 
+def _base_services(*, data_root: Path, database_path: Path):
+    repository = EncounterRepository(
+        data_root / "eso_info" / "bosses",
+        data_root / "encounter_evidence",
+        database_path=database_path,
+    )
+    return EncounterService(repository)
+
+
 def build_default_raid_provider_scope(
     *,
     encounter_id: str,
@@ -165,18 +174,45 @@ def build_default_raid_provider_scope(
     data_root: Path,
     database_path: Path,
 ) -> BuildCandidateProviderScope:
-    """Bind provider scope to default raid coverage plus configured Tank responsibility."""
+    """Bind generic Phase 12 provider scope to default raid coverage only."""
+
+    coverage_adapter = RaidCoverageEncounterAdapter(DEFAULT_RAID_COVERAGE_PROFILE)
+    base_service = _base_services(data_root=data_root, database_path=database_path)
+    encounter_service = EncounterRequirementOverlayService(
+        base_service,
+        {encounter_id: coverage_adapter.requirements(encounter_id)},
+    )
+    roster_evaluator = EncounterRosterEvaluator(
+        encounter_service,
+        SavedBuildEncounterCapabilityAdapter(coverage_adapter.capability_identity_maps()),
+        requirement_semantics=coverage_adapter.requirement_semantics(),
+        required_provider_counts=coverage_adapter.required_provider_counts(encounter_id),
+    )
+    return BuildCandidateProviderScope.create(
+        encounter_id=encounter_id,
+        member_id=member_id,
+        roster_builds=roster_builds,
+        capability_service=capability_service,
+        roster_evaluator=roster_evaluator,
+    )
+
+
+def build_default_raid_tank_provider_scope(
+    *,
+    encounter_id: str,
+    member_id: str,
+    roster_builds: tuple[PlayerBuild, ...],
+    capability_service: SavedBuildCapabilityService,
+    data_root: Path,
+    database_path: Path,
+) -> BuildCandidateProviderScope:
+    """Bind Tank Rotation provider scope to raid coverage plus Tank responsibilities."""
 
     coverage_adapter = RaidCoverageEncounterAdapter(DEFAULT_RAID_COVERAGE_PROFILE)
     tank_adapter = RaidTankResponsibilityEncounterAdapter(
         DEFAULT_RAID_TANK_RESPONSIBILITY_PROFILE
     )
-    repository = EncounterRepository(
-        data_root / "eso_info" / "bosses",
-        data_root / "encounter_evidence",
-        database_path=database_path,
-    )
-    base_service = EncounterService(repository)
+    base_service = _base_services(data_root=data_root, database_path=database_path)
     encounter_service = EncounterRequirementOverlayService(
         base_service,
         {
@@ -190,7 +226,6 @@ def build_default_raid_provider_scope(
     semantics.update(tank_adapter.requirement_semantics())
     provider_counts = dict(coverage_adapter.required_provider_counts(encounter_id))
     provider_counts.update(tank_adapter.required_provider_counts(encounter_id))
-
     roster_evaluator = EncounterRosterEvaluator(
         encounter_service,
         SavedBuildEncounterCapabilityAdapter(coverage_adapter.capability_identity_maps()),
