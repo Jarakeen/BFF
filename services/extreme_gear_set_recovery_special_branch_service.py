@@ -71,14 +71,29 @@ class ExtremeGearSetRecoverySpecialBranchService:
         return " ".join(normalize_eso_markup(str(description or "")).text.casefold().split())
 
     @staticmethod
-    def _recovery_clause(text: str, resource: str) -> str:
+    def _shared_recovery_pattern() -> str:
+        # ESO tooltips use several list orders, for example
+        # "Health, Magicka, and Stamina Recovery" and
+        # "Stamina, Magicka, and Health Recovery". Match the three-resource list
+        # without assigning semantic meaning to the order.
+        resource = r"(?:health|magicka|stamina)"
+        return rf"{resource},?\s+{resource},?\s+(?:and\s+)?{resource}\s+recovery"
+
+    @classmethod
+    def _has_shared_recovery(cls, text: str, resource: str) -> bool:
+        match = re.search(cls._shared_recovery_pattern(), text)
+        if match is None:
+            return False
+        phrase = match.group(0)
+        return all(name in phrase for name in ("health", "magicka", "stamina")) and resource in phrase
+
+    @classmethod
+    def _recovery_clause(cls, text: str, resource: str) -> str:
         """Return the smallest sentence-like clause that owns target recovery text."""
         candidates = re.split(r"(?<=[.;])\s+|\n+", text)
         target = f"{resource} recovery"
         for clause in candidates:
-            if target in clause:
-                return clause
-            if resource in clause and "health" in clause and "magicka" in clause and "stamina recovery" in clause:
+            if target in clause or cls._has_shared_recovery(clause, resource):
                 return clause
         return text
 
@@ -86,7 +101,7 @@ class ExtremeGearSetRecoverySpecialBranchService:
     def _flat_ceiling(cls, text: str, resource: str) -> float | None:
         clause = cls._recovery_clause(text, resource)
         target = re.escape(f"{resource} recovery")
-        shared = r"health,?\s+magicka,?\s+(?:and\s+)?stamina recovery"
+        shared = cls._shared_recovery_pattern()
 
         # Amount before the stat: "gain 35-1505 Health Recovery" / "adds 1011 Health Recovery".
         before = re.search(
@@ -116,8 +131,7 @@ class ExtremeGearSetRecoverySpecialBranchService:
 
         # Shared fixed amount often appears before the list: "gain 465 Health, Magicka, and Stamina Recovery".
         shared_before = re.search(
-            r"(?:gain|adds?|receive)\s+(?P<value>\d+(?:\.\d+)?)\s+"
-            r"health,?\s+magicka,?\s+(?:and\s+)?stamina recovery\b",
+            rf"(?:gain|adds?|receive)\s+(?P<value>\d+(?:\.\d+)?)\s+{shared}\b",
             clause,
         )
         return float(shared_before.group("value")) if shared_before else None
@@ -178,7 +192,7 @@ class ExtremeGearSetRecoverySpecialBranchService:
             )
 
         target_phrase = f"{resource} recovery"
-        shared_recovery = resource in text and "health" in text and "magicka" in text and "stamina recovery" in text
+        shared_recovery = cls._has_shared_recovery(text, resource)
         relevant = target_phrase in text or shared_recovery
         named_buff = {
             "health": ("major fortitude", "minor fortitude"),
@@ -195,7 +209,7 @@ class ExtremeGearSetRecoverySpecialBranchService:
                     kind=ExtremeRecoverySpecialBranchKind.NAMED_BUFF,
                     can_raise_self=True,
                     percent_ceiling=percent,
-                    condition=phrase.replace(" ", "_"),
+                    condition=phrase.replace(" ", "_") if phrase else None,
                     description=description,
                 )
 
@@ -203,13 +217,13 @@ class ExtremeGearSetRecoverySpecialBranchService:
             return None
 
         target_pattern = re.escape(target_phrase)
-        shared_pattern = r"health,?\s+magicka,?\s+(?:and\s+)?stamina recovery"
+        shared_pattern = cls._shared_recovery_pattern()
         negative_recovery = re.search(
             rf"\b(?:reduce|reduces|reduced|reducing|lower|lowers|lowered|lowering)\b"
             rf"[^.;]{{0,140}}?(?:{target_pattern}|{shared_pattern})\b[^.;]{{0,35}}?\bby\s+\d+(?:\.\d+)?%?",
             text,
         ) or re.search(
-            rf"(?:{target_pattern}|{shared_pattern})\b[^.;]{{0,35}}?\b(?:reduced|lowered)\b[^.;]{{0,20}}?\bby\s+\d+(?:\.\d+)?%?",
+            rf"(?:{target_pattern}|{shared_pattern})\b[^.;]{{0,50}}?\b(?:reduced|lowered)\b[^.;]{{0,25}}?\bby\s+\d+(?:\.\d+)?%?",
             text,
         )
         negative_markers = (
@@ -243,7 +257,9 @@ class ExtremeGearSetRecoverySpecialBranchService:
             )
 
         percent_match = re.search(
-            r"(?:increase(?:s|d)?|increasing)\s+(?:your\s+)?(?:health, magicka, and stamina recovery|"
+            r"(?:increase(?:s|d)?|increasing)\s+(?:your\s+)?(?:"
+            + shared_pattern
+            + "|"
             + re.escape(target_phrase)
             + r")\s+by\s+(\d+(?:\.\d+)?)%",
             text,
@@ -262,10 +278,29 @@ class ExtremeGearSetRecoverySpecialBranchService:
             up_to = re.search(r"recovery[^.]{0,100}?up to\s+(\d+(?:\.\d+)?)", text)
             ceiling = float(up_to.group(1)) if up_to else None
             if ceiling is None:
-                counts = [int(v) for v in re.findall(r"up to\s+(\d+)\s+stacks", text)]
-                per_stack = re.search(r"each stack[^.]{0,140}?recovery[^.]{0,30}?by\s+(\d+(?:\.\d+)?)", text)
+                counts = [
+                    int(v)
+                    for v in re.findall(r"up to\s+(\d+)\s+(?:stacks(?:\s+max)?|times)", text)
+                ]
+                per_stack_after = re.search(
+                    rf"(?:each stack[^.]*?|(?:{target_pattern}|{shared_pattern})[^.]*?)"
+                    rf"(?:{target_pattern}|{shared_pattern})?[^.]*?\bby\s+"
+                    rf"(?P<value>\d+(?:\.\d+)?)\s+per stack\b",
+                    text,
+                )
+                per_stack_before = re.search(
+                    rf"each stack[^.]*?\b(?:grants?|adds?|increases?)\s+"
+                    rf"(?P<value>\d+(?:\.\d+)?)\s+(?:{target_pattern}|{shared_pattern})\b",
+                    text,
+                )
+                per_stack_legacy = re.search(
+                    rf"each stack[^.]*?(?:{target_pattern}|{shared_pattern})[^.]*?\bby\s+"
+                    rf"(?P<value>\d+(?:\.\d+)?)\b",
+                    text,
+                )
+                per_stack = per_stack_after or per_stack_before or per_stack_legacy
                 if counts and per_stack:
-                    ceiling = max(counts) * float(per_stack.group(1))
+                    ceiling = max(counts) * float(per_stack.group("value"))
             if ceiling is not None:
                 return ExtremeRecoverySpecialBranch(
                     set_name=set_name,
