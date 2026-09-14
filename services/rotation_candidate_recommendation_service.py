@@ -25,6 +25,17 @@ from services.rotation_role_aware_ranking_service import (
     RotationRoleAwareRankingService,
 )
 from services.rotation_candidate_ranking_service import RotationCandidateTier
+from services.rotation_tank_encounter_priority_context_service import (
+    RotationTankEncounterPriorityCue,
+)
+from services.rotation_tank_priority_candidate_assessment_service import (
+    RotationTankPriorityCandidateAssessment,
+    RotationTankPriorityCandidateAssessmentService,
+)
+
+
+def _canonical(value: object) -> str:
+    return "_".join(str(value or "").strip().casefold().replace("-", " ").split())
 
 
 @dataclass(frozen=True)
@@ -110,14 +121,21 @@ class RotationCandidateRecommendationEntry:
     candidate: GeneratedRotationCandidate
     evidence: RotationCandidateRecommendationEvidence
     ranking: RotationRoleAwareRankingResult
+    tank_priority_assessment: RotationTankPriorityCandidateAssessment | None = None
 
     @property
     def reasons(self) -> tuple[str, ...]:
-        """Hard-validity reasons, role-policy reasons, then diagnostic detail."""
+        """Hard-validity reasons, role-policy reasons, Tank context, then diagnostics."""
+        tank_reasons = (
+            ()
+            if self.tank_priority_assessment is None
+            else self.tank_priority_assessment.reasons
+        )
         return tuple(
             dict.fromkeys(
                 self.ranking.base_ranking.reasons
                 + self.ranking.role_reasons
+                + tank_reasons
                 + self.evidence.diagnostics
             )
         )
@@ -149,19 +167,27 @@ class RotationCandidateRecommendationService:
     """Orchestrate candidate generation, evidence evaluation, ranking, and explanation.
 
     Mechanics remain owned by the generator/refiner and shared evaluation services.
-    This layer only keeps candidate identity aligned, invokes the existing
-    role-aware lexicographic ranking policy, and returns the winning whole plan with
-    its evidence and explanation. It never invents a weighted score or encounter
-    strategy.
+    This layer keeps candidate identity aligned, invokes the existing role-aware
+    lexicographic ranking policy, and returns the winning whole plan with its evidence
+    and explanation. For Tank candidates only, optional reviewed encounter-priority
+    context may reorder candidates that are already eligible. That soft context cannot
+    rescue an ineligible plan and does not alter the universal role-aware ranker.
     """
 
     def __init__(
         self,
         generation_service: RotationCandidateGenerationService | None = None,
         ranking_service: RotationRoleAwareRankingService | None = None,
+        tank_priority_assessment_service: (
+            RotationTankPriorityCandidateAssessmentService | object | None
+        ) = None,
     ) -> None:
         self.generation_service = generation_service or RotationCandidateGenerationService()
         self.ranking_service = ranking_service or RotationRoleAwareRankingService()
+        self.tank_priority_assessment_service = (
+            tank_priority_assessment_service
+            or RotationTankPriorityCandidateAssessmentService()
+        )
 
     def generate_and_recommend(
         self,
@@ -178,6 +204,7 @@ class RotationCandidateRecommendationService:
         wait_decision: PrematureRecastDecisionProvider | None = None,
         wait_decision_factory: RotationCandidateWaitDecisionFactory | None = None,
         baseline_id: str = "baseline",
+        tank_priority_context: tuple[RotationTankEncounterPriorityCue, ...] = (),
     ) -> RotationCandidateRecommendationResult:
         candidates = self.generation_service.generate(
             seed_plan=seed_plan,
@@ -195,6 +222,7 @@ class RotationCandidateRecommendationService:
             role_key=role_key,
             role_output_label=role_output_label,
             assigned_support_label=assigned_support_label,
+            tank_priority_context=tank_priority_context,
         )
 
     def recommend(
@@ -205,6 +233,7 @@ class RotationCandidateRecommendationService:
         role_key: str,
         role_output_label: str,
         assigned_support_label: str,
+        tank_priority_context: tuple[RotationTankEncounterPriorityCue, ...] = (),
     ) -> RotationCandidateRecommendationResult:
         candidates = tuple(candidates)
         if not candidates:
@@ -258,11 +287,61 @@ class RotationCandidateRecommendationService:
 
         ranked = self.ranking_service.rank(tuple(ranking_inputs))
         candidate_by_id = {item.candidate_id.casefold(): item for item in candidates}
+        ranking_by_id = {item.candidate_id.casefold(): item for item in ranked}
+
+        tank_assessment_by_id: dict[str, RotationTankPriorityCandidateAssessment] = {}
+        tank_context = tuple(tank_priority_context)
+        if _canonical(role_key) == "tank" and tank_context:
+            for candidate in candidates:
+                assessment = self.tank_priority_assessment_service.assess(
+                    candidate_id=candidate.candidate_id,
+                    plan=candidate.plan,
+                    priority_context=tank_context,
+                )
+                if assessment.candidate_id.casefold() != candidate.candidate_id.casefold():
+                    raise ValueError(
+                        "Tank priority assessment candidate mismatch: "
+                        f"expected {candidate.candidate_id!r}, got {assessment.candidate_id!r}"
+                    )
+                tank_assessment_by_id[candidate.candidate_id.casefold()] = assessment
+
+            eligible_ids = [
+                item.candidate_id.casefold()
+                for item in ranked
+                if item.tier is RotationCandidateTier.ELIGIBLE
+            ]
+            ineligible_ids = [
+                item.candidate_id.casefold()
+                for item in ranked
+                if item.tier is RotationCandidateTier.INELIGIBLE
+            ]
+            eligible_ids.sort(
+                key=lambda key: (
+                    tank_assessment_by_id[key].preference_key,
+                    ranking_by_id[key].rank,
+                    key,
+                )
+            )
+            ordered_ids = eligible_ids + ineligible_ids
+            ranked = tuple(
+                RotationRoleAwareRankingResult(
+                    candidate_id=ranking_by_id[key].candidate_id,
+                    tier=ranking_by_id[key].tier,
+                    rank=index + 1,
+                    base_ranking=ranking_by_id[key].base_ranking,
+                    role_reasons=ranking_by_id[key].role_reasons,
+                )
+                for index, key in enumerate(ordered_ids)
+            )
+
         entries = tuple(
             RotationCandidateRecommendationEntry(
                 candidate=candidate_by_id[item.candidate_id.casefold()],
                 evidence=evidence_by_id[item.candidate_id.casefold()],
                 ranking=item,
+                tank_priority_assessment=tank_assessment_by_id.get(
+                    item.candidate_id.casefold()
+                ),
             )
             for item in ranked
         )
