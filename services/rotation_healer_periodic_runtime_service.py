@@ -128,10 +128,14 @@ class RotationHealerPeriodicRuntimeService:
         self,
         *,
         output_eligibility_service: RotationRuntimeOutputEligibilityService | None = None,
+        condition_context_resolver: (
+            RotationRuntimeOutputConditionContextResolver | None
+        ) = None,
     ) -> None:
         self.output_eligibility_service = (
             output_eligibility_service or RotationRuntimeOutputEligibilityService()
         )
+        self.condition_context_resolver = condition_context_resolver
 
     def project(
         self,
@@ -147,6 +151,11 @@ class RotationHealerPeriodicRuntimeService:
         horizon = float(horizon_seconds)
         if not math.isfinite(horizon) or horizon < 0:
             raise ValueError("periodic heal horizon must be finite and non-negative")
+        effective_condition_resolver = (
+            condition_context_resolver
+            if condition_context_resolver is not None
+            else self.condition_context_resolver
+        )
 
         evidence_by_key = {
             (item.source_name.casefold(), int(item.coefficient_number)): item
@@ -239,8 +248,8 @@ class RotationHealerPeriodicRuntimeService:
                         continue
 
                     condition_context = (
-                        condition_context_resolver(event)
-                        if condition_context_resolver is not None
+                        effective_condition_resolver(event)
+                        if effective_condition_resolver is not None
                         else None
                     )
                     eligibility = self.output_eligibility_service.evaluate(
