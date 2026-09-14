@@ -63,6 +63,34 @@ class ExtremeEnchantmentObjectiveService:
         "critical_damage": StatId.CRITICAL_DAMAGE,
     }
 
+    # Canonical jewelry semantic identities let objective searches prove that an
+    # unmapped mechanic is irrelevant before forcing it through EffectMapper.
+    # This is deliberately narrower than the engine StatId map: unsupported
+    # relevant semantics still fail closed below.
+    _JEWELRY_EFFECT_TYPES_BY_OBJECTIVE = {
+        "magicka_recovery": frozenset({"magicka_recovery"}),
+        "stamina_recovery": frozenset({"stamina_recovery"}),
+        "physical_resistance": frozenset({"physical_resistance"}),
+        "spell_resistance": frozenset({"spell_resistance"}),
+        "spell_damage": frozenset({"spell_damage", "weapon_spell_damage"}),
+        "weapon_damage": frozenset({"weapon_damage", "weapon_spell_damage"}),
+        "critical_damage": frozenset({"critical_damage"}),
+        "spell_critical": frozenset({"spell_critical", "critical_chance"}),
+        "weapon_critical": frozenset({"weapon_critical", "critical_chance"}),
+    }
+
+    @classmethod
+    def _objective(cls, objective_key: str) -> str:
+        objective = str(objective_key).strip().casefold()
+        if objective not in cls.REVIEWED_OBJECTIVES:
+            raise KeyError(f"unreviewed Extreme enchantment objective: {objective_key!r}")
+        return objective
+
+    @staticmethod
+    def _validate_multiplier(multiplier: float) -> None:
+        if multiplier < 0.0:
+            raise ValueError("enchantment multiplier must be non-negative")
+
     @classmethod
     def _project_effects(
         cls,
@@ -72,12 +100,8 @@ class ExtremeEnchantmentObjectiveService:
         effects: tuple[Effect, ...],
         multiplier: float,
     ) -> tuple[float | None, tuple[str, ...]]:
-        if multiplier < 0.0:
-            raise ValueError("enchantment multiplier must be non-negative")
-
-        objective = str(objective_key).strip().casefold()
-        if objective not in cls.REVIEWED_OBJECTIVES:
-            raise KeyError(f"unreviewed Extreme enchantment objective: {objective_key!r}")
+        cls._validate_multiplier(multiplier)
+        objective = cls._objective(objective_key)
 
         target_stat = cls._STAT_BY_OBJECTIVE.get(objective)
         if objective in {"spell_critical", "weapon_critical"}:
@@ -126,17 +150,49 @@ class ExtremeEnchantmentObjectiveService:
         *,
         multiplier: float = 1.0,
     ) -> ExtremeEnchantmentObjectiveCandidate:
-        effects = tuple(repository.get_jewelry_glyph_effect_by_name(glyph_name, use_max_value=True))
+        cls._validate_multiplier(multiplier)
+        objective = cls._objective(objective_key)
+
+        semantic_loader = getattr(repository, "get_jewelry_glyph_effect_types_by_name", None)
+        if callable(semantic_loader):
+            semantic_types = frozenset(
+                str(value or "").strip().casefold()
+                for value in semantic_loader(glyph_name)
+                if str(value or "").strip()
+            )
+            target_types = cls._JEWELRY_EFFECT_TYPES_BY_OBJECTIVE.get(objective, frozenset())
+            if semantic_types and semantic_types.isdisjoint(target_types):
+                return ExtremeEnchantmentObjectiveCandidate(
+                    enchantment_type="jewelry",
+                    glyph_name=str(glyph_name),
+                    objective_key=objective,
+                    projected_delta=0.0,
+                )
+
+        try:
+            effects = tuple(repository.get_jewelry_glyph_effect_by_name(glyph_name, use_max_value=True))
+        except ValueError as exc:
+            # If semantic review says the glyph could affect this objective, an
+            # unmapped engine mechanic is a proof blocker rather than a crash or
+            # an invented zero. Irrelevant semantics were returned above.
+            return ExtremeEnchantmentObjectiveCandidate(
+                enchantment_type="jewelry",
+                glyph_name=str(glyph_name),
+                objective_key=objective,
+                projected_delta=None,
+                unresolved=(f"{glyph_name}: {exc}",),
+            )
+
         delta, unresolved = cls._project_effects(
             glyph_name=glyph_name,
-            objective_key=objective_key,
+            objective_key=objective,
             effects=effects,
             multiplier=multiplier,
         )
         return ExtremeEnchantmentObjectiveCandidate(
             enchantment_type="jewelry",
             glyph_name=str(glyph_name),
-            objective_key=str(objective_key).strip().casefold(),
+            objective_key=objective,
             projected_delta=delta,
             source_effects=effects,
             unresolved=unresolved,
