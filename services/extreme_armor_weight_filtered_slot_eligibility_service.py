@@ -28,7 +28,15 @@ class ExtremeArmorWeightFilteredSlotEligibilityResult:
 
     @property
     def denominator_proven(self) -> bool:
-        return not self.unresolved and not self.catalog.unresolved
+        """Whether this adapter's armor-weight projection is complete.
+
+        Upstream catalog diagnostics remain attached to ``catalog.unresolved`` for
+        downstream consumers that own the broader named-gear denominator.  They do
+        not make this one transformation unresolved unless armor-weight evidence
+        itself is missing or malformed.
+        """
+
+        return not self.unresolved
 
 
 class ExtremeArmorWeightFilteredSlotEligibilityService:
