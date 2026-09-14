@@ -96,6 +96,32 @@ ROTATION_TANK_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="rotation.tank.encounter_defensive_timing_binding",
+        domain="rotation",
+        purpose=(
+            "Reuse reviewed canonical encounter clock-window projection to bind exact mechanic "
+            "occurrences to separately reviewed tank defensive facts without duplicating timing truth."
+        ),
+        implementation_path="services.rotation_tank_encounter_defensive_timing_service",
+        inputs=(
+            "EncounterBossGuide",
+            "RotationTankEncounterDefensiveTimingPolicy",
+            "EncounterRotationDemandService",
+        ),
+        outputs=("RotationTankEncounterDefensiveTimingProjection",),
+        dependencies=("rotation.tank.encounter_defensive_projection",),
+        responsibilities=("rotation_tank_reviewed_encounter_defensive_timing_binding",),
+        roles=("Tank",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Canonical encounter timing and defensive-response semantics remain separate evidence "
+            "lanes. Reviewed explicit seconds are reused through EncounterRotationDemandService; "
+            "health/phase thresholds, missing evidence, and ambiguous timing remain unresolved."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="rotation.tank.defensive_candidate_claim",
         domain="rotation",
         purpose=(
