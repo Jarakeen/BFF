@@ -25,6 +25,7 @@ _CLASS_OVERLAY_FIELDS = {
     "FrontBarSkills", "BackBarSkills", "ClassSkillLines", "ClassMasteryAbilityIds",
     "ScribedSkills", "ScribedSkillRecipes",
 }
+_SKILL_BAR_FIELDS = ("FrontBarSkills", "BackBarSkills")
 
 
 @dataclass(frozen=True)
@@ -91,6 +92,63 @@ class BuildReuseService:
             payload["Notes"] = ""
         return payload
 
+    @staticmethod
+    def _normalized_bar(value: object) -> list[str]:
+        bar = [str(item or "").strip() for item in list(value or [])[:6]]
+        return (bar + [""] * 6)[:6]
+
+    @classmethod
+    def _derive_shared_skill_core(
+        cls,
+        base_payload: dict[str, Any],
+        overlays: dict[str, dict[str, Any]],
+    ) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
+        """Promote same-slot skills shared by every class overlay into the role base.
+
+        This is deliberately evidence-based rather than a guessed class taxonomy. If
+        the Warden and Arcanist healer overlays both put Combat Prayer in slot 1, that
+        slot becomes part of the reusable healer core. Different skills remain in
+        their class overlays.
+        """
+        if len(overlays) < 2:
+            return deepcopy(base_payload), deepcopy(overlays)
+
+        result_base = deepcopy(base_payload)
+        result_overlays = deepcopy(overlays)
+        for field in _SKILL_BAR_FIELDS:
+            bars = [cls._normalized_bar(overlay.get(field)) for overlay in result_overlays.values()]
+            common = [""] * 6
+            for index in range(6):
+                values = [bar[index] for bar in bars]
+                nonempty = [value for value in values if value]
+                if nonempty and len(nonempty) == len(values) and len({value.casefold() for value in nonempty}) == 1:
+                    common[index] = nonempty[0]
+            if any(common):
+                base_bar = cls._normalized_bar(result_base.get(field))
+                for index, value in enumerate(common):
+                    if value:
+                        base_bar[index] = value
+                result_base[field] = base_bar
+                for overlay in result_overlays.values():
+                    overlay_bar = cls._normalized_bar(overlay.get(field))
+                    for index, value in enumerate(common):
+                        if value and overlay_bar[index].casefold() == value.casefold():
+                            overlay_bar[index] = ""
+                    overlay[field] = overlay_bar
+        return result_base, result_overlays
+
+    @classmethod
+    def _apply_overlay(cls, base_payload: dict[str, Any], overlay: dict[str, Any]) -> dict[str, Any]:
+        result = deepcopy(base_payload)
+        for field, value in overlay.items():
+            if field in _SKILL_BAR_FIELDS:
+                base_bar = cls._normalized_bar(result.get(field))
+                overlay_bar = cls._normalized_bar(value)
+                result[field] = [overlay_bar[index] or base_bar[index] for index in range(6)]
+            else:
+                result[field] = deepcopy(value)
+        return result
+
     def load_templates(self) -> tuple[BuildTemplateRecord, ...]:
         if not self.template_path.exists():
             return ()
@@ -140,8 +198,7 @@ class BuildReuseService:
 
         # Reusing the same template name with another class adds/replaces that
         # class overlay while preserving the first role-level base. This lets a
-        # healer template accumulate Warden, Arcanist, Templar, etc. overlays
-        # without turning them into unrelated templates.
+        # healer template accumulate Warden, Arcanist, Templar, etc. overlays.
         if existing is not None:
             if existing.role and build.Role.strip() and existing.role.casefold() != build.Role.strip().casefold():
                 raise ValueError(
@@ -150,6 +207,7 @@ class BuildReuseService:
             overlays = deepcopy(existing.class_overlays)
             if source_class:
                 overlays[source_class] = overlay
+            base_payload, overlays = self._derive_shared_skill_core(existing.base_payload, overlays)
             notes = existing.notes
             source_text = f"{build.Name or build.Gamertag} • {build.BuildName}".strip(" •")
             if source_text and source_text not in notes:
@@ -159,7 +217,7 @@ class BuildReuseService:
                 name=existing.name,
                 role=existing.role or build.Role.strip(),
                 source_class=existing.source_class or source_class,
-                base_payload=deepcopy(existing.base_payload),
+                base_payload=base_payload,
                 class_overlays=overlays,
                 notes=notes,
             )
@@ -219,8 +277,9 @@ class BuildReuseService:
         )
         return BuildReuseResult(PlayerBuild.from_dict(payload))
 
-    @staticmethod
+    @classmethod
     def apply_template(
+        cls,
         template: BuildTemplateRecord,
         *,
         destination_name: str,
@@ -233,21 +292,24 @@ class BuildReuseService:
     ) -> BuildReuseResult:
         payload = deepcopy(template.base_payload)
         class_name = str(destination_class or "").strip()
-        overlay = template.class_overlays.get(class_name)
+        overlay = next(
+            (value for key, value in template.class_overlays.items() if key.casefold() == class_name.casefold()),
+            None,
+        )
         warnings: list[str] = []
         if overlay:
-            payload.update(deepcopy(overlay))
+            payload = cls._apply_overlay(payload, overlay)
         elif template.class_overlays:
-            # Fail closed on class-specific skills. The role-level gear/CP/etc.
-            # still transfer, but no source-class skill state is guessed onto a new class.
-            payload["FrontBarSkills"] = [""] * 6
-            payload["BackBarSkills"] = [""] * 6
+            # Shared role-level skills promoted from multiple overlays remain safe.
+            # Class-specific slots stay blank instead of borrowing another class.
+            payload["FrontBarSkills"] = cls._normalized_bar(payload.get("FrontBarSkills"))
+            payload["BackBarSkills"] = cls._normalized_bar(payload.get("BackBarSkills"))
             payload["ClassSkillLines"] = []
             payload["ClassMasteryAbilityIds"] = []
             payload["ScribedSkills"] = []
             payload["ScribedSkillRecipes"] = []
             warnings.append(
-                f"No {class_name or 'destination-class'} overlay exists yet; role-level setup was copied but class/skill slots need review."
+                f"No {class_name or 'destination-class'} overlay exists yet; shared role skills/setup were copied and class-specific slots need review."
             )
         if not include_variants:
             payload["ContextVariants"] = []
