@@ -160,6 +160,7 @@ class BuildContextVariant:
     ContextType: str = "Boss"
     TeamName: str = ""
     BossName: str = ""
+    TransformedForm: str = ""
     Mundus: str = ""
     SecondMundus: str = ""
     Armor: dict[str, dict[str, str]] = field(default_factory=dict)
@@ -182,6 +183,7 @@ class BuildContextVariant:
             "ContextType": self.ContextType,
             "TeamName": self.TeamName,
             "BossName": self.BossName,
+            "TransformedForm": self.TransformedForm,
             "Mundus": self.Mundus,
             "SecondMundus": self.SecondMundus,
             "Armor": {slot: dict(values) for slot, values in self.Armor.items()},
@@ -213,6 +215,7 @@ class BuildContextVariant:
             ContextType=str(data.get("ContextType", "Boss") or "Boss"),
             TeamName=str(data.get("TeamName", "") or ""),
             BossName=str(data.get("BossName", data.get("Boss", "")) or ""),
+            TransformedForm=str(data.get("TransformedForm", "") or "").strip().casefold(),
             Mundus=str(data.get("Mundus", "") or ""),
             SecondMundus=str(data.get("SecondMundus", "") or ""),
             Armor=armor,
