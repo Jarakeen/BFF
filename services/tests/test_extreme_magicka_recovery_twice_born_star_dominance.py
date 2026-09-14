@@ -1,6 +1,10 @@
+from types import SimpleNamespace
+
 from minmax.mundus_repository import MundusEffectRecord
 from tools.audit_extreme_magicka_recovery_twice_born_star_dominance import (
+    EXPECTED_SEARCH_STATE_RULE,
     LOCKED_PRIMARY_MUNDUS,
+    recovery_search_state_rule,
     second_mundus_direct_recovery_ceiling,
 )
 
@@ -56,3 +60,18 @@ def test_second_mundus_ceiling_reports_relevant_unsupported_record():
     assert value == 0.0
     assert name is None
     assert unresolved
+
+
+def test_twice_born_rule_resolves_from_shared_recovery_semantics():
+    evidence = SimpleNamespace(
+        set_name="Twice-Born Star",
+        piece_count=5,
+        candidate=SimpleNamespace(
+            source_bonuses=(
+                SimpleNamespace(description="You can have two Mundus Stone boons at the same time."),
+            ),
+            unresolved=(),
+        ),
+    )
+
+    assert recovery_search_state_rule(evidence) == EXPECTED_SEARCH_STATE_RULE
