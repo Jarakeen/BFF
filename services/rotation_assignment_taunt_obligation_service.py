@@ -3,9 +3,10 @@ from __future__ import annotations
 """Translate explicit encounter assignments into tank taunt-application obligations.
 
 Provider assignment proves ownership. This policy layer proves only which canonical
-taunt source skill must be applied, on which bar when specified, and inside which
-explicit occurrence windows. It deliberately does not infer taunt duration, refresh
-cadence, target ownership, overtaunt/immunity behavior, or continuous maintenance.
+taunt source skill must be applied, on which bar when specified, to which explicit
+planning target when specified, and inside which explicit occurrence windows. It
+deliberately does not infer taunt duration, refresh cadence, overtaunt/immunity
+behavior, or continuous maintenance.
 """
 
 from dataclasses import dataclass
@@ -28,6 +29,7 @@ class RotationAssignmentTauntApplicationWindow:
     window_end_seconds: float
     minimum_applications: int = 1
     bar: str | None = None
+    target_key: str | None = None
 
     def __post_init__(self) -> None:
         occurrence_id = str(self.occurrence_id or "").strip()
@@ -54,6 +56,12 @@ class RotationAssignmentTauntApplicationWindow:
             if bar not in {"front", "back"}:
                 raise ValueError("rotation assignment taunt window bar must be front or back")
             object.__setattr__(self, "bar", bar)
+
+        if self.target_key is not None:
+            target_key = str(self.target_key or "").strip()
+            if not target_key:
+                raise ValueError("rotation assignment taunt window target_key must be non-empty when supplied")
+            object.__setattr__(self, "target_key", target_key)
 
 
 @dataclass(frozen=True)
@@ -185,6 +193,7 @@ class RotationAssignmentTauntObligationService:
                     window_end_seconds=window.window_end_seconds,
                     minimum_applications=window.minimum_applications,
                     bar=window.bar,
+                    target_key=window.target_key,
                     provenance=(
                         f"assignment={assignment.requirement_id}",
                         f"encounter={assignment.encounter_id}",
