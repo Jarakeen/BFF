@@ -74,6 +74,17 @@ class ContextVariantCard(FoundryCard):
         self.potion = _editable_combo(editor.potion_choices)
         self.notes = QLineEdit()
 
+        # Context bars inherit the character's affiliation eligibility. A base
+        # build marked Werewolf still represents the normal/mortal bar, while a
+        # context variant is where raid leads can intentionally author the
+        # transformed boss bar. Without this handoff, the centralized skill
+        # eligibility filter hides the entire Werewolf line from the variant.
+        self._sync_skill_context()
+        for toggle_name in ("werewolf", "vampire"):
+            toggle = getattr(editor, toggle_name, None)
+            if toggle is not None and hasattr(toggle, "toggled"):
+                toggle.toggled.connect(lambda *_: self._sync_skill_context())
+
         remove = FoundryButton("Remove", role=ButtonRole.DANGER, compact=True)
         remove.clicked.connect(lambda: self.removeRequested.emit(self))
         self.set_header_action(remove)
@@ -81,6 +92,7 @@ class ContextVariantCard(FoundryCard):
         hint = QLabel(
             "Leave fields blank to inherit from the base build. "
             "Resolution order: Team + Boss → Team → Boss → Base. "
+            "Werewolf skills are available here when the base character is marked WW. "
             "Raid assignments stay on the team Assignments surface."
         )
         hint.setWordWrap(True)
@@ -164,9 +176,30 @@ class ContextVariantCard(FoundryCard):
         build_form.addRow("Notes", self.notes)
         self.addLayout(build_form)
 
+    def _sync_skill_context(self, eso_class: str | None = None) -> None:
+        """Give variant bars the parent character's skill-line eligibility."""
+        selected_class = (
+            str(eso_class or "").strip()
+            or str(getattr(getattr(self.editor, "eso_class", None), "currentText", lambda: "")()).strip()
+        )
+        vampire_toggle = getattr(self.editor, "vampire", None)
+        werewolf_toggle = getattr(self.editor, "werewolf", None)
+        vampire = bool(vampire_toggle is not None and vampire_toggle.isChecked())
+        werewolf = bool(werewolf_toggle is not None and werewolf_toggle.isChecked())
+
+        for bar in (self.front_bar, self.back_bar):
+            if hasattr(bar, "set_class"):
+                bar.set_class(selected_class)
+            if hasattr(bar, "set_affiliation"):
+                bar.set_affiliation(vampire=vampire, werewolf=werewolf)
+            if hasattr(bar, "set_form"):
+                # Werewolf actives exist only on the transformed bar. Variants
+                # are the intended place to author that boss-only bar while the
+                # base build remains the normal form.
+                bar.set_form("werewolf" if werewolf else None)
+
     def set_class(self, eso_class: str) -> None:
-        self.front_bar.set_class(eso_class)
-        self.back_bar.set_class(eso_class)
+        self._sync_skill_context(eso_class)
 
     @staticmethod
     def _sparse_armor(rows) -> dict[str, dict[str, str]]:
@@ -220,6 +253,9 @@ class ContextVariantCard(FoundryCard):
         self.gear_rows["Ring1"].load(variant.Ring1)
         self.gear_rows["Ring2"].load(variant.Ring2)
 
+        # Reapply the parent affiliation before loading saved context bars so a
+        # persisted Werewolf skill can be selected instead of silently dropped.
+        self._sync_skill_context()
         self.cp_grid.load_entries(variant.ChampionPoints)
         self.front_bar.load(variant.FrontBarSkills)
         self.back_bar.load(variant.BackBarSkills)
