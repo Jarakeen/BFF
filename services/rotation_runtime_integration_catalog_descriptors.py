@@ -63,6 +63,34 @@ ROTATION_RUNTIME_INTEGRATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] 
             "therefore it still does not materialize a RotationAction."
         ),
     ),
+    ServiceDescriptor(
+        service_id="rotation.runtime.execution_strategy_resolution",
+        domain="rotation",
+        purpose=(
+            "Resolve one activated runtime intent into exact already-slotted canonical capability "
+            "sources that may satisfy the directive, preserving skill, bar, target, and activation provenance."
+        ),
+        implementation_path="services.rotation_runtime_execution_strategy_service",
+        inputs=(
+            "RotationRuntimeActivatedIntent",
+            "PlayerBuild",
+            "SavedBuildUtilityProviderSourceResolution",
+        ),
+        outputs=(
+            "RotationRuntimeExecutionStrategyCandidate",
+            "RotationRuntimeExecutionStrategyResolution",
+        ),
+        dependencies=("rotation.runtime.trigger_condition_resolution",),
+        responsibilities=("rotation_runtime_execution_strategy_resolution",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Reuses canonical saved-build structural utility evidence. Multiple valid slotted providers "
+            "remain multiple candidates. The service does not pick a winner, infer a bar swap, interrupt "
+            "an occupied action, or emit RotationAction timing/sequence/action-kind state."
+        ),
+    ),
 )
 
 
