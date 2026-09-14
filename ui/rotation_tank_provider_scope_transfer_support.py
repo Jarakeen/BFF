@@ -11,7 +11,9 @@ into RotationGenerateTankAssignmentEvidence.
 
 Reviewed encounter Tank responsibility lanes are bound only through exact prescription
 slot identities declared by the reviewed lane registry. Main/Off Tank is never inferred
-from roster order, build names, or role labels.
+from roster order, build names, or role labels. When a reviewed lane responsibility
+matches a canonical raid-Tank provider requirement, the bound member may resolve only
+provider-selection ambiguity among already-proven viable providers.
 """
 
 from dataclasses import dataclass
@@ -19,6 +21,12 @@ from dataclasses import dataclass
 from services.encounter_build_capability_adapter import SavedBuildEncounterCapabilityAdapter
 from services.raid_tank_encounter_responsibility_binding_service import (
     RaidTankEncounterResponsibilityBindingService,
+)
+from services.raid_tank_responsibility_encounter_adapter import (
+    RaidTankResponsibilityEncounterAdapter,
+)
+from services.raid_tank_responsibility_profile import (
+    DEFAULT_RAID_TANK_RESPONSIBILITY_PROFILE,
 )
 from services.rotation_tank_provider_scope_service import RotationTankProviderScopeService
 from ui.rotation_generate_tank_assignment_context_support import (
@@ -199,6 +207,32 @@ def _bind_encounter_responsibilities(
     return binding, ()
 
 
+def _provider_preferences_for_binding(encounter_id: str, binding) -> dict[str, str]:
+    if binding is None:
+        return {}
+    adapter = RaidTankResponsibilityEncounterAdapter(
+        DEFAULT_RAID_TANK_RESPONSIBILITY_PROFILE
+    )
+    canonical_by_suffix = {
+        requirement.requirement_id.rsplit(":tank:", 1)[-1].casefold(): requirement.requirement_id
+        for requirement in adapter.requirements(encounter_id)
+    }
+    preferred: dict[str, str] = {}
+    for row in binding.responsibilities:
+        canonical_id = canonical_by_suffix.get(
+            row.responsibility.responsibility_id.casefold()
+        )
+        if canonical_id is None:
+            continue
+        prior = preferred.get(canonical_id)
+        if prior is not None and prior.casefold() != row.member_id.casefold():
+            raise ValueError(
+                f"{canonical_id}: reviewed Tank lanes assign the same provider requirement to multiple members"
+            )
+        preferred[canonical_id] = row.member_id
+    return preferred
+
+
 def refresh_rotation_tank_provider_scope(
     window,
     *,
@@ -207,12 +241,7 @@ def refresh_rotation_tank_provider_scope(
         RaidTankEncounterResponsibilityBindingService | object | None
     ) = None,
 ) -> RotationTankProviderScopeTransferResult:
-    """Refresh Rotation Builder's Tank assignment evidence from the selected team.
-
-    Non-Tank Rotation selections deliberately clear Tank evidence so stale assignment
-    ownership cannot leak across role/build changes. Missing or ambiguous team state
-    also clears evidence and returns an explicit unresolved reason rather than guessing.
-    """
+    """Refresh Rotation Builder's Tank assignment evidence from the selected team."""
 
     pages = getattr(window, "pages", {}) or {}
     rotation_page = pages.get("rotations")
@@ -279,20 +308,6 @@ def refresh_rotation_tank_provider_scope(
             service = RotationTankProviderScopeService()
             window._rotation_tank_provider_scope_service = service
 
-    try:
-        scope = service.resolve(
-            player_build=selected_build,
-            roster_builds=roster_builds,
-            encounter_id=encounter_id,
-        )
-    except (LookupError, ValueError) as exc:
-        _clear_tank_assignment_evidence(rotation_page)
-        return RotationTankProviderScopeTransferResult(
-            False,
-            encounter_id=encounter_id,
-            unresolved=(str(exc),),
-        )
-
     binding_service = responsibility_binding_service
     if binding_service is None:
         binding_service = getattr(
@@ -311,16 +326,26 @@ def refresh_rotation_tank_provider_scope(
             provider_scope_service=service,
             binding_service=binding_service,
         )
+        if lane_unresolved:
+            _clear_tank_assignment_evidence(rotation_page)
+            return RotationTankProviderScopeTransferResult(
+                False,
+                encounter_id=encounter_id,
+                unresolved=lane_unresolved,
+            )
+        preferences = _provider_preferences_for_binding(encounter_id, binding)
+        scope = service.resolve(
+            player_build=selected_build,
+            roster_builds=roster_builds,
+            encounter_id=encounter_id,
+            preferred_member_by_requirement=preferences,
+        )
     except (LookupError, ValueError) as exc:
-        binding = None
-        lane_unresolved = (str(exc),)
-    if lane_unresolved:
         _clear_tank_assignment_evidence(rotation_page)
         return RotationTankProviderScopeTransferResult(
             False,
             encounter_id=encounter_id,
-            member_id=scope.member_id,
-            unresolved=lane_unresolved,
+            unresolved=(str(exc),),
         )
 
     contextual = () if binding is None else binding.for_member(scope.member_id)
