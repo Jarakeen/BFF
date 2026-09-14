@@ -147,6 +147,27 @@ class TeamProviderAssignmentWorkloadAdapterService:
         alternatives: list[TeamProviderWorkloadAlternativeRequest] = []
         rejected: list[TeamProviderWorkloadCandidateRejection] = []
 
+        # An assigned cast-produced effect cannot silently disappear from workload
+        # analysis merely because its workload-specific duration/capacity/window
+        # policy has not yet been reviewed. Preserve that missing evidence as an
+        # explicit blocker instead.
+        for requirement_key, effect_policy in effect_by_id.items():
+            assignment = assignment_by_id.get(requirement_key)
+            if (
+                assignment is not None
+                and assignment.status is ProviderAssignmentStatus.ASSIGNED
+                and requirement_key not in workload_by_id
+            ):
+                rejected.append(
+                    TeamProviderWorkloadCandidateRejection(
+                        alternative_id=effect_policy.requirement_id,
+                        effect_key=_canonical(effect_policy.effect_name),
+                        blockers=(
+                            f"{effect_policy.requirement_id}: assigned rotation effect has no explicit provider workload policy",
+                        ),
+                    )
+                )
+
         for requirement_key, workload_policy in workload_by_id.items():
             assignment = assignment_by_id.get(requirement_key)
             effect_policy = effect_by_id.get(requirement_key)
