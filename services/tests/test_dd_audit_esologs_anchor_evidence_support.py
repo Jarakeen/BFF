@@ -75,15 +75,11 @@ def test_maps_complete_exact_reviewed_observations_for_all_stampede_occurrences(
     result = DDAuditEsoLogsAnchorEvidenceSupport().map_file(path, plan=_plan())
 
     assert result.unresolved == ()
-    assert tuple(
-        (row.action_time_seconds, row.action_sequence, row.anchor_time_seconds)
-        for row in result.evidence
-    ) == pytest.approx(
-        (
-            (10.0, 1, 10.173),
-            (31.0, 1, 31.201),
-            (46.0, 1, 46.119),
-        )
+    assert len(result.evidence) == 3
+    assert tuple(row.action_time_seconds for row in result.evidence) == (10.0, 31.0, 46.0)
+    assert tuple(row.action_sequence for row in result.evidence) == (1, 1, 1)
+    assert tuple(row.anchor_time_seconds for row in result.evidence) == pytest.approx(
+        (10.173, 31.201, 46.119)
     )
     assert all("REVIEWED-REPORT" in row.source for row in result.evidence)
 
