@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+from dataclasses import is_dataclass, replace
 from types import MethodType
 from typing import Protocol
 
 from minmax.resource_costs import ResourceType
+from services.rotation_runtime_triggered_intent_service import (
+    RotationRuntimeTriggeredIntentService,
+)
 from ui.rotation_dashboard_page import RotationDashboardPage
 from ui.rotation_generate_canonical_context import RotationGenerateCanonicalContext
 
@@ -39,7 +43,9 @@ class RotationGenerateActionSupport:
     When the context owns an effective-build snapshot, that exact frozen build is used
     for role composition and orchestration. Rotation never re-resolves Team/Boss/Raid
     Plan build ownership; those decisions belong to the caller that produced the snapshot.
-    Legacy/static contexts preserve their historical orchestration call shape.
+    Raid Plan runtime-triggered responsibilities are projected into pending execution
+    intent and attached to the returned orchestration result without changing its
+    seconds-based final plan. Legacy/static contexts preserve their historical call shape.
     """
 
     def install(self, page) -> None:
@@ -148,6 +154,38 @@ class RotationGenerateActionSupport:
 
         return True
 
+    @staticmethod
+    def _runtime_triggered_intents_for_context(context: RotationGenerateCanonicalContext):
+        responsibilities = tuple(
+            getattr(context, "raid_plan_triggered_responsibilities", ()) or ()
+        )
+        if not responsibilities:
+            return ()
+        plan_id = str(getattr(context, "raid_plan_id", "") or "").strip()
+        seat_id = str(getattr(context, "raid_plan_seat_id", "") or "").strip()
+        if not plan_id or not seat_id:
+            raise ValueError(
+                "Raid Plan triggered responsibilities require bound plan and seat identity"
+            )
+        return RotationRuntimeTriggeredIntentService().project(
+            plan_id=plan_id,
+            seat_id=seat_id,
+            responsibilities=responsibilities,
+        )
+
+    @staticmethod
+    def _attach_runtime_triggered_intents(page, result, intents):
+        pending = tuple(intents)
+        if not pending:
+            return result
+        if is_dataclass(result):
+            result = replace(result, runtime_triggered_intents=pending)
+        else:
+            setattr(result, "runtime_triggered_intents", pending)
+        if hasattr(page, "last_canonical_cadence_orchestration_result"):
+            page.last_canonical_cadence_orchestration_result = result
+        return result
+
     def generate(self, page) -> None:
         context = getattr(page, "rotation_generate_canonical_context", None)
         provider = getattr(page, "rotation_generate_canonical_context_provider", None)
@@ -188,6 +226,7 @@ class RotationGenerateActionSupport:
                 evidence_bundle=bundle,
                 content_type=getattr(bundle, "content_type", ""),
             )
+            runtime_triggered_intents = self._runtime_triggered_intents_for_context(context)
             orchestration_kwargs = {
                 "role_evidence": role_evidence,
                 "cadence_obligations": context.cadence_obligations,
@@ -201,6 +240,11 @@ class RotationGenerateActionSupport:
             result = page.run_canonical_cadence_orchestration(
                 bundle,
                 **orchestration_kwargs,
+            )
+            result = self._attach_runtime_triggered_intents(
+                page,
+                result,
+                runtime_triggered_intents,
             )
         except (OSError, ValueError) as exc:
             page.status.warning(f"Encounter-aware rotation generation blocked: {exc}")
