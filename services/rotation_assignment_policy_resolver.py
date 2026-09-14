@@ -13,11 +13,14 @@ from services.encounter_provider_assignment import (
 from services.rotation_assignment_effect_obligation_service import (
     RotationAssignmentEffectPolicy,
 )
+from services.rotation_assignment_taunt_obligation_service import (
+    RotationAssignmentTauntPolicy,
+)
 
 
 @dataclass(frozen=True)
 class RotationAssignmentNonEffectPolicy:
-    """Verified declaration that an assignment is not an effect-uptime obligation.
+    """Verified declaration that an assignment is owned by another mechanic model.
 
     This is not a loophole for missing data. It is positive evidence that the exact
     assignment is fulfilled through another mechanic model, such as positioning,
@@ -50,6 +53,7 @@ class RotationAssignmentPolicyResolution:
 
     member_id: str
     effect_policies: tuple[RotationAssignmentEffectPolicy, ...]
+    taunt_policies: tuple[RotationAssignmentTauntPolicy, ...]
     non_effect_policies: tuple[RotationAssignmentNonEffectPolicy, ...]
     knowledge_gaps: tuple[CanonicalKnowledgeGap, ...]
 
@@ -65,16 +69,16 @@ class RotationAssignmentPolicyResolution:
 class RotationAssignmentPolicyResolver:
     """Resolve every owned assignment to explicit rotation semantics or a gap.
 
-    The resolver deliberately refuses to use absence of an effect policy as proof
+    The resolver deliberately refuses to use absence of one policy type as proof
     that an assignment is irrelevant to Rotation Maker. Every assignment owned by
     the requested member must have exactly one explicit disposition:
 
-    * RotationAssignmentEffectPolicy: a timed cast-produced effect obligation, or
-    * RotationAssignmentNonEffectPolicy: verified evidence that another mechanic
-      model owns the responsibility.
+    * RotationAssignmentEffectPolicy: timed cast-produced effect uptime;
+    * RotationAssignmentTauntPolicy: exact taunt applications in explicit windows;
+    * RotationAssignmentNonEffectPolicy: another verified mechanic model owns it.
 
-    Missing disposition becomes a reusable CanonicalKnowledgeGap for Comp Maker,
-    Rotation Maker, and Optimizer research/readiness reporting.
+    Taunt is separate from effect uptime because a source-backed taunt application
+    does not by itself prove duration or continuous maintenance semantics.
     """
 
     def resolve(
@@ -83,6 +87,7 @@ class RotationAssignmentPolicyResolver:
         member_id: str,
         assignments: tuple[ProviderAssignment, ...],
         effect_policies: tuple[RotationAssignmentEffectPolicy, ...] = (),
+        taunt_policies: tuple[RotationAssignmentTauntPolicy, ...] = (),
         non_effect_policies: tuple[RotationAssignmentNonEffectPolicy, ...] = (),
     ) -> RotationAssignmentPolicyResolution:
         resolved_member_id = str(member_id or "").strip()
@@ -97,20 +102,31 @@ class RotationAssignmentPolicyResolver:
             effect_policies,
             kind="rotation assignment effect policy",
         )
+        taunt_by_id = self._unique_by_requirement(
+            taunt_policies,
+            kind="rotation assignment taunt policy",
+        )
         non_effect_by_id = self._unique_by_requirement(
             non_effect_policies,
             kind="rotation assignment non-effect policy",
         )
 
-        overlap = set(effect_by_id) & set(non_effect_by_id)
-        if overlap:
-            requirement_id = sorted(overlap)[0]
-            raise ValueError(
-                "rotation assignment requirement cannot be both effect and non-effect policy: "
-                f"{requirement_id!r}"
-            )
+        dispositions = (
+            ("effect", effect_by_id),
+            ("taunt", taunt_by_id),
+            ("non-effect", non_effect_by_id),
+        )
+        for index, (left_name, left) in enumerate(dispositions):
+            for right_name, right in dispositions[index + 1 :]:
+                overlap = set(left) & set(right)
+                if overlap:
+                    requirement_id = sorted(overlap)[0]
+                    raise ValueError(
+                        "rotation assignment requirement cannot have multiple policy dispositions "
+                        f"({left_name}, {right_name}): {requirement_id!r}"
+                    )
 
-        for policy in (*effect_policies, *non_effect_policies):
+        for policy in (*effect_policies, *taunt_policies, *non_effect_policies):
             assignment = assignment_by_id.get(policy.requirement_id.casefold())
             if assignment is None:
                 raise ValueError(
@@ -120,6 +136,7 @@ class RotationAssignmentPolicyResolver:
             self._validate_policy_metadata(policy, assignment)
 
         resolved_effects: list[RotationAssignmentEffectPolicy] = []
+        resolved_taunts: list[RotationAssignmentTauntPolicy] = []
         resolved_non_effects: list[RotationAssignmentNonEffectPolicy] = []
         gaps: list[CanonicalKnowledgeGap] = []
 
@@ -141,9 +158,13 @@ class RotationAssignmentPolicyResolver:
 
             key = assignment.requirement_id.casefold()
             effect_policy = effect_by_id.get(key)
+            taunt_policy = taunt_by_id.get(key)
             non_effect_policy = non_effect_by_id.get(key)
             if effect_policy is not None:
                 resolved_effects.append(effect_policy)
+                continue
+            if taunt_policy is not None:
+                resolved_taunts.append(taunt_policy)
                 continue
             if non_effect_policy is not None:
                 resolved_non_effects.append(non_effect_policy)
@@ -158,10 +179,12 @@ class RotationAssignmentPolicyResolver:
                         f"{assignment.requirement_id}"
                     ),
                     needed_evidence=(
-                        "Determine whether this assignment is fulfilled by a timed cast-produced "
-                        "effect. If yes, provide exact effect identity, source skill, bar if "
-                        "required, minimum uptime, and provenance. If no, provide a verified "
-                        "non-effect disposition identifying the mechanic model that owns it."
+                        "Determine the assignment's executable mechanic model. For effect uptime, "
+                        "provide exact effect identity, source skill, bar if required, minimum uptime, "
+                        "and provenance. For taunt responsibility, provide the exact source-backed "
+                        "taunt skill and explicit application windows without inferring duration. "
+                        "Otherwise provide a verified non-effect disposition identifying the mechanic "
+                        "model that owns it."
                     ),
                     consumers=("comp_maker", "rotation_maker", "optimizer"),
                     source_context=(
@@ -175,6 +198,7 @@ class RotationAssignmentPolicyResolver:
         return RotationAssignmentPolicyResolution(
             member_id=resolved_member_id,
             effect_policies=tuple(resolved_effects),
+            taunt_policies=tuple(resolved_taunts),
             non_effect_policies=tuple(resolved_non_effects),
             knowledge_gaps=tuple(gaps),
         )
