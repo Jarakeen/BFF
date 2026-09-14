@@ -61,6 +61,24 @@ EXTREME_RECOVERY_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "against alternate jewelry traits remains a higher-level optimization concern."
         ),
     ),
+    ServiceDescriptor(
+        service_id="extreme.recovery_champion_point_branch",
+        domain="extreme",
+        purpose=(
+            "Classify dynamic or conditional Champion Point branches for Health, Magicka, "
+            "and Stamina Recovery while preserving their runtime conditions."
+        ),
+        implementation_path="services.extreme_recovery_champion_point_branch_service",
+        inputs=("ChampionPointRecord", "RecoveryObjective"),
+        outputs=("ExtremeRecoveryChampionPointBranch",),
+        responsibilities=("extreme_recovery_champion_point_branch_classification",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "This service bounds one star only. Four-slot discipline legality remains owned by "
+            "ChampionPointLoadoutService, and runtime conditions are not proven by selection."
+        ),
+    ),
 )
 
 
