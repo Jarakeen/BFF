@@ -10,7 +10,13 @@ reusable build catalog.
 """
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QComboBox, QCompleter, QTableWidget
+from PySide6.QtWidgets import (
+    QComboBox,
+    QCompleter,
+    QHeaderView,
+    QSizePolicy,
+    QTableWidget,
+)
 
 from ui.raid_plan_page import RaidPlanPage, _clean
 
@@ -85,16 +91,52 @@ def known_character_classes(saved_builds, personnel_members, gamertag: str, char
     return tuple(sorted(by_key.values(), key=str.casefold))
 
 
+def raid_plan_stretch_columns() -> tuple[int, ...]:
+    """Columns that should consume the available Raid Plan workspace width."""
+    return (1, 2, 3, 4, 5)
+
+
 class RaidPlanCharacterSelectionPage(RaidPlanPage):
     """Raid Plan page with player-scoped character and build selectors."""
 
     def _build_ui(self) -> None:
         super()._build_ui()
+
+        # Raid Plans are a wide working surface. Let the workspace and table consume
+        # the available stacked-page area instead of honoring child size hints that
+        # make the plan open as a narrow, scrunched-up strip.
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.workspace_widget.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding,
+        )
+        self.workspace_scroll.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding,
+        )
+        self.team_table.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding,
+        )
+        self.team_table.setMinimumWidth(0)
+
+        header = self.team_table.horizontalHeader()
+        header.setStretchLastSection(False)
+        header.setMinimumSectionSize(70)
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(6, QHeaderView.ResizeMode.ResizeToContents)
+        for column in raid_plan_stretch_columns():
+            header.setSectionResizeMode(column, QHeaderView.ResizeMode.Stretch)
+
         for row in range(self.team_table.rowCount()):
             combo = QComboBox()
             combo.setEditable(True)
             combo.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
-            combo.setMinimumWidth(150)
+            combo.setMinimumWidth(0)
+            combo.setSizePolicy(
+                QSizePolicy.Policy.Expanding,
+                QSizePolicy.Policy.Fixed,
+            )
             if combo.lineEdit() is not None:
                 combo.lineEdit().setPlaceholderText("Choose or type character…")
                 combo.lineEdit().setClearButtonEnabled(True)
@@ -253,4 +295,5 @@ __all__ = [
     "known_character_classes",
     "known_character_names",
     "matching_saved_build_indices",
+    "raid_plan_stretch_columns",
 ]
