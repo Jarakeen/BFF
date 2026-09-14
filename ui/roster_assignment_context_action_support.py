@@ -63,11 +63,13 @@ def install() -> None:
             coverage,
             team_name,
             boss_name=selected_encounter_name(page),
+            use_context=True,
         )
 
     actions._coverage_builds_for_team = coverage_builds_for_selected_context
-    # Evaluate now uses Coverage's canonical team health-check path rather than
-    # maintaining a second, slightly different build-selection algorithm.
+    # Evaluate from Assignments is explicitly contextual: Team Default applies
+    # Team variants, and an optional Boss also applies the matching Boss/Team+Boss
+    # overrides. Direct Coverage remains the simpler base-build health check.
     actions._evaluate_team = evaluate_selected_team
     actions._selected_assignment_encounter_id = selected_encounter_id
     actions._selected_assignment_encounter_name = selected_encounter_name
