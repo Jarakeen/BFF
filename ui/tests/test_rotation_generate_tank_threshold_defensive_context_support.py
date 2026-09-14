@@ -31,8 +31,12 @@ class _AssignmentBundleService:
 
 
 class _ThresholdDefensiveBundleService:
-    def __init__(self, *, obligations=("threshold-block",), unresolved=()):
-        self.obligations = obligations
+    def __init__(self, *, obligations=None, unresolved=()):
+        self.obligations = (
+            (SimpleNamespace(obligation_id="threshold-block"),)
+            if obligations is None
+            else tuple(obligations)
+        )
         self.unresolved = unresolved
         self.calls = []
 
@@ -53,10 +57,16 @@ def _row():
     )
 
 
-def _bundle(*, thresholds=object()):
+def _thresholds(encounter_id="taleria_hm"):
+    return SimpleNamespace(encounter_id=encounter_id)
+
+
+def _bundle(*, thresholds=None):
     return SimpleNamespace(
         encounter_id="taleria_hm",
-        health_threshold_projection=thresholds,
+        health_threshold_projection=(
+            _thresholds() if thresholds is None else thresholds
+        ),
     )
 
 
@@ -72,17 +82,18 @@ def test_threshold_defensive_projection_flows_into_tank_generate_hard_obligation
     )
     row = _row()
     support.set_evidence((row,))
-    thresholds = object()
+    thresholds = _thresholds()
 
     result = support.context_for(object(), _bundle(thresholds=thresholds))
 
-    assert result.defensive_obligations == ("threshold-block",)
+    expected = threshold_service.obligations
+    assert result.defensive_obligations == expected
     assert len(threshold_service.calls) == 1
     threshold_call = threshold_service.calls[0]
     assert threshold_call["thresholds"] is thresholds
     assert threshold_call["facts"] == row.defensive_facts
     assert threshold_call["policies"] == row.defensive_threshold_timing_policies
-    assert assignment_bundle.calls[0]["defensive_obligations"] == ("threshold-block",)
+    assert assignment_bundle.calls[0]["defensive_obligations"] == expected
 
 
 def test_threshold_defensive_generate_fails_closed_without_canonical_threshold_projection():
@@ -94,8 +105,12 @@ def test_threshold_defensive_generate_fails_closed_without_canonical_threshold_p
     )
     support.set_evidence((_row(),))
 
+    bundle = SimpleNamespace(
+        encounter_id="taleria_hm",
+        health_threshold_projection=None,
+    )
     with pytest.raises(ValueError, match="canonical health-threshold projection is unavailable"):
-        support.context_for(object(), _bundle(thresholds=None))
+        support.context_for(object(), bundle)
 
 
 def test_threshold_defensive_generate_propagates_unresolved_reviewed_projection():
