@@ -64,6 +64,36 @@ def test_shared_per_stage_recovery_applies_to_magicka():
     assert row.flat_ceiling == pytest.approx(90.0)
 
 
+def test_conditional_paired_per_stage_recovery_keeps_runtime_condition():
+    row = ExtremeRecoveryChampionPointBranchService.classify(
+        _record(
+            "Refreshing Stride",
+            "While Sprinting you gain 100 Health and Magicka Recovery per stage.",
+            max_points=5,
+            jump_points=(),
+        ),
+        "health_recovery",
+    )
+
+    assert row.complete
+    assert row.kind is ExtremeRecoveryChampionPointBranchKind.PER_STAGE_FLAT
+    assert row.stages == 5
+    assert row.flat_ceiling == pytest.approx(500.0)
+    assert row.condition == "while Sprinting"
+
+
+def test_recovery_used_only_as_input_is_not_objective_relevant():
+    text = (
+        "Healing yourself or an ally under 50% Health grants them Minor Heroism for 1 second "
+        "for every 300 Magicka Recovery you have."
+    )
+
+    assert not ExtremeRecoveryChampionPointBranchService.mentions_objective_recovery(
+        text,
+        "magicka_recovery",
+    )
+
+
 def test_unknown_objective_fails_closed():
     with pytest.raises(KeyError):
         ExtremeRecoveryChampionPointBranchService.classify(
