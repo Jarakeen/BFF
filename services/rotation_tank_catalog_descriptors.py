@@ -41,6 +41,32 @@ ROTATION_TANK_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "uptime, target ownership, immunity/overtaunt behavior, or survivability."
         ),
     ),
+    ServiceDescriptor(
+        service_id="rotation.tank.defensive_response_obligation",
+        domain="rotation",
+        purpose=(
+            "Assess explicit source-backed block/dodge response obligations against the exact "
+            "role-neutral rotation schedule without inventing mitigation or encounter timing."
+        ),
+        implementation_path="services.rotation_tank_defensive_obligation_service",
+        inputs=(
+            "GeneratedRotationCandidate",
+            "RotationTankDefensiveObligation",
+            "RotationActionKind.BLOCK",
+            "RotationActionKind.DODGE",
+        ),
+        outputs=("RotationCandidateRoleHardObligationEvidence",),
+        responsibilities=("rotation_tank_defensive_response_hard_obligation",),
+        roles=("Tank",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Allowed response kind, exact response window, minimum count, optional bar, and "
+            "provenance are explicit inputs. The service does not infer that a mechanic is "
+            "blockable/dodgeable, calculate mitigation, or manufacture timing from guide prose."
+        ),
+    ),
 )
 
 
