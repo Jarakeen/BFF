@@ -72,8 +72,10 @@ class RotationRecoveryHeavyCandidatePipelineService:
     A caller may additionally provide one role-neutral candidate-family projector.
     The projector is applied by the generation bridge on every recovery regeneration,
     before replay/stabilization, so role/encounter actions and sustain evidence always
-    describe the same plan. This pipeline only forwards that callable; it does not
-    infer role strategy or construct projector policy.
+    describe the same plan. When no projector argument is supplied explicitly, the
+    effect-aware path may consume already-authorized ``candidate_projector`` metadata
+    carried by the final role-aware resolver. This pipeline only forwards that callable;
+    it does not infer role strategy or construct projector policy.
 
     Effect-aware callers may instead supply plan-specific Heavy Attack completion
     evidence. The pipeline then builds the restoration resolver for each regenerated
@@ -247,6 +249,13 @@ class RotationRecoveryHeavyCandidatePipelineService:
         option_tuple = tuple(options)
         requirement_tuple = tuple(requirements)
         passive_tuple = tuple(passives)
+        effective_candidate_projector = candidate_projector
+        if effective_candidate_projector is None and role_aware_input_resolver is not None:
+            effective_candidate_projector = getattr(
+                role_aware_input_resolver,
+                "candidate_projector",
+                None,
+            )
         bridged = self.generation_bridge.build(
             seed_plan=seed_plan,
             priorities=priorities,
@@ -254,7 +263,7 @@ class RotationRecoveryHeavyCandidatePipelineService:
             demands=demand_tuple,
             options=option_tuple,
             wait_decision_factory=wait_decision_factory,
-            candidate_projector=candidate_projector,
+            candidate_projector=effective_candidate_projector,
             baseline_id=baseline_id,
         )
 
