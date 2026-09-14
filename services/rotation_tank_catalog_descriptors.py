@@ -25,6 +25,7 @@ ROTATION_TANK_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         inputs=(
             "RotationPlan",
             "RotationTankTauntApplicationRequirement",
+            "RotationAction.target_key",
             "SkillCoefficientRepository",
             "SkillComponentUtilityEffectRepository",
         ),
@@ -36,9 +37,11 @@ ROTATION_TANK_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.MIXED,
         notes=(
             "The requirement must explicitly supply source skill, timing window, minimum "
-            "application count, and optional bar. Canonical TAUNT utility proves only that "
-            "the scheduled skill applies taunt. It does not prove taunt duration, continuous "
-            "uptime, target ownership, immunity/overtaunt behavior, or survivability."
+            "application count, optional bar, and optional target identity. Canonical TAUNT "
+            "utility proves only that the scheduled skill applies taunt. When a target_key is "
+            "supplied, only an exact matching scheduled target counts. The service does not "
+            "infer target identity, taunt duration, continuous uptime, immunity/overtaunt "
+            "behavior, or survivability."
         ),
     ),
     ServiceDescriptor(
@@ -64,9 +67,10 @@ ROTATION_TANK_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.POLICY,
         notes=(
             "Provider assignment proves who owns the responsibility. Policy supplies the exact "
-            "source taunt skill and one or more explicit occurrence windows. The adapter emits "
-            "application requirements only; it does not derive taunt duration, refresh cadence, "
-            "continuous maintenance, target ownership, or overtaunt/immunity semantics."
+            "source taunt skill and one or more explicit occurrence windows, optionally including "
+            "an exact caller-owned target_key. The adapter emits application requirements only; "
+            "it does not infer target identity, taunt duration, refresh cadence, continuous "
+            "maintenance, or overtaunt/immunity semantics."
         ),
     ),
     ServiceDescriptor(
@@ -83,6 +87,7 @@ ROTATION_TANK_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "RotationTankTauntApplicationRequirement",
             "RotationTankTauntActionClaim",
             "RotationActionSlotRequirement",
+            "RotationAction.target_key",
         ),
         outputs=("RotationTankTauntCandidateProjection",),
         dependencies=("rotation.tank.taunt_application_obligation",),
@@ -92,13 +97,13 @@ ROTATION_TANK_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=True,
         evidence_class=EvidenceClass.POLICY,
         notes=(
-            "The requirement owns the exact source skill and application window; the claim owns "
-            "only action kind, exact time, sequence, and optional bar. Existing legal applications "
-            "are preserved. New casts require saved-build structural evidence proving the exact "
-            "skill/Ultimate is slotted on the selected bar; a two-bar source without an explicit "
-            "bar remains unresolved. Conflicting slots and missing applications fail closed. "
-            "This remains application-only and does not imply duration, maintenance, target "
-            "ownership, or overtaunt."
+            "The requirement owns the exact source skill, application window, and optional target "
+            "identity; the claim owns action kind, exact time, sequence, optional bar, and may "
+            "repeat the same target identity. Existing legal applications are preserved. New "
+            "casts require saved-build structural evidence proving the exact skill/Ultimate is "
+            "slotted on the selected bar; a two-bar source without an explicit bar remains "
+            "unresolved. Conflicting target identities, slots, and missing applications fail "
+            "closed. This remains application-only and does not imply duration or maintenance."
         ),
     ),
     ServiceDescriptor(
@@ -125,9 +130,9 @@ ROTATION_TANK_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.POLICY,
         notes=(
             "Resolved candidates preserve/insert exact taunt applications before family evaluation. "
-            "Saved-build slot evidence is carried through unchanged. Candidate-specific projection "
-            "failures remain on that plan's unresolved channel instead of aborting otherwise valid "
-            "sibling candidates."
+            "Saved-build slot evidence and any explicit action target identity are carried through. "
+            "Candidate-specific projection failures remain on that plan's unresolved channel "
+            "instead of aborting otherwise valid sibling candidates."
         ),
     ),
     ServiceDescriptor(
