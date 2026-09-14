@@ -42,6 +42,61 @@ ROTATION_TANK_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="rotation.tank.taunt_candidate_claim",
+        domain="rotation",
+        purpose=(
+            "Preserve already-satisfied source-backed taunt applications or insert exact "
+            "caller-owned taunt skill claims without choosing refresh cadence or displacing "
+            "occupied rotation slots."
+        ),
+        implementation_path="services.rotation_tank_taunt_candidate_service",
+        inputs=(
+            "GeneratedRotationCandidate",
+            "RotationTankTauntApplicationRequirement",
+            "RotationTankTauntActionClaim",
+        ),
+        outputs=("RotationTankTauntCandidateProjection",),
+        dependencies=("rotation.tank.taunt_application_obligation",),
+        responsibilities=("rotation_tank_taunt_candidate_generation",),
+        roles=("Tank",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.POLICY,
+        notes=(
+            "The requirement owns the exact source skill and application window; the claim owns "
+            "only action kind, exact time, sequence, and optional bar. Existing legal applications "
+            "are preserved. Conflicting slots and missing applications fail closed. This remains "
+            "application-only and does not imply duration, maintenance, target ownership, or overtaunt."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="rotation.tank.taunt_family_projection",
+        domain="rotation",
+        purpose=(
+            "Apply one explicit source-backed taunt requirement/claim policy to each generated "
+            "candidate through the role-neutral family projection hook before evaluation."
+        ),
+        implementation_path="services.rotation_tank_taunt_family_projector_service",
+        inputs=(
+            "GeneratedRotationCandidate",
+            "RotationTankTauntApplicationRequirement",
+            "RotationTankTauntActionClaim",
+            "RotationCandidateFamilyProjector",
+        ),
+        outputs=("GeneratedRotationCandidate",),
+        dependencies=("rotation.tank.taunt_candidate_claim",),
+        responsibilities=("rotation_tank_taunt_family_projection",),
+        roles=("Tank",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.POLICY,
+        notes=(
+            "Resolved candidates preserve/insert exact taunt applications before family evaluation. "
+            "Candidate-specific projection failures remain on that plan's unresolved channel "
+            "instead of aborting otherwise valid sibling candidates."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="rotation.tank.defensive_response_obligation",
         domain="rotation",
         purpose=(
