@@ -97,7 +97,7 @@ def main() -> int:
     buff_effects = effects_for_buff(TARGET_BUFF)
     print(
         f"target_buff={TARGET_BUFF!r} mapped_effects="
-        f"{tuple((effect.stat.value, effect.magnitude, effect.kind) for effect in buff_effects)!r}"
+        f"{tuple((effect.stat.value, effect.value, effect.bucket) for effect in buff_effects)!r}"
     )
     print()
 
