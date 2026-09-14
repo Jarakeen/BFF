@@ -23,9 +23,14 @@ def _audit(
         character_name=name,
         build_name=f"{name} Build",
         character_id=f"id-{name}",
+        resolved_sources=(),
         resolved_effects=effects,
+        conditional_sources=(),
         unresolved=unresolved,
-        capability_unresolved=capability_unresolved,
+        capability_unresolved=(
+            unresolved if capability_unresolved is None else capability_unresolved
+        ),
+        boundaries=(),
     )
 
 
