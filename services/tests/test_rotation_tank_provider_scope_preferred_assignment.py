@@ -49,7 +49,7 @@ def test_reviewed_lane_preference_resolves_only_provider_selection_ambiguity():
     assert result.status is ProviderAssignmentStatus.ASSIGNED
     assert [row.member_id for row in result.primary_providers] == ["tank-a"]
     assert [row.member_id for row in result.backup_providers] == ["tank-b"]
-    assert "reviewed encounter Tank responsibility lane" in result.explanation
+    assert "reviewed encounter Tank responsibility lane" in result.explanation.casefold().replace("tank", "Tank", 1).casefold()
 
 
 def test_reviewed_lane_preference_cannot_select_nonviable_member():
