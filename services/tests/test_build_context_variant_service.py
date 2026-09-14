@@ -13,6 +13,7 @@ def test_context_variants_round_trip_with_full_override_shape() -> None:
             BuildContextVariant(
                 ContextType="Team",
                 TeamName="Swine & Punishment",
+                TransformedForm="werewolf",
                 Mundus="The Atronach",
                 Armor={"Head": {"Set": "Pearls of Ehlnofey", "Trait": "Divines"}},
                 FrontBarWeapon=GearSlot(Set="Roaring Opportunist", Trait="Powered"),
@@ -26,6 +27,7 @@ def test_context_variants_round_trip_with_full_override_shape() -> None:
     assert len(restored.ContextVariants) == 1
     variant = restored.ContextVariants[0]
     assert variant.TeamName == "Swine & Punishment"
+    assert variant.TransformedForm == "werewolf"
     assert variant.Armor["Head"]["Set"] == "Pearls of Ehlnofey"
     assert variant.FrontBarWeapon.Set == "Roaring Opportunist"
 
@@ -47,6 +49,7 @@ def test_legacy_boss_loadouts_migrate_in_memory_to_boss_variants() -> None:
     assert restored.BossLoadouts[0].BossName == "Xalvakka"
     assert restored.ContextVariants[0].ContextType == "Boss"
     assert restored.ContextVariants[0].BossName == "Xalvakka"
+    assert restored.ContextVariants[0].TransformedForm == ""
 
 
 def test_team_boss_variant_precedence_is_team_boss_then_team_then_boss() -> None:
@@ -138,3 +141,43 @@ def test_sparse_variant_inherits_unchanged_base_fields() -> None:
     assert resolved.FrontBarWeapon.Set == "Master Architect"
     assert resolved.FrontBarSkills == ["SW 1", "Base 2", "Base 3", "Base 4", "Base 5", "Base Ult"]
     assert resolved.Food == "Base Food"
+
+
+def test_werewolf_form_override_is_context_state_not_affiliation() -> None:
+    build = PlayerBuild(
+        Name="Magrat",
+        Werewolf=True,
+        FrontBarSkills=["Mortal 1", "Mortal 2", "Mortal 3", "Mortal 4", "Mortal 5", "Mortal Ult"],
+        ContextVariants=[
+            BuildContextVariant(
+                ContextType="Boss",
+                BossName="Boss A",
+                TransformedForm="werewolf",
+                FrontBarSkills=["Howl of Agony", "", "", "", "", ""],
+            )
+        ],
+    )
+
+    base_context = resolve_build_context(build, boss_name="Other")
+    werewolf_context = resolve_build_context(build, boss_name="Boss A")
+
+    assert not hasattr(base_context, "TransformedForm")
+    assert werewolf_context.Werewolf is True
+    assert werewolf_context.TransformedForm == "werewolf"
+    assert werewolf_context.FrontBarSkills[0] == "Howl of Agony"
+
+
+def test_blank_form_override_does_not_transform_werewolf_enabled_character() -> None:
+    build = PlayerBuild(
+        Name="Magrat",
+        Werewolf=True,
+        ContextVariants=[
+            BuildContextVariant(ContextType="Boss", BossName="Boss A", Food="Boss Food")
+        ],
+    )
+
+    resolved = resolve_build_context(build, boss_name="Boss A")
+
+    assert resolved.Werewolf is True
+    assert not hasattr(resolved, "TransformedForm")
+    assert resolved.Food == "Boss Food"
