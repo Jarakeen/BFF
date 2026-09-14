@@ -161,6 +161,29 @@ EXTREME_HEALTH_RECOVERY_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "the comparison; that makes a domination result conservative."
         ),
     ),
+    ServiceDescriptor(
+        service_id="mechanics.status_application_opportunity",
+        domain="mechanics",
+        purpose=(
+            "Project explicit damage-component events into canonical status-effect "
+            "application opportunities without converting stochastic rolls into facts."
+        ),
+        implementation_path="services.status_application_opportunity_service",
+        inputs=(
+            "DamageComponentCastTimes",
+            "DamageTypes",
+            "StatusEffectChanceSource",
+            "StatusChanceIncreasePercent",
+        ),
+        outputs=("StatusApplicationOpportunityCatalog",),
+        responsibilities=("status_application_opportunity_projection",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "All-procs ceilings, deterministic applications, and expected application "
+            "counts remain separate so Extreme maxima never imply reliable gameplay."
+        ),
+    ),
 )
 
 
