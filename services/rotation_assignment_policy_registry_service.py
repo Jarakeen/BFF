@@ -141,6 +141,17 @@ class RotationAssignmentPolicyRegistryService:
         value = raw.get("bar")
         return None if value is None else str(value)
 
+    @staticmethod
+    def _windows(raw: dict, *, kind: str) -> tuple[dict, ...]:
+        windows = raw.get("windows")
+        if not isinstance(windows, list):
+            raise ValueError(f"rotation assignment {kind} policy windows must be a list")
+        if any(not isinstance(window, dict) for window in windows):
+            raise ValueError(
+                f"rotation assignment {kind} policy windows must contain only objects"
+            )
+        return tuple(windows)
+
     @classmethod
     def _effect(cls, raw: dict) -> RotationAssignmentEffectPolicy:
         return RotationAssignmentEffectPolicy(
@@ -156,9 +167,7 @@ class RotationAssignmentPolicyRegistryService:
 
     @classmethod
     def _taunt(cls, raw: dict) -> RotationAssignmentTauntPolicy:
-        windows = raw.get("windows")
-        if not isinstance(windows, list):
-            raise ValueError("rotation assignment taunt policy windows must be a list")
+        windows = cls._windows(raw, kind="taunt")
         return RotationAssignmentTauntPolicy(
             requirement_id=cls._required_text(raw, "requirement_id"),
             encounter_id=cls._required_text(raw, "encounter_id"),
@@ -179,15 +188,12 @@ class RotationAssignmentPolicyRegistryService:
                     ),
                 )
                 for window in windows
-                if isinstance(window, dict)
             ),
         )
 
     @classmethod
     def _taunt_maintenance(cls, raw: dict) -> RotationAssignmentTauntMaintenancePolicy:
-        windows = raw.get("windows")
-        if not isinstance(windows, list):
-            raise ValueError("rotation assignment taunt maintenance windows must be a list")
+        windows = cls._windows(raw, kind="taunt maintenance")
         return RotationAssignmentTauntMaintenancePolicy(
             requirement_id=cls._required_text(raw, "requirement_id"),
             encounter_id=cls._required_text(raw, "encounter_id"),
@@ -203,7 +209,6 @@ class RotationAssignmentPolicyRegistryService:
                     bar=cls._optional_bar(window),
                 )
                 for window in windows
-                if isinstance(window, dict)
             ),
         )
 
