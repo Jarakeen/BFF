@@ -41,6 +41,31 @@ ROTATION_GAMEPLAY_POLICY_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="rotation.assignment_policy.registry",
+        domain="rotation",
+        purpose=(
+            "Load reviewed executable policy for exact encounter/provider requirements without "
+            "deriving strategy from role names, assignment labels, requirement prose, or capability presence."
+        ),
+        implementation_path="services.rotation_assignment_policy_registry_service",
+        inputs=("EncounterId", "PersistedRotationAssignmentPolicyRegistry"),
+        outputs=("RotationAssignmentPolicyBundle",),
+        responsibilities=(
+            "rotation_assignment_policy_persistence",
+            "rotation_assignment_policy_disposition_authority",
+        ),
+        roles=("DPS", "Healer", "Tank", "Support"),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.POLICY,
+        notes=(
+            "The registry supports effect-uptime, discrete-taunt, continuous-taunt-maintenance, "
+            "and explicit non-effect dispositions. One encounter/requirement identity may have "
+            "only one disposition. Missing reviewed rows remain missing and are resolved as "
+            "knowledge gaps by RotationAssignmentPolicyResolver rather than becoming empty success."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="rotation.gameplay_policy.dd_personal_heal",
         domain="rotation",
         purpose=(
