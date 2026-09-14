@@ -45,6 +45,33 @@ ROTATION_TANK_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="rotation.tank.taunt_duration",
+        domain="rotation",
+        purpose=(
+            "Resolve source-backed tank taunt duration only when canonical TAUNT identity and "
+            "canonical duration evidence agree unambiguously, without creating refresh policy."
+        ),
+        implementation_path="services.rotation_tank_taunt_duration_service",
+        inputs=(
+            "SkillCoefficientRepository",
+            "SkillComponentUtilityEffectRepository",
+            "RotationDurationResolution",
+        ),
+        outputs=("RotationTankTauntDurationResolution",),
+        responsibilities=("rotation_tank_taunt_duration_evidence",),
+        roles=("Tank",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "The service promotes a duration only when the named source has a canonical TAUNT "
+            "utility component and every positive canonical duration exposed for that source "
+            "collapses to one value. Distinct durations fail closed pending component-specific "
+            "temporal binding. A resolved duration is evidence only and does not imply recast "
+            "cadence, safety margin, continuous ownership, immunity, or overtaunt semantics."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="rotation.tank.assignment_taunt_obligation",
         domain="rotation",
         purpose=(
