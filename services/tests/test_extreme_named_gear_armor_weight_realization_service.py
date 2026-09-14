@@ -158,7 +158,7 @@ def test_both_monster_slots_must_support_required_weight(tmp_path):
     assert result.compatible is False
 
 
-def test_non_heavy_five_piece_set_can_avoid_armor_via_jewelry_and_two_handed_weapon(tmp_path):
+def test_non_heavy_five_piece_set_can_avoid_armor_via_jewelry_and_weapon_slots(tmp_path):
     path = tmp_path / "eso.db"
     _database(path, _armor_rows(10, 2))
     topology = ExtremeGearSetCountTopology(counts=(5,), unused_units=7)
