@@ -2,9 +2,13 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
+from minmax.rotation_plan import RotationActionKind
 from services.build_rotation_artifact_service import (
     BuildRotationArtifactService,
     resolve_canonical_build_id,
+    rotation_plan_from_artifact,
 )
 
 
@@ -43,6 +47,69 @@ def test_saving_again_replaces_only_that_builds_rotation(tmp_path) -> None:
 
     assert service.get_rotation("build-1")["actions"] == [{"name": "Updated"}]
     assert service.get_rotation("build-2")["actions"] == [{"name": "Other"}]
+
+
+def test_restores_saved_artifact_into_canonical_rotation_plan(tmp_path) -> None:
+    service = BuildRotationArtifactService(tmp_path / "build_rotations.json")
+    service.save_rotation(
+        build_id="magrat-df",
+        artifact={
+            "character_name": "Magrat",
+            "build_name": "DF Healer",
+            "duration_seconds": 30.0,
+            "actions": [
+                {
+                    "time_seconds": 0.0,
+                    "sequence": 0,
+                    "kind": "skill",
+                    "name": "Combat Prayer",
+                    "bar": "front",
+                },
+                {
+                    "time_seconds": 1.0,
+                    "sequence": 0,
+                    "kind": "light_attack",
+                    "name": None,
+                    "bar": "front",
+                },
+            ],
+            "assumptions": ["reviewed plan"],
+            "unresolved": ["one explicit gap"],
+        },
+    )
+
+    plan = service.get_rotation_plan("magrat-df")
+
+    assert plan is not None
+    assert plan.character_name == "Magrat"
+    assert plan.build_name == "DF Healer"
+    assert plan.duration_seconds == 30.0
+    assert tuple(action.kind for action in plan.actions) == (
+        RotationActionKind.SKILL,
+        RotationActionKind.LIGHT_ATTACK,
+    )
+    assert plan.assumptions == ("reviewed plan",)
+    assert plan.unresolved == ("one explicit gap",)
+
+
+def test_saved_rotation_restoration_fails_closed_on_invalid_action() -> None:
+    with pytest.raises(ValueError, match="action 0 is invalid"):
+        rotation_plan_from_artifact(
+            {
+                "character_name": "Magrat",
+                "build_name": "DF Healer",
+                "duration_seconds": 30.0,
+                "actions": [
+                    {
+                        "time_seconds": 0.0,
+                        "sequence": 0,
+                        "kind": "invented_action",
+                        "name": "Definitely Real Skill",
+                        "bar": "front",
+                    }
+                ],
+            }
+        )
 
 
 def test_resolver_uses_gamertag_character_and_build_identity() -> None:
