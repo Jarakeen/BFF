@@ -4,14 +4,16 @@ from __future__ import annotations
 
 Willow's Path is a percentage-Recovery branch, so it cannot be compared to flat gear
 by pretending 18% is another flat bonus. This audit composes it at the shared percent
-layer. The ordinary 5-piece coexistence capacity bound is first reconstructed with an
-actual set/count selection. If that same selection is physically realizable beside
-Willow, the structural upper bound becomes a constructive witness; its Max Magicka
-component is then rescored against the real remaining Enlivening headroom.
+layer. The loose seven-unit coexistence capacity bound remains an upper bound only;
+a separate constrained named-gear search requires Willow's Path physically and
+externalizes its percentage mechanic so the companion package is an actual legal
+seven-Light witness.
 
-The comparison uses only already-locked nonnegative shared sources. If Willow wins at
-this conservative shared floor, later nonnegative flat sources can only widen its lead
-because Willow's total Recovery slope is 18 percentage points higher.
+The physical witness is rescored with exact remaining Enlivening headroom. We only
+need a constructive Willow lower bound that beats the closed ordinary incumbent here,
+not the exact global Willow maximum. If the legal witness wins at this conservative
+shared floor, later nonnegative flat sources can only widen its lead because Willow's
+total Recovery slope is 18 percentage points higher.
 """
 
 import argparse
@@ -36,13 +38,13 @@ from services.extreme_armor_weight_filtered_slot_eligibility_service import Extr
 from services.extreme_divines_mundus_objective_service import ExtremeDivinesMundusObjectiveService
 from services.extreme_gear_set_bonus_breakpoint_service import ExtremeGearSetBonusBreakpointService
 from services.extreme_gear_set_objective_relevance_service import ExtremeGearSetObjectiveRelevanceService
-from services.extreme_gear_set_topology_catalog_service import ExtremeGearSetCountTopology, ExtremeGearSetTopologyCatalogService
-from services.extreme_named_gear_set_realization_service import ExtremeNamedGearSetRealizationService
+from services.extreme_gear_set_topology_catalog_service import ExtremeGearSetTopologyCatalogService
 from services.extreme_named_gear_set_slot_eligibility_service import ExtremeNamedGearSetSlotEligibilityService
 from services.extreme_recovery_jewelry_projection_service import ExtremeRecoveryJewelryProjectionService
 from services.extreme_recovery_provisioning_projection_service import ExtremeRecoveryProvisioningProjectionService
 from tools.audit_extreme_magicka_recovery_armor_mundus_frontier import _same_build_max_magicka_for_weight_types
 from tools.audit_extreme_magicka_recovery_direct_flat_named_gear_screen import aggregate_recovery_semantic_branch
+from tools.audit_extreme_magicka_recovery_max_magicka_only_named_gear_dominance import _constrained_effective_recovery_search
 from tools.audit_extreme_magicka_recovery_ordinary_named_gear_frontier import (
     OBJECTIVE,
     RESOURCE_OBJECTIVE,
@@ -73,8 +75,7 @@ def _parser() -> argparse.ArgumentParser:
 
 
 def best_distinct_capacity_selection(*, challenger_set_id: int, pair_scores, capacity: int = 7) -> CapacitySelection:
-    """Return one exact distinct-set knapsack witness for the optimistic capacity bound."""
-    choices_by_set: dict[int, tuple[tuple[int, float], ...]] = {}
+    """Return one exact distinct-set knapsack witness for the loose capacity bound."""
     mutable: dict[int, list[tuple[int, float]]] = {}
     for (set_id, count), score in pair_scores.items():
         set_id = int(set_id)
@@ -90,7 +91,6 @@ def best_distinct_capacity_selection(*, challenger_set_id: int, pair_scores, cap
         for set_id, rows in mutable.items()
     }
 
-    # dp[used] = (score, chosen (set_id,count) pairs)
     dp: list[tuple[float, tuple[tuple[int, int], ...]]] = [(0.0, ()) for _ in range(capacity + 1)]
     for set_id in sorted(choices_by_set):
         previous = tuple(dp)
@@ -124,6 +124,20 @@ def mapped_positive_recovery_flat(evidence) -> float:
     )
 
 
+def companion_pair_totals(realization, pair_scores, *, excluded_set_id: int) -> tuple[float, float]:
+    recovery = 0.0
+    max_magicka = 0.0
+    for set_id, count in zip(realization.set_ids, realization.counts):
+        if int(set_id) == int(excluded_set_id):
+            continue
+        score = pair_scores.get((int(set_id), int(count)))
+        if score is None or not score.ordinary:
+            continue
+        recovery += float(score.direct_recovery)
+        max_magicka += float(score.max_magicka_flat)
+    return recovery, max_magicka
+
+
 def compose_final(*, shared_flat: float, gear_flat: float, multiplier: float) -> float:
     return (float(shared_flat) + float(gear_flat)) * float(multiplier)
 
@@ -151,7 +165,7 @@ def main() -> int:
     undaunted_multiplier = 1.0 + undaunted_mettle_resource_percent(1)
     conversion = 0.005 * undaunted_multiplier
 
-    pair_scores, _merged = build_pair_scores(
+    pair_scores, merged = build_pair_scores(
         recovery,
         max_magicka,
         max_magicka_to_recovery=conversion,
@@ -176,51 +190,45 @@ def main() -> int:
         willow_percent = float(branch.percent_ceiling) / 100.0
 
     own_flat = mapped_positive_recovery_flat(target) if target is not None else 0.0
-    selection = best_distinct_capacity_selection(
+    loose_selection = best_distinct_capacity_selection(
         challenger_set_id=target_id,
         pair_scores=pair_scores,
         capacity=12 - TARGET_PIECES,
     ) if target_id >= 0 else CapacitySelection(0.0, ())
 
-    eligibility_by_id = {int(row.set_id): row for row in filtered.catalog.sets}
-    selected_rows = []
+    constrained = None
     if target_id >= 0:
-        willow_eligibility = eligibility_by_id.get(target_id)
-        if willow_eligibility is None:
-            unresolved.append("Willow's Path has no seven-Light-compatible slot eligibility")
-        else:
-            selected_rows.append((TARGET_PIECES, willow_eligibility))
-    for set_id, count in selection.pairs:
-        row = eligibility_by_id.get(int(set_id))
-        if row is None:
-            unresolved.append(f"ordinary capacity witness set_id={set_id} lacks Light-compatible eligibility")
-            continue
-        selected_rows.append((int(count), row))
-
-    selected_rows.sort(key=lambda item: (-item[0], int(item[1].set_id)))
-    counts = tuple(count for count, _row in selected_rows)
-    topology = ExtremeGearSetCountTopology(
-        counts=counts,
-        unused_units=12 - sum(counts),
-    ) if selected_rows else None
-    realization = (
-        ExtremeNamedGearSetRealizationService.find_witness(
-            topology,
-            tuple(row for _count, row in selected_rows),
+        challenger = SimpleNamespace(
+            set_id=target_id,
+            set_name=TARGET_NAME,
+            piece_count=TARGET_PIECES,
         )
-        if topology is not None
-        else None
-    )
-    if realization is None:
-        unresolved.append("optimistic Willow coexistence selection has no physical seven-Light realization")
+        constrained, constrained_unresolved = _constrained_effective_recovery_search(
+            challenger=challenger,
+            topology=topology_catalog,
+            breakpoints=breakpoints,
+            eligibility=filtered.catalog,
+            merged=merged,
+            pair_scores=pair_scores,
+        )
+        unresolved.extend(constrained_unresolved)
+
+    physical_optimistic = None
+    realization = None
+    if constrained is not None and constrained.winner_found:
+        physical_optimistic = float(constrained.best_exact_flat_delta or 0.0)
+        realization = constrained.realizations[0]
+    else:
+        unresolved.append("no physically realizable seven-Light Willow coexistence witness")
 
     selected_direct = 0.0
     selected_max_magicka = 0.0
-    for set_id, count in selection.pairs:
-        score = pair_scores.get((int(set_id), int(count)))
-        if score is not None:
-            selected_direct += float(score.direct_recovery)
-            selected_max_magicka += float(score.max_magicka_flat)
+    if realization is not None:
+        selected_direct, selected_max_magicka = companion_pair_totals(
+            realization,
+            pair_scores,
+            excluded_set_id=target_id,
+        )
     target_score = pair_scores.get((target_id, TARGET_PIECES)) if target_id >= 0 else None
     own_max_magicka = float(target_score.max_magicka_flat) if target_score is not None else 0.0
     exact_extra_enlivening = min(
@@ -289,7 +297,7 @@ def main() -> int:
     )
     margin = willow_final - ordinary_final
     future_flat_slope_advantage = willow_multiplier - RECOVERY_MULTIPLIER
-    willow_wins = margin > 1e-9
+    willow_wins = realization is not None and margin > 1e-9
     unique_unresolved = tuple(dict.fromkeys(unresolved))
     closed = bool(
         not unique_unresolved
@@ -308,9 +316,12 @@ def main() -> int:
     print(f"remaining_enlivening_headroom={remaining_headroom:.3f}")
     print(f"willow_percent={willow_percent * 100.0:.3f}")
     print(f"willow_own_mapped_flat={own_flat:.3f}")
-    print(f"capacity_optimistic_score={selection.optimistic_score:.3f}")
-    print(f"capacity_selection={tuple((names.get(set_id, str(set_id)), count) for set_id, count in selection.pairs)!r}")
-    print(f"capacity_witness_physically_realized={realization is not None}")
+    print(f"capacity_optimistic_score={loose_selection.optimistic_score:.3f}")
+    print(f"capacity_selection={tuple((names.get(set_id, str(set_id)), count) for set_id, count in loose_selection.pairs)!r}")
+    print(f"physical_constrained_optimistic_score={float(physical_optimistic or 0.0):.3f}")
+    print(f"physical_capacity_witness={realization is not None}")
+    if realization is not None:
+        print(f"physical_witness_sets={tuple(zip(realization.set_names, realization.counts))!r}")
     print(f"selected_direct_recovery={selected_direct:.3f}")
     print(f"selected_max_magicka_flat={selected_max_magicka:.3f}")
     print(f"exact_extra_enlivening={exact_extra_enlivening:.3f}")
@@ -335,7 +346,7 @@ def main() -> int:
         print(f"  unresolved: {item}")
     print(f"willows_path_branch_closed={closed}")
     print(
-        "NEXT_STEP=promote Willow's Path witness as the named-gear incumbent and rebase surviving flat/special challengers"
+        "NEXT_STEP=promote the legal Willow's Path witness as the named-gear incumbent lower bound and rebase surviving flat/special challengers"
         if closed else
         "NEXT_STEP=close only the reported Willow's Path blockers"
     )
