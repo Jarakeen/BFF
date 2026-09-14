@@ -106,6 +106,11 @@ class EncounterRosterEvaluator:
     Stronger provider semantics and provider cardinality must be supplied explicitly
     by callers from source-backed encounter evidence. Generic movement, positioning,
     cleanse, and interrupt requirements keep their compliance semantics.
+
+    Callers may additionally supply already-canonical ``RosterCapabilityEvidence``
+    from other mechanic families, such as coefficient-owned structural utilities.
+    Those rows are merged with the existing EffectVariant-backed evidence without
+    teaching this evaluator how any particular mechanic is discovered.
     """
 
     def __init__(
@@ -131,6 +136,7 @@ class EncounterRosterEvaluator:
         encounter_id: str,
         audits: tuple[SavedBuildCapabilityAudit, ...],
         difficulty: EncounterDifficulty | str = EncounterDifficulty.VETERAN,
+        additional_capability_evidence: tuple[RosterCapabilityEvidence, ...] = (),
     ) -> EncounterRosterEvaluationReport:
         selected_difficulty = normalize_encounter_difficulty(difficulty)
         roster_members = tuple(self._adapter.member_id(audit) for audit in audits)
@@ -148,7 +154,18 @@ class EncounterRosterEvaluator:
                 == RequirementSemantics.PROVIDER_CAPABILITY
             )
         )
-        evidence = self._adapter.evidence_for(audits, provider_capabilities)
+        effect_evidence = self._adapter.evidence_for(audits, provider_capabilities)
+        additional = tuple(additional_capability_evidence)
+        roster_set = set(roster_members)
+        foreign_members = tuple(
+            row.member_id for row in additional if row.member_id not in roster_set
+        )
+        if foreign_members:
+            raise ValueError(
+                "additional capability evidence references non-roster members: "
+                + ", ".join(dict.fromkeys(foreign_members))
+            )
+        evidence = tuple(effect_evidence) + additional
         requirement_evaluation = self._evaluator.evaluate(
             encounter_id,
             roster_members,
