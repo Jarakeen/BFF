@@ -158,6 +158,38 @@ ROTATION_TANK_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="rotation.tank.assignment_obligation_bundle",
+        domain="rotation",
+        purpose=(
+            "Compose exact assignment-backed Tank taunt application, continuous taunt ownership, "
+            "and reviewed defensive obligations for one encounter/member into one Generate-ready bundle."
+        ),
+        implementation_path="services.rotation_tank_assignment_obligation_bundle_service",
+        inputs=(
+            "CharacterBuild",
+            "ProviderAssignment",
+            "RotationAssignmentTauntPolicy",
+            "RotationAssignmentTauntMaintenancePolicy",
+            "RotationTankDefensiveObligation",
+        ),
+        outputs=("RotationTankAssignmentObligationBundle",),
+        dependencies=(
+            "rotation.tank.assignment_taunt_obligation",
+            "rotation.tank.assignment_taunt_maintenance",
+            "rotation.tank.defensive_response_obligation",
+        ),
+        responsibilities=("rotation_tank_assignment_obligation_composition",),
+        roles=("Tank",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "This is orchestration only. Provider assignment remains authoritative for ownership; "
+            "taunt policy services remain authoritative for taunt semantics; defensive obligations "
+            "must already be reviewed. Foreign-encounter policy input fails closed."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="rotation.tank.taunt_candidate_claim",
         domain="rotation",
         purpose=(
@@ -358,6 +390,35 @@ ROTATION_TANK_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="rotation.tank.encounter_defensive_bundle",
+        domain="rotation",
+        purpose=(
+            "Compose reviewed explicit-clock Tank defensive occurrences by joining canonical "
+            "encounter timing with separately reviewed structured defensive facts."
+        ),
+        implementation_path="services.rotation_tank_encounter_defensive_bundle_service",
+        inputs=(
+            "EncounterBossGuide",
+            "ReconciledEncounterFact",
+            "RotationTankEncounterDefensiveTimingPolicy",
+        ),
+        outputs=("RotationTankEncounterDefensiveBundle",),
+        dependencies=(
+            "rotation.tank.encounter_defensive_timing_binding",
+            "rotation.tank.encounter_defensive_projection",
+        ),
+        responsibilities=("rotation_tank_reviewed_explicit_clock_defensive_composition",),
+        roles=("Tank",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "This service creates no new mechanic or timing truth. Missing, duplicate, conflicting, "
+            "or unreviewed fact identity remains unresolved; resolved obligations are ordered by "
+            "their canonical clock windows."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="rotation.tank.encounter_threshold_defensive_timing_binding",
         domain="rotation",
         purpose=(
@@ -386,6 +447,65 @@ ROTATION_TANK_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "raid-damage trajectory projection. Missing, ambiguous, or unreachable threshold "
             "clock points remain unresolved; this adapter only binds resolved windows to the "
             "separately reviewed defensive mechanic fact."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="rotation.tank.encounter_threshold_defensive_bundle",
+        domain="rotation",
+        purpose=(
+            "Compose reviewed health-threshold Tank defensive occurrences from the existing "
+            "canonical threshold clock projection and separately reviewed defensive facts."
+        ),
+        implementation_path="services.rotation_tank_encounter_threshold_defensive_bundle_service",
+        inputs=(
+            "EncounterHealthThresholdProjection",
+            "ReconciledEncounterFact",
+            "RotationTankEncounterThresholdDefensiveTimingPolicy",
+        ),
+        outputs=("RotationTankEncounterThresholdDefensiveBundle",),
+        dependencies=(
+            "rotation.tank.encounter_threshold_defensive_timing_binding",
+            "rotation.tank.encounter_defensive_projection",
+        ),
+        responsibilities=("rotation_tank_reviewed_threshold_defensive_composition",),
+        roles=("Tank",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "The canonical EncounterHealthThresholdProjection remains the sole owner of threshold "
+            "clock points. This service does not derive raid DPS, boss health, or threshold timing."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="rotation.tank.hard_obligation_composition",
+        domain="rotation",
+        purpose=(
+            "Compose all supplied canonical Tank hard responsibilities into the single role-hard-"
+            "obligation evidence channel consumed by candidate evaluation."
+        ),
+        implementation_path="services.rotation_tank_hard_obligation_service",
+        inputs=(
+            "GeneratedRotationCandidate",
+            "RotationTankTauntApplicationRequirement",
+            "RotationTankTauntMaintenanceRequirement",
+            "RotationTankDefensiveObligation",
+        ),
+        outputs=("RotationCandidateRoleHardObligationEvidence",),
+        dependencies=(
+            "rotation.tank.taunt_application_obligation",
+            "rotation.tank.taunt_maintenance_obligation",
+            "rotation.tank.defensive_response_obligation",
+        ),
+        responsibilities=("rotation_tank_canonical_hard_obligation_composition",),
+        roles=("Tank",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "No scalar Tank score is invented. Any resolved hard failure dominates unresolved "
+            "evidence; otherwise unresolved remains unresolved, and only candidates passing every "
+            "supplied Tank responsibility receive a resolved pass."
         ),
     ),
     ServiceDescriptor(
