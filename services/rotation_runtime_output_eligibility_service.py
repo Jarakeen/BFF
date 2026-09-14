@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import json
+from pathlib import Path
 
 from minmax.character_build.effect_relationship import ConditionContext
 from minmax.runtime_event import RuntimeEvent
@@ -62,45 +64,106 @@ class RotationRuntimeOutputEventFilterResult:
         return not self.unresolved
 
 
-_REVIEWED_RULES: tuple[RotationRuntimeOutputConditionRule, ...] = (
-    RotationRuntimeOutputConditionRule(
-        skill_entity_id="detonating_siphon",
-        coefficient_number=1,
-        eligibility=RuntimeOutputEligibilityRule(
-            required_conditions=(DETONATING_SIPHON_GEOMETRY_CONDITION,),
-            source=(
-                "reviewed Detonating Siphon tooltip geometry: enemies around the corpse "
-                "and between the caster and corpse"
-            ),
-        ),
-    ),
-)
+class RotationRuntimeOutputConditionRegistryService:
+    """Load reviewed runtime-output condition rules from versioned repository data.
+
+    The registry stores reviewed policy/evidence only. It does not calculate runtime
+    state, geometry, cadence, or output magnitude. Missing data resolves to no
+    conditional rules rather than inventing behavior.
+    """
+
+    SCHEMA_VERSION = 1
+
+    def __init__(self, path: str | Path | None = None) -> None:
+        self.path = (
+            Path(path)
+            if path is not None
+            else Path(__file__).resolve().parents[1]
+            / "data"
+            / "rotation_runtime_output_conditions.json"
+        )
+
+    def load(self) -> tuple[RotationRuntimeOutputConditionRule, ...]:
+        if not self.path.exists():
+            return ()
+        payload = json.loads(self.path.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict):
+            raise ValueError("runtime output condition registry must be a JSON object")
+        if payload.get("schema_version") != self.SCHEMA_VERSION:
+            raise ValueError("runtime output condition registry schema_version must be 1")
+        rows = payload.get("entries", [])
+        if not isinstance(rows, list):
+            raise ValueError("runtime output condition registry entries must be a list")
+
+        rules: list[RotationRuntimeOutputConditionRule] = []
+        seen: set[tuple[str, int]] = set()
+        for index, row in enumerate(rows):
+            if not isinstance(row, dict):
+                raise ValueError(
+                    f"runtime output condition registry entry {index} must be an object"
+                )
+            try:
+                required_conditions = tuple(
+                    str(item).strip()
+                    for item in row["required_conditions"]
+                    if str(item).strip()
+                )
+                source = str(row["source"]).strip()
+                if not required_conditions:
+                    raise ValueError("required_conditions must contain at least one condition")
+                if not source:
+                    raise ValueError("source must be non-empty")
+                rule = RotationRuntimeOutputConditionRule(
+                    skill_entity_id=str(row["skill_entity_id"]),
+                    coefficient_number=int(row["coefficient_number"]),
+                    eligibility=RuntimeOutputEligibilityRule(
+                        required_conditions=required_conditions,
+                        source=source,
+                    ),
+                )
+            except (KeyError, TypeError, ValueError) as exc:
+                raise ValueError(
+                    f"invalid runtime output condition registry entry {index}: {exc}"
+                ) from exc
+            key = (rule.skill_entity_id, rule.coefficient_number)
+            if key in seen:
+                raise ValueError(
+                    "duplicate runtime output condition registry rule for "
+                    f"{rule.skill_entity_id} coefficient {rule.coefficient_number}"
+                )
+            seen.add(key)
+            rules.append(rule)
+        return tuple(rules)
 
 
 class RotationRuntimeOutputEligibilityService:
     """Evaluate reviewed skill-component output conditions without inventing runtime state.
 
-    Rules are keyed by canonical skill identity plus coefficient number. Skills/components
-    with no reviewed rule pass through unchanged. A reviewed conditional output fails closed
-    when no ``ConditionContext`` is supplied. A supplied context that does not contain every
-    required opaque condition resolves deterministically to ineligible output.
+    Production rules are loaded from the versioned runtime-output condition registry.
+    Explicit ``rules`` injection remains available for focused tests and callers that
+    already own reviewed rule objects. Rules are keyed by canonical skill identity plus
+    coefficient number. Skills/components with no reviewed rule pass through unchanged.
 
-    ``filter_events`` evaluates context independently for each exact runtime event. This is
-    the contract required by mechanics whose output can stop and resume during one persistent
-    lifetime. It deliberately does not smear a cast-time condition across later occurrences.
-
-    Detonating Siphon is intentionally represented only as an opaque geometry requirement.
-    This service does not calculate corpse position, player position, target position, radius,
-    line geometry, cadence, or tick timing. Until a caller can prove the named condition at
-    the exact output instant, Siphon damage remains unresolved rather than guessed.
+    A reviewed conditional output fails closed when no ``ConditionContext`` is supplied.
+    A supplied context that does not contain every required opaque condition resolves
+    deterministically to ineligible output. ``filter_events`` evaluates context
+    independently for each exact runtime event, so cast-time truth is never smeared over
+    later occurrences.
     """
 
     def __init__(
         self,
-        rules: tuple[RotationRuntimeOutputConditionRule, ...] = _REVIEWED_RULES,
+        rules: tuple[RotationRuntimeOutputConditionRule, ...] | None = None,
+        *,
+        registry: RotationRuntimeOutputConditionRegistryService | None = None,
     ) -> None:
+        resolved_rules = (
+            tuple(rules)
+            if rules is not None
+            else (registry or RotationRuntimeOutputConditionRegistryService()).load()
+        )
         keyed: dict[tuple[str, int], RotationRuntimeOutputConditionRule] = {}
-        for rule in rules:
+        for rule in resolved_rules:
             key = (rule.skill_entity_id, rule.coefficient_number)
             if key in keyed:
                 raise ValueError(
@@ -177,13 +240,7 @@ class RotationRuntimeOutputEligibilityService:
             RotationRuntimeOutputConditionContextResolver | None
         ) = None,
     ) -> RotationRuntimeOutputEventFilterResult:
-        """Filter exact runtime events through reviewed output conditions.
-
-        Unreviewed components pass through unchanged. For a reviewed conditional component,
-        every event requires its own explicit context. Known-unsatisfied events are omitted
-        without becoming unresolved; events lacking context are omitted and preserved as
-        exact-time unresolved evidence.
-        """
+        """Filter exact runtime events through reviewed output conditions."""
 
         rule = self.rule_for(skill_entity_id, coefficient_number)
         if rule is None or not events:
@@ -225,6 +282,7 @@ class RotationRuntimeOutputEligibilityService:
 __all__ = [
     "DETONATING_SIPHON_GEOMETRY_CONDITION",
     "RotationRuntimeOutputConditionContextResolver",
+    "RotationRuntimeOutputConditionRegistryService",
     "RotationRuntimeOutputConditionRule",
     "RotationRuntimeOutputEligibilityResult",
     "RotationRuntimeOutputEligibilityService",
