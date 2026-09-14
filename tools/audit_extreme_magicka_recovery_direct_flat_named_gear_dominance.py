@@ -7,9 +7,16 @@ branches whose direct Recovery upside can be represented by a finite flat ceilin
 Percentage, named-buff, and search-state mutations remain explicit survivors for a
 separate proof because they act on a broader Recovery reference state.
 
-For every flat challenger we require the named set physically, externalize its
-special pair, search the best ordinary effective-Recovery structure that can coexist
-with it, then add a deliberately generous special ceiling:
+For every flat challenger we first compute a deliberately loose abstract topology
+upper bound. The challenger consumes one matching piece-count partition and every
+remaining partition is awarded the best ordinary score for that count, even if that
+reuses the same set identity and ignores all physical slot conflicts. If that
+impossible-best case still loses, the branch is dominated without an expensive
+physical search. Only abstract survivors reach the constrained physical solver.
+
+For physical survivors we require the named set, externalize its special pair,
+search the best ordinary effective-Recovery structure that can coexist with it,
+then add a deliberately generous special ceiling:
 
 * all positive mapped flat Magicka Recovery from the candidate;
 * the larger of the triaged flat ceiling and the sum of description-classified flat
@@ -95,6 +102,7 @@ class DirectFlatDominanceRow:
     optimistic_total: float | None
     incumbent: float
     physically_available: bool
+    bound_kind: str = "constrained_physical"
 
     @property
     def margin(self) -> float | None:
@@ -181,7 +189,46 @@ def direct_flat_upper_bound(challenger, recovery_evidence) -> DirectFlatUpperBou
     )
 
 
-def dominance_row(*, challenger, structural_score: float | None, special_ceiling: float, incumbent: float):
+def abstract_topology_structural_upper_bound(challenger, pair_scores, topology_catalog) -> float | None:
+    """Impossible-best ordinary coexistence bound before physical realization.
+
+    A matching count slot is consumed by the special challenger. Every remaining
+    count slot receives the best ordinary score available for that count. Set
+    identities may be reused and physical eligibility is ignored, both of which can
+    only raise the result. Therefore the returned value is a safe structural upper
+    bound for dominance pruning.
+    """
+    challenger_id = int(challenger.set_id)
+    required_count = int(challenger.piece_count)
+    best_by_count: dict[int, float] = {}
+    for (set_id, count), score in pair_scores.items():
+        if int(set_id) == challenger_id or not score.ordinary:
+            continue
+        value = max(0.0, float(score.optimistic_effective_recovery))
+        count = int(count)
+        if value > best_by_count.get(count, 0.0):
+            best_by_count[count] = value
+
+    best: float | None = None
+    for topology in topology_catalog.topologies:
+        counts = list(int(value) for value in topology.counts)
+        if required_count not in counts:
+            continue
+        counts.remove(required_count)
+        score = sum(best_by_count.get(count, 0.0) for count in counts)
+        if best is None or score > best:
+            best = score
+    return best
+
+
+def dominance_row(
+    *,
+    challenger,
+    structural_score: float | None,
+    special_ceiling: float,
+    incumbent: float,
+    bound_kind: str = "constrained_physical",
+):
     available = structural_score is not None
     optimistic = None if structural_score is None else float(structural_score) + float(special_ceiling)
     return DirectFlatDominanceRow(
@@ -193,6 +240,7 @@ def dominance_row(*, challenger, structural_score: float | None, special_ceiling
         optimistic_total=optimistic,
         incumbent=float(incumbent),
         physically_available=available,
+        bound_kind=str(bound_kind),
     )
 
 
@@ -264,7 +312,27 @@ def main() -> int:
 
     rows: list[DirectFlatDominanceRow] = []
     search_unresolved: list[str] = []
+    abstract_pruned = 0
+    physical_search_candidates = 0
     for challenger, upper in candidates:
+        abstract_structural = abstract_topology_structural_upper_bound(
+            challenger,
+            pair_scores,
+            topology,
+        )
+        abstract_row = dominance_row(
+            challenger=challenger,
+            structural_score=abstract_structural,
+            special_ceiling=upper.total_special_ceiling,
+            incumbent=incumbent,
+            bound_kind="abstract_topology_upper",
+        )
+        if abstract_row.dominated:
+            rows.append(abstract_row)
+            abstract_pruned += 1
+            continue
+
+        physical_search_candidates += 1
         constrained, unresolved = _constrained_effective_recovery_search(
             challenger=challenger,
             topology=topology,
@@ -287,6 +355,7 @@ def main() -> int:
                 structural_score=structural,
                 special_ceiling=upper.total_special_ceiling,
                 incumbent=incumbent,
+                bound_kind="constrained_physical",
             )
         )
 
@@ -316,18 +385,21 @@ def main() -> int:
     print(f"direct_recovery_challengers={len(direct)}")
     print(f"flat_upper_bound_candidates={len(candidates)}")
     print(f"nonflat_or_search_state_pending={len(pending)}")
+    print(f"abstract_topology_pruned={abstract_pruned}")
+    print(f"physical_search_candidates={physical_search_candidates}")
     print()
-    print("CONSTRAINED FLAT UPPER BOUNDS")
+    print("DIRECT-FLAT UPPER BOUNDS")
     for row in rows:
         if not row.physically_available:
             print(
-                f"set={row.set_name!r} pieces={row.piece_count} physically_available=False "
-                "dominated=True reason='no legal constrained Light-armor witness'"
+                f"set={row.set_name!r} pieces={row.piece_count} bound_kind={row.bound_kind!r} "
+                "physically_available=False dominated=True reason='no compatible count topology or legal constrained witness'"
             )
             continue
         assert row.optimistic_total is not None and row.margin is not None
         print(
-            f"set={row.set_name!r} pieces={row.piece_count} structural_ordinary={row.structural_ordinary_score:.3f} "
+            f"set={row.set_name!r} pieces={row.piece_count} bound_kind={row.bound_kind!r} "
+            f"structural_upper={row.structural_ordinary_score:.3f} "
             f"special_flat_upper_bound={row.special_flat_upper_bound:.3f} "
             f"optimistic_total={row.optimistic_total:.3f} margin_to_incumbent={row.margin:.3f} "
             f"dominated={row.dominated}"
@@ -336,7 +408,7 @@ def main() -> int:
     print("SURVIVORS")
     for row in survivors:
         print(
-            f"survivor: set={row.set_name!r} pieces={row.piece_count} "
+            f"survivor: set={row.set_name!r} pieces={row.piece_count} bound_kind={row.bound_kind!r} "
             f"optimistic_total={row.optimistic_total:.3f} margin_to_incumbent={row.margin:.3f}"
         )
     for challenger, reasons in pending:
