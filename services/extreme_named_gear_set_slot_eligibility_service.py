@@ -8,11 +8,18 @@ can occupy.  Exact source rows are authoritative for special sets.  Standard
 reconstructable five-piece sets may use the same reviewed missing-weapon
 completion rule already used by Stickerbook; no other missing slot is invented.
 
+The source ``gear_set.category`` field currently labels Mythics as ``standard``.
+For denominator legality, one-piece gear whose name is also a UESP Antiquities
+set name is therefore normalized to semantic category ``mythic``.  This preserves
+ordinary one-piece sets such as Prophet's while giving every downstream Extreme
+search one authoritative one-Mythic identity contract.
+
 The result is intentionally separate from set-count topology and physical-shape
 realization.  Those layers answer different denominator questions and should not
 be collapsed merely because 5+5+2 looks familiar.
 """
 
+import csv
 from dataclasses import dataclass
 from pathlib import Path
 import re
@@ -85,9 +92,36 @@ class ExtremeNamedGearSetSlotEligibilityService:
 
     @staticmethod
     def _set_slug(value: str) -> str:
-        """Match the semantic set IDs stored by the UESP content importer."""
+        """Match semantic set identities across canonical source families."""
 
         return re.sub(r"[^a-z0-9]+", "_", str(value or "").casefold()).strip("_")
+
+    def _antiquity_set_slugs(self) -> frozenset[str]:
+        """Return UESP Antiquities set identities adjacent to the canonical DB.
+
+        The reference export stores the antiquity reward set name in column 10
+        (``set_name``).  Mythic gear appears here as a five-lead antiquity set,
+        while ordinary one-piece gear such as Prophet's does not.  The Extreme
+        legality contract only uses this evidence together with
+        ``max_equip_count == 1``; furnishings and other antiquities therefore
+        cannot be misclassified as equippable Mythics.
+        """
+
+        names: set[str] = set()
+        for path in sorted(self.database_path.parent.glob("antiquities_[0-9][0-9].csv")):
+            try:
+                with path.open("r", encoding="utf-8", newline="") as handle:
+                    for raw in csv.reader(handle):
+                        if not raw or str(raw[0]).strip().casefold() == "id":
+                            continue
+                        if len(raw) < 10:
+                            continue
+                        slug = self._set_slug(raw[9])
+                        if slug:
+                            names.add(slug)
+            except OSError:
+                continue
+        return frozenset(names)
 
     @classmethod
     def _source_by_set(
@@ -167,6 +201,7 @@ class ExtremeNamedGearSetSlotEligibilityService:
     def build(self) -> ExtremeNamedGearSetSlotEligibilityCatalog:
         unresolved: list[str] = []
         rows_out: list[ExtremeNamedGearSetSlotEligibility] = []
+        antiquity_set_slugs = self._antiquity_set_slugs()
 
         try:
             connection = sqlite3.connect(f"file:{self.database_path.resolve()}?mode=ro", uri=True)
@@ -207,6 +242,10 @@ class ExtremeNamedGearSetSlotEligibilityService:
                     unresolved.append(
                         f"Gear set {name} has no positive canonical max_equip_count"
                     )
+
+                semantic_category = category
+                if max_count == 1 and self._set_slug(name) in antiquity_set_slugs:
+                    semantic_category = "mythic"
 
                 piece_rows = connection.execute(
                     """
@@ -273,7 +312,7 @@ class ExtremeNamedGearSetSlotEligibilityService:
                     ExtremeNamedGearSetSlotEligibility(
                         set_id=set_id,
                         name=name,
-                        category=category,
+                        category=semantic_category,
                         max_equip_count=max_count,
                         armor_slots=tuple(sorted(armor_slots)),
                         jewelry_slots=tuple(sorted(jewelry_slots)),
