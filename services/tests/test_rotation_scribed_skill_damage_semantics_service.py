@@ -1,3 +1,4 @@
+import json
 from types import SimpleNamespace
 
 import pytest
@@ -71,3 +72,55 @@ def test_magical_banner_activation_resolves_zero_direct_damage_before_exploiter_
 
 def test_unreviewed_scribed_display_name_does_not_get_zero_damage_escape_hatch() -> None:
     assert RotationScribedSkillDamageSemanticsService().resolve("Imaginary Banner") is None
+
+
+def test_scribed_semantics_registry_must_match_canonical_result_identity(tmp_path) -> None:
+    path = tmp_path / "scribed_semantics.json"
+    path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "entries": [
+                    {
+                        "result_name": "Magical Banner",
+                        "grimoire": "Wrong Grimoire",
+                        "focus": "Magic Damage",
+                        "deals_direct_damage_on_activation": False,
+                        "persistent_toggle": True,
+                        "active_damage_done": {"magic": 0.06},
+                        "source": "reviewed fixture",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="identity does not match canonical scribing catalog"):
+        RotationScribedSkillDamageSemanticsService(path)
+
+
+def test_scribed_semantics_registry_rejects_unknown_damage_modifier_fields(tmp_path) -> None:
+    path = tmp_path / "scribed_semantics.json"
+    path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "entries": [
+                    {
+                        "result_name": "Magical Banner",
+                        "grimoire": "Banner Bearer",
+                        "focus": "Magic Damage",
+                        "deals_direct_damage_on_activation": False,
+                        "persistent_toggle": True,
+                        "active_damage_done": {"imaginary": 0.06},
+                        "source": "reviewed fixture",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="invalid scribed damage semantics registry entry"):
+        RotationScribedSkillDamageSemanticsService(path)
