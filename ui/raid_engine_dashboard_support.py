@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-"""Register the Raid Engine dashboard with the existing MainWindow.
+"""Register Raid Engine planning surfaces with the existing MainWindow.
 
-Kept as a support layer so the dashboard can be added without duplicating or
-replacing the long-lived Raid Engine pages it summarizes.
+The dashboard remains a read-mostly summary. The new Raid Plans workspace owns the
+visible session draft for one trial plan without replacing the long-lived Roster,
+Comp Maker, Coverage, Encounter, or Optimization pages.
 """
 
 import warnings
@@ -14,13 +15,18 @@ _DASHBOARD_REFRESH_PATCHED = False
 
 
 def _install_sidebar_route() -> None:
-    """Make the Raid Engine category header open the dashboard."""
+    """Make Raid Engine open the dashboard and expose Raid Plans as a child route."""
     from ui.components import foundry_sidebar
 
     for section in foundry_sidebar.CORE_NAV_SECTIONS:
-        if isinstance(section, dict) and section.get("label") == "Raid Engine":
-            section["page"] = "raid_engine_dashboard"
-            return
+        if not isinstance(section, dict) or section.get("label") != "Raid Engine":
+            continue
+        section["page"] = "raid_engine_dashboard"
+        children = list(section.get("children") or ())
+        if ("Raid Plans", "raid_plans") not in children:
+            children.insert(0, ("Raid Plans", "raid_plans"))
+        section["children"] = children
+        return
 
 
 def _install_read_only_dashboard_refresh() -> None:
@@ -98,28 +104,36 @@ def _open_dashboard_help(window) -> None:
         help_page.show_topic("comp_builder")
 
 
+def _register_page(window, route: str, page) -> None:
+    window.pages[route] = page
+    container = window.wrap_page(page)
+    window.page_containers[route] = container
+    window.stack.addWidget(container)
+
+
 def _build_ui_with_raid_engine_dashboard(self) -> None:
     assert _ORIGINAL_BUILD_UI is not None
     _ORIGINAL_BUILD_UI(self)
 
     from ui.raid_engine_dashboard_page import RaidEngineDashboardPage
+    from ui.raid_plan_page import RaidPlanPage
 
-    page = RaidEngineDashboardPage()
-    page.set_sources(
+    dashboard = RaidEngineDashboardPage()
+    dashboard.set_sources(
         comp_builder=self.pages.get("comp_builder"),
         optimization=self.pages.get("console:6"),
         coverage=self.pages.get("console:7"),
         encounters=self.pages.get("console:1"),
         performance=self.pages.get("console:3"),
     )
-    page.pageRequested.connect(self.show_page)
-    page.sendTeamRequested.connect(self._send_optimized_team_to_roster)
-    page.helpRequested.connect(lambda: _open_dashboard_help(self))
+    dashboard.pageRequested.connect(self.show_page)
+    dashboard.sendTeamRequested.connect(self._send_optimized_team_to_roster)
+    dashboard.helpRequested.connect(lambda: _open_dashboard_help(self))
+    _register_page(self, "raid_engine_dashboard", dashboard)
 
-    self.pages["raid_engine_dashboard"] = page
-    container = self.wrap_page(page)
-    self.page_containers["raid_engine_dashboard"] = container
-    self.stack.addWidget(container)
+    raid_plans = RaidPlanPage()
+    raid_plans.pageRequested.connect(self.show_page)
+    _register_page(self, "raid_plans", raid_plans)
 
 
 def install() -> None:
@@ -128,12 +142,18 @@ def install() -> None:
         return
 
     from ui.main_window import MainWindow
+    from ui.build_screenshot_import_disable_support import (
+        install as install_build_screenshot_import_disable_support,
+    )
 
     _install_sidebar_route()
     _install_read_only_dashboard_refresh()
     from ui.raid_engine_dashboard_polish_support import install as install_dashboard_polish
     install_dashboard_polish()
     _install_safe_dashboard_rewire()
+    # Keep the screenshot/OCR intake implementation in the tree but remove its
+    # user-facing Builds control while the new planning/intake ownership settles.
+    install_build_screenshot_import_disable_support()
     _ORIGINAL_BUILD_UI = MainWindow.build_ui
     MainWindow.build_ui = _build_ui_with_raid_engine_dashboard
     _INSTALLED = True
