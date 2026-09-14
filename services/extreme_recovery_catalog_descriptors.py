@@ -24,6 +24,25 @@ EXTREME_RECOVERY_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "remain external-ceiling requirements until the appropriate canonical owner proves the maximum."
         ),
     ),
+    ServiceDescriptor(
+        service_id="extreme.recovery_class_route_frontier",
+        domain="extreme",
+        purpose=(
+            "Compose reviewed static class passives, active-bar slot-count Recovery mechanics, "
+            "and pure-class Mastery effects across every legal class/subclass line configuration."
+        ),
+        implementation_path="services.extreme_recovery_class_route_frontier_service",
+        inputs=("CanonicalEsoDatabase", "RecoveryObjective", "RecoveryReferenceValue"),
+        outputs=("ExtremeRecoveryClassRouteFrontier",),
+        dependencies=("extreme.recovery_passive_special_branch",),
+        responsibilities=("extreme_recovery_class_route_frontier_projection",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Runtime-dependent passives remain explicit obligations. The service does not "
+            "convert semantic classification into free score or declare a whole-build record."
+        ),
+    ),
 )
 
 
