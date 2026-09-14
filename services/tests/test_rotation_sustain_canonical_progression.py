@@ -44,7 +44,7 @@ def test_rotation_sustain_prefers_canonical_owned_skill_lines() -> None:
     assert unresolved == ()
 
 
-def test_empty_canonical_progression_uses_labeled_compatibility_fallback() -> None:
+def test_empty_canonical_progression_stays_empty_and_fails_closed() -> None:
     canonical = CharacterProgression(attributes=AttributeAllocation(magicka=64))
     service = RotationSustainService(
         progression_adapter=_Adapter(
@@ -57,14 +57,15 @@ def test_empty_canonical_progression_uses_labeled_compatibility_fallback() -> No
 
     progression, unresolved = service._progression(_build())
 
-    assert progression.owns_skill_line("Light Armor")
-    assert progression.owns_skill_line("Medium Armor")
+    assert progression is canonical
+    assert progression.owns_skill_line("Light Armor") is False
+    assert progression.owns_skill_line("Medium Armor") is False
     assert any("canonical character progression has no owned skill lines" in item for item in unresolved)
-    assert any("compatibility fallback" in item for item in unresolved)
+    assert any("will not infer character-owned progression from equipped armor" in item for item in unresolved)
 
 
-def test_missing_canonical_character_keeps_resolution_failure_and_labels_fallback() -> None:
-    fallback = CharacterProgression(
+def test_missing_canonical_character_keeps_resolution_failure_without_reconstruction() -> None:
+    unresolved_progression = CharacterProgression(
         attributes=AttributeAllocation(magicka=64),
         passive_ranks=None,
         passive_cp_points=None,
@@ -73,7 +74,7 @@ def test_missing_canonical_character_keeps_resolution_failure_and_labels_fallbac
         progression_adapter=_Adapter(
             SavedBuildProgressionResolution(
                 character_id="",
-                progression=fallback,
+                progression=unresolved_progression,
                 unresolved=("Canonical character progression could not be resolved for saved build",),
             )
         )
@@ -81,7 +82,8 @@ def test_missing_canonical_character_keeps_resolution_failure_and_labels_fallbac
 
     progression, unresolved = service._progression(_build())
 
-    assert progression.owns_skill_line("Light Armor")
-    assert progression.owns_skill_line("Medium Armor")
+    assert progression is unresolved_progression
+    assert progression.owns_skill_line("Light Armor") is False
+    assert progression.owns_skill_line("Medium Armor") is False
     assert "Canonical character progression could not be resolved for saved build" in unresolved
-    assert any("could not use canonical character progression" in item for item in unresolved)
+    assert any("character-owned skill-line ownership remains unresolved" in item for item in unresolved)
