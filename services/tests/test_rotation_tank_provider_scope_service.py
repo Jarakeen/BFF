@@ -14,9 +14,9 @@ class _CapabilityService:
     def audit_build(self, build):
         self.calls.append(build)
         return SimpleNamespace(
-            player_name=self.member_id,
+            character_id=self.member_id,
+            character_name=getattr(build, "Name", "Tank A"),
             build_name=getattr(build, "BuildName", "Tank Build"),
-            member_id=self.member_id,
         )
 
 
