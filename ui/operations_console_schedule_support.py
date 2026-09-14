@@ -124,6 +124,7 @@ def install() -> None:
     from ui.roster_assignment_action_support import install as install_roster_assignment_action_support
     from ui.roster_assignment_context_action_support import install as install_roster_assignment_context_action_support
     from ui.roster_assignment_usability_support import install as install_roster_assignment_usability_support
+    from ui.roster_player_alias_support import install as install_roster_player_alias_support
     from ui.comp_builder_roster_intake_support import install as install_comp_builder_roster_intake_support
     from ui.build_context_variant_support import install as install_build_context_variant_support
     from ui.build_reuse_template_support import install as install_build_reuse_template_support
@@ -183,6 +184,9 @@ def install() -> None:
     # Header sorting and the searchable reviewed boss selector install after the
     # assignment layers so they decorate the final table rather than competing with it.
     install_roster_assignment_usability_support()
+    # Install player aliases after all other Roster UI decorators so Personnel gets
+    # one final merge/alias surface and rename collisions cannot crash refresh.
+    install_roster_player_alias_support()
     # Install after the Assignments action layer so its Send to Comp Maker button
     # can hand over actual player/class/role context and the action card can lose
     # the redundant header without creating another parallel workflow.
