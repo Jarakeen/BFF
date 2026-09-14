@@ -44,22 +44,30 @@ def _horizon(end=107.116512):
     )
 
 
-def _threshold_projection(*, fraction=0.70, seconds=32.13, resolved=True):
+def _point(
+    *,
+    fact_key="retreat_thresholds",
+    fraction=0.70,
+    seconds=32.13,
+    resolved=True,
+):
+    return EncounterThresholdClockPoint(
+        fact_key=fact_key,
+        label=fact_key.replace("_", " ").title(),
+        threshold_fraction=fraction,
+        time_seconds=seconds if resolved else None,
+        resolved=resolved,
+        reason="projected from caller-supplied raid damage trajectory",
+    )
+
+
+def _threshold_projection(*, points=None):
     return EncounterHealthThresholdProjection(
         encounter_id="xalvakka",
         difficulty="hardmode",
         maximum_health=214233024,
         trajectory=None,
-        points=(
-            EncounterThresholdClockPoint(
-                fact_key="retreat_thresholds",
-                label="Retreat Thresholds",
-                threshold_fraction=fraction,
-                time_seconds=seconds if resolved else None,
-                resolved=resolved,
-                reason="projected from caller-supplied raid damage trajectory",
-            ),
-        ),
+        points=tuple(points if points is not None else (_point(),)),
         unresolved=(),
     )
 
@@ -102,14 +110,33 @@ def test_health_threshold_endpoint_materializes_from_canonical_threshold_clock_p
     assert "threshold_fact=retreat_thresholds" in result.evidence
 
 
-def test_health_threshold_endpoint_requires_exactly_one_matching_clock_point():
-    projection = EncounterHealthThresholdProjection(
-        encounter_id="xalvakka",
-        difficulty="hardmode",
-        maximum_health=214233024,
-        trajectory=None,
-        points=(),
-        unresolved=(),
+def test_corroborating_same_threshold_facts_may_share_one_projected_endpoint():
+    projection = _threshold_projection(
+        points=(
+            _point(fact_key="retreat_thresholds"),
+            _point(fact_key="phase_2"),
+        )
+    )
+
+    result = RotationAssignmentTauntMaintenanceHorizonPolicyService().materialize(
+        policy=_policy(end_reference="health_threshold:70%"),
+        horizon=_horizon(),
+        health_threshold_projection=projection,
+    )
+
+    assert result.resolved is True
+    assert result.policy is not None
+    assert result.policy.windows[0].active_end_seconds == 32.13
+    assert "threshold_fact=retreat_thresholds" in result.evidence
+    assert "threshold_fact=phase_2" in result.evidence
+
+
+def test_corroborating_same_threshold_facts_must_not_disagree_on_clock_time():
+    projection = _threshold_projection(
+        points=(
+            _point(fact_key="retreat_thresholds", seconds=32.13),
+            _point(fact_key="phase_2", seconds=33.13),
+        )
     )
 
     result = RotationAssignmentTauntMaintenanceHorizonPolicyService().materialize(
@@ -120,14 +147,30 @@ def test_health_threshold_endpoint_requires_exactly_one_matching_clock_point():
 
     assert result.resolved is False
     assert result.policy is None
-    assert "expected exactly one canonical 70%" in result.unresolved[0]
+    assert "disagree on projected clock time" in result.unresolved[0]
+
+
+def test_health_threshold_endpoint_requires_matching_clock_point():
+    projection = _threshold_projection(points=())
+
+    result = RotationAssignmentTauntMaintenanceHorizonPolicyService().materialize(
+        policy=_policy(end_reference="health_threshold:70%"),
+        horizon=_horizon(),
+        health_threshold_projection=projection,
+    )
+
+    assert result.resolved is False
+    assert result.policy is None
+    assert "no canonical 70%" in result.unresolved[0]
 
 
 def test_unresolved_health_threshold_endpoint_fails_closed():
     result = RotationAssignmentTauntMaintenanceHorizonPolicyService().materialize(
         policy=_policy(end_reference="health_threshold:70%"),
         horizon=_horizon(),
-        health_threshold_projection=_threshold_projection(resolved=False),
+        health_threshold_projection=_threshold_projection(
+            points=(_point(resolved=False),)
+        ),
     )
 
     assert result.resolved is False
