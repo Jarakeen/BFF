@@ -6,7 +6,14 @@ The action card deliberately stays small: Save, Clear, Send to Comp Maker, and
 Evaluate. Assignment context comes from the selected Team + optional Boss.
 """
 
-from PySide6.QtWidgets import QComboBox, QGridLayout, QHeaderView, QPushButton, QSizePolicy
+from PySide6.QtWidgets import (
+    QComboBox,
+    QGridLayout,
+    QHeaderView,
+    QLabel,
+    QPushButton,
+    QSizePolicy,
+)
 
 from engine.config import get_data_dir
 from services.build_service import BuildService
@@ -292,6 +299,24 @@ def _clear_card_header(card) -> None:
     card.header.setMaximumHeight(0)
 
 
+def _flatten_team_summary_header(page) -> None:
+    """Render Team Summary as plain card text instead of a button-like header strip."""
+    card = getattr(page, "team_card", None)
+    if card is None:
+        return
+    card.set_title("")
+    card.set_icon("")
+    card.set_badge("")
+    _clear_layout(card.header_action_layout)
+    card.header.hide()
+    card.header.setMinimumHeight(0)
+    card.header.setMaximumHeight(0)
+
+    title = QLabel("Team Summary")
+    title.setProperty("cardTitle", True)
+    card.body_layout.insertWidget(0, title)
+
+
 def _install_attention_actions(page) -> None:
     card = getattr(page, "attention_card", None)
     if card is None:
@@ -315,24 +340,19 @@ def _install_attention_actions(page) -> None:
 
     save = QPushButton("Save")
     save.setProperty("primary", True)
-    save.setToolTip("Save the visible assignments for the selected team and optional boss.")
     save.clicked.connect(lambda *_: _save_assignments(page))
 
     clear = QPushButton("Clear")
-    clear.setToolTip(
-        "Clear this context. On a boss, this restores the team's default assignments."
-    )
     clear.clicked.connect(lambda *_: _clear_assignments(page))
 
     send = QPushButton("Send to Comp Maker")
-    send.setToolTip("Carry the selected roster team into Comp Maker.")
     send.clicked.connect(lambda *_: _send_to_comp_maker(page))
 
     evaluate = QPushButton("Evaluate")
-    evaluate.setToolTip("Run Coverage for the selected team's saved builds.")
     evaluate.clicked.connect(lambda *_: _evaluate_team(page))
 
     for button in (save, clear, send, evaluate):
+        button.setToolTip("")
         button.setMinimumHeight(52)
         button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
@@ -394,6 +414,7 @@ def install() -> None:
     def refresh_summary_cards_with_actions(self):
         result = original_refresh_summary_cards(self)
         _install_attention_actions(self)
+        _flatten_team_summary_header(self)
         return result
 
     RosterPage._build_assignments_tab = build_assignments_tab_with_actions
