@@ -66,9 +66,48 @@ EXTREME_ACTUAL_HEAL_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         roles=("Healer",),
         evidence_class=EvidenceClass.GAME_MECHANIC,
         notes=(
-            "The current reviewed signature preserves Medium-piece count for Agility/Dexterity "
-            "and distinct armor-type count for Undaunted Mettle. Joint gear-package plus "
-            "armor-weight search remains a separate E2 proof obligation."
+            "The reviewed signature preserves Medium-piece count for Agility/Dexterity "
+            "and distinct armor-type count for Undaunted Mettle."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.actual_heal_armor_package_composition",
+        domain="extreme",
+        purpose=(
+            "Compose existing H1 armor-bearing gear-package candidates with their exact "
+            "physically legal armor-weight frontiers before canonical event scoring."
+        ),
+        implementation_path="services.extreme_actual_heal_armor_weight_package_adapter",
+        inputs=("BuildCandidate", "ExtremeActualHealArmorWeightCandidateResult"),
+        outputs=("BuildCandidate", "ExtremeActualHealArmorWeightPackageAdapterStats"),
+        dependencies=("extreme.actual_heal_armor_weight_frontier",),
+        responsibilities=("extreme_actual_heal_gear_armor_weight_composition",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("Healer",),
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Package services retain ownership of set discovery and slot shape. Unresolved "
+            "armor-type evidence removes that package from authoritative scoring and remains "
+            "visible in cumulative proof diagnostics across optimization passes."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.actual_heal_armor_progression",
+        domain="extreme",
+        purpose=(
+            "Normalize the reviewed non-class passive ranks required by theoretical H1 "
+            "armor search without making the ceiling depend on the seed character's purchases."
+        ),
+        implementation_path="services.extreme_actual_heal_armor_progression_service",
+        inputs=("CharacterProgression", "ExtremeHealClassRoute"),
+        outputs=("CharacterProgression",),
+        responsibilities=("extreme_actual_heal_armor_passive_progression",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("Healer",),
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Adds canonical max-rank Medium Armor Agility/Dexterity and Undaunted Mettle only. "
+            "Canonical armor and Undaunted resolvers continue to own all stat math."
         ),
     ),
 )
