@@ -16,8 +16,8 @@ from PySide6.QtWidgets import (
 from engine.config import get_data_dir
 from services.eso_database import EsoDatabase
 from services.generated_roster_plan_service import (
-    GeneratedRosterPlanService,
-    GeneratedRosterPlanSlot,
+    GeneratedRosterDraftService,
+    GeneratedRosterDraftSlot,
 )
 from services.team_prescription import PrescriptionDimension
 from services.team_prescription_slot_constraints import build_gear_set_names
@@ -50,14 +50,14 @@ def _saved_build_for_assignment(page, assignment):
     return None
 
 
-def prescription_plan_slots(page) -> tuple[GeneratedRosterPlanSlot, ...]:
-    """Project the generated prescription itself into a persistent roster plan."""
+def prescription_plan_slots(page) -> tuple[GeneratedRosterDraftSlot, ...]:
+    """Project the generated prescription itself into persistent roster-draft evidence."""
 
     prescription = getattr(page, "current_prescription", None)
     if prescription is None:
         return ()
 
-    rows: list[GeneratedRosterPlanSlot] = []
+    rows: list[GeneratedRosterDraftSlot] = []
     for assignment in prescription.assignments:
         prescribed = assignment.prescribed_build
         source_build = (
@@ -104,7 +104,7 @@ def prescription_plan_slots(page) -> tuple[GeneratedRosterPlanSlot, ...]:
             str(item).strip() for item in assignment.unresolved if str(item).strip()
         )
         rows.append(
-            GeneratedRosterPlanSlot(
+            GeneratedRosterDraftSlot(
                 slot_name=assignment.slot_name,
                 kind=kind,
                 player_name=player_name,
@@ -307,7 +307,7 @@ def _show_selected_template(page, *_args) -> None:
 def _roster_init_with_generated_plans(self, parent=None) -> None:
     assert _ORIGINAL_ROSTER_INIT is not None
     _ORIGINAL_ROSTER_INIT(self, parent)
-    self.generated_plan_service = GeneratedRosterPlanService(
+    self.generated_plan_service = GeneratedRosterDraftService(
         EsoDatabase(get_data_dir() / "eso.db")
     )
     if self.view_combo.findText("Generated Team") < 0:
