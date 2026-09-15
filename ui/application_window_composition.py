@@ -20,7 +20,10 @@ def compose_application_window(window) -> None:
     """Apply instance-level presentation features to the constructed application."""
     apply_roster_sub_terminology(window.pages["roster_page"])
     apply_gear_lookup_description_cleanup(window.pages["gear_lookup"])
-    apply_extreme_max_magicka_record(window.pages["extreme_optimization"])
+
+    extreme_page = window.pages.get("extreme_optimization")
+    if extreme_page is not None:
+        apply_extreme_max_magicka_record(extreme_page)
 
 
 __all__ = ["compose_application_window"]
