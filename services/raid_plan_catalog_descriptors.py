@@ -27,6 +27,27 @@ RAID_PLAN_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="coverage.named_group_effect_projection",
+        domain="coverage",
+        purpose=(
+            "Project exact canonical EffectVariant identities from saved-build audits into the raid-facing "
+            "buff/debuff catalog without aliases, self-only promotion, or uptime inference."
+        ),
+        implementation_path="services.raid_named_group_effect_capability_service",
+        inputs=("RaidCoverageSnapshot", "PlayerBuild", "SavedBuildCapabilityAudit"),
+        outputs=("RaidCoverageSnapshot",),
+        dependencies=("build.saved_capability_analysis",),
+        responsibilities=("raid_named_group_effect_static_projection",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        ui_safe=True,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Only exact canonical identity matches are projected. Effects classified as self-only or with unknown target "
+            "scope fail closed; conditional/triggered effects never claim uptime."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="raid_plan.coverage_scope",
         domain="raid_plan",
         purpose=(
