@@ -4,6 +4,9 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from models.build_model import PlayerBuild
+from services.extreme_actual_heal_armor_weight_candidate_service import (
+    ExtremeActualHealArmorWeightCandidateResult,
+)
 from services.extreme_actual_heal_attribute_projection_service import (
     ExtremeActualHealAttributeProjectionResult,
 )
@@ -45,15 +48,35 @@ class _AttributeProjection:
         character_id,
         baseline_build_id,
     ):
-        self.calls.append(
-            (build, entity_id, character_id, baseline_build_id)
-        )
+        self.calls.append((build, entity_id, character_id, baseline_build_id))
         return self.result
+
+
+class _ArmorWeightCandidates:
+    def __init__(self, result):
+        self.result = result
+        self.calls = []
+
+    def build_candidates(self, build, *, character_id, baseline_build_id):
+        self.calls.append((build, character_id, baseline_build_id))
+        return self.result
+
+
+def _empty_armor_candidates():
+    return _ArmorWeightCandidates(
+        ExtremeActualHealArmorWeightCandidateResult(
+            candidates=(),
+            raw_layout_count=1,
+            retained_signature_count=1,
+            denominator_proven=True,
+        )
+    )
 
 
 def test_standing_optimizer_defaults_to_canonical_healing_event_service():
     service = ExtremeCanonicalActualHealOptimizationService(
         optimizer=_optimizer(),
+        armor_weight_candidates=_empty_armor_candidates(),
     )
 
     assert isinstance(service.healing_events, ExtremeCanonicalHealingEventService)
@@ -64,6 +87,7 @@ def test_explicit_healing_event_evaluator_remains_authoritative():
     service = ExtremeCanonicalActualHealOptimizationService(
         optimizer=_optimizer(),
         healing_events=custom,
+        armor_weight_candidates=_empty_armor_candidates(),
     )
 
     assert service.healing_events is custom
@@ -79,6 +103,7 @@ def test_standing_optimizer_uses_injected_champion_point_candidate_search():
         optimizer=_optimizer(),
         healing_events=object(),
         champion_point_candidates=cp,
+        armor_weight_candidates=_empty_armor_candidates(),
     )
 
     candidates = service._additional_candidates(
@@ -110,6 +135,7 @@ def test_standing_optimizer_uses_proved_attribute_projection():
         optimizer=_optimizer(),
         healing_events=object(),
         attribute_projection=projection,
+        armor_weight_candidates=_empty_armor_candidates(),
     )
     service._attribute_search_entity_id = "combat_prayer"
 
@@ -138,6 +164,7 @@ def test_failed_attribute_projection_falls_back_and_preserves_proof_gap():
         optimizer=_optimizer(),
         healing_events=object(),
         attribute_projection=projection,
+        armor_weight_candidates=_empty_armor_candidates(),
     )
     service._attribute_search_entity_id = "odd_heal"
 
@@ -157,3 +184,72 @@ def test_failed_attribute_projection_falls_back_and_preserves_proof_gap():
     }
     assert allocations == {(64, 0, 0), (0, 64, 0), (0, 0, 64)}
     assert service._attribute_search_unresolved == ("unsupported coefficient family",)
+
+
+def test_standing_optimizer_adds_legal_current_layout_armor_frontier():
+    sentinel = object()
+    armor = _ArmorWeightCandidates(
+        ExtremeActualHealArmorWeightCandidateResult(
+            candidates=(sentinel,),
+            raw_layout_count=2187,
+            retained_signature_count=14,
+            denominator_proven=True,
+        )
+    )
+    service = ExtremeCanonicalActualHealOptimizationService(
+        optimizer=_optimizer(),
+        healing_events=object(),
+        champion_point_candidates=_ChampionPointCandidates(
+            ExtremeActualHealChampionPointCandidateResult()
+        ),
+        armor_weight_candidates=armor,
+    )
+
+    candidates = service._additional_candidates(
+        PlayerBuild(),
+        progression=object(),
+        character_id="character",
+        baseline_build_id="build",
+        entity_id="heal",
+        active_bar="front",
+    )
+
+    assert candidates == (sentinel,)
+    assert len(armor.calls) == 1
+    assert service._armor_weight_search_unresolved == ()
+    assert service._armor_weight_search_scope == (
+        "physical armor-weight search for current gear layout: 2187 legal slot layouts reduced to 14 H1-relevant signatures",
+    )
+
+
+def test_unresolved_armor_weight_evidence_stays_explicit_and_emits_no_candidates():
+    armor = _ArmorWeightCandidates(
+        ExtremeActualHealArmorWeightCandidateResult(
+            candidates=(),
+            raw_layout_count=0,
+            retained_signature_count=0,
+            denominator_proven=False,
+            unresolved=("set piece armor_type unknown",),
+        )
+    )
+    service = ExtremeCanonicalActualHealOptimizationService(
+        optimizer=_optimizer(),
+        healing_events=object(),
+        champion_point_candidates=_ChampionPointCandidates(
+            ExtremeActualHealChampionPointCandidateResult()
+        ),
+        armor_weight_candidates=armor,
+    )
+
+    candidates = service._additional_candidates(
+        PlayerBuild(),
+        progression=object(),
+        character_id="character",
+        baseline_build_id="build",
+        entity_id="heal",
+        active_bar="front",
+    )
+
+    assert candidates == ()
+    assert service._armor_weight_search_unresolved == ("set piece armor_type unknown",)
+    assert service._armor_weight_search_scope == ()
