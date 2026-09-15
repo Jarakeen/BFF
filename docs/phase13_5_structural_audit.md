@@ -225,13 +225,54 @@ Audit in progress.
 
 ---
 
+### F011 — Stabilized healer catalog metadata lags the production multi-demand runtime path
+
+**Category:** documentation / service-catalog drift
+
+**Files reviewed:**
+- `services/rotation_catalog_descriptors.py`
+- `services/rotation_recovery_healer_role_output_service.py`
+- `ui/rotation_generate_healer_role_evidence_support.py`
+
+**Finding:** the service descriptor for `rotation.healer.stabilized_runtime_role_output` still names `RotationCandidateHealerRoleOutputService` as the healer-output input. Production Generate now binds `RotationHealerCanonicalRoleOutputFactoryResult` / `RotationCandidateHealerMultiDemandRoleOutputService` and may also recompute verified healer hard criteria from the same stabilized runtime context. The descriptor therefore understates the current production contract.
+
+**Disposition:** DEFERRED TO DOCUMENTATION/CONFIGURATION CLEANUP.
+
+**Reason deferred:** `rotation_catalog_descriptors.py` is a large shared registry file under concurrent Phase 13.5 activity. Runtime behavior is already correct and verified; replacing the entire shared file for a narrow metadata edit would create unnecessary overwrite risk. The catalog is discovery metadata, not runtime authority.
+
+**Closeout boundary:** before Phase 13.5 closes, update the stabilized healer descriptor to advertise the multi-demand healer provider/factory result and the shared runtime hard-criteria binding. Do not treat the stale descriptor as evidence that production still uses the single-demand path.
+
+---
+
+### F012 — Single-demand healer role-output service remains a lower-level diagnostic compatibility primitive
+
+**Category:** apparent dead service / compatibility review
+
+**Files reviewed:**
+- `services/rotation_candidate_healer_role_output_service.py`
+- `services/rotation_recovery_healer_role_output_service.py`
+- `tools/audit_phase13_saved_build_stabilized_healer_output.py`
+- focused healer role-output/runtime-context tests
+
+**Finding:** production healer Generate now uses the canonical multi-demand role-output path, so `RotationCandidateHealerRoleOutputService` initially appears superseded. Reference review shows it remains intentionally used by the saved-build stabilized-healer audit and lower-level canonical demand/runtime forwarding tests. The recovery-healer adapter intentionally accepts both the single-demand diagnostic primitive and the production multi-demand wrapper through the same runtime-context seam.
+
+**Disposition:** INTENTIONALLY RETAINED as lower-level diagnostic compatibility.
+
+**Reason retained:** the single-demand service remains useful for focused mechanic/audit isolation without becoming a competing production ranking authority. Deleting it would force audit tooling to construct multi-demand orchestration solely to inspect one demand window, adding ceremony without improving correctness.
+
+**Closeout boundary:** production Generate must continue using the multi-demand path. New application-facing healer ranking code should not adopt the single-demand service; its scope is focused diagnostics, audit tooling, and lower-level tests.
+
+---
+
 ## Audit queue
 
-The remaining Phase 13.5 audit will review, in order:
+Completed/reviewed in this ledger:
+- Character -> Build -> Team identity reconstruction/fallback paths;
+- stale rotation aliases/wrappers/compatibility seams reviewed so far.
 
-1. Character -> Build -> Team identity reconstruction or fallback paths;
-2. stale rotation tests, aliases, wrappers, temporary shims, and feature flags;
-3. unused/dead Phase 13 services and catalog entries;
-4. documentation/configuration drift;
-5. focused regression after each material cleanup;
-6. full regression checkpoint before Phase 13.5 closeout.
+Remaining Phase 13.5 audit:
+
+1. unused/dead Phase 13 services and catalog entries;
+2. documentation/configuration drift, including F011;
+3. focused regression after each material cleanup;
+4. full regression checkpoint before Phase 13.5 closeout.
