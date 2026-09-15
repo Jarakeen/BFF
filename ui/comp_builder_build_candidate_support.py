@@ -7,7 +7,7 @@ from services.comp_builder_build_candidates import (
     CompBuildCandidate,
     CompBuilderBuildCandidateService,
 )
-from services.generated_roster_plan_service import GeneratedRosterPlanSlot
+from services.generated_roster_plan_service import GeneratedRosterDraftSlot
 from ui.components.foundry_button import ButtonRole, FoundryButton
 from ui.components.foundry_card import FoundryCard
 
@@ -397,7 +397,7 @@ def _send_to_roster_with_candidates(self, *_args) -> None:
 
     goal = self.goal_combo.currentText().strip() or "Custom Goal"
     plan_name = self.plan_name_input.text().strip() or f"{goal} Composition"
-    slots: list[GeneratedRosterPlanSlot] = []
+    slots: list[GeneratedRosterDraftSlot] = []
     for row in range(self.matrix_table.rowCount()):
         slot_name = self._cell_text(row, 0)
         role = self._cell_text(row, 1)
@@ -416,7 +416,7 @@ def _send_to_roster_with_candidates(self, *_args) -> None:
         if candidate is None:
             concrete = selected_class != "Any class"
             slots.append(
-                GeneratedRosterPlanSlot(
+                GeneratedRosterDraftSlot(
                     slot_name=slot_name,
                     kind="prescribed_recruit" if concrete else "open_recruit",
                     player_name="Recruitment Needed",
@@ -432,7 +432,7 @@ def _send_to_roster_with_candidates(self, *_args) -> None:
 
         is_saved = candidate.source_kind == "saved_build"
         slots.append(
-            GeneratedRosterPlanSlot(
+            GeneratedRosterDraftSlot(
                 slot_name=slot_name,
                 kind="saved" if is_saved else "prescribed_recruit",
                 player_name=candidate.source_name if is_saved else "Recruitment Needed",
