@@ -5,11 +5,14 @@ from __future__ import annotations
 The shared gear objective service must preserve conditional Weapon/Spell Damage
 because those mechanics matter in general. Standing MOST Actual Heal can prove a
 few narrower facts without weakening that shared model: damage-type and reviewed
-offensive-weapon ability scopes cannot modify a healing event, and the standing
-scenario itself satisfies a ``standing_still`` condition.
+offensive-weapon ability scopes cannot modify a healing event; some unmapped
+bonuses explicitly scope their Weapon/Spell Damage to damaging attacks or enemy
+output only; and the standing scenario itself satisfies a ``standing_still``
+condition.
 """
 
 from dataclasses import dataclass
+import re
 
 from services.extreme_gear_set_objective_service import ExtremeGearSetObjectiveCandidate
 
@@ -30,6 +33,24 @@ _DAMAGE_ONLY_ABILITY_SCOPES = frozenset(
     }
 )
 _STANDING_H1_CONDITIONS = frozenset({"standing_still"})
+
+# These patterns are intentionally about the *scope of the power bonus itself*,
+# not merely about an enemy/proc appearing somewhere in the tooltip. A proc that
+# damages an enemy and then grants global Weapon/Spell Damage remains unresolved.
+_DAMAGE_ONLY_POWER_TEXT = (
+    re.compile(r"weapon and spell damage to your damaging\s*abilities", re.IGNORECASE),
+    re.compile(
+        r"weapon and spell damage to your damage over time and ranged attacks.*"
+        r"weapon and spell damage to your melee attacks",
+        re.IGNORECASE | re.DOTALL,
+    ),
+    re.compile(r"weapon and spell damage against enemies\b", re.IGNORECASE),
+    re.compile(r"weapon and spell damage against your marked target\b", re.IGNORECASE),
+    re.compile(
+        r"weapon and spell damage for flame, shock, or frost damage",
+        re.IGNORECASE,
+    ),
+)
 
 
 @dataclass(frozen=True)
@@ -60,7 +81,7 @@ class ExtremeActualHealGearConditionRelevanceService:
         for blocker in row.unresolved:
             text = str(blocker)
             if objective in {"spell_damage", "weapon_damage"}:
-                damage_only = any(
+                damage_only_scope = any(
                     f"requires condition {scope}" in text
                     for scope in _DAMAGE_ONLY_ABILITY_SCOPES
                 )
@@ -68,7 +89,8 @@ class ExtremeActualHealGearConditionRelevanceService:
                     f"requires condition {condition}" in text
                     for condition in _STANDING_H1_CONDITIONS
                 )
-                if damage_only or standing_proven:
+                damage_only_text = any(pattern.search(text) for pattern in _DAMAGE_ONLY_POWER_TEXT)
+                if damage_only_scope or standing_proven or damage_only_text:
                     ignored.append(text)
                     continue
             remaining.append(text)
