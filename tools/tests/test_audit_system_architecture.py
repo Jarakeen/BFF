@@ -7,6 +7,7 @@ from tools.audit_system_architecture import (
     _duplicate_class_findings,
     _install_fanout_findings,
     _monkey_patch_findings,
+    _quarantine_import_findings,
     _repo_contract_findings,
     audit_system_architecture,
 )
@@ -47,6 +48,39 @@ def install():
     assert fanout and fanout[0].code == "installer-fanout"
 
 
+def test_runtime_quarantine_imports_are_architecture_errors(tmp_path) -> None:
+    path = tmp_path / "services" / "live_service.py"
+    path.parent.mkdir(parents=True)
+    source = """
+from old_pages.old_math import calculate
+from legacy.compat import OldThing
+from deprecated.previous_service import PreviousService
+from migration.v2_to_v3 import migrate
+"""
+
+    findings = _quarantine_import_findings(tmp_path, path, ast.parse(source))
+
+    assert len(findings) == 1
+    finding = findings[0]
+    assert finding.severity == "ERROR"
+    assert finding.code == "runtime-quarantine-import"
+    assert "old_pages.old_math" in finding.message
+    assert "legacy.compat" in finding.message
+    assert "deprecated.previous_service" in finding.message
+    assert "migration.v2_to_v3" in finding.message
+
+
+def test_normal_runtime_imports_do_not_trigger_quarantine_boundary(tmp_path) -> None:
+    path = tmp_path / "services" / "live_service.py"
+    path.parent.mkdir(parents=True)
+    source = """
+from models.build_model import PlayerBuild
+from services.roster_service import RosterService
+"""
+
+    assert _quarantine_import_findings(tmp_path, path, ast.parse(source)) == []
+
+
 def test_repo_contract_detector_flags_hidden_build_persistence_authority(tmp_path) -> None:
     services = tmp_path / "services"
     services.mkdir(parents=True)
@@ -72,6 +106,7 @@ def test_current_repo_audit_confirms_resolved_authority_and_identity_debt() -> N
     assert "package-import-side-effect" not in codes
     assert "raid-plan-name-based-build-identity" not in codes
     assert "stale-raid-plan-persistence-doc" not in codes
+    assert "runtime-quarantine-import" not in codes
     assert "overlapping-plan-persistence" in codes
     assert "catalog-family-transitive-aggregation" in codes
     assert "duplicate-class-definition" in codes
