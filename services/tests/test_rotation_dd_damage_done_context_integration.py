@@ -122,7 +122,10 @@ def test_skill_damage_uses_cp_categories_without_cross_contamination() -> None:
         ),
     )
 
-    merged = RotationCandidateSkillDamageEvidenceService._damage_done_for_context(context)
+    merged = RotationCandidateSkillDamageEvidenceService._damage_done_for_context(
+        context,
+        None,
+    )
     direct_aoe = resolve_damage_done(
         merged,
         damage_type="magical",
