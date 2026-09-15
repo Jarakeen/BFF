@@ -154,7 +154,7 @@ def test_team_merge_moves_memberships_and_build_assignments_without_deleting_ide
 
 
 def test_team_merge_installs_after_multi_time_team_schedule_surface() -> None:
-    source = Path("ui/operations_console_schedule_support.py").read_text(encoding="utf-8")
+    source = Path("ui/application_workspace_bootstrap.py").read_text(encoding="utf-8")
     assert source.index("install_team_schedule_multi_time_support()") < source.index(
         "install_roster_team_merge_support()"
     )
