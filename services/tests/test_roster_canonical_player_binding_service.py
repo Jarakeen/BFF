@@ -59,11 +59,11 @@ def test_explicit_binding_uses_stable_catalog_player_id(tmp_path: Path) -> None:
     assert service.binding_for_member(member_id) == result
 
 
-def test_binding_fails_closed_on_unknown_or_duplicate_player_id(tmp_path: Path) -> None:
+def test_binding_fails_closed_on_unknown_player_but_allows_multiple_character_rows(tmp_path: Path) -> None:
     database = EsoDatabase(tmp_path / "eso.db")
     roster = RosterService(database)
     first = roster.create_member(_member("Jarakeen", "Magrat"))
-    second = roster.create_member(_member("Another Label", "Other Character"))
+    second = roster.create_member(_member("Jarakeen", "Second Character"))
     builds = _builds(tmp_path)
     player_id = builds.canonical.catalog_service.list_players()[0]["player_id"]
     service = RosterCanonicalPlayerBindingService(database, builds)
@@ -72,8 +72,10 @@ def test_binding_fails_closed_on_unknown_or_duplicate_player_id(tmp_path: Path) 
         service.bind(roster_member_id=first, canonical_player_id="missing-player")
 
     service.bind(roster_member_id=first, canonical_player_id=player_id)
-    with pytest.raises(ValueError, match="already bound"):
-        service.bind(roster_member_id=second, canonical_player_id=player_id)
+    service.bind(roster_member_id=second, canonical_player_id=player_id)
+
+    assert roster.get_member(first).CanonicalPlayerId == player_id
+    assert roster.get_member(second).CanonicalPlayerId == player_id
 
 
 def test_binding_can_be_cleared_without_deleting_identity(tmp_path: Path) -> None:
@@ -92,7 +94,7 @@ def test_binding_can_be_cleared_without_deleting_identity(tmp_path: Path) -> Non
     assert builds.canonical.catalog_service.get_player(player_id) is not None
 
 
-def test_roster_schema_upgrade_adds_canonical_player_id_without_guessing(tmp_path: Path) -> None:
+def test_roster_schema_upgrade_adds_canonical_identity_links_without_guessing(tmp_path: Path) -> None:
     database = EsoDatabase(tmp_path / "eso.db")
     database.execute(
         """
@@ -121,3 +123,4 @@ def test_roster_schema_upgrade_adds_canonical_player_id_without_guessing(tmp_pat
 
     assert member.PlayerName == "Jarakeen"
     assert member.CanonicalPlayerId == ""
+    assert member.CanonicalCharacterId == ""
