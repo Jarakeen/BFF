@@ -8,6 +8,8 @@ scribed skills into the live skill selectors, and removes the old standalone Too
 navigation route.
 """
 
+from ui.build_editor_lifecycle_support import register_post_load
+
 _INSTALLED = False
 
 
@@ -98,7 +100,6 @@ def install() -> None:
     from widgets.build_editor import BuildEditor
 
     original_build_skills_card = BuildEditor._build_skills_card
-    original_load = BuildEditor.load
 
     def build_skills_card_with_scribing(self):
         card = original_build_skills_card(self)
@@ -130,8 +131,7 @@ def install() -> None:
         _refresh_editor_skill_choices(self)
         _refresh_editor_summary(self)
 
-    def load_with_scribing_section(self, model) -> None:
-        original_load(self, model)
+    def refresh_after_load(self, model) -> None:
         _refresh_editor_skill_choices(self)
         # A direct BuildEditor construction may not have had saved synthetic skills
         # available during the first load. Reapply the saved bars after recomposition.
@@ -143,6 +143,6 @@ def install() -> None:
 
     BuildEditor._build_skills_card = build_skills_card_with_scribing
     BuildEditor._edit_scribed_skills_in_builder = edit_scribed_skills_in_builder
-    BuildEditor.load = load_with_scribing_section
+    register_post_load("scribing_simulator", refresh_after_load)
 
     _INSTALLED = True
