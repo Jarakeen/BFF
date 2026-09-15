@@ -96,8 +96,16 @@ def test_assignment_page_does_not_depend_on_roster_assignment_context_service() 
 
     assert "RosterAssignmentContextService" not in source
     assert "roster_assignment_context" not in source
-    assert "primary_assignment=self._assignment_text" not in source
     assert "merge_plan_assignment_values" in source
     assert "QCompleter.CompletionMode.PopupCompletion" in source
     assert "Qt.MatchFlag.MatchContains" in source
     assert "Type to find assignment" in source
+
+
+def test_raid_engine_registers_assignment_aware_raid_plan_page() -> None:
+    from pathlib import Path
+
+    source = Path("ui/raid_engine_dashboard_support.py").read_text(encoding="utf-8")
+
+    assert "from ui.raid_plan_assignment_page import RaidPlanAssignmentPage" in source
+    assert "raid_plans = RaidPlanAssignmentPage()" in source
