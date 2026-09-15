@@ -46,7 +46,7 @@ TEAM_WORKFLOW_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         service_id="team.generated_draft.persistence",
         domain="team",
         purpose="Persist Comp Maker composition, recruitment, and candidate evidence as a draft awaiting explicit adoption.",
-        implementation_path="services.generated_roster_plan_service",
+        implementation_path="services.generated_roster_draft_service",
         inputs=("EsoDatabase", "GeneratedRosterDraftSlot"),
         outputs=("GeneratedRosterDraft",),
         dependencies=("team.roster.persistence",),
@@ -54,8 +54,8 @@ TEAM_WORKFLOW_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         behavior=ServiceBehavior.DETERMINISTIC,
         evidence_class=EvidenceClass.POLICY,
         notes=(
-            "Generated draft storage is compatibility-backed evidence, not authoritative RaidPlan state. "
-            "Open recruit chairs remain requirements rather than invented players; explicit adoption owns final Team/RaidPlan selections."
+            "Generated drafts have canonical generated_roster_draft storage separate from RaidPlan state. "
+            "Legacy generated_roster_plan tables are migration input only; open recruit chairs remain requirements rather than invented players."
         ),
     ),
     ServiceDescriptor(
