@@ -45,7 +45,7 @@ def _build() -> PlayerBuild:
 def _core_value(inputs, stat: StatId) -> float:
     field = "spell_damage" if stat is StatId.SPELL_DAMAGE else "weapon_damage"
     trace = getattr(inputs.core, field)
-    return sum(item.value for item in trace.additive_after_percent)
+    return sum(item.value for item in trace.flat)
 
 
 def test_standing_condition_controls_peace_and_serenity_power() -> None:
