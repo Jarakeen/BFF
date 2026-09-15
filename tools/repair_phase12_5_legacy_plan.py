@@ -12,18 +12,18 @@ from engine.config import get_data_dir
 from migration.phase12_5_legacy_plan_repair import Phase125LegacyPlanRepairService
 from services.build_service import BuildService
 from services.eso_database import EsoDatabase
-from services.generated_roster_plan_service import GeneratedRosterPlanService
+from services.generated_roster_plan_service import GeneratedRosterDraftService
 from services.roster_service import RosterService
 
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Inspect or safely repair one pre-Phase-12.5 generated team plan."
+        description="Inspect or safely repair one pre-Phase-12.5 generated team draft."
     )
     parser.add_argument(
         "--team",
         default="",
-        help="Generated team name. Defaults to the most recent generated plan.",
+        help="Generated team name. Defaults to the most recent generated draft.",
     )
     parser.add_argument(
         "--apply",
@@ -37,7 +37,7 @@ def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     data_dir = get_data_dir()
     db = EsoDatabase(data_dir / "eso.db")
-    plans = GeneratedRosterPlanService(db)
+    plans = GeneratedRosterDraftService(db)
     roster = RosterService(db)
     builds = BuildService(data_dir / "builds.json")
     service = Phase125LegacyPlanRepairService(plans=plans, roster=roster)
@@ -45,8 +45,8 @@ def main(argv: list[str] | None = None) -> int:
     requested = str(args.team or "").strip()
     plan = plans.load_plan(requested) if requested else plans.latest_plan()
     if plan is None:
-        print("PHASE 12.5 LEGACY PLAN REPAIR")
-        print("RESULT: NO PLAN")
+        print("PHASE 12.5 LEGACY DRAFT REPAIR")
+        print("RESULT: NO DRAFT")
         return 1
 
     roster_members = tuple(roster.list_members())
@@ -58,7 +58,7 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     print("========================================")
-    print(" PHASE 12.5 LEGACY PLAN REPAIR")
+    print(" PHASE 12.5 LEGACY DRAFT REPAIR")
     print("========================================")
     print(f"Team:                       {result.team_name}")
     print(f"Missing team identity:      {'yes' if result.team_identity_missing else 'no'}")
