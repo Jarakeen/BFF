@@ -13,7 +13,13 @@ bounds. It monkey-patches only the imported audit-local reconciler before runnin
 the existing tightening audit. Any other unresolved warning still fails closed.
 """
 
+from pathlib import Path
 import re
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 import tools.audit_extreme_weapon_damage_same_build_resource_tightening as tightening
 
