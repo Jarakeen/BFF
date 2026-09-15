@@ -3,17 +3,19 @@ from __future__ import annotations
 """Proof-owned attribute reduction for standing Extreme MOST Actual Heal.
 
 The objective-neutral Extreme universe contains every legal 64-point
-Health/Magicka/Stamina split.  Standing H1 currently scores coefficient-backed
-heals through the canonical type-8 relation, whose resource input is the larger
-of Max Magicka and Max Stamina.  For a fixed non-attribute build state, each of
-those resources is monotonic in only its own attribute-point count, so every
-mixed allocation is dominated by at least one pure 64-point resource endpoint.
+Health/Magicka/Stamina split. Standing H1 currently scores reviewed HEAL
+components through the canonical type-8 relation, whose resource input is the
+larger of Max Magicka and Max Stamina. For a fixed non-attribute build state,
+each resource is monotonic in only its own attribute-point count.
+
+A mixed allocation may therefore be discarded only when every HEAL component
+that can contribute to the selected event is on the reviewed type-8 path and is
+non-decreasing in highest resource. That second guard matters: type 8 describes
+the formula shape, not the sign of its resource coefficient.
 
 This service owns that reduction only for the currently reviewed standing H1
-coefficient path.  It refuses the proof when the selected heal contains an active
-coefficient type other than type 8.  Conditional/emergency scenarios remain
-separate callers and do not inherit this proof merely because the same skill can
-appear there.
+coefficient path. Conditional/emergency scenarios remain separate callers and do
+not inherit this proof merely because the same skill can appear there.
 """
 
 from dataclasses import dataclass
@@ -22,6 +24,8 @@ from pathlib import Path
 from minmax.build_candidate import BuildCandidate
 from minmax.skill_coefficient_repository import SkillCoefficientRepository
 from minmax.skill_coefficients import is_inactive_skill_coefficient
+from minmax.skill_component_classification import SkillEffectKind
+from minmax.skill_component_repository import SkillComponentRepository
 from models.build_model import PlayerBuild
 from services.extreme_complete_optimization_service import ExtremeCompleteOptimizationService
 from services.extreme_global_search_universe_service import ExtremeGlobalSearchUniverseService
@@ -44,14 +48,15 @@ class ExtremeActualHealAttributeProjectionService:
         database_path: str | Path | None = None,
         *,
         coefficient_repository: SkillCoefficientRepository | None = None,
+        component_repository: SkillComponentRepository | None = None,
     ) -> None:
-        if coefficient_repository is None:
+        if coefficient_repository is None or component_repository is None:
             if database_path is None:
                 raise ValueError(
-                    "database_path is required when coefficient_repository is not supplied"
+                    "database_path is required when coefficient/component repositories are not supplied"
                 )
-            coefficient_repository = SkillCoefficientRepository(database_path)
-        self.coefficients = coefficient_repository
+        self.coefficients = coefficient_repository or SkillCoefficientRepository(database_path)
+        self.components = component_repository or SkillComponentRepository(database_path)
 
     @staticmethod
     def _allocation(build: PlayerBuild) -> tuple[int, int, int]:
@@ -87,27 +92,61 @@ class ExtremeActualHealAttributeProjectionService:
                 unresolved=tuple(dict.fromkeys(unresolved)),
             )
 
-        active_coefficients = tuple(
+        heal_numbers = {
+            int(component.coefficient_number)
+            for component in self.components.get_for_skill_rank(
+                resolution.rank.skill_rank_id
+            )
+            if component.effect_kind is SkillEffectKind.HEAL
+        }
+        if not heal_numbers:
+            unresolved.append(
+                f"{normalized_entity}: no HEAL-classified coefficients available for H1 attribute proof"
+            )
+
+        heal_coefficients = tuple(
             coefficient
             for coefficient in resolution.rank.coefficients
-            if not is_inactive_skill_coefficient(coefficient)
-        )
-        if not active_coefficients:
-            unresolved.append(
-                f"{normalized_entity}: no active coefficients available for H1 attribute proof"
+            if (
+                not is_inactive_skill_coefficient(coefficient)
+                and int(coefficient.coefficient_number) in heal_numbers
             )
+        )
+        found_numbers = {int(coefficient.coefficient_number) for coefficient in heal_coefficients}
+        missing_numbers = tuple(sorted(heal_numbers - found_numbers))
+        if missing_numbers:
+            unresolved.append(
+                f"{normalized_entity}: HEAL coefficient definitions missing for H1 attribute proof: "
+                + ", ".join(str(number) for number in missing_numbers)
+            )
+
         unsupported = tuple(
             coefficient
-            for coefficient in active_coefficients
+            for coefficient in heal_coefficients
             if str(coefficient.type or "").strip() != "8"
         )
         if unsupported:
             unresolved.append(
-                f"{normalized_entity}: H1 attribute projection supports only type-8 active coefficients; "
+                f"{normalized_entity}: H1 attribute projection supports only type-8 HEAL coefficients; "
                 "found "
                 + ", ".join(
                     f"#{coefficient.coefficient_number}=type {coefficient.type}"
                     for coefficient in unsupported
+                )
+            )
+
+        negative_resource_slopes = tuple(
+            coefficient
+            for coefficient in heal_coefficients
+            if float(coefficient.a) < 0.0
+        )
+        if negative_resource_slopes:
+            unresolved.append(
+                f"{normalized_entity}: H1 attribute endpoint dominance is not proven for negative "
+                "HEAL resource coefficient(s): "
+                + ", ".join(
+                    f"#{coefficient.coefficient_number} A={coefficient.a:g}"
+                    for coefficient in negative_resource_slopes
                 )
             )
 
@@ -169,7 +208,8 @@ class ExtremeActualHealAttributeProjectionService:
 
         scope = (
             f"all {len(source_allocations):,} legal 64-point attribute allocations proof-reduced "
-            "to pure Magicka/Stamina endpoints for the reviewed standing type-8 H1 coefficient path",
+            "to pure Magicka/Stamina endpoints for standing H1 HEAL components with reviewed "
+            "type-8 non-negative highest-resource scaling",
         )
         return ExtremeActualHealAttributeProjectionResult(
             candidates=tuple(result),
