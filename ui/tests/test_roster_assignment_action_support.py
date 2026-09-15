@@ -84,7 +84,7 @@ def test_assignment_actions_route_only_to_comp_maker_and_coverage():
 
 
 def test_assignment_actions_install_after_persistence_layer():
-    source = Path("ui/operations_console_schedule_support.py").read_text(encoding="utf-8")
+    source = Path("ui/application_workspace_bootstrap.py").read_text(encoding="utf-8")
 
     assert "install_roster_assignment_action_support()" in source
     assert source.index("install_roster_assignment_persistence_support()") < source.index(
