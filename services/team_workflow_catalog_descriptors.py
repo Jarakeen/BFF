@@ -60,6 +60,22 @@ TEAM_WORKFLOW_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="compat.generated_roster_plan.imports",
+        domain="compatibility",
+        purpose="Preserve old generated-roster-plan import paths while live callers migrate to canonical generated draft APIs.",
+        implementation_path="services.generated_roster_plan_service",
+        inputs=("legacy import path",),
+        outputs=("GeneratedRosterDraft", "GeneratedRosterDraftService", "GeneratedRosterDraftSlot"),
+        dependencies=("team.generated_draft.persistence",),
+        responsibilities=("generated_roster_plan_import_compatibility",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.NONE,
+        notes=(
+            "Compatibility-only wrapper. It owns no persistence or RaidPlan state and must not gain new runtime behavior. "
+            "Normal runtime callers should migrate to services.generated_roster_draft_service."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="team.generated_draft.prescription_persistence",
         domain="team",
         purpose="Persist preserved recruit-prescription evidence against canonical generated-draft identities.",
