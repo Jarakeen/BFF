@@ -15,6 +15,11 @@ for older callers that do not carry bar provenance.
 Mixed tagged + untagged history is never silently normalized. Tagged attempts remain
 usable as proven evidence, while every untagged attempt is surfaced as unresolved
 because its bar-local skill legality cannot be reconstructed honestly.
+
+Explicit ``EffectSourcePersistence`` semantics are honored when reviewed skill data
+supplies them. Imported skill effects that do not yet carry persistence metadata keep
+the established duration-driven behavior; missing metadata is not rewritten into a
+new failure state.
 """
 
 from dataclasses import dataclass
@@ -22,6 +27,7 @@ from pathlib import Path
 
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_build.effect_layer import EffectLayer
+from minmax.effect_source_persistence import EffectSourcePersistence
 from minmax.named_combat_buffs import canonical_buff_name, effects_for_buff
 from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
 from minmax.runtime_effect_stream import process_effect_variant_runtime_stream
@@ -30,6 +36,7 @@ from minmax.skill_effect_repository import SkillEffectRepository
 from minmax.support_target_type import SupportTargetType
 from models.build_model import PlayerBuild
 from services.extreme_runtime_bar_effect_attempt import ExtremeRuntimeBarEffectAttempt
+from services.extreme_runtime_bar_transition import ExtremeRuntimeBarTransition
 
 
 @dataclass(frozen=True)
@@ -77,6 +84,70 @@ class ExtremeSkillRuntimeEffectService:
             if str(value or "").strip()
         }
 
+    @staticmethod
+    def _window_loses_skill_source(
+        skill_bars: set[str],
+        window,
+        transitions: tuple[ExtremeRuntimeBarTransition, ...],
+        *,
+        snapshot_time_seconds: float,
+    ) -> bool:
+        start_key = (float(window.start_time_seconds), int(window.sequence))
+        for transition in transitions:
+            transition_key = (float(transition.time_seconds), int(transition.sequence))
+            if transition_key <= start_key:
+                continue
+            if float(transition.time_seconds) > float(snapshot_time_seconds) + 1e-12:
+                break
+            if transition.to_bar not in skill_bars:
+                return True
+        return False
+
+    @classmethod
+    def _effect_survives_source_persistence(
+        cls,
+        effect: EffectVariant,
+        *,
+        skill_name: str,
+        skill_bars: set[str],
+        snapshot_bar: str,
+        active_windows: tuple,
+        bar_transitions: tuple[ExtremeRuntimeBarTransition, ...],
+        bar_transition_history_complete: bool,
+        snapshot_time_seconds: float,
+        unresolved: list[str],
+    ) -> bool:
+        persistence = effect.source_persistence
+        if persistence is None or persistence is EffectSourcePersistence.PERSISTS_AFTER_ACTIVATION:
+            return True
+
+        if persistence is EffectSourcePersistence.REQUIRES_SOURCE_ACTIVE_AT_SNAPSHOT:
+            return snapshot_bar in skill_bars
+
+        if persistence is EffectSourcePersistence.ENDS_WHEN_SOURCE_INACTIVE:
+            if skill_bars == {"front", "back"}:
+                return True
+            if not bar_transition_history_complete:
+                unresolved.append(
+                    f"{skill_name} {effect.name} ends when its source becomes inactive; "
+                    "complete bar-transition history is required"
+                )
+                return False
+            return any(
+                not cls._window_loses_skill_source(
+                    skill_bars,
+                    window,
+                    bar_transitions,
+                    snapshot_time_seconds=snapshot_time_seconds,
+                )
+                for window in active_windows
+            )
+
+        unresolved.append(
+            f"{skill_name} {effect.name} has unsupported source persistence: {persistence!r}"
+        )
+        return False
+
     def resolve_history(
         self,
         build: PlayerBuild,
@@ -85,6 +156,8 @@ class ExtremeSkillRuntimeEffectService:
         attempts: tuple[RuntimeEffectEventAttempt, ...],
         snapshot_time_seconds: float,
         bar_attempts: tuple[ExtremeRuntimeBarEffectAttempt, ...] = (),
+        bar_transitions: tuple[ExtremeRuntimeBarTransition, ...] = (),
+        bar_transition_history_complete: bool = False,
     ) -> ExtremeSkillRuntimeEffectResult:
         snapshot = float(snapshot_time_seconds)
         snapshot_bar = (
@@ -115,6 +188,16 @@ class ExtremeSkillRuntimeEffectService:
             row
             for row in bar_attempts
             if float(row.attempt.event.time_seconds) <= snapshot + 1e-12
+        )
+        ordered_transitions = tuple(
+            sorted(
+                (
+                    row
+                    for row in bar_transitions
+                    if float(row.time_seconds) <= snapshot + 1e-12
+                ),
+                key=lambda row: (row.time_seconds, row.sequence),
+            )
         )
         if tagged_attempts and legacy_attempts:
             unresolved.append(
@@ -165,8 +248,23 @@ class ExtremeSkillRuntimeEffectService:
                     stream.final_state.windows,
                     at_time_seconds=snapshot,
                 )
-                if not any(
-                    window.effect_name == effect.name for window in partition.active
+                active_windows = tuple(
+                    window
+                    for window in partition.active
+                    if window.effect_name == effect.name
+                )
+                if not active_windows:
+                    continue
+                if not self._effect_survives_source_persistence(
+                    effect,
+                    skill_name=skill_name,
+                    skill_bars=skill_bars,
+                    snapshot_bar=snapshot_bar,
+                    active_windows=active_windows,
+                    bar_transitions=ordered_transitions,
+                    bar_transition_history_complete=bool(bar_transition_history_complete),
+                    snapshot_time_seconds=snapshot,
+                    unresolved=unresolved,
                 ):
                     continue
                 buff = self._named_buff(effect)
