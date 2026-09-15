@@ -6,7 +6,7 @@ from minmax.healing_champion_point_component_resolver import (
 )
 
 
-def _database(path, *, swift_link=False, is_dot=1, is_aoe=1, effect_kind="heal"):
+def _database(path, *, swift_link=False, focused_link=False, is_dot=1, is_aoe=1, effect_kind="heal"):
     db = sqlite3.connect(path)
     db.executescript(
         """
@@ -62,7 +62,9 @@ def _database(path, *, swift_link=False, is_dot=1, is_aoe=1, effect_kind="heal")
             (2, 'Soothing Tide', 1, 50, '0,10,20,30,40,50',
              'Increases your Healing Done by area of effect heals by 2% per stage.', NULL, NULL),
             (3, 'Swift Renewal', 1, 50, '0,10,20,30,40,50',
-             'Increases your Healing Done with healing over time effects by 2% per stage.', NULL, NULL);
+             'Increases your Healing Done with healing over time effects by 2% per stage.', NULL, NULL),
+            (4, 'Focused Mending', 1, 50, '0,10,20,30,40,50',
+             'Increases your Healing Done with single target heals by 2% per stage.', NULL, NULL);
 
         INSERT INTO champion_point_skill_rank VALUES
             (1, 1, 100, 10, 42028, 'Buffs', 'only while slotted', 'ESO-Hub', 'Explicit', 'energy-orb', 'Energy Orb -> Rejuvenator'),
@@ -74,6 +76,12 @@ def _database(path, *, swift_link=False, is_dot=1, is_aoe=1, effect_kind="heal")
             """INSERT INTO champion_point_skill_rank VALUES
                (3, 3, 100, 10, 42028, 'Buffs', 'only while slotted', 'ESO-Hub', 'Explicit',
                 'example', 'Example -> Swift Renewal')"""
+        )
+    if focused_link:
+        db.execute(
+            """INSERT INTO champion_point_skill_rank VALUES
+               (4, 4, 100, 10, 42028, 'Buffs', 'only while slotted', 'ESO-Hub', 'Explicit',
+                'example', 'Example -> Focused Mending')"""
         )
     db.execute(
         """
@@ -93,6 +101,7 @@ def _allocations(*, points=50):
         ChampionPointAllocation(node_id="rejuvenator", points=points),
         ChampionPointAllocation(node_id="soothing_tide", points=points),
         ChampionPointAllocation(node_id="swift_renewal", points=points),
+        ChampionPointAllocation(node_id="focused_mending", points=points),
     )
 
 
@@ -101,16 +110,12 @@ def test_explicit_rank_links_gate_energy_orb_style_component(tmp_path):
     _database(path, swift_link=False, is_dot=1, is_aoe=1)
 
     result = HealingChampionPointComponentResolver(path).resolve(
-        allocations=_allocations(),
-        skill_rank_id=100,
-        coefficient_number=1,
-        is_slotted=True,
+        allocations=_allocations(), skill_rank_id=100, coefficient_number=1, is_slotted=True
     )
 
     assert result.power_bonus == 205.0
     assert result.healing_done_percent == 10.0
     assert result.applied == ("Rejuvenator", "Soothing Tide")
-    assert "Swift Renewal" not in result.applied
     assert result.unresolved == ()
 
 
@@ -119,10 +124,7 @@ def test_hot_and_aoe_bonuses_share_one_additive_bucket(tmp_path):
     _database(path, swift_link=True, is_dot=1, is_aoe=1)
 
     result = HealingChampionPointComponentResolver(path).resolve(
-        allocations=_allocations(),
-        skill_rank_id=100,
-        coefficient_number=1,
-        is_slotted=True,
+        allocations=_allocations(), skill_rank_id=100, coefficient_number=1, is_slotted=True
     )
 
     assert result.power_bonus == 205.0
@@ -130,48 +132,53 @@ def test_hot_and_aoe_bonuses_share_one_additive_bucket(tmp_path):
     assert result.applied == ("Rejuvenator", "Swift Renewal", "Soothing Tide")
 
 
-def test_component_semantics_narrow_explicit_relationships(tmp_path):
+def test_focused_mending_applies_only_to_explicit_non_aoe_heal_component(tmp_path):
     path = tmp_path / "eso.db"
-    _database(path, swift_link=True, is_dot=0, is_aoe=0)
+    _database(path, focused_link=True, is_dot=0, is_aoe=0)
 
     result = HealingChampionPointComponentResolver(path).resolve(
-        allocations=_allocations(),
-        skill_rank_id=100,
-        coefficient_number=1,
-        is_slotted=True,
+        allocations=_allocations(), skill_rank_id=100, coefficient_number=1, is_slotted=True
     )
 
     assert result.power_bonus == 205.0
-    assert result.healing_done_percent == 0.0
-    assert result.applied == ("Rejuvenator",)
+    assert result.healing_done_percent == 10.0
+    assert result.applied == ("Rejuvenator", "Focused Mending")
+
+
+def test_component_semantics_narrow_explicit_relationships(tmp_path):
+    path = tmp_path / "eso.db"
+    _database(path, swift_link=True, focused_link=True, is_dot=0, is_aoe=1)
+
+    result = HealingChampionPointComponentResolver(path).resolve(
+        allocations=_allocations(), skill_rank_id=100, coefficient_number=1, is_slotted=True
+    )
+
+    assert result.power_bonus == 205.0
+    assert result.healing_done_percent == 10.0
+    assert result.applied == ("Rejuvenator", "Soothing Tide")
 
 
 def test_unknown_component_semantics_remain_unresolved(tmp_path):
     path = tmp_path / "eso.db"
-    _database(path, swift_link=True, is_dot=None, is_aoe=None)
+    _database(path, swift_link=True, focused_link=True, is_dot=None, is_aoe=None)
 
     result = HealingChampionPointComponentResolver(path).resolve(
-        allocations=_allocations(),
-        skill_rank_id=100,
-        coefficient_number=1,
-        is_slotted=True,
+        allocations=_allocations(), skill_rank_id=100, coefficient_number=1, is_slotted=True
     )
 
     assert result.power_bonus == 205.0
     assert result.healing_done_percent == 0.0
     assert any("Swift Renewal" in item and "periodicity unknown" in item for item in result.unresolved)
     assert any("Soothing Tide" in item and "target shape unknown" in item for item in result.unresolved)
+    assert any("Focused Mending" in item and "target shape unknown" in item for item in result.unresolved)
 
 
 def test_only_while_slotted_is_not_assumed_true(tmp_path):
     path = tmp_path / "eso.db"
-    _database(path, swift_link=True)
+    _database(path, swift_link=True, focused_link=True)
 
     result = HealingChampionPointComponentResolver(path).resolve(
-        allocations=_allocations(),
-        skill_rank_id=100,
-        coefficient_number=1,
-        is_slotted=False,
+        allocations=_allocations(), skill_rank_id=100, coefficient_number=1, is_slotted=False
     )
 
     assert result.power_bonus == 0.0
@@ -181,13 +188,10 @@ def test_only_while_slotted_is_not_assumed_true(tmp_path):
 
 def test_non_healing_component_is_unaffected(tmp_path):
     path = tmp_path / "eso.db"
-    _database(path, swift_link=True, effect_kind="damage")
+    _database(path, swift_link=True, focused_link=True, effect_kind="damage")
 
     result = HealingChampionPointComponentResolver(path).resolve(
-        allocations=_allocations(),
-        skill_rank_id=100,
-        coefficient_number=1,
-        is_slotted=True,
+        allocations=_allocations(), skill_rank_id=100, coefficient_number=1, is_slotted=True
     )
 
     assert result.power_bonus == 0.0
@@ -205,10 +209,7 @@ def test_source_drift_fails_closed(tmp_path):
         db.commit()
 
     result = HealingChampionPointComponentResolver(path).resolve(
-        allocations=_allocations(),
-        skill_rank_id=100,
-        coefficient_number=1,
-        is_slotted=True,
+        allocations=_allocations(), skill_rank_id=100, coefficient_number=1, is_slotted=True
     )
 
     assert result.power_bonus == 0.0
@@ -223,10 +224,7 @@ def test_saved_points_are_clamped_without_mutating_allocation(tmp_path):
     allocations = _allocations(points=999)
 
     result = HealingChampionPointComponentResolver(path).resolve(
-        allocations=allocations,
-        skill_rank_id=100,
-        coefficient_number=1,
-        is_slotted=True,
+        allocations=allocations, skill_rank_id=100, coefficient_number=1, is_slotted=True
     )
 
     assert result.power_bonus == 205.0
