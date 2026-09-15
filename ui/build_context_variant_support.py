@@ -369,7 +369,11 @@ def install() -> None:
     if _INSTALLED:
         return
 
-    from ui.build_editor_lifecycle_support import register_model_post, register_post_load
+    from ui.build_editor_lifecycle_support import (
+        register_add_boss_loadout,
+        register_model_post,
+        register_post_load,
+    )
 
     BuildEditor = build_editor_module.BuildEditor
 
@@ -387,7 +391,7 @@ def install() -> None:
             self.add_boss_loadout(variant)
 
     BuildEditor._build_boss_card = _build_variants_card
-    BuildEditor.add_boss_loadout = _add_variant
+    register_add_boss_loadout(_add_variant)
     register_model_post("context_variants", store_context_variants)
     register_post_load("context_variants", load_context_variants)
 
