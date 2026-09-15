@@ -12,7 +12,7 @@ def test_alias_import_support_wraps_slot_and_apply_paths() -> None:
 
 
 def test_alias_support_installs_after_identity_resolution_and_before_preview() -> None:
-    source = Path("ui/operations_console_schedule_support.py").read_text(encoding="utf-8")
+    source = Path("ui/application_workspace_bootstrap.py").read_text(encoding="utf-8")
     identity = source.index("install_roster_import_identity_resolution_support()")
     aliases = source.index("install_roster_gear_set_alias_import_support()")
     preview = source.index("install_roster_import_match_preview_support()")
