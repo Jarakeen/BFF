@@ -94,6 +94,23 @@ def _consequence():
     )
 
 
+def _conditional_consequence(coefficient_number: int, threshold: float):
+    return SkillComponentConditionalConsequence(
+        skill_rank_id=1,
+        coefficient_number=coefficient_number,
+        consequence_type=SkillComponentConditionalConsequenceType.ACTIVATES_COMPONENT,
+        condition=SkillComponentCondition(
+            skill_rank_id=1,
+            coefficient_number=coefficient_number,
+            condition_type=SkillComponentConditionType.TARGET_HEALTH_BELOW_PERCENT,
+            threshold=threshold,
+            evidence=f"below {threshold:.0%} target Health",
+        ),
+        maximum_bonus_fraction=None,
+        evidence=f"coefficient {coefficient_number} periodic execute",
+    )
+
+
 def _snapshot(time_seconds: float, health_fraction: float):
     return CombatStateSnapshot(
         time_seconds=time_seconds,
@@ -125,6 +142,24 @@ class _MixedCalculator:
                 SimpleNamespace(coefficient_number=1, final_value=100.0),
                 SimpleNamespace(coefficient_number=2, final_value=250.0),
             ),
+            unresolved=(),
+        )
+
+
+class _MultiConditionalCalculator:
+    def __init__(self, *, include_ordinary: bool = False):
+        self.include_ordinary = include_ordinary
+
+    def evaluate_entity_id(self, entity_id, context):
+        components = [
+            SimpleNamespace(coefficient_number=1, final_value=100.0),
+            SimpleNamespace(coefficient_number=2, final_value=200.0),
+        ]
+        if self.include_ordinary:
+            components.append(SimpleNamespace(coefficient_number=3, final_value=250.0))
+        return SimpleNamespace(
+            skill=SimpleNamespace(skill_rank_id=1),
+            components=tuple(components),
             unresolved=(),
         )
 
@@ -171,9 +206,62 @@ class _MixedComponents:
         )
 
 
+class _MultiConditionalComponents:
+    def __init__(self, *, include_ordinary: bool = False):
+        self.include_ordinary = include_ordinary
+
+    def get_for_skill_rank(self, skill_rank_id):
+        rows = [
+            SkillComponentClassification(
+                skill_rank_id=1,
+                coefficient_number=1,
+                effect_kind=SkillEffectKind.DAMAGE,
+                damage_type="magical",
+                is_dot=True,
+                is_aoe=False,
+                can_crit=False,
+                source="test",
+            ),
+            SkillComponentClassification(
+                skill_rank_id=1,
+                coefficient_number=2,
+                effect_kind=SkillEffectKind.DAMAGE,
+                damage_type="magical",
+                is_dot=True,
+                is_aoe=False,
+                can_crit=False,
+                source="test",
+            ),
+        ]
+        if self.include_ordinary:
+            rows.append(
+                SkillComponentClassification(
+                    skill_rank_id=1,
+                    coefficient_number=3,
+                    effect_kind=SkillEffectKind.DAMAGE,
+                    damage_type="magical",
+                    is_dot=False,
+                    is_aoe=False,
+                    can_crit=False,
+                    source="test",
+                )
+            )
+        return tuple(rows)
+
+
 class _Consequences:
     def resolve(self, skill_rank_id, coefficient_number):
         return (_consequence(),) if int(coefficient_number) == 1 else ()
+
+
+class _MultiConditionalConsequences:
+    def resolve(self, skill_rank_id, coefficient_number):
+        number = int(coefficient_number)
+        if number == 1:
+            return (_conditional_consequence(1, 0.5),)
+        if number == 2:
+            return (_conditional_consequence(2, 0.3),)
+        return ()
 
 
 class _Projection:
@@ -190,6 +278,35 @@ class _Projection:
                         RuntimeEvent(1.0, "damage_dealt", "periodic"),
                         RuntimeEvent(2.0, "damage_dealt", "periodic", sequence=1),
                         RuntimeEvent(3.0, "damage_dealt", "periodic", sequence=2),
+                    ),
+                    unresolved=(),
+                ),
+            )
+        )
+
+
+class _MultiConditionalProjection:
+    def __init__(self, action):
+        self.action = action
+
+    def project(self, *, plan, semantics):
+        return SimpleNamespace(
+            entries=(
+                SimpleNamespace(
+                    action=self.action,
+                    coefficient_number=1,
+                    events=(
+                        RuntimeEvent(1.0, "damage_dealt", "periodic"),
+                        RuntimeEvent(2.0, "damage_dealt", "periodic", sequence=1),
+                    ),
+                    unresolved=(),
+                ),
+                SimpleNamespace(
+                    action=self.action,
+                    coefficient_number=2,
+                    events=(
+                        RuntimeEvent(1.5, "damage_dealt", "periodic"),
+                        RuntimeEvent(2.5, "damage_dealt", "periodic", sequence=1),
                     ),
                     unresolved=(),
                 ),
@@ -268,6 +385,19 @@ class _Base:
         return 150.0 * len(tuple(runtime_events)), ()
 
 
+class _MultiConditionalBase(_Base):
+    def __init__(self, action, *, include_ordinary: bool = False):
+        super().__init__(action)
+        self.calculator = _MultiConditionalCalculator(include_ordinary=include_ordinary)
+        self.components = _MultiConditionalComponents(include_ordinary=include_ordinary)
+        self.conditional_consequences = _MultiConditionalConsequences()
+        self.periodic_runtime_projection_service = _MultiConditionalProjection(action)
+
+    @staticmethod
+    def _resolve_component_damage(*, base_value, **kwargs):
+        return float(base_value)
+
+
 def _eligibility(policy):
     return RotationPeriodicTargetHealthEligibilityService(
         semantics_service=RotationPeriodicTargetHealthSemanticsService(
@@ -277,6 +407,27 @@ def _eligibility(policy):
                     coefficient_number=1,
                     policy=policy,
                     source="reviewed test evidence",
+                ),
+            )
+        )
+    )
+
+
+def _multi_eligibility():
+    return RotationPeriodicTargetHealthEligibilityService(
+        semantics_service=RotationPeriodicTargetHealthSemanticsService(
+            (
+                RotationPeriodicTargetHealthSemantics(
+                    skill_entity_id="Periodic Execute",
+                    coefficient_number=1,
+                    policy=PeriodicTargetHealthTimingPolicy.DYNAMIC_AT_TICK,
+                    source="reviewed coefficient 1 evidence",
+                ),
+                RotationPeriodicTargetHealthSemantics(
+                    skill_entity_id="Periodic Execute",
+                    coefficient_number=2,
+                    policy=PeriodicTargetHealthTimingPolicy.DYNAMIC_AT_TICK,
+                    source="reviewed coefficient 2 evidence",
                 ),
             )
         )
@@ -379,3 +530,55 @@ def test_mixed_damage_skill_composes_other_components_through_canonical_delegate
     assert evidence.damage_value == 550.0
     assert evidence.unresolved == ()
     assert base.components.get_for_skill_rank(1)[0].effect_kind is SkillEffectKind.DAMAGE
+
+
+def test_multiple_periodic_target_health_components_resolve_independently() -> None:
+    action = _action()
+    base = _MultiConditionalBase(action)
+    snapshots = {
+        1.0: _snapshot(1.0, 0.60),
+        2.0: _snapshot(2.0, 0.40),
+        1.5: _snapshot(1.5, 0.20),
+        2.5: _snapshot(2.5, 0.40),
+    }
+    bridge = RotationCandidatePeriodicTargetHealthDamageBridgeService(
+        base=base,
+        target_health_eligibility=_multi_eligibility(),
+        snapshot_resolver=lambda time_seconds, sequence: snapshots.get(float(time_seconds)),
+        target_identity="boss",
+    )
+
+    evidence = bridge.evaluate_if_supported(candidate=_candidate(action), action=action)
+
+    assert evidence is not None
+    assert evidence.damage_value == 300.0
+    assert evidence.unresolved == ()
+
+
+def test_multiple_periodic_target_health_components_compose_one_ordinary_component_once() -> None:
+    action = _action()
+    base = _MultiConditionalBase(action, include_ordinary=True)
+    snapshots = {
+        1.0: _snapshot(1.0, 0.60),
+        2.0: _snapshot(2.0, 0.40),
+        1.5: _snapshot(1.5, 0.20),
+        2.5: _snapshot(2.5, 0.40),
+    }
+    bridge = RotationCandidatePeriodicTargetHealthDamageBridgeService(
+        base=base,
+        target_health_eligibility=_multi_eligibility(),
+        snapshot_resolver=lambda time_seconds, sequence: snapshots.get(float(time_seconds)),
+        target_identity="boss",
+    )
+
+    evidence = bridge.evaluate_if_supported(candidate=_candidate(action), action=action)
+
+    assert evidence is not None
+    assert evidence.damage_value == 550.0
+    assert evidence.unresolved == ()
+    rows = base.components.get_for_skill_rank(1)
+    assert [row.effect_kind for row in rows] == [
+        SkillEffectKind.DAMAGE,
+        SkillEffectKind.DAMAGE,
+        SkillEffectKind.DAMAGE,
+    ]
