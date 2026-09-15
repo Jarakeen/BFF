@@ -36,6 +36,9 @@ class RotationHealerU50SkillComponentRepository:
 
     Crit eligibility is left unresolved here unless separately proven. This
     repository owns healer identity and temporal scope, not critical-heal rules.
+    When the base repository already carries separately proven critical
+    eligibility, this overlay preserves that evidence instead of replacing it
+    with its own unresolved ``None`` value.
     """
 
     BUDDING_SEEDS_RANK_ID = 6910
@@ -188,7 +191,11 @@ class RotationHealerU50SkillComponentRepository:
             effect_kind=reviewed.effect_kind,
             is_dot=reviewed.is_dot,
             is_aoe=reviewed.is_aoe,
-            can_crit=reviewed.can_crit,
+            can_crit=(
+                reviewed.can_crit
+                if reviewed.can_crit is not None
+                else base.can_crit
+            ),
             source=reviewed.source,
             confidence=reviewed.confidence,
             heal_recipient_scope=reviewed.heal_recipient_scope,
