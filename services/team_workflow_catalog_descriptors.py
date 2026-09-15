@@ -43,6 +43,22 @@ TEAM_WORKFLOW_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="team.roster.canonical_player_binding",
+        domain="team",
+        purpose="Bind one Personnel record to one explicit stable Build Catalog player identity without name inference.",
+        implementation_path="services.roster_canonical_player_binding_service",
+        inputs=("EsoDatabase", "BuildService", "roster_member_id", "canonical_player_id"),
+        outputs=("CanonicalPlayerBinding",),
+        dependencies=("team.roster.persistence", "build.catalog.persistence"),
+        responsibilities=("roster_canonical_player_binding",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.NONE,
+        notes=(
+            "Bindings are explicit and one-to-one. The service verifies player_id existence and fails closed on duplicate ownership; "
+            "it never infers identity from similar names."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="team.generated_draft.persistence",
         domain="team",
         purpose="Persist Comp Maker composition, recruitment, and candidate evidence as a draft awaiting explicit adoption.",
