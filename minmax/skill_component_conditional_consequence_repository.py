@@ -6,6 +6,8 @@ import re
 import sqlite3
 from pathlib import Path
 
+from engine.config import DEFAULT_DATABASE
+
 from .skill_component_condition import explicit_ordinal_condition_owner
 from .skill_component_condition_repository import SkillComponentConditionRepository
 from .skill_component_conditional_consequence import (
@@ -13,9 +15,6 @@ from .skill_component_conditional_consequence import (
     extract_explicit_conditional_consequences,
 )
 from .skill_component_text_evidence import extract_component_text_evidence
-
-
-DEFAULT_DATABASE = Path(__file__).resolve().parents[1] / "data" / "eso.db"
 
 
 def _normalize_source_text(value: object) -> str:
