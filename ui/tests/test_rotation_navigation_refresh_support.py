@@ -13,7 +13,7 @@ def test_rotation_navigation_refresh_reloads_long_lived_saved_build_state() -> N
 
 
 def test_rotation_navigation_refresh_support_is_installed() -> None:
-    source = Path("ui/operations_console_schedule_support.py").read_text(encoding="utf-8")
+    source = Path("ui/application_workspace_bootstrap.py").read_text(encoding="utf-8")
 
     assert "install_rotation_navigation_refresh_support" in source
     assert "install_rotation_navigation_refresh_support()" in source
