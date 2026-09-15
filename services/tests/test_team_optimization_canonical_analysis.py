@@ -111,7 +111,7 @@ def test_canonical_optimization_analysis_replaces_placeholder_surfaces() -> None
 
 
 def test_canonical_optimization_analysis_is_installed_after_roster_load_refocus() -> None:
-    installer = Path("ui/team_optimization_hybrid_anchor_support.py").read_text(
+    installer = Path("ui/application_team_optimization_bootstrap.py").read_text(
         encoding="utf-8"
     )
 
