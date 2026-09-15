@@ -17,6 +17,7 @@ def test_save_merge_preserves_hidden_assignment_and_triggered_state() -> None:
                 seat_id="healer-1",
                 gamertag="Jarakeen",
                 roster_member_id=7,
+                player_id="player-id",
                 character_id="magrat-id",
                 character_name="Magrat",
                 role="Healer",
@@ -63,6 +64,7 @@ def test_save_merge_preserves_hidden_assignment_and_triggered_state() -> None:
     assert member.selected_build_id == "rojo-healer-id"
     assert member.selected_build_name == "ROJO Healer"
     assert member.roster_member_id == 7
+    assert member.player_id == "player-id"
     assert member.character_id == "magrat-id"
     assert member.primary_assignment == "Group Healer"
     assert member.secondary_assignment == "Portal Backup"
@@ -72,13 +74,56 @@ def test_save_merge_preserves_hidden_assignment_and_triggered_state() -> None:
     assert merged.triggered_responsibilities == loaded.triggered_responsibilities
 
 
-def test_persistence_page_binds_and_restores_stable_build_id_before_name_fallback() -> None:
+def test_persistence_page_resolves_selected_build_into_stable_member_identity() -> None:
     source = Path(raid_plan_persistence_page.__file__).read_text(encoding="utf-8")
 
+    assert "RaidPlanMemberIdentityResolutionService" in source
     assert "selected_build_id=selected_ids.get(member.seat_id.casefold())" in source
+    assert "resolver.resolve(candidate)" in source
+    assert "roster_member_id=resolution.roster_member_id" in source
+    assert "player_id=resolution.player_id" in source
+    assert "character_id=resolution.character_id" in source
     assert 'build_id = _clean(getattr(self.saved_builds[saved_index], "BuildId", ""))' in source
     assert "if member.selected_build_id:" in source
     assert "if not matched and member.selected_build_name:" in source
+
+
+def test_hidden_character_identity_is_not_carried_to_changed_character() -> None:
+    loaded = RaidPlan(
+        plan_id="plan",
+        trial_id="rockgrove",
+        name="Plan",
+        members=(
+            RaidPlanMember(
+                seat_id="healer-1",
+                gamertag="Jarakeen",
+                roster_member_id=7,
+                player_id="player-id",
+                character_id="magrat-id",
+                character_name="Magrat",
+            ),
+        ),
+    )
+    visible = RaidPlan(
+        plan_id="plan",
+        trial_id="rockgrove",
+        name="Plan",
+        members=(
+            RaidPlanMember(
+                seat_id="healer-1",
+                gamertag="Jarakeen",
+                character_name="Other Toon",
+            ),
+        ),
+    )
+
+    merged = merge_visible_plan_with_loaded_snapshot(visible, loaded)
+    member = merged.member("healer-1")
+
+    assert member is not None
+    assert member.player_id == "player-id"
+    assert member.character_id is None
+    assert member.roster_member_id is None
 
 
 def test_hidden_member_state_is_not_carried_to_a_different_player() -> None:
