@@ -6,6 +6,7 @@ from engine.config import get_data_dir
 from minmax.fight_damage_trajectory import RaidDamageSegment
 from minmax.resource_costs import ResourceType
 from models.effective_build_snapshot import EffectiveBuildSnapshot
+from services.build_context_variant_service import resolve_build_context
 from services.canonical_knowledge_gap import (
     CanonicalKnowledgeDomain,
     CanonicalKnowledgeGap,
@@ -75,10 +76,12 @@ class RotationGenerateApplicationContextProvider:
     Generate time. Missing role-specific composition is allowed so roles without a
     canonical composer remain on the existing role-neutral path instead of being guessed.
 
-    The selected build is frozen into an ``EffectiveBuildSnapshot`` after all live
-    application facts used by this provider have been resolved. Downstream Rotation code
-    evaluates that exact configuration and does not re-read or re-resolve contextual build
-    ownership from mutable UI state.
+    Before static or role evidence is composed, the selected encounter is applied through
+    the canonical sparse build-context resolver. Boss variants are deltas, never standalone
+    builds: blank skill slots, gear fields, CP, food, and potion values inherit from the
+    lower-specificity context/base build. The fully resolved result is then frozen into an
+    ``EffectiveBuildSnapshot`` so downstream Rotation code evaluates one exact build and
+    does not re-resolve contextual ownership from mutable UI state.
     """
 
     def __init__(
@@ -144,14 +147,30 @@ class RotationGenerateApplicationContextProvider:
         ) or "static build context unavailable"
         raise ValueError("canonical static build evidence is unresolved: " + detail)
 
+    @staticmethod
+    def _resolved_build_for_page(page, build, *, encounter_id: str):
+        """Materialize the selected sparse Boss variant over its parent saved build."""
+        combo = getattr(page, "rotation_boss_combo", None)
+        current_text = getattr(combo, "currentText", None)
+        boss_name = str(current_text() if callable(current_text) else "").strip()
+        if not boss_name:
+            boss_name = str(encounter_id or "").strip()
+        return resolve_build_context(build, boss_name=boss_name)
+
     def context_for(self, page) -> RotationGenerateCanonicalContext:
-        build = page._selected_build()
-        if build is None:
+        saved_build = page._selected_build()
+        if saved_build is None:
             raise ValueError("select a saved build before canonical rotation generation")
 
         encounter_id = str(page.selected_encounter_id() or "").strip()
         if not encounter_id:
             raise ValueError("select an encounter before canonical rotation generation")
+
+        build = self._resolved_build_for_page(
+            page,
+            saved_build,
+            encounter_id=encounter_id,
+        )
 
         policy = page.canonical_recovery_policy()
         resource = policy.get("resource")
@@ -220,7 +239,7 @@ class RotationGenerateApplicationContextProvider:
             character_id=character_id,
             encounter_id=encounter_id,
             provenance=(
-                "RotationGenerateApplicationContextProvider live saved-build selection",
+                "RotationGenerateApplicationContextProvider canonical boss-context resolution",
             ),
         )
 
