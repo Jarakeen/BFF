@@ -55,6 +55,14 @@ _DAMAGE_ONLY_POWER_TEXT = (
         r"weapon and spell damage to your one hand and shield abilities",
         re.IGNORECASE,
     ),
+    re.compile(
+        r"weapon and spell damage against targets who are at or below\s*25% health",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"weapon and spell damage by\s*8-369 against enemies inflicted with a poison damage effect",
+        re.IGNORECASE,
+    ),
 )
 
 # Exact reviewed compound mechanics whose positive power term is materialized by
