@@ -25,7 +25,7 @@ def test_obsolete_encounter_override_tab_is_removed() -> None:
 
 
 def test_context_selector_installs_before_assignment_persistence() -> None:
-    source = Path("ui/operations_console_schedule_support.py").read_text(encoding="utf-8")
+    source = Path("ui/application_workspace_bootstrap.py").read_text(encoding="utf-8")
 
     assert source.index("install_roster_encounter_assignment_context_support()") < source.index(
         "install_roster_assignment_persistence_support()"
