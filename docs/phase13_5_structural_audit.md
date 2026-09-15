@@ -172,9 +172,30 @@ Audit in progress.
 
 **Disposition:** FIXED.
 
-**Resolution:** the Raid Plan -> Rotation canonical context now reads only `PlayerBuild.Name` for character identity and only `PlayerBuild.BuildName` for build identity. Missing canonical values fail closed. Regression coverage explicitly supplies a fake legacy `CharacterName` while canonical `Name` is blank and separately makes `Name` equal the selected build label while `BuildName` is blank; both bindings are rejected.
+**Resolution:** the Raid Plan -> Rotation canonical context now reads only `PlayerBuild.Name` for character identity and only `PlayerBuild.BuildName` for build identity. Missing canonical values fail closed. Regression coverage explicitly supplies a fake legacy `CharacterName` while canonical `Name` is blank and separately leaves canonical `Name` intact while `BuildName` is blank; both bindings are rejected at the appropriate identity boundary.
 
 **Closeout boundary:** exact Raid Plan/Rotation build binding must validate canonical model fields directly. Compatibility aliases or UI/display labels may be normalized at ingestion boundaries, but they may not substitute for missing canonical identity after a `PlayerBuild` has entered the Rotation/Raid Plan execution path.
+
+---
+
+### F009 — Comp saved-build candidates conflate character identity and account display fallback
+
+**Category:** Character -> Build -> Team identity contract debt
+
+**Files reviewed:**
+- `services/comp_builder_build_candidates.py`
+- `services/comp_builder_team_candidate_optimizer.py`
+- `services/comp_builder_provider_evidence.py`
+- `ui/team_provider_workload_support.py`
+- `ui/comp_builder_build_candidate_support.py`
+
+**Finding:** saved `CompBuildCandidate` rows use `source_name` as a blended display-owner field: canonical `PlayerBuild.Name` when present, otherwise `PlayerBuild.Gamertag`. Downstream Comp Maker grouping, provider-evidence, and selected-build recovery reuse `source_name` as a saved-player key. This means the field is not a stable canonical character identity even though several consumers treat it as if it were one.
+
+**Disposition:** DEFERRED — broader Comp Maker identity-contract cleanup required.
+
+**Reason deferred:** the ambiguity originates in the upstream candidate contract rather than one Rotation consumer. Tightening only `ui/team_provider_workload_support.py` would make that consumer disagree with candidate generation, optimizer grouping, and provider evidence. A correct repair needs a dedicated canonical saved-build identity on `CompBuildCandidate` (for example canonical build id and/or explicit character identity) while retaining `source_name` as display/source metadata.
+
+**Closeout boundary:** no new consumer may treat `CompBuildCandidate.source_name` as canonical character or build identity. Existing consumers may retain current fail-closed/unique-match behavior until the candidate contract is migrated. Exact Raid Plan and Rotation execution paths must continue using canonical `PlayerBuild` fields / build ids and must not inherit this display fallback.
 
 ---
 
