@@ -1,5 +1,7 @@
 from types import SimpleNamespace
 
+from minmax.build_evaluation import BuildEvaluation
+from minmax.calculation import CalculationResult
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from minmax.stat_ids import StatId
 from services.rotation_candidate_dd_role_output_service import RotationActionDamageEvidence
@@ -30,6 +32,14 @@ def _context(bar):
             }
         ),
         dd_exploiter_bonus=0.0,
+    )
+
+
+def _evaluation(label: str) -> BuildEvaluation:
+    return BuildEvaluation(
+        stats=CalculationResult(stats={}),
+        combat_effects=(label,),  # type: ignore[arg-type]
+        combat_contributions=(),
     )
 
 
@@ -109,7 +119,7 @@ def _factory(monkeypatch):
     _FakeHeavyAttackService.calls.clear()
     resolution = RotationWeaponAttackBuildEvaluationResolution(
         build=object(),  # type: ignore[arg-type]
-        evaluations=(("front", "front-eval"), ("back", "back-eval")),  # type: ignore[arg-type]
+        evaluations=(("front", _evaluation("front-eval")), ("back", _evaluation("back-eval"))),
         unresolved=(),
     )
     return dd_support.RotationGenerateDDCanonicalWeaponAttackProviderFactory(
@@ -134,7 +144,7 @@ def test_factory_promotes_verified_scheduler_reservation_to_heavy_completion(mon
     assert result.damage_value == 500.0
     assert len(_FakeHeavyAttackService.calls) == 1
     call = _FakeHeavyAttackService.calls[0]
-    assert call["evaluation"] == "front-eval"
+    assert call["evaluation"].combat_effects == ("front-eval",)
     assert call["evaluation_context"].target_resistance == 18200.0
     assert len(call["completion_evidence"]) == 1
     evidence = call["completion_evidence"][0]
