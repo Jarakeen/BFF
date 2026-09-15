@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from PySide6.QtWidgets import QApplication, QComboBox
+
 from ui import rotation_dashboard_layout_support
 
 
@@ -50,6 +52,29 @@ def test_rotation_potion_picker_reuses_full_canonical_catalogs_on_every_build_re
     )
     assert "refresh_rotation_consumables(self)" in dashboard
     assert "CanonicalRotationDashboardPage._refresh_build_context =" not in source
+
+
+def test_rotation_potion_display_label_never_leaks_into_engine_value() -> None:
+    app = QApplication.instance() or QApplication([])
+    _ = app
+    combo = QComboBox()
+    combo.setEditable(True)
+    combo.addItem("None", "")
+    combo.addItem("Crafted · Spell Power", "spell_power")
+    combo.addItem("Named · Essence of Spell Power", "Essence of Spell Power")
+    combo.currentIndexChanged.connect(
+        lambda index: rotation_dashboard_layout_support._sync_potion_edit_text(
+            combo, index
+        )
+    )
+
+    combo.setCurrentIndex(1)
+    assert combo.currentText() == "spell_power"
+    assert combo.currentData() == "spell_power"
+
+    combo.setCurrentIndex(2)
+    assert combo.currentText() == "Essence of Spell Power"
+    assert combo.currentData() == "Essence of Spell Power"
 
 
 def test_rotation_food_display_refreshes_from_selected_saved_build() -> None:
