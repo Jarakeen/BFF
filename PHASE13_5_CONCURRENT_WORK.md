@@ -2,9 +2,9 @@
 
 This file is a short-lived coordination note for parallel Phase 13.5 workstreams. It is not architecture authority and should be removed when the concurrent work settles.
 
-## Raid Plan workstream — ROTATION HANDOFF COMPLETE / STABLE
+## Raid Plan workstream — OPTIMIZER ADVISER READY FOR VALIDATION
 
-Raid Engine persists canonical `RaidPlan` snapshots, exposes plan-owned Primary/Secondary assignments, hands the exact current Raid Plan into Coverage, and exposes a selected-chair handoff into the existing Rotation workspace.
+Raid Engine persists canonical `RaidPlan` snapshots, exposes plan-owned Primary/Secondary assignments, hands the exact current Raid Plan into Coverage, exposes a selected-chair handoff into Rotation, and now has a read-only Optimizer Adviser handoff for the whole current plan.
 
 ### Verified checkpoints
 
@@ -13,7 +13,7 @@ Raid Engine persists canonical `RaidPlan` snapshots, exposes plan-owned Primary/
 - Coverage/persistence/bridge gate: **34 passed in 4.22s**
 - Coverage support-set + Rotation handoff gate: **35 passed in 3.23s**
 
-### Stable Raid Plan slices
+### Stable prior slices
 
 Persistence:
 - `services/raid_plan_repository.py`
@@ -35,58 +35,60 @@ Coverage:
 - `ui/raid_plan_coverage_page.py`
 - `ui/tests/test_raid_plan_coverage_support.py`
 
-### Coverage support-set evidence correction — STABLE
+Coverage support-set evidence:
+- `services/raid_unique_support_set_capability_service.py`
+- reviewed proc/activation sets such as Powerful Assault remain `Conditional`; equipment presence never claims uptime
+- full raid-facing group/unique-set catalog is visible in Raid Plan Coverage
 
-Coverage now treats exact equipped support-set thresholds as static capability evidence without claiming runtime uptime.
-
-Stable contract:
-- `services/raid_unique_support_set_capability_service.py` projects exact equipped-piece thresholds into static Coverage evidence.
-- The service reuses `SavedBuildCapabilityService._active_set_counts`, including active-bar/two-handed weapon semantics, instead of inventing another gear-counting rule.
-- Reviewed proc/activation sets such as Powerful Assault remain `Conditional`; equipment presence never claims uptime.
-- `services/raid_unique_support_set_catalog.py` records reviewed piece thresholds (5-piece sets, 2-piece monster sets, 1-piece mythics).
-- `ui/coverage_group_effect_catalog_support.py` overlays that evidence after canonical saved-build capability analysis.
-- `ui/coverage_raid_plan_scope_support.py` renders the full raid-facing group/unique-set catalog rather than only `DEFAULT_RAID_COVERAGE_PROFILE`.
-- Raid Plan assignment labels remain planning intent only.
-- No `RaidPlan` model, Rotation engine, database, or persistence contract changed.
-
-### Rotation handoff — STABLE
-
-Stable files/contracts:
+Rotation handoff:
 - `ui/raid_plan_rotation_handoff_support.py`
 - `ui/raid_plan_rotation_page.py`
-- `ui/tests/test_raid_plan_rotation_handoff_support.py`
-- `ui/tests/test_raid_plan_rotation_page.py`
-- `ui/raid_engine_dashboard_support.py` instantiates `RaidPlanRotationPage`
-- existing assignment/coverage route-contract tests advance through the Rotation-aware subclass
+- selected chairs resolve exact saved builds and enter Rotation through the existing canonical context seam
+- encounter selection remains owned by Rotation
+- no Rotation engine/service ownership moved into RaidPlan
 
-Contract:
-- Raid Plan exposes a **Rotation / Execution** card with one selected chair and **Open Rotation**.
-- The selected chair must already have an exact saved build; unresolved/missing/ambiguous build ownership fails closed.
-- Rotation's visible Character/Build selectors are aligned to the exact resolved Raid Plan build.
-- The existing Rotation canonical context provider remains the owner of encounter/evidence/generation policy.
-- The Raid Plan wrapper pins build reads to the exact selected build, then delegates to the existing `RaidPlanRotationContextBridge`.
-- Encounter selection remains inside Rotation. Trial identity is never fabricated into a boss/encounter id.
-- The bridge freezes the exact build as a `raid_plan` `EffectiveBuildSnapshot` and carries matching encounter-scoped triggered responsibilities.
-- Primary/Secondary assignment labels are retained as provenance only. They are not converted into build adjustment labels or runtime timings.
-- No Rotation engine/service file was modified for this handoff.
+### Optimizer Adviser slice — READY FOR VALIDATION
+
+New/changed contracts:
+- `services/raid_plan_optimizer_adviser_service.py`
+- `services/tests/test_raid_plan_optimizer_adviser_service.py`
+- `services/tests/test_raid_plan_optimizer_adviser_catalog_registration.py`
+- `ui/raid_plan_optimizer_adviser_support.py`
+- `ui/raid_plan_adviser_page.py`
+- `ui/tests/test_raid_plan_optimizer_adviser_support.py`
+- `ui/raid_engine_dashboard_support.py` now instantiates `RaidPlanAdviserPage`
+- prior assignment/Coverage/Rotation route-contract tests advance through the Adviser-aware subclass
+
+Adviser contract:
+- Raid Plan's former **Open Optimizer** action is presented as **Open Adviser**.
+- The exact current RaidPlan is passed to the existing Optimization workspace.
+- The existing team editor is populated from exact resolved Raid Plan saved builds with `autofill=False`; the Adviser does not choose replacement players/builds.
+- Advice is rendered in a dedicated **Optimizer Adviser** card and is read-only.
+- Finding categories are explicit: `blocker`, `coverage_gap`, `conditional`, `redundancy`, `data_gap`.
+- Open/unresolved chairs are plan blockers.
+- Missing proven required static coverage is a coverage-gap review item, not an automatic team edit.
+- Conditional capabilities require trigger/rotation review; they do not claim uptime.
+- Multiple proven static providers are flagged only for intentional-redundancy review.
+- Canonical capability-resolution debt is labeled `data_gap` and explicitly says not to change a player's build solely to clear Foundry's missing evidence.
+- Reviewed unique support-set presence such as Powerful Assault feeds Adviser conditional findings through the same equipment-count semantics as Coverage.
+- No recommendation is automatically applied or persisted.
 - No structural change was made to `models/raid_plan.py`.
-- No database migration/reset is involved.
+- No database migration/reset occurred.
+- No Rotation engine/service file changed for the Adviser slice.
 
-### Roadmap remains unchanged
+### Roadmap
 
 ```text
 Persistence -> Assignments -> Coverage -> Rotation -> Optimizer Adviser
 ```
 
-Persistence, Assignments, Coverage, and the Raid Plan -> Rotation handoff are complete/stable. **Optimizer Adviser is next for the Raid Plan workstream.**
+Persistence, Assignments, Coverage, and Rotation are stable. Optimizer Adviser is implemented and **awaiting its focused validation gate** before the roadmap is marked complete.
 
 ### Rotation workstream coordination
 
-Roto/Rotation remains the downstream consumer. The stable handoff intentionally wraps Roto's existing canonical context-provider seam rather than editing its generation/runtime engine.
+Roto/Rotation remains an independent downstream consumer. The Adviser consumes RaidPlan/Coverage/build evidence and does not alter Rotation runtime or canonical generation contracts.
 
-Do **not** add a second Raid Plan persistence, assignment, Coverage, effective-build, or Rotation context authority.
-
-If Roto needs a structural change to `models/raid_plan.py`, coordinate it first because that model shape round-trips through durable storage and repository tests. Prefer additive consumer-side adapters.
+Do **not** add a second Raid Plan persistence, assignment, Coverage, effective-build, Rotation context, or optimization-advice authority.
 
 Ownership remains:
 
@@ -95,6 +97,7 @@ Personnel / Characters / Saved Builds = global reusable identity
 RaidPlan = trial-specific selections, assignments, adjustments, triggered responsibilities
 Coverage = consumer of exact selected Raid Plan builds + explicit planning labels
 Rotation = consumer of exact resolved Raid Plan chair/effective build + live encounter/policy
+Optimizer Adviser = read-only consumer of RaidPlan + canonical build/Coverage evidence
 RaidPlanRepository = persistence of RaidPlan snapshots only
 ```
 
@@ -102,4 +105,4 @@ Do not make ESO Logs, Rotation runtime state, or Team Optimization state a persi
 
 ## Rotation workstream — ACTIVE / INDEPENDENT
 
-Roto may continue its mechanics/runtime work independently. The Raid Plan handoff is now stable upstream behavior and does not change Rotation-owned engine files or the persisted `RaidPlan` shape.
+Roto may continue its mechanics/runtime work independently. No Rotation-owned engine file or persisted `RaidPlan` shape changed in the Adviser slice.
