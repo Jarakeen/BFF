@@ -236,6 +236,7 @@ def main() -> int:
     from ui.application_team_optimization_bootstrap import bootstrap_team_optimization_extensions
     from ui.application_extreme_optimization_bootstrap import bootstrap_extreme_optimization_extensions
     from ui.extreme_optimization_support import install as install_extreme_optimization_support
+    from ui.application_window_composition import compose_application_window
     from services.performance_dd_analysis_support import install as install_performance_dd_analysis_support
     from ui.performance_dashboard_dd_support import install as install_performance_dashboard_dd_support
 
@@ -341,6 +342,7 @@ def main() -> int:
     theme.apply(app)
 
     window = MainWindow()
+    compose_application_window(window)
     window.show_page("operations_console")
     if not foundry_icon.isNull():
         window.setWindowIcon(foundry_icon)
