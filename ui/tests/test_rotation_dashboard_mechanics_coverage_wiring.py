@@ -16,6 +16,11 @@ class _Candidates:
         return self.result
 
 
+class _CadenceCard:
+    def clear_report(self) -> None:
+        return None
+
+
 class _Page:
     def __init__(self) -> None:
         self.build = PlayerBuild(Name="Magrat", BuildName="DF Healer", Role="Healer")
@@ -23,6 +28,10 @@ class _Page:
         self.rotation_canonical_candidates = _Candidates()
         self.last_canonical_candidate_result = None
         self.last_canonical_render_evidence = None
+        self.last_cadence_progression_run = None
+        self.last_cadence_progression_render_evidence = None
+        self.last_canonical_cadence_orchestration_result = None
+        self.cadence_progression_card = _CadenceCard()
 
     def _selected_build(self):
         return self.build
@@ -47,8 +56,11 @@ class _Page:
             "use_scheduled_combat_attacks_for_ultimate": True,
         }
 
-    def canonical_generation_request(self):
-        return CanonicalRotationDashboardPage.canonical_generation_request(self)
+    def canonical_generation_request(self, *, player_build=None):
+        return CanonicalRotationDashboardPage.canonical_generation_request(
+            self,
+            player_build=player_build,
+        )
 
     def evaluate_canonical_candidates(self, **kwargs):
         return CanonicalRotationDashboardPage.evaluate_canonical_candidates(self, **kwargs)
