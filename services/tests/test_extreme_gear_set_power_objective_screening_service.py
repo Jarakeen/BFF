@@ -61,3 +61,22 @@ def test_weapon_trait_effectiveness_remains_a_global_search_hazard() -> None:
 def test_unknown_power_objective_fails_closed() -> None:
     with pytest.raises(KeyError, match="unreviewed Extreme power screening objective"):
         ExtremeGearSetPowerObjectiveScreeningService.review("Anything", "actual_damage")
+
+
+def test_scaling_clause_with_output_multiplier_is_not_a_sheet_power_mutation() -> None:
+    result = ExtremeGearSetPowerObjectiveScreeningService.review(
+        "The damage scales off the higher of your Weapon or Spell Damage increases by 25% per stack.",
+        "weapon_damage",
+    )
+
+    assert result.proven_irrelevant
+
+
+def test_scaling_clause_does_not_hide_a_separate_direct_power_grant() -> None:
+    result = ExtremeGearSetPowerObjectiveScreeningService.review(
+        "The damage scales off the higher of your Weapon or Spell Damage and you gain 100 Weapon and Spell Damage.",
+        "weapon_damage",
+    )
+
+    assert not result.proven_irrelevant
+    assert result.power_hazards == ("direct self Weapon/Spell Damage mutation",)

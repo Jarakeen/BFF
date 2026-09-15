@@ -112,7 +112,7 @@ def test_unmapped_active_bonus_preserves_known_lower_bound_and_blocker():
                     2,
                     2,
                     5,
-                    "When you do something dramatic, gain an effect whose mechanic is not mapped yet.",
+                    "When you do something dramatic, gain an unknown amount of Weapon and Spell Damage.",
                 ),
             ]
         },
@@ -128,7 +128,7 @@ def test_unmapped_active_bonus_preserves_known_lower_bound_and_blocker():
     assert row.mechanic_complete is False
     assert row.unresolved
     assert "not yet mechanic-mapped" in row.unresolved[0]
-    assert "gain an effect" in row.unresolved[0].casefold()
+    assert "unknown amount of weapon and spell damage" in row.unresolved[0].casefold()
 
 
 def test_unresolved_bonus_is_never_treated_as_zero_complete_mechanic():
@@ -236,7 +236,14 @@ def test_candidates_sort_mechanic_complete_sets_before_incomplete_sets():
         [incomplete, complete],
         {
             8: [_bonus(1, 8, 2, "Adds 100 Weapon and Spell Damage")],
-            9: [_bonus(2, 9, 2, "An unresolved bonus worth an unknown amount.")],
+            9: [
+                _bonus(
+                    2,
+                    9,
+                    2,
+                    "Gain an unknown amount of Weapon and Spell Damage.",
+                )
+            ],
         },
     )
 

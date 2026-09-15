@@ -35,6 +35,12 @@ _SELF_CHANGE = re.compile(
     rf"(?:increase(?:s|d|ing)?|gain(?:s|ed|ing)?|grant(?:s|ed|ing)?|adds?)\b",
     re.IGNORECASE,
 )
+_SCALING_CLAUSE = re.compile(
+    r"(?:the\s+)?(?:damage|healing|effect)\s+scales?\s+off(?:\s+of)?\s+"
+    r"(?:the\s+higher\s+of\s+)?(?:your\s+)?weapon\s+or\s+spell\s+damage"
+    r"(?:\s+increases?\s+by\s+\d+(?:\.\d+)?%\s+per\s+stack)?",
+    re.IGNORECASE,
+)
 
 
 @dataclass(frozen=True)
@@ -74,7 +80,8 @@ class ExtremeGearSetPowerObjectiveScreeningService:
         # A scaling source consumes sheet power; it does not mutate sheet power.
         # The direct-change grammar intentionally looks for the player's stat,
         # while enemy/attacker reductions are not matched as self-stat gains.
-        if _SELF_CHANGE.search(text):
+        direct_text = _SCALING_CLAUSE.sub("", text)
+        if _SELF_CHANGE.search(direct_text):
             hazards.append("direct self Weapon/Spell Damage mutation")
 
         for phrase in relevant_buffs:

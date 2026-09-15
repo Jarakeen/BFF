@@ -890,3 +890,19 @@ that stat is an input to the effect; the effect does not raise the character's
 Weapon or Spell Damage. Extreme power searches may discard that proc for the
 literal sheet-stat objective while still retaining any separate line that grants
 Weapon/Spell Damage directly.
+
+---
+
+## 2026-09-15 — A parsed set line does not bound an unmapped proc
+
+A set can have an ordinary parsed bonus such as **129 Weapon and Spell Damage**
+and a separate conditional five-piece bonus that grants hundreds more. The parsed
+line proves only its own 129-point contribution; it says nothing about the ceiling
+of the additional proc.
+
+**Layman's version:** reading one line on the set does not put a cap on every other
+line. A small known bonus cannot stand in for a larger conditional one.
+
+**For BFF:** Extreme proof audits bound every active power-granting bonus
+independently, then add those ceilings. An unresolved proc remains a blocker unless
+its own description supplies a finite conservative bound.

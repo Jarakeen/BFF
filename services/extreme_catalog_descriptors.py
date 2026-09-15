@@ -29,6 +29,25 @@ EXTREME_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.gear_set_power_upper_bound",
+        domain="extreme",
+        purpose=(
+            "Extract proof-safe flat and percentage ceilings from unresolved canonical "
+            "named-gear power descriptions without claiming runtime executability."
+        ),
+        implementation_path="services.extreme_gear_set_power_upper_bound_service",
+        inputs=("GearSetBonusDescription", "PowerObjective"),
+        outputs=("ExtremeGearSetPowerUpperBound",),
+        dependencies=("extreme.gear_set_power_objective_screening",),
+        responsibilities=("extreme_gear_set_power_upper_bound",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Finite tooltip ranges and stated stack counts may form conservative bounds; "
+            "unstated formula denominators and search-state mutations remain explicit."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.resource_canonical_static_snapshot",
         domain="extreme",
         purpose=(

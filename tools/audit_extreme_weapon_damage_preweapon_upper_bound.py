@@ -21,8 +21,6 @@ if str(ROOT) not in sys.path:
 
 from minmax.champion_point_static_repository import ChampionPointStaticRepository
 from minmax.combat_effect_semantics import GameUpdate
-from minmax.effects import EffectOperation
-from minmax.gear_set_repository import GearSetRepository
 from minmax.jewelry_glyph_repository import JewelryGlyphEffectRepository
 from minmax.jewelry_trait_repository import JewelryTraitRepository
 from minmax.mundus_repository import MundusRepository, U50_GAME_UPDATE
@@ -37,15 +35,9 @@ from services.extreme_armor_mundus_joint_objective_service import ExtremeArmorMu
 from services.extreme_arcanist_harnessed_quintessence_service import ExtremeArcanistHarnessedQuintessenceService
 from services.extreme_blueprint_service import _SORCERER_EXPERT_MAGE_PER_SLOT
 from services.extreme_champion_point_objective_service import ExtremeChampionPointObjectiveService
-from services.extreme_gear_set_bonus_breakpoint_service import ExtremeGearSetBonusBreakpointService
-from services.extreme_gear_set_objective_relevance_service import (
-    ExtremeGearSetObjectiveRelevance,
-    ExtremeGearSetObjectiveRelevanceService,
-)
-from services.extreme_gear_set_objective_service import ExtremeGearSetObjectiveService
-from services.extreme_gear_set_topology_catalog_service import ExtremeGearSetTopologyCatalogService
 from services.extreme_nightblade_class_mastery_healing_service import ExtremeNightbladeClassMasteryHealingService
 from services.extreme_race_objective_service import ExtremeRaceObjectiveService
+from tools.audit_extreme_weapon_damage_named_gear_threshold import _named_gear_upper_bound
 
 DATABASE = ROOT / "data" / "eso.db"
 OBJECTIVE = "weapon_damage"
@@ -53,97 +45,6 @@ SWORD_BOARD_THRESHOLD = 14113.333
 BASE_LEVEL_50_POWER = 1000.0
 JEWELRY_SLOTS = 3
 GLYPH_NAME = "Glyph of Increase Physical Harm"
-
-
-def _bounded_named_gear() -> tuple[float, tuple[tuple[str, int], ...], bool, tuple[str, ...]]:
-    """Return a fast conservative flat named-gear ceiling.
-
-    For each legal topology count position, use the strongest canonical positive
-    Weapon Damage breakpoint at that count. Duplicate identities and slot
-    conflicts are intentionally ignored, which can only make the bound larger.
-    Positive percentage target-stat effects remain blockers because flattening
-    them would not be proof-safe for the Sword-and-Board comparison.
-    """
-
-    repository = GearSetRepository(DATABASE)
-    breakpoints = ExtremeGearSetBonusBreakpointService(repository).build()
-    topology = ExtremeGearSetTopologyCatalogService(repository).build()
-    relevance = ExtremeGearSetObjectiveRelevanceService(repository).build(
-        OBJECTIVE,
-        breakpoints,
-    )
-    target_stats = ExtremeGearSetObjectiveService._target_stats(OBJECTIVE)
-
-    by_count: dict[int, list[tuple[float, str, int]]] = {}
-    blockers: list[str] = [*breakpoints.unresolved, *topology.unresolved]
-
-    for row in relevance.evidence:
-        if row.status is ExtremeGearSetObjectiveRelevance.PROVEN_IRRELEVANT:
-            continue
-
-        flat = max(0.0, float(row.reviewed_delta))
-        saw_target = False
-        row_blocked = False
-        for effect in row.candidate.source_effects:
-            if effect.stat not in target_stats or float(effect.value) <= 0.0:
-                continue
-            saw_target = True
-            if effect.operation is EffectOperation.ADD:
-                flat = max(flat, float(effect.value))
-            elif effect.operation is EffectOperation.ADD_PERCENT:
-                blockers.append(
-                    f"{row.set_name} {row.piece_count}pc: positive percentage Weapon Damage set effect requires separate stacking bound ({float(effect.value):g})"
-                )
-                row_blocked = True
-            else:
-                blockers.append(
-                    f"{row.set_name} {row.piece_count}pc: unsupported positive Weapon Damage operation in upper-bound audit: {effect.operation}"
-                )
-                row_blocked = True
-
-        if (
-            row.status is ExtremeGearSetObjectiveRelevance.UNRESOLVED
-            and not saw_target
-            and flat <= 0.0
-        ):
-            blockers.append(
-                f"{row.set_name} {row.piece_count}pc: unresolved Weapon Damage breakpoint has no bounded target-stat effect"
-            )
-            row_blocked = True
-
-        # Even blocked rows are retained in the numeric flat ceiling when a flat
-        # contribution is known. The blocker simply prevents a false proof claim.
-        by_count.setdefault(int(row.piece_count), []).append(
-            (float(flat), str(row.set_name), int(row.set_id))
-        )
-
-    best = 0.0
-    signature: tuple[tuple[str, int], ...] = ()
-    for topology_row in topology.topologies:
-        score = 0.0
-        parts: list[tuple[str, int]] = []
-        for count in tuple(int(value) for value in topology_row.counts):
-            candidates = by_count.get(count, ())
-            if not candidates:
-                parts.append(("<zero objective contribution>", count))
-                continue
-            value, name, _set_id = max(
-                candidates,
-                key=lambda item: (item[0], item[1].casefold(), item[2]),
-            )
-            score += max(0.0, float(value))
-            parts.append((name, count))
-        candidate = tuple(parts)
-        if score > best + 1e-9 or (
-            abs(score - best) <= 1e-9
-            and (not signature or candidate < signature)
-        ):
-            best = score
-            signature = candidate
-
-    blockers = list(dict.fromkeys(message for message in blockers if message))
-    closed = bool(topology.topologies) and not blockers
-    return float(best), signature, closed, tuple(blockers)
 
 
 def _race_ceiling() -> tuple[str, float]:
@@ -234,7 +135,15 @@ def _weapon_enchant_ceiling() -> float:
 
 
 def main() -> int:
-    named_gear, named_signature, named_closed, named_unresolved = _bounded_named_gear()
+    (
+        named_gear,
+        named_signature,
+        named_closed,
+        named_unresolved,
+        _relevance,
+        _topology,
+        _bounded_unresolved,
+    ) = _named_gear_upper_bound()
     race_name, race = _race_ceiling()
     jewelry = _jewelry_ceiling()
     mundus = _mundus_ceiling()
@@ -280,7 +189,8 @@ def main() -> int:
     print(f"ordinary_weapon_damage_enchant={enchant:.3f}")
     print(f"named_gear_flat_upper_bound={named_gear:.3f}")
     print(f"named_gear_upper_bound_signature={named_signature!r}")
-    print("named_gear_duplicate_identities_allowed=True")
+    print("named_gear_same_count_duplicate_identities_allowed=False")
+    print("named_gear_cross_count_duplicate_identities_allowed=True")
     print("named_gear_slot_conflicts_ignored=True")
     print()
     print("DELIBERATELY OVER-COUNTED MUTUALLY EXCLUSIVE CLASS/RUNTIME FLATS")

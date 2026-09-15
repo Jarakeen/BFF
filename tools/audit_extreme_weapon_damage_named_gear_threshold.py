@@ -11,7 +11,9 @@ objective-relevance catalogs but deliberately over-credits named gear:
 * every positive conditional flat is assumed active;
 * for each set-count position in a legal topology, the strongest canonical
   Weapon Damage breakpoint at that count is used;
-* duplicate set identities and slot conflicts are allowed in the bound.
+* one identity may be reused across different piece counts, and physical slot
+  conflicts are ignored, but repeated positions at the same count use distinct
+  set identities.
 
 Those relaxations can only make the named-gear number larger. Positive
 percentage Weapon Damage set effects are not flattened; they remain explicit
@@ -26,6 +28,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from minmax.effects import EffectOperation
+from minmax.gear_set_effect_resolver import GearSetEffectResolver
 from minmax.gear_set_repository import GearSetRepository
 from services.extreme_gear_set_bonus_breakpoint_service import ExtremeGearSetBonusBreakpointService
 from services.extreme_gear_set_objective_relevance_service import (
@@ -34,6 +37,9 @@ from services.extreme_gear_set_objective_relevance_service import (
 )
 from services.extreme_gear_set_objective_service import ExtremeGearSetObjectiveService
 from services.extreme_gear_set_topology_catalog_service import ExtremeGearSetTopologyCatalogService
+from services.extreme_gear_set_power_upper_bound_service import (
+    ExtremeGearSetPowerUpperBoundService,
+)
 
 DATABASE = ROOT / "data" / "eso.db"
 OBJECTIVE = "weapon_damage"
@@ -44,17 +50,17 @@ def _bounded_flat_for_evidence(row) -> tuple[float, tuple[str, ...]]:
     """Return a safe flat ceiling for one breakpoint or explicit blockers."""
 
     target_stats = ExtremeGearSetObjectiveService._target_stats(OBJECTIVE)
-    flat = max(0.0, float(row.reviewed_delta))
+    flat = 0.0
     blockers: list[str] = []
-    saw_target = False
 
     for effect in row.candidate.source_effects:
         if effect.stat not in target_stats or float(effect.value) <= 0.0:
             continue
-        saw_target = True
         operation = effect.operation
         if operation is EffectOperation.ADD:
-            flat = max(flat, float(effect.value))
+            # Conditional/scoped target effects are deliberately assumed active
+            # in this ceiling even when exact execution remains unresolved.
+            flat += float(effect.value)
         elif operation is EffectOperation.ADD_PERCENT:
             blockers.append(
                 f"{row.set_name} {row.piece_count}pc: positive percentage Weapon Damage set effect requires separate stacking bound ({float(effect.value):g})"
@@ -64,16 +70,80 @@ def _bounded_flat_for_evidence(row) -> tuple[float, tuple[str, ...]]:
                 f"{row.set_name} {row.piece_count}pc: unsupported positive Weapon Damage operation in upper-bound audit: {operation}"
             )
 
-    if (
-        row.status is ExtremeGearSetObjectiveRelevance.UNRESOLVED
-        and not saw_target
-        and flat <= 0.0
-    ):
-        blockers.append(
-            f"{row.set_name} {row.piece_count}pc: unresolved Weapon Damage breakpoint has no bounded target-stat effect"
+    resolver = GearSetEffectResolver()
+    for bonus in row.candidate.source_bonuses:
+        if resolver.resolve(bonus, use_max_value=True, source=row.set_name):
+            continue
+        bound = ExtremeGearSetPowerUpperBoundService.build(
+            str(bonus.description or ""),
+            OBJECTIVE,
+        )
+        flat += float(bound.flat_upper_bound)
+        if bound.percent_upper_bound > 0.0:
+            blockers.append(
+                f"{row.set_name} {row.piece_count}pc: positive percentage Weapon Damage "
+                f"set effect requires separate stacking bound ({bound.percent_upper_bound:g})"
+            )
+        blockers.extend(
+            f"{row.set_name} {row.piece_count}pc: {message}"
+            for message in bound.unresolved
         )
 
+    if row.status is ExtremeGearSetObjectiveRelevance.UNRESOLVED and not blockers and flat <= 0.0:
+        blockers.append(f"{row.set_name} {row.piece_count}pc: unresolved power bonus has no finite upper bound")
+
     return float(flat), tuple(blockers)
+
+
+def _relaxed_distinct_topology_bound(
+    by_count: dict[int, list[tuple[float, str, int]]],
+    topologies,
+) -> tuple[float, tuple[tuple[str, int], ...]]:
+    """Return the strongest relaxed topology with distinct identities per count."""
+
+    best_score = 0.0
+    best_signature: tuple[tuple[str, int], ...] = ()
+    for topology_row in topologies:
+        score = 0.0
+        parts: list[tuple[str, int]] = []
+        counts = tuple(int(value) for value in topology_row.counts)
+        for count in sorted(set(counts)):
+            needed = counts.count(count)
+            candidates = by_count.get(count, ())
+            # One named set identity cannot occupy two separate positions of the
+            # same topology. We still allow the same identity to appear at two
+            # different piece counts and ignore physical slot conflicts, so this
+            # remains an intentionally favorable upper bound.
+            ordered = sorted(
+                candidates,
+                key=lambda item: (-item[0], item[1].casefold(), item[2]),
+            )
+            chosen: list[tuple[float, str, int]] = []
+            seen_set_ids: set[int] = set()
+            for candidate in ordered:
+                set_id = int(candidate[2])
+                if set_id in seen_set_ids:
+                    continue
+                seen_set_ids.add(set_id)
+                chosen.append(candidate)
+                if len(chosen) == needed:
+                    break
+            score += sum(max(0.0, float(value)) for value, _name, _set_id in chosen)
+            parts.extend((name, count) for _value, name, _set_id in chosen)
+            # A topology position may be occupied by an objective-irrelevant
+            # set. Zero is therefore a safe contribution for unfilled positions.
+            parts.extend(
+                ("<zero objective contribution>", count)
+                for _ in range(needed - len(chosen))
+            )
+        signature = tuple(parts)
+        if score > best_score + 1e-9 or (
+            abs(score - best_score) <= 1e-9
+            and (not best_signature or signature < best_signature)
+        ):
+            best_score = score
+            best_signature = signature
+    return float(best_score), best_signature
 
 
 def _named_gear_upper_bound():
@@ -100,31 +170,10 @@ def _named_gear_upper_bound():
             (float(flat), str(row.set_name), int(row.set_id))
         )
 
-    best_score = 0.0
-    best_signature: tuple[tuple[str, int], ...] = ()
-    for topology_row in topology.topologies:
-        score = 0.0
-        parts: list[tuple[str, int]] = []
-        for count in tuple(int(value) for value in topology_row.counts):
-            candidates = by_count.get(count, ())
-            if not candidates:
-                # A topology position may be occupied by an objective-irrelevant
-                # set. Zero is therefore a safe contribution for this position.
-                parts.append(("<zero objective contribution>", count))
-                continue
-            value, name, _set_id = max(
-                candidates,
-                key=lambda item: (item[0], item[1].casefold(), item[2]),
-            )
-            score += max(0.0, float(value))
-            parts.append((name, count))
-        signature = tuple(parts)
-        if score > best_score + 1e-9 or (
-            abs(score - best_score) <= 1e-9
-            and (not best_signature or signature < best_signature)
-        ):
-            best_score = score
-            best_signature = signature
+    best_score, best_signature = _relaxed_distinct_topology_bound(
+        by_count,
+        topology.topologies,
+    )
 
     blockers = list(dict.fromkeys(message for message in blockers if message))
     proven = bool(topology.topologies) and not blockers
@@ -167,7 +216,8 @@ def main() -> int:
     print("CONSERVATIVE NAMED-GEAR BOUND")
     print(f"named_gear_flat_upper_bound={best_score:.3f}")
     print(f"upper_bound_signature={best_signature!r}")
-    print("duplicate_set_identities_allowed_in_bound=True")
+    print("same_count_duplicate_set_identities_allowed_in_bound=False")
+    print("cross_count_duplicate_set_identities_allowed_in_bound=True")
     print("slot_conflicts_ignored_in_bound=True")
     print("conditional_flats_assumed_active=True")
     print()
