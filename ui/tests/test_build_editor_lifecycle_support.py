@@ -11,11 +11,13 @@ def _source(module) -> str:
     return Path(module.__file__).read_text(encoding="utf-8")
 
 
-def test_lifecycle_support_owns_single_load_and_model_wrapper() -> None:
+def test_lifecycle_support_owns_single_init_load_and_model_wrapper() -> None:
     source = _source(build_editor_lifecycle_support)
 
+    assert "BuildEditor.__init__ = init_composed" in source
     assert "BuildEditor.load = load_composed" in source
     assert "BuildEditor.model = property(model_composed)" in source
+    assert "_POST_INIT_HOOKS" in source
     assert "_PRE_LOAD_HOOKS" in source
     assert "_POST_LOAD_HOOKS" in source
     assert "_MODEL_POST_HOOKS" in source
@@ -37,11 +39,13 @@ def test_scribing_simulator_uses_post_load_hook_instead_of_wrapping_load() -> No
     assert "BuildEditor.load =" not in source
 
 
-def test_potion_support_uses_lifecycle_hooks_instead_of_wrapping_load_and_model() -> None:
+def test_potion_support_uses_lifecycle_hooks_instead_of_wrapping_init_load_and_model() -> None:
     source = _source(phase5_potion_picker_support)
 
+    assert 'register_post_init("searchable_build_dropdowns", _configure_all_build_dropdowns)' in source
     assert 'register_post_load("canonical_potion", load_canonical_potion)' in source
     assert 'register_model_post("canonical_potion", persist_canonical_potion)' in source
+    assert "BuildEditor.__init__ =" not in source
     assert "BuildEditor.load =" not in source
     assert "BuildEditor.model =" not in source
 
