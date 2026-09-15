@@ -41,7 +41,7 @@ def test_explicit_build_assignment_still_blocks_duplicate_saved_player() -> None
 
 def test_candidate_picker_reuses_existing_authoritative_assignment_callback() -> None:
     source = Path("ui/comp_builder_candidate_picker_support.py").read_text(encoding="utf-8")
-    installer = Path("ui/team_optimization_hybrid_anchor_support.py").read_text(encoding="utf-8")
+    installer = Path("ui/application_team_optimization_bootstrap.py").read_text(encoding="utf-8")
 
     assert "candidate_support._apply_top_candidate = _apply_selected_candidate" in source
     assert "install_comp_builder_build_candidates()" in installer
