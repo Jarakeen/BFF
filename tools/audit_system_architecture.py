@@ -5,8 +5,8 @@ from __future__ import annotations
 This audit reports architecture debt without mutating application data or importing UI
 implementations. It complements ``tools/audit_service_catalog.py`` with checks for hidden
 runtime authority, package-import mutation, monkey-patch/install fan-out, overlapping plan
-persistence, stale RaidPlan identity boundaries, legacy engine duplication, and runtime
-path defaults.
+persistence, stale RaidPlan identity boundaries, quarantine-boundary imports, legacy engine
+duplication, and runtime path defaults.
 
 The default command is report-only and returns success even when known architecture debt
 is present. Use ``--strict`` when the goal is to fail on ERROR findings.
@@ -28,7 +28,8 @@ from tools.audit_service_catalog import audit_service_catalog
 
 
 _RUNTIME_ROOTS = ("engine", "minmax", "models", "services", "ui")
-_SKIP_PARTS = frozenset({"tests", "test", "__pycache__", "old_pages"})
+_QUARANTINE_ROOTS = ("legacy", "deprecated", "old_pages", "migration")
+_SKIP_PARTS = frozenset({"tests", "test", "__pycache__", *_QUARANTINE_ROOTS})
 
 
 @dataclass(frozen=True)
@@ -187,24 +188,36 @@ def _install_fanout_findings(root: Path, path: Path, tree: ast.Module) -> list[A
     return findings
 
 
-def _old_pages_import_findings(root: Path, path: Path, tree: ast.Module) -> list[ArchitectureFinding]:
+def _quarantine_import_findings(root: Path, path: Path, tree: ast.Module) -> list[ArchitectureFinding]:
+    """Reject normal runtime dependencies on archived/quarantined code roots."""
     imports: list[str] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
-            imports.extend(alias.name for alias in node.names if alias.name.startswith("old_pages"))
+            for alias in node.names:
+                if any(alias.name == prefix or alias.name.startswith(prefix + ".") for prefix in _QUARANTINE_ROOTS):
+                    imports.append(alias.name)
         elif isinstance(node, ast.ImportFrom):
             module = str(node.module or "")
-            if module.startswith("old_pages"):
+            if any(module == prefix or module.startswith(prefix + ".") for prefix in _QUARANTINE_ROOTS):
                 imports.append(module)
     if not imports:
         return []
     return [
         ArchitectureFinding(
-            "WARNING",
-            "live-old-pages-import",
+            "ERROR",
+            "runtime-quarantine-import",
             _relative(root, path),
-            "runtime module imports historical old_pages code: " + ", ".join(sorted(set(imports))),
+            "normal runtime imports quarantine/migration code: " + ", ".join(sorted(set(imports))),
         )
+    ]
+
+
+def _old_pages_import_findings(root: Path, path: Path, tree: ast.Module) -> list[ArchitectureFinding]:
+    """Compatibility wrapper for older focused tests/callers."""
+    return [
+        finding
+        for finding in _quarantine_import_findings(root, path, tree)
+        if "old_pages" in finding.message
     ]
 
 
@@ -333,7 +346,7 @@ def audit_system_architecture(*, root: Path) -> ArchitectureAuditResult:
         findings.extend(_duplicate_class_findings(root, path, tree))
         findings.extend(_monkey_patch_findings(root, path, tree))
         findings.extend(_install_fanout_findings(root, path, tree))
-        findings.extend(_old_pages_import_findings(root, path, tree))
+        findings.extend(_quarantine_import_findings(root, path, tree))
         findings.extend(_runtime_path_findings(root, path, tree))
 
     findings.extend(_repo_contract_findings(root))
