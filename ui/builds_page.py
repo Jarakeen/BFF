@@ -138,6 +138,45 @@ class BuildsPage(FoundryPage):
         self.status.info(f"{len(self.roster.Members)} build(s) loaded.")
 
     def _refresh_roster(self, *_args):
+        gamertag = str(getattr(self, "_player_build_filter", "") or "").strip()
+        if gamertag:
+            wanted = gamertag.casefold()
+            matching_indexes = [
+                index
+                for index, build in enumerate(self.roster.Members)
+                if str(getattr(build, "Gamertag", "") or "").strip().casefold()
+                == wanted
+            ]
+
+            self.roster_list.blockSignals(True)
+            self.roster_list.clear()
+            for index in matching_indexes:
+                build = self.roster.Members[index]
+                character = str(getattr(build, "Name", "") or "").strip()
+                build_name = str(getattr(build, "BuildName", "") or "").strip()
+                role = str(getattr(build, "Role", "") or "").strip()
+                label = f"{character or 'Unnamed Character'} — {build_name or 'Default'}"
+                if role:
+                    label += f"   {role}"
+                item = QListWidgetItem(label)
+                item.setData(Qt.ItemDataRole.UserRole, index)
+                eso_class = str(getattr(build, "EsoClass", "") or "").strip()
+                item.setToolTip(f"{eso_class or 'Class not set'} • @{gamertag}")
+                self.roster_list.addItem(item)
+            self.roster_list.blockSignals(False)
+
+            if matching_indexes:
+                self.selected_index = matching_indexes[0]
+                self.roster_list.setCurrentRow(0)
+                self._refresh_detail()
+                self.status.info(
+                    f"Showing {len(matching_indexes)} saved build(s) for {gamertag}."
+                )
+            else:
+                self._clear_detail()
+                self.status.warning(f"No saved builds found for {gamertag}.")
+            return
+
         current = self.selected_index
         self.roster_list.blockSignals(True)
         self.roster_list.clear()
@@ -150,7 +189,9 @@ class BuildsPage(FoundryPage):
             item.setToolTip(f"{build.EsoClass or 'Class not set'} • {status}")
             self.roster_list.addItem(item)
         if self.roster_list.count():
-            self.roster_list.setCurrentRow(min(max(current, 0), self.roster_list.count() - 1))
+            self.roster_list.setCurrentRow(
+                min(max(current, 0), self.roster_list.count() - 1)
+            )
         self.roster_list.blockSignals(False)
         self._select_member(self.roster_list.currentRow())
 
@@ -162,10 +203,31 @@ class BuildsPage(FoundryPage):
         return "", "Active"
 
     def _select_member(self, row: int):
-        if row < 0 or row >= len(self.roster.Members):
+        if row < 0:
             return
-        self.selected_index = row
+        item = self.roster_list.item(row)
+        if item is None:
+            return
+        try:
+            index = int(item.data(Qt.ItemDataRole.UserRole))
+        except (TypeError, ValueError):
+            return
+        if index < 0 or index >= len(self.roster.Members):
+            return
+        self.selected_index = index
         self._refresh_detail()
+
+    def show_player_builds(self, gamertag: str) -> None:
+        self._player_build_filter = str(gamertag or "").strip()
+        if hasattr(self, "build_tabs"):
+            self.build_tabs.setCurrentIndex(0)
+        self._refresh_roster()
+
+    def clear_player_build_filter(self) -> None:
+        if not str(getattr(self, "_player_build_filter", "") or "").strip():
+            return
+        self._player_build_filter = ""
+        self._refresh_roster()
 
     def _clear_detail(self):
         while self.detail_layout.count():

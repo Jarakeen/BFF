@@ -79,6 +79,45 @@ class RosterPage(BaseRosterPage):
         self.export_share_button.setMenu(share_menu)
         self.header.add_context_widget(self.export_share_button)
 
+        self.open_player_builds_button = QPushButton("Open Builds")
+        self.open_player_builds_button.setToolTip(
+            "Open this player's saved characters and builds on the Builds page."
+        )
+        self.open_player_builds_button.clicked.connect(
+            self._open_selected_player_builds
+        )
+        if hasattr(self, "actions") and self.actions.layout() is not None:
+            self.actions.layout().addWidget(self.open_player_builds_button)
+        if hasattr(self, "table"):
+            self.table.itemDoubleClicked.connect(
+                lambda *_: self._open_selected_player_builds()
+            )
+
+    def _open_selected_player_builds(self) -> None:
+        member_id = (
+            self.table.selected_member_id() if hasattr(self, "table") else None
+        )
+        if member_id is None:
+            self.status.warning("Select a personnel record first.")
+            return
+        member = self.roster_service.get_member(int(member_id))
+        if member is None:
+            self.status.warning("That personnel record could not be reloaded.")
+            return
+        gamertag = str(member.PlayerName or "").strip()
+        if not gamertag:
+            self.status.warning(
+                "This personnel record does not have a Gamertag / Player Name yet."
+            )
+            return
+        opener = getattr(self.window(), "_open_player_builds", None)
+        if not callable(opener):
+            self.status.warning(
+                "Build navigation is not available from this window."
+            )
+            return
+        opener(gamertag)
+
     def _build_team_schedule_tab(self) -> QWidget:
         page = QWidget()
         root = QVBoxLayout(page)

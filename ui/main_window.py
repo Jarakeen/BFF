@@ -378,9 +378,24 @@ class MainWindow(QMainWindow):
         )
         self.show_page("roster_page")
 
+    def _open_player_builds(self, gamertag: str) -> None:
+        self.show_page("console:2")
+        builds_page = self.pages.get("console:2")
+        if builds_page is None:
+            return
+        show_player = getattr(builds_page, "show_player_builds", None)
+        if callable(show_player):
+            show_player(gamertag)
+
     def show_page(self, page_name: str):
         if not self._confirm_collectible_navigation(page_name):
             return
+
+        if page_name == "console:2":
+            builds_page = self.pages.get("console:2")
+            clear_filter = getattr(builds_page, "clear_player_build_filter", None)
+            if callable(clear_filter):
+                clear_filter()
 
         if page_name.startswith("collectibles:"):
             category = page_name.split(":", 1)[1]
