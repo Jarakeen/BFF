@@ -16,13 +16,10 @@ from dataclasses import dataclass
 import json
 from pathlib import Path
 
+from services.paths import DATA
 
-_DEFAULT_PATH = (
-    Path(__file__).resolve().parents[1]
-    / "data"
-    / "raid_tank_encounter_responsibility"
-    / "reviewed.json"
-)
+
+_DEFAULT_PATH = DATA / "raid_tank_encounter_responsibility" / "reviewed.json"
 
 
 @dataclass(frozen=True)
