@@ -8,6 +8,9 @@ from minmax.skill_component_classification import (
 from services.rotation_dd_action_damage_event_service import (
     RotationDDActionDamageEventService,
 )
+from services.rotation_dd_reviewed_skill_component_repository import (
+    RotationDDReviewedSkillComponentRepository,
+)
 
 
 class _FakeCoefficients:
@@ -101,6 +104,36 @@ def _service(*, resolution=None, result=None, classifications=()):
     )
 
 
+def test_default_component_source_projects_existing_reviewed_dd_identity(tmp_path):
+    service = RotationDDActionDamageEventService(
+        tmp_path / "missing.db",
+        coefficient_repository=_FakeCoefficients(
+            {"Reviewed Hit": _resolution(rank_id=7188)}
+        ),
+        calculator=_FakeCalculator(
+            {"Reviewed Hit": _result(_trace(1, 987.0))}
+        ),
+    )
+
+    assert isinstance(service.components, RotationDDReviewedSkillComponentRepository)
+
+    projection = service.project(
+        plan=_plan(_action(name="Reviewed Hit")),
+        context=object(),
+    )
+
+    assert projection.unresolved == ()
+    assert projection.dot_components == ()
+    assert len(projection.events) == 1
+    event = projection.events[0]
+    assert event.coefficient_number == 1
+    assert event.event.base_value == 987.0
+    assert event.event.damage_type == "poison"
+    assert event.event.can_crit is True
+    assert event.event.is_dot is False
+    assert event.event.is_aoe is False
+
+
 def test_projects_verified_direct_damage_component_at_cast_time():
     service = _service(classifications=(_classification(),))
 
@@ -133,7 +166,7 @@ def test_preserves_verified_damage_identity_flags():
     event = projection.events[0].event
     assert event.damage_type == "physical"
     assert event.is_aoe is True
-    assert event.can_crit is False
+    assert event.event.can_crit is False
 
 
 def test_non_damage_component_is_not_projected_as_damage():
