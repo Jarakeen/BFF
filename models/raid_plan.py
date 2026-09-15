@@ -4,7 +4,8 @@ from __future__ import annotations
 
 Raid plans own raid decisions. They do not own reusable player, character, or saved-build
 identity. A member may intentionally be incomplete while the raid lead is still assembling
-the group: gamertag can be known before character, class, role, or build selection.
+the group: gamertag can be known before stable player identity, character, class, role, or
+build selection.
 
 Triggered responsibilities are planning instructions, not scheduled Rotation actions. They
 record who owns a response when a reviewed runtime condition becomes true without inventing
@@ -38,6 +39,7 @@ class RaidPlanMember:
     seat_id: str
     gamertag: str
     roster_member_id: int | None = None
+    player_id: str | None = None
     character_id: str | None = None
     character_name: str | None = None
     role: str | None = None
@@ -63,6 +65,7 @@ class RaidPlanMember:
                 raise ValueError("roster_member_id must be positive when supplied")
             object.__setattr__(self, "roster_member_id", roster_member_id)
         for name in (
+            "player_id",
             "character_id",
             "character_name",
             "role",
