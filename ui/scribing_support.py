@@ -358,8 +358,8 @@ def install() -> None:
     if _INSTALLED:
         return
 
+    from ui.build_editor_lifecycle_support import register_model_post, register_pre_load
     from ui.builds_page import BuildsPage
-    from widgets.build_editor import BuildEditor
 
     original_to_dict = PlayerBuild.to_dict
     original_from_dict = PlayerBuild.from_dict
@@ -393,20 +393,14 @@ def install() -> None:
     PlayerBuild.to_dict = to_dict_with_recipes
     PlayerBuild.from_dict = classmethod(from_dict_with_recipes)
 
-    original_load = BuildEditor.load
-    original_model = BuildEditor.model
-
-    def load_with_recipes(self, model: PlayerBuild) -> None:
+    def load_recipes(self, model: PlayerBuild) -> None:
         self._scribed_skill_recipes = _recipes_for(model)
-        original_load(self, model)
 
-    def model_with_recipes(self) -> PlayerBuild:
-        build = original_model.fget(self)
+    def store_recipes(self, build: PlayerBuild) -> None:
         _store_recipes(build, list(getattr(self, "_scribed_skill_recipes", [])))
-        return build
 
-    BuildEditor.load = load_with_recipes
-    BuildEditor.model = property(model_with_recipes)
+    register_pre_load("scribing.recipes", load_recipes)
+    register_model_post("scribing.recipes", store_recipes)
 
     original_editor = BuildsPage._editor
 
