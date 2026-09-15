@@ -39,7 +39,8 @@ class _PageState:
     def _selected_build(self):
         return self.build
 
-    def canonical_generation_request(self):
+    def canonical_generation_request(self, *, player_build=None):
+        assert player_build is self.build
         return object()
 
 
