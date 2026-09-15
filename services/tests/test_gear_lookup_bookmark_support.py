@@ -23,7 +23,7 @@ def test_gear_lookup_bookmarks_share_existing_profile_aware_shortlist() -> None:
 
 
 def test_gear_lookup_bookmarks_install_before_main_window_construction() -> None:
-    installer = Path("ui/team_optimization_hybrid_anchor_support.py").read_text(
+    installer = Path("ui/application_team_optimization_bootstrap.py").read_text(
         encoding="utf-8"
     )
 
