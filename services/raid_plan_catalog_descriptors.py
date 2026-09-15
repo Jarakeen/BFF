@@ -26,6 +26,26 @@ RAID_PLAN_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "ESO Logs evidence, and optimization state are not persistence dependencies."
         ),
     ),
+    ServiceDescriptor(
+        service_id="raid_plan.coverage_scope",
+        domain="raid_plan",
+        purpose=(
+            "Resolve one RaidPlan into exact selected saved builds plus explicit Primary/Secondary "
+            "coverage-assignment labels for static Coverage inspection."
+        ),
+        implementation_path="services.raid_plan_coverage_scope_service",
+        inputs=("RaidPlan", "PlayerBuild", "CoverageEffectName"),
+        outputs=("RaidPlanCoverageScope",),
+        responsibilities=("raid_plan_coverage_scope_resolution",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        ui_safe=True,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Saved-build resolution fails closed. Assignment labels are planning intent only; "
+            "exact label matches may populate provider/backup presentation but never prove effect availability or uptime."
+        ),
+    ),
 )
 
 
