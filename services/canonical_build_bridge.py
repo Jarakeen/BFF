@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import os
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -65,9 +67,15 @@ class CanonicalBuildBridge:
         return roster
 
     def save(self, roster: BuildRoster) -> None:
+        """Persist canonical state first, then refresh the compatibility mirror.
+
+        ``characters.json`` is authoritative. A compatibility-mirror failure must
+        therefore never prevent an already-valid canonical save from remaining the
+        source of truth.
+        """
         normalized = self.enchantment_compatibility.normalize_roster(roster)
-        self._save_legacy(normalized)
         self.sync_from_roster(normalized)
+        self._save_legacy(normalized)
 
     def sync_from_roster(self, roster: BuildRoster) -> dict[str, Any]:
         """Resync builds without deleting canonical characters that have none.
@@ -100,18 +108,35 @@ class CanonicalBuildBridge:
     def _load_legacy(self) -> BuildRoster:
         if not self.legacy_path.exists():
             return BuildRoster()
-        try:
-            data = json.loads(self.legacy_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            return BuildRoster()
+        data = json.loads(self.legacy_path.read_text(encoding="utf-8"))
         return BuildRoster.from_dict(data)
 
     def _save_legacy(self, roster: BuildRoster) -> None:
-        self.legacy_path.parent.mkdir(parents=True, exist_ok=True)
-        self.legacy_path.write_text(
-            json.dumps(roster.to_dict(), ensure_ascii=False, indent=2),
-            encoding="utf-8",
+        """Atomically refresh builds.json as a verified compatibility mirror."""
+        path = self.legacy_path
+        path.parent.mkdir(parents=True, exist_ok=True)
+        expected = roster.to_dict()
+        payload = json.dumps(expected, ensure_ascii=False, indent=2)
+
+        fd, temp_name = tempfile.mkstemp(
+            prefix=f".{path.name}.",
+            suffix=".tmp",
+            dir=path.parent,
+            text=True,
         )
+        temp_path = Path(temp_name)
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8", newline="") as handle:
+                handle.write(payload)
+                handle.flush()
+                os.fsync(handle.fileno())
+            temp_path.replace(path)
+            written = json.loads(path.read_text(encoding="utf-8"))
+            if written != expected:
+                raise IOError(f"Build compatibility mirror verification failed for {path.resolve()}")
+        finally:
+            if temp_path.exists():
+                temp_path.unlink()
 
     @staticmethod
     def _has_meaningful_legacy_data(value: Any) -> bool:
