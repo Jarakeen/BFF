@@ -213,6 +213,7 @@ def test_audit_attaches_partial_review_without_promoting_it_to_reviewed() -> Non
     assert len(result.missing) == 1
     assert result.missing[0].partial_review is partial
     assert partial.unresolved_executable_fields == (
+        "activation_anchor",
         "first_tick_offset_seconds",
         "refresh_boundary",
         "magnitude_policy",
