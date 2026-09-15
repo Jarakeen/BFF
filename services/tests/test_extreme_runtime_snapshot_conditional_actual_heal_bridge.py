@@ -15,14 +15,14 @@ def _snapshot(*, at: float) -> ExtremeRuntimeSnapshot:
         runtime_history=(
             ExtremeRuntimeConditionWindow(
                 condition_id=RESTORATION_HEAVY_POST_COMPLETION_CONDITION,
-                start_time_seconds=10.0,
-                end_time_seconds=14.0,
+                active_from_seconds=10.0,
+                active_until_seconds=14.0,
                 source_evidence="reviewed Essence Drain post-heavy window",
             ),
             ExtremeRuntimeConditionWindow(
                 condition_id=SACRED_GROUND_CONDITION,
-                start_time_seconds=9.0,
-                end_time_seconds=13.0,
+                active_from_seconds=9.0,
+                active_until_seconds=13.0,
                 source_evidence="reviewed Sacred Ground active/grace window",
                 sequence=1,
             ),
