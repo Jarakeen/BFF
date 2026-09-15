@@ -42,6 +42,7 @@ class _ContextFactory:
             active_bar=kwargs["active_bar"],
             unresolved_gear_effects=(
                 "Champion Point effect not yet modeled: Exploiter: Increases your damage done against Off Balance enemies by 2% per stage.",
+                "Champion Point is dynamic or not yet stat-mapped: Exploiter",
             ),
         )
 
@@ -60,7 +61,7 @@ class _Conditional:
         )
 
 
-def test_dd_context_carries_exploiter_magnitude_and_retires_stale_static_warning() -> None:
+def test_dd_context_carries_exploiter_magnitude_and_retires_static_warnings() -> None:
     service = RotationStaticBuildContextService(
         progression_adapter=_ProgressionAdapter(),
         context_factory=_ContextFactory(),
