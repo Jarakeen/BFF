@@ -7,11 +7,14 @@ from minmax.rotation_demand_window import (
     RotationDemandPattern,
     RotationDemandWindow,
 )
+from minmax.rotation_plan import RotationPlan
+from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 from services.rotation_candidate_healer_multi_demand_role_output_service import (
     RotationCandidateHealerDemandWindowOutput,
     RotationCandidateHealerMultiDemandOutput,
 )
 from services.rotation_healer_demand_criteria_service import (
+    RotationCandidateHealerCriteriaHardObligationService,
     RotationHealerDemandCriterion,
     RotationHealerDemandCriterionSourceKind,
     RotationHealerDemandCriteriaService,
@@ -55,6 +58,34 @@ def _criterion(
         source_kind=source_kind,
         provenance=("reviewed encounter evidence",),
     )
+
+
+def _candidate() -> GeneratedRotationCandidate:
+    return GeneratedRotationCandidate(
+        candidate_id="healer-candidate",
+        plan=RotationPlan(
+            character_name="Healer",
+            build_name="Runtime Healer",
+            duration_seconds=30.0,
+            actions=(),
+        ),
+        refresh_leads=(),
+        action_claims=(),
+    )
+
+
+class _RuntimeMultiDemandOutput:
+    def __init__(self) -> None:
+        self.calls = []
+
+    def evaluate_windows(self, candidate, *, runtime_build_context_resolver=None):
+        self.calls.append((candidate, runtime_build_context_resolver))
+        value = 500.0 if runtime_build_context_resolver is None else 1500.0
+        return RotationCandidateHealerMultiDemandOutput(
+            candidate_id=candidate.candidate_id,
+            windows=(_window("burn", value),),
+            unresolved=(),
+        )
 
 
 def test_verified_encounter_criteria_can_form_hard_healer_obligations() -> None:
@@ -126,6 +157,26 @@ def test_unresolved_window_stays_unresolved_in_authoritative_criterion() -> None
     assert assessment.unresolved == (
         "burn: periodic refresh behavior unresolved",
     )
+
+
+def test_hard_criteria_use_same_runtime_context_as_stabilized_healer_output() -> None:
+    output = _RuntimeMultiDemandOutput()
+    service = RotationCandidateHealerCriteriaHardObligationService(
+        multi_demand_output_service=output,  # type: ignore[arg-type]
+        criteria=(_criterion("burn", 1000.0),),
+    )
+    runtime_resolver = lambda _time, _sequence=None: SimpleNamespace()
+
+    static_result = service.evaluate_plan(_candidate())
+    runtime_result = service.evaluate_plan(
+        _candidate(),
+        runtime_build_context_resolver=runtime_resolver,
+    )
+
+    assert static_result.satisfied is False
+    assert runtime_result.satisfied is True
+    assert output.calls[0][1] is None
+    assert output.calls[1][1] is runtime_resolver
 
 
 def test_criteria_require_provenance_and_unique_demand_names() -> None:
