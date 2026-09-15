@@ -20,15 +20,11 @@ from pathlib import Path
 from services.encounter_health_threshold_projection_service import (
     EncounterHealthThresholdProjection,
 )
+from services.paths import DATA
 from services.rotation_tank_encounter_horizon_service import RotationTankEncounterHorizon
 
 
-_DEFAULT_PATH = (
-    Path(__file__).resolve().parents[1]
-    / "data"
-    / "encounter_transition_timing"
-    / "reviewed.json"
-)
+_DEFAULT_PATH = DATA / "encounter_transition_timing" / "reviewed.json"
 
 
 @dataclass(frozen=True)
