@@ -8,7 +8,7 @@ All Teams remains a safe overview instead of an ambiguous editing surface.
 """
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QComboBox, QTableWidgetItem
+from PySide6.QtWidgets import QComboBox, QHeaderView, QTableWidgetItem
 
 from services.roster_assignment_context_service import RosterAssignmentContextService
 from ui.roster_encounter_assignment_context_support import selected_encounter_id
@@ -147,6 +147,28 @@ def _restore_row(page, row: int) -> None:
         notes_item.setToolTip("")
 
 
+def _size_assignment_columns(page) -> None:
+    """Give autocomplete assignment menus enough room without crushing the rest."""
+    table = page.assignment_table
+    header = table.horizontalHeader()
+    header.setStretchLastSection(False)
+    header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+    header.setSectionResizeMode(7, QHeaderView.ResizeMode.Stretch)
+
+    widths = {
+        0: 150,  # Player
+        1: 95,   # Role
+        2: 110,  # Class
+        3: 150,  # Build / character
+        4: 260,  # Primary Assignment autocomplete
+        5: 260,  # Secondary Assignment autocomplete
+        6: 170,  # Gear Needed
+        8: 70,   # Ready
+    }
+    for column, width in widths.items():
+        table.setColumnWidth(column, width)
+
+
 def install() -> None:
     global _INSTALLED
     if _INSTALLED:
@@ -160,6 +182,7 @@ def install() -> None:
     def build_assignments_tab_with_persistence(self):
         page = original_build_assignments_tab(self)
         self.assignment_context_service = RosterAssignmentContextService(self.database)
+        _size_assignment_columns(self)
         self.assignment_table.itemChanged.connect(
             lambda item: _persist_item_edit(self, item)
         )
