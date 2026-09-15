@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 
 from minmax.resource_costs import ResourceType
+from models.build_model import PlayerBuild
 from ui.rotation_generate_application_context_provider import (
     RotationGenerateApplicationContextProvider,
 )
@@ -35,7 +36,11 @@ class _PolicyProvider:
 
 class _Page:
     def __init__(self, role: str) -> None:
-        self.build = SimpleNamespace(Role=role)
+        self.build = PlayerBuild(
+            Name="Role Test",
+            BuildName="Role Routing",
+            Role=role,
+        )
 
     def _selected_build(self):
         return self.build
