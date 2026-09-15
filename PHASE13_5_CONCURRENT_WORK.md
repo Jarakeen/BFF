@@ -2,29 +2,41 @@
 
 This file is a short-lived coordination note for parallel Phase 13.5 workstreams. It is not architecture authority and should be removed when the concurrent work settles.
 
-## Raid Plan workstream — PERSISTENCE SLICE STABLE
+## Raid Plan workstream — PERSISTENCE COMPLETE / HANDOFF READY
 
-Raid Engine is being remodeled around persistent `RaidPlan` snapshots.
+Raid Engine now persists canonical `RaidPlan` snapshots and the focused persistence/bridge gate is green.
 
-### Stable persistence checkpoint
+### Verified persistence checkpoint
 
-- Repository: `services/raid_plan_repository.py`
-- Repository tests: `services/tests/test_raid_plan_repository.py`
-- Catalog descriptor: `services/raid_plan_catalog_descriptors.py`
-- Catalog registration flows through `services/comp_maker_catalog_descriptors.py` into the canonical `SERVICE_CATALOG`.
-- Visible save/load page: `ui/raid_plan_persistence_page.py`
-- Main Raid Engine registration now instantiates `RaidPlanPersistencePage`.
-- Storage target: versioned `raid_plans.json` under the normal app data directory.
+User-reported focused gate: **32 passed in 5.49s**.
+
+Stable files:
+
+- `services/raid_plan_repository.py`
+- `services/tests/test_raid_plan_repository.py`
+- `services/raid_plan_catalog_descriptors.py`
+- `services/tests/test_raid_plan_catalog_registration.py`
+- `ui/raid_plan_persistence_page.py`
+- `ui/tests/test_raid_plan_persistence_page.py`
+- `ui/raid_engine_dashboard_support.py` now instantiates `RaidPlanPersistencePage`
+
+Persistence behavior:
+
+- Storage target is versioned `raid_plans.json` under the normal app data directory.
+- Multiple named Raid Plans are supported.
+- Save / Load / Delete are visible on the Raid Plan page.
 - Persistence owns **trial-specific planning decisions only**.
-- It does not create/mutate Personnel, Character, Saved Build, Team, or canonical encounter identity.
-- No database reset or migration is used.
-- Hidden plan-owned state that is not yet editable in the UI (assignments, notes, stable references, triggered responsibilities) is preserved across Load -> edit visible fields -> Save.
+- It does not create or mutate Personnel, Character, Saved Build, Team, ESO Logs, or canonical encounter identity.
+- No database reset or database migration is used.
+- Hidden plan-owned state that is not yet editable in the UI, including assignments, notes, stable references, and triggered responsibilities, is preserved across Load -> edit visible fields -> Save.
 
-### Rotation workstream guidance
+### Rotation workstream handoff
 
-Rotation may **consume** `RaidPlan` / `RaidPlanMember` and the existing effective-build/runtime bridges. It should not add its own Raid Plan persistence or duplicate plan ownership.
+Roto/Rotation may now treat Raid Plan persistence as a stable upstream contract and continue consuming `RaidPlan` / `RaidPlanMember` through the existing effective-build/runtime bridges.
 
-The persistence files above are now stable enough to consume. Avoid changing their persisted shape without coordination. In particular, if Rotation needs a field or contract change in `models/raid_plan.py`, coordinate before changing the model because that shape now round-trips through durable storage.
+Do **not** add a second Raid Plan persistence path inside Rotation.
+
+If Rotation needs a structural change to `models/raid_plan.py`, coordinate it first because that model shape now round-trips through durable storage and repository tests. Additive consumer-side adapters are preferred over changing persistence-owned shape.
 
 ### Ownership boundary
 
@@ -39,7 +51,7 @@ Do not make ESO Logs, Rotation runtime state, or Team Optimization state a persi
 
 ## Rotation workstream — ACTIVE
 
-Recent Rotation commits observed during this persistence slice include:
+Recent Rotation commits observed during the persistence slice include:
 
 - `a75ddec7` Fix runtime application RaidPlanMember test fixture
 - `cd435e44` Test runtime application installer contract
@@ -51,4 +63,4 @@ Those changes remain intact. Raid Plan persistence intentionally avoided Rotatio
 
 ## Next Raid Plan slice
 
-After the persistence gate is green, the next planned work is assignment editing/ownership on the Raid Plan surface, reusing existing assignment behavior rather than duplicating it.
+The persistence slice is done. The next Raid Plan work is assignment editing/ownership on the Raid Plan surface, reusing existing assignment behavior rather than duplicating it. Rotation is free to continue against the stable persistence boundary while that separate UI/assignment slice proceeds.
