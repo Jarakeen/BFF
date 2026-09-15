@@ -23,3 +23,15 @@ def test_workspace_bootstrap_owns_cross_feature_install_order() -> None:
     assert source.index("install_roster_assignment_persistence_support()") < source.index(
         "install_roster_assignment_action_support()"
     )
+
+
+def test_startup_order_tests_no_longer_treat_schedule_feature_as_bootstrap() -> None:
+    legacy = 'Path("ui/operations_console_schedule_support.py")'
+    offenders = []
+    for path in Path("ui/tests").glob("test_*.py"):
+        if path.name == Path(__file__).name:
+            continue
+        if legacy in path.read_text(encoding="utf-8"):
+            offenders.append(path.as_posix())
+
+    assert offenders == []
