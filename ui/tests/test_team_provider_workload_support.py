@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_shared_workload_card_is_installed_after_comp_maker_polish():
-    source = (ROOT / "ui" / "team_optimization_hybrid_anchor_support.py").read_text(
+    source = (ROOT / "ui" / "application_team_optimization_bootstrap.py").read_text(
         encoding="utf-8"
     )
 
