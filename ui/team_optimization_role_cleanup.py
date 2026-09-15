@@ -4,8 +4,8 @@ from engine.config import get_data_dir
 from minmax.optimization_mode import OptimizationMode
 from services.eso_database import EsoDatabase
 from services.generated_roster_plan_service import (
-    GeneratedRosterPlanService,
-    GeneratedRosterPlanSlot,
+    GeneratedRosterDraftService,
+    GeneratedRosterDraftSlot,
 )
 from services.roster_service import RosterService
 from services.team_role_autofill import build_role_compatible_autofill
@@ -268,7 +268,7 @@ def _all_named_teams(page) -> tuple[str, ...]:
 def _install_load_team(page) -> None:
     db_path = get_data_dir() / "eso.db"
     page._optimization_roster_service = RosterService(EsoDatabase(db_path))
-    page._optimization_generated_plan_service = GeneratedRosterPlanService(EsoDatabase(db_path))
+    page._optimization_generated_plan_service = GeneratedRosterDraftService(EsoDatabase(db_path))
     page._optimization_loaded_team_name_a = ""
     page._optimization_loaded_team_name_b = ""
     page._optimization_loaded_generated_plan_a = None
@@ -321,7 +321,7 @@ def _init_refocused(self, parent=None) -> None:
     _refocus_optimization_ui(self)
 
 
-def _original_slot_by_name(page) -> dict[str, GeneratedRosterPlanSlot]:
+def _original_slot_by_name(page) -> dict[str, GeneratedRosterDraftSlot]:
     plan = _loaded_generated_plan(page)
     if plan is None:
         return {}
@@ -332,7 +332,7 @@ def _original_slot_by_name(page) -> dict[str, GeneratedRosterPlanSlot]:
     }
 
 
-def _slot_from_optimization_row(row: dict[str, str], original=None) -> GeneratedRosterPlanSlot:
+def _slot_from_optimization_row(row: dict[str, str], original=None) -> GeneratedRosterDraftSlot:
     slot_name = row.get("slot", "")
     is_saved = row.get("kind") == "saved"
     player_name = row.get("player", "") or "Recruitment Needed"
@@ -351,7 +351,7 @@ def _slot_from_optimization_row(row: dict[str, str], original=None) -> Generated
             preserve_original = True
 
     if preserve_original:
-        return GeneratedRosterPlanSlot(
+        return GeneratedRosterDraftSlot(
             slot_name=slot_name or original.slot_name,
             kind=original.kind,
             player_name=original.player_name,
@@ -370,7 +370,7 @@ def _slot_from_optimization_row(row: dict[str, str], original=None) -> Generated
             mundus=original.mundus,
         )
 
-    return GeneratedRosterPlanSlot(
+    return GeneratedRosterDraftSlot(
         slot_name=slot_name,
         kind=("saved" if is_saved else "open_recruit"),
         player_name=player_name,
