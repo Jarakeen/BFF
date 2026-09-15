@@ -170,6 +170,7 @@ class _Base:
             magnitude_policy=magnitude_policy,
             successive_hit_multiplier=None,
         )
+        self.dynamic_event_times = []
 
     def _periodic_semantics_for(self, *, action_name, coefficient_number):
         return self.semantic
@@ -196,6 +197,18 @@ class _Base:
     @staticmethod
     def _occurrence_multiplier(semantic, occurrence_index):
         return 1.0
+
+    def _resolve_dynamic_periodic_damage(
+        self,
+        *,
+        action,
+        coefficient_number,
+        classification,
+        runtime_events,
+        semantic,
+    ):
+        self.dynamic_event_times.extend(float(event.time_seconds) for event in runtime_events)
+        return 150.0 * len(tuple(runtime_events)), ()
 
 
 def _eligibility(policy):
@@ -268,19 +281,24 @@ def test_missing_dynamic_tick_health_fails_closed() -> None:
     assert any("tick at 2s" in item for item in evidence.unresolved)
 
 
-def test_dynamic_source_magnitude_remains_explicitly_unresolved() -> None:
+def test_dynamic_source_magnitude_uses_canonical_tick_resolver_for_included_ticks_only() -> None:
     action = _action()
+    base = _Base(action, magnitude_policy=PeriodicDamageMagnitudePolicy.DYNAMIC_AT_TICK)
+    snapshots = {
+        1.0: _snapshot(1.0, 0.75),
+        2.0: _snapshot(2.0, 0.25),
+        3.0: _snapshot(3.0, 0.25),
+    }
     bridge = RotationCandidatePeriodicTargetHealthDamageBridgeService(
-        base=_Base(action, magnitude_policy=PeriodicDamageMagnitudePolicy.DYNAMIC_AT_TICK),
+        base=base,
         target_health_eligibility=_eligibility(PeriodicTargetHealthTimingPolicy.DYNAMIC_AT_TICK),
-        snapshot_resolver=lambda time_seconds, sequence: _snapshot(float(time_seconds), 0.25),
+        snapshot_resolver=lambda time_seconds, sequence: snapshots.get(float(time_seconds)),
         target_identity="boss",
     )
 
     evidence = bridge.evaluate_if_supported(candidate=_candidate(action), action=action)
 
     assert evidence is not None
-    assert evidence.damage_value is None
-    assert evidence.unresolved == (
-        "Periodic Execute: coefficient 1 periodic target-Health bridge currently requires snapshot_at_cast source magnitude",
-    )
+    assert evidence.damage_value == 300.0
+    assert evidence.unresolved == ()
+    assert base.dynamic_event_times == [2.0, 3.0]
