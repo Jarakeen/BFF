@@ -2,6 +2,9 @@ from minmax.skill_component_classification import HealTemporalScope, SkillEffect
 from services.rotation_healer_u50_skill_component_repository import (
     RotationHealerU50SkillComponentRepository,
 )
+from services.rotation_reviewed_skill_component_repository import (
+    RotationReviewedSkillComponentRepository,
+)
 
 
 class _EmptyBase:
@@ -28,6 +31,12 @@ def _repo(base=None):
         "unused.db",
         base_repository=base or _EmptyBase(),
     )
+
+
+def test_default_base_reuses_role_neutral_reviewed_rotation_repository():
+    repo = RotationHealerU50SkillComponentRepository("unused.db")
+
+    assert isinstance(repo.base_repository, RotationReviewedSkillComponentRepository)
 
 
 def test_budding_seeds_bloom_is_delayed_heal_and_field_is_periodic():
