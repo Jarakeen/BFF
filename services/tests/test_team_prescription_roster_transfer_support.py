@@ -1,3 +1,4 @@
+from pathlib import Path
 from types import SimpleNamespace
 
 from models.build_model import GearSlot, PlayerBuild
@@ -125,3 +126,12 @@ def test_concise_preview_stays_one_line_per_slot_instead_of_dumping_all_unresolv
     assert "Prescribed recruits: 1" in preview
     assert "Still unresolved: 1" in preview
     assert "class, build, gear, skills, CP" not in preview
+
+
+def test_live_prescription_transfer_uses_generated_roster_draft_api() -> None:
+    source = Path("ui/team_prescription_roster_transfer_support.py").read_text(encoding="utf-8")
+
+    assert "GeneratedRosterDraftService" in source
+    assert "GeneratedRosterDraftSlot" in source
+    assert "GeneratedRosterPlanService" not in source
+    assert "GeneratedRosterPlanSlot" not in source
