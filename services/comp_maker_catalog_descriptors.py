@@ -2,12 +2,10 @@ from __future__ import annotations
 
 """Explicit Comp Maker and Team Optimization service catalog descriptors.
 
-``COMP_MAKER_LOCAL_SERVICE_DESCRIPTORS`` contains only this family's metadata.
-``COMP_MAKER_SERVICE_DESCRIPTORS`` remains a temporary compatibility aggregate for
-the legacy ``services.service_catalog`` bootstrap, which still imports that symbol
-directly.  The canonical whole-catalog family list lives in
-``services.service_catalog_aggregator`` and consumes the local symbol so the new
-aggregator does not recursively own itself.
+This module contains metadata only for the Comp Maker / Team Optimization domain.
+Whole-catalog aggregation lives in ``services.service_catalog_aggregator`` so this
+family does not transitively own unrelated RaidPlan, Extreme, Rotation, or Team
+Workflow descriptor families.
 """
 
 from services.service_catalog import (
@@ -118,67 +116,10 @@ COMP_MAKER_LOCAL_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
     ),
 )
 
-# Compatibility bridge for the legacy service_catalog bootstrap.  Keep this list
-# explicit and metadata-only; runtime service wiring remains typed elsewhere.
-from services.application_catalog_descriptors import APPLICATION_SERVICE_DESCRIPTORS
-from services.extreme_catalog_descriptors import EXTREME_SERVICE_DESCRIPTORS
-from services.extreme_health_recovery_catalog_descriptors import (
-    EXTREME_HEALTH_RECOVERY_SERVICE_DESCRIPTORS,
-)
-from services.extreme_recovery_catalog_descriptors import EXTREME_RECOVERY_SERVICE_DESCRIPTORS
-from services.extreme_spell_damage_catalog_descriptors import (
-    EXTREME_SPELL_DAMAGE_SERVICE_DESCRIPTORS,
-)
-from services.extreme_weapon_damage_catalog_descriptors import (
-    EXTREME_WEAPON_DAMAGE_SERVICE_DESCRIPTORS,
-)
-from services.raid_plan_catalog_descriptors import RAID_PLAN_SERVICE_DESCRIPTORS
-from services.rotation_catalog_descriptors import ROTATION_SERVICE_DESCRIPTORS
-from services.rotation_dd_catalog_descriptors import ROTATION_DD_SERVICE_DESCRIPTORS
-from services.rotation_dd_periodic_catalog_descriptors import (
-    ROTATION_DD_PERIODIC_SERVICE_DESCRIPTORS,
-)
-from services.rotation_gameplay_policy_catalog_descriptors import (
-    ROTATION_GAMEPLAY_POLICY_SERVICE_DESCRIPTORS,
-)
-from services.rotation_observation_catalog_descriptors import (
-    ROTATION_OBSERVATION_SERVICE_DESCRIPTORS,
-)
-from services.rotation_runtime_integration_catalog_descriptors import (
-    ROTATION_RUNTIME_INTEGRATION_SERVICE_DESCRIPTORS,
-)
-from services.rotation_tank_catalog_descriptors import ROTATION_TANK_SERVICE_DESCRIPTORS
-from services.rotation_tank_integration_catalog_descriptors import (
-    ROTATION_TANK_INTEGRATION_SERVICE_DESCRIPTORS,
-)
-from services.team_prescription_catalog_descriptors import (
-    TEAM_PRESCRIPTION_SERVICE_DESCRIPTORS,
-)
-from services.team_provider_catalog_descriptors import TEAM_PROVIDER_SERVICE_DESCRIPTORS
-from services.team_workflow_catalog_descriptors import TEAM_WORKFLOW_SERVICE_DESCRIPTORS
-
-
-COMP_MAKER_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
-    *APPLICATION_SERVICE_DESCRIPTORS,
-    *COMP_MAKER_LOCAL_SERVICE_DESCRIPTORS,
-    *RAID_PLAN_SERVICE_DESCRIPTORS,
-    *EXTREME_SERVICE_DESCRIPTORS,
-    *EXTREME_HEALTH_RECOVERY_SERVICE_DESCRIPTORS,
-    *EXTREME_RECOVERY_SERVICE_DESCRIPTORS,
-    *EXTREME_SPELL_DAMAGE_SERVICE_DESCRIPTORS,
-    *EXTREME_WEAPON_DAMAGE_SERVICE_DESCRIPTORS,
-    *ROTATION_SERVICE_DESCRIPTORS,
-    *ROTATION_DD_SERVICE_DESCRIPTORS,
-    *ROTATION_DD_PERIODIC_SERVICE_DESCRIPTORS,
-    *ROTATION_GAMEPLAY_POLICY_SERVICE_DESCRIPTORS,
-    *ROTATION_OBSERVATION_SERVICE_DESCRIPTORS,
-    *ROTATION_RUNTIME_INTEGRATION_SERVICE_DESCRIPTORS,
-    *ROTATION_TANK_SERVICE_DESCRIPTORS,
-    *ROTATION_TANK_INTEGRATION_SERVICE_DESCRIPTORS,
-    *TEAM_PRESCRIPTION_SERVICE_DESCRIPTORS,
-    *TEAM_PROVIDER_SERVICE_DESCRIPTORS,
-    *TEAM_WORKFLOW_SERVICE_DESCRIPTORS,
-)
+# Compatibility name retained for callers that historically imported the family
+# under this symbol. It is now local-only; whole-catalog aggregation belongs to
+# services.service_catalog_aggregator.
+COMP_MAKER_SERVICE_DESCRIPTORS = COMP_MAKER_LOCAL_SERVICE_DESCRIPTORS
 
 
 __all__ = [
