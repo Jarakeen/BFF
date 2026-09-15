@@ -13,7 +13,7 @@ def test_assignment_persistence_support_restores_and_saves_editable_fields():
 
 
 def test_assignment_persistence_installs_after_team_filtering():
-    source = Path("ui/operations_console_schedule_support.py").read_text(encoding="utf-8")
+    source = Path("ui/application_workspace_bootstrap.py").read_text(encoding="utf-8")
 
     assert "install_roster_assignment_persistence_support()" in source
     assert source.index("install_roster_team_assignment_filter_support()") < source.index(
