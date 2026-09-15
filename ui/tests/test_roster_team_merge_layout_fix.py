@@ -2,7 +2,7 @@ from pathlib import Path
 
 
 def test_merge_layout_fix_installs_after_merge_visibility_support() -> None:
-    source = Path("ui/operations_console_schedule_support.py").read_text(encoding="utf-8")
+    source = Path("ui/application_workspace_bootstrap.py").read_text(encoding="utf-8")
     assert source.index("install_roster_team_merge_visibility_support()") < source.index(
         "install_roster_team_merge_layout_fix()"
     )
