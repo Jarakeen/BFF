@@ -11,12 +11,9 @@ from dataclasses import dataclass
 import json
 from pathlib import Path
 
-_DEFAULT_PATH = (
-    Path(__file__).resolve().parents[1]
-    / "data"
-    / "encounter_add_taunt_handling"
-    / "reviewed.json"
-)
+from services.paths import DATA
+
+_DEFAULT_PATH = DATA / "encounter_add_taunt_handling" / "reviewed.json"
 
 _ALLOWED_HANDLING = {
     "strong_taunt_maintenance_target",
