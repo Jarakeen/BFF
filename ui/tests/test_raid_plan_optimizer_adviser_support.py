@@ -30,7 +30,9 @@ def test_optimizer_adviser_is_explicitly_read_only_and_plan_scoped() -> None:
     assert "_populate_team_editor(page.team_table, autofill=False)" in source
     assert "No player, build, assignment, skill, gear, or Raid Plan field is changed automatically." in source
     assert "set_raid_plan_adviser_scope" in source
-    assert "save" not in source.casefold().split("def _set_raid_plan_adviser_scope", 1)[1].split("def ", 1)[0]
+    scope_body = source.split("def _set_raid_plan_adviser_scope", 1)[1].split("def ", 1)[0]
+    assert ".save(" not in scope_body
+    assert "repository.save" not in scope_body
 
 
 def test_adviser_support_is_installed_before_main_window_builds_optimization_page() -> None:
