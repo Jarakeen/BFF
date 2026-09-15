@@ -31,6 +31,15 @@ _NON_SERVICE_MODULES = frozenset(
         "services.validation_service",
     }
 )
+_EXTERNAL_CONSUMER_ROOTS = ("engine", "minmax", "ui", "tools")
+_SKIP_CONSUMER_PARTS = frozenset({"tests", "test", "__pycache__", "old_pages"})
+_ARCHITECTURAL_SUFFIXES = (
+    "_repository",
+    "_pipeline",
+    "_optimizer",
+    "_persistence",
+    "_coordinator_service",
+)
 
 
 @dataclass(frozen=True)
@@ -79,7 +88,7 @@ def _service_modules(root: Path) -> tuple[str, ...]:
 
 
 def _looks_like_service_module(path: Path) -> bool:
-    """Conservatively classify top-level services modules for coverage warnings."""
+    """Conservatively classify top-level services modules for coverage review."""
 
     try:
         tree = ast.parse(path.read_text(encoding="utf-8"))
@@ -97,6 +106,54 @@ def _looks_like_service_module(path: Path) -> bool:
             if name.startswith(("run_", "optimize_", "evaluate_", "generate_", "project_")):
                 return True
     return False
+
+
+def _module_imported_by_external_runtime(root: Path, module: str) -> bool:
+    """Return True when an application boundary outside services imports ``module``.
+
+    The service catalog documents architectural seams, not every leaf calculation
+    helper. A private helper consumed only by other service implementations therefore
+    does not need its own descriptor merely because its filename ends in ``_service``.
+    """
+
+    for root_name in _EXTERNAL_CONSUMER_ROOTS:
+        base = root / root_name
+        if not base.exists():
+            continue
+        for path in base.rglob("*.py"):
+            try:
+                rel_parts = path.relative_to(root).parts
+            except ValueError:
+                rel_parts = path.parts
+            if any(part in _SKIP_CONSUMER_PARTS for part in rel_parts):
+                continue
+            try:
+                tree = ast.parse(path.read_text(encoding="utf-8"))
+            except (OSError, SyntaxError, UnicodeDecodeError):
+                continue
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    if any(alias.name == module for alias in node.names):
+                        return True
+                elif isinstance(node, ast.ImportFrom):
+                    if str(node.module or "") == module:
+                        return True
+    return False
+
+
+def _needs_catalog_registration(root: Path, module: str, path: Path) -> bool:
+    """Classify an unregistered module as an architectural catalog boundary.
+
+    Explicit repositories/pipelines/optimizers/persistence/coordinators remain worth
+    surfacing even when their current consumers are internal. Ordinary leaf services
+    are surfaced only when application code outside ``services`` consumes them.
+    """
+
+    if not _looks_like_service_module(path):
+        return False
+    if path.stem.endswith(_ARCHITECTURAL_SUFFIXES):
+        return True
+    return _module_imported_by_external_runtime(root, module)
 
 
 def _dependency_cycle(
@@ -237,11 +294,11 @@ def audit_service_catalog(
         if module in registered_modules:
             continue
         path = services_dir / f"{module.removeprefix('services.')}.py"
-        if _looks_like_service_module(path):
+        if _needs_catalog_registration(root, module, path):
             findings.append(
                 CatalogFinding(
                     "WARNING",
-                    "unregistered-service-module",
+                    "unregistered-service-boundary",
                     path.relative_to(root).as_posix(),
                 )
             )
