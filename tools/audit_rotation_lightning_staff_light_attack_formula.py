@@ -9,6 +9,12 @@ buckets that make Rotation Builder refuse Lightning Staff LA damage today.
 """
 
 from dataclasses import dataclass
+from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from minmax.formulas.light_attack_contracts import LIGHT_ATTACK_CONTRACTS
 
