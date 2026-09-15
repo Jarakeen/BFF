@@ -87,6 +87,7 @@ def test_generic_pipeline_bridges_generation_into_recovery_workflow() -> None:
             "demands": ("demand-a", "demand-b"),
             "options": ("option-a", "option-b"),
             "wait_decision_factory": wait_factory,
+            "candidate_projector": None,
             "baseline_id": "saved-build-baseline",
         }
     ]
@@ -157,6 +158,7 @@ def test_effect_pipeline_preserves_build_boundary_and_materializes_effect_eviden
     assert result == "effect-result"
     assert bridge.calls[0]["demands"] == ("support-window",)
     assert bridge.calls[0]["options"] == ("refresh-option",)
+    assert bridge.calls[0]["candidate_projector"] is None
     assert len(workflow.effect_calls) == 1
     call = workflow.effect_calls[0]
     assert call["player_build"] is player_build
