@@ -6,9 +6,11 @@ import sqlite3
 
 from minmax.skill_coefficient_repository import SkillCoefficientRepository
 from minmax.skill_component_classification import HealTemporalScope, SkillEffectKind
-from minmax.skill_component_repository import SkillComponentRepository
 from minmax.skill_component_text_evidence import SkillComponentTextEvidence, extract_component_text_evidence
 from models.build_model import PlayerBuild
+from services.rotation_healer_u50_skill_component_repository import (
+    RotationHealerU50SkillComponentRepository,
+)
 
 
 @dataclass(frozen=True)
@@ -69,12 +71,13 @@ class RotationHealerComponentIdentityGapReport:
 
 
 class RotationHealerComponentIdentityGapService:
-    """Compare coefficient-local healing text with persisted component identity.
+    """Compare coefficient-local healing text with canonical reviewed component identity.
 
     This is an audit service only. Coefficient text is allowed to identify review
     candidates, but it never writes or silently upgrades canonical classification.
-    That keeps the rotation engine fail-closed while giving reviewers exact
-    skill-rank/coefficient coordinates for missing healer identities.
+    The default component view is the same reviewed Rotation + U50 healer overlay
+    consumed by healer runtime evaluation, so already-reviewed identities are not
+    repeatedly reported as missing merely because the raw database still lacks them.
     """
 
     def __init__(
@@ -82,11 +85,13 @@ class RotationHealerComponentIdentityGapService:
         database_path: str | Path,
         *,
         coefficient_repository: SkillCoefficientRepository | None = None,
-        component_repository: SkillComponentRepository | None = None,
+        component_repository: object | None = None,
     ) -> None:
         self.database_path = Path(database_path)
         self.coefficients = coefficient_repository or SkillCoefficientRepository(self.database_path)
-        self.components = component_repository or SkillComponentRepository(self.database_path)
+        self.components = component_repository or RotationHealerU50SkillComponentRepository(
+            self.database_path
+        )
 
     def inspect(self, build: PlayerBuild) -> RotationHealerComponentIdentityGapReport:
         rows: list[RotationHealerComponentIdentityGapRow] = []
