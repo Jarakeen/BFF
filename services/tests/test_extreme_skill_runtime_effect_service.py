@@ -6,6 +6,8 @@ from minmax.runtime_event import RuntimeEvent
 from minmax.support_stacking import StackingBehavior
 from minmax.support_target_type import SupportTargetType
 from models.build_model import PlayerBuild
+from services.extreme_runtime_bar_effect_attempt import ExtremeRuntimeBarEffectAttempt
+from services.extreme_runtime_bar_transition import ExtremeRuntimeBarTransition
 from services.extreme_runtime_snapshot import ExtremeRuntimeSnapshot
 from services.extreme_runtime_snapshot_combat_state_service import (
     ExtremeRuntimeSnapshotCombatStateService,
@@ -51,13 +53,35 @@ def _build() -> PlayerBuild:
     )
 
 
-def _attempt(time_seconds: float = 10.0) -> RuntimeEffectEventAttempt:
+def _back_bar_build() -> PlayerBuild:
+    return PlayerBuild(
+        BuildName="Runtime Back Bar Skill Build",
+        EsoClass="Templar",
+        FrontBarSkills=["", "", "", "", "", ""],
+        BackBarSkills=["Runtime Skill", "", "", "", "", ""],
+    )
+
+
+def _attempt(time_seconds: float = 10.0, sequence: int = 0) -> RuntimeEffectEventAttempt:
     return RuntimeEffectEventAttempt(
         RuntimeEvent(
             time_seconds=time_seconds,
             trigger="critical_heal",
             source="runtime skill test",
+            sequence=sequence,
         )
+    )
+
+
+def _bar_attempt(
+    *,
+    bar: str,
+    time_seconds: float = 10.0,
+    sequence: int = 0,
+) -> ExtremeRuntimeBarEffectAttempt:
+    return ExtremeRuntimeBarEffectAttempt(
+        attempt=_attempt(time_seconds=time_seconds, sequence=sequence),
+        active_bar=bar,
     )
 
 
@@ -111,3 +135,49 @@ def test_shared_runtime_snapshot_projects_skill_named_and_non_named_effects() ->
     assert len(result.active_effects) == 1
     assert result.active_effects[0].name == "weapon_spell_damage"
     assert result.active_effects[0].magnitude == 222.0
+
+
+def test_back_bar_triggered_skill_effect_persists_after_swap_to_front() -> None:
+    skill_runtime = ExtremeSkillRuntimeEffectService("unused.db", repository=_Repository())
+    tagged = _bar_attempt(bar="back", time_seconds=10.0)
+    result = ExtremeRuntimeSnapshotCombatStateService(
+        skill_runtime_effects=skill_runtime,
+    ).resolve(
+        _back_bar_build(),
+        progression=CharacterProgression(passive_ranks={}),
+        active_bar="front",
+        snapshot=ExtremeRuntimeSnapshot(
+            runtime_history=(
+                tagged,
+                ExtremeRuntimeBarTransition(11.0, 0, "back", "front"),
+            ),
+            snapshot_time_seconds=15.0,
+            bar_transition_history_complete=True,
+        ),
+    )
+
+    assert result.unresolved == ()
+    assert result.combat_state.active_buffs == ("Major Sorcery",)
+    assert len(result.active_effects) == 1
+    assert result.active_effects[0].name == "weapon_spell_damage"
+
+
+def test_trigger_on_wrong_bar_does_not_activate_back_bar_skill_effect() -> None:
+    skill_runtime = ExtremeSkillRuntimeEffectService("unused.db", repository=_Repository())
+    tagged = _bar_attempt(bar="front", time_seconds=10.0)
+    result = ExtremeRuntimeSnapshotCombatStateService(
+        skill_runtime_effects=skill_runtime,
+    ).resolve(
+        _back_bar_build(),
+        progression=CharacterProgression(passive_ranks={}),
+        active_bar="front",
+        snapshot=ExtremeRuntimeSnapshot(
+            runtime_history=(tagged,),
+            snapshot_time_seconds=15.0,
+            bar_transition_history_complete=True,
+        ),
+    )
+
+    assert result.unresolved == ()
+    assert result.combat_state.active_buffs == ()
+    assert result.active_effects == ()
