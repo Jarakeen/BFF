@@ -61,7 +61,7 @@ class RotationDDWholePlanDamageBlockerTriageService:
     """Prioritize whole-plan DD blockers without weakening fail-closed evidence.
 
     Coverage blockers remain authoritative. This service distinguishes intentionally
-    parked periodic evidence gaps, caller/runtime-owned exact evidence gaps, and
+    parked source-review gaps, caller/runtime-owned exact evidence gaps, and
     engineering work that is still actionable. No disposition converts unresolved
     damage to zero or marks the underlying coverage audit complete.
     """
@@ -72,6 +72,9 @@ class RotationDDWholePlanDamageBlockerTriageService:
         "periodic runtime",
         "periodic target-health timing is not source-reviewed",
         "periodic target-health conditional timing is unresolved",
+    )
+    _PARKED_SOURCE_REVIEW_REASON_MARKERS = (
+        "lightning staff light-attack combat semantics remain unresolved",
     )
     _RUNTIME_INPUT_REASON_MARKERS = (
         "requires exact runtime anchor evidence",
@@ -118,6 +121,21 @@ class RotationDDWholePlanDamageBlockerTriageService:
                         blocker=blocker,
                         disposition=RotationDDDamageBlockerDisposition.PARKED_EVIDENCE,
                         disposition_reason=parked_review.reason,
+                    )
+                )
+                continue
+            if any(
+                marker in reason_folded
+                for marker in self._PARKED_SOURCE_REVIEW_REASON_MARKERS
+            ):
+                result.append(
+                    RotationDDDamageBlockerTriage(
+                        blocker=blocker,
+                        disposition=RotationDDDamageBlockerDisposition.PARKED_EVIDENCE,
+                        disposition_reason=(
+                            "Lightning Staff light-attack modifier semantics require source review; "
+                            "the preserved formula contract still carries Heavy-Attack/Empower/DoT-shaped buckets"
+                        ),
                     )
                 )
                 continue
