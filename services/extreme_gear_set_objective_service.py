@@ -20,6 +20,7 @@ from minmax.effects import Effect, EffectOperation, EffectUnit
 from minmax.eso_markup import normalize_eso_markup
 from minmax.gear_set_effect_resolver import GearSetEffectResolver
 from minmax.gear_set_repository import GearSetRepository
+from minmax.gear_set_resource_condition_resolver import GearSetResourceConditionResolver
 from minmax.gear_sets import GearSet, GearSetBonus
 from minmax.gear_stat_inputs import GearStatInputResolver
 from minmax.stat_ids import StatId
@@ -208,6 +209,7 @@ class ExtremeGearSetObjectiveService:
 
         active_bonuses = cls._active_bonuses(repository, gear_set.id, piece_count)
         effect_resolver = resolver or GearSetEffectResolver()
+        resource_condition_resolver = GearSetResourceConditionResolver()
         all_effects: list[Effect] = []
         unresolved: list[str] = []
         reviewed_delta = 0.0
@@ -221,6 +223,14 @@ class ExtremeGearSetObjectiveService:
                     source=source,
                 )
             )
+            if not effects and objective in cls._MAX_RESOURCE_OBJECTIVES:
+                effects = tuple(
+                    resource_condition_resolver.resolve(
+                        bonus,
+                        use_max_value=True,
+                        source=source,
+                    )
+                )
             all_effects.extend(effects)
 
             if not effects:
