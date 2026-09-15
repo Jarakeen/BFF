@@ -384,14 +384,16 @@ class CharacterProgressionDialog(QDialog):
 
 
 def _finish_endgame_gear(editor) -> None:
-    """Set every populated gear slot to CP160 Legendary with endgame glyphs."""
+    """Set every populated gear slot to CP160 Legendary with endgame glyphs when supported."""
     for row in getattr(editor, "gear_rows", {}).values():
         slot = row.value
         if slot.is_empty:
             continue
         row.quality_combo.setCurrentText("Gold")
         row.level_combo.setCurrentText("CP160")
-        row.enchant_tier_combo.setCurrentText("Truly Superb")
+        enchant_tier_combo = getattr(row, "enchant_tier_combo", None)
+        if enchant_tier_combo is not None:
+            enchant_tier_combo.setCurrentText("Truly Superb")
 
 
 def _character_id_for_page(page, build: PlayerBuild) -> str | None:
