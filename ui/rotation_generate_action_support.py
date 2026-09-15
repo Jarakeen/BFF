@@ -114,17 +114,38 @@ class RotationGenerateActionSupport:
         page.rotation_generate_canonical_context_provider = None
 
     @staticmethod
-    def _advanced_application_context_ready(page, provider) -> bool:
+    def _live_application_provider(provider):
+        """Find the live application provider through transparent provider decorators.
+
+        Rotation's production context is intentionally decorated by optional evidence
+        adapters. Those wrappers must not accidentally opt baseline Generate into the
+        strict advanced path merely because their class name differs from the wrapped
+        application provider.
+        """
+
+        current = provider
+        seen: set[int] = set()
+        while current is not None and id(current) not in seen:
+            seen.add(id(current))
+            if current.__class__.__name__ == "RotationGenerateApplicationContextProvider":
+                return current
+            current = getattr(current, "provider", None)
+        return None
+
+    @classmethod
+    def _advanced_application_context_ready(cls, page, provider) -> bool:
         """Return whether the workspace explicitly opted into strict canonical Generate.
 
         Generic/static context providers keep their historical behavior. This guard only
-        applies to the live application provider used by the Rotation workspace, detected
-        by the exact policy seams it consumes. Recovery policy is an optional advanced
-        stabilization feature; DD target resistance is optional advanced damage evidence.
-        Leaving either unset must not disable the baseline Rotation Maker.
+        applies to the live application provider used by the Rotation workspace, even
+        when that provider is wrapped by transparent evidence decorators. Recovery policy
+        is an optional advanced stabilization feature; DD target resistance is optional
+        advanced damage evidence. Leaving either unset must not disable the baseline
+        Rotation Maker.
         """
 
-        if provider.__class__.__name__ != "RotationGenerateApplicationContextProvider":
+        application_provider = cls._live_application_provider(provider)
+        if application_provider is None:
             return True
 
         recovery_policy = getattr(page, "canonical_recovery_policy", None)
