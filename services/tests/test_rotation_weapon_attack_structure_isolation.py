@@ -66,7 +66,7 @@ def _weapon(weapon_type):
     return GearSlot(Set="Test", WeaponType=weapon_type, Quality="Gold", Level="CP160")
 
 
-def test_weapon_attack_structure_ignores_skill_and_enchant_diagnostics_but_not_ambiguous_weapon_identity():
+def test_weapon_attack_structure_ignores_unrelated_diagnostics_and_isolates_legacy_two_handed_family():
     build = PlayerBuild(
         Name="Rylonia",
         BuildName="Corpsebuster DD",
@@ -90,6 +90,7 @@ def test_weapon_attack_structure_ignores_skill_and_enchant_diagnostics_but_not_a
     assert result.build.front_bar.main_hand.weapon_type is WeaponType.DAGGER
     assert result.build.front_bar.off_hand is not None
     assert result.build.front_bar.off_hand.weapon_type is WeaponType.DAGGER
-    assert result.build.back_bar is None
+    assert result.build.back_bar is not None
+    assert result.build.back_bar.main_hand.weapon_type is WeaponType.GREATSWORD
     assert result.evaluation_for("front") is not None
     assert result.evaluation_for("back") is not None
