@@ -92,14 +92,12 @@ def _raid_schedule_card(self, _build=None) -> FoundryCard:
 
 
 def install() -> None:
-    """Install the saved-schedule override after the explicit workspace bootstrap."""
+    """Install only the saved-schedule override."""
     global _INSTALLED
     if _INSTALLED:
         return
 
-    from ui.application_workspace_bootstrap import bootstrap_workspace_extensions
     from ui import operations_console
 
-    bootstrap_workspace_extensions()
     operations_console.OperationsConsole._raid_schedule_card = _raid_schedule_card
     _INSTALLED = True
