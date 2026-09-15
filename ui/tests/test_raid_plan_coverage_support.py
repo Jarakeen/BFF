@@ -1,14 +1,17 @@
 from pathlib import Path
 
 
-def test_raid_plan_route_uses_coverage_aware_workspace() -> None:
-    source = Path("ui/raid_engine_dashboard_support.py").read_text(encoding="utf-8")
+def test_raid_plan_route_preserves_coverage_aware_workspace() -> None:
+    route_source = Path("ui/raid_engine_dashboard_support.py").read_text(encoding="utf-8")
+    rotation_source = Path("ui/raid_plan_rotation_page.py").read_text(encoding="utf-8")
 
-    assert "RaidPlanCoveragePage" in source
-    assert "coverageRequested.connect" in source
-    assert "_open_raid_plan_coverage" in source
-    assert 'window.pages.get("console:7")' in source
-    assert "coverage.set_raid_plan_scope(plan)" in source
+    assert "RaidPlanRotationPage" in route_source
+    assert "from ui.raid_plan_coverage_page import RaidPlanCoveragePage" in rotation_source
+    assert "class RaidPlanRotationPage(RaidPlanCoveragePage):" in rotation_source
+    assert "coverageRequested.connect" in route_source
+    assert "_open_raid_plan_coverage" in route_source
+    assert 'window.pages.get("console:7")' in route_source
+    assert "coverage.set_raid_plan_scope(plan)" in route_source
 
 
 def test_coverage_support_is_installed_before_main_window_builds_pages() -> None:
