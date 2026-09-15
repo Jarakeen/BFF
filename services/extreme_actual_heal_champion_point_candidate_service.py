@@ -3,14 +3,13 @@ from __future__ import annotations
 """Generate legal Champion Point loadout candidates for Extreme actual healing.
 
 Champion Point mechanics remain owned by the canonical CP repository and the
-existing component-scoped healing resolver. This service only discovers CP stars
-that can affect one actual healing event, proves Champion Bar slot legality through
-``ChampionPointLoadoutService``, and materializes each legal loadout onto a real
-``PlayerBuild`` for canonical event scoring.
+component-scoped healing resolver. This service discovers CP stars that can
+change the magnitude of one identified heal, proves Champion Bar legality, and
+materializes legal loadouts onto real ``PlayerBuild`` candidates.
 
 Mixed CP units are never ranked here. Flat Weapon/Spell Damage, Max Resource,
-Healing Done, and Critical Healing are incomparable until the real healing event
-pipeline evaluates the resulting build.
+Healing Done, and Critical Healing remain incomparable until the canonical heal
+evaluator scores the resulting build.
 """
 
 from dataclasses import dataclass
@@ -32,8 +31,31 @@ from services.extreme_complete_optimization_service import ExtremeCompleteOptimi
 
 
 _REVIEWED_COMPONENT_HEALING_CP = frozenset(
-    {"rejuvenator", "soothing tide", "swift renewal"}
+    {"focused mending", "rejuvenator", "soothing tide", "swift renewal"}
 )
+
+# Reviewed dynamic CP whose tooltips mention healing, recovery, shields, or
+# Weapon/Spell Damage but do not increase the magnitude of the heal event H1 is
+# scoring. They may matter to sustain, support, survivability, proc output, or a
+# different event and therefore remain available to those consumers instead.
+_REVIEWED_NON_MAGNITUDE_CP = frozenset(
+    {
+        "cleansing revival",
+        "enlivening overflow",
+        "foresight",
+        "hope infusion",
+        "last stand",
+        "peace of mind",
+        "reaving blows",
+        "refreshing stride",
+        "salve of renewal",
+        "soothing shield",
+        "strategic reserve",
+        "sustained by suffering",
+        "wrathful strikes",
+    }
+)
+
 _HEAL_RELEVANT_STATS = frozenset(
     {
         StatId.MAX_MAGICKA,
@@ -45,12 +67,10 @@ _HEAL_RELEVANT_STATS = frozenset(
     }
 )
 _HEAL_RELEVANT_DESCRIPTION_MARKERS = (
-    "heal",
+    "healing done",
+    "healing abilities",
     "max magicka",
     "max stamina",
-    "weapon and spell damage",
-    "weapon damage",
-    "spell damage",
     "critical healing",
 )
 
@@ -68,7 +88,7 @@ class ExtremeActualHealChampionPointCandidateResult:
 
 
 class ExtremeActualHealChampionPointCandidateService:
-    """Materialize every reviewed heal-relevant legal CP loadout."""
+    """Materialize every reviewed heal-magnitude-relevant legal CP loadout."""
 
     def __init__(
         self,
@@ -95,9 +115,11 @@ class ExtremeActualHealChampionPointCandidateService:
             if key in _REVIEWED_COMPONENT_HEALING_CP:
                 relevant.append(record)
                 continue
+            if key in _REVIEWED_NON_MAGNITUDE_CP:
+                continue
             if key in EXTERNALLY_MODELED_DYNAMIC_CP_NAMES:
-                # Other externally modeled stars (for example damage or shield
-                # mechanics) are not actual-heal magnitude candidates.
+                # Externally modeled stars outside the reviewed healing-component
+                # set belong to another objective/event unless explicitly added.
                 continue
 
             effects, problems = self.repository.resolve(record.name, record.max_points)
