@@ -2,20 +2,19 @@
 
 This file is a short-lived coordination note for parallel Phase 13.5 workstreams. It is not architecture authority and should be removed when the concurrent work settles.
 
-## Raid Plan workstream — COVERAGE SLICE READY FOR VALIDATION
+## Raid Plan workstream — COVERAGE SLICE COMPLETE / STABLE
 
-Raid Engine persists canonical `RaidPlan` snapshots, exposes plan-owned Primary/Secondary assignments, and now hands the exact current Raid Plan into Coverage for static build auditing.
+Raid Engine persists canonical `RaidPlan` snapshots, exposes plan-owned Primary/Secondary assignments, and hands the exact current Raid Plan into Coverage for static build auditing.
 
 ### Verified checkpoints
 
-User-reported persistence/bridge gate: **32 passed in 5.49s**.
+- Persistence/bridge gate: **32 passed in 5.49s**
+- Assignment/persistence/bridge gate: **30 passed in 3.22s**
+- Coverage/persistence/bridge gate: **34 passed in 4.22s**
 
-User-reported assignment/persistence/bridge gate: **30 passed in 3.22s**.
-
-### Stable prior slices
+### Stable Raid Plan slices
 
 Persistence:
-
 - `services/raid_plan_repository.py`
 - `services/tests/test_raid_plan_repository.py`
 - `services/raid_plan_catalog_descriptors.py`
@@ -24,38 +23,30 @@ Persistence:
 - `ui/tests/test_raid_plan_persistence_page.py`
 
 Assignments:
-
 - `ui/raid_plan_assignment_page.py`
 - `ui/tests/test_raid_plan_assignment_page.py`
 
-### Coverage slice implemented
-
-New/changed files:
-
+Coverage:
 - `services/raid_plan_coverage_scope_service.py`
 - `services/tests/test_raid_plan_coverage_scope_service.py`
-- `services/raid_plan_catalog_descriptors.py` now registers `raid_plan.coverage_scope`
 - `services/tests/test_raid_plan_coverage_catalog_registration.py`
 - `ui/coverage_raid_plan_scope_support.py`
 - `ui/raid_plan_coverage_page.py`
 - `ui/tests/test_raid_plan_coverage_support.py`
-- `ui/raid_engine_dashboard_support.py` now instantiates `RaidPlanCoveragePage`
+- `ui/raid_engine_dashboard_support.py` instantiates `RaidPlanCoveragePage`
 
-Behavior:
+### Coverage contract
 
-- Raid Plans expose **Check Plan Coverage**.
-- The current `RaidPlan` is handed directly to Coverage; Team Optimization is not an intermediate authority.
-- Each selected Raid Plan build is resolved through the existing fail-closed `RaidPlanSavedBuildResolutionService`.
-- Coverage audits exactly the successfully resolved selected builds.
-- Missing or ambiguous selected builds remain explicitly unresolved and are reported in the Coverage scope/summary.
-- A Raid Plan with zero resolved builds does **not** fall back to all saved builds.
-- Coverage gets a distinct `raid_plan` build-scope entry.
-- Primary and Secondary assignment labels populate **Planned Provider** and **Backup** only when they exactly match a coverage-effect display name.
-- Assignment labels are planning intent only and never prove static availability or uptime.
-- Static capability evidence remains owned by the existing Coverage/SavedBuildCapability services.
-- No structural change was made to `models/raid_plan.py`.
-- No database migration/reset is involved.
-- Boss/encounter overrides remain a later contextual layer; the original roadmap was not changed.
+- **Check Plan Coverage** sends the current `RaidPlan` directly to Coverage.
+- Team Optimization is not an intermediate authority.
+- Selected builds resolve through fail-closed `RaidPlanSavedBuildResolutionService`.
+- Coverage audits only successfully resolved plan-selected builds.
+- Missing/ambiguous chairs remain explicitly unresolved.
+- Zero resolved builds never falls back to all saved builds.
+- Primary/Secondary assignment labels populate Planned Provider/Backup only on exact coverage-effect display-name matches.
+- Assignment labels remain planning intent, not proof of static availability or uptime.
+- Static capability evidence remains owned by Coverage/SavedBuildCapability services.
+- No `models/raid_plan.py` shape change, database migration, or reset occurred.
 
 ### Roadmap remains unchanged
 
@@ -63,17 +54,15 @@ Behavior:
 Persistence -> Assignments -> Coverage -> Rotation -> Optimizer Adviser
 ```
 
-Persistence and Assignments are stable. Coverage is implemented and awaiting its focused validation gate before being marked stable.
+Persistence, Assignments, and Coverage are complete/stable. Rotation is next.
 
 ### Rotation workstream handoff
 
-Roto/Rotation may continue consuming the stable Raid Plan persistence and assignment fields. The Coverage slice is a sibling consumer and does not alter Rotation contracts, runtime state, or persisted model shape.
+Roto/Rotation may treat Raid Plan persistence, assignments, and Coverage scope as stable upstream context. Rotation remains a consumer and should not add a second Raid Plan persistence, assignment, or Coverage authority.
 
-Do **not** add a second Raid Plan persistence, assignment, or Coverage authority inside Rotation.
+If Rotation needs a structural change to `models/raid_plan.py`, coordinate it first because that model shape round-trips through durable storage and repository tests. Prefer additive consumer-side adapters.
 
-If Rotation needs a structural change to `models/raid_plan.py`, coordinate it first because that model shape round-trips through durable storage and repository tests. Additive consumer-side adapters are preferred.
-
-### Ownership boundary
+Ownership remains:
 
 ```text
 Personnel / Characters / Saved Builds = global reusable identity
@@ -87,8 +76,4 @@ Do not make ESO Logs, Rotation runtime state, or Team Optimization state a persi
 
 ## Rotation workstream — ACTIVE
 
-Rotation is continuing on separate runtime/mechanics files. The Raid Plan Coverage slice intentionally avoided Rotation-owned files.
-
-### Coverage validation gate
-
-Do not treat this Coverage slice as stable until the focused Raid Plan scope/catalog/UI/persistence/bridge tests are green. Once the user reports that gate, update this note to mark Coverage complete/stable and hand it off as upstream context.
+Rotation may now proceed against the stable upstream Raid Plan contract. The next Raid Plan integration target is making the visible Raid Plan hand one selected chair's exact resolved effective build and assignment context into Rotation, without moving Rotation ownership into RaidPlan persistence.
