@@ -73,6 +73,26 @@ def test_package_adapter_expands_every_candidate_and_reports_denominator_stats()
     assert service.stats.unresolved == ()
 
 
+def test_package_adapter_accumulates_diagnostics_across_optimizer_passes():
+    candidate = _candidate("candidate")
+    expanded = _candidate("candidate:expanded")
+    delegate = _Delegate((candidate,))
+    armor = _ArmorWeights({"candidate": _result(expanded, raw=9, retained=2)})
+    service = ExtremeActualHealArmorWeightPackageAdapter(
+        delegate,
+        armor,
+        label="package",
+    )
+
+    service.build_candidates()
+    service.build_candidates()
+
+    assert service.stats.raw_package_candidates == 2
+    assert service.stats.expanded_candidates == 2
+    assert service.stats.raw_weight_layouts_reviewed == 18
+    assert service.stats.retained_weight_signatures == 4
+
+
 def test_package_adapter_drops_unproven_physical_candidate_but_keeps_blocker():
     candidate = _candidate("illegal")
     delegate = _Delegate((candidate,))
