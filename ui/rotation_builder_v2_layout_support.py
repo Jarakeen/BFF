@@ -3,14 +3,13 @@ from __future__ import annotations
 """User-intent layout for Rotation Builder.
 
 This layer deliberately reuses the dashboard's canonical widgets rather than cloning
-engine inputs.  The new workspace organizes Rotation around build context, rotation
+engine inputs. The new workspace organizes Rotation around build context, rotation
 style, execution profile, sustain, pressure windows, and generated evidence while the
 underlying planners continue to own combat truth.
 """
 
 from types import MethodType
 
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -80,7 +79,9 @@ def _build_execution_profile(page) -> FoundryCard:
     page.rotation_complexity_combo.addItems(["Simple", "Moderate", "High"])
     page.rotation_complexity_combo.setCurrentText("Moderate")
 
-    page.rotation_prioritize_survival = QCheckBox("Prioritize survivability over perfect output")
+    page.rotation_prioritize_survival = QCheckBox(
+        "Prioritize survivability over perfect output"
+    )
     page.rotation_human_reaction_time = QCheckBox("Account for human reaction time")
     page.rotation_human_reaction_time.setChecked(True)
 
@@ -244,8 +245,11 @@ def _build_results_card(page) -> FoundryCard:
     row.addWidget(page.clear_plan_button)
     row.addStretch()
     card.addLayout(row)
-    card.addWidget(page.resource_summary)
-    card.addWidget(page.resource_detail)
+    page.rotation_result_hint = _muted(
+        "Generate builds the implemented rotation plan. Timeline details live on Timeline; "
+        "resource and duration evidence live on Uptime & Resources."
+    )
+    card.addWidget(page.rotation_result_hint)
     return card
 
 
