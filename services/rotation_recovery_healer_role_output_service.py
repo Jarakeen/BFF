@@ -5,6 +5,9 @@ from services.rotation_candidate_canonical_plan_evidence_service import (
     RotationCandidateRoleOutputEvidence,
 )
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
+from services.rotation_candidate_healer_multi_demand_role_output_service import (
+    RotationCandidateHealerMultiDemandRoleOutputService,
+)
 from services.rotation_candidate_healer_role_output_service import (
     RotationCandidateHealerRoleOutputService,
 )
@@ -24,13 +27,21 @@ class RotationRecoveryHealerRoleOutputService:
     snapshot-owned runtime CombatState resolver and the shared canonical rebuild
     bridge. Legacy snapshots without runtime history retain the role-output service's
     static-context path rather than inventing time-varying evidence.
+
+    Both the original single-demand healer role-output service and the canonical
+    multi-demand wrapper accept the same optional runtime build-context seam. This
+    adapter owns neither healing math nor demand aggregation; it only binds final-plan
+    runtime state before delegating to those existing authorities.
     """
 
     def __init__(
         self,
         *,
         build: PlayerBuild,
-        role_output_service: RotationCandidateHealerRoleOutputService,
+        role_output_service: (
+            RotationCandidateHealerRoleOutputService
+            | RotationCandidateHealerMultiDemandRoleOutputService
+        ),
         runtime_build_context_service: RotationPlanRuntimeBuildContextService,
     ) -> None:
         self.build = build
