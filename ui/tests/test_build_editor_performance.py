@@ -22,7 +22,7 @@ def test_performance_layer_does_not_monkeypatch_skill_bar_logic() -> None:
     assert "lru_cache" not in source
 
 
-def test_finish_endgame_gear_is_batched_without_signal_or_repaint_storms() -> None:
+def test_finish_endgame_gear_is_batched_without_owning_build_editor_method() -> None:
     source = Path(build_editor_performance.__file__).read_text(encoding="utf-8")
 
     assert "def finish_endgame_gear_batched" in source
@@ -33,3 +33,4 @@ def test_finish_endgame_gear_is_batched_without_signal_or_repaint_storms() -> No
     assert 'row.enchant_tier_combo.setCurrentText("Truly Superb")' in source
     assert 'combo.setProperty("foundryLastValidIndex", combo.currentIndex())' in source
     assert "phase5_build_ui_support._finish_endgame_gear = finish_endgame_gear_batched" in source
+    assert "BuildEditor.finish_endgame_gear =" not in source
