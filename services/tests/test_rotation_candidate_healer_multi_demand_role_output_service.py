@@ -61,6 +61,29 @@ class _DemandEvidenceProvider:
         )
 
 
+class _RuntimeDemandEvidenceProvider(_DemandEvidenceProvider):
+    def evaluate_demand(
+        self,
+        *,
+        candidate,
+        demand,
+        runtime_build_context_resolver=None,
+    ):
+        self.calls.append(
+            (candidate.candidate_id, demand.name, runtime_build_context_resolver)
+        )
+        return RotationHealerDemandHealingEvidence(
+            demand=demand,
+            direct_events=(),
+            periodic_events=(),
+            delayed_events=(),
+            modeled_direct_healing=float(self.totals[demand.name]),
+            modeled_periodic_healing=0.0,
+            modeled_delayed_healing=0.0,
+            unresolved=tuple(self.unresolved_by_name.get(demand.name, ())),
+        )
+
+
 def test_multi_demand_output_preserves_each_window_and_uses_weakest_rate() -> None:
     first = _demand("first danger", 10.0, 15.0)
     second = _demand("second danger", 30.0, 40.0)
@@ -155,6 +178,30 @@ def test_each_required_window_is_evaluated_independently() -> None:
     assert provider.calls == [
         ("healer-candidate", "window one"),
         ("healer-candidate", "window two"),
+    ]
+
+
+def test_runtime_build_context_is_forwarded_to_every_required_window() -> None:
+    first = _demand("window one", 5.0, 10.0)
+    second = _demand("window two", 10.0, 15.0)
+    provider = _RuntimeDemandEvidenceProvider(
+        {"window one": 1000.0, "window two": 1000.0}
+    )
+    service = RotationCandidateHealerMultiDemandRoleOutputService(
+        demands=(first, second),
+        demand_evidence_provider=provider,
+    )
+
+    runtime_resolver = lambda _time, _sequence=None: SimpleNamespace()
+    result = service.evaluate_plan(
+        _candidate(),
+        runtime_build_context_resolver=runtime_resolver,
+    )
+
+    assert result.resolved_value == pytest.approx(200.0)
+    assert provider.calls == [
+        ("healer-candidate", "window one", runtime_resolver),
+        ("healer-candidate", "window two", runtime_resolver),
     ]
 
 
