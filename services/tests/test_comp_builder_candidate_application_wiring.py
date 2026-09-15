@@ -41,7 +41,8 @@ def test_fill_from_roster_uses_saved_build_candidates_only():
 def test_comp_maker_send_to_roster_preserves_structured_candidate_evidence():
     source = Path("ui/comp_builder_build_candidate_support.py").read_text(encoding="utf-8")
 
-    assert "GeneratedRosterPlanSlot(" in source
+    assert "GeneratedRosterDraftSlot(" in source
+    assert "GeneratedRosterPlanSlot" not in source
     assert 'kind="saved" if is_saved else "prescribed_recruit"' in source
     assert "build_name=candidate.name" in source
     assert 'gear_summary=" + ".join(candidate.gear_sets)' in source
