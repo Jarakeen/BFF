@@ -31,7 +31,7 @@ def test_food_and_potions_card_owns_real_potion_generation_control() -> None:
         encoding="utf-8"
     )
     assert "install_rotation_dashboard_layout(self)" in dashboard
-    assert "self._refresh_build_context()" in source
+    assert "page._refresh_build_context()" in source
 
 
 def test_rotation_potion_picker_reuses_full_canonical_catalogs_on_every_build_refresh() -> None:
