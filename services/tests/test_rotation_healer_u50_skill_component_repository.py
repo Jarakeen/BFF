@@ -26,6 +26,25 @@ class _BaseWithSentinel:
         )
 
 
+class _BaseWithProvenCrit:
+    def get_for_skill_rank(self, skill_rank_id: int):
+        from minmax.skill_component_classification import SkillComponentClassification
+
+        if skill_rank_id != RotationHealerU50SkillComponentRepository.COMBAT_PRAYER_RANK_ID:
+            return ()
+        return (
+            SkillComponentClassification(
+                skill_rank_id=skill_rank_id,
+                coefficient_number=1,
+                effect_kind=SkillEffectKind.HEAL,
+                is_dot=False,
+                is_aoe=True,
+                can_crit=True,
+                source="positive runtime critical observation",
+            ),
+        )
+
+
 def _repo(base=None):
     return RotationHealerU50SkillComponentRepository(
         "unused.db",
@@ -108,6 +127,16 @@ def test_combat_prayer_is_direct_heal():
     assert component.effect_kind is SkillEffectKind.HEAL
     assert component.heal_temporal_scope is HealTemporalScope.DIRECT
     assert component.is_dot is False
+
+
+def test_healer_identity_overlay_preserves_separately_proven_critical_eligibility():
+    component = _repo(_BaseWithProvenCrit()).get_for_skill_rank(
+        RotationHealerU50SkillComponentRepository.COMBAT_PRAYER_RANK_ID
+    )[0]
+
+    assert component.effect_kind is SkillEffectKind.HEAL
+    assert component.heal_temporal_scope is HealTemporalScope.DIRECT
+    assert component.can_crit is True
 
 
 def test_unrelated_base_components_are_preserved():
