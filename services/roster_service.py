@@ -42,7 +42,8 @@ class RosterService:
                 primary_role TEXT,
                 secondary_role TEXT,
                 status TEXT NOT NULL DEFAULT 'Active',
-                canonical_player_id TEXT NOT NULL DEFAULT ''
+                canonical_player_id TEXT NOT NULL DEFAULT '',
+                canonical_character_id TEXT NOT NULL DEFAULT ''
             )
         """)
         existing_roster_columns = {
@@ -52,11 +53,26 @@ class RosterService:
             self.db.execute(
                 "ALTER TABLE roster_member ADD COLUMN canonical_player_id TEXT NOT NULL DEFAULT ''"
             )
+        if "canonical_character_id" not in existing_roster_columns:
+            self.db.execute(
+                "ALTER TABLE roster_member ADD COLUMN canonical_character_id TEXT NOT NULL DEFAULT ''"
+            )
+        # A single player may legitimately have multiple Personnel rows because the
+        # current roster model is still player+character shaped. Character identity,
+        # not player identity, is the one-to-one bridge at this layer.
+        self.db.execute("DROP INDEX IF EXISTS roster_member_canonical_player_id_unique")
         self.db.execute(
             """
-            CREATE UNIQUE INDEX IF NOT EXISTS roster_member_canonical_player_id_unique
+            CREATE INDEX IF NOT EXISTS roster_member_canonical_player_id_index
             ON roster_member(canonical_player_id)
             WHERE canonical_player_id <> ''
+            """
+        )
+        self.db.execute(
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS roster_member_canonical_character_id_unique
+            ON roster_member(canonical_character_id)
+            WHERE canonical_character_id <> ''
             """
         )
         self.db.execute("""
@@ -119,6 +135,7 @@ class RosterService:
                 rm.secondary_role,
                 rm.status,
                 rm.canonical_player_id,
+                rm.canonical_character_id,
                 COALESCE((
                     SELECT GROUP_CONCAT(team_name, ', ')
                     FROM (
@@ -147,6 +164,7 @@ class RosterService:
                 rm.secondary_role,
                 rm.status,
                 rm.canonical_player_id,
+                rm.canonical_character_id,
                 COALESCE((
                     SELECT GROUP_CONCAT(team_name, ', ')
                     FROM (
@@ -314,12 +332,14 @@ class RosterService:
         cursor = self.db.execute("""
             INSERT INTO roster_member (
                 player_name, character_name, eso_class,
-                primary_role, secondary_role, status, canonical_player_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                primary_role, secondary_role, status,
+                canonical_player_id, canonical_character_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             member.PlayerName, member.CharacterName, member.EsoClass,
             member.PrimaryRole, member.SecondaryRole, member.Status or "Active",
             str(member.CanonicalPlayerId or "").strip(),
+            str(member.CanonicalCharacterId or "").strip(),
         ))
         member_id = cursor.lastrowid
         self._set_member_teams(member_id, member.Team)
@@ -332,12 +352,14 @@ class RosterService:
         self.db.execute("""
             UPDATE roster_member SET
                 player_name = ?, character_name = ?, eso_class = ?,
-                primary_role = ?, secondary_role = ?, status = ?, canonical_player_id = ?
+                primary_role = ?, secondary_role = ?, status = ?,
+                canonical_player_id = ?, canonical_character_id = ?
             WHERE id = ?
         """, (
             member.PlayerName, member.CharacterName, member.EsoClass,
             member.PrimaryRole, member.SecondaryRole, member.Status or "Active",
-            str(member.CanonicalPlayerId or "").strip(), member.Id,
+            str(member.CanonicalPlayerId or "").strip(),
+            str(member.CanonicalCharacterId or "").strip(), member.Id,
         ))
         self._set_member_teams(member.Id, member.Team)
         self.db.commit()
@@ -386,4 +408,5 @@ class RosterService:
             PrimaryRole=row["primary_role"] or "", SecondaryRole=row["secondary_role"] or "",
             Status=row["status"] or "Active", Team=row["team_name"] or "",
             CanonicalPlayerId=row["canonical_player_id"] or "",
+            CanonicalCharacterId=row["canonical_character_id"] or "",
         )
