@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-"""Prove build/scenario-owned gear condition markers for standing Extreme H1 scoring.
+"""Compose proven condition markers for standing Extreme H1 scoring.
 
-This service owns no stat arithmetic and does not infer proc/runtime state. It
-materializes conditions proven directly by the saved/hypothetical build plus the
-standing H1 scenario itself: canonical provisioning kind, active-bar Destruction
-Staff type, an explicitly selected transformed form, and ``standing_still``.
-Pet, dodge, trigger, stack, and other runtime conditions remain absent until a
-specialist runtime service proves them.
+This service owns no stat arithmetic. It materializes conditions proven directly
+by the saved/hypothetical build and the standing H1 scenario, then composes
+specialist pre-event witnesses for reviewed runtime setup mechanics. Pet, dodge,
+proc, stack, and other runtime conditions remain absent until a specialist service
+proves them.
 """
 
 from dataclasses import dataclass
@@ -15,6 +14,9 @@ from pathlib import Path
 import sqlite3
 
 from models.build_model import PlayerBuild
+from services.extreme_actual_heal_gear_precondition_witness_service import (
+    ExtremeActualHealGearPreconditionWitnessService,
+)
 
 
 _DESTRUCTION_STAFF_TYPES = frozenset(
@@ -34,10 +36,18 @@ class ExtremeActualHealBuildConditionContext:
 
 
 class ExtremeActualHealBuildConditionContextService:
-    """Resolve condition markers proven by the build or standing H1 scenario."""
+    """Resolve build/scenario conditions plus reviewed pre-H1 setup witnesses."""
 
-    def __init__(self, database_path: str | Path) -> None:
+    def __init__(
+        self,
+        database_path: str | Path,
+        *,
+        gear_preconditions: ExtremeActualHealGearPreconditionWitnessService | None = None,
+    ) -> None:
         self.database_path = str(database_path)
+        self.gear_preconditions = (
+            gear_preconditions or ExtremeActualHealGearPreconditionWitnessService()
+        )
         self._provisioning_kind_cache: dict[str, str | None] = {}
 
     def _provisioning_kind(self, name: str) -> str | None:
@@ -109,6 +119,14 @@ class ExtremeActualHealBuildConditionContextService:
         if transformed:
             active.add("transformed")
             evidence.append(f"transformed: explicit build form is {transformed}")
+
+        preconditions = self.gear_preconditions.resolve(
+            build,
+            active_bar=active_bar,
+        )
+        active.update(preconditions.active_conditions)
+        evidence.extend(preconditions.evidence)
+        unresolved.extend(preconditions.unresolved)
 
         return ExtremeActualHealBuildConditionContext(
             active_conditions=tuple(sorted(active, key=str.casefold)),
