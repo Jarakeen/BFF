@@ -25,7 +25,10 @@ def test_roster_intake_matches_dd_and_places_known_roles_before_unresolved():
 def test_send_to_comp_maker_uses_roster_intake_bridge():
     source = Path("ui/comp_builder_roster_intake_support.py").read_text(encoding="utf-8")
 
-    assert "comp.apply_roster_team_context(team_name, members)" in source
+    assert "comp.apply_roster_team_context(" in source
+    assert "encounter_id=encounter_id" in source
+    assert "encounter_name=encounter_name" in source
+    assert "assignments=assignments" in source
     assert "assignment_actions._send_to_comp_maker = _send_roster_team_to_comp" in source
 
 
