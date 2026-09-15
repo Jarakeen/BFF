@@ -32,7 +32,8 @@ def test_build_editor_dropdowns_share_searchable_combo_behavior() -> None:
     assert "PopupCompletion" in source
     assert "setClearButtonEnabled(True)" in source
     assert "NoInsert" in source
-    assert "BuildEditor.__init__ = init_with_searchable_dropdowns" in source
+    assert 'register_post_init("searchable_build_dropdowns", _configure_all_build_dropdowns)' in source
+    assert "BuildEditor.__init__ =" not in source
 
 
 def test_newly_searchable_fixed_catalogs_reject_unfinished_typed_values() -> None:
