@@ -145,7 +145,7 @@ def test_current_repo_audit_confirms_resolved_authority_and_identity_debt() -> N
     assert "stale-raid-plan-persistence-doc" not in codes
     assert "runtime-quarantine-import" not in codes
     assert "legacy-generated-roster-plan-runtime-alias" not in codes
+    assert "catalog-family-transitive-aggregation" not in codes
     assert "overlapping-plan-persistence" in codes
-    assert "catalog-family-transitive-aggregation" in codes
     assert "duplicate-class-definition" in codes
     assert "ui-class-monkey-patch" in codes
