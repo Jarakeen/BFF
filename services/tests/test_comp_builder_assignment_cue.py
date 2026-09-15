@@ -62,7 +62,7 @@ def test_rylo_uses_one_gold_assignment_accent_for_source_and_target() -> None:
 
 
 def test_assignment_cue_installs_after_candidate_picker_and_main_control_surfaces() -> None:
-    installer = Path("ui/team_optimization_hybrid_anchor_support.py").read_text(
+    installer = Path("ui/application_team_optimization_bootstrap.py").read_text(
         encoding="utf-8"
     )
 
