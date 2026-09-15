@@ -18,12 +18,55 @@ from ui.raid_plan_character_selection_page import RaidPlanCharacterSelectionPage
 from ui.raid_plan_page import RAID_PLAN_SEATS, _clean, _slug
 
 
+def merge_visible_plan_with_loaded_snapshot(visible: RaidPlan, loaded: RaidPlan | None) -> RaidPlan:
+    """Preserve plan-owned fields not editable on the current Raid Plan surface.
+
+    Assignments, notes, stable identity references, and triggered responsibilities are
+    already legitimate RaidPlan state even though this UI slice does not expose editors
+    for all of them yet. Saving a loaded plan must not erase that hidden state.
+    """
+    if loaded is None or loaded.trial_id.casefold() != visible.trial_id.casefold():
+        return visible
+
+    prior_by_seat = {member.seat_id.casefold(): member for member in loaded.members}
+    members = []
+    for member in visible.members:
+        prior = prior_by_seat.get(member.seat_id.casefold())
+        if prior is not None and prior.gamertag.casefold() == member.gamertag.casefold():
+            member = member.with_selection(
+                roster_member_id=prior.roster_member_id,
+                character_id=prior.character_id,
+                primary_assignment=prior.primary_assignment,
+                secondary_assignment=prior.secondary_assignment,
+                notes=prior.notes,
+            )
+        members.append(member)
+
+    active_seats = {member.seat_id.casefold() for member in members}
+    triggered = tuple(
+        row
+        for row in loaded.triggered_responsibilities
+        if row.seat_id.casefold() in active_seats
+    )
+    return RaidPlan(
+        plan_id=visible.plan_id,
+        trial_id=visible.trial_id,
+        name=visible.name,
+        team_name=loaded.team_name,
+        difficulty=visible.difficulty,
+        status=loaded.status,
+        members=tuple(members),
+        triggered_responsibilities=triggered,
+    )
+
+
 class RaidPlanPersistencePage(RaidPlanCharacterSelectionPage):
     """Raid Plan editor with durable named-plan save/load controls."""
 
     def __init__(self, parent=None) -> None:
         self.plan_repository = RaidPlanRepository(get_data_dir() / "raid_plans.json")
         self._loading_plan = False
+        self._loaded_plan_snapshot: RaidPlan | None = None
         super().__init__(parent)
         self.refresh_saved_plan_picker()
 
@@ -61,6 +104,10 @@ class RaidPlanPersistencePage(RaidPlanCharacterSelectionPage):
 
         layout.addLayout(row)
         self.header.add_context_widget(controls)
+
+    def current_plan(self) -> RaidPlan:
+        visible = super().current_plan()
+        return merge_visible_plan_with_loaded_snapshot(visible, self._loaded_plan_snapshot)
 
     def refresh_saved_plan_picker(self, *, select_plan_id: str | None = None) -> None:
         if not hasattr(self, "saved_plan_combo"):
@@ -101,6 +148,7 @@ class RaidPlanPersistencePage(RaidPlanCharacterSelectionPage):
         except (RaidPlanRepositoryError, ValueError, TypeError) as exc:
             self.status.error(f"Could not save Raid Plan: {exc}")
             return
+        self._loaded_plan_snapshot = plan
         self.refresh_saved_plan_picker(select_plan_id=plan.plan_id)
         self.status.success(f"Saved Raid Plan: {plan.name}")
 
@@ -131,11 +179,22 @@ class RaidPlanPersistencePage(RaidPlanCharacterSelectionPage):
         except RaidPlanRepositoryError as exc:
             self.status.error(f"Could not delete Raid Plan: {exc}")
             return
+        if (
+            deleted
+            and self._loaded_plan_snapshot is not None
+            and self._loaded_plan_snapshot.plan_id.casefold() == plan_id.casefold()
+        ):
+            self._loaded_plan_snapshot = None
         self.refresh_saved_plan_picker()
         if deleted:
             self.status.info("Saved Raid Plan deleted. Personnel and saved builds were unchanged.")
         else:
             self.status.warning("That saved Raid Plan no longer exists.")
+
+    def clear_plan(self) -> None:
+        self._loaded_plan_snapshot = None
+        super().clear_plan()
+        self.refresh_saved_plan_picker(select_plan_id=None)
 
     def apply_plan(self, plan: RaidPlan) -> None:
         """Restore one persisted planning snapshot without mutating global identity."""
@@ -194,8 +253,9 @@ class RaidPlanPersistencePage(RaidPlanCharacterSelectionPage):
             self.team_table.blockSignals(False)
             self._loading_plan = False
 
+        self._loaded_plan_snapshot = plan
         self.refresh_saved_plan_picker(select_plan_id=plan.plan_id)
         self._update_summary()
 
 
-__all__ = ["RaidPlanPersistencePage"]
+__all__ = ["RaidPlanPersistencePage", "merge_visible_plan_with_loaded_snapshot"]
