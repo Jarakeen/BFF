@@ -59,7 +59,7 @@ def test_build_around_support_filters_candidates_and_revalidates_before_transfer
     from pathlib import Path
 
     source = Path("ui/comp_builder_build_constraint_support.py").read_text(encoding="utf-8")
-    installer = Path("ui/team_optimization_hybrid_anchor_support.py").read_text(encoding="utf-8")
+    installer = Path("ui/application_team_optimization_bootstrap.py").read_text(encoding="utf-8")
 
     assert "BUILD AROUND • REQUIRED GEAR SETS" in source
     assert "parse_required_gear_sets(text)" in source
