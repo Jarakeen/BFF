@@ -5,6 +5,12 @@ from __future__ import annotations
 This is a focused frontier audit, not a whole-record claim. It reuses canonical
 owners for armor weight + Divines/Mundus scoring and Champion Point stat projection,
 then reports only objective-relevant unresolved mechanics.
+
+The Weapon Damage objective is the generic character-sheet stat. Champion Point
+branches that grant Weapon/Spell Damage only to a scoped consumer (healing
+abilities, damaging abilities, Martial attacks, or Magical attacks) belong to
+role/output evaluation instead and must not inflate or block this sheet-stat
+record.
 """
 
 import argparse
@@ -33,6 +39,14 @@ OBJECTIVE = "weapon_damage"
 REFERENCE_VALUE = 3000.0
 
 
+_SCOPED_POWER_PHRASES = (
+    "to your healing abilities",
+    "to your damaging abilities",
+    "to martial attacks",
+    "to magical attacks",
+)
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--database", default=str(ROOT / "data" / "eso.db"))
@@ -40,13 +54,28 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _normalized(text: str) -> str:
+    return " ".join(str(text or "").casefold().split())
+
+
 def _mentions_weapon_damage(text: str) -> bool:
-    value = " ".join(str(text or "").casefold().split())
+    value = _normalized(text)
     return (
         "weapon damage" in value
         or "weapon and spell damage" in value
         or "weapon & spell damage" in value
     )
+
+
+def _is_scoped_power_only(text: str) -> bool:
+    value = _normalized(text)
+    return _mentions_weapon_damage(value) and any(
+        phrase in value for phrase in _SCOPED_POWER_PHRASES
+    )
+
+
+def _is_sheet_weapon_damage_relevant(text: str) -> bool:
+    return _mentions_weapon_damage(text) and not _is_scoped_power_only(text)
 
 
 def main() -> int:
@@ -68,6 +97,7 @@ def main() -> int:
     cp_repository = ChampionPointStaticRepository(database)
     cp_candidates: list[ChampionPointLoadoutCandidate] = []
     cp_relevant_unresolved: list[str] = []
+    cp_scoped_excluded: list[str] = []
 
     for record in cp_repository.slottable_records():
         projected = ExtremeChampionPointObjectiveService.candidate_for_record(
@@ -87,7 +117,10 @@ def main() -> int:
                     )
                 )
             continue
-        if _mentions_weapon_damage(record.description):
+        if _is_scoped_power_only(record.description):
+            cp_scoped_excluded.append(record.name)
+            continue
+        if _is_sheet_weapon_damage_relevant(record.description):
             cp_relevant_unresolved.append(
                 f"{record.name}: {'; '.join(projected.unresolved)}"
             )
@@ -105,13 +138,19 @@ def main() -> int:
     }
     for projected in cp_baseline.unresolved_candidates:
         record = non_slottable_records.get(projected.name.casefold())
-        if record is not None and _mentions_weapon_damage(record.description):
+        if record is None:
+            continue
+        if _is_scoped_power_only(record.description):
+            cp_scoped_excluded.append(record.name)
+            continue
+        if _is_sheet_weapon_damage_relevant(record.description):
             cp_relevant_unresolved.append(
                 f"non-slottable {record.name}: {'; '.join(projected.unresolved)}"
             )
 
     unresolved.extend(cp_relevant_unresolved)
     unique_unresolved = tuple(dict.fromkeys(unresolved))
+    scoped_excluded = tuple(dict.fromkeys(cp_scoped_excluded))
 
     print("EXTREME WEAPON DAMAGE ARMOR / MUNDUS / CP FRONTIER")
     print(f"database={database}")
@@ -146,11 +185,15 @@ def main() -> int:
         )
     print(f"slottable_total_delta={cp_loadout.total_flat_ceiling:.3f}")
     print(f"non_slottable_reviewed_lower_bound={cp_baseline.reviewed_lower_bound:.3f}")
+    print(f"scoped_power_excluded_count={len(scoped_excluded)}")
+    for name in scoped_excluded:
+        print(f"  scoped_not_sheet_stat: {name}")
     print(f"weapon_damage_relevant_cp_unresolved_count={len(cp_relevant_unresolved)}")
     print()
     print("PROOF GATES")
     print(f"armor_mundus_frontier_resolved={armor_mundus is not None}")
     print(f"cp_four_slot_denominator_proven={cp_loadout.denominator_proven}")
+    print(f"scoped_cp_power_kept_out_of_sheet_stat={bool(scoped_excluded)}")
     print(f"cp_weapon_damage_denominator_closed={not cp_relevant_unresolved and cp_loadout.denominator_proven}")
     print(f"unresolved_count={len(unique_unresolved)}")
     for row in unique_unresolved:
