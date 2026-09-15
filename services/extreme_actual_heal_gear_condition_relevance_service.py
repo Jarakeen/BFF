@@ -3,9 +3,10 @@ from __future__ import annotations
 """H1-specific relevance rules for conditional gear objective blockers.
 
 The shared gear objective service must preserve conditional Weapon/Spell Damage
-because those mechanics matter in general. MOST Actual Heal can prove a narrower
-fact: damage-type ability scopes cannot modify a healing event. This service owns
-that H1 contextual proof without weakening the shared gear model.
+because those mechanics matter in general. Standing MOST Actual Heal can prove two
+narrower facts without weakening that shared model: damage-type ability scopes
+cannot modify a healing event, and the standing scenario itself satisfies a
+``standing_still`` condition.
 """
 
 from dataclasses import dataclass
@@ -23,6 +24,7 @@ _DAMAGE_ONLY_ABILITY_SCOPES = frozenset(
         "ability_scope:physical_and_bleed_damage",
     }
 )
+_STANDING_H1_CONDITIONS = frozenset({"standing_still"})
 
 
 @dataclass(frozen=True)
@@ -34,7 +36,7 @@ class ExtremeActualHealGearConditionRelevanceResult:
 
 
 class ExtremeActualHealGearConditionRelevanceService:
-    """Contextualize shared gear blockers for an H1 healing event."""
+    """Contextualize shared gear blockers for a standing H1 healing event."""
 
     @classmethod
     def review(
@@ -52,13 +54,19 @@ class ExtremeActualHealGearConditionRelevanceService:
         remaining: list[str] = []
         for blocker in row.unresolved:
             text = str(blocker)
-            if objective in {"spell_damage", "weapon_damage"} and any(
-                f"requires condition {scope}" in text
-                for scope in _DAMAGE_ONLY_ABILITY_SCOPES
-            ):
-                ignored.append(text)
-            else:
-                remaining.append(text)
+            if objective in {"spell_damage", "weapon_damage"}:
+                damage_only = any(
+                    f"requires condition {scope}" in text
+                    for scope in _DAMAGE_ONLY_ABILITY_SCOPES
+                )
+                standing_proven = any(
+                    f"requires condition {condition}" in text
+                    for condition in _STANDING_H1_CONDITIONS
+                )
+                if damage_only or standing_proven:
+                    ignored.append(text)
+                    continue
+            remaining.append(text)
 
         return ExtremeActualHealGearConditionRelevanceResult(
             objective_key=objective,
