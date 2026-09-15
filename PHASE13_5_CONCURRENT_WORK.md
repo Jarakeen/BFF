@@ -13,6 +13,7 @@ Raid Engine persists canonical `RaidPlan` snapshots, exposes plan-owned Primary/
 - Coverage/persistence/bridge gate: **34 passed in 4.22s**
 - Coverage support-set + Rotation handoff gate: **35 passed in 3.23s**
 - Optimizer Adviser gate: **44 passed in 7.75s**
+- Raid Plan controls + canonical Coverage group-effect bridge gate: **35 passed in 4.74s**
 
 ### Stable Raid Plan slices
 
@@ -40,6 +41,14 @@ Coverage support-set evidence:
 - `services/raid_unique_support_set_capability_service.py`
 - reviewed proc/activation sets such as Powerful Assault remain `Conditional`; equipment presence never claims uptime
 - full raid-facing group/unique-set catalog is visible in Raid Plan Coverage
+
+Coverage canonical named-effect bridge:
+- `services/raid_named_group_effect_capability_service.py`
+- exact canonical `EffectVariant.name` identities may populate matching raid-facing Coverage rows
+- only group/ally/self-or-ally/enemy targeted evidence is eligible; self-only and unclassified effects are not promoted as raid coverage
+- triggered/conditional evidence stays `Conditional`; no uptime is inferred
+- unique support sets continue through their separate exact-equipped-set evidence path
+- Raid Plan header remains context-only (`Trial`, `Difficulty`, `Plan`); saved-plan actions and `Check Plan Coverage` now live in a normal Plan Controls row below the header
 
 Rotation handoff:
 - `ui/raid_plan_rotation_handoff_support.py`
@@ -82,7 +91,7 @@ Optimizer Adviser:
 Persistence -> Assignments -> Coverage -> Rotation -> Optimizer Adviser
 ```
 
-All five Raid Plan roadmap slices are now implemented and verified green.
+All five Raid Plan roadmap slices are implemented and verified green. Subsequent work is refinement/validation, not a roadmap ownership change.
 
 ### Rotation workstream coordination
 
@@ -105,4 +114,4 @@ Do not make ESO Logs, Rotation runtime state, or Team Optimization state a persi
 
 ## Rotation workstream — ACTIVE / INDEPENDENT
 
-Roto may continue its mechanics/runtime work independently. No Rotation-owned engine file or persisted `RaidPlan` shape changed in the Adviser slice.
+Roto may continue its mechanics/runtime work independently. No Rotation-owned engine file or persisted `RaidPlan` shape changed in the latest Coverage/layout refinement.
