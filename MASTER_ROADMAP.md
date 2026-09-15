@@ -609,9 +609,9 @@ Extreme Builds is one shared legal-character optimization engine with role-speci
 
 Current engineering estimate toward a role-complete Extreme product is approximately **55–60% overall**. Architecture is farther along than exhaustive ESO mechanic/corpus coverage. Percentages below are planning estimates, not phase-closeout claims.
 
-##### E1. Unified runtime snapshot — 🟡 next / advanced
+##### E1. Unified runtime snapshot — 🟢 Complete
 
-Replace fragmented single-source scenario inputs with one deterministic runtime history plus one exact snapshot time:
+E1 now replaces fragmented runtime scenario inputs with one deterministic runtime history plus one exact snapshot time:
 
 ```text
 Runtime History
@@ -623,6 +623,9 @@ Runtime History
   ├── deterministic chance rolls
   ├── condition evidence
   ├── stacking / refresh
+  ├── bar provenance / transitions
+  ├── source-persistence semantics
+  ├── explicit condition windows
   └── target applicability
           +
    exact snapshot time
@@ -630,7 +633,13 @@ Runtime History
       CombatState
 ```
 
-The lower runtime infrastructure is already strong: named buffs, potion windows, skill prebuffs, triggered skills, gear procs, `SELF_OR_ALLY`, explicit condition evidence, ordered event streams, cooldowns, stacking, and exact active-window boundaries are implemented. The remaining bridge is orchestration so every role asks one authoritative question: **what is provably true for this candidate at time `t`?**
+Closeout on **2026-09-15** proved one role-neutral runtime contract for named buffs, generic timed effects, potion windows, triggered skills, gear procs, `SELF_OR_ALLY`, explicit condition evidence, ordered event streams, cooldowns, stacking, exact active-window boundaries, bar-tagged activation, coherent bar-transition history, and reviewed source-persistence behavior. Restoration-heavy and Sacred Ground runtime windows now enter the production Extreme healer path through the same snapshot instead of parallel healer-only truth.
+
+The closed Weapon Damage and Spell Damage records also expose machine-readable ownership and deterministic runtime witnesses. E1 owns only ordered player runtime history; target Health / Off Balance remain `target_state`, same-build higher resource remains `structural_state`, Font / Calculated Defense remain `class_runtime`, and Sorcerer slot legality remains `active_bar`.
+
+Real integration used the canonical saved **Margrat → DF Healer** build and reported `snapshot_unresolved_count=0`, `e1_real_integration_ready=True`, `e1_healer_runtime_bridge_closed=True`, `e1_power_runtime_bridge_closed=True`, and `e1_closeout_audit_ready=True`. Focused E1 regression: **45 passed in 8.29s**. Full repository regression: **2970 passed in 198.10s**, failures **0**. Detailed closeout: `docs/extreme_e1_unified_runtime_closeout.md`.
+
+The audit also exposed a separate canonical identity discrepancy: the live healer build is currently owned by `Margrat`, while a distinct `Magrat` character exists with zero builds. That issue belongs to Phase 1 / identity cleanup and does not reopen E1.
 
 ##### E2. Complete shared legal-character search — 🟡 partial
 
@@ -761,7 +770,7 @@ Planning snapshot from 2026-09-09:
 | Shared legal class/subclass architecture | 90% |
 | Static character calculation infrastructure | 90% |
 | Runtime/proc architecture | 85% |
-| Unified runtime snapshot orchestration | 70% |
+| Unified runtime snapshot orchestration | 100% |
 | Whole-character exhaustive candidate dimensions | 55% |
 | Mechanic corpus coverage | 50% |
 | Search-space proof / exhaustive audit | 30% |
