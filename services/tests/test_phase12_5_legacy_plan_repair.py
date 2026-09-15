@@ -5,15 +5,15 @@ from models.build_model import BuildRoster, PlayerBuild
 from models.roster_model import RosterMember
 from services.eso_database import EsoDatabase
 from services.generated_roster_plan_service import (
-    GeneratedRosterPlanService,
-    GeneratedRosterPlanSlot,
+    GeneratedRosterDraftService,
+    GeneratedRosterDraftSlot,
 )
 from services.roster_service import RosterService
 
 
 def _services(tmp_path: Path):
     db = EsoDatabase(tmp_path / "eso.db")
-    plans = GeneratedRosterPlanService(db)
+    plans = GeneratedRosterDraftService(db)
     roster = RosterService(db)
     repair = Phase125LegacyPlanRepairService(plans=plans, roster=roster)
     return db, plans, roster, repair
@@ -27,13 +27,13 @@ def _delete_team_identity(db: EsoDatabase, name: str) -> None:
         db.commit()
 
 
-def _legacy_plan(plans: GeneratedRosterPlanService, *, source_kind: str = "saved_build"):
+def _legacy_plan(plans: GeneratedRosterDraftService, *, source_kind: str = "saved_build"):
     return plans.save_plan(
         name="Godslayer Composition",
         goal="Godslayer",
         difficulty="Veteran Hardmode",
         slots=(
-            GeneratedRosterPlanSlot(
+            GeneratedRosterDraftSlot(
                 slot_name="Healer 1",
                 kind="prescribed_recruit",
                 player_name="Magrat",
@@ -45,7 +45,7 @@ def _legacy_plan(plans: GeneratedRosterPlanService, *, source_kind: str = "saved
                 source_name="Magrat",
                 unresolved="Legacy row.",
             ),
-            GeneratedRosterPlanSlot(
+            GeneratedRosterDraftSlot(
                 slot_name="Healer 2",
                 kind="open_recruit",
                 player_name="Recruitment Needed",
