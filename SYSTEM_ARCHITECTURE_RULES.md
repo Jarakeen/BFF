@@ -132,6 +132,27 @@ The boundary follows these rules:
 
 Tests for this boundary should prove that an exact candidate can move between engines without silent identity mutation, evidence loss, favorable UNKNOWN coercion, or mechanics being reconstructed from presentation strings.
 
+## Code retirement and quarantine
+
+BFF preserves old code deliberately when it may still matter for compatibility, migration, forensic comparison, or historical reference. Do not treat a quick unreferenced search as proof that a file is safe to delete.
+
+Use the retirement path:
+
+`live runtime -> deprecated -> legacy or migration -> delete only after proof`
+
+The directory meanings and proof checklist are defined in `docs/CODE_RETIREMENT_AND_QUARANTINE.md`.
+
+Normal runtime code under `engine/`, `minmax/`, `models/`, `services/`, and `ui/` must not import from `legacy/`, `deprecated/`, `old_pages/`, or `migration/`.
+
+- `deprecated/` contains still-callable code being phased out. It must not gain new production consumers.
+- `legacy/` contains compatibility/history preserved after normal production callers have migrated away.
+- `migration/` contains explicit old-data/schema/identity transition code. It may be invoked deliberately by migration/bootstrap tooling, but it is not a normal runtime authority.
+- `old_pages/` is archival UI/reference material only. Runtime imports from it are forbidden.
+
+Before moving a file into quarantine, prove its callers, canonical replacement, focused tests, service/architecture ownership, and persisted-data implications. Broad or cross-domain moves should also receive an appropriate full regression run.
+
+Deletion is the final cleanup step. Keep a quarantined implementation until no supported migration or compatibility path needs it and tests prove removal safe.
+
 ## Fail closed
 
 Unknown, unsupported, or mechanically ambiguous ESO behavior stays explicit. No BFF engine may turn missing evidence into a favorable optimization assumption.
