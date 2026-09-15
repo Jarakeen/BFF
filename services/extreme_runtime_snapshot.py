@@ -51,8 +51,9 @@ class ExtremeRuntimeSnapshot:
     and ``ExtremeRuntimeBarTransition`` rather than added to the generic Phase 7
     ``RuntimeEvent`` contract. ``bar_transition_history_complete`` is separate from
     the transition tuple because an empty tuple may mean either "no swaps occurred"
-    or "swap history was never proven". Strict source-bound gear persistence may
-    rely on transition absence only when this flag is true.
+    or "swap history was never proven". When the flag is true, the transition rows
+    must also form one contiguous deterministic chain; impossible complete histories
+    fail closed before downstream persistence logic can consume them.
     """
 
     # Keep the original positional order intact while E1 callers migrate.
@@ -81,6 +82,7 @@ class ExtremeRuntimeSnapshot:
                 if str(value or "").strip()
             )
         )
+        complete_bar_history = bool(self.bar_transition_history_complete)
         object.__setattr__(self, "runtime_history", history)
         object.__setattr__(self, "attempts", attempts)
         object.__setattr__(self, "recipient_actor_id", recipient)
@@ -88,7 +90,7 @@ class ExtremeRuntimeSnapshot:
         object.__setattr__(
             self,
             "bar_transition_history_complete",
-            bool(self.bar_transition_history_complete),
+            complete_bar_history,
         )
 
         if history and (attempts or supplied_potion_elapsed is not None):
@@ -115,6 +117,8 @@ class ExtremeRuntimeSnapshot:
 
         if history:
             ordered = tuple(sorted(history, key=self._entry_order))
+            if complete_bar_history:
+                self._validate_complete_bar_transition_chain(ordered)
             projected_attempts = tuple(
                 entry.attempt
                 if isinstance(entry, ExtremeRuntimeBarEffectAttempt)
@@ -149,6 +153,35 @@ class ExtremeRuntimeSnapshot:
                 "runtime snapshot potion elapsed time must be finite and non-negative"
             )
         object.__setattr__(self, "potion_elapsed_seconds", potion_elapsed)
+
+    @classmethod
+    def _validate_complete_bar_transition_chain(
+        cls,
+        ordered_history: tuple[ExtremeRuntimeHistoryEntry, ...],
+    ) -> None:
+        transitions = tuple(
+            entry
+            for entry in ordered_history
+            if isinstance(entry, ExtremeRuntimeBarTransition)
+        )
+        if not transitions:
+            return
+
+        previous = transitions[0]
+        for current in transitions[1:]:
+            previous_key = cls._entry_order(previous)
+            current_key = cls._entry_order(current)
+            if current_key == previous_key:
+                raise ValueError(
+                    "complete runtime bar-transition history cannot contain two transitions at the same ordered instant"
+                )
+            if previous.to_bar != current.from_bar:
+                raise ValueError(
+                    "complete runtime bar-transition history is not contiguous: "
+                    f"{previous.from_bar}->{previous.to_bar} is followed by "
+                    f"{current.from_bar}->{current.to_bar}"
+                )
+            previous = current
 
     @staticmethod
     def _entry_order(entry: ExtremeRuntimeHistoryEntry) -> tuple[float, int]:
