@@ -10,7 +10,8 @@ if str(ROOT) not in sys.path:
 
 from engine.config import DEFAULT_DATABASE, get_data_dir
 from minmax.character_progression import CharacterProgression
-from services.build_service import BuildService
+from models.build_model import PlayerBuild
+from services.build_catalog_service import BuildCatalogService
 from services.extreme_conditional_actual_heal_class_route_catalog_service import (
     ExtremeConditionalActualHealClassRouteCatalogService,
 )
@@ -32,7 +33,7 @@ from services.extreme_runtime_snapshot_conditional_actual_heal_optimization_serv
 )
 
 
-DEFAULT_BUILDS = get_data_dir() / "builds.json"
+DEFAULT_CATALOG = get_data_dir() / "characters.json"
 
 
 def _character_name(build) -> str:
@@ -44,24 +45,59 @@ def _character_name(build) -> str:
     ).strip()
 
 
-def _load_saved_build(path: Path, *, character: str, build_name: str):
-    roster = BuildService(path).load()
+def _load_saved_build(
+    path: Path,
+    *,
+    character: str,
+    build_name: str,
+) -> tuple[PlayerBuild, str, str]:
+    """Load one real build through the canonical character/build catalog."""
+
+    service = BuildCatalogService(path)
+    catalog = service.load()
+    characters = [
+        row
+        for row in catalog.get("characters", ())
+        if isinstance(row, dict)
+        and str(row.get("name") or "").strip().casefold() == character.casefold()
+    ]
+    if not characters:
+        raise ValueError(f"Canonical character not found: {character!r}")
+    if len(characters) > 1:
+        raise ValueError(f"Canonical character identity is ambiguous: {character!r}")
+
+    character_id = str(characters[0].get("character_id") or "").strip()
+    if not character_id:
+        raise ValueError(f"Canonical character has no stable id: {character!r}")
+
     matches = [
-        build
-        for build in roster.Members
-        if _character_name(build).casefold() == character.casefold()
-        and str(getattr(build, "BuildName", "") or "").strip().casefold()
-        == build_name.casefold()
+        row
+        for row in service.builds_for_character(character_id)
+        if str(row.get("name") or "").strip().casefold() == build_name.casefold()
     ]
     if not matches:
         raise ValueError(
-            f"Saved build not found: character={character!r}, build={build_name!r}"
+            f"Canonical saved build not found: character={character!r}, build={build_name!r}"
         )
     if len(matches) > 1:
         raise ValueError(
-            f"Saved build identity is ambiguous: character={character!r}, build={build_name!r}"
+            f"Canonical saved build identity is ambiguous: character={character!r}, build={build_name!r}"
         )
-    return matches[0]
+
+    record = matches[0]
+    payload = record.get("payload")
+    if not isinstance(payload, dict):
+        raise ValueError(
+            f"Canonical saved build has no payload: character={character!r}, build={build_name!r}"
+        )
+    build_id = str(record.get("build_id") or "").strip()
+    if not build_id:
+        raise ValueError(
+            f"Canonical saved build has no stable id: character={character!r}, build={build_name!r}"
+        )
+
+    build = PlayerBuild.from_dict(payload)
+    return build, character_id, build_id
 
 
 def _healer_condition_snapshot() -> ExtremeRuntimeSnapshot:
@@ -89,17 +125,17 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
             "Audit Extreme E1 unified runtime snapshot closeout against the real "
-            "Magrat -> DF Healer production path plus the closed Weapon/Spell runtime contracts."
+            "Magrat -> DF Healer canonical production path plus the closed Weapon/Spell runtime contracts."
         )
     )
     parser.add_argument("--character", default="Magrat")
     parser.add_argument("--build", default="DF Healer")
-    parser.add_argument("--builds", type=Path, default=DEFAULT_BUILDS)
+    parser.add_argument("--catalog", type=Path, default=DEFAULT_CATALOG)
     parser.add_argument("--database", type=Path, default=DEFAULT_DATABASE)
     args = parser.parse_args()
 
-    build = _load_saved_build(
-        Path(args.builds),
+    build, character_id, build_id = _load_saved_build(
+        Path(args.catalog),
         character=args.character,
         build_name=args.build,
     )
@@ -122,7 +158,9 @@ def main() -> int:
     optimizer = catalog.optimizer
 
     real_build_loaded = (
-        _character_name(build).casefold() == args.character.casefold()
+        bool(character_id)
+        and bool(build_id)
+        and _character_name(build).casefold() == args.character.casefold()
         and str(getattr(build, "BuildName", "") or "").strip().casefold()
         == args.build.casefold()
     )
@@ -177,9 +215,11 @@ def main() -> int:
 
     print("EXTREME E1 UNIFIED RUNTIME SNAPSHOT CLOSEOUT")
     print(f"database={Path(args.database)}")
-    print(f"builds={Path(args.builds)}")
+    print(f"catalog={Path(args.catalog)}")
     print(f"character={_character_name(build)!r}")
+    print(f"character_id={character_id!r}")
     print(f"build={str(getattr(build, 'BuildName', '') or '')!r}")
+    print(f"build_id={build_id!r}")
     print(f"snapshot_time_seconds={snapshot.snapshot_time_seconds:.3f}")
     print(f"active_condition_ids={active_conditions!r}")
     print()
