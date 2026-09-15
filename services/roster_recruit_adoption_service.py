@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import asdict
-import json
-
 from models.build_model import PlayerBuild
 from services.build_service import BuildService
-from services.generated_roster_plan_service import (
+from services.generated_roster_draft_prescription_service import (
+    GeneratedRosterDraftPrescriptionService,
+)
+from services.generated_roster_draft_service import (
     GeneratedRosterDraft,
     GeneratedRosterDraftService,
     GeneratedRosterDraftSlot,
@@ -34,26 +34,7 @@ class RosterRecruitAdoptionService:
         self.plans = plans
         self.roster = roster
         self.db = plans.db
-        self._ensure_schema()
-
-    def _ensure_schema(self) -> None:
-        self.db.execute(
-            """
-            CREATE TABLE IF NOT EXISTS generated_roster_recruit_prescription (
-                plan_id INTEGER NOT NULL
-                    REFERENCES generated_roster_plan(id)
-                    ON DELETE CASCADE,
-                slot_name TEXT NOT NULL,
-                prescription_json TEXT NOT NULL,
-                adopted_player_name TEXT NOT NULL DEFAULT '',
-                adopted_character_name TEXT NOT NULL DEFAULT '',
-                adopted_build_name TEXT NOT NULL DEFAULT '',
-                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                PRIMARY KEY (plan_id, slot_name)
-            )
-            """
-        )
-        self.db.commit()
+        self.prescriptions = GeneratedRosterDraftPrescriptionService(self.db)
 
     @staticmethod
     def _clean(value: object) -> str:
@@ -155,21 +136,7 @@ class RosterRecruitAdoptionService:
         plan = self.plans.load_plan(plan_name)
         if plan is None:
             return None
-        row = self.db.execute(
-            """
-            SELECT prescription_json
-            FROM generated_roster_recruit_prescription
-            WHERE plan_id = ? AND slot_name = ? COLLATE NOCASE
-            """,
-            (plan.plan_id, self._clean(slot_name)),
-        ).fetchone()
-        if row is None:
-            return None
-        try:
-            value = json.loads(str(row["prescription_json"] or "{}"))
-        except json.JSONDecodeError:
-            return None
-        return value if isinstance(value, dict) else None
+        return self.prescriptions.load(plan.draft_id, self._clean(slot_name))
 
     def _remember_prescription(
         self,
@@ -180,52 +147,14 @@ class RosterRecruitAdoptionService:
         character_name: str,
         build_name: str,
     ) -> None:
-        existing = self.db.execute(
-            """
-            SELECT 1
-            FROM generated_roster_recruit_prescription
-            WHERE plan_id = ? AND slot_name = ? COLLATE NOCASE
-            """,
-            (plan.plan_id, slot.slot_name),
-        ).fetchone()
-        payload = json.dumps(
-            self._prescription_payload(slot), ensure_ascii=False, sort_keys=True
+        self.prescriptions.save(
+            draft_id=plan.draft_id,
+            slot_name=slot.slot_name,
+            prescription=self._prescription_payload(slot),
+            adopted_player_name=player_name,
+            adopted_character_name=character_name,
+            adopted_build_name=build_name,
         )
-        if existing is None:
-            self.db.execute(
-                """
-                INSERT INTO generated_roster_recruit_prescription (
-                    plan_id, slot_name, prescription_json,
-                    adopted_player_name, adopted_character_name, adopted_build_name,
-                    updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-                """,
-                (
-                    plan.plan_id,
-                    slot.slot_name,
-                    payload,
-                    player_name,
-                    character_name,
-                    build_name,
-                ),
-            )
-        else:
-            self.db.execute(
-                """
-                UPDATE generated_roster_recruit_prescription
-                SET adopted_player_name = ?, adopted_character_name = ?,
-                    adopted_build_name = ?, updated_at = CURRENT_TIMESTAMP
-                WHERE plan_id = ? AND slot_name = ? COLLATE NOCASE
-                """,
-                (
-                    player_name,
-                    character_name,
-                    build_name,
-                    plan.plan_id,
-                    slot.slot_name,
-                ),
-            )
-        self.db.commit()
 
     def _add_member_to_team(self, member, team_name: str) -> None:
         teams = [part.strip() for part in str(member.Team or "").split(",") if part.strip()]
