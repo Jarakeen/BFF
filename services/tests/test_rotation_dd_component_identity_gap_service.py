@@ -8,6 +8,9 @@ from models.build_model import PlayerBuild
 from services.rotation_dd_component_identity_gap_service import (
     RotationDDComponentIdentityGapService,
 )
+from services.rotation_dd_reviewed_skill_component_repository import (
+    RotationDDReviewedSkillComponentRepository,
+)
 
 
 class _Coefficients:
@@ -52,6 +55,12 @@ def _rank(name: str, rank_id: int, ability_id: int, coefficient_numbers=(1,)):
         ),
         unresolved=(),
     )
+
+
+def test_default_gap_audit_uses_reviewed_dd_component_repository() -> None:
+    service = RotationDDComponentIdentityGapService("unused.db")
+
+    assert isinstance(service.components, RotationDDReviewedSkillComponentRepository)
 
 
 def test_text_damage_without_canonical_row_becomes_review_candidate() -> None:
