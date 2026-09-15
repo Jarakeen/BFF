@@ -4,7 +4,7 @@ from pathlib import Path
 def test_context_variant_import_support_replaces_prior_team_imports() -> None:
     source = Path("ui/roster_import_context_variant_support.py").read_text(encoding="utf-8")
 
-    assert "Imported from roster" in source
+    assert '.startswith("imported from roster")' in source
     assert "selected_players" in source
     assert "builds.before-roster-reimport.json" in source
     assert "characters.before-roster-reimport.json" in source
