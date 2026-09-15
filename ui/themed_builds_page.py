@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QFileDialog
 from services.accessibility_preferences import AccessibilityPreferences
 from services.share_document_export import ShareDocumentExporter
 from ui.builds_page import BuildsPage as BaseBuildsPage
+from ui.phase5_build_delete_support import attach_delete_build_action
 
 
 class BuildsPage(BaseBuildsPage):
@@ -23,6 +24,7 @@ class BuildsPage(BaseBuildsPage):
             "Export a themed PDF for people, or CSV for data interchange."
         )
         self.export_button.clicked.connect(self._export_builds)
+        attach_delete_build_action(self)
 
     def _export_builds(self):
         folder = ""
