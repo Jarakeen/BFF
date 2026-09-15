@@ -3,7 +3,7 @@ from __future__ import annotations
 from migration.phase12_5_team_workflow_audit import Phase125TeamWorkflowAuditService
 from models.build_model import BuildRoster, PlayerBuild
 from models.roster_model import RosterMember
-from services.generated_roster_plan_service import GeneratedRosterPlan, GeneratedRosterPlanSlot
+from services.generated_roster_plan_service import GeneratedRosterDraft, GeneratedRosterDraftSlot
 
 
 def _build() -> PlayerBuild:
@@ -27,14 +27,14 @@ def _member() -> RosterMember:
     )
 
 
-def _plan() -> GeneratedRosterPlan:
-    return GeneratedRosterPlan(
-        plan_id=7,
+def _plan() -> GeneratedRosterDraft:
+    return GeneratedRosterDraft(
+        draft_id=7,
         name="GH Prog",
         goal="Cloudrest",
         difficulty="Veteran Hardmode",
         slots=(
-            GeneratedRosterPlanSlot(
+            GeneratedRosterDraftSlot(
                 slot_name="Healer 1",
                 kind="saved",
                 player_name="@keen",
@@ -49,7 +49,7 @@ def _plan() -> GeneratedRosterPlan:
                 mundus="The Atronach",
                 unresolved="Exact encounter bar changes unresolved.",
             ),
-            GeneratedRosterPlanSlot(
+            GeneratedRosterDraftSlot(
                 slot_name="Damage 1",
                 kind="prescribed_recruit",
                 player_name="Recruitment Needed",
@@ -153,8 +153,8 @@ def test_phase12_5_audit_detects_lost_structured_adoption_evidence() -> None:
 
 def test_phase12_5_audit_detects_duplicate_chairs() -> None:
     plan = _plan()
-    duplicate = GeneratedRosterPlan(
-        plan_id=plan.plan_id,
+    duplicate = GeneratedRosterDraft(
+        draft_id=plan.draft_id,
         name=plan.name,
         goal=plan.goal,
         difficulty=plan.difficulty,
