@@ -4,7 +4,7 @@ from __future__ import annotations
 
 The dashboard remains a read-mostly summary. The Raid Plans workspace owns the
 visible persistent trial plan without replacing the long-lived Roster, Comp Maker,
-Coverage, Encounter, or Optimization pages.
+Coverage, Encounter, Rotation, or Optimization pages.
 """
 
 import warnings
@@ -112,6 +112,23 @@ def _open_raid_plan_coverage(window, plan) -> None:
     window.show_page("console:7")
 
 
+def _open_raid_plan_rotation(window, plan, seat_id: str) -> None:
+    rotation = window.pages.get("rotations")
+    if rotation is None:
+        return
+    from ui.raid_plan_rotation_handoff_support import bind_raid_plan_rotation_page
+
+    try:
+        bind_raid_plan_rotation_page(rotation, raid_plan=plan, seat_id=seat_id)
+    except (OSError, TypeError, ValueError) as exc:
+        raid_plans = window.pages.get("raid_plans")
+        status = getattr(raid_plans, "status", None)
+        if status is not None:
+            status.warning(f"Could not open Raid Plan chair in Rotation: {exc}")
+        return
+    window.show_page("rotations")
+
+
 def _register_page(window, route: str, page) -> None:
     window.pages[route] = page
     container = window.wrap_page(page)
@@ -124,7 +141,7 @@ def _build_ui_with_raid_engine_dashboard(self) -> None:
     _ORIGINAL_BUILD_UI(self)
 
     from ui.raid_engine_dashboard_page import RaidEngineDashboardPage
-    from ui.raid_plan_coverage_page import RaidPlanCoveragePage
+    from ui.raid_plan_rotation_page import RaidPlanRotationPage
 
     dashboard = RaidEngineDashboardPage()
     dashboard.set_sources(
@@ -139,9 +156,12 @@ def _build_ui_with_raid_engine_dashboard(self) -> None:
     dashboard.helpRequested.connect(lambda: _open_dashboard_help(self))
     _register_page(self, "raid_engine_dashboard", dashboard)
 
-    raid_plans = RaidPlanCoveragePage()
+    raid_plans = RaidPlanRotationPage()
     raid_plans.pageRequested.connect(self.show_page)
     raid_plans.coverageRequested.connect(lambda plan: _open_raid_plan_coverage(self, plan))
+    raid_plans.rotationRequested.connect(
+        lambda plan, seat_id: _open_raid_plan_rotation(self, plan, seat_id)
+    )
     _register_page(self, "raid_plans", raid_plans)
 
 
