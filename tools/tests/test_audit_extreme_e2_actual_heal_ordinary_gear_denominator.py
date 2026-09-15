@@ -13,7 +13,8 @@ def test_denominator_row_distinguishes_positive_complete_and_unresolved_states()
         useful_piece_count=5,
         reviewed_positive_objectives=("healing_done",),
         unresolved_objectives=(),
-        selected_by_bounded_search=False,
+        selected_by_authoritative_search=True,
+        selected_by_bounded_comparison=False,
     )
     unresolved = audit.OrdinaryGearDenominatorRow(
         set_id=2,
@@ -22,7 +23,8 @@ def test_denominator_row_distinguishes_positive_complete_and_unresolved_states()
         useful_piece_count=5,
         reviewed_positive_objectives=("max_magicka",),
         unresolved_objectives=("healing_done",),
-        selected_by_bounded_search=True,
+        selected_by_authoritative_search=False,
+        selected_by_bounded_comparison=False,
     )
 
     assert complete.reviewed_positive is True
@@ -37,14 +39,16 @@ def test_audit_source_uses_complete_repository_preload_and_all_h1_objectives() -
     assert "repository.preload_all_static()" in source
     assert "ExtremeActualHealGearSetCandidateService.OBJECTIVES" in source
     assert "ExtremeGearSetObjectiveService.candidate_for_set" in source
-    assert "selected_by_bounded_search" in source
+    assert "selected_by_authoritative_search" in source
     assert "global_gear_family_denominator_complete=False" in source
 
 
-def test_audit_keeps_bounded_candidate_cap_separate_from_global_denominator() -> None:
+def test_audit_separates_authoritative_exhaustive_search_from_bounded_comparison() -> None:
     source = Path(audit.__file__).read_text(encoding="utf-8")
 
-    assert "per_objective_candidate_cap=" in source
-    assert "bounded_search_omitted_mechanic_complete_reviewed_positive_count=" in source
-    assert "ordinary_gear_bounded_search_is_complete_denominator=" in source
+    assert 'candidate_set_names(per_objective=None)' in source
+    assert "authoritative_per_objective_candidate_cap=None" in source
+    assert "comparison_per_objective_candidate_cap=" in source
+    assert "authoritative_search_omitted_mechanic_complete_reviewed_positive_count=" in source
+    assert "ordinary_gear_authoritative_reviewed_denominator_complete=" in source
     assert "monster sets, mythics, arena weapons, and runtime proc families" in source
