@@ -199,6 +199,32 @@ Audit in progress.
 
 ---
 
+### F010 — Stabilized healer runtime output service existed but Generate did not bind it
+
+**Category:** unwired canonical capability / stale pre-stabilization role evidence
+
+**Files:**
+- `services/rotation_candidate_healer_multi_demand_role_output_service.py`
+- `services/rotation_healer_canonical_role_output_factory_service.py`
+- `services/rotation_recovery_healer_role_output_service.py`
+- `services/rotation_healer_demand_criteria_service.py`
+- `ui/rotation_generate_healer_role_evidence_support.py`
+- focused healer runtime/factory/criteria tests
+
+**Finding:** `RotationRecoveryHealerRoleOutputService` already existed to evaluate healer output against the final recovery-stabilized plan using exact runtime build context, but the production healer Generate path supplied a plain canonical plan-evidence provider with no stabilized-snapshot binder. Recovery could therefore move casts/bar swaps while healer role-output evidence remained on the static/pre-stabilization path. Verified healer hard criteria were vulnerable to the same split authority.
+
+**Disposition:** FIXED.
+
+**Resolution:** the existing multi-demand healer output path now accepts an optional exact runtime build-context resolver and forwards it to every canonical healing demand. `RotationHealerCanonicalRoleOutputFactoryResult` exposes the same runtime seam. The recovery-healer adapter supports the canonical multi-demand provider and exposes its exact stabilized runtime resolver. Production healer Generate wraps canonical plan evidence with a stabilized-snapshot binder so role output and verified healer hard criteria evaluate the same final plan/runtime context. Static behavior remains unchanged when no runtime history is supplied.
+
+**Fail-closed clarification:** relevant factory-level static-context blockers invalidate aggregate healer comparison and verified hard obligations without erasing already-modeled per-window evidence. A window may therefore remain inspectably modeled while `weakest_window_value` and authoritative criteria stay unresolved.
+
+**Validation:** user-reported focused healer gate after final repair: `31 passed in 5.28s`.
+
+**Closeout boundary:** healer role ranking and verified healer hard obligations must consume the same final stabilized runtime context whenever such evidence exists. Do not reintroduce a seed/static-only healer ranking path after recovery stabilization.
+
+---
+
 ## Audit queue
 
 The remaining Phase 13.5 audit will review, in order:
