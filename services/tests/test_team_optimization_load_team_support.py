@@ -10,6 +10,15 @@ def test_optimization_replaces_team_source_with_load_team() -> None:
     assert "_hide_team_source(page)" in source
 
 
+def test_optimization_uses_generated_roster_draft_api_not_legacy_plan_aliases() -> None:
+    source = Path("ui/team_optimization_role_cleanup.py").read_text(encoding="utf-8")
+
+    assert "GeneratedRosterDraftService" in source
+    assert "GeneratedRosterDraftSlot" in source
+    assert "GeneratedRosterPlanService" not in source
+    assert "GeneratedRosterPlanSlot" not in source
+
+
 def test_load_team_prefers_exact_generated_plan_before_roster_autofill() -> None:
     source = Path("ui/team_optimization_role_cleanup.py").read_text(encoding="utf-8")
 
