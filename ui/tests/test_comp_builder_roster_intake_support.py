@@ -37,7 +37,7 @@ def test_assignments_attention_card_header_is_hidden_but_card_remains():
 
 
 def test_roster_intake_installs_after_assignment_actions():
-    source = Path("ui/operations_console_schedule_support.py").read_text(encoding="utf-8")
+    source = Path("ui/application_workspace_bootstrap.py").read_text(encoding="utf-8")
 
     assert "install_comp_builder_roster_intake_support()" in source
     assert source.index("install_roster_assignment_action_support()") < source.index(
