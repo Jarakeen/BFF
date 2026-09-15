@@ -94,10 +94,18 @@ class RotationHealerCanonicalRoleOutputFactoryResult:
             detail = "; ".join(self.unresolved) or "healer role-output provider unavailable"
             raise ValueError("canonical healer role output is unavailable: " + detail)
 
-        output = provider.evaluate_windows(
-            candidate,
-            runtime_build_context_resolver=runtime_build_context_resolver,
-        )
+        # Preserve the historical provider call shape when no runtime resolver was
+        # supplied. Runtime-aware providers receive the explicit resolver only when
+        # the caller actually has one. This keeps older provider implementations and
+        # focused test doubles compatible without swallowing genuine TypeErrors from
+        # inside provider.evaluate_windows().
+        if runtime_build_context_resolver is None:
+            output = provider.evaluate_windows(candidate)
+        else:
+            output = provider.evaluate_windows(
+                candidate,
+                runtime_build_context_resolver=runtime_build_context_resolver,
+            )
         if not self.unresolved:
             return output
         blockers = tuple(
