@@ -116,6 +116,18 @@ class _Calculator:
         )
 
 
+class _MixedCalculator:
+    def evaluate_entity_id(self, entity_id, context):
+        return SimpleNamespace(
+            skill=SimpleNamespace(skill_rank_id=1),
+            components=(
+                SimpleNamespace(coefficient_number=1, final_value=100.0),
+                SimpleNamespace(coefficient_number=2, final_value=250.0),
+            ),
+            unresolved=(),
+        )
+
+
 class _Components:
     def get_for_skill_rank(self, skill_rank_id):
         return (
@@ -132,9 +144,35 @@ class _Components:
         )
 
 
+class _MixedComponents:
+    def get_for_skill_rank(self, skill_rank_id):
+        return (
+            SkillComponentClassification(
+                skill_rank_id=1,
+                coefficient_number=1,
+                effect_kind=SkillEffectKind.DAMAGE,
+                damage_type="magical",
+                is_dot=True,
+                is_aoe=False,
+                can_crit=False,
+                source="test",
+            ),
+            SkillComponentClassification(
+                skill_rank_id=1,
+                coefficient_number=2,
+                effect_kind=SkillEffectKind.DAMAGE,
+                damage_type="magical",
+                is_dot=False,
+                is_aoe=False,
+                can_crit=False,
+                source="test",
+            ),
+        )
+
+
 class _Consequences:
     def resolve(self, skill_rank_id, coefficient_number):
-        return (_consequence(),)
+        return (_consequence(),) if int(coefficient_number) == 1 else ()
 
 
 class _Projection:
@@ -302,3 +340,24 @@ def test_dynamic_source_magnitude_uses_canonical_tick_resolver_for_included_tick
     assert evidence.damage_value == 300.0
     assert evidence.unresolved == ()
     assert base.dynamic_event_times == [2.0, 3.0]
+
+
+def test_mixed_damage_skill_reports_component_level_composition_gap() -> None:
+    action = _action()
+    base = _Base(action)
+    base.calculator = _MixedCalculator()
+    base.components = _MixedComponents()
+    bridge = RotationCandidatePeriodicTargetHealthDamageBridgeService(
+        base=base,
+        target_health_eligibility=_eligibility(PeriodicTargetHealthTimingPolicy.DYNAMIC_AT_TICK),
+        snapshot_resolver=lambda time_seconds, sequence: _snapshot(float(time_seconds), 0.25),
+        target_identity="boss",
+    )
+
+    evidence = bridge.evaluate_if_supported(candidate=_candidate(action), action=action)
+
+    assert evidence is not None
+    assert evidence.damage_value is None
+    assert evidence.unresolved == (
+        "Periodic Execute: coefficient 1 periodic target-Health damage is part of a mixed 2-component damage skill; component-level mixed-damage composition is required",
+    )
