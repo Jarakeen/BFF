@@ -101,6 +101,51 @@ def test_snapshot_at_slices_future_bar_transitions_but_preserves_completeness_pr
     assert sliced.bar_transition_history_complete is True
 
 
+def test_complete_bar_transition_history_accepts_one_contiguous_chain():
+    first = ExtremeRuntimeBarTransition(5.0, 0, "front", "back")
+    second = ExtremeRuntimeBarTransition(9.0, 0, "back", "front")
+    third = ExtremeRuntimeBarTransition(12.0, 0, "front", "back")
+    snapshot = ExtremeRuntimeSnapshot(
+        runtime_history=(third, first, second),
+        snapshot_time_seconds=15.0,
+        bar_transition_history_complete=True,
+    )
+    assert snapshot.bar_transitions == (first, second, third)
+
+
+def test_complete_bar_transition_history_rejects_noncontiguous_chain():
+    first = ExtremeRuntimeBarTransition(5.0, 0, "front", "back")
+    impossible = ExtremeRuntimeBarTransition(9.0, 0, "front", "back")
+    with pytest.raises(ValueError, match="not contiguous"):
+        ExtremeRuntimeSnapshot(
+            runtime_history=(impossible, first),
+            snapshot_time_seconds=15.0,
+            bar_transition_history_complete=True,
+        )
+
+
+def test_complete_bar_transition_history_rejects_ambiguous_same_order_key():
+    first = ExtremeRuntimeBarTransition(5.0, 0, "front", "back")
+    second = ExtremeRuntimeBarTransition(5.0, 0, "back", "front")
+    with pytest.raises(ValueError, match="same ordered instant"):
+        ExtremeRuntimeSnapshot(
+            runtime_history=(first, second),
+            snapshot_time_seconds=15.0,
+            bar_transition_history_complete=True,
+        )
+
+
+def test_incomplete_bar_transition_history_may_remain_noncontiguous():
+    first = ExtremeRuntimeBarTransition(5.0, 0, "front", "back")
+    unknown_gap = ExtremeRuntimeBarTransition(9.0, 0, "front", "back")
+    snapshot = ExtremeRuntimeSnapshot(
+        runtime_history=(unknown_gap, first),
+        snapshot_time_seconds=15.0,
+        bar_transition_history_complete=False,
+    )
+    assert snapshot.bar_transitions == (first, unknown_gap)
+
+
 def test_invalid_bar_provenance_fails_closed():
     with pytest.raises(ValueError, match="unsupported Extreme runtime effect bar"):
         _bar_attempt(time_seconds=1.0, active_bar="middle")
