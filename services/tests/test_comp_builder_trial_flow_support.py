@@ -77,7 +77,7 @@ def test_comp_maker_final_action_uses_send_comp_to_roster_language() -> None:
 
 
 def test_trial_flow_installs_after_candidate_and_assignment_surfaces() -> None:
-    installer = Path("ui/team_optimization_hybrid_anchor_support.py").read_text(
+    installer = Path("ui/application_team_optimization_bootstrap.py").read_text(
         encoding="utf-8"
     )
 
