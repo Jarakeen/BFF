@@ -8,11 +8,22 @@ from ui.rotation_generate_application_context_provider import (
 
 
 class _StaticContext:
-    def __init__(self, *, resolved=True, unresolved=(), maximum=32123) -> None:
+    def __init__(
+        self,
+        *,
+        resolved=True,
+        unresolved=(),
+        maximum=32123,
+        has_contexts=True,
+    ) -> None:
         self.resolved = resolved
         self.unresolved = tuple(unresolved)
         self.maximum = maximum
-        self.progression = SimpleNamespace(character_id="magrat-id")
+        self.progression = SimpleNamespace(
+            character_id="magrat-id",
+            resolved=resolved,
+        )
+        self.contexts = (object(), object()) if has_contexts else ()
 
     def maximum_amount_for(self, bar, resource):
         assert bar == "front"
@@ -107,6 +118,24 @@ def test_live_context_uses_exact_build_encounter_explicit_policy_and_static_maxi
     assert context.evidence_inputs.trigger_fraction == 0.35
     assert context.evidence_inputs.knowledge_gaps == ()
     assert context.role_evidence_composer is composer
+    assert context.character_id == "magrat-id"
+
+
+def test_static_diagnostics_do_not_block_seedable_generate_context() -> None:
+    potion_message = (
+        "front static context: Potion selected; activation/uptime is not part of "
+        "static build state: spell power"
+    )
+    provider = RotationGenerateApplicationContextProvider(
+        static_context_service=_StaticContextService(
+            _StaticContext(resolved=True, unresolved=(potion_message,))
+        ),  # type: ignore[arg-type]
+        demand_policy_provider=_PolicyProvider(clock=(), threshold=()),  # type: ignore[arg-type]
+    )
+
+    context = provider.context_for(_Page())
+
+    assert context.evidence_inputs.maximum_amount == 32123
     assert context.character_id == "magrat-id"
 
 
@@ -228,7 +257,11 @@ def test_live_context_requires_explicit_recovery_resource_and_trigger() -> None:
 def test_unresolved_static_context_blocks_instead_of_inventing_resource_maximum() -> None:
     provider = RotationGenerateApplicationContextProvider(
         static_context_service=_StaticContextService(
-            _StaticContext(resolved=False, unresolved=("unknown gear effect",))
+            _StaticContext(
+                resolved=False,
+                unresolved=("canonical character progression unavailable",),
+                has_contexts=False,
+            )
         ),  # type: ignore[arg-type]
         demand_policy_provider=_PolicyProvider(),  # type: ignore[arg-type]
     )
@@ -237,7 +270,8 @@ def test_unresolved_static_context_blocks_instead_of_inventing_resource_maximum(
         provider.context_for(_Page())
     except ValueError as exc:
         assert str(exc) == (
-            "canonical static build evidence is unresolved: unknown gear effect"
+            "canonical static build evidence is unresolved: "
+            "canonical character progression unavailable"
         )
     else:
-        raise AssertionError("unresolved static build context should fail closed")
+        raise AssertionError("structurally unresolved static build context should fail closed")
