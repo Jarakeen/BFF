@@ -78,6 +78,9 @@ def test_damage_only_unmapped_power_text_is_irrelevant_to_h1_heal() -> None:
         "granting you 10-460 Weapon and Spell Damage against your marked target.",
         "Elemental Succession (5): active set bonus is not yet mechanic-mapped: "
         "Whenever you deal Flame, Shock, or Frost Damage, you gain 11-492 Weapon and Spell Damage for Flame, Shock, or Frost Damage for 4 seconds.",
+        "Knight-errant's Mail (5): active set bonus is not yet mechanic-mapped: "
+        "Adds 10-450 Weapon and Spell Damage to your One Hand and Shield abilities. "
+        "When you use a One Hand and Shield ability, you heal for 35-1537 Health.",
     )
 
     for blocker in examples:
