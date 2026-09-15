@@ -127,6 +127,25 @@ def _rebuild_rotation_setup(page) -> None:
     card.addLayout(grid)
 
 
+def _canonical_potion_value(combo, index: int | None = None) -> str:
+    """Return the engine value behind one decorated potion-menu item."""
+    resolved_index = combo.currentIndex() if index is None else int(index)
+    if resolved_index < 0:
+        return str(combo.currentText() or "").strip()
+    data = combo.itemData(resolved_index)
+    if data is None:
+        return str(combo.currentText() or "").strip()
+    return str(data or "").strip()
+
+
+def _sync_potion_edit_text(combo, index: int) -> None:
+    """Keep editable currentText canonical while dropdown rows remain descriptive."""
+    if index < 0:
+        return
+    canonical = _canonical_potion_value(combo, index)
+    combo.setEditText(canonical)
+
+
 def _rebuild_consumables(page) -> None:
     card = _card(page, "Food & Potions")
     if card is None:
@@ -158,6 +177,12 @@ def _rebuild_consumables(page) -> None:
         "When enabled, Generate Rotation schedules the selected potion on its canonical cooldown."
     )
     card.addWidget(page.potion_on_cooldown)
+
+    if not bool(getattr(page, "_rotation_potion_value_sync_installed", False)):
+        page.potion_combo.currentIndexChanged.connect(
+            lambda index, combo=page.potion_combo: _sync_potion_edit_text(combo, index)
+        )
+        page._rotation_potion_value_sync_installed = True
 
     hint = QLabel(
         "Food follows the selected saved build. Potion may be changed here for this generated rotation."
@@ -239,6 +264,9 @@ def _refresh_consumables(page) -> None:
 
     _select_combo_data(combo, saved_potion)
     _configure_search(combo)
+    # Signals are blocked during catalog rebuild, so normalize the selected edit
+    # text explicitly once. Future user selections are normalized by the signal.
+    _sync_potion_edit_text(combo, combo.currentIndex())
     combo.blockSignals(False)
 
 
