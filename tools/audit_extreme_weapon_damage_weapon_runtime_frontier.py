@@ -4,7 +4,7 @@ from __future__ import annotations
 
 This audit deliberately separates static sheet Weapon Damage from a proc-active
 Weapon Damage enchant snapshot. It reuses canonical CP160 Gold weapon power,
-Nirnhoned math, the reviewed Twin Blade and Blunt sword bonus, and canonical
+Nirnhoned math, the reviewed U50 Twin Blade and Blunt sword bonus, and canonical
 weapon-enchantment semantics. It does not claim the whole-record denominator;
 named gear and alternate weapon-line passives remain separate challengers.
 """
@@ -28,7 +28,11 @@ from minmax.weapon_enchantment_effect_service import WeaponEnchantmentEffectServ
 from minmax.weapon_enchantment_repository import WeaponEnchantmentRepository
 
 DATABASE = ROOT / "data" / "eso.db"
-TWIN_BLADE_SWORD_DAMAGE_PER_SWORD = 129.0
+
+# U50 max-rank Twin Blade and Blunt: each equipped sword grants +64 Weapon and
+# Spell Damage. Heavy Weapons is a different passive and grants +129 for a
+# Two-Handed sword; the old 129-per-Dual-Wield-sword assumption was incorrect.
+TWIN_BLADE_SWORD_DAMAGE_PER_SWORD = 64.0
 
 
 def _nirn_bonus(power: float, *, scale: float = 1.0) -> float:
@@ -36,7 +40,12 @@ def _nirn_bonus(power: float, *, scale: float = 1.0) -> float:
     return (improved - float(power)) * float(scale)
 
 
-def _best_weapon_damage_enchant(service: WeaponEnchantmentEffectService, repository: WeaponEnchantmentRepository, *, trait: str | None = None):
+def _best_weapon_damage_enchant(
+    service: WeaponEnchantmentEffectService,
+    repository: WeaponEnchantmentRepository,
+    *,
+    trait: str | None = None,
+):
     best = None
     for item_id, name in repository.list_items():
         effects = service.resolve_effects(
@@ -63,8 +72,13 @@ def main() -> int:
     one_hand = float(WEAPON_POWER_CP160_GOLD["Sword"])
     two_hand = float(WEAPON_POWER_CP160_GOLD["Two-Handed"])
 
-    dual_base = (one_hand - NAKED_LEVEL_50_POWER) + floor(one_hand * DUAL_WIELD_OFFHAND_POWER_RATIO)
-    dual_nirn = _nirn_bonus(one_hand) + _nirn_bonus(one_hand, scale=DUAL_WIELD_OFFHAND_POWER_RATIO)
+    dual_base = (one_hand - NAKED_LEVEL_50_POWER) + floor(
+        one_hand * DUAL_WIELD_OFFHAND_POWER_RATIO
+    )
+    dual_nirn = _nirn_bonus(one_hand) + _nirn_bonus(
+        one_hand,
+        scale=DUAL_WIELD_OFFHAND_POWER_RATIO,
+    )
     dual_sword_passive = 2.0 * TWIN_BLADE_SWORD_DAMAGE_PER_SWORD
     dual_nirn_static = dual_base + dual_nirn + dual_sword_passive
 
@@ -73,7 +87,11 @@ def main() -> int:
     two_hand_nirn_before_line_passive = two_hand_base + two_hand_nirn
 
     ordinary_enchant = _best_weapon_damage_enchant(effect_service, repository)
-    infused_enchant = _best_weapon_damage_enchant(effect_service, repository, trait="Infused")
+    infused_enchant = _best_weapon_damage_enchant(
+        effect_service,
+        repository,
+        trait="Infused",
+    )
 
     unresolved: list[str] = []
     if ordinary_enchant is None:
@@ -99,6 +117,7 @@ def main() -> int:
     print(f"dual_offhand_ratio={DUAL_WIELD_OFFHAND_POWER_RATIO:.6f}")
     print(f"dual_base_delta={dual_base:.3f}")
     print(f"dual_nirnhoned_delta={dual_nirn:.3f}")
+    print(f"twin_blade_sword_per_sword={TWIN_BLADE_SWORD_DAMAGE_PER_SWORD:.3f}")
     print(f"twin_blade_sword_delta={dual_sword_passive:.3f}")
     print(f"dual_nirnhoned_static_weapon_delta={dual_nirn_static:.3f}")
     print()
@@ -106,7 +125,10 @@ def main() -> int:
     print(f"two_handed_power={two_hand:.3f}")
     print(f"two_handed_base_delta={two_hand_base:.3f}")
     print(f"two_handed_nirnhoned_delta={two_hand_nirn:.3f}")
-    print(f"two_handed_nirnhoned_before_weapon_line_passive={two_hand_nirn_before_line_passive:.3f}")
+    print(
+        f"two_handed_nirnhoned_before_weapon_line_passive="
+        f"{two_hand_nirn_before_line_passive:.3f}"
+    )
     print("two_handed_weapon_line_power_passive_still_separate_challenger=True")
     print()
     print("WEAPON DAMAGE ENCHANT")
@@ -127,19 +149,27 @@ def main() -> int:
     print("TRAIT OPPORTUNITY")
     print(f"dual_main_nirnhoned_static_gain={dual_main_nirn_gain:.3f}")
     print(f"infused_extra_proc_gain={infused_gain:.3f}")
-    print(f"dual_main_nirnhoned_beats_infused_extra_proc={dual_trait_prefers_nirn_at_proc}")
+    print(
+        f"dual_main_nirnhoned_beats_infused_extra_proc="
+        f"{dual_trait_prefers_nirn_at_proc}"
+    )
     print("weapon_damage_enchant_runtime_condition_preserved=True")
     print()
     print("PROOF GATES")
     print(f"canonical_weapon_damage_enchant_resolved={ordinary_enchant is not None}")
     print(f"canonical_infused_enchant_scaling_resolved={infused_enchant is not None}")
     print("dual_sword_static_witness_resolved=True")
+    print("stale_129_per_dual_sword_assumption_removed=True")
     print(f"unresolved_count={len(unresolved)}")
     for row in unresolved:
         print(f"  unresolved: {row}")
     closed = not unresolved
     print(f"weapon_damage_weapon_runtime_frontier_inventory_closed={closed}")
-    print("NEXT_STEP=compare alternate weapon-line sheet-power passives against the reviewed dual-sword witness, then combine the winning weapon realization with named gear and class/runtime power challengers")
+    print(
+        "NEXT_STEP=compare alternate weapon-line sheet-power passives against the "
+        "corrected dual-sword witness, then combine the winning weapon realization "
+        "with named gear and class/runtime power challengers"
+    )
     return 0 if closed else 2
 
 
