@@ -24,24 +24,29 @@ from minmax.gear_stat_inputs import (
 from minmax.phase5_context_factory import Phase5BuildCalculationContextFactory
 from minmax.stat_ids import StatId
 from models.build_model import PlayerBuild
+from services.extreme_gear_set_power_tradeoff_resolver import (
+    ExtremeGearSetPowerTradeoffResolver,
+)
 from services.extreme_resource_canonical_static_snapshot_service import (
     ExtremeResourceCanonicalStaticSnapshotService,
 )
 
 
 class _ExtremeConditionedGearEffectResolver:
-    """Shared static grammar plus reviewed Extreme conditional gear grammar."""
+    """Shared static grammar plus reviewed Extreme conditional/tradeoff grammar."""
 
     def __init__(self) -> None:
         self.static = GearSetEffectResolver()
         self.resource_conditions = GearSetResourceConditionResolver()
         self.healing_conditions = GearSetHealingConditionResolver()
+        self.power_tradeoffs = ExtremeGearSetPowerTradeoffResolver()
 
     def resolve(self, bonus, *, use_max_value=True, source=None):
         for resolver in (
             self.static,
             self.resource_conditions,
             self.healing_conditions,
+            self.power_tradeoffs,
         ):
             effects = resolver.resolve(
                 bonus,
