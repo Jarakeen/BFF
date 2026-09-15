@@ -60,6 +60,22 @@ TEAM_WORKFLOW_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="team.generated_draft.prescription_persistence",
+        domain="team",
+        purpose="Persist preserved recruit-prescription evidence against canonical generated-draft identities.",
+        implementation_path="services.generated_roster_draft_prescription_service",
+        inputs=("EsoDatabase", "draft_id", "slot_name", "RecruitPrescriptionEvidence"),
+        outputs=("RecruitPrescriptionEvidence",),
+        dependencies=("team.generated_draft.persistence",),
+        responsibilities=("generated_roster_draft_prescription_persistence",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.POLICY,
+        notes=(
+            "Canonical prescription rows reference generated_roster_draft ids. "
+            "Legacy generated_roster_recruit_prescription rows are read-migration input only and are never rewritten."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="team.roster.recruit_adoption",
         domain="team",
         purpose="Attach a real roster member and saved build to an open generated-draft chair while preserving the original recruit prescription as evidence.",
@@ -68,6 +84,7 @@ TEAM_WORKFLOW_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         outputs=("GeneratedRosterDraft",),
         dependencies=(
             "team.generated_draft.persistence",
+            "team.generated_draft.prescription_persistence",
             "team.roster.persistence",
             "team.prescription.slot_constraints",
         ),
