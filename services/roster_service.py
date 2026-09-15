@@ -41,9 +41,24 @@ class RosterService:
                 eso_class TEXT,
                 primary_role TEXT,
                 secondary_role TEXT,
-                status TEXT NOT NULL DEFAULT 'Active'
+                status TEXT NOT NULL DEFAULT 'Active',
+                canonical_player_id TEXT NOT NULL DEFAULT ''
             )
         """)
+        existing_roster_columns = {
+            row["name"] for row in self.db.execute("PRAGMA table_info(roster_member)").fetchall()
+        }
+        if "canonical_player_id" not in existing_roster_columns:
+            self.db.execute(
+                "ALTER TABLE roster_member ADD COLUMN canonical_player_id TEXT NOT NULL DEFAULT ''"
+            )
+        self.db.execute(
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS roster_member_canonical_player_id_unique
+            ON roster_member(canonical_player_id)
+            WHERE canonical_player_id <> ''
+            """
+        )
         self.db.execute("""
             CREATE TABLE IF NOT EXISTS team (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -103,6 +118,7 @@ class RosterService:
                 rm.primary_role,
                 rm.secondary_role,
                 rm.status,
+                rm.canonical_player_id,
                 COALESCE((
                     SELECT GROUP_CONCAT(team_name, ', ')
                     FROM (
@@ -130,6 +146,7 @@ class RosterService:
                 rm.primary_role,
                 rm.secondary_role,
                 rm.status,
+                rm.canonical_player_id,
                 COALESCE((
                     SELECT GROUP_CONCAT(team_name, ', ')
                     FROM (
@@ -297,11 +314,12 @@ class RosterService:
         cursor = self.db.execute("""
             INSERT INTO roster_member (
                 player_name, character_name, eso_class,
-                primary_role, secondary_role, status
-            ) VALUES (?, ?, ?, ?, ?, ?)
+                primary_role, secondary_role, status, canonical_player_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
         """, (
             member.PlayerName, member.CharacterName, member.EsoClass,
             member.PrimaryRole, member.SecondaryRole, member.Status or "Active",
+            str(member.CanonicalPlayerId or "").strip(),
         ))
         member_id = cursor.lastrowid
         self._set_member_teams(member_id, member.Team)
@@ -314,11 +332,12 @@ class RosterService:
         self.db.execute("""
             UPDATE roster_member SET
                 player_name = ?, character_name = ?, eso_class = ?,
-                primary_role = ?, secondary_role = ?, status = ?
+                primary_role = ?, secondary_role = ?, status = ?, canonical_player_id = ?
             WHERE id = ?
         """, (
             member.PlayerName, member.CharacterName, member.EsoClass,
-            member.PrimaryRole, member.SecondaryRole, member.Status or "Active", member.Id,
+            member.PrimaryRole, member.SecondaryRole, member.Status or "Active",
+            str(member.CanonicalPlayerId or "").strip(), member.Id,
         ))
         self._set_member_teams(member.Id, member.Team)
         self.db.commit()
@@ -366,4 +385,5 @@ class RosterService:
             CharacterName=row["character_name"] or "", EsoClass=row["eso_class"] or "",
             PrimaryRole=row["primary_role"] or "", SecondaryRole=row["secondary_role"] or "",
             Status=row["status"] or "Active", Team=row["team_name"] or "",
+            CanonicalPlayerId=row["canonical_player_id"] or "",
         )
