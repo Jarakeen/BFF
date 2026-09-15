@@ -111,6 +111,28 @@ class RotationGenerateApplicationContextProvider:
             or RotationDDPeriodicRuntimeSemanticsGapAuditService(get_data_dir() / "eso.db")
         )
 
+    @staticmethod
+    def _require_static_seed_context(static_context) -> None:
+        """Require only the static structure needed to seed canonical Generate.
+
+        ``RotationStaticBuildContextResolution.unresolved`` intentionally contains both
+        true output blockers and broader static diagnostics. Role/candidate-specific
+        relevance services own those mechanics decisions later in the pipeline. The
+        application provider only needs a resolved canonical character plus actual bar
+        contexts so it can read the explicit resource ceiling without inventing state.
+        """
+        progression = getattr(static_context, "progression", None)
+        contexts = tuple(getattr(static_context, "contexts", ()) or ())
+        if progression is not None and bool(getattr(progression, "resolved", False)) and contexts:
+            return
+
+        detail = "; ".join(
+            str(item).strip()
+            for item in tuple(getattr(static_context, "unresolved", ()) or ())
+            if str(item).strip()
+        ) or "static build context unavailable"
+        raise ValueError("canonical static build evidence is unresolved: " + detail)
+
     def context_for(self, page) -> RotationGenerateCanonicalContext:
         build = page._selected_build()
         if build is None:
@@ -136,11 +158,7 @@ class RotationGenerateApplicationContextProvider:
             raise ValueError("canonical recovery trigger must be between 0% and 100%")
 
         static_context = self.static_context_service.resolve(build)
-        if not static_context.resolved:
-            detail = "; ".join(static_context.unresolved) or "static build context unavailable"
-            raise ValueError(
-                "canonical static build evidence is unresolved: " + detail
-            )
+        self._require_static_seed_context(static_context)
         maximum_amount = static_context.maximum_amount_for("front", resource)
         if maximum_amount <= 0:
             raise ValueError("canonical recovery resource maximum must be positive")
