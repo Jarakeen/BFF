@@ -102,6 +102,9 @@ def test_migrated_instance_helpers_no_longer_replace_page_class_methods() -> Non
     gear_support = Path("ui/gear_lookup_description_cleanup_support.py").read_text(
         encoding="utf-8"
     )
+    magicka_support = Path("ui/extreme_max_magicka_record_support.py").read_text(
+        encoding="utf-8"
+    )
     bootstrap = Path("ui/application_workspace_bootstrap.py").read_text(
         encoding="utf-8"
     )
@@ -111,6 +114,17 @@ def test_migrated_instance_helpers_no_longer_replace_page_class_methods() -> Non
     assert "install_roster_sub_terminology_support" not in bootstrap
     assert "GearLookupPage._show_selected =" not in gear_support
     assert "_ORIGINAL_SHOW_SELECTED" not in gear_support
+    assert "ExtremeOptimizationPage._build_ui =" not in magicka_support
+    assert "original_build_ui" not in magicka_support
+    assert "def apply_extreme_max_magicka_record(page)" in magicka_support
+
+
+def test_extreme_max_magicka_record_is_composed_from_constructed_window_page() -> None:
+    source = Path("ui/application_window_composition.py").read_text(encoding="utf-8")
+
+    assert "apply_extreme_max_magicka_record" in source
+    assert 'window.pages.get("extreme_optimization")' in source
+    assert "apply_extreme_max_magicka_record(extreme_page)" in source
 
 
 def test_application_composes_instance_helpers_after_main_window_construction() -> None:
