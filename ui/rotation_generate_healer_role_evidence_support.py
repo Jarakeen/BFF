@@ -3,6 +3,7 @@ from __future__ import annotations
 """Compose canonical healer role evidence at Generate time."""
 
 from collections.abc import Callable
+from dataclasses import replace
 from pathlib import Path
 
 from engine.config import get_data_dir
@@ -11,6 +12,7 @@ from models.build_model import PlayerBuild
 from services.rotation_candidate_canonical_plan_evidence_service import (
     RotationCandidateCanonicalPlanEvidenceService,
 )
+from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 from services.rotation_healer_canonical_role_output_factory_service import (
     RotationHealerCanonicalRoleOutputFactoryService,
 )
@@ -33,6 +35,15 @@ from services.rotation_healer_demand_criteria_service import (
 from services.rotation_healer_periodic_runtime_evidence_service import (
     RotationHealerReviewedRuntimeObservation,
 )
+from services.rotation_plan_runtime_build_context_service import (
+    RotationPlanRuntimeBuildContextService,
+)
+from services.rotation_recovery_healer_role_output_service import (
+    RotationRecoveryHealerRoleOutputService,
+)
+from services.rotation_recovery_heavy_candidate_orchestration_service import (
+    RecoveryHeavyStabilizedCandidateSnapshot,
+)
 from ui.rotation_canonical_candidate_support import RotationCanonicalRoleEvidence
 from ui.rotation_canonical_evidence_bundle_support import RotationCanonicalEvidenceBundle
 
@@ -44,6 +55,98 @@ def _canonical_role(value: object) -> str:
     return "_".join(str(value or "").strip().casefold().replace("-", " ").split())
 
 
+class _RotationGenerateRuntimeHealerPlanEvidenceProvider:
+    """Re-evaluate healer-only final evidence from one stabilized runtime snapshot."""
+
+    def __init__(
+        self,
+        *,
+        static_provider: RotationCandidateCanonicalPlanEvidenceService,
+        snapshot: RecoveryHeavyStabilizedCandidateSnapshot,
+        recovery_role_output: RotationRecoveryHealerRoleOutputService,
+        hard_obligation_provider: RotationCandidateHealerCriteriaHardObligationService | None,
+    ) -> None:
+        self.static_provider = static_provider
+        self.snapshot = snapshot
+        self.recovery_role_output = recovery_role_output
+        self.hard_obligation_provider = hard_obligation_provider
+
+    def evaluate_plan(self, candidate: GeneratedRotationCandidate):
+        if candidate.candidate_id.casefold() != self.snapshot.candidate_id.casefold():
+            raise ValueError(
+                "stabilized healer plan-evidence candidate mismatch: "
+                f"expected {self.snapshot.candidate_id!r}, got {candidate.candidate_id!r}"
+            )
+        if candidate.plan != self.snapshot.plan:
+            raise ValueError(
+                "stabilized healer plan-evidence provider requires the exact final plan"
+            )
+
+        evidence = self.static_provider.evaluate_plan(candidate)
+        role_output = self.recovery_role_output.evaluate_snapshot(self.snapshot)
+        if role_output.candidate_id.casefold() != candidate.candidate_id.casefold():
+            raise ValueError(
+                "stabilized healer role-output candidate mismatch: "
+                f"expected {candidate.candidate_id!r}, got {role_output.candidate_id!r}"
+            )
+
+        updates = {
+            "role_output_value": role_output.resolved_value,
+            "role_output_unresolved": tuple(role_output.unresolved),
+        }
+        if self.hard_obligation_provider is not None:
+            runtime_resolver = (
+                self.recovery_role_output.runtime_build_context_resolver_for_snapshot(
+                    self.snapshot
+                )
+            )
+            hard_obligation = self.hard_obligation_provider.evaluate_plan(
+                candidate,
+                runtime_build_context_resolver=runtime_resolver,
+            )
+            if hard_obligation.candidate_id.casefold() != candidate.candidate_id.casefold():
+                raise ValueError(
+                    "stabilized healer hard-obligation candidate mismatch: "
+                    f"expected {candidate.candidate_id!r}, got {hard_obligation.candidate_id!r}"
+                )
+            updates.update(
+                role_hard_obligation_satisfied=hard_obligation.satisfied,
+                role_hard_obligation_reasons=tuple(hard_obligation.reasons),
+            )
+        return replace(evidence, **updates)
+
+
+class _RotationGenerateHealerPlanEvidenceProvider:
+    """Bind canonical healer output to the final recovery-stabilized snapshot."""
+
+    def __init__(
+        self,
+        *,
+        static_provider: RotationCandidateCanonicalPlanEvidenceService,
+        recovery_role_output: RotationRecoveryHealerRoleOutputService,
+        hard_obligation_provider: RotationCandidateHealerCriteriaHardObligationService | None,
+    ) -> None:
+        self.static_provider = static_provider
+        self.recovery_role_output = recovery_role_output
+        self.hard_obligation_provider = hard_obligation_provider
+
+    def evaluate_plan(self, candidate: GeneratedRotationCandidate):
+        return self.static_provider.evaluate_plan(candidate)
+
+    def for_stabilized_snapshot(
+        self,
+        snapshot: RecoveryHeavyStabilizedCandidateSnapshot,
+    ):
+        if snapshot.runtime_combat_state_resolver is None:
+            return self.static_provider
+        return _RotationGenerateRuntimeHealerPlanEvidenceProvider(
+            static_provider=self.static_provider,
+            snapshot=snapshot,
+            recovery_role_output=self.recovery_role_output,
+            hard_obligation_provider=self.hard_obligation_provider,
+        )
+
+
 class RotationGenerateHealerRoleEvidenceSupport:
     """Join a selected healer build to explicit canonical healing demands.
 
@@ -53,6 +156,12 @@ class RotationGenerateHealerRoleEvidenceSupport:
     target counts, phase names, or encounter policy from display text. Explicit
     reviewed healer criteria reuse the same window output as a separate hard gate;
     caller assumptions never become authoritative through this bridge.
+
+    Production canonical plan evidence is runtime-bindable: after recovery stabilization,
+    healer output and verified healer criteria are recomputed from the exact final-plan
+    runtime build context. Sustain, duration, and unrelated evidence remain owned by the
+    ordinary canonical plan-evidence service. Injected/custom plan-evidence factories
+    keep their supplied shape unchanged.
     """
 
     def __init__(
@@ -61,6 +170,7 @@ class RotationGenerateHealerRoleEvidenceSupport:
         database_path: str | Path | None = None,
         role_output_factory: RotationHealerCanonicalRoleOutputFactoryService | None = None,
         plan_evidence_factory: PlanEvidenceFactory | None = None,
+        runtime_build_context_service: RotationPlanRuntimeBuildContextService | None = None,
         reviewed_runtime_observations: tuple[
             RotationHealerReviewedRuntimeObservation, ...
         ] = (),
@@ -96,6 +206,17 @@ class RotationGenerateHealerRoleEvidenceSupport:
         self.plan_evidence_factory = (
             plan_evidence_factory or RotationCandidateCanonicalPlanEvidenceService
         )
+        self.runtime_build_context_service = runtime_build_context_service
+        if (
+            self.runtime_build_context_service is None
+            and isinstance(
+                self.role_output_factory,
+                RotationHealerCanonicalRoleOutputFactoryService,
+            )
+        ):
+            self.runtime_build_context_service = RotationPlanRuntimeBuildContextService(
+                static_context_service=self.role_output_factory.static_context_service,
+            )
         self.reviewed_runtime_observations = tuple(reviewed_runtime_observations)
         self.delayed_runtime_evidence = tuple(delayed_runtime_evidence)
         self.channel_runtime_evidence = tuple(channel_runtime_evidence)
@@ -156,19 +277,34 @@ class RotationGenerateHealerRoleEvidenceSupport:
             detail = "; ".join(role_output.unresolved) or "role-output provider unavailable"
             raise ValueError("canonical healer role output is unavailable: " + detail)
 
+        hard_obligation_provider = None
         plan_kwargs = {
             "build": player_build,
             "resource": evidence_bundle.resource,
             "role_output_evidence_provider": role_output,
         }
         if self.criteria:
+            hard_obligation_provider = RotationCandidateHealerCriteriaHardObligationService(
+                multi_demand_output_service=role_output,
+                criteria=self.criteria,
+            )
             plan_kwargs["role_hard_obligation_evidence_provider"] = (
-                RotationCandidateHealerCriteriaHardObligationService(
-                    multi_demand_output_service=role_output,
-                    criteria=self.criteria,
-                )
+                hard_obligation_provider
             )
         plan_evidence = self.plan_evidence_factory(**plan_kwargs)
+        if (
+            isinstance(plan_evidence, RotationCandidateCanonicalPlanEvidenceService)
+            and self.runtime_build_context_service is not None
+        ):
+            plan_evidence = _RotationGenerateHealerPlanEvidenceProvider(
+                static_provider=plan_evidence,
+                recovery_role_output=RotationRecoveryHealerRoleOutputService(
+                    build=player_build,
+                    role_output_service=role_output,
+                    runtime_build_context_service=self.runtime_build_context_service,
+                ),
+                hard_obligation_provider=hard_obligation_provider,
+            )
         return RotationCanonicalRoleEvidence(
             plan_evidence_provider=plan_evidence,
             role_output_label=self.role_output_label,
