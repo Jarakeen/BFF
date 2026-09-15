@@ -5,14 +5,13 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
+from engine.config import DEFAULT_DATABASE
+
 from .skill_component_effect_relationship import (
     SkillComponentEffectRelationship,
     extract_explicit_effect_applications,
 )
 from .skill_component_text_evidence import extract_component_text_evidence
-
-
-DEFAULT_DATABASE = Path(__file__).resolve().parents[1] / "data" / "eso.db"
 
 
 class SkillComponentEffectRelationshipRepository:
