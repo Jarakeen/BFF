@@ -44,6 +44,23 @@ def test_all_reviewed_damage_type_scopes_are_h1_irrelevant() -> None:
         assert ExtremeActualHealGearConditionRelevanceService.review(row).h1_mechanic_complete
 
 
+def test_reviewed_offensive_weapon_skill_scopes_are_h1_irrelevant() -> None:
+    for scope in (
+        "dual_wield",
+        "two_handed",
+        "bow",
+        "destruction_staff",
+        "one_hand_and_shield",
+    ):
+        row = _row(
+            "spell_damage",
+            f"Scoped Set (5): relevant set effect requires condition ability_scope:{scope}",
+        )
+        result = ExtremeActualHealGearConditionRelevanceService.review(row)
+        assert result.h1_mechanic_complete is True
+        assert result.remaining_blockers == ()
+
+
 def test_standing_still_is_proven_by_standing_h1_scenario() -> None:
     row = _row(
         "spell_damage",
