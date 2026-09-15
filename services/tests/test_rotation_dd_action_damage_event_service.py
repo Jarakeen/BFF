@@ -166,7 +166,7 @@ def test_preserves_verified_damage_identity_flags():
     event = projection.events[0].event
     assert event.damage_type == "physical"
     assert event.is_aoe is True
-    assert event.event.can_crit is False
+    assert event.can_crit is False
 
 
 def test_non_damage_component_is_not_projected_as_damage():
