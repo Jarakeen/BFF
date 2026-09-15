@@ -31,7 +31,6 @@ from services.character_creation_service import (
     CharacterCreationService,
 )
 from services.gear_set_armor_weight_resolver import GearSetArmorWeightResolver
-from ui import phase5_build_ui_support
 from ui.components.foundry_button import ButtonRole, FoundryButton
 
 _INSTALLED = False
@@ -441,7 +440,6 @@ def install() -> None:
     original_editor_build_ui = BuildEditor._build_ui
     original_identity_card = BuildEditor._build_identity_card
     original_boss_card = BuildEditor._build_boss_card
-    original_finish_endgame_gear = phase5_build_ui_support._finish_endgame_gear
 
     def _build_ui(self):
         original_build_ui(self)
@@ -669,16 +667,6 @@ def install() -> None:
         if refresh_selectors is not None:
             refresh_selectors()
 
-    def _finish_endgame_gear(self) -> None:
-        """Finish populated gear at the endgame level, quality, and glyph tier."""
-        original_finish_endgame_gear(self)
-        for row in getattr(self, "gear_rows", {}).values():
-            if row.value.is_empty:
-                continue
-            row.enchant_tier_combo.setCurrentText("Truly Superb")
-
-    phase5_build_ui_support._finish_endgame_gear = _finish_endgame_gear
-    BuildEditor.finish_endgame_gear = _finish_endgame_gear
     BuildsPage._build_ui = _build_ui
     BuildsPage._role_for = _role_for
     BuildsPage._save_edit_tab = _save_edit_tab
