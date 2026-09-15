@@ -140,6 +140,13 @@ class RotationHealerDemandCriteriaService:
     caller-supplied, provenance-bearing criteria to already-modeled demand-window
     output. Missing candidate evidence fails closed for authoritative criteria.
     Caller assumptions are preserved for diagnostics but never become hard gates.
+
+    Output-level unresolved evidence represents a blocker that applies to the
+    aggregate healer result rather than one specific demand window. Authoritative
+    criteria inherit those blockers and therefore remain unresolved even when an
+    individual window retains an inspectable modeled value. This preserves known
+    window evidence without allowing a globally untrusted healer context to certify
+    a hard encounter threshold.
     """
 
     def assess(
@@ -160,7 +167,8 @@ class RotationHealerDemandCriteriaService:
 
         windows = {item.demand.name.casefold(): item for item in output.windows}
         assessments: list[RotationHealerDemandCriterionAssessment] = []
-        unresolved: list[str] = list(output.unresolved)
+        aggregate_unresolved = tuple(output.unresolved)
+        unresolved: list[str] = list(aggregate_unresolved)
 
         for criterion in criteria:
             window = windows.get(criterion.demand_name.casefold())
@@ -180,6 +188,24 @@ class RotationHealerDemandCriteriaService:
 
             window_unresolved = tuple(window.unresolved)
             value = window.modeled_healing_per_demand_second
+
+            if criterion.authoritative and aggregate_unresolved:
+                messages = tuple(
+                    f"{criterion.demand_name}: {message}"
+                    for message in aggregate_unresolved
+                )
+                assessments.append(
+                    RotationHealerDemandCriterionAssessment(
+                        criterion=criterion,
+                        modeled_healing_per_demand_second=(
+                            float(value) if value is not None else None
+                        ),
+                        unresolved=messages,
+                    )
+                )
+                unresolved.extend(messages)
+                continue
+
             if window_unresolved or value is None:
                 messages = tuple(
                     f"{criterion.demand_name}: {message}" for message in window_unresolved
