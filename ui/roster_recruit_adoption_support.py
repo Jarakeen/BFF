@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
 from engine.config import get_data_dir
 from services.build_service import BuildService
 from services.eso_database import EsoDatabase
-from services.generated_roster_plan_service import GeneratedRosterDraftService
+from services.generated_roster_draft_service import GeneratedRosterDraftService
 from services.roster_recruit_adoption_service import RosterRecruitAdoptionService
 from services.roster_service import RosterService
 
