@@ -6,6 +6,7 @@ from pathlib import Path
 from tools.audit_system_architecture import (
     _duplicate_class_findings,
     _install_fanout_findings,
+    _legacy_generated_roster_alias_findings,
     _monkey_patch_findings,
     _quarantine_import_findings,
     _repo_contract_findings,
@@ -81,6 +82,42 @@ from services.roster_service import RosterService
     assert _quarantine_import_findings(tmp_path, path, ast.parse(source)) == []
 
 
+def test_live_generated_roster_plan_alias_import_is_reported(tmp_path) -> None:
+    path = tmp_path / "ui" / "legacy_consumer.py"
+    path.parent.mkdir(parents=True)
+    source = """
+from services.generated_roster_plan_service import (
+    GeneratedRosterPlanService,
+    GeneratedRosterPlanSlot,
+)
+"""
+
+    findings = _legacy_generated_roster_alias_findings(
+        tmp_path, path, ast.parse(source)
+    )
+
+    assert len(findings) == 1
+    finding = findings[0]
+    assert finding.code == "legacy-generated-roster-plan-runtime-alias"
+    assert "GeneratedRosterPlanService" in finding.message
+    assert "GeneratedRosterPlanSlot" in finding.message
+
+
+def test_generated_roster_draft_api_does_not_trigger_legacy_alias_finding(tmp_path) -> None:
+    path = tmp_path / "ui" / "draft_consumer.py"
+    path.parent.mkdir(parents=True)
+    source = """
+from services.generated_roster_plan_service import (
+    GeneratedRosterDraftService,
+    GeneratedRosterDraftSlot,
+)
+"""
+
+    assert _legacy_generated_roster_alias_findings(
+        tmp_path, path, ast.parse(source)
+    ) == []
+
+
 def test_repo_contract_detector_flags_hidden_build_persistence_authority(tmp_path) -> None:
     services = tmp_path / "services"
     services.mkdir(parents=True)
@@ -107,6 +144,7 @@ def test_current_repo_audit_confirms_resolved_authority_and_identity_debt() -> N
     assert "raid-plan-name-based-build-identity" not in codes
     assert "stale-raid-plan-persistence-doc" not in codes
     assert "runtime-quarantine-import" not in codes
+    assert "legacy-generated-roster-plan-runtime-alias" not in codes
     assert "overlapping-plan-persistence" in codes
     assert "catalog-family-transitive-aggregation" in codes
     assert "duplicate-class-definition" in codes
