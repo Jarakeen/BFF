@@ -3,6 +3,9 @@ from types import SimpleNamespace
 from minmax.resource_costs import ResourceType
 from ui.rotation_dashboard_page import RotationDashboardPage
 from ui.rotation_generate_action_support import RotationGenerateActionSupport
+from ui.rotation_generate_conditional_output_context_provider import (
+    RotationGenerateConditionalOutputContextProvider,
+)
 
 
 class _Status:
@@ -32,10 +35,15 @@ class _Page:
         resource=None,
         trigger_fraction=None,
         target_resistance=None,
+        wrap_provider: bool = False,
     ) -> None:
         self.rotation_generate_canonical_context = None
+        application_provider = RotationGenerateApplicationContextProvider()
+        self.application_provider = application_provider
         self.rotation_generate_canonical_context_provider = (
-            RotationGenerateApplicationContextProvider()
+            RotationGenerateConditionalOutputContextProvider(application_provider)
+            if wrap_provider
+            else application_provider
         )
         self.status = _Status()
         self.build = SimpleNamespace(Role=role)
@@ -70,7 +78,30 @@ def test_generate_uses_baseline_path_when_recovery_policy_is_unset(monkeypatch) 
     support.generate(page)
 
     assert plain_calls == [page]
-    assert page.rotation_generate_canonical_context_provider.calls == 0
+    assert page.application_provider.calls == 0
+    assert page.status.warnings == []
+
+
+def test_generate_uses_baseline_path_when_production_provider_is_wrapped(monkeypatch) -> None:
+    support = RotationGenerateActionSupport()
+    page = _Page(
+        resource=None,
+        trigger_fraction=None,
+        target_resistance=None,
+        wrap_provider=True,
+    )
+    plain_calls = []
+
+    monkeypatch.setattr(
+        RotationDashboardPage,
+        "generate_rotation",
+        lambda supplied_page: plain_calls.append(supplied_page),
+    )
+
+    support.generate(page)
+
+    assert plain_calls == [page]
+    assert page.application_provider.calls == 0
     assert page.status.warnings == []
 
 
@@ -92,7 +123,7 @@ def test_generate_uses_baseline_path_when_dd_target_resistance_is_unset(monkeypa
     support.generate(page)
 
     assert plain_calls == [page]
-    assert page.rotation_generate_canonical_context_provider.calls == 0
+    assert page.application_provider.calls == 0
     assert page.status.warnings == []
 
 
@@ -101,6 +132,20 @@ def test_complete_dd_advanced_policy_opts_into_canonical_provider() -> None:
         resource=ResourceType.STAMINA,
         trigger_fraction=0.30,
         target_resistance=18200.0,
+    )
+
+    assert RotationGenerateActionSupport._advanced_application_context_ready(
+        page,
+        page.rotation_generate_canonical_context_provider,
+    ) is True
+
+
+def test_complete_wrapped_dd_advanced_policy_opts_into_canonical_provider() -> None:
+    page = _Page(
+        resource=ResourceType.STAMINA,
+        trigger_fraction=0.30,
+        target_resistance=18200.0,
+        wrap_provider=True,
     )
 
     assert RotationGenerateActionSupport._advanced_application_context_ready(
