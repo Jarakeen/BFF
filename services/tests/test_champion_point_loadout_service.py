@@ -2,6 +2,7 @@ from services.champion_point_loadout_service import (
     CHAMPION_POINT_SLOTS_PER_DISCIPLINE,
     ChampionPointLoadoutCandidate,
     ChampionPointLoadoutService,
+    ChampionPointSlotCandidate,
 )
 
 
@@ -12,6 +13,10 @@ def _candidate(name, discipline, ceiling, condition=None):
         flat_ceiling=ceiling,
         condition=condition,
     )
+
+
+def _slot(name, discipline):
+    return ChampionPointSlotCandidate(name=name, discipline_index=discipline)
 
 
 def test_selects_additive_top_four_per_discipline_and_keeps_other_disciplines():
@@ -75,3 +80,51 @@ def test_duplicate_identity_fails_closed():
 
     assert result.denominator_proven is False
     assert "duplicate" in result.unresolved[0]
+
+
+def test_mixed_unit_enumeration_keeps_all_relevant_stars_when_four_or_fewer():
+    result = ChampionPointLoadoutService.enumerate_legal_loadouts(
+        (
+            _slot("Flat Power", 1),
+            _slot("Healing Done", 1),
+            _slot("Critical Healing", 1),
+            _slot("Other Discipline", 2),
+        )
+    )
+
+    assert result.denominator_proven is True
+    assert result.candidate_count == 4
+    assert result.discipline_candidate_counts == ((1, 3), (2, 1))
+    assert len(result.loadouts) == 1
+    assert [row.name for row in result.loadouts[0]] == [
+        "Critical Healing",
+        "Flat Power",
+        "Healing Done",
+        "Other Discipline",
+    ]
+
+
+def test_mixed_unit_enumeration_emits_every_four_star_combination():
+    result = ChampionPointLoadoutService.enumerate_legal_loadouts(
+        tuple(_slot(name, 1) for name in ("A", "B", "C", "D", "E"))
+    )
+
+    assert result.denominator_proven is True
+    assert len(result.loadouts) == 5
+    assert {tuple(row.name for row in loadout) for loadout in result.loadouts} == {
+        ("A", "B", "C", "D"),
+        ("A", "B", "C", "E"),
+        ("A", "B", "D", "E"),
+        ("A", "C", "D", "E"),
+        ("B", "C", "D", "E"),
+    }
+
+
+def test_mixed_unit_enumeration_fails_closed_on_missing_discipline():
+    result = ChampionPointLoadoutService.enumerate_legal_loadouts(
+        (_slot("Mystery", None),)
+    )
+
+    assert result.denominator_proven is False
+    assert result.loadouts == ()
+    assert "discipline identity" in result.unresolved[0]
