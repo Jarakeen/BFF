@@ -168,4 +168,9 @@ def test_current_repo_audit_confirms_resolved_authority_and_identity_debt() -> N
         and row.path == "ui/phase5_build_delete_support.py"
         for row in result.findings
     )
+    assert not any(
+        row.code == "ui-class-monkey-patch"
+        and row.path == "ui/gear_lookup_description_cleanup_support.py"
+        for row in result.findings
+    )
     assert "ui-class-monkey-patch" in codes
