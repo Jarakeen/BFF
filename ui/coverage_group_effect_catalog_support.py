@@ -2,9 +2,10 @@ from __future__ import annotations
 
 """Expand Coverage with raid-facing group effects and unique support-set effects.
 
-The existing saved-build capability audit remains authoritative. Newly displayed
-reference effects are deliberately left Unverified until canonical capability mapping
-exists; this support layer does not infer combat evidence from display names.
+The existing saved-build capability audit remains authoritative for canonical named
+effects. The reviewed unique support-set catalog is overlaid only when exact saved-build
+equipment proves the required set-piece threshold. Proc/activation effects remain
+Conditional; this layer never infers uptime from gear presence.
 """
 
 from PySide6.QtCore import Qt
@@ -14,6 +15,9 @@ from services.raid_group_effect_catalog import (
     GROUP_COVERAGE_BY_NAME,
     GROUP_COVERAGE_NAMES,
     GROUP_DEBUFF_NAMES,
+)
+from services.raid_unique_support_set_capability_service import (
+    RaidUniqueSupportSetCapabilityService,
 )
 from services.raid_unique_support_set_catalog import (
     UNIQUE_SUPPORT_DEBUFF_NAMES,
@@ -55,7 +59,11 @@ def _extend_snapshot(snapshot: RaidCoverageSnapshot) -> RaidCoverageSnapshot:
 
 def _snapshot_with_group_catalog(self, builds):
     assert _ORIGINAL_SNAPSHOT_FOR_BUILDS is not None
-    return _extend_snapshot(_ORIGINAL_SNAPSHOT_FOR_BUILDS(self, builds))
+    selected_builds = tuple(builds)
+    snapshot = _extend_snapshot(
+        _ORIGINAL_SNAPSHOT_FOR_BUILDS(self, selected_builds)
+    )
+    return RaidUniqueSupportSetCapabilityService().overlay(snapshot, selected_builds)
 
 
 def _apply_reference_labels(page) -> None:
