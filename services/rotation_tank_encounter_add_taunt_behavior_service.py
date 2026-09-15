@@ -12,13 +12,10 @@ from dataclasses import dataclass
 import json
 from pathlib import Path
 
+from services.paths import DATA
 
-_DEFAULT_PATH = (
-    Path(__file__).resolve().parents[1]
-    / "data"
-    / "encounter_add_taunt_behavior"
-    / "reviewed.json"
-)
+
+_DEFAULT_PATH = DATA / "encounter_add_taunt_behavior" / "reviewed.json"
 
 
 @dataclass(frozen=True)
