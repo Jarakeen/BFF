@@ -54,8 +54,9 @@ TEAM_WORKFLOW_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         behavior=ServiceBehavior.DETERMINISTIC,
         evidence_class=EvidenceClass.POLICY,
         notes=(
-            "Generated drafts have canonical generated_roster_draft storage separate from RaidPlan state. "
-            "Legacy generated_roster_plan tables are migration input only; open recruit chairs remain requirements rather than invented players."
+            "Generated draft storage is canonical and not authoritative RaidPlan state. "
+            "Legacy generated_roster_plan tables are migration input only. "
+            "Open recruit chairs remain requirements rather than invented players; explicit adoption owns final Team/RaidPlan selections."
         ),
     ),
     ServiceDescriptor(
