@@ -5,13 +5,11 @@ import re
 import sqlite3
 from pathlib import Path
 
+from engine.config import DEFAULT_DATABASE
 from .skill_component_source_alignment_issue import (
     SkillComponentSourceAlignmentIssue,
     SkillComponentSourceAlignmentIssueType,
 )
-
-
-DEFAULT_DATABASE = Path(__file__).resolve().parents[1] / "data" / "eso.db"
 
 
 class SkillComponentSourceAlignmentIssueRepository:
