@@ -69,3 +69,14 @@ def test_dashboard_uses_supplied_decorative_assets_and_wires_all_mockup_destinat
         assert route in source
     assert "sendTeamRequested.connect(self._send_optimized_team_to_roster)" in support
     assert 'section["page"] = "raid_engine_dashboard"' in support
+
+def test_dashboard_refresh_keeps_team_optimization_read_only() -> None:
+    source = Path("ui/raid_engine_dashboard_page.py").read_text(encoding="utf-8")
+    support = Path("ui/raid_engine_dashboard_support.py").read_text(encoding="utf-8")
+
+    refresh_source = source.split("    def refresh(self) -> None:", 1)[1]
+    assert 'refresh = getattr(self.coverage, "refresh", None)' in refresh_source
+    assert "for page in (self.optimization, self.coverage)" not in refresh_source
+    assert "_install_read_only_dashboard_refresh" not in support
+    assert "RaidEngineDashboardPage.refresh =" not in support
+

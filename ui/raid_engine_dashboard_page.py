@@ -781,14 +781,15 @@ class RaidEngineDashboardPage(FoundryPage):
         self.next_actions_label.setText("\n\n".join(actions[:6]))
 
     def refresh(self) -> None:
-        # Let source pages update their own canonical read models first.
-        for page in (self.optimization, self.coverage):
-            refresh = getattr(page, "refresh", None)
-            if callable(refresh):
-                try:
-                    refresh()
-                except (OSError, ValueError, AttributeError):
-                    pass
+        # Coverage owns a canonical read model that is safe to update here.
+        # Team Optimization is intentionally read-only: its refresh rebuilds the
+        # working editor, so opening this summary must consume its current state.
+        refresh = getattr(self.coverage, "refresh", None)
+        if callable(refresh):
+            try:
+                refresh()
+            except (OSError, ValueError, AttributeError):
+                pass
 
         self._sync_context_labels()
         slots = self._slot_snapshot()
