@@ -22,6 +22,7 @@ class _RefinementService:
         wait_decision=None,
         demands=(),
         demand_refresh_leads=(),
+        demand_action_claims=(),
     ):
         self.wait_decisions.append(wait_decision)
         if wait_decision is not None:
