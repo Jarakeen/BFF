@@ -59,7 +59,8 @@ _RECOGNIZED_MECHANIC_WORD = re.compile(
     r"sneak|dodge|roll|block|blocking|ultimate|weapon|spell|attack|enemy|enemies|target|"
     r"status|effect|disease|poison|flame|frost|shock|bleed|physical|magic|"
     r"oblivion|bash|interrupt|taunt|cooldown|cost|duration|stack|stacks|pet|"
-    r"companion|snare|immobilize|invisible|stealth|synergy|buff|debuff|group|absorption)\b",
+    r"companion|snare|snares|immobilize|immobilized|immobilization|immobilizations|"
+    r"crowd control|immunity|invisible|stealth|synergy|buff|debuff|group|absorption)\b",
     re.IGNORECASE,
 )
 
