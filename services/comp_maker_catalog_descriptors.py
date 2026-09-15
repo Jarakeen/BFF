@@ -17,6 +17,9 @@ from services.extreme_health_recovery_catalog_descriptors import (
     EXTREME_HEALTH_RECOVERY_SERVICE_DESCRIPTORS,
 )
 from services.extreme_recovery_catalog_descriptors import EXTREME_RECOVERY_SERVICE_DESCRIPTORS
+from services.extreme_weapon_damage_catalog_descriptors import (
+    EXTREME_WEAPON_DAMAGE_SERVICE_DESCRIPTORS,
+)
 from services.raid_plan_catalog_descriptors import RAID_PLAN_SERVICE_DESCRIPTORS
 from services.rotation_catalog_descriptors import ROTATION_SERVICE_DESCRIPTORS
 from services.rotation_dd_catalog_descriptors import ROTATION_DD_SERVICE_DESCRIPTORS
@@ -150,6 +153,7 @@ COMP_MAKER_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
     *EXTREME_SERVICE_DESCRIPTORS,
     *EXTREME_HEALTH_RECOVERY_SERVICE_DESCRIPTORS,
     *EXTREME_RECOVERY_SERVICE_DESCRIPTORS,
+    *EXTREME_WEAPON_DAMAGE_SERVICE_DESCRIPTORS,
     *ROTATION_SERVICE_DESCRIPTORS,
     *ROTATION_DD_SERVICE_DESCRIPTORS,
     *ROTATION_DD_PERIODIC_SERVICE_DESCRIPTORS,
