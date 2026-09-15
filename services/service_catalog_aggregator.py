@@ -5,9 +5,13 @@ from __future__ import annotations
 Descriptor-family modules should describe only their own domain. This module is the
 single place allowed to concatenate those families for ``SERVICE_CATALOG`` bootstrap.
 It is metadata-only and must not instantiate or execute runtime services.
+
+Some older family exports are still compatibility aggregates themselves. Until those
+families are flattened, this module must not also append their nested descriptor
+families independently. In particular, ``TEAM_WORKFLOW_SERVICE_DESCRIPTORS`` currently
+contains Build + Foundation, and Foundation already contains Application descriptors.
 """
 
-from services.application_catalog_descriptors import APPLICATION_SERVICE_DESCRIPTORS
 from services.comp_maker_catalog_descriptors import COMP_MAKER_LOCAL_SERVICE_DESCRIPTORS
 from services.extreme_catalog_descriptors import EXTREME_SERVICE_DESCRIPTORS
 from services.extreme_health_recovery_catalog_descriptors import (
@@ -47,7 +51,6 @@ from services.team_workflow_catalog_descriptors import TEAM_WORKFLOW_SERVICE_DES
 
 
 ALL_EXTENSION_SERVICE_DESCRIPTORS = (
-    *APPLICATION_SERVICE_DESCRIPTORS,
     *COMP_MAKER_LOCAL_SERVICE_DESCRIPTORS,
     *RAID_PLAN_SERVICE_DESCRIPTORS,
     *EXTREME_SERVICE_DESCRIPTORS,
