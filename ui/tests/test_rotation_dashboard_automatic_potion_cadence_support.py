@@ -14,6 +14,10 @@ from ui.rotation_dashboard_canonical_candidate_support import (
     RotationDashboardCanonicalCandidateSupport,
 )
 from ui.rotation_generation_support import RotationGenerationRequest, RotationGenerationResult
+from ui.rotation_runtime_snapshot_candidate_support import RotationRuntimeSnapshotCandidateSupport
+from ui.rotation_ultimate_affordability_candidate_support import (
+    RotationUltimateAffordabilityCandidateSupport,
+)
 
 
 class _Generation:
@@ -79,8 +83,11 @@ def _run(support: RotationDashboardCanonicalCandidateSupport, **extra):
 def test_dashboard_default_uses_automatic_potion_cadence_adapter() -> None:
     support = RotationDashboardCanonicalCandidateSupport(generation=_Generation())
 
+    assert isinstance(support.canonical_candidates, RotationRuntimeSnapshotCandidateSupport)
+    ultimate = support.canonical_candidates.canonical_candidates
+    assert isinstance(ultimate, RotationUltimateAffordabilityCandidateSupport)
     assert isinstance(
-        support.canonical_candidates,
+        ultimate.canonical_candidates,
         RotationAutomaticPotionCadenceCandidateSupport,
     )
 
