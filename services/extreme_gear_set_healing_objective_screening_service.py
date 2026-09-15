@@ -9,6 +9,11 @@ forms for healing modifiers and proc heals. For ``critical_healing`` the screen 
 narrower: both critical and healing language must be present before the unmapped
 bonus can plausibly modify Critical Healing.
 
+Absence of healing vocabulary is not enough to prove irrelevance. The description
+must also contain positive evidence of a recognized unrelated mechanic family.
+Opaque or semantically unclassified text remains unresolved and therefore fails
+closed.
+
 This does not classify proc heals as irrelevant to Extreme MOST Actual Heal. It
 only classifies whether an unmapped description can modify the sheet objective
 used for ordinary-set candidate discovery. Proc-heal candidacy remains owned by
@@ -31,6 +36,20 @@ _GLOBAL_EQUIPMENT_HAZARDS = (
 _HEAL_WORD = re.compile(r"\bheal(?:s|ed|ing)?\b|\bhealing\b", re.IGNORECASE)
 _CRITICAL_WORD = re.compile(r"\bcritical(?:ly)?\b", re.IGNORECASE)
 
+# A healing-sheet screen may prune only when the raw description positively
+# identifies some non-healing mechanic family. These markers do not claim that
+# the mechanic itself is understood; they only establish that the description is
+# not semantically opaque. Relevant healing/proc hazards still fail closed below.
+_UNRELATED_MECHANIC_WORD = re.compile(
+    r"\b(?:damage|resistance|armor|shield|ward|penetration|magicka|stamina|health|"
+    r"recovery|resource|movement|speed|sprint|sneak|dodge|roll|block|blocking|"
+    r"ultimate|weapon|spell|attack|enemy|target|status|effect|disease|poison|"
+    r"flame|frost|shock|bleed|physical|magic|oblivion|bash|interrupt|taunt|"
+    r"cooldown|cost|duration|stack|stacks|pet|companion|crowd control|snare|"
+    r"immobilize|invisible|stealth)\b",
+    re.IGNORECASE,
+)
+
 
 @dataclass(frozen=True)
 class ExtremeGearSetHealingObjectiveScreeningResult:
@@ -38,6 +57,7 @@ class ExtremeGearSetHealingObjectiveScreeningResult:
     proven_irrelevant: bool
     healing_hazards: tuple[str, ...] = ()
     global_equipment_hazards: tuple[str, ...] = ()
+    unrelated_mechanic_evidence: tuple[str, ...] = ()
 
     @property
     def blockers(self) -> tuple[str, ...]:
@@ -71,7 +91,9 @@ class ExtremeGearSetHealingObjectiveScreeningService:
 
         if key == "healing_done":
             if has_heal:
-                hazards.append("unmapped healing language may modify Healing Done or represent a heal proc")
+                hazards.append(
+                    "unmapped healing language may modify Healing Done or represent a heal proc"
+                )
             if "minor mending" in text or "major mending" in text:
                 hazards.append("Mending healing modifier reference")
         elif has_heal and has_critical:
@@ -80,12 +102,19 @@ class ExtremeGearSetHealingObjectiveScreeningService:
         global_hazards = tuple(
             phrase for phrase in _GLOBAL_EQUIPMENT_HAZARDS if phrase in text
         )
+        unrelated_matches = tuple(
+            dict.fromkeys(match.group(0).casefold() for match in _UNRELATED_MECHANIC_WORD.finditer(text))
+        )
         final_hazards = tuple(dict.fromkeys(hazards))
+        proven_irrelevant = bool(
+            unrelated_matches and not final_hazards and not global_hazards
+        )
         return ExtremeGearSetHealingObjectiveScreeningResult(
             objective_key=key,
-            proven_irrelevant=not final_hazards and not global_hazards,
+            proven_irrelevant=proven_irrelevant,
             healing_hazards=final_hazards,
             global_equipment_hazards=global_hazards,
+            unrelated_mechanic_evidence=unrelated_matches,
         )
 
 
