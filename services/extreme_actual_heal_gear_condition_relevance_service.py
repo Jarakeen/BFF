@@ -51,6 +51,10 @@ _DAMAGE_ONLY_POWER_TEXT = (
         r"weapon and spell damage for flame, shock, or frost damage",
         re.IGNORECASE,
     ),
+    re.compile(
+        r"weapon and spell damage to your one hand and shield abilities",
+        re.IGNORECASE,
+    ),
 )
 
 # Exact reviewed compound mechanics whose positive power term is materialized by
