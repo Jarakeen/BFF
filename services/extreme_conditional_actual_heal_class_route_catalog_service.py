@@ -11,6 +11,10 @@ from services.extreme_actual_heal_class_route_catalog_service import (
 from services.extreme_conditional_actual_heal_optimization_service import (
     ExtremeConditionalActualHealOptimizationService,
 )
+from services.extreme_runtime_snapshot import ExtremeRuntimeSnapshot
+from services.extreme_runtime_snapshot_conditional_actual_heal_optimization_service import (
+    ExtremeRuntimeSnapshotConditionalActualHealOptimizationService,
+)
 
 
 class ExtremeConditionalActualHealClassRouteCatalogService:
@@ -21,10 +25,10 @@ class ExtremeConditionalActualHealClassRouteCatalogService:
     heal optimizer so target-health mechanics are evaluated consistently on every
     route and every whole-build candidate rebuild.
 
-    Callers may also request the reviewed post-Restoration-heavy scenario. That
-    trigger remains explicit and is delegated to the conditional optimizer, where
-    Essence Drain must prove the active Restoration Staff and passive rank before
-    Major Mending enters canonical CombatState.
+    Runtime-condition windows may now come from the shared ``ExtremeRuntimeSnapshot``.
+    Legacy Restoration-heavy and Sacred Ground booleans remain compatibility inputs,
+    but production route search no longer needs parallel healer-only runtime truth
+    when the unified snapshot already proves those windows at the evaluation instant.
 
     Cross-class search defaults on here because the Extreme conditional objective
     asks for the strongest legal hypothetical healer, not merely the strongest
@@ -36,6 +40,8 @@ class ExtremeConditionalActualHealClassRouteCatalogService:
         *,
         target_health_fraction: float,
         fully_charged_restoration_heavy_attack_completed: bool = False,
+        sacred_ground_window_active: bool = False,
+        runtime_snapshot: ExtremeRuntimeSnapshot | None = None,
         database_path: str | Path | None = None,
         catalog: ExtremeActualHealClassRouteCatalogService | None = None,
         conditional_optimizer: ExtremeConditionalActualHealOptimizationService | None = None,
@@ -44,22 +50,42 @@ class ExtremeConditionalActualHealClassRouteCatalogService:
         if not 0.0 <= value <= 1.0:
             raise ValueError("target_health_fraction must be between 0 and 1")
         self.target_health_fraction = value
-        self.fully_charged_restoration_heavy_attack_completed = bool(
-            fully_charged_restoration_heavy_attack_completed
-        )
+        self.runtime_snapshot = runtime_snapshot
 
         if catalog is not None:
             self.catalog = catalog
             self.optimizer = conditional_optimizer
+            self.fully_charged_restoration_heavy_attack_completed = bool(
+                fully_charged_restoration_heavy_attack_completed
+            )
+            self.sacred_ground_window_active = bool(sacred_ground_window_active)
             return
 
-        optimizer = conditional_optimizer or ExtremeConditionalActualHealOptimizationService(
-            target_health_fraction=value,
-            fully_charged_restoration_heavy_attack_completed=(
-                self.fully_charged_restoration_heavy_attack_completed
-            ),
+        optimizer = conditional_optimizer or (
+            ExtremeRuntimeSnapshotConditionalActualHealOptimizationService(
+                target_health_fraction=value,
+                runtime_snapshot=runtime_snapshot,
+                fully_charged_restoration_heavy_attack_completed=(
+                    fully_charged_restoration_heavy_attack_completed
+                ),
+                sacred_ground_window_active=sacred_ground_window_active,
+            )
         )
         self.optimizer = optimizer
+        self.fully_charged_restoration_heavy_attack_completed = bool(
+            getattr(
+                optimizer,
+                "fully_charged_restoration_heavy_attack_completed",
+                fully_charged_restoration_heavy_attack_completed,
+            )
+        )
+        self.sacred_ground_window_active = bool(
+            getattr(
+                optimizer,
+                "sacred_ground_window_active",
+                sacred_ground_window_active,
+            )
+        )
         self.catalog = ExtremeActualHealClassRouteCatalogService(
             database_path=database_path,
             optimizer=optimizer,
@@ -83,10 +109,20 @@ class ExtremeConditionalActualHealClassRouteCatalogService:
             "explicit conditional target health fraction "
             f"{self.target_health_fraction:.6f}"
         ]
+        if self.runtime_snapshot is not None:
+            scenarios.append(
+                "unified runtime snapshot at "
+                f"{self.runtime_snapshot.snapshot_time_seconds:.6f}s"
+            )
+        if self.sacred_ground_window_active:
+            scenarios.append(
+                "Sacred Ground active/grace window proven at the runtime snapshot; "
+                "Minor Mending still requires canonical build/passive legality"
+            )
         if self.fully_charged_restoration_heavy_attack_completed:
             scenarios.append(
-                "explicit fully charged Restoration Staff heavy attack completed; "
-                "Essence Drain Major Mending requires canonical legality proof"
+                "Restoration Staff heavy post-completion window proven at the runtime snapshot; "
+                "Essence Drain Major Mending still requires canonical weapon/passive legality"
             )
         return replace(
             result,
