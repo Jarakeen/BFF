@@ -198,6 +198,58 @@ def test_replayed_pressure_resolver_feeds_updated_resource_state_back_to_generat
     assert "above the 30.0% recovery trigger" in pressure.reason
 
 
+def test_anticipatory_pressure_uses_earlier_legal_window_before_later_shortfall() -> None:
+    timeline = ResourceTimelineResult(
+        resource=ResourceType.MAGICKA,
+        starting_amount=10000,
+        ending_amount=0,
+        starting_maximum=10000,
+        ending_maximum=10000,
+        events=(
+            AppliedResourceTimelineEvent(
+                time_seconds=4.0,
+                kind=ResourceTimelineEventKind.ACTION_COST,
+                source="early heal",
+                before=10000,
+                attempted_change=-1000,
+                applied_change=-1000,
+                after=9000,
+                maximum_before=10000,
+                maximum_after=10000,
+            ),
+            AppliedResourceTimelineEvent(
+                time_seconds=12.0,
+                kind=ResourceTimelineEventKind.ACTION_COST,
+                source="later burst heal",
+                before=9000,
+                attempted_change=-10000,
+                applied_change=-9000,
+                after=0,
+                shortfall=1000,
+                maximum_before=10000,
+                maximum_after=10000,
+            ),
+        ),
+    )
+    replay = SimpleNamespace(
+        final_projection=SimpleNamespace(run=SimpleNamespace(timeline=timeline))
+    )
+
+    resolver = RotationRecoveryHeavyReplayService.pressure_resolver(
+        replay=replay,
+        maximum_amount=10000,
+        trigger_fraction=0.20,
+        anticipate_future_shortfall=True,
+    )
+    pressure = resolver(_context(4.0))
+
+    assert pressure.current_amount == 10000
+    assert pressure.resource_fraction == 1.0
+    assert pressure.reserve_shortfall == 1000
+    assert pressure.recommended is True
+    assert "later shortfall of 1000" in pressure.reason
+
+
 def test_replay_rejects_restore_before_scheduled_heavy_starts() -> None:
     sustain = _FakeSustainService()
     service = RotationRecoveryHeavyReplayService(sustain_service=sustain)
