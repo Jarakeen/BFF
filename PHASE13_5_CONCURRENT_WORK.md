@@ -34,6 +34,22 @@ Coverage:
 - `ui/raid_plan_coverage_page.py`
 - `ui/tests/test_raid_plan_coverage_support.py`
 
+### Coverage support-set evidence correction — READY FOR VALIDATION
+
+Coverage previously exposed unique raid-support sets as reference rows but left them `Unverified` even when exact saved-build equipment proved the set-piece threshold, and Raid Plan scope still rendered only the older default-required profile.
+
+The correction is additive and remains upstream of Rotation:
+- `services/raid_unique_support_set_capability_service.py` projects exact equipped-piece thresholds into static Coverage evidence.
+- The service reuses `SavedBuildCapabilityService._active_set_counts`, including active-bar/two-handed weapon semantics, instead of inventing another gear-counting rule.
+- Reviewed proc/activation sets such as Powerful Assault remain `Conditional`; equipment presence never claims uptime.
+- `services/raid_unique_support_set_catalog.py` now records reviewed piece thresholds (5-piece sets, 2-piece monster sets, 1-piece mythics).
+- `ui/coverage_group_effect_catalog_support.py` overlays that evidence after canonical saved-build capability analysis.
+- `ui/coverage_raid_plan_scope_support.py` now renders the full raid-facing group/unique-set catalog rather than only `DEFAULT_RAID_COVERAGE_PROFILE`.
+- Raid Plan assignment labels remain planning intent only.
+- No `RaidPlan` model, Rotation engine, database, or persistence contract changed.
+
+Until its focused gate is green, treat this as **ready for validation**, not a replacement for the previously verified 34-test Coverage checkpoint.
+
 ### Rotation handoff slice implemented
 
 New/changed files:
