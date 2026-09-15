@@ -7,9 +7,10 @@ from .character_build.effect_instance import EffectVariant
 from .character_build.effect_layer import EffectLayer
 from .skill_known_effects import verified_skill_effects
 from .support_effect_category import SupportEffectCategory
+from services.paths import DATA
 from services.skill_bar_eligibility import is_eligible
 
-DEFAULT_DATABASE = Path(__file__).resolve().parents[1] / "data" / "eso.db"
+DEFAULT_DATABASE = DATA / "eso.db"
 
 
 class SkillEffectRepository:
