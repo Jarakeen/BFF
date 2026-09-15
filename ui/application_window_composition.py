@@ -9,12 +9,16 @@ application boundary visible and avoids hiding presentation behavior behind
 runtime class mutation.
 """
 
+from ui.gear_lookup_description_cleanup_support import (
+    apply_gear_lookup_description_cleanup,
+)
 from ui.roster_sub_terminology_support import apply_roster_sub_terminology
 
 
 def compose_application_window(window) -> None:
     """Apply instance-level presentation features to the constructed application."""
     apply_roster_sub_terminology(window.pages["roster_page"])
+    apply_gear_lookup_description_cleanup(window.pages["gear_lookup"])
 
 
 __all__ = ["compose_application_window"]
