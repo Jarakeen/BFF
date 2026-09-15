@@ -42,6 +42,9 @@ from services.saved_build_utility_capability_service import (
 from ui.rotation_generate_canonical_context import RotationGenerateCanonicalContext
 
 
+_INSTALLED = False
+
+
 @dataclass(frozen=True)
 class RotationRuntimeApplicationSupportResult:
     pipeline_result: RotationRuntimeApplicationPipelineResult
@@ -170,8 +173,27 @@ def install_rotation_runtime_application(page) -> RotationRuntimeApplicationSupp
     return support
 
 
+def install() -> None:
+    """Install runtime observation application on every canonical Rotation page."""
+    global _INSTALLED
+    if _INSTALLED:
+        return
+
+    from ui.rotation_dashboard_canonical_page import CanonicalRotationDashboardPage
+
+    original_init = CanonicalRotationDashboardPage.__init__
+
+    def init_with_runtime_application(self, *args, **kwargs) -> None:
+        original_init(self, *args, **kwargs)
+        install_rotation_runtime_application(self)
+
+    CanonicalRotationDashboardPage.__init__ = init_with_runtime_application
+    _INSTALLED = True
+
+
 __all__ = [
     "RotationRuntimeApplicationSupport",
     "RotationRuntimeApplicationSupportResult",
+    "install",
     "install_rotation_runtime_application",
 ]
