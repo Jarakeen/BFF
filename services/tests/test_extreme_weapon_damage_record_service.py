@@ -4,6 +4,7 @@ from services.extreme_weapon_damage_record_service import (
     WEAPON_DAMAGE_RECORD_VALUE,
     WEAPON_DAMAGE_WINNER,
 )
+from services.service_catalog import SERVICE_CATALOG
 
 
 def test_weapon_damage_closed_record_matches_reviewed_conditional_snapshot() -> None:
@@ -41,3 +42,12 @@ def test_weapon_damage_record_preserves_runtime_prerequisites() -> None:
     assert "Font of Power" in joined
     assert "Calculated Defense" in joined
     assert "Six Sorcerer abilities" in joined
+
+
+def test_weapon_damage_record_is_registered_in_service_catalog() -> None:
+    descriptor = SERVICE_CATALOG.get("extreme.weapon_damage_record")
+
+    assert descriptor is not None
+    assert descriptor.implementation_path == "services.extreme_weapon_damage_record_service"
+    assert "extreme_weapon_damage_record" in descriptor.responsibilities
+    assert descriptor.ui_safe is True
