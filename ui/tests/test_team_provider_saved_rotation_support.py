@@ -219,7 +219,7 @@ def test_installer_orders_saved_rotation_bridge_after_workload_support():
 
     source = (
         Path(__file__).resolve().parents[1]
-        / "team_optimization_hybrid_anchor_support.py"
+        / "application_team_optimization_bootstrap.py"
     ).read_text(encoding="utf-8")
 
     workload = source.index("install_team_provider_workload_support()")
