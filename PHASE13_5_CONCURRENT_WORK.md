@@ -2,13 +2,15 @@
 
 This file is a short-lived coordination note for parallel Phase 13.5 workstreams. It is not architecture authority and should be removed when the concurrent work settles.
 
-## Raid Plan workstream — ASSIGNMENT SLICE READY FOR VALIDATION
+## Raid Plan workstream — ASSIGNMENT SLICE COMPLETE / STABLE
 
-Raid Engine persists canonical `RaidPlan` snapshots and now has a plan-owned Primary/Secondary assignment editing surface. The prior persistence/bridge gate is green; the new assignment slice is awaiting its focused pytest gate.
+Raid Engine persists canonical `RaidPlan` snapshots and now has a plan-owned Primary/Secondary assignment editing surface. The persistence, assignment, and existing bridge tests are green.
 
-### Verified persistence checkpoint
+### Verified checkpoints
 
-User-reported focused gate: **32 passed in 5.49s**.
+User-reported persistence/bridge gate: **32 passed in 5.49s**.
+
+User-reported assignment/persistence/bridge gate: **30 passed in 3.22s**.
 
 Stable persistence files:
 
@@ -19,21 +21,21 @@ Stable persistence files:
 - `ui/raid_plan_persistence_page.py`
 - `ui/tests/test_raid_plan_persistence_page.py`
 
-### Assignment slice implemented
+Stable assignment files:
 
-The original roadmap remains unchanged:
+- `ui/raid_plan_assignment_page.py`
+- `ui/tests/test_raid_plan_assignment_page.py`
+- `ui/raid_engine_dashboard_support.py` instantiates `RaidPlanAssignmentPage`
+
+### Roadmap remains unchanged
 
 ```text
 Persistence -> Assignments -> Coverage -> Rotation -> Optimizer Adviser
 ```
 
-New/changed files:
+Persistence and Assignments are now complete/stable for this roadmap slice. Coverage is the next Raid Plan integration target.
 
-- `ui/raid_plan_assignment_page.py`
-- `ui/tests/test_raid_plan_assignment_page.py`
-- `ui/raid_engine_dashboard_support.py` now instantiates `RaidPlanAssignmentPage`
-
-Behavior:
+### Assignment behavior
 
 - The Raid Plan page exposes a separate **Assignments** card for all 12 chairs.
 - Each chair has editable Primary and Secondary assignment controls.
@@ -49,9 +51,9 @@ Behavior:
 
 ### Rotation workstream handoff
 
-Roto/Rotation may continue consuming the existing `RaidPlanMember.primary_assignment` and `secondary_assignment` fields. The assignment slice does not alter Rotation contracts or persisted model shape.
+Roto/Rotation may now treat the Raid Plan assignment slice as stable upstream context and continue consuming `RaidPlanMember.primary_assignment` and `secondary_assignment` through additive consumer-side adapters.
 
-Do **not** add a second Raid Plan persistence path inside Rotation.
+Do **not** add a second Raid Plan assignment or persistence authority inside Rotation.
 
 If Rotation needs a structural change to `models/raid_plan.py`, coordinate it first because that model shape round-trips through durable storage and repository tests. Additive consumer-side adapters are preferred.
 
@@ -68,8 +70,4 @@ Do not make ESO Logs, Rotation runtime state, or Team Optimization state a persi
 
 ## Rotation workstream — ACTIVE
 
-Rotation is continuing on separate runtime/mechanics files. The Raid Plan assignment slice intentionally avoided Rotation-owned files.
-
-### Assignment validation gate
-
-Do not treat this assignment slice as stable until the focused assignment/persistence/bridge tests are green. Once the user reports that gate, update this note to mark the assignment slice complete and hand it off as stable upstream context.
+Rotation is continuing on separate runtime/mechanics files. The completed Raid Plan assignment slice intentionally avoided Rotation-owned files.
