@@ -40,6 +40,21 @@ def test_hostile_heal_absorption_is_not_wearer_healing_done() -> None:
     assert result.healing_hazards == ()
 
 
+def test_crowd_control_immunity_mechanic_is_irrelevant_to_healing_sheet_stats() -> None:
+    description = (
+        "(5 items) While you have Crowd Control Immunity, you are immune to "
+        "Snares and Immobilizations."
+    )
+    for objective in ("healing_done", "critical_healing"):
+        result = ExtremeGearSetHealingObjectiveScreeningService.review(
+            description,
+            objective,
+        )
+        assert result.proven_irrelevant is True
+        assert result.blockers == ()
+        assert result.unrelated_mechanic_evidence
+
+
 def test_direct_healing_done_reference_stays_blocking() -> None:
     result = ExtremeGearSetHealingObjectiveScreeningService.review(
         "While on your back bar, increase your Healing Done by 14%.",
