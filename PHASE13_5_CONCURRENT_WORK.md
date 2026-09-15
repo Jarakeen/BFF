@@ -2,9 +2,9 @@
 
 This file is a short-lived coordination note for parallel Phase 13.5 workstreams. It is not architecture authority and should be removed when the concurrent work settles.
 
-## Raid Plan workstream — COVERAGE SLICE COMPLETE / STABLE
+## Raid Plan workstream — ROTATION HANDOFF READY FOR VALIDATION
 
-Raid Engine persists canonical `RaidPlan` snapshots, exposes plan-owned Primary/Secondary assignments, and hands the exact current Raid Plan into Coverage for static build auditing.
+Raid Engine persists canonical `RaidPlan` snapshots, exposes plan-owned Primary/Secondary assignments, hands the exact current Raid Plan into Coverage, and now exposes a selected-chair handoff into the existing Rotation workspace.
 
 ### Verified checkpoints
 
@@ -12,7 +12,7 @@ Raid Engine persists canonical `RaidPlan` snapshots, exposes plan-owned Primary/
 - Assignment/persistence/bridge gate: **30 passed in 3.22s**
 - Coverage/persistence/bridge gate: **34 passed in 4.22s**
 
-### Stable Raid Plan slices
+### Stable prior Raid Plan slices
 
 Persistence:
 - `services/raid_plan_repository.py`
@@ -33,20 +33,29 @@ Coverage:
 - `ui/coverage_raid_plan_scope_support.py`
 - `ui/raid_plan_coverage_page.py`
 - `ui/tests/test_raid_plan_coverage_support.py`
-- `ui/raid_engine_dashboard_support.py` instantiates `RaidPlanCoveragePage`
 
-### Coverage contract
+### Rotation handoff slice implemented
 
-- **Check Plan Coverage** sends the current `RaidPlan` directly to Coverage.
-- Team Optimization is not an intermediate authority.
-- Selected builds resolve through fail-closed `RaidPlanSavedBuildResolutionService`.
-- Coverage audits only successfully resolved plan-selected builds.
-- Missing/ambiguous chairs remain explicitly unresolved.
-- Zero resolved builds never falls back to all saved builds.
-- Primary/Secondary assignment labels populate Planned Provider/Backup only on exact coverage-effect display-name matches.
-- Assignment labels remain planning intent, not proof of static availability or uptime.
-- Static capability evidence remains owned by Coverage/SavedBuildCapability services.
-- No `models/raid_plan.py` shape change, database migration, or reset occurred.
+New/changed files:
+- `ui/raid_plan_rotation_handoff_support.py`
+- `ui/raid_plan_rotation_page.py`
+- `ui/tests/test_raid_plan_rotation_handoff_support.py`
+- `ui/tests/test_raid_plan_rotation_page.py`
+- `ui/raid_engine_dashboard_support.py` now instantiates `RaidPlanRotationPage`
+- existing assignment/coverage route-contract tests advanced through the new subclass
+
+Contract:
+- Raid Plan exposes a **Rotation / Execution** card with one selected chair and **Open Rotation**.
+- The selected chair must already have an exact saved build; unresolved/missing/ambiguous build ownership fails closed.
+- Rotation's visible Character/Build selectors are aligned to the exact resolved Raid Plan build.
+- The existing Rotation canonical context provider remains the owner of encounter/evidence/generation policy.
+- The Raid Plan wrapper pins build reads to the exact selected build, then delegates to the existing `RaidPlanRotationContextBridge`.
+- Encounter selection remains inside Rotation. Trial identity is never fabricated into a boss/encounter id.
+- The bridge freezes the exact build as a `raid_plan` `EffectiveBuildSnapshot` and carries matching encounter-scoped triggered responsibilities.
+- Primary/Secondary assignment labels are retained as provenance only. They are not converted into build adjustment labels or runtime timings.
+- No Rotation engine/service file was modified for this slice.
+- No structural change was made to `models/raid_plan.py`.
+- No database migration/reset is involved.
 
 ### Roadmap remains unchanged
 
@@ -54,13 +63,15 @@ Coverage:
 Persistence -> Assignments -> Coverage -> Rotation -> Optimizer Adviser
 ```
 
-Persistence, Assignments, and Coverage are complete/stable. Rotation is next.
+Persistence, Assignments, and Coverage are stable. The visible Raid Plan -> Rotation handoff is implemented and awaiting its focused validation gate before the Rotation slice is marked stable.
 
-### Rotation workstream handoff
+### Rotation workstream coordination
 
-Roto/Rotation may treat Raid Plan persistence, assignments, and Coverage scope as stable upstream context. Rotation remains a consumer and should not add a second Raid Plan persistence, assignment, or Coverage authority.
+Roto/Rotation remains the downstream consumer. This handoff intentionally wraps Roto's existing canonical context-provider seam rather than editing its generation/runtime engine.
 
-If Rotation needs a structural change to `models/raid_plan.py`, coordinate it first because that model shape round-trips through durable storage and repository tests. Prefer additive consumer-side adapters.
+Do **not** add a second Raid Plan persistence, assignment, Coverage, effective-build, or Rotation context authority.
+
+If Roto needs a structural change to `models/raid_plan.py`, coordinate it first because that model shape round-trips through durable storage and repository tests. Prefer additive consumer-side adapters.
 
 Ownership remains:
 
@@ -68,7 +79,7 @@ Ownership remains:
 Personnel / Characters / Saved Builds = global reusable identity
 RaidPlan = trial-specific selections, assignments, adjustments, triggered responsibilities
 Coverage = consumer of exact selected Raid Plan builds + explicit planning labels
-Rotation = consumer of an exact resolved Raid Plan seat/effective build
+Rotation = consumer of exact resolved Raid Plan chair/effective build + live encounter/policy
 RaidPlanRepository = persistence of RaidPlan snapshots only
 ```
 
@@ -76,4 +87,4 @@ Do not make ESO Logs, Rotation runtime state, or Team Optimization state a persi
 
 ## Rotation workstream — ACTIVE
 
-Rotation may now proceed against the stable upstream Raid Plan contract. The next Raid Plan integration target is making the visible Raid Plan hand one selected chair's exact resolved effective build and assignment context into Rotation, without moving Rotation ownership into RaidPlan persistence.
+Roto may continue its mechanics/runtime work independently. The Raid Plan handoff has not changed Rotation-owned engine files or the persisted RaidPlan shape. Treat this handoff as **ready for validation**, not stable, until the focused test gate is reported green.
