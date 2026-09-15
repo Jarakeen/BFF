@@ -3,10 +3,10 @@ from __future__ import annotations
 """H1-specific relevance rules for conditional gear objective blockers.
 
 The shared gear objective service must preserve conditional Weapon/Spell Damage
-because those mechanics matter in general. Standing MOST Actual Heal can prove two
-narrower facts without weakening that shared model: damage-type ability scopes
-cannot modify a healing event, and the standing scenario itself satisfies a
-``standing_still`` condition.
+because those mechanics matter in general. Standing MOST Actual Heal can prove a
+few narrower facts without weakening that shared model: damage-type and reviewed
+offensive-weapon ability scopes cannot modify a healing event, and the standing
+scenario itself satisfies a ``standing_still`` condition.
 """
 
 from dataclasses import dataclass
@@ -22,6 +22,11 @@ _DAMAGE_ONLY_ABILITY_SCOPES = frozenset(
         "ability_scope:magic_damage",
         "ability_scope:poison_and_disease_damage",
         "ability_scope:physical_and_bleed_damage",
+        "ability_scope:dual_wield",
+        "ability_scope:two_handed",
+        "ability_scope:bow",
+        "ability_scope:destruction_staff",
+        "ability_scope:one_hand_and_shield",
     }
 )
 _STANDING_H1_CONDITIONS = frozenset({"standing_still"})
