@@ -5,19 +5,27 @@ from PySide6.QtWidgets import QApplication, QComboBox
 from ui import rotation_dashboard_layout_support
 
 
-def test_rotation_setup_owns_canonical_evaluation_and_recovery_controls() -> None:
+def test_rotation_setup_temporarily_hides_and_unsets_advanced_mode_controls() -> None:
     source = Path(rotation_dashboard_layout_support.__file__).read_text(encoding="utf-8")
 
     assert '_card(page, "Rotation Setup")' in source
+    assert 'page.rotation_advanced_mode_enabled = False' in source
+    assert 'page.rotation_threshold_difficulty_combo' in source
     assert 'page.rotation_threshold_raid_dps_spin' in source
     assert 'page.rotation_dd_target_resistance_spin' in source
     assert 'page.rotation_recovery_resource_combo' in source
     assert 'page.rotation_recovery_trigger_spin' in source
-    assert '_field(page, "RAID DPS")' in source
-    assert '_field(page, "TARGET RESIST")' in source
-    assert '_field(page, "RECOVERY")' in source
-    assert '_field(page, "RECOVERY TRIGGER")' in source
     assert '_remove_header_wrapper(page, control)' in source
+    assert 'control.hide()' in source
+    assert 'page.rotation_threshold_difficulty_combo.setCurrentIndex(0)' in source
+    assert 'page.rotation_threshold_raid_dps_spin.setValue(0.0)' in source
+    assert 'page.rotation_dd_target_resistance_spin.setValue(-1.0)' in source
+    assert 'page.rotation_recovery_resource_combo.setCurrentIndex(0)' in source
+    assert 'page.rotation_recovery_trigger_spin.setValue(-1.0)' in source
+    assert '_field(page, "RAID DPS")' not in source
+    assert '_field(page, "TARGET RESIST")' not in source
+    assert '_field(page, "RECOVERY")' not in source
+    assert '_field(page, "RECOVERY TRIGGER")' not in source
 
 
 def test_food_and_potions_card_owns_real_potion_generation_control() -> None:
@@ -89,7 +97,7 @@ def test_layout_support_moves_existing_widgets_instead_of_creating_duplicates() 
     source = Path(rotation_dashboard_layout_support.__file__).read_text(encoding="utf-8")
 
     assert 'The canonical controls are created by their existing owners.' in source
-    assert 'Move the canonical widgets themselves, not clones.' in source
+    assert 'Keep the canonical objects alive for their existing policy methods' in source
     dashboard = Path("ui/rotation_dashboard_canonical_page.py").read_text(
         encoding="utf-8"
     )
