@@ -7,6 +7,8 @@ surface. Loading a plan restores only RaidPlan-owned choices; Personnel, Charact
 Saved Builds, Team records, and Rotation runtime state remain independently owned.
 """
 
+from dataclasses import replace
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
@@ -105,8 +107,31 @@ class RaidPlanPersistencePage(RaidPlanCharacterSelectionPage):
         layout.addLayout(row)
         self.header.add_context_widget(controls)
 
+    def _selected_build_ids_by_seat(self) -> dict[str, str]:
+        """Read stable BuildIds from the exact saved-build rows selected in the UI."""
+        selected: dict[str, str] = {}
+        for row, seat in enumerate(RAID_PLAN_SEATS):
+            combo = self.team_table.cellWidget(row, 5)
+            if not isinstance(combo, QComboBox):
+                continue
+            saved_index = combo.currentData()
+            if not isinstance(saved_index, int) or not 0 <= saved_index < len(self.saved_builds):
+                continue
+            build_id = _clean(getattr(self.saved_builds[saved_index], "BuildId", ""))
+            if build_id:
+                selected[_slug(seat).casefold()] = build_id
+        return selected
+
     def current_plan(self) -> RaidPlan:
         visible = super().current_plan()
+        selected_ids = self._selected_build_ids_by_seat()
+        members = tuple(
+            member.with_selection(
+                selected_build_id=selected_ids.get(member.seat_id.casefold())
+            )
+            for member in visible.members
+        )
+        visible = replace(visible, members=members)
         return merge_visible_plan_with_loaded_snapshot(visible, self._loaded_plan_snapshot)
 
     def refresh_saved_plan_picker(self, *, select_plan_id: str | None = None) -> None:
@@ -239,15 +264,28 @@ class RaidPlanPersistencePage(RaidPlanCharacterSelectionPage):
                 build_combo = self.team_table.cellWidget(row, 5)
                 if isinstance(build_combo, QComboBox):
                     build_combo.setCurrentIndex(0)
-                    if member and member.selected_build_name:
-                        for combo_index in range(1, build_combo.count()):
-                            saved_index = build_combo.itemData(combo_index)
-                            if not isinstance(saved_index, int) or not 0 <= saved_index < len(self.saved_builds):
-                                continue
-                            build_name = _clean(getattr(self.saved_builds[saved_index], "BuildName", ""))
-                            if build_name.casefold() == member.selected_build_name.casefold():
-                                build_combo.setCurrentIndex(combo_index)
-                                break
+                    if member:
+                        matched = False
+                        if member.selected_build_id:
+                            wanted_id = member.selected_build_id.casefold()
+                            for combo_index in range(1, build_combo.count()):
+                                saved_index = build_combo.itemData(combo_index)
+                                if not isinstance(saved_index, int) or not 0 <= saved_index < len(self.saved_builds):
+                                    continue
+                                build_id = _clean(getattr(self.saved_builds[saved_index], "BuildId", ""))
+                                if build_id.casefold() == wanted_id:
+                                    build_combo.setCurrentIndex(combo_index)
+                                    matched = True
+                                    break
+                        if not matched and member.selected_build_name:
+                            for combo_index in range(1, build_combo.count()):
+                                saved_index = build_combo.itemData(combo_index)
+                                if not isinstance(saved_index, int) or not 0 <= saved_index < len(self.saved_builds):
+                                    continue
+                                build_name = _clean(getattr(self.saved_builds[saved_index], "BuildName", ""))
+                                if build_name.casefold() == member.selected_build_name.casefold():
+                                    build_combo.setCurrentIndex(combo_index)
+                                    break
                 self._refresh_personnel_button(row)
         finally:
             self.team_table.blockSignals(False)
