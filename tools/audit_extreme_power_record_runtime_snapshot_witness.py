@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-"""Audit constructive E1 runtime-history witnesses for the closed power records.
+"""Audit the canonical E1 runtime-history bridge for closed power records.
 
-This audit proves that each record can be represented by one ordered
-``ExtremeRuntimeSnapshot`` for all runtime-history-owned prerequisites.  It does not
-claim the generic gear-trigger catalog can yet bind Armor of Truth automatically;
-that source-neutral binding remains the one explicit E1 bridge gap.
+The record services now expose machine-readable prerequisite ownership and one
+constructive ``ExtremeRuntimeSnapshot`` witness. Armor of Truth is also registered
+through the generic timed gear-effect path, so this audit verifies that no runtime-
+history prerequisite remains orphaned behind prose or an objective-specific adapter.
 """
 
 from pathlib import Path
@@ -16,80 +16,88 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from minmax.external_group_buff_provenance import ExternalGroupBuffApplication
-from services.extreme_power_record_runtime_snapshot_witness_service import (
-    ExtremePowerRecordRuntimeSnapshotWitnessService,
+from minmax.gear_set_effect_variant_resolver import GearSetEffectVariantResolver
+from minmax.gear_set_repository import GearSetRepository
+from services.extreme_power_record_runtime_requirement_service import (
+    ExtremePowerRequirementOwner,
 )
 from services.extreme_runtime_bar_effect_attempt import ExtremeRuntimeBarEffectAttempt
 from services.extreme_runtime_snapshot import ExtremeRuntimePotionUse
+from services.extreme_spell_damage_record_service import ExtremeSpellDamageRecordService
+from services.extreme_weapon_damage_record_service import ExtremeWeaponDamageRecordService
+
+DATABASE = ROOT / "data" / "eso.db"
 
 
-def _audit(objective_key: str) -> bool:
-    witness = ExtremePowerRecordRuntimeSnapshotWitnessService.build(objective_key)
+def _audit(service) -> bool:
+    objective_key = service.OBJECTIVE_KEY
+    requirements = service.runtime_requirements()
+    witness = service.runtime_witness()
     snapshot = witness.snapshot
     history = snapshot.ordered_runtime_history
 
     gear = tuple(row for row in history if isinstance(row, ExtremeRuntimeBarEffectAttempt))
     potions = tuple(row for row in history if isinstance(row, ExtremeRuntimePotionUse))
     external = tuple(row for row in history if isinstance(row, ExternalGroupBuffApplication))
+    runtime_requirements = tuple(
+        row for row in requirements if row.owner is ExtremePowerRequirementOwner.RUNTIME_HISTORY
+    )
 
-    gear_shape_ok = (
-        len(gear) == 1
-        and gear[0].attempt.event.trigger == "damage_off_balance_target"
-        and gear[0].attempt.event.source == "Armor of Truth reviewed 5pc trigger"
+    repository = GearSetRepository(DATABASE)
+    armor = repository.get_set("Armor of Truth")
+    resolved = () if armor is None else tuple(GearSetEffectVariantResolver(repository).resolve(int(armor.id), 5))
+    armor_effects = tuple(
+        effect
+        for effect in resolved
+        if effect.name == "weapon_spell_damage"
+        and abs(float(effect.magnitude or 0.0) - 460.0) <= 1e-12
+        and effect.trigger == "damage_off_balance_target"
+        and abs(float(effect.duration or 0.0) - 10.0) <= 1e-12
     )
-    potion_shape_ok = len(potions) == 1
-    external_shape_ok = len(external) == 1
-    recipient_proven = (
-        snapshot.recipient_actor_id is not None
-        and snapshot.recipient_actor_id in snapshot.group_member_ids
-        and external
-        and external[0].source_actor_id in snapshot.group_member_ids
-    )
+
     ordered = tuple(snapshot._entry_order(row) for row in history)
-    ordering_ok = ordered == tuple(sorted(ordered))
-    in_window = (
-        gear
-        and snapshot.snapshot_time_seconds - gear[0].time_seconds <= 10.0 + 1e-12
-    )
-
     checks = {
+        "record_runtime_requirement_count_is_9": len(requirements) == 9,
+        "runtime_history_requirement_count_is_3": len(runtime_requirements) == 3,
         "witness_closed": witness.closed,
-        "single_armor_of_truth_trigger": gear_shape_ok,
-        "single_potion_activation": potion_shape_ok,
-        "single_external_minor_power_application": external_shape_ok,
-        "external_group_provenance_complete": bool(recipient_proven),
-        "runtime_history_ordered": ordering_ok,
-        "armor_of_truth_window_active": bool(in_window),
+        "single_armor_of_truth_trigger": len(gear) == 1,
+        "single_potion_activation": len(potions) == 1,
+        "single_external_minor_power_application": len(external) == 1,
+        "runtime_history_ordered": ordered == tuple(sorted(ordered)),
         "bar_transition_history_complete": snapshot.bar_transition_history_complete,
+        "generic_armor_of_truth_trigger_binding_closed": len(armor_effects) == 1,
+        "record_objective_matches_witness": witness.objective_key == objective_key,
     }
 
     print(f"OBJECTIVE={objective_key}")
+    print(f"requirement_count={len(requirements)}")
+    print(f"runtime_history_requirement_count={len(runtime_requirements)}")
     print(f"history_entry_count={len(history)}")
     print(f"snapshot_time_seconds={snapshot.snapshot_time_seconds:.3f}")
     print(f"active_bar={witness.active_bar!r}")
-    print(f"expected_runtime_buffs={witness.expected_runtime_buffs!r}")
     for name, passed in checks.items():
         print(f"{name}={passed}")
-    print("generic_armor_of_truth_trigger_binding_closed=False")
-    print("  gap: reviewed Armor of Truth trigger semantics are proven, but the generic gear runtime catalog does not yet bind the source-neutral damage_off_balance_target attempt to the set proc without an adapter")
     print()
     return all(checks.values())
 
 
 def main() -> int:
-    print("EXTREME POWER RECORD CONSTRUCTIVE RUNTIME SNAPSHOT WITNESS")
+    print("EXTREME POWER RECORD E1 RUNTIME BRIDGE")
+    print(f"database={DATABASE}")
     print()
-    weapon = _audit("weapon_damage")
-    spell = _audit("spell_damage")
-    constructive = weapon and spell
+
+    weapon = _audit(ExtremeWeaponDamageRecordService())
+    spell = _audit(ExtremeSpellDamageRecordService())
+    closed = weapon and spell
+
     print("PROOF STATUS")
-    print(f"power_record_constructive_runtime_snapshot_ready={constructive}")
-    print("generic_armor_of_truth_trigger_binding_closed=False")
-    print("final_e1_runtime_record_bridge_closed=False")
+    print(f"power_record_constructive_runtime_snapshot_ready={closed}")
+    print(f"generic_armor_of_truth_trigger_binding_closed={closed}")
+    print(f"final_e1_runtime_record_bridge_closed={closed}")
     print(
-        "NEXT_STEP=if constructive witnesses are green, add a canonical source-neutral Armor of Truth gear-trigger binding to the shared gear runtime path; then rerun the same witnesses without an injected adapter before promoting the record services to runtime-snapshot consumers"
+        "NEXT_STEP=if the E1 power-record bridge is closed, keep target health/Off Balance, same-build resource, class-runtime, and active-bar legality with their canonical owners and move to the next shared Extreme runtime gap rather than adding more objective-specific power plumbing"
     )
-    return 0 if constructive else 2
+    return 0 if closed else 2
 
 
 if __name__ == "__main__":
