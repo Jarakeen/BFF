@@ -2,17 +2,24 @@ from __future__ import annotations
 
 """Bridge reviewed periodic target-Health timing into canonical DD tick damage.
 
-This is intentionally narrow. It handles a skill action only when exactly one damage
-component exists, that component is periodic, owns target-Health consequences, and
-reviewed periodic runtime semantics exist. Mixed damage shapes that contain a reviewed
-periodic target-Health component fail closed with an explicit diagnostic rather than
-falling back as though target-Health review had never matched.
+This bridge resolves one reviewed periodic target-Health damage component and composes
+it with any other damage components on the same skill without creating a second DD
+formula path. For mixed skills, an evaluation-local copy of the canonical skill
+damage provider masks only the reviewed periodic target-Health coefficient as utility;
+the canonical provider then evaluates every remaining component normally. The bridge
+adds the reviewed periodic component back through its target-Health runtime path.
 
-Source magnitude timing and target-Health timing remain separate reviewed facts.
-``snapshot_at_cast`` reuses the base evaluator's cast-state magnitude path;
-``dynamic_at_tick`` delegates each included occurrence back through the base
-service's exact-time dynamic periodic resolver. This bridge owns no damage formula.
+Multiple periodic target-Health damage components remain unresolved because their
+component-local results need independent composition. Source magnitude timing and
+target-Health timing also remain separate reviewed facts. ``snapshot_at_cast`` reuses
+the base evaluator's cast-state magnitude path; ``dynamic_at_tick`` delegates each
+included occurrence back through the base service's exact-time dynamic periodic
+resolver. This bridge owns no damage formula and never mutates canonical component
+identity.
 """
+
+from copy import copy
+from dataclasses import replace
 
 from minmax.build_candidate_damage import calculation_result_from_build_context
 from minmax.combat_damage_modifiers import damage_taken_from_target_state
@@ -32,6 +39,33 @@ from services.rotation_candidate_skill_damage_evidence_service import (
 from services.rotation_periodic_target_health_eligibility_service import (
     RotationPeriodicTargetHealthEligibilityService,
 )
+
+
+class _MaskedSkillComponentRepository:
+    """Evaluation-local view that hides one component from ordinary DD damage."""
+
+    def __init__(self, base_repository, *, skill_rank_id: int, coefficient_number: int) -> None:
+        self.base_repository = base_repository
+        self.skill_rank_id = int(skill_rank_id)
+        self.coefficient_number = int(coefficient_number)
+
+    def get_for_skill_rank(self, skill_rank_id: int):
+        rows = self.base_repository.get_for_skill_rank(skill_rank_id)
+        if int(skill_rank_id) != self.skill_rank_id:
+            return rows
+        return tuple(
+            replace(
+                row,
+                effect_kind=SkillEffectKind.UTILITY,
+                damage_type=None,
+                is_dot=None,
+                is_aoe=None,
+                can_crit=None,
+            )
+            if int(row.coefficient_number) == self.coefficient_number
+            else row
+            for row in rows
+        )
 
 
 class RotationCandidatePeriodicTargetHealthDamageBridgeService:
@@ -106,13 +140,7 @@ class RotationCandidatePeriodicTargetHealthDamageBridgeService:
             )
             return self._unresolved(
                 action,
-                f"{action.name}: periodic target-Health bridge found multiple reviewed conditional damage components ({numbers}); component-level mixed-damage composition is required",
-            )
-        if len(damage_components) != 1:
-            component = periodic_target_health_components[0][0]
-            return self._unresolved(
-                action,
-                f"{action.name}: coefficient {component.coefficient_number} periodic target-Health damage is part of a mixed {len(damage_components)}-component damage skill; component-level mixed-damage composition is required",
+                f"{action.name}: periodic target-Health bridge found multiple reviewed conditional damage components ({numbers}); independent component composition is required",
             )
 
         component, classification, target_health_consequences = (
@@ -123,6 +151,21 @@ class RotationCandidatePeriodicTargetHealthDamageBridgeService:
                 action,
                 f"{action.name}: coefficient {component.coefficient_number} periodic target-Health damage classification is incomplete",
             )
+
+        ordinary_damage = 0.0
+        if len(damage_components) > 1:
+            ordinary = self._evaluate_other_components(
+                candidate=candidate,
+                action=action,
+                skill_rank_id=tooltip.skill.skill_rank_id,
+                coefficient_number=component.coefficient_number,
+            )
+            if ordinary.damage_value is None or ordinary.unresolved:
+                detail = ordinary.unresolved or (
+                    "canonical mixed-component damage evaluation is unresolved",
+                )
+                return self._unresolved(action, *detail)
+            ordinary_damage = float(ordinary.damage_value)
 
         if self.base.periodic_runtime_projection_service is None:
             return self._unresolved(
@@ -191,7 +234,7 @@ class RotationCandidatePeriodicTargetHealthDamageBridgeService:
             target_resistance=self.base.context.target_resistance,
         )
         dd_stats = evaluate_dd_stats(calculation, evaluation_context)
-        total_damage = 0.0
+        total_damage = ordinary_damage
 
         for occurrence_index, (event, occurrence) in enumerate(
             zip(runtime_entry.events, eligibility.occurrences)
@@ -247,6 +290,22 @@ class RotationCandidatePeriodicTargetHealthDamageBridgeService:
             sequence=action.sequence,
             damage_value=total_damage,
         )
+
+    def _evaluate_other_components(
+        self,
+        *,
+        candidate: GeneratedRotationCandidate,
+        action: RotationAction,
+        skill_rank_id: int,
+        coefficient_number: int,
+    ) -> RotationActionDamageEvidence:
+        delegate = copy(self.base)
+        delegate.components = _MaskedSkillComponentRepository(
+            self.base.components,
+            skill_rank_id=skill_rank_id,
+            coefficient_number=coefficient_number,
+        )
+        return delegate.evaluate_action(candidate=candidate, action=action)
 
     @staticmethod
     def _unresolved(action: RotationAction, *messages: str) -> RotationActionDamageEvidence:
