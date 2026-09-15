@@ -34,7 +34,10 @@ from services.rotation_saved_build_dd_damage_done_service import (
 
 
 _DD_ROLE_KEYS = {"dd", "dps", "damage", "damage dealer", "damage_dealer"}
-_EXPLOITER_UNMODELED_PREFIX = "champion point effect not yet modeled: exploiter:"
+_EXPLOITER_UNMODELED_PREFIXES = (
+    "champion point effect not yet modeled: exploiter:",
+    "champion point is dynamic or not yet stat-mapped: exploiter",
+)
 
 
 @dataclass(frozen=True)
@@ -356,7 +359,7 @@ class RotationStaticBuildContextService:
                 and not (
                     dd_conditional_resolved
                     and str(message or "").strip().casefold().startswith(
-                        _EXPLOITER_UNMODELED_PREFIX
+                        _EXPLOITER_UNMODELED_PREFIXES
                     )
                 )
                 and str(message or "").strip().casefold()
