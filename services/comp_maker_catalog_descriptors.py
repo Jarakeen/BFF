@@ -17,6 +17,7 @@ from services.extreme_health_recovery_catalog_descriptors import (
     EXTREME_HEALTH_RECOVERY_SERVICE_DESCRIPTORS,
 )
 from services.extreme_recovery_catalog_descriptors import EXTREME_RECOVERY_SERVICE_DESCRIPTORS
+from services.raid_plan_catalog_descriptors import RAID_PLAN_SERVICE_DESCRIPTORS
 from services.rotation_catalog_descriptors import ROTATION_SERVICE_DESCRIPTORS
 from services.rotation_dd_catalog_descriptors import ROTATION_DD_SERVICE_DESCRIPTORS
 from services.rotation_dd_periodic_catalog_descriptors import (
@@ -145,6 +146,7 @@ COMP_MAKER_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.POLICY,
         notes="Comparison is bounded to static capability presence, redundancy, gaps, conditional sources, recruits, and evidence boundaries.",
     ),
+    *RAID_PLAN_SERVICE_DESCRIPTORS,
     *EXTREME_SERVICE_DESCRIPTORS,
     *EXTREME_HEALTH_RECOVERY_SERVICE_DESCRIPTORS,
     *EXTREME_RECOVERY_SERVICE_DESCRIPTORS,
