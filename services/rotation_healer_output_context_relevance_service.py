@@ -42,6 +42,10 @@ class RotationHealerOutputContextRelevanceService:
         "champion point is dynamic or not yet stat-mapped: celerity",
         "movement_speed unresolved",
         "charged: requires status-effect chance model",
+        # Potion activation and uptime are now evaluated by the plan/runtime potion
+        # bridge. A saved potion therefore must not make the static healer snapshot
+        # incomplete merely because standing-sheet state does not assume it is active.
+        "potion selected; activation/uptime is not part of static build state:",
     )
 
     _STATIC_CONTEXT_PREFIXES = (
