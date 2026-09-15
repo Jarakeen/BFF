@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QComboBox, QCompleter
 from minmax.potion_availability_repository import DEFAULT_PROCESSED, LEGACY_PROCESSED
 from models.build_model import PlayerBuild
 from services.potion_choice_service import PotionChoiceService
+from ui.build_editor_lifecycle_support import register_model_post, register_post_load
 
 _INSTALLED = False
 
@@ -170,8 +171,6 @@ def install() -> None:
 
     original_init = BuildEditor.__init__
     original_skills_card = BuildEditor._build_skills_card
-    original_load = BuildEditor.load
-    original_model = BuildEditor.model
 
     def init_with_searchable_dropdowns(self, *args, **kwargs) -> None:
         original_init(self, *args, **kwargs)
@@ -187,18 +186,15 @@ def install() -> None:
         )
         return card
 
-    def load_with_canonical_potions(self, model: PlayerBuild) -> None:
-        original_load(self, model)
+    def load_canonical_potion(self, model: PlayerBuild) -> None:
         _select_saved(self.potion, str(model.Potion or ""))
 
-    def model_with_canonical_potions(self) -> PlayerBuild:
-        build = original_model.fget(self)
+    def persist_canonical_potion(self, build: PlayerBuild) -> None:
         build.Potion = _persisted_value(self.potion)
-        return build
 
     BuildEditor.__init__ = init_with_searchable_dropdowns
     BuildEditor._build_skills_card = skills_card_with_canonical_potions
-    BuildEditor.load = load_with_canonical_potions
-    BuildEditor.model = property(model_with_canonical_potions)
+    register_post_load("canonical_potion", load_canonical_potion)
+    register_model_post("canonical_potion", persist_canonical_potion)
 
     _INSTALLED = True
