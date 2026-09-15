@@ -2,12 +2,14 @@ from __future__ import annotations
 
 """Conservative whole-build preweapon flat ceiling for Extreme Weapon Damage.
 
-This audit is intentionally generous to the One Hand and Shield challenger.  It
+This audit is intentionally generous to the One Hand and Shield challenger. It
 adds mutually exclusive class/runtime maxima together, keeps both Courage flats,
-uses the Bloodthirsty jewelry ceiling, and takes the strongest reviewed legal
-named-gear package.  If even that over-counted nonweapon flat ceiling remains
-below the zero-common-percent Sword-and-Board threshold, the +3% Sword and Board
-passive cannot overtake the corrected Dual Wield weapon realization.
+uses the Bloodthirsty jewelry ceiling, and uses a proof-safe named-gear upper
+bound rather than exhaustively realizing every named set assignment.
+
+If even this over-counted nonweapon flat ceiling remains below the zero-common-
+percent Sword-and-Board threshold, the +3% Sword and Board passive cannot
+overtake the corrected Dual Wield weapon realization.
 """
 
 from pathlib import Path
@@ -18,6 +20,8 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from minmax.champion_point_static_repository import ChampionPointStaticRepository
+from minmax.combat_effect_semantics import GameUpdate
+from minmax.effects import EffectOperation
 from minmax.gear_set_repository import GearSetRepository
 from minmax.jewelry_glyph_repository import JewelryGlyphEffectRepository
 from minmax.jewelry_trait_repository import JewelryTraitRepository
@@ -28,18 +32,19 @@ from minmax.rule_repository import RuleRepository
 from minmax.stat_ids import StatId
 from minmax.weapon_enchantment_effect_service import WeaponEnchantmentEffectService
 from minmax.weapon_enchantment_repository import WeaponEnchantmentRepository
-from minmax.combat_effect_semantics import GameUpdate
 from services.champion_point_loadout_service import ChampionPointLoadoutCandidate, ChampionPointLoadoutService
 from services.extreme_armor_mundus_joint_objective_service import ExtremeArmorMundusJointObjectiveService
 from services.extreme_arcanist_harnessed_quintessence_service import ExtremeArcanistHarnessedQuintessenceService
 from services.extreme_blueprint_service import _SORCERER_EXPERT_MAGE_PER_SLOT
 from services.extreme_champion_point_objective_service import ExtremeChampionPointObjectiveService
 from services.extreme_gear_set_bonus_breakpoint_service import ExtremeGearSetBonusBreakpointService
-from services.extreme_gear_set_objective_relevance_service import ExtremeGearSetObjectiveRelevanceService
+from services.extreme_gear_set_objective_relevance_service import (
+    ExtremeGearSetObjectiveRelevance,
+    ExtremeGearSetObjectiveRelevanceService,
+)
+from services.extreme_gear_set_objective_service import ExtremeGearSetObjectiveService
 from services.extreme_gear_set_topology_catalog_service import ExtremeGearSetTopologyCatalogService
-from services.extreme_named_gear_set_slot_eligibility_service import ExtremeNamedGearSetSlotEligibilityService
 from services.extreme_nightblade_class_mastery_healing_service import ExtremeNightbladeClassMasteryHealingService
-from services.extreme_objective_named_gear_set_catalog_realization_service import ExtremeObjectiveNamedGearSetCatalogRealizationService
 from services.extreme_race_objective_service import ExtremeRaceObjectiveService
 
 DATABASE = ROOT / "data" / "eso.db"
@@ -50,61 +55,134 @@ JEWELRY_SLOTS = 3
 GLYPH_NAME = "Glyph of Increase Physical Harm"
 
 
-def _best_named_gear() -> tuple[float, tuple[tuple[str, int], ...], bool, tuple[str, ...]]:
+def _bounded_named_gear() -> tuple[float, tuple[tuple[str, int], ...], bool, tuple[str, ...]]:
+    """Return a fast conservative flat named-gear ceiling.
+
+    For each legal topology count position, use the strongest canonical positive
+    Weapon Damage breakpoint at that count. Duplicate identities and slot
+    conflicts are intentionally ignored, which can only make the bound larger.
+    Positive percentage target-stat effects remain blockers because flattening
+    them would not be proof-safe for the Sword-and-Board comparison.
+    """
+
     repository = GearSetRepository(DATABASE)
     breakpoints = ExtremeGearSetBonusBreakpointService(repository).build()
     topology = ExtremeGearSetTopologyCatalogService(repository).build()
-    eligibility = ExtremeNamedGearSetSlotEligibilityService(DATABASE).build()
-    relevance = ExtremeGearSetObjectiveRelevanceService(repository).build(OBJECTIVE, breakpoints)
-    realization = ExtremeObjectiveNamedGearSetCatalogRealizationService(
-        breakpoints=breakpoints,
-        eligibility=eligibility,
-        relevance=relevance,
-    ).build(topology)
-    evidence = {(int(row.set_id), int(row.piece_count)): row for row in relevance.evidence}
+    relevance = ExtremeGearSetObjectiveRelevanceService(repository).build(
+        OBJECTIVE,
+        breakpoints,
+    )
+    target_stats = ExtremeGearSetObjectiveService._target_stats(OBJECTIVE)
+
+    by_count: dict[int, list[tuple[float, str, int]]] = {}
+    blockers: list[str] = [*breakpoints.unresolved, *topology.unresolved]
+
+    for row in relevance.evidence:
+        if row.status is ExtremeGearSetObjectiveRelevance.PROVEN_IRRELEVANT:
+            continue
+
+        flat = max(0.0, float(row.reviewed_delta))
+        saw_target = False
+        row_blocked = False
+        for effect in row.candidate.source_effects:
+            if effect.stat not in target_stats or float(effect.value) <= 0.0:
+                continue
+            saw_target = True
+            if effect.operation is EffectOperation.ADD:
+                flat = max(flat, float(effect.value))
+            elif effect.operation is EffectOperation.ADD_PERCENT:
+                blockers.append(
+                    f"{row.set_name} {row.piece_count}pc: positive percentage Weapon Damage set effect requires separate stacking bound ({float(effect.value):g})"
+                )
+                row_blocked = True
+            else:
+                blockers.append(
+                    f"{row.set_name} {row.piece_count}pc: unsupported positive Weapon Damage operation in upper-bound audit: {effect.operation}"
+                )
+                row_blocked = True
+
+        if (
+            row.status is ExtremeGearSetObjectiveRelevance.UNRESOLVED
+            and not saw_target
+            and flat <= 0.0
+        ):
+            blockers.append(
+                f"{row.set_name} {row.piece_count}pc: unresolved Weapon Damage breakpoint has no bounded target-stat effect"
+            )
+            row_blocked = True
+
+        # Even blocked rows are retained in the numeric flat ceiling when a flat
+        # contribution is known. The blocker simply prevents a false proof claim.
+        by_count.setdefault(int(row.piece_count), []).append(
+            (float(flat), str(row.set_name), int(row.set_id))
+        )
+
     best = 0.0
     signature: tuple[tuple[str, int], ...] = ()
-    missing: list[str] = []
-    for topology_row in realization.realization.topologies:
-        for witness in topology_row.realizations:
-            score = 0.0
-            parts: list[tuple[str, int]] = []
-            for set_id, set_name, count in zip(witness.set_ids, witness.set_names, witness.counts, strict=True):
-                row = evidence.get((int(set_id), int(count)))
-                if row is None:
-                    missing.append(f"missing named-gear evidence: {set_name} {count}pc")
-                    continue
-                score += max(0.0, float(row.reviewed_delta))
-                parts.append((str(set_name), int(count)))
-            candidate = tuple(parts)
-            if score > best + 1e-9 or (abs(score - best) <= 1e-9 and candidate < signature):
-                best = score
-                signature = candidate
-    unresolved = tuple(dict.fromkeys((*relevance.unresolved, *realization.unresolved, *missing)))
-    closed = relevance.denominator_proven and realization.denominator_proven and not unresolved
-    return best, signature, closed, unresolved
+    for topology_row in topology.topologies:
+        score = 0.0
+        parts: list[tuple[str, int]] = []
+        for count in tuple(int(value) for value in topology_row.counts):
+            candidates = by_count.get(count, ())
+            if not candidates:
+                parts.append(("<zero objective contribution>", count))
+                continue
+            value, name, _set_id = max(
+                candidates,
+                key=lambda item: (item[0], item[1].casefold(), item[2]),
+            )
+            score += max(0.0, float(value))
+            parts.append((name, count))
+        candidate = tuple(parts)
+        if score > best + 1e-9 or (
+            abs(score - best) <= 1e-9
+            and (not signature or candidate < signature)
+        ):
+            best = score
+            signature = candidate
+
+    blockers = list(dict.fromkeys(message for message in blockers if message))
+    closed = bool(topology.topologies) and not blockers
+    return float(best), signature, closed, tuple(blockers)
 
 
 def _race_ceiling() -> tuple[str, float]:
-    row = ExtremeRaceObjectiveService.best_for_objective(RaceRepository(DATABASE), OBJECTIVE)
-    return ("<none>", 0.0) if row is None else (row.race_name, float(row.projected_delta))
+    row = ExtremeRaceObjectiveService.best_for_objective(
+        RaceRepository(DATABASE),
+        OBJECTIVE,
+    )
+    return ("<none>", 0.0) if row is None else (
+        row.race_name,
+        float(row.projected_delta),
+    )
 
 
 def _jewelry_ceiling() -> float:
     glyphs = JewelryGlyphEffectRepository(DATABASE)
     traits = JewelryTraitRepository(DATABASE)
     rows = tuple(
-        effect for effect in glyphs.get_jewelry_glyph_effect_by_name(GLYPH_NAME, use_max_value=True)
+        effect
+        for effect in glyphs.get_jewelry_glyph_effect_by_name(
+            GLYPH_NAME,
+            use_max_value=True,
+        )
         if effect.stat is StatId.WEAPON_DAMAGE
     )
     glyph = max((float(row.value) for row in rows), default=0.0)
-    bloodthirsty = traits.get_bloodthirsty_max_damage(quality="Gold", level="CP160") or 0.0
+    bloodthirsty = traits.get_bloodthirsty_max_damage(
+        quality="Gold",
+        level="CP160",
+    ) or 0.0
     return JEWELRY_SLOTS * (glyph + float(bloodthirsty))
 
 
 def _mundus_ceiling() -> float:
     repository = MundusRepository(DATABASE, game_update=U50_GAME_UPDATE)
-    row = ExtremeArmorMundusJointObjectiveService.best_for_objective(repository, OBJECTIVE, reference_value=0.0)
+    row = ExtremeArmorMundusJointObjectiveService.best_for_objective(
+        repository,
+        OBJECTIVE,
+        reference_value=0.0,
+    )
     return 0.0 if row is None else float(row.mundus_delta)
 
 
@@ -112,15 +190,24 @@ def _cp_ceiling() -> float:
     repository = ChampionPointStaticRepository(DATABASE)
     candidates: list[ChampionPointLoadoutCandidate] = []
     for record in repository.slottable_records():
-        projected = ExtremeChampionPointObjectiveService.candidate_for_record(repository, record, OBJECTIVE, reference_value=0.0)
+        projected = ExtremeChampionPointObjectiveService.candidate_for_record(
+            repository,
+            record,
+            OBJECTIVE,
+            reference_value=0.0,
+        )
         if projected.reviewed_delta is not None and projected.reviewed_delta > 0.0:
-            candidates.append(ChampionPointLoadoutCandidate(
-                name=record.name,
-                discipline_index=record.discipline_index,
-                flat_ceiling=float(projected.reviewed_delta),
-                condition=None,
-            ))
-    return float(ChampionPointLoadoutService.build(tuple(candidates)).total_flat_ceiling)
+            candidates.append(
+                ChampionPointLoadoutCandidate(
+                    name=record.name,
+                    discipline_index=record.discipline_index,
+                    flat_ceiling=float(projected.reviewed_delta),
+                    condition=None,
+                )
+            )
+    return float(
+        ChampionPointLoadoutService.build(tuple(candidates)).total_flat_ceiling
+    )
 
 
 def _courage_ceiling() -> float:
@@ -134,7 +221,10 @@ def _courage_ceiling() -> float:
 
 def _weapon_enchant_ceiling() -> float:
     repository = WeaponEnchantmentRepository(DATABASE)
-    service = WeaponEnchantmentEffectService(repository, RuleRepository(DATABASE))
+    service = WeaponEnchantmentEffectService(
+        repository,
+        RuleRepository(DATABASE),
+    )
     best = 0.0
     for item_id, _name in repository.list_items():
         for effect in service.resolve_effects(item_id):
@@ -144,7 +234,7 @@ def _weapon_enchant_ceiling() -> float:
 
 
 def main() -> int:
-    named_gear, named_signature, named_closed, named_unresolved = _best_named_gear()
+    named_gear, named_signature, named_closed, named_unresolved = _bounded_named_gear()
     race_name, race = _race_ceiling()
     jewelry = _jewelry_ceiling()
     mundus = _mundus_ceiling()
@@ -155,8 +245,12 @@ def main() -> int:
     # Deliberate over-count: these maxima are mutually exclusive class routes.
     # Summing them is conservative for killing Sword-and-Board as a challenger.
     expert_mage = 6.0 * float(_SORCERER_EXPERT_MAGE_PER_SLOT)
-    harnessed = max(ExtremeArcanistHarnessedQuintessenceService.POWER_BY_RANK.values())
-    eye = float(ExtremeNightbladeClassMasteryHealingService.EYE_FOR_EXPLOITATION_MAX_POWER)
+    harnessed = max(
+        ExtremeArcanistHarnessedQuintessenceService.POWER_BY_RANK.values()
+    )
+    eye = float(
+        ExtremeNightbladeClassMasteryHealingService.EYE_FOR_EXPLOITATION_MAX_POWER
+    )
     class_runtime_overcount = expert_mage + harnessed + eye
 
     total = (
@@ -184,8 +278,10 @@ def main() -> int:
     print(f"cp_flat={cp:.3f}")
     print(f"minor_plus_major_courage={courage:.3f}")
     print(f"ordinary_weapon_damage_enchant={enchant:.3f}")
-    print(f"best_named_gear_reviewed_flat_delta={named_gear:.3f}")
-    print(f"best_named_gear_signature={named_signature!r}")
+    print(f"named_gear_flat_upper_bound={named_gear:.3f}")
+    print(f"named_gear_upper_bound_signature={named_signature!r}")
+    print("named_gear_duplicate_identities_allowed=True")
+    print("named_gear_slot_conflicts_ignored=True")
     print()
     print("DELIBERATELY OVER-COUNTED MUTUALLY EXCLUSIVE CLASS/RUNTIME FLATS")
     print(f"sorcerer_expert_mage_six_slots={expert_mage:.3f}")
@@ -196,21 +292,23 @@ def main() -> int:
     print()
     print("SWORD AND BOARD DOMINANCE")
     print(f"conservative_preweapon_flat_upper_bound={total:.3f}")
-    print(f" sword_board_threshold={SWORD_BOARD_THRESHOLD:.3f}")
+    print(f"sword_board_threshold={SWORD_BOARD_THRESHOLD:.3f}")
     print(f"threshold_headroom={headroom:.3f}")
     print(f"sword_board_threshold_dominated={threshold_dominated}")
     print("common_percent_assumed_zero=True")
     print("positive_common_percent_only_makes_sword_board_harder_to_win=True")
     print()
     print("PROOF GATES")
-    print(f"named_gear_denominator_closed={named_closed}")
+    print(f"named_gear_upper_bound_closed={named_closed}")
     print(f"named_gear_unresolved_count={len(named_unresolved)}")
     for row in named_unresolved:
         print(f"  unresolved: {row}")
     closed = named_closed and threshold_dominated
     print(f"weapon_damage_preweapon_upper_bound_closed={closed}")
     print(f"dual_wield_weapon_champion_proven={closed}")
-    print("NEXT_STEP=with weapon topology closed, compose the exact legal class/runtime and named-gear winner instead of the conservative over-count, then produce the final Weapon Damage record snapshot")
+    print(
+        "NEXT_STEP=with weapon topology closed, compose the exact legal class/runtime and named-gear winner instead of the conservative over-count, then produce the final Weapon Damage record snapshot"
+    )
     return 0 if closed else 2
 
 
