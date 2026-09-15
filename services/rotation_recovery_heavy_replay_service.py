@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Callable
 
 from minmax.build_calculation_context import BuildCalculationContext
@@ -134,12 +134,20 @@ class RotationRecoveryHeavyReplayService:
         maximum_amount: int,
         trigger_fraction: float,
         reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None,
+        anticipate_future_shortfall: bool = False,
     ) -> RecoveryPressureResolver:
         """Build generation-ready pressure evidence from the replayed timeline.
 
         The fallback ``maximum_amount`` preserves compatibility for historical
         timelines. Produced bar-aware timelines carry maximum evidence directly, so
         each pressure decision uses the ceiling active at that exact decision time.
+
+        When ``anticipate_future_shortfall`` is enabled, a legal recovery-heavy
+        decision point may be recommended before the ordinary low-resource threshold
+        is crossed when the already-replayed plan proves that a resource shortfall
+        occurs later in the same horizon. This lets a "prefer safe windows" policy
+        recover while a channel window still exists instead of waiting until the bar
+        is already empty and the last safe window has passed.
         """
 
         timeline = replay.final_projection.run.timeline
@@ -156,12 +164,34 @@ class RotationRecoveryHeavyReplayService:
                 context.time_seconds,
                 fallback=int(maximum_amount),
             )
-            return evaluate_healer_recovery_heavy_pressure(
+            pressure = evaluate_healer_recovery_heavy_pressure(
                 timeline=timeline,
                 time_seconds=context.time_seconds,
                 maximum_amount=active_maximum,
                 trigger_fraction=trigger_fraction,
                 reserve_assessment=reserve,
+            )
+            if pressure.recommended or not anticipate_future_shortfall:
+                return pressure
+
+            future_shortfall = sum(
+                int(event.shortfall)
+                for event in timeline.events
+                if float(event.time_seconds) > float(context.time_seconds)
+            )
+            if future_shortfall <= 0:
+                return pressure
+
+            return replace(
+                pressure,
+                reserve_shortfall=future_shortfall,
+                recommended=True,
+                reason=(
+                    f"the current {timeline.resource.value} pool is above the "
+                    f"{float(trigger_fraction):.1%} recovery trigger, but the replayed "
+                    f"rotation proves a later shortfall of {future_shortfall}; recover "
+                    "during this earlier legal window"
+                ),
             )
 
         return resolve
