@@ -48,6 +48,8 @@ def test_save_merge_preserves_hidden_assignment_and_triggered_state() -> None:
             RaidPlanMember(
                 seat_id="healer-1",
                 gamertag="Jarakeen",
+                player_id="player-id",
+                character_id="magrat-id",
                 character_name="Magrat",
                 role="Healer",
                 eso_class="Warden",
@@ -112,6 +114,7 @@ def test_hidden_character_identity_is_not_carried_to_changed_character() -> None
             RaidPlanMember(
                 seat_id="healer-1",
                 gamertag="Jarakeen",
+                player_id="player-id",
                 character_name="Other Toon",
             ),
         ),
@@ -123,6 +126,80 @@ def test_hidden_character_identity_is_not_carried_to_changed_character() -> None
     assert member is not None
     assert member.player_id == "player-id"
     assert member.character_id is None
+    assert member.roster_member_id is None
+
+
+def test_matching_gamertag_does_not_override_conflicting_stable_player_identity() -> None:
+    loaded = RaidPlan(
+        plan_id="plan",
+        trial_id="rockgrove",
+        name="Plan",
+        members=(
+            RaidPlanMember(
+                seat_id="dd-1",
+                gamertag="Same Display",
+                player_id="player-a",
+                notes="Player A note",
+            ),
+        ),
+    )
+    visible = RaidPlan(
+        plan_id="plan",
+        trial_id="rockgrove",
+        name="Plan",
+        members=(
+            RaidPlanMember(
+                seat_id="dd-1",
+                gamertag="Same Display",
+                player_id="player-b",
+            ),
+        ),
+    )
+
+    merged = merge_visible_plan_with_loaded_snapshot(visible, loaded)
+
+    member = merged.member("dd-1")
+    assert member is not None
+    assert member.player_id == "player-b"
+    assert member.notes is None
+
+
+def test_matching_character_name_does_not_override_conflicting_stable_character_identity() -> None:
+    loaded = RaidPlan(
+        plan_id="plan",
+        trial_id="rockgrove",
+        name="Plan",
+        members=(
+            RaidPlanMember(
+                seat_id="dd-1",
+                gamertag="Jarakeen",
+                player_id="player-id",
+                character_id="character-a",
+                character_name="Same Name",
+                roster_member_id=7,
+            ),
+        ),
+    )
+    visible = RaidPlan(
+        plan_id="plan",
+        trial_id="rockgrove",
+        name="Plan",
+        members=(
+            RaidPlanMember(
+                seat_id="dd-1",
+                gamertag="Jarakeen",
+                player_id="player-id",
+                character_id="character-b",
+                character_name="Same Name",
+            ),
+        ),
+    )
+
+    merged = merge_visible_plan_with_loaded_snapshot(visible, loaded)
+
+    member = merged.member("dd-1")
+    assert member is not None
+    assert member.character_id == "character-b"
     assert member.roster_member_id is None
 
 
@@ -149,6 +226,38 @@ def test_hidden_member_state_is_not_carried_to_a_different_player() -> None:
     merged = merge_visible_plan_with_loaded_snapshot(visible, loaded)
 
     assert merged.member("dd-1").primary_assignment is None
+
+
+def test_legacy_rows_still_merge_by_gamertag_when_no_stable_player_id_exists() -> None:
+    loaded = RaidPlan(
+        plan_id="plan",
+        trial_id="rockgrove",
+        name="Plan",
+        members=(
+            RaidPlanMember(
+                seat_id="dd-1",
+                gamertag="Legacy Friend",
+                character_name="Legacy Toon",
+                notes="Legacy note",
+            ),
+        ),
+    )
+    visible = RaidPlan(
+        plan_id="plan",
+        trial_id="rockgrove",
+        name="Plan",
+        members=(
+            RaidPlanMember(
+                seat_id="dd-1",
+                gamertag="legacy friend",
+                character_name="legacy toon",
+            ),
+        ),
+    )
+
+    merged = merge_visible_plan_with_loaded_snapshot(visible, loaded)
+
+    assert merged.member("dd-1").notes == "Legacy note"
 
 
 def test_hidden_state_is_not_carried_across_trial_change() -> None:
