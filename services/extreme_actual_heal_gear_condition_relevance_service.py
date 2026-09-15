@@ -8,8 +8,9 @@ few narrower facts without weakening that shared model: damage-type and reviewed
 offensive-weapon ability scopes cannot modify a healing event; some unmapped
 bonuses explicitly scope their Weapon/Spell Damage to damaging attacks or enemy
 output only; reviewed always-on power plus an H1-irrelevant companion mechanic may
-be projected by the dedicated Extreme tradeoff resolver; and the standing scenario
-itself satisfies a ``standing_still`` condition.
+be projected by the dedicated Extreme tradeoff resolver; reviewed pre-event gear
+conditions may be admitted only when a separate H1 witness service constructs the
+required setup; and the standing scenario itself satisfies ``standing_still``.
 """
 
 from dataclasses import dataclass
@@ -77,6 +78,14 @@ _REVIEWED_H1_POWER_TRADEOFF_TEXT = (
     ),
 )
 
+_REVIEWED_H1_PRECONDITION_TEXT = (
+    re.compile(
+        r"Blessing of High Isle \(5\): active set bonus is not yet mechanic-mapped:.*"
+        r"When you are healed while in combat, increase your Weapon and Spell Damage by\s*8-369\s+for\s+5 seconds",
+        re.IGNORECASE | re.DOTALL,
+    ),
+)
+
 
 @dataclass(frozen=True)
 class ExtremeActualHealGearConditionRelevanceResult:
@@ -118,7 +127,16 @@ class ExtremeActualHealGearConditionRelevanceService:
                 reviewed_tradeoff = any(
                     pattern.search(text) for pattern in _REVIEWED_H1_POWER_TRADEOFF_TEXT
                 )
-                if damage_only_scope or standing_proven or damage_only_text or reviewed_tradeoff:
+                reviewed_precondition = any(
+                    pattern.search(text) for pattern in _REVIEWED_H1_PRECONDITION_TEXT
+                )
+                if (
+                    damage_only_scope
+                    or standing_proven
+                    or damage_only_text
+                    or reviewed_tradeoff
+                    or reviewed_precondition
+                ):
                     ignored.append(text)
                     continue
             remaining.append(text)
