@@ -369,18 +369,15 @@ def install() -> None:
     if _INSTALLED:
         return
 
-    BuildEditor = build_editor_module.BuildEditor
-    original_model = BuildEditor.model.fget
-    original_load = BuildEditor.load
+    from ui.build_editor_lifecycle_support import register_model_post, register_post_load
 
-    def model_with_context_variants(self):
-        model = original_model(self)
+    BuildEditor = build_editor_module.BuildEditor
+
+    def store_context_variants(self, model) -> None:
         model.ContextVariants = [card.value for card in self._boss_cards]
         model.BossLoadouts = []
-        return model
 
-    def load_with_context_variants(self, model):
-        original_load(self, model)
+    def load_context_variants(self, model) -> None:
         for card in list(self._boss_cards):
             self._remove_boss_loadout(card)
         variants = list(getattr(model, "ContextVariants", ()) or ())
@@ -391,8 +388,8 @@ def install() -> None:
 
     BuildEditor._build_boss_card = _build_variants_card
     BuildEditor.add_boss_loadout = _add_variant
-    BuildEditor.model = property(model_with_context_variants)
-    BuildEditor.load = load_with_context_variants
+    register_model_post("context_variants", store_context_variants)
+    register_post_load("context_variants", load_context_variants)
 
     from ui.builds_page import BuildsPage
 
