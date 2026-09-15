@@ -80,7 +80,11 @@ def _coverage(status: CanonicalMechanicsCoverageStatus):
     )
 
 
-def _build(report):
+def _build(
+    report,
+    *,
+    dependency_keys: tuple[str, ...] = ("warden:passive-duration",),
+):
     return RotationCanonicalEvidenceBundleSupport(
         guide_service=_GuideService(),
         demand_service=EncounterRotationDemandService(),
@@ -94,7 +98,7 @@ def _build(report):
         trigger_fraction=0.35,
         restoration_resolver=object(),
         coverage_report=report,
-        coverage_dependency_keys=("warden:passive-duration",),
+        coverage_dependency_keys=dependency_keys,
     )
 
 
@@ -132,7 +136,7 @@ def test_coverage_report_only_merges_rotation_relevant_gaps() -> None:
         )
     )
 
-    bundle = _build(report)
+    bundle = _build(report, dependency_keys=())
 
     assert bundle.ready is True
     assert bundle.knowledge_gaps == ()
