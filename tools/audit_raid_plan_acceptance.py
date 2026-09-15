@@ -299,6 +299,15 @@ def main() -> int:
     data_dir = Path(args.data_dir)
     plan_repository = RaidPlanRepository(data_dir / "raid_plans.json")
     plans = plan_repository.list_plans()
+    if not plans:
+        print("Raid Plan acceptance audit found no persisted Raid Plans.")
+        print(f"Checked repository: {plan_repository.path}")
+        print(
+            "Open Raid Engine > Raid Plans, assemble the plan you want to validate, "
+            "and click Save in Plan Controls. The audit cannot inspect an unsaved live UI plan."
+        )
+        return 2
+
     try:
         plan = _choose_plan(plans, plan_id=args.plan_id, plan_name=args.plan)
     except ValueError as exc:
