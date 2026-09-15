@@ -81,6 +81,10 @@ def test_damage_only_unmapped_power_text_is_irrelevant_to_h1_heal() -> None:
         "Knight-errant's Mail (5): active set bonus is not yet mechanic-mapped: "
         "Adds 10-450 Weapon and Spell Damage to your One Hand and Shield abilities. "
         "When you use a One Hand and Shield ability, you heal for 35-1537 Health.",
+        "Kvatch Gladiator (5): active set bonus is not yet mechanic-mapped: "
+        "You gain 128-1475 Weapon and Spell Damage against targets who are at or below 25% Health.",
+        "Witch-Knight's Defiance (5): active set bonus is not yet mechanic-mapped: "
+        "Increases your Weapon and Spell Damage by 8-369 against enemies inflicted with a Poison Damage effect.",
     )
 
     for blocker in examples:
