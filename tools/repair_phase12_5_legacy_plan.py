@@ -9,10 +9,10 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from engine.config import get_data_dir
+from migration.phase12_5_legacy_plan_repair import Phase125LegacyPlanRepairService
 from services.build_service import BuildService
 from services.eso_database import EsoDatabase
 from services.generated_roster_plan_service import GeneratedRosterPlanService
-from services.phase12_5_legacy_plan_repair import Phase125LegacyPlanRepairService
 from services.roster_service import RosterService
 
 
