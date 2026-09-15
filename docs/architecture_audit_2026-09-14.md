@@ -34,6 +34,24 @@ Priority order:
 
 Do not perform these as one giant refactor. Each item should get a migration contract and focused regression gate.
 
+## Remediation checkpoint — 2026-09-15
+
+Current focused gate:
+
+- architecture audit: **0 errors, 342 warnings**;
+- the complete `installer-fanout` category is closed and regression-guarded;
+- application composition now has explicit workspace, Team Optimization, Performance Dashboard, and Extreme Optimization bootstrap boundaries;
+- feature-specific schedule, Hybrid-anchor, Build Editor performance, and Extreme page installers no longer bootstrap unrelated features;
+- Build persistence authority, GeneratedRosterDraft migration, RaidPlan stable identity, runtime data paths, catalog aggregation, and legacy Console quarantine are substantially resolved;
+- remaining high-value cleanup is concentrated in UI class monkey-patch families and selected compatibility retirement;
+- raw service-catalog warning count remains intentionally noisy and is not a completion percentage.
+
+Protected scope remains unchanged:
+
+- do not modify Achievements or Collectibles during this cleanup;
+- keep ESO Logs integrated because Top Gear, Capabilities, Performance, and ranked-team evidence actively consume it;
+- defer Broadcast / Field Notes modular extraction to its own explicit migration.
+
 ---
 
 ## Healthy architecture worth preserving
