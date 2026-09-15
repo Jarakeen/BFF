@@ -108,14 +108,16 @@ def _looks_like_service_module(path: Path) -> bool:
     return False
 
 
-def _module_imported_by_external_runtime(root: Path, module: str) -> bool:
-    """Return True when an application boundary outside services imports ``module``.
+def _external_runtime_service_imports(root: Path) -> frozenset[str]:
+    """Index service modules imported by application code outside ``services``.
 
-    The service catalog documents architectural seams, not every leaf calculation
-    helper. A private helper consumed only by other service implementations therefore
-    does not need its own descriptor merely because its filename ends in ``_service``.
+    The old implementation reparsed the whole external runtime once for every
+    unregistered service candidate. Foundry has hundreds of service modules, so
+    that made one architecture audit perform tens of thousands of redundant AST
+    parses. Build the import index once instead.
     """
 
+    imported: set[str] = set()
     for root_name in _EXTERNAL_CONSUMER_ROOTS:
         base = root / root_name
         if not base.exists():
@@ -133,15 +135,39 @@ def _module_imported_by_external_runtime(root: Path, module: str) -> bool:
                 continue
             for node in ast.walk(tree):
                 if isinstance(node, ast.Import):
-                    if any(alias.name == module for alias in node.names):
-                        return True
+                    for alias in node.names:
+                        if alias.name.startswith("services."):
+                            imported.add(alias.name)
                 elif isinstance(node, ast.ImportFrom):
-                    if str(node.module or "") == module:
-                        return True
-    return False
+                    module = str(node.module or "")
+                    if module.startswith("services."):
+                        imported.add(module)
+    return frozenset(imported)
 
 
-def _needs_catalog_registration(root: Path, module: str, path: Path) -> bool:
+def _module_imported_by_external_runtime(
+    root: Path,
+    module: str,
+    *,
+    external_imports: frozenset[str] | None = None,
+) -> bool:
+    """Return True when an application boundary outside services imports ``module``."""
+
+    imports = (
+        external_imports
+        if external_imports is not None
+        else _external_runtime_service_imports(root)
+    )
+    return module in imports
+
+
+def _needs_catalog_registration(
+    root: Path,
+    module: str,
+    path: Path,
+    *,
+    external_imports: frozenset[str] | None = None,
+) -> bool:
     """Classify an unregistered module as an architectural catalog boundary.
 
     Explicit repositories/pipelines/optimizers/persistence/coordinators remain worth
@@ -153,7 +179,11 @@ def _needs_catalog_registration(root: Path, module: str, path: Path) -> bool:
         return False
     if path.stem.endswith(_ARCHITECTURAL_SUFFIXES):
         return True
-    return _module_imported_by_external_runtime(root, module)
+    return _module_imported_by_external_runtime(
+        root,
+        module,
+        external_imports=external_imports,
+    )
 
 
 def _dependency_cycle(
@@ -260,9 +290,7 @@ def audit_service_catalog(
                     )
                 )
 
-    for responsibility in sorted(
-        {item for row in rows for item in row.responsibilities}
-    ):
+    for responsibility in sorted({item for row in rows for item in row.responsibilities}):
         canonical = tuple(
             row
             for row in rows
@@ -289,12 +317,20 @@ def audit_service_catalog(
             )
         )
 
+    # Parse the application-side runtime exactly once, then reuse its import set
+    # while classifying every unregistered service candidate.
+    external_imports = _external_runtime_service_imports(root)
     services_dir = root / "services"
     for module in _service_modules(root):
         if module in registered_modules:
             continue
         path = services_dir / f"{module.removeprefix('services.')}.py"
-        if _needs_catalog_registration(root, module, path):
+        if _needs_catalog_registration(
+            root,
+            module,
+            path,
+            external_imports=external_imports,
+        ):
             findings.append(
                 CatalogFinding(
                     "WARNING",
