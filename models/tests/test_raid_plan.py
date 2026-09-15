@@ -29,6 +29,18 @@ def test_raid_plan_allows_gamertag_before_character_role_or_build() -> None:
     assert resolved.eso_class is None
 
 
+def test_stable_build_id_counts_as_selected_and_is_normalized() -> None:
+    member = RaidPlanMember(
+        seat_id="healer-1",
+        gamertag="Jarakeen",
+        selected_build_id="  build-123  ",
+    )
+
+    assert member.selected_build_id == "build-123"
+    assert member.selected_build_name is None
+    assert member.build_selected is True
+
+
 def test_same_character_can_be_referenced_by_multiple_trial_plans() -> None:
     magrat_rg = RaidPlanMember(
         seat_id="healer-1",
@@ -36,9 +48,11 @@ def test_same_character_can_be_referenced_by_multiple_trial_plans() -> None:
         character_id="magrat-id",
         character_name="Magrat",
         role="Healer",
+        selected_build_id="df-healer-id",
         selected_build_name="DF Healer",
     )
     magrat_dsr = magrat_rg.with_selection(
+        selected_build_id="spc-pillager-id",
         selected_build_name="SPC Pillager",
         primary_assignment="Group Healer",
     )
@@ -60,6 +74,8 @@ def test_same_character_can_be_referenced_by_multiple_trial_plans() -> None:
 
     assert rockgrove.member("healer-1").character_id == "magrat-id"
     assert dreadsail.member("healer-1").character_id == "magrat-id"
+    assert rockgrove.member("healer-1").selected_build_id == "df-healer-id"
+    assert dreadsail.member("healer-1").selected_build_id == "spc-pillager-id"
     assert rockgrove.member("healer-1").selected_build_name == "DF Healer"
     assert dreadsail.member("healer-1").selected_build_name == "SPC Pillager"
 
@@ -79,12 +95,16 @@ def test_plan_member_replacement_changes_plan_not_original_member() -> None:
 
     selected = original.with_selection(
         role="Healer",
+        selected_build_id="df-healer-id",
         selected_build_name="DF Healer",
     )
     updated = plan.with_member(selected)
 
+    assert plan.member("healer-1").selected_build_id is None
     assert plan.member("healer-1").selected_build_name is None
+    assert updated.member("healer-1").selected_build_id == "df-healer-id"
     assert updated.member("healer-1").selected_build_name == "DF Healer"
+    assert original.selected_build_id is None
     assert original.selected_build_name is None
 
 
