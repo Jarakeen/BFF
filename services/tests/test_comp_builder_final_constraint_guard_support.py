@@ -13,7 +13,7 @@ def test_final_constraint_guard_filters_every_merged_candidate_source() -> None:
 
 
 def test_final_constraint_guard_installs_after_trial_and_esologs_candidate_wrappers() -> None:
-    installer = Path("ui/team_optimization_hybrid_anchor_support.py").read_text(
+    installer = Path("ui/application_team_optimization_bootstrap.py").read_text(
         encoding="utf-8"
     )
 
