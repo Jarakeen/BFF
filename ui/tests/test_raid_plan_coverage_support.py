@@ -34,6 +34,17 @@ def test_coverage_scope_never_falls_back_to_team_optimization_scope() -> None:
     assert "set_team_scope" not in source
 
 
+def test_raid_plan_coverage_renders_full_raid_effect_catalog() -> None:
+    source = Path("ui/coverage_raid_plan_scope_support.py").read_text(encoding="utf-8")
+
+    assert "GROUP_COVERAGE_NAMES" in source
+    assert "UNIQUE_SUPPORT_SET_NAMES" in source
+    assert "RAID_PLAN_COVERAGE_NAMES" in source
+    assert "Powerful Assault" not in source  # catalog-driven, never hard-coded here
+    assert "snapshot.conditional_providers.get(effect, [])" in source
+    assert '"conditional": "Conditional"' in source
+
+
 def test_raid_plan_coverage_action_emits_current_plan() -> None:
     source = Path("ui/raid_plan_coverage_page.py").read_text(encoding="utf-8")
 
