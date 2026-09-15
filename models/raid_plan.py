@@ -11,8 +11,9 @@ record who owns a response when a reviewed runtime condition becomes true withou
 a wall-clock timestamp. A later resolver may bind a proven runtime condition to an exact
 execution time; this model deliberately does not do that itself.
 
-This module is deliberately persistence-neutral. Existing roster/team/assignment services
-remain authoritative until a later migration explicitly adopts RaidPlan persistence.
+RaidPlan snapshots are durably persisted by RaidPlanRepository. Persistence stores only
+trial-specific planning choices and stable references to reusable identities; Personnel,
+Characters, Saved Builds, Teams, and canonical encounter truth remain independently owned.
 """
 
 from dataclasses import dataclass, field, replace
@@ -41,6 +42,7 @@ class RaidPlanMember:
     character_name: str | None = None
     role: str | None = None
     eso_class: str | None = None
+    selected_build_id: str | None = None
     selected_build_name: str | None = None
     primary_assignment: str | None = None
     secondary_assignment: str | None = None
@@ -65,6 +67,7 @@ class RaidPlanMember:
             "character_name",
             "role",
             "eso_class",
+            "selected_build_id",
             "selected_build_name",
             "primary_assignment",
             "secondary_assignment",
@@ -74,7 +77,7 @@ class RaidPlanMember:
 
     @property
     def build_selected(self) -> bool:
-        return self.selected_build_name is not None
+        return self.selected_build_id is not None or self.selected_build_name is not None
 
     @property
     def character_selected(self) -> bool:
