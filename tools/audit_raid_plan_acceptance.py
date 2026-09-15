@@ -23,9 +23,16 @@ Usage examples:
 """
 
 import argparse
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
+
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 
 from engine.config import DEFAULT_DATABASE, get_data_dir
 from models.effective_build_snapshot import EffectiveBuildSnapshot
