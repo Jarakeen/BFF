@@ -9,6 +9,7 @@ from ui.rotation_dashboard_canonical_candidate_support import (
     RotationDashboardCanonicalCandidateSupport,
 )
 from ui.rotation_generation_support import RotationGenerationRequest, RotationGenerationResult
+from ui.rotation_runtime_snapshot_candidate_support import RotationRuntimeSnapshotCandidateSupport
 from ui.rotation_ultimate_affordability_candidate_support import (
     RotationUltimateAffordabilityCandidateSupport,
 )
@@ -87,8 +88,9 @@ def _run(generation, canonical, *, request=None):
 def test_dashboard_default_composes_final_ultimate_affordability_support() -> None:
     support = RotationDashboardCanonicalCandidateSupport(generation=_Generation(None))
 
+    assert isinstance(support.canonical_candidates, RotationRuntimeSnapshotCandidateSupport)
     assert isinstance(
-        support.canonical_candidates,
+        support.canonical_candidates.canonical_candidates,
         RotationUltimateAffordabilityCandidateSupport,
     )
 
