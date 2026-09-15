@@ -1,6 +1,11 @@
 from __future__ import annotations
 
-"""Phase 5 safe build deletion for the Builds page."""
+"""Safe build deletion helpers for the Builds page.
+
+Deletion is composed onto the concrete themed BuildsPage instance instead of replacing
+BuildsPage._build_ui at runtime. The legacy install() entry point remains temporarily
+because app.py still invokes the Phase 5 startup installers.
+"""
 
 from PySide6.QtWidgets import QMessageBox
 
@@ -44,25 +49,32 @@ def _delete_selected(page) -> None:
     page.status.success(f"Deleted build: {label}. Character progression was preserved.")
 
 
+def attach_delete_build_action(page) -> FoundryButton | None:
+    """Attach the destructive build action to one constructed Builds page."""
+    existing = getattr(page, "delete_build_button", None)
+    if isinstance(existing, FoundryButton):
+        return existing
+
+    edit_button = getattr(page, "edit_button", None)
+    parent = edit_button.parentWidget() if edit_button is not None else None
+    layout = parent.layout() if parent is not None else None
+    if layout is None:
+        return None
+
+    button = FoundryButton("Delete Build", role=ButtonRole.DANGER)
+    button.clicked.connect(lambda: _delete_selected(page))
+    page.delete_build_button = button
+    # Destructive action is deliberately last in the fixed page action row.
+    layout.addWidget(button)
+    return button
+
+
 def install() -> None:
+    """Retained startup compatibility; page composition is now explicit."""
     global _INSTALLED
     if _INSTALLED:
         return
-
-    from ui.builds_page import BuildsPage
-
-    original_build_ui = BuildsPage._build_ui
-
-    def patched_build_ui(self):
-        original_build_ui(self)
-        parent = self.edit_button.parentWidget()
-        layout = parent.layout() if parent is not None else None
-        if layout is None:
-            return
-        self.delete_build_button = FoundryButton("Delete Build", role=ButtonRole.DANGER)
-        self.delete_build_button.clicked.connect(lambda: _delete_selected(self))
-        # Destructive action is deliberately last: Edit, Save, Export, Delete.
-        layout.addWidget(self.delete_build_button)
-
-    BuildsPage._build_ui = patched_build_ui
     _INSTALLED = True
+
+
+__all__ = ["attach_delete_build_action", "install"]
