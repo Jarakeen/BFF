@@ -4,11 +4,13 @@ from __future__ import annotations
 
 This is intentionally narrow. It handles a skill action only when exactly one damage
 component exists, that component is periodic, owns target-Health consequences, and
-its source-magnitude policy is ``snapshot_at_cast``. All other shapes return ``None``
-so callers may delegate to the ordinary canonical skill-damage evaluator unchanged.
+reviewed periodic runtime semantics exist. All other shapes return ``None`` so callers
+may delegate to the ordinary canonical skill-damage evaluator unchanged.
 
-Dynamic source magnitude plus target-Health timing remains a separate unresolved
-runtime problem; this bridge does not silently combine those two dimensions.
+Source magnitude timing and target-Health timing remain separate reviewed facts.
+``snapshot_at_cast`` reuses the base evaluator's cast-state magnitude path;
+``dynamic_at_tick`` delegates each included occurrence back through the base
+service's exact-time dynamic periodic resolver. This bridge owns no damage formula.
 """
 
 from minmax.build_candidate_damage import calculation_result_from_build_context
@@ -32,7 +34,7 @@ from services.rotation_periodic_target_health_eligibility_service import (
 
 
 class RotationCandidatePeriodicTargetHealthDamageBridgeService:
-    """Resolve the safe snapshot-magnitude subset of periodic execute damage."""
+    """Resolve reviewed periodic execute damage without duplicating canonical math."""
 
     def __init__(
         self,
@@ -112,10 +114,13 @@ class RotationCandidatePeriodicTargetHealthDamageBridgeService:
                 action,
                 f"{action.name}: coefficient {component.coefficient_number} reviewed periodic runtime semantics are unavailable",
             )
-        if semantic.magnitude_policy is not PeriodicDamageMagnitudePolicy.SNAPSHOT_AT_CAST:
+        if semantic.magnitude_policy not in {
+            PeriodicDamageMagnitudePolicy.SNAPSHOT_AT_CAST,
+            PeriodicDamageMagnitudePolicy.DYNAMIC_AT_TICK,
+        }:
             return self._unresolved(
                 action,
-                f"{action.name}: coefficient {component.coefficient_number} periodic target-Health bridge currently requires snapshot_at_cast source magnitude",
+                f"{action.name}: coefficient {component.coefficient_number} periodic target-Health bridge requires a reviewed source-magnitude timing policy",
             )
 
         projection = self.base.periodic_runtime_projection_service.project(
@@ -174,28 +179,40 @@ class RotationCandidatePeriodicTargetHealthDamageBridgeService:
             if not occurrence.include:
                 continue
 
-            tick_target_state = self.base._target_state_for_runtime_event(event)
-            if (
-                self.base._requires_exploiter_target_state(self.base.context)
-                and tick_target_state is None
-            ):
-                return self._unresolved(
-                    action,
-                    f"{action.name}: coefficient {component.coefficient_number} tick at {float(event.time_seconds):g}s: Exploiter requires authoritative target CombatState",
+            if semantic.magnitude_policy is PeriodicDamageMagnitudePolicy.DYNAMIC_AT_TICK:
+                tick_damage, tick_unresolved = self.base._resolve_dynamic_periodic_damage(
+                    action=action,
+                    coefficient_number=component.coefficient_number,
+                    classification=classification,
+                    runtime_events=(event,),
+                    semantic=semantic,
+                )
+                if tick_unresolved:
+                    return self._unresolved(action, *tick_unresolved)
+            else:
+                tick_target_state = self.base._target_state_for_runtime_event(event)
+                if (
+                    self.base._requires_exploiter_target_state(self.base.context)
+                    and tick_target_state is None
+                ):
+                    return self._unresolved(
+                        action,
+                        f"{action.name}: coefficient {component.coefficient_number} tick at {float(event.time_seconds):g}s: Exploiter requires authoritative target CombatState",
+                    )
+
+                tick_context = self.base._context_for_runtime_event(self.base.context, event)
+                tick_damage = self.base._resolve_component_damage(
+                    context=tick_context,
+                    base_value=float(component.final_value),
+                    classification=classification,
+                    dd_stats=dd_stats,
+                    damage_done=self.base._damage_done_for_context(
+                        self.base.context,
+                        tick_target_state,
+                    ),
+                    damage_taken=damage_taken_from_target_state(tick_target_state),
                 )
 
-            tick_context = self.base._context_for_runtime_event(self.base.context, event)
-            tick_damage = self.base._resolve_component_damage(
-                context=tick_context,
-                base_value=float(component.final_value),
-                classification=classification,
-                dd_stats=dd_stats,
-                damage_done=self.base._damage_done_for_context(
-                    self.base.context,
-                    tick_target_state,
-                ),
-                damage_taken=damage_taken_from_target_state(tick_target_state),
-            )
             tick_damage *= self.base._occurrence_multiplier(semantic, occurrence_index)
             tick_damage *= float(occurrence.damage_multiplier)
             total_damage += tick_damage
