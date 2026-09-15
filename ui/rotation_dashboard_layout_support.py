@@ -18,8 +18,6 @@ from services.reference_data_service import ReferenceDataService
 from ui.components.foundry_card import FoundryCard
 from ui.phase5_potion_picker_support import _choices, _configure_search
 
-_INSTALLED = False
-
 
 def _card(page, title: str) -> FoundryCard | None:
     wanted = str(title or "").strip().casefold()
@@ -244,31 +242,18 @@ def _refresh_consumables(page) -> None:
     combo.blockSignals(False)
 
 
-def install() -> None:
-    global _INSTALLED
-    if _INSTALLED:
-        return
-
-    from ui.rotation_dashboard_canonical_page import CanonicalRotationDashboardPage
-
-    original_init = CanonicalRotationDashboardPage.__init__
-    original_refresh_build_context = CanonicalRotationDashboardPage._refresh_build_context
-
-    def refresh_build_context_with_consumables(self, *args, **kwargs) -> None:
-        original_refresh_build_context(self, *args, **kwargs)
-        _refresh_consumables(self)
-
-    def init_with_consolidated_controls(self, *args, **kwargs) -> None:
-        original_init(self, *args, **kwargs)
-        _rebuild_rotation_setup(self)
-        _rebuild_consumables(self)
-        # Re-apply the selected build after replacing the consumable display
-        # labels and populate the full canonical potion catalog.
-        self._refresh_build_context()
-
-    CanonicalRotationDashboardPage._refresh_build_context = refresh_build_context_with_consumables
-    CanonicalRotationDashboardPage.__init__ = init_with_consolidated_controls
-    _INSTALLED = True
+def refresh_rotation_consumables(page) -> None:
+    """Synchronize consumable controls with the selected canonical saved build."""
+    _refresh_consumables(page)
 
 
-__all__ = ["install"]
+def install_rotation_dashboard_layout(page) -> None:
+    """Move canonical controls into their final cards without replacing methods."""
+    _rebuild_rotation_setup(page)
+    _rebuild_consumables(page)
+    # Re-apply the selected build after replacing the consumable display labels
+    # and populate the full canonical potion catalog.
+    page._refresh_build_context()
+
+
+__all__ = ["install_rotation_dashboard_layout", "refresh_rotation_consumables"]

@@ -35,7 +35,6 @@ def bootstrap_workspace_extensions() -> None:
     from ui.roster_import_match_preview_support import install as install_roster_import_match_preview_support
     from ui.roster_import_build_confirmation_support import install as install_roster_import_build_confirmation_support
     from ui.coverage_capability_gap_visibility_support import install as install_coverage_capability_gap_visibility_support
-    from ui.rotation_dashboard_layout_support import install as install_rotation_dashboard_layout_support
     from ui.build_rotation_artifact_support import install as install_build_rotation_artifact_support
     from ui.roster_team_assignment_filter_support import install as install_roster_team_assignment_filter_support
     from ui.roster_encounter_assignment_context_support import install as install_roster_encounter_assignment_context_support
@@ -70,7 +69,6 @@ def bootstrap_workspace_extensions() -> None:
     install_roster_import_match_preview_support()
     install_roster_import_build_confirmation_support()
     install_coverage_capability_gap_visibility_support()
-    install_rotation_dashboard_layout_support()
     install_build_rotation_artifact_support()
     install_roster_team_assignment_filter_support()
     install_roster_encounter_assignment_context_support()

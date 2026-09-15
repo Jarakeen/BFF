@@ -27,7 +27,11 @@ def test_food_and_potions_card_owns_real_potion_generation_control() -> None:
     assert 'potion_label = QLabel("ROTATION POTION")' in source
     assert 'card.addWidget(page.potion_combo)' in source
     assert 'card.addWidget(page.potion_on_cooldown)' in source
-    assert 'self._refresh_build_context()' in source
+    dashboard = Path("ui/rotation_dashboard_canonical_page.py").read_text(
+        encoding="utf-8"
+    )
+    assert "install_rotation_dashboard_layout(self)" in dashboard
+    assert "self._refresh_build_context()" in source
 
 
 def test_rotation_potion_picker_reuses_full_canonical_catalogs_on_every_build_refresh() -> None:
@@ -41,7 +45,11 @@ def test_rotation_potion_picker_reuses_full_canonical_catalogs_on_every_build_re
     assert 'f"Named · {name}"' in source
     assert '_select_combo_data(combo, saved_potion)' in source
     assert '_configure_search(combo)' in source
-    assert 'CanonicalRotationDashboardPage._refresh_build_context = refresh_build_context_with_consumables' in source
+    dashboard = Path("ui/rotation_dashboard_canonical_page.py").read_text(
+        encoding="utf-8"
+    )
+    assert "refresh_rotation_consumables(self)" in dashboard
+    assert "CanonicalRotationDashboardPage._refresh_build_context =" not in source
 
 
 def test_rotation_food_display_refreshes_from_selected_saved_build() -> None:
@@ -57,4 +65,8 @@ def test_layout_support_moves_existing_widgets_instead_of_creating_duplicates() 
 
     assert 'The canonical controls are created by their existing owners.' in source
     assert 'Move the canonical widgets themselves, not clones.' in source
-    assert 'CanonicalRotationDashboardPage.__init__ = init_with_consolidated_controls' in source
+    dashboard = Path("ui/rotation_dashboard_canonical_page.py").read_text(
+        encoding="utf-8"
+    )
+    assert "install_rotation_dashboard_layout(self)" in dashboard
+    assert "CanonicalRotationDashboardPage.__init__ =" not in source

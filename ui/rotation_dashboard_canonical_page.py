@@ -53,6 +53,10 @@ from ui.rotation_dashboard_canonical_candidate_support import (
     RotationDashboardCanonicalCandidateResult,
     RotationDashboardCanonicalCandidateSupport,
 )
+from ui.rotation_dashboard_layout_support import (
+    install_rotation_dashboard_layout,
+    refresh_rotation_consumables,
+)
 from ui.rotation_dashboard_page import RotationDashboardPage
 from ui.rotation_encounter_selector_support import RotationEncounterSelectorSupport
 from ui.rotation_generate_action_support import RotationGenerateCanonicalContextProvider
@@ -144,6 +148,11 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
                 canonical_generate_context_provider
             )
         install_rotation_runtime_application(self)
+        install_rotation_dashboard_layout(self)
+
+    def _refresh_build_context(self, *args, **kwargs) -> None:
+        super()._refresh_build_context(*args, **kwargs)
+        refresh_rotation_consumables(self)
 
     def showEvent(self, event) -> None:  # noqa: N802 - Qt override
         try:

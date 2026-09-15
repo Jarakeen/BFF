@@ -40,9 +40,14 @@ def test_saved_rotation_renders_timeline_and_generation_setup() -> None:
     assert "canonical_dd_evaluation_policy" in source
 
 
-def test_support_is_installed_after_rotation_layout_support() -> None:
-    source = Path("ui/application_workspace_bootstrap.py").read_text(encoding="utf-8")
+def test_support_wraps_rotation_after_native_layout_construction() -> None:
+    bootstrap = Path("ui/application_workspace_bootstrap.py").read_text(
+        encoding="utf-8"
+    )
+    dashboard = Path("ui/rotation_dashboard_canonical_page.py").read_text(
+        encoding="utf-8"
+    )
 
-    layout_call = source.index("install_rotation_dashboard_layout_support()")
-    artifact_call = source.index("install_build_rotation_artifact_support()")
-    assert layout_call < artifact_call
+    assert "install_build_rotation_artifact_support()" in bootstrap
+    assert "install_rotation_dashboard_layout(self)" in dashboard
+    assert "install_rotation_dashboard_layout_support()" not in bootstrap
