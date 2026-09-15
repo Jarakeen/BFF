@@ -4,80 +4,6 @@ import math
 from pathlib import Path
 from typing import List, Dict, Set
 
-from .models import SourceGameObject, DynamicTrigger, CombatEffect
-
-
-class TheConsoleEngine:
-    def __init__(self, pvp_rules: bool = False):
-        self.is_pvp = pvp_rules
-        self.mitigation_constant = 660.0 if pvp_rules else 500.0
-
-    def flatten_character_capabilities(self, choices: List[SourceGameObject]) -> Dict[str, CombatEffect]:
-        """Layer 3: Reductor pipeline translating choices into exact unique capabilities.
-
-        If multiple items provide 'Major Courage', this deduplicates them cleanly,
-        storing the unique fact without duplicating calculation loops.
-        """
-        active_capabilities = {}
-        for game_object in choices:
-            for trigger in game_object.triggers:
-                # Passive elements like Mundus, Food, or Class Passives are evaluated on 'slotted/equipped'
-                if trigger.condition_type in ["on_slotted", "on_equip", "on_hit"]:
-                    for effect in trigger.effects:
-                        # Deduplicate by absolute Capability ID
-                        active_capabilities[effect.capability_id] = effect
-        return active_capabilities
-
-    def compile_raid_matrix(self, roster_choices: Dict[str, List[SourceGameObject]]) -> Dict[str, CombatEffect]:
-        """Aggregates all 12 unique player choice vectors into a single global group matrix."""
-        global_capabilities = {}
-        for player_name, choices in roster_choices.items():
-            player_caps = self.flatten_character_capabilities(choices)
-            global_capabilities.update(player_caps)  # Overwrites duplicates naturally
-        return global_capabilities
-
-    def evaluate_encounter_operation(
-        self,
-        global_capabilities: Dict[str, CombatEffect],
-        base_boss_armor: int,
-        required_mechanics: Set[str]
-    ) -> Dict:
-        """Layer 4: Connects group capabilities straight to boss mechanics and math realities."""
-
-        # --- RULES CALCULATION LAYER ---
-        # 1. Resolve Group Debuffs against Boss Armor
-        flat_armor_reductions = 0
-        crit_damage_bonuses = 0.0
-
-        for cap_id, effect in global_capabilities.items():
-            if effect.stat_modified == "armor":
-                # Sum flat absolute debuffs (e.g., Major Breach, Minor Breach, Crusher)
-                flat_armor_reductions += abs(effect.modification_value)
-            elif effect.stat_modified == "crit_damage" and effect.is_percent:
-                crit_damage_bonuses += effect.modification_value
-
-        effective_boss_armor = max(0, base_boss_armor - flat_armor_reductions)
-        mitigation_pct = (effective_armor := effective_boss_armor) / self.mitigation_constant
-
-        # 2. Map group capability strings directly to the interface requirements
-        present_capabilities = set(global_capabilities.keys())
-        missing_operational_requirements = required_mechanics - present_capabilities
-
-        return {
-            "group_penetration_status": {
-                "initial_armor": base_boss_armor,
-                "effective_armor": effective_armor,
-                "boss_mitigation_percentage": round(mitigation_pct, 2),
-                "shredded_armor_total": flat_armor_reductions
-            },
-            "group_crit_damage_bonus_percentage": round(min(crit_damage_bonuses, 125.0), 2),  # Capped via rules layer
-            "operational_audit": {
-                "has_all_requirements": len(missing_operational_requirements) == 0,
-                "missing_capabilities": list(missing_operational_requirements),
-                "active_capabilities_logged": list(present_capabilities)
-            }
-        }
-
 
 class TheConsoleOpsEngine:
     def __init__(self, data_directory_path: str):
@@ -110,20 +36,17 @@ class TheConsoleOpsEngine:
         if not target_boss:
             raise ValueError(f"Encounter {encounter_id} missing from operations database.")
 
-        # 1. Compile total group assets
         group_capabilities = set()
         for player_name, choices in roster_choices.items():
             player_caps = self.extract_capabilities(choices)
             group_capabilities.update(player_caps)
 
-        # 2. Check operational parameters
         mandatory = set(target_boss["operational_requirements"]["mandatory_capabilities"])
         recommended = set(target_boss["operational_requirements"]["recommended_capabilities"])
 
         missing_mandatory = mandatory - group_capabilities
         missing_recommended = recommended - group_capabilities
 
-        # 3. Calculate absolute system mechanics (Rules Layer math)
         base_armor = target_boss["combat_metrics"]["base_armor"]
         flat_shred = 0
 
@@ -133,7 +56,7 @@ class TheConsoleOpsEngine:
                 flat_shred += abs(cap_fact["modification_value"])
 
         effective_armor = max(0, base_armor - flat_shred)
-        final_mitigation_pct = effective_armor / 500.0  # 500 armor = 1% PvE reduction
+        final_mitigation_pct = effective_armor / 500.0
 
         return {
             "encounter": target_boss["boss_name"],
