@@ -162,4 +162,5 @@ def test_current_repo_audit_confirms_resolved_authority_and_identity_debt() -> N
     assert "duplicate-class-definition" not in codes
     assert "overlapping-plan-persistence" not in codes
     assert "runtime-local-data-path" not in codes
+    assert "installer-fanout" not in codes
     assert "ui-class-monkey-patch" in codes
