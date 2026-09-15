@@ -14,6 +14,9 @@ from services.rotation_candidate_healer_role_output_service import (
 from services.rotation_healer_demand_healing_evidence_service import (
     RotationHealerDemandHealingEvidence,
 )
+from services.rotation_plan_runtime_build_context_service import (
+    RotationRuntimeBuildContextResolver,
+)
 
 
 @dataclass(frozen=True)
@@ -94,6 +97,11 @@ class RotationCandidateHealerMultiDemandRoleOutputService:
     service only evaluates each explicit healing obligation and exposes a
     conservative weakest-window comparison value to the existing role-aware ranker.
 
+    Exact-time runtime build context remains caller-owned. When supplied after final
+    recovery stabilization, the same resolver is forwarded unchanged to every demand
+    evidence evaluation so direct, periodic, delayed, and channel magnitude all bind
+    to the final schedule rather than a seed-plan snapshot.
+
     No demand weighting, target-count multiplication, required-HPS threshold, or
     survival claim is invented here. Unknown evidence in any required window keeps
     the candidate's aggregate healer role output unknown.
@@ -124,15 +132,22 @@ class RotationCandidateHealerMultiDemandRoleOutputService:
     def evaluate_windows(
         self,
         candidate: GeneratedRotationCandidate,
+        *,
+        runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
     ) -> RotationCandidateHealerMultiDemandOutput:
         windows: list[RotationCandidateHealerDemandWindowOutput] = []
         unresolved: list[str] = []
 
         for demand in self.demands:
-            evidence = self.demand_evidence_provider.evaluate_demand(
-                candidate=candidate,
-                demand=demand,
-            )
+            demand_kwargs = {
+                "candidate": candidate,
+                "demand": demand,
+            }
+            if runtime_build_context_resolver is not None:
+                demand_kwargs["runtime_build_context_resolver"] = (
+                    runtime_build_context_resolver
+                )
+            evidence = self.demand_evidence_provider.evaluate_demand(**demand_kwargs)
             if evidence.demand != demand:
                 raise ValueError(
                     "rotation healer demand evidence mismatch: provider returned a "
@@ -164,8 +179,13 @@ class RotationCandidateHealerMultiDemandRoleOutputService:
     def evaluate_plan(
         self,
         candidate: GeneratedRotationCandidate,
+        *,
+        runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
     ) -> RotationCandidateRoleOutputEvidence:
-        result = self.evaluate_windows(candidate)
+        result = self.evaluate_windows(
+            candidate,
+            runtime_build_context_resolver=runtime_build_context_resolver,
+        )
         return RotationCandidateRoleOutputEvidence(
             candidate_id=candidate.candidate_id,
             value=result.weakest_window_value,
