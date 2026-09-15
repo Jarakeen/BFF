@@ -23,6 +23,24 @@ from ui.raid_plan_page import RAID_PLAN_SEATS, _clean, _slug
 from ui.raid_plan_stable_identity_selection_page import RaidPlanStableIdentitySelectionPage
 
 
+def _same_player_identity(prior, visible) -> bool:
+    """Prefer stable player ids; use gamertag only for fully legacy rows."""
+    prior_id = _clean(getattr(prior, "player_id", ""))
+    visible_id = _clean(getattr(visible, "player_id", ""))
+    if prior_id or visible_id:
+        return bool(prior_id and visible_id and prior_id == visible_id)
+    return prior.gamertag.casefold() == visible.gamertag.casefold()
+
+
+def _same_character_identity(prior, visible) -> bool:
+    """Prefer stable character ids; use display name only for fully legacy rows."""
+    prior_id = _clean(getattr(prior, "character_id", ""))
+    visible_id = _clean(getattr(visible, "character_id", ""))
+    if prior_id or visible_id:
+        return bool(prior_id and visible_id and prior_id == visible_id)
+    return _clean(prior.character_name).casefold() == _clean(visible.character_name).casefold()
+
+
 def merge_visible_plan_with_loaded_snapshot(visible: RaidPlan, loaded: RaidPlan | None) -> RaidPlan:
     """Preserve plan-owned fields not editable on the current Raid Plan surface.
 
@@ -37,10 +55,8 @@ def merge_visible_plan_with_loaded_snapshot(visible: RaidPlan, loaded: RaidPlan 
     members = []
     for member in visible.members:
         prior = prior_by_seat.get(member.seat_id.casefold())
-        if prior is not None and prior.gamertag.casefold() == member.gamertag.casefold():
-            same_character = _clean(prior.character_name).casefold() == _clean(
-                member.character_name
-            ).casefold()
+        if prior is not None and _same_player_identity(prior, member):
+            same_character = _same_character_identity(prior, member)
             member = member.with_selection(
                 roster_member_id=(
                     member.roster_member_id
