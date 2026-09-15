@@ -2,6 +2,8 @@ from types import SimpleNamespace
 
 import pytest
 
+from minmax.build_evaluation import BuildEvaluation
+from minmax.calculation import CalculationResult
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from minmax.stat_ids import StatId
 from services.rotation_candidate_dd_role_output_service import RotationActionDamageEvidence
@@ -35,6 +37,14 @@ def _context(bar):
     )
 
 
+def _evaluation(label: str) -> BuildEvaluation:
+    return BuildEvaluation(
+        stats=CalculationResult(stats={}),
+        combat_effects=(label,),  # type: ignore[arg-type]
+        combat_contributions=(),
+    )
+
+
 class _StaticContext:
     def __init__(self):
         self.front = _context("front")
@@ -63,7 +73,7 @@ class _FakeLightAttackService:
 
     def evaluate_action(self, *, candidate, action):
         evaluation = self.kwargs["evaluation"]
-        value = 100.0 if evaluation == "front-eval" else 200.0
+        value = 100.0 if evaluation.combat_effects == ("front-eval",) else 200.0
         return RotationActionDamageEvidence(
             time_seconds=action.time_seconds,
             sequence=action.sequence,
@@ -98,7 +108,7 @@ def test_factory_routes_light_attacks_through_bar_specific_build_evaluations(mon
     _FakeLightAttackService.calls.clear()
     resolution = RotationWeaponAttackBuildEvaluationResolution(
         build=object(),  # type: ignore[arg-type]
-        evaluations=(("front", "front-eval"), ("back", "back-eval")),  # type: ignore[arg-type]
+        evaluations=(("front", _evaluation("front-eval")), ("back", _evaluation("back-eval"))),
         unresolved=(),
     )
     evaluation_service = _EvaluationService(resolution)
@@ -128,9 +138,9 @@ def test_factory_routes_light_attacks_through_bar_specific_build_evaluations(mon
     assert evaluation_service.calls == [
         {"player_build": build, "static_context": static}
     ]
-    assert [call["evaluation"] for call in _FakeLightAttackService.calls] == [
-        "front-eval",
-        "back-eval",
+    assert [call["evaluation"].combat_effects for call in _FakeLightAttackService.calls] == [
+        ("front-eval",),
+        ("back-eval",),
     ]
     assert all(
         call["evaluation_context"].target_resistance == 18200.0
