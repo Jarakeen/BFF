@@ -38,6 +38,16 @@ class RaidPlanMemberIdentityResolutionService:
         self.roster = RosterService(database)
         self.catalog = build_service.canonical.catalog_service
 
+    def _roster_members_for_character(self, character_id: str):
+        key = _clean(character_id)
+        if not key:
+            return ()
+        return tuple(
+            member
+            for member in self.roster.list_members()
+            if _clean(member.CanonicalCharacterId) == key
+        )
+
     def resolve(self, member: RaidPlanMember) -> RaidPlanMemberIdentityResolution:
         if not isinstance(member, RaidPlanMember):
             raise TypeError("raid plan member identity resolution requires RaidPlanMember")
@@ -123,6 +133,27 @@ class RaidPlanMemberIdentityResolutionService:
                                 unresolved.append(
                                     f"canonical player {player_id!r} for selected build does not exist"
                                 )
+
+        # A canonical character may identify one Personnel row because Personnel enforces
+        # unique non-empty CanonicalCharacterId values. This is a stable-ID join, not a
+        # character-name or gamertag inference. Do not attempt the inverse player-only join:
+        # one player may legitimately own multiple roster characters.
+        if roster_member_id is None and character_id:
+            roster_matches = self._roster_members_for_character(character_id)
+            if len(roster_matches) > 1:
+                unresolved.append(
+                    f"multiple Personnel rows claim canonical character {character_id!r}"
+                )
+            elif len(roster_matches) == 1:
+                roster_member = roster_matches[0]
+                roster_member_id = int(roster_member.Id)
+                roster_player_id = _clean(roster_member.CanonicalPlayerId) or None
+                if player_id and roster_player_id and player_id != roster_player_id:
+                    unresolved.append(
+                        "canonical character Personnel owner disagrees with RaidPlan player_id"
+                    )
+                elif not player_id and roster_player_id:
+                    player_id = roster_player_id
 
         return RaidPlanMemberIdentityResolution(
             roster_member_id=roster_member_id,
