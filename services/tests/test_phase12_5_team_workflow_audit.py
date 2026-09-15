@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+from migration.phase12_5_team_workflow_audit import Phase125TeamWorkflowAuditService
 from models.build_model import BuildRoster, PlayerBuild
 from models.roster_model import RosterMember
 from services.generated_roster_plan_service import GeneratedRosterPlan, GeneratedRosterPlanSlot
-from services.phase12_5_team_workflow_audit import Phase125TeamWorkflowAuditService
 
 
 def _build() -> PlayerBuild:
