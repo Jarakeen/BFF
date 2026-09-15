@@ -13,6 +13,7 @@ from dataclasses import replace
 from minmax.context_factory import BuildCalculationContextFactory
 from minmax.derived_stats import StatContribution
 from minmax.gear_set_effect_resolver import GearSetEffectResolver
+from minmax.gear_set_healing_condition_resolver import GearSetHealingConditionResolver
 from minmax.gear_set_resource_condition_resolver import GearSetResourceConditionResolver
 from minmax.gear_stat_inputs import (
     CORE_FIELDS,
@@ -29,25 +30,27 @@ from services.extreme_resource_canonical_static_snapshot_service import (
 
 
 class _ExtremeConditionedGearEffectResolver:
-    """Shared static grammar plus reviewed Extreme conditional-resource grammar."""
+    """Shared static grammar plus reviewed Extreme conditional gear grammar."""
 
     def __init__(self) -> None:
         self.static = GearSetEffectResolver()
         self.resource_conditions = GearSetResourceConditionResolver()
+        self.healing_conditions = GearSetHealingConditionResolver()
 
     def resolve(self, bonus, *, use_max_value=True, source=None):
-        effects = self.static.resolve(
-            bonus,
-            use_max_value=use_max_value,
-            source=source,
-        )
-        if effects:
-            return effects
-        return self.resource_conditions.resolve(
-            bonus,
-            use_max_value=use_max_value,
-            source=source,
-        )
+        for resolver in (
+            self.static,
+            self.resource_conditions,
+            self.healing_conditions,
+        ):
+            effects = resolver.resolve(
+                bonus,
+                use_max_value=use_max_value,
+                source=source,
+            )
+            if effects:
+                return effects
+        return []
 
 
 class ExtremeResourceConditionedGearStatInputResolver(GearStatInputResolver):
