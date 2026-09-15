@@ -106,9 +106,12 @@ def test_raid_engine_registers_assignment_aware_raid_plan_page() -> None:
     from pathlib import Path
 
     route_source = Path("ui/raid_engine_dashboard_support.py").read_text(encoding="utf-8")
+    rotation_source = Path("ui/raid_plan_rotation_page.py").read_text(encoding="utf-8")
     coverage_source = Path("ui/raid_plan_coverage_page.py").read_text(encoding="utf-8")
 
-    assert "from ui.raid_plan_coverage_page import RaidPlanCoveragePage" in route_source
-    assert "raid_plans = RaidPlanCoveragePage()" in route_source
+    assert "from ui.raid_plan_rotation_page import RaidPlanRotationPage" in route_source
+    assert "raid_plans = RaidPlanRotationPage()" in route_source
+    assert "from ui.raid_plan_coverage_page import RaidPlanCoveragePage" in rotation_source
+    assert "class RaidPlanRotationPage(RaidPlanCoveragePage):" in rotation_source
     assert "from ui.raid_plan_assignment_page import RaidPlanAssignmentPage" in coverage_source
     assert "class RaidPlanCoveragePage(RaidPlanAssignmentPage):" in coverage_source
