@@ -6,9 +6,9 @@ import json
 from models.build_model import BuildRoster
 from models.roster_model import RosterMember
 from services.generated_roster_plan_service import (
-    GeneratedRosterPlan,
-    GeneratedRosterPlanService,
-    GeneratedRosterPlanSlot,
+    GeneratedRosterDraft,
+    GeneratedRosterDraftService,
+    GeneratedRosterDraftSlot,
 )
 from services.roster_service import RosterService
 
@@ -35,10 +35,10 @@ class Phase125LegacyPlanRepair:
 
 
 class Phase125LegacyPlanRepairService:
-    """Repair only provable pre-Phase-12.5 generated-plan inconsistencies.
+    """Repair only provable pre-Phase-12.5 generated-draft inconsistencies.
 
     Missing Roster team identity is safe to backfill because a persisted generated
-    plan now canonically owns that user-facing team identity. A legacy recruit chair
+    draft carries that historical user-facing team identity. A legacy recruit chair
     may be promoted to ``saved`` only when its real player/character identity and
     exact saved build resolve uniquely and the source does not identify non-roster
     evidence such as ESO Logs or a reference template.
@@ -55,7 +55,7 @@ class Phase125LegacyPlanRepairService:
     def __init__(
         self,
         *,
-        plans: GeneratedRosterPlanService,
+        plans: GeneratedRosterDraftService,
         roster: RosterService,
     ) -> None:
         self.plans = plans
@@ -92,7 +92,7 @@ class Phase125LegacyPlanRepairService:
         return {item for item in values if item}
 
     @classmethod
-    def _matching_builds(cls, builds: BuildRoster, slot: GeneratedRosterPlanSlot):
+    def _matching_builds(cls, builds: BuildRoster, slot: GeneratedRosterDraftSlot):
         wanted_people = {
             cls._clean(slot.player_name).casefold(),
             cls._clean(slot.character_name).casefold(),
@@ -111,7 +111,7 @@ class Phase125LegacyPlanRepairService:
         return tuple(matches)
 
     @classmethod
-    def _matching_members(cls, members: tuple[RosterMember, ...], slot: GeneratedRosterPlanSlot):
+    def _matching_members(cls, members: tuple[RosterMember, ...], slot: GeneratedRosterDraftSlot):
         wanted = {
             cls._clean(slot.player_name).casefold(),
             cls._clean(slot.character_name).casefold(),
@@ -124,7 +124,7 @@ class Phase125LegacyPlanRepairService:
         )
 
     @classmethod
-    def _real_player_recruit(cls, slot: GeneratedRosterPlanSlot) -> bool:
+    def _real_player_recruit(cls, slot: GeneratedRosterDraftSlot) -> bool:
         return (
             slot.kind != "saved"
             and cls._clean(slot.player_name).casefold()
@@ -144,7 +144,7 @@ class Phase125LegacyPlanRepairService:
         return values
 
     @staticmethod
-    def _slot_payload(slot: GeneratedRosterPlanSlot) -> dict[str, object]:
+    def _slot_payload(slot: GeneratedRosterDraftSlot) -> dict[str, object]:
         return {
             "slot_name": slot.slot_name,
             "kind": slot.kind,
@@ -164,7 +164,7 @@ class Phase125LegacyPlanRepairService:
         }
 
     def _remember_legacy_evidence(
-        self, plan: GeneratedRosterPlan, slot: GeneratedRosterPlanSlot
+        self, plan: GeneratedRosterDraft, slot: GeneratedRosterDraftSlot
     ) -> None:
         payload = json.dumps(self._slot_payload(slot), ensure_ascii=False, sort_keys=True)
         self.db.execute(
@@ -176,7 +176,7 @@ class Phase125LegacyPlanRepairService:
                 evidence_json = excluded.evidence_json,
                 updated_at = CURRENT_TIMESTAMP
             """,
-            (plan.plan_id, slot.slot_name, payload),
+            (plan.draft_id, slot.slot_name, payload),
         )
         self.db.commit()
 
@@ -192,7 +192,7 @@ class Phase125LegacyPlanRepairService:
             FROM generated_roster_legacy_assignment_evidence
             WHERE plan_id = ? AND slot_name = ? COLLATE NOCASE
             """,
-            (plan.plan_id, self._clean(slot_name)),
+            (plan.draft_id, self._clean(slot_name)),
         ).fetchone()
         if row is None:
             return None
@@ -205,7 +205,7 @@ class Phase125LegacyPlanRepairService:
     def inspect(
         self,
         *,
-        plan: GeneratedRosterPlan,
+        plan: GeneratedRosterDraft,
         builds: BuildRoster,
         roster_members: tuple[RosterMember, ...],
     ) -> Phase125LegacyPlanRepair:
@@ -240,8 +240,8 @@ class Phase125LegacyPlanRepairService:
         )
 
     @staticmethod
-    def _normalized_recruit(slot: GeneratedRosterPlanSlot) -> GeneratedRosterPlanSlot:
-        return GeneratedRosterPlanSlot(
+    def _normalized_recruit(slot: GeneratedRosterDraftSlot) -> GeneratedRosterDraftSlot:
+        return GeneratedRosterDraftSlot(
             slot_name=slot.slot_name,
             kind=slot.kind,
             player_name="Recruitment Needed",
@@ -263,10 +263,10 @@ class Phase125LegacyPlanRepairService:
     def apply(
         self,
         *,
-        plan: GeneratedRosterPlan,
+        plan: GeneratedRosterDraft,
         builds: BuildRoster,
         roster_members: tuple[RosterMember, ...],
-    ) -> GeneratedRosterPlan:
+    ) -> GeneratedRosterDraft:
         inspection = self.inspect(
             plan=plan,
             builds=builds,
@@ -280,7 +280,7 @@ class Phase125LegacyPlanRepairService:
         if not promotable and not normalizable:
             return self.plans.load_plan(plan.name) or plan
 
-        updated_slots: list[GeneratedRosterPlanSlot] = []
+        updated_slots: list[GeneratedRosterDraftSlot] = []
         for slot in plan.slots:
             slot_key = slot.slot_name.casefold()
             if slot_key in normalizable:
@@ -300,7 +300,7 @@ class Phase125LegacyPlanRepairService:
                 self.roster.update_member(member)
 
             updated_slots.append(
-                GeneratedRosterPlanSlot(
+                GeneratedRosterDraftSlot(
                     slot_name=slot.slot_name,
                     kind="saved",
                     player_name=slot.player_name,
