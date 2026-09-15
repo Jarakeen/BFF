@@ -135,6 +135,9 @@ class _WorkloadProvider:
             alternative_id=candidate.candidate_id,
             viable=True,
             primary_role_displacement_seconds=0.0,
+            recipient_coverage_result=None,
+            temporal_coverage_result=None,
+            unresolved=(),
         )
 
 
