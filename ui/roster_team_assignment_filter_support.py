@@ -7,6 +7,8 @@ existing roster records and canonical build-team assignments; no duplicate team
 or assignment persistence is introduced here.
 """
 
+from dataclasses import dataclass
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QComboBox
 
@@ -17,6 +19,13 @@ _INSTALLED = False
 _ALL_TEAMS_LABEL = "All Teams"
 
 
+@dataclass(frozen=True)
+class CanonicalTeamMembership:
+    player_ids: frozenset[str] = frozenset()
+    character_ids: frozenset[str] = frozenset()
+    legacy_names: frozenset[tuple[str, str]] = frozenset()
+
+
 def _legacy_team_names(value: str) -> set[str]:
     return {
         piece.strip().casefold()
@@ -25,13 +34,15 @@ def _legacy_team_names(value: str) -> set[str]:
     }
 
 
-def _canonical_team_members(page, team_name: str) -> set[tuple[str, str]]:
+def _canonical_team_members(page, team_name: str) -> CanonicalTeamMembership:
     build_library = getattr(page, "build_library", None)
     if build_library is None:
-        return set()
+        return CanonicalTeamMembership()
 
     catalog = build_library.canonical.catalog_service
-    members: set[tuple[str, str]] = set()
+    player_ids: set[str] = set()
+    character_ids: set[str] = set()
+    legacy_names: set[tuple[str, str]] = set()
     for assignment in catalog.assignments_for_team(team_name):
         build = catalog.get_build(str(assignment.get("build_id") or "").strip()) or {}
         character_id = str(build.get("character_id") or "").strip()
@@ -39,28 +50,53 @@ def _canonical_team_members(page, team_name: str) -> set[tuple[str, str]]:
             continue
         character = catalog.get_character(character_id) or {}
         player = catalog.player_for_character(character_id) or {}
+        player_id = str(player.get("player_id") or "").strip()
         gamertag = str(player.get("gamertag") or "").strip().casefold()
         character_name = str(character.get("name") or "").strip().casefold()
+        character_ids.add(character_id)
+        if player_id:
+            player_ids.add(player_id)
         if gamertag:
-            members.add((gamertag, character_name))
-    return members
+            legacy_names.add((gamertag, character_name))
+    return CanonicalTeamMembership(
+        player_ids=frozenset(player_ids),
+        character_ids=frozenset(character_ids),
+        legacy_names=frozenset(legacy_names),
+    )
 
 
-def _member_belongs_to_team(page, member, team_name: str, canonical_members: set[tuple[str, str]]) -> bool:
+def _member_belongs_to_team(
+    page,
+    member,
+    team_name: str,
+    canonical_members: CanonicalTeamMembership,
+) -> bool:
     team_key = team_name.strip().casefold()
     if not team_key:
         return True
     if team_key in _legacy_team_names(getattr(member, "Team", "")):
         return True
 
+    player_id = str(getattr(member, "CanonicalPlayerId", "") or "").strip()
+    character_id = str(getattr(member, "CanonicalCharacterId", "") or "").strip()
     player_name = str(getattr(member, "PlayerName", "") or "").strip().casefold()
     character_name = str(getattr(member, "CharacterName", "") or "").strip().casefold()
+
+    if character_id:
+        return character_id in canonical_members.character_ids
+    if player_id and not character_name:
+        return player_id in canonical_members.player_ids
+
+    # Compatibility fallback for partially migrated/legacy Personnel rows only.
     if not player_name:
         return False
-
-    if (player_name, character_name) in canonical_members:
+    if (player_name, character_name) in canonical_members.legacy_names:
         return True
-    return not character_name and any(player == player_name for player, _ in canonical_members)
+    return (
+        not character_name
+        and not player_id
+        and any(player == player_name for player, _ in canonical_members.legacy_names)
+    )
 
 
 def _assignment_tab_index(page) -> int:
