@@ -9,7 +9,11 @@ def test_assignment_persistence_support_restores_and_saves_editable_fields():
     assert '"gear_needed"' in source
     assert '"notes"' in source
     assert "get_member_assignment(member_id)" in source
-    assert "set_member_assignment_field(member_id, field, value)" in source
+    assert "_context_service(page).set_field(" in source
+    assert "team_name=team_name" in source
+    assert "encounter_id=selected_encounter_id(page)" in source
+    assert "field=field" in source
+    assert "value=value" in source
 
 
 def test_assignment_persistence_installs_after_team_filtering():
