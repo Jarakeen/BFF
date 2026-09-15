@@ -104,31 +104,26 @@ class RaidPlanStableIdentitySelectionPage(RaidPlanCharacterSelectionPage):
     """Attach stable ids to existing editable RaidPlan picker choices."""
 
     @staticmethod
-    def _exact_item_data(combo: QComboBox, visible_text: str) -> str | None:
-        key = _clean(visible_text).casefold()
-        if not key:
+    def _selected_item_data(combo: QComboBox) -> str | None:
+        index = combo.currentIndex()
+        if index < 0:
             return None
-        matches: list[str] = []
-        for index in range(combo.count()):
-            if _clean(combo.itemText(index)).casefold() != key:
-                continue
-            value = _clean(combo.itemData(index))
-            if value:
-                matches.append(value)
-        unique = tuple(dict.fromkeys(matches))
-        return unique[0] if len(unique) == 1 else None
+        if _clean(combo.itemText(index)).casefold() != _clean(combo.currentText()).casefold():
+            return None
+        value = _clean(combo.itemData(index))
+        return value or None
 
     def _selected_player_id(self, row: int) -> str | None:
         combo = self.team_table.cellWidget(row, 1)
         if not isinstance(combo, QComboBox):
             return None
-        return self._exact_item_data(combo, combo.currentText())
+        return self._selected_item_data(combo)
 
     def _selected_character_id(self, row: int) -> str | None:
         combo = self._character_combo(row)
         if combo is None:
             return None
-        return self._exact_item_data(combo, combo.currentText())
+        return self._selected_item_data(combo)
 
     def _apply_player_item_data(self) -> None:
         if not hasattr(self, "team_table"):
