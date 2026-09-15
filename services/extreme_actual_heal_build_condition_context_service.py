@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-"""Prove build-owned gear condition markers for standing Extreme H1 scoring.
+"""Prove build/scenario-owned gear condition markers for standing Extreme H1 scoring.
 
-This service owns no stat arithmetic and does not infer proc/runtime state. It only
-materializes conditions that are directly proven by the saved/hypothetical build:
-canonical provisioning kind, active-bar Destruction Staff type, and an explicitly
-selected transformed form. Pet, dodge, standing-still, trigger, stack, and other
-runtime conditions remain absent until a specialist runtime service proves them.
+This service owns no stat arithmetic and does not infer proc/runtime state. It
+materializes conditions proven directly by the saved/hypothetical build plus the
+standing H1 scenario itself: canonical provisioning kind, active-bar Destruction
+Staff type, an explicitly selected transformed form, and ``standing_still``.
+Pet, dodge, trigger, stack, and other runtime conditions remain absent until a
+specialist runtime service proves them.
 """
 
 from dataclasses import dataclass
@@ -33,7 +34,7 @@ class ExtremeActualHealBuildConditionContext:
 
 
 class ExtremeActualHealBuildConditionContextService:
-    """Resolve only condition markers whose truth is owned by the build itself."""
+    """Resolve condition markers proven by the build or standing H1 scenario."""
 
     def __init__(self, database_path: str | Path) -> None:
         self.database_path = str(database_path)
@@ -78,8 +79,8 @@ class ExtremeActualHealBuildConditionContextService:
         *,
         active_bar: str = "front",
     ) -> ExtremeActualHealBuildConditionContext:
-        active: set[str] = set()
-        evidence: list[str] = []
+        active: set[str] = {"standing_still"}
+        evidence: list[str] = ["standing_still: standing H1 scenario definition"]
         unresolved: list[str] = []
 
         food = str(build.Food or "").strip()
