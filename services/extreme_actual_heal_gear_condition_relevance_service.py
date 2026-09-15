@@ -7,7 +7,7 @@ because those mechanics matter in general. Standing MOST Actual Heal can prove a
 few narrower facts without weakening that shared model: damage-type and reviewed
 offensive-weapon ability scopes cannot modify a healing event; some unmapped
 bonuses explicitly scope their Weapon/Spell Damage to damaging attacks or enemy
-output only; reviewed always-on power plus an H1-irrelevant defensive tradeoff may
+output only; reviewed always-on power plus an H1-irrelevant companion mechanic may
 be projected by the dedicated Extreme tradeoff resolver; and the standing scenario
 itself satisfies a ``standing_still`` condition.
 """
@@ -35,9 +35,6 @@ _DAMAGE_ONLY_ABILITY_SCOPES = frozenset(
 )
 _STANDING_H1_CONDITIONS = frozenset({"standing_still"})
 
-# These patterns are intentionally about the *scope of the power bonus itself*,
-# not merely about an enemy/proc appearing somewhere in the tooltip. A proc that
-# damages an enemy and then grants global Weapon/Spell Damage remains unresolved.
 _DAMAGE_ONLY_POWER_TEXT = (
     re.compile(r"weapon and spell damage to your damaging\s*abilities", re.IGNORECASE),
     re.compile(
@@ -65,14 +62,17 @@ _DAMAGE_ONLY_POWER_TEXT = (
     ),
 )
 
-# Exact reviewed compound mechanics whose positive power term is materialized by
-# ExtremeGearSetPowerTradeoffResolver. The ignored companion term is irrelevant to
-# the *amount* of a standing H1 heal, but remains intentionally unmapped globally.
 _REVIEWED_H1_POWER_TRADEOFF_TEXT = (
     re.compile(
         r"Talfyg's Treachery \(5\): active set bonus is not yet mechanic-mapped:.*"
         r"Increases your Weapon and Spell Damage by\s+8-372\..*"
         r"Increases your damage taken from Flame and Fighter'?s Guild abilities by\s+5%",
+        re.IGNORECASE | re.DOTALL,
+    ),
+    re.compile(
+        r"Dreugh King Slayer \(5\): active set bonus is not yet mechanic-mapped:.*"
+        r"Gain Major Brutality and Sorcery at all times, increasing your Weapon and Spell Damage by\s*20%\..*"
+        r"When you kill an enemy, you gain Major Expedition",
         re.IGNORECASE | re.DOTALL,
     ),
 )
