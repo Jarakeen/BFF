@@ -10,6 +10,14 @@ the shared read-only contract consumed by Extreme and downstream advisers.
 
 from dataclasses import dataclass
 
+from services.extreme_power_record_runtime_requirement_service import (
+    ExtremePowerRecordRequirement,
+    ExtremePowerRecordRuntimeRequirementService,
+)
+from services.extreme_power_record_runtime_snapshot_witness_service import (
+    ExtremePowerRecordRuntimeSnapshotWitness,
+    ExtremePowerRecordRuntimeSnapshotWitnessService,
+)
 from services.extreme_record_result import (
     ExtremeRecordProofStatus,
     ExtremeRecordResult,
@@ -57,6 +65,8 @@ class ExtremeWeaponDamageConditionalSnapshot:
 class ExtremeWeaponDamageRecordService:
     """Return the reviewed U50 contextual potion-active Weapon Damage maximum."""
 
+    OBJECTIVE_KEY = "weapon_damage"
+
     RUNTIME_PREREQUISITES = (
         "Target is at or below 25% Health for Kvatch Gladiator.",
         "Armor of Truth was triggered by damaging an Off Balance target and its 10-second buff remains active.",
@@ -83,6 +93,14 @@ class ExtremeWeaponDamageRecordService:
 
     def snapshot(self) -> ExtremeWeaponDamageConditionalSnapshot:
         return ExtremeWeaponDamageConditionalSnapshot()
+
+    def runtime_requirements(self) -> tuple[ExtremePowerRecordRequirement, ...]:
+        """Return machine-readable prerequisite ownership for this record."""
+        return ExtremePowerRecordRuntimeRequirementService.requirements_for(self.OBJECTIVE_KEY)
+
+    def runtime_witness(self) -> ExtremePowerRecordRuntimeSnapshotWitness:
+        """Return the reviewed E1 runtime-history witness for this record."""
+        return ExtremePowerRecordRuntimeSnapshotWitnessService.build(self.OBJECTIVE_KEY)
 
     def record(self) -> ExtremeRecordResult:
         snapshot = self.snapshot()
@@ -121,7 +139,7 @@ class ExtremeWeaponDamageRecordService:
             "pre_percent_reference": snapshot.pre_percent_reference,
         }
         return ExtremeRecordResult.for_objective(
-            "weapon_damage",
+            self.OBJECTIVE_KEY,
             raw_value=value,
             proof_status=ExtremeRecordProofStatus.CONDITIONAL,
             winning_build=winning_build,
