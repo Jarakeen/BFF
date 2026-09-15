@@ -26,25 +26,6 @@ def install() -> None:
     if _INSTALLED:
         return
 
-    from ui.performance_dashboard_polish_support import install as install_performance_dashboard_polish
-    install_performance_dashboard_polish()
-    from ui.performance_dashboard_overlay_support import install as install_performance_dashboard_overlay
-    install_performance_dashboard_overlay()
-    from ui.performance_dashboard_timeline_support import install as install_performance_dashboard_timeline
-    install_performance_dashboard_timeline()
-    from ui.performance_dashboard_immunity_compat import install as install_performance_dashboard_immunity_compat
-    install_performance_dashboard_immunity_compat()
-    from ui.performance_dashboard_effect_retrieval_support import install as install_performance_dashboard_effect_retrieval
-    install_performance_dashboard_effect_retrieval()
-    from ui.performance_dashboard_timeline_service_support import install as install_performance_dashboard_timeline_service
-    install_performance_dashboard_timeline_service()
-    from ui.performance_dashboard_boss_activity_support import install as install_performance_dashboard_boss_activity
-    install_performance_dashboard_boss_activity()
-    from ui.performance_dashboard_focus_support import install as install_performance_dashboard_focus
-    install_performance_dashboard_focus()
-    from ui.operations_console_focus_support import install as install_operations_console_focus
-    install_operations_console_focus()
-
     from ui import phase5_build_ui_support
     from ui.builds_page import BuildsPage
     from ui.build_editor_inline_compat import _force_dark_surface, _set_combo_index
