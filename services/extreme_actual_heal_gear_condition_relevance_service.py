@@ -7,8 +7,9 @@ because those mechanics matter in general. Standing MOST Actual Heal can prove a
 few narrower facts without weakening that shared model: damage-type and reviewed
 offensive-weapon ability scopes cannot modify a healing event; some unmapped
 bonuses explicitly scope their Weapon/Spell Damage to damaging attacks or enemy
-output only; and the standing scenario itself satisfies a ``standing_still``
-condition.
+output only; reviewed always-on power plus an H1-irrelevant defensive tradeoff may
+be projected by the dedicated Extreme tradeoff resolver; and the standing scenario
+itself satisfies a ``standing_still`` condition.
 """
 
 from dataclasses import dataclass
@@ -52,6 +53,18 @@ _DAMAGE_ONLY_POWER_TEXT = (
     ),
 )
 
+# Exact reviewed compound mechanics whose positive power term is materialized by
+# ExtremeGearSetPowerTradeoffResolver. The ignored companion term is irrelevant to
+# the *amount* of a standing H1 heal, but remains intentionally unmapped globally.
+_REVIEWED_H1_POWER_TRADEOFF_TEXT = (
+    re.compile(
+        r"Talfyg's Treachery \(5\): active set bonus is not yet mechanic-mapped:.*"
+        r"Increases your Weapon and Spell Damage by\s+8-372\..*"
+        r"Increases your damage taken from Flame and Fighter'?s Guild abilities by\s+5%",
+        re.IGNORECASE | re.DOTALL,
+    ),
+)
+
 
 @dataclass(frozen=True)
 class ExtremeActualHealGearConditionRelevanceResult:
@@ -90,7 +103,10 @@ class ExtremeActualHealGearConditionRelevanceService:
                     for condition in _STANDING_H1_CONDITIONS
                 )
                 damage_only_text = any(pattern.search(text) for pattern in _DAMAGE_ONLY_POWER_TEXT)
-                if damage_only_scope or standing_proven or damage_only_text:
+                reviewed_tradeoff = any(
+                    pattern.search(text) for pattern in _REVIEWED_H1_POWER_TRADEOFF_TEXT
+                )
+                if damage_only_scope or standing_proven or damage_only_text or reviewed_tradeoff:
                     ignored.append(text)
                     continue
             remaining.append(text)
