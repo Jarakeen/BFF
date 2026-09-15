@@ -218,6 +218,7 @@ def main() -> int:
     from ui.mechanics_search_support import install as install_mechanics_search_support
     from ui.help_support import install as install_help_support
     from ui.independent_timer_note_support import install as install_independent_timer_note_support
+    from ui.application_workspace_bootstrap import bootstrap_workspace_extensions
     from ui.operations_console_schedule_support import install as install_operations_console_schedule_support
     from ui.encounter_research_support import install as install_encounter_research_support
     from ui.collectibles_profile_support import install as install_collectibles_profile_support
@@ -291,6 +292,9 @@ def main() -> int:
     # User-facing timers/notepads own separate state and must be patched before
     # MainWindow constructs the affected pages.
     install_independent_timer_note_support()
+    # Cross-feature roster/rotation/build decorators have explicit application
+    # composition here; the schedule feature no longer doubles as their bootstrap.
+    bootstrap_workspace_extensions()
     # The Raid Engine overview reads the durable Roster Team Schedule rather than
     # showing decorative example raids.
     install_operations_console_schedule_support()
