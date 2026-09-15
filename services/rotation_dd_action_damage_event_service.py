@@ -11,6 +11,9 @@ from minmax.skill_coefficient_repository import SkillCoefficientRepository
 from minmax.skill_component_classification import SkillEffectKind
 from minmax.skill_component_repository import SkillComponentRepository
 from minmax.skill_tooltip_calculator import SkillTooltipCalculator
+from services.rotation_dd_reviewed_skill_component_repository import (
+    RotationDDReviewedSkillComponentRepository,
+)
 
 
 RotationDDActionContextResolver = Callable[[float, int], BuildCalculationContext]
@@ -67,14 +70,14 @@ class RotationDDActionDamageEventService:
         database_path: str | Path,
         *,
         coefficient_repository: SkillCoefficientRepository | None = None,
-        component_repository: SkillComponentRepository | None = None,
+        component_repository: SkillComponentRepository | object | None = None,
         calculator: SkillTooltipCalculator | None = None,
     ) -> None:
         self.database_path = Path(database_path)
         self.coefficients = coefficient_repository or SkillCoefficientRepository(
             self.database_path
         )
-        self.components = component_repository or SkillComponentRepository(
+        self.components = component_repository or RotationDDReviewedSkillComponentRepository(
             self.database_path
         )
         self.calculator = calculator or SkillTooltipCalculator(self.coefficients)
