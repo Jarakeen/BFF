@@ -6,6 +6,9 @@ from pathlib import Path
 from minmax.character_build.character_class import CharacterClass
 from minmax.character_progression import CharacterProgression
 from models.build_model import PlayerBuild
+from services.extreme_actual_heal_armor_progression_service import (
+    ExtremeActualHealArmorProgressionService,
+)
 from services.extreme_actual_heal_optimization_service import (
     ExtremeActualHealOptimizationResult,
     ExtremeActualHealOptimizationService,
@@ -83,11 +86,12 @@ class ExtremeActualHealClassRouteCatalogService:
     base classes, materializing each route onto a real ``PlayerBuild`` before
     heal discovery and whole-build scoring.
 
-    Every route receives a hypothetical fully-leveled class progression snapshot:
-    non-class progression is preserved, unequipped class-line passives are removed,
-    and passives belonging to the three selected class lines are populated at the
-    canonical recorded maximum rank. That exact progression snapshot is then
-    passed through every whole-build candidate context rebuild.
+    Every route receives a hypothetical fully-leveled progression snapshot:
+    selected class-line passives are populated at canonical maximum rank, and the
+    reviewed non-class passives needed by H1 armor search are also normalized to
+    their legal maximums: Medium Armor Agility/Dexterity and Undaunted Mettle.
+    That exact progression snapshot is then passed through every whole-build
+    candidate context rebuild.
 
     This progression normalization proves ownership/rank availability only. It
     does not pretend every passive effect/proc is modeled, so incomplete mechanic
@@ -103,6 +107,7 @@ class ExtremeActualHealClassRouteCatalogService:
     SEARCH_SCOPE = (
         "structurally legal class-line routes",
         "hypothetical selected-class-line max progression normalization",
+        "reviewed H1 Medium Armor Agility/Dexterity and Undaunted Mettle max-rank progression",
         "class-line-aware canonical HEAL candidate discovery per route",
         "active-bar weapon-skill legality for HEAL candidates",
         "selected heal replacement across the five ordinary active-bar slots",
@@ -122,14 +127,18 @@ class ExtremeActualHealClassRouteCatalogService:
         optimizer: ExtremeActualHealOptimizationService | None = None,
         candidates: ExtremeHealSkillCandidateService | None = None,
         routes: ExtremeHealClassRouteService | None = None,
-        progression_normalizer: ExtremeHypotheticalClassProgressionService | None = None,
+        progression_normalizer: (
+            ExtremeActualHealArmorProgressionService
+            | ExtremeHypotheticalClassProgressionService
+            | None
+        ) = None,
     ) -> None:
         self.optimizer = optimizer or ExtremeCanonicalActualHealOptimizationService()
         resolved_path = Path(database_path or self.optimizer.optimizer.database_path)
         self.candidates = candidates or ExtremeHealSkillCandidateService(resolved_path)
         self.routes = routes or ExtremeHealClassRouteService()
         self.progression_normalizer = progression_normalizer or (
-            ExtremeHypotheticalClassProgressionService(resolved_path)
+            ExtremeActualHealArmorProgressionService(resolved_path)
         )
 
     def rank(
