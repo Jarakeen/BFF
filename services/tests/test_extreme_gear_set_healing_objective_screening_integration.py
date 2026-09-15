@@ -66,6 +66,21 @@ def test_unmapped_crit_heal_trigger_does_not_block_critical_healing_sheet_object
     assert row.unresolved == ()
 
 
+def test_group_member_modifier_that_excludes_wearer_does_not_block_self_h1() -> None:
+    row = ExtremeGearSetObjectiveService.candidate_for_set(
+        _Repo(
+            "While you have more than 50% Health, the Critical Damage and Critical Healing of "
+            "any group members not wearing Lucent Echoes within 28 meters of you increases by 11%."
+        ),
+        "Screened Set",
+        "critical_healing",
+    )
+
+    assert row.reviewed_delta == 0.0
+    assert row.mechanic_complete is True
+    assert row.unresolved == ()
+
+
 def test_unmapped_critical_healing_modifier_still_blocks_critical_healing() -> None:
     row = ExtremeGearSetObjectiveService.candidate_for_set(
         _Repo("Your Critical Healing is increased by an unknown amount."),
