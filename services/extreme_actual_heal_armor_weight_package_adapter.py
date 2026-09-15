@@ -9,7 +9,9 @@ proof-reduced armor-weight frontier before canonical event scoring.
 
 If canonical armor-type evidence is unresolved for a package, that package is
 not silently scored as though its inherited saved-build weights were wearable.
-The unresolved boundary is retained for the final H1 result.
+The unresolved boundary is retained for the final H1 result. Diagnostics
+accumulate across optimizer passes until ``reset`` so an early proof gap cannot
+vanish merely because a later coordinate pass produced fewer candidates.
 """
 
 from dataclasses import dataclass
@@ -70,12 +72,23 @@ class ExtremeActualHealArmorWeightPackageAdapter:
                 continue
             expanded.extend(result.candidates)
 
+        previous = self._stats
         self._stats = ExtremeActualHealArmorWeightPackageAdapterStats(
-            raw_package_candidates=len(raw_candidates),
-            expanded_candidates=len(expanded),
-            raw_weight_layouts_reviewed=raw_layouts,
-            retained_weight_signatures=retained_signatures,
-            unresolved=tuple(dict.fromkeys(unresolved)),
+            raw_package_candidates=(
+                previous.raw_package_candidates + len(raw_candidates)
+            ),
+            expanded_candidates=(
+                previous.expanded_candidates + len(expanded)
+            ),
+            raw_weight_layouts_reviewed=(
+                previous.raw_weight_layouts_reviewed + raw_layouts
+            ),
+            retained_weight_signatures=(
+                previous.retained_weight_signatures + retained_signatures
+            ),
+            unresolved=tuple(
+                dict.fromkeys((*previous.unresolved, *unresolved))
+            ),
         )
         return tuple(expanded)
 
