@@ -112,7 +112,7 @@ class RotationRecoveryHeavyStabilizationService:
         calculation_context: BuildCalculationContext | None = None,
         maximum_event_resolver: RecoveryMaximumEventResolver | None = None,
         displayed_recovery_resolver_factory: RecoveryDisplayedRecoveryResolverFactory | None = None,
-        anticipate_future_shortfall: bool = False,
+        anticipate_future_shortfall: bool = True,
     ) -> RotationRecoveryHeavyStabilizationResult:
         if (restoration_resolver is None) == (restoration_resolver_factory is None):
             raise ValueError(
