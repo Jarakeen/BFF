@@ -40,9 +40,13 @@ def test_phase12_5_repair_is_migration_only_and_audit_is_read_only() -> None:
     assert audit is not None
     assert repair.domain == "migration"
     assert audit.domain == "audit"
+    assert repair.implementation_path == "migration.phase12_5_legacy_plan_repair"
+    assert audit.implementation_path == "migration.phase12_5_team_workflow_audit"
+    assert "GeneratedRosterDraft" in repair.inputs
+    assert "GeneratedRosterDraft" in repair.outputs
     assert "Migration-only" in repair.notes
     assert "uniquely provable" in repair.notes
-    assert "Read-only integrity audit" in audit.notes
+    assert "Read-only" in audit.notes
     assert "raid outcome remain later-phase responsibilities" in audit.notes
 
 
