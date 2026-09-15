@@ -3,7 +3,10 @@ from __future__ import annotations
 """Raid-planning references for support sets with unique, non-Major/Minor effects.
 
 These rows are presentation/reference data for Coverage. They do not create canonical
-combat-effect mappings or universal raid requirements.
+combat-effect mappings or universal raid requirements. ``required_pieces`` records the
+reviewed equipment threshold needed before static build state can prove that the set's
+support effect is even available. ``static_state`` remains conservative: triggered/proc
+support effects are capability evidence, not uptime evidence.
 """
 
 from dataclasses import dataclass
@@ -16,6 +19,8 @@ class RaidUniqueSupportSetReference:
     type_label: str
     source_notes: tuple[str, ...]
     default_required: bool = False
+    required_pieces: int = 5
+    static_state: str = "conditional"
 
     def __post_init__(self) -> None:
         if not self.name:
@@ -26,10 +31,16 @@ class RaidUniqueSupportSetReference:
             raise ValueError("unique support type labels must start with 'Unique:'")
         if not self.source_notes:
             raise ValueError("source_notes must contain at least one reviewed example")
+        if int(self.required_pieces) <= 0:
+            raise ValueError("required_pieces must be positive")
+        if self.static_state not in {"available", "conditional"}:
+            raise ValueError("static_state must be available or conditional")
 
 
 # Keep labels deliberately terse: this column is for raid-lead scanning, while
-# Coverage Notes carries the fuller planning explanation.
+# Coverage Notes carries the fuller planning explanation. All current unique effects
+# remain conditional because their actual raid value depends on proc/activation/combat
+# state even when the equipment threshold is statically proven.
 UNIQUE_SUPPORT_SET_EFFECTS: tuple[RaidUniqueSupportSetReference, ...] = (
     RaidUniqueSupportSetReference(
         "Powerful Assault", "Buff", "Unique: +307 W/SD",
@@ -38,6 +49,7 @@ UNIQUE_SUPPORT_SET_EFFECTS: tuple[RaidUniqueSupportSetReference, ...] = (
     RaidUniqueSupportSetReference(
         "Spaulder of Ruin", "Buff", "Unique: +W/SD aura",
         ("Mythic: Spaulder of Ruin", "Aura of Pride grants nearby group members a unique Weapon and Spell Damage increase."),
+        required_pieces=1,
     ),
     RaidUniqueSupportSetReference(
         "Pearlescent Ward", "Buff", "Unique: dmg / mitigation",
@@ -50,10 +62,12 @@ UNIQUE_SUPPORT_SET_EFFECTS: tuple[RaidUniqueSupportSetReference, ...] = (
     RaidUniqueSupportSetReference(
         "Symphony of Blades", "Buff", "Unique: resource restore",
         ("Monster set: Symphony of Blades", "Unique ally Magicka/Stamina restoration proc."),
+        required_pieces=2,
     ),
     RaidUniqueSupportSetReference(
         "Ozezan the Inferno", "Buff", "Unique: +Armor / Vitality",
         ("Monster set: Ozezan the Inferno", "Provides Minor Vitality and an additional unique Armor-support effect from healing/overhealing."),
+        required_pieces=2,
     ),
     RaidUniqueSupportSetReference(
         "Jorvuld's Guidance", "Buff", "Unique: buff duration",
@@ -86,10 +100,12 @@ UNIQUE_SUPPORT_SET_EFFECTS: tuple[RaidUniqueSupportSetReference, ...] = (
     RaidUniqueSupportSetReference(
         "Nazaray", "Debuff", "Unique: debuff extension",
         ("Monster set: Nazaray", "Ultimate use extends eligible negative effects already active on nearby enemies."),
+        required_pieces=2,
     ),
     RaidUniqueSupportSetReference(
         "Encratis's Behemoth", "Debuff", "Unique: flame dmg modifier",
         ("Monster set: Encratis's Behemoth", "Creates a unique flame-support area that increases enemy Flame Damage taken and reduces Flame Damage taken by group members."),
+        required_pieces=2,
     ),
 )
 
