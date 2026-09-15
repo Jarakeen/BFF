@@ -25,6 +25,39 @@ def raid_plan_assignment_choices() -> tuple[str, ...]:
     return tuple(label for label, _identity in _assignment_choice_rows() if _clean(label))
 
 
+def merge_plan_assignment_values(
+    plan: RaidPlan,
+    assignments_by_seat: dict[str, tuple[str, str]],
+) -> RaidPlan:
+    """Apply visible assignment values to existing RaidPlan members only.
+
+    Empty strings intentionally clear the corresponding plan-owned assignment. Unknown
+    seat keys are ignored so UI presentation cannot manufacture new raid chairs.
+    """
+    if not isinstance(plan, RaidPlan):
+        raise TypeError("plan must be a RaidPlan")
+
+    normalized = {
+        _clean(seat_id).casefold(): (_clean(primary), _clean(secondary))
+        for seat_id, (primary, secondary) in assignments_by_seat.items()
+        if _clean(seat_id)
+    }
+    members = []
+    for member in plan.members:
+        values = normalized.get(member.seat_id.casefold())
+        if values is None:
+            members.append(member)
+            continue
+        primary, secondary = values
+        members.append(
+            member.with_selection(
+                primary_assignment=primary or None,
+                secondary_assignment=secondary or None,
+            )
+        )
+    return replace(plan, members=tuple(members))
+
+
 class RaidPlanAssignmentPage(RaidPlanPersistencePage):
     """Persistent Raid Plan editor with plan-level primary/secondary assignments."""
 
@@ -127,20 +160,14 @@ class RaidPlanAssignmentPage(RaidPlanPersistencePage):
         if not hasattr(self, "assignment_table"):
             return plan
 
-        row_by_seat = {_slug(seat).casefold(): row for row, seat in enumerate(RAID_PLAN_SEATS)}
-        members = []
-        for member in plan.members:
-            row = row_by_seat.get(member.seat_id.casefold())
-            if row is None:
-                members.append(member)
-                continue
-            members.append(
-                member.with_selection(
-                    primary_assignment=self._assignment_text(row, 2) or None,
-                    secondary_assignment=self._assignment_text(row, 3) or None,
-                )
+        assignments = {
+            _slug(seat): (
+                self._assignment_text(row, 2),
+                self._assignment_text(row, 3),
             )
-        return replace(plan, members=tuple(members))
+            for row, seat in enumerate(RAID_PLAN_SEATS)
+        }
+        return merge_plan_assignment_values(plan, assignments)
 
     def apply_plan(self, plan: RaidPlan) -> None:
         super().apply_plan(plan)
@@ -174,4 +201,8 @@ class RaidPlanAssignmentPage(RaidPlanPersistencePage):
         self._update_summary()
 
 
-__all__ = ["RaidPlanAssignmentPage", "raid_plan_assignment_choices"]
+__all__ = [
+    "RaidPlanAssignmentPage",
+    "merge_plan_assignment_values",
+    "raid_plan_assignment_choices",
+]
