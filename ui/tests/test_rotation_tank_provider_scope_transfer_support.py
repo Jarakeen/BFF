@@ -234,7 +234,7 @@ def test_generate_refreshes_provider_scope_before_canonical_generation(monkeypat
 
 
 def test_transfer_support_is_installed_before_main_window_construction():
-    installer = Path("ui/team_optimization_hybrid_anchor_support.py").read_text(
+    installer = Path("ui/application_team_optimization_bootstrap.py").read_text(
         encoding="utf-8"
     )
 
