@@ -141,6 +141,55 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
                 canonical_generate_context_provider
             )
 
+    def showEvent(self, event) -> None:  # noqa: N802 - Qt override
+        try:
+            self._refresh_saved_builds()
+        except Exception as exc:  # navigation must not take the whole app down
+            status = getattr(self, "status", None)
+            if status is not None and hasattr(status, "error"):
+                status.error(f"Could not refresh saved builds for Rotations: {exc}")
+            else:
+                print(f"[FoundryDock] Rotation build refresh failed: {exc}")
+        super().showEvent(event)
+
+    def _refresh_saved_builds(self) -> None:
+        """Reload canonical saved Builds and preserve the current selection."""
+        selected_character = str(self.character_combo.currentData() or "")
+        selected_build = str(self.build_combo.currentText() or "")
+
+        self.roster = self.build_service.load()
+
+        self.character_combo.blockSignals(True)
+        self.character_combo.clear()
+        seen: set[str] = set()
+        for build in self.roster.Members:
+            name = self._character_name(build)
+            key = name.casefold()
+            if key in seen:
+                continue
+            seen.add(key)
+            self.character_combo.addItem(name, name)
+        self.character_combo.blockSignals(False)
+
+        character_index = self.character_combo.findData(selected_character)
+        if character_index < 0 and self.character_combo.count():
+            character_index = 0
+        if character_index >= 0:
+            self.character_combo.setCurrentIndex(character_index)
+
+        build_index = self.build_combo.findText(selected_build)
+        if build_index < 0 and self.build_combo.count():
+            build_index = 0
+        if build_index >= 0:
+            self.build_combo.setCurrentIndex(build_index)
+
+        self._character_changed()
+        if selected_build:
+            build_index = self.build_combo.findText(selected_build)
+            if build_index >= 0:
+                self.build_combo.setCurrentIndex(build_index)
+        self._refresh_build_context()
+
     def _install_canonical_recovery_policy_controls(self) -> None:
         self.rotation_recovery_resource_combo = QComboBox()
         self.rotation_recovery_resource_combo.setMinimumWidth(120)

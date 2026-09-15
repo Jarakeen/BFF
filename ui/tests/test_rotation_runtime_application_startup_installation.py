@@ -11,10 +11,15 @@ def test_runtime_application_support_is_installed_at_app_startup() -> None:
     assert "install_rotation_runtime_application_support()" in source
 
 
-def test_runtime_application_installs_after_rotation_build_refresh_support() -> None:
-    source = Path("ui/application_workspace_bootstrap.py").read_text(encoding="utf-8")
+def test_runtime_application_coexists_with_native_rotation_build_refresh() -> None:
+    bootstrap = Path("ui/application_workspace_bootstrap.py").read_text(
+        encoding="utf-8"
+    )
+    dashboard = Path("ui/rotation_dashboard_canonical_page.py").read_text(
+        encoding="utf-8"
+    )
 
-    refresh_call = source.index("install_rotation_navigation_refresh_support()")
-    runtime_call = source.index("install_rotation_runtime_application_support()")
-
-    assert refresh_call < runtime_call
+    assert "install_rotation_runtime_application_support()" in bootstrap
+    assert "rotation_navigation_refresh_support" not in bootstrap
+    assert "def showEvent(self, event)" in dashboard
+    assert "self._refresh_saved_builds()" in dashboard
