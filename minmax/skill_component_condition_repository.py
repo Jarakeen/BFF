@@ -6,6 +6,8 @@ import re
 import sqlite3
 from pathlib import Path
 
+from services.paths import DATA
+
 from .skill_component_condition import (
     SkillComponentCondition,
     explicit_ordinal_condition_owner,
@@ -15,7 +17,7 @@ from .skill_component_condition import (
 from .skill_component_text_evidence import extract_component_text_evidence
 
 
-DEFAULT_DATABASE = Path(__file__).resolve().parents[1] / "data" / "eso.db"
+DEFAULT_DATABASE = DATA / "eso.db"
 _COLOR_TAG_RE = re.compile(r"\|c[0-9a-fA-F]{6}|\|r")
 
 
