@@ -8,6 +8,7 @@ from services.service_catalog import SERVICE_CATALOG
 from services.application_catalog_descriptors import APPLICATION_SERVICE_DESCRIPTORS
 from services.comp_maker_catalog_descriptors import COMP_MAKER_SERVICE_DESCRIPTORS
 from services.rotation_catalog_descriptors import ROTATION_SERVICE_DESCRIPTORS
+from services.service_catalog_aggregator import ALL_EXTENSION_SERVICE_DESCRIPTORS
 from services.team_prescription_catalog_descriptors import (
     TEAM_PRESCRIPTION_SERVICE_DESCRIPTORS,
 )
@@ -43,6 +44,17 @@ def test_every_exported_descriptor_family_reaches_canonical_catalog() -> None:
     }
 
     assert missing_by_family == {}
+
+
+def test_explicit_extension_aggregator_reaches_canonical_catalog() -> None:
+    catalog_ids = {descriptor.service_id for descriptor in SERVICE_CATALOG.descriptors}
+    missing = sorted(
+        descriptor.service_id
+        for descriptor in ALL_EXTENSION_SERVICE_DESCRIPTORS
+        if descriptor.service_id not in catalog_ids
+    )
+
+    assert missing == []
 
 
 def test_canonical_catalog_service_ids_are_globally_unique() -> None:
