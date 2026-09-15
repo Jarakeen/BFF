@@ -106,7 +106,7 @@ def _raw(tmp_path):
                 "targetID": 21,
                 "sourceIsFriendly": True,
                 "targetIsFriendly": True,
-                "abilityGameID": 193807,
+                "abilityGameID": 129434,
                 "ability": {"name": "Budding Seeds"},
                 "tick": True,
             }
@@ -135,6 +135,7 @@ def test_extraction_matches_numeric_alias_from_canonical_skill_identity(tmp_path
     )
 
     assert extractor.ability_ids_for_target(target) == (93807, 193807)
+    assert extractor.periodic_effect_ids_for_target(target) == (129434,)
 
     report = extractor.extract(
         _raw(tmp_path),
