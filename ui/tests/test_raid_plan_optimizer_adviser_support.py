@@ -41,3 +41,16 @@ def test_adviser_support_is_installed_before_main_window_builds_optimization_pag
     install_pos = source.index("install_raid_plan_optimizer_adviser_support()")
     wrap_pos = source.index("_ORIGINAL_BUILD_UI = MainWindow.build_ui")
     assert install_pos < wrap_pos
+
+
+def test_raid_plan_header_keeps_context_while_actions_move_to_workspace_card() -> None:
+    source = Path("ui/raid_plan_adviser_page.py").read_text(encoding="utf-8")
+
+    assert 'FoundryCard("Plan Controls", "checklist")' in source
+    assert "self.header.context_layout.removeWidget(saved_host)" in source
+    assert "self.header.context_layout.removeWidget(coverage_button)" in source
+    assert 'QPushButton("Load")' in source
+    assert 'QPushButton("Save")' in source
+    assert 'QPushButton("Delete")' in source
+    assert '"Check Plan Coverage"' in source
+    assert "self.workspace_layout.insertWidget(0, card)" in source
