@@ -6,12 +6,14 @@ import sqlite3
 
 from minmax.skill_coefficient_repository import SkillCoefficientRepository
 from minmax.skill_component_classification import SkillEffectKind
-from minmax.skill_component_repository import SkillComponentRepository
 from minmax.skill_component_text_evidence import (
     SkillComponentTextEvidence,
     extract_component_text_evidence,
 )
 from models.build_model import PlayerBuild
+from services.rotation_dd_reviewed_skill_component_repository import (
+    RotationDDReviewedSkillComponentRepository,
+)
 
 
 @dataclass(frozen=True)
@@ -72,12 +74,13 @@ class RotationDDComponentIdentityGapReport:
 
 
 class RotationDDComponentIdentityGapService:
-    """Compare coefficient-local damage text with persisted DD component identity.
+    """Compare coefficient-local damage text with canonical reviewed DD identity.
 
     This is a read-only audit service. Coefficient text may identify review
     candidates, but it never writes or silently promotes canonical classification.
-    That keeps Rotation Builder execution fail-closed while exposing exact
-    skill-rank/coefficient coordinates for missing DD damage/periodic identities.
+    The default component view includes Rotation's exact reviewed DD overlay so a
+    previously reviewed rank/coefficient does not remain a permanent false-positive
+    merely because the raw database classification has not been promoted yet.
     """
 
     def __init__(
@@ -85,13 +88,13 @@ class RotationDDComponentIdentityGapService:
         database_path: str | Path,
         *,
         coefficient_repository: SkillCoefficientRepository | None = None,
-        component_repository: SkillComponentRepository | None = None,
+        component_repository: object | None = None,
     ) -> None:
         self.database_path = Path(database_path)
         self.coefficients = coefficient_repository or SkillCoefficientRepository(
             self.database_path
         )
-        self.components = component_repository or SkillComponentRepository(
+        self.components = component_repository or RotationDDReviewedSkillComponentRepository(
             self.database_path
         )
 
