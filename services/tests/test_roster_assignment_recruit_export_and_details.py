@@ -63,7 +63,7 @@ def test_assignment_details_prefer_structured_fields_with_legacy_text_fallback()
 
 
 def test_assignment_details_are_installed_after_generated_roster_support() -> None:
-    source = Path("ui/team_optimization_hybrid_anchor_support.py").read_text(
+    source = Path("ui/application_team_optimization_bootstrap.py").read_text(
         encoding="utf-8"
     )
 
