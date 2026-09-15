@@ -13,9 +13,13 @@ class ExtremeActualHealGearSetCandidateService:
     """Materialize reviewed ordinary five-piece set mutations for actual-heal search.
 
     This service does not rank set tooltip deltas as final answers. It uses the
-    reviewed gear-set objective layer only to build a bounded candidate pool, then
-    writes the set onto real body slots so the whole build can be reevaluated by
-    the canonical context factory.
+    reviewed gear-set objective layer to discover mechanic-complete candidate sets,
+    then writes each set onto real body slots so the whole build can be reevaluated
+    by the canonical context factory.
+
+    Authoritative H1 search is exhaustive across the reviewed ordinary five-piece
+    universe. ``per_objective`` is optional and exists only for focused callers or
+    tests that deliberately want a bounded sample; production callers omit it.
 
     Candidate discovery includes generic healing/critical/power stats plus all
     three maximum-resource families because legal heals may scale from Health,
@@ -46,10 +50,14 @@ class ExtremeActualHealGearSetCandidateService:
     def __init__(self, database_path: str | Path) -> None:
         self.repository = GearSetRepository(database_path)
 
-    def candidate_set_names(self, *, per_objective: int = 12) -> tuple[str, ...]:
+    def candidate_set_names(
+        self,
+        *,
+        per_objective: int | None = None,
+    ) -> tuple[str, ...]:
         names: list[str] = []
         seen: set[str] = set()
-        limit = max(1, int(per_objective))
+        limit = None if per_objective is None else max(1, int(per_objective))
 
         rows_by_objective = {
             objective: ExtremeGearSetObjectiveService.candidates_for_objective(
@@ -87,7 +95,7 @@ class ExtremeActualHealGearSetCandidateService:
                     seen.add(key)
                     names.append(row.set_name)
                 accepted += 1
-                if accepted >= limit:
+                if limit is not None and accepted >= limit:
                     break
         return tuple(names)
 
@@ -97,7 +105,7 @@ class ExtremeActualHealGearSetCandidateService:
         *,
         character_id: str,
         baseline_build_id: str,
-        per_objective: int = 12,
+        per_objective: int | None = None,
     ) -> tuple[BuildCandidate, ...]:
         result: list[BuildCandidate] = []
         current_primary = {
