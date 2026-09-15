@@ -95,7 +95,7 @@ class RotationRuntimeTriggerConditionService:
         pending_intents = tuple(intents)
         observed = tuple(observations)
 
-        observation_by_key: dict[str, RotationRuntimeTriggerObservation] = {}
+        observations_by_key: dict[str, list[RotationRuntimeTriggerObservation]] = {}
         rejected: list[str] = []
         for row in observed:
             if not row.authoritative:
@@ -103,10 +103,10 @@ class RotationRuntimeTriggerConditionService:
                     f"{row.trigger_key}: observation is not authoritative runtime evidence"
                 )
                 continue
-            key = row.trigger_key.casefold()
-            existing = observation_by_key.get(key)
-            if existing is None or row.observed_at_seconds < existing.observed_at_seconds:
-                observation_by_key[key] = row
+            observations_by_key.setdefault(row.trigger_key.casefold(), []).append(row)
+
+        for rows in observations_by_key.values():
+            rows.sort(key=lambda row: float(row.observed_at_seconds))
 
         activated: list[RotationRuntimeActivatedIntent] = []
         still_pending: list[RotationRuntimeTriggeredIntent] = []
@@ -118,24 +118,32 @@ class RotationRuntimeTriggerConditionService:
                 continue
             seen_intents.add(identity)
 
-            observation = observation_by_key.get(intent.trigger_key.casefold())
-            if observation is None:
+            candidates = tuple(observations_by_key.get(intent.trigger_key.casefold(), ()))
+            if not candidates:
                 still_pending.append(intent)
                 continue
 
-            mismatch = self._scope_mismatch(intent, observation)
+            compatible = tuple(
+                row for row in candidates if self._scope_mismatch(intent, row) is None
+            )
+            if compatible:
+                observation = compatible[0]
+                activated.append(
+                    RotationRuntimeActivatedIntent(
+                        intent=intent,
+                        activated_at_seconds=observation.observed_at_seconds,
+                        trigger_source=observation.source,
+                    )
+                )
+                continue
+
+            # Authoritative evidence exists for this trigger key, but every observed
+            # occurrence is scoped to a different encounter/plan/seat. Preserve one
+            # deterministic mismatch explanation while leaving the intent pending.
+            mismatch = self._scope_mismatch(intent, candidates[0])
             if mismatch is not None:
                 rejected.append(mismatch)
-                still_pending.append(intent)
-                continue
-
-            activated.append(
-                RotationRuntimeActivatedIntent(
-                    intent=intent,
-                    activated_at_seconds=observation.observed_at_seconds,
-                    trigger_source=observation.source,
-                )
-            )
+            still_pending.append(intent)
 
         return RotationRuntimeTriggerResolution(
             activated=tuple(activated),
