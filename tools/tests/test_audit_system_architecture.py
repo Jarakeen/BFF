@@ -62,13 +62,14 @@ def test_repo_contract_detector_flags_hidden_build_persistence_authority(tmp_pat
     assert "package-import-side-effect" in codes
 
 
-def test_current_repo_audit_surfaces_priority_authority_debt() -> None:
+def test_current_repo_audit_confirms_persistence_fix_and_surfaces_remaining_debt() -> None:
     root = Path(__file__).resolve().parents[2]
 
     result = audit_system_architecture(root=root)
     codes = {row.code for row in result.findings}
 
-    assert "build-persistence-authority-bypass" in codes
+    assert "build-persistence-authority-bypass" not in codes
+    assert "package-import-side-effect" not in codes
     assert "overlapping-plan-persistence" in codes
     assert "raid-plan-name-based-build-identity" in codes
     assert "catalog-family-transitive-aggregation" in codes
