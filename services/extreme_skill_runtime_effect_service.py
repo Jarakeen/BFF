@@ -5,6 +5,12 @@ from __future__ import annotations
 This service is role-neutral. It reuses canonical SkillEffectRepository rows and the
 Phase 7 ordered runtime stream, then separates named combat buffs from other timed
 EffectVariants. It owns no objective scoring and invents no skill semantics.
+
+When bar-tagged attempts are available, trigger eligibility is evaluated against the
+skill bar that was active when each attempt occurred. This prevents a persistent
+back-bar-triggered effect from disappearing merely because the snapshot itself is
+later evaluated on the front bar. Untagged attempts remain a compatibility fallback
+for older callers that do not carry bar provenance.
 """
 
 from dataclasses import dataclass
@@ -19,6 +25,7 @@ from minmax.runtime_effect_window import partition_runtime_effect_windows
 from minmax.skill_effect_repository import SkillEffectRepository
 from minmax.support_target_type import SupportTargetType
 from models.build_model import PlayerBuild
+from services.extreme_runtime_bar_effect_attempt import ExtremeRuntimeBarEffectAttempt
 
 
 @dataclass(frozen=True)
@@ -57,6 +64,15 @@ class ExtremeSkillRuntimeEffectService:
             return None
         return canonical
 
+    @staticmethod
+    def _skills_for_bar(build: PlayerBuild, bar: str) -> set[str]:
+        attr = "BackBarSkills" if bar == "back" else "FrontBarSkills"
+        return {
+            str(value or "").strip().casefold()
+            for value in list(getattr(build, attr))[:5]
+            if str(value or "").strip()
+        }
+
     def resolve_history(
         self,
         build: PlayerBuild,
@@ -64,19 +80,18 @@ class ExtremeSkillRuntimeEffectService:
         active_bar: str,
         attempts: tuple[RuntimeEffectEventAttempt, ...],
         snapshot_time_seconds: float,
+        bar_attempts: tuple[ExtremeRuntimeBarEffectAttempt, ...] = (),
     ) -> ExtremeSkillRuntimeEffectResult:
         snapshot = float(snapshot_time_seconds)
-        attr = (
-            "BackBarSkills"
+        snapshot_bar = (
+            "back"
             if str(active_bar or "front").strip().casefold() == "back"
-            else "FrontBarSkills"
+            else "front"
         )
-        slotted = {
-            str(value or "").strip().casefold()
-            for value in list(getattr(build, attr))[:5]
-            if str(value or "").strip()
-        }
-        if not slotted or not attempts:
+        front_skills = self._skills_for_bar(build, "front")
+        back_skills = self._skills_for_bar(build, "back")
+        all_slotted = front_skills | back_skills
+        if not all_slotted or (not attempts and not bar_attempts):
             return ExtremeSkillRuntimeEffectResult()
 
         available = {
@@ -87,17 +102,44 @@ class ExtremeSkillRuntimeEffectService:
         active_effects: list[EffectVariant] = []
         unresolved: list[str] = []
 
-        relevant_attempts = tuple(
+        legacy_attempts = tuple(
             attempt
             for attempt in attempts
             if float(attempt.event.time_seconds) <= snapshot + 1e-12
         )
-        for skill_name in sorted(slotted):
+        tagged_attempts = tuple(
+            row
+            for row in bar_attempts
+            if float(row.attempt.event.time_seconds) <= snapshot + 1e-12
+        )
+
+        for skill_name in sorted(all_slotted):
             ability_id = available.get(skill_name)
             if ability_id is None:
                 continue
+            skill_bars = {
+                bar
+                for bar, slotted in (("front", front_skills), ("back", back_skills))
+                if skill_name in slotted
+            }
             for effect in self.repository.resolve(ability_id):
                 if not self._is_runtime_candidate(effect):
+                    continue
+
+                if tagged_attempts:
+                    relevant_attempts = tuple(
+                        row.attempt
+                        for row in tagged_attempts
+                        if row.active_bar in skill_bars
+                    )
+                else:
+                    # Compatibility path: without historical bar provenance, only
+                    # the snapshot-active bar can honestly prove the skill was slotted.
+                    if snapshot_bar not in skill_bars:
+                        continue
+                    relevant_attempts = legacy_attempts
+
+                if not relevant_attempts:
                     continue
                 stream = process_effect_variant_runtime_stream(relevant_attempts, effect)
                 for step in stream.unresolved_steps:
