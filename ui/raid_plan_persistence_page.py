@@ -19,8 +19,8 @@ from services.raid_plan_member_identity_resolution_service import (
     RaidPlanMemberIdentityResolutionService,
 )
 from services.raid_plan_repository import RaidPlanRepository, RaidPlanRepositoryError
-from ui.raid_plan_character_selection_page import RaidPlanCharacterSelectionPage
 from ui.raid_plan_page import RAID_PLAN_SEATS, _clean, _slug
+from ui.raid_plan_stable_identity_selection_page import RaidPlanStableIdentitySelectionPage
 
 
 def merge_visible_plan_with_loaded_snapshot(visible: RaidPlan, loaded: RaidPlan | None) -> RaidPlan:
@@ -76,7 +76,7 @@ def merge_visible_plan_with_loaded_snapshot(visible: RaidPlan, loaded: RaidPlan 
     )
 
 
-class RaidPlanPersistencePage(RaidPlanCharacterSelectionPage):
+class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
     """Raid Plan editor with durable named-plan save/load controls."""
 
     def __init__(self, parent=None) -> None:
