@@ -105,7 +105,10 @@ def test_assignment_page_does_not_depend_on_roster_assignment_context_service() 
 def test_raid_engine_registers_assignment_aware_raid_plan_page() -> None:
     from pathlib import Path
 
-    source = Path("ui/raid_engine_dashboard_support.py").read_text(encoding="utf-8")
+    route_source = Path("ui/raid_engine_dashboard_support.py").read_text(encoding="utf-8")
+    coverage_source = Path("ui/raid_plan_coverage_page.py").read_text(encoding="utf-8")
 
-    assert "from ui.raid_plan_assignment_page import RaidPlanAssignmentPage" in source
-    assert "raid_plans = RaidPlanAssignmentPage()" in source
+    assert "from ui.raid_plan_coverage_page import RaidPlanCoveragePage" in route_source
+    assert "raid_plans = RaidPlanCoveragePage()" in route_source
+    assert "from ui.raid_plan_assignment_page import RaidPlanAssignmentPage" in coverage_source
+    assert "class RaidPlanCoveragePage(RaidPlanAssignmentPage):" in coverage_source
