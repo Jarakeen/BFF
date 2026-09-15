@@ -9,6 +9,6 @@ def test_characters_tab_hides_assignment_header_filters_only():
 
 
 def test_character_header_context_support_installs_after_roster_composition():
-    source = Path("ui/operations_console_schedule_support.py").read_text(encoding="utf-8")
+    source = Path("ui/application_workspace_bootstrap.py").read_text(encoding="utf-8")
     assert 'install_roster_characters_header_context_support()' in source
     assert source.index('install_roster_team_assignment_filter_support()') < source.index('install_roster_characters_header_context_support()')
