@@ -16,6 +16,7 @@ from services.eso_database import EsoDatabase
 from services.reference_data_service import ReferenceDataService
 from ui.components.foundry_card import FoundryCard
 from ui.phase5_potion_picker_support import _choices, _configure_search
+from ui.rotation_builder_v2_finish_support import install_rotation_builder_v2_finish
 from ui.rotation_builder_v2_layout_support import install_rotation_builder_v2_layout
 
 
@@ -246,6 +247,7 @@ def install_rotation_dashboard_layout(page) -> None:
     _rebuild_consumables(page)
     page._refresh_build_context()
     install_rotation_builder_v2_layout(page)
+    install_rotation_builder_v2_finish(page)
 
 
 __all__ = ["install_rotation_dashboard_layout", "refresh_rotation_consumables"]
