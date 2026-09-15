@@ -88,7 +88,7 @@ def test_esologs_snapshot_support_preserves_coherent_player_rows() -> None:
 
 
 def test_esologs_snapshot_candidates_install_after_trial_routing() -> None:
-    installer = Path("ui/team_optimization_hybrid_anchor_support.py").read_text(
+    installer = Path("ui/application_team_optimization_bootstrap.py").read_text(
         encoding="utf-8"
     )
 
