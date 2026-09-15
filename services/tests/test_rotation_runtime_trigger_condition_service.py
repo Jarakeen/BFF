@@ -109,6 +109,31 @@ def test_earliest_authoritative_matching_observation_wins() -> None:
     assert result.activated[0].trigger_source == "first authoritative observer event"
 
 
+def test_earlier_wrong_scope_does_not_block_later_compatible_observation() -> None:
+    intent = _intent()
+    result = RotationRuntimeTriggerConditionService().resolve(
+        intents=(intent,),
+        observations=(
+            _observation(
+                observed_at_seconds=36.0,
+                source="main tank actor observation",
+                source_seat_id="main-tank",
+            ),
+            _observation(
+                observed_at_seconds=37.25,
+                source="off tank actor observation",
+                source_seat_id="off-tank",
+            ),
+        ),
+    )
+
+    assert result.pending == ()
+    assert result.rejected_observations == ()
+    assert len(result.activated) == 1
+    assert result.activated[0].activated_at_seconds == pytest.approx(37.25)
+    assert result.activated[0].trigger_source == "off tank actor observation"
+
+
 def test_observation_time_must_be_real_runtime_time() -> None:
     with pytest.raises(ValueError, match="finite and non-negative"):
         _observation(observed_at_seconds=float("nan"))
