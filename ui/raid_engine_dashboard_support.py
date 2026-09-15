@@ -129,6 +129,21 @@ def _open_raid_plan_rotation(window, plan, seat_id: str) -> None:
     window.show_page("rotations")
 
 
+def _open_raid_plan_adviser(window, plan) -> None:
+    adviser = window.pages.get("console:6")
+    if adviser is None or not hasattr(adviser, "set_raid_plan_adviser_scope"):
+        return
+    try:
+        adviser.set_raid_plan_adviser_scope(plan)
+    except (OSError, TypeError, ValueError) as exc:
+        raid_plans = window.pages.get("raid_plans")
+        status = getattr(raid_plans, "status", None)
+        if status is not None:
+            status.warning(f"Could not review Raid Plan in Optimizer Adviser: {exc}")
+        return
+    window.show_page("console:6")
+
+
 def _register_page(window, route: str, page) -> None:
     window.pages[route] = page
     container = window.wrap_page(page)
@@ -141,7 +156,7 @@ def _build_ui_with_raid_engine_dashboard(self) -> None:
     _ORIGINAL_BUILD_UI(self)
 
     from ui.raid_engine_dashboard_page import RaidEngineDashboardPage
-    from ui.raid_plan_rotation_page import RaidPlanRotationPage
+    from ui.raid_plan_adviser_page import RaidPlanAdviserPage
 
     dashboard = RaidEngineDashboardPage()
     dashboard.set_sources(
@@ -156,12 +171,13 @@ def _build_ui_with_raid_engine_dashboard(self) -> None:
     dashboard.helpRequested.connect(lambda: _open_dashboard_help(self))
     _register_page(self, "raid_engine_dashboard", dashboard)
 
-    raid_plans = RaidPlanRotationPage()
+    raid_plans = RaidPlanAdviserPage()
     raid_plans.pageRequested.connect(self.show_page)
     raid_plans.coverageRequested.connect(lambda plan: _open_raid_plan_coverage(self, plan))
     raid_plans.rotationRequested.connect(
         lambda plan, seat_id: _open_raid_plan_rotation(self, plan, seat_id)
     )
+    raid_plans.adviserRequested.connect(lambda plan: _open_raid_plan_adviser(self, plan))
     _register_page(self, "raid_plans", raid_plans)
 
 
@@ -175,10 +191,12 @@ def install() -> None:
         install as install_build_screenshot_import_disable_support,
     )
     from ui.coverage_raid_plan_scope_support import install as install_coverage_raid_plan_scope_support
+    from ui.raid_plan_optimizer_adviser_support import install as install_raid_plan_optimizer_adviser_support
 
-    # CoveragePage is created by MainWindow's original build_ui, so extend the class
-    # before that UI is constructed.
+    # CoveragePage and OptimizationPage are created by MainWindow's original build_ui,
+    # so extend both classes before that UI is constructed.
     install_coverage_raid_plan_scope_support()
+    install_raid_plan_optimizer_adviser_support()
     _install_sidebar_route()
     _install_read_only_dashboard_refresh()
     from ui.raid_engine_dashboard_polish_support import install as install_dashboard_polish
