@@ -7,14 +7,10 @@ mechanic-complete reviewed five-piece universe. An optional bounded comparison i
 retained only to measure what the retired shortlist policy would have omitted.
 
 This audit enumerates the complete canonical GearSetRepository universe against
-the exact H1 objective families used by the candidate service. It distinguishes:
-
-* sets incapable of reaching a useful five-piece threshold;
-* sets with at least one reviewed positive H1 contribution;
-* sets whose potentially relevant mechanics remain unresolved;
-* mechanic-complete reviewed-positive sets selected by authoritative exhaustive search;
-* any authoritative omissions, which are proof failures; and
-* optional omissions caused by a deliberately bounded comparison policy.
+the exact H1 objective families used by the candidate service. Shared objective
+blockers are interpreted through the same H1 contextual relevance rule as
+production discovery, so damage-type ability scopes that cannot affect a healing
+event do not remain false denominator blockers.
 
 It does not score whole builds and does not claim that the gear-family denominator
 is globally complete across monster sets, mythics, arena weapons, or runtime procs.
@@ -97,7 +93,7 @@ def build_ordinary_gear_denominator(
                 )
                 if candidate.reviewed_delta > 0:
                     positive.append(objective)
-                if candidate.unresolved:
+                if not service._h1_mechanic_complete(candidate):
                     unresolved.append(objective)
 
         key = gear_set.name.casefold()
