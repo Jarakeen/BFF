@@ -27,11 +27,11 @@ def _clean(value: object) -> str:
 
 
 def _build_character_name(build: PlayerBuild) -> str:
-    return _clean(getattr(build, "CharacterName", None) or getattr(build, "Name", None))
+    return _clean(build.Name)
 
 
 def _build_name(build: PlayerBuild) -> str:
-    return _clean(getattr(build, "BuildName", None) or getattr(build, "Name", None))
+    return _clean(build.BuildName)
 
 
 class RotationGenerateRoleEvidenceComposer(Protocol):
