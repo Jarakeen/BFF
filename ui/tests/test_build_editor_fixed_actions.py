@@ -1,14 +1,18 @@
 from pathlib import Path
 
-from ui import character_creation_easy_mode_support
+from ui import character_creation_easy_mode_support, phase5_build_ui_support
 
 
-def _source() -> str:
+def _easy_mode_source() -> str:
     return Path(character_creation_easy_mode_support.__file__).read_text(encoding="utf-8")
 
 
+def _phase5_source() -> str:
+    return Path(phase5_build_ui_support.__file__).read_text(encoding="utf-8")
+
+
 def test_build_save_and_cancel_live_in_fixed_page_action_bar() -> None:
-    source = _source()
+    source = _easy_mode_source()
 
     assert 'FoundryButton(\n            "Cancel", role=ButtonRole.SECONDARY, compact=True' in source
     assert 'FoundryButton(\n            "Save Build", role=ButtonRole.PRIMARY, compact=True' in source
@@ -19,7 +23,7 @@ def test_build_save_and_cancel_live_in_fixed_page_action_bar() -> None:
 
 
 def test_boss_alternates_keeps_only_contextual_add_action() -> None:
-    source = _source()
+    source = _easy_mode_source()
 
     assert "for button in (add_build, save, cancel):" in source
     assert "button.deleteLater()" in source
@@ -29,9 +33,15 @@ def test_boss_alternates_keeps_only_contextual_add_action() -> None:
     assert "row.addWidget(cancel)" not in boss_section
 
 
-def test_finish_endgame_gear_sets_truly_superb_enchantment_tier() -> None:
-    source = _source()
+def test_phase5_owns_complete_finish_endgame_gear_action() -> None:
+    phase5 = _phase5_source()
+    easy_mode = _easy_mode_source()
 
-    assert "original_finish_endgame_gear(self)" in source
-    assert 'row.enchant_tier_combo.setCurrentText("Truly Superb")' in source
-    assert "phase5_build_ui_support._finish_endgame_gear = _finish_endgame_gear" in source
+    assert 'row.quality_combo.setCurrentText("Gold")' in phase5
+    assert 'row.level_combo.setCurrentText("CP160")' in phase5
+    assert 'row.enchant_tier_combo.setCurrentText("Truly Superb")' in phase5
+    assert "BuildEditor.finish_endgame_gear = _finish_endgame_gear" in phase5
+
+    assert "BuildEditor.finish_endgame_gear =" not in easy_mode
+    assert "original_finish_endgame_gear" not in easy_mode
+    assert "phase5_build_ui_support._finish_endgame_gear =" not in easy_mode
