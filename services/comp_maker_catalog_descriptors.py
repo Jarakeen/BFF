@@ -2,51 +2,16 @@ from __future__ import annotations
 
 """Explicit Comp Maker and Team Optimization service catalog descriptors.
 
-This module contains metadata only. It must not import, instantiate, or execute the
-services it describes. Runtime code continues to use typed imports and explicit
-dependency wiring.
+This module contains metadata only for the Comp Maker / Team Optimization domain.
+Whole-catalog aggregation lives in ``services.service_catalog_aggregator`` so this
+family does not transitively own unrelated RaidPlan, Extreme, Rotation, or Team
+Workflow descriptor families.
 """
 
 from services.service_catalog import (
     EvidenceClass,
     ServiceBehavior,
     ServiceDescriptor,
-)
-from services.extreme_catalog_descriptors import EXTREME_SERVICE_DESCRIPTORS
-from services.extreme_health_recovery_catalog_descriptors import (
-    EXTREME_HEALTH_RECOVERY_SERVICE_DESCRIPTORS,
-)
-from services.extreme_recovery_catalog_descriptors import EXTREME_RECOVERY_SERVICE_DESCRIPTORS
-from services.extreme_weapon_damage_catalog_descriptors import (
-    EXTREME_WEAPON_DAMAGE_SERVICE_DESCRIPTORS,
-)
-from services.raid_plan_catalog_descriptors import RAID_PLAN_SERVICE_DESCRIPTORS
-from services.rotation_catalog_descriptors import ROTATION_SERVICE_DESCRIPTORS
-from services.rotation_dd_catalog_descriptors import ROTATION_DD_SERVICE_DESCRIPTORS
-from services.rotation_dd_periodic_catalog_descriptors import (
-    ROTATION_DD_PERIODIC_SERVICE_DESCRIPTORS,
-)
-from services.rotation_gameplay_policy_catalog_descriptors import (
-    ROTATION_GAMEPLAY_POLICY_SERVICE_DESCRIPTORS,
-)
-from services.rotation_observation_catalog_descriptors import (
-    ROTATION_OBSERVATION_SERVICE_DESCRIPTORS,
-)
-from services.rotation_runtime_integration_catalog_descriptors import (
-    ROTATION_RUNTIME_INTEGRATION_SERVICE_DESCRIPTORS,
-)
-from services.rotation_tank_catalog_descriptors import ROTATION_TANK_SERVICE_DESCRIPTORS
-from services.rotation_tank_integration_catalog_descriptors import (
-    ROTATION_TANK_INTEGRATION_SERVICE_DESCRIPTORS,
-)
-from services.team_prescription_catalog_descriptors import (
-    TEAM_PRESCRIPTION_SERVICE_DESCRIPTORS,
-)
-from services.team_provider_catalog_descriptors import (
-    TEAM_PROVIDER_SERVICE_DESCRIPTORS,
-)
-from services.team_workflow_catalog_descriptors import (
-    TEAM_WORKFLOW_SERVICE_DESCRIPTORS,
 )
 
 
@@ -149,22 +114,6 @@ COMP_MAKER_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.POLICY,
         notes="Comparison is bounded to static capability presence, redundancy, gaps, conditional sources, recruits, and evidence boundaries.",
     ),
-    *RAID_PLAN_SERVICE_DESCRIPTORS,
-    *EXTREME_SERVICE_DESCRIPTORS,
-    *EXTREME_HEALTH_RECOVERY_SERVICE_DESCRIPTORS,
-    *EXTREME_RECOVERY_SERVICE_DESCRIPTORS,
-    *EXTREME_WEAPON_DAMAGE_SERVICE_DESCRIPTORS,
-    *ROTATION_SERVICE_DESCRIPTORS,
-    *ROTATION_DD_SERVICE_DESCRIPTORS,
-    *ROTATION_DD_PERIODIC_SERVICE_DESCRIPTORS,
-    *ROTATION_GAMEPLAY_POLICY_SERVICE_DESCRIPTORS,
-    *ROTATION_OBSERVATION_SERVICE_DESCRIPTORS,
-    *ROTATION_RUNTIME_INTEGRATION_SERVICE_DESCRIPTORS,
-    *ROTATION_TANK_SERVICE_DESCRIPTORS,
-    *ROTATION_TANK_INTEGRATION_SERVICE_DESCRIPTORS,
-    *TEAM_PRESCRIPTION_SERVICE_DESCRIPTORS,
-    *TEAM_PROVIDER_SERVICE_DESCRIPTORS,
-    *TEAM_WORKFLOW_SERVICE_DESCRIPTORS,
 )
 
 
