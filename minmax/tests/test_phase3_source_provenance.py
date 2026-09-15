@@ -1,6 +1,11 @@
 from __future__ import annotations
 
-from minmax.source_provenance import load_source_provenance
+from minmax.source_provenance import DEFAULT_SOURCE_MANIFEST, load_source_provenance
+from services.paths import DATA
+
+
+def test_source_manifest_default_uses_canonical_data_root():
+    assert DEFAULT_SOURCE_MANIFEST == DATA / "source_manifest.json"
 
 
 def test_skill_coefficient_source_keeps_unknown_version_fields_explicit():
