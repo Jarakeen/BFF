@@ -39,6 +39,20 @@ Before moving a live file into a quarantine directory, establish all of the foll
 
 A file may remain in `deprecated/` for a long time. That is preferable to deleting a helper later discovered to be required by an old install, repair tool, or compatibility path.
 
+## Retirement inventory audit
+
+`tools/audit_code_retirement.py` reports static inbound-import evidence for named Python files before they are moved. It distinguishes production runtime consumers from tools, tests, and already quarantined consumers.
+
+Its statuses are intentionally conservative:
+
+- `LIVE_RUNTIME`: at least one production runtime module imports the candidate; do not quarantine it yet.
+- `TOOLING_ONLY`: no runtime importer was found, but one or more tools still import it; inspect whether it belongs in `migration/` or `legacy/`.
+- `TEST_ONLY`: only tests import it; inspect whether those tests are historical compatibility checks before moving it.
+- `QUARANTINE_REFERENCED`: only already quarantined code imports it.
+- `STATIC_ORPHAN_CANDIDATE`: no static Python import was found. This is a review candidate, not proof that the file is dead.
+
+The audit cannot prove absence of dynamic imports, installer registration, string-based references, subprocess entry points, Qt signal wiring, or persisted-data dependencies. Those must still be reviewed before a move or deletion.
+
 ## Import boundary
 
 Normal runtime roots are `engine/`, `minmax/`, `models/`, `services/`, and `ui/`.
