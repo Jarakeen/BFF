@@ -1,4 +1,7 @@
+from pathlib import Path
+
 from models.raid_plan import RaidPlan, RaidPlanMember, RaidPlanTriggeredResponsibility
+from ui import raid_plan_persistence_page
 from ui.raid_plan_persistence_page import merge_visible_plan_with_loaded_snapshot
 
 
@@ -18,6 +21,7 @@ def test_save_merge_preserves_hidden_assignment_and_triggered_state() -> None:
                 character_name="Magrat",
                 role="Healer",
                 eso_class="Warden",
+                selected_build_id="df-healer-id",
                 selected_build_name="DF Healer",
                 primary_assignment="Group Healer",
                 secondary_assignment="Portal Backup",
@@ -46,6 +50,7 @@ def test_save_merge_preserves_hidden_assignment_and_triggered_state() -> None:
                 character_name="Magrat",
                 role="Healer",
                 eso_class="Warden",
+                selected_build_id="rojo-healer-id",
                 selected_build_name="ROJO Healer",
             ),
         ),
@@ -55,6 +60,7 @@ def test_save_merge_preserves_hidden_assignment_and_triggered_state() -> None:
 
     member = merged.member("healer-1")
     assert member is not None
+    assert member.selected_build_id == "rojo-healer-id"
     assert member.selected_build_name == "ROJO Healer"
     assert member.roster_member_id == 7
     assert member.character_id == "magrat-id"
@@ -64,6 +70,15 @@ def test_save_merge_preserves_hidden_assignment_and_triggered_state() -> None:
     assert merged.team_name == "Performance Mode"
     assert merged.status == "active"
     assert merged.triggered_responsibilities == loaded.triggered_responsibilities
+
+
+def test_persistence_page_binds_and_restores_stable_build_id_before_name_fallback() -> None:
+    source = Path(raid_plan_persistence_page.__file__).read_text(encoding="utf-8")
+
+    assert "selected_build_id=selected_ids.get(member.seat_id.casefold())" in source
+    assert 'build_id = _clean(getattr(self.saved_builds[saved_index], "BuildId", ""))' in source
+    assert "if member.selected_build_id:" in source
+    assert "if not matched and member.selected_build_name:" in source
 
 
 def test_hidden_member_state_is_not_carried_to_a_different_player() -> None:
