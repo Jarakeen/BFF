@@ -117,6 +117,7 @@ def install() -> None:
     from ui.rotation_dashboard_layout_support import install as install_rotation_dashboard_layout_support
     from ui.build_rotation_artifact_support import install as install_build_rotation_artifact_support
     from ui.rotation_navigation_refresh_support import install as install_rotation_navigation_refresh_support
+    from ui.rotation_runtime_application_support import install as install_rotation_runtime_application_support
     from ui.user_workspace_polish_support import install as install_user_workspace_polish_support
     from ui.roster_team_assignment_filter_support import install as install_roster_team_assignment_filter_support
     from ui.roster_encounter_assignment_context_support import install as install_roster_encounter_assignment_context_support
@@ -176,6 +177,10 @@ def install() -> None:
     # Rotations is a long-lived page. Re-entering it after Build edits/imports
     # reloads canonical saved-build state instead of holding startup-era objects.
     install_rotation_navigation_refresh_support()
+    # Runtime observations belong to the final canonical Rotation page, not a
+    # parallel live-combat screen. Install the explicit observation adapter here so
+    # every page instance can apply authoritative triggers to its exact generated plan.
+    install_rotation_runtime_application_support()
     install_user_workspace_polish_support()
     install_roster_team_assignment_filter_support()
     # One simple Boss selector sits beside the team selector. Team Default stays
