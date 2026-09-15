@@ -24,7 +24,7 @@ def test_strategy_engine_remains_installed_but_button_is_hidden_from_main_workfl
     support = Path("ui/comp_builder_strategy_support.py").read_text(encoding="utf-8")
     controls = Path("ui/comp_builder_main_controls_support.py").read_text(encoding="utf-8")
     layout = Path("ui/comp_builder_layout_support.py").read_text(encoding="utf-8")
-    installer = Path("ui/team_optimization_hybrid_anchor_support.py").read_text(encoding="utf-8")
+    installer = Path("ui/application_team_optimization_bootstrap.py").read_text(encoding="utf-8")
 
     assert 'setProperty("compInterestingStrategy", True)' in support
     assert 'button = getattr(page, "comp_interesting_strategy_button", None)' in controls
