@@ -7,6 +7,11 @@ those exact widgets after page construction so canonical Generate keeps reading
 the same objects and values rather than a presentation-layer copy. It also keeps
 Rotation consumables synchronized with the selected saved build while using the
 same canonical crafted/named potion catalogs as the Build Editor.
+
+Advanced encounter-aware policy controls are intentionally hidden for now. Their
+canonical widgets remain alive but are reset to their unset values so Generate
+stays on the baseline deterministic Rotation Maker path until advanced mode is
+explicitly restored.
 """
 
 from PySide6.QtCore import Qt
@@ -59,6 +64,34 @@ def _field(page, title: str):
     return page._field_label(title)
 
 
+def _disable_advanced_rotation_mode(page) -> None:
+    """Hide/reset the encounter-aware controls that opt Generate into strict mode."""
+    page.rotation_advanced_mode_enabled = False
+
+    controls = (
+        page.rotation_threshold_difficulty_combo,
+        page.rotation_threshold_raid_dps_spin,
+        page.rotation_dd_target_resistance_spin,
+        page.rotation_recovery_resource_combo,
+        page.rotation_recovery_trigger_spin,
+    )
+    for control in controls:
+        _remove_header_wrapper(page, control)
+        # Keep the canonical objects alive for their existing policy methods while
+        # removing them from the user-facing layout.
+        control.setParent(page)
+        control.hide()
+
+    # Reset every advanced-policy input to its explicit "unset" state. This is
+    # what keeps Rotation on the ordinary deterministic path rather than merely
+    # making strict encounter-aware mode invisible while still active.
+    page.rotation_threshold_difficulty_combo.setCurrentIndex(0)
+    page.rotation_threshold_raid_dps_spin.setValue(0.0)
+    page.rotation_dd_target_resistance_spin.setValue(-1.0)
+    page.rotation_recovery_resource_combo.setCurrentIndex(0)
+    page.rotation_recovery_trigger_spin.setValue(-1.0)
+
+
 def _rebuild_rotation_setup(page) -> None:
     card = _card(page, "Rotation Setup")
     if card is None or not card.body_layout.count():
@@ -79,15 +112,7 @@ def _rebuild_rotation_setup(page) -> None:
         page.rotation_recovery_trigger_spin,
     )
 
-    # Raid DPS / target resistance / recovery were installed as header context
-    # fields. Move the canonical widgets themselves, not clones.
-    for control in (
-        page.rotation_threshold_raid_dps_spin,
-        page.rotation_dd_target_resistance_spin,
-        page.rotation_recovery_resource_combo,
-        page.rotation_recovery_trigger_spin,
-    ):
-        _remove_header_wrapper(page, control)
+    _disable_advanced_rotation_mode(page)
 
     old_item = card.body_layout.takeAt(0)
     old_layout = old_item.layout() if old_item is not None else None
@@ -113,16 +138,6 @@ def _rebuild_rotation_setup(page) -> None:
     grid.addWidget(_field(page, "STARTING ULTIMATE"), 4, 0)
     grid.addWidget(page.starting_ultimate_spin, 5, 0)
     grid.addWidget(page.attack_ultimate_generation, 4, 1, 2, 1)
-
-    grid.addWidget(_field(page, "RAID DPS"), 6, 0)
-    grid.addWidget(_field(page, "TARGET RESIST"), 6, 1)
-    grid.addWidget(page.rotation_threshold_raid_dps_spin, 7, 0)
-    grid.addWidget(page.rotation_dd_target_resistance_spin, 7, 1)
-
-    grid.addWidget(_field(page, "RECOVERY"), 8, 0)
-    grid.addWidget(_field(page, "RECOVERY TRIGGER"), 8, 1)
-    grid.addWidget(page.rotation_recovery_resource_combo, 9, 0)
-    grid.addWidget(page.rotation_recovery_trigger_spin, 9, 1)
 
     card.addLayout(grid)
 
@@ -276,7 +291,7 @@ def refresh_rotation_consumables(page) -> None:
 
 
 def install_rotation_dashboard_layout(page) -> None:
-    """Move canonical controls into their final cards without replacing methods."""
+    """Move baseline controls into their final cards and keep advanced mode disabled."""
     _rebuild_rotation_setup(page)
     _rebuild_consumables(page)
     # Re-apply the selected build after replacing the consumable display labels
