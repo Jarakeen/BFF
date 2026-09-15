@@ -38,6 +38,7 @@ class RosterMember:
     SecondaryRole: str = ""
     Status: str = "Active"
     Team: str = ""
+    CanonicalPlayerId: str = ""
 
     def to_dict(self) -> dict:
         return asdict(self)
