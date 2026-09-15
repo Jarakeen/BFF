@@ -16,6 +16,7 @@ from minmax.skill_component_conditional_consequence import (
     SkillComponentConditionalConsequenceType,
 )
 from minmax.stat_ids import StatId
+from services.rotation_candidate_dd_role_output_service import RotationActionDamageEvidence
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 from services.rotation_candidate_periodic_damage_runtime_projection_service import (
     PeriodicDamageMagnitudePolicy,
@@ -210,6 +211,24 @@ class _Base:
         )
         self.dynamic_event_times = []
 
+    def evaluate_action(self, *, candidate, action):
+        tooltip = self.calculator.evaluate_entity_id(action.name, self.context)
+        classifications = {
+            row.coefficient_number: row
+            for row in self.components.get_for_skill_rank(tooltip.skill.skill_rank_id)
+        }
+        total = sum(
+            float(component.final_value)
+            for component in tooltip.components
+            if classifications.get(component.coefficient_number) is not None
+            and classifications[component.coefficient_number].effect_kind is SkillEffectKind.DAMAGE
+        )
+        return RotationActionDamageEvidence(
+            time_seconds=action.time_seconds,
+            sequence=action.sequence,
+            damage_value=total,
+        )
+
     def _periodic_semantics_for(self, *, action_name, coefficient_number):
         return self.semantic
 
@@ -342,7 +361,7 @@ def test_dynamic_source_magnitude_uses_canonical_tick_resolver_for_included_tick
     assert base.dynamic_event_times == [2.0, 3.0]
 
 
-def test_mixed_damage_skill_reports_component_level_composition_gap() -> None:
+def test_mixed_damage_skill_composes_other_components_through_canonical_delegate() -> None:
     action = _action()
     base = _Base(action)
     base.calculator = _MixedCalculator()
@@ -357,7 +376,6 @@ def test_mixed_damage_skill_reports_component_level_composition_gap() -> None:
     evidence = bridge.evaluate_if_supported(candidate=_candidate(action), action=action)
 
     assert evidence is not None
-    assert evidence.damage_value is None
-    assert evidence.unresolved == (
-        "Periodic Execute: coefficient 1 periodic target-Health damage is part of a mixed 2-component damage skill; component-level mixed-damage composition is required",
-    )
+    assert evidence.damage_value == 550.0
+    assert evidence.unresolved == ()
+    assert base.components.get_for_skill_rank(1)[0].effect_kind is SkillEffectKind.DAMAGE
