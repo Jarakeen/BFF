@@ -54,6 +54,7 @@ class _PageState:
         self.last_canonical_render_evidence = None
         self.last_cadence_progression_run = object()
         self.last_cadence_progression_render_evidence = object()
+        self.last_canonical_cadence_orchestration_result = None
         self.cadence_progression_card = _CadenceCard()
 
     def _selected_build(self):
@@ -72,8 +73,11 @@ class _PageState:
             "use_scheduled_combat_attacks_for_ultimate": True,
         }
 
-    def canonical_generation_request(self):
-        return CanonicalRotationDashboardPage.canonical_generation_request(self)
+    def canonical_generation_request(self, *, player_build=None):
+        return CanonicalRotationDashboardPage.canonical_generation_request(
+            self,
+            player_build=player_build,
+        )
 
     def evaluate_canonical_candidates(self, **kwargs):
         return CanonicalRotationDashboardPage.evaluate_canonical_candidates(self, **kwargs)
@@ -200,7 +204,7 @@ def test_page_candidate_evaluation_requires_selected_saved_build() -> None:
     page = _PageState()
     page.build = None
 
-    with pytest.raises(ValueError, match="select a saved build"):
+    with pytest.raises(ValueError, match="select or supply a build"):
         CanonicalRotationDashboardPage.evaluate_canonical_candidates(
             page,
             evaluator_resolver=object(),
