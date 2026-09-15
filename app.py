@@ -200,6 +200,7 @@ def main() -> int:
     from ui.build_editor_inline_compat import install as install_inline_build_editor
     from ui.build_workspace_edit_fix import install as install_build_workspace_edit_fix
     from ui.build_workspace_tab_layout_fix import install as install_build_workspace_tab_layout_fix
+    from ui.application_performance_dashboard_bootstrap import bootstrap_performance_dashboard_extensions
     from ui.build_editor_performance import install as install_build_editor_performance
     from ui.build_progression_scroll_fix import install as install_build_progression_scroll_fix
     from ui.build_progression_readiness_support import install as install_build_progression_readiness_support
@@ -251,6 +252,9 @@ def main() -> int:
     install_inline_build_editor()
     install_build_workspace_edit_fix()
     install_build_workspace_tab_layout_fix()
+    # Performance surfaces previously composed themselves inside the Build Editor
+    # feature. Keep that ordering explicit at the application boundary.
+    bootstrap_performance_dashboard_extensions()
     install_build_editor_performance()
     install_build_progression_scroll_fix()
     install_build_progression_readiness_support()
