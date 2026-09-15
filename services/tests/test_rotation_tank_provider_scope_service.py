@@ -3,6 +3,10 @@ from types import SimpleNamespace
 import pytest
 
 from models.build_model import PlayerBuild
+from services.encounter_provider_assignment import (
+    ProviderAssignment,
+    ProviderAssignmentStatus,
+)
 from services.rotation_tank_provider_scope_service import RotationTankProviderScopeService
 
 
@@ -50,8 +54,22 @@ def _tank():
     return PlayerBuild(Name="Tank A", BuildName="MT", Role="Tank")
 
 
+def _assignment(requirement_id: str) -> ProviderAssignment:
+    return ProviderAssignment(
+        requirement_id=requirement_id,
+        encounter_id="test-encounter",
+        requirement_type="test",
+        status=ProviderAssignmentStatus.INSUFFICIENT,
+        primary_providers=(),
+        backup_providers=(),
+        unresolved_candidates=(),
+        conflicting_candidates=(),
+        explanation="test assignment",
+    )
+
+
 def test_provider_scope_reuses_canonical_scope_and_policy_resolver():
-    assignments = (object(), object())
+    assignments = (_assignment("req-a"), _assignment("req-b"))
     capability = _CapabilityService()
     scope_factory = _ScopeFactory(assignments)
     policy = _PolicyResolver(ready=True)
@@ -104,7 +122,7 @@ def test_provider_scope_preserves_missing_policy_as_unresolved_not_empty_success
         database_path="data/eso.db",
         build_service=object(),
         capability_service=_CapabilityService(),
-        scope_factory=_ScopeFactory((object(),)),
+        scope_factory=_ScopeFactory((_assignment("req-a"),)),
         policy_resolver=_PolicyResolver(
             ready=False,
             unresolved=("Owned encounter assignment has no explicit rotation policy disposition",),
