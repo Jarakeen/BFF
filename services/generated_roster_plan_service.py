@@ -7,8 +7,18 @@ from services.eso_database import EsoDatabase
 from services.roster_service import RosterService
 
 
+GENERATED_ROSTER_DRAFT_OWNERSHIP = "composition_recruitment_evidence_only"
+LEGACY_GENERATED_ROSTER_PLAN_COMPATIBILITY = True
+
+
 @dataclass(frozen=True)
-class GeneratedRosterPlanSlot:
+class GeneratedRosterDraftSlot:
+    """One persisted composition/recruitment draft chair.
+
+    This is candidate/planning evidence only. It does not own final RaidPlan player,
+    character, build, or assignment identity.
+    """
+
     slot_name: str
     kind: str
     player_name: str
@@ -28,21 +38,33 @@ class GeneratedRosterPlanSlot:
 
 
 @dataclass(frozen=True)
-class GeneratedRosterPlan:
-    plan_id: int
+class GeneratedRosterDraft:
+    """Durable Comp Maker draft evidence waiting for explicit adoption.
+
+    RaidPlan owns trial-specific selected people, builds, and assignments. This draft
+    preserves recruitment placeholders and candidate/source evidence that cannot yet be
+    represented by RaidPlan without fabricating player identity.
+    """
+
+    draft_id: int
     name: str
     goal: str
     difficulty: str
-    slots: tuple[GeneratedRosterPlanSlot, ...]
+    slots: tuple[GeneratedRosterDraftSlot, ...]
+
+    @property
+    def plan_id(self) -> int:
+        """Compatibility view for legacy callers during migration."""
+        return self.draft_id
 
 
-class GeneratedRosterPlanService:
-    """Persistent build/assignment layer for a named Roster team.
+class GeneratedRosterDraftService:
+    """Legacy-backed persistence for Comp Maker draft evidence.
 
-    Recruitment requirements remain separate from ``roster_member`` so BFF never
-    fabricates people. The plan name is one durable user-facing team identity shared
-    with Roster and Optimization. Structured assignment fields remain authoritative;
-    ``gear_summary`` and ``unresolved`` are retained for backwards-compatible display.
+    The existing ``generated_roster_plan*`` SQLite tables are retained only as a
+    compatibility store during migration. Records here are not authoritative RaidPlan
+    state. Explicit adoption into Team and/or RaidPlan owns final people/build/assignment
+    selections; this service preserves composition, recruitment, and candidate evidence.
     """
 
     _STRUCTURED_COLUMNS = {
@@ -128,16 +150,16 @@ class GeneratedRosterPlanService:
         name: str,
         goal: str,
         difficulty: str,
-        slots: tuple[GeneratedRosterPlanSlot, ...],
-    ) -> GeneratedRosterPlan:
+        slots: tuple[GeneratedRosterDraftSlot, ...],
+    ) -> GeneratedRosterDraft:
         plan_name = str(name or "").strip()
         plan_goal = str(goal or "").strip()
         if not plan_name:
-            raise ValueError("generated roster plan requires a name")
+            raise ValueError("generated roster draft requires a name")
         if not plan_goal:
-            raise ValueError("generated roster plan requires a goal")
+            raise ValueError("generated roster draft requires a goal")
         if not slots:
-            raise ValueError("generated roster plan requires at least one slot")
+            raise ValueError("generated roster draft requires at least one slot")
 
         self.db.execute(
             """
@@ -155,11 +177,11 @@ class GeneratedRosterPlanService:
             (plan_name,),
         ).fetchone()
         if row is None:
-            raise RuntimeError("generated roster plan could not be reloaded after save")
-        plan_id = int(row["id"])
+            raise RuntimeError("generated roster draft could not be reloaded after save")
+        draft_id = int(row["id"])
         self.db.execute(
             "DELETE FROM generated_roster_plan_slot WHERE plan_id = ?",
-            (plan_id,),
+            (draft_id,),
         )
         for index, slot in enumerate(slots):
             self.db.execute(
@@ -172,7 +194,7 @@ class GeneratedRosterPlanService:
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    plan_id,
+                    draft_id,
                     index,
                     slot.slot_name,
                     slot.kind,
@@ -195,8 +217,8 @@ class GeneratedRosterPlanService:
         self.db.commit()
 
         canonical_name = RosterService(self.db).ensure_team_name(plan_name)
-        return GeneratedRosterPlan(
-            plan_id=plan_id,
+        return GeneratedRosterDraft(
+            draft_id=draft_id,
             name=canonical_name,
             goal=plan_goal,
             difficulty=str(difficulty or "").strip(),
@@ -213,7 +235,7 @@ class GeneratedRosterPlanService:
         ).fetchall()
         return tuple(str(row["name"]) for row in rows)
 
-    def load_plan(self, name: str) -> GeneratedRosterPlan | None:
+    def load_plan(self, name: str) -> GeneratedRosterDraft | None:
         row = self.db.execute(
             """
             SELECT id, name, goal, difficulty
@@ -226,21 +248,21 @@ class GeneratedRosterPlanService:
             return None
         return self._load_row(row)
 
-    def latest_plan(self) -> GeneratedRosterPlan | None:
+    def latest_plan(self) -> GeneratedRosterDraft | None:
         row = self.db.execute(
             """
             SELECT id, name, goal, difficulty
             FROM generated_roster_plan
             ORDER BY updated_at DESC, id DESC
             LIMIT 1
-            """
+            """,
         ).fetchone()
         if row is None:
             return None
         return self._load_row(row)
 
-    def _load_row(self, row) -> GeneratedRosterPlan:
-        plan_id = int(row["id"])
+    def _load_row(self, row) -> GeneratedRosterDraft:
+        draft_id = int(row["id"])
         slot_rows = self.db.execute(
             """
             SELECT slot_name, kind, player_name, character_name,
@@ -251,10 +273,10 @@ class GeneratedRosterPlanService:
             WHERE plan_id = ?
             ORDER BY slot_index
             """,
-            (plan_id,),
+            (draft_id,),
         ).fetchall()
         slots = tuple(
-            GeneratedRosterPlanSlot(
+            GeneratedRosterDraftSlot(
                 slot_name=str(slot["slot_name"] or ""),
                 kind=str(slot["kind"] or ""),
                 player_name=str(slot["player_name"] or ""),
@@ -274,10 +296,28 @@ class GeneratedRosterPlanService:
             )
             for slot in slot_rows
         )
-        return GeneratedRosterPlan(
-            plan_id=plan_id,
+        return GeneratedRosterDraft(
+            draft_id=draft_id,
             name=str(row["name"]),
             goal=str(row["goal"]),
             difficulty=str(row["difficulty"] or ""),
             slots=slots,
         )
+
+
+# Compatibility aliases retained while older Phase 12.5 tools/tests are migrated.
+GeneratedRosterPlanSlot = GeneratedRosterDraftSlot
+GeneratedRosterPlan = GeneratedRosterDraft
+GeneratedRosterPlanService = GeneratedRosterDraftService
+
+
+__all__ = [
+    "GENERATED_ROSTER_DRAFT_OWNERSHIP",
+    "LEGACY_GENERATED_ROSTER_PLAN_COMPATIBILITY",
+    "GeneratedRosterDraft",
+    "GeneratedRosterDraftService",
+    "GeneratedRosterDraftSlot",
+    "GeneratedRosterPlan",
+    "GeneratedRosterPlanService",
+    "GeneratedRosterPlanSlot",
+]
