@@ -3,6 +3,7 @@ from types import SimpleNamespace
 import pytest
 
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
+from minmax.stat_ids import StatId
 from services.rotation_candidate_dd_role_output_service import RotationActionDamageEvidence
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 from services.rotation_saved_build_weapon_attack_evaluation_service import (
@@ -11,10 +12,33 @@ from services.rotation_saved_build_weapon_attack_evaluation_service import (
 import ui.rotation_generate_dd_role_evidence_support as dd_support
 
 
+def _trace(value):
+    return SimpleNamespace(final_value=value)
+
+
+def _context(bar):
+    return SimpleNamespace(
+        active_bar=bar,
+        core_state=SimpleNamespace(
+            derived={
+                StatId.MAX_MAGICKA: _trace(30000.0),
+                StatId.MAX_STAMINA: _trace(20000.0),
+                StatId.WEAPON_DAMAGE: _trace(5000.0),
+                StatId.SPELL_DAMAGE: _trace(5000.0),
+                StatId.PHYSICAL_PENETRATION: _trace(7000.0),
+                StatId.SPELL_PENETRATION: _trace(7000.0),
+                StatId.CRITICAL_DAMAGE: _trace(0.5),
+                StatId.CRITICAL_CHANCE: _trace(0.4),
+            }
+        ),
+        dd_exploiter_bonus=0.0,
+    )
+
+
 class _StaticContext:
     def __init__(self):
-        self.front = SimpleNamespace(active_bar="front")
-        self.back = SimpleNamespace(active_bar="back")
+        self.front = _context("front")
+        self.back = _context("back")
 
     def context_for(self, bar):
         return {"front": self.front, "back": self.back}.get(bar)
