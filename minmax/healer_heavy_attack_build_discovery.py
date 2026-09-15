@@ -35,6 +35,10 @@ class HealerHeavyAttackBuildIncentive:
     resolution and must never overwrite that source value. Required-effect identity
     and category allow the shared duration layer to apply generic modifiers such as
     Jorvuld's Guidance without hard-coding one set combination into the scheduler.
+
+    ``maintain_effect_uptime`` means the heavy itself is the refresh action for a
+    short-lived support effect. Runtime scheduling must therefore begin the next
+    full channel early enough that it can complete before the current effect expires.
     """
 
     bar: str
@@ -48,6 +52,7 @@ class HealerHeavyAttackBuildIncentive:
     required_effect_name: str | None = None
     required_effect_category: SupportEffectCategory | None = None
     effective_effect_duration_seconds: float | None = None
+    maintain_effect_uptime: bool = False
 
 
 _WEAPON_TYPES = {
@@ -84,6 +89,11 @@ _LOTUS_SOURCE = (
 _BASE_RECOVERY_SOURCE = (
     "canonical heavy_attack_restoration weapon classification: fully charged staff "
     "heavy attacks restore Magicka; exact restored amount remains caller-verified"
+)
+
+_ESSENCE_DRAIN_SOURCE = (
+    "VERIFIED_WEAPON_PASSIVE_RULES: Essence Drain; fully charged Restoration Staff "
+    "Heavy Attack grants Major Mending and the passive's heal for 4 seconds"
 )
 
 
@@ -135,10 +145,13 @@ def discover_healer_heavy_attack_build_incentives(
                     HealerHeavyAttackBuildIncentive(
                         bar=bar,
                         weapon=weapon,
-                        kind=HeavyAttackBuildIncentiveKind.HEALING_VALUE,
+                        kind=HeavyAttackBuildIncentiveKind.REQUIRED_EFFECT,
                         name="Essence Drain",
-                        source="VERIFIED_WEAPON_PASSIVE_RULES: Essence Drain",
+                        source=_ESSENCE_DRAIN_SOURCE,
                         maximum_effect_duration_seconds=4.0,
+                        required_effect_name="major_mending",
+                        required_effect_category=SupportEffectCategory.BUFF,
+                        maintain_effect_uptime=True,
                     )
                 )
             if "Cycle of Life" in passive_names:
