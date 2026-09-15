@@ -1,22 +1,28 @@
 from __future__ import annotations
 
+from typing import Protocol
+
 from models.build_model import PlayerBuild
 from services.rotation_candidate_canonical_plan_evidence_service import (
     RotationCandidateRoleOutputEvidence,
 )
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
-from services.rotation_candidate_healer_multi_demand_role_output_service import (
-    RotationCandidateHealerMultiDemandRoleOutputService,
-)
-from services.rotation_candidate_healer_role_output_service import (
-    RotationCandidateHealerRoleOutputService,
-)
 from services.rotation_plan_runtime_build_context_service import (
     RotationPlanRuntimeBuildContextService,
+    RotationRuntimeBuildContextResolver,
 )
 from services.rotation_recovery_heavy_candidate_orchestration_service import (
     RecoveryHeavyStabilizedCandidateSnapshot,
 )
+
+
+class RotationRuntimeBindableHealerRoleOutput(Protocol):
+    def evaluate_plan(
+        self,
+        candidate: GeneratedRotationCandidate,
+        *,
+        runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
+    ) -> RotationCandidateRoleOutputEvidence: ...
 
 
 class RotationRecoveryHealerRoleOutputService:
@@ -28,25 +34,44 @@ class RotationRecoveryHealerRoleOutputService:
     bridge. Legacy snapshots without runtime history retain the role-output service's
     static-context path rather than inventing time-varying evidence.
 
-    Both the original single-demand healer role-output service and the canonical
-    multi-demand wrapper accept the same optional runtime build-context seam. This
-    adapter owns neither healing math nor demand aggregation; it only binds final-plan
-    runtime state before delegating to those existing authorities.
+    Runtime-bindable single-demand, multi-demand, and factory-result providers all use
+    the same narrow protocol. This adapter owns neither healing math nor demand
+    aggregation; it only binds final-plan runtime state before delegating to those
+    existing authorities. The resolver is exposed so verified healer hard obligations
+    can consume the exact same final-plan context as role output.
     """
 
     def __init__(
         self,
         *,
         build: PlayerBuild,
-        role_output_service: (
-            RotationCandidateHealerRoleOutputService
-            | RotationCandidateHealerMultiDemandRoleOutputService
-        ),
+        role_output_service: RotationRuntimeBindableHealerRoleOutput,
         runtime_build_context_service: RotationPlanRuntimeBuildContextService,
     ) -> None:
         self.build = build
         self.role_output_service = role_output_service
         self.runtime_build_context_service = runtime_build_context_service
+
+    def runtime_build_context_resolver_for_snapshot(
+        self,
+        snapshot: RecoveryHeavyStabilizedCandidateSnapshot,
+    ) -> RotationRuntimeBuildContextResolver | None:
+        runtime_state = snapshot.runtime_combat_state_resolver
+        if runtime_state is None:
+            return None
+
+        def resolve(
+            time_seconds: float,
+            sequence: int | None = None,
+        ):
+            return self.runtime_build_context_service.resolve(
+                self.build,
+                runtime_combat_state_resolver=runtime_state,
+                time_seconds=time_seconds,
+                sequence=sequence,
+            )
+
+        return resolve
 
     def evaluate_snapshot(
         self,
@@ -58,25 +83,16 @@ class RotationRecoveryHealerRoleOutputService:
             refresh_leads=(),
             action_claims=(),
         )
-        runtime_state = snapshot.runtime_combat_state_resolver
-        if runtime_state is None:
+        runtime_resolver = self.runtime_build_context_resolver_for_snapshot(snapshot)
+        if runtime_resolver is None:
             return self.role_output_service.evaluate_plan(candidate)
-
-        def runtime_build_context_resolver(
-            time_seconds: float,
-            sequence: int | None = None,
-        ):
-            return self.runtime_build_context_service.resolve(
-                self.build,
-                runtime_combat_state_resolver=runtime_state,
-                time_seconds=time_seconds,
-                sequence=sequence,
-            )
-
         return self.role_output_service.evaluate_plan(
             candidate,
-            runtime_build_context_resolver=runtime_build_context_resolver,
+            runtime_build_context_resolver=runtime_resolver,
         )
 
 
-__all__ = ["RotationRecoveryHealerRoleOutputService"]
+__all__ = [
+    "RotationRecoveryHealerRoleOutputService",
+    "RotationRuntimeBindableHealerRoleOutput",
+]
