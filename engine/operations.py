@@ -3,36 +3,8 @@ import json
 import math
 from pathlib import Path
 from typing import List, Dict, Set
-from dataclasses import dataclass, field
 
-# Point cleanly to models without importing itself
 from .models import SourceGameObject, DynamicTrigger, CombatEffect
-
-
-@dataclass
-class CombatEffect:
-    """The generic payload representing an absolute modifier or system state."""
-    capability_id: str          # e.g., "breach_major", "courage_major", "ec_fire"
-    stat_modified: str          # e.g., "armor", "weapon_spell_damage", "crit_damage"
-    modification_value: float   # e.g., -5948, 430, 15.0
-    is_percent: bool = False
-
-
-@dataclass
-class DynamicTrigger:
-    """The operational condition layer."""
-    condition_type: str         # e.g., "on_hit", "on_crit", "on_slotted", "on_equip"
-    target: str                 # e.g., "self", "enemy", "group"
-    effects: List[CombatEffect] = field(default_factory=list)
-
-
-@dataclass
-class SourceGameObject:
-    """Universal schema representing any Layer 1 object (Skill, Set, Food, etc.)."""
-    id: str                     # Stable lookup key (e.g., "skill_pierce_armor")
-    name: str                   # Human readable display name
-    source_layer: str           # "skills", "gear_sets", "mundus", etc.
-    triggers: List[DynamicTrigger] = field(default_factory=list)
 
 
 class TheConsoleEngine:
