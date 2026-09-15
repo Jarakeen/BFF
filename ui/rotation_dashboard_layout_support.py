@@ -1,17 +1,11 @@
 from __future__ import annotations
 
-"""Keep Rotation controls beside the concepts they configure.
+"""Final presentation wiring for the Rotation workspace.
 
-The canonical controls are created by their existing owners. This layer moves
-those exact widgets after page construction so canonical Generate keeps reading
-the same objects and values rather than a presentation-layer copy. It also keeps
-Rotation consumables synchronized with the selected saved build while using the
-same canonical crafted/named potion catalogs as the Build Editor.
-
-Advanced encounter-aware policy controls are intentionally hidden for now. Their
-canonical widgets remain alive but are reset to their unset values so Generate
-stays on the baseline deterministic Rotation Maker path until advanced mode is
-explicitly restored.
+The canonical controls are created by their existing owners. This layer moves those
+exact widgets rather than cloning engine inputs, keeps the full potion catalog in sync,
+hides the unfinished encounter-aware advanced controls, and installs the intent-first
+Rotation Builder V2 workspace.
 """
 
 from PySide6.QtCore import Qt
@@ -22,6 +16,7 @@ from services.eso_database import EsoDatabase
 from services.reference_data_service import ReferenceDataService
 from ui.components.foundry_card import FoundryCard
 from ui.phase5_potion_picker_support import _choices, _configure_search
+from ui.rotation_builder_v2_layout_support import install_rotation_builder_v2_layout
 
 
 def _card(page, title: str) -> FoundryCard | None:
@@ -36,20 +31,18 @@ def _clear_layout(layout, *, preserve=()) -> None:
     keep = set(preserve)
     while layout.count():
         item = layout.takeAt(0)
-        widget = item.widget()
         nested = item.layout()
         if nested is not None:
             _clear_layout(nested, preserve=keep)
+        widget = item.widget()
         if widget is not None and widget not in keep:
             widget.deleteLater()
 
 
 def _remove_header_wrapper(page, control) -> None:
     wrapper = control.parentWidget()
-    if wrapper is None:
-        return
     layout = getattr(page.header, "context_layout", None)
-    if layout is None:
+    if wrapper is None or layout is None:
         return
     for index in range(layout.count() - 1, -1, -1):
         item = layout.itemAt(index)
@@ -67,7 +60,6 @@ def _field(page, title: str):
 def _disable_advanced_rotation_mode(page) -> None:
     """Hide/reset the encounter-aware controls that opt Generate into strict mode."""
     page.rotation_advanced_mode_enabled = False
-
     controls = (
         page.rotation_threshold_difficulty_combo,
         page.rotation_threshold_raid_dps_spin,
@@ -77,14 +69,10 @@ def _disable_advanced_rotation_mode(page) -> None:
     )
     for control in controls:
         _remove_header_wrapper(page, control)
-        # Keep the canonical objects alive for their existing policy methods while
-        # removing them from the user-facing layout.
+        # Keep the canonical objects alive for their existing policy methods.
         control.setParent(page)
         control.hide()
 
-    # Reset every advanced-policy input to its explicit "unset" state. This is
-    # what keeps Rotation on the ordinary deterministic path rather than merely
-    # making strict encounter-aware mode invisible while still active.
     page.rotation_threshold_difficulty_combo.setCurrentIndex(0)
     page.rotation_threshold_raid_dps_spin.setValue(0.0)
     page.rotation_dd_target_resistance_spin.setValue(-1.0)
@@ -106,12 +94,7 @@ def _rebuild_rotation_setup(page) -> None:
         page.attack_ultimate_generation,
         page.potion_combo,
         page.potion_on_cooldown,
-        page.rotation_threshold_raid_dps_spin,
-        page.rotation_dd_target_resistance_spin,
-        page.rotation_recovery_resource_combo,
-        page.rotation_recovery_trigger_spin,
     )
-
     _disable_advanced_rotation_mode(page)
 
     old_item = card.body_layout.takeAt(0)
@@ -124,87 +107,31 @@ def _rebuild_rotation_setup(page) -> None:
     grid.setHorizontalSpacing(8)
     grid.setVerticalSpacing(6)
     page.rotation_setup_grid = grid
-
     grid.addWidget(_field(page, "EXECUTE STARTS"), 0, 0)
     grid.addWidget(_field(page, "ROTATION TYPE"), 0, 1)
     grid.addWidget(page.execute_spin, 1, 0)
     grid.addWidget(page.rotation_type_combo, 1, 1)
-
     grid.addWidget(_field(page, "TARGET TYPE"), 2, 0)
     grid.addWidget(_field(page, "ULTIMATE"), 2, 1)
     grid.addWidget(page.target_type_combo, 3, 0)
     grid.addWidget(page.ultimate_bar_combo, 3, 1)
-
     grid.addWidget(_field(page, "STARTING ULTIMATE"), 4, 0)
     grid.addWidget(page.starting_ultimate_spin, 5, 0)
     grid.addWidget(page.attack_ultimate_generation, 4, 1, 2, 1)
-
     card.addLayout(grid)
 
 
 def _canonical_potion_value(combo, index: int | None = None) -> str:
-    """Return the engine value behind one decorated potion-menu item."""
     resolved_index = combo.currentIndex() if index is None else int(index)
     if resolved_index < 0:
         return str(combo.currentText() or "").strip()
     data = combo.itemData(resolved_index)
-    if data is None:
-        return str(combo.currentText() or "").strip()
-    return str(data or "").strip()
+    return str(combo.currentText() if data is None else data or "").strip()
 
 
 def _sync_potion_edit_text(combo, index: int) -> None:
-    """Keep editable currentText canonical while dropdown rows remain descriptive."""
-    if index < 0:
-        return
-    canonical = _canonical_potion_value(combo, index)
-    combo.setEditText(canonical)
-
-
-def _rebuild_consumables(page) -> None:
-    card = _card(page, "Food & Potions")
-    if card is None:
-        return
-
-    # The potion selector is the exact control consumed by rotation_settings()
-    # and canonical_generation_request(). Food remains the selected saved build's
-    # canonical food rather than becoming a presentation-only override.
-    _clear_layout(card.body_layout, preserve=(page.potion_combo, page.potion_on_cooldown))
-    card.setMaximumHeight(225)
-
-    page.food_value = page._value_label()
-    page.food_value.setToolTip(
-        "Food saved on the selected build. Rotation generation evaluates the selected build as-is."
-    )
-    page.potion_value = page._value_label()  # compatibility mirror; not a second input
-
-    card.addWidget(page._labelled_value("SAVED FOOD", page.food_value))
-
-    potion_label = QLabel("ROTATION POTION")
-    potion_label.setProperty("sidebarHeading", True)
-    card.addWidget(potion_label)
-    page.potion_combo.setToolTip(
-        "Potion used by Generate Rotation. Search crafted effect families or named/non-crafted potions. "
-        "The selected build's saved potion is selected automatically."
-    )
-    card.addWidget(page.potion_combo)
-    page.potion_on_cooldown.setToolTip(
-        "When enabled, Generate Rotation schedules the selected potion on its canonical cooldown."
-    )
-    card.addWidget(page.potion_on_cooldown)
-
-    if not bool(getattr(page, "_rotation_potion_value_sync_installed", False)):
-        page.potion_combo.currentIndexChanged.connect(
-            lambda index, combo=page.potion_combo: _sync_potion_edit_text(combo, index)
-        )
-        page._rotation_potion_value_sync_installed = True
-
-    hint = QLabel(
-        "Food follows the selected saved build. Potion may be changed here for this generated rotation."
-    )
-    hint.setWordWrap(True)
-    hint.setProperty("muted", True)
-    card.addWidget(hint)
+    if index >= 0:
+        combo.setEditText(_canonical_potion_value(combo, index))
 
 
 def _named_potion_choices() -> list[str]:
@@ -231,17 +158,47 @@ def _select_combo_data(combo, value: str) -> None:
         if str(combo.itemData(index) or "").strip().casefold() == wanted.casefold():
             combo.setCurrentIndex(index)
             return
-    # Preserve a legacy/free-text build value without pretending it came from a
-    # current canonical catalog.
     combo.addItem(wanted, wanted)
     combo.setCurrentIndex(combo.count() - 1)
+
+
+def _rebuild_consumables(page) -> None:
+    card = _card(page, "Food & Potions")
+    if card is None:
+        return
+    _clear_layout(card.body_layout, preserve=(page.potion_combo, page.potion_on_cooldown))
+    card.setMaximumHeight(225)
+
+    page.food_value = page._value_label()
+    page.food_value.setToolTip(
+        "Food saved on the selected build. Rotation generation evaluates the selected build as-is."
+    )
+    page.potion_value = page._value_label()
+    card.addWidget(page._labelled_value("SAVED FOOD", page.food_value))
+    potion_label = QLabel("ROTATION POTION")
+    potion_label.setProperty("sidebarHeading", True)
+    card.addWidget(potion_label)
+    card.addWidget(page.potion_combo)
+    card.addWidget(page.potion_on_cooldown)
+
+    if not bool(getattr(page, "_rotation_potion_value_sync_installed", False)):
+        page.potion_combo.currentIndexChanged.connect(
+            lambda index, combo=page.potion_combo: _sync_potion_edit_text(combo, index)
+        )
+        page._rotation_potion_value_sync_installed = True
+
+    hint = QLabel(
+        "Food follows the selected saved build. Potion may be changed here for this generated rotation."
+    )
+    hint.setWordWrap(True)
+    hint.setProperty("muted", True)
+    card.addWidget(hint)
 
 
 def _refresh_consumables(page) -> None:
     build = page._selected_build()
     food = str(getattr(build, "Food", "") or "Not selected") if build is not None else "—"
     saved_potion = str(getattr(build, "Potion", "") or "").strip() if build is not None else ""
-
     if hasattr(page, "food_value"):
         page.food_value.setText(food)
     if hasattr(page, "potion_value"):
@@ -251,16 +208,13 @@ def _refresh_consumables(page) -> None:
     combo.blockSignals(True)
     combo.clear()
     combo.addItem("None", "")
-
     for choice in _choices():
         combo.addItem(f"Crafted · {choice.label}", choice.canonical_id)
-        index = combo.count() - 1
         combo.setItemData(
-            index,
+            combo.count() - 1,
             f"Crafted potion effect family · {choice.formula_count} verified reagent formula(s)",
             Qt.ItemDataRole.ToolTipRole,
         )
-
     crafted_ids = {
         str(combo.itemData(index) or "").strip().casefold()
         for index in range(combo.count())
@@ -270,17 +224,13 @@ def _refresh_consumables(page) -> None:
         if name.casefold() in crafted_ids:
             continue
         combo.addItem(f"Named · {name}", name)
-        index = combo.count() - 1
         combo.setItemData(
-            index,
+            combo.count() - 1,
             "Named/non-crafted potion from the canonical ESO entity catalog.",
             Qt.ItemDataRole.ToolTipRole,
         )
-
     _select_combo_data(combo, saved_potion)
     _configure_search(combo)
-    # Signals are blocked during catalog rebuild, so normalize the selected edit
-    # text explicitly once. Future user selections are normalized by the signal.
     _sync_potion_edit_text(combo, combo.currentIndex())
     combo.blockSignals(False)
 
@@ -291,12 +241,11 @@ def refresh_rotation_consumables(page) -> None:
 
 
 def install_rotation_dashboard_layout(page) -> None:
-    """Move baseline controls into their final cards and keep advanced mode disabled."""
+    """Install the baseline controls, then the intent-first Rotation Builder workspace."""
     _rebuild_rotation_setup(page)
     _rebuild_consumables(page)
-    # Re-apply the selected build after replacing the consumable display labels
-    # and populate the full canonical potion catalog.
     page._refresh_build_context()
+    install_rotation_builder_v2_layout(page)
 
 
 __all__ = ["install_rotation_dashboard_layout", "refresh_rotation_consumables"]
