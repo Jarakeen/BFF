@@ -76,6 +76,30 @@ def test_critical_healing_language_stays_blocking() -> None:
     assert result.healing_hazards
 
 
+def test_group_member_bonus_that_excludes_wearer_is_irrelevant_to_self_h1() -> None:
+    result = ExtremeGearSetHealingObjectiveScreeningService.review(
+        "While you have more than 50% Health, the Critical Damage and Critical Healing of "
+        "any group members not wearing Lucent Echoes within 28 meters of you increases by 11%.",
+        "critical_healing",
+    )
+
+    assert result.proven_irrelevant is True
+    assert result.wearer_excluded is True
+    assert result.healing_hazards == ()
+
+
+def test_group_member_exclusion_does_not_override_global_equipment_hazard() -> None:
+    result = ExtremeGearSetHealingObjectiveScreeningService.review(
+        "The Critical Healing of group members not wearing this set increases by 10%, "
+        "and you can have two Mundus Stone boons at the same time.",
+        "critical_healing",
+    )
+
+    assert result.wearer_excluded is True
+    assert result.proven_irrelevant is False
+    assert result.global_equipment_hazards
+
+
 def test_opaque_text_stays_unresolved_without_positive_mechanic_evidence() -> None:
     result = ExtremeGearSetHealingObjectiveScreeningService.review(
         "An unresolved bonus worth an unknown amount.",
