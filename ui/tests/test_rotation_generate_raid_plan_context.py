@@ -127,7 +127,7 @@ def test_raid_plan_member_binding_rejects_missing_canonical_character_name() -> 
     )
     missing = _build()
     missing.Name = ""
-    missing.CharacterName = "Rylonia"  # type: ignore[attr-defined]
+    setattr(missing, "CharacterName", "Rylonia")
 
     with pytest.raises(ValueError, match="member character does not match"):
         base.with_raid_plan_member(
@@ -160,7 +160,6 @@ def test_raid_plan_member_binding_rejects_missing_canonical_build_name() -> None
     )
     missing = _build()
     missing.BuildName = ""
-    missing.Name = "Tank Build"
 
     with pytest.raises(ValueError, match="selected build does not match"):
         base.with_raid_plan_member(
