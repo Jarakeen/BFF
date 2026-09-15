@@ -882,3 +882,11 @@ A provider assignment can require an exact source skill on an exact bar. During 
 **What it means in actual play:** bar ownership can change the true refresh count, GCD burden, resource cost, and timing of a support responsibility even when the skill name is identical.
 
 **For BFF:** provider action bindings now preserve optional front/back bar identity end to end. Bar-agnostic assignments still match either bar, but an explicit bar requirement survives candidate generation instead of being broadened downstream.
+
+## 2026-09-15 — Weapon/Spell Damage scaling is not sheet power
+
+When a tooltip says an attack, heal, or proc “scales off” Weapon or Spell Damage,
+that stat is an input to the effect; the effect does not raise the character's
+Weapon or Spell Damage. Extreme power searches may discard that proc for the
+literal sheet-stat objective while still retaining any separate line that grants
+Weapon/Spell Damage directly.

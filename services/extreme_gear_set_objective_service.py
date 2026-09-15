@@ -7,10 +7,10 @@ Every active canonical bonus row is inspected. If the shared gear-set resolver
 cannot interpret an active bonus, the bonus normally remains an explicit blocker
 rather than silently contributing zero.
 
-For max-resource and recovery objectives, narrow conservative screening layers may
-prove an *unmapped* bonus irrelevant when its description cannot modify the requested
-objective and does not alter the legal equipment search. Relevant or ambiguous
-mechanics remain fail-closed for later review.
+For max-resource, recovery, and sheet-power objectives, narrow conservative
+screening layers may prove an *unmapped* bonus irrelevant when its description
+cannot modify the requested objective and does not alter the legal equipment
+search. Relevant or ambiguous mechanics remain fail-closed for later review.
 """
 
 from dataclasses import dataclass
@@ -24,6 +24,9 @@ from minmax.gear_stat_inputs import GearStatInputResolver
 from minmax.stat_ids import StatId
 from services.extreme_gear_set_recovery_objective_screening_service import (
     ExtremeGearSetRecoveryObjectiveScreeningService,
+)
+from services.extreme_gear_set_power_objective_screening_service import (
+    ExtremeGearSetPowerObjectiveScreeningService,
 )
 from services.extreme_gear_set_resource_objective_screening_service import (
     ExtremeGearSetResourceObjectiveScreeningService,
@@ -71,6 +74,7 @@ class ExtremeGearSetObjectiveService:
     )
     _MAX_RESOURCE_OBJECTIVES = frozenset({"max_health", "max_magicka", "max_stamina"})
     _RECOVERY_OBJECTIVES = frozenset({"health_recovery", "magicka_recovery", "stamina_recovery"})
+    _POWER_OBJECTIVES = frozenset({"spell_damage", "weapon_damage"})
     _MAX_RESOURCE_RELEVANCE_CONDITIONS = frozenset(
         {
             "armor_ability_slotted",
@@ -227,6 +231,13 @@ class ExtremeGearSetObjectiveService:
                             continue
                     elif objective in cls._RECOVERY_OBJECTIVES:
                         screening = ExtremeGearSetRecoveryObjectiveScreeningService.review(
+                            description,
+                            objective,
+                        )
+                        if screening.proven_irrelevant:
+                            continue
+                    elif objective in cls._POWER_OBJECTIVES:
+                        screening = ExtremeGearSetPowerObjectiveScreeningService.review(
                             description,
                             objective,
                         )

@@ -11,6 +11,24 @@ from services.service_catalog import (
 
 EXTREME_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
     ServiceDescriptor(
+        service_id="extreme.gear_set_power_objective_screening",
+        domain="extreme",
+        purpose=(
+            "Prove unmapped named-gear bonuses irrelevant to literal Weapon or Spell "
+            "Damage sheet objectives without confusing source scaling with stat mutation."
+        ),
+        implementation_path="services.extreme_gear_set_power_objective_screening_service",
+        inputs=("GearSetBonusDescription", "PowerObjective"),
+        outputs=("ExtremeGearSetPowerObjectiveScreeningResult",),
+        responsibilities=("extreme_gear_set_power_objective_screening",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Direct self-stat changes, relevant named buffs, weapon-trait changes, and "
+            "global equipment-state mutations remain fail-closed proof obligations."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.resource_canonical_static_snapshot",
         domain="extreme",
         purpose=(

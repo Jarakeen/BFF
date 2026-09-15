@@ -48,14 +48,15 @@ def test_unmapped_unrelated_proc_no_longer_blocks_max_resource_objective():
     assert row.unresolved == ()
 
 
-def test_same_unmapped_proc_still_blocks_non_resource_objective():
+def test_same_unmapped_proc_is_also_pruned_from_sheet_power_objective():
     row = _candidate(
         "(5 items) When you deal damage, summon a creature that deals Shock Damage every 2 seconds.",
         "spell_damage",
     )
 
-    assert row.mechanic_complete is False
-    assert any("not yet mechanic-mapped" in item for item in row.unresolved)
+    assert row.reviewed_delta == 0.0
+    assert row.mechanic_complete is True
+    assert row.unresolved == ()
 
 
 def test_unmapped_target_resource_reference_remains_blocker():
