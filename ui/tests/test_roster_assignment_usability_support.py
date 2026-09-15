@@ -15,7 +15,8 @@ def test_assignment_headers_sort_player_role_and_class_only():
 def test_boss_selector_uses_contains_autocomplete_and_reviewed_raid_identities():
     source = Path("ui/roster_assignment_usability_support.py").read_text(encoding="utf-8")
 
-    assert "load_raid_encounter_identities(get_data_dir())" in source
+    assert "data_root = get_data_dir()" in source
+    assert "load_raid_encounter_identities(data_root)" in source
     assert "row.display_name" in source
     assert "row.encounter_id" in source
     assert "combo.setEditable(True)" in source
