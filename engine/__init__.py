@@ -4,7 +4,6 @@
 
 from .engine import TheConsoleEngine, WeaponSwapSimulationEngine
 from .models import CombatEffect, DynamicTrigger, SourceGameObject
-from .operations import TheConsoleOpsEngine
 
 __all__ = [
     "CombatEffect",
@@ -12,5 +11,4 @@ __all__ = [
     "SourceGameObject",
     "TheConsoleEngine",
     "WeaponSwapSimulationEngine",
-    "TheConsoleOpsEngine",
 ]
