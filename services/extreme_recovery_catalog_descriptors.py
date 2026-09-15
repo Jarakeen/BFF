@@ -79,6 +79,25 @@ EXTREME_RECOVERY_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "ChampionPointLoadoutService, and runtime conditions are not proven by selection."
         ),
     ),
+    ServiceDescriptor(
+        service_id="extreme.stamina_recovery_record",
+        domain="extreme",
+        purpose=(
+            "Expose the proof-closed U50 theoretical Stamina Recovery maximum as a canonical "
+            "ExtremeRecordResult for UI and downstream consumers."
+        ),
+        implementation_path="services.extreme_stamina_recovery_record_service",
+        inputs=("ClosedStaminaRecoveryProof",),
+        outputs=("ExtremeRecordResult",),
+        responsibilities=("extreme_stamina_recovery_record_projection",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        ui_safe=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "The service publishes the closed proof and preserves runtime/external prerequisites; "
+            "it does not recompute the denominator or treat contextual states as always active."
+        ),
+    ),
 )
 
 
