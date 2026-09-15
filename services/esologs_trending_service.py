@@ -2,11 +2,9 @@ from __future__ import annotations
 
 """Aggregate observed top-ranked ESO Logs player gear usage by combat role.
 
-This is descriptive meta evidence, not canonical build truth. The service asks ESO
-Logs for the top individual character rankings for DD, healer, and tank, resolves only
-those ranked players back to their report playerDetails, counts distinct set usage per
-ranked player, and compares the current snapshot with the previous saved snapshot for
-that same encounter/role.
+This is descriptive meta evidence, not canonical build truth. Ranking rows identify
+candidate players; report ``playerDetails`` role buckets remain authoritative for role
+membership before gear or class evidence is attributed to DD, healer, or tank.
 """
 
 from collections import Counter
@@ -86,7 +84,7 @@ class EsoLogsTrendingReport:
 
 
 class EsoLogsTrendingService:
-    """Build role-aware popularity summaries from top individual ranked players."""
+    """Build role-aware popularity summaries from ranked player observations."""
 
     def __init__(self, client: EsoLogsClient, history_path: Path | None = None):
         self.client = client
@@ -189,18 +187,19 @@ class EsoLogsTrendingService:
         encounter_id: int,
         limit: int,
     ) -> tuple[list[dict] | None, str | None]:
-        """Resolve Tank rankings using the filters ESO Logs currently exposes.
+        """Resolve Tank ranking candidates without treating a class filter as role proof.
 
-        The public Tank Damage Rankings page uses the ``Tanks`` class filter. Prefer
-        that evidence-backed path first. Older/specialized ranking shapes remain as
-        fallbacks for compatibility with content or partitions that expose them.
+        Prefer the tank-specific metric and specialization filters. The public-page
+        ``Tanks`` class filter remains a compatibility fallback only; every returned
+        candidate still has to match the report's explicit ``tanks`` playerDetails
+        bucket before any gear is attributed to Tank Trending.
         """
 
         attempts = (
-            {"metric": "dps", "class_name": "Tanks", "label": "Tank-class DPS"},
             {"metric": "tankcombineddps", "label": "combined Tank"},
             {"metric": "dps", "spec_name": "Tank", "label": "Tank-spec DPS"},
             {"metric": "dps", "spec_name": "tank", "label": "tank-spec DPS"},
+            {"metric": "dps", "class_name": "Tanks", "label": "Tank-class DPS"},
         )
         errors: list[str] = []
         for attempt in attempts:
@@ -323,31 +322,6 @@ class EsoLogsTrendingService:
         if not name or not report_code or fight_id is None:
             return None
 
-        # For Tank Trending, prefer the combatant info returned on the ranked Tank
-        # row itself. That keeps gear provenance attached to the exact ranked player
-        # and avoids role-bucket disagreements in a later report Summary payload.
-        direct_info = ranking.get("combatant_info")
-        if role_key == "tank" and isinstance(direct_info, dict):
-            direct_actor = {
-                "name": name,
-                "class": ranking.get("class"),
-                "combatantInfo": direct_info,
-            }
-            direct_gear = TopTeamService._gear_sets(direct_actor)
-            if direct_gear:
-                return TopTeamPlayer(
-                    Name=name,
-                    Role="tank",
-                    GearSets=direct_gear,
-                    ClassName=(
-                        str(ranking.get("class") or "").strip()
-                        or TopTeamService._class_name(direct_actor)
-                    ),
-                    Abilities=TopTeamService._abilities(direct_actor),
-                    Mundus="",
-                    ActorId=None,
-                )
-
         try:
             normalized_fight_id = int(fight_id)
         except (TypeError, ValueError):
@@ -373,6 +347,9 @@ class EsoLogsTrendingService:
         name_key = name.casefold()
         class_key = str(ranking.get("class") or "").strip().casefold()
 
+        # Ranking combatantInfo is gear evidence for the ranked identity, but it is
+        # not role authority. Only the explicit playerDetails role bucket can prove
+        # that an identity belongs in the Tank, Healer, or DD column.
         matches = [
             player
             for player in players
@@ -544,12 +521,24 @@ class EsoLogsTrendingService:
                     current_percent=current_percent,
                     previous_percent=previous_percent,
                     delta_points=current_percent - previous_percent,
-                    current_rank=(int(current_row["rank"]) if current_row.get("rank") is not None else None),
-                    previous_rank=(int(previous_row["rank"]) if previous_row.get("rank") is not None else None),
+                    current_rank=(
+                        int(current_row["rank"])
+                        if current_row.get("rank") is not None
+                        else None
+                    ),
+                    previous_rank=(
+                        int(previous_row["rank"])
+                        if previous_row.get("rank") is not None
+                        else None
+                    ),
                 )
             )
 
-        new_arrivals = [row for row in movements if row.previous_percent <= 0.0 and row.current_percent > 0.0]
+        new_arrivals = [
+            row
+            for row in movements
+            if row.previous_percent <= 0.0 and row.current_percent > 0.0
+        ]
         breakouts = [
             row
             for row in movements
@@ -573,8 +562,12 @@ class EsoLogsTrendingService:
         ]
 
         new_arrivals.sort(key=lambda row: (-row.current_percent, row.name.casefold()))
-        breakouts.sort(key=lambda row: (-row.delta_points, row.current_rank or 999, row.name.casefold()))
-        making_waves.sort(key=lambda row: (-row.delta_points, row.current_rank or 999, row.name.casefold()))
+        breakouts.sort(
+            key=lambda row: (-row.delta_points, row.current_rank or 999, row.name.casefold())
+        )
+        making_waves.sort(
+            key=lambda row: (-row.delta_points, row.current_rank or 999, row.name.casefold())
+        )
         cooling_off.sort(key=lambda row: (row.delta_points, row.name.casefold()))
 
         return replace(
