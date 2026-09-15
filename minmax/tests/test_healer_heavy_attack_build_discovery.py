@@ -24,8 +24,10 @@ def test_restoration_staff_discovers_verified_heavy_passive_incentives() -> None
     by_name = {(item.bar, item.name): item for item in incentives}
 
     essence = by_name[("front", "Essence Drain")]
-    assert essence.kind is HeavyAttackBuildIncentiveKind.HEALING_VALUE
+    assert essence.kind is HeavyAttackBuildIncentiveKind.REQUIRED_EFFECT
     assert essence.maximum_effect_duration_seconds == 4.0
+    assert essence.required_effect_name == "major_mending"
+    assert essence.maintain_effect_uptime is True
 
     cycle = by_name[("front", "Cycle of Life")]
     assert cycle.kind is HeavyAttackBuildIncentiveKind.RECOVERY_VALUE
