@@ -37,7 +37,7 @@ def test_e2_actual_heal_dimension_ledger_does_not_overclaim_global_denominator()
 
     assert by_key["race"].status is E2DimensionStatus.COVERED
     assert by_key["class_route"].status is E2DimensionStatus.COVERED
-    assert by_key["attributes"].status is E2DimensionStatus.PARTIAL
+    assert by_key["attributes"].status is E2DimensionStatus.COVERED
     assert by_key["armor_weights_passives"].status is E2DimensionStatus.PARTIAL
     assert by_key["gear_packages_procs"].status is E2DimensionStatus.PARTIAL
     assert by_key["weapon_configuration_passives"].status is E2DimensionStatus.PARTIAL
@@ -55,6 +55,15 @@ def test_e2_actual_heal_dimension_ledger_keeps_open_gaps_explicit() -> None:
     open_rows = tuple(row for row in rows if row.status is not E2DimensionStatus.COVERED)
     assert open_rows
     assert all(row.remaining_gap for row in open_rows)
-    assert any("mixed legal allocation" in row.remaining_gap for row in open_rows)
     assert any("critical-heal evidence" in row.remaining_gap for row in open_rows)
     assert any("front/back weapon-configuration" in row.remaining_gap for row in open_rows)
+
+
+def test_e2_attribute_row_records_the_full_denominator_proof() -> None:
+    rows = build_dimension_coverage()
+    attributes = next(row for row in rows if row.key == "attributes")
+
+    assert attributes.status is E2DimensionStatus.COVERED
+    assert "2,145" in attributes.evidence
+    assert "pure Magicka/Stamina endpoints" in attributes.evidence
+    assert attributes.remaining_gap == ""
