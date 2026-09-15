@@ -6,11 +6,11 @@ import re
 import sqlite3
 from pathlib import Path
 
+from engine.config import DEFAULT_DATABASE
 from .skill_component_role import SkillComponentRole, extract_explicit_component_roles
 from .skill_component_text_evidence import extract_component_text_evidence
 
 
-DEFAULT_DATABASE = Path(__file__).resolve().parents[1] / "data" / "eso.db"
 _COLOR_TAG_RE = re.compile(r"\|c[0-9a-fA-F]{6}|\|r")
 
 
