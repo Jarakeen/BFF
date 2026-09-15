@@ -44,3 +44,14 @@ def test_recovery_controls_return_exact_selected_resource_and_fraction() -> None
         "resource": ResourceType.MAGICKA,
         "trigger_fraction": 0.35,
     }
+
+
+def test_recovery_controls_normalize_qt_string_item_data() -> None:
+    page = _Page(resource="magicka", trigger_percent=6.0)
+
+    policy = CanonicalRotationDashboardPage.canonical_recovery_policy(page)
+
+    assert policy == {
+        "resource": ResourceType.MAGICKA,
+        "trigger_fraction": 0.06,
+    }
