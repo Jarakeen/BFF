@@ -8,6 +8,13 @@ any time on genuinely unresolved class, gear, trait, enchant, CP, or runtime
 branches.
 """
 
+from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 from minmax.combat_effect_semantics import GameUpdate
 from minmax.named_combat_buffs import effects_for_buff
 from minmax.passive_math import (
