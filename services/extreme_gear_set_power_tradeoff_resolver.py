@@ -18,7 +18,7 @@ from minmax.stat_ids import StatId
 
 
 class ExtremeGearSetPowerTradeoffResolver:
-    """Map explicitly reviewed always-on power + H1-irrelevant tradeoff bonuses."""
+    """Map explicitly reviewed always-on power + H1-irrelevant companion mechanics."""
 
     _TALFYGS_TREACHERY = re.compile(
         r"^\(5 items\)\s*Increases your Weapon and Spell Damage by\s+"
@@ -27,6 +27,40 @@ class ExtremeGearSetPowerTradeoffResolver:
         r"(?P<damage_taken>\d+(?:\.\d+)?)%\.?$",
         re.IGNORECASE,
     )
+    _DREUGH_KING_SLAYER = re.compile(
+        r"^\(5 items\)\s*Gain Major Brutality and Sorcery at all times, increasing your Weapon and Spell Damage by\s+"
+        r"(?P<power>\d+(?:\.\d+)?)%\.\s*When you kill an enemy, you gain Major Expedition for\s+"
+        r"(?P<duration>\d+(?:\.\d+)?)\s+seconds, increasing your Movement Speedby\s+"
+        r"(?P<speed>\d+(?:\.\d+)?)%\.?$",
+        re.IGNORECASE,
+    )
+
+    @staticmethod
+    def _power_effects(
+        *,
+        operation: EffectOperation,
+        value: float,
+        unit: EffectUnit,
+        source_text: str,
+    ) -> list[Effect]:
+        return [
+            Effect(
+                operation=operation,
+                value=value,
+                source=source_text,
+                stat=StatId.WEAPON_DAMAGE,
+                kind=EffectKind.STAT,
+                unit=unit,
+            ),
+            Effect(
+                operation=operation,
+                value=value,
+                source=source_text,
+                stat=StatId.SPELL_DAMAGE,
+                kind=EffectKind.STAT,
+                unit=unit,
+            ),
+        ]
 
     def resolve(
         self,
@@ -38,32 +72,31 @@ class ExtremeGearSetPowerTradeoffResolver:
         description = normalize_eso_markup(str(bonus.description or "")).text.strip()
         if not description:
             return []
-
-        match = self._TALFYGS_TREACHERY.fullmatch(" ".join(description.split()))
-        if not match:
-            return []
-
-        key = "max" if use_max_value else "min"
-        value = float(match.group(key).replace(",", ""))
+        normalized = " ".join(description.split())
         source_text = source or f"Gear set bonus ({bonus.piece_count} items)"
-        return [
-            Effect(
+
+        match = self._TALFYGS_TREACHERY.fullmatch(normalized)
+        if match:
+            key = "max" if use_max_value else "min"
+            value = float(match.group(key).replace(",", ""))
+            return self._power_effects(
                 operation=EffectOperation.ADD,
                 value=value,
-                source=source_text,
-                stat=StatId.WEAPON_DAMAGE,
-                kind=EffectKind.STAT,
                 unit=EffectUnit.FLAT,
-            ),
-            Effect(
-                operation=EffectOperation.ADD,
+                source_text=source_text,
+            )
+
+        match = self._DREUGH_KING_SLAYER.fullmatch(normalized)
+        if match:
+            value = float(match.group("power"))
+            return self._power_effects(
+                operation=EffectOperation.ADD_PERCENT,
                 value=value,
-                source=source_text,
-                stat=StatId.SPELL_DAMAGE,
-                kind=EffectKind.STAT,
-                unit=EffectUnit.FLAT,
-            ),
-        ]
+                unit=EffectUnit.PERCENT,
+                source_text=source_text,
+            )
+
+        return []
 
 
 __all__ = ["ExtremeGearSetPowerTradeoffResolver"]
