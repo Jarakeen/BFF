@@ -155,6 +155,12 @@ class MainWindow(QMainWindow):
             self.page_containers[name] = container
             self.stack.addWidget(container)
 
+        # Help joins Settings after all canonical pages exist, so its contextual
+        # buttons can bind directly without replacing MainWindow.build_ui.
+        from ui.help_support import install_help_surfaces
+
+        install_help_surfaces(self)
+
         # Raid Engine pages join the canonical page registry directly. Their
         # preconstruction extensions are composed by the application bootstrap.
         from ui.raid_engine_dashboard_support import register_raid_engine_pages

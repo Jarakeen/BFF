@@ -89,25 +89,21 @@ def _add_context_help_buttons(window) -> None:
         header.add_context_widget(button)
 
 
+def install_help_surfaces(window) -> None:
+    """Attach Help to the completed canonical MainWindow page registry."""
+    _install_settings_help(window)
+    _add_context_help_buttons(window)
+
+
 def install() -> None:
-    """Embed Help in Settings and wire contextual page help before construction."""
+    """Install Help topic extensions before MainWindow construction."""
     global _INSTALLED
     if _INSTALLED:
         return
 
     from ui.help_feature_extension_support import install as install_help_feature_extensions
-    from ui.main_window import MainWindow
 
     # Extend the data-driven guide before HelpPage is constructed so screenshot
     # build import and portable calendar export are searchable like native topics.
     install_help_feature_extensions()
-
-    original_build_ui = MainWindow.build_ui
-
-    def build_ui_with_help(self) -> None:
-        original_build_ui(self)
-        _install_settings_help(self)
-        _add_context_help_buttons(self)
-
-    MainWindow.build_ui = build_ui_with_help
     _INSTALLED = True
