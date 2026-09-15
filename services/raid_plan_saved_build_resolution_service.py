@@ -59,8 +59,10 @@ class RaidPlanSavedBuildResolutionService:
                 unresolved=(f"Raid Plan seat {seat!r} is not present",),
             )
 
+        saved = tuple(build for build in tuple(saved_builds) if isinstance(build, PlayerBuild))
+        selected_build_id = _clean(member.selected_build_id)
         selected_build = _clean(member.selected_build_name)
-        if not selected_build:
+        if not selected_build_id and not selected_build:
             return RaidPlanSavedBuildResolution(
                 seat_id=member.seat_id,
                 unresolved=(
@@ -68,10 +70,33 @@ class RaidPlanSavedBuildResolutionService:
                 ),
             )
 
+        if selected_build_id:
+            candidates = [
+                build
+                for build in saved
+                if _key(getattr(build, "BuildId", "")) == _key(selected_build_id)
+            ]
+            if not candidates:
+                return RaidPlanSavedBuildResolution(
+                    seat_id=member.seat_id,
+                    unresolved=(
+                        f"No saved build matches stable BuildId {selected_build_id!r} for Raid Plan seat {member.seat_id!r}",
+                    ),
+                )
+            if len(candidates) > 1:
+                return RaidPlanSavedBuildResolution(
+                    seat_id=member.seat_id,
+                    unresolved=(
+                        f"Multiple saved builds share stable BuildId {selected_build_id!r}; exact build ownership is ambiguous",
+                    ),
+                )
+            return RaidPlanSavedBuildResolution(
+                seat_id=member.seat_id,
+                build=deepcopy(candidates[0]),
+            )
+
         candidates: list[PlayerBuild] = []
-        for build in tuple(saved_builds):
-            if not isinstance(build, PlayerBuild):
-                continue
+        for build in saved:
             if _key(build.BuildName) != _key(selected_build):
                 continue
             if member.character_name and _key(build.Name) != _key(member.character_name):
