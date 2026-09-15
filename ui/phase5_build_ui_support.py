@@ -384,13 +384,14 @@ class CharacterProgressionDialog(QDialog):
 
 
 def _finish_endgame_gear(editor) -> None:
-    """Set every populated gear slot to CP160 Legendary without changing mechanics."""
+    """Set every populated gear slot to CP160 Legendary with endgame glyphs."""
     for row in getattr(editor, "gear_rows", {}).values():
         slot = row.value
         if slot.is_empty:
             continue
         row.quality_combo.setCurrentText("Gold")
         row.level_combo.setCurrentText("CP160")
+        row.enchant_tier_combo.setCurrentText("Truly Superb")
 
 
 def _character_id_for_page(page, build: PlayerBuild) -> str | None:
@@ -418,7 +419,7 @@ def install() -> None:
     def gear_card_with_finisher(self):
         card = original_gear_card(self)
         button = FoundryButton("✦ FINISH ENDGAME GEAR", role=ButtonRole.PRIMARY, compact=True)
-        button.setToolTip("Set every populated gear slot to CP160 and Gold. Sets, traits, enchants, weights, and weapon types are unchanged.")
+        button.setToolTip("Set every populated gear slot to CP160, Gold quality, and Truly Superb glyph tier. Sets, traits, enchants, weights, and weapon types are unchanged.")
         button.clicked.connect(lambda *_: _finish_endgame_gear(self))
         card.set_header_action(button)
         return card
