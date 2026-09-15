@@ -36,7 +36,7 @@ def test_reviewed_identity_keeps_lylanar_and_turlassil_as_one_planning_fight():
 
 
 def test_assignment_usability_installs_after_context_actions():
-    source = Path("ui/operations_console_schedule_support.py").read_text(encoding="utf-8")
+    source = Path("ui/application_workspace_bootstrap.py").read_text(encoding="utf-8")
 
     assert "install_roster_assignment_usability_support()" in source
     assert source.index("install_roster_assignment_context_action_support()") < source.index(
