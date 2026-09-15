@@ -9,13 +9,13 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from engine.config import get_data_dir
-from services.build_service import BuildService
-from services.eso_database import EsoDatabase
-from services.generated_roster_plan_service import GeneratedRosterPlanService
-from services.phase12_5_team_workflow_audit import (
+from migration.phase12_5_team_workflow_audit import (
     Phase125TeamWorkflowAuditService,
     recruit_prescriptions_from_rows,
 )
+from services.build_service import BuildService
+from services.eso_database import EsoDatabase
+from services.generated_roster_plan_service import GeneratedRosterPlanService
 from services.roster_service import RosterService
 
 
