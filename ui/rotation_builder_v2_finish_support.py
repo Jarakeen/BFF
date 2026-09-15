@@ -4,15 +4,16 @@ from __future__ import annotations
 
 This layer intentionally does not claim Static/Dynamic planner support or completed
 pressure-window planning. It finishes the user-facing V2 shell and bridges the pieces
-that are already real: sparse Boss build inheritance, execution-profile Light Attack
-preference, build-aware recovery Heavy Attack stabilization, and explicit resource
-selection. Existing canonical services remain the authority for game mechanics.
+that are already real: sparse Team/Boss build inheritance, execution-profile Light
+Attack preference, build-aware recovery Heavy Attack stabilization, and explicit
+resource selection. Existing canonical services remain the authority for game mechanics.
 """
 
 from dataclasses import replace
 from types import MethodType
 
 from PySide6.QtWidgets import (
+    QComboBox,
     QGridLayout,
     QHBoxLayout,
     QLabel,
@@ -84,15 +85,56 @@ def _remove_header_wrapper(page, control) -> None:
             return
 
 
+def _base_build(page):
+    getter = getattr(page, "_rotation_base_selected_build", None)
+    if callable(getter):
+        return getter()
+    return page._selected_build()
+
+
+def _refresh_team_choices(page) -> None:
+    combo = page.rotation_team_combo
+    previous = str(combo.currentData() or "")
+    build = _base_build(page)
+    teams: list[str] = []
+    if build is not None:
+        for variant in tuple(getattr(build, "ContextVariants", ()) or ()):
+            team = " ".join(str(getattr(variant, "TeamName", "") or "").strip().split())
+            if team and team.casefold() not in {item.casefold() for item in teams}:
+                teams.append(team)
+
+    combo.blockSignals(True)
+    combo.clear()
+    combo.addItem("No team context", "")
+    for team in sorted(teams, key=str.casefold):
+        combo.addItem(team, team)
+    if previous:
+        index = combo.findData(previous)
+        if index >= 0:
+            combo.setCurrentIndex(index)
+    elif len(teams) == 1:
+        combo.setCurrentIndex(1)
+    combo.blockSignals(False)
+
+
 def _move_context_to_top_card(page) -> None:
     card = _card(page, "Build & Context")
     if card is None or bool(getattr(page, "_rotation_context_card_controls_installed", False)):
         return
 
+    page.rotation_team_combo = QComboBox()
+    page.rotation_team_combo.setMinimumWidth(170)
+    page.rotation_team_combo.setToolTip(
+        "Optional Team context for sparse Team / Team + Boss build variants. "
+        "A single available team is selected automatically; multiple teams remain explicit."
+    )
+    _refresh_team_choices(page)
+
     controls = (
         ("CHARACTER", page.character_combo),
         ("BUILD", page.build_combo),
-        ("CONTENT", page.rotation_content_combo),
+        ("TEAM", page.rotation_team_combo),
+        ("CONTENT / LOCATION", page.rotation_content_combo),
         ("BOSS", page.rotation_boss_combo),
         ("DIFFICULTY", page.rotation_threshold_difficulty_combo),
     )
@@ -104,10 +146,10 @@ def _move_context_to_top_card(page) -> None:
     grid.setContentsMargins(0, 0, 0, 0)
     grid.setHorizontalSpacing(8)
     grid.setVerticalSpacing(6)
-    for column in range(5):
+    for column in range(3):
         grid.setColumnStretch(column, 1)
-    for column, (title, control) in enumerate(controls):
-        grid.addWidget(page._context_field(title, control), 0, column)
+    for index, (title, control) in enumerate(controls):
+        grid.addWidget(page._context_field(title, control), index // 3, index % 3)
 
     card.body_layout.insertLayout(0, grid)
     page._rotation_context_card_controls_installed = True
@@ -120,11 +162,18 @@ def _boss_name(page) -> str:
     return str(combo.currentText() or "").strip()
 
 
-def _install_effective_boss_build_scope(page) -> None:
-    """Use sparse Boss variants only while Rotation is reading/evaluating the build.
+def _team_name(page) -> str:
+    combo = getattr(page, "rotation_team_combo", None)
+    if combo is None:
+        return ""
+    return str(combo.currentData() or "").strip()
 
-    Rotation artifacts must still save against the canonical parent build identity, so
-    the ordinary ``_selected_build`` behavior remains the default outside refresh and
+
+def _install_effective_boss_build_scope(page) -> None:
+    """Use sparse Team/Boss variants only while Rotation reads/evaluates a build.
+
+    Rotation artifacts still save against the canonical parent build identity, so the
+    ordinary ``_selected_build`` behavior remains the default outside refresh and
     Generate scopes.
     """
     if bool(getattr(page, "_rotation_effective_boss_scope_installed", False)):
@@ -133,15 +182,17 @@ def _install_effective_boss_build_scope(page) -> None:
     base_selected_build = page._selected_build
     page._rotation_base_selected_build = base_selected_build
     page._rotation_effective_scope_active = False
+    _refresh_team_choices(page)
 
     def effective_build(bound_page):
         base = base_selected_build()
         if base is None:
             return None
-        boss = _boss_name(bound_page)
-        if not boss:
-            return base
-        return resolve_build_context(base, boss_name=boss)
+        return resolve_build_context(
+            base,
+            team_name=_team_name(bound_page),
+            boss_name=_boss_name(bound_page),
+        )
 
     def selected_build(bound_page):
         if bool(getattr(bound_page, "_rotation_effective_scope_active", False)):
@@ -163,8 +214,13 @@ def _install_effective_boss_build_scope(page) -> None:
     def refresh_effective(*_args) -> None:
         run_effective(page._refresh_build_context)
 
+    def refresh_team_then_effective(*_args) -> None:
+        _refresh_team_choices(page)
+        refresh_effective()
+
     page.rotation_boss_combo.currentIndexChanged.connect(refresh_effective)
-    page.build_combo.currentIndexChanged.connect(refresh_effective)
+    page.rotation_team_combo.currentIndexChanged.connect(refresh_effective)
+    page.build_combo.currentIndexChanged.connect(refresh_team_then_effective)
 
     try:
         page.generate_button.clicked.disconnect()
@@ -446,11 +502,7 @@ def _wire_resource_selection(page) -> None:
             kwargs["resource"] = ResourceType.STAMINA
 
         replay_projection = getattr(page, "_rotation_v2_last_recovery_projection", None)
-        replay_resource = getattr(page, "_rotation_v2_last_recovery_resource", None)
-        requested_resource = kwargs.get("resource")
-        if replay_projection is not None and (
-            requested_resource is None or requested_resource is replay_resource
-        ):
+        if replay_projection is not None:
             return replay_projection
         return original_evaluate(*args, **kwargs)
 
