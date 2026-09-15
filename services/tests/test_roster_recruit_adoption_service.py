@@ -192,7 +192,7 @@ def test_recruit_adoption_ui_keeps_encounter_future_boundary_explicit() -> None:
     details = Path("ui/roster_recruit_prescription_details_support.py").read_text(
         encoding="utf-8"
     )
-    installer = Path("ui/team_optimization_hybrid_anchor_support.py").read_text(
+    installer = Path("ui/application_team_optimization_bootstrap.py").read_text(
         encoding="utf-8"
     )
 
