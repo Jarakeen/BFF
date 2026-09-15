@@ -23,6 +23,19 @@ def _ro_incentive() -> HealerHeavyAttackBuildIncentive:
     )
 
 
+def _essence_drain_incentive() -> HealerHeavyAttackBuildIncentive:
+    return HealerHeavyAttackBuildIncentive(
+        bar="front",
+        weapon=HeavyAttackWeaponType.RESTORATION_STAFF,
+        kind=HeavyAttackBuildIncentiveKind.REQUIRED_EFFECT,
+        name="Essence Drain",
+        source="verified fixture",
+        maximum_effect_duration_seconds=4.0,
+        required_effect_name="major_mending",
+        maintain_effect_uptime=True,
+    )
+
+
 def test_required_heavy_is_due_before_first_qualifying_trigger() -> None:
     state = evaluate_required_heavy_attack_due_state(
         incentive=_ro_incentive(),
@@ -33,6 +46,34 @@ def test_required_heavy_is_due_before_first_qualifying_trigger() -> None:
     assert state.next_eligible_seconds == 8.0
     assert state.effect_expires_seconds is None
     assert state.seconds_until_due == 0.0
+
+
+def test_essence_drain_upkeep_begins_early_enough_to_finish_before_major_mending_expires() -> None:
+    runtime = HeavyAttackEffectRuntimeState(
+        incentive_name="Essence Drain",
+        bar="front",
+        last_trigger_seconds=5.0,
+    )
+
+    early = evaluate_required_heavy_attack_due_state(
+        incentive=_essence_drain_incentive(),
+        current_time_seconds=7.0,
+        runtime=runtime,
+        required_window_seconds=1.8,
+    )
+    due = evaluate_required_heavy_attack_due_state(
+        incentive=_essence_drain_incentive(),
+        current_time_seconds=7.2,
+        runtime=runtime,
+        required_window_seconds=1.8,
+    )
+
+    assert early.due is False
+    assert early.effect_expires_seconds == pytest.approx(9.0)
+    assert early.next_eligible_seconds == pytest.approx(7.2)
+    assert early.seconds_until_due == pytest.approx(0.2)
+    assert due.due is True
+    assert "complete before effect expiry" in due.reason
 
 
 def test_ro_due_state_preserves_effect_expiry_and_target_lockout_gap() -> None:
