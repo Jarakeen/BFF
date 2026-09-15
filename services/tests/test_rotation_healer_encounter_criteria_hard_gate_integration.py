@@ -44,7 +44,7 @@ class _WindowOutputService:
     def __init__(self, modeled_rate):
         self.modeled_rate = float(modeled_rate)
 
-    def evaluate_windows(self, candidate):
+    def evaluate_windows(self, candidate, *, runtime_build_context_resolver=None):
         total = self.modeled_rate * _DEMAND.duration_seconds
         evidence = RotationHealerDemandHealingEvidence(
             demand=_DEMAND,
