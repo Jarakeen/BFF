@@ -98,9 +98,14 @@ def test_audit_reports_dependency_cycle(tmp_path: Path) -> None:
     assert "circular-dependency" in {row.code for row in result.errors}
 
 
-def test_audit_reports_unregistered_service_module_as_warning(tmp_path: Path) -> None:
+def test_audit_reports_unregistered_service_boundary_used_by_ui(tmp_path: Path) -> None:
     _write_module(tmp_path, "services.registered_service")
     _write_module(tmp_path, "services.forgotten_service")
+    _write_module(
+        tmp_path,
+        "ui.page",
+        "from services.forgotten_service import ExampleService\n",
+    )
     descriptors = (
         _descriptor("registered", implementation_path="services.registered_service"),
     )
@@ -108,8 +113,38 @@ def test_audit_reports_unregistered_service_module_as_warning(tmp_path: Path) ->
     result = audit_service_catalog(root=tmp_path, descriptors=descriptors)
 
     assert any(
-        row.code == "unregistered-service-module"
+        row.code == "unregistered-service-boundary"
         and row.message == "services/forgotten_service.py"
+        for row in result.warnings
+    )
+
+
+def test_audit_ignores_unregistered_leaf_service_consumed_only_inside_services(tmp_path: Path) -> None:
+    _write_module(tmp_path, "services.registered_service")
+    _write_module(tmp_path, "services.leaf_math_service")
+    _write_module(
+        tmp_path,
+        "services.consumer_service",
+        "from services.leaf_math_service import ExampleService\nclass ConsumerService: pass\n",
+    )
+    descriptors = (
+        _descriptor("registered", implementation_path="services.registered_service"),
+        _descriptor("consumer", implementation_path="services.consumer_service", responsibility="consumer"),
+    )
+
+    result = audit_service_catalog(root=tmp_path, descriptors=descriptors)
+
+    assert not any(row.message == "services/leaf_math_service.py" for row in result.warnings)
+
+
+def test_audit_reports_repository_boundary_even_without_external_consumer(tmp_path: Path) -> None:
+    _write_module(tmp_path, "services.orphan_repository", "class OrphanRepository: pass\n")
+
+    result = audit_service_catalog(root=tmp_path, descriptors=())
+
+    assert any(
+        row.code == "unregistered-service-boundary"
+        and row.message == "services/orphan_repository.py"
         for row in result.warnings
     )
 
@@ -124,7 +159,7 @@ def test_audit_ignores_catalog_infrastructure_module(tmp_path: Path) -> None:
     result = audit_service_catalog(root=tmp_path, descriptors=())
 
     assert not any(
-        row.code == "unregistered-service-module"
+        row.code == "unregistered-service-boundary"
         and row.message == "services/service_catalog.py"
         for row in result.warnings
     )
@@ -140,13 +175,13 @@ def test_audit_ignores_verified_old_page_only_service_utilities(tmp_path: Path) 
     warning_paths = {
         row.message
         for row in result.warnings
-        if row.code == "unregistered-service-module"
+        if row.code == "unregistered-service-boundary"
     }
 
     assert "services/ai_service.py" not in warning_paths
     assert "services/json_service.py" not in warning_paths
     assert "services/validation_service.py" not in warning_paths
-    assert "services/still_current_service.py" in warning_paths
+    assert "services/still_current_service.py" not in warning_paths
 
 
 def test_audit_reports_deprecated_service_without_successor(tmp_path: Path) -> None:
