@@ -94,6 +94,7 @@ def _build(report):
         trigger_fraction=0.35,
         restoration_resolver=object(),
         coverage_report=report,
+        coverage_dependency_keys=("warden:passive-duration",),
     )
 
 
