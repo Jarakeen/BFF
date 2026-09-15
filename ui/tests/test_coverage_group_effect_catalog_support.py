@@ -40,3 +40,10 @@ def test_unique_support_sets_have_their_own_filter():
     assert 'self.effect_filter.addItem("Unique Buffs")' in source
     assert 'category = "Unique Buffs"' in source
     assert 'CoveragePage._apply_coverage_filters = _apply_coverage_filters_with_unique' in source
+
+
+def test_unique_support_set_presence_is_overlaid_after_canonical_snapshot():
+    source = Path("ui/coverage_group_effect_catalog_support.py").read_text(encoding="utf-8")
+    assert "RaidUniqueSupportSetCapabilityService" in source
+    assert "selected_builds = tuple(builds)" in source
+    assert ".overlay(snapshot, selected_builds)" in source
