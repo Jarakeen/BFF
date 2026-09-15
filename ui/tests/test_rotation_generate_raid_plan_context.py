@@ -121,6 +121,23 @@ def test_raid_plan_member_binding_rejects_wrong_character() -> None:
         )
 
 
+def test_raid_plan_member_binding_rejects_missing_canonical_character_name() -> None:
+    base = RotationGenerateCanonicalContext(
+        evidence_inputs=object(),  # type: ignore[arg-type]
+    )
+    missing = _build()
+    missing.Name = ""
+    missing.CharacterName = "Rylonia"  # type: ignore[attr-defined]
+
+    with pytest.raises(ValueError, match="member character does not match"):
+        base.with_raid_plan_member(
+            raid_plan=_plan(),
+            seat_id="off-tank",
+            build=missing,
+            encounter_id="xalvakka",
+        )
+
+
 def test_raid_plan_member_binding_rejects_wrong_selected_build() -> None:
     base = RotationGenerateCanonicalContext(
         evidence_inputs=object(),  # type: ignore[arg-type]
@@ -133,6 +150,23 @@ def test_raid_plan_member_binding_rejects_wrong_selected_build() -> None:
             raid_plan=_plan(),
             seat_id="off-tank",
             build=wrong,
+            encounter_id="xalvakka",
+        )
+
+
+def test_raid_plan_member_binding_rejects_missing_canonical_build_name() -> None:
+    base = RotationGenerateCanonicalContext(
+        evidence_inputs=object(),  # type: ignore[arg-type]
+    )
+    missing = _build()
+    missing.BuildName = ""
+    missing.Name = "Tank Build"
+
+    with pytest.raises(ValueError, match="selected build does not match"):
+        base.with_raid_plan_member(
+            raid_plan=_plan(),
+            seat_id="off-tank",
+            build=missing,
             encounter_id="xalvakka",
         )
 
