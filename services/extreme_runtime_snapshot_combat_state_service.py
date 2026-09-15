@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_progression import CharacterProgression
 from minmax.combat_state import CombatState
 from minmax.external_group_buff_provenance import ExternalGroupBuffProvenanceResolver
@@ -29,17 +30,23 @@ from services.extreme_runtime_snapshot import ExtremeRuntimeSnapshot
 @dataclass(frozen=True)
 class ExtremeRuntimeSnapshotCombatStateResult:
     combat_state: CombatState
+    active_effects: tuple[EffectVariant, ...] = ()
     unresolved: tuple[str, ...] = ()
 
 
 class ExtremeRuntimeSnapshotCombatStateService:
-    """Project one role-neutral runtime snapshot into CombatState.
+    """Project one role-neutral runtime snapshot into CombatState plus timed effects.
 
     The class keeps its original Extreme-prefixed name for compatibility, but the
     responsibility is intentionally shared. Skill, gear, potion, and externally
     supplied group-buff runtime evidence enter through the snapshot's authoritative
     ordered runtime history. Role-specific healing, tanking, damage, rotation, or
     provider interpretation belongs above this projection boundary.
+
+    Named Major/Minor effects remain in ``CombatState.active_buffs``. Reviewed
+    timed non-named effects remain machine-readable in ``active_effects`` so later
+    objective consumers can interpret their canonical identity without pretending
+    every proc is a named buff.
 
     When ``gear_activation`` is supplied, gear proc projection uses the full
     two-bar legality path and therefore requires bar provenance on runtime effect
@@ -93,6 +100,7 @@ class ExtremeRuntimeSnapshotCombatStateService:
             for raw_name in base_active_buffs
             if (name := str(raw_name or "").strip())
         )
+        active_effects: list[EffectVariant] = []
         unresolved: list[str] = []
         in_combat = bool(base_state.in_combat)
         attempts = snapshot.effect_attempts
@@ -132,6 +140,7 @@ class ExtremeRuntimeSnapshotCombatStateService:
                         bar_transition_history_complete=snapshot.bar_transition_history_complete,
                     )
                     active_buffs.extend(gear_result.active_buffs)
+                    active_effects.extend(getattr(gear_result, "active_effects", ()))
                     unresolved.extend(gear_result.unresolved)
             else:
                 gear_service = self.gear_runtime_buffs
@@ -146,6 +155,7 @@ class ExtremeRuntimeSnapshotCombatStateService:
                         snapshot_time_seconds=snapshot.snapshot_time_seconds,
                     )
                     active_buffs.extend(gear_result.active_buffs)
+                    active_effects.extend(getattr(gear_result, "active_effects", ()))
                     unresolved.extend(gear_result.unresolved)
             in_combat = True
 
@@ -203,6 +213,11 @@ class ExtremeRuntimeSnapshotCombatStateService:
                 active_buffs.extend(projection.active_buffs)
                 unresolved.extend(projection.unresolved)
 
+        unique_effects: dict[tuple[str, str, float | None], EffectVariant] = {}
+        for effect in active_effects:
+            key = (str(effect.source), str(effect.name), effect.magnitude)
+            unique_effects[key] = effect
+
         return ExtremeRuntimeSnapshotCombatStateResult(
             combat_state=CombatState(
                 in_combat=in_combat,
@@ -212,5 +227,6 @@ class ExtremeRuntimeSnapshotCombatStateService:
                 in_home_campaign=base_state.in_home_campaign,
                 emperor_home_keeps=base_state.emperor_home_keeps,
             ),
+            active_effects=tuple(unique_effects.values()),
             unresolved=tuple(dict.fromkeys(message for message in unresolved if message)),
         )
