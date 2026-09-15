@@ -39,6 +39,9 @@ from services.rotation_healer_output_context_relevance_service import (
 from services.rotation_healer_periodic_runtime_evidence_service import (
     RotationHealerReviewedRuntimeObservation,
 )
+from services.rotation_plan_runtime_build_context_service import (
+    RotationRuntimeBuildContextResolver,
+)
 from services.rotation_static_build_context_service import (
     RotationStaticBuildContextResolution,
     RotationStaticBuildContextService,
@@ -65,10 +68,15 @@ class RotationHealerCanonicalRoleOutputFactoryResult:
     def evaluate_plan(
         self,
         candidate: GeneratedRotationCandidate,
+        *,
+        runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
     ) -> RotationCandidateRoleOutputEvidence:
         """Expose fail-closed aggregate output to canonical plan evidence."""
 
-        output = self.evaluate_windows(candidate)
+        output = self.evaluate_windows(
+            candidate,
+            runtime_build_context_resolver=runtime_build_context_resolver,
+        )
         return RotationCandidateRoleOutputEvidence(
             candidate_id=output.candidate_id,
             value=output.weakest_window_value,
@@ -78,13 +86,18 @@ class RotationHealerCanonicalRoleOutputFactoryResult:
     def evaluate_windows(
         self,
         candidate: GeneratedRotationCandidate,
+        *,
+        runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
     ) -> RotationCandidateHealerMultiDemandOutput:
         provider = self.role_output_provider
         if provider is None:
             detail = "; ".join(self.unresolved) or "healer role-output provider unavailable"
             raise ValueError("canonical healer role output is unavailable: " + detail)
 
-        output = provider.evaluate_windows(candidate)
+        output = provider.evaluate_windows(
+            candidate,
+            runtime_build_context_resolver=runtime_build_context_resolver,
+        )
         if not self.unresolved:
             return output
         blockers = tuple(
