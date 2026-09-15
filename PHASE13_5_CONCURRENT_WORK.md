@@ -85,6 +85,34 @@ Optimizer Adviser:
 - No database migration/reset occurred.
 - No Rotation engine/service file changed for the Adviser slice.
 
+### End-to-end acceptance audit — READY FOR VALIDATION
+
+A read-only closeout audit now exercises the complete stable chain against an actual locally saved Raid Plan when run by the user:
+
+```text
+persisted RaidPlan
+  -> exact saved-build resolution
+  -> canonical Coverage evidence
+  -> raid_plan EffectiveBuildSnapshot boundary used by Rotation
+  -> read-only Optimizer Adviser review
+```
+
+Files:
+- `tools/audit_raid_plan_acceptance.py`
+- `tools/tests/test_audit_raid_plan_acceptance.py`
+
+Contract:
+- the user's real `raid_plans.json` and `builds.json` are read only;
+- persistence round-trip is tested in a temporary repository, never against the live plan file;
+- exact selected builds are resolved through `RaidPlanCoverageScopeService`;
+- full Coverage evidence uses canonical named group effects plus reviewed unique support-set evidence;
+- each resolved chair is frozen as a `raid_plan` `EffectiveBuildSnapshot` and fingerprint-checked against the exact resolved build;
+- Adviser consumes the same plan/build truth;
+- plan blockers (open/unresolved chairs) are reported separately from pipeline health;
+- Powerful Assault is covered by an acceptance regression and remains `Conditional`, never asserted as uptime.
+
+This closeout audit is refinement/validation only. It does not add a new authority or change the stable Raid Plan roadmap.
+
 ### Roadmap complete
 
 ```text
@@ -114,4 +142,4 @@ Do not make ESO Logs, Rotation runtime state, or Team Optimization state a persi
 
 ## Rotation workstream — ACTIVE / INDEPENDENT
 
-Roto may continue its mechanics/runtime work independently. No Rotation-owned engine file or persisted `RaidPlan` shape changed in the latest Coverage/layout refinement.
+Roto may continue its mechanics/runtime work independently. No Rotation-owned engine file or persisted `RaidPlan` shape changed in the acceptance-audit slice.
