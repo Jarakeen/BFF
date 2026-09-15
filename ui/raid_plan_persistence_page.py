@@ -15,6 +15,9 @@ from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QPushButton, QVBox
 from engine.config import get_data_dir
 from models.raid_plan import RaidPlan
 from services.comp_builder_trial_scope import COMP_MAKER_TRIALS
+from services.raid_plan_member_identity_resolution_service import (
+    RaidPlanMemberIdentityResolutionService,
+)
 from services.raid_plan_repository import RaidPlanRepository, RaidPlanRepositoryError
 from ui.raid_plan_character_selection_page import RaidPlanCharacterSelectionPage
 from ui.raid_plan_page import RAID_PLAN_SEATS, _clean, _slug
@@ -35,9 +38,20 @@ def merge_visible_plan_with_loaded_snapshot(visible: RaidPlan, loaded: RaidPlan 
     for member in visible.members:
         prior = prior_by_seat.get(member.seat_id.casefold())
         if prior is not None and prior.gamertag.casefold() == member.gamertag.casefold():
+            same_character = _clean(prior.character_name).casefold() == _clean(
+                member.character_name
+            ).casefold()
             member = member.with_selection(
-                roster_member_id=prior.roster_member_id,
-                character_id=prior.character_id,
+                roster_member_id=(
+                    member.roster_member_id
+                    if member.roster_member_id is not None
+                    else prior.roster_member_id if same_character else None
+                ),
+                player_id=member.player_id or prior.player_id,
+                character_id=(
+                    member.character_id
+                    or (prior.character_id if same_character else None)
+                ),
                 primary_assignment=prior.primary_assignment,
                 secondary_assignment=prior.secondary_assignment,
                 notes=prior.notes,
@@ -122,17 +136,48 @@ class RaidPlanPersistencePage(RaidPlanCharacterSelectionPage):
                 selected[_slug(seat).casefold()] = build_id
         return selected
 
+    def _stable_identity_resolver(self) -> RaidPlanMemberIdentityResolutionService:
+        return RaidPlanMemberIdentityResolutionService(
+            self.roster_service.db,
+            self.build_service,
+        )
+
+    @staticmethod
+    def _resolved_member(member, resolution):
+        if resolution.unresolved:
+            details = "; ".join(resolution.unresolved)
+            raise ValueError(
+                f"Raid Plan seat {member.seat_id!r} has contradictory stable identity: {details}"
+            )
+        return member.with_selection(
+            roster_member_id=resolution.roster_member_id,
+            player_id=resolution.player_id,
+            character_id=resolution.character_id,
+            selected_build_id=resolution.selected_build_id,
+        )
+
     def current_plan(self) -> RaidPlan:
         visible = super().current_plan()
         selected_ids = self._selected_build_ids_by_seat()
-        members = tuple(
-            member.with_selection(
+        resolver = self._stable_identity_resolver()
+
+        members = []
+        for member in visible.members:
+            candidate = member.with_selection(
                 selected_build_id=selected_ids.get(member.seat_id.casefold())
             )
-            for member in visible.members
+            members.append(self._resolved_member(candidate, resolver.resolve(candidate)))
+        visible = replace(visible, members=tuple(members))
+
+        merged = merge_visible_plan_with_loaded_snapshot(
+            visible,
+            self._loaded_plan_snapshot,
         )
-        visible = replace(visible, members=members)
-        return merge_visible_plan_with_loaded_snapshot(visible, self._loaded_plan_snapshot)
+        validated = tuple(
+            self._resolved_member(member, resolver.resolve(member))
+            for member in merged.members
+        )
+        return replace(merged, members=validated)
 
     def refresh_saved_plan_picker(self, *, select_plan_id: str | None = None) -> None:
         if not hasattr(self, "saved_plan_combo"):
