@@ -19,6 +19,7 @@ from dataclasses import dataclass
 from minmax.effects import Effect, EffectOperation, EffectUnit
 from minmax.eso_markup import normalize_eso_markup
 from minmax.gear_set_effect_resolver import GearSetEffectResolver
+from minmax.gear_set_healing_condition_resolver import GearSetHealingConditionResolver
 from minmax.gear_set_repository import GearSetRepository
 from minmax.gear_set_resource_condition_resolver import GearSetResourceConditionResolver
 from minmax.gear_sets import GearSet, GearSetBonus
@@ -91,6 +92,7 @@ class ExtremeGearSetObjectiveService:
             "transformed",
         }
     )
+    _HEALING_RELEVANCE_CONDITIONS = frozenset({"food_buff_active"})
 
     _STAT_BY_OBJECTIVE = {
         "critical_damage": StatId.CRITICAL_DAMAGE,
@@ -147,10 +149,14 @@ class ExtremeGearSetObjectiveService:
 
         if effect.condition:
             condition = str(effect.condition).strip()
-            if not (
+            permitted = (
                 objective in cls._MAX_RESOURCE_OBJECTIVES
                 and condition in cls._MAX_RESOURCE_RELEVANCE_CONDITIONS
-            ):
+            ) or (
+                objective in cls._HEALING_OBJECTIVES
+                and condition in cls._HEALING_RELEVANCE_CONDITIONS
+            )
+            if not permitted:
                 return None, f"{effect.source}: relevant set effect requires condition {effect.condition}"
 
         if effect.operation is EffectOperation.ADD:
@@ -210,6 +216,7 @@ class ExtremeGearSetObjectiveService:
         active_bonuses = cls._active_bonuses(repository, gear_set.id, piece_count)
         effect_resolver = resolver or GearSetEffectResolver()
         resource_condition_resolver = GearSetResourceConditionResolver()
+        healing_condition_resolver = GearSetHealingConditionResolver()
         all_effects: list[Effect] = []
         unresolved: list[str] = []
         reviewed_delta = 0.0
@@ -226,6 +233,14 @@ class ExtremeGearSetObjectiveService:
             if not effects and objective in cls._MAX_RESOURCE_OBJECTIVES:
                 effects = tuple(
                     resource_condition_resolver.resolve(
+                        bonus,
+                        use_max_value=True,
+                        source=source,
+                    )
+                )
+            if not effects and objective in cls._HEALING_OBJECTIVES:
+                effects = tuple(
+                    healing_condition_resolver.resolve(
                         bonus,
                         use_max_value=True,
                         source=source,
