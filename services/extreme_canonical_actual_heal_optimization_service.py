@@ -2,6 +2,12 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+from services.extreme_actual_heal_armor_weight_candidate_service import (
+    ExtremeActualHealArmorWeightCandidateService,
+)
+from services.extreme_actual_heal_armor_weight_legality_service import (
+    ExtremeActualHealArmorWeightLegalityService,
+)
 from services.extreme_actual_heal_attribute_projection_service import (
     ExtremeActualHealAttributeProjectionService,
 )
@@ -31,16 +37,23 @@ class ExtremeCanonicalActualHealOptimizationService(ExtremeActualHealOptimizatio
     shared a unit. Any heal-relevant CP coverage gap remains explicit unresolved
     evidence.
 
-    The standing H1 attribute axis is also proof-reduced here. The complete legal
+    The standing H1 attribute axis is proof-reduced here. The complete legal
     64-point simplex remains the denominator, but a selected heal is reduced to
-    pure Magicka/Stamina endpoints only when its active coefficient family is
-    entirely the reviewed type-8 highest-resource model. If that proof fails, the
-    inherited conservative candidate path remains active and the proof gap is
-    carried as unresolved evidence.
+    pure Magicka/Stamina endpoints only when every contributing HEAL coefficient
+    is on the reviewed type-8, non-negative highest-resource path. If that proof
+    fails, the inherited conservative candidate path remains active and the proof
+    gap is carried as unresolved evidence.
+
+    Armor-weight search uses canonical set-piece ``armor_type`` evidence for the
+    current gear layout. It enumerates every physically legal slot-weight layout
+    and keeps one deterministic witness for each H1-relevant Medium-piece-count +
+    distinct-armor-type signature. Joint gear-package + weight expansion remains
+    a later proof boundary; this layer does not pretend a set can change armor
+    weight merely because that would score better.
 
     Explicitly injected optimizers, healing-event evaluators, CP candidate
-    services, and attribute projection services remain authoritative for focused
-    tests and specialist callers.
+    services, attribute projection services, and armor candidate services remain
+    authoritative for focused tests and specialist callers.
     """
 
     CP_SEARCH_SCOPE = "legal heal-relevant Champion Point loadout search"
@@ -52,6 +65,7 @@ class ExtremeCanonicalActualHealOptimizationService(ExtremeActualHealOptimizatio
         healing_events=None,
         champion_point_candidates: ExtremeActualHealChampionPointCandidateService | None = None,
         attribute_projection: ExtremeActualHealAttributeProjectionService | None = None,
+        armor_weight_candidates: ExtremeActualHealArmorWeightCandidateService | None = None,
         **kwargs,
     ) -> None:
         core_optimizer = optimizer or ExtremeCompleteOptimizationService()
@@ -80,16 +94,26 @@ class ExtremeCanonicalActualHealOptimizationService(ExtremeActualHealOptimizatio
                 else None
             )
         )
+        self.armor_weight_candidates = armor_weight_candidates
+        if self.armor_weight_candidates is None and database_path is not None:
+            self.armor_weight_candidates = ExtremeActualHealArmorWeightCandidateService(
+                ExtremeActualHealArmorWeightLegalityService(database_path)
+            )
+
         self._champion_point_search_unresolved: tuple[str, ...] = ()
         self._attribute_search_unresolved: tuple[str, ...] = ()
         self._attribute_search_scope: tuple[str, ...] = ()
         self._attribute_search_entity_id = ""
+        self._armor_weight_search_unresolved: tuple[str, ...] = ()
+        self._armor_weight_search_scope: tuple[str, ...] = ()
 
     def optimize(self, baseline_build, entity_id: str, *args, **kwargs):
         self._champion_point_search_unresolved = ()
         self._attribute_search_unresolved = ()
         self._attribute_search_scope = ()
         self._attribute_search_entity_id = str(entity_id or "").strip()
+        self._armor_weight_search_unresolved = ()
+        self._armor_weight_search_scope = ()
         result = super().optimize(baseline_build, entity_id, *args, **kwargs)
         unresolved = tuple(
             dict.fromkeys(
@@ -97,13 +121,14 @@ class ExtremeCanonicalActualHealOptimizationService(ExtremeActualHealOptimizatio
                     *result.unresolved,
                     *self._champion_point_search_unresolved,
                     *self._attribute_search_unresolved,
+                    *self._armor_weight_search_unresolved,
                 )
             )
         )
         search_scope = result.search_scope
         if self.CP_SEARCH_SCOPE not in search_scope:
             search_scope = (*search_scope, self.CP_SEARCH_SCOPE)
-        for item in self._attribute_search_scope:
+        for item in (*self._attribute_search_scope, *self._armor_weight_search_scope):
             if item not in search_scope:
                 search_scope = (*search_scope, item)
         return replace(
@@ -159,27 +184,56 @@ class ExtremeCanonicalActualHealOptimizationService(ExtremeActualHealOptimizatio
         entity_id: str,
         active_bar: str,
     ):
-        inherited = super()._additional_candidates(
-            baseline_build,
-            progression=progression,
-            character_id=character_id,
-            baseline_build_id=baseline_build_id,
-            entity_id=entity_id,
-            active_bar=active_bar,
-        )
-        if self.champion_point_candidates is None:
-            return inherited
-        result = self.champion_point_candidates.build_candidates(
-            baseline_build,
-            character_id=character_id,
-            baseline_build_id=baseline_build_id,
-        )
-        self._champion_point_search_unresolved = tuple(
-            dict.fromkeys(
-                (
-                    *self._champion_point_search_unresolved,
-                    *result.unresolved,
-                )
+        inherited = list(
+            super()._additional_candidates(
+                baseline_build,
+                progression=progression,
+                character_id=character_id,
+                baseline_build_id=baseline_build_id,
+                entity_id=entity_id,
+                active_bar=active_bar,
             )
         )
-        return (*inherited, *result.candidates)
+
+        if self.champion_point_candidates is not None:
+            cp_result = self.champion_point_candidates.build_candidates(
+                baseline_build,
+                character_id=character_id,
+                baseline_build_id=baseline_build_id,
+            )
+            self._champion_point_search_unresolved = tuple(
+                dict.fromkeys(
+                    (
+                        *self._champion_point_search_unresolved,
+                        *cp_result.unresolved,
+                    )
+                )
+            )
+            inherited.extend(cp_result.candidates)
+
+        if self.armor_weight_candidates is not None:
+            armor_result = self.armor_weight_candidates.build_candidates(
+                baseline_build,
+                character_id=character_id,
+                baseline_build_id=baseline_build_id,
+            )
+            self._armor_weight_search_unresolved = tuple(
+                dict.fromkeys(
+                    (
+                        *self._armor_weight_search_unresolved,
+                        *armor_result.unresolved,
+                    )
+                )
+            )
+            if armor_result.denominator_proven:
+                scope = (
+                    f"physical armor-weight search for current gear layout: "
+                    f"{armor_result.raw_layout_count} legal slot layouts reduced to "
+                    f"{armor_result.retained_signature_count} H1-relevant signatures",
+                )
+                self._armor_weight_search_scope = tuple(
+                    dict.fromkeys((*self._armor_weight_search_scope, *scope))
+                )
+                inherited.extend(armor_result.candidates)
+
+        return tuple(inherited)
