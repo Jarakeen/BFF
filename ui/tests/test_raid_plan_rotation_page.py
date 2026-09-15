@@ -12,14 +12,17 @@ def test_raid_plan_rotation_page_preserves_coverage_inheritance() -> None:
 
 
 def test_raid_engine_routes_selected_chair_to_existing_rotation_page() -> None:
-    source = Path("ui/raid_engine_dashboard_support.py").read_text(encoding="utf-8")
+    route_source = Path("ui/raid_engine_dashboard_support.py").read_text(encoding="utf-8")
+    adviser_source = Path("ui/raid_plan_adviser_page.py").read_text(encoding="utf-8")
 
-    assert "from ui.raid_plan_rotation_page import RaidPlanRotationPage" in source
-    assert "raid_plans = RaidPlanRotationPage()" in source
-    assert "rotationRequested.connect" in source
-    assert 'window.pages.get("rotations")' in source
-    assert "bind_raid_plan_rotation_page" in source
-    assert 'window.show_page("rotations")' in source
+    assert "from ui.raid_plan_adviser_page import RaidPlanAdviserPage" in route_source
+    assert "raid_plans = RaidPlanAdviserPage()" in route_source
+    assert "from ui.raid_plan_rotation_page import RaidPlanRotationPage" in adviser_source
+    assert "class RaidPlanAdviserPage(RaidPlanRotationPage):" in adviser_source
+    assert "rotationRequested.connect" in route_source
+    assert 'window.pages.get("rotations")' in route_source
+    assert "bind_raid_plan_rotation_page" in route_source
+    assert 'window.show_page("rotations")' in route_source
 
 
 def test_rotation_handoff_does_not_mutate_rotation_engine_files() -> None:
