@@ -23,13 +23,7 @@ _EXPECTED_JUMPS = (0,) + _THRESHOLDS
 
 @dataclass(frozen=True)
 class HealingChampionPointComponentModifiers:
-    """Actual-effect modifiers for one classified healing coefficient.
-
-    ``power_bonus`` is added inside the coefficient's Weapon/Spell Damage power
-    term. ``healing_done_percent`` is a single additive category bucket applied
-    after raw coefficient evaluation. Neither value is a standing sheet stat or
-    assumed tooltip-visible modifier.
-    """
+    """Actual-effect modifiers for one classified healing coefficient."""
 
     power_bonus: float = 0.0
     healing_done_percent: float = 0.0
@@ -52,6 +46,12 @@ _VERIFIED = {
         description_fragment="Grants 41 Weapon and Spell Damage to your healing abilities per stage.",
         contribution="power",
     ),
+    "focused mending": _VerifiedHealingCP(
+        name="Focused Mending",
+        per_stage=2.0,
+        description_fragment="Increases your Healing Done with single target heals by 2% per stage.",
+        contribution="single_target_healing_done",
+    ),
     "soothing tide": _VerifiedHealingCP(
         name="Soothing Tide",
         per_stage=2.0,
@@ -72,11 +72,12 @@ class HealingChampionPointComponentResolver:
 
     Applicability is intentionally two-stage and fail-closed:
       1. ESO-Hub's harvested CP -> rank/morph relationship must exist.
-      2. Persisted Phase 3 component semantics must qualify the coefficient.
+      2. Persisted component semantics must qualify the coefficient.
 
-    Component semantics may narrow an explicit relationship but never invent
-    one. Source CP metadata is also verified against the current database before
-    any numeric contribution is returned.
+    ``is_aoe`` is the reviewed target-shape identity used by both sides of the
+    mutually exclusive target-shape branch: True qualifies Soothing Tide and
+    False qualifies Focused Mending. None remains unresolved and never becomes
+    an inferred single-target claim.
     """
 
     def __init__(
@@ -177,7 +178,12 @@ class HealingChampionPointComponentResolver:
         applied: list[str] = []
         unresolved: list[str] = []
 
-        for key in ("rejuvenator", "swift renewal", "soothing tide"):
+        for key in (
+            "rejuvenator",
+            "focused mending",
+            "swift renewal",
+            "soothing tide",
+        ):
             allocation = selected.get(key)
             relationship = relationships.get(key)
             if allocation is None or allocation.points <= 0 or relationship is None:
@@ -206,6 +212,14 @@ class HealingChampionPointComponentResolver:
                     )
                     continue
                 if component.is_aoe is not True:
+                    continue
+            elif rule.contribution == "single_target_healing_done":
+                if component.is_aoe is None:
+                    unresolved.append(
+                        f"Healing CP applicability unresolved: {rule.name}: component target shape unknown"
+                    )
+                    continue
+                if component.is_aoe is not False:
                     continue
 
             max_points, source_error = self._verify_source(rule)
