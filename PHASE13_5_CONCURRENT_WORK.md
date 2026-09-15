@@ -2,9 +2,9 @@
 
 This file is a short-lived coordination note for parallel Phase 13.5 workstreams. It is not architecture authority and should be removed when the concurrent work settles.
 
-## Raid Plan workstream — OPTIMIZER ADVISER READY FOR VALIDATION
+## Raid Plan workstream — ROADMAP COMPLETE / STABLE
 
-Raid Engine persists canonical `RaidPlan` snapshots, exposes plan-owned Primary/Secondary assignments, hands the exact current Raid Plan into Coverage, exposes a selected-chair handoff into Rotation, and now has a read-only Optimizer Adviser handoff for the whole current plan.
+Raid Engine persists canonical `RaidPlan` snapshots, exposes plan-owned Primary/Secondary assignments, hands the exact current Raid Plan into Coverage, exposes a selected-chair handoff into Rotation, and has a read-only Optimizer Adviser handoff for the whole current plan.
 
 ### Verified checkpoints
 
@@ -12,8 +12,9 @@ Raid Engine persists canonical `RaidPlan` snapshots, exposes plan-owned Primary/
 - Assignment/persistence/bridge gate: **30 passed in 3.22s**
 - Coverage/persistence/bridge gate: **34 passed in 4.22s**
 - Coverage support-set + Rotation handoff gate: **35 passed in 3.23s**
+- Optimizer Adviser gate: **44 passed in 7.75s**
 
-### Stable prior slices
+### Stable Raid Plan slices
 
 Persistence:
 - `services/raid_plan_repository.py`
@@ -47,19 +48,18 @@ Rotation handoff:
 - encounter selection remains owned by Rotation
 - no Rotation engine/service ownership moved into RaidPlan
 
-### Optimizer Adviser slice — READY FOR VALIDATION
-
-New/changed contracts:
+Optimizer Adviser:
 - `services/raid_plan_optimizer_adviser_service.py`
 - `services/tests/test_raid_plan_optimizer_adviser_service.py`
 - `services/tests/test_raid_plan_optimizer_adviser_catalog_registration.py`
 - `ui/raid_plan_optimizer_adviser_support.py`
 - `ui/raid_plan_adviser_page.py`
 - `ui/tests/test_raid_plan_optimizer_adviser_support.py`
-- `ui/raid_engine_dashboard_support.py` now instantiates `RaidPlanAdviserPage`
+- `ui/raid_engine_dashboard_support.py` instantiates `RaidPlanAdviserPage`
 - prior assignment/Coverage/Rotation route-contract tests advance through the Adviser-aware subclass
 
-Adviser contract:
+### Optimizer Adviser contract — STABLE
+
 - Raid Plan's former **Open Optimizer** action is presented as **Open Adviser**.
 - The exact current RaidPlan is passed to the existing Optimization workspace.
 - The existing team editor is populated from exact resolved Raid Plan saved builds with `autofill=False`; the Adviser does not choose replacement players/builds.
@@ -76,17 +76,17 @@ Adviser contract:
 - No database migration/reset occurred.
 - No Rotation engine/service file changed for the Adviser slice.
 
-### Roadmap
+### Roadmap complete
 
 ```text
 Persistence -> Assignments -> Coverage -> Rotation -> Optimizer Adviser
 ```
 
-Persistence, Assignments, Coverage, and Rotation are stable. Optimizer Adviser is implemented and **awaiting its focused validation gate** before the roadmap is marked complete.
+All five Raid Plan roadmap slices are now implemented and verified green.
 
 ### Rotation workstream coordination
 
-Roto/Rotation remains an independent downstream consumer. The Adviser consumes RaidPlan/Coverage/build evidence and does not alter Rotation runtime or canonical generation contracts.
+Roto/Rotation remains an independent downstream consumer. Adviser consumes RaidPlan/Coverage/build evidence and does not alter Rotation runtime or canonical generation contracts.
 
 Do **not** add a second Raid Plan persistence, assignment, Coverage, effective-build, Rotation context, or optimization-advice authority.
 
