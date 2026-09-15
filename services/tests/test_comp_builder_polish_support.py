@@ -62,7 +62,7 @@ def test_polish_uses_build_catalog_role_language_and_circle_check_icon() -> None
 
 
 def test_polish_is_installed_after_layout() -> None:
-    installer = Path("ui/team_optimization_hybrid_anchor_support.py").read_text(encoding="utf-8")
+    installer = Path("ui/application_team_optimization_bootstrap.py").read_text(encoding="utf-8")
 
     assert "install_comp_builder_layout()" in installer
     assert "install_comp_builder_polish()" in installer
