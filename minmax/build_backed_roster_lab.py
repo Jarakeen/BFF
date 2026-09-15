@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from engine.config import DEFAULT_DATABASE
+
 from .character_build.bar import Bar
 from .character_build.capability_resolver import CharacterCapabilityResolver
 from .character_build.character_build import CharacterBuild
@@ -20,8 +22,6 @@ from .mock_roster_lab import MockRosterLab
 from .role import Role
 from .roster_capability_resolver import RosterCapabilityResolver
 from .skill_effect_repository import SkillEffectRepository
-
-DEFAULT_DATABASE = Path(__file__).resolve().parents[1] / "data" / "eso.db"
 
 
 @dataclass(frozen=True)
