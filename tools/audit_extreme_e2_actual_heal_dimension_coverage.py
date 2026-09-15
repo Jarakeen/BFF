@@ -111,10 +111,9 @@ def build_dimension_coverage() -> tuple[E2DimensionCoverage, ...]:
         E2DimensionCoverage(
             "attributes",
             "Attributes",
-            E2DimensionStatus.PARTIAL,
-            "ExtremeActualHealOptimizationService._resource_attribute_candidates",
-            "Current H1 search materializes the three pure 64-point resource allocations and rescoring is canonical.",
-            "E2 still lacks a denominator/dominance proof showing that no mixed legal allocation can beat those representatives for every candidate heal.",
+            E2DimensionStatus.COVERED,
+            "ExtremeActualHealAttributeProjectionService + ExtremeCanonicalActualHealOptimizationService",
+            "The complete 2,145-allocation 64-point simplex remains the denominator and is proof-reduced to pure Magicka/Stamina endpoints only for the reviewed standing type-8 highest-resource H1 coefficient path; unsupported coefficient families fail closed to the conservative candidate path.",
         ),
         E2DimensionCoverage(
             "mundus",
