@@ -44,6 +44,15 @@ _HEAL_RELEVANT_STATS = frozenset(
         StatId.CRITICAL_HEALING,
     }
 )
+_HEAL_RELEVANT_DESCRIPTION_MARKERS = (
+    "heal",
+    "max magicka",
+    "max stamina",
+    "weapon and spell damage",
+    "weapon damage",
+    "spell damage",
+    "critical healing",
+)
 
 
 @dataclass(frozen=True)
@@ -73,6 +82,11 @@ class ExtremeActualHealChampionPointCandidateService:
             repository = ChampionPointStaticRepository(database_path)
         self.repository = repository
 
+    @staticmethod
+    def _description_may_affect_actual_heal(description: str) -> bool:
+        text = " ".join(str(description or "").strip().casefold().split())
+        return any(marker in text for marker in _HEAL_RELEVANT_DESCRIPTION_MARKERS)
+
     def _discover(self) -> tuple[tuple[ChampionPointRecord, ...], tuple[str, ...]]:
         relevant: list[ChampionPointRecord] = []
         unresolved: list[str] = []
@@ -88,8 +102,7 @@ class ExtremeActualHealChampionPointCandidateService:
 
             effects, problems = self.repository.resolve(record.name, record.max_points)
             if problems:
-                description = str(record.description or "").casefold()
-                if "heal" in description:
+                if self._description_may_affect_actual_heal(record.description):
                     unresolved.extend(
                         f"{record.name}: {problem}" for problem in problems
                     )
