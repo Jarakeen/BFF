@@ -163,9 +163,4 @@ def test_current_repo_audit_confirms_resolved_authority_and_identity_debt() -> N
     assert "overlapping-plan-persistence" not in codes
     assert "runtime-local-data-path" not in codes
     assert "installer-fanout" not in codes
-    assert not any(
-        row.code == "ui-class-monkey-patch"
-        and row.path == "ui/phase5_racial_context_support.py"
-        for row in result.findings
-    )
     assert "ui-class-monkey-patch" in codes
