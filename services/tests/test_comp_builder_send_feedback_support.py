@@ -40,7 +40,7 @@ def test_selected_build_details_surface_skills_before_send() -> None:
 
 
 def test_send_feedback_and_roster_cleanup_are_installed() -> None:
-    installer = Path("ui/team_optimization_hybrid_anchor_support.py").read_text(encoding="utf-8")
+    installer = Path("ui/application_team_optimization_bootstrap.py").read_text(encoding="utf-8")
 
     assert "install_comp_builder_send_feedback()" in installer
     assert "install_comp_builder_roster_view()" in installer
