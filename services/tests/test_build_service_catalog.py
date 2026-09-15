@@ -52,3 +52,14 @@ def test_saved_build_capability_analysis_does_not_claim_runtime_uptime() -> None
     assert analysis.evidence_class is EvidenceClass.GAME_MECHANIC
     assert analysis.encounter_aware is False
     assert "Static capability availability is not runtime uptime" in analysis.notes
+
+
+def test_unique_support_set_capability_is_static_and_uptime_bounded() -> None:
+    service = canonical_service_for("unique_support_set_static_capability_projection")
+
+    assert service is not None
+    assert service.service_id == "build.unique_support_set_capability"
+    assert service.dependencies == ("build.saved_capability_analysis",)
+    assert service.evidence_class is EvidenceClass.GAME_MECHANIC
+    assert service.ui_safe is True
+    assert "never imply observed or guaranteed uptime" in service.notes
