@@ -3,6 +3,7 @@ from minmax.character_build.effect_layer import EffectLayer
 from minmax.effect_source_persistence import EffectSourcePersistence
 from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
 from minmax.runtime_event import RuntimeEvent
+from minmax.support_stacking import StackingBehavior
 from minmax.support_target_type import SupportTargetType
 from services.extreme_dual_bar_gear_runtime_legality_service import (
     ExtremeDualBarGearRuntimeLegalityService,
@@ -28,6 +29,8 @@ class _Resolver:
                 duration=10.0,
                 trigger="damage_off_balance_target",
                 target_type=SupportTargetType.SELF,
+                stacking=StackingBehavior.UNIQUE,
+                exclusivity_group="armor_of_truth_power",
                 source_persistence=EffectSourcePersistence.PERSISTS_AFTER_ACTIVATION,
             )
         ]
