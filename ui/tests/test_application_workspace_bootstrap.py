@@ -4,10 +4,19 @@ from pathlib import Path
 def test_schedule_feature_no_longer_owns_workspace_composition() -> None:
     source = Path("ui/operations_console_schedule_support.py").read_text(encoding="utf-8")
 
-    assert "bootstrap_workspace_extensions()" in source
+    assert "bootstrap_workspace_extensions" not in source
     assert "install_roster_import_support()" not in source
     assert "install_rotation_dashboard_layout_support()" not in source
     assert "install_build_context_variant_support()" not in source
+
+
+def test_application_startup_owns_workspace_composition_before_schedule_feature() -> None:
+    source = Path("app.py").read_text(encoding="utf-8")
+
+    assert "from ui.application_workspace_bootstrap import bootstrap_workspace_extensions" in source
+    assert source.index("bootstrap_workspace_extensions()") < source.index(
+        "install_operations_console_schedule_support()"
+    )
 
 
 def test_workspace_bootstrap_owns_cross_feature_install_order() -> None:
