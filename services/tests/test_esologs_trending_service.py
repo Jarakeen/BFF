@@ -17,7 +17,17 @@ class _TrendingClient:
                 {"name": "HealB", "class": "Warden", "report": {"code": "B", "fightID": 2}},
             ],
             "tank": [
-                {"name": "TankA", "class": "Dragonknight", "report": {"code": "A", "fightID": 1}},
+                {
+                    "name": "TankA",
+                    "class": "Dragonknight",
+                    "report": {"code": "A", "fightID": 1},
+                    "combatantInfo": {
+                        "gear": [
+                            {"setName": "Coral Riptide"},
+                            {"setName": "Deadly Strike"},
+                        ]
+                    },
+                },
                 {"name": "TankB", "class": "Necromancer", "report": {"code": "B", "fightID": 2}},
             ],
         }
@@ -38,7 +48,11 @@ class _TrendingClient:
         metric = variables["metric"]
         self.query_calls.append((metric, dict(variables)))
 
-        if metric == "dps" and variables.get("className") == "Tanks":
+        if metric == "tankcombineddps":
+            rows = self.rankings["tank"]
+        elif metric == "dps" and variables.get("specName") in {"Tank", "tank"}:
+            rows = self.rankings["tank"]
+        elif metric == "dps" and variables.get("className") == "Tanks":
             rows = self.rankings["tank"]
         else:
             rows = self.rankings[metric]
@@ -168,18 +182,18 @@ def test_trending_aggregates_top_individual_players_by_role():
     assert [metric for metric, _ in client.query_calls] == [
         "dps",
         "hps",
-        "dps",
+        "tankcombineddps",
     ]
     assert all("role" not in variables for _, variables in client.query_calls)
     tank_variables = client.query_calls[2][1]
-    assert tank_variables["className"] == "Tanks"
+    assert tank_variables["className"] is None
     assert tank_variables["specName"] is None
     assert report.ranked_players_analyzed == 7
     assert report.ranked_players_skipped == 0
     assert report.players_analyzed == 7
 
     # Seven ranked players came from only two reports. Their full team summaries are
-    # fetched once each, then only the ranked identities are retained.
+    # fetched once each, then only identities proven in the requested role bucket remain.
     assert client.summary_calls == [("A", 1), ("B", 2)]
 
     dd = report.role_summaries["dps"]
@@ -200,6 +214,38 @@ def test_trending_aggregates_top_individual_players_by_role():
     tank = report.role_summaries["tank"]
     assert tank.gear_sets[0].name == "Pearlescent Ward"
     assert tank.gear_sets[0].count == 2
+    assert all(row.name != "Coral Riptide" for row in tank.gear_sets)
+    assert all(row.name != "Deadly Strike" for row in tank.gear_sets)
+
+
+def test_tank_ranking_combatant_info_cannot_override_report_role_bucket():
+    client = _TrendingClient()
+    client.rankings["tank"] = [
+        {
+            "name": "DDA",
+            "class": "Arcanist",
+            "report": {"code": "A", "fightID": 1},
+            "combatantInfo": {
+                "gear": [
+                    {"setName": "Coral Riptide"},
+                    {"setName": "Deadly Strike"},
+                ]
+            },
+        }
+    ]
+
+    report = EsoLogsTrendingService(client).analyze_encounter(
+        zone_id=1,
+        zone_name="Sunspire",
+        encounter_id=99,
+        encounter_name="Nahviintaas",
+        player_limit=5,
+    )
+
+    tank = report.role_summaries["tank"]
+    assert tank.player_count == 0
+    assert tank.gear_sets == ()
+    assert report.ranked_players_skipped == 1
 
 
 def test_trending_does_not_count_duplicate_equipped_pieces_as_multiple_players():
