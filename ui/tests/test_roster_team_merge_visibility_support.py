@@ -39,7 +39,7 @@ def test_merge_button_is_inserted_inside_nested_team_card_layout() -> None:
 
 
 def test_visibility_support_installs_after_merge_workflow() -> None:
-    source = Path("ui/operations_console_schedule_support.py").read_text(encoding="utf-8")
+    source = Path("ui/application_workspace_bootstrap.py").read_text(encoding="utf-8")
     assert source.index("install_roster_team_merge_support()") < source.index(
         "install_roster_team_merge_visibility_support()"
     )
