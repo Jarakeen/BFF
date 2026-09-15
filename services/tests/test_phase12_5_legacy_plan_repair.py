@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from migration.phase12_5_legacy_plan_repair import Phase125LegacyPlanRepairService
 from models.build_model import BuildRoster, PlayerBuild
 from models.roster_model import RosterMember
 from services.eso_database import EsoDatabase
@@ -7,7 +8,6 @@ from services.generated_roster_plan_service import (
     GeneratedRosterPlanService,
     GeneratedRosterPlanSlot,
 )
-from services.phase12_5_legacy_plan_repair import Phase125LegacyPlanRepairService
 from services.roster_service import RosterService
 
 
