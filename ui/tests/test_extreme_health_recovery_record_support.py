@@ -2,7 +2,7 @@ from pathlib import Path
 
 from services.extreme_health_recovery_record_service import ExtremeHealthRecoveryRecordService
 from ui import extreme_health_recovery_record_support
-from ui import extreme_optimization_support
+from ui import application_extreme_optimization_bootstrap
 
 
 def test_health_recovery_record_payload_is_projected_from_canonical_record() -> None:
@@ -25,7 +25,7 @@ def test_health_recovery_record_payload_is_projected_from_canonical_record() -> 
 
 
 def test_extreme_lab_installs_health_recovery_record_support() -> None:
-    source = Path(extreme_optimization_support.__file__).read_text(encoding="utf-8")
+    source = Path(application_extreme_optimization_bootstrap.__file__).read_text(encoding="utf-8")
 
     assert "from ui.extreme_health_recovery_record_support import install as install_extreme_health_recovery_record_support" in source
     assert "install_extreme_health_recovery_record_support()" in source
