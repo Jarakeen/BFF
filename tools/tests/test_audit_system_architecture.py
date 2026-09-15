@@ -133,6 +133,19 @@ def test_repo_contract_detector_flags_hidden_build_persistence_authority(tmp_pat
     assert "package-import-side-effect" in codes
 
 
+def test_repo_contract_detector_flags_legacy_backed_generated_draft_storage(tmp_path) -> None:
+    services = tmp_path / "services"
+    services.mkdir(parents=True)
+    (services / "raid_plan_repository.py").write_text("class RaidPlanRepository: pass\n", encoding="utf-8")
+    (services / "generated_roster_plan_service.py").write_text(
+        "class GeneratedRosterDraftService: pass\n",
+        encoding="utf-8",
+    )
+
+    findings = _repo_contract_findings(tmp_path)
+    assert "overlapping-plan-persistence" in {row.code for row in findings}
+
+
 def test_current_repo_audit_confirms_resolved_authority_and_identity_debt() -> None:
     root = Path(__file__).resolve().parents[2]
 
@@ -147,5 +160,6 @@ def test_current_repo_audit_confirms_resolved_authority_and_identity_debt() -> N
     assert "legacy-generated-roster-plan-runtime-alias" not in codes
     assert "catalog-family-transitive-aggregation" not in codes
     assert "duplicate-class-definition" not in codes
-    assert "overlapping-plan-persistence" in codes
+    assert "overlapping-plan-persistence" not in codes
+    assert "runtime-local-data-path" not in codes
     assert "ui-class-monkey-patch" in codes
