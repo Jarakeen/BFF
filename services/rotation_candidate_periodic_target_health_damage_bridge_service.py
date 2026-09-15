@@ -4,8 +4,9 @@ from __future__ import annotations
 
 This is intentionally narrow. It handles a skill action only when exactly one damage
 component exists, that component is periodic, owns target-Health consequences, and
-reviewed periodic runtime semantics exist. All other shapes return ``None`` so callers
-may delegate to the ordinary canonical skill-damage evaluator unchanged.
+reviewed periodic runtime semantics exist. Mixed damage shapes that contain a reviewed
+periodic target-Health component fail closed with an explicit diagnostic rather than
+falling back as though target-Health review had never matched.
 
 Source magnitude timing and target-Health timing remain separate reviewed facts.
 ``snapshot_at_cast`` reuses the base evaluator's cast-state magnitude path;
@@ -71,33 +72,57 @@ class RotationCandidatePeriodicTargetHealthDamageBridgeService:
             for row in self.base.components.get_for_skill_rank(tooltip.skill.skill_rank_id)
         }
         damage_components = []
+        periodic_target_health_components = []
         for component in tooltip.components:
             classification = classifications.get(component.coefficient_number)
             if classification is None or classification.effect_kind is not SkillEffectKind.DAMAGE:
                 continue
             damage_components.append((component, classification))
-
-        if len(damage_components) != 1:
-            return None
-
-        component, classification = damage_components[0]
-        if not classification.is_dot or not classification.is_complete_damage_identity:
-            return None
-
-        consequences = tuple(
-            self.base.conditional_consequences.resolve(
-                tooltip.skill.skill_rank_id,
-                component.coefficient_number,
+            if not classification.is_dot:
+                continue
+            consequences = tuple(
+                self.base.conditional_consequences.resolve(
+                    tooltip.skill.skill_rank_id,
+                    component.coefficient_number,
+                )
             )
-        )
-        target_health_consequences = tuple(
-            consequence
-            for consequence in consequences
-            if consequence.condition.condition_type
-            is SkillComponentConditionType.TARGET_HEALTH_BELOW_PERCENT
-        )
-        if not target_health_consequences:
+            target_health_consequences = tuple(
+                consequence
+                for consequence in consequences
+                if consequence.condition.condition_type
+                is SkillComponentConditionType.TARGET_HEALTH_BELOW_PERCENT
+            )
+            if target_health_consequences:
+                periodic_target_health_components.append(
+                    (component, classification, target_health_consequences)
+                )
+
+        if not periodic_target_health_components:
             return None
+        if len(periodic_target_health_components) != 1:
+            numbers = ", ".join(
+                str(component.coefficient_number)
+                for component, _, _ in periodic_target_health_components
+            )
+            return self._unresolved(
+                action,
+                f"{action.name}: periodic target-Health bridge found multiple reviewed conditional damage components ({numbers}); component-level mixed-damage composition is required",
+            )
+        if len(damage_components) != 1:
+            component = periodic_target_health_components[0][0]
+            return self._unresolved(
+                action,
+                f"{action.name}: coefficient {component.coefficient_number} periodic target-Health damage is part of a mixed {len(damage_components)}-component damage skill; component-level mixed-damage composition is required",
+            )
+
+        component, classification, target_health_consequences = (
+            periodic_target_health_components[0]
+        )
+        if not classification.is_complete_damage_identity:
+            return self._unresolved(
+                action,
+                f"{action.name}: coefficient {component.coefficient_number} periodic target-Health damage classification is incomplete",
+            )
 
         if self.base.periodic_runtime_projection_service is None:
             return self._unresolved(
