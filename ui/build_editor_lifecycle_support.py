@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-"""Explicit composition seam for BuildEditor lifecycle extensions.
+"""Explicit composition seam for BuildEditor lifecycle and action extensions.
 
-Historically BuildEditor features wrapped ``__init__``, ``load``, and ``model``
-independently at startup. That made behavior depend on installer order. This
-module keeps one runtime wrapper per lifecycle boundary and lets features
-register deterministic hooks while the remaining legacy wrappers are migrated
-incrementally.
+Historically BuildEditor features wrapped ``__init__``, ``load``, ``model``, and
+individual actions independently at startup. That made behavior depend on
+installer order. This module keeps one runtime wrapper per composition boundary
+and lets features register deterministic hooks while legacy wrappers are
+migrated incrementally.
 """
 
 from collections.abc import Callable
@@ -17,6 +17,7 @@ _POST_INIT_HOOKS: dict[str, Callable[[Any], None]] = {}
 _PRE_LOAD_HOOKS: dict[str, Callable[[Any, Any], None]] = {}
 _POST_LOAD_HOOKS: dict[str, Callable[[Any, Any], None]] = {}
 _MODEL_POST_HOOKS: dict[str, Callable[[Any, Any], None]] = {}
+_ADD_BOSS_LOADOUT_HOOK: Callable[[Any, Any], Any] | None = None
 
 
 def install() -> None:
@@ -29,6 +30,7 @@ def install() -> None:
     original_init = BuildEditor.__init__
     original_load = BuildEditor.load
     original_model_getter = BuildEditor.model.fget
+    original_add_boss_loadout = BuildEditor.add_boss_loadout
 
     def init_composed(self, *args, **kwargs) -> None:
         original_init(self, *args, **kwargs)
@@ -48,9 +50,16 @@ def install() -> None:
             hook(self, build)
         return build
 
+    def add_boss_loadout_composed(self, variant=None):
+        hook = _ADD_BOSS_LOADOUT_HOOK
+        if hook is not None:
+            return hook(self, variant)
+        return original_add_boss_loadout(self, variant)
+
     BuildEditor.__init__ = init_composed
     BuildEditor.load = load_composed
     BuildEditor.model = property(model_composed)
+    BuildEditor.add_boss_loadout = add_boss_loadout_composed
     _INSTALLED = True
 
 
@@ -74,10 +83,17 @@ def register_model_post(key: str, hook: Callable[[Any, Any], None]) -> None:
     _MODEL_POST_HOOKS[str(key)] = hook
 
 
+def register_add_boss_loadout(hook: Callable[[Any, Any], Any]) -> None:
+    global _ADD_BOSS_LOADOUT_HOOK
+    install()
+    _ADD_BOSS_LOADOUT_HOOK = hook
+
+
 __all__ = [
     "install",
     "register_post_init",
     "register_pre_load",
     "register_post_load",
     "register_model_post",
+    "register_add_boss_loadout",
 ]
