@@ -55,17 +55,51 @@ class OrdinaryGearDenominatorRow:
         return not self.unresolved_objectives
 
 
+def _bounded_selected_names(
+    repository: GearSetRepository,
+    *,
+    per_objective: int,
+) -> frozenset[str]:
+    """Reproduce the production bounded-discovery policy on one cached repo."""
+
+    names: list[str] = []
+    seen: set[str] = set()
+    limit = max(1, int(per_objective))
+    for objective in ExtremeActualHealGearSetCandidateService.OBJECTIVES:
+        accepted = 0
+        for row in ExtremeGearSetObjectiveService.candidates_for_objective(
+            repository,
+            objective,
+        ):
+            gear_set = repository.get_set_by_id(row.set_id)
+            if gear_set is None:
+                continue
+            useful = ExtremeGearSetObjectiveService._maximum_useful_piece_count(
+                repository,
+                gear_set,
+            )
+            if useful < 5 or not row.mechanic_complete or row.reviewed_delta <= 0:
+                continue
+            key = row.set_name.casefold()
+            if key not in seen:
+                seen.add(key)
+                names.append(row.set_name)
+            accepted += 1
+            if accepted >= limit:
+                break
+    return frozenset(name.casefold() for name in names)
+
+
 def build_ordinary_gear_denominator(
     repository: GearSetRepository,
     *,
     per_objective: int = 12,
 ) -> tuple[OrdinaryGearDenominatorRow, ...]:
-    selected = {
-        name.casefold()
-        for name in ExtremeActualHealGearSetCandidateService(
-            repository.database_path
-        ).candidate_set_names(per_objective=per_objective)
-    }
+    repository.preload_all_static()
+    selected = _bounded_selected_names(
+        repository,
+        per_objective=per_objective,
+    )
 
     rows: list[OrdinaryGearDenominatorRow] = []
     for gear_set in repository.list_sets():
@@ -120,19 +154,13 @@ def main() -> int:
     unresolved = tuple(row for row in five_piece if row.unresolved_objectives)
     selected = tuple(row for row in five_piece if row.selected_by_bounded_search)
     omitted_positive = tuple(
-        row
-        for row in reviewed_positive
-        if not row.selected_by_bounded_search
+        row for row in reviewed_positive if not row.selected_by_bounded_search
     )
     complete_positive = tuple(
-        row
-        for row in reviewed_positive
-        if row.mechanic_complete_for_h1_screen
+        row for row in reviewed_positive if row.mechanic_complete_for_h1_screen
     )
     omitted_complete_positive = tuple(
-        row
-        for row in complete_positive
-        if not row.selected_by_bounded_search
+        row for row in complete_positive if not row.selected_by_bounded_search
     )
 
     print("EXTREME E2 ACTUAL HEAL ORDINARY GEAR DENOMINATOR")
@@ -159,9 +187,7 @@ def main() -> int:
     if unresolved:
         print("UNRESOLVED H1 SCREEN SETS")
         for row in unresolved[:50]:
-            print(
-                f"  {row.set_name}: objectives={','.join(row.unresolved_objectives)}"
-            )
+            print(f"  {row.set_name}: objectives={','.join(row.unresolved_objectives)}")
         if len(unresolved) > 50:
             print(f"  ... {len(unresolved) - 50} additional unresolved sets")
 
