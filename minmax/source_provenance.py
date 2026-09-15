@@ -4,10 +4,10 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
+from services.paths import DATA
 
-DEFAULT_SOURCE_MANIFEST = (
-    Path(__file__).resolve().parents[1] / "data" / "source_manifest.json"
-)
+
+DEFAULT_SOURCE_MANIFEST = DATA / "source_manifest.json"
 
 
 class SourceProvenanceError(ValueError):
