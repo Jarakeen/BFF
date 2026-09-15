@@ -8,11 +8,23 @@ from minmax.rotation_demand_window import (
     RotationDemandPattern,
     RotationDemandWindow,
 )
+from minmax.rotation_plan import RotationPlan
 from models.build_model import PlayerBuild
+from services.rotation_candidate_canonical_plan_evidence_service import (
+    RotationCandidateCanonicalPlanEvidenceService,
+    RotationCandidateRoleOutputEvidence,
+)
+from services.rotation_candidate_generation_service import GeneratedRotationCandidate
+from services.rotation_candidate_recommendation_evidence_service import (
+    RotationCandidatePlanEvidence,
+)
 from services.rotation_healer_demand_criteria_service import (
     RotationCandidateHealerCriteriaHardObligationService,
     RotationHealerDemandCriterion,
     RotationHealerDemandCriterionSourceKind,
+)
+from services.rotation_recovery_heavy_candidate_orchestration_service import (
+    RecoveryHeavyStabilizedCandidateSnapshot,
 )
 from ui.rotation_generate_healer_role_evidence_support import (
     RotationGenerateHealerRoleEvidenceSupport,
@@ -59,11 +71,81 @@ class _PlanEvidenceFactory:
         return self.result
 
 
+class _CanonicalPlanProvider(RotationCandidateCanonicalPlanEvidenceService):
+    def __init__(self) -> None:
+        self.calls = []
+
+    def evaluate_plan(self, candidate):
+        self.calls.append(candidate)
+        return RotationCandidatePlanEvidence(
+            sustain=object(),  # type: ignore[arg-type]
+            role_output_value=111.0,
+            sustain_margin=1000.0,
+        )
+
+
+class _CanonicalPlanFactory:
+    def __init__(self) -> None:
+        self.calls = []
+        self.result = _CanonicalPlanProvider()
+
+    def __call__(self, **kwargs):
+        self.calls.append(kwargs)
+        return self.result
+
+
+class _RuntimeRoleOutputResult:
+    role_output_provider = object()
+    unresolved = ()
+
+    def __init__(self) -> None:
+        self.calls = []
+
+    def evaluate_plan(self, candidate, *, runtime_build_context_resolver=None):
+        self.calls.append((candidate, runtime_build_context_resolver))
+        value = 111.0
+        if runtime_build_context_resolver is not None:
+            resolved = runtime_build_context_resolver(12.0, 2)
+            assert resolved.context == "runtime-healer-context"
+            value = 777.0
+        return RotationCandidateRoleOutputEvidence(
+            candidate_id=candidate.candidate_id,
+            value=value,
+        )
+
+
+class _RuntimeBuildContextService:
+    def __init__(self) -> None:
+        self.calls = []
+
+    def resolve(self, build, **kwargs):
+        self.calls.append((build, kwargs))
+        kwargs["runtime_combat_state_resolver"](
+            kwargs["time_seconds"],
+            kwargs["sequence"],
+        )
+        return SimpleNamespace(context="runtime-healer-context")
+
+
 def _bundle(*demands):
     return SimpleNamespace(
         demands=tuple(demands),
         resource=ResourceType.MAGICKA,
         content_type="trial",
+    )
+
+
+def _candidate() -> GeneratedRotationCandidate:
+    return GeneratedRotationCandidate(
+        candidate_id="final-healer",
+        plan=RotationPlan(
+            character_name="Healer Tester",
+            build_name="Runtime Healer",
+            duration_seconds=30.0,
+            actions=(),
+        ),
+        refresh_leads=(),
+        action_claims=(),
     )
 
 
@@ -201,3 +283,49 @@ def test_generate_healer_composer_attaches_verified_criteria_as_separate_hard_ga
     )
     assert hard_gate.multi_demand_output_service is role_factory.result
     assert hard_gate.criteria == (criterion,)
+
+
+def test_production_healer_plan_evidence_rebinds_role_output_after_stabilization() -> None:
+    role_output = _RuntimeRoleOutputResult()
+    role_factory = _RoleOutputFactory(role_output)
+    plan_factory = _CanonicalPlanFactory()
+    runtime_context = _RuntimeBuildContextService()
+    build = PlayerBuild(Name="Healer Tester", BuildName="Runtime Healer", Role="Healer")
+    support = RotationGenerateHealerRoleEvidenceSupport(
+        role_output_factory=role_factory,
+        plan_evidence_factory=plan_factory,
+        runtime_build_context_service=runtime_context,  # type: ignore[arg-type]
+    )
+
+    evidence = support.compose(
+        player_build=build,
+        evidence_bundle=_bundle(_HEALING),  # type: ignore[arg-type]
+    )
+    binder = getattr(evidence.plan_evidence_provider, "for_stabilized_snapshot", None)
+    assert callable(binder)
+
+    runtime_calls = []
+
+    def runtime_state(time_seconds, sequence=None):
+        runtime_calls.append((time_seconds, sequence))
+        return object()
+
+    candidate = _candidate()
+    snapshot = RecoveryHeavyStabilizedCandidateSnapshot(
+        candidate_id=candidate.candidate_id,
+        plan=candidate.plan,
+        replay=object(),
+        stabilization=object(),
+        runtime_combat_state_resolver=runtime_state,
+    )
+    rebound = binder(snapshot)
+    result = rebound.evaluate_plan(candidate)
+
+    assert result.role_output_value == pytest.approx(777.0)
+    assert result.role_output_unresolved == ()
+    assert len(plan_factory.result.calls) == 1
+    assert runtime_calls == [(12.0, 2)]
+    assert len(runtime_context.calls) == 1
+    assert runtime_context.calls[0][0] is build
+    assert len(role_output.calls) == 1
+    assert role_output.calls[0][1] is not None
