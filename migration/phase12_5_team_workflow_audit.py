@@ -5,7 +5,7 @@ import json
 
 from models.build_model import BuildRoster
 from models.roster_model import RosterMember
-from services.generated_roster_plan_service import GeneratedRosterPlan
+from services.generated_roster_plan_service import GeneratedRosterDraft
 
 
 @dataclass(frozen=True)
@@ -96,7 +96,7 @@ class Phase125TeamWorkflowAuditService:
         *,
         team_name: str,
         registered_team_names: tuple[str, ...],
-        plan: GeneratedRosterPlan | None,
+        plan: GeneratedRosterDraft | None,
         builds: BuildRoster,
         roster_members: tuple[RosterMember, ...],
         recruit_prescriptions: dict[str, dict[str, object]] | None = None,
