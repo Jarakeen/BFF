@@ -5,6 +5,9 @@ from pathlib import Path
 from minmax.build_candidate import BuildCandidate
 from minmax.gear_set_repository import GearSetRepository
 from models.build_model import PlayerBuild
+from services.extreme_actual_heal_gear_condition_relevance_service import (
+    ExtremeActualHealGearConditionRelevanceService,
+)
 from services.extreme_complete_optimization_service import ExtremeCompleteOptimizationService
 from services.extreme_gear_set_objective_service import ExtremeGearSetObjectiveService
 
@@ -26,10 +29,11 @@ class ExtremeActualHealGearSetCandidateService:
     Magicka, or Stamina. Final usefulness is still decided only after the real
     candidate build is reevaluated through canonical heal math.
 
-    Admission is fail-closed across the complete H1 objective screen. A set with
-    unresolved active mechanics for any H1 discovery objective cannot re-enter the
-    authoritative pool merely because a different objective has a reviewed positive
-    contribution. This preserves one set-level mechanic-completeness boundary.
+    Admission is fail-closed across the complete H1 objective screen. Shared gear
+    blockers are contextualized only where H1 can prove irrelevance. In particular,
+    damage-type ability-scoped Weapon/Spell Damage cannot modify a healing event;
+    class, Restoration Staff, AoE, movement/state, and other potentially relevant
+    conditional power remains blocking.
 
     Monster sets, mythics, arena weapons, and mixed 5+2+1 packages are intentionally
     outside this first body-set tranche because they require slot-family legality,
@@ -49,6 +53,12 @@ class ExtremeActualHealGearSetCandidateService:
 
     def __init__(self, database_path: str | Path) -> None:
         self.repository = GearSetRepository(database_path)
+
+    @staticmethod
+    def _h1_mechanic_complete(row) -> bool:
+        return ExtremeActualHealGearConditionRelevanceService.review(
+            row
+        ).h1_mechanic_complete
 
     def candidate_set_names(
         self,
@@ -70,7 +80,7 @@ class ExtremeActualHealGearSetCandidateService:
             int(row.set_id)
             for rows in rows_by_objective.values()
             for row in rows
-            if not row.mechanic_complete
+            if not self._h1_mechanic_complete(row)
         }
 
         for objective in self.OBJECTIVES:
@@ -86,7 +96,7 @@ class ExtremeActualHealGearSetCandidateService:
                 if (
                     useful < 5
                     or int(row.set_id) in unresolved_set_ids
-                    or not row.mechanic_complete
+                    or not self._h1_mechanic_complete(row)
                     or row.reviewed_delta <= 0
                 ):
                     continue
