@@ -181,3 +181,29 @@ def test_trigger_on_wrong_bar_does_not_activate_back_bar_skill_effect() -> None:
     assert result.unresolved == ()
     assert result.combat_state.active_buffs == ()
     assert result.active_effects == ()
+
+
+def test_mixed_tagged_and_untagged_skill_history_surfaces_unresolved_without_discarding_proven_tagged_effect() -> None:
+    skill_runtime = ExtremeSkillRuntimeEffectService("unused.db", repository=_Repository())
+    tagged = _bar_attempt(bar="back", time_seconds=10.0, sequence=0)
+    untagged = _attempt(time_seconds=10.5, sequence=0)
+    result = ExtremeRuntimeSnapshotCombatStateService(
+        skill_runtime_effects=skill_runtime,
+    ).resolve(
+        _back_bar_build(),
+        progression=CharacterProgression(passive_ranks={}),
+        active_bar="front",
+        snapshot=ExtremeRuntimeSnapshot(
+            runtime_history=(tagged, untagged),
+            snapshot_time_seconds=15.0,
+            bar_transition_history_complete=True,
+        ),
+    )
+
+    assert result.combat_state.active_buffs == ("Major Sorcery",)
+    assert len(result.active_effects) == 1
+    assert result.active_effects[0].name == "weapon_spell_damage"
+    assert result.unresolved == (
+        "Skill runtime history mixes bar-tagged and untagged effect attempts; "
+        "untagged attempts cannot prove bar-local skill activation",
+    )
