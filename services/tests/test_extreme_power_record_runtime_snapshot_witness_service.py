@@ -1,7 +1,17 @@
-from types import SimpleNamespace
+from pathlib import Path
 
 from minmax.character_progression import CharacterProgression
+from minmax.gear_set_effect_variant_resolver import GearSetEffectVariantResolver
+from minmax.gear_set_repository import GearSetRepository
 from models.build_model import PlayerBuild
+from services.extreme_dual_bar_gear_runtime_legality_service import (
+    ExtremeDualBarGearRuntimeLegalityService,
+)
+from services.extreme_dual_bar_set_activation_evidence_service import (
+    ExtremeDualBarSetActivationEvidence,
+    ExtremeDualBarSetActivationEvidenceCatalog,
+    ExtremeDualBarSetActivationScope,
+)
 from services.extreme_power_record_runtime_snapshot_witness_service import (
     ExtremePowerRecordRuntimeSnapshotWitnessService,
 )
@@ -10,40 +20,7 @@ from services.extreme_runtime_snapshot_combat_state_service import (
 )
 
 
-class _ArmorOfTruthRuntimeAdapter:
-    def __init__(self) -> None:
-        self.calls = []
-
-    def resolve_history(
-        self,
-        activation,
-        *,
-        attempts,
-        snapshot_time_seconds,
-        snapshot_active_bar=None,
-        bar_transitions=(),
-        bar_transition_history_complete=False,
-    ):
-        self.calls.append(
-            (
-                activation,
-                attempts,
-                snapshot_time_seconds,
-                snapshot_active_bar,
-                bar_transitions,
-                bar_transition_history_complete,
-            )
-        )
-        valid = any(
-            tagged.attempt.event.trigger == "damage_off_balance_target"
-            and tagged.attempt.event.source == "Armor of Truth reviewed 5pc trigger"
-            and snapshot_time_seconds - tagged.attempt.event.time_seconds <= 10.0 + 1e-12
-            for tagged in attempts
-        )
-        return SimpleNamespace(
-            active_buffs=("Armor of Truth",) if valid else (),
-            unresolved=() if valid else ("Armor of Truth trigger witness is not active",),
-        )
+DATABASE = Path(__file__).resolve().parents[2] / "data" / "eso.db"
 
 
 class _PotionResolver:
@@ -76,9 +53,32 @@ class _PotionCadence:
         return _PotionCadenceWindow(self.event.buff_names)
 
 
+def _armor_of_truth_activation(repository: GearSetRepository) -> ExtremeDualBarSetActivationEvidenceCatalog:
+    gear_set = repository.get_set("Armor of Truth")
+    assert gear_set is not None
+    return ExtremeDualBarSetActivationEvidenceCatalog(
+        evidence=(
+            ExtremeDualBarSetActivationEvidence(
+                set_id=int(gear_set.id),
+                set_name=str(gear_set.name),
+                category=str(gear_set.category or ""),
+                front_count=5,
+                back_count=5,
+                front_active_breakpoints=(2, 3, 4, 5),
+                back_active_breakpoints=(2, 3, 4, 5),
+                activation_scope=ExtremeDualBarSetActivationScope.BOTH,
+                weapon_only_two_piece=False,
+            ),
+        ),
+    )
+
+
 def _project(monkeypatch, objective_key: str, potion_name: str, major_buff: str):
     witness = ExtremePowerRecordRuntimeSnapshotWitnessService.build(objective_key)
-    gear = _ArmorOfTruthRuntimeAdapter()
+    repository = GearSetRepository(DATABASE)
+    gear = ExtremeDualBarGearRuntimeLegalityService(
+        resolver=GearSetEffectVariantResolver(repository)
+    )
     monkeypatch.setattr(
         "services.extreme_runtime_snapshot_combat_state_service.PotionCadence",
         _PotionCadence,
@@ -94,13 +94,24 @@ def _project(monkeypatch, objective_key: str, potion_name: str, major_buff: str)
         progression=progression,
         active_bar=witness.active_bar,
         snapshot=witness.snapshot,
-        gear_activation=SimpleNamespace(evidence=("Armor of Truth 5pc",), unresolved=()),
+        gear_activation=_armor_of_truth_activation(repository),
     )
-    return witness, result, gear
+    return witness, result
+
+
+def _assert_armor_of_truth_effect(result) -> None:
+    matches = tuple(
+        effect
+        for effect in result.active_effects
+        if effect.name == "weapon_spell_damage"
+        and abs(float(effect.magnitude or 0.0) - 460.0) <= 1e-12
+        and effect.trigger == "damage_off_balance_target"
+    )
+    assert len(matches) == 1
 
 
 def test_weapon_damage_witness_projects_runtime_owned_conditions(monkeypatch) -> None:
-    witness, result, gear = _project(
+    witness, result = _project(
         monkeypatch,
         "weapon_damage",
         "Weapon Power potion",
@@ -110,15 +121,14 @@ def test_weapon_damage_witness_projects_runtime_owned_conditions(monkeypatch) ->
     assert witness.closed is True
     assert result.unresolved == ()
     assert set(result.combat_state.active_buffs) == {
-        "Armor of Truth",
         "Major Brutality",
         "Minor Brutality",
     }
-    assert len(gear.calls) == 1
+    _assert_armor_of_truth_effect(result)
 
 
 def test_spell_damage_witness_projects_runtime_owned_conditions(monkeypatch) -> None:
-    witness, result, gear = _project(
+    witness, result = _project(
         monkeypatch,
         "spell_damage",
         "Spell Power potion",
@@ -128,11 +138,10 @@ def test_spell_damage_witness_projects_runtime_owned_conditions(monkeypatch) -> 
     assert witness.closed is True
     assert result.unresolved == ()
     assert set(result.combat_state.active_buffs) == {
-        "Armor of Truth",
         "Major Sorcery",
         "Minor Sorcery",
     }
-    assert len(gear.calls) == 1
+    _assert_armor_of_truth_effect(result)
 
 
 def test_witness_fails_closed_when_armor_of_truth_window_expired() -> None:
