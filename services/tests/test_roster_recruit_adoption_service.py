@@ -9,8 +9,8 @@ from models.roster_model import RosterMember
 from services.build_service import BuildService
 from services.eso_database import EsoDatabase
 from services.generated_roster_plan_service import (
-    GeneratedRosterPlanService,
-    GeneratedRosterPlanSlot,
+    GeneratedRosterDraftService,
+    GeneratedRosterDraftSlot,
 )
 from services.roster_recruit_adoption_service import RosterRecruitAdoptionService
 from services.roster_service import RosterService
@@ -19,7 +19,7 @@ from services.roster_service import RosterService
 def _services(tmp_path: Path):
     db = EsoDatabase(tmp_path / "eso.db")
     builds = BuildService(tmp_path / "builds.json")
-    plans = GeneratedRosterPlanService(db)
+    plans = GeneratedRosterDraftService(db)
     roster = RosterService(db)
     adoption = RosterRecruitAdoptionService(builds=builds, plans=plans, roster=roster)
     return builds, plans, roster, adoption
@@ -51,13 +51,13 @@ def _build(name: str = "DF Healer") -> PlayerBuild:
     return build
 
 
-def _recruit_plan(plans: GeneratedRosterPlanService):
+def _recruit_plan(plans: GeneratedRosterDraftService):
     return plans.save_plan(
         name="GH Prog",
         goal="Cloudrest",
         difficulty="Veteran Hardmode",
         slots=(
-            GeneratedRosterPlanSlot(
+            GeneratedRosterDraftSlot(
                 slot_name="Healer 1",
                 kind="prescribed_recruit",
                 player_name="Recruitment Needed",
@@ -196,6 +196,8 @@ def test_recruit_adoption_ui_keeps_encounter_future_boundary_explicit() -> None:
         encoding="utf-8"
     )
 
+    assert "GeneratedRosterDraftService" in source
+    assert "GeneratedRosterPlanService" not in source
     assert 'QPushButton("Assign Recruit")' in source
     assert '"Use existing saved build"' in source
     assert '"Create new draft from prescribed setup"' in source
