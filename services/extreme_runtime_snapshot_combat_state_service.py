@@ -117,7 +117,7 @@ class ExtremeRuntimeSnapshotCombatStateService:
                 skill_result = skill_runtime.resolve_history(
                     build,
                     active_bar=active_bar,
-                    attempts=attempts,
+                    attempts=snapshot.unbarred_effect_attempts,
                     bar_attempts=snapshot.bar_effect_attempts,
                     snapshot_time_seconds=snapshot.snapshot_time_seconds,
                 )
