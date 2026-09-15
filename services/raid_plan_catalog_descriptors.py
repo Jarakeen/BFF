@@ -46,6 +46,27 @@ RAID_PLAN_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "exact label matches may populate provider/backup presentation but never prove effect availability or uptime."
         ),
     ),
+    ServiceDescriptor(
+        service_id="raid_plan.optimizer_adviser",
+        domain="raid_plan",
+        purpose=(
+            "Review one explicit RaidPlan against exact saved-build and Coverage evidence and return "
+            "explainable advisory findings without applying team, build, assignment, or runtime changes."
+        ),
+        implementation_path="services.raid_plan_optimizer_adviser_service",
+        inputs=("RaidPlan", "PlayerBuild", "SavedBuildCapabilityAudit", "RaidCoverageSnapshot"),
+        outputs=("RaidPlanAdviserReview", "RaidPlanAdviserFinding"),
+        dependencies=("raid_plan.coverage_scope", "build.saved_capability_analysis"),
+        responsibilities=("raid_plan_read_only_optimization_advice",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        ui_safe=True,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Adviser findings distinguish plan blockers, coverage gaps, conditional execution, provider redundancy, "
+            "and Foundry evidence debt. Recommendations are read-only and never mutate RaidPlan or saved builds."
+        ),
+    ),
 )
 
 
