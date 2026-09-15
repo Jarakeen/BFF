@@ -11,6 +11,10 @@ skill bar that was active when each attempt occurred. This prevents a persistent
 back-bar-triggered effect from disappearing merely because the snapshot itself is
 later evaluated on the front bar. Untagged attempts remain a compatibility fallback
 for older callers that do not carry bar provenance.
+
+Mixed tagged + untagged history is never silently normalized. Tagged attempts remain
+usable as proven evidence, while every untagged attempt is surfaced as unresolved
+because its bar-local skill legality cannot be reconstructed honestly.
 """
 
 from dataclasses import dataclass
@@ -112,6 +116,11 @@ class ExtremeSkillRuntimeEffectService:
             for row in bar_attempts
             if float(row.attempt.event.time_seconds) <= snapshot + 1e-12
         )
+        if tagged_attempts and legacy_attempts:
+            unresolved.append(
+                "Skill runtime history mixes bar-tagged and untagged effect attempts; "
+                "untagged attempts cannot prove bar-local skill activation"
+            )
 
         for skill_name in sorted(all_slotted):
             ability_id = available.get(skill_name)
