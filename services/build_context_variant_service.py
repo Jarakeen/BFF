@@ -8,6 +8,11 @@ exact team + boss > wildcard team + any boss > team > exact boss > wildcard boss
 Resolution is field-by-field. Lower-specificity matching variants are applied first,
 so a sparse exact Team + Boss row can inherit from a generic Bosses setup instead of
 falling all the way back to the base build.
+
+Legacy ``BossLoadouts`` remain readable as Boss variants when a build has not yet been
+migrated to ``ContextVariants``. This mirrors the Build Editor's compatibility behavior
+so Rotation, Coverage, and other consumers resolve the same effective build instead of
+silently dropping older boss setups.
 """
 
 from copy import deepcopy
@@ -21,6 +26,23 @@ def _key(value: object) -> str:
 
 def _is_boss_wildcard(value: object) -> bool:
     return _key(value) in {"*", "any boss", "all bosses", "bosses"}
+
+
+def _available_variants(build: PlayerBuild) -> tuple[BuildContextVariant, ...]:
+    """Return generalized variants, or the canonical legacy BossLoadout fallback.
+
+    Generalized ContextVariants win whenever present. Mixing both authorities would
+    risk applying the same historical boss setup twice. Legacy BossLoadouts are sparse
+    skill/consumable deltas, so converting them through the model helper preserves the
+    rule that blank skill slots inherit from the parent build.
+    """
+    variants = tuple(getattr(build, "ContextVariants", ()) or ())
+    if variants:
+        return variants
+    return tuple(
+        BuildContextVariant.from_boss_loadout(loadout)
+        for loadout in tuple(getattr(build, "BossLoadouts", ()) or ())
+    )
 
 
 def _context_score(variant: BuildContextVariant, team_name: str, boss_name: str) -> int:
@@ -54,7 +76,7 @@ def _matching_variants(
 ) -> tuple[tuple[int, BuildContextVariant], ...]:
     """Return at most one matching row per specificity, least to most specific."""
     latest_by_score: dict[int, tuple[int, BuildContextVariant]] = {}
-    for index, variant in enumerate(build.ContextVariants):
+    for index, variant in enumerate(_available_variants(build)):
         score = _context_score(variant, team_name, boss_name)
         if score < 0:
             continue
@@ -113,9 +135,6 @@ def apply_context_variant(build: PlayerBuild, variant: BuildContextVariant) -> P
 
     transformed_form = _key(getattr(variant, "TransformedForm", ""))
     if transformed_form in {"werewolf", "vampire"}:
-        # TransformedForm is context runtime state, not affiliation. Keep it on
-        # the resolved build snapshot so downstream eligibility consumers can
-        # distinguish "can transform" from "this context is transformed".
         result.TransformedForm = transformed_form
 
     if str(variant.Mundus or "").strip():
