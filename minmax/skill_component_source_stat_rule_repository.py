@@ -4,13 +4,12 @@ import json
 import sqlite3
 from pathlib import Path
 
+from engine.config import DEFAULT_DATABASE
+
 from .skill_component_source_stat_rule import (
     SkillComponentSourceStatRule,
     extract_source_mapped_stat_rule,
 )
-
-
-DEFAULT_DATABASE = Path(__file__).resolve().parents[1] / "data" / "eso.db"
 
 
 class SkillComponentSourceStatRuleRepository:
