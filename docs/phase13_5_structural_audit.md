@@ -159,6 +159,25 @@ Audit in progress.
 
 ---
 
+### F008 — Raid Plan Rotation binding reconstructed canonical build identity from legacy/adjacent fields
+
+**Category:** Character -> Build identity reconstruction / fail-open guard
+
+**Files:**
+- `ui/rotation_generate_canonical_context.py`
+- `ui/tests/test_rotation_generate_raid_plan_context.py`
+- canonical `models/build_model.py` `PlayerBuild`
+
+**Finding:** `RotationGenerateCanonicalContext.with_raid_plan_member()` validates the exact Raid Plan member against the supplied `PlayerBuild`, but its local helpers accepted `CharacterName or Name` for character identity and `BuildName or Name` for build identity. Canonical `PlayerBuild` owns `Name` as character identity and `BuildName` as build identity; it has no canonical `CharacterName` field. The build-name fallback was especially unsafe because a blank `BuildName` could be replaced by the character name and potentially satisfy a selected-build guard using the wrong field.
+
+**Disposition:** FIXED.
+
+**Resolution:** the Raid Plan -> Rotation canonical context now reads only `PlayerBuild.Name` for character identity and only `PlayerBuild.BuildName` for build identity. Missing canonical values fail closed. Regression coverage explicitly supplies a fake legacy `CharacterName` while canonical `Name` is blank and separately makes `Name` equal the selected build label while `BuildName` is blank; both bindings are rejected.
+
+**Closeout boundary:** exact Raid Plan/Rotation build binding must validate canonical model fields directly. Compatibility aliases or UI/display labels may be normalized at ingestion boundaries, but they may not substitute for missing canonical identity after a `PlayerBuild` has entered the Rotation/Raid Plan execution path.
+
+---
+
 ## Audit queue
 
 The remaining Phase 13.5 audit will review, in order:
