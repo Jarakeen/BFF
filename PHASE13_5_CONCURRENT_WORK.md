@@ -140,6 +140,24 @@ RaidPlanRepository = persistence of RaidPlan snapshots only
 
 Do not make ESO Logs, Rotation runtime state, or Team Optimization state a persistence dependency of `RaidPlanRepository`.
 
+## Architecture audit — ACTIVE / REPORT-ONLY
+
+The post-roadmap architecture audit is now source-reviewed and documented in:
+
+- `docs/architecture_audit_2026-09-14.md`
+- `tools/audit_system_architecture.py`
+- `tools/tests/test_audit_system_architecture.py`
+
+The audit is intentionally report-only by default. `--strict` may later be used to make known `ERROR` findings gate CI after their migration slices are complete.
+
+Highest-priority confirmed finding: `services/__init__.py` currently replaces `BuildService.load/save` at package import with direct `builds.json` persistence, bypassing the canonical `CanonicalBuildBridge` path declared by the service catalog. Do not add another workaround around this; the next cleanup slice should restore one Build persistence authority while preserving the existing atomic-write/corruption protections.
+
+Other confirmed debt includes hidden UI installer/monkey-patch composition, overlapping durable player/character identity stores, live `GeneratedRosterPlan` persistence overlapping the newer RaidPlan ownership model, stale RaidPlan persistence documentation/name-based build identity, legacy Console engine prototypes, and transitive service-catalog family aggregation.
+
+No architecture cleanup/refactor has been applied yet. This section is coordination only. Rotation and Extreme work may continue independently, but new work should not add additional persistence authorities or new unrelated transitive installers while the audit is active.
+
+Achievements and Collectibles are outside this cleanup scope.
+
 ## Rotation workstream — ACTIVE / INDEPENDENT
 
-Roto may continue its mechanics/runtime work independently. No Rotation-owned engine file or persisted `RaidPlan` shape changed in the acceptance-audit slice.
+Roto may continue its mechanics/runtime work independently. No Rotation-owned engine file or persisted `RaidPlan` shape changed in the architecture-audit reporting slice.
