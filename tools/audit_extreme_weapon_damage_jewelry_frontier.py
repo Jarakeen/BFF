@@ -6,6 +6,13 @@ This closes only the jewelry magnitude frontier. Bloodthirsty target-health
 activation remains an explicit runtime condition for the final record snapshot.
 """
 
+from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 from engine.config import get_data_dir
 from minmax.jewelry_glyph_repository import JewelryGlyphEffectRepository
 from minmax.jewelry_trait_repository import JewelryTraitRepository
