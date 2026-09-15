@@ -2,9 +2,9 @@
 
 This file is a short-lived coordination note for parallel Phase 13.5 workstreams. It is not architecture authority and should be removed when the concurrent work settles.
 
-## Raid Plan workstream — ASSIGNMENT SLICE ACTIVE
+## Raid Plan workstream — ASSIGNMENT SLICE READY FOR VALIDATION
 
-Raid Engine now persists canonical `RaidPlan` snapshots and the focused persistence/bridge gate is green.
+Raid Engine persists canonical `RaidPlan` snapshots and now has a plan-owned Primary/Secondary assignment editing surface. The prior persistence/bridge gate is green; the new assignment slice is awaiting its focused pytest gate.
 
 ### Verified persistence checkpoint
 
@@ -19,17 +19,7 @@ Stable persistence files:
 - `ui/raid_plan_persistence_page.py`
 - `ui/tests/test_raid_plan_persistence_page.py`
 
-Persistence behavior:
-
-- Storage target is versioned `raid_plans.json` under the normal app data directory.
-- Multiple named Raid Plans are supported.
-- Save / Load / Delete are visible on the Raid Plan page.
-- Persistence owns **trial-specific planning decisions only**.
-- It does not create or mutate Personnel, Character, Saved Build, Team, ESO Logs, or canonical encounter identity.
-- No database reset or database migration is used.
-- Hidden plan-owned state that is not yet editable in the UI is preserved across Load -> edit visible fields -> Save.
-
-### Current Raid Plan assignment slice
+### Assignment slice implemented
 
 The original roadmap remains unchanged:
 
@@ -37,31 +27,33 @@ The original roadmap remains unchanged:
 Persistence -> Assignments -> Coverage -> Rotation -> Optimizer Adviser
 ```
 
-This slice exposes the existing `RaidPlanMember.primary_assignment` and `secondary_assignment` fields on the Raid Plan surface.
+New/changed files:
 
-Rules for this slice:
+- `ui/raid_plan_assignment_page.py`
+- `ui/tests/test_raid_plan_assignment_page.py`
+- `ui/raid_engine_dashboard_support.py` now instantiates `RaidPlanAssignmentPage`
 
-- Assignments remain **plan-owned**, not Roster/Team-owned.
-- Reuse the same assignment vocabulary/autocomplete already used by the Roster Assignments UI.
-- Do not write Raid Plan assignment edits into `roster_assignment_context`.
-- Do not reorganize Raid Plans around bosses or encounters.
-- Boss/encounter overrides remain a later contextual layer.
-- No structural change to `models/raid_plan.py` is expected.
-- Rotation may continue consuming the stable `RaidPlanMember` assignment fields as upstream context.
+Behavior:
 
-Expected assignment-slice files:
-
-- new Raid Plan assignment-aware UI subclass and focused tests
-- `ui/raid_engine_dashboard_support.py` route update to use that page
-- `FEATURES.md` wording update
+- The Raid Plan page exposes a separate **Assignments** card for all 12 chairs.
+- Each chair has editable Primary and Secondary assignment controls.
+- Controls use case-insensitive contains autocomplete and the same user-facing assignment vocabulary as the existing Roster Assignments surface.
+- Assignment values write only to `RaidPlanMember.primary_assignment` and `RaidPlanMember.secondary_assignment`.
+- Existing member identity, build selection, notes, triggered responsibilities, plan status, and team metadata are preserved.
+- Clearing a visible assignment clears that plan-owned field intentionally.
+- Unknown/nonexistent seat keys cannot create new Raid Plan members.
+- This slice does **not** write to `RosterAssignmentContextService` or `roster_assignment_context`.
+- No database migration or reset is involved.
+- No structural change was made to `models/raid_plan.py`.
+- Boss/encounter overrides remain a later contextual layer; Raid Plans were not reorganized around encounters.
 
 ### Rotation workstream handoff
 
-Roto/Rotation may treat Raid Plan persistence as a stable upstream contract and continue consuming `RaidPlan` / `RaidPlanMember` through the existing effective-build/runtime bridges.
+Roto/Rotation may continue consuming the existing `RaidPlanMember.primary_assignment` and `secondary_assignment` fields. The assignment slice does not alter Rotation contracts or persisted model shape.
 
 Do **not** add a second Raid Plan persistence path inside Rotation.
 
-If Rotation needs a structural change to `models/raid_plan.py`, coordinate it first because that model shape now round-trips through durable storage and repository tests. Additive consumer-side adapters are preferred over changing persistence-owned shape.
+If Rotation needs a structural change to `models/raid_plan.py`, coordinate it first because that model shape round-trips through durable storage and repository tests. Additive consumer-side adapters are preferred.
 
 ### Ownership boundary
 
@@ -76,4 +68,8 @@ Do not make ESO Logs, Rotation runtime state, or Team Optimization state a persi
 
 ## Rotation workstream — ACTIVE
 
-Recent Rotation activity is continuing on separate runtime/mechanics files. Raid Plan assignment work should avoid Rotation-owned files and will re-fetch shared route files immediately before writes.
+Rotation is continuing on separate runtime/mechanics files. The Raid Plan assignment slice intentionally avoided Rotation-owned files.
+
+### Assignment validation gate
+
+Do not treat this assignment slice as stable until the focused assignment/persistence/bridge tests are green. Once the user reports that gate, update this note to mark the assignment slice complete and hand it off as stable upstream context.
