@@ -17,7 +17,7 @@ from services.extreme_record_result import (
 )
 
 
-WEAPON_DAMAGE_RECORD_VALUE = 13_020.810
+WEAPON_DAMAGE_RECORD_VALUE = 13_834.610
 WEAPON_DAMAGE_WINNER = ("Armor of Truth 5pc", "Kvatch Gladiator 5pc")
 
 
@@ -30,6 +30,7 @@ class ExtremeWeaponDamageConditionalSnapshot:
     higher_max_resource: float = 49_961.0
     font_plus_calculated_defense_percent: float = 0.40
     major_brutality_percent: float = 0.20
+    minor_brutality_percent: float = 0.10
 
     @property
     def named_gear_weapon_damage(self) -> float:
@@ -49,6 +50,7 @@ class ExtremeWeaponDamageConditionalSnapshot:
             1.0
             + self.font_plus_calculated_defense_percent
             + self.major_brutality_percent
+            + self.minor_brutality_percent
         )
 
 
@@ -60,6 +62,7 @@ class ExtremeWeaponDamageRecordService:
         "Armor of Truth was triggered by damaging an Off Balance target and its 10-second buff remains active.",
         "Bloodthirsty execute-side condition is active.",
         "Weapon Power potion supplies Major Brutality.",
+        "External Minor Brutality is active under the same borrowed named-buff scope already used for Courage.",
         "Font of Power is active at the reviewed same-build higher Max Resource breakpoint.",
         "Calculated Defense is active after its reviewed shield-survival trigger.",
         "Six Sorcerer abilities remain slotted on the active bar for full Expert Mage.",
@@ -75,6 +78,7 @@ class ExtremeWeaponDamageRecordService:
     EXTERNAL_CONDITIONS = (
         "Target at or below 25% Health",
         "Target Off Balance on Armor of Truth trigger hit",
+        "Minor Brutality active",
     )
 
     def snapshot(self) -> ExtremeWeaponDamageConditionalSnapshot:
@@ -96,6 +100,7 @@ class ExtremeWeaponDamageRecordService:
                 "pure-Sorcerer active-bar Expert Mage frontier",
                 "same-build Max Magicka/Max Stamina resource coupling",
                 "potion-active Major Brutality baseline",
+                "external Minor Brutality named-buff correction",
                 "conditional named-set coexistence snapshot",
                 "Twice-Born Star finite two-Mundus resource states",
             ),
@@ -112,6 +117,7 @@ class ExtremeWeaponDamageRecordService:
             "higher_max_resource": snapshot.higher_max_resource,
             "font_plus_calculated_defense_percent": snapshot.font_plus_calculated_defense_percent,
             "major_brutality_percent": snapshot.major_brutality_percent,
+            "minor_brutality_percent": snapshot.minor_brutality_percent,
             "pre_percent_reference": snapshot.pre_percent_reference,
         }
         return ExtremeRecordResult.for_objective(
@@ -127,10 +133,10 @@ class ExtremeWeaponDamageRecordService:
             ceiling_threats=(),
             search_coverage=coverage,
             explanation=(
-                "The contextual potion-active U50 maximum is 13,020.810 Weapon Damage.",
+                "The contextual potion-active U50 maximum is 13,834.610 Weapon Damage.",
                 "Armor of Truth 5pc + Kvatch Gladiator 5pc is the sole physical witness tied at the validated maximum.",
-                "The final denominator replay scored 79 clean physical witnesses and found zero rows above the winner.",
-                "The record is conditional rather than resting/unconditional because execute, target-state, potion, and class-runtime prerequisites must coexist.",
+                "The corrected denominator replay scored 79 clean physical witnesses and found zero rows above the winner after adding external Minor Brutality consistently with the existing borrowed Courage scope.",
+                "The record is conditional rather than resting/unconditional because execute, target-state, borrowed named-buff, potion, and class-runtime prerequisites must coexist.",
             ),
         )
 
