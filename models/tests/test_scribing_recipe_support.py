@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from models.build_model import PlayerBuild
 from models.scribing_recipe import ScribedSkillRecipe
 from services.scribing_catalog import (
@@ -8,7 +10,8 @@ from services.scribing_catalog import (
     result_name,
     skill_line_for_grimoire,
 )
-from ui.scribing_support import _recipes_for, _store_recipes, install
+from ui import scribing_support
+from ui.scribing_support import _recipes_for, _store_recipes
 
 
 def test_uesp_scribing_catalog_has_expected_shape():
@@ -42,8 +45,7 @@ def test_recipe_store_keeps_legacy_name_mirror():
     assert _recipes_for(build) == [recipe]
 
 
-def test_installed_player_build_serialization_round_trips_recipe():
-    install()
+def test_player_build_natively_round_trips_scribing_recipe_without_ui_install():
     build = PlayerBuild(Name="Tank")
     recipe = ScribedSkillRecipe(
         ResultName="Warding Burst",
@@ -63,8 +65,7 @@ def test_installed_player_build_serialization_round_trips_recipe():
     assert _recipes_for(restored) == [recipe]
 
 
-def test_installed_player_build_migrates_legacy_scribed_names():
-    install()
+def test_player_build_natively_migrates_legacy_scribed_names_without_ui_install():
     restored = PlayerBuild.from_dict(
         {
             "Name": "Legacy Tank",
@@ -76,3 +77,12 @@ def test_installed_player_build_migrates_legacy_scribed_names():
     assert len(recipes) == 1
     assert recipes[0].ResultName == "Warding Burst"
     assert recipes[0].Grimoire == ""
+
+
+def test_scribing_ui_does_not_replace_player_build_serialization_methods():
+    source = Path(scribing_support.__file__).read_text(encoding="utf-8")
+
+    assert "PlayerBuild.to_dict =" not in source
+    assert "PlayerBuild.from_dict =" not in source
+    assert "original_to_dict" not in source
+    assert "original_from_dict" not in source
