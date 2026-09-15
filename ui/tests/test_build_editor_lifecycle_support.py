@@ -11,16 +11,18 @@ def _source(module) -> str:
     return Path(module.__file__).read_text(encoding="utf-8")
 
 
-def test_lifecycle_support_owns_single_init_load_and_model_wrapper() -> None:
+def test_lifecycle_support_owns_single_init_load_model_and_context_action_wrapper() -> None:
     source = _source(build_editor_lifecycle_support)
 
     assert "BuildEditor.__init__ = init_composed" in source
     assert "BuildEditor.load = load_composed" in source
     assert "BuildEditor.model = property(model_composed)" in source
+    assert "BuildEditor.add_boss_loadout = add_boss_loadout_composed" in source
     assert "_POST_INIT_HOOKS" in source
     assert "_PRE_LOAD_HOOKS" in source
     assert "_POST_LOAD_HOOKS" in source
     assert "_MODEL_POST_HOOKS" in source
+    assert "_ADD_BOSS_LOADOUT_HOOK" in source
 
 
 def test_core_scribing_uses_pre_load_and_model_hooks() -> None:
@@ -50,10 +52,12 @@ def test_potion_support_uses_lifecycle_hooks_instead_of_wrapping_init_load_and_m
     assert "BuildEditor.model =" not in source
 
 
-def test_context_variants_use_post_load_and_model_hooks() -> None:
+def test_context_variants_use_lifecycle_hooks_instead_of_wrapping_editor_methods() -> None:
     source = _source(build_context_variant_support)
 
+    assert "register_add_boss_loadout(_add_variant)" in source
     assert 'register_post_load("context_variants", load_context_variants)' in source
     assert 'register_model_post("context_variants", store_context_variants)' in source
+    assert "BuildEditor.add_boss_loadout =" not in source
     assert "BuildEditor.load =" not in source
     assert "BuildEditor.model =" not in source
