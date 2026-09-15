@@ -34,7 +34,7 @@ def test_food_and_destruction_staff_are_proven_from_build(tmp_path) -> None:
     )
 
     assert result.condition_context == frozenset(
-        {"food_buff_active", "destruction_staff_equipped"}
+        {"standing_still", "food_buff_active", "destruction_staff_equipped"}
     )
     assert result.unresolved == ()
 
@@ -44,7 +44,9 @@ def test_drink_and_explicit_transformed_form_are_proven(tmp_path) -> None:
 
     result = ExtremeActualHealBuildConditionContextService(_database(tmp_path)).resolve(build)
 
-    assert result.condition_context == frozenset({"drink_buff_active", "transformed"})
+    assert result.condition_context == frozenset(
+        {"standing_still", "drink_buff_active", "transformed"}
+    )
     assert result.unresolved == ()
 
 
@@ -53,18 +55,19 @@ def test_unknown_selected_provisioning_fails_closed(tmp_path) -> None:
 
     result = ExtremeActualHealBuildConditionContextService(_database(tmp_path)).resolve(build)
 
-    assert result.condition_context == frozenset()
+    assert result.condition_context == frozenset({"standing_still"})
     assert result.unresolved == (
         "Selected provisioning item has no canonical food/drink type: Mystery Stew",
     )
 
 
-def test_runtime_conditions_are_not_invented(tmp_path) -> None:
+def test_standing_h1_scenario_is_explicit_but_other_runtime_conditions_are_not_invented(tmp_path) -> None:
     build = PlayerBuild()
     build.FrontBarSkills[0] = "Some Pet Skill"
 
     result = ExtremeActualHealBuildConditionContextService(_database(tmp_path)).resolve(build)
 
+    assert "standing_still" in result.condition_context
+    assert any("standing H1 scenario" in item for item in result.evidence)
     assert "pet_active" not in result.condition_context
-    assert "standing_still" not in result.condition_context
     assert "dodge" not in result.condition_context
