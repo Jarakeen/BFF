@@ -44,12 +44,25 @@ def test_all_reviewed_damage_type_scopes_are_h1_irrelevant() -> None:
         assert ExtremeActualHealGearConditionRelevanceService.review(row).h1_mechanic_complete
 
 
-def test_class_restoration_aoe_and_state_conditions_remain_blocking() -> None:
+def test_standing_still_is_proven_by_standing_h1_scenario() -> None:
+    row = _row(
+        "spell_damage",
+        "Peace and Serenity (5): relevant set effect requires condition standing_still",
+    )
+
+    result = ExtremeActualHealGearConditionRelevanceService.review(row)
+
+    assert result.h1_mechanic_complete is True
+    assert result.ignored_blockers
+    assert result.remaining_blockers == ()
+
+
+def test_class_restoration_aoe_and_other_state_conditions_remain_blocking() -> None:
     for condition in (
         "ability_scope:class",
         "ability_scope:restoration_staff",
         "ability_scope:area_of_effect",
-        "standing_still",
+        "moving",
     ):
         row = _row(
             "spell_damage",
