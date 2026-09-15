@@ -15,7 +15,7 @@ from migration.phase12_5_team_workflow_audit import (
 )
 from services.build_service import BuildService
 from services.eso_database import EsoDatabase
-from services.generated_roster_plan_service import GeneratedRosterPlanService
+from services.generated_roster_plan_service import GeneratedRosterDraftService
 from services.roster_service import RosterService
 
 
@@ -26,7 +26,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--team",
         default="",
-        help="Named Roster/generated team. Defaults to the most recent generated plan.",
+        help="Named Roster/generated team. Defaults to the most recent generated draft.",
     )
     return parser
 
@@ -50,13 +50,13 @@ def _prescription_rows(db: EsoDatabase, plan_id: int):
 
 def _print_available_names(
     *,
-    plans: GeneratedRosterPlanService,
+    plans: GeneratedRosterDraftService,
     roster: RosterService,
 ) -> None:
     plan_names = plans.list_plan_names()
     roster_names = tuple(roster.list_team_names())
 
-    print("\nGenerated plans visible in this database:")
+    print("\nGenerated drafts visible in this database:")
     if plan_names:
         for name in plan_names:
             print(f"- {name}")
@@ -75,7 +75,7 @@ def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     data_dir = get_data_dir()
     db = EsoDatabase(data_dir / "eso.db")
-    plans = GeneratedRosterPlanService(db)
+    plans = GeneratedRosterDraftService(db)
     roster = RosterService(db)
     builds = BuildService(data_dir / "builds.json")
 
@@ -85,15 +85,15 @@ def main(argv: list[str] | None = None) -> int:
         print("PHASE 12.5 TEAM WORKFLOW AUDIT")
         print("RESULT: FAIL")
         if requested:
-            print(f"No generated team plan named {requested!r} exists in {data_dir / 'eso.db'}.")
+            print(f"No generated team draft named {requested!r} exists in {data_dir / 'eso.db'}.")
         else:
-            print(f"No generated team plan exists in {data_dir / 'eso.db'}.")
-        print("Send a real Comp Maker team to Roster first, then audit that generated plan name.")
+            print(f"No generated team draft exists in {data_dir / 'eso.db'}.")
+        print("Send a real Comp Maker team to Roster first, then audit that generated draft name.")
         _print_available_names(plans=plans, roster=roster)
         return 1
 
     team_name = requested or plan.name
-    prescriptions = recruit_prescriptions_from_rows(_prescription_rows(db, plan.plan_id))
+    prescriptions = recruit_prescriptions_from_rows(_prescription_rows(db, plan.draft_id))
     result = Phase125TeamWorkflowAuditService.audit(
         team_name=team_name,
         registered_team_names=tuple(roster.list_team_names()),
@@ -108,8 +108,8 @@ def main(argv: list[str] | None = None) -> int:
     print("========================================")
     print(f"Team:                    {result.team_name}")
     print(f"Roster identity:         {'yes' if result.team_registered else 'NO'}")
-    print(f"Generated plan:          {'yes' if result.generated_plan_found else 'NO'}")
-    print(f"Plan slots:              {result.slot_count}")
+    print(f"Generated draft:         {'yes' if result.generated_plan_found else 'NO'}")
+    print(f"Draft slots:             {result.slot_count}")
     print(f"Saved assignments:       {result.saved_slot_count}")
     print(f"Exact saved resolutions: {result.exact_saved_assignment_count}")
     print(f"Recruit/open chairs:     {result.recruit_slot_count}")
@@ -124,8 +124,11 @@ def main(argv: list[str] | None = None) -> int:
         print("- none")
 
     print("\nBOUNDARIES")
-    for boundary in result.boundaries:
-        print(f"- {boundary}")
+    if result.boundaries:
+        for boundary in result.boundaries:
+            print(f"- {boundary}")
+    else:
+        print("- none")
 
     print(f"\nRESULT: {'PASS' if result.passed else 'FAIL'}")
     return 0 if result.passed else 1
