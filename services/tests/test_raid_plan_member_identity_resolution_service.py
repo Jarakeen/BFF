@@ -61,6 +61,7 @@ def test_stable_ids_resolve_across_personnel_character_and_build(tmp_path: Path)
     result = RaidPlanMemberIdentityResolutionService(database, builds).resolve(member)
 
     assert result.resolved
+    assert result.roster_member_id == roster_member_id
     assert result.player_id == player["player_id"]
     assert result.character_id == character["character_id"]
     assert result.selected_build_id == build["build_id"]
@@ -94,9 +95,18 @@ def test_stable_id_contradictions_fail_closed_without_name_fallback(tmp_path: Pa
     assert any("does not exist" in item for item in result.unresolved)
 
 
-def test_build_id_can_supply_character_and_player_without_name_inference(tmp_path: Path) -> None:
+def test_build_id_can_supply_character_player_and_bound_roster_without_name_inference(tmp_path: Path) -> None:
     database = EsoDatabase(tmp_path / "eso.db")
     builds, player, character, build = _build_state(tmp_path)
+    roster = RosterService(database)
+    roster_member_id = roster.create_member(
+        RosterMember(
+            PlayerName="A Display Label That Does Not Match",
+            CharacterName="Also Not Used For The Join",
+            CanonicalPlayerId=player["player_id"],
+            CanonicalCharacterId=character["character_id"],
+        )
+    )
 
     member = RaidPlanMember(
         seat_id="healer-1",
@@ -106,9 +116,34 @@ def test_build_id_can_supply_character_and_player_without_name_inference(tmp_pat
     result = RaidPlanMemberIdentityResolutionService(database, builds).resolve(member)
 
     assert result.resolved
+    assert result.roster_member_id == roster_member_id
     assert result.selected_build_id == build["build_id"]
     assert result.character_id == character["character_id"]
     assert result.player_id == player["player_id"]
+
+
+def test_player_only_identity_does_not_guess_one_of_multiple_roster_characters(tmp_path: Path) -> None:
+    database = EsoDatabase(tmp_path / "eso.db")
+    builds, player, _character, _build = _build_state(tmp_path)
+    roster = RosterService(database)
+    roster.create_member(
+        RosterMember(PlayerName="Jarakeen", CharacterName="Magrat", CanonicalPlayerId=player["player_id"])
+    )
+    roster.create_member(
+        RosterMember(PlayerName="Jarakeen", CharacterName="Other Toon", CanonicalPlayerId=player["player_id"])
+    )
+
+    member = RaidPlanMember(
+        seat_id="healer-1",
+        gamertag="Jarakeen",
+        player_id=player["player_id"],
+    )
+    result = RaidPlanMemberIdentityResolutionService(database, builds).resolve(member)
+
+    assert result.resolved
+    assert result.player_id == player["player_id"]
+    assert result.character_id is None
+    assert result.roster_member_id is None
 
 
 def test_raid_plan_repository_round_trips_player_id_and_loads_legacy_member(tmp_path: Path) -> None:
