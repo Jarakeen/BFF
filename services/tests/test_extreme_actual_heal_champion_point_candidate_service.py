@@ -45,6 +45,7 @@ def _effect(stat):
 
 def test_discovers_reviewed_component_and_static_heal_relevant_cp():
     records = (
+        _record("Focused Mending"),
         _record("Rejuvenator"),
         _record("Soothing Tide"),
         _record("Swift Renewal"),
@@ -72,11 +73,44 @@ def test_discovers_reviewed_component_and_static_heal_relevant_cp():
     assert result.relevant_star_names == (
         "Arcane Supremacy",
         "Fighting Finesse",
+        "Focused Mending",
         "Rejuvenator",
         "Soothing Tide",
         "Swift Renewal",
     )
-    assert result.legal_loadout_count == 5
+    assert result.legal_loadout_count == 15
+
+
+def test_reviewed_support_sustain_and_proc_cp_do_not_block_actual_heal_magnitude():
+    reviewed_irrelevant = (
+        _record("Cleansing Revival", description="Healing a target under 25% Health removes harmful effects."),
+        _record("Enlivening Overflow", description="Overhealing grants Recovery."),
+        _record("Foresight", description="Potion use reduces healing ability cost."),
+        _record("Hope Infusion", description="Healing grants Minor Heroism."),
+        _record("Last Stand", description="Taking damage grants Major Heroism."),
+        _record("Peace of Mind", description="While immune to crowd control gain Recovery."),
+        _record("Reaving Blows", description="Direct damage heals you."),
+        _record("Refreshing Stride", description="Sprinting grants Recovery."),
+        _record("Salve of Renewal", description="Removing a harmful effect triggers a heal."),
+        _record("Soothing Shield", description="Overhealing grants a damage shield."),
+        _record("Strategic Reserve", description="Ultimate grants Health Recovery."),
+        _record("Sustained by Suffering", description="Negative effects increase Recovery."),
+        _record("Wrathful Strikes", description="Grants Weapon and Spell Damage to damaging abilities."),
+    )
+    repository = _Repository(
+        reviewed_irrelevant,
+        unresolved={row.name: ("dynamic or unmapped",) for row in reviewed_irrelevant},
+    )
+
+    result = ExtremeActualHealChampionPointCandidateService(
+        repository=repository
+    ).build_candidates(
+        PlayerBuild(), character_id="character", baseline_build_id="build"
+    )
+
+    assert result.denominator_proven is True
+    assert result.relevant_star_names == ()
+    assert result.unresolved == ()
 
 
 def test_materializes_every_legal_four_star_warfare_loadout_and_preserves_fitness():
@@ -108,8 +142,6 @@ def test_materializes_every_legal_four_star_warfare_loadout_and_preserves_fitnes
 
     assert result.denominator_proven is True
     assert result.legal_loadout_count == 5
-    # One of the five legal combinations is the baseline A/B/C/D bar, so only
-    # the four distinct replacements need BuildCandidate objects.
     assert len(result.candidates) == 4
     observed = set()
     for candidate in result.candidates:
@@ -130,7 +162,7 @@ def test_materializes_every_legal_four_star_warfare_loadout_and_preserves_fitnes
 def test_heal_relevant_unresolved_cp_blocks_denominator_instead_of_becoming_zero():
     record = _record(
         "Mysterious Mending",
-        description="Increases your healing under a condition BFF has not reviewed.",
+        description="Increases your Healing Done under a condition BFF has not reviewed.",
     )
     repository = _Repository(
         (record,),
