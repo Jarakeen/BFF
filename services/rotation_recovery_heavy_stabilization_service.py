@@ -112,6 +112,7 @@ class RotationRecoveryHeavyStabilizationService:
         calculation_context: BuildCalculationContext | None = None,
         maximum_event_resolver: RecoveryMaximumEventResolver | None = None,
         displayed_recovery_resolver_factory: RecoveryDisplayedRecoveryResolverFactory | None = None,
+        anticipate_future_shortfall: bool = False,
     ) -> RotationRecoveryHeavyStabilizationResult:
         if (restoration_resolver is None) == (restoration_resolver_factory is None):
             raise ValueError(
@@ -205,6 +206,7 @@ class RotationRecoveryHeavyStabilizationService:
                 maximum_amount=maximum_amount,
                 trigger_fraction=trigger_fraction,
                 reserve_assessment_resolver=reserve_assessment_resolver,
+                anticipate_future_shortfall=anticipate_future_shortfall,
             )
 
         assert final_plan is not None
