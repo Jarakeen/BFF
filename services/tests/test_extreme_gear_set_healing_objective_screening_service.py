@@ -27,6 +27,19 @@ def test_heal_proc_is_irrelevant_to_healing_done_sheet_stat() -> None:
     assert result.blockers == ()
 
 
+def test_hostile_heal_absorption_is_not_wearer_healing_done() -> None:
+    result = ExtremeGearSetHealingObjectiveScreeningService.review(
+        "Your melee Light Attacks place a ring on the ground that explodes after 1.3 seconds, "
+        "applying 4830 Heal Absorption to all enemies hit for 4 seconds, negating the next "
+        "4830 points of healing done.",
+        "healing_done",
+    )
+
+    assert result.proven_irrelevant is True
+    assert result.hostile_heal_absorption is True
+    assert result.healing_hazards == ()
+
+
 def test_direct_healing_done_reference_stays_blocking() -> None:
     result = ExtremeGearSetHealingObjectiveScreeningService.review(
         "While on your back bar, increase your Healing Done by 14%.",
