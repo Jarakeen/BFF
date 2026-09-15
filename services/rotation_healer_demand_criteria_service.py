@@ -12,6 +12,9 @@ from services.rotation_candidate_healer_multi_demand_role_output_service import 
     RotationCandidateHealerMultiDemandOutput,
     RotationCandidateHealerMultiDemandRoleOutputService,
 )
+from services.rotation_plan_runtime_build_context_service import (
+    RotationRuntimeBuildContextResolver,
+)
 
 
 class RotationHealerDemandCriterionSourceKind(str, Enum):
@@ -213,6 +216,11 @@ class RotationCandidateHealerCriteriaHardObligationService:
     Caller assumptions remain outside this hard-obligation channel. A resolved
     verified threshold miss returns ``False``; unresolved verified evidence returns
     ``None`` so recommendation fails closed; otherwise the role hard gate passes.
+
+    When final recovery stabilization supplies exact runtime build context, the same
+    resolver used by healer role-output evaluation is forwarded to the demand-window
+    provider before threshold assessment. Hard criteria therefore judge the final
+    schedule rather than a stale pre-recovery magnitude snapshot.
     """
 
     def __init__(
@@ -229,8 +237,13 @@ class RotationCandidateHealerCriteriaHardObligationService:
     def evaluate_plan(
         self,
         candidate: GeneratedRotationCandidate,
+        *,
+        runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
     ) -> RotationCandidateRoleHardObligationEvidence:
-        output = self.multi_demand_output_service.evaluate_windows(candidate)
+        output = self.multi_demand_output_service.evaluate_windows(
+            candidate,
+            runtime_build_context_resolver=runtime_build_context_resolver,
+        )
         assessment = self.criteria_service.assess(
             output=output,
             criteria=self.criteria,
