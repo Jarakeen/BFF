@@ -115,11 +115,16 @@ class ExtremeActualHealArmorWeightCandidateService:
             )
 
         before_weights = self._weights(baseline_build)
+        before_signature = self._signature(before_weights)
         result: list[BuildCandidate] = []
         for signature in sorted(witnesses):
-            weights = witnesses[signature]
-            if weights == before_weights:
+            # The frontier owns mechanic-equivalent signatures, not cosmetic slot
+            # permutations. If the baseline already occupies this signature, it is
+            # the existing witness even when the deterministic representative for
+            # that signature uses a different Light/Heavy arrangement.
+            if signature == before_signature:
                 continue
+            weights = witnesses[signature]
             build = self._materialize(baseline_build, weights)
             medium_count, type_count = signature
             result.append(
@@ -162,12 +167,13 @@ class ExtremeActualHealArmorWeightCandidateService:
             )
 
         before_weights = self._weights(build)
+        before_signature = self._signature(before_weights)
         variants: list[BuildCandidate] = []
         for signature in sorted(witnesses):
-            weights = witnesses[signature]
-            if weights == before_weights:
+            if signature == before_signature:
                 variants.append(candidate)
                 continue
+            weights = witnesses[signature]
             medium_count, type_count = signature
             materialized = self._materialize(build, weights)
             change = BuildChange.from_values(
