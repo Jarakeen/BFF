@@ -6,7 +6,7 @@ This audit reports architecture debt without mutating application data or import
 implementations. It complements ``tools/audit_service_catalog.py`` with checks for hidden
 runtime authority, package-import mutation, monkey-patch/install fan-out, overlapping plan
 persistence, stale RaidPlan identity boundaries, quarantine-boundary imports, legacy engine
-duplication, and runtime path defaults.
+duplication, legacy generated-roster compatibility aliases, and runtime path defaults.
 
 The default command is report-only and returns success even when known architecture debt
 is present. Use ``--strict`` when the goal is to fail on ERROR findings.
@@ -30,6 +30,9 @@ from tools.audit_service_catalog import audit_service_catalog
 _RUNTIME_ROOTS = ("engine", "minmax", "models", "services", "ui")
 _QUARANTINE_ROOTS = ("legacy", "deprecated", "old_pages", "migration")
 _SKIP_PARTS = frozenset({"tests", "test", "__pycache__", *_QUARANTINE_ROOTS})
+_LEGACY_GENERATED_ROSTER_NAMES = frozenset(
+    {"GeneratedRosterPlan", "GeneratedRosterPlanService", "GeneratedRosterPlanSlot"}
+)
 
 
 @dataclass(frozen=True)
@@ -138,12 +141,8 @@ def _monkey_patch_findings(root: Path, path: Path, tree: ast.Module) -> list[Arc
                 continue
             tail = dotted.rsplit(".", 1)[-1]
             if tail.startswith("_") and tail not in {"__init__"}:
-                # Private module globals such as page._foo = ... are common. The
-                # architecture concern here is class/method replacement.
                 continue
             if tail in {"__init__", "refresh", "load", "save", "build_ui", "_build_ui"} or dotted.count(".") >= 1:
-                # Require a capitalized owner somewhere to avoid ordinary instance
-                # state assignments. This catches Page.__init__ / Class.method.
                 owner = dotted.split(".")[-2] if dotted.count(".") else ""
                 if owner and owner[:1].isupper():
                     targets.append(dotted)
@@ -208,6 +207,32 @@ def _quarantine_import_findings(root: Path, path: Path, tree: ast.Module) -> lis
             "runtime-quarantine-import",
             _relative(root, path),
             "normal runtime imports quarantine/migration code: " + ", ".join(sorted(set(imports))),
+        )
+    ]
+
+
+def _legacy_generated_roster_alias_findings(
+    root: Path, path: Path, tree: ast.Module
+) -> list[ArchitectureFinding]:
+    """Flag live runtime callers that still use pre-draft GeneratedRosterPlan names."""
+    imported: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ImportFrom):
+            continue
+        if str(node.module or "") != "services.generated_roster_plan_service":
+            continue
+        for alias in node.names:
+            if alias.name in _LEGACY_GENERATED_ROSTER_NAMES:
+                imported.add(alias.name)
+    if not imported:
+        return []
+    return [
+        ArchitectureFinding(
+            "WARNING",
+            "legacy-generated-roster-plan-runtime-alias",
+            _relative(root, path),
+            "live runtime still imports compatibility GeneratedRosterPlan API: "
+            + ", ".join(sorted(imported)),
         )
     ]
 
@@ -298,7 +323,7 @@ def _repo_contract_findings(root: Path) -> list[ArchitectureFinding]:
                 "WARNING",
                 "overlapping-plan-persistence",
                 "services/generated_roster_plan_service.py",
-                "GeneratedRosterPlan and RaidPlan are both live durable planning models; migration/ownership boundary is required",
+                "GeneratedRosterDraft still uses legacy generated_roster_plan SQLite compatibility storage alongside RaidPlan; migration/ownership boundary remains open",
             )
         )
 
@@ -347,6 +372,7 @@ def audit_system_architecture(*, root: Path) -> ArchitectureAuditResult:
         findings.extend(_monkey_patch_findings(root, path, tree))
         findings.extend(_install_fanout_findings(root, path, tree))
         findings.extend(_quarantine_import_findings(root, path, tree))
+        findings.extend(_legacy_generated_roster_alias_findings(root, path, tree))
         findings.extend(_runtime_path_findings(root, path, tree))
 
     findings.extend(_repo_contract_findings(root))
