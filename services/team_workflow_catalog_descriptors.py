@@ -45,7 +45,7 @@ TEAM_WORKFLOW_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
     ServiceDescriptor(
         service_id="team.roster.canonical_player_binding",
         domain="team",
-        purpose="Bind one Personnel record to one explicit stable Build Catalog player identity without name inference.",
+        purpose="Bind Personnel rows to explicit stable Build Catalog player identity without name inference.",
         implementation_path="services.roster_canonical_player_binding_service",
         inputs=("EsoDatabase", "BuildService", "roster_member_id", "canonical_player_id"),
         outputs=("CanonicalPlayerBinding",),
@@ -54,8 +54,28 @@ TEAM_WORKFLOW_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         behavior=ServiceBehavior.DETERMINISTIC,
         evidence_class=EvidenceClass.NONE,
         notes=(
-            "Bindings are explicit and one-to-one. The service verifies player_id existence and fails closed on duplicate ownership; "
-            "it never infers identity from similar names."
+            "Bindings are explicit. Multiple current player+character Personnel rows may reference the same canonical player. "
+            "If a canonical character is already bound, its Build Catalog player owner must match. No name inference is permitted."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="team.roster.canonical_character_binding",
+        domain="team",
+        purpose="Bind one Personnel row to one explicit stable Build Catalog character identity and preserve its canonical player owner.",
+        implementation_path="services.roster_canonical_character_binding_service",
+        inputs=("EsoDatabase", "BuildService", "roster_member_id", "canonical_character_id"),
+        outputs=("CanonicalCharacterBinding",),
+        dependencies=(
+            "team.roster.persistence",
+            "team.roster.canonical_player_binding",
+            "build.catalog.persistence",
+        ),
+        responsibilities=("roster_canonical_character_binding",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.NONE,
+        notes=(
+            "Character binding is one-to-one at the Personnel-row layer. The supplied character_id must exist; its player owner is "
+            "derived from canonical Build Catalog identity, duplicate character ownership fails closed, and names are never used as identity proof."
         ),
     ),
     ServiceDescriptor(
