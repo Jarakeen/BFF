@@ -109,7 +109,8 @@ def main() -> int:
     print(f"medium_armor_power_semantics_canonical={not any('Medium Armor' in row for row in unresolved)}")
     print(f"fighters_guild_slayer_semantics_canonical={not any('Fighters Guild' in row or 'Slayer' in row for row in unresolved)}")
     print(f"harnessed_quintessence_semantics_canonical={not any('Harnessed Quintessence' in row for row in unresolved)}")
-    print(f"skill_major_brutality_carrier_canonical={not any("Tome-Bearer's" in row for row in unresolved)}")
+    carrier_closed = not any("Tome-Bearer's" in row for row in unresolved)
+    print(f"skill_major_brutality_carrier_canonical={carrier_closed}")
     print(f"unresolved_count={len(unresolved)}")
     for row in unresolved:
         print(f"  unresolved: {row}")
