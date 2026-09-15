@@ -12,9 +12,12 @@ Those mechanics remain the responsibility of the proc/runtime gear family rather
 than blocking ordinary five-piece sheet-stat screening.
 
 Direct Healing Done / Critical Healing modifiers, named Mending modifiers, and
-global equipment-state mutations remain fail-closed. Absence of relevant language
-alone is still not enough: the description must contain positive evidence of a
-recognized mechanic family before it can be proven irrelevant.
+global equipment-state mutations remain fail-closed. Bonuses that explicitly
+exclude the wearer (for example, effects granted only to nearby group members not
+wearing the set) are proven irrelevant to self-H1 even if they mention one of the
+target healing stats. Absence of relevant language alone is still not enough: the
+description must contain positive evidence of a recognized mechanic family before
+it can be proven irrelevant.
 """
 
 from dataclasses import dataclass
@@ -32,6 +35,10 @@ _GLOBAL_EQUIPMENT_HAZARDS = (
 
 _HEALING_DONE_STAT = re.compile(r"\bhealing\s+done\b", re.IGNORECASE)
 _CRITICAL_HEALING_STAT = re.compile(r"\bcritical\s+healing\b", re.IGNORECASE)
+_WEARER_EXCLUDED_GROUP = re.compile(
+    r"\bgroup members?\b[^.;]{0,120}\bnot wearing\b",
+    re.IGNORECASE,
+)
 
 # Positive evidence that the description belongs to some concrete mechanic family.
 # This does not mean that mechanic is fully modeled. It only prevents semantically
@@ -42,7 +49,7 @@ _RECOGNIZED_MECHANIC_WORD = re.compile(
     r"sneak|dodge|roll|block|blocking|ultimate|weapon|spell|attack|enemy|target|"
     r"status|effect|disease|poison|flame|frost|shock|bleed|physical|magic|"
     r"oblivion|bash|interrupt|taunt|cooldown|cost|duration|stack|stacks|pet|"
-    r"companion|snare|immobilize|invisible|stealth|synergy|buff|debuff)\b",
+    r"companion|snare|immobilize|invisible|stealth|synergy|buff|debuff|group)\b",
     re.IGNORECASE,
 )
 
@@ -54,6 +61,7 @@ class ExtremeGearSetHealingObjectiveScreeningResult:
     healing_hazards: tuple[str, ...] = ()
     global_equipment_hazards: tuple[str, ...] = ()
     unrelated_mechanic_evidence: tuple[str, ...] = ()
+    wearer_excluded: bool = False
 
     @property
     def blockers(self) -> tuple[str, ...]:
@@ -81,15 +89,19 @@ class ExtremeGearSetHealingObjectiveScreeningService:
             )
 
         text = cls._normalized(description)
+        wearer_excluded = bool(_WEARER_EXCLUDED_GROUP.search(text))
         hazards: list[str] = []
 
-        if key == "healing_done":
-            if _HEALING_DONE_STAT.search(text):
-                hazards.append("direct Healing Done modifier reference")
-            if "minor mending" in text or "major mending" in text:
-                hazards.append("Mending healing modifier reference")
-        elif _CRITICAL_HEALING_STAT.search(text):
-            hazards.append("direct Critical Healing modifier reference")
+        # Explicit target exclusion wins for self-H1: a modifier granted only to
+        # other group members cannot alter the wearer's sheet stat.
+        if not wearer_excluded:
+            if key == "healing_done":
+                if _HEALING_DONE_STAT.search(text):
+                    hazards.append("direct Healing Done modifier reference")
+                if "minor mending" in text or "major mending" in text:
+                    hazards.append("Mending healing modifier reference")
+            elif _CRITICAL_HEALING_STAT.search(text):
+                hazards.append("direct Critical Healing modifier reference")
 
         global_hazards = tuple(
             phrase for phrase in _GLOBAL_EQUIPMENT_HAZARDS if phrase in text
@@ -102,7 +114,9 @@ class ExtremeGearSetHealingObjectiveScreeningService:
         )
         final_hazards = tuple(dict.fromkeys(hazards))
         proven_irrelevant = bool(
-            mechanic_matches and not final_hazards and not global_hazards
+            (wearer_excluded or mechanic_matches)
+            and not final_hazards
+            and not global_hazards
         )
         return ExtremeGearSetHealingObjectiveScreeningResult(
             objective_key=key,
@@ -110,6 +124,7 @@ class ExtremeGearSetHealingObjectiveScreeningService:
             healing_hazards=final_hazards,
             global_equipment_hazards=global_hazards,
             unrelated_mechanic_evidence=mechanic_matches,
+            wearer_excluded=wearer_excluded,
         )
 
 
