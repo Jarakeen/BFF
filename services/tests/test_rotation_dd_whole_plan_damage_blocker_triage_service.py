@@ -150,3 +150,49 @@ def test_saved_build_stampede_impact_gaps_remain_grouped_runtime_dependency() ->
     assert "lacks exact caller/runtime evidence" in (
         runtime_dependency.disposition_reason or ""
     )
+
+
+def test_target_health_snapshot_gap_is_runtime_input_not_engineering_work() -> None:
+    audit = RotationDDWholePlanDamageCoverageAudit(
+        candidate_id="candidate",
+        total_damage_actions=1,
+        resolved_damage_actions=0,
+        unresolved_damage_actions=1,
+        blockers=(
+            _blocker(
+                "Killer's Blade",
+                "Killer's Blade: coefficient 1: target-health conditional damage requires an exact runtime snapshot",
+            ),
+        ),
+    )
+
+    result = _service().classify(audit)
+
+    assert result.actionable == ()
+    assert result.parked == ()
+    assert len(result.runtime_input_required) == 1
+    assert result.runtime_input_required[0].disposition is (
+        RotationDDDamageBlockerDisposition.RUNTIME_INPUT_REQUIRED
+    )
+
+
+def test_parked_periodic_target_health_timing_gap_remains_evidence_work() -> None:
+    audit = RotationDDWholePlanDamageCoverageAudit(
+        candidate_id="candidate",
+        total_damage_actions=1,
+        resolved_damage_actions=0,
+        unresolved_damage_actions=1,
+        blockers=(
+            _blocker(
+                "Unnerving Boneyard",
+                "Unnerving Boneyard: coefficient 1 periodic target-Health timing is not source-reviewed",
+            ),
+        ),
+    )
+
+    result = _service().classify(audit)
+
+    assert result.actionable == ()
+    assert result.runtime_input_required == ()
+    assert len(result.parked) == 1
+    assert result.parked[0].disposition is RotationDDDamageBlockerDisposition.PARKED_EVIDENCE
