@@ -3,9 +3,12 @@ from pathlib import Path
 
 def test_raid_plan_route_preserves_coverage_aware_workspace() -> None:
     route_source = Path("ui/raid_engine_dashboard_support.py").read_text(encoding="utf-8")
+    adviser_source = Path("ui/raid_plan_adviser_page.py").read_text(encoding="utf-8")
     rotation_source = Path("ui/raid_plan_rotation_page.py").read_text(encoding="utf-8")
 
-    assert "RaidPlanRotationPage" in route_source
+    assert "RaidPlanAdviserPage" in route_source
+    assert "from ui.raid_plan_rotation_page import RaidPlanRotationPage" in adviser_source
+    assert "class RaidPlanAdviserPage(RaidPlanRotationPage):" in adviser_source
     assert "from ui.raid_plan_coverage_page import RaidPlanCoveragePage" in rotation_source
     assert "class RaidPlanRotationPage(RaidPlanCoveragePage):" in rotation_source
     assert "coverageRequested.connect" in route_source
