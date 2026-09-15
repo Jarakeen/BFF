@@ -2,9 +2,9 @@ from __future__ import annotations
 
 """Audit the ordinary five-piece gear-set denominator for Extreme H1 Actual Heal.
 
-Read-only. The production H1 ordinary-set candidate service intentionally uses a
-bounded per-objective pool. That is a useful search heuristic, but it is not a
-proof that every canonically relevant ordinary five-piece set was considered.
+Read-only. Authoritative H1 ordinary-set discovery is exhaustive across the
+mechanic-complete reviewed five-piece universe. An optional bounded comparison is
+retained only to measure what the retired shortlist policy would have omitted.
 
 This audit enumerates the complete canonical GearSetRepository universe against
 the exact H1 objective families used by the candidate service. It distinguishes:
@@ -12,8 +12,9 @@ the exact H1 objective families used by the candidate service. It distinguishes:
 * sets incapable of reaching a useful five-piece threshold;
 * sets with at least one reviewed positive H1 contribution;
 * sets whose potentially relevant mechanics remain unresolved;
-* sets selected by the current bounded production discovery policy; and
-* reviewed-positive sets omitted only because of that production bound.
+* mechanic-complete reviewed-positive sets selected by authoritative exhaustive search;
+* any authoritative omissions, which are proof failures; and
+* optional omissions caused by a deliberately bounded comparison policy.
 
 It does not score whole builds and does not claim that the gear-family denominator
 is globally complete across monster sets, mythics, arena weapons, or runtime procs.
@@ -44,7 +45,8 @@ class OrdinaryGearDenominatorRow:
     useful_piece_count: int
     reviewed_positive_objectives: tuple[str, ...]
     unresolved_objectives: tuple[str, ...]
-    selected_by_bounded_search: bool
+    selected_by_authoritative_search: bool
+    selected_by_bounded_comparison: bool
 
     @property
     def reviewed_positive(self) -> bool:
@@ -55,51 +57,27 @@ class OrdinaryGearDenominatorRow:
         return not self.unresolved_objectives
 
 
-def _bounded_selected_names(
-    repository: GearSetRepository,
-    *,
-    per_objective: int,
-) -> frozenset[str]:
-    """Reproduce the production bounded-discovery policy on one cached repo."""
-
-    names: list[str] = []
-    seen: set[str] = set()
-    limit = max(1, int(per_objective))
-    for objective in ExtremeActualHealGearSetCandidateService.OBJECTIVES:
-        accepted = 0
-        for row in ExtremeGearSetObjectiveService.candidates_for_objective(
-            repository,
-            objective,
-        ):
-            gear_set = repository.get_set_by_id(row.set_id)
-            if gear_set is None:
-                continue
-            useful = ExtremeGearSetObjectiveService._maximum_useful_piece_count(
-                repository,
-                gear_set,
-            )
-            if useful < 5 or not row.mechanic_complete or row.reviewed_delta <= 0:
-                continue
-            key = row.set_name.casefold()
-            if key not in seen:
-                seen.add(key)
-                names.append(row.set_name)
-            accepted += 1
-            if accepted >= limit:
-                break
-    return frozenset(name.casefold() for name in names)
-
-
 def build_ordinary_gear_denominator(
     repository: GearSetRepository,
     *,
-    per_objective: int = 12,
+    comparison_per_objective: int = 12,
 ) -> tuple[OrdinaryGearDenominatorRow, ...]:
     repository.preload_all_static()
-    selected = _bounded_selected_names(
-        repository,
-        per_objective=per_objective,
+
+    service = ExtremeActualHealGearSetCandidateService.__new__(
+        ExtremeActualHealGearSetCandidateService
     )
+    service.repository = repository
+    authoritative = {
+        name.casefold()
+        for name in service.candidate_set_names(per_objective=None)
+    }
+    bounded = {
+        name.casefold()
+        for name in service.candidate_set_names(
+            per_objective=max(1, int(comparison_per_objective))
+        )
+    }
 
     rows: list[OrdinaryGearDenominatorRow] = []
     for gear_set in repository.list_sets():
@@ -122,6 +100,7 @@ def build_ordinary_gear_denominator(
                 if candidate.unresolved:
                     unresolved.append(objective)
 
+        key = gear_set.name.casefold()
         rows.append(
             OrdinaryGearDenominatorRow(
                 set_id=int(gear_set.id),
@@ -130,7 +109,8 @@ def build_ordinary_gear_denominator(
                 useful_piece_count=int(useful),
                 reviewed_positive_objectives=tuple(positive),
                 unresolved_objectives=tuple(unresolved),
-                selected_by_bounded_search=gear_set.name.casefold() in selected,
+                selected_by_authoritative_search=key in authoritative,
+                selected_by_bounded_comparison=key in bounded,
             )
         )
 
@@ -140,49 +120,65 @@ def build_ordinary_gear_denominator(
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--database", type=Path, default=DEFAULT_DATABASE)
-    parser.add_argument("--per-objective", type=int, default=12)
+    parser.add_argument("--comparison-per-objective", type=int, default=12)
     args = parser.parse_args()
 
+    comparison_cap = max(1, int(args.comparison_per_objective))
     repository = GearSetRepository(Path(args.database))
     rows = build_ordinary_gear_denominator(
         repository,
-        per_objective=max(1, int(args.per_objective)),
+        comparison_per_objective=comparison_cap,
     )
 
     five_piece = tuple(row for row in rows if row.useful_piece_count >= 5)
     reviewed_positive = tuple(row for row in five_piece if row.reviewed_positive)
     unresolved = tuple(row for row in five_piece if row.unresolved_objectives)
-    selected = tuple(row for row in five_piece if row.selected_by_bounded_search)
-    omitted_positive = tuple(
-        row for row in reviewed_positive if not row.selected_by_bounded_search
-    )
     complete_positive = tuple(
         row for row in reviewed_positive if row.mechanic_complete_for_h1_screen
     )
-    omitted_complete_positive = tuple(
-        row for row in complete_positive if not row.selected_by_bounded_search
+    authoritative_selected = tuple(
+        row for row in five_piece if row.selected_by_authoritative_search
+    )
+    authoritative_omitted_complete_positive = tuple(
+        row
+        for row in complete_positive
+        if not row.selected_by_authoritative_search
+    )
+    bounded_selected = tuple(
+        row for row in five_piece if row.selected_by_bounded_comparison
+    )
+    bounded_omitted_complete_positive = tuple(
+        row
+        for row in complete_positive
+        if not row.selected_by_bounded_comparison
     )
 
     print("EXTREME E2 ACTUAL HEAL ORDINARY GEAR DENOMINATOR")
     print(f"database={Path(args.database)}")
-    print(f"per_objective_candidate_cap={max(1, int(args.per_objective))}")
+    print("authoritative_per_objective_candidate_cap=None")
+    print(f"comparison_per_objective_candidate_cap={comparison_cap}")
     print(f"canonical_set_count={len(rows)}")
     print(f"five_piece_capable_set_count={len(five_piece)}")
     print(f"reviewed_positive_h1_set_count={len(reviewed_positive)}")
     print(f"mechanic_complete_reviewed_positive_set_count={len(complete_positive)}")
     print(f"h1_screen_unresolved_set_count={len(unresolved)}")
-    print(f"bounded_search_selected_set_count={len(selected)}")
-    print(f"bounded_search_omitted_reviewed_positive_count={len(omitted_positive)}")
+    print(f"authoritative_search_selected_set_count={len(authoritative_selected)}")
     print(
-        "bounded_search_omitted_mechanic_complete_reviewed_positive_count="
-        f"{len(omitted_complete_positive)}"
+        "authoritative_search_omitted_mechanic_complete_reviewed_positive_count="
+        f"{len(authoritative_omitted_complete_positive)}"
+    )
+    print(f"bounded_comparison_selected_set_count={len(bounded_selected)}")
+    print(
+        "bounded_comparison_omitted_mechanic_complete_reviewed_positive_count="
+        f"{len(bounded_omitted_complete_positive)}"
     )
 
-    if omitted_complete_positive:
-        print("OMITTED MECHANIC-COMPLETE REVIEWED-POSITIVE SETS")
-        for row in omitted_complete_positive:
-            objectives = ",".join(row.reviewed_positive_objectives)
-            print(f"  {row.set_name}: objectives={objectives}")
+    if authoritative_omitted_complete_positive:
+        print("AUTHORITATIVE OMISSIONS — PROOF FAILURE")
+        for row in authoritative_omitted_complete_positive:
+            print(
+                f"  {row.set_name}: objectives={','.join(row.reviewed_positive_objectives)}"
+            )
 
     if unresolved:
         print("UNRESOLVED H1 SCREEN SETS")
@@ -191,8 +187,15 @@ def main() -> int:
         if len(unresolved) > 50:
             print(f"  ... {len(unresolved) - 50} additional unresolved sets")
 
-    bounded_search_is_denominator = not omitted_complete_positive and not unresolved
-    print(f"ordinary_gear_bounded_search_is_complete_denominator={bounded_search_is_denominator}")
+    authoritative_reviewed_denominator_complete = not authoritative_omitted_complete_positive
+    print(
+        "ordinary_gear_authoritative_reviewed_denominator_complete="
+        f"{authoritative_reviewed_denominator_complete}"
+    )
+    print(
+        "ordinary_gear_full_mechanic_denominator_complete="
+        f"{authoritative_reviewed_denominator_complete and not unresolved}"
+    )
     print("global_gear_family_denominator_complete=False")
     print(
         "GLOBAL_GEAR_FAMILY_REASON=ordinary five-piece proof is only one family; "
@@ -201,13 +204,9 @@ def main() -> int:
     print(
         "NEXT_STEP="
         + (
-            "prove unresolved ordinary-set mechanics, then replace or justify the bounded per-objective candidate cap"
+            "close unresolved ordinary-set mechanics while preserving exhaustive authoritative admission"
             if unresolved
-            else (
-                "remove or prove-safe-prune the bounded per-objective cap before closing the ordinary five-piece denominator"
-                if omitted_complete_positive
-                else "ordinary five-piece denominator is ready for family-level closure; continue with monster/mythic/arena/proc denominators"
-            )
+            else "ordinary five-piece family is closed; continue with monster/mythic/arena/proc denominators"
         )
     )
     return 0
