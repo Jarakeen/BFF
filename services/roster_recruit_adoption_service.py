@@ -6,29 +6,28 @@ import json
 from models.build_model import PlayerBuild
 from services.build_service import BuildService
 from services.generated_roster_plan_service import (
-    GeneratedRosterPlan,
-    GeneratedRosterPlanService,
-    GeneratedRosterPlanSlot,
+    GeneratedRosterDraft,
+    GeneratedRosterDraftService,
+    GeneratedRosterDraftSlot,
 )
 from services.roster_service import RosterService
 from services.team_prescription_slot_constraints import build_gear_set_names
 
 
 class RosterRecruitAdoptionService:
-    """Replace a generated recruit chair with a real roster member/build.
+    """Adopt a generated draft chair into real Team/build state.
 
-    The generated-team assignment and canonical Build remain separate concepts.
-    The original recruit prescription is persisted as structured evidence before a
-    real player is attached, so later encounter-aware evaluation can compare the
-    assigned build with the prescription instead of reconstructing intent from UI
-    text.
+    The generated roster draft preserves composition/recruitment evidence. Canonical
+    Build and Team state remain separate authorities; adopting a real player/build updates
+    those authorities while the draft keeps the original prescription for comparison.
+    RaidPlan remains the owner of trial-specific final selections and assignments.
     """
 
     def __init__(
         self,
         *,
         builds: BuildService,
-        plans: GeneratedRosterPlanService,
+        plans: GeneratedRosterDraftService,
         roster: RosterService,
     ) -> None:
         self.builds = builds
@@ -74,7 +73,7 @@ class RosterRecruitAdoptionService:
             raise ValueError(f"Roster member {member_id} does not exist.")
         return member
 
-    def _slot(self, plan: GeneratedRosterPlan, slot_name: str) -> GeneratedRosterPlanSlot:
+    def _slot(self, plan: GeneratedRosterDraft, slot_name: str) -> GeneratedRosterDraftSlot:
         wanted = self._clean(slot_name).casefold()
         slot = next(
             (
@@ -85,7 +84,7 @@ class RosterRecruitAdoptionService:
             None,
         )
         if slot is None:
-            raise ValueError(f"Generated team has no chair named {slot_name!r}.")
+            raise ValueError(f"Generated draft has no chair named {slot_name!r}.")
         if slot.kind == "saved":
             raise ValueError(f"{slot.slot_name} already has a saved player/build assignment.")
         return slot
@@ -134,7 +133,7 @@ class RosterRecruitAdoptionService:
         return cls._dedupe((*build.FrontBarSkills, *build.BackBarSkills))
 
     @classmethod
-    def _prescription_payload(cls, slot: GeneratedRosterPlanSlot) -> dict[str, object]:
+    def _prescription_payload(cls, slot: GeneratedRosterDraftSlot) -> dict[str, object]:
         return {
             "slot_name": slot.slot_name,
             "role": slot.role,
@@ -175,8 +174,8 @@ class RosterRecruitAdoptionService:
     def _remember_prescription(
         self,
         *,
-        plan: GeneratedRosterPlan,
-        slot: GeneratedRosterPlanSlot,
+        plan: GeneratedRosterDraft,
+        slot: GeneratedRosterDraftSlot,
         player_name: str,
         character_name: str,
         build_name: str,
@@ -211,8 +210,6 @@ class RosterRecruitAdoptionService:
                 ),
             )
         else:
-            # Preserve the original prescription JSON. Only adopted identity changes
-            # on later reassignment.
             self.db.execute(
                 """
                 UPDATE generated_roster_recruit_prescription
@@ -239,16 +236,16 @@ class RosterRecruitAdoptionService:
 
     def _saved_slot(
         self,
-        original: GeneratedRosterPlanSlot,
+        original: GeneratedRosterDraftSlot,
         member,
         build: PlayerBuild,
         *,
         unresolved_suffix: str = "",
-    ) -> GeneratedRosterPlanSlot:
+    ) -> GeneratedRosterDraftSlot:
         player_name = self._clean(member.PlayerName) or self._clean(build.Name) or "Assigned Player"
         character_name = self._clean(member.CharacterName) or self._clean(build.Name)
         unresolved = self._dedupe((original.unresolved, unresolved_suffix))
-        return GeneratedRosterPlanSlot(
+        return GeneratedRosterDraftSlot(
             slot_name=original.slot_name,
             kind="saved",
             player_name=player_name,
@@ -269,10 +266,10 @@ class RosterRecruitAdoptionService:
 
     def _replace_slot(
         self,
-        plan: GeneratedRosterPlan,
-        original: GeneratedRosterPlanSlot,
-        replacement: GeneratedRosterPlanSlot,
-    ) -> GeneratedRosterPlan:
+        plan: GeneratedRosterDraft,
+        original: GeneratedRosterDraftSlot,
+        replacement: GeneratedRosterDraftSlot,
+    ) -> GeneratedRosterDraft:
         slots = tuple(
             replacement if item.slot_name == original.slot_name else item
             for item in plan.slots
@@ -291,10 +288,10 @@ class RosterRecruitAdoptionService:
         slot_name: str,
         member_id: int,
         build_name: str,
-    ) -> GeneratedRosterPlan:
+    ) -> GeneratedRosterDraft:
         plan = self.plans.load_plan(plan_name)
         if plan is None:
-            raise ValueError(f"Generated team {plan_name!r} does not exist.")
+            raise ValueError(f"Generated draft {plan_name!r} does not exist.")
         slot = self._slot(plan, slot_name)
         member = self._member(member_id)
         build = self._find_build(member_id, build_name)
@@ -324,10 +321,10 @@ class RosterRecruitAdoptionService:
         member_id: int,
         base_build_name: str,
         new_build_name: str,
-    ) -> GeneratedRosterPlan:
+    ) -> GeneratedRosterDraft:
         plan = self.plans.load_plan(plan_name)
         if plan is None:
-            raise ValueError(f"Generated team {plan_name!r} does not exist.")
+            raise ValueError(f"Generated draft {plan_name!r} does not exist.")
         slot = self._slot(plan, slot_name)
         member = self._member(member_id)
         base = self._find_build(member_id, base_build_name)
@@ -359,7 +356,7 @@ class RosterRecruitAdoptionService:
 
         boundary = (
             "Adopted from recruit prescription using a real saved build as the base. "
-            "Prescribed gear-set and ability lists remain structured assignment evidence; "
+            "Prescribed gear-set and ability lists remain structured draft evidence; "
             "exact gear slots, traits, enchants, and skill-bar placement were not invented."
         )
         replacement = self._saved_slot(
