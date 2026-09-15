@@ -38,3 +38,25 @@ def test_actual_heal_armor_weight_frontier_is_registered() -> None:
     assert descriptor.dependencies == ("extreme.actual_heal_armor_weight_legality",)
     assert "extreme_actual_heal_armor_weight_frontier" in descriptor.responsibilities
     assert descriptor.available is True
+
+
+def test_actual_heal_armor_package_composition_is_registered() -> None:
+    descriptor = SERVICE_CATALOG.get("extreme.actual_heal_armor_package_composition")
+
+    assert descriptor is not None
+    assert descriptor.domain == "extreme"
+    assert descriptor.dependencies == ("extreme.actual_heal_armor_weight_frontier",)
+    assert "extreme_actual_heal_gear_armor_weight_composition" in descriptor.responsibilities
+    assert descriptor.available is True
+
+
+def test_actual_heal_armor_progression_is_registered() -> None:
+    descriptor = SERVICE_CATALOG.get("extreme.actual_heal_armor_progression")
+
+    assert descriptor is not None
+    assert descriptor.domain == "extreme"
+    assert descriptor.implementation_path == (
+        "services.extreme_actual_heal_armor_progression_service"
+    )
+    assert "extreme_actual_heal_armor_passive_progression" in descriptor.responsibilities
+    assert descriptor.available is True
