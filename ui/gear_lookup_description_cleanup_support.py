@@ -1,28 +1,35 @@
 from __future__ import annotations
 
+"""Instance-level cleanup for ESO color markup in Gear Lookup descriptions.
+
+Gear Lookup owns the canonical selection/render path. This helper only normalizes
+its already-rendered bonus text, so it composes with the constructed page instead
+of replacing ``GearLookupPage._show_selected`` at runtime.
+"""
+
 from ui.eso_text_cleanup import strip_eso_color_markup
 
-_INSTALLED = False
-_ORIGINAL_SHOW_SELECTED = None
 
-
-def install() -> None:
-    global _INSTALLED, _ORIGINAL_SHOW_SELECTED
-    if _INSTALLED:
+def apply_gear_lookup_description_cleanup(page) -> None:
+    """Strip ESO color markup after each normal Gear Lookup selection render."""
+    if getattr(page, "_gear_lookup_description_cleanup_handler", None) is not None:
         return
 
-    from ui.gear_lookup_layout_support import install as install_layout_support
-    from ui.gear_lookup_page import GearLookupPage
+    results = getattr(page, "results", None)
+    bonuses = getattr(page, "bonuses", None)
+    if results is None or bonuses is None:
+        return
 
-    install_layout_support()
-    _ORIGINAL_SHOW_SELECTED = GearLookupPage._show_selected
+    def cleanup(*_args) -> None:
+        current = bonuses.text()
+        cleaned = strip_eso_color_markup(current)
+        if cleaned != current:
+            bonuses.setText(cleaned)
 
-    def show_selected_without_eso_markup(self, current, previous=None) -> None:
-        _ORIGINAL_SHOW_SELECTED(self, current, previous)
-        if hasattr(self, "bonuses"):
-            cleaned = strip_eso_color_markup(self.bonuses.text())
-            if cleaned != self.bonuses.text():
-                self.bonuses.setText(cleaned)
+    # Keep the closure on the page for an explicit lifetime and idempotency marker.
+    page._gear_lookup_description_cleanup_handler = cleanup
+    results.currentItemChanged.connect(cleanup)
+    cleanup()
 
-    GearLookupPage._show_selected = show_selected_without_eso_markup
-    _INSTALLED = True
+
+__all__ = ["apply_gear_lookup_description_cleanup"]
