@@ -1,5 +1,10 @@
 from services.eso_database import EsoDatabase
 from services.generated_roster_plan_service import (
+    GENERATED_ROSTER_DRAFT_OWNERSHIP,
+    GeneratedRosterDraft,
+    GeneratedRosterDraftService,
+    GeneratedRosterDraftSlot,
+    GeneratedRosterPlan,
     GeneratedRosterPlanService,
     GeneratedRosterPlanSlot,
 )
@@ -7,13 +12,20 @@ from services.roster_service import RosterService
 
 
 def _service(tmp_path):
-    return GeneratedRosterPlanService(EsoDatabase(tmp_path / "eso.db"))
+    return GeneratedRosterDraftService(EsoDatabase(tmp_path / "eso.db"))
 
 
-def test_generated_roster_plan_persists_saved_and_recruit_slots(tmp_path) -> None:
+def test_generated_roster_plan_names_are_compatibility_aliases_only() -> None:
+    assert GeneratedRosterPlanService is GeneratedRosterDraftService
+    assert GeneratedRosterPlanSlot is GeneratedRosterDraftSlot
+    assert GeneratedRosterPlan is GeneratedRosterDraft
+    assert GENERATED_ROSTER_DRAFT_OWNERSHIP == "composition_recruitment_evidence_only"
+
+
+def test_generated_roster_draft_persists_saved_and_recruit_slots(tmp_path) -> None:
     service = _service(tmp_path)
     slots = (
-        GeneratedRosterPlanSlot(
+        GeneratedRosterDraftSlot(
             slot_name="Main Tank",
             kind="saved",
             player_name="Tank Player",
@@ -22,7 +34,7 @@ def test_generated_roster_plan_persists_saved_and_recruit_slots(tmp_path) -> Non
             build_name="YOUR TANK BUILD",
             gear_summary="Turning Tide + Pearlescent Ward",
         ),
-        GeneratedRosterPlanSlot(
+        GeneratedRosterDraftSlot(
             slot_name="Healer 1",
             kind="prescribed_recruit",
             player_name="Recruitment Needed",
@@ -32,7 +44,7 @@ def test_generated_roster_plan_persists_saved_and_recruit_slots(tmp_path) -> Non
             gear_summary="Serpent's Disdain + Pillager's Profit",
             unresolved="traits unresolved",
         ),
-        GeneratedRosterPlanSlot(
+        GeneratedRosterDraftSlot(
             slot_name="DD 1",
             kind="open_recruit",
             player_name="Recruitment Needed",
@@ -52,6 +64,7 @@ def test_generated_roster_plan_persists_saved_and_recruit_slots(tmp_path) -> Non
     loaded = service.load_plan("godslayer prescribed roster")
 
     assert loaded is not None
+    assert loaded.draft_id == saved.draft_id
     assert loaded.plan_id == saved.plan_id
     assert loaded.goal == "Godslayer"
     assert loaded.difficulty == "Veteran Hardmode"
@@ -61,9 +74,9 @@ def test_generated_roster_plan_persists_saved_and_recruit_slots(tmp_path) -> Non
     assert RosterService(service.db).list_team_names() == ["Godslayer Prescribed Roster"]
 
 
-def test_generated_plan_round_trips_structured_candidate_evidence(tmp_path) -> None:
+def test_generated_draft_round_trips_structured_candidate_evidence(tmp_path) -> None:
     service = _service(tmp_path)
-    slot = GeneratedRosterPlanSlot(
+    slot = GeneratedRosterDraftSlot(
         slot_name="Off Tank",
         kind="prescribed_recruit",
         player_name="Recruitment Needed",
@@ -106,14 +119,14 @@ def test_generated_plan_round_trips_structured_candidate_evidence(tmp_path) -> N
     assert loaded.slots[0].mundus == "The Atronach"
 
 
-def test_generated_plan_team_identity_does_not_fabricate_roster_members(tmp_path) -> None:
+def test_generated_draft_team_identity_does_not_fabricate_roster_members(tmp_path) -> None:
     service = _service(tmp_path)
     service.save_plan(
         name="GH Prog",
         goal="Gryphon Heart",
         difficulty="Veteran Hardmode",
         slots=(
-            GeneratedRosterPlanSlot(
+            GeneratedRosterDraftSlot(
                 slot_name="Healer 1",
                 kind="prescribed_recruit",
                 player_name="Recruitment Needed",
@@ -129,14 +142,14 @@ def test_generated_plan_team_identity_does_not_fabricate_roster_members(tmp_path
     assert roster.list_members() == []
 
 
-def test_resending_same_named_plan_replaces_slots_instead_of_duplicating(tmp_path) -> None:
+def test_resending_same_named_draft_replaces_slots_instead_of_duplicating(tmp_path) -> None:
     service = _service(tmp_path)
     service.save_plan(
         name="Godslayer Prescribed Roster",
         goal="Godslayer",
         difficulty="Veteran",
         slots=(
-            GeneratedRosterPlanSlot(
+            GeneratedRosterDraftSlot(
                 slot_name="Main Tank",
                 kind="open_recruit",
                 player_name="Recruitment Needed",
@@ -148,7 +161,7 @@ def test_resending_same_named_plan_replaces_slots_instead_of_duplicating(tmp_pat
     )
 
     replacement = (
-        GeneratedRosterPlanSlot(
+        GeneratedRosterDraftSlot(
             slot_name="Main Tank",
             kind="saved",
             player_name="Tank Player",
@@ -156,7 +169,7 @@ def test_resending_same_named_plan_replaces_slots_instead_of_duplicating(tmp_pat
             eso_class="Necromancer",
             build_name="Tank Build",
         ),
-        GeneratedRosterPlanSlot(
+        GeneratedRosterDraftSlot(
             slot_name="Healer 1",
             kind="prescribed_recruit",
             player_name="Recruitment Needed",
