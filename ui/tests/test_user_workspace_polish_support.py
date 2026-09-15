@@ -39,7 +39,7 @@ def test_characters_navigation_opens_personnel_by_label() -> None:
 
 
 def test_polish_installs_after_rotation_and_roster_composition() -> None:
-    source = Path("ui/operations_console_schedule_support.py").read_text(encoding="utf-8")
+    source = Path("ui/application_workspace_bootstrap.py").read_text(encoding="utf-8")
 
     polish_call = source.index("install_user_workspace_polish_support()")
     assert source.index("install_roster_player_architecture_support()") < polish_call
