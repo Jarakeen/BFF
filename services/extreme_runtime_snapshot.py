@@ -7,6 +7,7 @@ from minmax.external_group_buff_provenance import ExternalGroupBuffApplication
 from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
 from services.extreme_runtime_bar_effect_attempt import ExtremeRuntimeBarEffectAttempt
 from services.extreme_runtime_bar_transition import ExtremeRuntimeBarTransition
+from services.extreme_runtime_condition_window import ExtremeRuntimeConditionWindow
 
 
 @dataclass(frozen=True)
@@ -30,6 +31,7 @@ ExtremeRuntimeHistoryEntry = (
     RuntimeEffectEventAttempt
     | ExtremeRuntimeBarEffectAttempt
     | ExtremeRuntimeBarTransition
+    | ExtremeRuntimeConditionWindow
     | ExtremeRuntimePotionUse
     | ExternalGroupBuffApplication
 )
@@ -41,11 +43,11 @@ class ExtremeRuntimeSnapshot:
 
     ``runtime_history`` is the authoritative E1 input when supplied. It carries
     ordinary effect attempts, optional bar-provenance effect attempts, explicit
-    bar transitions, potion activations, and explicitly evidenced external group-
-    buff applications on one ordered timeline. The older positional fields remain
-    in their original order as a compatibility bridge for existing callers, but
-    they cannot be supplied alongside ``runtime_history`` so two competing versions
-    of runtime truth cannot enter one evaluation.
+    bar transitions, explicit condition windows, potion activations, and explicitly
+    evidenced external group-buff applications on one ordered timeline. The older
+    positional fields remain in their original order as a compatibility bridge for
+    existing callers, but they cannot be supplied alongside ``runtime_history`` so
+    two competing versions of runtime truth cannot enter one evaluation.
 
     Bar provenance is deliberately carried by ``ExtremeRuntimeBarEffectAttempt``
     and ``ExtremeRuntimeBarTransition`` rather than added to the generic Phase 7
@@ -105,6 +107,7 @@ class ExtremeRuntimeSnapshot:
                     RuntimeEffectEventAttempt,
                     ExtremeRuntimeBarEffectAttempt,
                     ExtremeRuntimeBarTransition,
+                    ExtremeRuntimeConditionWindow,
                     ExtremeRuntimePotionUse,
                     ExternalGroupBuffApplication,
                 ),
@@ -112,7 +115,8 @@ class ExtremeRuntimeSnapshot:
                 raise TypeError(
                     "runtime_history entries must be RuntimeEffectEventAttempt, "
                     "ExtremeRuntimeBarEffectAttempt, ExtremeRuntimeBarTransition, "
-                    "ExtremeRuntimePotionUse, or ExternalGroupBuffApplication"
+                    "ExtremeRuntimeConditionWindow, ExtremeRuntimePotionUse, or "
+                    "ExternalGroupBuffApplication"
                 )
 
         if history:
@@ -191,6 +195,8 @@ class ExtremeRuntimeSnapshot:
             return (entry.time_seconds, entry.sequence)
         if isinstance(entry, ExtremeRuntimeBarTransition):
             return (entry.time_seconds, entry.sequence)
+        if isinstance(entry, ExtremeRuntimeConditionWindow):
+            return (entry.active_from_seconds, entry.sequence)
         if isinstance(entry, ExtremeRuntimePotionUse):
             return (float(entry.time_seconds), int(entry.sequence))
         return (float(entry.applied_at_seconds), int(entry.sequence))
@@ -274,6 +280,26 @@ class ExtremeRuntimeSnapshot:
             entry
             for entry in self.ordered_runtime_history
             if isinstance(entry, ExtremeRuntimeBarTransition)
+        )
+
+    @property
+    def condition_windows(self) -> tuple[ExtremeRuntimeConditionWindow, ...]:
+        if not self.runtime_history:
+            return ()
+        return tuple(
+            entry
+            for entry in self.ordered_runtime_history
+            if isinstance(entry, ExtremeRuntimeConditionWindow)
+        )
+
+    @property
+    def active_condition_ids(self) -> tuple[str, ...]:
+        return tuple(
+            dict.fromkeys(
+                window.condition_id
+                for window in self.condition_windows
+                if window.active_at(self.snapshot_time_seconds)
+            )
         )
 
     @property
