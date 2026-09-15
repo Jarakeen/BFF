@@ -31,7 +31,7 @@ def test_unmapped_damage_proc_does_not_block_healing_done_objective() -> None:
     assert row.unresolved == ()
 
 
-def test_unmapped_heal_proc_still_blocks_healing_done_objective() -> None:
+def test_unmapped_heal_proc_does_not_block_healing_done_sheet_objective() -> None:
     row = ExtremeGearSetObjectiveService.candidate_for_set(
         _Repo("When you take damage, heal yourself for an unknown amount."),
         "Screened Set",
@@ -39,8 +39,8 @@ def test_unmapped_heal_proc_still_blocks_healing_done_objective() -> None:
     )
 
     assert row.reviewed_delta == 0.0
-    assert row.mechanic_complete is False
-    assert row.unresolved
+    assert row.mechanic_complete is True
+    assert row.unresolved == ()
 
 
 def test_unmapped_damage_critical_text_does_not_block_critical_healing() -> None:
@@ -54,7 +54,19 @@ def test_unmapped_damage_critical_text_does_not_block_critical_healing() -> None
     assert row.unresolved == ()
 
 
-def test_unmapped_critical_healing_text_still_blocks_critical_healing() -> None:
+def test_unmapped_crit_heal_trigger_does_not_block_critical_healing_sheet_objective() -> None:
+    row = ExtremeGearSetObjectiveService.candidate_for_set(
+        _Repo("When your healing critically strikes, grant the target a damage shield."),
+        "Screened Set",
+        "critical_healing",
+    )
+
+    assert row.reviewed_delta == 0.0
+    assert row.mechanic_complete is True
+    assert row.unresolved == ()
+
+
+def test_unmapped_critical_healing_modifier_still_blocks_critical_healing() -> None:
     row = ExtremeGearSetObjectiveService.candidate_for_set(
         _Repo("Your Critical Healing is increased by an unknown amount."),
         "Screened Set",
