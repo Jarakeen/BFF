@@ -3,6 +3,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from minmax.resource_costs import ResourceType
+from models.build_model import PlayerBuild
 from ui.rotation_canonical_candidate_support import RotationCanonicalRoleEvidence
 from ui.rotation_dashboard_canonical_page import CanonicalRotationDashboardPage
 
@@ -35,7 +36,7 @@ class _Status:
 
 class _DirectPageState:
     def __init__(self) -> None:
-        self.build = object()
+        self.build = PlayerBuild(Name="Magrat", BuildName="DF Healer", Role="Healer")
         self.request = object()
         self.rotation_canonical_candidates = _CanonicalCandidates()
         self.last_canonical_candidate_result = None
@@ -48,7 +49,8 @@ class _DirectPageState:
     def _selected_build(self):
         return self.build
 
-    def canonical_generation_request(self):
+    def canonical_generation_request(self, *, player_build=None):
+        assert player_build is self.build
         return self.request
 
 
@@ -168,7 +170,7 @@ def test_page_cadence_orchestration_forwards_role_evidence() -> None:
 
     class _CadencePage:
         def __init__(self) -> None:
-            self.build = object()
+            self.build = PlayerBuild(Name="Magrat", BuildName="DF Healer", Role="Healer")
             self.request = object()
             self.rotation_canonical_cadence_orchestration = _Orchestrator()
             self.last_canonical_cadence_orchestration_result = None
@@ -182,7 +184,8 @@ def test_page_cadence_orchestration_forwards_role_evidence() -> None:
         def _selected_build(self):
             return self.build
 
-        def canonical_generation_request(self):
+        def canonical_generation_request(self, *, player_build=None):
+            assert player_build is self.build
             return self.request
 
     page = _CadencePage()
