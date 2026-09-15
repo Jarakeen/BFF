@@ -25,6 +25,7 @@ from services.extreme_dual_bar_set_activation_evidence_service import (
     ExtremeDualBarSetActivationEvidenceCatalog,
 )
 from services.extreme_runtime_snapshot import ExtremeRuntimeSnapshot
+from services.extreme_skill_runtime_effect_service import ExtremeSkillRuntimeEffectService
 
 
 @dataclass(frozen=True)
@@ -59,6 +60,7 @@ class ExtremeRuntimeSnapshotCombatStateService:
         database_path: str | Path | None = None,
         *,
         skill_buff_candidates: ExtremeActualHealSkillBuffCandidateService | None = None,
+        skill_runtime_effects: ExtremeSkillRuntimeEffectService | None = None,
         gear_runtime_buffs: ExtremeActualHealGearRuntimeBuffService | None = None,
         dual_bar_gear_runtime: ExtremeDualBarGearRuntimeLegalityService | None = None,
         potion_use_resolver: PotionUseEventResolver | None = None,
@@ -66,6 +68,7 @@ class ExtremeRuntimeSnapshotCombatStateService:
     ) -> None:
         self.database_path = None if database_path is None else Path(database_path)
         self.skill_buff_candidates = skill_buff_candidates
+        self.skill_runtime_effects = skill_runtime_effects
         self.gear_runtime_buffs = gear_runtime_buffs
         self.dual_bar_gear_runtime = dual_bar_gear_runtime
         self.potion_use_resolver = potion_use_resolver
@@ -106,19 +109,34 @@ class ExtremeRuntimeSnapshotCombatStateService:
         attempts = snapshot.effect_attempts
 
         if attempts:
-            skill_service = self.skill_buff_candidates
-            if skill_service is None and self.database_path is not None:
-                skill_service = ExtremeActualHealSkillBuffCandidateService(self.database_path)
-                self.skill_buff_candidates = skill_service
-            if skill_service is not None:
-                active_buffs.extend(
-                    skill_service.active_triggered_named_buffs_history(
-                        build,
-                        active_bar=active_bar,
-                        attempts=attempts,
-                        snapshot_time_seconds=snapshot.snapshot_time_seconds,
-                    )
+            skill_runtime = self.skill_runtime_effects
+            if skill_runtime is None and self.database_path is not None:
+                skill_runtime = ExtremeSkillRuntimeEffectService(self.database_path)
+                self.skill_runtime_effects = skill_runtime
+            if skill_runtime is not None:
+                skill_result = skill_runtime.resolve_history(
+                    build,
+                    active_bar=active_bar,
+                    attempts=attempts,
+                    snapshot_time_seconds=snapshot.snapshot_time_seconds,
                 )
+                active_buffs.extend(skill_result.active_buffs)
+                active_effects.extend(skill_result.active_effects)
+                unresolved.extend(skill_result.unresolved)
+            else:
+                # Compatibility bridge for callers that inject the older healer-oriented
+                # named-buff candidate service. New shared callers should use
+                # ExtremeSkillRuntimeEffectService.
+                skill_service = self.skill_buff_candidates
+                if skill_service is not None:
+                    active_buffs.extend(
+                        skill_service.active_triggered_named_buffs_history(
+                            build,
+                            active_bar=active_bar,
+                            attempts=attempts,
+                            snapshot_time_seconds=snapshot.snapshot_time_seconds,
+                        )
+                    )
 
             if gear_activation is not None:
                 if snapshot.unbarred_effect_attempts:
