@@ -104,6 +104,14 @@ def _open_dashboard_help(window) -> None:
         help_page.show_topic("comp_builder")
 
 
+def _open_raid_plan_coverage(window, plan) -> None:
+    coverage = window.pages.get("console:7")
+    if coverage is None or not hasattr(coverage, "set_raid_plan_scope"):
+        return
+    coverage.set_raid_plan_scope(plan)
+    window.show_page("console:7")
+
+
 def _register_page(window, route: str, page) -> None:
     window.pages[route] = page
     container = window.wrap_page(page)
@@ -116,7 +124,7 @@ def _build_ui_with_raid_engine_dashboard(self) -> None:
     _ORIGINAL_BUILD_UI(self)
 
     from ui.raid_engine_dashboard_page import RaidEngineDashboardPage
-    from ui.raid_plan_assignment_page import RaidPlanAssignmentPage
+    from ui.raid_plan_coverage_page import RaidPlanCoveragePage
 
     dashboard = RaidEngineDashboardPage()
     dashboard.set_sources(
@@ -131,8 +139,9 @@ def _build_ui_with_raid_engine_dashboard(self) -> None:
     dashboard.helpRequested.connect(lambda: _open_dashboard_help(self))
     _register_page(self, "raid_engine_dashboard", dashboard)
 
-    raid_plans = RaidPlanAssignmentPage()
+    raid_plans = RaidPlanCoveragePage()
     raid_plans.pageRequested.connect(self.show_page)
+    raid_plans.coverageRequested.connect(lambda plan: _open_raid_plan_coverage(self, plan))
     _register_page(self, "raid_plans", raid_plans)
 
 
@@ -145,7 +154,11 @@ def install() -> None:
     from ui.build_screenshot_import_disable_support import (
         install as install_build_screenshot_import_disable_support,
     )
+    from ui.coverage_raid_plan_scope_support import install as install_coverage_raid_plan_scope_support
 
+    # CoveragePage is created by MainWindow's original build_ui, so extend the class
+    # before that UI is constructed.
+    install_coverage_raid_plan_scope_support()
     _install_sidebar_route()
     _install_read_only_dashboard_refresh()
     from ui.raid_engine_dashboard_polish_support import install as install_dashboard_polish
