@@ -101,7 +101,6 @@ def main() -> int:
         reference_value=0.0,
     )
 
-    # The blueprint owns the canonical self-usable potion profile.
     blueprint = ExtremeBlueprintService(database_path=DATABASE)
     weapon_objective = blueprint.extreme.objective("weapon_damage")
     spell_objective = blueprint.extreme.objective("spell_damage")
@@ -145,20 +144,12 @@ def main() -> int:
     print(f"database={DATABASE}")
     print()
     print("RACE")
-    print(
-        f"weapon={None if weapon_race is None else (weapon_race.race_name, float(weapon_race.projected_delta))!r}"
-    )
-    print(
-        f"spell={None if spell_race is None else (spell_race.race_name, float(spell_race.projected_delta))!r}"
-    )
+    print(f"weapon={None if weapon_race is None else (weapon_race.race_name, float(weapon_race.projected_delta))!r}")
+    print(f"spell={None if spell_race is None else (spell_race.race_name, float(spell_race.projected_delta))!r}")
     print()
     print("MUNDUS")
-    print(
-        f"weapon={None if weapon_mundus is None else (weapon_mundus.mundus_name, float(weapon_mundus.projected_delta))!r}"
-    )
-    print(
-        f"spell={None if spell_mundus is None else (spell_mundus.mundus_name, float(spell_mundus.projected_delta))!r}"
-    )
+    print(f"weapon={None if weapon_mundus is None else (weapon_mundus.mundus_name, float(weapon_mundus.projected_delta))!r}")
+    print(f"spell={None if spell_mundus is None else (spell_mundus.mundus_name, float(spell_mundus.projected_delta))!r}")
     print()
     print("JEWELRY GLYPH")
     print(f"weapon_physical_harm={weapon_glyph!r}")
@@ -175,8 +166,10 @@ def main() -> int:
     print(f"spell_major_courage={spell_major_courage!r}")
     print()
     print("SORCERER / POTION")
-    print(f"weapon_expert_mage={None if weapon_expert is None else float(weapon_expert.projected_delta):!r}")
-    print(f"spell_expert_mage={None if spell_expert is None else float(spell_expert.projected_delta):!r}")
+    weapon_expert_value = None if weapon_expert is None else float(weapon_expert.projected_delta)
+    spell_expert_value = None if spell_expert is None else float(spell_expert.projected_delta)
+    print(f"weapon_expert_mage={weapon_expert_value!r}")
+    print(f"spell_expert_mage={spell_expert_value!r}")
     print(f"weapon_potion={weapon_potion!r}")
     print(f"spell_potion={spell_potion!r}")
     print()
