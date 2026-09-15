@@ -11,13 +11,10 @@ from dataclasses import dataclass
 import json
 from pathlib import Path
 
+from services.paths import DATA
 
-_DEFAULT_PATH = (
-    Path(__file__).resolve().parents[1]
-    / "data"
-    / "encounter_tank_observed_lane_assignment"
-    / "reviewed.json"
-)
+
+_DEFAULT_PATH = DATA / "encounter_tank_observed_lane_assignment" / "reviewed.json"
 
 
 @dataclass(frozen=True)
