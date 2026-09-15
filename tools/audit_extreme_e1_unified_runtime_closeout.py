@@ -148,7 +148,7 @@ def main() -> int:
     requirement_service = ExtremePowerRecordRuntimeRequirementService()
     power_rows = []
     for objective in ("weapon_damage", "spell_damage"):
-        requirements = requirement_service.requirements(objective)
+        requirements = requirement_service.requirements_for(objective)
         witness = ExtremePowerRecordRuntimeSnapshotWitnessService.build(objective)
         power_rows.append(
             (
