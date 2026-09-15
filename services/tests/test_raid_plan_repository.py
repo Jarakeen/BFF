@@ -25,6 +25,7 @@ def _plan(*, plan_id: str = "performance-mode-rockgrove", name: str = "Performan
                 character_name="Magrat",
                 role="Healer",
                 eso_class="Warden",
+                selected_build_id="df-healer-build-id",
                 selected_build_name="DF Healer",
                 primary_assignment="Group Healer",
                 notes="Top-left pool",
@@ -50,8 +51,43 @@ def test_repository_round_trips_complete_plan_snapshot(tmp_path) -> None:
 
     repository.save(plan)
 
-    assert repository.get(plan.plan_id) == plan
+    restored = repository.get(plan.plan_id)
+    assert restored == plan
+    assert restored.member("healer-1").selected_build_id == "df-healer-build-id"
     assert repository.list_plans() == (plan,)
+
+
+def test_repository_reads_legacy_plan_without_selected_build_id(tmp_path) -> None:
+    path = tmp_path / "raid_plans.json"
+    payload = {
+        "schema_version": 1,
+        "plans": [
+            {
+                "plan_id": "legacy-plan",
+                "trial_id": "rockgrove",
+                "name": "Legacy Plan",
+                "members": [
+                    {
+                        "seat_id": "healer-1",
+                        "gamertag": "Jarakeen",
+                        "character_name": "Magrat",
+                        "selected_build_name": "DF Healer",
+                    }
+                ],
+                "triggered_responsibilities": [],
+            }
+        ],
+    }
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+    plan = RaidPlanRepository(path).get("legacy-plan")
+
+    assert plan is not None
+    member = plan.member("healer-1")
+    assert member is not None
+    assert member.selected_build_id is None
+    assert member.selected_build_name == "DF Healer"
+    assert member.build_selected is True
 
 
 def test_save_replaces_same_plan_id_without_duplicating(tmp_path) -> None:
