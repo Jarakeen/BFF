@@ -78,7 +78,14 @@ def test_missing_target_families_are_reported(tmp_path):
         db.executescript(
             """
             CREATE TABLE skill (id INTEGER PRIMARY KEY, base_ability_id INTEGER, name TEXT);
-            CREATE TABLE skill_rank (id INTEGER PRIMARY KEY, skill_id INTEGER, ability_id INTEGER, raw_name TEXT);
+            CREATE TABLE skill_rank (
+                id INTEGER PRIMARY KEY,
+                skill_id INTEGER,
+                ability_id INTEGER,
+                raw_name TEXT,
+                rank INTEGER,
+                morph INTEGER
+            );
             """
         )
 
