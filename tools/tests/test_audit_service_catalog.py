@@ -6,6 +6,7 @@ from services.service_catalog import (
     ServiceAuthority,
     ServiceDescriptor,
 )
+import tools.audit_service_catalog as catalog_audit
 from tools.audit_service_catalog import audit_service_catalog
 
 
@@ -147,6 +148,27 @@ def test_audit_reports_repository_boundary_even_without_external_consumer(tmp_pa
         and row.message == "services/orphan_repository.py"
         for row in result.warnings
     )
+
+
+def test_audit_indexes_external_runtime_imports_once_per_run(tmp_path: Path, monkeypatch) -> None:
+    _write_module(tmp_path, "services.alpha_service")
+    _write_module(tmp_path, "services.beta_service")
+    _write_module(tmp_path, "services.gamma_service")
+    calls = 0
+
+    def fake_index(_root: Path) -> frozenset[str]:
+        nonlocal calls
+        calls += 1
+        return frozenset({"services.beta_service"})
+
+    monkeypatch.setattr(catalog_audit, "_external_runtime_service_imports", fake_index)
+
+    result = audit_service_catalog(root=tmp_path, descriptors=())
+
+    assert calls == 1
+    assert any(row.message == "services/beta_service.py" for row in result.warnings)
+    assert not any(row.message == "services/alpha_service.py" for row in result.warnings)
+    assert not any(row.message == "services/gamma_service.py" for row in result.warnings)
 
 
 def test_audit_ignores_catalog_infrastructure_module(tmp_path: Path) -> None:
