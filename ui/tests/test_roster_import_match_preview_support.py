@@ -24,7 +24,7 @@ def test_import_preview_matches_player_character_and_build_hierarchy():
 
 
 def test_import_match_preview_installs_after_identity_resolution():
-    source = Path("ui/operations_console_schedule_support.py").read_text(encoding="utf-8")
+    source = Path("ui/application_workspace_bootstrap.py").read_text(encoding="utf-8")
 
     assert "install_roster_import_match_preview_support()" in source
     assert source.index("install_roster_import_identity_resolution_support()") < source.index(
