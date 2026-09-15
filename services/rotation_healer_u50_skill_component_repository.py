@@ -9,7 +9,9 @@ from minmax.skill_component_classification import (
     SkillComponentClassification,
     SkillEffectKind,
 )
-from minmax.skill_component_repository import SkillComponentRepository
+from services.rotation_reviewed_skill_component_repository import (
+    RotationReviewedSkillComponentRepository,
+)
 
 
 class RotationHealerU50SkillComponentRepository:
@@ -20,6 +22,10 @@ class RotationHealerU50SkillComponentRepository:
     persisted classification table does not yet expose their healer identity.
     This overlay adds only exact rank/coefficient identities reviewed from the
     U50 corpus.
+
+    Its default base is the role-neutral reviewed Rotation component repository,
+    so healer evaluation inherits already-reviewed mechanic identity from other
+    Rotation workstreams instead of falling back to a second raw-database view.
 
     Synergy-owned healing components are intentionally excluded from this
     repository. They require a separate activation-owner/runtime contract and
@@ -41,11 +47,7 @@ class RotationHealerU50SkillComponentRepository:
 
     _INTENTIONALLY_EXCLUDED_CASTER_HEALING_COMPONENTS = frozenset(
         {
-            # Harvest synergy is activated/owned by the synergy user, not emitted
-            # automatically by the healer's Budding Seeds cast.
             (BUDDING_SEEDS_RANK_ID, 3),
-            # Healing Combustion is the Energy Orb synergy consequence and likewise
-            # requires separate activation-owner/runtime evidence.
             (ENERGY_ORB_RANK_ID, 2),
         }
     )
@@ -155,10 +157,12 @@ class RotationHealerU50SkillComponentRepository:
         self,
         database_path: str | Path,
         *,
-        base_repository: SkillComponentRepository | object | None = None,
+        base_repository: object | None = None,
     ) -> None:
         self.database_path = Path(database_path)
-        self.base_repository = base_repository or SkillComponentRepository(database_path)
+        self.base_repository = base_repository or RotationReviewedSkillComponentRepository(
+            database_path
+        )
 
     @classmethod
     def is_intentionally_excluded_caster_healing_component(
@@ -167,7 +171,6 @@ class RotationHealerU50SkillComponentRepository:
         skill_rank_id: int,
         coefficient_number: int,
     ) -> bool:
-        """Return whether reviewed U50 evidence places this heal outside caster output."""
         return (
             int(skill_rank_id),
             int(coefficient_number),
