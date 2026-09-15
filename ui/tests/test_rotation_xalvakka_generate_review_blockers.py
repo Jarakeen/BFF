@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 
 from minmax.resource_costs import ResourceType
+from models.build_model import PlayerBuild
 from ui.rotation_generate_application_context_provider import (
     RotationGenerateApplicationContextProvider,
 )
@@ -24,7 +25,7 @@ class _StaticContextService:
 
 class _Page:
     def __init__(self) -> None:
-        self.build = SimpleNamespace(Role="Healer")
+        self.build = PlayerBuild(Name="Magrat", BuildName="DF Healer", Role="Healer")
 
     def _selected_build(self):
         return self.build
