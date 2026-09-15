@@ -24,6 +24,9 @@ from minmax.gear_stat_inputs import (
 from minmax.phase5_context_factory import Phase5BuildCalculationContextFactory
 from minmax.stat_ids import StatId
 from models.build_model import PlayerBuild
+from services.extreme_actual_heal_gear_precondition_effect_resolver import (
+    ExtremeActualHealGearPreconditionEffectResolver,
+)
 from services.extreme_gear_set_power_tradeoff_resolver import (
     ExtremeGearSetPowerTradeoffResolver,
 )
@@ -40,6 +43,7 @@ class _ExtremeConditionedGearEffectResolver:
         self.resource_conditions = GearSetResourceConditionResolver()
         self.healing_conditions = GearSetHealingConditionResolver()
         self.power_tradeoffs = ExtremeGearSetPowerTradeoffResolver()
+        self.precondition_effects = ExtremeActualHealGearPreconditionEffectResolver()
 
     def resolve(self, bonus, *, use_max_value=True, source=None):
         for resolver in (
@@ -47,6 +51,7 @@ class _ExtremeConditionedGearEffectResolver:
             self.resource_conditions,
             self.healing_conditions,
             self.power_tradeoffs,
+            self.precondition_effects,
         ):
             effects = resolver.resolve(
                 bonus,
