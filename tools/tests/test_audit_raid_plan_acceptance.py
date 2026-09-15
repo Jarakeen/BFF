@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from models.build_model import PlayerBuild
 from models.raid_plan import RaidPlan, RaidPlanMember
 from services.saved_build_capability_service import SavedBuildCapabilityAudit
@@ -115,3 +117,13 @@ def test_choose_plan_requires_explicit_choice_when_multiple_exist() -> None:
 
     assert _choose_plan((first, second), plan_id="performance-mode-rg") == first
     assert _choose_plan((first, second), plan_name="Performance Mode") == first
+
+
+def test_acceptance_audit_script_bootstraps_repo_root_for_direct_execution() -> None:
+    source = Path("tools/audit_raid_plan_acceptance.py").read_text(encoding="utf-8")
+
+    root_pos = source.index("ROOT = Path(__file__).resolve().parents[1]")
+    path_pos = source.index("sys.path.insert(0, str(ROOT))")
+    engine_import_pos = source.index("from engine.config import")
+
+    assert root_pos < path_pos < engine_import_pos
