@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-"""Explicitly bind Personnel records to canonical Build Catalog player identities.
+"""Explicitly bind Personnel rows to canonical Build Catalog player identities.
 
 This service never guesses identity from names. A binding is accepted only when the caller
-supplies a real Build Catalog ``player_id``. One canonical player may be bound to at most
-one Personnel record; ambiguous or conflicting state fails closed.
+supplies a real Build Catalog ``player_id``. Multiple Personnel rows may reference the same
+player because the current roster model is still player+character shaped. Character binding
+owns the one-to-one row identity and must remain consistent with its canonical player.
 """
 
 from dataclasses import dataclass
@@ -56,18 +57,20 @@ class RosterCanonicalPlayerBindingService:
             raise ValueError(f"roster member {roster_member_id} does not exist")
         player = self._canonical_player(canonical_player_id)
         player_id = str(player.get("player_id") or "").strip()
-        conflict = self.database.execute(
-            """
-            SELECT id
-            FROM roster_member
-            WHERE canonical_player_id = ? AND id <> ?
-            """,
-            (player_id, int(roster_member_id)),
-        ).fetchone()
-        if conflict is not None:
-            raise ValueError(
-                f"canonical player {player_id!r} is already bound to roster member {int(conflict['id'])}"
-            )
+
+        character_id = str(member.CanonicalCharacterId or "").strip()
+        if character_id:
+            character = self.build_service.canonical.catalog_service.get_character(character_id)
+            if character is None:
+                raise ValueError(
+                    f"roster member references missing canonical character {character_id!r}"
+                )
+            character_player_id = str(character.get("player_id") or "").strip()
+            if character_player_id != player_id:
+                raise ValueError(
+                    "canonical player binding conflicts with the member's canonical character owner"
+                )
+
         self.database.execute(
             "UPDATE roster_member SET canonical_player_id = ? WHERE id = ?",
             (player_id, int(roster_member_id)),
@@ -80,8 +83,11 @@ class RosterCanonicalPlayerBindingService:
         )
 
     def clear(self, *, roster_member_id: int) -> None:
-        if self.roster.get_member(int(roster_member_id)) is None:
+        member = self.roster.get_member(int(roster_member_id))
+        if member is None:
             raise ValueError(f"roster member {roster_member_id} does not exist")
+        if str(member.CanonicalCharacterId or "").strip():
+            raise ValueError("clear the canonical character binding before clearing its player")
         self.database.execute(
             "UPDATE roster_member SET canonical_player_id = '' WHERE id = ?",
             (int(roster_member_id),),
