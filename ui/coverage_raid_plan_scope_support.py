@@ -11,19 +11,47 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel, QTableWidgetItem
 
 from models.raid_plan import RaidPlan
+from services.raid_group_effect_catalog import (
+    GROUP_COVERAGE_BY_NAME,
+    GROUP_COVERAGE_NAMES,
+)
 from services.raid_plan_coverage_scope_service import RaidPlanCoverageScopeService
-from services.raid_coverage_profile import DEFAULT_RAID_COVERAGE_PROFILE
+from services.raid_unique_support_set_catalog import (
+    UNIQUE_SUPPORT_SET_BY_NAME,
+    UNIQUE_SUPPORT_SET_NAMES,
+)
 
 _INSTALLED = False
 _ORIGINAL_REFRESH = None
 
+# Raid Plan scope must render the same raid-facing effect universe as ordinary Coverage,
+# not only the older default-required profile. Unique-set references override duplicate
+# generic rows so their terse type label and exact set semantics survive the handoff.
+REFERENCE_BY_NAME = {**GROUP_COVERAGE_BY_NAME, **UNIQUE_SUPPORT_SET_BY_NAME}
+RAID_PLAN_COVERAGE_NAMES = tuple(
+    dict.fromkeys((*GROUP_COVERAGE_NAMES, *UNIQUE_SUPPORT_SET_NAMES))
+)
+
 
 def _effect_names(page) -> tuple[str, ...]:
-    return tuple(
-        row.display_name
-        for row in DEFAULT_RAID_COVERAGE_PROFILE.requirements
-        if row.required
-    )
+    del page
+    return RAID_PLAN_COVERAGE_NAMES
+
+
+def _reference(effect: str):
+    return REFERENCE_BY_NAME.get(effect)
+
+
+def _required_text(effect: str) -> str:
+    reference = _reference(effect)
+    return "Yes" if reference is not None and reference.default_required else "No"
+
+
+def _type_text(effect: str) -> str:
+    reference = _reference(effect)
+    if reference is None:
+        return "Buff"
+    return str(getattr(reference, "type_label", "") or reference.category)
 
 
 def _apply_filters(page) -> None:
@@ -32,8 +60,6 @@ def _apply_filters(page) -> None:
 
 
 def _render_raid_plan_scope(page) -> None:
-    from ui.coverage_page import DEBUFFS, UTILITY
-
     scope = getattr(page, "_raid_plan_coverage_scope", None)
     if scope is None:
         return
@@ -63,19 +89,18 @@ def _render_raid_plan_scope(page) -> None:
     for effect in _effect_names(page):
         row = page.table.rowCount()
         page.table.insertRow(row)
-        names = snapshot.providers[effect]
-        conditional = snapshot.conditional_providers[effect]
-        state = snapshot.status[effect]
+        names = snapshot.providers.get(effect, [])
+        conditional = snapshot.conditional_providers.get(effect, [])
+        state = snapshot.status.get(effect, "unverified")
         source_text = ", ".join(names) if names else (
             f"Conditional: {', '.join(conditional)}" if conditional else "—"
         )
         primary = ", ".join(scope.primary_for(effect)) or "—"
         backup = ", ".join(scope.secondary_for(effect)) or "—"
-        category = "Debuff" if effect in DEBUFFS else "Utility" if effect in UTILITY else "Buff"
         values = [
             effect,
-            category,
-            "Yes",
+            _type_text(effect),
+            _required_text(effect),
             source_text,
             primary,
             backup,
@@ -86,57 +111,82 @@ def _render_raid_plan_scope(page) -> None:
                 "conditional": "Conditional",
                 "not_found": "Not identified",
                 "unverified": "Unverified",
-            }[state],
+            }.get(state, "Unverified"),
         ]
         for column, value in enumerate(values):
             item = QTableWidgetItem(str(value))
             if column == 8:
                 item.setData(Qt.ItemDataRole.UserRole, state)
             if column == 3:
-                item.setData(Qt.ItemDataRole.UserRole, len(names))
+                item.setData(Qt.ItemDataRole.UserRole, len(names) + len(conditional))
             if column in (4, 5):
                 item.setToolTip(
                     "Explicit Raid Plan assignment label. This is planning intent, not proof that the effect is available or maintained."
                 )
             elif column >= 3:
                 item.setToolTip("Static build evidence only. Uptime is not inferred.")
+            elif column == 2:
+                item.setToolTip(
+                    "Default raid coverage requirement."
+                    if value == "Yes"
+                    else "Reference-visible group effect; not a universal raid requirement."
+                )
             else:
-                item.setToolTip("Default raid coverage requirement.")
+                item.setToolTip("Raid-facing coverage effect.")
             page.table.setItem(row, column, item)
 
     _apply_filters(page)
-    available = sum(state == "available" for state in snapshot.status.values())
-    conditional = sum(state == "conditional" for state in snapshot.status.values())
-    not_found = sum(state == "not_found" for state in snapshot.status.values())
-    unverified = sum(state == "unverified" for state in snapshot.status.values())
+    visible_effects = _effect_names(page)
+    available = sum(snapshot.status.get(name) == "available" for name in visible_effects)
+    conditional_count = sum(snapshot.status.get(name) == "conditional" for name in visible_effects)
+    not_found = sum(snapshot.status.get(name) == "not_found" for name in visible_effects)
+    unverified = sum(snapshot.status.get(name, "unverified") == "unverified" for name in visible_effects)
     page.summary_card.clear()
     page.summary_card.addWidget(QLabel(
-        f"TOTAL EFFECTS   {len(_effect_names(page))}\n"
+        f"TOTAL EFFECTS   {len(visible_effects)}\n"
         f"STATIC SOURCES  {available}\n"
-        f"CONDITIONAL     {conditional}\n"
+        f"CONDITIONAL     {conditional_count}\n"
         f"NOT IDENTIFIED  {not_found}\n"
         f"UNVERIFIED      {unverified}\n"
         f"UNRESOLVED CHAIRS {unresolved}"
     ))
     page.providers_card.clear()
     provider_counts: dict[str, int] = {}
-    for names in snapshot.providers.values():
-        for name in names:
+    conditional_counts: dict[str, int] = {}
+    for effect in visible_effects:
+        for name in snapshot.providers.get(effect, []):
             provider_counts[name] = provider_counts.get(name, 0) + 1
-    if provider_counts:
-        for name, count in sorted(provider_counts.items(), key=lambda row: (-row[1], row[0]))[:5]:
-            page.providers_card.addWidget(QLabel(f"{name}   {count} effect(s) identified"))
+        for name in snapshot.conditional_providers.get(effect, []):
+            conditional_counts[name] = conditional_counts.get(name, 0) + 1
+    if provider_counts or conditional_counts:
+        all_names = sorted(
+            set(provider_counts) | set(conditional_counts),
+            key=lambda name: (
+                -(provider_counts.get(name, 0) + conditional_counts.get(name, 0)),
+                name,
+            ),
+        )
+        for name in all_names[:5]:
+            static_count = provider_counts.get(name, 0)
+            conditional_for_name = conditional_counts.get(name, 0)
+            details = []
+            if static_count:
+                details.append(f"{static_count} static")
+            if conditional_for_name:
+                details.append(f"{conditional_for_name} conditional")
+            page.providers_card.addWidget(QLabel(f"{name}   {', '.join(details)} effect(s) identified"))
     else:
-        page.providers_card.addWidget(QLabel("No unconditional static sources identified."))
+        page.providers_card.addWidget(QLabel("No static or conditional sources identified."))
 
     if unresolved:
         page.status.warning(
-            f"Raid Plan Coverage • {available}/{len(_effect_names(page))} static effects available; "
-            f"{unresolved} chair(s) unresolved."
+            f"Raid Plan Coverage • {available} static + {conditional_count} conditional "
+            f"of {len(visible_effects)} effects; {unresolved} chair(s) unresolved."
         )
     else:
         page.status.info(
-            f"Raid Plan Coverage • {available}/{len(_effect_names(page))} effects have static sources; uptime unknown."
+            f"Raid Plan Coverage • {available} static + {conditional_count} conditional "
+            f"of {len(visible_effects)} effects; uptime unknown."
         )
 
 
