@@ -13,7 +13,7 @@ def test_context_variant_import_support_replaces_prior_team_imports() -> None:
 
 
 def test_context_variant_import_support_installs_after_alias_normalization() -> None:
-    source = Path("ui/operations_console_schedule_support.py").read_text(encoding="utf-8")
+    source = Path("ui/application_workspace_bootstrap.py").read_text(encoding="utf-8")
 
     assert source.index("install_roster_gear_set_alias_import_support()") < source.index(
         "install_roster_import_context_variant_support()"
