@@ -42,8 +42,15 @@ class CanonicalBuildBridge:
         self.catalog_service = BuildCatalogService(self.catalog_path)
         self.enchantment_compatibility = BuildGearEnchantmentCompatibilityService()
 
+    def _load_catalog_strict(self) -> dict[str, Any]:
+        """Read canonical user state without converting corruption into emptiness."""
+        if not self.catalog_path.exists():
+            return self.catalog_service.new_catalog()
+        payload = json.loads(self.catalog_path.read_text(encoding="utf-8"))
+        return self.catalog_service._normalize(payload)
+
     def load(self) -> BuildRoster:
-        catalog = self.catalog_service.load()
+        catalog = self._load_catalog_strict()
         if catalog["builds"]:
             canonical_roster = self.enchantment_compatibility.normalize_roster(
                 self._roster_from_catalog(catalog)
@@ -85,7 +92,10 @@ class CanonicalBuildBridge:
         every build for a character while preserving that character record.
         """
         normalized = self.enchantment_compatibility.normalize_roster(roster)
-        existing = self.catalog_service.load()
+        existing = self._load_catalog_strict()
+        # import_legacy_roster performs its own normal load after the strict gate
+        # above. The gate prevents corrupt canonical state from being silently
+        # replaced by compatibility data.
         catalog = self.catalog_service.import_legacy_roster(normalized)
 
         represented_ids = {
