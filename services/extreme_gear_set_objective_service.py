@@ -93,6 +93,7 @@ class ExtremeGearSetObjectiveService:
         }
     )
     _HEALING_RELEVANCE_CONDITIONS = frozenset({"food_buff_active"})
+    _HEALING_STANDING_INACTIVE_CONDITIONS = frozenset({"sneaking_or_invisible"})
 
     _STAT_BY_OBJECTIVE = {
         "critical_damage": StatId.CRITICAL_DAMAGE,
@@ -149,6 +150,11 @@ class ExtremeGearSetObjectiveService:
 
         if effect.condition:
             condition = str(effect.condition).strip()
+            if (
+                objective in cls._HEALING_OBJECTIVES
+                and condition in cls._HEALING_STANDING_INACTIVE_CONDITIONS
+            ):
+                return 0.0, None
             permitted = (
                 objective in cls._MAX_RESOURCE_OBJECTIVES
                 and condition in cls._MAX_RESOURCE_RELEVANCE_CONDITIONS
