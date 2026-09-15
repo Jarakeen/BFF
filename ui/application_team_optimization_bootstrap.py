@@ -72,6 +72,9 @@ def bootstrap_team_optimization_extensions() -> None:
     )
     install_comp_builder_main_controls()
 
+    from ui.raid_engine_dashboard_support import install as install_raid_engine_dashboard
+    install_raid_engine_dashboard()
+
     from ui.comp_builder_assignment_cue_support import (
         install as install_comp_builder_assignment_cue,
     )

@@ -155,6 +155,12 @@ class MainWindow(QMainWindow):
             self.page_containers[name] = container
             self.stack.addWidget(container)
 
+        # Raid Engine pages join the canonical page registry directly. Their
+        # preconstruction extensions are composed by the application bootstrap.
+        from ui.raid_engine_dashboard_support import register_raid_engine_pages
+
+        register_raid_engine_pages(self)
+
     def connect_signals(self):
         self.sidebar.pageRequested.connect(self.show_page)
 

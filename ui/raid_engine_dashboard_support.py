@@ -10,7 +10,6 @@ Coverage, Encounter, Rotation, or Optimization pages.
 import warnings
 
 _INSTALLED = False
-_ORIGINAL_BUILD_UI = None
 
 
 def _install_sidebar_route() -> None:
@@ -114,42 +113,38 @@ def _register_page(window, route: str, page) -> None:
     window.stack.addWidget(container)
 
 
-def _build_ui_with_raid_engine_dashboard(self) -> None:
-    assert _ORIGINAL_BUILD_UI is not None
-    _ORIGINAL_BUILD_UI(self)
-
+def register_raid_engine_pages(window) -> None:
+    """Register Raid Engine pages after MainWindow creates their source pages."""
     from ui.raid_engine_dashboard_page import RaidEngineDashboardPage
     from ui.raid_plan_adviser_page import RaidPlanAdviserPage
 
     dashboard = RaidEngineDashboardPage()
     dashboard.set_sources(
-        comp_builder=self.pages.get("comp_builder"),
-        optimization=self.pages.get("console:6"),
-        coverage=self.pages.get("console:7"),
-        encounters=self.pages.get("console:1"),
-        performance=self.pages.get("console:3"),
+        comp_builder=window.pages.get("comp_builder"),
+        optimization=window.pages.get("console:6"),
+        coverage=window.pages.get("console:7"),
+        encounters=window.pages.get("console:1"),
+        performance=window.pages.get("console:3"),
     )
-    dashboard.pageRequested.connect(self.show_page)
-    dashboard.sendTeamRequested.connect(self._send_optimized_team_to_roster)
-    dashboard.helpRequested.connect(lambda: _open_dashboard_help(self))
-    _register_page(self, "raid_engine_dashboard", dashboard)
+    dashboard.pageRequested.connect(window.show_page)
+    dashboard.sendTeamRequested.connect(window._send_optimized_team_to_roster)
+    dashboard.helpRequested.connect(lambda: _open_dashboard_help(window))
+    _register_page(window, "raid_engine_dashboard", dashboard)
 
     raid_plans = RaidPlanAdviserPage()
-    raid_plans.pageRequested.connect(self.show_page)
-    raid_plans.coverageRequested.connect(lambda plan: _open_raid_plan_coverage(self, plan))
+    raid_plans.pageRequested.connect(window.show_page)
+    raid_plans.coverageRequested.connect(lambda plan: _open_raid_plan_coverage(window, plan))
     raid_plans.rotationRequested.connect(
-        lambda plan, seat_id: _open_raid_plan_rotation(self, plan, seat_id)
+        lambda plan, seat_id: _open_raid_plan_rotation(window, plan, seat_id)
     )
-    raid_plans.adviserRequested.connect(lambda plan: _open_raid_plan_adviser(self, plan))
-    _register_page(self, "raid_plans", raid_plans)
-
+    raid_plans.adviserRequested.connect(lambda plan: _open_raid_plan_adviser(window, plan))
+    _register_page(window, "raid_plans", raid_plans)
 
 def install() -> None:
-    global _INSTALLED, _ORIGINAL_BUILD_UI
+    global _INSTALLED
     if _INSTALLED:
         return
 
-    from ui.main_window import MainWindow
     from ui.build_screenshot_import_disable_support import (
         install as install_build_screenshot_import_disable_support,
     )
@@ -167,6 +162,4 @@ def install() -> None:
     # Keep the screenshot/OCR intake implementation in the tree but remove its
     # user-facing Builds control while the new planning/intake ownership settles.
     install_build_screenshot_import_disable_support()
-    _ORIGINAL_BUILD_UI = MainWindow.build_ui
-    MainWindow.build_ui = _build_ui_with_raid_engine_dashboard
     _INSTALLED = True

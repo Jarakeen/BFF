@@ -80,3 +80,15 @@ def test_dashboard_refresh_keeps_team_optimization_read_only() -> None:
     assert "_install_read_only_dashboard_refresh" not in support
     assert "RaidEngineDashboardPage.refresh =" not in support
 
+def test_raid_engine_pages_use_native_main_window_registration() -> None:
+    main_window = Path("ui/main_window.py").read_text(encoding="utf-8")
+    support = Path("ui/raid_engine_dashboard_support.py").read_text(encoding="utf-8")
+    comp_controls = Path("ui/comp_builder_main_controls_support.py").read_text(encoding="utf-8")
+    bootstrap = Path("ui/application_team_optimization_bootstrap.py").read_text(encoding="utf-8")
+
+    assert "register_raid_engine_pages(self)" in main_window
+    assert "MainWindow.build_ui =" not in support
+    assert "_ORIGINAL_BUILD_UI" not in support
+    assert "install_raid_engine_dashboard()" in bootstrap
+    assert "install_raid_engine_dashboard()" not in comp_controls
+

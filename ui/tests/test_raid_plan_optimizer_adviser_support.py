@@ -35,12 +35,16 @@ def test_optimizer_adviser_is_explicitly_read_only_and_plan_scoped() -> None:
     assert "repository.save" not in scope_body
 
 
-def test_adviser_support_is_installed_before_main_window_builds_optimization_page() -> None:
-    source = Path("ui/raid_engine_dashboard_support.py").read_text(encoding="utf-8")
+def test_adviser_support_is_installed_before_main_window_construction() -> None:
+    support = Path("ui/raid_engine_dashboard_support.py").read_text(encoding="utf-8")
+    bootstrap = Path("ui/application_team_optimization_bootstrap.py").read_text(encoding="utf-8")
+    app = Path("app.py").read_text(encoding="utf-8")
 
-    install_pos = source.index("install_raid_plan_optimizer_adviser_support()")
-    wrap_pos = source.index("_ORIGINAL_BUILD_UI = MainWindow.build_ui")
-    assert install_pos < wrap_pos
+    assert "install_raid_plan_optimizer_adviser_support()" in support
+    assert "install_raid_engine_dashboard()" in bootstrap
+    assert app.index("bootstrap_team_optimization_extensions()") < app.index(
+        "from ui.main_window import MainWindow"
+    )
 
 
 def test_raid_plan_header_keeps_context_while_actions_move_to_workspace_card() -> None:
