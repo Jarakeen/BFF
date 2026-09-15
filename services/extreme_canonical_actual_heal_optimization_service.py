@@ -8,6 +8,9 @@ from services.extreme_actual_heal_armor_weight_candidate_service import (
 from services.extreme_actual_heal_armor_weight_legality_service import (
     ExtremeActualHealArmorWeightLegalityService,
 )
+from services.extreme_actual_heal_armor_weight_package_adapter import (
+    ExtremeActualHealArmorWeightPackageAdapter,
+)
 from services.extreme_actual_heal_attribute_projection_service import (
     ExtremeActualHealAttributeProjectionService,
 )
@@ -44,12 +47,12 @@ class ExtremeCanonicalActualHealOptimizationService(ExtremeActualHealOptimizatio
     fails, the inherited conservative candidate path remains active and the proof
     gap is carried as unresolved evidence.
 
-    Armor-weight search uses canonical set-piece ``armor_type`` evidence for the
-    current gear layout. It enumerates every physically legal slot-weight layout
-    and keeps one deterministic witness for each H1-relevant Medium-piece-count +
-    distinct-armor-type signature. Joint gear-package + weight expansion remains
-    a later proof boundary; this layer does not pretend a set can change armor
-    weight merely because that would score better.
+    Armor-weight search uses canonical set-piece ``armor_type`` evidence. The
+    current gear layout is searched directly, while armor-bearing gear package
+    services are decorated so every package candidate is expanded through its own
+    physically legal armor-weight frontier before canonical event scoring. Raw
+    slot layouts are proof-reduced by Medium-piece count plus distinct armor-type
+    count, preserving the reviewed Agility/Dexterity and Undaunted Mettle inputs.
 
     Explicitly injected optimizers, healing-event evaluators, CP candidate
     services, attribute projection services, and armor candidate services remain
@@ -57,6 +60,13 @@ class ExtremeCanonicalActualHealOptimizationService(ExtremeActualHealOptimizatio
     """
 
     CP_SEARCH_SCOPE = "legal heal-relevant Champion Point loadout search"
+    _ARMOR_PACKAGE_SERVICES = (
+        ("gear_set_candidates", "ordinary-five-piece"),
+        ("monster_packages", "five-plus-monster"),
+        ("double_five_packages", "double-five"),
+        ("mythic_packages", "ring-mythic-package"),
+        ("non_ring_mythic_packages", "non-ring-mythic-package"),
+    )
 
     def __init__(
         self,
@@ -100,6 +110,22 @@ class ExtremeCanonicalActualHealOptimizationService(ExtremeActualHealOptimizatio
                 ExtremeActualHealArmorWeightLegalityService(database_path)
             )
 
+        self._armor_package_adapters: list[ExtremeActualHealArmorWeightPackageAdapter] = []
+        if self.armor_weight_candidates is not None:
+            for attribute, label in self._ARMOR_PACKAGE_SERVICES:
+                delegate = getattr(self, attribute, None)
+                if delegate is None or isinstance(
+                    delegate, ExtremeActualHealArmorWeightPackageAdapter
+                ):
+                    continue
+                adapter = ExtremeActualHealArmorWeightPackageAdapter(
+                    delegate,
+                    self.armor_weight_candidates,
+                    label=label,
+                )
+                setattr(self, attribute, adapter)
+                self._armor_package_adapters.append(adapter)
+
         self._champion_point_search_unresolved: tuple[str, ...] = ()
         self._attribute_search_unresolved: tuple[str, ...] = ()
         self._attribute_search_scope: tuple[str, ...] = ()
@@ -114,7 +140,36 @@ class ExtremeCanonicalActualHealOptimizationService(ExtremeActualHealOptimizatio
         self._attribute_search_entity_id = str(entity_id or "").strip()
         self._armor_weight_search_unresolved = ()
         self._armor_weight_search_scope = ()
+        for adapter in self._armor_package_adapters:
+            adapter.reset()
+
         result = super().optimize(baseline_build, entity_id, *args, **kwargs)
+
+        package_unresolved: list[str] = []
+        raw_packages = expanded_packages = raw_layouts = retained_signatures = 0
+        for adapter in self._armor_package_adapters:
+            stats = adapter.stats
+            raw_packages += stats.raw_package_candidates
+            expanded_packages += stats.expanded_candidates
+            raw_layouts += stats.raw_weight_layouts_reviewed
+            retained_signatures += stats.retained_weight_signatures
+            package_unresolved.extend(stats.unresolved)
+        self._armor_weight_search_unresolved = tuple(
+            dict.fromkeys(
+                (*self._armor_weight_search_unresolved, *package_unresolved)
+            )
+        )
+        if raw_packages:
+            package_scope = (
+                "armor-bearing H1 gear package composition: "
+                f"{raw_packages} raw package candidates expanded to {expanded_packages} "
+                f"physically legal package+weight candidates after reviewing {raw_layouts} "
+                f"slot-weight layouts and retaining {retained_signatures} H1 signatures",
+            )
+            self._armor_weight_search_scope = tuple(
+                dict.fromkeys((*self._armor_weight_search_scope, *package_scope))
+            )
+
         unresolved = tuple(
             dict.fromkeys(
                 (
