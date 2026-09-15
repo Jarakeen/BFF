@@ -41,7 +41,7 @@ def test_saved_rotation_renders_timeline_and_generation_setup() -> None:
 
 
 def test_support_is_installed_after_rotation_layout_support() -> None:
-    source = Path("ui/operations_console_schedule_support.py").read_text(encoding="utf-8")
+    source = Path("ui/application_workspace_bootstrap.py").read_text(encoding="utf-8")
 
     layout_call = source.index("install_rotation_dashboard_layout_support()")
     artifact_call = source.index("install_build_rotation_artifact_support()")
