@@ -69,7 +69,7 @@ def test_roster_import_keeps_personnel_unique_by_gamertag_when_character_differs
 
 
 def test_roster_import_identity_support_is_installed_after_import_workflow():
-    source = Path("ui/operations_console_schedule_support.py").read_text(encoding="utf-8")
+    source = Path("ui/application_workspace_bootstrap.py").read_text(encoding="utf-8")
 
     assert "install_roster_import_identity_resolution_support()" in source
     assert source.index("install_roster_import_support()") < source.index(
