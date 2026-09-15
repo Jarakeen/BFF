@@ -39,7 +39,6 @@ def bootstrap_workspace_extensions() -> None:
     from ui.roster_team_assignment_filter_support import install as install_roster_team_assignment_filter_support
     from ui.roster_encounter_assignment_context_support import install as install_roster_encounter_assignment_context_support
     from ui.roster_characters_header_context_support import install as install_roster_characters_header_context_support
-    from ui.roster_sub_terminology_support import install as install_roster_sub_terminology_support
     from ui.roster_assignment_persistence_support import install as install_roster_assignment_persistence_support
     from ui.roster_assignment_action_support import install as install_roster_assignment_action_support
     from ui.roster_assignment_context_action_support import install as install_roster_assignment_context_action_support
@@ -73,7 +72,6 @@ def bootstrap_workspace_extensions() -> None:
     install_roster_team_assignment_filter_support()
     install_roster_encounter_assignment_context_support()
     install_roster_characters_header_context_support()
-    install_roster_sub_terminology_support()
     install_roster_assignment_persistence_support()
     install_roster_assignment_action_support()
     install_roster_assignment_context_action_support()
