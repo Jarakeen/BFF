@@ -58,6 +58,9 @@ from ui.rotation_encounter_selector_support import RotationEncounterSelectorSupp
 from ui.rotation_generate_action_support import RotationGenerateCanonicalContextProvider
 from ui.rotation_generation_support import RotationGenerationRequest
 from ui.rotation_pdf_export_support import install_rotation_pdf_export
+from ui.rotation_runtime_application_support import (
+    install_rotation_runtime_application,
+)
 from ui.rotation_selected_encounter_evidence_support import (
     RotationSelectedEncounterEvidenceInputs,
     RotationSelectedEncounterEvidenceSupport,
@@ -140,6 +143,7 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
             self.set_rotation_generate_canonical_context_provider(
                 canonical_generate_context_provider
             )
+        install_rotation_runtime_application(self)
 
     def showEvent(self, event) -> None:  # noqa: N802 - Qt override
         try:
