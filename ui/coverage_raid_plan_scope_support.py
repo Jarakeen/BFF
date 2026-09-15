@@ -32,6 +32,8 @@ def _apply_filters(page) -> None:
 
 
 def _render_raid_plan_scope(page) -> None:
+    from ui.coverage_page import DEBUFFS, UTILITY
+
     scope = getattr(page, "_raid_plan_coverage_scope", None)
     if scope is None:
         return
@@ -69,13 +71,6 @@ def _render_raid_plan_scope(page) -> None:
         )
         primary = ", ".join(scope.primary_for(effect)) or "—"
         backup = ", ".join(scope.secondary_for(effect)) or "—"
-        category = (
-            "Debuff" if effect in getattr(page, "DEBUFFS", set()) else
-            "Utility" if effect in getattr(page, "UTILITY", set()) else
-            "Buff"
-        )
-        # CoveragePage exposes these sets at module scope rather than on the instance.
-        from ui.coverage_page import DEBUFFS, UTILITY
         category = "Debuff" if effect in DEBUFFS else "Utility" if effect in UTILITY else "Buff"
         values = [
             effect,
