@@ -1,0 +1,99 @@
+from __future__ import annotations
+
+"""Explicit application composition for roster/rotation/build workspace extensions.
+
+This module owns startup ordering for cross-feature UI decorators that must be installed
+before ``MainWindow`` construction. Feature modules should install only their own behavior;
+application-wide composition belongs here where the order is visible and reviewable.
+"""
+
+from engine.config import get_data_dir
+from services.eso_database import EsoDatabase
+from services.roster_duplicate_player_merge_service import merge_duplicate_roster_players
+
+_BOOTSTRAPPED = False
+
+
+def bootstrap_workspace_extensions() -> None:
+    """Install the roster/rotation/build workspace extension graph exactly once."""
+    global _BOOTSTRAPPED
+    if _BOOTSTRAPPED:
+        return
+
+    from ui.team_schedule_calendar_support import install as install_team_schedule_calendar_support
+    from ui.team_schedule_multi_time_support import install as install_team_schedule_multi_time_support
+    from ui.roster_team_merge_support import install as install_roster_team_merge_support
+    from ui.roster_team_merge_visibility_support import install as install_roster_team_merge_visibility_support
+    from ui.roster_team_merge_layout_fix import install as install_roster_team_merge_layout_fix
+    from ui.roster_player_architecture_support import install as install_roster_player_architecture_support
+    from ui.scrollable_message_dialog_support import install as install_scrollable_message_dialog_support
+    from ui.roster_import_workflow import install as install_roster_import_support
+    from ui.roster_import_identity_resolution_support import install as install_roster_import_identity_resolution_support
+    from ui.roster_gear_set_alias_import_support import install as install_roster_gear_set_alias_import_support
+    from ui.roster_import_context_variant_support import install as install_roster_import_context_variant_support
+    from ui.roster_import_sparse_alternate_support import install as install_roster_import_sparse_alternate_support
+    from ui.roster_import_match_preview_support import install as install_roster_import_match_preview_support
+    from ui.roster_import_build_confirmation_support import install as install_roster_import_build_confirmation_support
+    from ui.coverage_capability_gap_visibility_support import install as install_coverage_capability_gap_visibility_support
+    from ui.player_build_navigation_support import install as install_player_build_navigation_support
+    from ui.rotation_dashboard_layout_support import install as install_rotation_dashboard_layout_support
+    from ui.build_rotation_artifact_support import install as install_build_rotation_artifact_support
+    from ui.rotation_navigation_refresh_support import install as install_rotation_navigation_refresh_support
+    from ui.rotation_runtime_application_support import install as install_rotation_runtime_application_support
+    from ui.user_workspace_polish_support import install as install_user_workspace_polish_support
+    from ui.roster_team_assignment_filter_support import install as install_roster_team_assignment_filter_support
+    from ui.roster_encounter_assignment_context_support import install as install_roster_encounter_assignment_context_support
+    from ui.roster_characters_header_context_support import install as install_roster_characters_header_context_support
+    from ui.roster_sub_terminology_support import install as install_roster_sub_terminology_support
+    from ui.roster_assignment_persistence_support import install as install_roster_assignment_persistence_support
+    from ui.roster_assignment_action_support import install as install_roster_assignment_action_support
+    from ui.roster_assignment_context_action_support import install as install_roster_assignment_context_action_support
+    from ui.roster_assignment_usability_support import install as install_roster_assignment_usability_support
+    from ui.roster_player_alias_support import install as install_roster_player_alias_support
+    from ui.comp_builder_roster_intake_support import install as install_comp_builder_roster_intake_support
+    from ui.build_context_variant_support import install as install_build_context_variant_support
+    from ui.build_reuse_template_support import install as install_build_reuse_template_support
+
+    # Personnel is player-level identity. Repair duplicates left by older imports
+    # before any roster page reads them. The merge unions teams and moves legacy
+    # plus Team/Boss assignments before deleting only the redundant Personnel row.
+    merge_duplicate_roster_players(EsoDatabase(get_data_dir() / "eso.db"))
+
+    install_team_schedule_calendar_support()
+    install_team_schedule_multi_time_support()
+    install_scrollable_message_dialog_support()
+    install_roster_team_merge_support()
+    install_roster_team_merge_visibility_support()
+    install_roster_team_merge_layout_fix()
+    install_roster_player_architecture_support()
+    install_roster_import_support()
+    install_roster_import_identity_resolution_support()
+    install_roster_gear_set_alias_import_support()
+    install_roster_import_context_variant_support()
+    install_roster_import_sparse_alternate_support()
+    install_roster_import_match_preview_support()
+    install_roster_import_build_confirmation_support()
+    install_coverage_capability_gap_visibility_support()
+    install_player_build_navigation_support()
+    install_rotation_dashboard_layout_support()
+    install_build_rotation_artifact_support()
+    install_rotation_navigation_refresh_support()
+    install_rotation_runtime_application_support()
+    install_user_workspace_polish_support()
+    install_roster_team_assignment_filter_support()
+    install_roster_encounter_assignment_context_support()
+    install_roster_characters_header_context_support()
+    install_roster_sub_terminology_support()
+    install_roster_assignment_persistence_support()
+    install_roster_assignment_action_support()
+    install_roster_assignment_context_action_support()
+    install_roster_assignment_usability_support()
+    install_roster_player_alias_support()
+    install_comp_builder_roster_intake_support()
+    install_build_context_variant_support()
+    install_build_reuse_template_support()
+
+    _BOOTSTRAPPED = True
+
+
+__all__ = ["bootstrap_workspace_extensions"]
