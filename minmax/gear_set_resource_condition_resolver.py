@@ -12,7 +12,6 @@ import re
 
 from .effect_kinds import EffectKind
 from .effects import Effect, EffectOperation, EffectUnit
-from .eso_markup import normalize_eso_markup
 from .gear_sets import GearSetBonus
 from .stat_ids import StatId
 
@@ -23,8 +22,7 @@ class GearSetResourceConditionResolver:
         r"^\(\d+\s+(?:perfected\s+)?items?\)\s*",
         re.IGNORECASE,
     )
-    _RANGE = r"(?P<min>\d[\d,]*)\s*-\s*(?P<max>\d[\d,]*)"
-    _NUMBER_OR_RANGE = r"(?:(?P<min>\d[\d,]*)\s*-\s*)?(?P<max>\d[\d,]*)"
+    _NUMBER_OR_RANGE = r"(?:(\d[\d,]*)\s*-\s*)?(\d[\d,]*)"
 
     def resolve(
         self,
@@ -43,31 +41,31 @@ class GearSetResourceConditionResolver:
         conditional_patterns = (
             (
                 rf"While you have a food buff active, your Max Health is increased by {self._NUMBER_OR_RANGE}"
-                rf" and Health Recovery by {self._NUMBER_OR_RANGE}\. ?",
+                rf" and Health Recovery by {self._NUMBER_OR_RANGE}\.?",
                 (
-                    (StatId.MAX_HEALTH, "first", "food_buff_active"),
-                    (StatId.HEALTH_RECOVERY, "second", "food_buff_active"),
+                    (StatId.MAX_HEALTH, "food_buff_active"),
+                    (StatId.HEALTH_RECOVERY, "food_buff_active"),
                 ),
             ),
             (
                 rf"While you have a drink buff active, your Max Magicka is increased by {self._NUMBER_OR_RANGE}"
-                rf" and Magicka Recovery by {self._NUMBER_OR_RANGE}\. ?",
+                rf" and Magicka Recovery by {self._NUMBER_OR_RANGE}\.?",
                 (
-                    (StatId.MAX_MAGICKA, "first", "drink_buff_active"),
-                    (StatId.MAGICKA_RECOVERY, "second", "drink_buff_active"),
+                    (StatId.MAX_MAGICKA, "drink_buff_active"),
+                    (StatId.MAGICKA_RECOVERY, "drink_buff_active"),
                 ),
             ),
             (
                 rf"While you have a drink buff active, your Max Stamina is increased by {self._NUMBER_OR_RANGE}"
-                rf" and Stamina Recovery by {self._NUMBER_OR_RANGE}\. ?",
+                rf" and Stamina Recovery by {self._NUMBER_OR_RANGE}\.?",
                 (
-                    (StatId.MAX_STAMINA, "first", "drink_buff_active"),
-                    (StatId.STAMINA_RECOVERY, "second", "drink_buff_active"),
+                    (StatId.MAX_STAMINA, "drink_buff_active"),
+                    (StatId.STAMINA_RECOVERY, "drink_buff_active"),
                 ),
             ),
             (
-                rf"While you have a pet active, your Max Magicka is increased by {self._NUMBER_OR_RANGE}\. ?",
-                ((StatId.MAX_MAGICKA, "first", "pet_active"),),
+                rf"While you have a pet active, your Max Magicka is increased by {self._NUMBER_OR_RANGE}\.?",
+                ((StatId.MAX_MAGICKA, "pet_active"),),
             ),
         )
 
@@ -77,7 +75,7 @@ class GearSetResourceConditionResolver:
                 values = self._ordered_values(match, use_max_value)
                 return [
                     self._effect(stat, values[index], source_text, condition=condition)
-                    for index, (stat, _label, condition) in enumerate(specs)
+                    for index, (stat, condition) in enumerate(specs)
                 ]
 
         group_resource_patterns = (
@@ -108,19 +106,13 @@ class GearSetResourceConditionResolver:
 
     @staticmethod
     def _ordered_values(match: re.Match[str], use_max_value: bool) -> tuple[float, ...]:
-        values: list[float] = []
-        groupdict = match.groupdict()
-        # Python disallows duplicate named groups, so patterns contribute numbered
-        # captures in min/max pairs. Read them in order and collapse each pair.
         captures = match.groups()
-        index = 0
-        while index < len(captures):
-            first = captures[index]
-            second = captures[index + 1] if index + 1 < len(captures) else None
-            chosen = second if use_max_value and second is not None else first or second
-            if chosen is not None:
-                values.append(float(str(chosen).replace(",", "")))
-            index += 2
+        values: list[float] = []
+        for index in range(0, len(captures), 2):
+            minimum = captures[index]
+            maximum = captures[index + 1]
+            chosen = maximum if use_max_value or minimum is None else minimum
+            values.append(float(str(chosen).replace(",", "")))
         return tuple(values)
 
     @staticmethod
