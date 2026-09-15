@@ -24,8 +24,8 @@ from PySide6.QtWidgets import (
 from engine.config import get_data_dir
 from services.eso_database import EsoDatabase
 from services.generated_roster_plan_service import (
-    GeneratedRosterPlanService,
-    GeneratedRosterPlanSlot,
+    GeneratedRosterDraftService,
+    GeneratedRosterDraftSlot,
 )
 from services.team_composition_catalog import (
     CompositionSlot,
@@ -73,7 +73,7 @@ class CompBuilderPage(FoundryPage):
         self.catalog = TeamCompositionCatalog(data_dir / "team_compositions.json")
         self.snapshot = self.catalog.load()
         self.user_template_path = data_dir / "team_composition_user_templates.json"
-        self.plan_service = GeneratedRosterPlanService(EsoDatabase(data_dir / "eso.db"))
+        self.plan_service = GeneratedRosterDraftService(EsoDatabase(data_dir / "eso.db"))
         self.current_template: TeamCompositionTemplate | None = None
         self.current_slots: tuple[CompositionSlot, ...] = ()
         self._build_ui()
@@ -137,8 +137,6 @@ class CompBuilderPage(FoundryPage):
         self.matrix_table.verticalHeader().setVisible(False)
         self.matrix_table.verticalHeader().setDefaultSectionSize(32)
         self.matrix_table.horizontalHeader().setStretchLastSection(True)
-        # ESO trial groups cap at 12 players. Keep enough room for the full raid
-        # plus header breathing room, but never let this table stretch the page.
         self.matrix_table.setFixedHeight(430)
         self.matrix_card.addWidget(self.matrix_table)
         top.addWidget(self.matrix_card, 7)
@@ -553,7 +551,7 @@ class CompBuilderPage(FoundryPage):
     def _send_to_roster(self, *_args) -> None:
         goal = self.goal_combo.currentText().strip() or "Custom Goal"
         plan_name = self.plan_name_input.text().strip() or f"{goal} Composition"
-        slots: list[GeneratedRosterPlanSlot] = []
+        slots: list[GeneratedRosterDraftSlot] = []
         for row in range(self.matrix_table.rowCount()):
             slot_name = self._cell_text(row, 0)
             eso_class = self._selected_class(row)
@@ -569,7 +567,7 @@ class CompBuilderPage(FoundryPage):
             )
             concrete = eso_class != "Any class"
             slots.append(
-                GeneratedRosterPlanSlot(
+                GeneratedRosterDraftSlot(
                     slot_name=slot_name,
                     kind="prescribed_recruit" if concrete else "open_recruit",
                     player_name="Recruitment Needed",
@@ -581,13 +579,13 @@ class CompBuilderPage(FoundryPage):
                 )
             )
 
-        plan = self.plan_service.save_plan(
+        draft = self.plan_service.save_plan(
             name=plan_name,
             goal=goal,
             difficulty=self.difficulty_combo.currentText(),
             slots=tuple(slots),
         )
         self.status.success(
-            f"Sent {plan.name} to Roster with {len(plan.slots)} composition chair(s)."
+            f"Sent {draft.name} to Roster with {len(draft.slots)} composition chair(s)."
         )
-        self.rosterPlanSent.emit(plan.name)
+        self.rosterPlanSent.emit(draft.name)
