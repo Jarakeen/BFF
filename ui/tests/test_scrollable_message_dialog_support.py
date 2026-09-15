@@ -2,7 +2,7 @@ from pathlib import Path
 
 
 def test_long_message_support_is_installed_before_roster_import() -> None:
-    source = Path("ui/operations_console_schedule_support.py").read_text(encoding="utf-8")
+    source = Path("ui/application_workspace_bootstrap.py").read_text(encoding="utf-8")
     assert source.index("install_scrollable_message_dialog_support()") < source.index(
         "install_roster_import_support()"
     )
