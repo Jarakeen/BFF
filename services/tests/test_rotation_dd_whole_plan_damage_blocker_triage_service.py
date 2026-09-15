@@ -196,3 +196,31 @@ def test_parked_periodic_target_health_timing_gap_remains_evidence_work() -> Non
     assert result.runtime_input_required == ()
     assert len(result.parked) == 1
     assert result.parked[0].disposition is RotationDDDamageBlockerDisposition.PARKED_EVIDENCE
+
+
+def test_lightning_staff_light_attack_semantics_gap_is_parked_source_review() -> None:
+    blocker = RotationDDDamageCoverageBlocker(
+        action_kind=RotationActionKind.LIGHT_ATTACK,
+        action_name=None,
+        reason=(
+            "lightning staff light-attack combat semantics remain unresolved: "
+            "the canonical source formula preserves HA, Empower, and DoT modifier buckets"
+        ),
+        occurrences=((1.0, 1),),
+    )
+    audit = RotationDDWholePlanDamageCoverageAudit(
+        candidate_id="candidate",
+        total_damage_actions=1,
+        resolved_damage_actions=0,
+        unresolved_damage_actions=1,
+        blockers=(blocker,),
+    )
+
+    result = _service().classify(audit)
+
+    assert result.actionable == ()
+    assert result.runtime_input_required == ()
+    assert len(result.parked) == 1
+    parked = result.parked[0]
+    assert parked.disposition is RotationDDDamageBlockerDisposition.PARKED_EVIDENCE
+    assert "source review" in (parked.disposition_reason or "").casefold()
