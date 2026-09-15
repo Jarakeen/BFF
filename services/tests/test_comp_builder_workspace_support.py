@@ -65,7 +65,7 @@ def test_comp_maker_selected_chair_editor_contains_duties_providers_mechanics_an
 
 def test_comp_maker_rylo_has_explicit_workspace_overrides():
     source = Path("ui/comp_builder_rylo_support.py").read_text(encoding="utf-8")
-    installer = Path("ui/team_optimization_hybrid_anchor_support.py").read_text(
+    installer = Path("ui/application_team_optimization_bootstrap.py").read_text(
         encoding="utf-8"
     )
 
