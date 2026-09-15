@@ -79,6 +79,28 @@ TEAM_WORKFLOW_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="raid.plan.member_identity_resolution",
+        domain="raid_plan",
+        purpose="Validate stable RaidPlan player, character, build, and Personnel relationships without falling back to display-name inference.",
+        implementation_path="services.raid_plan_member_identity_resolution_service",
+        inputs=("RaidPlanMember", "EsoDatabase", "BuildService"),
+        outputs=("RaidPlanMemberIdentityResolution",),
+        dependencies=(
+            "team.roster.persistence",
+            "team.roster.canonical_player_binding",
+            "team.roster.canonical_character_binding",
+            "build.catalog.persistence",
+        ),
+        responsibilities=("raid_plan_member_identity_resolution",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.NONE,
+        notes=(
+            "Stable ids are authoritative when present. roster_member_id may supply explicit canonical player/character ids; "
+            "character_id may supply its canonical player owner; selected_build_id may supply its canonical character owner. "
+            "Contradictions fail closed and gamertag/character/build names remain legacy or display evidence only."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="team.generated_draft.persistence",
         domain="team",
         purpose="Persist Comp Maker composition, recruitment, and candidate evidence as a draft awaiting explicit adoption.",
