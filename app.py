@@ -234,6 +234,7 @@ def main() -> int:
     from ui.team_optimization_mode_defaults import install as install_team_optimization_mode_defaults
     from ui.team_optimization_hybrid_anchor_support import install as install_team_optimization_hybrid_anchor_support
     from ui.application_team_optimization_bootstrap import bootstrap_team_optimization_extensions
+    from ui.application_extreme_optimization_bootstrap import bootstrap_extreme_optimization_extensions
     from ui.extreme_optimization_support import install as install_extreme_optimization_support
     from services.performance_dd_analysis_support import install as install_performance_dd_analysis_support
     from ui.performance_dashboard_dd_support import install as install_performance_dashboard_dd_support
@@ -324,6 +325,9 @@ def main() -> int:
     # Cross-feature Team Optimization and Comp Maker decorators compose here,
     # after the Hybrid policy wrapper and before MainWindow construction.
     bootstrap_team_optimization_extensions()
+    # Extreme profile/result/record surfaces compose before the lab page attaches
+    # itself to MainWindow, preserving the feature's established install order.
+    bootstrap_extreme_optimization_extensions()
     # Tools gets the deliberately unconstrained single-stat lab before MainWindow is built.
     install_extreme_optimization_support()
     # DD performance diagnostics extend the existing ESO Logs dashboard without
