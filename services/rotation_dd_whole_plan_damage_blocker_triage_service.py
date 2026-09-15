@@ -70,11 +70,18 @@ class RotationDDWholePlanDamageBlockerTriageService:
         "reviewed periodic runtime semantics are unavailable",
         "periodic magnitude timing policy is unavailable",
         "periodic runtime",
+        "periodic target-health timing is not source-reviewed",
+        "periodic target-health conditional timing is unresolved",
     )
     _RUNTIME_INPUT_REASON_MARKERS = (
         "requires exact runtime anchor evidence",
         "requires authoritative target combatstate",
         "requires exact-time runtime",
+        "target-health conditional damage requires an exact runtime snapshot",
+        "target-health conditional damage requires a target identity",
+        "is absent from snapshot",
+        "health is unknown",
+        "threshold state is unknown",
     )
 
     def __init__(
