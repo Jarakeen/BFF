@@ -207,8 +207,14 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
         self.rotation_recovery_resource_combo = QComboBox()
         self.rotation_recovery_resource_combo.setMinimumWidth(120)
         self.rotation_recovery_resource_combo.addItem("Select resource", None)
-        self.rotation_recovery_resource_combo.addItem("Magicka", ResourceType.MAGICKA)
-        self.rotation_recovery_resource_combo.addItem("Stamina", ResourceType.STAMINA)
+        # Store primitive values because Qt may unwrap string-backed enums when
+        # round-tripping item data through QVariant.
+        self.rotation_recovery_resource_combo.addItem(
+            "Magicka", ResourceType.MAGICKA.value
+        )
+        self.rotation_recovery_resource_combo.addItem(
+            "Stamina", ResourceType.STAMINA.value
+        )
         self.rotation_recovery_resource_combo.setToolTip(
             "Explicit resource pool used for canonical recovery-heavy stabilization. "
             "Heavy Attack restoration is resolved from the actual weapon mechanics."
@@ -239,9 +245,22 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
 
     def canonical_recovery_policy(self) -> dict[str, object | None]:
         """Return only explicit recovery policy selected in the canonical UI."""
+        raw_resource = self.rotation_recovery_resource_combo.currentData()
+        if isinstance(raw_resource, ResourceType):
+            resource = raw_resource
+        else:
+            try:
+                resource = (
+                    ResourceType(str(raw_resource).strip().casefold())
+                    if raw_resource not in (None, "")
+                    else None
+                )
+            except ValueError:
+                resource = None
+
         trigger_percent = float(self.rotation_recovery_trigger_spin.value())
         return {
-            "resource": self.rotation_recovery_resource_combo.currentData(),
+            "resource": resource,
             "trigger_fraction": (
                 None if trigger_percent < 0.0 else trigger_percent / 100.0
             ),
