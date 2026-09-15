@@ -48,7 +48,7 @@ def test_context_variant_form_choices_follow_base_affiliation() -> None:
 
 
 def test_context_variant_support_is_installed_by_main_ui_composition() -> None:
-    source = Path("ui/operations_console_schedule_support.py").read_text(encoding="utf-8")
+    source = Path("ui/application_workspace_bootstrap.py").read_text(encoding="utf-8")
 
     assert "install_build_context_variant_support()" in source
     assert source.index("install_comp_builder_roster_intake_support()") < source.index(
