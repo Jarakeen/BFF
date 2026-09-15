@@ -6,7 +6,7 @@ This note closes the repository-structure pass required by the Phase 13 / 13.5 R
 
 ## Result
 
-**STRUCTURAL AUDIT COMPLETE — regression checkpoint still required before Phase 13 closes.**
+**STRUCTURAL AUDIT COMPLETE — Rotation-focused regression checkpoint verified green; full repository regression still required before Phase 13 closes.**
 
 The audit found no proven orphaned Rotation production service whose removal would improve correctness without removing a supported caller, diagnostic boundary, evidence-review path, or explicit compatibility contract.
 
@@ -49,14 +49,25 @@ These items do **not** represent missing Rotation Engine architecture:
 
 The live Raid Plan workstream is roadmap-complete and stable: persistence → assignments → Coverage → Rotation → Optimizer Adviser. Selected Raid Plan chairs resolve exact saved builds and enter Rotation through the existing canonical context seam. Rotation does not own a competing persistence, assignment, or team identity model.
 
-## Remaining closeout gates
+## Verified closeout validation
 
-The Rotation Engine should now move directly to validation rather than feature expansion:
+The Rotation-specific closeout gates have now been reported green by the user:
 
-1. run a broad Rotation-focused regression checkpoint;
-2. run the real DD whole-plan/post-routing blocker audit and verify any remaining blockers are runtime-input or parked-evidence rather than actionable engine defects;
-3. retain the already-established real healer/Tank validation evidence and rerun focused paths only if the broad checkpoint exposes a regression;
-4. run the full repository regression suite;
-5. record the final Phase 13 closeout only from actual reported test/audit output.
+- focused healer stabilization gate: **31 passed in 5.28s**;
+- Exploiter-focused DD repair gate: **14 passed in 3.37s**;
+- real `Rylonia` / `Corpsebuster DD` whole-plan damage audit: **0 actionable blockers**; remaining unresolved damage actions were classified as runtime-input-required because Exploiter requires authoritative target `CombatState` at each damage instant rather than a guessed standing bonus;
+- broad Rotation regression across `services/tests`, `ui/tests`, `minmax/tests`, and `tools/tests` with `-k "rotation"`: **2425 passed, 6774 deselected in 73.26s**.
 
-Until those validation gates are reported green, Phase 13 remains **closeout-ready, not yet closed**.
+The broad Rotation gate initially exposed stale fixtures and compatibility-test drift around hardened canonical contracts. Those fixtures were updated without weakening production boundaries. The final rerun was fully green.
+
+## Remaining closeout gate
+
+Only the repository-wide regression checkpoint remains before Phase 13 / 13.5 Rotation can be recorded closed:
+
+```powershell
+python -m pytest -q
+```
+
+If that full suite is green, the Rotation Engine is closed for Phase 13.5. Any remaining Lightning Staff, exact Stampede-anchor, execute-interpolation, or similar items remain explicitly owned by future source/evidence review and do not reopen engine architecture.
+
+Until the full repository regression is reported green, Phase 13 remains **Rotation-green, repository-closeout-pending**.
