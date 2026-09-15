@@ -60,9 +60,9 @@ def build_required_heavy_attack_candidates(
     """Build required-effect heavy candidates that are due at this exact window.
 
     Static build discovery says which required heavy effects exist. Runtime state
-    says whether each recurrence is currently eligible. The supplied decision
-    window owns encounter safety, channel length, refresh collision, and whether a
-    higher-priority action currently preempts the heavy.
+    says whether each recurrence or upkeep refresh is currently due. The supplied
+    decision window owns encounter safety, channel length, refresh collision, and
+    whether a higher-priority action currently preempts the heavy.
     """
 
     runtime_by_key = {
@@ -81,6 +81,7 @@ def build_required_heavy_attack_candidates(
             incentive=incentive,
             current_time_seconds=window.time_seconds,
             runtime=runtime,
+            required_window_seconds=window.required_window_seconds,
         )
         if not due.due:
             continue
