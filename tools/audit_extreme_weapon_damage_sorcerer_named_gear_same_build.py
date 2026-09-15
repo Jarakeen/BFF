@@ -20,10 +20,19 @@ The resulting higher Max Resource is then fed directly into canonical Sorcerer
 Class Mastery scoring for Font of Power + Calculated Defense and compared with the
 strongest non-Sorcerer reviewed Class Mastery route at the identical pre-class
 Weapon Damage baseline. No independent resource maximum is mixed in.
+
+Named-gear witnesses intentionally own set identity + physical slot legality, not
+armor level/quality. The canonical sheet evaluator therefore emits CP160-Gold armor
+base warnings when such a witness is scored without a later armor layer. For the
+Max Magicka / Max Stamina objectives in this diagnostic, armor base rating cannot
+change the objective value. Those exact metadata-only warnings are therefore
+reported as neutralized rather than allowed to make an otherwise resolved resource
+score look mechanically unresolved. No other warning is suppressed.
 """
 
 from dataclasses import dataclass
 from pathlib import Path
+import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -72,6 +81,10 @@ DATABASE = ROOT / "data" / "eso.db"
 WEAPON_OBJECTIVE = "weapon_damage"
 RESOURCE_OBJECTIVES = ("max_magicka", "max_stamina")
 EMPEROR_BUFF = f"{EMPEROR_STATE_MARKER_PREFIX}6"
+_ARMOR_BASE_WARNING = re.compile(
+    r"^(Head|Shoulders|Chest|Hands|Waist|Legs|Feet) armor base: "
+    r"CP160 Gold required \(level unset, quality unset\)$"
+)
 
 
 @dataclass(frozen=True)
@@ -91,6 +104,27 @@ class _SameBuildRow:
     sorcerer_wins: bool
     projected_weapon_damage: float
     unresolved: tuple[str, ...]
+    neutralized: tuple[str, ...]
+
+
+def _reconcile_resource_unresolved(
+    objective_key: str,
+    unresolved: tuple[str, ...],
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """Neutralize only armor-base metadata warnings irrelevant to max resources."""
+
+    objective = str(objective_key or "").strip().casefold()
+    effective: list[str] = []
+    neutralized: list[str] = []
+    for raw in unresolved:
+        message = str(raw or "").strip()
+        if not message:
+            continue
+        if objective in RESOURCE_OBJECTIVES and _ARMOR_BASE_WARNING.fullmatch(message):
+            neutralized.append(message)
+            continue
+        effective.append(message)
+    return tuple(dict.fromkeys(effective)), tuple(dict.fromkeys(neutralized))
 
 
 def _physical_frontier_with_witnesses():
@@ -173,17 +207,27 @@ def _best_resource_for_witness(
                     food=provisioning,
                     active_buffs=(EMPEROR_BUFF,),
                 )
+                effective, neutralized = _reconcile_resource_unresolved(
+                    objective,
+                    tuple(unresolved),
+                )
                 row = (
                     float(value),
                     objective,
                     active_bar,
                     provisioning,
-                    tuple(unresolved),
+                    effective,
+                    neutralized,
                     payload,
                 )
                 rows.append(row)
-                if best is None or row[0] > best[0] + 1e-9:
+                candidate_key = (len(effective), -row[0], objective, active_bar, provisioning)
+                if best is None:
                     best = row
+                else:
+                    best_key = (len(best[4]), -best[0], best[1], best[2], best[3])
+                    if candidate_key < best_key:
+                        best = row
     return best, tuple(rows)
 
 
@@ -211,6 +255,7 @@ def main() -> int:
     print("resource_cp_in_scope=False")
     print("armor_resource_glyphs_in_scope=False")
     print("independent_resource_maximum_used=False")
+    print("armor_base_metadata_warning_neutralization=max_resource_only")
     print()
 
     print("REVIEWED NON-GEAR PRE-CLASS WEAPON DAMAGE SUBTOTAL")
@@ -221,6 +266,7 @@ def main() -> int:
 
     output_rows: list[_SameBuildRow] = []
     resource_unresolved: list[str] = []
+    resource_neutralized: list[str] = []
 
     for gear, witness in frontier:
         reference = float(nongear) + float(gear.weapon_damage)
@@ -244,7 +290,15 @@ def main() -> int:
             )
             continue
 
-        higher_resource, resource_objective, active_bar, provisioning, unresolved, _payload = best_resource
+        (
+            higher_resource,
+            resource_objective,
+            active_bar,
+            provisioning,
+            unresolved,
+            neutralized,
+            _payload,
+        ) = best_resource
         sorcerer = mastery.best_for_class(
             CharacterClass.SORCERER,
             WEAPON_OBJECTIVE,
@@ -280,11 +334,14 @@ def main() -> int:
                 sorcerer_wins=sorcerer_wins,
                 projected_weapon_damage=reference + sorcerer_delta,
                 unresolved=tuple(unresolved),
+                neutralized=tuple(neutralized),
             )
         )
         resource_unresolved.extend(str(item) for item in unresolved if str(item))
+        resource_neutralized.extend(str(item) for item in neutralized if str(item))
         for row in resource_rows:
             resource_unresolved.extend(str(item) for item in row[4] if str(item))
+            resource_neutralized.extend(str(item) for item in row[5] if str(item))
 
     output_rows.sort(
         key=lambda row: (
@@ -297,9 +354,7 @@ def main() -> int:
     print("SAME-BUILD RESOLVED GEAR STATES")
     print(f"physical_pareto_count={len(frontier)}")
     print(f"same_build_rows_scored={len(output_rows)}")
-    winners = 0
     for row in output_rows:
-        winners += int(row.sorcerer_wins and not row.unresolved)
         print(f"  {row.package}")
         print(f"    preclass_weapon_damage={row.preclass_weapon_damage:.3f}")
         print(
@@ -319,11 +374,13 @@ def main() -> int:
         print(f"    sorcerer_beats_incumbent={row.sorcerer_wins}")
         print(f"    projected_weapon_damage={row.projected_weapon_damage:.3f}")
         print(f"    unresolved_count={len(row.unresolved)}")
+        print(f"    neutralized_metadata_count={len(row.neutralized)}")
         for message in row.unresolved[:3]:
             print(f"      unresolved: {message}")
         print()
 
     clean_unresolved = tuple(dict.fromkeys(message for message in resource_unresolved if message))
+    clean_neutralized = tuple(dict.fromkeys(message for message in resource_neutralized if message))
     clean_rows = tuple(row for row in output_rows if not row.unresolved)
     clean_winners = tuple(row for row in clean_rows if row.sorcerer_wins)
     best = clean_winners[0] if clean_winners else None
@@ -342,6 +399,9 @@ def main() -> int:
         print(f"  unresolved: {message}")
     if len(clean_unresolved) > 10:
         print(f"  ... {len(clean_unresolved) - 10} more")
+    print(f"neutralized_armor_metadata_warning_count={len(clean_neutralized)}")
+    for message in clean_neutralized:
+        print(f"  neutralized: {message}")
 
     class_route_resolved_frontier_has_sorc_winner = bool(best is not None)
     print(f"resolved_frontier_has_sorcerer_winner={class_route_resolved_frontier_has_sorc_winner}")
