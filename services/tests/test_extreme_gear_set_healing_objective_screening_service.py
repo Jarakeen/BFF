@@ -17,14 +17,24 @@ def test_damage_proc_is_irrelevant_to_healing_done_sheet_stat() -> None:
     assert result.blockers == ()
 
 
-def test_unmapped_heal_language_stays_blocking_for_healing_done() -> None:
+def test_heal_proc_is_irrelevant_to_healing_done_sheet_stat() -> None:
     result = ExtremeGearSetHealingObjectiveScreeningService.review(
         "When you take damage, heal yourself for an unknown amount.",
         "healing_done",
     )
 
+    assert result.proven_irrelevant is True
+    assert result.blockers == ()
+
+
+def test_direct_healing_done_reference_stays_blocking() -> None:
+    result = ExtremeGearSetHealingObjectiveScreeningService.review(
+        "While on your back bar, increase your Healing Done by 14%.",
+        "healing_done",
+    )
+
     assert result.proven_irrelevant is False
-    assert result.healing_hazards
+    assert any("Healing Done" in item for item in result.healing_hazards)
 
 
 def test_mending_reference_stays_blocking_for_healing_done() -> None:
@@ -46,6 +56,16 @@ def test_plain_damage_critical_language_is_irrelevant_to_critical_healing() -> N
     assert result.proven_irrelevant is True
 
 
+def test_critical_heal_trigger_is_not_a_critical_healing_stat_modifier() -> None:
+    result = ExtremeGearSetHealingObjectiveScreeningService.review(
+        "When your healing critically strikes, grant the target a damage shield.",
+        "critical_healing",
+    )
+
+    assert result.proven_irrelevant is True
+    assert result.blockers == ()
+
+
 def test_critical_healing_language_stays_blocking() -> None:
     result = ExtremeGearSetHealingObjectiveScreeningService.review(
         "Your Critical Healing is increased by an unknown amount.",
@@ -54,6 +74,16 @@ def test_critical_healing_language_stays_blocking() -> None:
 
     assert result.proven_irrelevant is False
     assert result.healing_hazards
+
+
+def test_opaque_text_stays_unresolved_without_positive_mechanic_evidence() -> None:
+    result = ExtremeGearSetHealingObjectiveScreeningService.review(
+        "An unresolved bonus worth an unknown amount.",
+        "healing_done",
+    )
+
+    assert result.proven_irrelevant is False
+    assert result.unrelated_mechanic_evidence == ()
 
 
 def test_global_equipment_mutation_stays_blocking() -> None:
