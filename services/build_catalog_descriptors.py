@@ -116,6 +116,21 @@ BUILD_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.GAME_MECHANIC,
         notes="Static capability availability is not runtime uptime. Profile summaries do not assign providers. Dynamic CP, potion activation, conditional effects, and unresolved scribing semantics remain explicit boundaries rather than being inferred.",
     ),
+    ServiceDescriptor(
+        service_id="build.unique_support_set_capability",
+        domain="build",
+        purpose="Project reviewed unique raid-support set presence from exact saved-build equipment into static Coverage evidence without claiming proc uptime.",
+        implementation_path="services.raid_unique_support_set_capability_service",
+        inputs=("PlayerBuild", "RaidCoverageSnapshot", "RaidUniqueSupportSetReference"),
+        outputs=("RaidUniqueSupportSetCapabilityEvidence", "RaidCoverageSnapshot"),
+        dependencies=("build.saved_capability_analysis",),
+        responsibilities=("unique_support_set_static_capability_projection",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        ui_safe=True,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes="Exact active-bar set-piece thresholds can prove capability presence. Triggered/proc unique set effects remain Conditional and never imply observed or guaranteed uptime.",
+    ),
 )
 
 
