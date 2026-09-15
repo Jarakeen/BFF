@@ -444,6 +444,12 @@ class MainWindow(QMainWindow):
             self.pages["operations_console"].refresh()
         elif page_name == "console:7":
             self.pages["console:7"].refresh()
+        elif page_name == "rotations":
+            from ui.rotation_tank_provider_scope_transfer_support import (
+                prepare_rotation_tank_provider_scope,
+            )
+
+            prepare_rotation_tank_provider_scope(self)
         elif page_name == "console:4":
             self.pages["console:4"].refresh_context()
         elif page_name == "gear_lookup":

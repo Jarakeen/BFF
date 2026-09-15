@@ -35,9 +35,6 @@ from ui.rotation_generate_tank_assignment_context_support import (
 
 
 _INSTALLED = False
-_ORIGINAL_SHOW_PAGE = None
-_ORIGINAL_GENERATE = None
-
 
 def _canonical_role(value: object) -> str:
     return "_".join(str(value or "").strip().casefold().replace("-", " ").split())
@@ -372,42 +369,18 @@ def refresh_rotation_tank_provider_scope(
     )
 
 
-def _show_page_with_tank_provider_scope(self, page_name: str, *args, **kwargs):
-    assert _ORIGINAL_SHOW_PAGE is not None
-    result = _ORIGINAL_SHOW_PAGE(self, page_name, *args, **kwargs)
-    if page_name == "rotations":
-        rotation_page = (getattr(self, "pages", {}) or {}).get("rotations")
-        if rotation_page is not None:
-            rotation_page._rotation_tank_provider_scope_transfer_owner = self
-        refresh_rotation_tank_provider_scope(self)
-    return result
-
-
-def _generate_with_fresh_tank_provider_scope(self, page) -> None:
-    assert _ORIGINAL_GENERATE is not None
-    owner = getattr(page, "_rotation_tank_provider_scope_transfer_owner", None)
-    if owner is not None:
-        refresh_rotation_tank_provider_scope(owner)
-    return _ORIGINAL_GENERATE(self, page)
-
-
-def install() -> None:
-    global _INSTALLED, _ORIGINAL_SHOW_PAGE, _ORIGINAL_GENERATE
-    if _INSTALLED:
-        return
-
-    from ui.main_window import MainWindow
-    from ui.rotation_generate_action_support import RotationGenerateActionSupport
-
-    _ORIGINAL_SHOW_PAGE = MainWindow.show_page
-    MainWindow.show_page = _show_page_with_tank_provider_scope
-    _ORIGINAL_GENERATE = RotationGenerateActionSupport.generate
-    RotationGenerateActionSupport.generate = _generate_with_fresh_tank_provider_scope
-    _INSTALLED = True
+def prepare_rotation_tank_provider_scope(window) -> RotationTankProviderScopeTransferResult:
+    """Bind a fresh provider-scope callback to Rotation and refresh it now."""
+    rotation_page = (getattr(window, "pages", {}) or {}).get("rotations")
+    if rotation_page is not None:
+        rotation_page._refresh_rotation_tank_provider_scope = (
+            lambda: refresh_rotation_tank_provider_scope(window)
+        )
+    return refresh_rotation_tank_provider_scope(window)
 
 
 __all__ = [
     "RotationTankProviderScopeTransferResult",
-    "install",
+    "prepare_rotation_tank_provider_scope",
     "refresh_rotation_tank_provider_scope",
 ]

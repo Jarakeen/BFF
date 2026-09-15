@@ -187,6 +187,12 @@ class RotationGenerateActionSupport:
         return result
 
     def generate(self, page) -> None:
+        refresh_provider_scope = getattr(
+            page, "_refresh_rotation_tank_provider_scope", None
+        )
+        if callable(refresh_provider_scope):
+            refresh_provider_scope()
+
         context = getattr(page, "rotation_generate_canonical_context", None)
         provider = getattr(page, "rotation_generate_canonical_context_provider", None)
         if context is None and provider is not None:

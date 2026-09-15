@@ -2,7 +2,10 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import ui.rotation_tank_provider_scope_transfer_support as support_module
+from ui.rotation_generate_action_support import RotationGenerateActionSupport
+from ui.rotation_dashboard_page import RotationDashboardPage
 from ui.rotation_tank_provider_scope_transfer_support import (
+    prepare_rotation_tank_provider_scope,
     refresh_rotation_tank_provider_scope,
 )
 
@@ -214,28 +217,54 @@ def test_provider_scope_resolution_failure_does_not_leave_stale_evidence():
 
 def test_generate_refreshes_provider_scope_before_canonical_generation(monkeypatch):
     calls = []
-    owner = object()
-    page = SimpleNamespace(_rotation_tank_provider_scope_transfer_owner=owner)
+    page = SimpleNamespace(
+        _refresh_rotation_tank_provider_scope=lambda: calls.append("refresh"),
+        rotation_generate_canonical_context=None,
+        rotation_generate_canonical_context_provider=None,
+    )
+    monkeypatch.setattr(
+        RotationDashboardPage,
+        "generate_rotation",
+        lambda generated_page: calls.append(("generate", generated_page)),
+    )
 
+    RotationGenerateActionSupport().generate(page)
+
+    assert calls == ["refresh", ("generate", page)]
+
+
+def test_native_navigation_prepares_provider_scope(monkeypatch):
+    rotation_page = SimpleNamespace()
+    window = _window(rotation_page)
+    calls = []
     monkeypatch.setattr(
         support_module,
         "refresh_rotation_tank_provider_scope",
-        lambda window: calls.append(("refresh", window)),
-    )
-    monkeypatch.setattr(
-        support_module,
-        "_ORIGINAL_GENERATE",
-        lambda _self, generated_page: calls.append(("generate", generated_page)),
+        lambda owner: calls.append(owner) or "refreshed",
     )
 
-    support_module._generate_with_fresh_tank_provider_scope(object(), page)
+    result = prepare_rotation_tank_provider_scope(window)
 
-    assert calls == [("refresh", owner), ("generate", page)]
+    assert result == "refreshed"
+    assert calls == [window]
+    rotation_page._refresh_rotation_tank_provider_scope()
+    assert calls == [window, window]
 
 
-def test_transfer_support_is_installed_before_main_window_construction():
+def test_transfer_uses_native_navigation_and_generate_seams():
+    main_window = Path("ui/main_window.py").read_text(encoding="utf-8")
+    generate_action = Path("ui/rotation_generate_action_support.py").read_text(
+        encoding="utf-8"
+    )
+    support = Path("ui/rotation_tank_provider_scope_transfer_support.py").read_text(
+        encoding="utf-8"
+    )
     installer = Path("ui/application_team_optimization_bootstrap.py").read_text(
         encoding="utf-8"
     )
 
-    assert "install_rotation_tank_provider_scope_transfer_support()" in installer
+    assert "prepare_rotation_tank_provider_scope(self)" in main_window
+    assert '"_refresh_rotation_tank_provider_scope"' in generate_action
+    assert "MainWindow.show_page =" not in support
+    assert "RotationGenerateActionSupport.generate =" not in support
+    assert "install_rotation_tank_provider_scope_transfer_support()" not in installer
