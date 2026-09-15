@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
 from engine.config import get_data_dir
 from services.build_service import BuildService
 from services.eso_database import EsoDatabase
-from services.generated_roster_plan_service import GeneratedRosterPlanService
+from services.generated_roster_plan_service import GeneratedRosterDraftService
 from services.roster_recruit_adoption_service import RosterRecruitAdoptionService
 from services.roster_service import RosterService
 
@@ -205,7 +205,7 @@ def _show_recruit_dialog(page, *_args) -> None:
         page.status.error(str(exc))
         return
 
-    # Refresh both the compatibility BuildRoster and the generated-team view.
+    # Refresh both the compatibility BuildRoster and the generated-team draft view.
     if hasattr(page, "build_service"):
         try:
             page.roster = page.build_service.load()
@@ -227,7 +227,7 @@ def _init_with_recruit_adoption(self, parent=None) -> None:
     data_dir = get_data_dir()
     db = EsoDatabase(data_dir / "eso.db")
     self._roster_recruit_roster_service = RosterService(db)
-    plans = getattr(self, "generated_plan_service", None) or GeneratedRosterPlanService(db)
+    plans = getattr(self, "generated_plan_service", None) or GeneratedRosterDraftService(db)
     self._roster_recruit_adoption_service = RosterRecruitAdoptionService(
         builds=BuildService(data_dir / "builds.json"),
         plans=plans,
