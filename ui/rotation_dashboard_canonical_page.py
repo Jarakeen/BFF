@@ -156,8 +156,11 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
         self.rotation_recovery_trigger_spin.setRange(-1.0, 100.0)
         self.rotation_recovery_trigger_spin.setDecimals(1)
         self.rotation_recovery_trigger_spin.setSingleStep(1.0)
-        self.rotation_recovery_trigger_spin.setSpecialValueText("Not set")
+        self.rotation_recovery_trigger_spin.setSpecialValueText("")
         self.rotation_recovery_trigger_spin.setValue(-1.0)
+        line_edit = self.rotation_recovery_trigger_spin.lineEdit()
+        if line_edit is not None:
+            line_edit.setPlaceholderText("35% suggested")
         self.rotation_recovery_trigger_spin.setSuffix("%")
         self.rotation_recovery_trigger_spin.setMinimumWidth(100)
         self.rotation_recovery_trigger_spin.setToolTip(

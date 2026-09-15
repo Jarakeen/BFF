@@ -34,6 +34,7 @@ class RosterRecord(QWidget):
         self.member_id: int | None = None
 
         self.player_name = QLineEdit()
+        self.player_name.setPlaceholderText("Gamertag")
         self.character_name = QLineEdit()
 
         self.eso_class = QComboBox()

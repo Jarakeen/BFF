@@ -40,7 +40,6 @@ def bootstrap_workspace_extensions() -> None:
     from ui.build_rotation_artifact_support import install as install_build_rotation_artifact_support
     from ui.rotation_navigation_refresh_support import install as install_rotation_navigation_refresh_support
     from ui.rotation_runtime_application_support import install as install_rotation_runtime_application_support
-    from ui.user_workspace_polish_support import install as install_user_workspace_polish_support
     from ui.roster_team_assignment_filter_support import install as install_roster_team_assignment_filter_support
     from ui.roster_encounter_assignment_context_support import install as install_roster_encounter_assignment_context_support
     from ui.roster_characters_header_context_support import install as install_roster_characters_header_context_support
@@ -79,7 +78,6 @@ def bootstrap_workspace_extensions() -> None:
     install_build_rotation_artifact_support()
     install_rotation_navigation_refresh_support()
     install_rotation_runtime_application_support()
-    install_user_workspace_polish_support()
     install_roster_team_assignment_filter_support()
     install_roster_encounter_assignment_context_support()
     install_roster_characters_header_context_support()

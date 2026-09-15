@@ -82,5 +82,6 @@ def test_legacy_roster_row_keeps_name_fallback_without_canonical_ids():
 
 def test_team_assignment_filter_installs_after_roster_composition():
     source = Path("ui/application_workspace_bootstrap.py").read_text(encoding="utf-8")
-    assert 'install_roster_team_assignment_filter_support()' in source
-    assert source.index('install_user_workspace_polish_support()') < source.index('install_roster_team_assignment_filter_support()')
+    filter_pos = source.index("install_roster_team_assignment_filter_support()")
+    assert source.index("install_roster_player_architecture_support()") < filter_pos
+    assert source.index("install_player_build_navigation_support()") < filter_pos

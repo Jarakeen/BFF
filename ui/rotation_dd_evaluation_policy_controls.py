@@ -18,8 +18,11 @@ class RotationDDEvaluationPolicyControls:
         page.rotation_dd_target_resistance_spin.setRange(-1.0, 100_000.0)
         page.rotation_dd_target_resistance_spin.setDecimals(0)
         page.rotation_dd_target_resistance_spin.setSingleStep(500.0)
-        page.rotation_dd_target_resistance_spin.setSpecialValueText("Not set")
+        page.rotation_dd_target_resistance_spin.setSpecialValueText("")
         page.rotation_dd_target_resistance_spin.setValue(-1.0)
+        line_edit = page.rotation_dd_target_resistance_spin.lineEdit()
+        if line_edit is not None:
+            line_edit.setPlaceholderText("18,200 armor (typical PvE)")
         page.rotation_dd_target_resistance_spin.setSuffix(" armor")
         page.rotation_dd_target_resistance_spin.setMinimumWidth(135)
         page.rotation_dd_target_resistance_spin.setToolTip(

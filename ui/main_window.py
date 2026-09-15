@@ -49,6 +49,14 @@ from ui.settings_page import SettingsPage
 from ui.stickerbook_page import StickerbookPage
 
 
+def _tab_index_by_text(tabs, title: str) -> int:
+    wanted = str(title or "").strip().casefold()
+    for index in range(tabs.count()):
+        if str(tabs.tabText(index) or "").strip().casefold() == wanted:
+            return index
+    return -1
+
+
 class MainWindow(QMainWindow):
     """Black Feather Foundry main window."""
 
@@ -392,7 +400,9 @@ class MainWindow(QMainWindow):
                 if callable(refresh):
                     refresh()
                 if hasattr(roster_page, "tabs"):
-                    roster_page.tabs.setCurrentIndex(1)
+                    personnel_index = _tab_index_by_text(roster_page.tabs, "PERSONNEL")
+                    if personnel_index >= 0:
+                        roster_page.tabs.setCurrentIndex(personnel_index)
                 roster_page.header.title.setText("Characters")
                 roster_page.header.subtitle.setText("People and characters available to your raid roster.")
                 roster_page.header.department.setText("ROSTER • CHARACTERS")

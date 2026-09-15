@@ -471,7 +471,6 @@ class OperationsConsole(FoundryPage):
 
     def _player_card(self, build: PlayerBuild | None) -> FoundryCard:
         card = FoundryCard("Character Command")
-        card.setProperty("overviewAccent", "teal")
         if build is None:
             card.addWidget(QLabel("No saved build selected."))
             card.addStretch()
