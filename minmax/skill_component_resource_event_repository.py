@@ -8,6 +8,7 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
+from engine.config import DEFAULT_DATABASE
 from .skill_component_resource_event import (
     SkillComponentResourceEvent,
     extract_explicit_component_resource_events,
@@ -15,7 +16,6 @@ from .skill_component_resource_event import (
 from .skill_component_text_evidence import extract_component_text_evidence
 
 
-DEFAULT_DATABASE = Path(__file__).resolve().parents[1] / "data" / "eso.db"
 _COLOR_TAG_RE = re.compile(r"\|c[0-9a-fA-F]{6}|\|r")
 _CURRENT_RESTORE_RE = re.compile(
     r"\bcurrent\s+restore\s*:\s*\$(?P<number>\d+)(?!\d)",
