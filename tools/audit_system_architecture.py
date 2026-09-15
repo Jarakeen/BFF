@@ -316,16 +316,30 @@ def _repo_contract_findings(root: Path) -> list[ArchitectureFinding]:
                 )
             )
 
-    generated = root / "services" / "generated_roster_plan_service.py"
-    if generated.is_file() and raid_repo.is_file():
-        findings.append(
-            ArchitectureFinding(
-                "WARNING",
-                "overlapping-plan-persistence",
-                "services/generated_roster_plan_service.py",
-                "GeneratedRosterDraft still uses legacy generated_roster_plan SQLite compatibility storage alongside RaidPlan; migration/ownership boundary remains open",
-            )
+    generated_compat = root / "services" / "generated_roster_plan_service.py"
+    generated_canonical = root / "services" / "generated_roster_draft_service.py"
+    if generated_compat.is_file() and raid_repo.is_file():
+        compat_text = generated_compat.read_text(encoding="utf-8")
+        canonical_text = (
+            generated_canonical.read_text(encoding="utf-8")
+            if generated_canonical.is_file()
+            else ""
         )
+        canonical_boundary = (
+            'GENERATED_ROSTER_DRAFT_STORAGE = "generated_roster_draft"' in canonical_text
+            and "LEGACY_GENERATED_ROSTER_PLAN_READ_MIGRATION_ONLY = True" in canonical_text
+            and "class GeneratedRosterDraftService" in canonical_text
+            and "class GeneratedRosterDraftService" not in compat_text
+        )
+        if not canonical_boundary:
+            findings.append(
+                ArchitectureFinding(
+                    "WARNING",
+                    "overlapping-plan-persistence",
+                    "services/generated_roster_plan_service.py",
+                    "GeneratedRosterDraft lacks a canonical draft-only persistence boundary separate from RaidPlan; migration/ownership boundary remains open",
+                )
+            )
 
     comp_catalog = root / "services" / "comp_maker_catalog_descriptors.py"
     if comp_catalog.is_file():
