@@ -10,6 +10,16 @@ of replacing ``GearLookupPage._show_selected`` at runtime.
 from ui.eso_text_cleanup import strip_eso_color_markup
 
 
+def install() -> None:
+    """Compatibility no-op for the legacy pre-window startup call.
+
+    Actual behavior is applied by ``application_window_composition`` after the real
+    Gear Lookup page instance exists. Keeping this no-op avoids unrelated churn in
+    the large application bootstrap while this architecture migration is staged.
+    """
+    return None
+
+
 def apply_gear_lookup_description_cleanup(page) -> None:
     """Strip ESO color markup after each normal Gear Lookup selection render."""
     if getattr(page, "_gear_lookup_description_cleanup_handler", None) is not None:
@@ -32,4 +42,4 @@ def apply_gear_lookup_description_cleanup(page) -> None:
     cleanup()
 
 
-__all__ = ["apply_gear_lookup_description_cleanup"]
+__all__ = ["install", "apply_gear_lookup_description_cleanup"]
