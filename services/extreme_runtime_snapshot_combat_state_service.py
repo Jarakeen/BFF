@@ -118,6 +118,7 @@ class ExtremeRuntimeSnapshotCombatStateService:
                     build,
                     active_bar=active_bar,
                     attempts=attempts,
+                    bar_attempts=snapshot.bar_effect_attempts,
                     snapshot_time_seconds=snapshot.snapshot_time_seconds,
                 )
                 active_buffs.extend(skill_result.active_buffs)
