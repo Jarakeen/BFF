@@ -121,9 +121,20 @@ class RotationGenerateApplicationContextProvider:
         application provider only needs a resolved canonical character plus actual bar
         contexts so it can read the explicit resource ceiling without inventing state.
         """
+        legacy_resolved = bool(getattr(static_context, "resolved", False))
         progression = getattr(static_context, "progression", None)
-        contexts = tuple(getattr(static_context, "contexts", ()) or ())
-        if progression is not None and bool(getattr(progression, "resolved", False)) and contexts:
+        if progression is None or not hasattr(progression, "resolved"):
+            progression_ready = legacy_resolved
+        else:
+            progression_ready = bool(getattr(progression, "resolved", False))
+
+        contexts_value = getattr(static_context, "contexts", None)
+        contexts_ready = (
+            legacy_resolved
+            if contexts_value is None
+            else bool(tuple(contexts_value or ()))
+        )
+        if progression_ready and contexts_ready:
             return
 
         detail = "; ".join(
