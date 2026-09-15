@@ -5,6 +5,10 @@ from __future__ import annotations
 The builder prefers the normalized Update 51 PTS scribing catalog in eso.db.
 Static compatibility remains as a compatibility fallback for databases that
 have not yet imported the U51 catalog.
+
+PlayerBuild owns scribing serialization natively.  This UI module edits recipes
+and participates only in the explicit BuildEditor lifecycle; it must not replace
+model ``to_dict``/``from_dict`` methods at runtime.
 """
 
 from PySide6.QtCore import Qt
@@ -360,38 +364,6 @@ def install() -> None:
 
     from ui.build_editor_lifecycle_support import register_model_post, register_pre_load
     from ui.builds_page import BuildsPage
-
-    original_to_dict = PlayerBuild.to_dict
-    original_from_dict = PlayerBuild.from_dict
-
-    def to_dict_with_recipes(self: PlayerBuild) -> dict:
-        data = original_to_dict(self)
-        recipes = _recipes_for(self)
-        data["ScribedSkillRecipes"] = [recipe.to_dict() for recipe in recipes]
-        data["ScribedSkills"] = [recipe.ResultName for recipe in recipes]
-        return data
-
-    def from_dict_with_recipes(cls, data: dict | None) -> PlayerBuild:
-        raw = dict(data or {})
-        build = original_from_dict(raw)
-        raw_recipes = raw.get("ScribedSkillRecipes")
-        if raw_recipes is None:
-            recipes = [
-                ScribedSkillRecipe.from_legacy_name(name)
-                for name in raw.get("ScribedSkills", [])
-                if str(name or "").strip()
-            ]
-        else:
-            recipes = [
-                ScribedSkillRecipe.from_dict(value)
-                for value in raw_recipes
-                if isinstance(value, dict)
-            ]
-        _store_recipes(build, recipes)
-        return build
-
-    PlayerBuild.to_dict = to_dict_with_recipes
-    PlayerBuild.from_dict = classmethod(from_dict_with_recipes)
 
     def load_recipes(self, model: PlayerBuild) -> None:
         self._scribed_skill_recipes = _recipes_for(model)
