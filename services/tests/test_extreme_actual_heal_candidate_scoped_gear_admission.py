@@ -1,8 +1,10 @@
 from dataclasses import dataclass
 
+from minmax.gear_set_effect_resolver import GearSetEffectResolver
 from minmax.gear_sets import GearSetBonus
 from models.build_model import PlayerBuild
 from services.extreme_actual_heal_candidate_gear_condition_service import (
+    DAGON_AREA_SCOPE_CONDITION,
     ExtremeActualHealCandidateGearConditionService,
 )
 from services.extreme_actual_heal_candidate_scope_service import ExtremeActualHealCandidateScope
@@ -25,12 +27,12 @@ class _ScopeStub:
         return self.rows.get(entity_id)
 
 
-def _scope(*, class_ability: bool, restoration: bool) -> ExtremeActualHealCandidateScope:
+def _scope(*, class_ability: bool, restoration: bool, area=None) -> ExtremeActualHealCandidateScope:
     return ExtremeActualHealCandidateScope(
         is_class_ability=class_ability,
         is_weapon_skill_ability=restoration,
         is_restoration_staff_ability=restoration,
-        is_area_of_effect=None,
+        is_area_of_effect=area,
         evidence=(),
         unresolved=(),
     )
@@ -46,29 +48,34 @@ def _build(set_name: str) -> PlayerBuild:
 def test_candidate_scoped_conditions_follow_selected_heal_identity(tmp_path) -> None:
     scopes = _ScopeStub(
         {
-            "combat_prayer": _scope(class_ability=False, restoration=True),
-            "budding_seeds": _scope(class_ability=True, restoration=False),
+            "combat_prayer": _scope(class_ability=False, restoration=True, area=True),
+            "budding_seeds": _scope(class_ability=True, restoration=False, area=True),
+            "single_heal": _scope(class_ability=True, restoration=False, area=False),
         }
     )
 
-    light = ExtremeActualHealCandidateGearConditionService(
+    service = ExtremeActualHealCandidateGearConditionService(
         tmp_path / "eso.db",
         scope_service=scopes,
     )
-    light_for_restoration = light.resolve(_build("Light Speaker"), "combat_prayer")
-    light_for_class = light.resolve(_build("Light Speaker"), "budding_seeds")
-    innate_for_restoration = light.resolve(_build("Innate Axiom"), "combat_prayer")
-    innate_for_class = light.resolve(_build("Innate Axiom"), "budding_seeds")
+    light_for_restoration = service.resolve(_build("Light Speaker"), "combat_prayer")
+    light_for_class = service.resolve(_build("Light Speaker"), "budding_seeds")
+    innate_for_restoration = service.resolve(_build("Innate Axiom"), "combat_prayer")
+    innate_for_class = service.resolve(_build("Innate Axiom"), "budding_seeds")
+    dagon_for_area = service.resolve(_build("Dagon's Dominion"), "budding_seeds")
+    dagon_for_single = service.resolve(_build("Dagon's Dominion"), "single_heal")
 
     assert LIGHT_SPEAKER_RESTORATION_SCOPE_CONDITION in light_for_restoration.condition_context
     assert LIGHT_SPEAKER_RESTORATION_SCOPE_CONDITION not in light_for_class.condition_context
     assert INNATE_AXIOM_CLASS_SCOPE_CONDITION not in innate_for_restoration.condition_context
     assert INNATE_AXIOM_CLASS_SCOPE_CONDITION in innate_for_class.condition_context
+    assert DAGON_AREA_SCOPE_CONDITION in dagon_for_area.condition_context
+    assert DAGON_AREA_SCOPE_CONDITION not in dagon_for_single.condition_context
 
 
 def test_scoped_effects_map_exact_reviewed_values() -> None:
-    resolver = ExtremeActualHealGearPreconditionEffectResolver()
-    light = resolver.resolve(
+    specialist = ExtremeActualHealGearPreconditionEffectResolver()
+    light = specialist.resolve(
         GearSetBonus(
             id=1,
             set_id=1,
@@ -76,7 +83,7 @@ def test_scoped_effects_map_exact_reviewed_values() -> None:
             description="(5 items) Adds 600 Weapon and Spell Damage to your Restoration Staff abilities.",
         )
     )
-    innate = resolver.resolve(
+    innate = specialist.resolve(
         GearSetBonus(
             id=2,
             set_id=2,
@@ -84,11 +91,21 @@ def test_scoped_effects_map_exact_reviewed_values() -> None:
             description="(5 items) Adds 400 Weapon and Spell Damage to your Class abilities.",
         )
     )
+    dagon = GearSetEffectResolver().resolve(
+        GearSetBonus(
+            id=3,
+            set_id=3,
+            piece_count=5,
+            description="(5 items) Adds 492 Weapon and Spell Damage to your Area of Effect abilities.",
+        )
+    )
 
     assert {effect.value for effect in light} == {600.0}
     assert {effect.condition for effect in light} == {LIGHT_SPEAKER_RESTORATION_SCOPE_CONDITION}
     assert {effect.value for effect in innate} == {400.0}
     assert {effect.condition for effect in innate} == {INNATE_AXIOM_CLASS_SCOPE_CONDITION}
+    assert {effect.value for effect in dagon} == {492.0}
+    assert {effect.condition for effect in dagon} == {DAGON_AREA_SCOPE_CONDITION}
 
 
 def test_exact_live_candidate_scope_blockers_are_h1_mechanic_complete() -> None:
@@ -100,6 +117,10 @@ def test_exact_live_candidate_scope_blockers_are_h1_mechanic_complete() -> None:
         (
             "Innate Axiom",
             "Innate Axiom (5): relevant set effect requires condition ability_scope:class",
+        ),
+        (
+            "Dagon's Dominion",
+            "Dagon's Dominion (5): relevant set effect requires condition ability_scope:area_of_effect",
         ),
     )
     for index, (set_name, blocker) in enumerate(cases, start=1):
