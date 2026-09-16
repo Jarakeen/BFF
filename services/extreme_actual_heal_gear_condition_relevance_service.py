@@ -104,6 +104,13 @@ _REVIEWED_H1_PRECONDITION_TEXT = (
         r"Weapon and Spell Damage by\s*430",
         re.IGNORECASE | re.DOTALL,
     ),
+    re.compile(
+        r"Vestment of Olorime \(5\): active set bonus is not yet mechanic-mapped:.*"
+        r"Casting abilities that leave an effect on the ground in combat will create a circle of might for\s*5 seconds.*"
+        r"You and your group members in the circle gain Major Courage for\s*20 seconds.*"
+        r"Weapon and Spell Damage by\s*430",
+        re.IGNORECASE | re.DOTALL,
+    ),
 )
 
 
