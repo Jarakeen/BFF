@@ -16,6 +16,7 @@ from minmax.gear_stat_inputs import GearStatInputResolver
 from services.extreme_actual_heal_setup_action_legality_service import (
     GRANTS_RESOLVE,
     HAS_CAST_OR_CHANNEL_TIME,
+    IS_ASSAULT_ABILITY,
     ExtremeActualHealSetupActionLegalityService,
 )
 from services.extreme_actual_heal_setup_action_materialization_service import (
@@ -27,6 +28,7 @@ from services.extreme_player_skill_candidate_service import ExtremePlayerSkillLe
 _REVIEWED_SETUP_SETS = (
     ("Seventh Legion Brute", GRANTS_RESOLVE, "resolve"),
     ("Soulshine", HAS_CAST_OR_CHANNEL_TIME, "cast-channel"),
+    ("Powerful Assault", IS_ASSAULT_ABILITY, "assault"),
 )
 
 
@@ -105,7 +107,6 @@ class ExtremeActualHealSetupActionPackageAdapter:
                             continue
                         after_bar = list(getattr(placement.build, setup_attr))
                         if after_bar == before_bar:
-                            # Existing witness: the original candidate already owns the legal setup.
                             continue
                         slot = int(placement.slot_index or 0)
                         change = BuildChange.from_values(
