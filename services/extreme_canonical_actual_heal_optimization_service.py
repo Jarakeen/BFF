@@ -18,6 +18,9 @@ from services.extreme_actual_heal_attribute_projection_service import (
 from services.extreme_actual_heal_build_condition_context_service import (
     ExtremeActualHealBuildConditionContextService,
 )
+from services.extreme_actual_heal_candidate_gear_condition_service import (
+    ExtremeActualHealCandidateGearConditionService,
+)
 from services.extreme_actual_heal_champion_point_candidate_service import (
     ExtremeActualHealChampionPointCandidateService,
 )
@@ -63,19 +66,20 @@ class ExtremeCanonicalActualHealOptimizationService(ExtremeActualHealOptimizatio
 
     Standing gear conditions are explicit. Final H1 scoring uses the existing
     Extreme conditioned Phase 5 context with only build-owned condition markers
-    proven from canonical provisioning type, active weapon type, or explicit
-    transformed form. Trigger/proc/pet/dodge/standing-state conditions are never
-    invented merely because they would improve the result.
+    proven from canonical provisioning type, active weapon type, explicit
+    transformed form, or selected-heal scope identity. Trigger/proc/pet/dodge/
+    standing-state conditions are never invented merely because they would improve
+    the result.
 
     Explicitly injected optimizers, healing-event evaluators, CP candidate
     services, attribute projection services, armor candidate services, condition
-    services, and conditioned context factories remain authoritative for focused
-    tests and specialist callers.
+    services, candidate-scope services, and conditioned context factories remain
+    authoritative for focused tests and specialist callers.
     """
 
     CP_SEARCH_SCOPE = "legal heal-relevant Champion Point loadout search"
     CONDITION_SEARCH_SCOPE = (
-        "standing H1 gear effects scored only under explicit build-owned condition evidence"
+        "standing H1 gear effects scored only under explicit build-owned or selected-heal condition evidence"
     )
     _ARMOR_PACKAGE_SERVICES = (
         ("gear_set_candidates", "ordinary-five-piece"),
@@ -94,6 +98,7 @@ class ExtremeCanonicalActualHealOptimizationService(ExtremeActualHealOptimizatio
         attribute_projection: ExtremeActualHealAttributeProjectionService | None = None,
         armor_weight_candidates: ExtremeActualHealArmorWeightCandidateService | None = None,
         build_condition_context: ExtremeActualHealBuildConditionContextService | None = None,
+        candidate_gear_conditions: ExtremeActualHealCandidateGearConditionService | None = None,
         conditioned_context_factory=None,
         **kwargs,
     ) -> None:
@@ -131,6 +136,11 @@ class ExtremeCanonicalActualHealOptimizationService(ExtremeActualHealOptimizatio
 
         self.build_condition_context = build_condition_context or (
             ExtremeActualHealBuildConditionContextService(database_path)
+            if database_path is not None
+            else None
+        )
+        self.candidate_gear_conditions = candidate_gear_conditions or (
+            ExtremeActualHealCandidateGearConditionService(database_path)
             if database_path is not None
             else None
         )
@@ -262,6 +272,25 @@ class ExtremeCanonicalActualHealOptimizationService(ExtremeActualHealOptimizatio
             build,
             active_bar=active_bar,
         )
+        candidate_state = (
+            self.candidate_gear_conditions.resolve(
+                build,
+                entity_id,
+                active_bar=active_bar,
+            )
+            if self.candidate_gear_conditions is not None
+            else None
+        )
+        condition_context = frozenset(
+            {
+                *condition_state.condition_context,
+                *(
+                    candidate_state.condition_context
+                    if candidate_state is not None
+                    else frozenset()
+                ),
+            }
+        )
         candidate_progression = replace(
             progression,
             attributes=AttributeAllocation(
@@ -276,7 +305,7 @@ class ExtremeCanonicalActualHealOptimizationService(ExtremeActualHealOptimizatio
             build=build,
             progression=candidate_progression,
             active_bar=active_bar,
-            gear_condition_context=condition_state.condition_context,
+            gear_condition_context=condition_context,
         )
         event = self.healing_events.evaluate(
             build=build,
@@ -287,6 +316,11 @@ class ExtremeCanonicalActualHealOptimizationService(ExtremeActualHealOptimizatio
             *tuple(context.unresolved_gear_effects),
             *tuple(event.unresolved),
             *tuple(condition_state.unresolved),
+            *(
+                tuple(candidate_state.unresolved)
+                if candidate_state is not None
+                else ()
+            ),
         )
         return event, tuple(dict.fromkeys(message for message in unresolved if message))
 
