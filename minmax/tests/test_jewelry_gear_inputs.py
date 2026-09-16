@@ -18,6 +18,13 @@ class EmptyGearSetRepository:
 
 
 class FakeJewelryGlyphRepository:
+    def get_jewelry_glyph_effect_types_by_name(self, glyph_name):
+        return (
+            ("magicka_recovery",)
+            if glyph_name == "Glyph of Magicka Recovery"
+            else ()
+        )
+
     def get_jewelry_glyph_effect_by_name(self, glyph_name, *, use_max_value=True):
         if glyph_name == "Glyph of Magicka Recovery":
             return [
