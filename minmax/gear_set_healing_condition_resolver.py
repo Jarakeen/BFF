@@ -85,6 +85,22 @@ class GearSetHealingConditionResolver:
                 ),
             ]
 
+        match = re.fullmatch(
+            r"Adds 200% Status Effect Chance while your Health is above 50%\.\s*"
+            r"Adds (?P<value>\d+(?:\.\d+)?)% Healing Done while your Health is 50% or less\.?",
+            text,
+            re.IGNORECASE,
+        )
+        if match:
+            return [
+                self._effect(
+                    StatId.HEALING_DONE,
+                    float(match.group("value")),
+                    source_text,
+                    condition="wearer_health_at_or_below_50_percent",
+                )
+            ]
+
         return []
 
     @classmethod
