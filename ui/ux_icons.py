@@ -10,7 +10,7 @@ from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import QApplication, QLabel, QPushButton, QToolButton, QWidget
 
 from engine.config import get_resource_path
-from services.accessibility_preferences import VISUAL_THEME_RYLO
+from services.accessibility_preferences import is_rylo_visual_theme
 
 
 _ICON_ROOTS = (
@@ -139,7 +139,8 @@ _RYLO_SELECTED = "#B88A3C"
 
 def _is_rylo_theme() -> bool:
     app = QApplication.instance()
-    return bool(app is not None and app.property("visualTheme") == VISUAL_THEME_RYLO)
+    theme = app.property("visualTheme") if app is not None else ""
+    return is_rylo_visual_theme(str(theme or ""))
 
 
 def icon_path(name: str) -> Path | None:
