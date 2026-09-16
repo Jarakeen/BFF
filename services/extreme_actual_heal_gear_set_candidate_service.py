@@ -49,14 +49,12 @@ _RAVAGER_BLOCKER = re.compile(
     re.IGNORECASE | re.DOTALL,
 )
 _LIGHT_SPEAKER_BLOCKER = re.compile(
-    r"^Light Speaker \(5\): active set bonus is not yet mechanic-mapped:.*"
-    r"Adds\s*(?:\d[\d,]*\s*-\s*)?600\s+Weapon and Spell Damage to your Restoration Staff abilities\.?$",
-    re.IGNORECASE | re.DOTALL,
+    r"^Light Speaker \(5\): relevant set effect requires condition ability_scope:restoration_staff$",
+    re.IGNORECASE,
 )
 _INNATE_AXIOM_BLOCKER = re.compile(
-    r"^Innate Axiom \(5\): active set bonus is not yet mechanic-mapped:.*"
-    r"Adds\s*(?:\d[\d,]*\s*-\s*)?400\s+Weapon and Spell Damage to your Class abilities\.?$",
-    re.IGNORECASE | re.DOTALL,
+    r"^Innate Axiom \(5\): relevant set effect requires condition ability_scope:class$",
+    re.IGNORECASE,
 )
 
 
