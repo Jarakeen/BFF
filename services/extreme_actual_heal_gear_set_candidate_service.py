@@ -20,6 +20,12 @@ _SOULSHINE_BLOCKER = re.compile(
     r"(?:\d[\d,]*\s*-\s*)?369\s+Weapon and Spell Damage for\s*5 seconds\.?$",
     re.IGNORECASE | re.DOTALL,
 )
+_POWERFUL_ASSAULT_BLOCKER = re.compile(
+    r"^Powerful Assault \(5\): active set bonus is not yet mechanic-mapped:.*"
+    r"When you cast an Assault ability while in combat, you and up to 5 group members within 12 meters gain\s*"
+    r"(?:\d[\d,]*\s*-\s*)?307\s+Weapon and Spell Damage for\s*15 seconds\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
 
 
 class ExtremeActualHealGearSetCandidateService:
@@ -53,11 +59,17 @@ class ExtremeActualHealGearSetCandidateService:
         review = ExtremeActualHealGearConditionRelevanceService.review(row)
         objective = str(row.objective_key or "").strip().casefold()
         blockers = tuple(str(value) for value in row.unresolved)
+        set_name = str(row.set_name or "").strip().casefold()
+        reviewed_blocker = None
+        if set_name == "soulshine":
+            reviewed_blocker = _SOULSHINE_BLOCKER
+        elif set_name == "powerful assault":
+            reviewed_blocker = _POWERFUL_ASSAULT_BLOCKER
         if (
-            str(row.set_name or "").strip().casefold() == "soulshine"
+            reviewed_blocker is not None
             and objective in {"spell_damage", "weapon_damage"}
             and blockers
-            and all(_SOULSHINE_BLOCKER.fullmatch(blocker) for blocker in blockers)
+            and all(reviewed_blocker.fullmatch(blocker) for blocker in blockers)
         ):
             return replace(
                 review,
