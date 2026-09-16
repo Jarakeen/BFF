@@ -17,7 +17,6 @@ def test_expedition_uses_canonical_movement_stat_channel() -> None:
     minor = effects_for_buff("Minor Expedition")
     major = effects_for_buff("Major Expedition")
 
-    assert minor == (pytest.approx(minor[0]),) if False else minor
     assert len(minor) == 1
     assert len(major) == 1
     assert minor[0].stat is StatId.MOVEMENT_SPEED
