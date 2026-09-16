@@ -10,7 +10,7 @@ from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QApplication, QWidget, QLabel, QHBoxLayout, QVBoxLayout, QSizePolicy
 
 from engine.config import get_resource_path
-from services.accessibility_preferences import VISUAL_THEME_RYLO
+from services.accessibility_preferences import is_rylo_visual_theme
 from ui.theme.fonts import Fonts
 from ui.ux_icons import icon as themed_icon, semantic_icon
 
@@ -97,7 +97,8 @@ class FoundryHeader(QWidget):
     @staticmethod
     def _is_rylo() -> bool:
         app = QApplication.instance()
-        return bool(app is not None and app.property("visualTheme") == VISUAL_THEME_RYLO)
+        theme = app.property("visualTheme") if app is not None else ""
+        return is_rylo_visual_theme(str(theme or ""))
 
     def _set_icon(self, name: str):
         self.icon.clear()
