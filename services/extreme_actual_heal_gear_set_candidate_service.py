@@ -14,6 +14,11 @@ from services.extreme_complete_optimization_service import ExtremeCompleteOptimi
 from services.extreme_gear_set_objective_service import ExtremeGearSetObjectiveService
 
 
+_ARMOR_MASTER_BLOCKER = re.compile(
+    r"^Armor Master \(5\): relevant percentage set effect requires "
+    r"objective-specific stacking/reference review$",
+    re.IGNORECASE,
+)
 _BASALT_BLOODED_WARRIOR_BLOCKER = re.compile(
     r"^Basalt-Blooded Warrior \(5\): active set bonus is not yet mechanic-mapped:.*"
     r"Casting an Earthen Heart ability grants you (?:a )?Rock Stance for\s*10 seconds\.\s*"
@@ -137,6 +142,7 @@ class ExtremeActualHealGearSetCandidateService:
         blockers = tuple(str(value) for value in row.unresolved)
         set_name = str(row.set_name or "").strip().casefold()
         reviewed_blocker = {
+            "armor master": _ARMOR_MASTER_BLOCKER,
             "basalt-blooded warrior": _BASALT_BLOODED_WARRIOR_BLOCKER,
             "burning spellweave": _BURNING_SPELLWEAVE_BLOCKER,
             "crusader": _CRUSADER_BLOCKER,
@@ -151,11 +157,12 @@ class ExtremeActualHealGearSetCandidateService:
             "innate axiom": _INNATE_AXIOM_BLOCKER,
             "dagon's dominion": _DAGONS_DOMINION_BLOCKER,
         }.get(set_name)
-        reviewed_objectives = (
-            {"healing_done"}
-            if set_name == "basalt-blooded warrior"
-            else {"spell_damage", "weapon_damage"}
-        )
+        if set_name == "armor master":
+            reviewed_objectives = {"max_health"}
+        elif set_name == "basalt-blooded warrior":
+            reviewed_objectives = {"healing_done"}
+        else:
+            reviewed_objectives = {"spell_damage", "weapon_damage"}
         if (
             reviewed_blocker is not None
             and objective in reviewed_objectives

@@ -9,12 +9,14 @@ from minmax.stat_ids import StatId
 from models.build_model import PlayerBuild
 from services.extreme_actual_heal_build_condition_context_service import ExtremeActualHealBuildConditionContextService
 from services.extreme_actual_heal_gear_precondition_witness_service import ExtremeActualHealGearPreconditionWitness
+from services.extreme_actual_heal_gear_set_candidate_service import ExtremeActualHealGearSetCandidateService
 from services.extreme_actual_heal_setup_action_legality_service import (
     IS_ARMOR_ABILITY,
     ExtremeActualHealSetupActionLegalityService,
     ExtremeActualHealSetupActionWitness,
 )
 from services.extreme_actual_heal_setup_action_package_adapter import _REVIEWED_ACTIVE_BAR_SLOTTED_SETS
+from services.extreme_gear_set_objective_service import ExtremeGearSetObjectiveCandidate
 from services.extreme_player_skill_candidate_service import ExtremePlayerSkillLegalityContext
 from services.extreme_skill_universe_service import ExtremePlayerSkillRecord, ExtremeSkillDomain
 
@@ -136,3 +138,26 @@ def test_armor_master_maps_five_percent_max_health_condition() -> None:
 
 def test_armor_master_package_owns_active_bar_slotted_slot() -> None:
     assert ("Armor Master", IS_ARMOR_ABILITY, "armor-ability-slotted") in _REVIEWED_ACTIVE_BAR_SLOTTED_SETS
+
+def test_armor_master_exact_percentage_reference_blocker_is_h1_reviewed() -> None:
+    blocker = (
+        "Armor Master (5): relevant percentage set effect requires "
+        "objective-specific stacking/reference review"
+    )
+    row = ExtremeGearSetObjectiveCandidate(
+        set_id=1,
+        set_name="Armor Master",
+        category="Test",
+        equipped_piece_count=5,
+        objective_key="max_health",
+        reviewed_delta=1206.0,
+        unresolved=(blocker,),
+    )
+
+    result = ExtremeActualHealGearSetCandidateService._h1_review(row)
+
+    assert result.h1_mechanic_complete is True
+    assert result.h1_positive_modifier_proven is True
+    assert result.ignored_blockers == (blocker,)
+    assert result.remaining_blockers == ()
+
