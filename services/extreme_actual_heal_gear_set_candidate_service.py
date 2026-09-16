@@ -48,6 +48,13 @@ _RAVAGER_BLOCKER = re.compile(
     r"You can gain a stack every 1 second\.\s*At 4 stacks, the duration doubles but cannot be refreshed\.?$",
     re.IGNORECASE | re.DOTALL,
 )
+_TRACKERS_LASH_BLOCKER = re.compile(
+    r"^Tracker's Lash \(5\): active set bonus is not yet mechanic-mapped:.*"
+    r"When your attack is dodged, increase your Weapon and Spell Damage by\s*"
+    r"(?:\d[\d,]*\s*-\s*)?95\s*for\s*7 seconds, stacking up to\s*5 times\.\s*"
+    r"This effect can occur once every\s*0\.5 seconds\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
 _LIGHT_SPEAKER_BLOCKER = re.compile(
     r"^Light Speaker \(5\): relevant set effect requires condition ability_scope:restoration_staff$",
     re.IGNORECASE,
@@ -97,6 +104,7 @@ class ExtremeActualHealGearSetCandidateService:
             "voidcaller": _VOIDCALLER_BLOCKER,
             "camonna tong": _CAMONNA_TONG_BLOCKER,
             "ravager": _RAVAGER_BLOCKER,
+            "tracker's lash": _TRACKERS_LASH_BLOCKER,
             "light speaker": _LIGHT_SPEAKER_BLOCKER,
             "innate axiom": _INNATE_AXIOM_BLOCKER,
             "dagon's dominion": _DAGONS_DOMINION_BLOCKER,
