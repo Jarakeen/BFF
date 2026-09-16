@@ -15,6 +15,7 @@ ability timing. Unknown capabilities fail closed.
 from dataclasses import dataclass
 from pathlib import Path
 import re
+import sqlite3
 from typing import Protocol
 
 from minmax.eso_markup import normalize_eso_markup
@@ -41,6 +42,13 @@ class _CandidateProvider(Protocol):
 
 class _TimingProvider(Protocol):
     def resolve_skill(self, skill_id: str): ...
+
+
+@dataclass(frozen=True)
+class _SetupTimingEvidence:
+    cast_time_seconds: float | None
+    channel_time_seconds: float | None
+    is_channeled: bool
 
 
 @dataclass(frozen=True)
@@ -71,6 +79,7 @@ class ExtremeActualHealSetupActionLegalityService:
         ),
     )
     _SUPPORTED = frozenset({GRANTS_RESOLVE, HAS_CAST_OR_CHANNEL_TIME})
+    _MILLISECONDS_PER_SECOND = 1000.0
 
     def __init__(
         self,
@@ -89,6 +98,66 @@ class ExtremeActualHealSetupActionLegalityService:
             if database_path is not None
             else None
         )
+        self._timing_by_ability_id = self._load_positive_timing_index(database_path)
+        self._timing_by_name: dict[str, object | None] = {}
+
+    @classmethod
+    def _load_positive_timing_index(
+        cls,
+        database_path: str | Path | None,
+    ) -> dict[int, _SetupTimingEvidence]:
+        """Load positive cast/channel timings once for denominator-scale audits.
+
+        H1 route audits revisit the same legal skills across thousands of routes.
+        Opening SQLite once per candidate skill is correct but needlessly quadratic
+        in database work. The canonical ``ability`` table is small enough to index
+        all positive timing rows once, preserving the same source evidence.
+        """
+        if database_path is None:
+            return {}
+        path = Path(database_path)
+        if not path.exists():
+            return {}
+        with sqlite3.connect(path) as connection:
+            table = connection.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='ability'"
+            ).fetchone()
+            if table is None:
+                return {}
+            columns = {
+                str(row[1])
+                for row in connection.execute("PRAGMA table_info(ability)").fetchall()
+            }
+            required = {"ability_id", "cast_time", "channel_time", "is_channeled"}
+            if not required.issubset(columns):
+                return {}
+            rows = connection.execute(
+                """
+                SELECT ability_id, cast_time, channel_time, is_channeled
+                FROM ability
+                WHERE COALESCE(cast_time, 0) > 0
+                   OR (COALESCE(is_channeled, 0) <> 0 AND COALESCE(channel_time, 0) > 0)
+                """
+            ).fetchall()
+
+        result: dict[int, _SetupTimingEvidence] = {}
+        for ability_id, cast_time, channel_time, is_channeled in rows:
+            cast = (
+                float(cast_time) / cls._MILLISECONDS_PER_SECOND
+                if cast_time is not None and float(cast_time) > 0.0
+                else None
+            )
+            channel = (
+                float(channel_time) / cls._MILLISECONDS_PER_SECOND
+                if channel_time is not None and float(channel_time) > 0.0
+                else None
+            )
+            result[int(ability_id)] = _SetupTimingEvidence(
+                cast_time_seconds=cast,
+                channel_time_seconds=channel,
+                is_channeled=bool(is_channeled),
+            )
+        return result
 
     @staticmethod
     def _text(row: ExtremePlayerSkillRecord) -> str:
@@ -101,19 +170,33 @@ class ExtremeActualHealSetupActionLegalityService:
         return any(pattern.search(text) for pattern in cls._RESOLVE_PATTERNS)
 
     def _timing_evidence(self, row: ExtremePlayerSkillRecord):
+        for ability_id in (row.max_rank_ability_id, row.base_ability_id, row.skill_id):
+            if ability_id is None:
+                continue
+            indexed = self._timing_by_ability_id.get(int(ability_id))
+            if indexed is not None:
+                return indexed
+
         if self.timing_service is None:
             return None
+        key = str(row.name or "").strip().casefold()
+        if key in self._timing_by_name:
+            return self._timing_by_name[key]
         resolution = self.timing_service.resolve_skill(row.name)
         evidence = getattr(resolution, "evidence", None)
         if evidence is None:
+            self._timing_by_name[key] = None
             return None
         cast_time = getattr(evidence, "cast_time_seconds", None)
         channel_time = getattr(evidence, "channel_time_seconds", None)
         is_channeled = bool(getattr(evidence, "is_channeled", False))
         if is_channeled and channel_time is not None and float(channel_time) > 0.0:
+            self._timing_by_name[key] = evidence
             return evidence
         if cast_time is not None and float(cast_time) > 0.0:
+            self._timing_by_name[key] = evidence
             return evidence
+        self._timing_by_name[key] = None
         return None
 
     def _supports(self, row: ExtremePlayerSkillRecord, capability: str) -> bool:
