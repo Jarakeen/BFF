@@ -1,25 +1,36 @@
 from pathlib import Path
 
 import ui.rotation_builder_v2_mockup_cards_support as mockup_cards
+import ui.rotation_builder_v2_runtime_repairs_support as runtime_repairs
 import ui.rotation_dashboard_layout_support as layout_support
 
 
-def test_rotation_mockup_cards_are_installed_after_compact_context() -> None:
+def test_rotation_uses_safe_runtime_repairs_after_compact_context() -> None:
     source = Path(layout_support.__file__).read_text(encoding="utf-8")
 
-    assert "install_rotation_builder_v2_mockup_cards" in source
+    assert "install_rotation_builder_v2_mockup_cards" not in source
+    assert "install_rotation_builder_v2_runtime_repairs" in source
     assert source.index("install_rotation_builder_v2_compact_context(page)") < source.index(
-        "install_rotation_builder_v2_mockup_cards(page)"
+        "install_rotation_builder_v2_runtime_repairs(page)"
     )
 
 
-def test_duration_evidence_is_flattened_instead_of_nested_in_another_foundry_card() -> None:
-    source = Path(mockup_cards.__file__).read_text(encoding="utf-8")
+def test_duration_evidence_is_flattened_without_rebuilding_the_workspace() -> None:
+    source = Path(runtime_repairs.__file__).read_text(encoding="utf-8")
 
     assert "def _flatten_duration_evidence(page)" in source
     assert 'outer = _card(page, "Duration & Uptime Evidence")' in source
-    assert "_detach(inner, page)" in source
+    assert "inner.setParent(page)" in source
     assert "layout.addWidget(inner, row, column, row_span, column_span)" in source
+
+
+def test_recovery_heavy_repair_reuses_saved_build_weapon_bridge() -> None:
+    source = Path(runtime_repairs.__file__).read_text(encoding="utf-8")
+
+    assert "RotationSavedBuildWeaponAttackEvaluationService" in source
+    assert "weapon_resolution = weapon_service.resolve(" in source
+    assert "character_build = weapon_resolution.build" in source
+    assert "heavy_service.restoration_resolver_for_plan(" in source
 
 
 def test_compare_mockup_reuses_live_combo_and_table() -> None:
