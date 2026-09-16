@@ -3,17 +3,13 @@ from __future__ import annotations
 """Audit the ordinary five-piece gear-set denominator for Extreme H1 Actual Heal.
 
 Read-only. Authoritative H1 ordinary-set discovery is exhaustive across the
-mechanic-complete reviewed five-piece universe. An optional bounded comparison is
-retained only to measure what the retired shortlist policy would have omitted.
+mechanic-complete reviewed five-piece universe. H1 positivity may be supplied by
+either the shared numeric objective parser or an H1 specialist rule whose value is
+owned by conditioned/runtime scoring (for example a witnessed named Courage buff).
 
-This audit enumerates the complete canonical GearSetRepository universe against
-the exact H1 objective families used by the candidate service. Shared objective
-blockers are interpreted through the same H1 contextual relevance rule as
-production discovery, so damage-type ability scopes that cannot affect a healing
-event do not remain false denominator blockers.
-
-It does not score whole builds and does not claim that the gear-family denominator
-is globally complete across monster sets, mythics, arena weapons, or runtime procs.
+An optional bounded comparison is retained only to measure what the retired
+shortlist policy would have omitted. This audit does not claim global completeness
+across monster sets, mythics, arena weapons, or runtime proc families.
 """
 
 import argparse
@@ -43,6 +39,7 @@ class OrdinaryGearDenominatorRow:
     unresolved_objectives: tuple[str, ...]
     selected_by_authoritative_search: bool
     selected_by_bounded_comparison: bool
+    shared_numeric_positive_objectives: tuple[str, ...] = ()
 
     @property
     def reviewed_positive(self) -> bool:
@@ -51,6 +48,10 @@ class OrdinaryGearDenominatorRow:
     @property
     def mechanic_complete_for_h1_screen(self) -> bool:
         return not self.unresolved_objectives
+
+    @property
+    def specialist_only_positive(self) -> bool:
+        return self.reviewed_positive and not self.shared_numeric_positive_objectives
 
 
 def build_ordinary_gear_denominator(
@@ -82,6 +83,7 @@ def build_ordinary_gear_denominator(
             gear_set,
         )
         positive: list[str] = []
+        shared_numeric_positive: list[str] = []
         unresolved: list[str] = []
         if useful >= 5:
             for objective in ExtremeActualHealGearSetCandidateService.OBJECTIVES:
@@ -91,9 +93,12 @@ def build_ordinary_gear_denominator(
                     objective,
                     equipped_piece_count=useful,
                 )
+                review = service._h1_review(candidate)
                 if candidate.reviewed_delta > 0:
+                    shared_numeric_positive.append(objective)
+                if candidate.reviewed_delta > 0 or review.h1_positive_modifier_proven:
                     positive.append(objective)
-                if not service._h1_mechanic_complete(candidate):
+                if not review.h1_mechanic_complete:
                     unresolved.append(objective)
 
         key = gear_set.name.casefold()
@@ -107,6 +112,7 @@ def build_ordinary_gear_denominator(
                 unresolved_objectives=tuple(unresolved),
                 selected_by_authoritative_search=key in authoritative,
                 selected_by_bounded_comparison=key in bounded,
+                shared_numeric_positive_objectives=tuple(shared_numeric_positive),
             )
         )
 
@@ -128,6 +134,12 @@ def main() -> int:
 
     five_piece = tuple(row for row in rows if row.useful_piece_count >= 5)
     reviewed_positive = tuple(row for row in five_piece if row.reviewed_positive)
+    shared_numeric_positive = tuple(
+        row for row in five_piece if row.shared_numeric_positive_objectives
+    )
+    specialist_only_positive = tuple(
+        row for row in five_piece if row.specialist_only_positive
+    )
     unresolved = tuple(row for row in five_piece if row.unresolved_objectives)
     complete_positive = tuple(
         row for row in reviewed_positive if row.mechanic_complete_for_h1_screen
@@ -155,6 +167,8 @@ def main() -> int:
     print(f"comparison_per_objective_candidate_cap={comparison_cap}")
     print(f"canonical_set_count={len(rows)}")
     print(f"five_piece_capable_set_count={len(five_piece)}")
+    print(f"shared_numeric_reviewed_positive_set_count={len(shared_numeric_positive)}")
+    print(f"specialist_only_reviewed_positive_set_count={len(specialist_only_positive)}")
     print(f"reviewed_positive_h1_set_count={len(reviewed_positive)}")
     print(f"mechanic_complete_reviewed_positive_set_count={len(complete_positive)}")
     print(f"h1_screen_unresolved_set_count={len(unresolved)}")
@@ -168,6 +182,13 @@ def main() -> int:
         "bounded_comparison_omitted_mechanic_complete_reviewed_positive_count="
         f"{len(bounded_omitted_complete_positive)}"
     )
+
+    if specialist_only_positive:
+        print("H1 SPECIALIST-ONLY POSITIVE SETS")
+        for row in specialist_only_positive:
+            print(
+                f"  {row.set_name}: objectives={','.join(row.reviewed_positive_objectives)}"
+            )
 
     if authoritative_omitted_complete_positive:
         print("AUTHORITATIVE OMISSIONS — PROOF FAILURE")
