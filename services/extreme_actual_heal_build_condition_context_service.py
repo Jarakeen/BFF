@@ -13,15 +13,25 @@ from dataclasses import dataclass
 from pathlib import Path
 import sqlite3
 
+from minmax.gear_stat_inputs import GearStatInputResolver
 from models.build_model import PlayerBuild
+from services.extreme_actual_heal_gear_precondition_effect_resolver import (
+    SEVENTH_LEGION_BRUTE_POWER_CONDITION,
+)
 from services.extreme_actual_heal_gear_precondition_witness_service import (
     ExtremeActualHealGearPreconditionWitnessService,
 )
+from services.extreme_actual_heal_setup_action_legality_service import (
+    GRANTS_RESOLVE,
+    ExtremeActualHealSetupActionLegalityService,
+)
+from services.extreme_player_skill_candidate_service import ExtremePlayerSkillLegalityContext
 
 
 _DESTRUCTION_STAFF_TYPES = frozenset(
     {"inferno staff", "lightning staff", "ice staff", "destruction staff"}
 )
+_SEVENTH_LEGION_BRUTE = "Seventh Legion Brute"
 
 
 @dataclass(frozen=True)
@@ -43,10 +53,14 @@ class ExtremeActualHealBuildConditionContextService:
         database_path: str | Path,
         *,
         gear_preconditions: ExtremeActualHealGearPreconditionWitnessService | None = None,
+        setup_action_legality: ExtremeActualHealSetupActionLegalityService | None = None,
     ) -> None:
         self.database_path = str(database_path)
         self.gear_preconditions = (
             gear_preconditions or ExtremeActualHealGearPreconditionWitnessService()
+        )
+        self.setup_action_legality = (
+            setup_action_legality or ExtremeActualHealSetupActionLegalityService(database_path)
         )
         self._provisioning_kind_cache: dict[str, str | None] = {}
 
@@ -82,6 +96,36 @@ class ExtremeActualHealBuildConditionContextService:
 
         self._provisioning_kind_cache[key] = kind
         return kind
+
+    @staticmethod
+    def _inactive_skills(build: PlayerBuild, active_bar: str) -> tuple[str, ...]:
+        bar = str(active_bar or "front").strip().casefold()
+        values = build.FrontBarSkills if bar == "back" else build.BackBarSkills
+        return tuple(str(value or "").strip() for value in list(values)[:5])
+
+    def _seventh_legion_setup_active(
+        self,
+        build: PlayerBuild,
+        *,
+        active_bar: str,
+    ) -> tuple[bool, str | None]:
+        counts = GearStatInputResolver.equipped_set_counts(build, active_bar=active_bar)
+        if int(counts.get(_SEVENTH_LEGION_BRUTE, 0)) < 5:
+            return False, None
+
+        context = ExtremePlayerSkillLegalityContext(
+            equipped_class_lines=tuple(build.ClassSkillLines or ()),
+            vampire=bool(build.Vampire),
+            werewolf=bool(build.Werewolf),
+            transformed_form=str(build.TransformedForm or "").strip() or None,
+        )
+        witness = self.setup_action_legality.witness(GRANTS_RESOLVE, context)
+        if not witness.proven or not str(witness.skill_name or "").strip():
+            return False, None
+        wanted = str(witness.skill_name).strip().casefold()
+        if not any(skill.casefold() == wanted for skill in self._inactive_skills(build, active_bar)):
+            return False, witness.skill_name
+        return True, witness.skill_name
 
     def resolve(
         self,
@@ -119,6 +163,18 @@ class ExtremeActualHealBuildConditionContextService:
         if transformed:
             active.add("transformed")
             evidence.append(f"transformed: explicit build form is {transformed}")
+
+        seventh_active, seventh_skill = self._seventh_legion_setup_active(
+            build,
+            active_bar=active_bar,
+        )
+        if seventh_active:
+            active.add(SEVENTH_LEGION_BRUTE_POWER_CONDITION)
+            evidence.append(
+                f"{SEVENTH_LEGION_BRUTE_POWER_CONDITION}: inactive-bar {seventh_skill} is a "
+                "route-legal Resolve setup action; cast in combat, swap back, and score within "
+                "Seventh Legion Brute's 15-second power window"
+            )
 
         preconditions = self.gear_preconditions.resolve(
             build,
