@@ -32,6 +32,10 @@ class StatId(str, Enum):
     BLOCK_COST = "block_cost"
     BLOCK_MITIGATION = "block_mitigation"
 
+    MOVEMENT_SPEED = "movement_speed"
+    SPRINT_SPEED = "sprint_speed"
+    SNEAK_SPEED = "sneak_speed"
+
     DETECTION_RADIUS_REDUCTION = "detection_radius_reduction"
     SNEAK_COST_REDUCTION = "sneak_cost_reduction"
 
