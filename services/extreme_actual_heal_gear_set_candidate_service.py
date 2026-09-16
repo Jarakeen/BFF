@@ -56,6 +56,10 @@ _INNATE_AXIOM_BLOCKER = re.compile(
     r"^Innate Axiom \(5\): relevant set effect requires condition ability_scope:class$",
     re.IGNORECASE,
 )
+_DAGONS_DOMINION_BLOCKER = re.compile(
+    r"^Dagon's Dominion \(5\): relevant set effect requires condition ability_scope:area_of_effect$",
+    re.IGNORECASE,
+)
 
 
 class ExtremeActualHealGearSetCandidateService:
@@ -95,6 +99,7 @@ class ExtremeActualHealGearSetCandidateService:
             "ravager": _RAVAGER_BLOCKER,
             "light speaker": _LIGHT_SPEAKER_BLOCKER,
             "innate axiom": _INNATE_AXIOM_BLOCKER,
+            "dagon's dominion": _DAGONS_DOMINION_BLOCKER,
         }.get(set_name)
         if (
             reviewed_blocker is not None
