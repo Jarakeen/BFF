@@ -16,6 +16,7 @@ BURNING_SPELLWEAVE_POWER_CONDITION = "burning_spellweave_power_active"
 ANCIENT_DRAGONGUARD_ABOVE_HALF_HEALTH_CONDITION = "wearer_health_above_50_percent"
 TITANBORN_STRENGTH_BELOW_HALF_HEALTH_CONDITION = "wearer_in_combat_below_50_percent_health"
 PEARLESCENT_WARD_FULL_GROUP_ALIVE_CONDITION = "pearlescent_ward_full_group_alive"
+CORAL_RIPTIDE_MAX_POWER_CONDITION = "wearer_stamina_at_or_below_50_percent"
 ARMOR_OF_TRUTH_POWER_CONDITION = "armor_of_truth_power_active"
 ARMOR_OF_THE_VEILED_HERITANCE_POWER_CONDITION = "armor_of_the_veiled_heritance_power_active"
 WARRIORS_FURY_FULL_STACKS_CONDITION = "warriors_fury_full_stacks"
@@ -45,6 +46,12 @@ class ExtremeActualHealGearPreconditionEffectResolver:
     _ANCIENT_DRAGONGUARD = re.compile(r"^\(5 items\)\s*Adds\s+(?P<min>\d[\d,]*)\s*-\s*(?P<max>\d[\d,]*)\s+Weapon and Spell Damage while your Health is above 50%\.\s*Adds\s+\d[\d,]*(?:\s*-\s*\d[\d,]*)?\s+Physical and Spell Resistance while your Health is 50% or less\.?$", re.IGNORECASE)
     _TITANBORN_STRENGTH = re.compile(r"^\(5 items\)\s*Adds\s+(?:(?P<min>\d[\d,]*)\s*-\s*)?(?P<max>\d[\d,]*)\s+Weapon and Spell Damage and\s+\d[\d,]*(?:\s*-\s*\d[\d,]*)?\s+Offensive Penetration\.\s*While in combat, this bonus doubles when you are under 75% Health and quadruples when you are under 50% Health\.?$", re.IGNORECASE)
     _PEARLESCENT_WARD = re.compile(r"^\(5 items\)\s*Grants you and up to 11 other group members Pearlescent Ward\.\s*This bonus persists through death\.\s*Pearlescent Ward increases Weapon and Spell Damage by up to\s*(?P<max>\d[\d,]*)\s*based on the number of group members that are alive\.\s*(?:Current\s+\d[\d,]*\s+Weapon and Spell Damage\.\s*)?Pearlescent Ward increases damage reduction from non-player enemies.*$", re.IGNORECASE)
+    _CORAL_RIPTIDE = re.compile(
+        r"^\(5 items\)\s*Increases your Weapon and Spell Damage by up to\s*"
+        r"(?P<max>\d[\d,]*),?\s*based on your missing Stamina, reaching the maximum at\s*"
+        r"50% Stamina\.\s*(?:Current bonus:\s*\d[\d,]*\s*Weapon and Spell Damage\.?\s*)?$",
+        re.IGNORECASE,
+    )
     _ARMOR_OF_TRUTH = re.compile(r"^\(5 items\)\s*When you deal damage to an enemy who is Off Balance, your Weapon and Spell Damage are increased by\s*(?:(?P<min>\d[\d,]*)\s*-\s*)?(?P<max>\d[\d,]*)\s*for\s*10 seconds\.?$", re.IGNORECASE)
     _ARMOR_OF_THE_VEILED_HERITANCE = re.compile(r"^\(5 items\)\s*When you interrupt an enemy, you gain\s*(?:(?P<min>\d[\d,]*)\s*-\s*)?(?P<max>\d[\d,]*)\s*Weapon and Spell Damage for\s*15 seconds\.\s*Your Bash attacks deal\s*\d[\d,]*(?:\s*-\s*\d[\d,]*)?\s*more damage\.?$", re.IGNORECASE)
     _WARRIORS_FURY = re.compile(r"^\(5 items\)\s*When you take damage, your Weapon and Spell Damage is increased by\s*(?:(?P<min>\d[\d,]*)\s*-\s*)?(?P<max>\d[\d,]*)\s*for\s*5 seconds, stacking up to\s*20 times\.\s*This effect can occur once every half second\.\s*Upon reaching 20 stacks, the duration is doubled but can no longer be refreshed\.?$", re.IGNORECASE)
@@ -70,6 +77,7 @@ class ExtremeActualHealGearPreconditionEffectResolver:
             (self._ANCIENT_DRAGONGUARD, ANCIENT_DRAGONGUARD_ABOVE_HALF_HEALTH_CONDITION, 1.0),
             (self._TITANBORN_STRENGTH, TITANBORN_STRENGTH_BELOW_HALF_HEALTH_CONDITION, 4.0),
             (self._PEARLESCENT_WARD, PEARLESCENT_WARD_FULL_GROUP_ALIVE_CONDITION, 1.0),
+            (self._CORAL_RIPTIDE, CORAL_RIPTIDE_MAX_POWER_CONDITION, 1.0),
             (self._ARMOR_OF_TRUTH, ARMOR_OF_TRUTH_POWER_CONDITION, 1.0),
             (self._ARMOR_OF_THE_VEILED_HERITANCE, ARMOR_OF_THE_VEILED_HERITANCE_POWER_CONDITION, 1.0),
             (self._WARRIORS_FURY, WARRIORS_FURY_FULL_STACKS_CONDITION, 20.0),
@@ -109,6 +117,7 @@ __all__ = [
     "BLESSING_OF_HIGH_ISLE_CONDITION",
     "BURNING_SPELLWEAVE_POWER_CONDITION",
     "CAMONNA_TONG_MAX_POWER_CONDITION",
+    "CORAL_RIPTIDE_MAX_POWER_CONDITION",
     "INNATE_AXIOM_CLASS_SCOPE_CONDITION",
     "LIGHT_SPEAKER_RESTORATION_SCOPE_CONDITION",
     "PEARLESCENT_WARD_FULL_GROUP_ALIVE_CONDITION",
