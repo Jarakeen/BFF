@@ -26,6 +26,14 @@ _POWERFUL_ASSAULT_BLOCKER = re.compile(
     r"(?:\d[\d,]*\s*-\s*)?307\s+Weapon and Spell Damage for\s*15 seconds\.?$",
     re.IGNORECASE | re.DOTALL,
 )
+_VOIDCALLER_BLOCKER = re.compile(
+    r"^Voidcaller \(5\): active set bonus is not yet mechanic-mapped:.*"
+    r"When you take damage, your Weapon and Spell Damage is increased by\s*"
+    r"(?:\d[\d,]*\s*-\s*)?24\s*for\s*5 seconds, stacking up to\s*20 times\.\s*"
+    r"This effect can occur once every half second\.\s*"
+    r"Upon reaching 20 stacks, the duration is doubled but can no longer be refreshed\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
 
 
 class ExtremeActualHealGearSetCandidateService:
@@ -65,6 +73,8 @@ class ExtremeActualHealGearSetCandidateService:
             reviewed_blocker = _SOULSHINE_BLOCKER
         elif set_name == "powerful assault":
             reviewed_blocker = _POWERFUL_ASSAULT_BLOCKER
+        elif set_name == "voidcaller":
+            reviewed_blocker = _VOIDCALLER_BLOCKER
         if (
             reviewed_blocker is not None
             and objective in {"spell_damage", "weapon_damage"}
