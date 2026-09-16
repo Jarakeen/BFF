@@ -42,6 +42,7 @@ _STATIC_KEYS = frozenset(objective.key for objective in COMPLETE_EXTREME_OBJECTI
 # reuse those services rather than being reimplemented inside the static optimizer.
 _SPECIALIZED_FAMILIES = {
     "actual_heal": "actual-heal-event",
+    "bash_damage": "single-event-output",
 }
 
 # Family labels intentionally group future work by reusable mechanics rather than
@@ -50,7 +51,6 @@ _SPECIALIZED_FAMILIES = {
 _PENDING_FAMILIES = {
     "critical_heal": "actual-heal-event",
     "damage_shield": "single-event-output",
-    "bash_damage": "single-event-output",
     "resource_sustain": "resource-timeline",
     "ultimate_generation": "resource-timeline",
     "movement_speed": "movement-state",
