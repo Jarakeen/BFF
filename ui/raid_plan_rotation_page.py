@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Raid Plan workspace with explicit selected-chair handoff to Rotation."""
+"""Raid Plan workspace with explicit selected-spot handoff to Rotation."""
 
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QWidget
@@ -12,7 +12,7 @@ from ui.raid_plan_page import RAID_PLAN_SEATS, _slug
 
 
 class RaidPlanRotationPage(RaidPlanCoveragePage):
-    """Coverage-aware Raid Plan page that can open one exact chair in Rotation."""
+    """Coverage-aware Raid Plan page that can open one exact spot in Rotation."""
 
     rotationRequested = Signal(object, str)
 
@@ -25,7 +25,7 @@ class RaidPlanRotationPage(RaidPlanCoveragePage):
         row.setContentsMargins(0, 0, 0, 0)
         row.setSpacing(8)
 
-        label = QLabel("CHAIR")
+        label = QLabel("ROLE / SPOT")
         label.setProperty("sidebarHeading", True)
         row.addWidget(label)
 
@@ -41,7 +41,7 @@ class RaidPlanRotationPage(RaidPlanCoveragePage):
             compact=True,
         )
         self.open_rotation_button.setToolTip(
-            "Open Rotation with this Raid Plan chair's exact selected saved build. "
+            "Open Rotation with this Raid Plan spot's exact selected saved build. "
             "Encounter and execution policy remain owned by Rotation."
         )
         self.open_rotation_button.clicked.connect(self._request_rotation)
@@ -50,7 +50,7 @@ class RaidPlanRotationPage(RaidPlanCoveragePage):
         card.addWidget(row_widget)
         card.addWidget(
             QLabel(
-                "Choose a chair after its saved build is selected. Rotation will use that exact build and "
+                "Choose a spot after its saved build is selected. Rotation will use that exact build and "
                 "the Raid Plan's assignment/trigger context; choose the encounter inside Rotation."
             )
         )
@@ -65,11 +65,11 @@ class RaidPlanRotationPage(RaidPlanCoveragePage):
 
         seat_id = str(self.rotation_seat_combo.currentData() or "").strip()
         if not seat_id:
-            self.status.warning("Choose a Raid Plan chair before opening Rotation.")
+            self.status.warning("Choose a Raid Plan spot before opening Rotation.")
             return
         member = plan.member(seat_id)
         if member is None:
-            self.status.warning("Name a player in that chair before opening Rotation.")
+            self.status.warning("Name a player in that spot before opening Rotation.")
             return
         if not member.selected_build_name:
             self.status.warning(
