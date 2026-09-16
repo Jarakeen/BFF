@@ -62,6 +62,9 @@ JEWELRY_ENCHANT_TO_GLYPH = {
     "stamina recovery": "Glyph of Stamina Recovery",
     "weapon damage": "Glyph of Increase Physical Harm",
     "spell damage": "Glyph of Increase Magical Harm",
+    "bashing": "Glyph of Bashing",
+    "block cost": "Glyph of Bracing",
+    "bracing": "Glyph of Bracing",
 }
 
 STATIC_JEWELRY_TRAITS = {"arcane", "healthy", "robust", "triune", "protective"}
@@ -131,6 +134,19 @@ class GearStatInputResolver:
     @staticmethod
     def _slot_names(slot: GearSlot) -> list[str]:
         return [name.strip() for name in (slot.Set, slot.Set2) if str(name).strip()]
+
+    @staticmethod
+    def _canonical_glyph_family(enchant: str, aliases: dict[str, str]) -> str | None:
+        """Resolve a saved UI label without mistaking canonical family names for gaps."""
+        value = " ".join(str(enchant or "").strip().split())
+        if not value:
+            return None
+        alias = aliases.get(value.casefold())
+        if alias is not None:
+            return alias
+        if value.casefold().startswith("glyph of "):
+            return value
+        return None
 
     @classmethod
     def equipped_set_counts(cls, build: PlayerBuild, *, active_bar: str = "front") -> Counter[str]:
@@ -261,7 +277,7 @@ class GearStatInputResolver:
             if not enchant:
                 continue
 
-            glyph_name = ARMOR_ENCHANT_TO_GLYPH.get(enchant.casefold())
+            glyph_name = self._canonical_glyph_family(enchant, ARMOR_ENCHANT_TO_GLYPH)
             if glyph_name is None:
                 unresolved.append(f"{slot_name} enchant not yet resolved: {enchant}")
                 continue
@@ -396,9 +412,14 @@ class GearStatInputResolver:
             if not enchant:
                 continue
 
-            glyph_name = JEWELRY_ENCHANT_TO_GLYPH.get(enchant.casefold())
+            glyph_name = self._canonical_glyph_family(enchant, JEWELRY_ENCHANT_TO_GLYPH)
             if glyph_name is None:
                 unresolved.append(f"{slot_name} enchant not yet resolved: {enchant}")
+                continue
+
+            effect_types = self.jewelry_glyph_repository.get_jewelry_glyph_effect_types_by_name(glyph_name)
+            if not effect_types:
+                unresolved.append(f"{slot_name} glyph not found: {glyph_name}")
                 continue
 
             level = str(slot.Level or "").strip()
@@ -413,7 +434,18 @@ class GearStatInputResolver:
             if multiplier == 0.0:
                 continue
 
-            effects = self.jewelry_glyph_repository.get_jewelry_glyph_effect_by_name(glyph_name, use_max_value=True)
+            try:
+                effects = self.jewelry_glyph_repository.get_jewelry_glyph_effect_by_name(
+                    glyph_name,
+                    use_max_value=True,
+                )
+            except ValueError:
+                unresolved.append(
+                    f"{slot_name} enchant not yet resolved: {enchant} "
+                    f"(recognized canonical jewelry glyph; specialized mechanic: {', '.join(effect_types)})"
+                )
+                continue
+
             if not effects:
                 unresolved.append(f"{slot_name} glyph not found: {glyph_name}")
                 continue
@@ -438,7 +470,10 @@ class GearStatInputResolver:
                         result = replace(result, core=new_core)
                         applied += 1
                     continue
-                unresolved.append(f"{slot_name} unsupported jewelry glyph effect: {stat.value}")
+                unresolved.append(
+                    f"{slot_name} enchant not yet resolved: {enchant} "
+                    f"(recognized canonical jewelry glyph; specialized mechanic: {stat.value})"
+                )
 
         return replace(result, applied_effect_count=applied, unresolved=tuple(unresolved))
 
