@@ -42,6 +42,7 @@ _STATIC_KEYS = frozenset(objective.key for objective in COMPLETE_EXTREME_OBJECTI
 # reuse those services rather than being reimplemented inside the static optimizer.
 _SPECIALIZED_FAMILIES = {
     "actual_heal": "actual-heal-event",
+    "critical_heal": "actual-heal-event",
     "bash_damage": "single-event-output",
 }
 
@@ -49,7 +50,6 @@ _SPECIALIZED_FAMILIES = {
 # by individual UI row.  Closing one family should unlock every member whose final
 # scorer is already canonical.
 _PENDING_FAMILIES = {
-    "critical_heal": "actual-heal-event",
     "damage_shield": "single-event-output",
     "resource_sustain": "resource-timeline",
     "ultimate_generation": "resource-timeline",
