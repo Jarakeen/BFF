@@ -16,6 +16,9 @@ from services.extreme_actual_heal_gear_precondition_effect_resolver import (
 )
 
 
+DAGON_AREA_SCOPE_CONDITION = "ability_scope:area_of_effect"
+
+
 @dataclass(frozen=True)
 class ExtremeActualHealCandidateGearCondition:
     active_conditions: tuple[str, ...] = ()
@@ -50,7 +53,7 @@ class ExtremeActualHealCandidateGearConditionService:
         if scope is None:
             relevant = any(
                 int(counts.get(name, 0)) >= 5
-                for name in ("Light Speaker", "Innate Axiom")
+                for name in ("Light Speaker", "Innate Axiom", "Dagon's Dominion")
             )
             unresolved = (
                 f"selected heal scope identity is unavailable for {entity_id}",
@@ -59,6 +62,7 @@ class ExtremeActualHealCandidateGearConditionService:
 
         active: list[str] = []
         evidence: list[str] = []
+        unresolved: list[str] = []
         if int(counts.get("Light Speaker", 0)) >= 5 and scope.is_restoration_staff_ability:
             active.append(LIGHT_SPEAKER_RESTORATION_SCOPE_CONDITION)
             evidence.append(
@@ -73,14 +77,27 @@ class ExtremeActualHealCandidateGearConditionService:
                 "is canonically a class ability"
             )
 
+        if int(counts.get("Dagon's Dominion", 0)) >= 5:
+            if scope.is_area_of_effect is True:
+                active.append(DAGON_AREA_SCOPE_CONDITION)
+                evidence.append(
+                    f"{DAGON_AREA_SCOPE_CONDITION}: selected heal {entity_id} "
+                    "has canonical reviewed AoE HEAL-component classification"
+                )
+            elif scope.is_area_of_effect is None:
+                unresolved.extend(scope.unresolved or (
+                    f"selected heal AoE identity is unavailable for {entity_id}",
+                ))
+
         return ExtremeActualHealCandidateGearCondition(
             active_conditions=tuple(active),
             evidence=tuple(evidence),
-            unresolved=(),
+            unresolved=tuple(dict.fromkeys(unresolved)),
         )
 
 
 __all__ = [
+    "DAGON_AREA_SCOPE_CONDITION",
     "ExtremeActualHealCandidateGearCondition",
     "ExtremeActualHealCandidateGearConditionService",
 ]
