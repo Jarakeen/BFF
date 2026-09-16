@@ -45,6 +45,9 @@ _SPECIALIZED_FAMILIES = {
     "critical_heal": "actual-heal-event",
     "damage_shield": "single-event-output",
     "bash_damage": "single-event-output",
+    "movement_speed": "movement-state",
+    "sprint_speed": "movement-state",
+    "stealthed_movement_speed": "movement-state",
 }
 
 # Family labels intentionally group future work by reusable mechanics rather than
@@ -53,9 +56,6 @@ _SPECIALIZED_FAMILIES = {
 _PENDING_FAMILIES = {
     "resource_sustain": "resource-timeline",
     "ultimate_generation": "resource-timeline",
-    "movement_speed": "movement-state",
-    "sprint_speed": "movement-state",
-    "stealthed_movement_speed": "movement-state",
     "detection_radius_reduction": "stealth-state",
     "invisibility_duration": "stealth-runtime",
     "invisibility_uptime": "stealth-runtime",
