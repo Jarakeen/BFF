@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Register raid-planning surfaces with the existing MainWindow.
+"""Register raid-planning surfaces with the existing application window.
 
 This module is the explicit application-composition boundary for the rebuilt
 raid-lead workspace. It keeps the long-lived engine pages intact, registers the
