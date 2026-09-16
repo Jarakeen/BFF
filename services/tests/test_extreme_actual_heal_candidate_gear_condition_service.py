@@ -1,4 +1,5 @@
 from services.extreme_actual_heal_candidate_gear_condition_service import (
+    DAGON_AREA_SCOPE_CONDITION,
     ExtremeActualHealCandidateGearConditionService,
 )
 from services.extreme_actual_heal_candidate_scope_service import ExtremeActualHealCandidateScope
@@ -17,12 +18,13 @@ class _ScopeService:
         return self.scope
 
 
-def _scope(*, class_ability=False, restoration=False):
+def _scope(*, class_ability=False, restoration=False, area=None, unresolved=()):
     return ExtremeActualHealCandidateScope(
         is_class_ability=class_ability,
         is_weapon_skill_ability=restoration,
         is_restoration_staff_ability=restoration,
-        is_area_of_effect=None,
+        is_area_of_effect=area,
+        unresolved=tuple(unresolved),
     )
 
 
@@ -59,6 +61,33 @@ def test_innate_axiom_activates_only_for_class_heal() -> None:
 
     assert INNATE_AXIOM_CLASS_SCOPE_CONDITION in active.condition_context
     assert INNATE_AXIOM_CLASS_SCOPE_CONDITION not in inactive.condition_context
+
+
+def test_dagon_activates_only_for_proven_aoe_heal() -> None:
+    active = ExtremeActualHealCandidateGearConditionService(
+        "unused.db",
+        scope_service=_ScopeService(_scope(area=True)),
+    ).resolve(_build("Dagon's Dominion"), "area_heal")
+    inactive = ExtremeActualHealCandidateGearConditionService(
+        "unused.db",
+        scope_service=_ScopeService(_scope(area=False)),
+    ).resolve(_build("Dagon's Dominion"), "single_heal")
+
+    assert DAGON_AREA_SCOPE_CONDITION in active.condition_context
+    assert DAGON_AREA_SCOPE_CONDITION not in inactive.condition_context
+    assert inactive.unresolved == ()
+
+
+def test_dagon_missing_aoe_scope_fails_closed() -> None:
+    result = ExtremeActualHealCandidateGearConditionService(
+        "unused.db",
+        scope_service=_ScopeService(
+            _scope(area=None, unresolved=("canonical HEAL component AoE evidence incomplete",))
+        ),
+    ).resolve(_build("Dagon's Dominion"), "unknown_area_heal")
+
+    assert DAGON_AREA_SCOPE_CONDITION not in result.condition_context
+    assert result.unresolved == ("canonical HEAL component AoE evidence incomplete",)
 
 
 def test_missing_scope_fails_closed_when_scoped_set_is_equipped() -> None:
