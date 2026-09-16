@@ -41,6 +41,7 @@ def test_related_records_share_execution_families() -> None:
     rows = {row.objective.key: row for row in ExtremeRecordExecutionCatalogService.descriptors()}
 
     assert rows["actual_heal"].status is ExtremeRecordExecutionStatus.SPECIALIZED
+    assert rows["critical_heal"].status is ExtremeRecordExecutionStatus.SPECIALIZED
     assert rows["actual_heal"].execution_family == "actual-heal-event"
     assert rows["critical_heal"].execution_family == "actual-heal-event"
 
@@ -67,5 +68,5 @@ def test_execution_disposition_counts_make_remaining_work_explicit() -> None:
         counts[row.status] += 1
 
     assert counts[ExtremeRecordExecutionStatus.READY] == 19
-    assert counts[ExtremeRecordExecutionStatus.SPECIALIZED] == 2
-    assert counts[ExtremeRecordExecutionStatus.PENDING] == 10
+    assert counts[ExtremeRecordExecutionStatus.SPECIALIZED] == 3
+    assert counts[ExtremeRecordExecutionStatus.PENDING] == 9
