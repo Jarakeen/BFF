@@ -32,6 +32,7 @@ from services.extreme_actual_heal_gear_precondition_effect_resolver import (
 from services.extreme_actual_heal_gear_precondition_witness_service import (
     FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION,
     PHOENIX_MOTH_MINOR_COURAGE_CONDITION,
+    SPELL_POWER_CURE_MAJOR_COURAGE_CONDITION,
 )
 from services.extreme_gear_set_power_tradeoff_resolver import (
     ExtremeGearSetPowerTradeoffResolver,
@@ -183,19 +184,20 @@ class ExtremeResourceConditionedPhase5ContextFactory(Phase5BuildCalculationConte
         condition_context: frozenset[str] | None,
     ) -> CombatState:
         active = condition_context or frozenset()
-        courage_witness = bool(
-            {
-                FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION,
-                PHOENIX_MOTH_MINOR_COURAGE_CONDITION,
-            }
-            & active
-        )
-        if not courage_witness:
+        buffs = list(combat_state.active_buffs)
+        if {
+            FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION,
+            PHOENIX_MOTH_MINOR_COURAGE_CONDITION,
+        } & active:
+            buffs.append("Minor Courage")
+        if SPELL_POWER_CURE_MAJOR_COURAGE_CONDITION in active:
+            buffs.append("Major Courage")
+        if tuple(buffs) == combat_state.active_buffs:
             return combat_state
         return replace(
             combat_state,
             in_combat=True,
-            active_buffs=(*combat_state.active_buffs, "Minor Courage"),
+            active_buffs=tuple(buffs),
         )
 
     def build(
