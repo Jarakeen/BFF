@@ -44,6 +44,27 @@ _LEGACY_ATTACK_FAMILY_REPRESENTATIVE_BY_NAME = {
     "two handed": WeaponType.GREATSWORD,
 }
 
+# Swift is a movement-speed jewelry trait. Movement speed is outside the saved-
+# weapon LA/HA stat and resource evidence used here, so an otherwise valid static
+# context must not be rejected merely because the broader character-sheet resolver
+# does not currently own that movement-speed channel. Keep every other diagnostic
+# fail-closed.
+_SWIFT_JEWELRY_TRAIT_SUFFIX = "jewelry trait not yet resolved: swift"
+
+
+def _weapon_attack_relevant_static_unresolved(
+    messages: tuple[str, ...],
+) -> tuple[str, ...]:
+    result: list[str] = []
+    for raw in messages:
+        message = str(raw or "").strip()
+        if not message:
+            continue
+        if message.casefold().endswith(_SWIFT_JEWELRY_TRAIT_SUFFIX):
+            continue
+        result.append(message)
+    return tuple(dict.fromkeys(result))
+
 
 @dataclass(frozen=True)
 class RotationWeaponAttackBuildEvaluationResolution:
@@ -278,8 +299,15 @@ class RotationSavedBuildWeaponAttackEvaluationService:
         player_build: PlayerBuild,
         static_context: RotationStaticBuildContextResolution,
     ) -> RotationWeaponAttackBuildEvaluationResolution:
-        if not static_context.resolved:
-            detail = tuple(static_context.unresolved) or (
+        relevant_static_unresolved = _weapon_attack_relevant_static_unresolved(
+            tuple(static_context.unresolved)
+        )
+        if (
+            not static_context.progression.resolved
+            or not static_context.contexts
+            or relevant_static_unresolved
+        ):
+            detail = relevant_static_unresolved or (
                 "canonical static build context is unresolved",
             )
             return RotationWeaponAttackBuildEvaluationResolution(
