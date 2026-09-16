@@ -96,7 +96,7 @@ def test_scoped_effects_map_exact_reviewed_values() -> None:
             id=3,
             set_id=3,
             piece_count=5,
-            description="(5 items) Adds 492 Weapon and Spell Damage to your Area of Effect abilities.",
+            description="(5 items) Adds 8-492 Weapon and Spell Damage to your Area of Effect abilities.",
         )
     )
 
