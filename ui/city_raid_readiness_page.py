@@ -1,26 +1,30 @@
 from __future__ import annotations
 
-"""City After Midnight Readiness surface for one persisted RaidPlan.
+"""Urban Wilderness Readiness surface for one persisted RaidPlan.
 
 The page composes only evidence it can actually prove from current persisted state.
 Build/assignment presence is known from RaidPlan. Rotation, sustain, and coverage remain
 NEEDS REVIEW until their owning engines provide evidence. Human Ready is explicit user state.
 """
 
+from pathlib import Path
+
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QSizePolicy,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
     QWidget,
 )
 
-from engine.config import get_data_dir
+from engine.config import get_data_dir, get_resource_path
 from models.raid_plan import RaidPlan, RaidPlanMember
 from services.raid_plan_repository import RaidPlanRepository
 from services.raid_section_state_service import RaidSectionStateService
@@ -35,11 +39,53 @@ def _clean(value: object) -> str:
 
 
 def _known(value: bool) -> str:
+    # Text + shape semantics are intentional: readiness never depends on red/green alone.
     return "✓ READY" if value else "! GAP"
 
 
 def _unknown() -> str:
     return "○ NEEDS REVIEW"
+
+
+class _ReadinessArt(QLabel):
+    """Static low-stimulation fantasy art; no timers, flashing, or animated effects."""
+
+    def __init__(self, filename: str, fallback: str, parent=None) -> None:
+        super().__init__(parent)
+        self.filename = filename
+        self.fallback = fallback
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.setWordWrap(True)
+        self.setMinimumHeight(125)
+        self.setMaximumHeight(175)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.setProperty("readinessNoteArt", True)
+        self._refresh_pixmap()
+
+    def _refresh_pixmap(self) -> None:
+        path = get_resource_path(
+            "assets", "themes", "bff", "field_journal", "roster", self.filename
+        )
+        pixmap = QPixmap(str(path)) if Path(path).is_file() else QPixmap()
+        self.clear()
+        if pixmap.isNull():
+            self.setText(self.fallback)
+            return
+        width = max(260, self.width() or 340)
+        height = max(110, self.height() or 145)
+        self.setPixmap(
+            pixmap.scaled(
+                width,
+                height,
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+        )
+        self.setToolTip(self.fallback)
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        self._refresh_pixmap()
 
 
 class CityRaidReadinessPage(FoundryPage):
@@ -95,12 +141,16 @@ class CityRaidReadinessPage(FoundryPage):
         self.summary_label.setWordWrap(True)
         self.summary_card.addWidget(self.summary_label)
         left_layout.addWidget(self.summary_card)
-        note = FoundryCard("Field Note", "feather")
-        note.setProperty("parchment", True)
-        note_text = QLabel("Ready means proven or explicitly confirmed. Unknown is allowed to stay unknown.")
-        note_text.setWordWrap(True)
-        note.addWidget(note_text)
-        left_layout.addWidget(note)
+
+        field_note = FoundryCard("Field Note", "feather")
+        field_note.setProperty("parchment", True)
+        field_note.addWidget(
+            _ReadinessArt(
+                "roster_people.jpg",
+                "Ready means proven or explicitly confirmed. Unknown is allowed to stay unknown.",
+            )
+        )
+        left_layout.addWidget(field_note)
         left_layout.addStretch(1)
         root.addWidget(left, 2)
 
@@ -157,12 +207,16 @@ class CityRaidReadinessPage(FoundryPage):
         self.mark_ready.clicked.connect(self._toggle_human_ready)
         selected.addWidget(self.mark_ready)
         right_layout.addWidget(selected)
-        note2 = FoundryCard("Run Note", "feather")
-        note2.setProperty("parchment", True)
-        txt = QLabel("A ready group is just panic that has been alphabetized.")
-        txt.setWordWrap(True)
-        note2.addWidget(txt)
-        right_layout.addWidget(note2)
+
+        fun_note = FoundryCard("Run Note", "feather")
+        fun_note.setProperty("parchment", True)
+        fun_note.addWidget(
+            _ReadinessArt(
+                "roster_team.jpg",
+                "A ready group is just panic that has been alphabetized.",
+            )
+        )
+        right_layout.addWidget(fun_note)
         right_layout.addStretch(1)
         root.addWidget(right, 3)
 
