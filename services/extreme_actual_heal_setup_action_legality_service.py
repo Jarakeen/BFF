@@ -9,7 +9,8 @@ context contain a canonical active skill whose reviewed evidence proves a reques
 setup capability?
 
 Resolve evidence is reviewed tooltip semantics. Cast/channel evidence is canonical
-ability timing. Unknown capabilities fail closed.
+ability timing. Assault-line evidence is canonical skill-line identity. Unknown
+capabilities fail closed.
 """
 
 from dataclasses import dataclass
@@ -29,6 +30,7 @@ from services.rotation_skill_timing_evidence_service import RotationSkillTimingE
 
 GRANTS_RESOLVE = "grants_resolve"
 HAS_CAST_OR_CHANNEL_TIME = "has_cast_or_channel_time"
+IS_ASSAULT_ABILITY = "is_assault_ability"
 
 
 class _CandidateProvider(Protocol):
@@ -78,7 +80,7 @@ class ExtremeActualHealSetupActionLegalityService:
             re.IGNORECASE,
         ),
     )
-    _SUPPORTED = frozenset({GRANTS_RESOLVE, HAS_CAST_OR_CHANNEL_TIME})
+    _SUPPORTED = frozenset({GRANTS_RESOLVE, HAS_CAST_OR_CHANNEL_TIME, IS_ASSAULT_ABILITY})
     _MILLISECONDS_PER_SECOND = 1000.0
 
     def __init__(
@@ -106,13 +108,6 @@ class ExtremeActualHealSetupActionLegalityService:
         cls,
         database_path: str | Path | None,
     ) -> dict[int, _SetupTimingEvidence]:
-        """Load positive cast/channel timings once for denominator-scale audits.
-
-        H1 route audits revisit the same legal skills across thousands of routes.
-        Opening SQLite once per candidate skill is correct but needlessly quadratic
-        in database work. The canonical ``ability`` table is small enough to index
-        all positive timing rows once, preserving the same source evidence.
-        """
         if database_path is None:
             return {}
         path = Path(database_path)
@@ -204,6 +199,8 @@ class ExtremeActualHealSetupActionLegalityService:
             return self._supports_resolve(row)
         if capability == HAS_CAST_OR_CHANNEL_TIME:
             return self._timing_evidence(row) is not None
+        if capability == IS_ASSAULT_ABILITY:
+            return str(row.skill_line or "").strip().casefold() == "assault"
         return False
 
     def witness(
@@ -242,13 +239,17 @@ class ExtremeActualHealSetupActionLegalityService:
             evidence_text = (
                 f"{witness.name}: route-legal active skill explicitly grants Major/Minor Resolve"
             )
-        else:
+        elif key == HAS_CAST_OR_CHANNEL_TIME:
             timing = self._timing_evidence(witness)
             cast_time = getattr(timing, "cast_time_seconds", None)
             channel_time = getattr(timing, "channel_time_seconds", None)
             evidence_text = (
                 f"{witness.name}: route-legal active skill has canonical cast/channel timing "
                 f"cast={cast_time!r}s channel={channel_time!r}s"
+            )
+        else:
+            evidence_text = (
+                f"{witness.name}: route-legal non-Ultimate active skill belongs to the Assault skill line"
             )
         return ExtremeActualHealSetupActionWitness(
             capability=key,
@@ -262,6 +263,7 @@ class ExtremeActualHealSetupActionLegalityService:
 __all__ = [
     "GRANTS_RESOLVE",
     "HAS_CAST_OR_CHANNEL_TIME",
+    "IS_ASSAULT_ABILITY",
     "ExtremeActualHealSetupActionWitness",
     "ExtremeActualHealSetupActionLegalityService",
 ]
