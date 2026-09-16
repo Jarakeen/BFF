@@ -3,20 +3,84 @@ from __future__ import annotations
 """Collectibles assets for the additive Field Journal and City themes.
 
 The original Foundry and Rylo collectible themes stay untouched. The two newer
-visual themes get their own palette and badge sheets, cut from the corresponding
-approved UI asset boards.
+visual themes get their own palette. When their dedicated badge sheets are not
+installed yet, the dashboard deliberately falls back to the proven legacy badge
+art and recolors it at render time instead of showing an empty badge slot.
 """
 
+from pathlib import Path
+
+from PySide6.QtGui import QColor, QImage, QPixmap
 from PySide6.QtWidgets import QApplication
 
 from engine.config import get_resource_path
 from services.accessibility_preferences import (
     VISUAL_THEME_FOUNDRY_FIELD_JOURNAL,
-    VISUAL_THEME_RYLO,
     VISUAL_THEME_RYLO_CITY,
 )
 
 _INSTALLED = False
+
+_FIELD_BADGE_TONES = (
+    "#C8A46A",
+    "#59AEB3",
+    "#D9B977",
+    "#7EB6B5",
+    "#D1983D",
+    "#91BFC0",
+)
+_CITY_BADGE_TONES = (
+    "#7EA6B8",
+    "#D0A35D",
+    "#95A4AC",
+    "#89B3C5",
+    "#C8B58D",
+    "#B9C5CC",
+)
+
+
+def _tone_for(label: str, labels: tuple[str, ...], tones: tuple[str, ...]) -> str:
+    try:
+        index = labels.index(label)
+    except ValueError:
+        index = 0
+    return tones[index % len(tones)]
+
+
+def _recolor_badge(pixmap: QPixmap | None, tone: str) -> QPixmap | None:
+    """Recolor visible badge artwork while preserving dark engraved detail.
+
+    The generated badge sprites contain deliberate dark shadows/outlines. A
+    whole-image tint would turn their backgrounds into colored squares, so only
+    medium/high-luminance pixels are remapped to the theme accent. Dark pixels
+    remain dark and the original alpha is preserved.
+    """
+    if pixmap is None or pixmap.isNull():
+        return None
+
+    image = pixmap.toImage().convertToFormat(QImage.Format.Format_ARGB32)
+    target = QColor(tone)
+    for y in range(image.height()):
+        for x in range(image.width()):
+            color = image.pixelColor(x, y)
+            if color.alpha() <= 8:
+                continue
+            luminance = (54 * color.red() + 183 * color.green() + 19 * color.blue()) // 256
+            if luminance < 44:
+                continue
+            strength = min(1.0, max(0.0, (luminance - 44) / 190.0))
+            factor = 0.52 + 0.72 * strength
+            image.setPixelColor(
+                x,
+                y,
+                QColor(
+                    min(255, round(target.red() * factor)),
+                    min(255, round(target.green() * factor)),
+                    min(255, round(target.blue() * factor)),
+                    color.alpha(),
+                ),
+            )
+    return QPixmap.fromImage(image)
 
 
 def install() -> None:
@@ -65,13 +129,14 @@ def install() -> None:
         quote_text="#E7E9EA",
     )
 
+    labels = tuple(spec.label for spec in dashboard.DASHBOARD_SPECS)
     field_badges = {
-        spec.label: dashboard.SpriteRef("badges.jpg", 6, 4, index)
-        for index, spec in enumerate(dashboard.DASHBOARD_SPECS)
+        label: dashboard.SpriteRef("badges.jpg", 6, 4, index)
+        for index, label in enumerate(labels)
     }
     city_badges = {
-        spec.label: dashboard.SpriteRef("badges.jpg", 6, 4, index)
-        for index, spec in enumerate(dashboard.DASHBOARD_SPECS)
+        label: dashboard.SpriteRef("badges.jpg", 6, 4, index)
+        for index, label in enumerate(labels)
     }
 
     original_active_theme = dashboard._active_theme
@@ -99,18 +164,41 @@ def install() -> None:
             )
         return original_theme_root(theme)
 
+    def dedicated_badge(theme, ref):
+        root = Path(theme_root(theme))
+        path = root / ref.filename
+        if not path.is_file():
+            return None
+        return dashboard._sheet_for(theme, ref).cell(ref.index)
+
     def badge_sprite(theme, label: str):
         if theme.key == field_theme.key:
             ref = field_badges.get(label)
-            return dashboard._sheet_for(theme, ref).cell(ref.index) if ref else None
+            dedicated = dedicated_badge(theme, ref) if ref else None
+            if dedicated is not None and not dedicated.isNull():
+                return dedicated
+            legacy = original_badge_sprite(dashboard.BFF_THEME, label)
+            return _recolor_badge(legacy, _tone_for(label, labels, _FIELD_BADGE_TONES))
         if theme.key == city_theme.key:
             ref = city_badges.get(label)
-            return dashboard._sheet_for(theme, ref).cell(ref.index) if ref else None
+            dedicated = dedicated_badge(theme, ref) if ref else None
+            if dedicated is not None and not dedicated.isNull():
+                return dedicated
+            legacy = original_badge_sprite(dashboard.RYLO_THEME, label)
+            if legacy is None or legacy.isNull():
+                legacy = original_badge_sprite(dashboard.BFF_THEME, label)
+            return _recolor_badge(legacy, _tone_for(label, labels, _CITY_BADGE_TONES))
         return original_badge_sprite(theme, label)
 
     def number_sprite(theme, index: int):
-        if theme.key in {field_theme.key, city_theme.key}:
-            return None
+        if theme.key == field_theme.key:
+            source = original_number_sprite(dashboard.BFF_THEME, index)
+            return _recolor_badge(source, "#C8A46A")
+        if theme.key == city_theme.key:
+            source = original_number_sprite(dashboard.RYLO_THEME, index)
+            if source is None or source.isNull():
+                source = original_number_sprite(dashboard.BFF_THEME, index)
+            return _recolor_badge(source, "#D0A35D")
         return original_number_sprite(theme, index)
 
     dashboard.FIELD_JOURNAL_THEME = field_theme
