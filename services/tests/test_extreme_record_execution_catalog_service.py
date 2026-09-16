@@ -53,9 +53,9 @@ def test_related_records_share_execution_families() -> None:
     assert rows["resource_sustain"].execution_family == "resource-timeline"
     assert rows["ultimate_generation"].execution_family == "resource-timeline"
 
-    assert rows["movement_speed"].execution_family == "movement-state"
-    assert rows["sprint_speed"].execution_family == "movement-state"
-    assert rows["stealthed_movement_speed"].execution_family == "movement-state"
+    for key in ("movement_speed", "sprint_speed", "stealthed_movement_speed"):
+        assert rows[key].status is ExtremeRecordExecutionStatus.SPECIALIZED
+        assert rows[key].execution_family == "movement-state"
 
     assert rows["detection_radius_reduction"].execution_family == "stealth-state"
     assert rows["invisibility_duration"].execution_family == "stealth-runtime"
@@ -69,5 +69,5 @@ def test_execution_disposition_counts_make_remaining_work_explicit() -> None:
         counts[row.status] += 1
 
     assert counts[ExtremeRecordExecutionStatus.READY] == 19
-    assert counts[ExtremeRecordExecutionStatus.SPECIALIZED] == 4
-    assert counts[ExtremeRecordExecutionStatus.PENDING] == 8
+    assert counts[ExtremeRecordExecutionStatus.SPECIALIZED] == 7
+    assert counts[ExtremeRecordExecutionStatus.PENDING] == 5
