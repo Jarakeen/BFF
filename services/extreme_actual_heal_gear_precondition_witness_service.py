@@ -13,6 +13,7 @@ from services.extreme_actual_heal_gear_precondition_effect_resolver import (
     BLESSING_OF_HIGH_ISLE_CONDITION,
     PEARLESCENT_WARD_FULL_GROUP_ALIVE_CONDITION,
     TITANBORN_STRENGTH_BELOW_HALF_HEALTH_CONDITION,
+    WARRIORS_FURY_FULL_STACKS_CONDITION,
 )
 
 
@@ -103,6 +104,14 @@ class ExtremeActualHealGearPreconditionWitnessService:
                 "armor_of_the_veiled_heritance_power_active: standing H1 setup may interrupt one "
                 "enemy, then snapshot the heal inside Armor of the Veiled Heritance's 15-second "
                 "Weapon and Spell Damage window"
+            )
+
+        if int(counts.get("Warrior's Fury", 0)) >= 5:
+            active.append(WARRIORS_FURY_FULL_STACKS_CONDITION)
+            evidence.append(
+                "warriors_fury_full_stacks: standing H1 setup may receive 20 damage events no "
+                "faster than one every 0.5 seconds, reach the 20-stack cap, and snapshot the heal "
+                "inside the resulting doubled 10-second full-stack window"
             )
 
         if int(counts.get("Claw of Yolnahkriin", 0)) >= 5:
