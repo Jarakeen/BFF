@@ -17,12 +17,17 @@ def test_raid_plan_route_preserves_coverage_aware_workspace() -> None:
     assert "coverage.set_raid_plan_scope(plan)" in route_source
 
 
-def test_coverage_support_is_installed_before_main_window_builds_pages() -> None:
-    source = Path("ui/raid_engine_dashboard_support.py").read_text(encoding="utf-8")
+def test_coverage_support_is_installed_before_main_window_construction() -> None:
+    support = Path("ui/raid_engine_dashboard_support.py").read_text(encoding="utf-8")
+    bootstrap = Path("ui/application_team_optimization_bootstrap.py").read_text(encoding="utf-8")
+    app = Path("app.py").read_text(encoding="utf-8")
 
-    install_pos = source.index("install_coverage_raid_plan_scope_support()")
-    wrap_pos = source.index("_ORIGINAL_BUILD_UI = MainWindow.build_ui")
-    assert install_pos < wrap_pos
+    assert "install_coverage_raid_plan_scope_support()" in support
+    assert "install_raid_engine_dashboard()" in bootstrap
+    assert app.index("bootstrap_team_optimization_extensions()") < app.index(
+        "from ui.main_window import MainWindow"
+    )
+    assert "MainWindow.build_ui =" not in support
 
 
 def test_coverage_scope_never_falls_back_to_team_optimization_scope() -> None:
