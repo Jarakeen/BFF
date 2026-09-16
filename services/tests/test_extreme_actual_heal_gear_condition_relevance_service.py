@@ -109,6 +109,40 @@ def test_reviewed_armor_of_truth_enemy_trigger_is_constructible_for_h1() -> None
     assert result.remaining_blockers == ()
 
 
+def test_reviewed_seventh_legion_resolve_setup_is_constructible_for_h1() -> None:
+    blocker = (
+        "Seventh Legion Brute (5): active set bonus is not yet mechanic-mapped: "
+        "When you cast an ability that grants Major or Minor Resolve while in combat, you gain "
+        "8-341 Weapon and Spell Damage and 8-341 Health Recovery for 15 seconds. "
+        "This effect can occur every 15 seconds."
+    )
+    row = _row("spell_damage", blocker)
+
+    result = ExtremeActualHealGearConditionRelevanceService.review(row)
+
+    assert result.h1_mechanic_complete is True
+    assert result.h1_positive_modifier_proven is True
+    assert result.ignored_blockers == (blocker,)
+    assert result.remaining_blockers == ()
+
+
+def test_unreviewed_resolve_triggered_power_set_stays_blocking() -> None:
+    blocker = (
+        "Unknown Resolve Set (5): active set bonus is not yet mechanic-mapped: "
+        "When you cast an ability that grants Major or Minor Resolve while in combat, you gain "
+        "8-341 Weapon and Spell Damage and 8-341 Health Recovery for 15 seconds. "
+        "This effect can occur every 15 seconds."
+    )
+    row = _row("spell_damage", blocker)
+
+    result = ExtremeActualHealGearConditionRelevanceService.review(row)
+
+    assert result.h1_mechanic_complete is False
+    assert result.h1_positive_modifier_proven is False
+    assert result.ignored_blockers == ()
+    assert result.remaining_blockers == (blocker,)
+
+
 def test_unreviewed_enemy_trigger_that_grants_global_power_stays_blocking() -> None:
     blocker = (
         "Unknown Power Set (5): active set bonus is not yet mechanic-mapped: "
