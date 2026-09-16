@@ -5,6 +5,10 @@ from __future__ import annotations
 The wrapped package service remains authoritative for gear generation. This adapter
 only adds physically legal setup-action bar variants for reviewed gear mechanics
 that require a cast before the scored heal. Candidate scoring remains canonical.
+
+When a caller does not provide the scored ``active_bar``, both front/back setup
+orientations are emitted. Canonical H1 condition resolution later activates a setup
+condition only when its witness is present on the bar opposite the actual scored bar.
 """
 
 from minmax.build_candidate import BuildCandidate, BuildChange
@@ -23,14 +27,14 @@ _SEVENTH_LEGION_BRUTE = "Seventh Legion Brute"
 
 
 class ExtremeActualHealSetupActionPackageAdapter:
-    """Decorate a gear-package candidate service with reviewed setup-bar variants."""
+    """Decorate gear-package candidates with reviewed setup-bar variants."""
 
     def __init__(
         self,
         delegate,
         legality: ExtremeActualHealSetupActionLegalityService,
         *,
-        active_bar_default: str = "front",
+        active_bar_default: str | None = None,
     ) -> None:
         self.delegate = delegate
         self.legality = legality
@@ -43,19 +47,32 @@ class ExtremeActualHealSetupActionPackageAdapter:
     def _bar_attr(bar: str) -> str:
         return "BackBarSkills" if str(bar or "front").strip().casefold() == "back" else "FrontBarSkills"
 
-    def build_candidates(self, baseline_build, *args, **kwargs):
-        candidates = tuple(self.delegate.build_candidates(baseline_build, *args, **kwargs))
-        active_bar = str(kwargs.get("active_bar", self.active_bar_default) or "front").strip().casefold()
-        if active_bar not in {"front", "back"}:
-            active_bar = "front"
+    @staticmethod
+    def _normalized_bar(value: object) -> str | None:
+        key = str(value or "").strip().casefold()
+        return key if key in {"front", "back"} else None
 
+    def _orientations(self, active_bar: str | None) -> tuple[str, ...]:
+        explicit = self._normalized_bar(active_bar)
+        if explicit is not None:
+            return (explicit,)
+        default = self._normalized_bar(self.active_bar_default)
+        if default is not None:
+            return (default,)
+        return ("front", "back")
+
+    def expand_candidates(
+        self,
+        candidates: tuple[BuildCandidate, ...],
+        *,
+        active_bar: str | None = None,
+    ) -> tuple[BuildCandidate, ...]:
         expanded: list[BuildCandidate] = []
+        orientations = self._orientations(active_bar)
+
         for candidate in candidates:
             expanded.append(candidate)
             build = candidate.candidate_build
-            counts = GearStatInputResolver.equipped_set_counts(build, active_bar=active_bar)
-            if int(counts.get(_SEVENTH_LEGION_BRUTE, 0)) < 5:
-                continue
 
             legality_context = ExtremePlayerSkillLegalityContext(
                 equipped_class_lines=tuple(build.ClassSkillLines or ()),
@@ -67,41 +84,54 @@ class ExtremeActualHealSetupActionPackageAdapter:
             if not witness.proven:
                 continue
 
-            setup_attr = self._bar_attr("back" if active_bar == "front" else "front")
-            before_bar = list(getattr(build, setup_attr))
-            for placement in ExtremeActualHealSetupActionMaterializationService.variants(
-                build,
-                witness,
-                active_bar=active_bar,
-            ):
-                if not placement.materialized:
+            for scored_bar in orientations:
+                counts = GearStatInputResolver.equipped_set_counts(build, active_bar=scored_bar)
+                if int(counts.get(_SEVENTH_LEGION_BRUTE, 0)) < 5:
                     continue
-                after_bar = list(getattr(placement.build, setup_attr))
-                if after_bar == before_bar:
-                    # Existing witness: the original candidate already owns the legal setup.
-                    continue
-                slot = int(placement.slot_index or 0)
-                change = BuildChange.from_values(
-                    path=f"{setup_attr}[{slot}]",
-                    before=before_bar[slot] if slot < len(before_bar) else "",
-                    after=after_bar[slot],
-                    source="extreme:actual-heal:setup-action:resolve",
-                )
-                expanded.append(
-                    BuildCandidate.from_build(
-                        character_id=candidate.character_id,
-                        baseline_build_id=candidate.baseline_build_id,
-                        candidate_id=f"{candidate.candidate_id}:setup-resolve:{slot}",
-                        candidate_build=placement.build,
-                        changes=(*candidate.changes, change),
-                        candidate_source=f"{candidate.candidate_source}+setup-resolve",
-                        evaluation_state=candidate.evaluation_state,
-                        unresolved=candidate.unresolved,
+
+                setup_bar = "back" if scored_bar == "front" else "front"
+                setup_attr = self._bar_attr(setup_bar)
+                before_bar = list(getattr(build, setup_attr))
+                for placement in ExtremeActualHealSetupActionMaterializationService.variants(
+                    build,
+                    witness,
+                    active_bar=scored_bar,
+                ):
+                    if not placement.materialized:
+                        continue
+                    after_bar = list(getattr(placement.build, setup_attr))
+                    if after_bar == before_bar:
+                        # Existing witness: the original candidate already owns the legal setup.
+                        continue
+                    slot = int(placement.slot_index or 0)
+                    change = BuildChange.from_values(
+                        path=f"{setup_attr}[{slot}]",
+                        before=before_bar[slot] if slot < len(before_bar) else "",
+                        after=after_bar[slot],
+                        source="extreme:actual-heal:setup-action:resolve",
                     )
-                )
+                    expanded.append(
+                        BuildCandidate.from_build(
+                            character_id=candidate.character_id,
+                            baseline_build_id=candidate.baseline_build_id,
+                            candidate_id=(
+                                f"{candidate.candidate_id}:setup-resolve:{scored_bar}:{slot}"
+                            ),
+                            candidate_build=placement.build,
+                            changes=(*candidate.changes, change),
+                            candidate_source=f"{candidate.candidate_source}+setup-resolve",
+                            evaluation_state=candidate.evaluation_state,
+                            unresolved=candidate.unresolved,
+                        )
+                    )
 
         unique = {candidate.candidate_id: candidate for candidate in expanded}
         return tuple(unique[key] for key in sorted(unique))
+
+    def build_candidates(self, baseline_build, *args, **kwargs):
+        active_bar = kwargs.get("active_bar")
+        candidates = tuple(self.delegate.build_candidates(baseline_build, *args, **kwargs))
+        return self.expand_candidates(candidates, active_bar=active_bar)
 
 
 __all__ = ["ExtremeActualHealSetupActionPackageAdapter"]
