@@ -110,6 +110,13 @@ _REVIEWED_H1_PRECONDITION_TEXT = (
         re.IGNORECASE | re.DOTALL,
     ),
     re.compile(
+        r"Claw of Yolnahkriin \(5\): active set bonus is not yet mechanic-mapped:.*"
+        r"When you taunt an enemy.*"
+        r"give yourself and 11 group members Minor Courage for\s*15 seconds.*"
+        r"Weapon and Spell Damage by\s*(?:\d[\d,]*\s*-\s*)?215",
+        re.IGNORECASE | re.DOTALL,
+    ),
+    re.compile(
         r"Fledgling's Nest \(5\): active set bonus is not yet mechanic-mapped:.*"
         r"Gryphon Nest.*"
         r"first time you or a group member leaves the Nest.*"
