@@ -41,5 +41,5 @@ def test_execution_catalog_still_covers_all_31_records_without_unclassified_fami
     assert len(rows) == 31
     assert all(row.execution_family != "unclassified" for row in rows)
     assert sum(row.status is ExtremeRecordExecutionStatus.READY for row in rows) == 19
-    assert sum(row.status is ExtremeRecordExecutionStatus.SPECIALIZED for row in rows) == 9
-    assert sum(row.status is ExtremeRecordExecutionStatus.PENDING for row in rows) == 3
+    assert sum(row.status is ExtremeRecordExecutionStatus.SPECIALIZED for row in rows) == 12
+    assert sum(row.status is ExtremeRecordExecutionStatus.PENDING for row in rows) == 0
