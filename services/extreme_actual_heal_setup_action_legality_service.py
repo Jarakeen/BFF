@@ -8,9 +8,9 @@ not mutate a build. It answers one narrower question: does the selected legality
 context contain a canonical active skill whose reviewed evidence proves a requested
 setup capability?
 
-Resolve evidence is reviewed tooltip semantics. Cast/channel evidence is canonical
-ability timing. Assault-line evidence is canonical skill-line identity. Unknown
-capabilities fail closed.
+Resolve and resistance-reduction evidence use reviewed tooltip semantics.
+Cast/channel evidence is canonical ability timing. Assault-line evidence is
+canonical skill-line identity. Unknown capabilities fail closed.
 """
 
 from dataclasses import dataclass
@@ -31,6 +31,7 @@ from services.rotation_skill_timing_evidence_service import RotationSkillTimingE
 GRANTS_RESOLVE = "grants_resolve"
 HAS_CAST_OR_CHANNEL_TIME = "has_cast_or_channel_time"
 IS_ASSAULT_ABILITY = "is_assault_ability"
+REDUCES_TARGET_RESISTANCE = "reduces_target_resistance"
 
 
 class _CandidateProvider(Protocol):
@@ -80,7 +81,25 @@ class ExtremeActualHealSetupActionLegalityService:
             re.IGNORECASE,
         ),
     )
-    _SUPPORTED = frozenset({GRANTS_RESOLVE, HAS_CAST_OR_CHANNEL_TIME, IS_ASSAULT_ABILITY})
+    _RESISTANCE_REDUCTION_PATTERNS = (
+        re.compile(r"\b(?:Major|Minor) Breach\b", re.IGNORECASE),
+        re.compile(
+            r"\breduc(?:e|es|ing)\b[^.]{0,120}\b(?:Physical|Spell) Resistance\b",
+            re.IGNORECASE,
+        ),
+        re.compile(
+            r"\breduc(?:e|es|ing)\b[^.]{0,120}\bPhysical and Spell Resistance\b",
+            re.IGNORECASE,
+        ),
+    )
+    _SUPPORTED = frozenset(
+        {
+            GRANTS_RESOLVE,
+            HAS_CAST_OR_CHANNEL_TIME,
+            IS_ASSAULT_ABILITY,
+            REDUCES_TARGET_RESISTANCE,
+        }
+    )
     _MILLISECONDS_PER_SECOND = 1000.0
 
     def __init__(
@@ -164,6 +183,11 @@ class ExtremeActualHealSetupActionLegalityService:
         text = cls._text(row)
         return any(pattern.search(text) for pattern in cls._RESOLVE_PATTERNS)
 
+    @classmethod
+    def _supports_resistance_reduction(cls, row: ExtremePlayerSkillRecord) -> bool:
+        text = cls._text(row)
+        return any(pattern.search(text) for pattern in cls._RESISTANCE_REDUCTION_PATTERNS)
+
     def _timing_evidence(self, row: ExtremePlayerSkillRecord):
         for ability_id in (row.max_rank_ability_id, row.base_ability_id, row.skill_id):
             if ability_id is None:
@@ -201,6 +225,8 @@ class ExtremeActualHealSetupActionLegalityService:
             return self._timing_evidence(row) is not None
         if capability == IS_ASSAULT_ABILITY:
             return str(row.skill_line or "").strip().casefold() == "assault"
+        if capability == REDUCES_TARGET_RESISTANCE:
+            return self._supports_resistance_reduction(row)
         return False
 
     def witness(
@@ -247,9 +273,14 @@ class ExtremeActualHealSetupActionLegalityService:
                 f"{witness.name}: route-legal active skill has canonical cast/channel timing "
                 f"cast={cast_time!r}s channel={channel_time!r}s"
             )
-        else:
+        elif key == IS_ASSAULT_ABILITY:
             evidence_text = (
                 f"{witness.name}: route-legal non-Ultimate active skill belongs to the Assault skill line"
+            )
+        else:
+            evidence_text = (
+                f"{witness.name}: route-legal active skill explicitly applies Breach or reduces "
+                "Physical/Spell Resistance"
             )
         return ExtremeActualHealSetupActionWitness(
             capability=key,
@@ -264,6 +295,7 @@ __all__ = [
     "GRANTS_RESOLVE",
     "HAS_CAST_OR_CHANNEL_TIME",
     "IS_ASSAULT_ABILITY",
+    "REDUCES_TARGET_RESISTANCE",
     "ExtremeActualHealSetupActionWitness",
     "ExtremeActualHealSetupActionLegalityService",
 ]
