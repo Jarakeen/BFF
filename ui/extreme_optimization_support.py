@@ -11,10 +11,6 @@ def install() -> None:
         return
 
     from services.extreme_complete_blueprint_service import ExtremeCompleteBlueprintService
-    from services.extreme_complete_optimization_service import (
-        CRITICAL_HEALING_OBJECTIVE,
-        ExtremeCompleteOptimizationService,
-    )
     from ui import main_window
     from ui.extreme_optimization_page import ExtremeOptimizationPage
 
@@ -26,15 +22,11 @@ def install() -> None:
             return
 
         page = ExtremeOptimizationPage()
-        # Keep the legacy page contract while routing both saved-build and
-        # from-scratch evaluation through the systemic completion layers.
-        page.service = ExtremeCompleteOptimizationService()
+        # The page now owns the canonical 31-record objective catalog and the
+        # complete saved-build optimizer directly.  This installer only supplies
+        # the completed from-scratch blueprint layer until that construction is
+        # moved into the page itself; it must not append or reclassify objectives.
         page.blueprint_service = ExtremeCompleteBlueprintService()
-        if page.objective_combo.findData(CRITICAL_HEALING_OBJECTIVE.key) < 0:
-            page.objective_combo.addItem(
-                CRITICAL_HEALING_OBJECTIVE.label,
-                CRITICAL_HEALING_OBJECTIVE.key,
-            )
         self.pages["extreme_optimization"] = page
         container = self.wrap_page(page)
         self.page_containers["extreme_optimization"] = container
