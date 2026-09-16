@@ -1,5 +1,12 @@
 from __future__ import annotations
 
+from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 from engine.config import DEFAULT_DATABASE
 from minmax.gear_set_repository import GearSetRepository
 from services.extreme_gear_set_objective_service import ExtremeGearSetObjectiveService
