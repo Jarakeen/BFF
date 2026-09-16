@@ -4,6 +4,7 @@ from services.extreme_actual_heal_setup_action_legality_service import (
     GRANTS_RESOLVE,
     HAS_CAST_OR_CHANNEL_TIME,
     IS_ASSAULT_ABILITY,
+    REDUCES_TARGET_RESISTANCE,
     ExtremeActualHealSetupActionLegalityService,
 )
 from services.extreme_player_skill_candidate_service import ExtremePlayerSkillLegalityContext
@@ -143,6 +144,42 @@ def test_assault_capability_uses_route_legal_skill_line_identity() -> None:
     assert result.skill_name == "Vigor"
     assert result.skill_line == "Assault"
     assert "Assault skill line" in str(result.evidence)
+
+
+def test_resistance_reduction_capability_accepts_major_breach() -> None:
+    row = _row(
+        "Breach Witness",
+        "Afflict the enemy with Major Breach for 20 seconds.",
+        line="Assault",
+    )
+    service = ExtremeActualHealSetupActionLegalityService(
+        candidate_service=_StubCandidateService((row,)),
+    )
+    result = service.witness(REDUCES_TARGET_RESISTANCE, _context())
+    assert result.proven is True
+    assert result.skill_name == "Breach Witness"
+    assert "reduces Physical/Spell Resistance" in str(result.evidence)
+
+
+def test_resistance_reduction_capability_accepts_direct_resistance_reduction() -> None:
+    row = _row(
+        "Direct Reduction",
+        "Reduce the enemy's Physical and Spell Resistance by 5948 for 15 seconds.",
+    )
+    service = ExtremeActualHealSetupActionLegalityService(
+        candidate_service=_StubCandidateService((row,)),
+    )
+    assert service.witness(REDUCES_TARGET_RESISTANCE, _context()).proven is True
+
+
+def test_resistance_reduction_capability_does_not_accept_resolve() -> None:
+    row = _row("Resolve Only", "Gain Major Resolve, increasing your resistances.")
+    service = ExtremeActualHealSetupActionLegalityService(
+        candidate_service=_StubCandidateService((row,)),
+    )
+    result = service.witness(REDUCES_TARGET_RESISTANCE, _context())
+    assert result.proven is False
+    assert result.unresolved
 
 
 def test_unknown_setup_capability_fails_closed_without_querying_candidates() -> None:
