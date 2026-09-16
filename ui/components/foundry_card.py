@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (
 )
 
 from engine.config import get_resource_path
-from services.accessibility_preferences import VISUAL_THEME_RYLO
+from services.accessibility_preferences import is_rylo_visual_theme
 from ui.theme.fonts import Fonts
 from ui.ux_icons import icon_path, semantic_icon, set_button_icon
 
@@ -219,7 +219,8 @@ class FoundryCard(QFrame):
 
         parchment = bool(self.property("parchment") or self.property("foundryNoteCard"))
         app = QApplication.instance()
-        rylo = app is not None and app.property("visualTheme") == VISUAL_THEME_RYLO
+        theme = app.property("visualTheme") if app is not None else ""
+        rylo = is_rylo_visual_theme(str(theme or ""))
 
         # Keep the original restrained corner marks. They frame the card without
         # intruding into the content area.
