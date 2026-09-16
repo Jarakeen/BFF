@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 260">
+  <rect width="640" height="260" rx="10" fill="#20252b"/>
+  <g fill="none" stroke="#aeb7bf" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".9">
+    <path d="M18 220 H622"/>
+    <path d="M46 220 V150 H92 V220 M105 220 V122 H142 V220 M154 220 V168 H193 V220 M207 220 V98 H258 V220 M270 220 V142 H318 V220 M333 220 V114 H376 V220 M390 220 V154 H433 V220 M448 220 V88 H502 V220 M518 220 V132 H568 V220"/>
+    <path d="M0 188 C110 158 177 170 252 148 C332 125 421 132 640 92"/>
+    <path d="M0 202 C122 172 206 187 276 166 C370 138 455 141 640 112"/>
+    <path d="M98 176 v44 M92 176 h12 M95 167 h6 M568 155 v65 M560 155 h16 M564 144 h8"/>
+    <path d="M405 74 q16-18 32 0 q14-16 28 0"/>
+    <path d="M478 53 q12-14 24 0 q10-12 20 0"/>
+  </g>
+  <g fill="#d1a55f" font-family="sans-serif" font-style="italic">
+    <text x="28" y="38" font-size="24">Same people. New nights.</text>
+    <text x="382" y="244" font-size="18">City note</text>
+  </g>
+  <g fill="#6fa8d3" opacity=".9">
+    <rect x="55" y="162" width="7" height="10"/><rect x="72" y="162" width="7" height="10"/>
+    <rect x="216" y="110" width="7" height="10"/><rect x="235" y="110" width="7" height="10"/>
+    <rect x="458" y="102" width="7" height="10"/><rect x="479" y="102" width="7" height="10"/>
+  </g>
+</svg>
