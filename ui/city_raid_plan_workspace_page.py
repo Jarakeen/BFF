@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Mockup-shaped City After Midnight shell over the existing canonical Raid Plan editor."""
+"""Urban Wilderness shell over the canonical Raid Plan editor."""
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -24,8 +24,17 @@ def _clean(value: object) -> str:
     return str(value or "").strip()
 
 
+def _foundry_card_ancestor(widget: QWidget | None) -> QWidget | None:
+    current = widget
+    while current is not None:
+        if bool(current.property("foundryCard")):
+            return current
+        current = current.parentWidget()
+    return None
+
+
 class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
-    """Raid Plan overview + explicit Roles editor using one underlying RaidPlan model."""
+    """Raid Plan overview + focused Roles editor using one underlying RaidPlan model."""
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
@@ -38,11 +47,22 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         self.header.subtitle.setText("Turn a group of good players into a great run.")
         self.header.department.setText("RAID • PLAN")
 
-        # Preserve every existing canonical editor/control by moving it into the Roles view.
+        # Preserve canonical role/spot controls, but do not duplicate Assignments here.
         roles_surface = QWidget()
         roles_layout = QVBoxLayout(roles_surface)
         roles_layout.setContentsMargins(0, 0, 0, 0)
         roles_layout.setSpacing(8)
+
+        roles_note = FoundryCard("Roles / Spots", "group")
+        roles_note.setProperty("parchment", True)
+        roles_text = QLabel(
+            "Choose who occupies each raid spot and which build they bring. Duties live in Assignments. "
+            "Same people. Higher standards."
+        )
+        roles_text.setWordWrap(True)
+        roles_note.addWidget(roles_text)
+        roles_layout.addWidget(roles_note)
+
         while self.workspace_layout.count():
             item = self.workspace_layout.takeAt(0)
             if item.widget() is not None:
@@ -50,6 +70,13 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
             elif item.layout() is not None:
                 roles_layout.addLayout(item.layout())
         self.roles_surface = roles_surface
+
+        # RaidPlanAssignmentPage is still the persistence owner, but its full assignment
+        # grid belongs on the dedicated Assignments page. Hiding that card here removes
+        # the stacked second editor without changing or discarding assignment data.
+        assignment_card = _foundry_card_ancestor(getattr(self, "assignment_table", None))
+        if assignment_card is not None:
+            assignment_card.hide()
 
         nav_host = QWidget()
         nav = QHBoxLayout(nav_host)
@@ -98,7 +125,7 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         self.plan_list = QListWidget()
         self.plan_list.itemDoubleClicked.connect(self._load_overview_plan)
         left.addWidget(self.plan_list)
-        field_note = QLabel("A plan is a promise to your future self. Keep the intent clear and the evidence honest.")
+        field_note = QLabel("Plans are just stories we tell ourselves before the interesting part.")
         field_note.setWordWrap(True)
         field_note.setProperty("muted", True)
         left.addWidget(field_note)
@@ -147,7 +174,7 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
 
         notes = FoundryCard("Plan Notes", "clipboard")
         notes.setProperty("parchment", True)
-        self.plan_notes = QLabel("No plan notes yet. Role-owned notes remain attached to their exact spot.")
+        self.plan_notes = QLabel("Good plans don't remove risk. They make it intentional.")
         self.plan_notes.setWordWrap(True)
         notes.addWidget(self.plan_notes)
         middle.addWidget(notes, 4)
@@ -230,7 +257,7 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         self.strategy_snapshot.value_label.setText(f"{assigned} / {len(plan.members)} spots assigned")
         self.progress_snapshot.value_label.setText(f"{builds} builds linked")
         notes = [f"{member.gamertag}: {member.notes}" for member in plan.members if _clean(member.notes)]
-        self.plan_notes.setText("\n".join(notes[:8]) or "No spot notes yet. Keep plan intent short, specific, and owned by a role.")
+        self.plan_notes.setText("\n".join(notes[:8]) or "A well-made plan doesn't guarantee success, but it turns chaos into a fair fight.")
 
     def _load_overview_plan(self, item: QListWidgetItem) -> None:
         plan_id = item.data(Qt.ItemDataRole.UserRole)
