@@ -161,6 +161,13 @@ _REVIEWED_H1_HEALING_PRECONDITION_TEXT = (
     ),
 )
 
+_REVIEWED_H1_HEALING_CONDITION_BLOCKERS = (
+    re.compile(
+        r"^Senche's Bite \(5\): relevant set effect requires condition successful_dodge_recent$",
+        re.IGNORECASE,
+    ),
+)
+
 
 @dataclass(frozen=True)
 class ExtremeActualHealGearConditionRelevanceResult:
@@ -222,7 +229,11 @@ class ExtremeActualHealGearConditionRelevanceService:
                 reviewed_healing_precondition = any(
                     pattern.search(text) for pattern in _REVIEWED_H1_HEALING_PRECONDITION_TEXT
                 )
-                if reviewed_healing_precondition:
+                reviewed_healing_condition = any(
+                    pattern.fullmatch(text)
+                    for pattern in _REVIEWED_H1_HEALING_CONDITION_BLOCKERS
+                )
+                if reviewed_healing_precondition or reviewed_healing_condition:
                     specialist_positive = True
                     ignored.append(text)
                     continue
