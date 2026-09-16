@@ -54,8 +54,14 @@ class ExtremeActualHealSetupActionLegalityService:
     """Find deterministic, route-legal setup actions for reviewed H1 capabilities."""
 
     _RESOLVE_PATTERNS = (
-        re.compile(r"\b(?:gain|grant(?:s|ing)?(?: you| yourself)?)\s+(?:Major|Minor) Resolve\b", re.IGNORECASE),
-        re.compile(r"\bgrants?\s+(?:you|yourself)\s+(?:Major|Minor) Resolve\b", re.IGNORECASE),
+        re.compile(
+            r"\b(?:gain|gaining)\s+(?:Major|Minor) Resolve\b",
+            re.IGNORECASE,
+        ),
+        re.compile(
+            r"\bgrant(?:s|ing)?\s+(?:you|yourself)\s+(?:Major|Minor) Resolve\b",
+            re.IGNORECASE,
+        ),
     )
 
     def __init__(
