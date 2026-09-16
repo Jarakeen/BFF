@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QApplication
 
-from services.accessibility_preferences import VISUAL_THEME_RYLO
+from services.accessibility_preferences import is_rylo_visual_theme
 
 _INSTALLED = False
 
@@ -24,11 +24,11 @@ def install() -> None:
             return
 
         app = QApplication.instance()
-        rylo = bool(app is not None and app.property("visualTheme") == VISUAL_THEME_RYLO)
+        theme = app.property("visualTheme") if app is not None else ""
+        rylo = is_rylo_visual_theme(str(theme or ""))
         if rylo:
-            # The Rylo lockup needs more horizontal breathing room than the
-            # feather mark. Keep the scythe's native 2:3 proportion and widen
-            # the rail so BLACK FEATHER / FOUNDRY is not compressed beside it.
+            # Both Rylo skins share the wider scythe lockup. The newer City
+            # theme changes materials and accents, not the brand silhouette.
             self.setMinimumWidth(248)
             self.setMaximumWidth(278)
             filename = "sidebar_scythe_rylo.svg"
