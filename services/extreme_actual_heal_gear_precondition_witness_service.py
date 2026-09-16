@@ -12,6 +12,7 @@ from services.extreme_actual_heal_gear_precondition_effect_resolver import (
     ARMOR_OF_TRUTH_POWER_CONDITION,
     BLESSING_OF_HIGH_ISLE_CONDITION,
     PEARLESCENT_WARD_FULL_GROUP_ALIVE_CONDITION,
+    STYGIAN_POWER_CONDITION,
     TITANBORN_STRENGTH_BELOW_HALF_HEALTH_CONDITION,
     WARRIORS_FURY_FULL_STACKS_CONDITION,
 )
@@ -112,6 +113,13 @@ class ExtremeActualHealGearPreconditionWitnessService:
                 "warriors_fury_full_stacks: standing H1 setup may receive 20 damage events no "
                 "faster than one every 0.5 seconds, reach the 20-stack cap, and snapshot the heal "
                 "inside the resulting doubled 10-second full-stack window"
+            )
+
+        if int(counts.get("Stygian", 0)) >= 5:
+            active.append(STYGIAN_POWER_CONDITION)
+            evidence.append(
+                "stygian_power_active: standing H1 setup may enter combat while Sneaking, leave "
+                "Sneak, and snapshot the heal inside Stygian's 15-second Weapon and Spell Damage window"
             )
 
         if int(counts.get("Claw of Yolnahkriin", 0)) >= 5:
