@@ -54,10 +54,43 @@ def _format_incentive(item) -> str:
     return f"{bar} bar • {name}: HA has build-aware healing value."
 
 
+def _refresh_context_labels(page) -> None:
+    team_label = getattr(page, "rotation_team_rules_label", None)
+    encounter_label = getattr(page, "rotation_encounter_rules_label", None)
+
+    if team_label is not None:
+        team_combo = getattr(page, "rotation_team_combo", None)
+        team = str(team_combo.currentData() or "").strip() if team_combo is not None else ""
+        if team:
+            team_label.setText(
+                f"Selected team context: {team}. The resolved Team / Team + Boss build variant "
+                "is already used by generation. Explicit provider/assignment obligations are not "
+                "yet promoted into this tab unless a canonical team-context bridge supplies them."
+            )
+        else:
+            team_label.setText(
+                "No team context selected. Generation uses the resolved base/Boss build only; "
+                "team-owned rotation duties are not inferred from role."
+            )
+
+    if encounter_label is not None:
+        content_combo = getattr(page, "rotation_content_combo", None)
+        boss_combo = getattr(page, "rotation_boss_combo", None)
+        content = str(content_combo.currentText() or "").strip() if content_combo is not None else ""
+        boss = str(boss_combo.currentText() or "").strip() if boss_combo is not None else ""
+        scope = " • ".join(value for value in (content, boss) if value)
+        encounter_label.setText(
+            f"Selected encounter context: {scope or 'none'}. Reviewed encounter obligations and "
+            "pressure windows appear here only when canonical encounter evidence exists; missing "
+            "research is never converted into guessed mechanics."
+        )
+
+
 def _refresh_detected_build_evidence(page) -> None:
     label = getattr(page, "rotation_detected_build_requirements_label", None)
     proc_label = getattr(page, "rotation_proc_status_label", None)
     if label is None and proc_label is None:
+        _refresh_context_labels(page)
         return
 
     build = _effective_build(page)
@@ -67,6 +100,7 @@ def _refresh_detected_build_evidence(page) -> None:
             label.setText(text)
         if proc_label is not None:
             proc_label.setText(text)
+        _refresh_context_labels(page)
         return
 
     incentives = tuple(discover_healer_heavy_attack_build_incentives(build))
@@ -105,6 +139,8 @@ def _refresh_detected_build_evidence(page) -> None:
             if proc_lines
             else "No reviewed HA-driven set/passive cadence is active on this resolved build."
         )
+
+    _refresh_context_labels(page)
 
 
 def _polish_builder_cards(page) -> None:
