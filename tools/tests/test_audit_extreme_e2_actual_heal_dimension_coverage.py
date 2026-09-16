@@ -79,3 +79,13 @@ def test_e2_armor_weight_row_records_physical_legality_and_reduction_proof() -> 
     assert "Medium-piece count" in armor.evidence
     assert "distinct armor-type count" in armor.evidence
     assert armor.remaining_gap == ""
+
+
+def test_e2_gear_row_records_ordinary_denominator_without_overclaiming_special_families() -> None:
+    rows = build_dimension_coverage()
+    gear = next(row for row in rows if row.key == "gear_packages_procs")
+
+    assert gear.status is E2DimensionStatus.PARTIAL
+    assert "complete canonical ordinary-set corpus" in gear.evidence
+    assert "authoritative five-piece candidate pool" in gear.evidence
+    assert "monster/mythic/arena/proc package families" in gear.remaining_gap
