@@ -79,10 +79,10 @@ def test_sprite_sheet_supports_arbitrary_grid_and_crop_insets(tmp_path):
     assert sheet.cell(9) is None
 
 
-def test_collections_sidebar_header_routes_to_dashboard():
+def test_collectibles_sidebar_header_routes_to_dashboard():
     section = next(
         item for item in CORE_NAV_SECTIONS
-        if isinstance(item, dict) and item.get("label") == "Collections"
+        if isinstance(item, dict) and item.get("label") == "Collectibles"
     )
     assert section["page"] == "collectibles"
     assert ("Mounts", "collectibles:Mounts") in section["children"]
