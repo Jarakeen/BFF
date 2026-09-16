@@ -8,6 +8,7 @@ from minmax.gear_stat_inputs import GearStatInputResolver
 from models.build_model import PlayerBuild
 from services.extreme_actual_heal_gear_precondition_effect_resolver import (
     ANCIENT_DRAGONGUARD_ABOVE_HALF_HEALTH_CONDITION,
+    ARMOR_OF_THE_VEILED_HERITANCE_POWER_CONDITION,
     ARMOR_OF_TRUTH_POWER_CONDITION,
     BLESSING_OF_HIGH_ISLE_CONDITION,
     PEARLESCENT_WARD_FULL_GROUP_ALIVE_CONDITION,
@@ -93,6 +94,14 @@ class ExtremeActualHealGearPreconditionWitnessService:
             evidence.append(
                 "armor_of_truth_power_active: standing H1 setup may damage one Off Balance enemy "
                 "with a weapon attack, then snapshot the heal inside Armor of Truth's 10-second "
+                "Weapon and Spell Damage window"
+            )
+
+        if int(counts.get("Armor of the Veiled Heritance", 0)) >= 5:
+            active.append(ARMOR_OF_THE_VEILED_HERITANCE_POWER_CONDITION)
+            evidence.append(
+                "armor_of_the_veiled_heritance_power_active: standing H1 setup may interrupt one "
+                "enemy, then snapshot the heal inside Armor of the Veiled Heritance's 15-second "
                 "Weapon and Spell Damage window"
             )
 
