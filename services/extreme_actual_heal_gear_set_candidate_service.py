@@ -48,6 +48,16 @@ _RAVAGER_BLOCKER = re.compile(
     r"You can gain a stack every 1 second\.\s*At 4 stacks, the duration doubles but cannot be refreshed\.?$",
     re.IGNORECASE | re.DOTALL,
 )
+_LIGHT_SPEAKER_BLOCKER = re.compile(
+    r"^Light Speaker \(5\): active set bonus is not yet mechanic-mapped:.*"
+    r"Adds\s*(?:\d[\d,]*\s*-\s*)?600\s+Weapon and Spell Damage to your Restoration Staff abilities\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+_INNATE_AXIOM_BLOCKER = re.compile(
+    r"^Innate Axiom \(5\): active set bonus is not yet mechanic-mapped:.*"
+    r"Adds\s*(?:\d[\d,]*\s*-\s*)?400\s+Weapon and Spell Damage to your Class abilities\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
 
 
 class ExtremeActualHealGearSetCandidateService:
@@ -55,6 +65,8 @@ class ExtremeActualHealGearSetCandidateService:
 
     Authoritative H1 search is exhaustive across the reviewed ordinary five-piece
     universe. Admission remains fail-closed across the complete H1 objective screen.
+    Candidate-scoped sets may enter the denominator once their condition is resolved
+    from the actual selected heal during canonical evaluation.
     """
 
     OBJECTIVES = (
@@ -83,6 +95,8 @@ class ExtremeActualHealGearSetCandidateService:
             "voidcaller": _VOIDCALLER_BLOCKER,
             "camonna tong": _CAMONNA_TONG_BLOCKER,
             "ravager": _RAVAGER_BLOCKER,
+            "light speaker": _LIGHT_SPEAKER_BLOCKER,
+            "innate axiom": _INNATE_AXIOM_BLOCKER,
         }.get(set_name)
         if (
             reviewed_blocker is not None
