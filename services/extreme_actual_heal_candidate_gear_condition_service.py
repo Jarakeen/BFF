@@ -7,16 +7,21 @@ from pathlib import Path
 
 from minmax.gear_stat_inputs import GearStatInputResolver
 from models.build_model import PlayerBuild
+from services.extreme_actual_heal_candidate_distance_service import (
+    ExtremeActualHealCandidateDistanceService,
+)
 from services.extreme_actual_heal_candidate_scope_service import (
     ExtremeActualHealCandidateScopeService,
 )
 from services.extreme_actual_heal_gear_precondition_effect_resolver import (
+    BLIND_PATH_DISTANT_HEAL_CONDITION,
     INNATE_AXIOM_CLASS_SCOPE_CONDITION,
     LIGHT_SPEAKER_RESTORATION_SCOPE_CONDITION,
 )
 
 
 DAGON_AREA_SCOPE_CONDITION = "ability_scope:area_of_effect"
+BLIND_PATH_DISTANCE_THRESHOLD_METERS = 15.0
 
 
 @dataclass(frozen=True)
@@ -38,8 +43,10 @@ class ExtremeActualHealCandidateGearConditionService:
         database_path: str | Path,
         *,
         scope_service: ExtremeActualHealCandidateScopeService | None = None,
+        distance_service: ExtremeActualHealCandidateDistanceService | None = None,
     ) -> None:
         self.scope_service = scope_service or ExtremeActualHealCandidateScopeService(database_path)
+        self.distance_service = distance_service or ExtremeActualHealCandidateDistanceService(database_path)
 
     def resolve(
         self,
@@ -58,7 +65,23 @@ class ExtremeActualHealCandidateGearConditionService:
             unresolved = (
                 f"selected heal scope identity is unavailable for {entity_id}",
             ) if relevant else ()
-            return ExtremeActualHealCandidateGearCondition(unresolved=unresolved)
+            active: list[str] = []
+            evidence: list[str] = []
+            if int(counts.get("Blind Path Induction", 0)) >= 5:
+                distance = self.distance_service.resolve(
+                    entity_id,
+                    threshold_meters=BLIND_PATH_DISTANCE_THRESHOLD_METERS,
+                )
+                if distance.can_affect_target_beyond_threshold is True:
+                    active.append(BLIND_PATH_DISTANT_HEAL_CONDITION)
+                    evidence.extend(distance.evidence)
+                elif distance.can_affect_target_beyond_threshold is None:
+                    unresolved = tuple(dict.fromkeys((*unresolved, *distance.unresolved)))
+            return ExtremeActualHealCandidateGearCondition(
+                active_conditions=tuple(active),
+                evidence=tuple(evidence),
+                unresolved=unresolved,
+            )
 
         active: list[str] = []
         evidence: list[str] = []
@@ -89,6 +112,19 @@ class ExtremeActualHealCandidateGearConditionService:
                     f"selected heal AoE identity is unavailable for {entity_id}",
                 ))
 
+        if int(counts.get("Blind Path Induction", 0)) >= 5:
+            distance = self.distance_service.resolve(
+                entity_id,
+                threshold_meters=BLIND_PATH_DISTANCE_THRESHOLD_METERS,
+            )
+            if distance.can_affect_target_beyond_threshold is True:
+                active.append(BLIND_PATH_DISTANT_HEAL_CONDITION)
+                evidence.extend(distance.evidence)
+            elif distance.can_affect_target_beyond_threshold is None:
+                unresolved.extend(distance.unresolved or (
+                    f"selected heal distance identity is unavailable for {entity_id}",
+                ))
+
         return ExtremeActualHealCandidateGearCondition(
             active_conditions=tuple(active),
             evidence=tuple(evidence),
@@ -97,6 +133,7 @@ class ExtremeActualHealCandidateGearConditionService:
 
 
 __all__ = [
+    "BLIND_PATH_DISTANCE_THRESHOLD_METERS",
     "DAGON_AREA_SCOPE_CONDITION",
     "ExtremeActualHealCandidateGearCondition",
     "ExtremeActualHealCandidateGearConditionService",
