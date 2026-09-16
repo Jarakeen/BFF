@@ -19,6 +19,7 @@ ARMOR_OF_TRUTH_POWER_CONDITION = "armor_of_truth_power_active"
 ARMOR_OF_THE_VEILED_HERITANCE_POWER_CONDITION = "armor_of_the_veiled_heritance_power_active"
 WARRIORS_FURY_FULL_STACKS_CONDITION = "warriors_fury_full_stacks"
 STYGIAN_POWER_CONDITION = "stygian_power_active"
+SEVENTH_LEGION_BRUTE_POWER_CONDITION = "seventh_legion_brute_power_active"
 
 
 class ExtremeActualHealGearPreconditionEffectResolver:
@@ -74,6 +75,13 @@ class ExtremeActualHealGearPreconditionEffectResolver:
         r"(?:(?P<min>\d[\d,]*)\s*-\s*)?(?P<max>\d[\d,]*)\s*for\s*15 seconds\.?$",
         re.IGNORECASE,
     )
+    _SEVENTH_LEGION_BRUTE = re.compile(
+        r"^\(5 items\)\s*When you cast an ability that grants Major or Minor Resolve while in combat, you gain\s*"
+        r"(?:(?P<min>\d[\d,]*)\s*-\s*)?(?P<max>\d[\d,]*)\s*Weapon and Spell Damage and\s*"
+        r"\d[\d,]*(?:\s*-\s*\d[\d,]*)?\s*Health Recovery for\s*15 seconds\.\s*"
+        r"This effect can occur every\s*15 seconds\.?$",
+        re.IGNORECASE,
+    )
 
     def resolve(
         self,
@@ -119,6 +127,10 @@ class ExtremeActualHealGearPreconditionEffectResolver:
             condition = STYGIAN_POWER_CONDITION
             multiplier = 1.0
         if match is None:
+            match = self._SEVENTH_LEGION_BRUTE.fullmatch(normalized)
+            condition = SEVENTH_LEGION_BRUTE_POWER_CONDITION
+            multiplier = 1.0
+        if match is None:
             return []
 
         key = "max" if use_max_value or not match.groupdict().get("min") else "min"
@@ -145,6 +157,7 @@ __all__ = [
     "ARMOR_OF_TRUTH_POWER_CONDITION",
     "BLESSING_OF_HIGH_ISLE_CONDITION",
     "PEARLESCENT_WARD_FULL_GROUP_ALIVE_CONDITION",
+    "SEVENTH_LEGION_BRUTE_POWER_CONDITION",
     "STYGIAN_POWER_CONDITION",
     "TITANBORN_STRENGTH_BELOW_HALF_HEALTH_CONDITION",
     "WARRIORS_FURY_FULL_STACKS_CONDITION",
