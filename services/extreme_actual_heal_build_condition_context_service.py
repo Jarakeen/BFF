@@ -32,6 +32,7 @@ from services.extreme_actual_heal_setup_action_legality_service import (
     DEALS_FLAME_DAMAGE,
     GRANTS_RESOLVE,
     HAS_CAST_OR_CHANNEL_TIME,
+    IS_ARMOR_ABILITY,
     IS_ASSAULT_ABILITY,
     IS_EARTHEN_HEART_ABILITY,
     REDUCES_TARGET_RESISTANCE,
@@ -44,13 +45,14 @@ _DESTRUCTION_STAFF_TYPES = frozenset(
     {"inferno staff", "lightning staff", "ice staff", "destruction staff"}
 )
 _REVIEWED_SETUP_CONDITIONS = (
-    ("Basalt-Blooded Warrior", IS_EARTHEN_HEART_ABILITY, BASALT_BLOODED_OBSIDIAN_STANCE_CONDITION, "10-second Obsidian Stance", "back"),
-    ("Burning Spellweave", DEALS_FLAME_DAMAGE, BURNING_SPELLWEAVE_POWER_CONDITION, "8-second", None),
-    ("Crusader", DEALS_DIRECT_MOBILITY_DAMAGE, CRUSADER_MINOR_COURAGE_CONDITION, "12-second Minor Courage", None),
-    ("Seventh Legion Brute", GRANTS_RESOLVE, SEVENTH_LEGION_BRUTE_POWER_CONDITION, "15-second", None),
-    ("Soulshine", HAS_CAST_OR_CHANNEL_TIME, SOULSHINE_POWER_CONDITION, "5-second", None),
-    ("Powerful Assault", IS_ASSAULT_ABILITY, POWERFUL_ASSAULT_POWER_CONDITION, "15-second", None),
-    ("Ravager", REDUCES_TARGET_RESISTANCE, RAVAGER_FULL_STACKS_CONDITION, "10-second full-stack", None),
+    ("Armor Master", IS_ARMOR_ABILITY, "armor_ability_slotted", "persistent slotted", None, "active"),
+    ("Basalt-Blooded Warrior", IS_EARTHEN_HEART_ABILITY, BASALT_BLOODED_OBSIDIAN_STANCE_CONDITION, "10-second Obsidian Stance", "back", "inactive"),
+    ("Burning Spellweave", DEALS_FLAME_DAMAGE, BURNING_SPELLWEAVE_POWER_CONDITION, "8-second", None, "inactive"),
+    ("Crusader", DEALS_DIRECT_MOBILITY_DAMAGE, CRUSADER_MINOR_COURAGE_CONDITION, "12-second Minor Courage", None, "inactive"),
+    ("Seventh Legion Brute", GRANTS_RESOLVE, SEVENTH_LEGION_BRUTE_POWER_CONDITION, "15-second", None, "inactive"),
+    ("Soulshine", HAS_CAST_OR_CHANNEL_TIME, SOULSHINE_POWER_CONDITION, "5-second", None, "inactive"),
+    ("Powerful Assault", IS_ASSAULT_ABILITY, POWERFUL_ASSAULT_POWER_CONDITION, "15-second", None, "inactive"),
+    ("Ravager", REDUCES_TARGET_RESISTANCE, RAVAGER_FULL_STACKS_CONDITION, "10-second full-stack", None, "inactive"),
 )
 
 
@@ -103,15 +105,32 @@ class ExtremeActualHealBuildConditionContextService:
         return kind
 
     @staticmethod
-    def _inactive_skills(build: PlayerBuild, active_bar: str) -> tuple[str, ...]:
+    def _bar_skills(
+        build: PlayerBuild,
+        active_bar: str,
+        *,
+        placement: str,
+    ) -> tuple[str, ...]:
         bar = str(active_bar or "front").strip().casefold()
-        values = build.FrontBarSkills if bar == "back" else build.BackBarSkills
+        want_active = str(placement or "inactive").strip().casefold() == "active"
+        values = build.BackBarSkills if (bar == "back") is want_active else build.FrontBarSkills
         return tuple(str(value or "").strip() for value in list(values)[:5])
 
     @staticmethod
-    def _legality_context(build: PlayerBuild) -> ExtremePlayerSkillLegalityContext:
+    def _armor_lines(build: PlayerBuild) -> tuple[str, ...]:
+        names = {
+            f"{str(entry.get('Weight', '') or '').strip()} Armor"
+            for entry in build.Armor.values()
+            if str(entry.get("Weight", "") or "").strip().casefold()
+            in {"light", "medium", "heavy"}
+        }
+        return tuple(sorted(names, key=str.casefold))
+
+    @classmethod
+    def _legality_context(cls, build: PlayerBuild) -> ExtremePlayerSkillLegalityContext:
         return ExtremePlayerSkillLegalityContext(
             equipped_class_lines=tuple(build.ClassSkillLines or ()),
+            equipped_armor_lines=cls._armor_lines(build),
             vampire=bool(build.Vampire),
             werewolf=bool(build.Werewolf),
             transformed_form=str(build.TransformedForm or "").strip() or None,
@@ -125,6 +144,7 @@ class ExtremeActualHealBuildConditionContextService:
         set_name: str,
         capability: str,
         required_active_bar: str | None = None,
+        placement: str = "inactive",
     ) -> tuple[bool, str | None]:
         normalized_bar = str(active_bar or "front").strip().casefold()
         if required_active_bar is not None and normalized_bar != required_active_bar:
@@ -136,7 +156,10 @@ class ExtremeActualHealBuildConditionContextService:
         if not witness.proven or not str(witness.skill_name or "").strip():
             return False, None
         wanted = str(witness.skill_name).strip().casefold()
-        if not any(skill.casefold() == wanted for skill in self._inactive_skills(build, active_bar)):
+        if not any(
+            skill.casefold() == wanted
+            for skill in self._bar_skills(build, active_bar, placement=placement)
+        ):
             return False, witness.skill_name
         return True, witness.skill_name
 
@@ -168,17 +191,31 @@ class ExtremeActualHealBuildConditionContextService:
             active.add("transformed")
             evidence.append(f"transformed: explicit build form is {transformed}")
 
-        for set_name, capability, condition, window, required_active_bar in _REVIEWED_SETUP_CONDITIONS:
+        for (
+            set_name,
+            capability,
+            condition,
+            window,
+            required_active_bar,
+            placement,
+        ) in _REVIEWED_SETUP_CONDITIONS:
             is_active, skill_name = self._setup_condition_active(
                 build,
                 active_bar=active_bar,
                 set_name=set_name,
                 capability=capability,
                 required_active_bar=required_active_bar,
+                placement=placement,
             )
             if is_active:
                 active.add(condition)
-                if set_name == "Basalt-Blooded Warrior":
+                if set_name == "Armor Master":
+                    evidence.append(
+                        f"{condition}: scored active-bar {skill_name} is a canonical Armor "
+                        "ability compatible with an equipped armor weight; Armor Master's "
+                        "5% Max Health condition remains active while it stays slotted"
+                    )
+                elif set_name == "Basalt-Blooded Warrior":
                     evidence.append(
                         f"{condition}: primary/front-bar {skill_name} is a route-legal Earthen Heart "
                         "setup action; cast it for Rock Stance, swap to the secondary/back bar, and "

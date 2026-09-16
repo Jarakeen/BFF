@@ -946,3 +946,7 @@ Basalt-Blooded Warrior does not grant its healing bonus merely because an Earthe
 
 Extreme routes store class lines as stable snake-case IDs such as `earthen_heart` and `winters_embrace`, while the skill database exposes display labels such as `Earthen Heart` and `Winter's Embrace`. Candidate legality must normalize both forms before comparing them. A literal comparison can make every active skill from an otherwise legal subclass line disappear, even though the route itself is valid.
 
+### Armor Master needs the Armor ability on the scored bar
+
+Armor Master's 5% Max Health bonus is a slotted condition, not a short proc window. A legal Light, Medium, or Heavy Armor active must remain on the same bar used for the scored event, and it must match an armor weight the build actually wears. Casting an Armor ability additionally grants resistance for 10 seconds, but that resistance branch does not increase the H1 heal.
+

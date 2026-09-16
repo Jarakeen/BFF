@@ -38,6 +38,7 @@ def _line_key(value: object) -> str:
 class ExtremePlayerSkillLegalityContext:
     equipped_class_lines: tuple[str, ...]
     equipped_weapon_lines: tuple[str, ...] = ()
+    equipped_armor_lines: tuple[str, ...] = ()
     vampire: bool = False
     werewolf: bool = False
     transformed_form: str | None = None
@@ -68,6 +69,14 @@ class ExtremePlayerSkillCandidateService:
         context: ExtremePlayerSkillLegalityContext,
     ) -> bool:
         allowed = {_line_key(line) for line in context.equipped_weapon_lines}
+        return _line_key(row.skill_line) in allowed
+
+    @staticmethod
+    def _armor_line_allowed(
+        row: ExtremePlayerSkillRecord,
+        context: ExtremePlayerSkillLegalityContext,
+    ) -> bool:
+        allowed = {_line_key(line) for line in context.equipped_armor_lines}
         return _line_key(row.skill_line) in allowed
 
     @staticmethod
@@ -112,10 +121,13 @@ class ExtremePlayerSkillCandidateService:
             return cls._class_line_allowed(row, context)
         if row.domain is ExtremeSkillDomain.WEAPON:
             return cls._weapon_line_allowed(row, context)
+        if row.domain is ExtremeSkillDomain.ARMOR:
+            if context.equipped_armor_lines:
+                return cls._armor_line_allowed(row, context)
+            return row.combat_line
         if row.domain is ExtremeSkillDomain.WORLD:
             return cls._world_line_allowed(row, context)
         if row.domain in {
-            ExtremeSkillDomain.ARMOR,
             ExtremeSkillDomain.GUILD,
             ExtremeSkillDomain.ALLIANCE_WAR,
             ExtremeSkillDomain.OTHER,

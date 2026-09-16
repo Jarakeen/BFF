@@ -109,3 +109,22 @@ def test_unproven_setup_witness_fails_closed_without_mutating_build() -> None:
     assert result.materialized is False
     assert result.build.to_dict() == build.to_dict()
     assert result.unresolved
+
+def test_persistent_slotted_witness_can_target_scored_active_bar() -> None:
+    build = PlayerBuild()
+    build.FrontBarSkills = ["Scored Heal", "A", "B", "C", "", "Front Ultimate"]
+    build.BackBarSkills = ["One", "Two", "Three", "Four", "Five", "Back Ultimate"]
+
+    result = ExtremeActualHealSetupActionMaterializationService.materialize(
+        build,
+        _witness("Annulment"),
+        active_bar="front",
+        placement_bar="active",
+    )
+
+    assert result.materialized is True
+    assert result.setup_bar == "front"
+    assert result.slot_index == 4
+    assert result.build.FrontBarSkills[:5] == ["Scored Heal", "A", "B", "C", "Annulment"]
+    assert result.build.BackBarSkills == build.BackBarSkills
+

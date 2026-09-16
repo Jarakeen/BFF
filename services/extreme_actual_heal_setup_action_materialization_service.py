@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-"""Materialize reviewed H1 setup actions on the inactive bar.
+"""Materialize reviewed H1 setup actions on a physically specified bar.
 
-The scored heal stays on ``active_bar``. A proven setup-action witness is placed on
-the opposite bar, cast before the scored event, then H1 swaps back to the original
-active bar. This prevents a setup witness from inventing a sixth ordinary skill
-slot or displacing the candidate heal being evaluated.
+Temporary pre-event actions default to the inactive bar: cast, swap back, then
+score the heal. Persistent slotted conditions may explicitly target the scored
+active bar. Every placement consumes one of the five ordinary skill slots.
 
 This layer performs placement only. Capability/route legality must already have
 been proved by :mod:`extreme_actual_heal_setup_action_legality_service`.
@@ -46,10 +45,18 @@ class ExtremeActualHealSetupActionMaterializationService:
         witness: ExtremeActualHealSetupActionWitness,
         *,
         active_bar: str = "front",
+        placement_bar: str = "inactive",
     ) -> tuple[ExtremeActualHealSetupActionMaterialization, ...]:
         baseline = PlayerBuild.from_dict(build.to_dict())
         normalized_active = "back" if str(active_bar or "front").strip().casefold() == "back" else "front"
-        setup_bar = "front" if normalized_active == "back" else "back"
+        placement = str(placement_bar or "inactive").strip().casefold()
+        if placement not in {"active", "inactive"}:
+            raise ValueError(f"unsupported H1 setup placement bar: {placement_bar!r}")
+        setup_bar = (
+            normalized_active
+            if placement == "active"
+            else ("front" if normalized_active == "back" else "back")
+        )
 
         if not witness.proven or not str(witness.skill_name or "").strip():
             return (
@@ -100,7 +107,7 @@ class ExtremeActualHealSetupActionMaterializationService:
             skills[slot] = wanted_name
             setattr(result, setup_attr, skills)
 
-            if tuple(getattr(result, active_attr)) != original_active:
+            if placement == "inactive" and tuple(getattr(result, active_attr)) != original_active:
                 results.append(
                     ExtremeActualHealSetupActionMaterialization(
                         build=baseline,
@@ -129,8 +136,14 @@ class ExtremeActualHealSetupActionMaterializationService:
         witness: ExtremeActualHealSetupActionWitness,
         *,
         active_bar: str = "front",
+        placement_bar: str = "inactive",
     ) -> ExtremeActualHealSetupActionMaterialization:
-        variants = cls.variants(build, witness, active_bar=active_bar)
+        variants = cls.variants(
+            build,
+            witness,
+            active_bar=active_bar,
+            placement_bar=placement_bar,
+        )
         materialized = tuple(item for item in variants if item.materialized)
         if not materialized:
             return variants[0]

@@ -24,7 +24,7 @@ from services.extreme_player_skill_candidate_service import (
     ExtremePlayerSkillCandidateService,
     ExtremePlayerSkillLegalityContext,
 )
-from services.extreme_skill_universe_service import ExtremePlayerSkillRecord
+from services.extreme_skill_universe_service import ExtremePlayerSkillRecord, ExtremeSkillDomain
 from services.rotation_skill_timing_evidence_service import RotationSkillTimingEvidenceService
 
 
@@ -32,6 +32,7 @@ DEALS_DIRECT_MOBILITY_DAMAGE = "deals_direct_mobility_damage"
 DEALS_FLAME_DAMAGE = "deals_flame_damage"
 GRANTS_RESOLVE = "grants_resolve"
 HAS_CAST_OR_CHANNEL_TIME = "has_cast_or_channel_time"
+IS_ARMOR_ABILITY = "is_armor_ability"
 IS_ASSAULT_ABILITY = "is_assault_ability"
 IS_EARTHEN_HEART_ABILITY = "is_earthen_heart_ability"
 REDUCES_TARGET_RESISTANCE = "reduces_target_resistance"
@@ -122,6 +123,7 @@ class ExtremeActualHealSetupActionLegalityService:
             DEALS_FLAME_DAMAGE,
             GRANTS_RESOLVE,
             HAS_CAST_OR_CHANNEL_TIME,
+            IS_ARMOR_ABILITY,
             IS_ASSAULT_ABILITY,
             IS_EARTHEN_HEART_ABILITY,
             REDUCES_TARGET_RESISTANCE,
@@ -272,6 +274,8 @@ class ExtremeActualHealSetupActionLegalityService:
             return self._supports_resolve(row)
         if capability == HAS_CAST_OR_CHANNEL_TIME:
             return self._timing_evidence(row) is not None
+        if capability == IS_ARMOR_ABILITY:
+            return row.domain is ExtremeSkillDomain.ARMOR
         if capability == IS_ASSAULT_ABILITY:
             return str(row.skill_line or "").strip().casefold() == "assault"
         if capability == IS_EARTHEN_HEART_ABILITY:
@@ -339,6 +343,11 @@ class ExtremeActualHealSetupActionLegalityService:
                 f"{witness.name}: route-legal active skill has canonical cast/channel timing "
                 f"cast={cast_time!r}s channel={channel_time!r}s"
             )
+        elif key == IS_ARMOR_ABILITY:
+            evidence_text = (
+                f"{witness.name}: route-legal non-Ultimate active skill belongs to "
+                f"the equipped {witness.skill_line} armor line"
+            )
         elif key == IS_ASSAULT_ABILITY:
             evidence_text = (
                 f"{witness.name}: route-legal non-Ultimate active skill belongs to the Assault skill line"
@@ -366,6 +375,7 @@ __all__ = [
     "DEALS_FLAME_DAMAGE",
     "GRANTS_RESOLVE",
     "HAS_CAST_OR_CHANNEL_TIME",
+    "IS_ARMOR_ABILITY",
     "IS_ASSAULT_ABILITY",
     "IS_EARTHEN_HEART_ABILITY",
     "REDUCES_TARGET_RESISTANCE",

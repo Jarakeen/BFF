@@ -18,6 +18,7 @@ from services.extreme_actual_heal_setup_action_legality_service import (
     DEALS_FLAME_DAMAGE,
     GRANTS_RESOLVE,
     HAS_CAST_OR_CHANNEL_TIME,
+    IS_ARMOR_ABILITY,
     IS_ASSAULT_ABILITY,
     IS_EARTHEN_HEART_ABILITY,
     REDUCES_TARGET_RESISTANCE,
@@ -28,6 +29,10 @@ from services.extreme_actual_heal_setup_action_materialization_service import (
 )
 from services.extreme_player_skill_candidate_service import ExtremePlayerSkillLegalityContext
 
+
+_REVIEWED_ACTIVE_BAR_SLOTTED_SETS = (
+    ("Armor Master", IS_ARMOR_ABILITY, "armor-ability-slotted"),
+)
 
 _REVIEWED_SETUP_SETS = (
     ("Basalt-Blooded Warrior", IS_EARTHEN_HEART_ABILITY, "earthen-heart"),
@@ -66,6 +71,16 @@ class ExtremeActualHealSetupActionPackageAdapter:
         key = str(value or "").strip().casefold()
         return key if key in {"front", "back"} else None
 
+    @staticmethod
+    def _armor_lines(build) -> tuple[str, ...]:
+        names = {
+            f"{str(entry.get('Weight', '') or '').strip()} Armor"
+            for entry in build.Armor.values()
+            if str(entry.get("Weight", "") or "").strip().casefold()
+            in {"light", "medium", "heavy"}
+        }
+        return tuple(sorted(names, key=str.casefold))
+
     def _orientations(self, active_bar: str | None) -> tuple[str, ...]:
         explicit = self._normalized_bar(active_bar)
         if explicit is not None:
@@ -89,6 +104,7 @@ class ExtremeActualHealSetupActionPackageAdapter:
             build = candidate.candidate_build
             legality_context = ExtremePlayerSkillLegalityContext(
                 equipped_class_lines=tuple(build.ClassSkillLines or ()),
+                equipped_armor_lines=self._armor_lines(build),
                 vampire=bool(build.Vampire),
                 werewolf=bool(build.Werewolf),
                 transformed_form=str(build.TransformedForm or "").strip() or None,
@@ -96,20 +112,29 @@ class ExtremeActualHealSetupActionPackageAdapter:
 
             for scored_bar in orientations:
                 counts = GearStatInputResolver.equipped_set_counts(build, active_bar=scored_bar)
-                for set_name, capability, token in _REVIEWED_SETUP_SETS:
+                reviewed_placements = (
+                    *((set_name, capability, token, "inactive") for set_name, capability, token in _REVIEWED_SETUP_SETS),
+                    *((set_name, capability, token, "active") for set_name, capability, token in _REVIEWED_ACTIVE_BAR_SLOTTED_SETS),
+                )
+                for set_name, capability, token, placement in reviewed_placements:
                     if int(counts.get(set_name, 0)) < 5:
                         continue
                     witness = self.legality.witness(capability, legality_context)
                     if not witness.proven:
                         continue
 
-                    setup_bar = "back" if scored_bar == "front" else "front"
+                    setup_bar = (
+                        scored_bar
+                        if placement == "active"
+                        else ("back" if scored_bar == "front" else "front")
+                    )
                     setup_attr = self._bar_attr(setup_bar)
                     before_bar = list(getattr(build, setup_attr))
                     for placement in ExtremeActualHealSetupActionMaterializationService.variants(
                         build,
                         witness,
                         active_bar=scored_bar,
+                        placement_bar=placement,
                     ):
                         if not placement.materialized:
                             continue
@@ -147,4 +172,7 @@ class ExtremeActualHealSetupActionPackageAdapter:
         return self.expand_candidates(candidates, active_bar=active_bar)
 
 
-__all__ = ["ExtremeActualHealSetupActionPackageAdapter"]
+__all__ = [
+    "_REVIEWED_ACTIVE_BAR_SLOTTED_SETS",
+    "ExtremeActualHealSetupActionPackageAdapter",
+]

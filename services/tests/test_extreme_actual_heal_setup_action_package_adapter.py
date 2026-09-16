@@ -2,6 +2,7 @@ from minmax.build_candidate import BuildCandidate, BuildChange
 from models.build_model import PlayerBuild
 from services.extreme_actual_heal_setup_action_legality_service import (
     HAS_CAST_OR_CHANNEL_TIME,
+    IS_ARMOR_ABILITY,
     ExtremeActualHealSetupActionWitness,
 )
 from services.extreme_actual_heal_setup_action_package_adapter import (
@@ -76,3 +77,17 @@ def test_unreviewed_set_is_not_setup_expanded() -> None:
     adapter = ExtremeActualHealSetupActionPackageAdapter(_Delegate(ordinary), _Legality())
     rows = adapter.build_candidates(PlayerBuild(), active_bar="front")
     assert [row.candidate_id for row in rows] == ["ordinary"]
+
+def test_armor_master_materializes_armor_ability_on_scored_active_bar() -> None:
+    candidate = _candidate("Armor Master", "armor-master")
+    for entry in candidate.candidate_build.Armor.values():
+        entry["Weight"] = "Light"
+    adapter = ExtremeActualHealSetupActionPackageAdapter(_Delegate(candidate), _Legality())
+
+    rows = adapter.build_candidates(PlayerBuild(), active_bar="front")
+
+    slotted = tuple(row for row in rows if ":setup-armor-ability-slotted:" in row.candidate_id)
+    assert len(slotted) == 5
+    assert all("Vigor" in row.candidate_build.FrontBarSkills[:5] for row in slotted)
+    assert all(row.candidate_build.BackBarSkills == candidate.candidate_build.BackBarSkills for row in slotted)
+

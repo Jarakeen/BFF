@@ -78,6 +78,26 @@ class GearSetResourceConditionResolver:
                     for index, (stat, condition) in enumerate(specs)
                 ]
 
+        armor_master = re.fullmatch(
+            r"While you have an Armor ability slotted, your Max Health is increased by "
+            r"(?P<value>\d+(?:\.\d+)?)%\.\s*When you use an Armor ability while in combat, "
+            r"your Physical and Spell Resistance is increased by "
+            r"(?:\d[\d,]*\s*-\s*)?\d[\d,]* for \d+(?:\.\d+)? seconds?\.?",
+            text,
+            re.IGNORECASE,
+        )
+        if armor_master:
+            return [
+                self._effect(
+                    StatId.MAX_HEALTH,
+                    float(armor_master.group("value")),
+                    source_text,
+                    condition="armor_ability_slotted",
+                    operation=EffectOperation.ADD_PERCENT,
+                    unit=EffectUnit.PERCENT,
+                )
+            ]
+
         group_resource_patterns = (
             (
                 rf"Increases Max Health by {self._NUMBER_OR_RANGE} for you and up to \d+ other group members"
@@ -122,14 +142,16 @@ class GearSetResourceConditionResolver:
         source: str,
         *,
         condition: str | None = None,
+        operation: EffectOperation = EffectOperation.ADD,
+        unit: EffectUnit = EffectUnit.FLAT,
     ) -> Effect:
         return Effect(
-            operation=EffectOperation.ADD,
+            operation=operation,
             value=float(value),
             source=source,
             stat=stat,
             kind=EffectKind.STAT,
-            unit=EffectUnit.FLAT,
+            unit=unit,
             condition=condition,
         )
 
