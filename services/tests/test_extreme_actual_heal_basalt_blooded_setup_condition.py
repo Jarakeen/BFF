@@ -28,10 +28,10 @@ from services.extreme_skill_universe_service import ExtremePlayerSkillRecord, Ex
 
 DESCRIPTION = (
     "(5 items) Casting an Earthen Heart ability grants you a Rock Stance for 10 seconds. "
-    "While you are on your Primary Weapon you gain Molten Stance, increasing your damage "
-    "done by 8% and reducing your damage taken by 8%. While you are on your Secondary "
-    "Weapon you gain Obsidian Stance, increasing your Healing Done and damage shields by "
-    "14%. Bar Swapping will swap your Stance automatically."
+    "While on your Primary Weapon you gain Molten Stance, granting you Major Heroism, "
+    "generating 3 Ultimate every 1.5 seconds. While you are on your Secondary Weapon you "
+    "gain Obsidian Stance, increasing your Healing Done and damage shields by 14%. "
+    "Bar Swapping will swap your Stance automatically."
 )
 
 
@@ -132,6 +132,24 @@ def test_basalt_condition_requires_front_setup_and_back_scored_bar(tmp_path: Pat
 def test_basalt_exact_five_piece_maps_to_fourteen_percent_healing_done() -> None:
     effects = GearSetHealingConditionResolver().resolve(
         GearSetBonus(id=1, set_id=1, piece_count=5, description=DESCRIPTION)
+    )
+    assert len(effects) == 1
+    assert effects[0].stat == StatId.HEALING_DONE
+    assert effects[0].value == 14.0
+    assert effects[0].condition == BASALT_BLOODED_OBSIDIAN_STANCE_CONDITION
+
+
+def test_basalt_canonical_markup_and_fused_spacing_maps_to_healing_done() -> None:
+    canonical = (
+        "(5 items) Casting an Earthen Heart ability grants you a Rock Stance for "
+        "|cffffff10|r seconds. While on your Primary Weapon you gain Molten Stance, "
+        "granting you Major Heroism, generating |cffffff3|r Ultimate every "
+        "|cffffff1.5|r seconds. While youare on your Secondary Weapon you gain "
+        "Obsidian Stance, increasing your Healing Done and damage shields by "
+        "|cffffff14|r%. \n\nBar Swapping will swap your Stance automatically."
+    )
+    effects = GearSetHealingConditionResolver().resolve(
+        GearSetBonus(id=1, set_id=1, piece_count=5, description=canonical)
     )
     assert len(effects) == 1
     assert effects[0].stat == StatId.HEALING_DONE

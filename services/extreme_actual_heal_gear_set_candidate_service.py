@@ -17,10 +17,12 @@ from services.extreme_gear_set_objective_service import ExtremeGearSetObjectiveS
 _BASALT_BLOODED_WARRIOR_BLOCKER = re.compile(
     r"^Basalt-Blooded Warrior \(5\): active set bonus is not yet mechanic-mapped:.*"
     r"Casting an Earthen Heart ability grants you (?:a )?Rock Stance for\s*10 seconds\.\s*"
-    r"While (?:you are )?on your Primary Weapon you gain Molten Stance, increasing your damage done by\s*"
-    r"\d+(?:\.\d+)?% and reducing your damage taken by\s*\d+(?:\.\d+)?%\.\s*"
-    r"While (?:you are )?on your Secondary Weapon you gain Obsidian Stance, increasing your Healing Done "
-    r"and damage shields by\s*14%\.\s*Bar Swapping will swap your Stance automatically\.?$",
+    r"While (?:you\s*are\s+)?on your Primary Weapon you gain Molten Stance, "
+    r"granting you Major Heroism, generating\s*\d+(?:\.\d+)?\s*Ultimate every\s*"
+    r"\d+(?:\.\d+)?\s*seconds\.\s*"
+    r"While (?:you\s*are\s+)?on your Secondary Weapon you gain Obsidian Stance, "
+    r"increasing your Healing Done and damage\s*shields by\s*14%\.\s*"
+    r"Bar Swapping will swap your Stance automatically\.?$",
     re.IGNORECASE | re.DOTALL,
 )
 _CRUSADER_BLOCKER = re.compile(

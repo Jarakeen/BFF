@@ -103,11 +103,12 @@ class GearSetHealingConditionResolver:
 
         match = re.fullmatch(
             r"Casting an Earthen Heart ability grants you (?:a )?Rock Stance for 10 seconds\.\s*"
-            r"While (?:you are )?on your Primary Weapon you gain Molten Stance, increasing "
-            r"your damage done by \d+(?:\.\d+)?% and reducing your damage taken by "
-            r"\d+(?:\.\d+)?%\.\s*While (?:you are )?on your Secondary Weapon you gain "
-            r"Obsidian Stance, increasing your Healing Done and damage shields by "
-            r"(?P<value>\d+(?:\.\d+)?)%\.\s*Bar Swapping will swap your Stance automatically\.?",
+            r"While (?:you\s*are\s+)?on your Primary Weapon you gain Molten Stance, "
+            r"granting you Major Heroism, generating \d+(?:\.\d+)? Ultimate every "
+            r"\d+(?:\.\d+)? seconds\.\s*While (?:you\s*are\s+)?on your Secondary "
+            r"Weapon you gain Obsidian Stance, increasing your Healing Done and "
+            r"damage\s*shields by (?P<value>\d+(?:\.\d+)?)%\.\s*"
+            r"Bar Swapping will swap your Stance automatically\.?",
             text,
             re.IGNORECASE,
         )

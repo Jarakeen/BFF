@@ -940,7 +940,7 @@ Minor Courage state. Existing Minor Courage does not stack with it.
 
 ### Basalt-Blooded Warrior bar identity matters for healing
 
-Basalt-Blooded Warrior does not grant its healing bonus merely because an Earthen Heart skill was cast. The cast starts a 10-second stance window, but the +14% Healing Done branch is Obsidian Stance on the secondary/back weapon. For an Extreme H1 heal witness, the setup therefore has to cast an Earthen Heart ability from the primary/front bar, swap bars, and score the heal from the secondary/back bar before the stance expires.
+Basalt-Blooded Warrior does not grant its healing bonus merely because an Earthen Heart skill was cast. The cast starts a 10-second stance window. Its current primary/front Molten Stance grants Major Heroism, while the +14% Healing Done branch is Obsidian Stance on the secondary/back weapon. For an Extreme H1 heal witness, the setup therefore has to cast an Earthen Heart ability from the primary/front bar, swap bars, and score the heal from the secondary/back bar before the stance expires.
 
 ### Class route IDs and skill-line display names are the same identity
 
