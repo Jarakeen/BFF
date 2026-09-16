@@ -37,7 +37,7 @@ U50_MUNDUS_EFFECTS: dict[str, tuple[tuple[str, float, str, int, str], ...]] = {
     ),
     "The Steed": (
         (StatId.HEALTH_RECOVERY.value, 238.0, "flat", 1, ""),
-        ("movement_speed", 10.0, "percent", 0, "Movement speed is outside the current character-sheet stat layer."),
+        (StatId.MOVEMENT_SPEED.value, 10.0, "percent", 1, ""),
     ),
     "The Thief": ((StatId.CRITICAL_CHANCE.value, 1333.0, "rating", 1, ""),),
     "The Tower": ((StatId.MAX_STAMINA.value, 2023.0, "flat", 1, ""),),
@@ -138,133 +138,148 @@ class MundusRepository:
 
                 CREATE TABLE IF NOT EXISTS mundus_effect (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    mundus_id INTEGER NOT NULL REFERENCES mundus_stone(id) ON DELETE CASCADE,
+                    mundus_stone_id INTEGER NOT NULL,
                     stat_id TEXT NOT NULL,
                     value REAL NOT NULL,
                     unit TEXT NOT NULL,
                     supported INTEGER NOT NULL DEFAULT 1,
                     notes TEXT NOT NULL DEFAULT '',
-                    UNIQUE(mundus_id, stat_id)
+                    UNIQUE(mundus_stone_id, stat_id),
+                    FOREIGN KEY (mundus_stone_id) REFERENCES mundus_stone(id) ON DELETE CASCADE
                 );
                 """
             )
-
-            if self.game_update == U50_GAME_UPDATE:
-                source_url = U50_SOURCE_URL
-                source_effects = U50_MUNDUS_EFFECTS
-            elif self.game_update == U51_GAME_UPDATE:
-                source_url = U51_SOURCE_URL
-                source_effects = U51_MUNDUS_EFFECTS
-            else:
-                return
-
-            for name, effects in source_effects.items():
+            source_url = U50_SOURCE_URL if self.game_update == U50_GAME_UPDATE else U51_SOURCE_URL
+            effects = U50_MUNDUS_EFFECTS if self.game_update == U50_GAME_UPDATE else U51_MUNDUS_EFFECTS
+            for name, rows in effects.items():
                 connection.execute(
                     """
                     INSERT INTO mundus_stone(name, game_update, source_url)
                     VALUES (?, ?, ?)
-                    ON CONFLICT(name, game_update)
-                    DO UPDATE SET source_url = excluded.source_url
+                    ON CONFLICT(name, game_update) DO UPDATE SET source_url = excluded.source_url
                     """,
                     (name, self.game_update, source_url),
                 )
-                row = connection.execute(
+                stone_id = connection.execute(
                     "SELECT id FROM mundus_stone WHERE name = ? AND game_update = ?",
                     (name, self.game_update),
-                ).fetchone()
-                mundus_id = int(row["id"])
-                for stat_id, value, unit, supported, notes in effects:
+                ).fetchone()["id"]
+                for stat_id, value, unit, supported, notes in rows:
                     connection.execute(
                         """
-                        INSERT INTO mundus_effect(mundus_id, stat_id, value, unit, supported, notes)
+                        INSERT INTO mundus_effect(mundus_stone_id, stat_id, value, unit, supported, notes)
                         VALUES (?, ?, ?, ?, ?, ?)
-                        ON CONFLICT(mundus_id, stat_id)
-                        DO UPDATE SET
+                        ON CONFLICT(mundus_stone_id, stat_id) DO UPDATE SET
                             value = excluded.value,
                             unit = excluded.unit,
                             supported = excluded.supported,
                             notes = excluded.notes
                         """,
-                        (mundus_id, stat_id, value, unit, supported, notes),
+                        (stone_id, stat_id, value, unit, supported, notes),
                     )
-        # Seeding is the only mutating operation this repository owns. If a caller
-        # explicitly reseeds an existing instance, discard read caches so subsequent
-        # reads observe the newly seeded canonical rows.
-        self._names_cache = None
-        self._records_cache.clear()
-        self._effects_cache.clear()
+            connection.commit()
 
-    def list_names(self) -> list[str]:
+    def list_names(self) -> tuple[str, ...]:
         if self._names_cache is not None:
-            return list(self._names_cache)
+            return self._names_cache
         with self._connect() as connection:
             rows = connection.execute(
-                "SELECT name FROM mundus_stone WHERE game_update = ? ORDER BY name",
+                "SELECT name FROM mundus_stone WHERE game_update = ? ORDER BY name COLLATE NOCASE",
                 (self.game_update,),
             ).fetchall()
-        self._names_cache = tuple(str(row["name"]) for row in rows)
-        return list(self._names_cache)
+        self._names_cache = tuple(row["name"] for row in rows)
+        return self._names_cache
 
-    def get_records(self, name: str) -> list[MundusEffectRecord]:
-        requested = str(name).strip()
-        cached = self._records_cache.get(requested)
+    def records_for_name(self, name: str) -> tuple[MundusEffectRecord, ...]:
+        key = str(name or "").strip()
+        if not key:
+            return ()
+        cached = self._records_cache.get(key.casefold())
         if cached is not None:
-            return list(cached)
+            return cached
         with self._connect() as connection:
             rows = connection.execute(
                 """
-                SELECT ms.name, me.stat_id, me.value, me.unit, me.supported, me.notes
-                FROM mundus_stone ms
-                JOIN mundus_effect me ON me.mundus_id = ms.id
-                WHERE ms.name = ? AND ms.game_update = ?
-                ORDER BY me.id
+                SELECT s.name, e.stat_id, e.value, e.unit, e.supported, e.notes
+                FROM mundus_stone AS s
+                JOIN mundus_effect AS e ON e.mundus_stone_id = s.id
+                WHERE s.game_update = ? AND s.name = ? COLLATE NOCASE
+                ORDER BY e.id
                 """,
-                (requested, self.game_update),
+                (self.game_update, key),
             ).fetchall()
-        records = tuple(
+        result = tuple(
             MundusEffectRecord(
-                name=str(row["name"]),
-                stat_id=str(row["stat_id"]),
+                name=row["name"],
+                stat_id=row["stat_id"],
                 value=float(row["value"]),
-                unit=str(row["unit"]),
+                unit=row["unit"],
                 supported=bool(row["supported"]),
-                notes=str(row["notes"] or ""),
+                notes=row["notes"] or "",
             )
             for row in rows
         )
-        self._records_cache[requested] = records
-        return list(records)
+        self._records_cache[key.casefold()] = result
+        return result
 
-    def get_effects(self, name: str, *, multiplier: float = 1.0) -> tuple[list[Effect], list[str]]:
-        requested = str(name).strip()
-        cache_key = (requested, float(multiplier))
+    def effects_for_name(
+        self,
+        name: str,
+        *,
+        divines_multiplier: float = 1.0,
+    ) -> tuple[tuple[Effect, ...], tuple[str, ...]]:
+        cache_key = (str(name or "").strip().casefold(), float(divines_multiplier))
         cached = self._effects_cache.get(cache_key)
         if cached is not None:
-            effects, unresolved = cached
-            return list(effects), list(unresolved)
+            return cached
 
         effects: list[Effect] = []
         unresolved: list[str] = []
-        for record in self.get_records(requested):
+        for record in self.records_for_name(name):
             if not record.supported:
-                unresolved.append(f"{record.name}: {record.stat_id} unresolved ({record.notes})")
+                unresolved.append(f"{record.name}: {record.notes or record.stat_id}")
                 continue
             try:
                 stat = StatId(record.stat_id)
             except ValueError:
                 unresolved.append(f"{record.name}: unsupported stat {record.stat_id}")
                 continue
-
-            operation = EffectOperation.ADD_PERCENT if record.unit == "percent" else EffectOperation.ADD
-            unit = EffectUnit.PERCENT if record.unit == "percent" else EffectUnit.FLAT
-            effects.append(
-                Effect(
-                    source=f"Mundus: {record.name}",
-                    stat=stat,
-                    operation=operation,
-                    value=float(record.value) * float(multiplier),
-                    unit=unit,
+            value = float(record.value)
+            if record.unit == "percent":
+                value *= float(divines_multiplier)
+                effects.append(
+                    Effect(
+                        stat=stat,
+                        operation=EffectOperation.ADD_PERCENT,
+                        value=value,
+                        unit=EffectUnit.PERCENT,
+                        source=f"Mundus: {record.name}",
+                    )
                 )
-            )
-        self._effects_cache[cache_key] = (tuple(effects), tuple(unresolved))
-        return list(effects), list(unresolved)
+            elif record.unit == "rating":
+                value *= float(divines_multiplier)
+                effects.append(
+                    Effect(
+                        stat=stat,
+                        operation=EffectOperation.ADD,
+                        value=value,
+                        unit=EffectUnit.RATING,
+                        source=f"Mundus: {record.name}",
+                    )
+                )
+            elif record.unit == "flat":
+                effects.append(
+                    Effect(
+                        stat=stat,
+                        operation=EffectOperation.ADD,
+                        value=value,
+                        unit=EffectUnit.FLAT,
+                        source=f"Mundus: {record.name}",
+                    )
+                )
+            else:
+                unresolved.append(f"{record.name}: unsupported Mundus unit {record.unit}")
+
+        result = (tuple(effects), tuple(unresolved))
+        self._effects_cache[cache_key] = result
+        return result
