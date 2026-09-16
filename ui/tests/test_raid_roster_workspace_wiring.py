@@ -18,7 +18,6 @@ def test_urban_wilderness_is_the_only_selectable_visual_profile(tmp_path: Path) 
         (COLOR_VISION_FRIENDLY, "Colorblind Friendly"),
     )
 
-    # Historical values remain migration inputs, not selectable themes.
     for legacy in (
         "foundry_grimoire",
         "rylo_grayscale",
@@ -42,7 +41,6 @@ def test_complete_raid_workspace_is_registered_as_first_class_pages() -> None:
         assert page_type in source
         assert f'_register_page(window, "{route}"' in source
 
-    # Assignments is no longer an alias back into the legacy Roster page.
     assert 'window.pages["assignments"] = page' not in source
     assert 'MainWindow.' not in source
 
@@ -83,8 +81,6 @@ def test_roster_workspace_exposes_six_card_workspaces_and_urban_wilderness_art()
     ):
         assert f'"{title}"' in base
 
-    # The active dashboard is intentionally tab-free. The compatibility wrapper
-    # must not try to resurrect the retired tabbed shell.
     assert "QTabWidget" not in dashboard
     assert "self.tabs" not in dashboard
     assert '"city_night"' in dashboard
@@ -92,6 +88,14 @@ def test_roster_workspace_exposes_six_card_workspaces_and_urban_wilderness_art()
     assert '"roster_team.webp"' in dashboard
     assert "class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):" in wrapper
     assert "self.tabs" not in wrapper
+
+    # Final composition polish protects the approved mockup proportions.
+    assert '"players": "users"' in wrapper
+    assert '"characters": "character"' in wrapper
+    assert 'setProperty("rosterMetricBadge", True)' in wrapper
+    assert "setMaximumWidth(390)" in wrapper
+    assert "setMaximumHeight(220)" in wrapper
+    assert "self.table.setMinimumWidth(720)" in wrapper
 
 
 def test_city_key_remains_the_compatibility_storage_key_for_urban_wilderness() -> None:
