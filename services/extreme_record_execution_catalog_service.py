@@ -49,12 +49,11 @@ _SPECIALIZED_FAMILIES = {
     "sprint_speed": "movement-state",
     "stealthed_movement_speed": "movement-state",
     "detection_radius_reduction": "stealth-state",
-}
-
-_PENDING_FAMILIES = {
     "invisibility_duration": "stealth-runtime",
     "invisibility_uptime": "stealth-runtime",
 }
+
+_PENDING_FAMILIES: dict[str, str] = {}
 
 
 class ExtremeRecordExecutionCatalogService:
@@ -112,6 +111,8 @@ class ExtremeRecordExecutionCatalogService:
             objective.key for objective in EXTREME_RECORD_OBJECTIVES
         ):
             raise AssertionError("Extreme record execution catalog changed canonical objective ordering")
+        if any(row.execution_family == "unclassified" for row in rows):
+            raise AssertionError("Extreme record execution catalog contains an unclassified objective")
         return tuple(rows)
 
     @classmethod
