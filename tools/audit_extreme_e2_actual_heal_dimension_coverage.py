@@ -140,10 +140,9 @@ def build_dimension_coverage() -> tuple[E2DimensionCoverage, ...]:
         E2DimensionCoverage(
             "armor_weights_passives",
             "Armor weights + armor passives",
-            E2DimensionStatus.PARTIAL,
-            "Canonical armor/passive resolvers",
-            "Equipped armor traits/enchants are searched and canonical armor passives can be scored from a materialized build.",
-            "H1 does not yet expose an exhaustive physically legal armor-weight denominator coupled to named-set slot eligibility.",
+            E2DimensionStatus.COVERED,
+            "ExtremeActualHealArmorWeightLegalityService + ExtremeActualHealArmorWeightCandidateService + ExtremeCanonicalActualHealOptimizationService",
+            "Every current-layout and armor-bearing package candidate is expanded through canonical gear_set_piece slot/armor_type legality, the full legal per-slot weight product is counted, and one deterministic witness is retained for every H1-relevant (Medium-piece count, distinct armor-type count) signature before canonical healing rescoring. This preserves the reviewed Agility/Dexterity and Undaunted Mettle inputs without treating cosmetic slot permutations as separate mechanics.",
         ),
         E2DimensionCoverage(
             "gear_packages_procs",
