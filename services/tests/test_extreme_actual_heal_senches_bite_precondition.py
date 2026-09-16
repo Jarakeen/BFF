@@ -65,12 +65,7 @@ def test_senches_bite_canonical_tooltip_preserves_minimum_when_requested() -> No
     assert {effect.value for effect in effects} == {0.0}
 
 
-def test_senches_bite_exact_h1_blocker_is_reviewed_by_dodge_witness() -> None:
-    blocker = (
-        "Senche's Bite (5): active set bonus is not yet mechanic-mapped: "
-        "(5 items) Whenever you successfully Dodge, increase your Critical Damage and "
-        "Critical Healing by 0-15% for 10 seconds."
-    )
+def _review(blocker: str):
     row = ExtremeGearSetObjectiveCandidate(
         set_id=1,
         set_name="Senche's Bite",
@@ -80,8 +75,28 @@ def test_senches_bite_exact_h1_blocker_is_reviewed_by_dodge_witness() -> None:
         reviewed_delta=0.0,
         unresolved=(blocker,),
     )
+    return ExtremeActualHealGearConditionRelevanceService.review(row)
 
-    result = ExtremeActualHealGearConditionRelevanceService.review(row)
+
+def test_senches_bite_exact_h1_blocker_is_reviewed_by_dodge_witness() -> None:
+    blocker = (
+        "Senche's Bite (5): active set bonus is not yet mechanic-mapped: "
+        "(5 items) Whenever you successfully Dodge, increase your Critical Damage and "
+        "Critical Healing by 0-15% for 10 seconds."
+    )
+
+    result = _review(blocker)
+
+    assert result.h1_mechanic_complete is True
+    assert result.h1_positive_modifier_proven is True
+    assert result.remaining_blockers == ()
+    assert result.ignored_blockers == (blocker,)
+
+
+def test_senches_bite_resolved_condition_blocker_is_reviewed_by_dodge_witness() -> None:
+    blocker = "Senche's Bite (5): relevant set effect requires condition successful_dodge_recent"
+
+    result = _review(blocker)
 
     assert result.h1_mechanic_complete is True
     assert result.h1_positive_modifier_proven is True
