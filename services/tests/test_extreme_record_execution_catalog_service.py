@@ -14,7 +14,7 @@ def test_every_canonical_record_has_exactly_one_execution_disposition() -> None:
     )
 
 
-def test_ready_static_records_include_existing_legacy_stats_and_critical_healing() -> None:
+def test_ready_static_records_include_existing_stats_critical_healing_and_block() -> None:
     rows = {row.objective.key: row for row in ExtremeRecordExecutionCatalogService.descriptors()}
 
     for key in (
@@ -28,6 +28,8 @@ def test_ready_static_records_include_existing_legacy_stats_and_critical_healing
         "critical_damage",
         "healing_done",
         "critical_healing",
+        "block_mitigation",
+        "block_cost_reduction",
     ):
         row = rows[key]
         assert row.status is ExtremeRecordExecutionStatus.READY
@@ -41,11 +43,6 @@ def test_related_records_share_execution_families() -> None:
     assert rows["actual_heal"].status is ExtremeRecordExecutionStatus.SPECIALIZED
     assert rows["actual_heal"].execution_family == "actual-heal-event"
     assert rows["critical_heal"].execution_family == "actual-heal-event"
-
-    assert rows["block_mitigation"].status is ExtremeRecordExecutionStatus.SPECIALIZED
-    assert rows["block_cost_reduction"].status is ExtremeRecordExecutionStatus.SPECIALIZED
-    assert rows["block_mitigation"].execution_family == "block-state"
-    assert rows["block_cost_reduction"].execution_family == "block-state"
 
     assert rows["resource_sustain"].execution_family == "resource-timeline"
     assert rows["ultimate_generation"].execution_family == "resource-timeline"
@@ -65,6 +62,6 @@ def test_execution_disposition_counts_make_remaining_work_explicit() -> None:
     for row in rows:
         counts[row.status] += 1
 
-    assert counts[ExtremeRecordExecutionStatus.READY] == 17
-    assert counts[ExtremeRecordExecutionStatus.SPECIALIZED] == 3
+    assert counts[ExtremeRecordExecutionStatus.READY] == 19
+    assert counts[ExtremeRecordExecutionStatus.SPECIALIZED] == 1
     assert counts[ExtremeRecordExecutionStatus.PENDING] == 11
