@@ -136,6 +136,13 @@ _REVIEWED_H1_PRECONDITION_TEXT = (
         r"Weapon and Spell Damage by\s*430",
         re.IGNORECASE | re.DOTALL,
     ),
+    re.compile(
+        r"Nix-Hound's Howl \(5\): active set bonus is not yet mechanic-mapped:.*"
+        r"Completing a fully-charged Heavy Attack.*"
+        r"gain Major Courage for the same duration.*"
+        r"Weapon and Spell Damage by\s*(?:\d[\d,]*\s*-\s*)?430",
+        re.IGNORECASE | re.DOTALL,
+    ),
 )
 
 
