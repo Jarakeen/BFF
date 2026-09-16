@@ -20,10 +20,10 @@ def test_urban_wilderness_palette_avoids_red_green_state_semantics() -> None:
     source = Path("ui/theme/theme_manager.py").read_text(encoding="utf-8")
 
     assert "URBAN_WILDERNESS_OVERRIDES" in source
-    assert "#82B6D1" in source  # confirmed/safe blue
-    assert "#D28A51" in source  # blocked/critical orange
-    assert "#C6A85A" in source  # partial/warning gold
-    assert "#A89BC8" in source  # review lavender
+    assert "#82B6D1" in source
+    assert "#D28A51" in source
+    assert "#C6A85A" in source
+    assert "#A89BC8" in source
     assert 'app.setProperty("reducedMotion", True)' in source
     assert "animated gradients" in source
 
@@ -46,17 +46,28 @@ def test_raid_plan_surface_exposes_roles_and_spots_as_user_language() -> None:
 
     assert '("Roles", None)' in source
     assert 'Manage Roles / Spots' in source
-    # Legacy implementation wording may still be translated at runtime, but the
-    # visible navigation and actions must never advertise a Chairs workspace.
     assert '("Chairs", None)' not in source
     assert 'Manage Chairs' not in source
+    assert "assignment_card.hide()" in source
+    assert "Duties live in Assignments" in source
 
 
-def test_roster_top_surface_has_six_collectibles_style_workspaces_without_visible_tabs() -> None:
+def test_assignment_surface_prefers_readable_duties_over_schema_columns() -> None:
+    source = Path("ui/city_raid_assignments_page.py").read_text(encoding="utf-8")
+
+    assert '("Spot", "Player", "Main Duty", "Backup / Utility", "Gear", "Notes", "Source")' in source
+    assert '"Character", "Role"' not in source
+    assert "Primary and Secondary fields" not in source
+    assert "Main Duty is the canonical primary assignment" in source
+    assert "If the job is vague, the wipe is specific." in source
+    assert "The best teams are built twice" in source
+
+
+def test_roster_top_surface_has_badges_and_mockup_proportion_polish() -> None:
     source = Path("ui/city_raid_roster_workspace_page.py").read_text(encoding="utf-8")
 
-    assert "self.tabs.tabBar().hide()" in source
     for key in ("players", "characters", "teams", "availability", "recruitment", "archive"):
         assert f'"{key}"' in source
-    assert 'prefer="city"' in source
-    assert 'prefer="field"' in source
+    assert "rosterMetricBadge" in source
+    assert "setMaximumWidth(390)" in source
+    assert "self.table.setMinimumWidth(720)" in source
