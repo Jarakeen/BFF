@@ -21,9 +21,6 @@ from ui.rotation_builder_v2_compact_context_support import (
 )
 from ui.rotation_builder_v2_finish_support import install_rotation_builder_v2_finish
 from ui.rotation_builder_v2_layout_support import install_rotation_builder_v2_layout
-from ui.rotation_builder_v2_mockup_cards_support import (
-    install_rotation_builder_v2_mockup_cards,
-)
 
 
 def _card(page, title: str) -> FoundryCard | None:
@@ -248,14 +245,13 @@ def refresh_rotation_consumables(page) -> None:
 
 
 def install_rotation_dashboard_layout(page) -> None:
-    """Install the functional V2 workspace, compact context, and safe mockup cards."""
+    """Install the functional V2 workspace and compact context card."""
     _rebuild_rotation_setup(page)
     _rebuild_consumables(page)
     page._refresh_build_context()
     install_rotation_builder_v2_layout(page)
     install_rotation_builder_v2_finish(page)
     install_rotation_builder_v2_compact_context(page)
-    install_rotation_builder_v2_mockup_cards(page)
 
 
 __all__ = ["install_rotation_dashboard_layout", "refresh_rotation_consumables"]
