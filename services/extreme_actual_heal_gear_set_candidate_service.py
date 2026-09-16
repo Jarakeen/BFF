@@ -34,6 +34,13 @@ _VOIDCALLER_BLOCKER = re.compile(
     r"Upon reaching 20 stacks, the duration is doubled but can no longer be refreshed\.?$",
     re.IGNORECASE | re.DOTALL,
 )
+_CAMONNA_TONG_BLOCKER = re.compile(
+    r"^Camonna Tong \(5\): active set bonus is not yet mechanic-mapped:.*"
+    r"When you kill a monster and gain Experience Points, gain 1 Weapon and Spell Damage for every 50 Experience Points the monster is worth for 30 seconds\.\s*"
+    r"This bonus can stack up to a maximum of\s*(?:\d[\d,]*\s*-\s*)?540\s*Weapon and Spell Damage\.\s*"
+    r"This item set is not affected by Experience Point boosting effects\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
 
 
 class ExtremeActualHealGearSetCandidateService:
@@ -75,6 +82,8 @@ class ExtremeActualHealGearSetCandidateService:
             reviewed_blocker = _POWERFUL_ASSAULT_BLOCKER
         elif set_name == "voidcaller":
             reviewed_blocker = _VOIDCALLER_BLOCKER
+        elif set_name == "camonna tong":
+            reviewed_blocker = _CAMONNA_TONG_BLOCKER
         if (
             reviewed_blocker is not None
             and objective in {"spell_damage", "weapon_damage"}
