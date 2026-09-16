@@ -1,0 +1,88 @@
+from minmax.build_candidate import BuildCandidate, BuildChange
+from models.build_model import PlayerBuild
+from services.extreme_actual_heal_setup_action_legality_service import (
+    ExtremeActualHealSetupActionWitness,
+)
+from services.extreme_actual_heal_setup_action_package_adapter import (
+    ExtremeActualHealSetupActionPackageAdapter,
+)
+
+
+class _Delegate:
+    def __init__(self, candidate: BuildCandidate) -> None:
+        self.candidate = candidate
+
+    def build_candidates(self, *args, **kwargs):
+        return (self.candidate,)
+
+
+class _Legality:
+    def witness(self, capability, context):
+        return ExtremeActualHealSetupActionWitness(
+            capability=capability,
+            skill_name="Vigor",
+            skill_line="Assault",
+            ability_id=12345,
+            evidence="Vigor grants Resolve",
+        )
+
+
+def _candidate() -> BuildCandidate:
+    build = PlayerBuild()
+    for slot in ("Head", "Chest", "Legs", "Shoulders", "Hands"):
+        build.Armor[slot]["Set"] = "Seventh Legion Brute"
+    build.FrontBarSkills = ["Scored Heal", "A", "B", "C", "D", "Front Ultimate"]
+    build.BackBarSkills = ["One", "Two", "Three", "Four", "Five", "Back Ultimate"]
+    return BuildCandidate.from_build(
+        character_id="char",
+        baseline_build_id="base",
+        candidate_id="seventh",
+        candidate_build=build,
+        changes=(
+            BuildChange.from_values(
+                path="Armor",
+                before="baseline",
+                after="Seventh Legion Brute",
+                source="test",
+            ),
+        ),
+        candidate_source="test",
+    )
+
+
+def test_seventh_legion_candidate_expands_all_full_inactive_bar_resolve_placements() -> None:
+    adapter = ExtremeActualHealSetupActionPackageAdapter(
+        _Delegate(_candidate()),
+        _Legality(),
+    )
+
+    rows = adapter.build_candidates(PlayerBuild(), active_bar="front")
+    setup = tuple(row for row in rows if ":setup-resolve:" in row.candidate_id)
+
+    assert len(setup) == 5
+    assert rows[0].candidate_id == "seventh"
+    assert {row.candidate_id.rsplit(":", 1)[-1] for row in setup} == {"0", "1", "2", "3", "4"}
+    assert all(row.candidate_build.FrontBarSkills[0] == "Scored Heal" for row in setup)
+    assert all(row.candidate_build.FrontBarSkills[5] == "Front Ultimate" for row in setup)
+    assert all(row.candidate_build.BackBarSkills[5] == "Back Ultimate" for row in setup)
+    assert all("Vigor" in row.candidate_build.BackBarSkills[:5] for row in setup)
+
+
+def test_non_seventh_candidate_is_not_setup_expanded() -> None:
+    candidate = _candidate()
+    build = candidate.candidate_build
+    for slot in ("Head", "Chest", "Legs", "Shoulders", "Hands"):
+        build.Armor[slot]["Set"] = "Other Set"
+    ordinary = BuildCandidate.from_build(
+        character_id="char",
+        baseline_build_id="base",
+        candidate_id="ordinary",
+        candidate_build=build,
+        changes=candidate.changes,
+        candidate_source="test",
+    )
+    adapter = ExtremeActualHealSetupActionPackageAdapter(_Delegate(ordinary), _Legality())
+
+    rows = adapter.build_candidates(PlayerBuild(), active_bar="front")
+
+    assert [row.candidate_id for row in rows] == ["ordinary"]
