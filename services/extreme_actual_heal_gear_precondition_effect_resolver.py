@@ -30,6 +30,7 @@ TRACKERS_LASH_FULL_STACKS_CONDITION = "trackers_lash_full_stacks"
 PELINALS_WRATH_FULL_STACKS_CONDITION = "pelinals_wrath_full_stacks"
 LIGHT_SPEAKER_RESTORATION_SCOPE_CONDITION = "light_speaker_restoration_scope_active"
 INNATE_AXIOM_CLASS_SCOPE_CONDITION = "innate_axiom_class_scope_active"
+RED_EAGLES_FURY_WEAPON_SCOPE_CONDITION = "red_eagles_fury_weapon_scope_active"
 
 
 class ExtremeActualHealGearPreconditionEffectResolver:
@@ -65,6 +66,12 @@ class ExtremeActualHealGearPreconditionEffectResolver:
     _PELINALS_WRATH = re.compile(r"^\(5 items\)\s*Whenever you kill an enemy you gain a damage shield that absorbs up to\s*\d[\d,]*(?:\s*-\s*\d[\d,]*)?\s*damage for\s*10 seconds and a stack of Wrath of Whitestrake for\s*10 seconds\.\s*Each stack of Wrath of Whitestrake grants you\s*(?P<max>\d[\d,]*)\s*Weapon and Spell Damage, but causes you to take\s*\d[\d,]*(?:\s*-\s*\d[\d,]*)?\s*Oblivion damage every second, up to\s*10 stacks\.\s*The damage shield scales off the higher of your Weapon or Spell Damage, and the damage scales off your Max Health\.?$", re.IGNORECASE)
     _LIGHT_SPEAKER = re.compile(r"^\(5 items\)\s*Adds\s+(?:(?P<min>\d[\d,]*)\s*-\s*)?(?P<max>\d[\d,]*)\s+Weapon and Spell Damage to your Restoration Staff abilities\.?$", re.IGNORECASE)
     _INNATE_AXIOM = re.compile(r"^\(5 items\)\s*Adds\s+(?:(?P<min>\d[\d,]*)\s*-\s*)?(?P<max>\d[\d,]*)\s+Weapon and Spell Damage to your Class abilities\.?$", re.IGNORECASE)
+    _RED_EAGLES_FURY = re.compile(
+        r"^\(5 items\)\s*Adds\s+(?:(?P<min>\d[\d,]*)\s*-\s*)?(?P<max>\d[\d,]*)\s+"
+        r"Weapon and Spell Damage to your Weapon Skill abilities\.\s*"
+        r"Increases the cost of your Weapon Skill abilities by\s*5%\.?$",
+        re.IGNORECASE,
+    )
 
     def resolve(self, bonus: GearSetBonus, *, use_max_value: bool = True, source: str | None = None) -> list[Effect]:
         description = normalize_eso_markup(str(bonus.description or "")).text.strip()
@@ -91,6 +98,7 @@ class ExtremeActualHealGearPreconditionEffectResolver:
             (self._PELINALS_WRATH, PELINALS_WRATH_FULL_STACKS_CONDITION, 10.0),
             (self._LIGHT_SPEAKER, LIGHT_SPEAKER_RESTORATION_SCOPE_CONDITION, 1.0),
             (self._INNATE_AXIOM, INNATE_AXIOM_CLASS_SCOPE_CONDITION, 1.0),
+            (self._RED_EAGLES_FURY, RED_EAGLES_FURY_WEAPON_SCOPE_CONDITION, 1.0),
         )
         match = None
         condition = ""
@@ -124,6 +132,7 @@ __all__ = [
     "PELINALS_WRATH_FULL_STACKS_CONDITION",
     "POWERFUL_ASSAULT_POWER_CONDITION",
     "RAVAGER_FULL_STACKS_CONDITION",
+    "RED_EAGLES_FURY_WEAPON_SCOPE_CONDITION",
     "SEVENTH_LEGION_BRUTE_POWER_CONDITION",
     "SOULSHINE_POWER_CONDITION",
     "STYGIAN_POWER_CONDITION",
