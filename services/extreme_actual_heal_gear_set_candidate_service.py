@@ -110,6 +110,12 @@ _DAGONS_DOMINION_BLOCKER = re.compile(
     r"^Dagon's Dominion \(5\): relevant set effect requires condition ability_scope:area_of_effect$",
     re.IGNORECASE,
 )
+_RED_EAGLES_FURY_BLOCKER = re.compile(
+    r"^Red Eagle's Fury \(5\): active set bonus is not yet mechanic-mapped:.*"
+    r"Adds\s+(?:\d[\d,]*\s*-\s*)?469\s+Weapon and Spell Damage to your Weapon Skill abilities\.\s*"
+    r"Increases the cost of your Weapon Skill abilities by\s*5%\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
 
 
 class ExtremeActualHealGearSetCandidateService:
@@ -156,6 +162,7 @@ class ExtremeActualHealGearSetCandidateService:
             "light speaker": _LIGHT_SPEAKER_BLOCKER,
             "innate axiom": _INNATE_AXIOM_BLOCKER,
             "dagon's dominion": _DAGONS_DOMINION_BLOCKER,
+            "red eagle's fury": _RED_EAGLES_FURY_BLOCKER,
         }.get(set_name)
         if set_name == "armor master":
             reviewed_objectives = {"max_health"}
