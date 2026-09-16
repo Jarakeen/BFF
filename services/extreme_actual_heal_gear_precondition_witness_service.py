@@ -21,6 +21,7 @@ VESTMENT_OF_OLORIME_MAJOR_COURAGE_CONDITION = "vestment_of_olorime_major_courage
 NIX_HOUNDS_HOWL_MAJOR_COURAGE_CONDITION = "nix_hounds_howl_major_courage_active"
 CLAW_OF_YOLNAHKRIIN_MINOR_COURAGE_CONDITION = "claw_of_yolnahkriin_minor_courage_active"
 SENCHES_BITE_DODGE_CONDITION = "successful_dodge_recent"
+SYMMETRY_OF_THE_WEALD_LOW_HEALTH_CONDITION = "wearer_health_at_or_below_50_percent"
 
 
 @dataclass(frozen=True)
@@ -68,6 +69,14 @@ class ExtremeActualHealGearPreconditionWitnessService:
                 "pearlescent_ward_full_group_alive: standing H1 scenario may snapshot a full "
                 "12-player group with all members alive, activating Pearlescent Ward's maximum "
                 "180 Weapon and Spell Damage branch for the wearer"
+            )
+
+        if int(counts.get("Symmetry of the Weald", 0)) >= 5:
+            active.append(SYMMETRY_OF_THE_WEALD_LOW_HEALTH_CONDITION)
+            evidence.append(
+                "wearer_health_at_or_below_50_percent: standing H1 scenario may snapshot the "
+                "caster at or below 50% current Health, activating Symmetry of the Weald's "
+                "10% Healing Done branch"
             )
 
         if int(counts.get("Blessing of High Isle", 0)) >= 5:
@@ -145,6 +154,7 @@ __all__ = [
     "PHOENIX_MOTH_MINOR_COURAGE_CONDITION",
     "SENCHES_BITE_DODGE_CONDITION",
     "SPELL_POWER_CURE_MAJOR_COURAGE_CONDITION",
+    "SYMMETRY_OF_THE_WEALD_LOW_HEALTH_CONDITION",
     "VESTMENT_OF_OLORIME_MAJOR_COURAGE_CONDITION",
     "ExtremeActualHealGearPreconditionWitness",
     "ExtremeActualHealGearPreconditionWitnessService",
