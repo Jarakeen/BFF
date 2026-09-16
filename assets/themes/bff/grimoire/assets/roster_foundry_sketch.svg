@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 260">
+  <rect width="640" height="260" rx="10" fill="#d8c39a"/>
+  <g fill="none" stroke="#3b3224" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".9">
+    <path d="M20 215 C90 180 135 190 195 150 C245 116 278 138 326 92 C356 64 390 88 420 54 C450 22 485 58 512 82 C540 108 570 95 620 128"/>
+    <path d="M35 222 L92 172 L123 204 L174 153 L214 198 L265 135 L320 206 L392 116 L450 205 L520 145 L610 218"/>
+    <path d="M78 226 v-54 m-18 17 18-26 19 27 m-28 11 9-15 11 15"/>
+    <path d="M540 224 v-66 m-21 22 21-34 22 34 m-33 15 11-18 13 18"/>
+    <circle cx="489" cy="67" r="34"/>
+    <path d="M489 26 v82 M448 67 h82 M464 42 l50 50 M514 42 l-50 50"/>
+    <path d="M340 207 q24-33 48 0 q22-31 44 0"/>
+  </g>
+  <g fill="#3b3224" font-family="serif" font-style="italic">
+    <text x="28" y="42" font-size="26">Better records. Brighter runs.</text>
+    <text x="410" y="242" font-size="20">Field note</text>
+  </g>
+</svg>
