@@ -14,6 +14,7 @@ from minmax.stat_ids import StatId
 BLESSING_OF_HIGH_ISLE_CONDITION = "recently_healed_in_combat"
 ANCIENT_DRAGONGUARD_ABOVE_HALF_HEALTH_CONDITION = "wearer_health_above_50_percent"
 TITANBORN_STRENGTH_BELOW_HALF_HEALTH_CONDITION = "wearer_in_combat_below_50_percent_health"
+PEARLESCENT_WARD_FULL_GROUP_ALIVE_CONDITION = "pearlescent_ward_full_group_alive"
 
 
 class ExtremeActualHealGearPreconditionEffectResolver:
@@ -37,6 +38,14 @@ class ExtremeActualHealGearPreconditionEffectResolver:
         r"Weapon and Spell Damage and\s+\d[\d,]*(?:\s*-\s*\d[\d,]*)?\s+Offensive Penetration\.\s*"
         r"While in combat, this bonus doubles when you are under 75% Health and quadruples "
         r"when you are under 50% Health\.?$",
+        re.IGNORECASE,
+    )
+    _PEARLESCENT_WARD = re.compile(
+        r"^\(5 items\)\s*Grants you and up to 11 other group members Pearlescent Ward\.\s*"
+        r"This bonus persists through death\.\s*Pearlescent Ward increases Weapon and Spell Damage "
+        r"by up to\s*(?P<max>\d[\d,]*)\s*based on the number of group members that are alive\.\s*"
+        r"(?:Current\s+\d[\d,]*\s+Weapon and Spell Damage\.\s*)?"
+        r"Pearlescent Ward increases damage reduction from non-player enemies.*$",
         re.IGNORECASE,
     )
 
@@ -63,6 +72,9 @@ class ExtremeActualHealGearPreconditionEffectResolver:
             condition = TITANBORN_STRENGTH_BELOW_HALF_HEALTH_CONDITION
             multiplier = 4.0
         if match is None:
+            match = self._PEARLESCENT_WARD.fullmatch(normalized)
+            condition = PEARLESCENT_WARD_FULL_GROUP_ALIVE_CONDITION
+        if match is None:
             return []
 
         key = "max" if use_max_value or not match.groupdict().get("min") else "min"
@@ -86,6 +98,7 @@ class ExtremeActualHealGearPreconditionEffectResolver:
 __all__ = [
     "ANCIENT_DRAGONGUARD_ABOVE_HALF_HEALTH_CONDITION",
     "BLESSING_OF_HIGH_ISLE_CONDITION",
+    "PEARLESCENT_WARD_FULL_GROUP_ALIVE_CONDITION",
     "TITANBORN_STRENGTH_BELOW_HALF_HEALTH_CONDITION",
     "ExtremeActualHealGearPreconditionEffectResolver",
 ]
