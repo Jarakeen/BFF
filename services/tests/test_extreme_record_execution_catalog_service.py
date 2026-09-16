@@ -40,18 +40,17 @@ def test_ready_static_records_include_existing_stats_critical_healing_and_block(
 def test_related_records_share_execution_families() -> None:
     rows = {row.objective.key: row for row in ExtremeRecordExecutionCatalogService.descriptors()}
 
-    assert rows["actual_heal"].status is ExtremeRecordExecutionStatus.SPECIALIZED
-    assert rows["critical_heal"].status is ExtremeRecordExecutionStatus.SPECIALIZED
-    assert rows["actual_heal"].execution_family == "actual-heal-event"
-    assert rows["critical_heal"].execution_family == "actual-heal-event"
+    for key in ("actual_heal", "critical_heal"):
+        assert rows[key].status is ExtremeRecordExecutionStatus.SPECIALIZED
+        assert rows[key].execution_family == "actual-heal-event"
 
-    assert rows["bash_damage"].status is ExtremeRecordExecutionStatus.SPECIALIZED
-    assert rows["damage_shield"].status is ExtremeRecordExecutionStatus.SPECIALIZED
-    assert rows["bash_damage"].execution_family == "single-event-output"
-    assert rows["damage_shield"].execution_family == "single-event-output"
+    for key in ("bash_damage", "damage_shield"):
+        assert rows[key].status is ExtremeRecordExecutionStatus.SPECIALIZED
+        assert rows[key].execution_family == "single-event-output"
 
-    assert rows["resource_sustain"].execution_family == "resource-timeline"
-    assert rows["ultimate_generation"].execution_family == "resource-timeline"
+    for key in ("resource_sustain", "ultimate_generation"):
+        assert rows[key].status is ExtremeRecordExecutionStatus.SPECIALIZED
+        assert rows[key].execution_family == "resource-timeline"
 
     for key in ("movement_speed", "sprint_speed", "stealthed_movement_speed"):
         assert rows[key].status is ExtremeRecordExecutionStatus.SPECIALIZED
@@ -69,5 +68,5 @@ def test_execution_disposition_counts_make_remaining_work_explicit() -> None:
         counts[row.status] += 1
 
     assert counts[ExtremeRecordExecutionStatus.READY] == 19
-    assert counts[ExtremeRecordExecutionStatus.SPECIALIZED] == 7
-    assert counts[ExtremeRecordExecutionStatus.PENDING] == 5
+    assert counts[ExtremeRecordExecutionStatus.SPECIALIZED] == 9
+    assert counts[ExtremeRecordExecutionStatus.PENDING] == 3
