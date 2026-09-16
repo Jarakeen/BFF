@@ -32,7 +32,6 @@ class GearSetHealingConditionResolver:
         use_max_value: bool = True,
         source: str | None = None,
     ) -> list[Effect]:
-        _ = use_max_value
         text = self._clean_description(bonus.description)
         if not text:
             return []
@@ -63,12 +62,14 @@ class GearSetHealingConditionResolver:
 
         match = re.fullmatch(
             r"Whenever you successfully Dodge, increase your Critical Damage and "
-            r"Critical Healing by (?P<value>\d+(?:\.\d+)?)% for 10 seconds\.?",
+            r"Critical Healing by (?:(?P<min>\d+(?:\.\d+)?)\s*-\s*)?"
+            r"(?P<max>\d+(?:\.\d+)?)% for 10 seconds\.?",
             text,
             re.IGNORECASE,
         )
         if match:
-            value = float(match.group("value"))
+            selected = match.group("max") if use_max_value or match.group("min") is None else match.group("min")
+            value = float(selected)
             return [
                 self._effect(
                     StatId.CRITICAL_DAMAGE,
