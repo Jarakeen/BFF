@@ -98,6 +98,12 @@ _REVIEWED_H1_PRECONDITION_TEXT = (
         re.IGNORECASE | re.DOTALL,
     ),
     re.compile(
+        r"Pearlescent Ward \(5\): active set bonus is not yet mechanic-mapped:.*"
+        r"Grants you and up to 11 other group members Pearlescent Ward\..*"
+        r"increases Weapon and Spell Damage by up to\s*180\s*based on the number of group members that are alive",
+        re.IGNORECASE | re.DOTALL,
+    ),
+    re.compile(
         r"Blessing of High Isle \(5\): active set bonus is not yet mechanic-mapped:.*"
         r"When you are healed while in combat, increase your Weapon and Spell Damage by\s*8-369\s+for\s+5 seconds",
         re.IGNORECASE | re.DOTALL,
