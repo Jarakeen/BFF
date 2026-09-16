@@ -21,6 +21,7 @@ from services.extreme_actual_heal_gear_precondition_effect_resolver import (
 )
 
 
+BASALT_BLOODED_OBSIDIAN_STANCE_CONDITION = "basalt_blooded_obsidian_stance_active"
 CRUSADER_MINOR_COURAGE_CONDITION = "crusader_minor_courage_active"
 FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION = "fledglings_nest_minor_courage_active"
 PHOENIX_MOTH_MINOR_COURAGE_CONDITION = "phoenix_moth_minor_courage_active"
@@ -224,6 +225,7 @@ class ExtremeActualHealGearPreconditionWitnessService:
 
 
 __all__ = [
+    "BASALT_BLOODED_OBSIDIAN_STANCE_CONDITION",
     "CLAW_OF_YOLNAHKRIIN_MINOR_COURAGE_CONDITION",
     "CRUSADER_MINOR_COURAGE_CONDITION",
     "FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION",

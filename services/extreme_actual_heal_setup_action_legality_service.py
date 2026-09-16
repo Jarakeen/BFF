@@ -33,6 +33,7 @@ DEALS_FLAME_DAMAGE = "deals_flame_damage"
 GRANTS_RESOLVE = "grants_resolve"
 HAS_CAST_OR_CHANNEL_TIME = "has_cast_or_channel_time"
 IS_ASSAULT_ABILITY = "is_assault_ability"
+IS_EARTHEN_HEART_ABILITY = "is_earthen_heart_ability"
 REDUCES_TARGET_RESISTANCE = "reduces_target_resistance"
 
 
@@ -122,6 +123,7 @@ class ExtremeActualHealSetupActionLegalityService:
             GRANTS_RESOLVE,
             HAS_CAST_OR_CHANNEL_TIME,
             IS_ASSAULT_ABILITY,
+            IS_EARTHEN_HEART_ABILITY,
             REDUCES_TARGET_RESISTANCE,
         }
     )
@@ -272,6 +274,13 @@ class ExtremeActualHealSetupActionLegalityService:
             return self._timing_evidence(row) is not None
         if capability == IS_ASSAULT_ABILITY:
             return str(row.skill_line or "").strip().casefold() == "assault"
+        if capability == IS_EARTHEN_HEART_ABILITY:
+            line = re.sub(
+                r"[^a-z0-9]+",
+                "_",
+                str(row.skill_line or "").strip().casefold().replace("'", ""),
+            ).strip("_")
+            return line == "earthen_heart"
         if capability == REDUCES_TARGET_RESISTANCE:
             return self._supports_resistance_reduction(row)
         return False
@@ -334,6 +343,10 @@ class ExtremeActualHealSetupActionLegalityService:
             evidence_text = (
                 f"{witness.name}: route-legal non-Ultimate active skill belongs to the Assault skill line"
             )
+        elif key == IS_EARTHEN_HEART_ABILITY:
+            evidence_text = (
+                f"{witness.name}: route-legal non-Ultimate active skill belongs to the Earthen Heart skill line"
+            )
         else:
             evidence_text = (
                 f"{witness.name}: route-legal active skill explicitly applies Breach or reduces "
@@ -354,6 +367,7 @@ __all__ = [
     "GRANTS_RESOLVE",
     "HAS_CAST_OR_CHANNEL_TIME",
     "IS_ASSAULT_ABILITY",
+    "IS_EARTHEN_HEART_ABILITY",
     "REDUCES_TARGET_RESISTANCE",
     "ExtremeActualHealSetupActionWitness",
     "ExtremeActualHealSetupActionLegalityService",

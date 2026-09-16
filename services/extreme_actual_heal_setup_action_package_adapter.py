@@ -19,6 +19,7 @@ from services.extreme_actual_heal_setup_action_legality_service import (
     GRANTS_RESOLVE,
     HAS_CAST_OR_CHANNEL_TIME,
     IS_ASSAULT_ABILITY,
+    IS_EARTHEN_HEART_ABILITY,
     REDUCES_TARGET_RESISTANCE,
     ExtremeActualHealSetupActionLegalityService,
 )
@@ -29,6 +30,7 @@ from services.extreme_player_skill_candidate_service import ExtremePlayerSkillLe
 
 
 _REVIEWED_SETUP_SETS = (
+    ("Basalt-Blooded Warrior", IS_EARTHEN_HEART_ABILITY, "earthen-heart"),
     ("Burning Spellweave", DEALS_FLAME_DAMAGE, "flame-damage"),
     ("Crusader", DEALS_DIRECT_MOBILITY_DAMAGE, "direct-mobility-damage"),
     ("Seventh Legion Brute", GRANTS_RESOLVE, "resolve"),

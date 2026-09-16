@@ -14,6 +14,15 @@ from services.extreme_complete_optimization_service import ExtremeCompleteOptimi
 from services.extreme_gear_set_objective_service import ExtremeGearSetObjectiveService
 
 
+_BASALT_BLOODED_WARRIOR_BLOCKER = re.compile(
+    r"^Basalt-Blooded Warrior \(5\): active set bonus is not yet mechanic-mapped:.*"
+    r"Casting an Earthen Heart ability grants you (?:a )?Rock Stance for\s*10 seconds\.\s*"
+    r"While (?:you are )?on your Primary Weapon you gain Molten Stance, increasing your damage done by\s*"
+    r"\d+(?:\.\d+)?% and reducing your damage taken by\s*\d+(?:\.\d+)?%\.\s*"
+    r"While (?:you are )?on your Secondary Weapon you gain Obsidian Stance, increasing your Healing Done "
+    r"and damage shields by\s*14%\.\s*Bar Swapping will swap your Stance automatically\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
 _CRUSADER_BLOCKER = re.compile(
     r"^Crusader \(5\): active set bonus is not yet mechanic-mapped:.*"
     r"When you deal direct damage with a Blink, Charge, Leap, Teleport, or Pull ability,\s*"
@@ -126,6 +135,7 @@ class ExtremeActualHealGearSetCandidateService:
         blockers = tuple(str(value) for value in row.unresolved)
         set_name = str(row.set_name or "").strip().casefold()
         reviewed_blocker = {
+            "basalt-blooded warrior": _BASALT_BLOODED_WARRIOR_BLOCKER,
             "burning spellweave": _BURNING_SPELLWEAVE_BLOCKER,
             "crusader": _CRUSADER_BLOCKER,
             "soulshine": _SOULSHINE_BLOCKER,
@@ -139,9 +149,14 @@ class ExtremeActualHealGearSetCandidateService:
             "innate axiom": _INNATE_AXIOM_BLOCKER,
             "dagon's dominion": _DAGONS_DOMINION_BLOCKER,
         }.get(set_name)
+        reviewed_objectives = (
+            {"healing_done"}
+            if set_name == "basalt-blooded warrior"
+            else {"spell_damage", "weapon_damage"}
+        )
         if (
             reviewed_blocker is not None
-            and objective in {"spell_damage", "weapon_damage"}
+            and objective in reviewed_objectives
             and blockers
             and all(reviewed_blocker.fullmatch(blocker) for blocker in blockers)
         ):

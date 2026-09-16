@@ -23,6 +23,7 @@ from services.extreme_actual_heal_gear_precondition_effect_resolver import (
     SOULSHINE_POWER_CONDITION,
 )
 from services.extreme_actual_heal_gear_precondition_witness_service import (
+    BASALT_BLOODED_OBSIDIAN_STANCE_CONDITION,
     CRUSADER_MINOR_COURAGE_CONDITION,
     ExtremeActualHealGearPreconditionWitnessService,
 )
@@ -32,6 +33,7 @@ from services.extreme_actual_heal_setup_action_legality_service import (
     GRANTS_RESOLVE,
     HAS_CAST_OR_CHANNEL_TIME,
     IS_ASSAULT_ABILITY,
+    IS_EARTHEN_HEART_ABILITY,
     REDUCES_TARGET_RESISTANCE,
     ExtremeActualHealSetupActionLegalityService,
 )
@@ -42,12 +44,13 @@ _DESTRUCTION_STAFF_TYPES = frozenset(
     {"inferno staff", "lightning staff", "ice staff", "destruction staff"}
 )
 _REVIEWED_SETUP_CONDITIONS = (
-    ("Burning Spellweave", DEALS_FLAME_DAMAGE, BURNING_SPELLWEAVE_POWER_CONDITION, "8-second"),
-    ("Crusader", DEALS_DIRECT_MOBILITY_DAMAGE, CRUSADER_MINOR_COURAGE_CONDITION, "12-second Minor Courage"),
-    ("Seventh Legion Brute", GRANTS_RESOLVE, SEVENTH_LEGION_BRUTE_POWER_CONDITION, "15-second"),
-    ("Soulshine", HAS_CAST_OR_CHANNEL_TIME, SOULSHINE_POWER_CONDITION, "5-second"),
-    ("Powerful Assault", IS_ASSAULT_ABILITY, POWERFUL_ASSAULT_POWER_CONDITION, "15-second"),
-    ("Ravager", REDUCES_TARGET_RESISTANCE, RAVAGER_FULL_STACKS_CONDITION, "10-second full-stack"),
+    ("Basalt-Blooded Warrior", IS_EARTHEN_HEART_ABILITY, BASALT_BLOODED_OBSIDIAN_STANCE_CONDITION, "10-second Obsidian Stance", "back"),
+    ("Burning Spellweave", DEALS_FLAME_DAMAGE, BURNING_SPELLWEAVE_POWER_CONDITION, "8-second", None),
+    ("Crusader", DEALS_DIRECT_MOBILITY_DAMAGE, CRUSADER_MINOR_COURAGE_CONDITION, "12-second Minor Courage", None),
+    ("Seventh Legion Brute", GRANTS_RESOLVE, SEVENTH_LEGION_BRUTE_POWER_CONDITION, "15-second", None),
+    ("Soulshine", HAS_CAST_OR_CHANNEL_TIME, SOULSHINE_POWER_CONDITION, "5-second", None),
+    ("Powerful Assault", IS_ASSAULT_ABILITY, POWERFUL_ASSAULT_POWER_CONDITION, "15-second", None),
+    ("Ravager", REDUCES_TARGET_RESISTANCE, RAVAGER_FULL_STACKS_CONDITION, "10-second full-stack", None),
 )
 
 
@@ -121,8 +124,12 @@ class ExtremeActualHealBuildConditionContextService:
         active_bar: str,
         set_name: str,
         capability: str,
+        required_active_bar: str | None = None,
     ) -> tuple[bool, str | None]:
-        counts = GearStatInputResolver.equipped_set_counts(build, active_bar=active_bar)
+        normalized_bar = str(active_bar or "front").strip().casefold()
+        if required_active_bar is not None and normalized_bar != required_active_bar:
+            return False, None
+        counts = GearStatInputResolver.equipped_set_counts(build, active_bar=normalized_bar)
         if int(counts.get(set_name, 0)) < 5:
             return False, None
         witness = self.setup_action_legality.witness(capability, self._legality_context(build))
@@ -161,16 +168,23 @@ class ExtremeActualHealBuildConditionContextService:
             active.add("transformed")
             evidence.append(f"transformed: explicit build form is {transformed}")
 
-        for set_name, capability, condition, window in _REVIEWED_SETUP_CONDITIONS:
+        for set_name, capability, condition, window, required_active_bar in _REVIEWED_SETUP_CONDITIONS:
             is_active, skill_name = self._setup_condition_active(
                 build,
                 active_bar=active_bar,
                 set_name=set_name,
                 capability=capability,
+                required_active_bar=required_active_bar,
             )
             if is_active:
                 active.add(condition)
-                if set_name == "Ravager":
+                if set_name == "Basalt-Blooded Warrior":
+                    evidence.append(
+                        f"{condition}: primary/front-bar {skill_name} is a route-legal Earthen Heart "
+                        "setup action; cast it for Rock Stance, swap to the secondary/back bar, and "
+                        "score inside the 10-second Obsidian Stance window"
+                    )
+                elif set_name == "Ravager":
                     evidence.append(
                         f"{condition}: inactive-bar {skill_name} is a route-legal resistance-reduction setup action; "
                         "perform four qualifying attempts no faster than one per second, swap back, and score "
