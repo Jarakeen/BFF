@@ -75,12 +75,14 @@ class ArmorGlyphEffectRepository:
         *,
         use_max_value: bool = True,
     ) -> list[Effect]:
-        """Return the strongest matching named glyph effects.
+        """Return the strongest effects for one glyph family name.
 
-        The build editor currently stores a human-readable enchantment rather
-        than an ESO item id. Phase 2F only calls this for explicitly max-level,
-        max-tier armor glyphs, so choosing the highest recorded value for each
-        effect type is deterministic and avoids pretending lower tiers are max.
+        Saved builds store family labels such as ``Glyph of Magicka`` while the
+        imported ESO catalog may contain item-tier names such as ``Truly Superb
+        Glyph of Magicka``. Exact matches remain valid, and tier-prefixed rows are
+        treated as members of the same family. The strongest recorded row for each
+        effect type is retained, which preserves multi-effect glyphs such as
+        Prismatic Defense without pretending that a tier prefix is mechanic identity.
         """
         cache_key = (self._name_key(glyph_name), bool(use_max_value))
         cached = self._name_cache.get(cache_key)
@@ -101,9 +103,10 @@ class ArmorGlyphEffectRepository:
                 JOIN armor_glyph_effect e
                     ON e.glyph_item_id = g.item_id
                 WHERE LOWER(TRIM(g.name)) = LOWER(TRIM(?))
+                   OR LOWER(TRIM(g.name)) LIKE '% ' || LOWER(TRIM(?))
                 ORDER BY COALESCE(e.value_max, e.value_min) DESC, e.id
                 """,
-                (glyph_name,),
+                (glyph_name, glyph_name),
             ).fetchall()
 
         strongest = []
