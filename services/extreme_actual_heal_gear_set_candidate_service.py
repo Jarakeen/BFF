@@ -41,6 +41,13 @@ _CAMONNA_TONG_BLOCKER = re.compile(
     r"This item set is not affected by Experience Point boosting effects\.?$",
     re.IGNORECASE | re.DOTALL,
 )
+_RAVAGER_BLOCKER = re.compile(
+    r"^Ravager \(5\): active set bonus is not yet mechanic-mapped:.*"
+    r"Each time you attempt to reduce the target's Physical or Spell Resistance, you gain a stack of Ravager for 5 seconds, "
+    r"increasing your Weapon and Spell Damage by\s*(?:\d[\d,]*\s*-\s*)?146\.\s*"
+    r"You can gain a stack every 1 second\.\s*At 4 stacks, the duration doubles but cannot be refreshed\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
 
 
 class ExtremeActualHealGearSetCandidateService:
@@ -48,11 +55,6 @@ class ExtremeActualHealGearSetCandidateService:
 
     Authoritative H1 search is exhaustive across the reviewed ordinary five-piece
     universe. Admission remains fail-closed across the complete H1 objective screen.
-
-    A set may be positively H1-relevant in either of two reviewed ways:
-    1. the shared objective parser exposes a positive ``reviewed_delta``; or
-    2. an H1 specialist rule proves a positive runtime/tradeoff modifier whose
-       numeric value is intentionally owned by the Extreme conditioned scorer.
     """
 
     OBJECTIVES = (
@@ -75,15 +77,13 @@ class ExtremeActualHealGearSetCandidateService:
         objective = str(row.objective_key or "").strip().casefold()
         blockers = tuple(str(value) for value in row.unresolved)
         set_name = str(row.set_name or "").strip().casefold()
-        reviewed_blocker = None
-        if set_name == "soulshine":
-            reviewed_blocker = _SOULSHINE_BLOCKER
-        elif set_name == "powerful assault":
-            reviewed_blocker = _POWERFUL_ASSAULT_BLOCKER
-        elif set_name == "voidcaller":
-            reviewed_blocker = _VOIDCALLER_BLOCKER
-        elif set_name == "camonna tong":
-            reviewed_blocker = _CAMONNA_TONG_BLOCKER
+        reviewed_blocker = {
+            "soulshine": _SOULSHINE_BLOCKER,
+            "powerful assault": _POWERFUL_ASSAULT_BLOCKER,
+            "voidcaller": _VOIDCALLER_BLOCKER,
+            "camonna tong": _CAMONNA_TONG_BLOCKER,
+            "ravager": _RAVAGER_BLOCKER,
+        }.get(set_name)
         if (
             reviewed_blocker is not None
             and objective in {"spell_damage", "weapon_damage"}
