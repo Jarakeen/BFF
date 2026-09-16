@@ -31,6 +31,7 @@ from services.extreme_actual_heal_gear_precondition_effect_resolver import (
 )
 from services.extreme_actual_heal_gear_precondition_witness_service import (
     FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION,
+    NIX_HOUNDS_HOWL_MAJOR_COURAGE_CONDITION,
     PHOENIX_MOTH_MINOR_COURAGE_CONDITION,
     SPELL_POWER_CURE_MAJOR_COURAGE_CONDITION,
     VESTMENT_OF_OLORIME_MAJOR_COURAGE_CONDITION,
@@ -192,6 +193,7 @@ class ExtremeResourceConditionedPhase5ContextFactory(Phase5BuildCalculationConte
         } & active:
             buffs.append("Minor Courage")
         if {
+            NIX_HOUNDS_HOWL_MAJOR_COURAGE_CONDITION,
             SPELL_POWER_CURE_MAJOR_COURAGE_CONDITION,
             VESTMENT_OF_OLORIME_MAJOR_COURAGE_CONDITION,
         } & active:
