@@ -29,6 +29,7 @@ _GLYPH_TIER_PREFIXES = (
     "Truly Superb",
     "Monumental",
     "Splendid",
+    "Grand",
     "Greater",
     "Superb",
     "Average",
@@ -59,11 +60,18 @@ class BuildEnchantCatalogService:
     reads the complete canonical catalog.
     """
 
-    def __init__(self, database_path: str | Path) -> None:
+    def __init__(
+        self,
+        database_path: str | Path,
+        *,
+        armor_repository: ArmorGlyphEffectRepository | None = None,
+        jewelry_repository: JewelryGlyphEffectRepository | None = None,
+        weapon_repository: WeaponEnchantmentRepository | None = None,
+    ) -> None:
         self.database_path = Path(database_path)
-        self.armor = ArmorGlyphEffectRepository(self.database_path)
-        self.jewelry = JewelryGlyphEffectRepository(self.database_path)
-        self.weapon = WeaponEnchantmentRepository(self.database_path)
+        self.armor = armor_repository or ArmorGlyphEffectRepository(self.database_path)
+        self.jewelry = jewelry_repository or JewelryGlyphEffectRepository(self.database_path)
+        self.weapon = weapon_repository or WeaponEnchantmentRepository(self.database_path)
 
     @staticmethod
     def _family_name(value: str) -> str:
