@@ -55,6 +55,15 @@ _TRACKERS_LASH_BLOCKER = re.compile(
     r"This effect can occur once every\s*0\.5 seconds\.?$",
     re.IGNORECASE | re.DOTALL,
 )
+_PELINALS_WRATH_BLOCKER = re.compile(
+    r"^Pelinal's Wrath \(5\): active set bonus is not yet mechanic-mapped:.*"
+    r"Whenever you kill an enemy you gain a damage shield that absorbs up to\s*"
+    r"\d[\d,]*(?:\s*-\s*\d[\d,]*)?\s*damage for\s*10 seconds and a stack of Wrath of Whitestrake for\s*10 seconds\.\s*"
+    r"Each stack of Wrath of Whitestrake grants you\s*(?:\d[\d,]*\s*-\s*)?100\s*Weapon and Spell Damage, but causes you to take\s*"
+    r"\d[\d,]*(?:\s*-\s*\d[\d,]*)?\s*Oblivion damage every second, up to\s*10 stacks\.\s*"
+    r"The damage shield scales off the higher of your Weapon or Spell Damage, and the damage scales off your Max Health\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
 _LIGHT_SPEAKER_BLOCKER = re.compile(
     r"^Light Speaker \(5\): relevant set effect requires condition ability_scope:restoration_staff$",
     re.IGNORECASE,
@@ -105,6 +114,7 @@ class ExtremeActualHealGearSetCandidateService:
             "camonna tong": _CAMONNA_TONG_BLOCKER,
             "ravager": _RAVAGER_BLOCKER,
             "tracker's lash": _TRACKERS_LASH_BLOCKER,
+            "pelinal's wrath": _PELINALS_WRATH_BLOCKER,
             "light speaker": _LIGHT_SPEAKER_BLOCKER,
             "innate axiom": _INNATE_AXIOM_BLOCKER,
             "dagon's dominion": _DAGONS_DOMINION_BLOCKER,
