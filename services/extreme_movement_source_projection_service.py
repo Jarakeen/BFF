@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from minmax.effects import Effect, EffectOperation, EffectUnit
+from minmax.named_combat_buffs import NamedBuffEffect
 from minmax.stat_ids import StatId
 from services.extreme_movement_state_service import ExtremeMovementStateInputs
 
@@ -25,23 +26,34 @@ class ExtremeMovementSourceProjectionService:
     """
 
     @staticmethod
-    def _movement_ratio(effect: Effect) -> tuple[float | None, str | None]:
+    def _mundus_movement_ratio(effect: Effect) -> tuple[float | None, str | None]:
+        source = str(effect.source or "Mundus")
         if effect.stat is not StatId.MOVEMENT_SPEED:
-            return None, f"{effect.source}: non-movement effect {effect.stat.value}"
+            stat = "none" if effect.stat is None else effect.stat.value
+            return None, f"{source}: non-movement effect {stat}"
         if effect.operation is not EffectOperation.ADD_PERCENT:
-            return None, f"{effect.source}: unsupported movement operation {effect.operation.value}"
-        value = float(effect.value)
-        if effect.unit is EffectUnit.PERCENT:
-            value /= 100.0
-        elif effect.unit not in {EffectUnit.RATIO, EffectUnit.PERCENT}:
-            return None, f"{effect.source}: unsupported movement unit {effect.unit.value}"
-        return value, None
+            return None, f"{source}: unsupported movement operation {effect.operation.value}"
+        if effect.unit is not EffectUnit.PERCENT:
+            return None, f"{source}: unsupported movement unit {effect.unit.value}"
+        return float(effect.value) / 100.0, None
+
+    @staticmethod
+    def _named_buff_movement_ratio(
+        effect: NamedBuffEffect,
+        *,
+        source: str,
+    ) -> tuple[float | None, str | None]:
+        if effect.stat is not StatId.MOVEMENT_SPEED:
+            return None, f"{source}: non-movement named-buff effect {effect.stat.value}"
+        if effect.bucket != "ratio_points":
+            return None, f"{source}: unsupported movement named-buff bucket {effect.bucket}"
+        return float(effect.value), None
 
     @classmethod
     def compose(
         cls,
         *,
-        named_buff_effects: tuple[Effect, ...] = (),
+        named_buff_effects: tuple[tuple[str, NamedBuffEffect], ...] = (),
         mundus_effects: tuple[Effect, ...] = (),
         base: ExtremeMovementStateInputs | None = None,
     ) -> ExtremeMovementSourceProjection:
@@ -51,17 +63,17 @@ class ExtremeMovementSourceProjectionService:
         evidence: list[str] = []
         unresolved: list[str] = []
 
-        for effect in named_buff_effects:
-            value, error = cls._movement_ratio(effect)
+        for source, effect in named_buff_effects:
+            value, error = cls._named_buff_movement_ratio(effect, source=source)
             if error is not None:
                 unresolved.append(error)
                 continue
             assert value is not None
             buff_movement += value
-            evidence.append(f"{effect.source}: +{value:.3f} Buff.MovementSpeed")
+            evidence.append(f"{source}: +{value:.3f} Buff.MovementSpeed")
 
         for effect in mundus_effects:
-            value, error = cls._movement_ratio(effect)
+            value, error = cls._mundus_movement_ratio(effect)
             if error is not None:
                 unresolved.append(error)
                 continue
