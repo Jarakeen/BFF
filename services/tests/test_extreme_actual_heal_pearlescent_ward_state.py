@@ -141,3 +141,31 @@ def test_pearlescent_ward_h1_review_tolerates_canonical_punctuation_variant() ->
     assert result.h1_mechanic_complete is True
     assert result.h1_positive_modifier_proven is True
     assert result.remaining_blockers == ()
+
+
+def test_pearlescent_ward_h1_review_matches_canonical_database_range_wording() -> None:
+    blocker = (
+        "Pearlescent Ward (5): active set bonus is not yet mechanic-mapped: "
+        "(5 items) Grants you and up to 11 other group members Pearlescent Ward. "
+        "This bonus persists through death.\n\nPearlescent Ward increases Weapon and Spell Damage "
+        "by up to 4-180 based on the number of group members that are alive.\n"
+        "Current 4-180 Weapon and Spell Damage.\n\nPearlescent Ward increases damage reduction "
+        "from non-player enemies out of 66% based on the number of group members that are dead.\n"
+        "Current 0% damage reduction."
+    )
+    row = ExtremeGearSetObjectiveCandidate(
+        set_id=648,
+        set_name="Pearlescent Ward",
+        category="standard",
+        equipped_piece_count=5,
+        objective_key="spell_damage",
+        reviewed_delta=0.0,
+        unresolved=(blocker,),
+    )
+
+    result = ExtremeActualHealGearConditionRelevanceService.review(row)
+
+    assert result.h1_mechanic_complete is True
+    assert result.h1_positive_modifier_proven is True
+    assert result.remaining_blockers == ()
+    assert result.ignored_blockers == (blocker,)
