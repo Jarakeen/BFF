@@ -32,6 +32,7 @@ from services.extreme_actual_heal_gear_precondition_effect_resolver import (
 from services.extreme_actual_heal_gear_precondition_witness_service import (
     CLAW_OF_YOLNAHKRIIN_MINOR_COURAGE_CONDITION,
     FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION,
+    NAGA_SHAMAN_MINOR_MENDING_CONDITION,
     NIX_HOUNDS_HOWL_MAJOR_COURAGE_CONDITION,
     PHOENIX_MOTH_MINOR_COURAGE_CONDITION,
     SPELL_POWER_CURE_MAJOR_COURAGE_CONDITION,
@@ -200,6 +201,8 @@ class ExtremeResourceConditionedPhase5ContextFactory(Phase5BuildCalculationConte
             VESTMENT_OF_OLORIME_MAJOR_COURAGE_CONDITION,
         } & active:
             buffs.append("Major Courage")
+        if NAGA_SHAMAN_MINOR_MENDING_CONDITION in active:
+            buffs.append("Minor Mending")
         if tuple(buffs) == combat_state.active_buffs:
             return combat_state
         return replace(
