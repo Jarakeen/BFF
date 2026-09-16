@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-"""City After Midnight assignment surface over plan-owned RaidPlan assignments."""
+"""Urban Wilderness assignment surface over plan-owned RaidPlan assignments."""
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
+    QHeaderView,
     QHBoxLayout,
     QLabel,
     QPushButton,
@@ -22,7 +23,7 @@ def _clean(value: object) -> str:
 
 
 class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
-    """Mockup-shaped assignment workspace with the canonical RaidPlan editor underneath."""
+    """Readable assignment summary with detailed editing kept in the selected-spot panel."""
 
     pageRequested = Signal(str)
 
@@ -36,8 +37,7 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         self.header.subtitle.setText("Turn good intentions into clear jobs.")
         self.header.department.setText("RAID • ASSIGNMENTS")
 
-        # Rehome the inherited plan/setup controls. They remain reachable as the Plan Setup
-        # view but do not dominate the assignment page.
+        # Keep the canonical plan editor available, but out of the main reading path.
         legacy = QWidget()
         legacy_layout = QVBoxLayout(legacy)
         legacy_layout.setContentsMargins(0, 0, 0, 0)
@@ -68,36 +68,49 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         body = QHBoxLayout()
         views = FoundryCard("Assignment Views", "checklist")
         for title, subtitle in (
-            ("Effective View", "Current plan assignments"),
+            ("Effective View", "Current plan duties"),
             ("Plan Assignments", "Edit this Raid Plan"),
             ("Supports", "Review support responsibilities"),
             ("Mechanics", "Review mechanic ownership"),
-            ("Roles", "Group by raid role"),
+            ("Roles", "Review raid spots"),
         ):
             button = QPushButton(f"{title}\n{subtitle}")
             if title == "Roles":
                 button.clicked.connect(self._toggle_plan_setup)
             views.addWidget(button)
-        note = QLabel("Clear jobs create calm groups. Vague work stays visible as a gap.")
+        note = QLabel("If the job is vague, the wipe is specific. — Field Note")
         note.setWordWrap(True)
         note.setProperty("muted", True)
         views.addWidget(note)
         body.addWidget(views, 2)
 
         table_card = FoundryCard("Team Assignments", "group")
-        # Keep the canonical editable assignment columns in place and append read-only
-        # context columns rather than creating a competing assignment model.
-        self.assignment_table.setColumnCount(9)
+        # Primary/secondary remain the canonical RaidPlan fields.  The surface names them
+        # Main Duty and Backup / Utility so the table reads like raid-lead language rather
+        # than a persistence schema.
+        self.assignment_table.setColumnCount(7)
         self.assignment_table.setHorizontalHeaderLabels(
-            ("Spot", "Player", "Primary Assignment", "Secondary Assignment", "Character", "Role", "Gear Needed", "Notes", "Source")
+            ("Spot", "Player", "Main Duty", "Backup / Utility", "Gear", "Notes", "Source")
         )
         self.assignment_table.setSelectionBehavior(self.assignment_table.SelectionBehavior.SelectRows)
         self.assignment_table.itemSelectionChanged.connect(self._refresh_selected_spot)
+        header = self.assignment_table.horizontalHeader()
+        header.setStretchLastSection(False)
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(5, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(6, QHeaderView.ResizeMode.ResizeToContents)
+        self.assignment_table.setColumnWidth(0, 105)
+        self.assignment_table.setColumnWidth(4, 110)
+        self.assignment_table.setColumnWidth(6, 100)
         table_card.addWidget(self.assignment_table)
         body.addWidget(table_card, 7)
 
         detail = FoundryCard("Selected Spot", "feather")
-        self.selected_spot_label = QLabel("Select a spot to review its plan-owned duties.")
+        self.selected_spot_label = QLabel("Select a spot to review its duties.")
         self.selected_spot_label.setWordWrap(True)
         detail.addWidget(self.selected_spot_label)
         open_build = QPushButton("Open Build")
@@ -119,7 +132,7 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         summary.addWidget(self.assignment_summary_label)
         bottom.addWidget(summary, 1)
         coverage = FoundryCard("Mechanic Coverage", "shield")
-        coverage_text = QLabel("Coverage evidence remains owned by Coverage. Open it for provider/recipient truth.")
+        coverage_text = QLabel("Coverage remains authoritative for provider and recipient truth.")
         coverage_text.setWordWrap(True)
         coverage.addWidget(coverage_text)
         open_coverage = QPushButton("Open Coverage")
@@ -127,6 +140,13 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         coverage.addWidget(open_coverage)
         bottom.addWidget(coverage, 1)
         self.workspace_layout.addLayout(bottom)
+
+        patience = FoundryCard("Field Note", "feather")
+        patience.setProperty("parchment", True)
+        patience_text = QLabel("The best teams are built twice: once in planning, once in patience. — J")
+        patience_text.setWordWrap(True)
+        patience.addWidget(patience_text)
+        self.workspace_layout.addWidget(patience)
         self.workspace_layout.addWidget(legacy)
 
     def _toggle_plan_setup(self) -> None:
@@ -147,9 +167,7 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         for row, spot in enumerate(RAID_PLAN_SEATS):
             member = members.get(_slug(spot).casefold())
             context = (
-                _clean(member.character_name) if member else "",
-                _clean(member.role) if member else "",
-                "—",
+                "—",  # Gear is intentionally not invented by this surface.
                 _clean(member.notes) if member else "",
                 "Raid Plan" if member else "Unassigned",
             )
@@ -160,15 +178,15 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
             if member and (member.primary_assignment or member.secondary_assignment):
                 assigned += 1
         self.assignment_summary_label.setText(
-            f"{assigned} / {len(RAID_PLAN_SEATS)} spots have explicit plan assignments.\n"
-            "Primary and Secondary fields are durable RaidPlan intent. Gear-needed remains unclaimed here rather than being invented."
+            f"{assigned} / {len(RAID_PLAN_SEATS)} spots have explicit duties.\n"
+            "Main Duty is the canonical primary assignment. Backup / Utility is optional secondary intent."
         )
         self._refresh_selected_spot()
 
     def _refresh_selected_spot(self) -> None:
         row = self.assignment_table.currentRow()
         if row < 0:
-            self.selected_spot_label.setText("Select a spot to review its plan-owned duties.")
+            self.selected_spot_label.setText("Select a spot to review its duties.")
             return
         spot = RAID_PLAN_SEATS[row]
         try:
@@ -182,10 +200,9 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         self.selected_spot_label.setText(
             f"{spot}\n"
             f"Player: {member.gamertag}\n"
-            f"Character: {_clean(member.character_name) or 'Not selected'}\n"
             f"Role: {_clean(member.role) or 'Not selected'}\n"
-            f"Primary Assignment: {_clean(member.primary_assignment) or 'Not set'}\n"
-            f"Secondary Assignment: {_clean(member.secondary_assignment) or 'Not set'}\n"
+            f"Main Duty: {_clean(member.primary_assignment) or 'Not set'}\n"
+            f"Backup / Utility: {_clean(member.secondary_assignment) or 'None'}\n"
             f"Linked Build: {_clean(member.selected_build_name) or 'Not selected'}\n"
             f"Notes: {_clean(member.notes) or 'None'}"
         )
