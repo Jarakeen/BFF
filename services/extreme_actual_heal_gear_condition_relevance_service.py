@@ -11,6 +11,12 @@ output only; reviewed always-on power plus an H1-irrelevant companion mechanic m
 be projected by the dedicated Extreme tradeoff resolver; reviewed pre-event gear
 conditions may be admitted only when a separate H1 witness service constructs the
 required setup; and the standing scenario itself satisfies ``standing_still``.
+
+The review result also records whether an H1-specific specialist rule proves a
+positive modifier even when the shared objective row has ``reviewed_delta == 0``.
+That distinction is required for authoritative candidate admission: a witnessed
+named buff such as Olorime Major Courage is useful to H1 even though the shared
+static parser intentionally leaves that runtime mechanic numerically unresolved.
 """
 
 from dataclasses import dataclass
@@ -118,6 +124,7 @@ _REVIEWED_H1_PRECONDITION_TEXT = (
 class ExtremeActualHealGearConditionRelevanceResult:
     objective_key: str
     h1_mechanic_complete: bool
+    h1_positive_modifier_proven: bool = False
     ignored_blockers: tuple[str, ...] = ()
     remaining_blockers: tuple[str, ...] = ()
 
@@ -139,6 +146,7 @@ class ExtremeActualHealGearConditionRelevanceService:
 
         ignored: list[str] = []
         remaining: list[str] = []
+        specialist_positive = False
         for blocker in row.unresolved:
             text = str(blocker)
             if objective in {"spell_damage", "weapon_damage"}:
@@ -157,6 +165,8 @@ class ExtremeActualHealGearConditionRelevanceService:
                 reviewed_precondition = any(
                     pattern.search(text) for pattern in _REVIEWED_H1_PRECONDITION_TEXT
                 )
+                if reviewed_tradeoff or reviewed_precondition:
+                    specialist_positive = True
                 if (
                     damage_only_scope
                     or standing_proven
@@ -171,6 +181,7 @@ class ExtremeActualHealGearConditionRelevanceService:
         return ExtremeActualHealGearConditionRelevanceResult(
             objective_key=objective,
             h1_mechanic_complete=not remaining,
+            h1_positive_modifier_proven=specialist_positive,
             ignored_blockers=tuple(ignored),
             remaining_blockers=tuple(remaining),
         )
