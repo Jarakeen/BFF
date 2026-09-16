@@ -3,6 +3,7 @@ from __future__ import annotations
 """Read-only H1 objective and distant-heal witness audit for Blind Path Induction."""
 
 from pathlib import Path
+import json
 import sqlite3
 import sys
 
@@ -104,6 +105,72 @@ def _heal_range_coverage(
     )
 
 
+def _raw_geometry_by_rank(
+    database: Path,
+    rank_ids: tuple[int, ...],
+) -> dict[int, tuple[object, ...]]:
+    if not rank_ids:
+        return {}
+    placeholders = ", ".join("?" for _value in rank_ids)
+    with sqlite3.connect(database) as connection:
+        rows = connection.execute(
+            f"""
+            SELECT
+                id,
+                radius,
+                min_range,
+                max_range,
+                raw_description,
+                raw_tooltip,
+                coef_description,
+                raw_json
+            FROM skill_rank
+            WHERE id IN ({placeholders})
+            """,
+            rank_ids,
+        ).fetchall()
+
+    result: dict[int, tuple[object, ...]] = {}
+    for (
+        rank_id,
+        radius,
+        minimum,
+        maximum,
+        description,
+        tooltip,
+        coefficient_description,
+        raw_json,
+    ) in rows:
+        raw_fields: tuple[tuple[str, object], ...] = ()
+        try:
+            payload = json.loads(str(raw_json or "{}"))
+        except (TypeError, ValueError, json.JSONDecodeError):
+            payload = {}
+        if isinstance(payload, dict):
+            raw_fields = tuple(
+                (key, payload.get(key))
+                for key in (
+                    "target",
+                    "radius",
+                    "minRange",
+                    "maxRange",
+                    "range",
+                    "distance",
+                )
+                if key in payload
+            )
+        result[int(rank_id)] = (
+            radius,
+            minimum,
+            maximum,
+            str(description or ""),
+            str(tooltip or ""),
+            str(coefficient_description or ""),
+            raw_fields,
+        )
+    return result
+
+
 def main() -> int:
     database = get_data_dir() / "eso.db"
     repository = GearSetRepository(database)
@@ -114,6 +181,10 @@ def main() -> int:
     )
     h1_review = ExtremeActualHealGearConditionRelevanceService.review(objective_row)
     heal_candidates, witnesses = _heal_range_coverage(database)
+    raw_geometry = _raw_geometry_by_rank(
+        database,
+        tuple(int(item[3]) for item in heal_candidates),
+    )
 
     print("EXTREME E2 H1 BLIND PATH INDUCTION OBJECTIVE AUDIT")
     print(f"database={database}")
@@ -162,6 +233,22 @@ def main() -> int:
             f"heal_components={heal_count} recipient_scopes={recipient_scopes!r} "
             f"complete_heal_identity={complete}"
         )
+        (
+            raw_radius,
+            raw_minimum,
+            raw_maximum,
+            raw_description,
+            raw_tooltip,
+            coefficient_description,
+            raw_fields,
+        ) = raw_geometry.get(rank_id, (None, None, None, "", "", "", ()))
+        print(
+            f"    geometry radius={raw_radius!r} min_range={raw_minimum!r} "
+            f"max_range={raw_maximum!r} raw_fields={raw_fields!r}"
+        )
+        print(f"    raw_description={raw_description!r}")
+        print(f"    raw_tooltip={raw_tooltip!r}")
+        print(f"    coefficient_description={coefficient_description!r}")
 
     print(f"distant_heal_witness_count={len(witnesses)}")
     print("DISTANT HEAL RANGE WITNESSES")
