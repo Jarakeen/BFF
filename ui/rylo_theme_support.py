@@ -22,8 +22,14 @@ def install(app: QApplication) -> None:
     if _INSTALLED:
         return
 
+    from ui.collectibles_new_theme_assets_support import install as install_collectibles_theme_assets
     from ui.theme import theme_manager
     from ui import settings_page
+
+    # Collectibles is a custom-painted dashboard, not just a QSS surface. Register
+    # the additive Field Journal / City palettes and badge sheets before MainWindow
+    # constructs that page. Legacy badge assets remain untouched.
+    install_collectibles_theme_assets()
 
     original_load_settings = settings_page.SettingsPage.load_settings
 
