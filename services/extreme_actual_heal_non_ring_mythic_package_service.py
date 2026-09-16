@@ -30,7 +30,6 @@ class ExtremeActualHealNonRingMythicPackageService(ExtremeActualHealMythicPackag
     No slot or set count is inferred from a tooltip or aggregate weapon label.
     """
 
-    # ESO/UESP mined-item equipType identities used by gear_set_piece.
     EQUIP_TYPE_TO_SLOT = {
         1: "Head",
         2: "Chest",
@@ -43,7 +42,6 @@ class ExtremeActualHealNonRingMythicPackageService(ExtremeActualHealMythicPackag
     }
     TWO_HAND_EQUIP_TYPE = 11
 
-    # position, equip_type, set-piece count
     NON_WEAPON_POSITIONS = (
         ("Head", 1, 1),
         ("Chest", 2, 1),
@@ -67,13 +65,21 @@ class ExtremeActualHealNonRingMythicPackageService(ExtremeActualHealMythicPackag
         names: list[str] = []
         seen: set[str] = set()
         limit = max(1, int(per_objective))
+        ordinary_allowed = frozenset(
+            name.casefold()
+            for name in self.ordinary_candidates.candidate_set_names(per_objective=None)
+        )
         for objective in self.OBJECTIVES:
             accepted = 0
             for row in ExtremeGearSetObjectiveService.candidates_for_objective(
                 self.repository,
                 objective,
             ):
-                if not row.mechanic_complete or row.reviewed_delta <= 0:
+                if row.set_name.casefold() not in ordinary_allowed:
+                    continue
+                if not self.ordinary_candidates._h1_mechanic_complete(row):
+                    continue
+                if not self.ordinary_candidates._h1_positive(row):
                     continue
                 gear_set = self.repository.get_set_by_id(row.set_id)
                 if gear_set is None or not self._ordinary(gear_set.id, gear_set.category):
@@ -133,15 +139,6 @@ class ExtremeActualHealNonRingMythicPackageService(ExtremeActualHealMythicPackag
         *,
         active_bar: str,
     ) -> tuple[tuple[str, int, int, int, bool], ...]:
-        """Return exact active-weapon positions as package-search evidence.
-
-        Tuple shape is ``(position, equip_type, piece_count, weapon_type_id,
-        exact_equip_type_required)``. Two-slot weapons count as two set pieces and
-        require the canonical two-hand equip family. Explicit paired weapons count
-        one piece per hand and require only the exact weapon subtype to exist in
-        the set's canonical piece universe, matching the shared arena-set proof.
-        """
-
         main, offhand = baseline_build.active_weapon_slots(active_bar)
         main_id = eso_weapon_type_id_from_saved_name(main.WeaponType)
         if main_id is None:
