@@ -31,6 +31,8 @@ def test_ancient_dragonguard_requires_five_pieces_for_threshold_witness() -> Non
 
 def test_ancient_dragonguard_exact_tooltip_maps_conditional_flat_power() -> None:
     bonus = GearSetBonus(
+        id=1,
+        set_id=1,
         piece_count=5,
         description=(
             "(5 items) Adds 8-300 Weapon and Spell Damage while your Health is above 50%. "
