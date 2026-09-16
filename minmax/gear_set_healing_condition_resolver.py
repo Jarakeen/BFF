@@ -16,6 +16,9 @@ from .gear_sets import GearSetBonus
 from .stat_ids import StatId
 
 
+BLIND_PATH_DISTANT_HEAL_CONDITION = "blind_path_target_beyond_15m"
+
+
 class GearSetHealingConditionResolver:
     """Map reviewed conditional healing modifiers into canonical Effects."""
 
@@ -140,6 +143,23 @@ class GearSetHealingConditionResolver:
                 )
             ]
 
+        match = re.fullmatch(
+            r"Increase the strength of your Damage Shields by (?P<shield>\d+(?:\.\d+)?)% "
+            r"to you and targets within 15 meters of you\.\s*Increase your Healing Done by "
+            r"(?P<heal>\d+(?:\.\d+)?)% to targets more than 15 meters away from you\.?",
+            text,
+            re.IGNORECASE,
+        )
+        if match:
+            return [
+                self._effect(
+                    StatId.HEALING_DONE,
+                    float(match.group("heal")),
+                    source_text,
+                    condition=BLIND_PATH_DISTANT_HEAL_CONDITION,
+                )
+            ]
+
         return []
 
     @classmethod
@@ -166,4 +186,7 @@ class GearSetHealingConditionResolver:
         )
 
 
-__all__ = ["GearSetHealingConditionResolver"]
+__all__ = [
+    "BLIND_PATH_DISTANT_HEAL_CONDITION",
+    "GearSetHealingConditionResolver",
+]
