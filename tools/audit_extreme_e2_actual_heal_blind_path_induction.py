@@ -27,7 +27,9 @@ def _value(raw: object) -> str:
     return str(getattr(raw, "value", raw))
 
 
-def _distant_heal_witnesses(database: Path) -> tuple[tuple[object, ...], ...]:
+def _heal_range_coverage(
+    database: Path,
+) -> tuple[tuple[tuple[object, ...], ...], tuple[tuple[object, ...], ...]]:
     candidate_service = ExtremeHealSkillCandidateService(database)
     rows = candidate_service._skill_rows()
     range_by_rank: dict[int, tuple[float, float | None]] = {}
@@ -48,6 +50,7 @@ def _distant_heal_witnesses(database: Path) -> tuple[tuple[object, ...], ...]:
                 continue
             range_by_rank[int(rank_id)] = (minimum_value, maximum_value)
 
+    heal_candidates: list[tuple[object, ...]] = []
     witnesses: list[tuple[object, ...]] = []
     seen: set[tuple[int, int]] = set()
     for row in rows:
@@ -57,8 +60,6 @@ def _distant_heal_witnesses(database: Path) -> tuple[tuple[object, ...], ...]:
         seen.add(identity)
         rank_id = int(row["skill_rank_id"])
         minimum, maximum = range_by_rank.get(rank_id, (0.0, None))
-        if maximum is None or maximum <= DISTANCE_THRESHOLD:
-            continue
         heals = tuple(
             component
             for component in candidate_service.components.get_for_skill_rank(rank_id)
@@ -76,29 +77,30 @@ def _distant_heal_witnesses(database: Path) -> tuple[tuple[object, ...], ...]:
             )
         )
         complete = all(component.is_complete_heal_event_identity for component in heals)
-        witnesses.append(
-            (
-                str(row["name"] or ""),
-                str(row["skill_line"] or ""),
-                str(row["class_type"] or ""),
-                rank_id,
-                minimum,
-                maximum,
-                len(heals),
-                recipient_scopes,
-                complete,
-            )
+        record = (
+            str(row["name"] or ""),
+            str(row["skill_line"] or ""),
+            str(row["class_type"] or ""),
+            rank_id,
+            minimum,
+            maximum,
+            len(heals),
+            recipient_scopes,
+            complete,
         )
-    return tuple(
-        sorted(
-            witnesses,
-            key=lambda item: (
-                str(item[2]).casefold(),
-                str(item[1]).casefold(),
-                str(item[0]).casefold(),
-                int(item[3]),
-            ),
-        )
+        heal_candidates.append(record)
+        if maximum is not None and maximum > DISTANCE_THRESHOLD:
+            witnesses.append(record)
+
+    key = lambda item: (
+        str(item[2]).casefold(),
+        str(item[1]).casefold(),
+        str(item[0]).casefold(),
+        int(item[3]),
+    )
+    return (
+        tuple(sorted(heal_candidates, key=key)),
+        tuple(sorted(witnesses, key=key)),
     )
 
 
@@ -111,7 +113,7 @@ def main() -> int:
         "healing_done",
     )
     h1_review = ExtremeActualHealGearConditionRelevanceService.review(objective_row)
-    witnesses = _distant_heal_witnesses(database)
+    heal_candidates, witnesses = _heal_range_coverage(database)
 
     print("EXTREME E2 H1 BLIND PATH INDUCTION OBJECTIVE AUDIT")
     print(f"database={database}")
@@ -140,6 +142,26 @@ def main() -> int:
     print(f"h1_positive_modifier_proven={h1_review.h1_positive_modifier_proven}")
     for blocker in h1_review.remaining_blockers:
         print(f"h1_remaining_blocker={blocker!r}")
+
+    print(f"canonical_heal_candidate_count={len(heal_candidates)}")
+    print("CANONICAL HEAL RANGE COVERAGE")
+    for (
+        name,
+        skill_line,
+        class_type,
+        rank_id,
+        minimum,
+        maximum,
+        heal_count,
+        recipient_scopes,
+        complete,
+    ) in heal_candidates:
+        print(
+            f"  name={name!r} line={skill_line!r} class={class_type!r} "
+            f"skill_rank_id={rank_id} min_range={minimum!r} max_range={maximum!r} "
+            f"heal_components={heal_count} recipient_scopes={recipient_scopes!r} "
+            f"complete_heal_identity={complete}"
+        )
 
     print(f"distant_heal_witness_count={len(witnesses)}")
     print("DISTANT HEAL RANGE WITNESSES")
