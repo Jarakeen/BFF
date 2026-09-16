@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QApplication
 
-from services.accessibility_preferences import is_rylo_visual_theme
+from services.accessibility_preferences import (
+    VISUAL_THEME_RYLO_CITY,
+    is_rylo_visual_theme,
+)
 
 _INSTALLED = False
 
@@ -24,11 +27,18 @@ def install() -> None:
             return
 
         app = QApplication.instance()
-        theme = app.property("visualTheme") if app is not None else ""
-        rylo = is_rylo_visual_theme(str(theme or ""))
-        if rylo:
-            # Both Rylo skins share the wider scythe lockup. The newer City
-            # theme changes materials and accents, not the brand silhouette.
+        theme = str(app.property("visualTheme") if app is not None else "")
+        rylo = is_rylo_visual_theme(theme)
+        if theme == VISUAL_THEME_RYLO_CITY:
+            # City After Midnight gets the skyline mark from its approved asset
+            # board. Keep the same rail width as Rylo Grayscale so switching
+            # themes never moves the rest of the app.
+            self.setMinimumWidth(248)
+            self.setMaximumWidth(278)
+            filename = "sidebar_city_rylo.svg"
+            pix_w, pix_h = 42, 63
+            box_w, box_h = 48, 68
+        elif rylo:
             self.setMinimumWidth(248)
             self.setMaximumWidth(278)
             filename = "sidebar_scythe_rylo.svg"
