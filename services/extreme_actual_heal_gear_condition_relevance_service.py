@@ -104,6 +104,12 @@ _REVIEWED_H1_PRECONDITION_TEXT = (
         re.IGNORECASE | re.DOTALL,
     ),
     re.compile(
+        r"Armor of the Veiled Heritance \(5\): active set bonus is not yet mechanic-mapped:.*"
+        r"When you interrupt an enemy, you gain\s*(?:\d[\d,]*\s*-\s*)?516\s*Weapon and Spell Damage for\s*15 seconds.*"
+        r"Your Bash attacks deal\s*(?:\d[\d,]*\s*-\s*)?516\s*more damage",
+        re.IGNORECASE | re.DOTALL,
+    ),
+    re.compile(
         r"Claw of Yolnahkriin \(5\): active set bonus is not yet mechanic-mapped:.*"
         r"When you taunt an enemy.*give yourself and 11 group members Minor Courage for\s*15 seconds.*"
         r"Weapon and Spell Damage by\s*(?:\d[\d,]*\s*-\s*)?215",
