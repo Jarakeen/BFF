@@ -135,7 +135,7 @@ def install() -> None:
         for index, label in enumerate(labels)
     }
     city_badges = {
-        label: dashboard.SpriteRef("badges.jpg", 6, 4, index)
+        label: dashboard.SpriteRef("badges.webp", 6, 4, index)
         for index, label in enumerate(labels)
     }
 
