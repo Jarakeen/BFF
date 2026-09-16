@@ -46,6 +46,7 @@ def test_related_records_share_execution_families() -> None:
     assert rows["critical_heal"].execution_family == "actual-heal-event"
 
     assert rows["bash_damage"].status is ExtremeRecordExecutionStatus.SPECIALIZED
+    assert rows["damage_shield"].status is ExtremeRecordExecutionStatus.SPECIALIZED
     assert rows["bash_damage"].execution_family == "single-event-output"
     assert rows["damage_shield"].execution_family == "single-event-output"
 
@@ -68,5 +69,5 @@ def test_execution_disposition_counts_make_remaining_work_explicit() -> None:
         counts[row.status] += 1
 
     assert counts[ExtremeRecordExecutionStatus.READY] == 19
-    assert counts[ExtremeRecordExecutionStatus.SPECIALIZED] == 3
-    assert counts[ExtremeRecordExecutionStatus.PENDING] == 9
+    assert counts[ExtremeRecordExecutionStatus.SPECIALIZED] == 4
+    assert counts[ExtremeRecordExecutionStatus.PENDING] == 8
