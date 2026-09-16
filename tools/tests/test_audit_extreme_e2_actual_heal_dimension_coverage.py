@@ -38,7 +38,7 @@ def test_e2_actual_heal_dimension_ledger_does_not_overclaim_global_denominator()
     assert by_key["race"].status is E2DimensionStatus.COVERED
     assert by_key["class_route"].status is E2DimensionStatus.COVERED
     assert by_key["attributes"].status is E2DimensionStatus.COVERED
-    assert by_key["armor_weights_passives"].status is E2DimensionStatus.PARTIAL
+    assert by_key["armor_weights_passives"].status is E2DimensionStatus.COVERED
     assert by_key["gear_packages_procs"].status is E2DimensionStatus.PARTIAL
     assert by_key["weapon_configuration_passives"].status is E2DimensionStatus.PARTIAL
     assert by_key["skills_morphs_ultimates"].status is E2DimensionStatus.PARTIAL
@@ -67,3 +67,15 @@ def test_e2_attribute_row_records_the_full_denominator_proof() -> None:
     assert "2,145" in attributes.evidence
     assert "pure Magicka/Stamina endpoints" in attributes.evidence
     assert attributes.remaining_gap == ""
+
+
+def test_e2_armor_weight_row_records_physical_legality_and_reduction_proof() -> None:
+    rows = build_dimension_coverage()
+    armor = next(row for row in rows if row.key == "armor_weights_passives")
+
+    assert armor.status is E2DimensionStatus.COVERED
+    assert "gear_set_piece" in armor.evidence
+    assert "full legal per-slot weight product" in armor.evidence
+    assert "Medium-piece count" in armor.evidence
+    assert "distinct armor-type count" in armor.evidence
+    assert armor.remaining_gap == ""
