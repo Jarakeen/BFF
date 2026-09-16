@@ -146,3 +146,30 @@ def test_noncombat_crafting_and_utility_actives_never_enter_combat_bar_pool():
     context = ExtremePlayerSkillLegalityContext(equipped_class_lines=("Green Balance",))
 
     assert _service((craft, utility)).candidates(context) == ()
+
+def test_canonical_snake_case_route_ids_match_display_class_line_names():
+    rows = (
+        _active(
+            "Igneous Shield",
+            "Earthen Heart",
+            ExtremeSkillDomain.CLASS,
+            class_type="Dragonknight",
+            ability_id=70,
+        ),
+        _active(
+            "Winter Skill",
+            "Winter's Embrace",
+            ExtremeSkillDomain.CLASS,
+            class_type="Warden",
+            ability_id=71,
+        ),
+    )
+    context = ExtremePlayerSkillLegalityContext(
+        equipped_class_lines=("earthen_heart", "winters_embrace", "siphoning"),
+    )
+
+    assert {row.name for row in _service(rows).candidates(context)} == {
+        "Igneous Shield",
+        "Winter Skill",
+    }
+

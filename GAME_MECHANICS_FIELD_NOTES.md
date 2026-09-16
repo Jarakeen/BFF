@@ -942,3 +942,7 @@ Minor Courage state. Existing Minor Courage does not stack with it.
 
 Basalt-Blooded Warrior does not grant its healing bonus merely because an Earthen Heart skill was cast. The cast starts a 10-second stance window, but the +14% Healing Done branch is Obsidian Stance on the secondary/back weapon. For an Extreme H1 heal witness, the setup therefore has to cast an Earthen Heart ability from the primary/front bar, swap bars, and score the heal from the secondary/back bar before the stance expires.
 
+### Class route IDs and skill-line display names are the same identity
+
+Extreme routes store class lines as stable snake-case IDs such as `earthen_heart` and `winters_embrace`, while the skill database exposes display labels such as `Earthen Heart` and `Winter's Embrace`. Candidate legality must normalize both forms before comparing them. A literal comparison can make every active skill from an otherwise legal subclass line disappear, even though the route itself is valid.
+

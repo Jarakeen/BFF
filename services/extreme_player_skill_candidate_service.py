@@ -14,6 +14,7 @@ legal candidate for the requested build/bar context.
 
 from dataclasses import dataclass
 from pathlib import Path
+import re
 
 from services.extreme_skill_universe_service import (
     ExtremePlayerSkillRecord,
@@ -24,6 +25,13 @@ from services.extreme_skill_universe_service import (
 
 def _key(value: object) -> str:
     return " ".join(str(value or "").strip().casefold().split())
+
+
+def _line_key(value: object) -> str:
+    """Normalize display names and canonical snake-case skill-line ids equally."""
+
+    text = str(value or "").strip().casefold().replace("'", "")
+    return " ".join(part for part in re.split(r"[^a-z0-9]+", text) if part)
 
 
 @dataclass(frozen=True)
@@ -51,16 +59,16 @@ class ExtremePlayerSkillCandidateService:
         row: ExtremePlayerSkillRecord,
         context: ExtremePlayerSkillLegalityContext,
     ) -> bool:
-        allowed = {_key(line) for line in context.equipped_class_lines}
-        return row.line_key in allowed
+        allowed = {_line_key(line) for line in context.equipped_class_lines}
+        return _line_key(row.skill_line) in allowed
 
     @staticmethod
     def _weapon_line_allowed(
         row: ExtremePlayerSkillRecord,
         context: ExtremePlayerSkillLegalityContext,
     ) -> bool:
-        allowed = {_key(line) for line in context.equipped_weapon_lines}
-        return row.line_key in allowed
+        allowed = {_line_key(line) for line in context.equipped_weapon_lines}
+        return _line_key(row.skill_line) in allowed
 
     @staticmethod
     def _world_line_allowed(
