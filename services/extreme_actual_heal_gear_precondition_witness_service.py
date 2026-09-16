@@ -12,6 +12,7 @@ from services.extreme_actual_heal_gear_precondition_effect_resolver import (
     ARMOR_OF_TRUTH_POWER_CONDITION,
     BLESSING_OF_HIGH_ISLE_CONDITION,
     CAMONNA_TONG_MAX_POWER_CONDITION,
+    CORAL_RIPTIDE_MAX_POWER_CONDITION,
     PEARLESCENT_WARD_FULL_GROUP_ALIVE_CONDITION,
     PELINALS_WRATH_FULL_STACKS_CONDITION,
     STYGIAN_POWER_CONDITION,
@@ -82,6 +83,14 @@ class ExtremeActualHealGearPreconditionWitnessService:
                 "pearlescent_ward_full_group_alive: standing H1 scenario may snapshot a full "
                 "12-player group with all members alive, activating Pearlescent Ward's maximum "
                 "180 Weapon and Spell Damage branch for the wearer"
+            )
+
+        if int(counts.get("Coral Riptide", 0)) >= 5:
+            active.append(CORAL_RIPTIDE_MAX_POWER_CONDITION)
+            evidence.append(
+                "wearer_stamina_at_or_below_50_percent: standing H1 scenario may snapshot the "
+                "caster at 50% current Stamina or lower, where Coral Riptide's tooltip explicitly "
+                "reaches its maximum Weapon and Spell Damage bonus"
             )
 
         if int(counts.get("Symmetry of the Weald", 0)) >= 5:
