@@ -11,6 +11,9 @@ from services.extreme_actual_heal_gear_precondition_effect_resolver import (
 )
 
 
+FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION = "fledglings_nest_minor_courage_active"
+
+
 @dataclass(frozen=True)
 class ExtremeActualHealGearPreconditionWitness:
     active_conditions: tuple[str, ...] = ()
@@ -42,6 +45,14 @@ class ExtremeActualHealGearPreconditionWitnessService:
                 "within Blessing of High Isle's 5-second power window"
             )
 
+        if int(counts.get("Fledgling's Nest", 0)) >= 5:
+            active.append(FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION)
+            evidence.append(
+                "fledglings_nest_minor_courage_active: standing H1 setup may cast one "
+                "ground-effect ability in combat, create the Gryphon Nest, leave it once, "
+                "and snapshot the heal inside the resulting 10-second Minor Courage window"
+            )
+
         return ExtremeActualHealGearPreconditionWitness(
             active_conditions=tuple(active),
             evidence=tuple(evidence),
@@ -50,6 +61,7 @@ class ExtremeActualHealGearPreconditionWitnessService:
 
 
 __all__ = [
+    "FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION",
     "ExtremeActualHealGearPreconditionWitness",
     "ExtremeActualHealGearPreconditionWitnessService",
 ]
