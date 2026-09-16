@@ -93,6 +93,12 @@ _REVIEWED_H1_PRECONDITION_TEXT = (
         re.IGNORECASE | re.DOTALL,
     ),
     re.compile(
+        r"Coral Riptide \(5\): active set bonus is not yet mechanic-mapped:.*"
+        r"Increases your Weapon and Spell Damage by up to\s*600,?\s*based on your missing Stamina, "
+        r"reaching the maximum at\s*50% Stamina",
+        re.IGNORECASE | re.DOTALL,
+    ),
+    re.compile(
         r"Blessing of High Isle \(5\): active set bonus is not yet mechanic-mapped:.*"
         r"When you are healed while in combat, increase your Weapon and Spell Damage by\s*8-369\s+for\s+5 seconds",
         re.IGNORECASE | re.DOTALL,
