@@ -84,7 +84,6 @@ CORE_NAV_SECTIONS = [
         ("Gear Lookup", "gear_lookup"),
         ("vAS2 Timer", "timers"),
     ]},
-    ("Community News", "community_news"),
     ("Settings", "settings"),
 ]
 
