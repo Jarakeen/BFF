@@ -14,6 +14,7 @@ from services.extreme_actual_heal_gear_precondition_effect_resolver import (
 )
 
 
+CLAW_OF_YOLNAHKRIIN_MINOR_COURAGE_CONDITION = "claw_of_yolnahkriin_minor_courage_active"
 FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION = "fledglings_nest_minor_courage_active"
 PHOENIX_MOTH_MINOR_COURAGE_CONDITION = "phoenix_moth_minor_courage_active"
 SPELL_POWER_CURE_MAJOR_COURAGE_CONDITION = "spell_power_cure_major_courage_active"
@@ -75,6 +76,14 @@ class ExtremeActualHealGearPreconditionWitnessService:
                 "within Blessing of High Isle's 5-second power window"
             )
 
+        if int(counts.get("Claw of Yolnahkriin", 0)) >= 5:
+            active.append(CLAW_OF_YOLNAHKRIIN_MINOR_COURAGE_CONDITION)
+            evidence.append(
+                "claw_of_yolnahkriin_minor_courage_active: standing H1 setup may taunt one "
+                "enemy, then snapshot the heal inside Yolnahkriin's 15-second self-applied "
+                "Minor Courage window"
+            )
+
         if int(counts.get("Fledgling's Nest", 0)) >= 5:
             active.append(FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION)
             evidence.append(
@@ -123,6 +132,7 @@ class ExtremeActualHealGearPreconditionWitnessService:
 
 
 __all__ = [
+    "CLAW_OF_YOLNAHKRIIN_MINOR_COURAGE_CONDITION",
     "FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION",
     "NIX_HOUNDS_HOWL_MAJOR_COURAGE_CONDITION",
     "PHOENIX_MOTH_MINOR_COURAGE_CONDITION",
