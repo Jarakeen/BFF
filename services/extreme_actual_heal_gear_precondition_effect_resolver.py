@@ -23,6 +23,7 @@ SEVENTH_LEGION_BRUTE_POWER_CONDITION = "seventh_legion_brute_power_active"
 SOULSHINE_POWER_CONDITION = "soulshine_power_active"
 POWERFUL_ASSAULT_POWER_CONDITION = "powerful_assault_power_active"
 CAMONNA_TONG_MAX_POWER_CONDITION = "camonna_tong_max_power_active"
+RAVAGER_FULL_STACKS_CONDITION = "ravager_full_stacks"
 
 
 class ExtremeActualHealGearPreconditionEffectResolver:
@@ -40,6 +41,7 @@ class ExtremeActualHealGearPreconditionEffectResolver:
     _SOULSHINE = re.compile(r"^\(5 items\)\s*Activating an ability with a cast or channel time grants you\s*(?:(?P<min>\d[\d,]*)\s*-\s*)?(?P<max>\d[\d,]*)\s*Weapon and Spell Damage for\s*5 seconds\.?$", re.IGNORECASE)
     _POWERFUL_ASSAULT = re.compile(r"^\(5 items\)\s*When you cast an Assault ability while in combat, you and up to 5 group members within 12 meters gain\s*(?:(?P<min>\d[\d,]*)\s*-\s*)?(?P<max>\d[\d,]*)\s*Weapon and Spell Damage for\s*15 seconds\.?$", re.IGNORECASE)
     _CAMONNA_TONG = re.compile(r"^\(5 items\)\s*When you kill a monster and gain Experience Points, gain 1 Weapon and Spell Damage for every 50 Experience Points the monster is worth for 30 seconds\.\s*This bonus can stack up to a maximum of\s*(?P<max>\d[\d,]*)\s*Weapon and Spell Damage\.\s*This item set is not affected by Experience Point boosting effects\.?$", re.IGNORECASE)
+    _RAVAGER = re.compile(r"^\(5 items\)\s*Each time you attempt to reduce the target's Physical or Spell Resistance, you gain a stack of Ravager for 5 seconds, increasing your Weapon and Spell Damage by\s*(?P<max>\d[\d,]*)\.\s*You can gain a stack every 1 second\.\s*At 4 stacks, the duration doubles but cannot be refreshed\.?$", re.IGNORECASE)
 
     def resolve(self, bonus: GearSetBonus, *, use_max_value: bool = True, source: str | None = None) -> list[Effect]:
         description = normalize_eso_markup(str(bonus.description or "")).text.strip()
@@ -59,6 +61,7 @@ class ExtremeActualHealGearPreconditionEffectResolver:
             (self._SOULSHINE, SOULSHINE_POWER_CONDITION, 1.0),
             (self._POWERFUL_ASSAULT, POWERFUL_ASSAULT_POWER_CONDITION, 1.0),
             (self._CAMONNA_TONG, CAMONNA_TONG_MAX_POWER_CONDITION, 1.0),
+            (self._RAVAGER, RAVAGER_FULL_STACKS_CONDITION, 4.0),
         )
         match = None
         condition = ""
@@ -86,6 +89,7 @@ __all__ = [
     "CAMONNA_TONG_MAX_POWER_CONDITION",
     "PEARLESCENT_WARD_FULL_GROUP_ALIVE_CONDITION",
     "POWERFUL_ASSAULT_POWER_CONDITION",
+    "RAVAGER_FULL_STACKS_CONDITION",
     "SEVENTH_LEGION_BRUTE_POWER_CONDITION",
     "SOULSHINE_POWER_CONDITION",
     "STYGIAN_POWER_CONDITION",
