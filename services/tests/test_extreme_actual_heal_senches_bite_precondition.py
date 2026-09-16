@@ -28,14 +28,14 @@ def test_senches_bite_requires_five_pieces_for_dodge_witness() -> None:
     assert any("successfully Dodge" in item for item in active.evidence)
 
 
-def test_senches_bite_exact_tooltip_maps_conditional_critical_healing() -> None:
+def test_senches_bite_canonical_tooltip_maps_maximum_conditional_critical_healing() -> None:
     bonus = GearSetBonus(
         id=1,
         set_id=1,
         piece_count=5,
         description=(
             "(5 items) Whenever you successfully Dodge, increase your Critical Damage and "
-            "Critical Healing by 15% for 10 seconds."
+            "Critical Healing by |cffffff0-15|r% for |cffffff10|r seconds."
         ),
     )
 
@@ -49,11 +49,27 @@ def test_senches_bite_exact_tooltip_maps_conditional_critical_healing() -> None:
     assert by_stat[StatId.CRITICAL_DAMAGE].condition == SENCHES_BITE_DODGE_CONDITION
 
 
+def test_senches_bite_canonical_tooltip_preserves_minimum_when_requested() -> None:
+    bonus = GearSetBonus(
+        id=1,
+        set_id=1,
+        piece_count=5,
+        description=(
+            "(5 items) Whenever you successfully Dodge, increase your Critical Damage and "
+            "Critical Healing by 0-15% for 10 seconds."
+        ),
+    )
+
+    effects = GearSetHealingConditionResolver().resolve(bonus, use_max_value=False)
+
+    assert {effect.value for effect in effects} == {0.0}
+
+
 def test_senches_bite_exact_h1_blocker_is_reviewed_by_dodge_witness() -> None:
     blocker = (
         "Senche's Bite (5): active set bonus is not yet mechanic-mapped: "
         "(5 items) Whenever you successfully Dodge, increase your Critical Damage and "
-        "Critical Healing by 15% for 10 seconds."
+        "Critical Healing by 0-15% for 10 seconds."
     )
     row = ExtremeGearSetObjectiveCandidate(
         set_id=1,
