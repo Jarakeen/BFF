@@ -78,11 +78,15 @@ def install(app: QApplication) -> None:
                 sidebar = getattr(widget, "sidebar", None)
                 if sidebar is not None and hasattr(sidebar, "refresh_brand_mark"):
                     sidebar.refresh_brand_mark()
+
                 pages = getattr(widget, "pages", {})
-                roster = pages.get("roster_page") if isinstance(pages, dict) else None
-                sketch = getattr(roster, "theme_sketch", None)
-                if sketch is not None and hasattr(sketch, "refresh_theme"):
-                    sketch.refresh_theme()
+                if not isinstance(pages, dict):
+                    continue
+                for route in ("roster_workspace", "roster_page"):
+                    page_widget = pages.get(route)
+                    refresh_assets = getattr(page_widget, "refresh_theme_assets", None)
+                    if callable(refresh_assets):
+                        refresh_assets()
 
             label = self.visual_theme_combo.currentText()
             if str(key) == VISUAL_THEME_RYLO_CITY:
