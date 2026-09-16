@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-"""City After Midnight presentation for the canonical Raid Roster workspace.
+"""Urban Wilderness presentation for the canonical Raid Roster workspace.
 
 The six Collectibles-style cards replace visible tabs as navigation. All existing roster,
 character, team, availability, recruitment and archive services remain the data owners.
+The visible composition deliberately blends the city-night and field-journal asset packs.
 """
 
 from pathlib import Path
@@ -45,7 +46,7 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
 
     def _install_city_dashboard(self) -> None:
         self.header.title.setText("Roster")
-        self.header.subtitle.setText("Built from static, stubbornness, and one more pull.")
+        self.header.subtitle.setText("Same people. Different rooftops. Better runs.")
         self.header.department.setText("RAID • ROSTER")
 
         self.tabs.tabBar().hide()
@@ -100,7 +101,7 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
             button.clicked.connect(callback)
             quick.addWidget(button)
         right_layout.addWidget(quick)
-        right_layout.addWidget(self._city_art("roster_people.webp", "Same people. New heights."), 1)
+        right_layout.addWidget(self._theme_art("roster_people", prefer="city", fallback="Same people. Higher standards."), 1)
         top.addWidget(right, 3)
         root.addLayout(top, 5)
 
@@ -111,7 +112,7 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
         snapshot.addWidget(self.city_team_snapshot)
         bottom.addWidget(snapshot, 2)
 
-        bottom.addWidget(self._city_art("roster_team.webp", "A stronger tomorrow, with the same crew."), 3)
+        bottom.addWidget(self._theme_art("roster_team", prefer="field", fallback="A stronger tomorrow, with the same crew."), 3)
 
         needs = FoundryCard("Recruitment Needs", "group")
         self.city_recruitment_needs = QLabel("")
@@ -129,6 +130,13 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
         bottom.addWidget(recent, 3)
         root.addLayout(bottom, 2)
 
+        note = FoundryCard("Field Note", "feather")
+        note.setProperty("parchment", True)
+        note_text = QLabel("Good people make hard things possible. Different rooftops. Same horizon.")
+        note_text.setWordWrap(True)
+        note.addWidget(note_text)
+        root.addWidget(note)
+
         self.player_editor_panel = FoundryCard("Player Editor", "feather")
         self.player_editor_panel.addWidget(self.record)
         self.player_editor_panel.addWidget(self.actions)
@@ -140,12 +148,29 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
         return page
 
     @staticmethod
-    def _city_art(filename: str, fallback: str) -> QLabel:
+    def _theme_art(stem: str, *, prefer: str, fallback: str) -> QLabel:
         label = QLabel()
         label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         label.setMinimumHeight(130)
-        path = get_resource_path("assets", "themes", "bff", "city_night", "roster", filename)
-        pixmap = QPixmap(str(path)) if Path(path).is_file() else QPixmap()
+
+        candidates = []
+        if prefer == "field":
+            candidates.extend((
+                get_resource_path("assets", "themes", "bff", "field_journal", "roster", f"{stem}.jpg"),
+                get_resource_path("assets", "themes", "bff", "city_night", "roster", f"{stem}.webp"),
+            ))
+        else:
+            candidates.extend((
+                get_resource_path("assets", "themes", "bff", "city_night", "roster", f"{stem}.webp"),
+                get_resource_path("assets", "themes", "bff", "field_journal", "roster", f"{stem}.jpg"),
+            ))
+
+        pixmap = QPixmap()
+        for path in candidates:
+            if Path(path).is_file():
+                pixmap = QPixmap(str(path))
+                if not pixmap.isNull():
+                    break
         if pixmap.isNull():
             label.setText(fallback)
             label.setWordWrap(True)
@@ -206,7 +231,7 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
         self.city_team_snapshot.setText(
             f"{len(teams)} Teams    {len(self.members)} Total Players\n"
             f"{len(active)} Active    {len(recruits)} Recruiting\n"
-            "Different rooftops. Same horizon."
+            "Same people. Higher standards."
         )
         roles = [str(member.PrimaryRole or "").casefold() for member in active]
         tanks = sum("tank" in role for role in roles)
