@@ -67,6 +67,7 @@ class ExtremeActualHealGearPreconditionEffectResolver:
         if match is None:
             match = self._ANCIENT_DRAGONGUARD.fullmatch(normalized)
             condition = ANCIENT_DRAGONGUARD_ABOVE_HALF_HEALTH_CONDITION
+            multiplier = 1.0
         if match is None:
             match = self._TITANBORN_STRENGTH.fullmatch(normalized)
             condition = TITANBORN_STRENGTH_BELOW_HALF_HEALTH_CONDITION
@@ -74,6 +75,7 @@ class ExtremeActualHealGearPreconditionEffectResolver:
         if match is None:
             match = self._PEARLESCENT_WARD.fullmatch(normalized)
             condition = PEARLESCENT_WARD_FULL_GROUP_ALIVE_CONDITION
+            multiplier = 1.0
         if match is None:
             return []
 
