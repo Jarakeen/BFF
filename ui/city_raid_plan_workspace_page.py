@@ -1,0 +1,281 @@
+from __future__ import annotations
+
+"""Mockup-shaped City After Midnight shell over the existing canonical Raid Plan editor."""
+
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QListWidget,
+    QListWidgetItem,
+    QPushButton,
+    QStackedWidget,
+    QTableWidget,
+    QVBoxLayout,
+    QWidget,
+)
+
+from ui.components.foundry_card import FoundryCard
+from ui.raid_plan_adviser_page import RaidPlanAdviserPage
+
+
+def _clean(value: object) -> str:
+    return str(value or "").strip()
+
+
+class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
+    """Raid Plan overview + explicit Roles editor using one underlying RaidPlan model."""
+
+    def __init__(self, parent=None) -> None:
+        super().__init__(parent)
+        self._compose_city_shell()
+        self._replace_legacy_role_language(self)
+        self._refresh_overview()
+
+    def _compose_city_shell(self) -> None:
+        self.header.title.setText("Raid Plan")
+        self.header.subtitle.setText("Turn a group of good players into a great run.")
+        self.header.department.setText("RAID • PLAN")
+
+        # Preserve every existing canonical editor/control by moving it into the Roles view.
+        roles_surface = QWidget()
+        roles_layout = QVBoxLayout(roles_surface)
+        roles_layout.setContentsMargins(0, 0, 0, 0)
+        roles_layout.setSpacing(8)
+        while self.workspace_layout.count():
+            item = self.workspace_layout.takeAt(0)
+            if item.widget() is not None:
+                roles_layout.addWidget(item.widget())
+            elif item.layout() is not None:
+                roles_layout.addLayout(item.layout())
+        self.roles_surface = roles_surface
+
+        nav_host = QWidget()
+        nav = QHBoxLayout(nav_host)
+        nav.setContentsMargins(0, 0, 0, 0)
+        nav.setSpacing(5)
+        self.context_buttons: dict[str, QPushButton] = {}
+        routes = (
+            ("Overview", None),
+            ("Roles", None),
+            ("Assignments", "assignments"),
+            ("Builds", "console:2"),
+            ("Rotations", "rotations"),
+            ("Coverage", "console:7"),
+            ("Strategy", "console:4"),
+            ("Readiness", "readiness"),
+            ("Run", "live_raid"),
+            ("Review", "console:3"),
+        )
+        for title, route in routes:
+            button = QPushButton(title)
+            button.setCheckable(route is None)
+            if title == "Overview":
+                button.clicked.connect(lambda _=False: self._show_local_view(0))
+            elif title == "Roles":
+                button.clicked.connect(lambda _=False: self._show_local_view(1))
+            else:
+                button.clicked.connect(lambda _=False, target=route: self.pageRequested.emit(target))
+            nav.addWidget(button)
+            self.context_buttons[title] = button
+        self.workspace_layout.addWidget(nav_host)
+
+        self.local_stack = QStackedWidget()
+        self.overview_surface = self._build_overview_surface()
+        self.local_stack.addWidget(self.overview_surface)
+        self.local_stack.addWidget(roles_surface)
+        self.workspace_layout.addWidget(self.local_stack, 1)
+        self._show_local_view(0)
+
+    def _build_overview_surface(self) -> QWidget:
+        page = QWidget()
+        root = QHBoxLayout(page)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(10)
+
+        left = FoundryCard("My Plans", "archive")
+        self.plan_list = QListWidget()
+        self.plan_list.itemDoubleClicked.connect(self._load_overview_plan)
+        left.addWidget(self.plan_list)
+        field_note = QLabel("A plan is a promise to your future self. Keep the intent clear and the evidence honest.")
+        field_note.setWordWrap(True)
+        field_note.setProperty("muted", True)
+        left.addWidget(field_note)
+        root.addWidget(left, 2)
+
+        center = QWidget()
+        center_layout = QVBoxLayout(center)
+        center_layout.setContentsMargins(0, 0, 0, 0)
+        center_layout.setSpacing(8)
+
+        hero = FoundryCard("Selected Plan", "trial")
+        self.overview_hero = QLabel("No saved plan selected.")
+        self.overview_hero.setProperty("heroTitle", True)
+        self.overview_hero.setWordWrap(True)
+        hero.addWidget(self.overview_hero)
+        center_layout.addWidget(hero)
+
+        snapshot = QGridLayout()
+        self.team_snapshot = self._snapshot_card("Team")
+        self.encounter_snapshot = self._snapshot_card("Encounter")
+        self.strategy_snapshot = self._snapshot_card("Strategy")
+        self.progress_snapshot = self._snapshot_card("Progress")
+        for index, card in enumerate((self.team_snapshot, self.encounter_snapshot, self.strategy_snapshot, self.progress_snapshot)):
+            snapshot.addWidget(card, 0, index)
+        center_layout.addLayout(snapshot)
+
+        middle = QHBoxLayout()
+        quick = FoundryCard("Quick Actions", "warning")
+        edit_roles = QPushButton("Manage Roles / Spots")
+        edit_roles.clicked.connect(lambda: self._show_local_view(1))
+        quick.addWidget(edit_roles)
+        for title, route in (
+            ("Edit Assignments", "assignments"),
+            ("Check Coverage", "console:7"),
+            ("Open Readiness", "readiness"),
+            ("Create Run Sheet", "live_raid"),
+        ):
+            button = QPushButton(title)
+            button.clicked.connect(lambda _=False, target=route: self.pageRequested.emit(target))
+            quick.addWidget(button)
+        save = QPushButton("Save Current Plan")
+        save.setProperty("primary", True)
+        save.clicked.connect(self._save_from_overview)
+        quick.addWidget(save)
+        middle.addWidget(quick, 2)
+
+        notes = FoundryCard("Plan Notes", "clipboard")
+        notes.setProperty("parchment", True)
+        self.plan_notes = QLabel("No plan notes yet. Role-owned notes remain attached to their exact spot.")
+        self.plan_notes.setWordWrap(True)
+        notes.addWidget(self.plan_notes)
+        middle.addWidget(notes, 4)
+
+        timeline = FoundryCard("Timeline", "stopwatch")
+        self.timeline_label = QLabel("PLANNED\nPlan created\nRoles selected\nAssignments reviewed\nReadiness checked\nFirst run")
+        self.timeline_label.setWordWrap(True)
+        timeline.addWidget(self.timeline_label)
+        middle.addWidget(timeline, 3)
+        center_layout.addLayout(middle)
+
+        lower = QHBoxLayout()
+        recent = FoundryCard("Recent Activity", "archive")
+        self.recent_label = QLabel("Saved RaidPlan snapshots are the durable activity boundary on this surface.")
+        self.recent_label.setWordWrap(True)
+        recent.addWidget(self.recent_label)
+        lower.addWidget(recent, 1)
+        linked = FoundryCard("Linked Resources", "clipboard")
+        for title, route in (
+            ("Builds", "console:2"),
+            ("Rotation Builder", "rotations"),
+            ("Coverage", "console:7"),
+            ("Optimizer Adviser", "console:6"),
+        ):
+            button = QPushButton(title)
+            button.clicked.connect(lambda _=False, target=route: self.pageRequested.emit(target))
+            linked.addWidget(button)
+        lower.addWidget(linked, 1)
+        center_layout.addLayout(lower)
+        root.addWidget(center, 7)
+        return page
+
+    @staticmethod
+    def _snapshot_card(title: str) -> FoundryCard:
+        card = FoundryCard(title, "compass")
+        label = QLabel("—")
+        label.setWordWrap(True)
+        label.setProperty("raidSnapshotValue", True)
+        card.addWidget(label)
+        card.value_label = label
+        return card
+
+    def _show_local_view(self, index: int) -> None:
+        self.local_stack.setCurrentIndex(index)
+        self.context_buttons["Overview"].setChecked(index == 0)
+        self.context_buttons["Roles"].setChecked(index == 1)
+        if index == 0:
+            self._refresh_overview()
+
+    def _refresh_overview(self) -> None:
+        if not hasattr(self, "plan_list"):
+            return
+        current = self.saved_plan_combo.currentData() if hasattr(self, "saved_plan_combo") else None
+        plans = self.plan_repository.list_plans()
+        self.plan_list.clear()
+        selected_item = None
+        for plan in plans:
+            item = QListWidgetItem(f"{plan.name}\n{plan.trial_id} · {plan.status.title()}")
+            item.setData(Qt.ItemDataRole.UserRole, plan.plan_id)
+            self.plan_list.addItem(item)
+            if current and plan.plan_id == current:
+                selected_item = item
+        if selected_item is not None:
+            self.plan_list.setCurrentItem(selected_item)
+        plan = self._loaded_plan_snapshot
+        if plan is None and plans:
+            plan = plans[0]
+        if plan is None:
+            self.overview_hero.setText("No saved Raid Plan yet. Use Roles to assemble one without inventing missing identity.")
+            for card in (self.team_snapshot, self.encounter_snapshot, self.strategy_snapshot, self.progress_snapshot):
+                card.value_label.setText("—")
+            return
+        assigned = sum(1 for member in plan.members if member.primary_assignment or member.secondary_assignment)
+        builds = sum(1 for member in plan.members if member.build_selected)
+        self.overview_hero.setText(
+            f"{plan.name}\n{plan.trial_id} · {plan.difficulty or 'Difficulty not set'} · {len(plan.members)} players\nStatus: {plan.status.title()}"
+        )
+        self.team_snapshot.value_label.setText(plan.team_name or "Ad-hoc team")
+        self.encounter_snapshot.value_label.setText(plan.trial_id)
+        self.strategy_snapshot.value_label.setText(f"{assigned} / {len(plan.members)} spots assigned")
+        self.progress_snapshot.value_label.setText(f"{builds} builds linked")
+        notes = [f"{member.gamertag}: {member.notes}" for member in plan.members if _clean(member.notes)]
+        self.plan_notes.setText("\n".join(notes[:8]) or "No spot notes yet. Keep plan intent short, specific, and owned by a role.")
+
+    def _load_overview_plan(self, item: QListWidgetItem) -> None:
+        plan_id = item.data(Qt.ItemDataRole.UserRole)
+        if not isinstance(plan_id, str):
+            return
+        index = self.saved_plan_combo.findData(plan_id)
+        if index >= 0:
+            self.saved_plan_combo.setCurrentIndex(index)
+        self.load_selected_plan()
+        self._refresh_overview()
+
+    def _save_from_overview(self) -> None:
+        self.save_current_plan()
+        self._refresh_overview()
+
+    @classmethod
+    def _replace_legacy_role_language(cls, root: QWidget) -> None:
+        replacements = (("CHAIRS", "ROLES"), ("Chairs", "Roles"), ("chairs", "roles"), ("CHAIR", "ROLE"), ("Chair", "Role"), ("chair", "role"))
+        for label in root.findChildren(QLabel):
+            text = label.text()
+            for old, new in replacements:
+                text = text.replace(old, new)
+            label.setText(text)
+            tip = label.toolTip()
+            for old, new in replacements:
+                tip = tip.replace(old, new)
+            label.setToolTip(tip)
+        for button in root.findChildren(QPushButton):
+            text = button.text()
+            for old, new in replacements:
+                text = text.replace(old, new)
+            button.setText(text)
+            tip = button.toolTip()
+            for old, new in replacements:
+                tip = tip.replace(old, new)
+            button.setToolTip(tip)
+        for table in root.findChildren(QTableWidget):
+            for column in range(table.columnCount()):
+                item = table.horizontalHeaderItem(column)
+                if item is None:
+                    continue
+                text = item.text()
+                for old, new in replacements:
+                    text = text.replace(old, new)
+                item.setText(text)
+
+
+__all__ = ["CityRaidPlanWorkspacePage"]
