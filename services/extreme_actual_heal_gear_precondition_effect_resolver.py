@@ -18,6 +18,7 @@ PEARLESCENT_WARD_FULL_GROUP_ALIVE_CONDITION = "pearlescent_ward_full_group_alive
 ARMOR_OF_TRUTH_POWER_CONDITION = "armor_of_truth_power_active"
 ARMOR_OF_THE_VEILED_HERITANCE_POWER_CONDITION = "armor_of_the_veiled_heritance_power_active"
 WARRIORS_FURY_FULL_STACKS_CONDITION = "warriors_fury_full_stacks"
+STYGIAN_POWER_CONDITION = "stygian_power_active"
 
 
 class ExtremeActualHealGearPreconditionEffectResolver:
@@ -68,6 +69,11 @@ class ExtremeActualHealGearPreconditionEffectResolver:
         r"This effect can occur once every half second\.\s*Upon reaching 20 stacks, the duration is doubled but can no longer be refreshed\.?$",
         re.IGNORECASE,
     )
+    _STYGIAN = re.compile(
+        r"^\(5 items\)\s*When you leave Sneak or invisibility while in combat, your Weapon and Spell Damage is increased by\s*"
+        r"(?:(?P<min>\d[\d,]*)\s*-\s*)?(?P<max>\d[\d,]*)\s*for\s*15 seconds\.?$",
+        re.IGNORECASE,
+    )
 
     def resolve(
         self,
@@ -109,6 +115,10 @@ class ExtremeActualHealGearPreconditionEffectResolver:
             condition = WARRIORS_FURY_FULL_STACKS_CONDITION
             multiplier = 20.0
         if match is None:
+            match = self._STYGIAN.fullmatch(normalized)
+            condition = STYGIAN_POWER_CONDITION
+            multiplier = 1.0
+        if match is None:
             return []
 
         key = "max" if use_max_value or not match.groupdict().get("min") else "min"
@@ -135,6 +145,7 @@ __all__ = [
     "ARMOR_OF_TRUTH_POWER_CONDITION",
     "BLESSING_OF_HIGH_ISLE_CONDITION",
     "PEARLESCENT_WARD_FULL_GROUP_ALIVE_CONDITION",
+    "STYGIAN_POWER_CONDITION",
     "TITANBORN_STRENGTH_BELOW_HALF_HEALTH_CONDITION",
     "WARRIORS_FURY_FULL_STACKS_CONDITION",
     "ExtremeActualHealGearPreconditionEffectResolver",
