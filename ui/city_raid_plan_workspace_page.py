@@ -47,21 +47,12 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         self.header.subtitle.setText("Turn a group of good players into a great run.")
         self.header.department.setText("RAID • PLAN")
 
-        # Preserve canonical role/spot controls, but do not duplicate Assignments here.
+        # Preserve canonical role/spot controls without adding another decorative
+        # field-note card above them. Duties live on the dedicated Assignments page.
         roles_surface = QWidget()
         roles_layout = QVBoxLayout(roles_surface)
         roles_layout.setContentsMargins(0, 0, 0, 0)
         roles_layout.setSpacing(8)
-
-        roles_note = FoundryCard("Roles / Spots", "group")
-        roles_note.setProperty("parchment", True)
-        roles_text = QLabel(
-            "Choose who occupies each raid spot and which build they bring. Duties live in Assignments. "
-            "Same people. Higher standards."
-        )
-        roles_text.setWordWrap(True)
-        roles_note.addWidget(roles_text)
-        roles_layout.addWidget(roles_note)
 
         while self.workspace_layout.count():
             item = self.workspace_layout.takeAt(0)
@@ -71,9 +62,6 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
                 roles_layout.addLayout(item.layout())
         self.roles_surface = roles_surface
 
-        # RaidPlanAssignmentPage is still the persistence owner, but its full assignment
-        # grid belongs on the dedicated Assignments page. Hiding that card here removes
-        # the stacked second editor without changing or discarding assignment data.
         assignment_card = _foundry_card_ancestor(getattr(self, "assignment_table", None))
         if assignment_card is not None:
             assignment_card.hide()
@@ -172,11 +160,16 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         quick.addWidget(save)
         middle.addWidget(quick, 2)
 
-        notes = FoundryCard("Plan Notes", "clipboard")
+        notes = FoundryCard("Plan Note", "feather")
         notes.setProperty("parchment", True)
-        self.plan_notes = QLabel("Good plans don't remove risk. They make it intentional.")
+        notes.set_watermark("compass", 0.12)
+        self.plan_notes = QLabel("If it matters, write it down.")
         self.plan_notes.setWordWrap(True)
+        self.plan_notes.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.plan_notes.setProperty("heroTitle", True)
+        notes.addStretch(1)
         notes.addWidget(self.plan_notes)
+        notes.addStretch(1)
         middle.addWidget(notes, 4)
 
         timeline = FoundryCard("Timeline", "stopwatch")
@@ -256,8 +249,6 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         self.encounter_snapshot.value_label.setText(plan.trial_id)
         self.strategy_snapshot.value_label.setText(f"{assigned} / {len(plan.members)} spots assigned")
         self.progress_snapshot.value_label.setText(f"{builds} builds linked")
-        notes = [f"{member.gamertag}: {member.notes}" for member in plan.members if _clean(member.notes)]
-        self.plan_notes.setText("\n".join(notes[:8]) or "A well-made plan doesn't guarantee success, but it turns chaos into a fair fight.")
 
     def _load_overview_plan(self, item: QListWidgetItem) -> None:
         plan_id = item.data(Qt.ItemDataRole.UserRole)
