@@ -11,6 +11,7 @@ from services.extreme_actual_heal_candidate_scope_service import ExtremeActualHe
 from services.extreme_actual_heal_gear_precondition_effect_resolver import (
     INNATE_AXIOM_CLASS_SCOPE_CONDITION,
     LIGHT_SPEAKER_RESTORATION_SCOPE_CONDITION,
+    RED_EAGLES_FURY_WEAPON_SCOPE_CONDITION,
     ExtremeActualHealGearPreconditionEffectResolver,
 )
 from services.extreme_actual_heal_gear_set_candidate_service import (
@@ -62,6 +63,8 @@ def test_candidate_scoped_conditions_follow_selected_heal_identity(tmp_path) -> 
     light_for_class = service.resolve(_build("Light Speaker"), "budding_seeds")
     innate_for_restoration = service.resolve(_build("Innate Axiom"), "combat_prayer")
     innate_for_class = service.resolve(_build("Innate Axiom"), "budding_seeds")
+    red_eagle_for_restoration = service.resolve(_build("Red Eagle's Fury"), "combat_prayer")
+    red_eagle_for_class = service.resolve(_build("Red Eagle's Fury"), "budding_seeds")
     dagon_for_area = service.resolve(_build("Dagon's Dominion"), "budding_seeds")
     dagon_for_single = service.resolve(_build("Dagon's Dominion"), "single_heal")
 
@@ -69,6 +72,9 @@ def test_candidate_scoped_conditions_follow_selected_heal_identity(tmp_path) -> 
     assert LIGHT_SPEAKER_RESTORATION_SCOPE_CONDITION not in light_for_class.condition_context
     assert INNATE_AXIOM_CLASS_SCOPE_CONDITION not in innate_for_restoration.condition_context
     assert INNATE_AXIOM_CLASS_SCOPE_CONDITION in innate_for_class.condition_context
+    assert RED_EAGLES_FURY_WEAPON_SCOPE_CONDITION in red_eagle_for_restoration.condition_context
+    assert RED_EAGLES_FURY_WEAPON_SCOPE_CONDITION not in red_eagle_for_class.condition_context
+    assert any("+5% Weapon Skill cost" in item for item in red_eagle_for_restoration.evidence)
     assert DAGON_AREA_SCOPE_CONDITION in dagon_for_area.condition_context
     assert DAGON_AREA_SCOPE_CONDITION not in dagon_for_single.condition_context
 
@@ -99,6 +105,17 @@ def test_scoped_effects_map_exact_reviewed_values() -> None:
             description="(5 items) Adds 8-492 Weapon and Spell Damage to your Area of Effect abilities.",
         )
     )
+    red_eagle = specialist.resolve(
+        GearSetBonus(
+            id=4,
+            set_id=4,
+            piece_count=5,
+            description=(
+                "(5 items) Adds 10-469 Weapon and Spell Damage to your Weapon Skill abilities. "
+                "Increases the cost of your Weapon Skill abilities by 5%."
+            ),
+        )
+    )
 
     assert {effect.value for effect in light} == {600.0}
     assert {effect.condition for effect in light} == {LIGHT_SPEAKER_RESTORATION_SCOPE_CONDITION}
@@ -106,6 +123,8 @@ def test_scoped_effects_map_exact_reviewed_values() -> None:
     assert {effect.condition for effect in innate} == {INNATE_AXIOM_CLASS_SCOPE_CONDITION}
     assert {effect.value for effect in dagon} == {492.0}
     assert {effect.condition for effect in dagon} == {DAGON_AREA_SCOPE_CONDITION}
+    assert {effect.value for effect in red_eagle} == {469.0}
+    assert {effect.condition for effect in red_eagle} == {RED_EAGLES_FURY_WEAPON_SCOPE_CONDITION}
 
 
 def test_exact_live_candidate_scope_blockers_are_h1_mechanic_complete() -> None:
@@ -122,6 +141,12 @@ def test_exact_live_candidate_scope_blockers_are_h1_mechanic_complete() -> None:
             "Dagon's Dominion",
             "Dagon's Dominion (5): relevant set effect requires condition ability_scope:area_of_effect",
         ),
+        (
+            "Red Eagle's Fury",
+            "Red Eagle's Fury (5): active set bonus is not yet mechanic-mapped: "
+            "(5 items) Adds 10-469 Weapon and Spell Damage to your Weapon Skill abilities. "
+            "Increases the cost of your Weapon Skill abilities by 5%.",
+        ),
     )
     for index, (set_name, blocker) in enumerate(cases, start=1):
         row = ExtremeGearSetObjectiveCandidate(
@@ -130,7 +155,7 @@ def test_exact_live_candidate_scope_blockers_are_h1_mechanic_complete() -> None:
             category="Test",
             equipped_piece_count=5,
             objective_key="spell_damage",
-            reviewed_delta=129.0,
+            reviewed_delta=129.0 if set_name != "Red Eagle's Fury" else 0.0,
             unresolved=(blocker,),
         )
         review = ExtremeActualHealGearSetCandidateService._h1_review(row)
