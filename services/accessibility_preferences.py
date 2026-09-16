@@ -9,17 +9,17 @@ from engine.config import get_app_root
 
 COLOR_VISION_STANDARD = "standard"
 COLOR_VISION_FRIENDLY = "colorblind_friendly"
-VALID_COLOR_VISION_MODES = frozenset(
-    {COLOR_VISION_STANDARD, COLOR_VISION_FRIENDLY}
-)
 
-# Historical theme keys remain defined for compatibility with old settings files
-# and code paths, but City After Midnight is now the only selectable/active skin.
+# Urban Wilderness is intentionally red/green-independent. Keep the historical
+# key constants readable for old settings/tests, but expose only the safe mode.
+VALID_COLOR_VISION_MODES = frozenset({COLOR_VISION_FRIENDLY})
+
 VISUAL_THEME_FOUNDRY = "foundry_grimoire"
 VISUAL_THEME_RYLO = "rylo_grayscale"
 VISUAL_THEME_FOUNDRY_FIELD_JOURNAL = "foundry_field_journal"
 VISUAL_THEME_RYLO_CITY = "rylo_city_night"
-VALID_VISUAL_THEMES = frozenset({VISUAL_THEME_RYLO_CITY})
+VISUAL_THEME_URBAN_WILDERNESS = VISUAL_THEME_RYLO_CITY
+VALID_VISUAL_THEMES = frozenset({VISUAL_THEME_URBAN_WILDERNESS})
 
 
 def is_rylo_visual_theme(theme: str) -> bool:
@@ -37,11 +37,12 @@ def is_foundry_visual_theme(theme: str) -> bool:
 
 
 class AccessibilityPreferences:
-    """Read and write local display/accessibility preferences.
+    """Read and write the single supported low-stimulation display profile.
 
-    Display state lives outside data/ because it is local UI state, not ESO
-    reference data. Theme migration is intentionally non-destructive: an older
-    saved theme key is simply normalized to City After Midnight on read.
+    Older theme/color-vision keys are migrated on read rather than deleted. The
+    active application profile is always Urban Wilderness plus the colorblind-
+    friendly semantic overlay so no saved preference can silently re-enable a
+    red/green-dependent or brighter legacy skin.
     """
 
     def __init__(self, path: str | Path | None = None) -> None:
@@ -68,33 +69,21 @@ class AccessibilityPreferences:
         )
 
     def color_vision_mode(self) -> str:
-        payload = self._read()
-        mode = str(
-            payload.get("ColorVisionMode", COLOR_VISION_STANDARD) or ""
-        ).strip().casefold()
-        return mode if mode in VALID_COLOR_VISION_MODES else COLOR_VISION_STANDARD
+        return COLOR_VISION_FRIENDLY
 
     def set_color_vision_mode(self, mode: str) -> str:
-        normalized = str(mode or "").strip().casefold()
-        if normalized not in VALID_COLOR_VISION_MODES:
-            normalized = COLOR_VISION_STANDARD
         payload = self._read()
-        payload["ColorVisionMode"] = normalized
-        payload["VisualTheme"] = VISUAL_THEME_RYLO_CITY
+        payload["ColorVisionMode"] = COLOR_VISION_FRIENDLY
+        payload["VisualTheme"] = VISUAL_THEME_URBAN_WILDERNESS
         self._write(payload)
-        return normalized
+        return COLOR_VISION_FRIENDLY
 
     def visual_theme(self) -> str:
-        payload = self._read()
-        theme = str(payload.get("VisualTheme", VISUAL_THEME_RYLO_CITY) or "").strip().casefold()
-        return theme if theme in VALID_VISUAL_THEMES else VISUAL_THEME_RYLO_CITY
+        return VISUAL_THEME_URBAN_WILDERNESS
 
     def set_visual_theme(self, theme: str) -> str:
-        normalized = str(theme or "").strip().casefold()
-        if normalized not in VALID_VISUAL_THEMES:
-            normalized = VISUAL_THEME_RYLO_CITY
         payload = self._read()
-        payload["VisualTheme"] = normalized
-        payload.setdefault("ColorVisionMode", COLOR_VISION_STANDARD)
+        payload["VisualTheme"] = VISUAL_THEME_URBAN_WILDERNESS
+        payload["ColorVisionMode"] = COLOR_VISION_FRIENDLY
         self._write(payload)
-        return normalized
+        return VISUAL_THEME_URBAN_WILDERNESS
