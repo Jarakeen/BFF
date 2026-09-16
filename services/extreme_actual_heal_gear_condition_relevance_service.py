@@ -191,6 +191,11 @@ _REVIEWED_H1_HEALING_PRECONDITION_TEXT = (
 
 _REVIEWED_H1_HEALING_CONDITION_BLOCKERS = (
     re.compile(
+        r"^Basalt-Blooded Warrior \(5\): relevant set effect requires condition "
+        r"basalt_blooded_obsidian_stance_active$",
+        re.IGNORECASE,
+    ),
+    re.compile(
         r"^Senche's Bite \(5\): relevant set effect requires condition successful_dodge_recent$",
         re.IGNORECASE,
     ),

@@ -197,3 +197,18 @@ def test_non_power_objective_never_discards_shared_blocker() -> None:
 
     assert result.h1_mechanic_complete is False
     assert result.ignored_blockers == ()
+
+def test_reviewed_basalt_obsidian_stance_condition_is_constructible_for_h1() -> None:
+    blocker = (
+        "Basalt-Blooded Warrior (5): relevant set effect requires condition "
+        "basalt_blooded_obsidian_stance_active"
+    )
+    row = _row("healing_done", blocker)
+
+    result = ExtremeActualHealGearConditionRelevanceService.review(row)
+
+    assert result.h1_mechanic_complete is True
+    assert result.h1_positive_modifier_proven is True
+    assert result.ignored_blockers == (blocker,)
+    assert result.remaining_blockers == ()
+
