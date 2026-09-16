@@ -21,6 +21,7 @@ WARRIORS_FURY_FULL_STACKS_CONDITION = "warriors_fury_full_stacks"
 STYGIAN_POWER_CONDITION = "stygian_power_active"
 SEVENTH_LEGION_BRUTE_POWER_CONDITION = "seventh_legion_brute_power_active"
 SOULSHINE_POWER_CONDITION = "soulshine_power_active"
+POWERFUL_ASSAULT_POWER_CONDITION = "powerful_assault_power_active"
 
 
 class ExtremeActualHealGearPreconditionEffectResolver:
@@ -36,6 +37,7 @@ class ExtremeActualHealGearPreconditionEffectResolver:
     _STYGIAN = re.compile(r"^\(5 items\)\s*When you leave Sneak or invisibility while in combat, your Weapon and Spell Damage is increased by\s*(?:(?P<min>\d[\d,]*)\s*-\s*)?(?P<max>\d[\d,]*)\s*for\s*15 seconds\.?$", re.IGNORECASE)
     _SEVENTH_LEGION_BRUTE = re.compile(r"^\(5 items\)\s*When you cast an ability that grants Major or Minor Resolve while in combat, you gain\s*(?:(?P<min>\d[\d,]*)\s*-\s*)?(?P<max>\d[\d,]*)\s*Weapon and Spell Damage and\s*\d[\d,]*(?:\s*-\s*\d[\d,]*)?\s*Health Recovery for\s*15 seconds\.\s*This effect can occur every\s*15 seconds\.?$", re.IGNORECASE)
     _SOULSHINE = re.compile(r"^\(5 items\)\s*Activating an ability with a cast or channel time grants you\s*(?:(?P<min>\d[\d,]*)\s*-\s*)?(?P<max>\d[\d,]*)\s*Weapon and Spell Damage for\s*5 seconds\.?$", re.IGNORECASE)
+    _POWERFUL_ASSAULT = re.compile(r"^\(5 items\)\s*When you cast an Assault ability while in combat, you and up to 5 group members within 12 meters gain\s*(?:(?P<min>\d[\d,]*)\s*-\s*)?(?P<max>\d[\d,]*)\s*Weapon and Spell Damage for\s*15 seconds\.?$", re.IGNORECASE)
 
     def resolve(self, bonus: GearSetBonus, *, use_max_value: bool = True, source: str | None = None) -> list[Effect]:
         description = normalize_eso_markup(str(bonus.description or "")).text.strip()
@@ -53,6 +55,7 @@ class ExtremeActualHealGearPreconditionEffectResolver:
             (self._STYGIAN, STYGIAN_POWER_CONDITION, 1.0),
             (self._SEVENTH_LEGION_BRUTE, SEVENTH_LEGION_BRUTE_POWER_CONDITION, 1.0),
             (self._SOULSHINE, SOULSHINE_POWER_CONDITION, 1.0),
+            (self._POWERFUL_ASSAULT, POWERFUL_ASSAULT_POWER_CONDITION, 1.0),
         )
         match = None
         condition = ""
@@ -78,6 +81,7 @@ __all__ = [
     "ARMOR_OF_TRUTH_POWER_CONDITION",
     "BLESSING_OF_HIGH_ISLE_CONDITION",
     "PEARLESCENT_WARD_FULL_GROUP_ALIVE_CONDITION",
+    "POWERFUL_ASSAULT_POWER_CONDITION",
     "SEVENTH_LEGION_BRUTE_POWER_CONDITION",
     "SOULSHINE_POWER_CONDITION",
     "STYGIAN_POWER_CONDITION",
