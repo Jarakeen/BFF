@@ -87,7 +87,7 @@ def test_roster_workspace_exposes_six_card_workspaces_and_urban_wilderness_art()
     assert 'prefer="field"' in dashboard
     assert '"city_night"' in dashboard
     assert '"field_journal"' in dashboard
-    assert "refresh_theme_assets" in dashboard
+    assert "def _theme_art(" in dashboard
 
 
 def test_city_key_remains_the_compatibility_storage_key_for_urban_wilderness() -> None:
