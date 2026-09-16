@@ -70,7 +70,8 @@ def test_raid_lead_navigation_uses_real_current_routes() -> None:
 
 def test_roster_workspace_exposes_six_card_workspaces_and_urban_wilderness_art() -> None:
     base = Path("ui/raid_roster_workspace_page.py").read_text(encoding="utf-8")
-    dashboard = Path("ui/city_raid_roster_workspace_page.py").read_text(encoding="utf-8")
+    dashboard = Path("ui/themed_raid_roster_workspace_page.py").read_text(encoding="utf-8")
+    wrapper = Path("ui/city_raid_roster_workspace_page.py").read_text(encoding="utf-8")
 
     for title in (
         "PLAYERS",
@@ -82,12 +83,15 @@ def test_roster_workspace_exposes_six_card_workspaces_and_urban_wilderness_art()
     ):
         assert f'"{title}"' in base
 
-    assert "self.tabs.tabBar().hide()" in dashboard
-    assert 'prefer="city"' in dashboard
-    assert 'prefer="field"' in dashboard
+    # The active dashboard is intentionally tab-free. The compatibility wrapper
+    # must not try to resurrect the retired tabbed shell.
+    assert "QTabWidget" not in dashboard
+    assert "self.tabs" not in dashboard
     assert '"city_night"' in dashboard
-    assert '"field_journal"' in dashboard
-    assert "def _theme_art(" in dashboard
+    assert '"roster_people.webp"' in dashboard
+    assert '"roster_team.webp"' in dashboard
+    assert "class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):" in wrapper
+    assert "self.tabs" not in wrapper
 
 
 def test_city_key_remains_the_compatibility_storage_key_for_urban_wilderness() -> None:
