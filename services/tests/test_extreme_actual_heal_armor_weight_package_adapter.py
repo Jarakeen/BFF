@@ -28,6 +28,16 @@ class _ArmorWeights:
         return self.results[candidate.candidate_id]
 
 
+class _SetupActions:
+    def __init__(self, result):
+        self.result = tuple(result)
+        self.calls = []
+
+    def expand_candidates(self, candidates, *, active_bar=None):
+        self.calls.append((tuple(candidates), active_bar))
+        return self.result
+
+
 def _candidate(name):
     return SimpleNamespace(candidate_id=name)
 
@@ -71,6 +81,28 @@ def test_package_adapter_expands_every_candidate_and_reports_denominator_stats()
     assert service.stats.raw_weight_layouts_reviewed == 12
     assert service.stats.retained_weight_signatures == 3
     assert service.stats.unresolved == ()
+
+
+def test_setup_action_expansion_runs_after_armor_legality() -> None:
+    candidate = _candidate("raw")
+    armored = _candidate("armored")
+    setup = _candidate("armored:setup")
+    delegate = _Delegate((candidate,))
+    armor = _ArmorWeights({"raw": _result(armored, raw=3, retained=1)})
+    setup_actions = _SetupActions((armored, setup))
+    service = ExtremeActualHealArmorWeightPackageAdapter(
+        delegate,
+        armor,
+        label="package",
+        setup_actions=setup_actions,
+    )
+
+    result = service.build_candidates("build", active_bar="back")
+
+    assert result == (armored, setup)
+    assert armor.calls == [candidate]
+    assert setup_actions.calls == [((armored,), "back")]
+    assert service.stats.expanded_candidates == 2
 
 
 def test_package_adapter_accumulates_diagnostics_across_optimizer_passes():
