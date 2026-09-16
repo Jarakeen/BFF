@@ -21,6 +21,7 @@ from services.extreme_actual_heal_gear_precondition_effect_resolver import (
 )
 
 
+CRUSADER_MINOR_COURAGE_CONDITION = "crusader_minor_courage_active"
 FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION = "fledglings_nest_minor_courage_active"
 PHOENIX_MOTH_MINOR_COURAGE_CONDITION = "phoenix_moth_minor_courage_active"
 SPELL_POWER_CURE_MAJOR_COURAGE_CONDITION = "spell_power_cure_major_courage_active"
@@ -224,6 +225,7 @@ class ExtremeActualHealGearPreconditionWitnessService:
 
 __all__ = [
     "CLAW_OF_YOLNAHKRIIN_MINOR_COURAGE_CONDITION",
+    "CRUSADER_MINOR_COURAGE_CONDITION",
     "FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION",
     "NAGA_SHAMAN_MINOR_MENDING_CONDITION",
     "NIX_HOUNDS_HOWL_MAJOR_COURAGE_CONDITION",

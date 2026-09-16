@@ -23,9 +23,11 @@ from services.extreme_actual_heal_gear_precondition_effect_resolver import (
     SOULSHINE_POWER_CONDITION,
 )
 from services.extreme_actual_heal_gear_precondition_witness_service import (
+    CRUSADER_MINOR_COURAGE_CONDITION,
     ExtremeActualHealGearPreconditionWitnessService,
 )
 from services.extreme_actual_heal_setup_action_legality_service import (
+    DEALS_DIRECT_MOBILITY_DAMAGE,
     DEALS_FLAME_DAMAGE,
     GRANTS_RESOLVE,
     HAS_CAST_OR_CHANNEL_TIME,
@@ -41,6 +43,7 @@ _DESTRUCTION_STAFF_TYPES = frozenset(
 )
 _REVIEWED_SETUP_CONDITIONS = (
     ("Burning Spellweave", DEALS_FLAME_DAMAGE, BURNING_SPELLWEAVE_POWER_CONDITION, "8-second"),
+    ("Crusader", DEALS_DIRECT_MOBILITY_DAMAGE, CRUSADER_MINOR_COURAGE_CONDITION, "12-second Minor Courage"),
     ("Seventh Legion Brute", GRANTS_RESOLVE, SEVENTH_LEGION_BRUTE_POWER_CONDITION, "15-second"),
     ("Soulshine", HAS_CAST_OR_CHANNEL_TIME, SOULSHINE_POWER_CONDITION, "5-second"),
     ("Powerful Assault", IS_ASSAULT_ABILITY, POWERFUL_ASSAULT_POWER_CONDITION, "15-second"),

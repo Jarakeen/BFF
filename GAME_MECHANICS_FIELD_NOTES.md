@@ -922,3 +922,18 @@ wear the set. Somebody still has to light the match.
 **For BFF:** Burning Spellweave candidates materialize a reviewed Flame-damage action
 on the inactive bar, then swap back to the scored heal. Unknown or missing Flame
 witnesses remain unresolved rather than receiving the proc.
+
+---
+
+## 2026-09-16 — “You and nearby group members” includes the set wearer
+
+**Crusader** applies Minor Courage to the wearer as well as nearby group members, but
+only after direct damage from a Blink, Charge, Leap, Teleport, or Pull ability creates
+its consecrated area. The named buff is self-eligible; the trigger action is not free.
+
+**Layman's version:** standing in your own shiny circle counts. You still have to spend
+a real skill slot making the circle first.
+
+**For BFF:** Crusader candidates materialize a reviewed direct-mobility damage action
+on the inactive bar, swap back to the scored heal, and enter the ordinary canonical
+Minor Courage state. Existing Minor Courage does not stack with it.

@@ -14,6 +14,16 @@ from services.extreme_complete_optimization_service import ExtremeCompleteOptimi
 from services.extreme_gear_set_objective_service import ExtremeGearSetObjectiveService
 
 
+_CRUSADER_BLOCKER = re.compile(
+    r"^Crusader \(5\): active set bonus is not yet mechanic-mapped:.*"
+    r"When you deal direct damage with a Blink, Charge, Leap, Teleport, or Pull ability,\s*"
+    r"you consecrate the ground beneath you for\s*10 seconds and gain a damage shield that absorbs\s*"
+    r"\d[\d,]*(?:\s*-\s*\d[\d,]*)?\s*damage for\s*6 seconds\.\s*"
+    r"Every\s*2 seconds you and (?:(?:up to\s*11|nearby)\s+)?group members in the area gain "
+    r"Minor Courage for\s*12 seconds\.\s*These effects can occur once every\s*20 seconds "
+    r"and the damage shield scales off the higher of your Weapon or Spell Damage\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
 _BURNING_SPELLWEAVE_BLOCKER = re.compile(
     r"^Burning Spellweave \(5\): active set bonus is not yet mechanic-mapped:.*"
     r"When you deal damage with a Flame Damage ability,\s*"
@@ -117,6 +127,7 @@ class ExtremeActualHealGearSetCandidateService:
         set_name = str(row.set_name or "").strip().casefold()
         reviewed_blocker = {
             "burning spellweave": _BURNING_SPELLWEAVE_BLOCKER,
+            "crusader": _CRUSADER_BLOCKER,
             "soulshine": _SOULSHINE_BLOCKER,
             "powerful assault": _POWERFUL_ASSAULT_BLOCKER,
             "voidcaller": _VOIDCALLER_BLOCKER,

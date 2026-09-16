@@ -28,6 +28,7 @@ from services.extreme_skill_universe_service import ExtremePlayerSkillRecord
 from services.rotation_skill_timing_evidence_service import RotationSkillTimingEvidenceService
 
 
+DEALS_DIRECT_MOBILITY_DAMAGE = "deals_direct_mobility_damage"
 DEALS_FLAME_DAMAGE = "deals_flame_damage"
 GRANTS_RESOLVE = "grants_resolve"
 HAS_CAST_OR_CHANNEL_TIME = "has_cast_or_channel_time"
@@ -90,6 +91,19 @@ class ExtremeActualHealSetupActionLegalityService:
             re.IGNORECASE,
         ),
     )
+    _MOBILITY_ACTION_PATTERN = re.compile(
+        r"\b(?:blink|charge|leap|teleport|pull)(?:s|ed|ing)?\b",
+        re.IGNORECASE,
+    )
+    _DIRECT_DAMAGE_PATTERN = re.compile(
+        r"\bdeal(?:s|ing)?\b[^.]{0,160}\b"
+        r"(?:Physical|Magic|Flame|Frost|Shock|Poison|Disease|Bleed) Damage\b",
+        re.IGNORECASE,
+    )
+    _PERIODIC_ONLY_PATTERN = re.compile(
+        r"\b(?:Damage|damage)\s+over\s+\d+(?:\.\d+)?\s+seconds?\b",
+        re.IGNORECASE,
+    )
     _RESISTANCE_REDUCTION_PATTERNS = (
         re.compile(r"\b(?:Major|Minor) Breach\b", re.IGNORECASE),
         re.compile(
@@ -103,6 +117,7 @@ class ExtremeActualHealSetupActionLegalityService:
     )
     _SUPPORTED = frozenset(
         {
+            DEALS_DIRECT_MOBILITY_DAMAGE,
             DEALS_FLAME_DAMAGE,
             GRANTS_RESOLVE,
             HAS_CAST_OR_CHANNEL_TIME,
@@ -194,6 +209,19 @@ class ExtremeActualHealSetupActionLegalityService:
         return any(pattern.search(text) for pattern in cls._RESOLVE_PATTERNS)
 
     @classmethod
+    def _supports_direct_mobility_damage(cls, row: ExtremePlayerSkillRecord) -> bool:
+        text = cls._text(row)
+        if cls._MOBILITY_ACTION_PATTERN.search(text) is None:
+            return False
+        for sentence in re.split(r"(?<=[.!?])\s+", text):
+            if cls._DIRECT_DAMAGE_PATTERN.search(sentence) is None:
+                continue
+            if cls._PERIODIC_ONLY_PATTERN.search(sentence) is not None:
+                continue
+            return True
+        return False
+
+    @classmethod
     def _supports_flame_damage(cls, row: ExtremePlayerSkillRecord) -> bool:
         text = cls._text(row)
         return any(pattern.search(text) for pattern in cls._FLAME_DAMAGE_PATTERNS)
@@ -234,6 +262,8 @@ class ExtremeActualHealSetupActionLegalityService:
         return None
 
     def _supports(self, row: ExtremePlayerSkillRecord, capability: str) -> bool:
+        if capability == DEALS_DIRECT_MOBILITY_DAMAGE:
+            return self._supports_direct_mobility_damage(row)
         if capability == DEALS_FLAME_DAMAGE:
             return self._supports_flame_damage(row)
         if capability == GRANTS_RESOLVE:
@@ -278,7 +308,12 @@ class ExtremeActualHealSetupActionLegalityService:
             ),
         )[0]
         ability_id = witness.max_rank_ability_id or witness.base_ability_id or witness.skill_id
-        if key == DEALS_FLAME_DAMAGE:
+        if key == DEALS_DIRECT_MOBILITY_DAMAGE:
+            evidence_text = (
+                f"{witness.name}: route-legal active skill has reviewed tooltip evidence "
+                "for direct damage plus Blink/Charge/Leap/Teleport/Pull movement"
+            )
+        elif key == DEALS_FLAME_DAMAGE:
             evidence_text = (
                 f"{witness.name}: route-legal active skill has reviewed tooltip evidence "
                 "that it deals Flame Damage to an enemy"
@@ -314,6 +349,7 @@ class ExtremeActualHealSetupActionLegalityService:
 
 
 __all__ = [
+    "DEALS_DIRECT_MOBILITY_DAMAGE",
     "DEALS_FLAME_DAMAGE",
     "GRANTS_RESOLVE",
     "HAS_CAST_OR_CHANNEL_TIME",

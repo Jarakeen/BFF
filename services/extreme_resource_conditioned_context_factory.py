@@ -31,6 +31,7 @@ from services.extreme_actual_heal_gear_precondition_effect_resolver import (
 )
 from services.extreme_actual_heal_gear_precondition_witness_service import (
     CLAW_OF_YOLNAHKRIIN_MINOR_COURAGE_CONDITION,
+    CRUSADER_MINOR_COURAGE_CONDITION,
     FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION,
     NAGA_SHAMAN_MINOR_MENDING_CONDITION,
     NIX_HOUNDS_HOWL_MAJOR_COURAGE_CONDITION,
@@ -191,6 +192,7 @@ class ExtremeResourceConditionedPhase5ContextFactory(Phase5BuildCalculationConte
         buffs = list(combat_state.active_buffs)
         if {
             CLAW_OF_YOLNAHKRIIN_MINOR_COURAGE_CONDITION,
+            CRUSADER_MINOR_COURAGE_CONDITION,
             FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION,
             PHOENIX_MOTH_MINOR_COURAGE_CONDITION,
         } & active:
