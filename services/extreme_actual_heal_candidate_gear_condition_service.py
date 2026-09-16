@@ -17,6 +17,7 @@ from services.extreme_actual_heal_candidate_scope_service import (
 from services.extreme_actual_heal_gear_precondition_effect_resolver import (
     INNATE_AXIOM_CLASS_SCOPE_CONDITION,
     LIGHT_SPEAKER_RESTORATION_SCOPE_CONDITION,
+    RED_EAGLES_FURY_WEAPON_SCOPE_CONDITION,
 )
 
 
@@ -60,7 +61,12 @@ class ExtremeActualHealCandidateGearConditionService:
         if scope is None:
             relevant = any(
                 int(counts.get(name, 0)) >= 5
-                for name in ("Light Speaker", "Innate Axiom", "Dagon's Dominion")
+                for name in (
+                    "Light Speaker",
+                    "Innate Axiom",
+                    "Dagon's Dominion",
+                    "Red Eagle's Fury",
+                )
             )
             unresolved = (
                 f"selected heal scope identity is unavailable for {entity_id}",
@@ -98,6 +104,14 @@ class ExtremeActualHealCandidateGearConditionService:
             evidence.append(
                 f"{INNATE_AXIOM_CLASS_SCOPE_CONDITION}: selected heal {entity_id} "
                 "is canonically a class ability"
+            )
+
+        if int(counts.get("Red Eagle's Fury", 0)) >= 5 and scope.is_weapon_skill_ability:
+            active.append(RED_EAGLES_FURY_WEAPON_SCOPE_CONDITION)
+            evidence.append(
+                f"{RED_EAGLES_FURY_WEAPON_SCOPE_CONDITION}: selected heal {entity_id} "
+                "is canonically a Weapon Skill ability; Red Eagle's +5% Weapon Skill cost "
+                "remains a real sustain tradeoff outside H1 heal-magnitude scoring"
             )
 
         if int(counts.get("Dagon's Dominion", 0)) >= 5:
