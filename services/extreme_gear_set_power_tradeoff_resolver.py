@@ -34,6 +34,12 @@ class ExtremeGearSetPowerTradeoffResolver:
         r"(?P<speed>\d+(?:\.\d+)?)%\.?$",
         re.IGNORECASE,
     )
+    _NEW_MOON_ACOLYTE = re.compile(
+        r"^\(5 items\)\s*Adds\s+(?P<min>\d[\d,]*)\s*-\s*(?P<max>\d[\d,]*)\s+"
+        r"Weapon and Spell Damage\.\s*Increases the cost of your active abilities by\s+"
+        r"(?P<cost>\d+(?:\.\d+)?)%\.?$",
+        re.IGNORECASE,
+    )
 
     @staticmethod
     def _power_effects(
@@ -93,6 +99,17 @@ class ExtremeGearSetPowerTradeoffResolver:
                 operation=EffectOperation.ADD_PERCENT,
                 value=value,
                 unit=EffectUnit.PERCENT,
+                source_text=source_text,
+            )
+
+        match = self._NEW_MOON_ACOLYTE.fullmatch(normalized)
+        if match:
+            key = "max" if use_max_value else "min"
+            value = float(match.group(key).replace(",", ""))
+            return self._power_effects(
+                operation=EffectOperation.ADD,
+                value=value,
+                unit=EffectUnit.FLAT,
                 source_text=source_text,
             )
 
