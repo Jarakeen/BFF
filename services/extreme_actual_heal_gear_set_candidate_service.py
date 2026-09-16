@@ -15,29 +15,17 @@ from services.extreme_gear_set_objective_service import ExtremeGearSetObjectiveS
 class ExtremeActualHealGearSetCandidateService:
     """Materialize reviewed ordinary five-piece set mutations for actual-heal search.
 
-    This service does not rank set tooltip deltas as final answers. It uses the
-    reviewed gear-set objective layer to discover mechanic-complete candidate sets,
-    then writes each set onto real body slots so the whole build can be reevaluated
-    by the canonical context factory.
-
     Authoritative H1 search is exhaustive across the reviewed ordinary five-piece
-    universe. ``per_objective`` is optional and exists only for focused callers or
-    tests that deliberately want a bounded sample; production callers omit it.
+    universe. Admission remains fail-closed across the complete H1 objective screen.
 
-    Candidate discovery includes generic healing/critical/power stats plus all
-    three maximum-resource families because legal heals may scale from Health,
-    Magicka, or Stamina. Final usefulness is still decided only after the real
-    candidate build is reevaluated through canonical heal math.
+    A set may be positively H1-relevant in either of two reviewed ways:
+    1. the shared objective parser exposes a positive ``reviewed_delta``; or
+    2. an H1 specialist rule proves a positive runtime/tradeoff modifier whose
+       numeric value is intentionally owned by the Extreme conditioned scorer.
 
-    Admission is fail-closed across the complete H1 objective screen. Shared gear
-    blockers are contextualized only where H1 can prove irrelevance. In particular,
-    damage-type ability-scoped Weapon/Spell Damage cannot modify a healing event;
-    class, Restoration Staff, AoE, movement/state, and other potentially relevant
-    conditional power remains blocking.
-
-    Monster sets, mythics, arena weapons, and mixed 5+2+1 packages are intentionally
-    outside this first body-set tranche because they require slot-family legality,
-    not merely a set name and piece count.
+    The second route is required for witnessed named buffs such as Olorime Major
+    Courage; otherwise a set can become mechanic-complete yet remain silently
+    absent from authoritative candidate search.
     """
 
     OBJECTIVES = (
@@ -55,10 +43,17 @@ class ExtremeActualHealGearSetCandidateService:
         self.repository = GearSetRepository(database_path)
 
     @staticmethod
-    def _h1_mechanic_complete(row) -> bool:
-        return ExtremeActualHealGearConditionRelevanceService.review(
-            row
-        ).h1_mechanic_complete
+    def _h1_review(row):
+        return ExtremeActualHealGearConditionRelevanceService.review(row)
+
+    @classmethod
+    def _h1_mechanic_complete(cls, row) -> bool:
+        return cls._h1_review(row).h1_mechanic_complete
+
+    @classmethod
+    def _h1_positive(cls, row) -> bool:
+        review = cls._h1_review(row)
+        return bool(row.reviewed_delta > 0 or review.h1_positive_modifier_proven)
 
     def candidate_set_names(
         self,
@@ -97,7 +92,7 @@ class ExtremeActualHealGearSetCandidateService:
                     useful < 5
                     or int(row.set_id) in unresolved_set_ids
                     or not self._h1_mechanic_complete(row)
-                    or row.reviewed_delta <= 0
+                    or not self._h1_positive(row)
                 ):
                     continue
                 key = row.set_name.casefold()
