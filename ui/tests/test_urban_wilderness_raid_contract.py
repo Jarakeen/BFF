@@ -41,12 +41,15 @@ def test_raid_sidebar_exposes_the_complete_top_workflow() -> None:
         assert route in source
 
 
-def test_raid_plan_surface_uses_roles_not_chairs() -> None:
+def test_raid_plan_surface_exposes_roles_and_spots_as_user_language() -> None:
     source = Path("ui/city_raid_plan_workspace_page.py").read_text(encoding="utf-8")
 
     assert '("Roles", None)' in source
     assert 'Manage Roles / Spots' in source
-    assert '"Chairs"' not in source
+    # Legacy implementation wording may still be translated at runtime, but the
+    # visible navigation and actions must never advertise a Chairs workspace.
+    assert '("Chairs", None)' not in source
+    assert 'Manage Chairs' not in source
 
 
 def test_roster_top_surface_has_six_collectibles_style_workspaces_without_visible_tabs() -> None:
