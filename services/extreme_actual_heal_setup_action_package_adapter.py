@@ -17,6 +17,7 @@ from services.extreme_actual_heal_setup_action_legality_service import (
     GRANTS_RESOLVE,
     HAS_CAST_OR_CHANNEL_TIME,
     IS_ASSAULT_ABILITY,
+    REDUCES_TARGET_RESISTANCE,
     ExtremeActualHealSetupActionLegalityService,
 )
 from services.extreme_actual_heal_setup_action_materialization_service import (
@@ -29,6 +30,7 @@ _REVIEWED_SETUP_SETS = (
     ("Seventh Legion Brute", GRANTS_RESOLVE, "resolve"),
     ("Soulshine", HAS_CAST_OR_CHANNEL_TIME, "cast-channel"),
     ("Powerful Assault", IS_ASSAULT_ABILITY, "assault"),
+    ("Ravager", REDUCES_TARGET_RESISTANCE, "resistance-reduction"),
 )
 
 
