@@ -35,13 +35,15 @@ def test_ready_static_records_include_existing_legacy_stats_and_critical_healing
         assert row.executable_in_static_lab is True
 
 
-def test_related_pending_records_share_execution_families() -> None:
+def test_related_records_share_execution_families() -> None:
     rows = {row.objective.key: row for row in ExtremeRecordExecutionCatalogService.descriptors()}
 
     assert rows["actual_heal"].status is ExtremeRecordExecutionStatus.SPECIALIZED
     assert rows["actual_heal"].execution_family == "actual-heal-event"
     assert rows["critical_heal"].execution_family == "actual-heal-event"
 
+    assert rows["block_mitigation"].status is ExtremeRecordExecutionStatus.SPECIALIZED
+    assert rows["block_cost_reduction"].status is ExtremeRecordExecutionStatus.SPECIALIZED
     assert rows["block_mitigation"].execution_family == "block-state"
     assert rows["block_cost_reduction"].execution_family == "block-state"
 
@@ -64,5 +66,5 @@ def test_execution_disposition_counts_make_remaining_work_explicit() -> None:
         counts[row.status] += 1
 
     assert counts[ExtremeRecordExecutionStatus.READY] == 17
-    assert counts[ExtremeRecordExecutionStatus.SPECIALIZED] == 1
-    assert counts[ExtremeRecordExecutionStatus.PENDING] == 13
+    assert counts[ExtremeRecordExecutionStatus.SPECIALIZED] == 3
+    assert counts[ExtremeRecordExecutionStatus.PENDING] == 11
