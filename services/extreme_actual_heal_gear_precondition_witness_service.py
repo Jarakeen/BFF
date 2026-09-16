@@ -14,12 +14,13 @@ from services.extreme_actual_heal_gear_precondition_effect_resolver import (
 )
 
 
-CLAW_OF_YOLNAHKRIIN_MINOR_COURAGE_CONDITION = "claw_of_yolnahkriin_minor_courage_active"
 FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION = "fledglings_nest_minor_courage_active"
 PHOENIX_MOTH_MINOR_COURAGE_CONDITION = "phoenix_moth_minor_courage_active"
 SPELL_POWER_CURE_MAJOR_COURAGE_CONDITION = "spell_power_cure_major_courage_active"
 VESTMENT_OF_OLORIME_MAJOR_COURAGE_CONDITION = "vestment_of_olorime_major_courage_active"
 NIX_HOUNDS_HOWL_MAJOR_COURAGE_CONDITION = "nix_hounds_howl_major_courage_active"
+CLAW_OF_YOLNAHKRIIN_MINOR_COURAGE_CONDITION = "claw_of_yolnahkriin_minor_courage_active"
+SENCHES_BITE_DODGE_CONDITION = "successful_dodge_recent"
 
 
 @dataclass(frozen=True)
@@ -80,8 +81,7 @@ class ExtremeActualHealGearPreconditionWitnessService:
             active.append(CLAW_OF_YOLNAHKRIIN_MINOR_COURAGE_CONDITION)
             evidence.append(
                 "claw_of_yolnahkriin_minor_courage_active: standing H1 setup may taunt one "
-                "enemy, then snapshot the heal inside Yolnahkriin's 15-second self-applied "
-                "Minor Courage window"
+                "enemy, then snapshot the heal inside the resulting 15-second Minor Courage window"
             )
 
         if int(counts.get("Fledgling's Nest", 0)) >= 5:
@@ -124,6 +124,13 @@ class ExtremeActualHealGearPreconditionWitnessService:
                 "Major Courage window"
             )
 
+        if int(counts.get("Senche's Bite", 0)) >= 5:
+            active.append(SENCHES_BITE_DODGE_CONDITION)
+            evidence.append(
+                "successful_dodge_recent: standing H1 setup may successfully Dodge, then "
+                "snapshot the heal inside Senche's Bite's 10-second Critical Healing window"
+            )
+
         return ExtremeActualHealGearPreconditionWitness(
             active_conditions=tuple(active),
             evidence=tuple(evidence),
@@ -136,6 +143,7 @@ __all__ = [
     "FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION",
     "NIX_HOUNDS_HOWL_MAJOR_COURAGE_CONDITION",
     "PHOENIX_MOTH_MINOR_COURAGE_CONDITION",
+    "SENCHES_BITE_DODGE_CONDITION",
     "SPELL_POWER_CURE_MAJOR_COURAGE_CONDITION",
     "VESTMENT_OF_OLORIME_MAJOR_COURAGE_CONDITION",
     "ExtremeActualHealGearPreconditionWitness",
