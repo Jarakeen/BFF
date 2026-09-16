@@ -85,9 +85,6 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         body.addWidget(views, 2)
 
         table_card = FoundryCard("Team Assignments", "group")
-        # Primary/secondary remain the canonical RaidPlan fields.  The surface names them
-        # Main Duty and Backup / Utility so the table reads like raid-lead language rather
-        # than a persistence schema.
         self.assignment_table.setColumnCount(7)
         self.assignment_table.setHorizontalHeaderLabels(
             ("Spot", "Player", "Main Duty", "Backup / Utility", "Gear", "Notes", "Source")
@@ -140,13 +137,6 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         coverage.addWidget(open_coverage)
         bottom.addWidget(coverage, 1)
         self.workspace_layout.addLayout(bottom)
-
-        patience = FoundryCard("Field Note", "feather")
-        patience.setProperty("parchment", True)
-        patience_text = QLabel("The best teams are built twice: once in planning, once in patience. — J")
-        patience_text.setWordWrap(True)
-        patience.addWidget(patience_text)
-        self.workspace_layout.addWidget(patience)
         self.workspace_layout.addWidget(legacy)
 
     def _toggle_plan_setup(self) -> None:
@@ -167,7 +157,7 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         for row, spot in enumerate(RAID_PLAN_SEATS):
             member = members.get(_slug(spot).casefold())
             context = (
-                "—",  # Gear is intentionally not invented by this surface.
+                "—",
                 _clean(member.notes) if member else "",
                 "Raid Plan" if member else "Unassigned",
             )
