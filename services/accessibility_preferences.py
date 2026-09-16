@@ -13,9 +13,37 @@ VALID_COLOR_VISION_MODES = frozenset(
     {COLOR_VISION_STANDARD, COLOR_VISION_FRIENDLY}
 )
 
+# Legacy visual themes remain stable. New visual directions get new keys so
+# existing installs can switch back without their previous theme changing under
+# them.
 VISUAL_THEME_FOUNDRY = "foundry_grimoire"
 VISUAL_THEME_RYLO = "rylo_grayscale"
-VALID_VISUAL_THEMES = frozenset({VISUAL_THEME_FOUNDRY, VISUAL_THEME_RYLO})
+VISUAL_THEME_FOUNDRY_FIELD_JOURNAL = "foundry_field_journal"
+VISUAL_THEME_RYLO_CITY = "rylo_city_night"
+VALID_VISUAL_THEMES = frozenset(
+    {
+        VISUAL_THEME_FOUNDRY,
+        VISUAL_THEME_RYLO,
+        VISUAL_THEME_FOUNDRY_FIELD_JOURNAL,
+        VISUAL_THEME_RYLO_CITY,
+    }
+)
+
+
+def is_rylo_visual_theme(theme: str) -> bool:
+    """Return whether ``theme`` belongs to the Rylo visual family."""
+    return str(theme or "").strip().casefold() in {
+        VISUAL_THEME_RYLO,
+        VISUAL_THEME_RYLO_CITY,
+    }
+
+
+def is_foundry_visual_theme(theme: str) -> bool:
+    """Return whether ``theme`` belongs to the Foundry visual family."""
+    return str(theme or "").strip().casefold() in {
+        VISUAL_THEME_FOUNDRY,
+        VISUAL_THEME_FOUNDRY_FIELD_JOURNAL,
+    }
 
 
 class AccessibilityPreferences:
