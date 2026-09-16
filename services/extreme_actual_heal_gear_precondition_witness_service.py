@@ -15,6 +15,7 @@ from services.extreme_actual_heal_gear_precondition_effect_resolver import (
     PEARLESCENT_WARD_FULL_GROUP_ALIVE_CONDITION,
     STYGIAN_POWER_CONDITION,
     TITANBORN_STRENGTH_BELOW_HALF_HEALTH_CONDITION,
+    TRACKERS_LASH_FULL_STACKS_CONDITION,
     WARRIORS_FURY_FULL_STACKS_CONDITION,
 )
 
@@ -116,6 +117,15 @@ class ExtremeActualHealGearPreconditionWitnessService:
                     f"faster than one every 0.5 seconds, reach the 20-stack cap, and snapshot the heal "
                     f"inside {set_name}'s resulting doubled 10-second full-stack window"
                 )
+
+        if int(counts.get("Tracker's Lash", 0)) >= 5:
+            active.append(TRACKERS_LASH_FULL_STACKS_CONDITION)
+            evidence.append(
+                "trackers_lash_full_stacks: standing H1 setup may make five outgoing attacks that "
+                "the target successfully Dodges, with trigger events no faster than one every 0.5 "
+                "seconds, reach Tracker's Lash's 5-stack cap, and snapshot the heal inside the "
+                "resulting 7-second full-stack window"
+            )
 
         if int(counts.get("Camonna Tong", 0)) >= 5:
             active.append(CAMONNA_TONG_MAX_POWER_CONDITION)
