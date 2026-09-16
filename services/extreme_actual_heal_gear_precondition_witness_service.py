@@ -11,6 +11,7 @@ from services.extreme_actual_heal_gear_precondition_effect_resolver import (
     ARMOR_OF_THE_VEILED_HERITANCE_POWER_CONDITION,
     ARMOR_OF_TRUTH_POWER_CONDITION,
     BLESSING_OF_HIGH_ISLE_CONDITION,
+    CAMONNA_TONG_MAX_POWER_CONDITION,
     PEARLESCENT_WARD_FULL_GROUP_ALIVE_CONDITION,
     STYGIAN_POWER_CONDITION,
     TITANBORN_STRENGTH_BELOW_HALF_HEALTH_CONDITION,
@@ -115,6 +116,14 @@ class ExtremeActualHealGearPreconditionWitnessService:
                     f"faster than one every 0.5 seconds, reach the 20-stack cap, and snapshot the heal "
                     f"inside {set_name}'s resulting doubled 10-second full-stack window"
                 )
+
+        if int(counts.get("Camonna Tong", 0)) >= 5:
+            active.append(CAMONNA_TONG_MAX_POWER_CONDITION)
+            evidence.append(
+                "camonna_tong_max_power_active: standing H1 setup may kill enough monsters to earn "
+                "at least 27,000 qualifying base Experience Points within 30 seconds, reaching "
+                "Camonna Tong's explicit 540 Weapon and Spell Damage cap before the heal snapshot"
+            )
 
         if int(counts.get("Stygian", 0)) >= 5:
             active.append(STYGIAN_POWER_CONDITION)
