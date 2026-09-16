@@ -98,6 +98,12 @@ _REVIEWED_H1_PRECONDITION_TEXT = (
         re.IGNORECASE | re.DOTALL,
     ),
     re.compile(
+        r"Armor of Truth \(5\): active set bonus is not yet mechanic-mapped:.*"
+        r"When you deal damage to an enemy who is Off Balance, your Weapon and Spell Damage are increased by\s*"
+        r"(?:\d[\d,]*\s*-\s*)?460\s*for\s*10 seconds",
+        re.IGNORECASE | re.DOTALL,
+    ),
+    re.compile(
         r"Claw of Yolnahkriin \(5\): active set bonus is not yet mechanic-mapped:.*"
         r"When you taunt an enemy.*give yourself and 11 group members Minor Courage for\s*15 seconds.*"
         r"Weapon and Spell Damage by\s*(?:\d[\d,]*\s*-\s*)?215",
