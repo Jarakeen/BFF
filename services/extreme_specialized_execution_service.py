@@ -13,6 +13,15 @@ from services.extreme_record_execution_catalog_service import (
 
 
 @dataclass(frozen=True)
+class ExtremeSpecializedInputRequirement:
+    key: str
+    label: str
+    kind: str
+    required: bool = True
+    note: str = ""
+
+
+@dataclass(frozen=True)
 class ExtremeSpecializedExecutionResult:
     objective_key: str
     label: str
@@ -29,17 +38,68 @@ class ExtremeSpecializedExecutionResult:
 class ExtremeSpecializedExecutionService:
     """One UI-facing gateway for non-static Extreme execution families.
 
-    Family services remain authoritative for ESO mechanics.  This class only
-    normalizes their outputs into one presentation contract so the Extreme Build
-    Lab does not grow one page-specific execution path per record.
-
-    Healing-event records are the first zero-extra-input specialized family: the
-    selected saved build and active bar are sufficient to run their existing H1
-    class-route search. Other specialized families remain explicit until their
-    required scenario/source inputs are supplied by the page.
+    Family services remain authoritative for ESO mechanics. This class normalizes
+    their outputs and owns one family-input registry so the Extreme Build Lab does
+    not grow separate ad-hoc forms and execution branches for every record.
     """
 
     _DIRECT_KEYS = frozenset({"actual_heal", "critical_heal"})
+
+    _FAMILY_REQUIREMENTS = {
+        "actual-heal-event": (),
+        "single-event-output": (
+            ExtremeSpecializedInputRequirement(
+                "event_source",
+                "Event Source",
+                "canonical_candidate",
+                note="Select/prove the legal Bash or damage-shield event source before scoring.",
+            ),
+        ),
+        "resource-timeline": (
+            ExtremeSpecializedInputRequirement(
+                "duration_seconds",
+                "Duration",
+                "seconds",
+                note="Sustained records require an explicit comparison window.",
+            ),
+            ExtremeSpecializedInputRequirement(
+                "timeline_evidence",
+                "Timeline Evidence",
+                "canonical_timeline",
+                note="Reuse Phase 4 resource events or explicit Ultimate generation events.",
+            ),
+        ),
+        "movement-state": (
+            ExtremeSpecializedInputRequirement(
+                "movement_sources",
+                "Movement Sources",
+                "canonical_state",
+                note="Aggregate reviewed skill, item, set, Mundus, buff and CP movement channels.",
+            ),
+        ),
+        "stealth-state": (
+            ExtremeSpecializedInputRequirement(
+                "stealth_sources",
+                "Stealth Sources",
+                "canonical_state",
+                note="Aggregate reviewed flat and multiplicative detection-radius reductions.",
+            ),
+        ),
+        "stealth-runtime": (
+            ExtremeSpecializedInputRequirement(
+                "duration_seconds",
+                "Duration",
+                "seconds",
+                note="Uptime is only meaningful over an explicit comparison window.",
+            ),
+            ExtremeSpecializedInputRequirement(
+                "invisibility_windows",
+                "Invisibility Windows",
+                "canonical_intervals",
+                note="Intervals must come from proven legal invisibility providers; do not infer tooltip durations here.",
+            ),
+        ),
+    }
 
     def __init__(
         self,
@@ -49,8 +109,23 @@ class ExtremeSpecializedExecutionService:
         self.healing_events = healing_events or ExtremeHealingEventRecordService()
 
     @classmethod
+    def requirements_for(cls, objective_key: str) -> tuple[ExtremeSpecializedInputRequirement, ...]:
+        descriptor = ExtremeRecordExecutionCatalogService.descriptor(objective_key)
+        if descriptor.status is not ExtremeRecordExecutionStatus.SPECIALIZED:
+            return ()
+        try:
+            return cls._FAMILY_REQUIREMENTS[descriptor.execution_family]
+        except KeyError as exc:
+            raise ValueError(
+                f"No specialized input contract for Extreme family {descriptor.execution_family!r}"
+            ) from exc
+
+    @classmethod
     def can_execute_without_extra_inputs(cls, objective_key: str) -> bool:
-        return str(objective_key or "").strip().casefold() in cls._DIRECT_KEYS
+        key = str(objective_key or "").strip().casefold()
+        if key not in cls._DIRECT_KEYS:
+            return False
+        return not cls.requirements_for(key)
 
     def execute(
         self,
@@ -63,9 +138,11 @@ class ExtremeSpecializedExecutionService:
         descriptor = ExtremeRecordExecutionCatalogService.descriptor(key)
         if descriptor.status is not ExtremeRecordExecutionStatus.SPECIALIZED:
             raise ValueError(f"Extreme record is not specialized: {objective_key!r}")
-        if key not in self._DIRECT_KEYS:
+        requirements = self.requirements_for(key)
+        if requirements:
+            labels = ", ".join(requirement.label for requirement in requirements if requirement.required)
             raise ValueError(
-                f"{descriptor.objective.label} requires family-specific scenario inputs before execution"
+                f"{descriptor.objective.label} requires family-specific scenario inputs before execution: {labels}"
             )
 
         if key in {"actual_heal", "critical_heal"}:
@@ -104,10 +181,11 @@ class ExtremeSpecializedExecutionService:
                 omitted_scope=tuple(catalog.omitted_scope),
             )
 
-        raise AssertionError(f"Unhandled direct specialized Extreme record: {key}")
+        raise AssertionError(f"Unhandled zero-input specialized Extreme record: {key}")
 
 
 __all__ = [
     "ExtremeSpecializedExecutionResult",
     "ExtremeSpecializedExecutionService",
+    "ExtremeSpecializedInputRequirement",
 ]
