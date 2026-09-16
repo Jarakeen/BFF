@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from minmax.armor_glyph_repository import ArmorGlyphEffectRepository
@@ -20,17 +21,42 @@ _JEWELRY_LEGACY_LABELS = {
     "glyph of stamina recovery": "Stamina Recovery",
     "glyph of increase physical harm": "Weapon Damage",
     "glyph of increase magical harm": "Spell Damage",
+    "glyph of bashing": "Bashing",
     "glyph of bracing": "Block Cost",
 }
+
+_GLYPH_TIER_PREFIXES = (
+    "Truly Superb",
+    "Monumental",
+    "Splendid",
+    "Greater",
+    "Superb",
+    "Average",
+    "Moderate",
+    "Inferior",
+    "Trifling",
+    "Strong",
+    "Lesser",
+    "Slight",
+    "Major",
+    "Minor",
+    "Petty",
+)
+_TIER_PREFIX_RE = re.compile(
+    r"^(?:" + "|".join(re.escape(value) for value in _GLYPH_TIER_PREFIXES) + r")\s+",
+    re.IGNORECASE,
+)
 
 
 class BuildEnchantCatalogService:
     """Expose canonical enchant choices by equipment family for the Build Editor.
 
-    The ESO repositories remain the source of truth. Known legacy Build labels are
-    retained only as display/storage compatibility aliases; every other canonical
-    glyph/enchantment name is surfaced verbatim instead of being omitted from a
-    hand-maintained UI list.
+    The ESO repositories remain the source of truth. Imported glyph tables contain
+    item-tier names such as ``Truly Superb Glyph of Bashing``; the editor needs the
+    enchant family, not every quality/tier duplicate. Tier prefixes are therefore
+    collapsed for presentation only. Known legacy Build labels remain compatibility
+    aliases so existing saved builds do not change identity merely because the UI now
+    reads the complete canonical catalog.
     """
 
     def __init__(self, database_path: str | Path) -> None:
@@ -40,17 +66,23 @@ class BuildEnchantCatalogService:
         self.weapon = WeaponEnchantmentRepository(self.database_path)
 
     @staticmethod
+    def _family_name(value: str) -> str:
+        normalized = " ".join(str(value or "").strip().split())
+        return _TIER_PREFIX_RE.sub("", normalized).strip()
+
+    @classmethod
     def _display_choices(
+        cls,
         names: tuple[str, ...],
         aliases: dict[str, str],
     ) -> tuple[str, ...]:
         values: list[str] = [""]
         seen: set[str] = {""}
         for raw in names:
-            canonical = " ".join(str(raw or "").strip().split())
-            if not canonical:
+            family = cls._family_name(raw)
+            if not family:
                 continue
-            display = aliases.get(canonical.casefold(), canonical)
+            display = aliases.get(family.casefold(), family)
             key = display.casefold()
             if key in seen:
                 continue
