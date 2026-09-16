@@ -1,18 +1,14 @@
 from __future__ import annotations
 
-"""Visual-theme Settings integration.
+"""City After Midnight theme integration.
 
-Legacy ``foundry_grimoire`` and ``rylo_grayscale`` remain unchanged. The newer
-Collectibles-inspired Foundry and city-night Rylo directions are separate theme
-keys registered by ``ThemeManager`` rather than replacements for the old skins.
+Historical theme keys remain readable for compatibility, but the application now
+presents a single visual skin: Rylo · City After Midnight.
 """
 
 from PySide6.QtWidgets import QApplication, QComboBox, QLabel
 
-from services.accessibility_preferences import (
-    VISUAL_THEME_FOUNDRY_FIELD_JOURNAL,
-    VISUAL_THEME_RYLO_CITY,
-)
+from services.accessibility_preferences import VISUAL_THEME_RYLO_CITY
 
 _INSTALLED = False
 
@@ -26,10 +22,12 @@ def install(app: QApplication) -> None:
     from ui.theme import theme_manager
     from ui import settings_page
 
-    # Collectibles is a custom-painted dashboard, not just a QSS surface. Register
-    # the additive Field Journal / City palettes and badge sheets before MainWindow
-    # constructs that page. Legacy badge assets remain untouched.
     install_collectibles_theme_assets()
+
+    # Normalize every install to the one supported skin before pages are built.
+    manager = theme_manager.ThemeManager()
+    manager.set_visual_theme(VISUAL_THEME_RYLO_CITY)
+    manager.apply(app)
 
     original_load_settings = settings_page.SettingsPage.load_settings
 
@@ -41,80 +39,40 @@ def install(app: QApplication) -> None:
         layout.addWidget(title)
 
         self.visual_theme_combo = QComboBox()
-        for key, label in theme_manager.ThemeManager.visual_theme_options():
-            self.visual_theme_combo.addItem(label, key)
+        self.visual_theme_combo.addItem("Rylo · City After Midnight", VISUAL_THEME_RYLO_CITY)
+        self.visual_theme_combo.setEnabled(False)
         layout.addWidget(self.visual_theme_combo)
 
         description = QLabel(
-            "Four independent skins are available. Foundry Grimoire and Rylo Grayscale "
-            "remain the original themes. Foundry · Field Journal uses the dense teal/gold "
-            "Collectibles language with parchment sketches. Rylo · City After Midnight uses "
-            "charcoal, steel blue, muted amber, city sketches, and the same page geometry."
+            "City After Midnight is the active FoundryDock skin: charcoal, steel blue, "
+            "muted amber, city sketches, parchment scraps, and Collectibles-style cards."
         )
         description.setWordWrap(True)
         description.setProperty("muted", True)
         layout.addWidget(description)
 
         accessibility = QLabel(
-            "Rylo · City After Midnight is colorblind-safe and seizure-aware by design: "
-            "status meaning is paired with text/shape, not hue alone, and the skin defines "
-            "no flashing, pulsing, strobing, or animated-gradient effects."
+            "The skin is colorblind-friendly and seizure-aware: state meaning uses text, "
+            "icons, and shape in addition to color, with no flashing, pulsing, strobing, "
+            "or animated-gradient effects."
         )
         accessibility.setWordWrap(True)
         accessibility.setProperty("muted", True)
         layout.addWidget(accessibility)
 
-        note = QLabel("FIELD JOURNAL  ·  CITY AFTER MIDNIGHT  ·  SAME APP, DIFFERENT WEATHER")
+        note = QLabel("CITY AFTER MIDNIGHT  ·  ONE VISUAL LANGUAGE  ·  LESS THEME DRAMA")
         note.setWordWrap(True)
         note.setProperty("integrationState", True)
         layout.addWidget(note)
-
-        def apply_selected_theme(index: int) -> None:
-            key = self.visual_theme_combo.itemData(index)
-            if not key:
-                return
-            manager = theme_manager.ThemeManager()
-            manager.set_visual_theme(str(key))
-            manager.apply(app)
-
-            from ui.ux_icons import refresh_theme_icons
-            refresh_theme_icons(app)
-
-            for widget in app.topLevelWidgets():
-                sidebar = getattr(widget, "sidebar", None)
-                if sidebar is not None and hasattr(sidebar, "refresh_brand_mark"):
-                    sidebar.refresh_brand_mark()
-
-                pages = getattr(widget, "pages", {})
-                if not isinstance(pages, dict):
-                    continue
-                for route in ("roster_workspace", "roster_page"):
-                    page_widget = pages.get(route)
-                    refresh_assets = getattr(page_widget, "refresh_theme_assets", None)
-                    if callable(refresh_assets):
-                        refresh_assets()
-
-            label = self.visual_theme_combo.currentText()
-            if str(key) == VISUAL_THEME_RYLO_CITY:
-                self.status.success(label + " · colorblind-safe city skin enabled.")
-            elif str(key) == VISUAL_THEME_FOUNDRY_FIELD_JOURNAL:
-                self.status.success(label + " · field-journal skin enabled.")
-            else:
-                self.status.success("Visual theme: " + label + ".")
-
-        self.visual_theme_combo.currentIndexChanged.connect(apply_selected_theme)
         return page
 
     def load_settings_with_theme(self):
         original_load_settings(self)
         combo = getattr(self, "visual_theme_combo", None)
-        if combo is None:
-            return
-        active = theme_manager.ThemeManager().visual_theme()
-        index = combo.findData(active)
-        combo.blockSignals(True)
-        combo.setCurrentIndex(index if index >= 0 else 0)
-        combo.blockSignals(False)
+        if combo is not None:
+            combo.blockSignals(True)
+            combo.setCurrentIndex(0)
+            combo.blockSignals(False)
 
     settings_page.SettingsPage._appearance_page = appearance_page_with_themes
     settings_page.SettingsPage.load_settings = load_settings_with_theme
