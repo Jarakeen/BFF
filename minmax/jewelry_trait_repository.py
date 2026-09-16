@@ -44,6 +44,17 @@ BLOODTHIRSTY_MAX_DAMAGE = {
     "Legendary": 350.0,
 }
 
+# Current CP160 Swift movement-speed percentage by jewelry quality. Movement
+# speed is a ratio channel, so callers consume these as percent points rather
+# than flat character-sheet values.
+SWIFT_MOVEMENT_PERCENT = {
+    "Normal": 3.0,
+    "Fine": 4.0,
+    "Superior": 5.0,
+    "Epic": 6.0,
+    "Legendary": 7.0,
+}
+
 STATIC_TRAIT_VALUES = {
     "arcane": {
         "Normal": ((StatId.MAX_MAGICKA, 767.0),),
@@ -151,12 +162,33 @@ class JewelryTraitRepository:
             return None
         return BLOODTHIRSTY_MAX_DAMAGE.get(database_quality)
 
+    def get_swift_movement_percent(self, *, quality: str, level: str) -> float | None:
+        database_quality = self.database_quality(quality)
+        item_level = self.database_item_level(level)
+        if not database_quality or item_level is None:
+            return None
+        return SWIFT_MOVEMENT_PERCENT.get(database_quality)
+
     def get_static_effects(self, trait_name: str, *, quality: str, level: str) -> list[Effect]:
         trait = str(trait_name or "").strip()
         database_quality = self.database_quality(quality)
         item_level = self.database_item_level(level)
         if not trait or not database_quality or item_level is None:
             return []
+
+        if trait.casefold() == "swift":
+            percent = self.get_swift_movement_percent(quality=quality, level=level)
+            if percent is None:
+                return []
+            return [
+                Effect(
+                    operation=EffectOperation.ADD_PERCENT,
+                    value=percent,
+                    source="Swift",
+                    stat=StatId.MOVEMENT_SPEED,
+                    unit=EffectUnit.PERCENT,
+                )
+            ]
 
         rows = STATIC_TRAIT_VALUES.get(trait.casefold(), {}).get(database_quality, ())
         return [
