@@ -15,6 +15,7 @@ BLESSING_OF_HIGH_ISLE_CONDITION = "recently_healed_in_combat"
 ANCIENT_DRAGONGUARD_ABOVE_HALF_HEALTH_CONDITION = "wearer_health_above_50_percent"
 TITANBORN_STRENGTH_BELOW_HALF_HEALTH_CONDITION = "wearer_in_combat_below_50_percent_health"
 PEARLESCENT_WARD_FULL_GROUP_ALIVE_CONDITION = "pearlescent_ward_full_group_alive"
+ARMOR_OF_TRUTH_POWER_CONDITION = "armor_of_truth_power_active"
 
 
 class ExtremeActualHealGearPreconditionEffectResolver:
@@ -48,6 +49,11 @@ class ExtremeActualHealGearPreconditionEffectResolver:
         r"Pearlescent Ward increases damage reduction from non-player enemies.*$",
         re.IGNORECASE,
     )
+    _ARMOR_OF_TRUTH = re.compile(
+        r"^\(5 items\)\s*When you deal damage to an enemy who is Off Balance, your Weapon and Spell Damage are increased by\s*"
+        r"(?:(?P<min>\d[\d,]*)\s*-\s*)?(?P<max>\d[\d,]*)\s*for\s*10 seconds\.?$",
+        re.IGNORECASE,
+    )
 
     def resolve(
         self,
@@ -77,6 +83,10 @@ class ExtremeActualHealGearPreconditionEffectResolver:
             condition = PEARLESCENT_WARD_FULL_GROUP_ALIVE_CONDITION
             multiplier = 1.0
         if match is None:
+            match = self._ARMOR_OF_TRUTH.fullmatch(normalized)
+            condition = ARMOR_OF_TRUTH_POWER_CONDITION
+            multiplier = 1.0
+        if match is None:
             return []
 
         key = "max" if use_max_value or not match.groupdict().get("min") else "min"
@@ -99,6 +109,7 @@ class ExtremeActualHealGearPreconditionEffectResolver:
 
 __all__ = [
     "ANCIENT_DRAGONGUARD_ABOVE_HALF_HEALTH_CONDITION",
+    "ARMOR_OF_TRUTH_POWER_CONDITION",
     "BLESSING_OF_HIGH_ISLE_CONDITION",
     "PEARLESCENT_WARD_FULL_GROUP_ALIVE_CONDITION",
     "TITANBORN_STRENGTH_BELOW_HALF_HEALTH_CONDITION",
