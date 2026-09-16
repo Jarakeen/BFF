@@ -15,11 +15,15 @@ from PySide6.QtWidgets import (
 )
 
 from services.extreme_blueprint_service import ExtremeBlueprintResult, ExtremeBlueprintService
+from services.extreme_complete_optimization_service import ExtremeCompleteOptimizationService
 from services.extreme_optimization_service import (
     EXTREME_OBJECTIVES,
     ExtremeOptimizationResult,
-    ExtremeOptimizationService,
     format_extreme_value,
+)
+from services.extreme_record_execution_catalog_service import (
+    ExtremeRecordExecutionCatalogService,
+    ExtremeRecordExecutionStatus,
 )
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
@@ -27,13 +31,17 @@ from ui.components.foundry_status_bar import FoundryStatusBar
 from ui.foundry_page import FoundryPage
 
 
+_BLUEPRINT_OBJECTIVE_KEYS = frozenset(objective.key for objective in EXTREME_OBJECTIVES)
+
+
 class ExtremeOptimizationPage(FoundryPage):
     """Tools workspace for deliberately absurd single-stat builds."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.service = ExtremeOptimizationService()
+        self.service = ExtremeCompleteOptimizationService()
         self.blueprint_service = ExtremeBlueprintService()
+        self.execution_rows = ExtremeRecordExecutionCatalogService.descriptors()
         self.builds = ()
         self.current_result: ExtremeOptimizationResult | ExtremeBlueprintResult | None = None
         self._build_ui()
@@ -62,9 +70,15 @@ class ExtremeOptimizationPage(FoundryPage):
         self.header.add_context_widget(self._context_field("STARTING BUILD", self.build_combo))
 
         self.objective_combo = QComboBox()
-        for objective in EXTREME_OBJECTIVES:
-            self.objective_combo.addItem(objective.label, objective.key)
-        self.objective_combo.setMinimumWidth(145)
+        for row in self.execution_rows:
+            label = row.objective.label
+            if row.status is ExtremeRecordExecutionStatus.SPECIALIZED:
+                label += " [SPECIALIZED]"
+            elif row.status is ExtremeRecordExecutionStatus.PENDING:
+                label += " [PENDING]"
+            self.objective_combo.addItem(label, row.objective.key)
+        self.objective_combo.setMinimumWidth(185)
+        self.objective_combo.currentIndexChanged.connect(self._objective_changed)
         self.header.add_context_widget(self._context_field("MAXIMIZE", self.objective_combo))
 
         self.bar_combo = QComboBox()
@@ -99,14 +113,14 @@ class ExtremeOptimizationPage(FoundryPage):
 
         self.warning_card = FoundryCard("Experimental Boundary")
         warning_text = QLabel(
-            "Existing-toon mode keeps the original bounded mutation search. "
-            "From-scratch mode builds a self-contained character from gear, food, race, attributes, intrinsic passives, and slotted skills. "
-            "It also shows a separate self-usable potion-active snapshot without borrowing group buffs or target debuffs."
+            "The objective menu is canonical: all Extreme Records are visible. "
+            "READY records share proven execution paths; SPECIALIZED and PENDING records stay visible without being routed through the wrong math. "
+            "From-scratch mode remains limited to its reviewed static-objective catalog."
         )
         warning_text.setWordWrap(True)
         warning_text.setProperty("pageSubtitle", True)
         self.warning_card.addWidget(warning_text)
-        self.warning_card.setMaximumHeight(86)
+        self.warning_card.setMaximumHeight(100)
         left.addWidget(self.warning_card)
 
         self.summary_card = FoundryCard("Result")
@@ -147,6 +161,7 @@ class ExtremeOptimizationPage(FoundryPage):
         self.change_table.verticalHeader().setVisible(False)
         self.change_table.setAlternatingRowColors(True)
         self.change_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.change_table.setSelectionBehavior(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.change_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.change_table.horizontalHeader().setStretchLastSection(True)
         self.change_table.setMinimumHeight(470)
@@ -167,6 +182,7 @@ class ExtremeOptimizationPage(FoundryPage):
 
         self.status = FoundryStatusBar()
         self.set_status(self.status)
+        self._objective_changed()
 
     @staticmethod
     def _context_field(label: str, widget: QWidget) -> QWidget:
@@ -191,6 +207,43 @@ class ExtremeOptimizationPage(FoundryPage):
         layout.addWidget(heading)
         layout.addWidget(value)
         return box
+
+    def _current_execution_descriptor(self):
+        key = str(self.objective_combo.currentData() or "")
+        return ExtremeRecordExecutionCatalogService.descriptor(key)
+
+    def _objective_changed(self, _index: int = -1) -> None:
+        if not hasattr(self, "run_button") or not hasattr(self, "scope_text"):
+            return
+        descriptor = self._current_execution_descriptor()
+        scratch = self.source_combo.currentData() == "scratch"
+        runnable = descriptor.status is ExtremeRecordExecutionStatus.READY
+        scratch_supported = descriptor.objective.key in _BLUEPRINT_OBJECTIVE_KEYS
+        if scratch and not scratch_supported:
+            runnable = False
+
+        self.run_button.setEnabled(runnable)
+        if runnable:
+            self.run_button.setToolTip("")
+            return
+
+        if descriptor.status is ExtremeRecordExecutionStatus.SPECIALIZED:
+            reason = (
+                f"{descriptor.objective.label} uses the shared {descriptor.execution_family} family, "
+                "but its dedicated scenario inputs are not routed through this page yet."
+            )
+        elif descriptor.status is ExtremeRecordExecutionStatus.PENDING:
+            reason = (
+                f"{descriptor.objective.label} is defined in the canonical catalog. "
+                f"Its shared {descriptor.execution_family} execution family is still pending."
+            )
+        else:
+            reason = (
+                f"{descriptor.objective.label} is ready for existing-toon optimization, "
+                "but the from-scratch blueprint runner has not adopted this objective yet."
+            )
+        self.run_button.setToolTip(reason)
+        self.scope_text.setPlainText(reason + "\n\nNo fallback calculation will be substituted.")
 
     def refresh(self) -> None:
         selected = self.build_combo.currentData() if hasattr(self, "build_combo") else None
@@ -237,12 +290,28 @@ class ExtremeOptimizationPage(FoundryPage):
             )
         else:
             self.scope_text.clear()
+        self._objective_changed()
 
     def _run_extreme_search(self) -> None:
         objective_key = str(self.objective_combo.currentData() or "")
         active_bar = str(self.bar_combo.currentData() or "front")
+        descriptor = self._current_execution_descriptor()
+
+        if descriptor.status is not ExtremeRecordExecutionStatus.READY:
+            self._objective_changed()
+            self.status.warning(
+                f"{descriptor.objective.label} is not runnable from this page yet; "
+                f"shared family: {descriptor.execution_family}."
+            )
+            return
 
         if self.source_combo.currentData() == "scratch":
+            if objective_key not in _BLUEPRINT_OBJECTIVE_KEYS:
+                self._objective_changed()
+                self.status.warning(
+                    f"{descriptor.objective.label} is not yet supported by the from-scratch blueprint runner."
+                )
+                return
             self._run_blueprint_search(objective_key, active_bar)
             return
 
