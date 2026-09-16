@@ -99,8 +99,9 @@ _REVIEWED_H1_PRECONDITION_TEXT = (
     ),
     re.compile(
         r"Pearlescent Ward \(5\): active set bonus is not yet mechanic-mapped:.*"
-        r"Grants you and up to 11 other group members Pearlescent Ward\..*"
-        r"increases Weapon and Spell Damage by up to\s*180\s*based on the number of group members that are alive",
+        r"Grants you and up to 11 other group members Pearlescent Ward\b.*"
+        r"Weapon and Spell Damage by up to\s*180\b.*"
+        r"number of group members that are alive",
         re.IGNORECASE | re.DOTALL,
     ),
     re.compile(
