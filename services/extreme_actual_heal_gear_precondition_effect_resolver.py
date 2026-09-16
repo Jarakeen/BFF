@@ -16,6 +16,7 @@ ANCIENT_DRAGONGUARD_ABOVE_HALF_HEALTH_CONDITION = "wearer_health_above_50_percen
 TITANBORN_STRENGTH_BELOW_HALF_HEALTH_CONDITION = "wearer_in_combat_below_50_percent_health"
 PEARLESCENT_WARD_FULL_GROUP_ALIVE_CONDITION = "pearlescent_ward_full_group_alive"
 ARMOR_OF_TRUTH_POWER_CONDITION = "armor_of_truth_power_active"
+ARMOR_OF_THE_VEILED_HERITANCE_POWER_CONDITION = "armor_of_the_veiled_heritance_power_active"
 
 
 class ExtremeActualHealGearPreconditionEffectResolver:
@@ -54,6 +55,12 @@ class ExtremeActualHealGearPreconditionEffectResolver:
         r"(?:(?P<min>\d[\d,]*)\s*-\s*)?(?P<max>\d[\d,]*)\s*for\s*10 seconds\.?$",
         re.IGNORECASE,
     )
+    _ARMOR_OF_THE_VEILED_HERITANCE = re.compile(
+        r"^\(5 items\)\s*When you interrupt an enemy, you gain\s*"
+        r"(?:(?P<min>\d[\d,]*)\s*-\s*)?(?P<max>\d[\d,]*)\s*Weapon and Spell Damage for\s*15 seconds\.\s*"
+        r"Your Bash attacks deal\s*\d[\d,]*(?:\s*-\s*\d[\d,]*)?\s*more damage\.?$",
+        re.IGNORECASE,
+    )
 
     def resolve(
         self,
@@ -87,6 +94,10 @@ class ExtremeActualHealGearPreconditionEffectResolver:
             condition = ARMOR_OF_TRUTH_POWER_CONDITION
             multiplier = 1.0
         if match is None:
+            match = self._ARMOR_OF_THE_VEILED_HERITANCE.fullmatch(normalized)
+            condition = ARMOR_OF_THE_VEILED_HERITANCE_POWER_CONDITION
+            multiplier = 1.0
+        if match is None:
             return []
 
         key = "max" if use_max_value or not match.groupdict().get("min") else "min"
@@ -109,6 +120,7 @@ class ExtremeActualHealGearPreconditionEffectResolver:
 
 __all__ = [
     "ANCIENT_DRAGONGUARD_ABOVE_HALF_HEALTH_CONDITION",
+    "ARMOR_OF_THE_VEILED_HERITANCE_POWER_CONDITION",
     "ARMOR_OF_TRUTH_POWER_CONDITION",
     "BLESSING_OF_HIGH_ISLE_CONDITION",
     "PEARLESCENT_WARD_FULL_GROUP_ALIVE_CONDITION",
