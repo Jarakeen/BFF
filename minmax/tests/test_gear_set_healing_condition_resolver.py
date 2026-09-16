@@ -41,7 +41,7 @@ def test_back_alley_gourmand_maps_food_conditioned_critical_healing() -> None:
     ]
 
 
-def test_triggered_dodge_critical_healing_is_not_claimed() -> None:
+def test_triggered_dodge_critical_healing_maps_explicit_runtime_condition() -> None:
     bonus = GearSetBonus(
         id=2,
         set_id=2,
@@ -52,4 +52,27 @@ def test_triggered_dodge_critical_healing_is_not_claimed() -> None:
         ),
     )
 
-    assert GearSetHealingConditionResolver().resolve(bonus) == []
+    effects = GearSetHealingConditionResolver().resolve(
+        bonus,
+        source="Senche's Bite (5)",
+    )
+
+    assert [
+        (effect.stat, effect.value, effect.operation, effect.unit, effect.condition)
+        for effect in effects
+    ] == [
+        (
+            StatId.CRITICAL_DAMAGE,
+            15.0,
+            EffectOperation.ADD_PERCENT,
+            EffectUnit.PERCENT,
+            "successful_dodge_recent",
+        ),
+        (
+            StatId.CRITICAL_HEALING,
+            15.0,
+            EffectOperation.ADD_PERCENT,
+            EffectUnit.PERCENT,
+            "successful_dodge_recent",
+        ),
+    ]
