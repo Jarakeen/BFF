@@ -101,6 +101,21 @@ def evaluate_required_heavy_attack_due_state(
         else incentive.maximum_effect_duration_seconds
     )
 
+    duration: float | None = None
+    recurrence: float | None = None
+    if incentive.maintain_effect_uptime:
+        if duration_value is None:
+            raise ValueError("uptime-maintained heavy attack incentive has no verified effect duration")
+        duration = float(duration_value)
+        if not math.isfinite(duration) or duration <= 0:
+            raise ValueError("heavy attack upkeep duration must be finite and positive")
+    else:
+        if incentive.recurrence_seconds is None:
+            raise ValueError("required heavy attack incentive has no verified recurrence")
+        recurrence = float(incentive.recurrence_seconds)
+        if not math.isfinite(recurrence) or recurrence <= 0:
+            raise ValueError("required heavy attack recurrence must be finite and positive")
+
     if last_trigger is None:
         return RequiredHeavyAttackDueState(
             incentive=incentive,
@@ -113,11 +128,7 @@ def evaluate_required_heavy_attack_due_state(
         )
 
     if incentive.maintain_effect_uptime:
-        if duration_value is None:
-            raise ValueError("uptime-maintained heavy attack incentive has no verified effect duration")
-        duration = float(duration_value)
-        if not math.isfinite(duration) or duration <= 0:
-            raise ValueError("heavy attack upkeep duration must be finite and positive")
+        assert duration is not None
         effect_expires = last_trigger + duration
         next_start = max(last_trigger, effect_expires - channel)
         due = now >= next_start
@@ -137,20 +148,14 @@ def evaluate_required_heavy_attack_due_state(
             reason=reason,
         )
 
-    if incentive.recurrence_seconds is None:
-        raise ValueError("required heavy attack incentive has no verified recurrence")
-
-    recurrence = float(incentive.recurrence_seconds)
-    if not math.isfinite(recurrence) or recurrence <= 0:
-        raise ValueError("required heavy attack recurrence must be finite and positive")
-
+    assert recurrence is not None
     next_eligible = last_trigger + recurrence
     effect_expires: float | None = None
     if duration_value is not None:
-        duration = float(duration_value)
-        if not math.isfinite(duration) or duration < 0:
+        effect_duration = float(duration_value)
+        if not math.isfinite(effect_duration) or effect_duration < 0:
             raise ValueError("heavy attack effect duration must be finite and non-negative")
-        effect_expires = last_trigger + duration
+        effect_expires = last_trigger + effect_duration
 
     due = now >= next_eligible
     seconds_until_due = max(0.0, next_eligible - now)
