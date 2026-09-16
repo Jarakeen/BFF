@@ -196,6 +196,22 @@ def _register_assignments_alias(window) -> None:
     window.sidebar.pageRequested.connect(prepare_assignments)
 
 
+def _register_roster_workspace_refresh(window, page) -> None:
+    """Reload canonical roster/build state whenever the visible Roster is opened."""
+
+    def prepare_roster(route: str) -> None:
+        if route != "roster_workspace":
+            return
+        refresh = getattr(page, "refresh", None)
+        if callable(refresh):
+            refresh()
+        refresh_assets = getattr(page, "refresh_theme_assets", None)
+        if callable(refresh_assets):
+            refresh_assets()
+
+    window.sidebar.pageRequested.connect(prepare_roster)
+
+
 def register_raid_engine_pages(window) -> None:
     """Register raid-planning pages after MainWindow creates their source pages."""
     from ui.raid_engine_dashboard_page import RaidEngineDashboardPage
@@ -204,6 +220,7 @@ def register_raid_engine_pages(window) -> None:
 
     roster_workspace = ThemedRaidRosterWorkspacePage()
     _register_page(window, "roster_workspace", roster_workspace)
+    _register_roster_workspace_refresh(window, roster_workspace)
     _register_assignments_alias(window)
 
     dashboard = RaidEngineDashboardPage()
