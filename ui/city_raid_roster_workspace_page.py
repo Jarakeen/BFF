@@ -8,7 +8,10 @@ summary cards across the top, then either the dashboard or the selected roster d
 workspace directly underneath. No modal editor windows are used on this surface.
 """
 
+from pathlib import Path
+
 from PySide6.QtCore import QSize, Qt
+from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QHeaderView,
@@ -20,6 +23,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from engine.config import get_resource_path
 from ui.themed_raid_roster_workspace_page import ThemedRaidRosterWorkspacePage
 from ui.ux_icons import icon, set_button_icon
 
@@ -34,6 +38,40 @@ _BADGES = {
 }
 
 
+class _StaticRosterArt(QLabel):
+    """Existing field-journal art reused without animation or brightness effects."""
+
+    def __init__(self, filename: str, parent=None) -> None:
+        super().__init__(parent)
+        self.filename = filename
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.setProperty("rosterSketch", True)
+        self.refresh()
+
+    def refresh(self) -> None:
+        path = get_resource_path(
+            "assets", "themes", "bff", "field_journal", "roster", self.filename
+        )
+        pixmap = QPixmap(str(path)) if Path(path).is_file() else QPixmap()
+        self.clear()
+        if pixmap.isNull():
+            self.setText("Leave better records.")
+            return
+        self.setPixmap(
+            pixmap.scaled(
+                max(300, self.width() or 420),
+                max(120, self.height() or 170),
+                Qt.AspectRatioMode.KeepAspectRatioByExpanding,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+        )
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        self.refresh()
+
+
 class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
     """Compatibility route name for the single Urban Wilderness Roster dashboard."""
 
@@ -41,8 +79,28 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
         self._embedded_detail_indexes: dict[str, int] = {}
         self._embedded_stack: QStackedWidget | None = None
         super().__init__(parent)
+        self._replace_legacy_city_art()
         self._polish_urban_wilderness_roster()
         self._embed_detail_workspaces()
+
+    def _replace_legacy_city_art(self) -> None:
+        """Replace the older raven/street panels with quieter existing field art."""
+        for attribute, filename in (
+            ("quote_art", "roster_people.jpg"),
+            ("team_art", "roster_team.jpg"),
+        ):
+            old = getattr(self, attribute, None)
+            if old is None:
+                continue
+            parent = old.parentWidget()
+            layout = parent.layout() if parent is not None else None
+            if layout is None:
+                continue
+            replacement = _StaticRosterArt(filename, parent)
+            layout.replaceWidget(old, replacement)
+            old.hide()
+            old.deleteLater()
+            setattr(self, attribute, replacement)
 
     def _polish_urban_wilderness_roster(self) -> None:
         """Keep the mockup readable at normal desktop widths without horizontal sprawl."""
@@ -70,22 +128,17 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
                 badge.setPixmap(icon(_BADGES.get(key, "compass")).pixmap(46, 46))
                 badge.setProperty("rosterMetricBadge", True)
 
-        # The artwork is flavor, not the page's landlord. Keep it cropped and restrained.
         if hasattr(self, "quote_art"):
             self.quote_art.setMinimumWidth(0)
             self.quote_art.setMaximumWidth(390)
             self.quote_art.setMinimumHeight(165)
             self.quote_art.setMaximumHeight(220)
-            self.quote_art.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         if hasattr(self, "team_art"):
             self.team_art.setMinimumWidth(0)
             self.team_art.setMaximumWidth(460)
             self.team_art.setMinimumHeight(120)
             self.team_art.setMaximumHeight(160)
-            self.team_art.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
-        # The roster itself is the primary information surface. Let useful columns share
-        # the width instead of allowing pixmap size hints to squeeze the table into a sliver.
         if hasattr(self, "table"):
             header = self.table.horizontalHeader()
             header.setStretchLastSection(True)
