@@ -13,6 +13,7 @@ from minmax.stat_ids import StatId
 
 BLESSING_OF_HIGH_ISLE_CONDITION = "recently_healed_in_combat"
 ANCIENT_DRAGONGUARD_ABOVE_HALF_HEALTH_CONDITION = "wearer_health_above_50_percent"
+TITANBORN_STRENGTH_BELOW_HALF_HEALTH_CONDITION = "wearer_in_combat_below_50_percent_health"
 
 
 class ExtremeActualHealGearPreconditionEffectResolver:
@@ -31,6 +32,13 @@ class ExtremeActualHealGearPreconditionEffectResolver:
         r"Physical and Spell Resistance while your Health is 50% or less\.?$",
         re.IGNORECASE,
     )
+    _TITANBORN_STRENGTH = re.compile(
+        r"^\(5 items\)\s*Adds\s+(?:(?P<min>\d[\d,]*)\s*-\s*)?(?P<max>\d[\d,]*)\s+"
+        r"Weapon and Spell Damage and\s+\d[\d,]*(?:\s*-\s*\d[\d,]*)?\s+Offensive Penetration\.\s*"
+        r"While in combat, this bonus doubles when you are under 75% Health and quadruples "
+        r"when you are under 50% Health\.?$",
+        re.IGNORECASE,
+    )
 
     def resolve(
         self,
@@ -46,14 +54,20 @@ class ExtremeActualHealGearPreconditionEffectResolver:
 
         match = self._BLESSING_OF_HIGH_ISLE.fullmatch(normalized)
         condition = BLESSING_OF_HIGH_ISLE_CONDITION
+        multiplier = 1.0
         if match is None:
             match = self._ANCIENT_DRAGONGUARD.fullmatch(normalized)
             condition = ANCIENT_DRAGONGUARD_ABOVE_HALF_HEALTH_CONDITION
         if match is None:
+            match = self._TITANBORN_STRENGTH.fullmatch(normalized)
+            condition = TITANBORN_STRENGTH_BELOW_HALF_HEALTH_CONDITION
+            multiplier = 4.0
+        if match is None:
             return []
 
-        key = "max" if use_max_value else "min"
-        value = float(match.group(key).replace(",", ""))
+        key = "max" if use_max_value or not match.groupdict().get("min") else "min"
+        raw_value = match.group(key) or match.group("max")
+        value = float(raw_value.replace(",", "")) * multiplier
         source_text = source or f"Gear set bonus ({bonus.piece_count} items)"
         return [
             Effect(
@@ -72,5 +86,6 @@ class ExtremeActualHealGearPreconditionEffectResolver:
 __all__ = [
     "ANCIENT_DRAGONGUARD_ABOVE_HALF_HEALTH_CONDITION",
     "BLESSING_OF_HIGH_ISLE_CONDITION",
+    "TITANBORN_STRENGTH_BELOW_HALF_HEALTH_CONDITION",
     "ExtremeActualHealGearPreconditionEffectResolver",
 ]
