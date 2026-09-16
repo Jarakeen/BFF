@@ -12,6 +12,15 @@ def test_collectibles_additive_themes_never_hide_badges_when_optional_sheet_is_m
     assert "_recolor_badge(legacy" in source
 
 
+def test_installed_collectible_art_packs_match_each_additive_theme() -> None:
+    source = Path("ui/collectibles_new_theme_assets_support.py").read_text(encoding="utf-8")
+
+    assert 'dashboard.SpriteRef("badges.jpg", 6, 4, index)' in source
+    assert 'dashboard.SpriteRef("badges.webp", 6, 4, index)' in source
+    assert Path("assets/themes/bff/field_journal/collectibles/badges.jpg").is_file()
+    assert Path("assets/themes/bff/city_night/collectibles/badges.webp").is_file()
+
+
 def test_city_collectible_palette_uses_steel_amber_not_red_status_language() -> None:
     source = Path("ui/collectibles_new_theme_assets_support.py").read_text(encoding="utf-8")
 
@@ -21,13 +30,19 @@ def test_city_collectible_palette_uses_steel_amber_not_red_status_language() -> 
     assert 'overall_chunk="#7EA6B8"' in source
 
 
-def test_new_roster_art_has_visible_legacy_fallback_until_optional_jpg_pack_exists() -> None:
+def test_new_roster_art_has_visible_legacy_fallback_and_installed_asset_packs() -> None:
     source = Path("ui/themed_raid_roster_workspace_page.py").read_text(encoding="utf-8")
 
     assert "def _legacy_sketch(self)" in source
     assert '"roster_rylo_sketch.svg"' in source
     assert '"roster_foundry_sketch.svg"' in source
     assert "Path(candidate).is_file() else self._legacy_sketch()" in source
+    assert 'filename = f"roster_{surface}.jpg"' in source
+    assert 'filename = f"roster_{surface}.webp"' in source
+    assert Path("assets/themes/bff/field_journal/roster/roster_people.jpg").is_file()
+    assert Path("assets/themes/bff/field_journal/roster/roster_team.jpg").is_file()
+    assert Path("assets/themes/bff/city_night/roster/roster_people.webp").is_file()
+    assert Path("assets/themes/bff/city_night/roster/roster_team.webp").is_file()
 
 
 def test_city_theme_uses_city_brand_mark_without_mutating_legacy_rylo_mark() -> None:
