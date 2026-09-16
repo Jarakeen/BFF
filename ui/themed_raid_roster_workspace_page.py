@@ -14,7 +14,11 @@ from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QApplication
 
 from engine.config import get_resource_path
-from services.accessibility_preferences import is_rylo_visual_theme
+from services.accessibility_preferences import (
+    VISUAL_THEME_FOUNDRY_FIELD_JOURNAL,
+    VISUAL_THEME_RYLO_CITY,
+    is_rylo_visual_theme,
+)
 from ui.raid_roster_workspace_page import RaidRosterWorkspacePage
 
 
@@ -26,22 +30,35 @@ class ThemedRaidRosterWorkspacePage(RaidRosterWorkspacePage):
         self.refresh_theme_assets()
 
     @staticmethod
-    def _rylo_family_active() -> bool:
+    def _visual_theme() -> str:
         app = QApplication.instance()
-        theme = app.property("visualTheme") if app is not None else ""
-        return is_rylo_visual_theme(str(theme or ""))
+        return str(app.property("visualTheme") if app is not None else "")
 
-    def _apply_sketch(self, label) -> None:
-        if label is None:
-            return
-        filename = (
-            "roster_rylo_sketch.svg"
-            if self._rylo_family_active()
-            else "roster_foundry_sketch.svg"
-        )
-        path = get_resource_path(
+    @classmethod
+    def _rylo_family_active(cls) -> bool:
+        return is_rylo_visual_theme(cls._visual_theme())
+
+    def _asset_for(self, surface: str) -> Path:
+        theme = self._visual_theme()
+        if theme == VISUAL_THEME_RYLO_CITY:
+            filename = f"roster_{surface}.jpg"
+            return get_resource_path(
+                "assets", "themes", "bff", "city_night", "roster", filename
+            )
+        if theme == VISUAL_THEME_FOUNDRY_FIELD_JOURNAL:
+            filename = f"roster_{surface}.jpg"
+            return get_resource_path(
+                "assets", "themes", "bff", "field_journal", "roster", filename
+            )
+        filename = "roster_rylo_sketch.svg" if self._rylo_family_active() else "roster_foundry_sketch.svg"
+        return get_resource_path(
             "assets", "themes", "bff", "grimoire", "assets", filename
         )
+
+    def _apply_sketch(self, label, surface: str) -> None:
+        if label is None:
+            return
+        path = self._asset_for(surface)
         pixmap = QPixmap(str(path)) if Path(path).exists() else QPixmap()
         label.clear()
         if pixmap.isNull():
@@ -69,8 +86,8 @@ class ThemedRaidRosterWorkspacePage(RaidRosterWorkspacePage):
             if callable(refresh_header):
                 refresh_header()
 
-        self._apply_sketch(getattr(self, "player_sketch", None))
-        self._apply_sketch(getattr(self, "team_sketch", None))
+        self._apply_sketch(getattr(self, "player_sketch", None), "people")
+        self._apply_sketch(getattr(self, "team_sketch", None), "team")
 
 
 __all__ = ["ThemedRaidRosterWorkspacePage"]
