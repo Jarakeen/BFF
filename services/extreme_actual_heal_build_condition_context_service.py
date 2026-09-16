@@ -17,6 +17,7 @@ from minmax.gear_stat_inputs import GearStatInputResolver
 from models.build_model import PlayerBuild
 from services.extreme_actual_heal_gear_precondition_effect_resolver import (
     POWERFUL_ASSAULT_POWER_CONDITION,
+    RAVAGER_FULL_STACKS_CONDITION,
     SEVENTH_LEGION_BRUTE_POWER_CONDITION,
     SOULSHINE_POWER_CONDITION,
 )
@@ -27,6 +28,7 @@ from services.extreme_actual_heal_setup_action_legality_service import (
     GRANTS_RESOLVE,
     HAS_CAST_OR_CHANNEL_TIME,
     IS_ASSAULT_ABILITY,
+    REDUCES_TARGET_RESISTANCE,
     ExtremeActualHealSetupActionLegalityService,
 )
 from services.extreme_player_skill_candidate_service import ExtremePlayerSkillLegalityContext
@@ -39,6 +41,7 @@ _REVIEWED_SETUP_CONDITIONS = (
     ("Seventh Legion Brute", GRANTS_RESOLVE, SEVENTH_LEGION_BRUTE_POWER_CONDITION, "15-second"),
     ("Soulshine", HAS_CAST_OR_CHANNEL_TIME, SOULSHINE_POWER_CONDITION, "5-second"),
     ("Powerful Assault", IS_ASSAULT_ABILITY, POWERFUL_ASSAULT_POWER_CONDITION, "15-second"),
+    ("Ravager", REDUCES_TARGET_RESISTANCE, RAVAGER_FULL_STACKS_CONDITION, "10-second full-stack"),
 )
 
 
@@ -161,10 +164,17 @@ class ExtremeActualHealBuildConditionContextService:
             )
             if is_active:
                 active.add(condition)
-                evidence.append(
-                    f"{condition}: inactive-bar {skill_name} is a route-legal {capability} setup action; "
-                    f"activate it, swap back, and score within {set_name}'s {window} power window"
-                )
+                if set_name == "Ravager":
+                    evidence.append(
+                        f"{condition}: inactive-bar {skill_name} is a route-legal resistance-reduction setup action; "
+                        "perform four qualifying attempts no faster than one per second, swap back, and score "
+                        "inside Ravager's doubled 10-second full-stack window"
+                    )
+                else:
+                    evidence.append(
+                        f"{condition}: inactive-bar {skill_name} is a route-legal {capability} setup action; "
+                        f"activate it, swap back, and score within {set_name}'s {window} power window"
+                    )
 
         preconditions = self.gear_preconditions.resolve(build, active_bar=active_bar)
         active.update(preconditions.active_conditions)
