@@ -12,6 +12,7 @@ from services.extreme_actual_heal_gear_precondition_effect_resolver import (
 
 
 FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION = "fledglings_nest_minor_courage_active"
+PHOENIX_MOTH_MINOR_COURAGE_CONDITION = "phoenix_moth_minor_courage_active"
 
 
 @dataclass(frozen=True)
@@ -53,6 +54,14 @@ class ExtremeActualHealGearPreconditionWitnessService:
                 "and snapshot the heal inside the resulting 10-second Minor Courage window"
             )
 
+        if int(counts.get("Phoenix Moth Theurge", 0)) >= 5:
+            active.append(PHOENIX_MOTH_MINOR_COURAGE_CONDITION)
+            evidence.append(
+                "phoenix_moth_minor_courage_active: standing H1 setup may perform one prior "
+                "self-heal and snapshot the target heal inside Phoenix Moth Theurge's "
+                "10-second Minor Courage window"
+            )
+
         return ExtremeActualHealGearPreconditionWitness(
             active_conditions=tuple(active),
             evidence=tuple(evidence),
@@ -62,6 +71,7 @@ class ExtremeActualHealGearPreconditionWitnessService:
 
 __all__ = [
     "FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION",
+    "PHOENIX_MOTH_MINOR_COURAGE_CONDITION",
     "ExtremeActualHealGearPreconditionWitness",
     "ExtremeActualHealGearPreconditionWitnessService",
 ]
