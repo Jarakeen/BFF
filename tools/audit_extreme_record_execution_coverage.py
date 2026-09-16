@@ -44,13 +44,32 @@ def main() -> int:
             }
         )
     )
+    specialized_families = tuple(
+        sorted(
+            {
+                row.execution_family
+                for row in rows
+                if row.status is ExtremeRecordExecutionStatus.SPECIALIZED
+            }
+        )
+    )
     print()
     print(f"pending_execution_family_count={len(pending_families)}")
     print(f"pending_execution_families={pending_families}")
-    print(
-        "NEXT_STEP=close shared execution families, not individual record clones; "
-        "then route the canonical catalog through the Extreme Build Lab UI"
-    )
+    print(f"specialized_execution_family_count={len(specialized_families)}")
+    print(f"specialized_execution_families={specialized_families}")
+    if pending_families:
+        print(
+            "NEXT_STEP=close shared execution families, not individual record clones; "
+            "then route the canonical catalog through the Extreme Build Lab UI"
+        )
+    elif specialized_families:
+        print(
+            "NEXT_STEP=route specialized execution families through the Extreme Build Lab UI; "
+            "preserve family-specific scenario inputs and unresolved source evidence"
+        )
+    else:
+        print("NEXT_STEP=run final Extreme UI and proof closeout gates")
     return 0
 
 
