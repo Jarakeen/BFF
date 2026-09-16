@@ -8,9 +8,9 @@ few narrower facts without weakening that shared model: damage-type and reviewed
 offensive-weapon ability scopes cannot modify a healing event; some unmapped
 bonuses explicitly scope their Weapon/Spell Damage to damaging attacks or enemy
 output only; reviewed always-on power plus an H1-irrelevant companion mechanic may
-be projected by the dedicated Extreme tradeoff resolver; reviewed pre-event gear
+be projected by the dedicated Extreme tradeoff resolver; reviewed setup/state gear
 conditions may be admitted only when a separate H1 witness service constructs the
-required setup; and the standing scenario itself satisfies ``standing_still``.
+required state; and the standing scenario itself satisfies ``standing_still``.
 
 The review result also records whether an H1-specific specialist rule proves a
 positive modifier even when the shared objective row has ``reviewed_delta == 0``.
@@ -85,6 +85,12 @@ _REVIEWED_H1_POWER_TRADEOFF_TEXT = (
 )
 
 _REVIEWED_H1_PRECONDITION_TEXT = (
+    re.compile(
+        r"Ancient Dragonguard \(5\): active set bonus is not yet mechanic-mapped:.*"
+        r"Adds\s+(?:\d[\d,]*\s*-\s*)?300\s+Weapon and Spell Damage while your Health is above 50%\..*"
+        r"Physical and Spell Resistance while your Health is 50% or less",
+        re.IGNORECASE | re.DOTALL,
+    ),
     re.compile(
         r"Blessing of High Isle \(5\): active set bonus is not yet mechanic-mapped:.*"
         r"When you are healed while in combat, increase your Weapon and Spell Damage by\s*8-369\s+for\s+5 seconds",
