@@ -92,6 +92,12 @@ _REVIEWED_H1_PRECONDITION_TEXT = (
         r"Weapon and Spell Damage by\s*215",
         re.IGNORECASE | re.DOTALL,
     ),
+    re.compile(
+        r"Phoenix Moth Theurge \(5\): active set bonus is not yet mechanic-mapped:.*"
+        r"Healing yourself or an ally grants the target Minor Courage and Minor Force for\s*10 seconds.*"
+        r"Weapon and Spell Damage by\s*215",
+        re.IGNORECASE | re.DOTALL,
+    ),
 )
 
 
