@@ -8,6 +8,9 @@ from minmax.character_build.gear_piece import GearPieceCategory
 from minmax.gear_set_category_resolver import GearSetCategoryResolver
 from minmax.gear_set_repository import GearSetRepository
 from models.build_model import PlayerBuild
+from services.extreme_actual_heal_gear_set_candidate_service import (
+    ExtremeActualHealGearSetCandidateService,
+)
 from services.extreme_complete_optimization_service import ExtremeCompleteOptimizationService
 from services.extreme_gear_set_objective_service import ExtremeGearSetObjectiveService
 
@@ -45,6 +48,10 @@ class ExtremeActualHealDoubleFivePackageService:
         self.database_path = Path(database_path)
         self.repository = GearSetRepository(self.database_path)
         self.categories = GearSetCategoryResolver(self.database_path)
+        self.ordinary_candidates = ExtremeActualHealGearSetCandidateService.__new__(
+            ExtremeActualHealGearSetCandidateService
+        )
+        self.ordinary_candidates.repository = self.repository
 
     def _piece_rows(self, set_id: int) -> tuple[tuple[int, int, int], ...]:
         with sqlite3.connect(self.database_path) as db:
@@ -119,13 +126,21 @@ class ExtremeActualHealDoubleFivePackageService:
         names: list[str] = []
         seen: set[str] = set()
         limit = max(1, int(per_objective))
+        ordinary_allowed = frozenset(
+            name.casefold()
+            for name in self.ordinary_candidates.candidate_set_names(per_objective=None)
+        )
         for objective in self.OBJECTIVES:
             accepted = 0
             for row in ExtremeGearSetObjectiveService.candidates_for_objective(
                 self.repository,
                 objective,
             ):
-                if not row.mechanic_complete or row.reviewed_delta <= 0:
+                if row.set_name.casefold() not in ordinary_allowed:
+                    continue
+                if not self.ordinary_candidates._h1_mechanic_complete(row):
+                    continue
+                if not self.ordinary_candidates._h1_positive(row):
                     continue
                 gear_set = self.repository.get_set_by_id(row.set_id)
                 if gear_set is None:
