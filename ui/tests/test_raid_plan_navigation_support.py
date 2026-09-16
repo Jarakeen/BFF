@@ -1,15 +1,33 @@
 from ui.components import foundry_sidebar
-from ui.raid_engine_dashboard_support import _install_sidebar_route
+from ui.raid_engine_dashboard_support import _install_canonical_sidebar_routes
 
 
-def test_raid_engine_navigation_exposes_raid_plans_first() -> None:
-    _install_sidebar_route()
+def test_raid_lead_navigation_exposes_current_planning_workspaces() -> None:
+    _install_canonical_sidebar_routes()
 
-    section = next(
+    raid = next(
         row
         for row in foundry_sidebar.CORE_NAV_SECTIONS
-        if isinstance(row, dict) and row.get("label") == "Raid Engine"
+        if isinstance(row, dict) and row.get("label") == "Raid"
+    )
+    build = next(
+        row
+        for row in foundry_sidebar.CORE_NAV_SECTIONS
+        if isinstance(row, dict) and row.get("label") == "Build"
+    )
+    team = next(
+        row
+        for row in foundry_sidebar.CORE_NAV_SECTIONS
+        if isinstance(row, dict) and row.get("label") == "Team"
     )
 
-    assert section.get("page") == "raid_engine_dashboard"
-    assert section.get("children", [])[0] == ("Raid Plans", "raid_plans")
+    assert raid.get("children", [])[:3] == [
+        ("Roster", "roster_workspace"),
+        ("Raid Plans", "raid_plans"),
+        ("Assignments", "assignments"),
+    ]
+    assert ("Rotation Builder", "rotations") in build.get("children", [])
+    assert ("Extreme Builder", "extreme_optimization") in build.get("children", [])
+    assert ("Coverage", "console:7") in team.get("children", [])
+    assert ("Comp Maker", "comp_builder") in team.get("children", [])
+    assert ("Optimizer Adviser", "console:6") in team.get("children", [])
