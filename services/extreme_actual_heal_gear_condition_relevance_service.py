@@ -196,6 +196,11 @@ _REVIEWED_H1_HEALING_CONDITION_BLOCKERS = (
         re.IGNORECASE,
     ),
     re.compile(
+        r"^Beacon of Oblivion \(5\): relevant set effect requires condition "
+        r"beacon_of_oblivion_no_permanent_pet_pve$",
+        re.IGNORECASE,
+    ),
+    re.compile(
         r"^Senche's Bite \(5\): relevant set effect requires condition successful_dodge_recent$",
         re.IGNORECASE,
     ),

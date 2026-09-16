@@ -950,3 +950,16 @@ Extreme routes store class lines as stable snake-case IDs such as `earthen_heart
 
 Armor Master's 5% Max Health bonus is a slotted condition, not a short proc window. A legal Light, Medium, or Heavy Armor active must remain on the same bar used for the scored event, and it must match an armor weight the build actually wears. Casting an Armor ability additionally grants resistance for 10 seconds, but that resistance branch does not increase the H1 heal.
 
+### Beacon of Oblivion is a chosen pet state, not a bar-slot rule
+
+Beacon of Oblivion has mutually exclusive five-piece branches. An active permanent
+pet grants Health and Armor; having no permanent pet active grants 15% Damage Done
+and Healing Done in PvE, reduced to 7% while Battle Spirit is active.
+
+**Layman's version:** a pet skill can stay on the bar, but the pet must be dismissed
+or never summoned when the heal is measured. PvP's Battle Spirit also changes the
+number.
+
+**For BFF:** H1 admits the 15% branch only through an explicit no-permanent-pet,
+Battle-Spirit-inactive witness. Equipping the set alone never activates the bonus,
+and the 7% PvP value cannot leak into the PvE maximum.

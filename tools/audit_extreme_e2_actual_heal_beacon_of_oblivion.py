@@ -54,8 +54,8 @@ def main() -> int:
     for blocker in h1_review.remaining_blockers:
         print(f"h1_remaining_blocker={blocker!r}")
     print(
-        "NEXT_STEP=review the exact no-permanent-pet and Battle Spirit grammar before "
-        "materializing Beacon of Oblivion's maximum PvE Healing Done branch"
+        "NEXT_STEP=retain Beacon of Oblivion only with its explicit no-permanent-pet, "
+        "Battle-Spirit-inactive H1 witness"
     )
     return 0
 

@@ -22,6 +22,9 @@ from services.extreme_actual_heal_gear_precondition_effect_resolver import (
 
 
 BASALT_BLOODED_OBSIDIAN_STANCE_CONDITION = "basalt_blooded_obsidian_stance_active"
+BEACON_OF_OBLIVION_NO_PERMANENT_PET_PVE_CONDITION = (
+    "beacon_of_oblivion_no_permanent_pet_pve"
+)
 CRUSADER_MINOR_COURAGE_CONDITION = "crusader_minor_courage_active"
 FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION = "fledglings_nest_minor_courage_active"
 PHOENIX_MOTH_MINOR_COURAGE_CONDITION = "phoenix_moth_minor_courage_active"
@@ -87,6 +90,14 @@ class ExtremeActualHealGearPreconditionWitnessService:
                 "wearer_health_at_or_below_50_percent: standing H1 scenario may snapshot the "
                 "caster at or below 50% current Health, activating Symmetry of the Weald's "
                 "10% Healing Done branch"
+            )
+
+        if int(counts.get("Beacon of Oblivion", 0)) >= 5:
+            active.append(BEACON_OF_OBLIVION_NO_PERMANENT_PET_PVE_CONDITION)
+            evidence.append(
+                "beacon_of_oblivion_no_permanent_pet_pve: standing H1 keeps every permanent "
+                "pet dismissed or unsummoned and snapshots outside Battle Spirit, activating "
+                "Beacon of Oblivion's 15% PvE Healing Done branch"
             )
 
         if int(counts.get("Blessing of High Isle", 0)) >= 5:
@@ -226,6 +237,7 @@ class ExtremeActualHealGearPreconditionWitnessService:
 
 __all__ = [
     "BASALT_BLOODED_OBSIDIAN_STANCE_CONDITION",
+    "BEACON_OF_OBLIVION_NO_PERMANENT_PET_PVE_CONDITION",
     "CLAW_OF_YOLNAHKRIIN_MINOR_COURAGE_CONDITION",
     "CRUSADER_MINOR_COURAGE_CONDITION",
     "FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION",

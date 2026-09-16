@@ -122,6 +122,24 @@ class GearSetHealingConditionResolver:
                 )
             ]
 
+        match = re.fullmatch(
+            r"While you have a permanent pet active, gain \d[\d,]* Health and "
+            r"\d[\d,]* Armor\.\s*While you do not have a permanent pet active, "
+            r"increase your Damage Done and Healing Done by (?P<value>15(?:\.0+)?)%\.\s*"
+            r"This value is reduced to 7(?:\.0+)?% while affected by Battle Spirit\.?",
+            text,
+            re.IGNORECASE,
+        )
+        if match:
+            return [
+                self._effect(
+                    StatId.HEALING_DONE,
+                    float(match.group("value")),
+                    source_text,
+                    condition="beacon_of_oblivion_no_permanent_pet_pve",
+                )
+            ]
+
         return []
 
     @classmethod
