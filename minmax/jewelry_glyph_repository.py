@@ -39,13 +39,12 @@ class JewelryGlyphEffectRepository:
         return self._names_cache
 
     def get_jewelry_glyph_effect_types_by_name(self, glyph_name: str) -> tuple[str, ...]:
-        """Return canonical semantic effect identities for one named jewelry glyph.
+        """Return semantic effect identities for one jewelry-glyph family name.
 
-        This is intentionally narrower than mapped engine ``Effect`` resolution.
-        Some legitimate jewelry mechanics, such as block-cost reduction or potion
-        duration, are not core-stat identities. Coverage/audit callers can inspect
-        the semantic source identity without forcing every ESO mechanic through
-        ``EffectMapper`` merely to prove it is unrelated to their objective.
+        A saved family label such as ``Glyph of Bashing`` may correspond to imported
+        item-tier rows such as ``Truly Superb Glyph of Bashing``. Exact and tier-
+        prefixed members are therefore inspected together; item tier is evidence for
+        magnitude, not a different mechanic identity.
         """
         key = self._name_key(glyph_name)
         cached = self._effect_types_cache.get(key)
@@ -59,24 +58,25 @@ class JewelryGlyphEffectRepository:
                 FROM jewelry_glyph g
                 JOIN jewelry_glyph_effect e
                     ON e.glyph_item_id = g.item_id
-                WHERE LOWER(TRIM(g.name)) = LOWER(TRIM(?))
+                WHERE (
+                        LOWER(TRIM(g.name)) = LOWER(TRIM(?))
+                        OR LOWER(TRIM(g.name)) LIKE '% ' || LOWER(TRIM(?))
+                      )
                   AND e.effect_type IS NOT NULL
                   AND TRIM(e.effect_type) <> ''
                 ORDER BY LOWER(TRIM(e.effect_type))
                 """,
-                (glyph_name,),
+                (glyph_name, glyph_name),
             ).fetchall()
         result = tuple(str(row[0]) for row in rows)
         self._effect_types_cache[key] = result
         return result
 
     def get_jewelry_glyph_descriptions_by_name(self, glyph_name: str) -> tuple[str, ...]:
-        """Return stored canonical descriptions for one named jewelry glyph.
+        """Return stored descriptions for one jewelry-glyph family name.
 
-        Descriptions are source evidence, not mechanic identity. They are exposed
-        so proof/audit layers can conservatively classify a legacy corpus row whose
-        semantic effect table is sparse without mutating the database or inventing
-        an engine stat mapping.
+        Descriptions are source evidence, not mechanic identity. Tier-prefixed item
+        rows are included so a family-level saved label does not falsely appear absent.
         """
         key = self._name_key(glyph_name)
         cached = self._descriptions_cache.get(key)
@@ -88,12 +88,15 @@ class JewelryGlyphEffectRepository:
                 """
                 SELECT DISTINCT enchant_description
                 FROM jewelry_glyph
-                WHERE LOWER(TRIM(name)) = LOWER(TRIM(?))
+                WHERE (
+                        LOWER(TRIM(name)) = LOWER(TRIM(?))
+                        OR LOWER(TRIM(name)) LIKE '% ' || LOWER(TRIM(?))
+                      )
                   AND enchant_description IS NOT NULL
                   AND TRIM(enchant_description) <> ''
                 ORDER BY enchant_description
                 """,
-                (glyph_name,),
+                (glyph_name, glyph_name),
             ).fetchall()
         result = tuple(
             str(row[0]).strip()
@@ -143,12 +146,13 @@ class JewelryGlyphEffectRepository:
         *,
         use_max_value: bool = True,
     ) -> list[Effect]:
-        """Return the strongest matching effects for a saved glyph name.
+        """Return strongest mapped effects for one jewelry-glyph family name.
 
-        PlayerBuild currently stores human-readable enchantment names rather
-        than ESO item ids. The deterministic max-level path therefore chooses
-        the strongest recorded row for each effect type, mirroring the armor
-        glyph repository while preserving multi-effect jewelry glyphs.
+        Saved builds use human-readable family labels while imported ESO rows may
+        include item-tier prefixes. Exact and tier-prefixed family members are
+        considered together and the strongest recorded row is retained per effect
+        type. Multi-effect families therefore remain intact without making tier text
+        part of mechanic identity.
         """
         cache_key = (self._name_key(glyph_name), bool(use_max_value))
         cached = self._name_cache.get(cache_key)
@@ -169,9 +173,10 @@ class JewelryGlyphEffectRepository:
                 JOIN jewelry_glyph_effect e
                     ON e.glyph_item_id = g.item_id
                 WHERE LOWER(TRIM(g.name)) = LOWER(TRIM(?))
+                   OR LOWER(TRIM(g.name)) LIKE '% ' || LOWER(TRIM(?))
                 ORDER BY COALESCE(e.value_max, e.value_min) DESC, e.id
                 """,
-                (glyph_name,),
+                (glyph_name, glyph_name),
             ).fetchall()
 
         strongest = []
