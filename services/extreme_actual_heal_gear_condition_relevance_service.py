@@ -208,6 +208,10 @@ _REVIEWED_H1_HEALING_CONDITION_BLOCKERS = (
         r"^Symmetry of the Weald \(5\): relevant set effect requires condition wearer_health_at_or_below_50_percent$",
         re.IGNORECASE,
     ),
+    re.compile(
+        r"^Blind Path Induction \(5\): relevant set effect requires condition blind_path_target_beyond_15m$",
+        re.IGNORECASE,
+    ),
 )
 
 
