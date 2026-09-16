@@ -161,7 +161,6 @@ class ExtremeOptimizationPage(FoundryPage):
         self.change_table.verticalHeader().setVisible(False)
         self.change_table.setAlternatingRowColors(True)
         self.change_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.change_table.setSelectionBehavior(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.change_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.change_table.horizontalHeader().setStretchLastSection(True)
         self.change_table.setMinimumHeight(470)
