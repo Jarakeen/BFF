@@ -51,22 +51,10 @@ _DAMAGE_ONLY_POWER_TEXT = (
     ),
     re.compile(r"weapon and spell damage against enemies\b", re.IGNORECASE),
     re.compile(r"weapon and spell damage against your marked target\b", re.IGNORECASE),
-    re.compile(
-        r"weapon and spell damage for flame, shock, or frost damage",
-        re.IGNORECASE,
-    ),
-    re.compile(
-        r"weapon and spell damage to your one hand and shield abilities",
-        re.IGNORECASE,
-    ),
-    re.compile(
-        r"weapon and spell damage against targets who are at or below\s*25% health",
-        re.IGNORECASE,
-    ),
-    re.compile(
-        r"weapon and spell damage by\s*8-369 against enemies inflicted with a poison damage effect",
-        re.IGNORECASE,
-    ),
+    re.compile(r"weapon and spell damage for flame, shock, or frost damage", re.IGNORECASE),
+    re.compile(r"weapon and spell damage to your one hand and shield abilities", re.IGNORECASE),
+    re.compile(r"weapon and spell damage against targets who are at or below\s*25% health", re.IGNORECASE),
+    re.compile(r"weapon and spell damage by\s*8-369 against enemies inflicted with a poison damage effect", re.IGNORECASE),
 )
 
 _REVIEWED_H1_POWER_TRADEOFF_TEXT = (
@@ -111,16 +99,13 @@ _REVIEWED_H1_PRECONDITION_TEXT = (
     ),
     re.compile(
         r"Claw of Yolnahkriin \(5\): active set bonus is not yet mechanic-mapped:.*"
-        r"When you taunt an enemy.*"
-        r"give yourself and 11 group members Minor Courage for\s*15 seconds.*"
+        r"When you taunt an enemy.*give yourself and 11 group members Minor Courage for\s*15 seconds.*"
         r"Weapon and Spell Damage by\s*(?:\d[\d,]*\s*-\s*)?215",
         re.IGNORECASE | re.DOTALL,
     ),
     re.compile(
         r"Fledgling's Nest \(5\): active set bonus is not yet mechanic-mapped:.*"
-        r"Gryphon Nest.*"
-        r"first time you or a group member leaves the Nest.*"
-        r"Minor Courage.*"
+        r"Gryphon Nest.*first time you or a group member leaves the Nest.*Minor Courage.*"
         r"Weapon and Spell Damage by\s*215",
         re.IGNORECASE | re.DOTALL,
     ),
@@ -145,8 +130,7 @@ _REVIEWED_H1_PRECONDITION_TEXT = (
     ),
     re.compile(
         r"Nix-Hound's Howl \(5\): active set bonus is not yet mechanic-mapped:.*"
-        r"Completing a fully-charged Heavy Attack.*"
-        r"gain Major Courage for the same duration.*"
+        r"Completing a fully-charged Heavy Attack.*gain Major Courage for the same duration.*"
         r"Weapon and Spell Damage by\s*(?:\d[\d,]*\s*-\s*)?430",
         re.IGNORECASE | re.DOTALL,
     ),
@@ -159,11 +143,21 @@ _REVIEWED_H1_HEALING_PRECONDITION_TEXT = (
         r"(?:\d+(?:\.\d+)?\s*-\s*)?15%\s*for\s*10 seconds",
         re.IGNORECASE | re.DOTALL,
     ),
+    re.compile(
+        r"Symmetry of the Weald \(5\): active set bonus is not yet mechanic-mapped:.*"
+        r"Adds 200% Status Effect Chance while your Health is above 50%\..*"
+        r"Adds 10% Healing Done while your Health is 50% or less",
+        re.IGNORECASE | re.DOTALL,
+    ),
 )
 
 _REVIEWED_H1_HEALING_CONDITION_BLOCKERS = (
     re.compile(
         r"^Senche's Bite \(5\): relevant set effect requires condition successful_dodge_recent$",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"^Symmetry of the Weald \(5\): relevant set effect requires condition wearer_health_at_or_below_50_percent$",
         re.IGNORECASE,
     ),
 )
@@ -208,21 +202,11 @@ class ExtremeActualHealGearConditionRelevanceService:
                     for condition in _STANDING_H1_CONDITIONS
                 )
                 damage_only_text = any(pattern.search(text) for pattern in _DAMAGE_ONLY_POWER_TEXT)
-                reviewed_tradeoff = any(
-                    pattern.search(text) for pattern in _REVIEWED_H1_POWER_TRADEOFF_TEXT
-                )
-                reviewed_precondition = any(
-                    pattern.search(text) for pattern in _REVIEWED_H1_PRECONDITION_TEXT
-                )
+                reviewed_tradeoff = any(pattern.search(text) for pattern in _REVIEWED_H1_POWER_TRADEOFF_TEXT)
+                reviewed_precondition = any(pattern.search(text) for pattern in _REVIEWED_H1_PRECONDITION_TEXT)
                 if reviewed_tradeoff or reviewed_precondition:
                     specialist_positive = True
-                if (
-                    damage_only_scope
-                    or standing_proven
-                    or damage_only_text
-                    or reviewed_tradeoff
-                    or reviewed_precondition
-                ):
+                if damage_only_scope or standing_proven or damage_only_text or reviewed_tradeoff or reviewed_precondition:
                     ignored.append(text)
                     continue
             elif objective in {"healing_done", "critical_healing"}:
@@ -230,8 +214,7 @@ class ExtremeActualHealGearConditionRelevanceService:
                     pattern.search(text) for pattern in _REVIEWED_H1_HEALING_PRECONDITION_TEXT
                 )
                 reviewed_healing_condition = any(
-                    pattern.fullmatch(text)
-                    for pattern in _REVIEWED_H1_HEALING_CONDITION_BLOCKERS
+                    pattern.fullmatch(text) for pattern in _REVIEWED_H1_HEALING_CONDITION_BLOCKERS
                 )
                 if reviewed_healing_precondition or reviewed_healing_condition:
                     specialist_positive = True
