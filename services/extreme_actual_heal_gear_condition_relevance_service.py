@@ -110,6 +110,12 @@ _REVIEWED_H1_PRECONDITION_TEXT = (
         re.IGNORECASE | re.DOTALL,
     ),
     re.compile(
+        r"Warrior's Fury \(5\): active set bonus is not yet mechanic-mapped:.*"
+        r"When you take damage, your Weapon and Spell Damage is increased by\s*(?:\d[\d,]*\s*-\s*)?24\s*for\s*5 seconds, stacking up to\s*20 times.*"
+        r"Upon reaching 20 stacks, the duration is doubled but can no longer be refreshed",
+        re.IGNORECASE | re.DOTALL,
+    ),
+    re.compile(
         r"Claw of Yolnahkriin \(5\): active set bonus is not yet mechanic-mapped:.*"
         r"When you taunt an enemy.*give yourself and 11 group members Minor Courage for\s*15 seconds.*"
         r"Weapon and Spell Damage by\s*(?:\d[\d,]*\s*-\s*)?215",
