@@ -38,8 +38,6 @@ class ExtremeRecordExecutionDescriptor:
 
 _STATIC_KEYS = frozenset(objective.key for objective in COMPLETE_EXTREME_OBJECTIVES)
 
-# These records already have dedicated backend mechanics and should continue to
-# reuse those services rather than being reimplemented inside the static optimizer.
 _SPECIALIZED_FAMILIES = {
     "actual_heal": "actual-heal-event",
     "critical_heal": "actual-heal-event",
@@ -50,13 +48,10 @@ _SPECIALIZED_FAMILIES = {
     "movement_speed": "movement-state",
     "sprint_speed": "movement-state",
     "stealthed_movement_speed": "movement-state",
+    "detection_radius_reduction": "stealth-state",
 }
 
-# Family labels intentionally group future work by reusable mechanics rather than
-# by individual UI row.  Closing one family should unlock every member whose final
-# scorer is already canonical.
 _PENDING_FAMILIES = {
-    "detection_radius_reduction": "stealth-state",
     "invisibility_duration": "stealth-runtime",
     "invisibility_uptime": "stealth-runtime",
 }
