@@ -16,6 +16,7 @@ import sqlite3
 from minmax.gear_stat_inputs import GearStatInputResolver
 from models.build_model import PlayerBuild
 from services.extreme_actual_heal_gear_precondition_effect_resolver import (
+    BURNING_SPELLWEAVE_POWER_CONDITION,
     POWERFUL_ASSAULT_POWER_CONDITION,
     RAVAGER_FULL_STACKS_CONDITION,
     SEVENTH_LEGION_BRUTE_POWER_CONDITION,
@@ -25,6 +26,7 @@ from services.extreme_actual_heal_gear_precondition_witness_service import (
     ExtremeActualHealGearPreconditionWitnessService,
 )
 from services.extreme_actual_heal_setup_action_legality_service import (
+    DEALS_FLAME_DAMAGE,
     GRANTS_RESOLVE,
     HAS_CAST_OR_CHANNEL_TIME,
     IS_ASSAULT_ABILITY,
@@ -38,6 +40,7 @@ _DESTRUCTION_STAFF_TYPES = frozenset(
     {"inferno staff", "lightning staff", "ice staff", "destruction staff"}
 )
 _REVIEWED_SETUP_CONDITIONS = (
+    ("Burning Spellweave", DEALS_FLAME_DAMAGE, BURNING_SPELLWEAVE_POWER_CONDITION, "8-second"),
     ("Seventh Legion Brute", GRANTS_RESOLVE, SEVENTH_LEGION_BRUTE_POWER_CONDITION, "15-second"),
     ("Soulshine", HAS_CAST_OR_CHANNEL_TIME, SOULSHINE_POWER_CONDITION, "5-second"),
     ("Powerful Assault", IS_ASSAULT_ABILITY, POWERFUL_ASSAULT_POWER_CONDITION, "15-second"),

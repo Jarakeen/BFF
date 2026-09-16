@@ -28,6 +28,7 @@ from services.extreme_skill_universe_service import ExtremePlayerSkillRecord
 from services.rotation_skill_timing_evidence_service import RotationSkillTimingEvidenceService
 
 
+DEALS_FLAME_DAMAGE = "deals_flame_damage"
 GRANTS_RESOLVE = "grants_resolve"
 HAS_CAST_OR_CHANNEL_TIME = "has_cast_or_channel_time"
 IS_ASSAULT_ABILITY = "is_assault_ability"
@@ -81,6 +82,14 @@ class ExtremeActualHealSetupActionLegalityService:
             re.IGNORECASE,
         ),
     )
+    _FLAME_DAMAGE_PATTERNS = (
+        re.compile(r"\bdeal(?:s|ing)?\b[^.]{0,180}\bFlame Damage\b", re.IGNORECASE),
+        re.compile(
+            r"\b(?:enemy|enemies|target|targets)\b[^.]{0,160}\b(?:for|take|takes)\b"
+            r"[^.]{0,80}\bFlame Damage\b",
+            re.IGNORECASE,
+        ),
+    )
     _RESISTANCE_REDUCTION_PATTERNS = (
         re.compile(r"\b(?:Major|Minor) Breach\b", re.IGNORECASE),
         re.compile(
@@ -94,6 +103,7 @@ class ExtremeActualHealSetupActionLegalityService:
     )
     _SUPPORTED = frozenset(
         {
+            DEALS_FLAME_DAMAGE,
             GRANTS_RESOLVE,
             HAS_CAST_OR_CHANNEL_TIME,
             IS_ASSAULT_ABILITY,
@@ -184,6 +194,11 @@ class ExtremeActualHealSetupActionLegalityService:
         return any(pattern.search(text) for pattern in cls._RESOLVE_PATTERNS)
 
     @classmethod
+    def _supports_flame_damage(cls, row: ExtremePlayerSkillRecord) -> bool:
+        text = cls._text(row)
+        return any(pattern.search(text) for pattern in cls._FLAME_DAMAGE_PATTERNS)
+
+    @classmethod
     def _supports_resistance_reduction(cls, row: ExtremePlayerSkillRecord) -> bool:
         text = cls._text(row)
         return any(pattern.search(text) for pattern in cls._RESISTANCE_REDUCTION_PATTERNS)
@@ -219,6 +234,8 @@ class ExtremeActualHealSetupActionLegalityService:
         return None
 
     def _supports(self, row: ExtremePlayerSkillRecord, capability: str) -> bool:
+        if capability == DEALS_FLAME_DAMAGE:
+            return self._supports_flame_damage(row)
         if capability == GRANTS_RESOLVE:
             return self._supports_resolve(row)
         if capability == HAS_CAST_OR_CHANNEL_TIME:
@@ -261,7 +278,12 @@ class ExtremeActualHealSetupActionLegalityService:
             ),
         )[0]
         ability_id = witness.max_rank_ability_id or witness.base_ability_id or witness.skill_id
-        if key == GRANTS_RESOLVE:
+        if key == DEALS_FLAME_DAMAGE:
+            evidence_text = (
+                f"{witness.name}: route-legal active skill has reviewed tooltip evidence "
+                "that it deals Flame Damage to an enemy"
+            )
+        elif key == GRANTS_RESOLVE:
             evidence_text = (
                 f"{witness.name}: route-legal active skill explicitly grants Major/Minor Resolve"
             )
@@ -292,6 +314,7 @@ class ExtremeActualHealSetupActionLegalityService:
 
 
 __all__ = [
+    "DEALS_FLAME_DAMAGE",
     "GRANTS_RESOLVE",
     "HAS_CAST_OR_CHANNEL_TIME",
     "IS_ASSAULT_ABILITY",

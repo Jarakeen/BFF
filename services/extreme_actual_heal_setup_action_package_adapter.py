@@ -14,6 +14,7 @@ condition only when its witness is present on the bar opposite the actual scored
 from minmax.build_candidate import BuildCandidate, BuildChange
 from minmax.gear_stat_inputs import GearStatInputResolver
 from services.extreme_actual_heal_setup_action_legality_service import (
+    DEALS_FLAME_DAMAGE,
     GRANTS_RESOLVE,
     HAS_CAST_OR_CHANNEL_TIME,
     IS_ASSAULT_ABILITY,
@@ -27,6 +28,7 @@ from services.extreme_player_skill_candidate_service import ExtremePlayerSkillLe
 
 
 _REVIEWED_SETUP_SETS = (
+    ("Burning Spellweave", DEALS_FLAME_DAMAGE, "flame-damage"),
     ("Seventh Legion Brute", GRANTS_RESOLVE, "resolve"),
     ("Soulshine", HAS_CAST_OR_CHANNEL_TIME, "cast-channel"),
     ("Powerful Assault", IS_ASSAULT_ABILITY, "assault"),

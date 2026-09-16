@@ -12,6 +12,7 @@ from minmax.stat_ids import StatId
 
 
 BLESSING_OF_HIGH_ISLE_CONDITION = "recently_healed_in_combat"
+BURNING_SPELLWEAVE_POWER_CONDITION = "burning_spellweave_power_active"
 ANCIENT_DRAGONGUARD_ABOVE_HALF_HEALTH_CONDITION = "wearer_health_above_50_percent"
 TITANBORN_STRENGTH_BELOW_HALF_HEALTH_CONDITION = "wearer_in_combat_below_50_percent_health"
 PEARLESCENT_WARD_FULL_GROUP_ALIVE_CONDITION = "pearlescent_ward_full_group_alive"
@@ -33,6 +34,13 @@ INNATE_AXIOM_CLASS_SCOPE_CONDITION = "innate_axiom_class_scope_active"
 class ExtremeActualHealGearPreconditionEffectResolver:
     """Map exact reviewed self-stat effects behind H1-owned conditions."""
 
+    _BURNING_SPELLWEAVE = re.compile(
+        r"^\(5 items\)\s*When you deal damage with a Flame Damage ability,\s*"
+        r"you apply the Burning status effect to the enemy and increase your Weapon and Spell Damage by\s*"
+        r"(?:(?P<min>\d[\d,]*)\s*-\s*)?(?P<max>\d[\d,]*)\s*for\s*8 seconds\.\s*"
+        r"(?:This effect|These effects) can occur once every\s*12 seconds\.?$",
+        re.IGNORECASE,
+    )
     _BLESSING_OF_HIGH_ISLE = re.compile(r"^\(5 items\)\s*When you are healed while in combat,\s*increase your Weapon and Spell Damage by\s+(?P<min>\d[\d,]*)\s*-\s*(?P<max>\d[\d,]*)\s+for\s+5 seconds\.?$", re.IGNORECASE)
     _ANCIENT_DRAGONGUARD = re.compile(r"^\(5 items\)\s*Adds\s+(?P<min>\d[\d,]*)\s*-\s*(?P<max>\d[\d,]*)\s+Weapon and Spell Damage while your Health is above 50%\.\s*Adds\s+\d[\d,]*(?:\s*-\s*\d[\d,]*)?\s+Physical and Spell Resistance while your Health is 50% or less\.?$", re.IGNORECASE)
     _TITANBORN_STRENGTH = re.compile(r"^\(5 items\)\s*Adds\s+(?:(?P<min>\d[\d,]*)\s*-\s*)?(?P<max>\d[\d,]*)\s+Weapon and Spell Damage and\s+\d[\d,]*(?:\s*-\s*\d[\d,]*)?\s+Offensive Penetration\.\s*While in combat, this bonus doubles when you are under 75% Health and quadruples when you are under 50% Health\.?$", re.IGNORECASE)
@@ -57,6 +65,7 @@ class ExtremeActualHealGearPreconditionEffectResolver:
             return []
         normalized = " ".join(description.split())
         checks = (
+            (self._BURNING_SPELLWEAVE, BURNING_SPELLWEAVE_POWER_CONDITION, 1.0),
             (self._BLESSING_OF_HIGH_ISLE, BLESSING_OF_HIGH_ISLE_CONDITION, 1.0),
             (self._ANCIENT_DRAGONGUARD, ANCIENT_DRAGONGUARD_ABOVE_HALF_HEALTH_CONDITION, 1.0),
             (self._TITANBORN_STRENGTH, TITANBORN_STRENGTH_BELOW_HALF_HEALTH_CONDITION, 4.0),
@@ -98,6 +107,7 @@ __all__ = [
     "ARMOR_OF_THE_VEILED_HERITANCE_POWER_CONDITION",
     "ARMOR_OF_TRUTH_POWER_CONDITION",
     "BLESSING_OF_HIGH_ISLE_CONDITION",
+    "BURNING_SPELLWEAVE_POWER_CONDITION",
     "CAMONNA_TONG_MAX_POWER_CONDITION",
     "INNATE_AXIOM_CLASS_SCOPE_CONDITION",
     "LIGHT_SPEAKER_RESTORATION_SCOPE_CONDITION",

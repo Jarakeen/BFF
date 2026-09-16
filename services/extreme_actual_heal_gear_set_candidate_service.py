@@ -14,6 +14,14 @@ from services.extreme_complete_optimization_service import ExtremeCompleteOptimi
 from services.extreme_gear_set_objective_service import ExtremeGearSetObjectiveService
 
 
+_BURNING_SPELLWEAVE_BLOCKER = re.compile(
+    r"^Burning Spellweave \(5\): active set bonus is not yet mechanic-mapped:.*"
+    r"When you deal damage with a Flame Damage ability,\s*"
+    r"you apply the Burning status effect to the enemy and increase your Weapon and Spell Damage by\s*"
+    r"(?:\d[\d,]*\s*-\s*)?490\s*for\s*8 seconds\.\s*"
+    r"(?:This effect|These effects) can occur once every\s*12 seconds\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
 _SOULSHINE_BLOCKER = re.compile(
     r"^Soulshine \(5\): active set bonus is not yet mechanic-mapped:.*"
     r"Activating an ability with a cast or channel time grants you\s*"
@@ -108,6 +116,7 @@ class ExtremeActualHealGearSetCandidateService:
         blockers = tuple(str(value) for value in row.unresolved)
         set_name = str(row.set_name or "").strip().casefold()
         reviewed_blocker = {
+            "burning spellweave": _BURNING_SPELLWEAVE_BLOCKER,
             "soulshine": _SOULSHINE_BLOCKER,
             "powerful assault": _POWERFUL_ASSAULT_BLOCKER,
             "voidcaller": _VOIDCALLER_BLOCKER,

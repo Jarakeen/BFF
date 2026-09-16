@@ -906,3 +906,19 @@ line. A small known bonus cannot stand in for a larger conditional one.
 **For BFF:** Extreme proof audits bound every active power-granting bonus
 independently, then add those ceilings. An unresolved proc remains a blocker unless
 its own description supplies a finite conservative bound.
+
+---
+
+## 2026-09-16 — A proc can consume a skill slot even when it is not the scored action
+
+**Burning Spellweave** grants its 490 Weapon/Spell Damage only after a Flame-damage
+ability hits an enemy. For an H1 heal snapshot, that Flame action is setup work: it
+must be a legal skill, occupy a real slot, trigger the proc, and leave the heal inside
+the eight-second power window.
+
+**Layman's version:** the set bonus is not a free 490 just because the character can
+wear the set. Somebody still has to light the match.
+
+**For BFF:** Burning Spellweave candidates materialize a reviewed Flame-damage action
+on the inactive bar, then swap back to the scored heal. Unknown or missing Flame
+witnesses remain unresolved rather than receiving the proc.
