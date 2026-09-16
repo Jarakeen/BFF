@@ -98,6 +98,12 @@ _REVIEWED_H1_PRECONDITION_TEXT = (
         r"Weapon and Spell Damage by\s*215",
         re.IGNORECASE | re.DOTALL,
     ),
+    re.compile(
+        r"Spell Power Cure \(5\): active set bonus is not yet mechanic-mapped:.*"
+        r"When you overheal yourself or an ally, you give the target Major Courage for\s*5 seconds.*"
+        r"Weapon and Spell Damage by\s*430",
+        re.IGNORECASE | re.DOTALL,
+    ),
 )
 
 
