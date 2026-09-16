@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-"""Collectibles assets for the additive Field Journal and City themes.
+"""Collectibles assets for the additive Field Journal and Urban Wilderness themes.
 
-The original Foundry and Rylo collectible themes stay untouched. The two newer
-visual themes get their own palette. When their dedicated badge sheets are not
-installed yet, the dashboard deliberately falls back to the proven legacy badge
-art and recolors it at render time instead of showing an empty badge slot.
+The original Foundry and Rylo collectible themes stay untouched. The newer themes
+reuse the proven etched fantasy badge language and recolor it for their accessible
+palettes rather than substituting empty glyph slots or high-brightness effects.
 """
 
 from pathlib import Path
@@ -48,13 +47,7 @@ def _tone_for(label: str, labels: tuple[str, ...], tones: tuple[str, ...]) -> st
 
 
 def _recolor_badge(pixmap: QPixmap | None, tone: str) -> QPixmap | None:
-    """Recolor visible badge artwork while preserving dark engraved detail.
-
-    The generated badge sprites contain deliberate dark shadows/outlines. A
-    whole-image tint would turn their backgrounds into colored squares, so only
-    medium/high-luminance pixels are remapped to the theme accent. Dark pixels
-    remain dark and the original alpha is preserved.
-    """
+    """Recolor visible badge artwork while preserving dark engraved detail."""
     if pixmap is None or pixmap.isNull():
         return None
 
@@ -171,23 +164,30 @@ def install() -> None:
             return None
         return dashboard._sheet_for(theme, ref).cell(ref.index)
 
+    def field_etched_badge(label: str):
+        """Canonical 6x4 etched badge sheet used as the Urban recolor source."""
+        ref = field_badges.get(label)
+        return dedicated_badge(field_theme, ref) if ref else None
+
     def badge_sprite(theme, label: str):
         if theme.key == field_theme.key:
-            ref = field_badges.get(label)
-            dedicated = dedicated_badge(theme, ref) if ref else None
-            if dedicated is not None and not dedicated.isNull():
-                return dedicated
-            legacy = original_badge_sprite(dashboard.BFF_THEME, label)
-            return _recolor_badge(legacy, _tone_for(label, labels, _FIELD_BADGE_TONES))
+            source = field_etched_badge(label)
+            if source is None or source.isNull():
+                source = original_badge_sprite(dashboard.BFF_THEME, label)
+            return _recolor_badge(source, _tone_for(label, labels, _FIELD_BADGE_TONES))
+
         if theme.key == city_theme.key:
-            ref = city_badges.get(label)
-            dedicated = dedicated_badge(theme, ref) if ref else None
-            if dedicated is not None and not dedicated.isNull():
-                return dedicated
-            legacy = original_badge_sprite(dashboard.RYLO_THEME, label)
-            if legacy is None or legacy.isNull():
-                legacy = original_badge_sprite(dashboard.BFF_THEME, label)
-            return _recolor_badge(legacy, _tone_for(label, labels, _CITY_BADGE_TONES))
+            # Urban Wilderness deliberately reuses the etched/grimoire-style badge
+            # silhouettes rather than the compact city placeholder sheet. Recoloring
+            # preserves icon identity while keeping the low-brightness blue/gold palette.
+            source = field_etched_badge(label)
+            if source is None or source.isNull():
+                ref = city_badges.get(label)
+                source = dedicated_badge(city_theme, ref) if ref else None
+            if source is None or source.isNull():
+                source = original_badge_sprite(dashboard.BFF_THEME, label)
+            return _recolor_badge(source, _tone_for(label, labels, _CITY_BADGE_TONES))
+
         return original_badge_sprite(theme, label)
 
     def number_sprite(theme, index: int):
