@@ -61,6 +61,29 @@ class GearSetHealingConditionResolver:
                 ),
             ]
 
+        match = re.fullmatch(
+            r"Whenever you successfully Dodge, increase your Critical Damage and "
+            r"Critical Healing by (?P<value>\d+(?:\.\d+)?)% for 10 seconds\.?",
+            text,
+            re.IGNORECASE,
+        )
+        if match:
+            value = float(match.group("value"))
+            return [
+                self._effect(
+                    StatId.CRITICAL_DAMAGE,
+                    value,
+                    source_text,
+                    condition="successful_dodge_recent",
+                ),
+                self._effect(
+                    StatId.CRITICAL_HEALING,
+                    value,
+                    source_text,
+                    condition="successful_dodge_recent",
+                ),
+            ]
+
         return []
 
     @classmethod
