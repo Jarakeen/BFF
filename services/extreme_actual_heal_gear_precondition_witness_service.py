@@ -22,6 +22,7 @@ NIX_HOUNDS_HOWL_MAJOR_COURAGE_CONDITION = "nix_hounds_howl_major_courage_active"
 CLAW_OF_YOLNAHKRIIN_MINOR_COURAGE_CONDITION = "claw_of_yolnahkriin_minor_courage_active"
 SENCHES_BITE_DODGE_CONDITION = "successful_dodge_recent"
 SYMMETRY_OF_THE_WEALD_LOW_HEALTH_CONDITION = "wearer_health_at_or_below_50_percent"
+NAGA_SHAMAN_MINOR_MENDING_CONDITION = "naga_shaman_minor_mending_active"
 
 
 @dataclass(frozen=True)
@@ -140,6 +141,14 @@ class ExtremeActualHealGearPreconditionWitnessService:
                 "snapshot the heal inside Senche's Bite's 10-second Critical Healing window"
             )
 
+        if int(counts.get("Naga Shaman", 0)) >= 5:
+            active.append(NAGA_SHAMAN_MINOR_MENDING_CONDITION)
+            evidence.append(
+                "naga_shaman_minor_mending_active: standing H1 setup may apply a damage shield "
+                "to the wearer, then snapshot the heal inside Naga Shaman's 6-second Minor "
+                "Mending window"
+            )
+
         return ExtremeActualHealGearPreconditionWitness(
             active_conditions=tuple(active),
             evidence=tuple(evidence),
@@ -150,6 +159,7 @@ class ExtremeActualHealGearPreconditionWitnessService:
 __all__ = [
     "CLAW_OF_YOLNAHKRIIN_MINOR_COURAGE_CONDITION",
     "FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION",
+    "NAGA_SHAMAN_MINOR_MENDING_CONDITION",
     "NIX_HOUNDS_HOWL_MAJOR_COURAGE_CONDITION",
     "PHOENIX_MOTH_MINOR_COURAGE_CONDITION",
     "SENCHES_BITE_DODGE_CONDITION",
