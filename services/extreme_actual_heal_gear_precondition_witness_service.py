@@ -107,13 +107,14 @@ class ExtremeActualHealGearPreconditionWitnessService:
                 "Weapon and Spell Damage window"
             )
 
-        if int(counts.get("Warrior's Fury", 0)) >= 5:
-            active.append(WARRIORS_FURY_FULL_STACKS_CONDITION)
-            evidence.append(
-                "warriors_fury_full_stacks: standing H1 setup may receive 20 damage events no "
-                "faster than one every 0.5 seconds, reach the 20-stack cap, and snapshot the heal "
-                "inside the resulting doubled 10-second full-stack window"
-            )
+        for set_name in ("Warrior's Fury", "Voidcaller"):
+            if int(counts.get(set_name, 0)) >= 5:
+                active.append(WARRIORS_FURY_FULL_STACKS_CONDITION)
+                evidence.append(
+                    f"warriors_fury_full_stacks: standing H1 setup may receive 20 damage events no "
+                    f"faster than one every 0.5 seconds, reach the 20-stack cap, and snapshot the heal "
+                    f"inside {set_name}'s resulting doubled 10-second full-stack window"
+                )
 
         if int(counts.get("Stygian", 0)) >= 5:
             active.append(STYGIAN_POWER_CONDITION)
