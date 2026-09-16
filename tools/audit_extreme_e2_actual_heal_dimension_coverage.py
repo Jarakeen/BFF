@@ -148,9 +148,9 @@ def build_dimension_coverage() -> tuple[E2DimensionCoverage, ...]:
             "gear_packages_procs",
             "Gear sets / mythics / monster sets / arena weapons / procs",
             E2DimensionStatus.PARTIAL,
-            "Extreme actual-heal gear package services + runtime gear-proc evidence",
-            "Reviewed five-piece, monster, double-five, mythic, non-ring mythic, arena-weapon, and explicit runtime proc paths exist.",
-            "Reviewed package coverage is not yet an exhaustive all-gear/all-proc denominator for H1.",
+            "ExtremeActualHealGearDenominatorService + actual-heal gear package services + runtime gear-proc evidence",
+            "The complete canonical ordinary-set corpus now receives one reconciled H1 disposition and accepted rows are cross-checked against the authoritative five-piece candidate pool; reviewed monster, double-five, mythic, non-ring mythic, arena-weapon, and explicit runtime proc paths also exist.",
+            "Ordinary five-piece accounting is explicit, but monster/mythic/arena/proc package families do not yet each expose a complete canonical denominator and disposition reconciliation for H1.",
         ),
         E2DimensionCoverage(
             "traits",
