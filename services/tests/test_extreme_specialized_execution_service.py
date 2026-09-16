@@ -41,6 +41,29 @@ def test_heal_event_records_are_direct_specialized_routes() -> None:
     assert not ExtremeSpecializedExecutionService.can_execute_without_extra_inputs("bash_damage")
 
 
+def test_family_requirements_are_shared_by_related_records() -> None:
+    bash = ExtremeSpecializedExecutionService.requirements_for("bash_damage")
+    shield = ExtremeSpecializedExecutionService.requirements_for("damage_shield")
+    assert bash == shield
+    assert tuple(row.key for row in bash) == ("event_source",)
+
+    sustain = ExtremeSpecializedExecutionService.requirements_for("resource_sustain")
+    ultimate = ExtremeSpecializedExecutionService.requirements_for("ultimate_generation")
+    assert sustain == ultimate
+    assert tuple(row.key for row in sustain) == ("duration_seconds", "timeline_evidence")
+
+    movement = ExtremeSpecializedExecutionService.requirements_for("movement_speed")
+    sprint = ExtremeSpecializedExecutionService.requirements_for("sprint_speed")
+    stealth_move = ExtremeSpecializedExecutionService.requirements_for("stealthed_movement_speed")
+    assert movement == sprint == stealth_move
+    assert tuple(row.key for row in movement) == ("movement_sources",)
+
+    invis_duration = ExtremeSpecializedExecutionService.requirements_for("invisibility_duration")
+    invis_uptime = ExtremeSpecializedExecutionService.requirements_for("invisibility_uptime")
+    assert invis_duration == invis_uptime
+    assert tuple(row.key for row in invis_duration) == ("duration_seconds", "invisibility_windows")
+
+
 def test_heal_event_execution_normalizes_family_result_for_ui() -> None:
     service = ExtremeSpecializedExecutionService(healing_events=_HealingEvents())
 
@@ -63,8 +86,11 @@ def test_heal_event_execution_normalizes_family_result_for_ui() -> None:
     assert result.omitted_scope == ("fixture omitted",)
 
 
-def test_specialized_family_needing_inputs_fails_explicitly() -> None:
+def test_specialized_family_needing_inputs_names_shared_requirements() -> None:
     service = ExtremeSpecializedExecutionService(healing_events=_HealingEvents())
 
-    with pytest.raises(ValueError, match="requires family-specific scenario inputs"):
+    with pytest.raises(
+        ValueError,
+        match="requires family-specific scenario inputs before execution: Movement Sources",
+    ):
         service.execute(SimpleNamespace(), "movement_speed")
