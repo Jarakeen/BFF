@@ -42,6 +42,14 @@ class FakeArmorGlyphRepository:
 
 
 class FakeJewelryGlyphRepository:
+    def get_jewelry_glyph_effect_types_by_name(self, glyph_name):
+        return {
+            "Glyph of Magicka Recovery": ("magicka_recovery",),
+            "Glyph of Stamina Recovery": ("stamina_recovery",),
+            "Glyph of Increase Physical Harm": ("weapon_spell_damage",),
+            "Glyph of Bashing": ("bash_damage",),
+        }.get(glyph_name, ())
+
     def get_jewelry_glyph_effect_by_name(self, glyph_name, *, use_max_value=True):
         if glyph_name == "Glyph of Magicka Recovery":
             return [
@@ -60,6 +68,16 @@ class FakeJewelryGlyphRepository:
                     value=174,
                     source="Glyph of Increase Physical Harm",
                     stat=StatId.WEAPON_DAMAGE,
+                    unit=EffectUnit.FLAT,
+                )
+            ]
+        if glyph_name == "Glyph of Bashing":
+            return [
+                Effect(
+                    operation=EffectOperation.ADD,
+                    value=180,
+                    source="Truly Superb Glyph of Bashing",
+                    stat=StatId.BASH_DAMAGE,
                     unit=EffectUnit.FLAT,
                 )
             ]
@@ -144,6 +162,23 @@ def test_cp160_truly_superb_armor_glyph_adds_item_resource_with_named_trace():
     trace = context.character_state.traces[StatId.MAX_MAGICKA]
     assert any(step.label == "Chest: Glyph of Magicka" and step.value == 868 for step in trace.steps)
     assert context.gear_effects_applied == 1
+
+
+def test_head_accepts_canonical_armor_glyph_family_name():
+    build = PlayerBuild()
+    build.Armor["Head"].update(
+        {"Enchant": "Glyph of Magicka", "EnchantTier": "Truly Superb", "Level": "CP160"}
+    )
+    resolver = GearStatInputResolver(
+        FakeGearSetRepository(),
+        armor_glyph_repository=FakeArmorGlyphRepository(),
+    )
+
+    resolved = resolver.resolve(build)
+
+    assert resolved.magicka.item_flat == 868
+    assert not any("Head glyph not found" in entry for entry in resolved.unresolved)
+    assert not any("Head enchant not yet resolved" in entry for entry in resolved.unresolved)
 
 
 def test_minor_armor_slot_uses_40_percent_glyph_strength():
@@ -261,6 +296,42 @@ def test_cp160_truly_superb_jewelry_recovery_glyph_adds_named_resource_trace():
     trace = context.character_state.traces[StatId.MAGICKA_RECOVERY]
     assert any(step.label == "Necklace: Glyph of Magicka Recovery" and step.value == 169 for step in trace.steps)
     assert context.gear_effects_applied == 1
+
+
+def test_jewelry_accepts_canonical_glyph_family_name():
+    build = PlayerBuild()
+    build.Necklace = GearSlot(
+        Enchant="Glyph of Magicka Recovery",
+        EnchantTier="Truly Superb",
+        Level="CP160",
+    )
+    resolver = GearStatInputResolver(
+        FakeGearSetRepository(),
+        jewelry_glyph_repository=FakeJewelryGlyphRepository(),
+    )
+
+    resolved = resolver.resolve(build)
+
+    assert resolved.magicka_recovery.item_flat == 169
+    assert not any("Necklace glyph not found" in entry for entry in resolved.unresolved)
+    assert not any("Necklace enchant not yet resolved" in entry for entry in resolved.unresolved)
+
+
+def test_recognized_specialized_jewelry_glyph_is_not_reported_as_missing():
+    build = PlayerBuild()
+    build.Ring1 = GearSlot(Enchant="Bashing", EnchantTier="Truly Superb", Level="CP160")
+    resolver = GearStatInputResolver(
+        FakeGearSetRepository(),
+        jewelry_glyph_repository=FakeJewelryGlyphRepository(),
+    )
+
+    resolved = resolver.resolve(build)
+
+    assert not any("glyph not found" in entry for entry in resolved.unresolved)
+    assert any(
+        "recognized canonical jewelry glyph" in entry and "bash_damage" in entry
+        for entry in resolved.unresolved
+    )
 
 
 def test_cp160_truly_superb_jewelry_damage_glyph_feeds_core_trace():
