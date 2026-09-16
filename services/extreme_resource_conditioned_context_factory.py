@@ -31,6 +31,7 @@ from services.extreme_actual_heal_gear_precondition_effect_resolver import (
 )
 from services.extreme_actual_heal_gear_precondition_witness_service import (
     FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION,
+    PHOENIX_MOTH_MINOR_COURAGE_CONDITION,
 )
 from services.extreme_gear_set_power_tradeoff_resolver import (
     ExtremeGearSetPowerTradeoffResolver,
@@ -182,7 +183,14 @@ class ExtremeResourceConditionedPhase5ContextFactory(Phase5BuildCalculationConte
         condition_context: frozenset[str] | None,
     ) -> CombatState:
         active = condition_context or frozenset()
-        if FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION not in active:
+        courage_witness = bool(
+            {
+                FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION,
+                PHOENIX_MOTH_MINOR_COURAGE_CONDITION,
+            }
+            & active
+        )
+        if not courage_witness:
             return combat_state
         return replace(
             combat_state,
@@ -218,7 +226,6 @@ class ExtremeResourceConditionedPhase5ContextFactory(Phase5BuildCalculationConte
         incoming_attack,
         condition_context: frozenset[str] | None,
     ) -> GearCalculationInputs:
-        """Run the full canonical gear-input pipeline under one reviewed condition snapshot."""
         previous = self._extreme_gear_condition_context
         self._extreme_gear_condition_context = condition_context
         reviewed_combat_state = self._combat_state_with_reviewed_gear_witnesses(
