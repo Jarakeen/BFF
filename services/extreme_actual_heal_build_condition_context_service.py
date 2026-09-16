@@ -17,12 +17,14 @@ from minmax.gear_stat_inputs import GearStatInputResolver
 from models.build_model import PlayerBuild
 from services.extreme_actual_heal_gear_precondition_effect_resolver import (
     SEVENTH_LEGION_BRUTE_POWER_CONDITION,
+    SOULSHINE_POWER_CONDITION,
 )
 from services.extreme_actual_heal_gear_precondition_witness_service import (
     ExtremeActualHealGearPreconditionWitnessService,
 )
 from services.extreme_actual_heal_setup_action_legality_service import (
     GRANTS_RESOLVE,
+    HAS_CAST_OR_CHANNEL_TIME,
     ExtremeActualHealSetupActionLegalityService,
 )
 from services.extreme_player_skill_candidate_service import ExtremePlayerSkillLegalityContext
@@ -31,7 +33,10 @@ from services.extreme_player_skill_candidate_service import ExtremePlayerSkillLe
 _DESTRUCTION_STAFF_TYPES = frozenset(
     {"inferno staff", "lightning staff", "ice staff", "destruction staff"}
 )
-_SEVENTH_LEGION_BRUTE = "Seventh Legion Brute"
+_REVIEWED_SETUP_CONDITIONS = (
+    ("Seventh Legion Brute", GRANTS_RESOLVE, SEVENTH_LEGION_BRUTE_POWER_CONDITION, "15-second"),
+    ("Soulshine", HAS_CAST_OR_CHANNEL_TIME, SOULSHINE_POWER_CONDITION, "5-second"),
+)
 
 
 @dataclass(frozen=True)
@@ -56,12 +61,8 @@ class ExtremeActualHealBuildConditionContextService:
         setup_action_legality: ExtremeActualHealSetupActionLegalityService | None = None,
     ) -> None:
         self.database_path = str(database_path)
-        self.gear_preconditions = (
-            gear_preconditions or ExtremeActualHealGearPreconditionWitnessService()
-        )
-        self.setup_action_legality = (
-            setup_action_legality or ExtremeActualHealSetupActionLegalityService(database_path)
-        )
+        self.gear_preconditions = gear_preconditions or ExtremeActualHealGearPreconditionWitnessService()
+        self.setup_action_legality = setup_action_legality or ExtremeActualHealSetupActionLegalityService(database_path)
         self._provisioning_kind_cache: dict[str, str | None] = {}
 
     def _provisioning_kind(self, name: str) -> str | None:
@@ -71,29 +72,18 @@ class ExtremeActualHealBuildConditionContextService:
         key = selected.casefold()
         if key in self._provisioning_kind_cache:
             return self._provisioning_kind_cache[key]
-
         kind: str | None = None
         with sqlite3.connect(self.database_path) as connection:
-            table = connection.execute(
-                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='entity'"
-            ).fetchone()
+            table = connection.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='entity'").fetchone()
             if table is not None:
                 row = connection.execute(
-                    """
-                    SELECT entity_type
-                    FROM entity
-                    WHERE lower(name)=lower(?)
-                      AND entity_type IN ('food', 'drink', 'provisioning')
-                    ORDER BY CASE entity_type WHEN 'food' THEN 0 WHEN 'drink' THEN 1 ELSE 2 END
-                    LIMIT 1
-                    """,
+                    """SELECT entity_type FROM entity WHERE lower(name)=lower(?) AND entity_type IN ('food', 'drink', 'provisioning') ORDER BY CASE entity_type WHEN 'food' THEN 0 WHEN 'drink' THEN 1 ELSE 2 END LIMIT 1""",
                     (selected,),
                 ).fetchone()
                 if row is not None:
                     candidate = str(row[0] or "").strip().casefold()
                     if candidate in {"food", "drink"}:
                         kind = candidate
-
         self._provisioning_kind_cache[key] = kind
         return kind
 
@@ -103,23 +93,27 @@ class ExtremeActualHealBuildConditionContextService:
         values = build.FrontBarSkills if bar == "back" else build.BackBarSkills
         return tuple(str(value or "").strip() for value in list(values)[:5])
 
-    def _seventh_legion_setup_active(
-        self,
-        build: PlayerBuild,
-        *,
-        active_bar: str,
-    ) -> tuple[bool, str | None]:
-        counts = GearStatInputResolver.equipped_set_counts(build, active_bar=active_bar)
-        if int(counts.get(_SEVENTH_LEGION_BRUTE, 0)) < 5:
-            return False, None
-
-        context = ExtremePlayerSkillLegalityContext(
+    @staticmethod
+    def _legality_context(build: PlayerBuild) -> ExtremePlayerSkillLegalityContext:
+        return ExtremePlayerSkillLegalityContext(
             equipped_class_lines=tuple(build.ClassSkillLines or ()),
             vampire=bool(build.Vampire),
             werewolf=bool(build.Werewolf),
             transformed_form=str(build.TransformedForm or "").strip() or None,
         )
-        witness = self.setup_action_legality.witness(GRANTS_RESOLVE, context)
+
+    def _setup_condition_active(
+        self,
+        build: PlayerBuild,
+        *,
+        active_bar: str,
+        set_name: str,
+        capability: str,
+    ) -> tuple[bool, str | None]:
+        counts = GearStatInputResolver.equipped_set_counts(build, active_bar=active_bar)
+        if int(counts.get(set_name, 0)) < 5:
+            return False, None
+        witness = self.setup_action_legality.witness(capability, self._legality_context(build))
         if not witness.proven or not str(witness.skill_name or "").strip():
             return False, None
         wanted = str(witness.skill_name).strip().casefold()
@@ -127,12 +121,7 @@ class ExtremeActualHealBuildConditionContextService:
             return False, witness.skill_name
         return True, witness.skill_name
 
-    def resolve(
-        self,
-        build: PlayerBuild,
-        *,
-        active_bar: str = "front",
-    ) -> ExtremeActualHealBuildConditionContext:
+    def resolve(self, build: PlayerBuild, *, active_bar: str = "front") -> ExtremeActualHealBuildConditionContext:
         active: set[str] = {"standing_still"}
         evidence: list[str] = ["standing_still: standing H1 scenario definition"]
         unresolved: list[str] = []
@@ -147,39 +136,34 @@ class ExtremeActualHealBuildConditionContextService:
                 active.add("drink_buff_active")
                 evidence.append(f"drink_buff_active: canonical provisioning type for {food}")
             else:
-                unresolved.append(
-                    f"Selected provisioning item has no canonical food/drink type: {food}"
-                )
+                unresolved.append(f"Selected provisioning item has no canonical food/drink type: {food}")
 
         main, _ = build.active_weapon_slots(active_bar)
         weapon_type = str(main.WeaponType or "").strip().casefold()
         if weapon_type in _DESTRUCTION_STAFF_TYPES:
             active.add("destruction_staff_equipped")
-            evidence.append(
-                f"destruction_staff_equipped: active weapon type is {weapon_type}"
-            )
+            evidence.append(f"destruction_staff_equipped: active weapon type is {weapon_type}")
 
         transformed = str(build.TransformedForm or "").strip().casefold()
         if transformed:
             active.add("transformed")
             evidence.append(f"transformed: explicit build form is {transformed}")
 
-        seventh_active, seventh_skill = self._seventh_legion_setup_active(
-            build,
-            active_bar=active_bar,
-        )
-        if seventh_active:
-            active.add(SEVENTH_LEGION_BRUTE_POWER_CONDITION)
-            evidence.append(
-                f"{SEVENTH_LEGION_BRUTE_POWER_CONDITION}: inactive-bar {seventh_skill} is a "
-                "route-legal Resolve setup action; cast in combat, swap back, and score within "
-                "Seventh Legion Brute's 15-second power window"
+        for set_name, capability, condition, window in _REVIEWED_SETUP_CONDITIONS:
+            is_active, skill_name = self._setup_condition_active(
+                build,
+                active_bar=active_bar,
+                set_name=set_name,
+                capability=capability,
             )
+            if is_active:
+                active.add(condition)
+                evidence.append(
+                    f"{condition}: inactive-bar {skill_name} is a route-legal {capability} setup action; "
+                    f"activate it, swap back, and score within {set_name}'s {window} power window"
+                )
 
-        preconditions = self.gear_preconditions.resolve(
-            build,
-            active_bar=active_bar,
-        )
+        preconditions = self.gear_preconditions.resolve(build, active_bar=active_bar)
         active.update(preconditions.active_conditions)
         evidence.extend(preconditions.evidence)
         unresolved.extend(preconditions.unresolved)
