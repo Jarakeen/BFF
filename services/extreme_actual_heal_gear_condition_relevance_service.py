@@ -122,6 +122,14 @@ _REVIEWED_H1_PRECONDITION_TEXT = (
         re.IGNORECASE | re.DOTALL,
     ),
     re.compile(
+        r"Seventh Legion Brute \(5\): active set bonus is not yet mechanic-mapped:.*"
+        r"When you cast an ability that grants Major or Minor Resolve while in combat, you gain\s*"
+        r"(?:\d[\d,]*\s*-\s*)?341\s+Weapon and Spell Damage and\s*"
+        r"(?:\d[\d,]*\s*-\s*)?341\s+Health Recovery for\s*15 seconds.*"
+        r"This effect can occur every\s*15 seconds",
+        re.IGNORECASE | re.DOTALL,
+    ),
+    re.compile(
         r"Claw of Yolnahkriin \(5\): active set bonus is not yet mechanic-mapped:.*"
         r"When you taunt an enemy.*give yourself and 11 group members Minor Courage for\s*15 seconds.*"
         r"Weapon and Spell Damage by\s*(?:\d[\d,]*\s*-\s*)?215",
