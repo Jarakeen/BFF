@@ -9,6 +9,7 @@ from models.build_model import PlayerBuild
 from services.extreme_actual_heal_gear_precondition_effect_resolver import (
     ANCIENT_DRAGONGUARD_ABOVE_HALF_HEALTH_CONDITION,
     BLESSING_OF_HIGH_ISLE_CONDITION,
+    TITANBORN_STRENGTH_BELOW_HALF_HEALTH_CONDITION,
 )
 
 
@@ -47,6 +48,14 @@ class ExtremeActualHealGearPreconditionWitnessService:
             evidence.append(
                 "wearer_health_above_50_percent: standing H1 scenario may snapshot the caster "
                 "above 50% current Health, activating Ancient Dragonguard's power branch"
+            )
+
+        if int(counts.get("Titanborn Strength", 0)) >= 5:
+            active.append(TITANBORN_STRENGTH_BELOW_HALF_HEALTH_CONDITION)
+            evidence.append(
+                "wearer_in_combat_below_50_percent_health: standing H1 scenario may snapshot "
+                "the caster in combat below 50% current Health, activating Titanborn Strength's "
+                "quadrupled five-piece power branch"
             )
 
         if int(counts.get("Blessing of High Isle", 0)) >= 5:
