@@ -155,7 +155,8 @@ _REVIEWED_H1_PRECONDITION_TEXT = (
 _REVIEWED_H1_HEALING_PRECONDITION_TEXT = (
     re.compile(
         r"Senche's Bite \(5\): active set bonus is not yet mechanic-mapped:.*"
-        r"Whenever you successfully Dodge, increase your Critical Damage and Critical Healing by\s*15%\s*for\s*10 seconds",
+        r"Whenever you successfully Dodge, increase your Critical Damage and Critical Healing by\s*"
+        r"(?:\d+(?:\.\d+)?\s*-\s*)?15%\s*for\s*10 seconds",
         re.IGNORECASE | re.DOTALL,
     ),
 )
