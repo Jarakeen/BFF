@@ -1,5 +1,5 @@
 from pathlib import Path
-from engine.config import get_resource_path
+from engine.config import get_data_dir, get_resource_path
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 from widgets import build_editor
+from services.build_enchant_catalog_service import BuildEnchantCatalogService
 from services.skill_bar_eligibility import filter_skill_choices
 from ui.components.foundry_button import ButtonRole, FoundryButton
 
@@ -96,6 +97,11 @@ class EligibleBuildEditor(build_editor.BuildEditor):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # The old BuildEditor exposed one combined enchant list to every slot. Keep
+        # existing saved text compatible, but source new choices from the canonical
+        # armor/jewelry/weapon repositories for the correct equipment family.
+        self._install_slot_aware_enchant_choices()
+
         # Keep the identity controls proportional to the compact gear editor.
         self.name.setMaximumWidth(360)
         self.gamertag.setMaximumWidth(360)
@@ -177,6 +183,45 @@ class EligibleBuildEditor(build_editor.BuildEditor):
         self._install_armor_set_button()
         self.eso_class.currentTextChanged.connect(self._on_class_changed)
         self._sync_skill_state()
+
+    @staticmethod
+    def _replace_combo_choices(combo: QComboBox, values: tuple[str, ...]) -> None:
+        current = combo.currentText().strip()
+        combo.blockSignals(True)
+        combo.clear()
+        combo.addItems(values)
+        if current:
+            match = combo.findText(current, Qt.MatchFlag.MatchFixedString)
+            if match >= 0:
+                combo.setCurrentIndex(match)
+            else:
+                # Editable Build selectors preserve legacy/custom saved labels even
+                # when the canonical catalog no longer exposes that display spelling.
+                combo.setCurrentText(current)
+        else:
+            combo.setCurrentIndex(0)
+        combo.blockSignals(False)
+
+    def _install_slot_aware_enchant_choices(self) -> None:
+        try:
+            catalog = BuildEnchantCatalogService(get_data_dir() / "eso.db")
+            armor_choices = catalog.armor_choices()
+            jewelry_choices = catalog.jewelry_choices()
+            weapon_choices = catalog.weapon_choices()
+        except Exception:
+            # Catalog hydration is a presentation enhancement. Leave the existing
+            # editable fallback list intact if canonical data is unavailable.
+            return
+
+        jewelry_slots = {"Neck", "Ring1", "Ring2"}
+        for slot_name, row in self.gear_rows.items():
+            if slot_name in build_editor.ARMOR_SLOTS:
+                choices = armor_choices
+            elif slot_name in jewelry_slots:
+                choices = jewelry_choices
+            else:
+                choices = weapon_choices
+            self._replace_combo_choices(row.enchant_combo, choices)
 
     def _install_armor_set_button(self):
         """Add the armor-set helper to the left of existing Gear-card actions."""
