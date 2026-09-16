@@ -9,6 +9,7 @@ from models.build_model import PlayerBuild
 from services.extreme_actual_heal_gear_precondition_effect_resolver import (
     ANCIENT_DRAGONGUARD_ABOVE_HALF_HEALTH_CONDITION,
     BLESSING_OF_HIGH_ISLE_CONDITION,
+    PEARLESCENT_WARD_FULL_GROUP_ALIVE_CONDITION,
     TITANBORN_STRENGTH_BELOW_HALF_HEALTH_CONDITION,
 )
 
@@ -56,6 +57,14 @@ class ExtremeActualHealGearPreconditionWitnessService:
                 "wearer_in_combat_below_50_percent_health: standing H1 scenario may snapshot "
                 "the caster in combat below 50% current Health, activating Titanborn Strength's "
                 "quadrupled five-piece power branch"
+            )
+
+        if int(counts.get("Pearlescent Ward", 0)) >= 5:
+            active.append(PEARLESCENT_WARD_FULL_GROUP_ALIVE_CONDITION)
+            evidence.append(
+                "pearlescent_ward_full_group_alive: standing H1 scenario may snapshot a full "
+                "12-player group with all members alive, activating Pearlescent Ward's maximum "
+                "180 Weapon and Spell Damage branch for the wearer"
             )
 
         if int(counts.get("Blessing of High Isle", 0)) >= 5:
