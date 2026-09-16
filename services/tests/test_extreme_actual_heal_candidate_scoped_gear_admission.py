@@ -91,17 +91,15 @@ def test_scoped_effects_map_exact_reviewed_values() -> None:
     assert {effect.condition for effect in innate} == {INNATE_AXIOM_CLASS_SCOPE_CONDITION}
 
 
-def test_exact_candidate_scoped_blockers_are_h1_mechanic_complete() -> None:
+def test_exact_live_candidate_scope_blockers_are_h1_mechanic_complete() -> None:
     cases = (
         (
             "Light Speaker",
-            "Light Speaker (5): active set bonus is not yet mechanic-mapped: "
-            "(5 items) Adds 600 Weapon and Spell Damage to your Restoration Staff abilities.",
+            "Light Speaker (5): relevant set effect requires condition ability_scope:restoration_staff",
         ),
         (
             "Innate Axiom",
-            "Innate Axiom (5): active set bonus is not yet mechanic-mapped: "
-            "(5 items) Adds 400 Weapon and Spell Damage to your Class abilities.",
+            "Innate Axiom (5): relevant set effect requires condition ability_scope:class",
         ),
     )
     for index, (set_name, blocker) in enumerate(cases, start=1):
@@ -111,7 +109,7 @@ def test_exact_candidate_scoped_blockers_are_h1_mechanic_complete() -> None:
             category="Test",
             equipped_piece_count=5,
             objective_key="spell_damage",
-            reviewed_delta=0.0,
+            reviewed_delta=129.0,
             unresolved=(blocker,),
         )
         review = ExtremeActualHealGearSetCandidateService._h1_review(row)
@@ -121,10 +119,31 @@ def test_exact_candidate_scoped_blockers_are_h1_mechanic_complete() -> None:
         assert review.ignored_blockers == (blocker,)
 
 
+def test_old_unmapped_scoped_wording_is_not_accidentally_admitted() -> None:
+    blocker = (
+        "Light Speaker (5): active set bonus is not yet mechanic-mapped: "
+        "(5 items) Adds 600 Weapon and Spell Damage to your Restoration Staff abilities."
+    )
+    row = ExtremeGearSetObjectiveCandidate(
+        set_id=8,
+        set_name="Light Speaker",
+        category="Test",
+        equipped_piece_count=5,
+        objective_key="spell_damage",
+        reviewed_delta=129.0,
+        unresolved=(blocker,),
+    )
+
+    review = ExtremeActualHealGearSetCandidateService._h1_review(row)
+
+    assert review.h1_mechanic_complete is False
+    assert review.remaining_blockers == (blocker,)
+
+
 def test_unreviewed_scoped_lookalike_stays_unresolved() -> None:
     blocker = (
-        "Mystery Scoped Set (5): active set bonus is not yet mechanic-mapped: "
-        "(5 items) Adds 600 Weapon and Spell Damage to your Restoration Staff abilities."
+        "Mystery Scoped Set (5): relevant set effect requires condition "
+        "ability_scope:restoration_staff"
     )
     row = ExtremeGearSetObjectiveCandidate(
         set_id=9,
@@ -132,7 +151,7 @@ def test_unreviewed_scoped_lookalike_stays_unresolved() -> None:
         category="Test",
         equipped_piece_count=5,
         objective_key="spell_damage",
-        reviewed_delta=0.0,
+        reviewed_delta=129.0,
         unresolved=(blocker,),
     )
 
