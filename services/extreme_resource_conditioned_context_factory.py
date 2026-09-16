@@ -5,11 +5,13 @@ from __future__ import annotations
 Normal saved-build calculations remain unchanged. Extreme callers may provide an
 explicit, proof-owned set of canonical condition markers; the shared gear resolver
 then suppresses conditional set effects whose marker is absent and activates only
-those whose marker is present.
+those whose marker is present. Reviewed named-buff witnesses are translated into
+canonical CombatState snapshots so normal named-buff deduplication still applies.
 """
 
 from dataclasses import replace
 
+from minmax.combat_state import CombatState
 from minmax.context_factory import BuildCalculationContextFactory
 from minmax.derived_stats import StatContribution
 from minmax.gear_set_effect_resolver import GearSetEffectResolver
@@ -26,6 +28,9 @@ from minmax.stat_ids import StatId
 from models.build_model import PlayerBuild
 from services.extreme_actual_heal_gear_precondition_effect_resolver import (
     ExtremeActualHealGearPreconditionEffectResolver,
+)
+from services.extreme_actual_heal_gear_precondition_witness_service import (
+    FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION,
 )
 from services.extreme_gear_set_power_tradeoff_resolver import (
     ExtremeGearSetPowerTradeoffResolver,
@@ -171,6 +176,20 @@ class ExtremeResourceConditionedPhase5ContextFactory(Phase5BuildCalculationConte
             )
         self._extreme_gear_condition_context: frozenset[str] | None = None
 
+    @staticmethod
+    def _combat_state_with_reviewed_gear_witnesses(
+        combat_state: CombatState,
+        condition_context: frozenset[str] | None,
+    ) -> CombatState:
+        active = condition_context or frozenset()
+        if FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION not in active:
+            return combat_state
+        return replace(
+            combat_state,
+            in_combat=True,
+            active_buffs=(*combat_state.active_buffs, "Minor Courage"),
+        )
+
     def build(
         self,
         *,
@@ -179,6 +198,11 @@ class ExtremeResourceConditionedPhase5ContextFactory(Phase5BuildCalculationConte
     ):
         previous = self._extreme_gear_condition_context
         self._extreme_gear_condition_context = gear_condition_context
+        base_combat_state = kwargs.get("combat_state", CombatState())
+        kwargs["combat_state"] = self._combat_state_with_reviewed_gear_witnesses(
+            base_combat_state,
+            gear_condition_context,
+        )
         try:
             return super().build(**kwargs)
         finally:
@@ -197,12 +221,16 @@ class ExtremeResourceConditionedPhase5ContextFactory(Phase5BuildCalculationConte
         """Run the full canonical gear-input pipeline under one reviewed condition snapshot."""
         previous = self._extreme_gear_condition_context
         self._extreme_gear_condition_context = condition_context
+        reviewed_combat_state = self._combat_state_with_reviewed_gear_witnesses(
+            combat_state,
+            condition_context,
+        )
         try:
             return self._gear_inputs(
                 build,
                 progression=progression,
                 active_bar=active_bar,
-                combat_state=combat_state,
+                combat_state=reviewed_combat_state,
                 incoming_attack=incoming_attack,
             )
         finally:
