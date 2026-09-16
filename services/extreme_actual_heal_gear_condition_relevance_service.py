@@ -70,6 +70,12 @@ _REVIEWED_H1_POWER_TRADEOFF_TEXT = (
         r"When you kill an enemy, you gain Major Expedition",
         re.IGNORECASE | re.DOTALL,
     ),
+    re.compile(
+        r"New Moon Acolyte \(5\): active set bonus is not yet mechanic-mapped:.*"
+        r"Adds\s*(?:\d[\d,]*\s*-\s*)?401\s+Weapon and Spell Damage\.\s*"
+        r"Increases the cost of your active abilities by\s*5%",
+        re.IGNORECASE | re.DOTALL,
+    ),
 )
 
 _REVIEWED_H1_PRECONDITION_TEXT = (
