@@ -11,10 +11,12 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from engine.config import get_data_dir
+from minmax.gear_set_repository import GearSetRepository
 from services.extreme_actual_heal_setup_action_legality_service import (
     IS_ARMOR_ABILITY,
     ExtremeActualHealSetupActionLegalityService,
 )
+from services.extreme_gear_set_objective_service import ExtremeGearSetObjectiveService
 from services.extreme_player_skill_candidate_service import ExtremePlayerSkillLegalityContext
 
 
@@ -24,6 +26,12 @@ ARMOR_LINES = ("Light Armor", "Medium Armor", "Heavy Armor")
 def main() -> int:
     database = get_data_dir() / "eso.db"
     setup = ExtremeActualHealSetupActionLegalityService(database)
+    repository = GearSetRepository(database)
+    objective_row = ExtremeGearSetObjectiveService.candidate_for_set(
+        repository,
+        "Armor Master",
+        "max_health",
+    )
     proven = 0
     witnesses: Counter[tuple[str, str]] = Counter()
     missing: list[str] = []
@@ -49,6 +57,29 @@ def main() -> int:
     print("DISTINCT ARMOR-ABILITY WITNESSES")
     for (line, name), count in sorted(witnesses.items()):
         print(f"  line={line!r} skill={name!r} armor_lines={count}")
+
+    print("CANONICAL ARMOR MASTER MAX-HEALTH OBJECTIVE")
+    print(f"  reviewed_delta={objective_row.reviewed_delta!r}")
+    print(f"  source_effect_count={len(objective_row.source_effects)}")
+    for bonus in objective_row.source_bonuses:
+        if int(bonus.piece_count) == 5:
+            print(f"  five_piece_description={str(bonus.description or '')!r}")
+    for effect in objective_row.source_effects:
+        stat = getattr(getattr(effect, "stat", None), "value", getattr(effect, "stat", None))
+        operation = getattr(
+            getattr(effect, "operation", None),
+            "value",
+            getattr(effect, "operation", None),
+        )
+        unit = getattr(getattr(effect, "unit", None), "value", getattr(effect, "unit", None))
+        print(
+            f"  effect stat={stat!r} operation={operation!r} unit={unit!r} "
+            f"value={effect.value!r} condition={effect.condition!r} source={effect.source!r}"
+        )
+    print(f"  unresolved_count={len(objective_row.unresolved)}")
+    for blocker in objective_row.unresolved:
+        print(f"  unresolved={blocker!r}")
+
     if missing:
         print("ARMOR LINES WITHOUT WITNESS")
         for line in missing:
