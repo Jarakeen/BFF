@@ -18,6 +18,7 @@ FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION = "fledglings_nest_minor_courage_active"
 PHOENIX_MOTH_MINOR_COURAGE_CONDITION = "phoenix_moth_minor_courage_active"
 SPELL_POWER_CURE_MAJOR_COURAGE_CONDITION = "spell_power_cure_major_courage_active"
 VESTMENT_OF_OLORIME_MAJOR_COURAGE_CONDITION = "vestment_of_olorime_major_courage_active"
+NIX_HOUNDS_HOWL_MAJOR_COURAGE_CONDITION = "nix_hounds_howl_major_courage_active"
 
 
 @dataclass(frozen=True)
@@ -106,6 +107,14 @@ class ExtremeActualHealGearPreconditionWitnessService:
                 "and snapshot the heal inside the resulting 20-second Major Courage window"
             )
 
+        if int(counts.get("Nix-Hound's Howl", 0)) >= 5:
+            active.append(NIX_HOUNDS_HOWL_MAJOR_COURAGE_CONDITION)
+            evidence.append(
+                "nix_hounds_howl_major_courage_active: standing H1 setup may complete one "
+                "fully-charged Heavy Attack, then snapshot the heal inside the resulting "
+                "Major Courage window"
+            )
+
         return ExtremeActualHealGearPreconditionWitness(
             active_conditions=tuple(active),
             evidence=tuple(evidence),
@@ -115,6 +124,7 @@ class ExtremeActualHealGearPreconditionWitnessService:
 
 __all__ = [
     "FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION",
+    "NIX_HOUNDS_HOWL_MAJOR_COURAGE_CONDITION",
     "PHOENIX_MOTH_MINOR_COURAGE_CONDITION",
     "SPELL_POWER_CURE_MAJOR_COURAGE_CONDITION",
     "VESTMENT_OF_OLORIME_MAJOR_COURAGE_CONDITION",
