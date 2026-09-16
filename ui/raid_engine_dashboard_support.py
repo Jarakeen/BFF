@@ -3,9 +3,9 @@ from __future__ import annotations
 """Register raid-planning surfaces with the existing application window.
 
 This module is the explicit application-composition boundary for the rebuilt
-raid-lead workspace. It keeps the long-lived engine pages intact, registers the
-new Roster workspace beside them, and reshapes navigation without moving data
-ownership or adding a second mechanics implementation.
+raid-lead workspace. It keeps long-lived engine ownership intact while exposing
+the City After Midnight RAID workflow as Roster -> Plans -> Assignments ->
+Readiness -> Live Raid.
 """
 
 import warnings
@@ -42,6 +42,8 @@ def _install_canonical_sidebar_routes() -> None:
                 ("Roster", "roster_workspace"),
                 ("Raid Plans", "raid_plans"),
                 ("Assignments", "assignments"),
+                ("Readiness", "readiness"),
+                ("Live Raid", "live_raid"),
             ],
         },
         {
@@ -87,12 +89,7 @@ def _install_canonical_sidebar_routes() -> None:
 
 
 def _install_safe_dashboard_rewire() -> None:
-    """Avoid PySide's noisy RuntimeWarning when a button has no slots to remove.
-
-    Disconnecting an unconnected signal is harmless, but libpyside emits a warning
-    before the Python exception guard can handle it. Keep the existing rewire
-    semantics while suppressing only that specific warning.
-    """
+    """Avoid PySide's noisy RuntimeWarning when a button has no slots to remove."""
     from ui import raid_engine_dashboard_polish_support as polish
 
     def safe_rewire(button, callback) -> None:
@@ -170,32 +167,6 @@ def _register_page(window, route: str, page) -> None:
     window.stack.addWidget(container)
 
 
-def _register_assignments_alias(window) -> None:
-    """Keep the audited legacy assignment surface reachable without duplicating it."""
-    page = window.pages.get("roster_page")
-    container = window.page_containers.get("roster_page")
-    if page is None or container is None:
-        return
-
-    window.pages["assignments"] = page
-    window.page_containers["assignments"] = container
-
-    def prepare_assignments(route: str) -> None:
-        if route != "assignments":
-            return
-        header = getattr(page, "header", None)
-        if header is None:
-            return
-        header.title.setText("Assignments")
-        header.subtitle.setText("Roles, responsibilities, provider duties, and readiness notes.")
-        header.department.setText("RAID • ASSIGNMENTS")
-        refresh = getattr(page, "refresh", None)
-        if callable(refresh):
-            refresh()
-
-    window.sidebar.pageRequested.connect(prepare_assignments)
-
-
 def _register_roster_workspace_refresh(window, page) -> None:
     """Reload canonical roster/build state whenever the visible Roster is opened."""
 
@@ -213,15 +184,29 @@ def _register_roster_workspace_refresh(window, page) -> None:
 
 
 def register_raid_engine_pages(window) -> None:
-    """Register raid-planning pages after MainWindow creates their source pages."""
+    """Register the complete City RAID workflow after source engine pages exist."""
+    from ui.city_live_raid_page import CityLiveRaidPage
+    from ui.city_raid_assignments_page import CityRaidAssignmentsPage
+    from ui.city_raid_plan_workspace_page import CityRaidPlanWorkspacePage
+    from ui.city_raid_readiness_page import CityRaidReadinessPage
+    from ui.city_raid_roster_workspace_page import CityRaidRosterWorkspacePage
     from ui.raid_engine_dashboard_page import RaidEngineDashboardPage
-    from ui.raid_plan_adviser_page import RaidPlanAdviserPage
-    from ui.themed_raid_roster_workspace_page import ThemedRaidRosterWorkspacePage
 
-    roster_workspace = ThemedRaidRosterWorkspacePage()
+    roster_workspace = CityRaidRosterWorkspacePage()
     _register_page(window, "roster_workspace", roster_workspace)
     _register_roster_workspace_refresh(window, roster_workspace)
-    _register_assignments_alias(window)
+
+    assignments = CityRaidAssignmentsPage()
+    assignments.pageRequested.connect(window.show_page)
+    _register_page(window, "assignments", assignments)
+
+    readiness = CityRaidReadinessPage()
+    readiness.pageRequested.connect(window.show_page)
+    _register_page(window, "readiness", readiness)
+
+    live_raid = CityLiveRaidPage()
+    live_raid.pageRequested.connect(window.show_page)
+    _register_page(window, "live_raid", live_raid)
 
     dashboard = RaidEngineDashboardPage()
     dashboard.set_sources(
@@ -236,7 +221,7 @@ def register_raid_engine_pages(window) -> None:
     dashboard.helpRequested.connect(lambda: _open_dashboard_help(window))
     _register_page(window, "raid_engine_dashboard", dashboard)
 
-    raid_plans = RaidPlanAdviserPage()
+    raid_plans = CityRaidPlanWorkspacePage()
     raid_plans.pageRequested.connect(window.show_page)
     raid_plans.coverageRequested.connect(lambda plan: _open_raid_plan_coverage(window, plan))
     raid_plans.rotationRequested.connect(
@@ -257,7 +242,7 @@ def install() -> None:
     from ui.coverage_raid_plan_scope_support import install as install_coverage_raid_plan_scope_support
     from ui.raid_plan_optimizer_adviser_support import install as install_raid_plan_optimizer_adviser_support
 
-    # CoveragePage and OptimizationPage are created by MainWindow's original build_ui,
+    # CoveragePage and OptimizationPage are created by the original build_ui,
     # so extend both classes before that UI is constructed.
     install_coverage_raid_plan_scope_support()
     install_raid_plan_optimizer_adviser_support()
