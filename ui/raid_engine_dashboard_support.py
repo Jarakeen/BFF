@@ -4,7 +4,7 @@ from __future__ import annotations
 
 This module is the explicit application-composition boundary for the rebuilt
 raid-lead workspace. It keeps long-lived engine ownership intact while exposing
-the City After Midnight RAID workflow as Roster -> Plans -> Assignments ->
+the Urban Wilderness RAID workflow as Roster -> Plans -> Assignments ->
 Readiness -> Live Raid.
 """
 
@@ -32,7 +32,6 @@ def _install_canonical_sidebar_routes() -> None:
     collectibles = existing_dict("Collectibles")
     tools = existing_dict("Tool") or existing_dict("Tools")
     achievements = existing_leaf("Achievements") or ("Achievements", "achievements")
-    community = existing_leaf("Community News") or ("Community News", "community_news")
     settings = existing_leaf("Settings") or ("Settings", "settings")
 
     sections: list = [
@@ -83,8 +82,10 @@ def _install_canonical_sidebar_routes() -> None:
         tools = dict(tools)
         tools["label"] = "Tools"
         sections.append(tools)
-    sections.extend((community, settings))
+    sections.append(settings)
 
+    # Community News remains registered for compatibility, but is intentionally
+    # absent from navigation while the feature is disabled. Humanity survived.
     foundry_sidebar.CORE_NAV_SECTIONS[:] = sections
 
 
@@ -184,7 +185,7 @@ def _register_roster_workspace_refresh(window, page) -> None:
 
 
 def register_raid_engine_pages(window) -> None:
-    """Register the complete City RAID workflow after source engine pages exist."""
+    """Register the complete Urban Wilderness RAID workflow after source engine pages exist."""
     from ui.city_live_raid_page import CityLiveRaidPage
     from ui.city_raid_assignments_page import CityRaidAssignmentsPage
     from ui.city_raid_plan_workspace_page import CityRaidPlanWorkspacePage
@@ -230,6 +231,11 @@ def register_raid_engine_pages(window) -> None:
     raid_plans.adviserRequested.connect(lambda plan: _open_raid_plan_adviser(window, plan))
     _register_page(window, "raid_plans", raid_plans)
 
+    # Roster is the application landing surface for the streamlined workspace.
+    # Keep the legacy roster route registered for old handoffs, but do not make
+    # people navigate through it merely because software enjoys archaeology.
+    window.show_page("roster_workspace")
+
 
 def install() -> None:
     global _INSTALLED
@@ -242,8 +248,6 @@ def install() -> None:
     from ui.coverage_raid_plan_scope_support import install as install_coverage_raid_plan_scope_support
     from ui.raid_plan_optimizer_adviser_support import install as install_raid_plan_optimizer_adviser_support
 
-    # CoveragePage and OptimizationPage are created by the original build_ui,
-    # so extend both classes before that UI is constructed.
     install_coverage_raid_plan_scope_support()
     install_raid_plan_optimizer_adviser_support()
     _install_canonical_sidebar_routes()
