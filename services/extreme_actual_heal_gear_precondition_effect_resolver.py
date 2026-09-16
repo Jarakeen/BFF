@@ -25,6 +25,7 @@ POWERFUL_ASSAULT_POWER_CONDITION = "powerful_assault_power_active"
 CAMONNA_TONG_MAX_POWER_CONDITION = "camonna_tong_max_power_active"
 RAVAGER_FULL_STACKS_CONDITION = "ravager_full_stacks"
 TRACKERS_LASH_FULL_STACKS_CONDITION = "trackers_lash_full_stacks"
+PELINALS_WRATH_FULL_STACKS_CONDITION = "pelinals_wrath_full_stacks"
 LIGHT_SPEAKER_RESTORATION_SCOPE_CONDITION = "light_speaker_restoration_scope_active"
 INNATE_AXIOM_CLASS_SCOPE_CONDITION = "innate_axiom_class_scope_active"
 
@@ -46,6 +47,7 @@ class ExtremeActualHealGearPreconditionEffectResolver:
     _CAMONNA_TONG = re.compile(r"^\(5 items\)\s*When you kill a monster and gain Experience Points, gain 1 Weapon and Spell Damage for every 50 Experience Points the monster is worth for 30 seconds\.\s*This bonus can stack up to a maximum of\s*(?P<max>\d[\d,]*)\s*Weapon and Spell Damage\.\s*This item set is not affected by Experience Point boosting effects\.?$", re.IGNORECASE)
     _RAVAGER = re.compile(r"^\(5 items\)\s*Each time you attempt to reduce the target's Physical or Spell Resistance, you gain a stack of Ravager for 5 seconds, increasing your Weapon and Spell Damage by\s*(?P<max>\d[\d,]*)\.\s*You can gain a stack every 1 second\.\s*At 4 stacks, the duration doubles but cannot be refreshed\.?$", re.IGNORECASE)
     _TRACKERS_LASH = re.compile(r"^\(5 items\)\s*When your attack is dodged, increase your Weapon and Spell Damage by\s*(?P<max>\d[\d,]*)\s*for\s*7 seconds, stacking up to\s*5 times\.\s*This effect can occur once every\s*0\.5 seconds\.?$", re.IGNORECASE)
+    _PELINALS_WRATH = re.compile(r"^\(5 items\)\s*Whenever you kill an enemy you gain a damage shield that absorbs up to\s*\d[\d,]*(?:\s*-\s*\d[\d,]*)?\s*damage for\s*10 seconds and a stack of Wrath of Whitestrake for\s*10 seconds\.\s*Each stack of Wrath of Whitestrake grants you\s*(?P<max>\d[\d,]*)\s*Weapon and Spell Damage, but causes you to take\s*\d[\d,]*(?:\s*-\s*\d[\d,]*)?\s*Oblivion damage every second, up to\s*10 stacks\.\s*The damage shield scales off the higher of your Weapon or Spell Damage, and the damage scales off your Max Health\.?$", re.IGNORECASE)
     _LIGHT_SPEAKER = re.compile(r"^\(5 items\)\s*Adds\s+(?:(?P<min>\d[\d,]*)\s*-\s*)?(?P<max>\d[\d,]*)\s+Weapon and Spell Damage to your Restoration Staff abilities\.?$", re.IGNORECASE)
     _INNATE_AXIOM = re.compile(r"^\(5 items\)\s*Adds\s+(?:(?P<min>\d[\d,]*)\s*-\s*)?(?P<max>\d[\d,]*)\s+Weapon and Spell Damage to your Class abilities\.?$", re.IGNORECASE)
 
@@ -69,6 +71,7 @@ class ExtremeActualHealGearPreconditionEffectResolver:
             (self._CAMONNA_TONG, CAMONNA_TONG_MAX_POWER_CONDITION, 1.0),
             (self._RAVAGER, RAVAGER_FULL_STACKS_CONDITION, 4.0),
             (self._TRACKERS_LASH, TRACKERS_LASH_FULL_STACKS_CONDITION, 5.0),
+            (self._PELINALS_WRATH, PELINALS_WRATH_FULL_STACKS_CONDITION, 10.0),
             (self._LIGHT_SPEAKER, LIGHT_SPEAKER_RESTORATION_SCOPE_CONDITION, 1.0),
             (self._INNATE_AXIOM, INNATE_AXIOM_CLASS_SCOPE_CONDITION, 1.0),
         )
@@ -99,6 +102,7 @@ __all__ = [
     "INNATE_AXIOM_CLASS_SCOPE_CONDITION",
     "LIGHT_SPEAKER_RESTORATION_SCOPE_CONDITION",
     "PEARLESCENT_WARD_FULL_GROUP_ALIVE_CONDITION",
+    "PELINALS_WRATH_FULL_STACKS_CONDITION",
     "POWERFUL_ASSAULT_POWER_CONDITION",
     "RAVAGER_FULL_STACKS_CONDITION",
     "SEVENTH_LEGION_BRUTE_POWER_CONDITION",
