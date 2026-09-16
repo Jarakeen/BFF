@@ -45,6 +45,8 @@ _SPECIALIZED_FAMILIES = {
     "critical_heal": "actual-heal-event",
     "damage_shield": "single-event-output",
     "bash_damage": "single-event-output",
+    "resource_sustain": "resource-timeline",
+    "ultimate_generation": "resource-timeline",
     "movement_speed": "movement-state",
     "sprint_speed": "movement-state",
     "stealthed_movement_speed": "movement-state",
@@ -54,8 +56,6 @@ _SPECIALIZED_FAMILIES = {
 # by individual UI row.  Closing one family should unlock every member whose final
 # scorer is already canonical.
 _PENDING_FAMILIES = {
-    "resource_sustain": "resource-timeline",
-    "ultimate_generation": "resource-timeline",
     "detection_radius_reduction": "stealth-state",
     "invisibility_duration": "stealth-runtime",
     "invisibility_uptime": "stealth-runtime",
