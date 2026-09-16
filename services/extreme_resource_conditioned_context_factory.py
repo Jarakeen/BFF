@@ -33,6 +33,7 @@ from services.extreme_actual_heal_gear_precondition_witness_service import (
     FLEDGLINGS_NEST_MINOR_COURAGE_CONDITION,
     PHOENIX_MOTH_MINOR_COURAGE_CONDITION,
     SPELL_POWER_CURE_MAJOR_COURAGE_CONDITION,
+    VESTMENT_OF_OLORIME_MAJOR_COURAGE_CONDITION,
 )
 from services.extreme_gear_set_power_tradeoff_resolver import (
     ExtremeGearSetPowerTradeoffResolver,
@@ -190,7 +191,10 @@ class ExtremeResourceConditionedPhase5ContextFactory(Phase5BuildCalculationConte
             PHOENIX_MOTH_MINOR_COURAGE_CONDITION,
         } & active:
             buffs.append("Minor Courage")
-        if SPELL_POWER_CURE_MAJOR_COURAGE_CONDITION in active:
+        if {
+            SPELL_POWER_CURE_MAJOR_COURAGE_CONDITION,
+            VESTMENT_OF_OLORIME_MAJOR_COURAGE_CONDITION,
+        } & active:
             buffs.append("Major Courage")
         if tuple(buffs) == combat_state.active_buffs:
             return combat_state
