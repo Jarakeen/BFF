@@ -92,6 +92,12 @@ _REVIEWED_H1_PRECONDITION_TEXT = (
         re.IGNORECASE | re.DOTALL,
     ),
     re.compile(
+        r"Titanborn Strength \(5\): active set bonus is not yet mechanic-mapped:.*"
+        r"Adds\s+(?:\d[\d,]*\s*-\s*)?110\s+Weapon and Spell Damage and.*Offensive Penetration\..*"
+        r"bonus doubles when you are under 75% Health and quadruples when you are under 50% Health",
+        re.IGNORECASE | re.DOTALL,
+    ),
+    re.compile(
         r"Blessing of High Isle \(5\): active set bonus is not yet mechanic-mapped:.*"
         r"When you are healed while in combat, increase your Weapon and Spell Damage by\s*8-369\s+for\s+5 seconds",
         re.IGNORECASE | re.DOTALL,
