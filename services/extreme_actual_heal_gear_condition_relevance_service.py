@@ -149,6 +149,12 @@ _REVIEWED_H1_HEALING_PRECONDITION_TEXT = (
         r"Adds 10% Healing Done while your Health is 50% or less",
         re.IGNORECASE | re.DOTALL,
     ),
+    re.compile(
+        r"Naga Shaman \(5\): active set bonus is not yet mechanic-mapped:.*"
+        r"When you apply a damage shield to yourself or an ally, you gain Minor Mending and Minor Vitality for\s*6 seconds.*"
+        r"healing done by\s*(?:\d+(?:\.\d+)?\s*-\s*)?8%",
+        re.IGNORECASE | re.DOTALL,
+    ),
 )
 
 _REVIEWED_H1_HEALING_CONDITION_BLOCKERS = (
