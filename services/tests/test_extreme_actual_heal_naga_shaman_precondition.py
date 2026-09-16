@@ -45,7 +45,9 @@ def test_naga_shaman_routes_through_canonical_minor_mending_without_stacking() -
         PlayerBuild(),
         combat_state=state,
     )
-    healing_done = sum(item.value for item in inputs.core.healing_done.additive)
+    healing_done = sum(
+        item.value for item in inputs.core.healing_done.additive_after_percent
+    )
 
     assert healing_done == 0.08
 
