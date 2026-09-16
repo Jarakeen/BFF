@@ -51,7 +51,7 @@ class ThemedRaidRosterWorkspacePage(RaidRosterWorkspacePage):
     def _asset_for(self, surface: str) -> Path:
         theme = self._visual_theme()
         if theme == VISUAL_THEME_RYLO_CITY:
-            filename = f"roster_{surface}.jpg"
+            filename = f"roster_{surface}.webp"
             candidate = get_resource_path(
                 "assets", "themes", "bff", "city_night", "roster", filename
             )
