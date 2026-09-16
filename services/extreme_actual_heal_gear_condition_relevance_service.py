@@ -84,6 +84,14 @@ _REVIEWED_H1_PRECONDITION_TEXT = (
         r"When you are healed while in combat, increase your Weapon and Spell Damage by\s*8-369\s+for\s+5 seconds",
         re.IGNORECASE | re.DOTALL,
     ),
+    re.compile(
+        r"Fledgling's Nest \(5\): active set bonus is not yet mechanic-mapped:.*"
+        r"Gryphon Nest.*"
+        r"first time you or a group member leaves the Nest.*"
+        r"Minor Courage.*"
+        r"Weapon and Spell Damage by\s*215",
+        re.IGNORECASE | re.DOTALL,
+    ),
 )
 
 
