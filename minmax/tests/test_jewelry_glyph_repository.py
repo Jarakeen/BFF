@@ -92,6 +92,25 @@ def test_name_lookup_preserves_each_effect_type_from_strongest_named_glyph(tmp_p
     }
 
 
+def test_family_name_lookup_includes_tier_prefixed_glyph_rows(tmp_path):
+    repository = JewelryGlyphEffectRepository(_database(tmp_path))
+
+    effects = repository.get_jewelry_glyph_effect_by_name("Glyph of Bashing")
+
+    assert len(effects) == 1
+    assert effects[0].stat == StatId.BASH_DAMAGE
+    assert effects[0].value == 180
+    assert effects[0].source == "Truly Superb Glyph of Bashing"
+
+
+def test_family_semantics_include_tier_prefixed_glyph_rows(tmp_path):
+    repository = JewelryGlyphEffectRepository(_database(tmp_path))
+
+    assert repository.get_jewelry_glyph_effect_types_by_name("Glyph of Bashing") == (
+        "bash_damage",
+    )
+
+
 def test_unsupported_effect_type_is_explicit(tmp_path):
     repository = JewelryGlyphEffectRepository(_database(tmp_path))
 
