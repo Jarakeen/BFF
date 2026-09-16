@@ -94,17 +94,34 @@ def test_damage_only_unmapped_power_text_is_irrelevant_to_h1_heal() -> None:
         assert result.remaining_blockers == ()
 
 
-def test_enemy_trigger_that_grants_global_power_stays_blocking() -> None:
-    row = _row(
-        "spell_damage",
+def test_reviewed_armor_of_truth_enemy_trigger_is_constructible_for_h1() -> None:
+    blocker = (
         "Armor of Truth (5): active set bonus is not yet mechanic-mapped: "
-        "When you deal damage to an enemy who is Off Balance, your Weapon and Spell Damage are increased by 10-460 for 10 seconds.",
+        "When you deal damage to an enemy who is Off Balance, your Weapon and Spell Damage are increased by 10-460 for 10 seconds."
     )
+    row = _row("spell_damage", blocker)
+
+    result = ExtremeActualHealGearConditionRelevanceService.review(row)
+
+    assert result.h1_mechanic_complete is True
+    assert result.h1_positive_modifier_proven is True
+    assert result.ignored_blockers == (blocker,)
+    assert result.remaining_blockers == ()
+
+
+def test_unreviewed_enemy_trigger_that_grants_global_power_stays_blocking() -> None:
+    blocker = (
+        "Unknown Power Set (5): active set bonus is not yet mechanic-mapped: "
+        "When you deal damage to an enemy who is Off Balance, your Weapon and Spell Damage are increased by 10-460 for 10 seconds."
+    )
+    row = _row("spell_damage", blocker)
 
     result = ExtremeActualHealGearConditionRelevanceService.review(row)
 
     assert result.h1_mechanic_complete is False
-    assert result.remaining_blockers
+    assert result.h1_positive_modifier_proven is False
+    assert result.ignored_blockers == ()
+    assert result.remaining_blockers == (blocker,)
 
 
 def test_standing_still_is_proven_by_standing_h1_scenario() -> None:
