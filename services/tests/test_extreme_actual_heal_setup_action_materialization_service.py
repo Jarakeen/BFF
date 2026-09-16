@@ -56,6 +56,25 @@ def test_full_inactive_bar_replaces_one_ordinary_slot_and_records_displacement()
     assert result.build.BackBarSkills[5] == "Back Ultimate"
 
 
+def test_full_inactive_bar_exposes_all_five_legal_replacement_variants() -> None:
+    build = PlayerBuild()
+    build.FrontBarSkills = ["Scored Heal", "A", "B", "C", "D", "Front Ultimate"]
+    build.BackBarSkills = ["One", "Two", "Three", "Four", "Five", "Back Ultimate"]
+
+    variants = ExtremeActualHealSetupActionMaterializationService.variants(
+        build,
+        _witness(),
+        active_bar="front",
+    )
+
+    assert [item.slot_index for item in variants] == [0, 1, 2, 3, 4]
+    assert [item.displaced_skill for item in variants] == ["One", "Two", "Three", "Four", "Five"]
+    assert all(item.build.FrontBarSkills == build.FrontBarSkills for item in variants)
+    assert all(item.build.BackBarSkills[5] == "Back Ultimate" for item in variants)
+    for item in variants:
+        assert item.build.BackBarSkills[item.slot_index] == "Vigor"
+
+
 def test_existing_setup_skill_is_reused_without_displacement() -> None:
     build = PlayerBuild()
     build.BackBarSkills = ["One", "Vigor", "Three", "Four", "Five", "Back Ultimate"]
