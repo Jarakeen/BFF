@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
+import re
 
 from minmax.build_candidate import BuildCandidate
 from minmax.gear_set_repository import GearSetRepository
@@ -10,6 +12,14 @@ from services.extreme_actual_heal_gear_condition_relevance_service import (
 )
 from services.extreme_complete_optimization_service import ExtremeCompleteOptimizationService
 from services.extreme_gear_set_objective_service import ExtremeGearSetObjectiveService
+
+
+_SOULSHINE_BLOCKER = re.compile(
+    r"^Soulshine \(5\): active set bonus is not yet mechanic-mapped:.*"
+    r"Activating an ability with a cast or channel time grants you\s*"
+    r"(?:\d[\d,]*\s*-\s*)?369\s+Weapon and Spell Damage for\s*5 seconds\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
 
 
 class ExtremeActualHealGearSetCandidateService:
@@ -22,10 +32,6 @@ class ExtremeActualHealGearSetCandidateService:
     1. the shared objective parser exposes a positive ``reviewed_delta``; or
     2. an H1 specialist rule proves a positive runtime/tradeoff modifier whose
        numeric value is intentionally owned by the Extreme conditioned scorer.
-
-    The second route is required for witnessed named buffs such as Olorime Major
-    Courage; otherwise a set can become mechanic-complete yet remain silently
-    absent from authoritative candidate search.
     """
 
     OBJECTIVES = (
@@ -44,7 +50,23 @@ class ExtremeActualHealGearSetCandidateService:
 
     @staticmethod
     def _h1_review(row):
-        return ExtremeActualHealGearConditionRelevanceService.review(row)
+        review = ExtremeActualHealGearConditionRelevanceService.review(row)
+        objective = str(row.objective_key or "").strip().casefold()
+        blockers = tuple(str(value) for value in row.unresolved)
+        if (
+            str(row.set_name or "").strip().casefold() == "soulshine"
+            and objective in {"spell_damage", "weapon_damage"}
+            and blockers
+            and all(_SOULSHINE_BLOCKER.fullmatch(blocker) for blocker in blockers)
+        ):
+            return replace(
+                review,
+                h1_mechanic_complete=True,
+                h1_positive_modifier_proven=True,
+                ignored_blockers=blockers,
+                remaining_blockers=(),
+            )
+        return review
 
     @classmethod
     def _h1_mechanic_complete(cls, row) -> bool:
@@ -55,20 +77,12 @@ class ExtremeActualHealGearSetCandidateService:
         review = cls._h1_review(row)
         return bool(row.reviewed_delta > 0 or review.h1_positive_modifier_proven)
 
-    def candidate_set_names(
-        self,
-        *,
-        per_objective: int | None = None,
-    ) -> tuple[str, ...]:
+    def candidate_set_names(self, *, per_objective: int | None = None) -> tuple[str, ...]:
         names: list[str] = []
         seen: set[str] = set()
         limit = None if per_objective is None else max(1, int(per_objective))
-
         rows_by_objective = {
-            objective: ExtremeGearSetObjectiveService.candidates_for_objective(
-                self.repository,
-                objective,
-            )
+            objective: ExtremeGearSetObjectiveService.candidates_for_objective(self.repository, objective)
             for objective in self.OBJECTIVES
         }
         unresolved_set_ids = {
@@ -77,23 +91,14 @@ class ExtremeActualHealGearSetCandidateService:
             for row in rows
             if not self._h1_mechanic_complete(row)
         }
-
         for objective in self.OBJECTIVES:
             accepted = 0
             for row in rows_by_objective[objective]:
                 gear_set = self.repository.get_set_by_id(row.set_id)
                 if gear_set is None:
                     continue
-                useful = ExtremeGearSetObjectiveService._maximum_useful_piece_count(
-                    self.repository,
-                    gear_set,
-                )
-                if (
-                    useful < 5
-                    or int(row.set_id) in unresolved_set_ids
-                    or not self._h1_mechanic_complete(row)
-                    or not self._h1_positive(row)
-                ):
+                useful = ExtremeGearSetObjectiveService._maximum_useful_piece_count(self.repository, gear_set)
+                if useful < 5 or int(row.set_id) in unresolved_set_ids or not self._h1_mechanic_complete(row) or not self._h1_positive(row):
                     continue
                 key = row.set_name.casefold()
                 if key not in seen:
@@ -118,18 +123,13 @@ class ExtremeActualHealGearSetCandidateService:
             for entry in baseline_build.Armor.values()
             if str(entry.get("Set", "") or "").strip()
         }
-
         for set_name in self.candidate_set_names(per_objective=per_objective):
             if set_name.casefold() in current_primary:
                 continue
             build = PlayerBuild.from_dict(baseline_build.to_dict())
-            before = {
-                slot: str(build.Armor[slot].get("Set", "") or "")
-                for slot in self.BODY_SLOTS[:5]
-            }
+            before = {slot: str(build.Armor[slot].get("Set", "") or "") for slot in self.BODY_SLOTS[:5]}
             for slot in self.BODY_SLOTS[:5]:
                 build.Armor[slot]["Set"] = set_name
-
             result.append(
                 ExtremeCompleteOptimizationService._direct_candidate(
                     build,
