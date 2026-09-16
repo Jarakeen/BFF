@@ -13,6 +13,7 @@ from services.extreme_actual_heal_gear_precondition_effect_resolver import (
     BLESSING_OF_HIGH_ISLE_CONDITION,
     CAMONNA_TONG_MAX_POWER_CONDITION,
     PEARLESCENT_WARD_FULL_GROUP_ALIVE_CONDITION,
+    PELINALS_WRATH_FULL_STACKS_CONDITION,
     STYGIAN_POWER_CONDITION,
     TITANBORN_STRENGTH_BELOW_HALF_HEALTH_CONDITION,
     TRACKERS_LASH_FULL_STACKS_CONDITION,
@@ -125,6 +126,16 @@ class ExtremeActualHealGearPreconditionWitnessService:
                 "the target successfully Dodges, with trigger events no faster than one every 0.5 "
                 "seconds, reach Tracker's Lash's 5-stack cap, and snapshot the heal inside the "
                 "resulting 7-second full-stack window"
+            )
+
+        if int(counts.get("Pelinal's Wrath", 0)) >= 5:
+            active.append(PELINALS_WRATH_FULL_STACKS_CONDITION)
+            evidence.append(
+                "pelinals_wrath_full_stacks: standing H1 setup may kill ten enemies within the "
+                "10-second Wrath of Whitestrake stack window, reach the explicit 10-stack cap, "
+                "and snapshot the heal while all ten +100 Weapon and Spell Damage stacks are active; "
+                "the set's damage shield and self-inflicted Oblivion damage remain real setup effects "
+                "but are not themselves Weapon/Spell Damage inputs"
             )
 
         if int(counts.get("Camonna Tong", 0)) >= 5:
