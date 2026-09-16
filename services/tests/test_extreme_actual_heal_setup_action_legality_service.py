@@ -23,15 +23,14 @@ def _row(name: str, description: str, *, line: str = "Heavy Armor") -> ExtremePl
         class_type="",
         skill_line=line,
         skill_type="Active",
-        description=description,
-        domain=ExtremeSkillDomain.ARMOR,
         is_passive=False,
         is_player=True,
-        max_rank_ability_id=12345,
-        base_ability_id=12340,
         is_crafted=False,
-        known_noncombat_line=False,
-        combat_line=True,
+        base_ability_id=12340,
+        max_rank=4,
+        max_rank_ability_id=12345,
+        description=description,
+        domain=ExtremeSkillDomain.ARMOR,
     )
 
 
