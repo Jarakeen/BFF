@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from minmax.gear_set_healing_condition_resolver import BLIND_PATH_DISTANT_HEAL_CONDITION
 from minmax.gear_stat_inputs import GearStatInputResolver
 from models.build_model import PlayerBuild
 from services.extreme_actual_heal_candidate_distance_service import (
@@ -14,7 +15,6 @@ from services.extreme_actual_heal_candidate_scope_service import (
     ExtremeActualHealCandidateScopeService,
 )
 from services.extreme_actual_heal_gear_precondition_effect_resolver import (
-    BLIND_PATH_DISTANT_HEAL_CONDITION,
     INNATE_AXIOM_CLASS_SCOPE_CONDITION,
     LIGHT_SPEAKER_RESTORATION_SCOPE_CONDITION,
 )
