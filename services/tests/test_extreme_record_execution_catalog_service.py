@@ -56,9 +56,12 @@ def test_related_records_share_execution_families() -> None:
         assert rows[key].status is ExtremeRecordExecutionStatus.SPECIALIZED
         assert rows[key].execution_family == "movement-state"
 
+    assert rows["detection_radius_reduction"].status is ExtremeRecordExecutionStatus.SPECIALIZED
     assert rows["detection_radius_reduction"].execution_family == "stealth-state"
-    assert rows["invisibility_duration"].execution_family == "stealth-runtime"
-    assert rows["invisibility_uptime"].execution_family == "stealth-runtime"
+
+    for key in ("invisibility_duration", "invisibility_uptime"):
+        assert rows[key].status is ExtremeRecordExecutionStatus.SPECIALIZED
+        assert rows[key].execution_family == "stealth-runtime"
 
 
 def test_execution_disposition_counts_make_remaining_work_explicit() -> None:
@@ -68,5 +71,5 @@ def test_execution_disposition_counts_make_remaining_work_explicit() -> None:
         counts[row.status] += 1
 
     assert counts[ExtremeRecordExecutionStatus.READY] == 19
-    assert counts[ExtremeRecordExecutionStatus.SPECIALIZED] == 9
-    assert counts[ExtremeRecordExecutionStatus.PENDING] == 3
+    assert counts[ExtremeRecordExecutionStatus.SPECIALIZED] == 12
+    assert counts[ExtremeRecordExecutionStatus.PENDING] == 0
