@@ -31,6 +31,26 @@ EXTREME_ACTUAL_HEAL_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.actual_heal_gear_denominator",
+        domain="extreme",
+        purpose=(
+            "Assign every canonical gear set one explicit ordinary-H1 disposition and "
+            "reconcile accepted rows against the authoritative five-piece candidate pool."
+        ),
+        implementation_path="services.extreme_actual_heal_gear_denominator_service",
+        inputs=("CanonicalGearSetCorpus", "ExtremeActualHealGearSetCandidatePolicy"),
+        outputs=("ExtremeActualHealGearDenominatorReport",),
+        responsibilities=("extreme_actual_heal_ordinary_gear_denominator",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("Healer",),
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "The service is proof-only: it does not broaden admission. Every canonical set "
+            "is classified as accepted, unresolved, lacking an ordinary five-piece shape, "
+            "or reviewed non-positive/irrelevant under the existing H1 objective screen."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.actual_heal_armor_weight_legality",
         domain="extreme",
         purpose=(
