@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QPushButton,
     QSizePolicy,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -173,7 +174,7 @@ def _apply_intent(page, name: str) -> None:
     _refresh_setting_summary(page)
 
 
-def _summary_row(title: str, value_label: QLabel) -> QWidget:
+def _summary_row(page, title: str, value_label: QLabel) -> QWidget:
     row = QFrame()
     row.setProperty("rotationSummaryRow", True)
     row.setMinimumHeight(48)
@@ -187,6 +188,17 @@ def _summary_row(title: str, value_label: QLabel) -> QWidget:
     layout.addWidget(title_label)
     layout.addStretch(1)
     layout.addWidget(value_label)
+    edit = QToolButton()
+    edit.setProperty("rotationSettingEdit", True)
+    edit.setToolTip(f"Edit {title}")
+    edit.setAutoRaise(True)
+    set_button_icon(edit, "pen", size=18)
+    edit.clicked.connect(
+        lambda _checked=False: page.phase14_rotation_advanced_panel.setVisible(
+            not page.phase14_rotation_advanced_panel.isVisible()
+        ) if hasattr(page, "phase14_rotation_advanced_panel") else None
+    )
+    layout.addWidget(edit)
     return row
 
 
@@ -408,12 +420,14 @@ def _build_intent_card(page) -> FoundryCard:
     intent_buttons.setSpacing(8)
     page.phase14_intent_buttons = {}
     for name, values in _INTENTS.items():
-        button = QPushButton(f"{name}\n{values['description']}")
+        button = QToolButton()
+        button.setText(f"{name}\n{values['description']}")
+        button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
         button.setCheckable(True)
-        button.setMinimumHeight(98)
-        button.setMaximumHeight(104)
+        button.setMinimumHeight(118)
+        button.setMaximumHeight(132)
         button.setProperty("rotationIntentChoice", True)
-        set_button_icon(button, values["icon"], size=28)
+        set_button_icon(button, values["icon"], size=36)
         button.clicked.connect(lambda checked, intent=name: _apply_intent(page, intent) if checked else None)
         page.phase14_intent_buttons[name] = button
         intent_buttons.addWidget(button, 1)
@@ -437,7 +451,7 @@ def _build_intent_card(page) -> FoundryCard:
         name: QLabel() for name in ("Weaving", "Bar swapping", "Heavy attacks", "Resource reserve")
     }
     for name, value_label in page.phase14_rotation_setting_labels.items():
-        intent_card.addWidget(_summary_row(name, value_label))
+        intent_card.addWidget(_summary_row(page, name, value_label))
 
     page.phase14_rotation_advanced_panel = _build_advanced_panel(page)
     page.phase14_rotation_advanced_panel.hide()
@@ -480,13 +494,14 @@ def _build_obligations_card(page) -> FoundryCard:
     obligations.addStretch(1)
     page.generate_button.setMinimumHeight(60)
     page.generate_button.setMaximumHeight(64)
-    set_button_icon(page.generate_button, "rotations", size=22)
+    page.generate_button.setText("▶  Generate Rotation")
     obligations.addWidget(page.generate_button)
     return obligations
 
 
 def _build_setup_tab(page) -> QWidget:
     tab = QWidget()
+    tab.setObjectName("phase14RotationFrontPage")
     layout = QVBoxLayout(tab)
     layout.setContentsMargins(0, 0, 0, 0)
     layout.setSpacing(10)
