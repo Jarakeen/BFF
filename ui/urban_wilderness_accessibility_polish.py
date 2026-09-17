@@ -60,10 +60,18 @@ def _card_ancestor(widget: QWidget | None) -> QWidget | None:
 
 
 def _first_art(*candidates: tuple[str, ...]) -> Path | None:
+    """Return the first safe UI artwork path.
+
+    The legacy Field Journal JPEG exports are malformed and trigger Qt's JPEG
+    decoder repeatedly during application boot. Keep them on disk for later
+    replacement, but never hand .jpg/.jpeg files to QPixmap from the active UI.
+    """
     for parts in candidates:
-        path = get_resource_path(*parts)
-        if Path(path).is_file():
-            return Path(path)
+        path = Path(get_resource_path(*parts))
+        if path.suffix.casefold() in {".jpg", ".jpeg"}:
+            continue
+        if path.is_file():
+            return path
     return None
 
 
