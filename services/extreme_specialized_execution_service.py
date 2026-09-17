@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 from models.build_model import PlayerBuild
 from services.extreme_healing_event_record_service import (
     ExtremeHealingEventRecordService,
+)
+from services.extreme_movement_static_package_service import (
+    ExtremeMovementStaticPackageService,
 )
 from services.extreme_record_execution_catalog_service import (
     ExtremeRecordExecutionCatalogService,
@@ -33,6 +37,7 @@ class ExtremeSpecializedExecutionResult:
     unresolved: tuple[str, ...]
     search_scope: tuple[str, ...]
     omitted_scope: tuple[str, ...]
+    value_text: str | None = None
 
 
 class ExtremeSpecializedExecutionService:
@@ -43,7 +48,15 @@ class ExtremeSpecializedExecutionService:
     not grow separate ad-hoc forms and execution branches for every record.
     """
 
-    _DIRECT_KEYS = frozenset({"actual_heal", "critical_heal"})
+    _DIRECT_KEYS = frozenset(
+        {
+            "actual_heal",
+            "critical_heal",
+            "movement_speed",
+            "sprint_speed",
+            "stealthed_movement_speed",
+        }
+    )
 
     _FAMILY_REQUIREMENTS = {
         "actual-heal-event": (),
@@ -69,14 +82,10 @@ class ExtremeSpecializedExecutionService:
                 note="Reuse Phase 4 resource events or explicit Ultimate generation events.",
             ),
         ),
-        "movement-state": (
-            ExtremeSpecializedInputRequirement(
-                "movement_sources",
-                "Movement Sources",
-                "canonical_state",
-                note="Aggregate reviewed skill, item, set, Mundus, buff and CP movement channels.",
-            ),
-        ),
+        # Reviewed build-owned movement sources can now produce a lower-bound
+        # record without asking the user to manually enter stat buckets. Missing
+        # runtime/provider families remain unresolved evidence in the result.
+        "movement-state": (),
         "stealth-state": (
             ExtremeSpecializedInputRequirement(
                 "stealth_sources",
@@ -105,8 +114,15 @@ class ExtremeSpecializedExecutionService:
         self,
         *,
         healing_events: ExtremeHealingEventRecordService | None = None,
+        movement_package: ExtremeMovementStaticPackageService | None = None,
+        database_path: str | Path | None = None,
     ) -> None:
         self.healing_events = healing_events or ExtremeHealingEventRecordService()
+        self.movement_package = movement_package or (
+            ExtremeMovementStaticPackageService(database_path)
+            if database_path is not None
+            else None
+        )
 
     @classmethod
     def requirements_for(cls, objective_key: str) -> tuple[ExtremeSpecializedInputRequirement, ...]:
@@ -168,17 +184,42 @@ class ExtremeSpecializedExecutionService:
             else:
                 unresolved.append("No scored legal healing-event candidate was produced")
 
+            value = result.best_scored_value
             return ExtremeSpecializedExecutionResult(
                 objective_key=key,
                 label=descriptor.objective.label,
                 execution_family=descriptor.execution_family,
-                value=result.best_scored_value,
+                value=value,
+                value_text=None if value is None else f"{value:,.0f}",
                 mechanic_complete=result.mechanic_complete,
                 global_maximum_proven=result.global_maximum_proven,
                 summary_rows=tuple(summary),
                 unresolved=tuple(dict.fromkeys(item for item in unresolved if item)),
                 search_scope=tuple(catalog.search_scope),
                 omitted_scope=tuple(catalog.omitted_scope),
+            )
+
+        if key in {"movement_speed", "sprint_speed", "stealthed_movement_speed"}:
+            if self.movement_package is None:
+                raise ValueError("Extreme movement package requires a canonical database path")
+            result = self.movement_package.evaluate(key)
+            state = result.result
+            return ExtremeSpecializedExecutionResult(
+                objective_key=key,
+                label=descriptor.objective.label,
+                execution_family=descriptor.execution_family,
+                value=state.raw_multiplier,
+                value_text=f"{state.raw_multiplier * 100.0:.1f}%",
+                mechanic_complete=result.mechanic_complete,
+                global_maximum_proven=False,
+                summary_rows=(
+                    ("Reviewed raw speed", f"{state.raw_multiplier * 100.0:.1f}%"),
+                    ("Effective speed", f"{state.effective_multiplier * 100.0:.1f}%"),
+                    ("Effective cap", f"{state.effective_cap_multiplier * 100.0:.0f}%"),
+                ),
+                unresolved=result.unresolved,
+                search_scope=result.evidence,
+                omitted_scope=result.unresolved,
             )
 
         raise AssertionError(f"Unhandled zero-input specialized Extreme record: {key}")
