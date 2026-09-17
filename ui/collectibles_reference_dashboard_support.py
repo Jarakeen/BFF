@@ -5,19 +5,27 @@ _ORIGINAL_REFRESH = None
 
 
 def _install_reference_badges(collectibles_dashboard_page) -> None:
-    # Reuse the existing semantic artwork so the recovered reference ledgers
-    # render as first-class dashboard tiles instead of falling back to text-only
-    # glyphs. Furnishing Plans belongs with Furnishings; Recipes uses the vial-
-    # style Fragments artwork until a dedicated recipe badge sheet exists.
+    """Give additive reference cards a theme-safe semantic fallback badge.
+
+    Urban Wilderness supplies dedicated artwork through
+    ``collectibles_new_theme_assets_support``. The base BFF and Rylo themes keep a
+    related in-theme emblem instead of dropping to a text glyph when the extra
+    cards are shown.
+    """
     badge_maps = (
         collectibles_dashboard_page.BFF_BADGES,
         collectibles_dashboard_page.RYLO_BADGES,
     )
     for badges in badge_maps:
-        if "Furnishing Plans" not in badges and "Furnishings" in badges:
-            badges["Furnishing Plans"] = badges["Furnishings"]
-        if "Recipes" not in badges and "Fragments" in badges:
-            badges["Recipes"] = badges["Fragments"]
+        fallbacks = {
+            "Furnishing Plans": "Furnishings",
+            "Recipes": "Fragments",
+            "Rumors": "Mementos",
+            "Favors": "Assistants",
+        }
+        for label, fallback in fallbacks.items():
+            if label not in badges and fallback in badges:
+                badges[label] = badges[fallback]
 
 
 def install() -> None:
@@ -61,6 +69,26 @@ def install() -> None:
                 (),
                 "shield",
                 "▤",
+            )
+        )
+    if "Rumors" not in existing_routes:
+        additions.append(
+            collectibles_dashboard_page.DashboardSpec(
+                "Rumors",
+                "Rumors",
+                (),
+                "bar",
+                "✉",
+            )
+        )
+    if "Favors" not in existing_routes:
+        additions.append(
+            collectibles_dashboard_page.DashboardSpec(
+                "Favors",
+                "Favors",
+                (),
+                "bar",
+                "✦",
             )
         )
 
