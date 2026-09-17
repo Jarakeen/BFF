@@ -80,16 +80,16 @@ try {
     Copy-Item $SourceDatabase (Join-Path $DataRoot "eso.db") -Force
 
     # Runtime external data is positive-allowlisted by release_manifest.py.
-    # Entries may include reviewed subdirectories such as gameplay_policy/.
+    # File entries may include reviewed subdirectories such as gameplay_policy/.
     $RuntimeFiles = python -c "import runpy; m=runpy.run_path(r'packaging/release_manifest.py'); print(chr(10).join(m.get('RUNTIME_EXTERNAL_DATA_FILES', ())))"
     if ($LASTEXITCODE -ne 0) {
-        throw "Could not read runtime data allowlist."
+        throw "Could not read runtime data file allowlist."
     }
     foreach ($Name in $RuntimeFiles) {
         $Name = $Name.Trim()
         if ([string]::IsNullOrWhiteSpace($Name)) { continue }
         $Source = Join-Path $ProjectRoot ("data\" + $Name)
-        if (-not (Test-Path $Source)) {
+        if (-not (Test-Path $Source -PathType Leaf)) {
             throw "Allowlisted runtime data file is missing: data\$Name"
         }
         $Destination = Join-Path $DataRoot $Name
@@ -98,6 +98,27 @@ try {
             New-Item -ItemType Directory -Force -Path $DestinationParent | Out-Null
         }
         Copy-Item $Source $Destination -Force
+    }
+
+    # Canonical runtime data directories are copied recursively, preserving their
+    # data-relative paths. These are reviewed application inputs, not user state.
+    $RuntimeDirectories = python -c "import runpy; m=runpy.run_path(r'packaging/release_manifest.py'); print(chr(10).join(m.get('RUNTIME_EXTERNAL_DATA_DIRECTORIES', ())))"
+    if ($LASTEXITCODE -ne 0) {
+        throw "Could not read runtime data directory allowlist."
+    }
+    foreach ($Name in $RuntimeDirectories) {
+        $Name = $Name.Trim()
+        if ([string]::IsNullOrWhiteSpace($Name)) { continue }
+        $Source = Join-Path $ProjectRoot ("data\" + $Name)
+        if (-not (Test-Path $Source -PathType Container)) {
+            throw "Allowlisted runtime data directory is missing: data\$Name"
+        }
+        $Destination = Join-Path $DataRoot $Name
+        $DestinationParent = Split-Path $Destination -Parent
+        if (-not [string]::IsNullOrWhiteSpace($DestinationParent)) {
+            New-Item -ItemType Directory -Force -Path $DestinationParent | Out-Null
+        }
+        Copy-Item $Source $Destination -Recurse -Force
     }
 
     # A first install starts with no developer-owned builds. Existing installs
@@ -159,9 +180,10 @@ try {
     New-Item -ItemType Directory -Force -Path $UpdateRoot | Out-Null
     Copy-Item (Join-Path $PackageRoot $ExeName) (Join-Path $UpdateRoot $ExeName) -Force
 
-    if ($RuntimeFiles.Count -gt 0) {
+    if ($RuntimeFiles.Count -gt 0 -or $RuntimeDirectories.Count -gt 0) {
         $UpdateDataRoot = Join-Path $UpdateRoot "data"
         New-Item -ItemType Directory -Force -Path $UpdateDataRoot | Out-Null
+
         foreach ($Name in $RuntimeFiles) {
             $Name = $Name.Trim()
             if ([string]::IsNullOrWhiteSpace($Name)) { continue }
@@ -171,6 +193,17 @@ try {
                 New-Item -ItemType Directory -Force -Path $UpdateDestinationParent | Out-Null
             }
             Copy-Item (Join-Path $DataRoot $Name) $UpdateDestination -Force
+        }
+
+        foreach ($Name in $RuntimeDirectories) {
+            $Name = $Name.Trim()
+            if ([string]::IsNullOrWhiteSpace($Name)) { continue }
+            $UpdateDestination = Join-Path $UpdateDataRoot $Name
+            $UpdateDestinationParent = Split-Path $UpdateDestination -Parent
+            if (-not [string]::IsNullOrWhiteSpace($UpdateDestinationParent)) {
+                New-Item -ItemType Directory -Force -Path $UpdateDestinationParent | Out-Null
+            }
+            Copy-Item (Join-Path $DataRoot $Name) $UpdateDestination -Recurse -Force
         }
     }
 
