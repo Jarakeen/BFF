@@ -8,7 +8,7 @@ and frameless directly on the dark card surface.
 """
 
 from PySide6.QtCore import QRect
-from PySide6.QtGui import QPixmap
+from PySide6.QtGui import QImage, QPixmap
 from PySide6.QtWidgets import QApplication
 
 from services.accessibility_preferences import VISUAL_THEME_RYLO_CITY
@@ -54,7 +54,7 @@ def install() -> None:
         # Neighboring cells leave narrow gold/teal slivers right at the sheet
         # boundaries. Clear a safe horizontal gutter, then alpha-trim again.
         # The actual medallion and its cardinal ornaments remain well inside it.
-        image = prepared.toImage().convertToFormat(prepared.toImage().format())
+        image = prepared.toImage().convertToFormat(QImage.Format.Format_ARGB32)
         gutter_x = max(2, round(image.width() * 0.075))
         gutter_y = max(1, round(image.height() * 0.015))
         for y in range(image.height()):
