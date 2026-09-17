@@ -76,7 +76,10 @@ def test_phase14_build_inspector_uses_selected_section_tabs() -> None:
     for label in ("Armor", "Jewelry", "Front Bar", "Back Bar"):
         assert f'"{label}"' in source
     assert "page.detail_layout.addWidget(tabs, 1)" in source
-    assert "_open_editor(page)" in source
+    assert "_open_workspace_tab(page, workspace_tab)" in source
+    assert 'tabs.tabBar().setVisible(not library_mode)' in source
+    assert '"Character Progression", workspace_tab=2' in source
+    assert '"Open Scribed Skills", workspace_tab=3' in source
 
 
 def test_rotation_command_center_is_installed_by_dashboard_layout() -> None:
