@@ -94,6 +94,7 @@ def test_nord_and_khajiit_combat_passives_are_mapped(tmp_path):
     assert feline == {
         "critical_damage_percent": 12.0,
         "critical_healing_percent": 12.0,
+        "detection_radius_reduction": 3.0,
     }
     assert feline_boundaries == []
     assert feline_unresolved == []
