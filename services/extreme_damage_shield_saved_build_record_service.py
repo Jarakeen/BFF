@@ -38,12 +38,13 @@ class ExtremeDamageShieldSavedBuildRecordService:
         *,
         optimizer: ExtremeCompleteOptimizationService | None = None,
         event_service: ExtremeDamageShieldEventService | None = None,
+        progression_adapter: MinmaxCharacterProgressionAdapter | None = None,
     ) -> None:
         self.database_path = Path(database_path)
         self.optimizer = optimizer or ExtremeCompleteOptimizationService(
             database_path=self.database_path
         )
-        self.progression = MinmaxCharacterProgressionAdapter(
+        self.progression = progression_adapter or MinmaxCharacterProgressionAdapter(
             self.optimizer.build_service.canonical.catalog_service
         )
         self.events = event_service or ExtremeDamageShieldEventService(self.database_path)
@@ -106,9 +107,6 @@ class ExtremeDamageShieldSavedBuildRecordService:
                 entity_id=rank.entity_id,
             )
             if result.modified_shield is None:
-                # A non-shield skill is expected on ordinary bars and does not make
-                # the whole saved-build record unresolved. Preserve only ambiguity
-                # from a skill that actually exposed SHIELD classification evidence.
                 if result.coefficient_number is not None:
                     unresolved.extend(result.unresolved)
                 continue
