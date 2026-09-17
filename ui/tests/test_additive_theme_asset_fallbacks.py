@@ -23,9 +23,9 @@ def test_collectible_palette_uses_steel_amber_not_red_green_status_language() ->
 def test_collectible_badges_are_large_frameless_and_trim_sheet_spill() -> None:
     source = Path("ui/collectibles_badge_presentation_support.py").read_text(encoding="utf-8")
 
-    assert "prepared.width() * 0.045" in source
-    assert "label.setFixedSize(120, 120)" in source
-    assert "original_set_sprite(label, pixmap, 116)" in source
+    assert "image.width() * 0.075" in source
+    assert "label.setFixedSize(132, 132)" in source
+    assert "original_set_sprite(label, pixmap, 128)" in source
     assert 'background: transparent; border: none; padding: 0;' in source
 
 
@@ -38,10 +38,13 @@ def test_roster_dashboard_uses_dedicated_theme_assets() -> None:
     assert "from ui.ux_icons import icon" not in source
 
 
-def test_urban_wilderness_branding_uses_approved_bff_logo() -> None:
+def test_urban_wilderness_branding_uses_only_approved_bff_logo() -> None:
     source = Path("ui/theme_brand_mark_support.py").read_text(encoding="utf-8")
 
     assert '_LOGO = ("assets", "logos", "BFF_logo.png")' in source
-    assert "self.brand_mark.setFixedSize(222, 140)" in source
+    assert "self.brand_mark.setFixedSize(228, 152)" in source
+    assert "def build_ui_with_brand" in source
     assert 'label.property("sidebarLogo")' in source
     assert 'label.property("sidebarOffice")' in source
+    assert "label.setParent(None)" in source
+    assert Path("assets/logos/BFF_logo.png").is_file()
