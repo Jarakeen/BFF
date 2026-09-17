@@ -53,9 +53,6 @@ def _command_center_attached(page) -> bool:
 
     table = page.phase14_build_table
     current = table
-    # Walk from the table to the direct splitter child. A live widget is not enough;
-    # this catches the blank-page case where a legacy wrapper leaves Phase 14 alive
-    # but no longer attached to the visible workspace.
     while _valid(current):
         parent = current.parentWidget()
         if parent is None:
@@ -67,10 +64,15 @@ def _command_center_attached(page) -> bool:
 
 
 def _show_library_workspace(page) -> None:
-    """Make the library tab/splitter visible without exposing legacy editor chrome."""
+    """Make the library tab/splitter/detail visible without exposing editor chrome."""
     splitter = getattr(page, "splitter", None)
     if _valid(splitter):
         splitter.show()
+
+    detail = getattr(page, "detail", None)
+    if _valid(detail):
+        detail.show()
+        detail.setMinimumWidth(500)
 
     tabs = getattr(page, "build_tabs", None)
     if _valid(tabs) and tabs.count() > 0:
@@ -80,6 +82,27 @@ def _show_library_workspace(page) -> None:
         roster_tab = tabs.widget(0)
         if _valid(roster_tab):
             roster_tab.show()
+
+
+def _restore_inspector(page) -> None:
+    """Render the selected build into the right-hand dossier after wrapper repair."""
+    detail = getattr(page, "detail", None)
+    detail_layout = getattr(page, "detail_layout", None)
+    if not _valid(detail) or detail_layout is None:
+        return
+    if not getattr(page, "roster", None) or not getattr(page.roster, "Members", None):
+        return
+
+    if int(getattr(page, "selected_index", -1)) < 0:
+        page.selected_index = 0
+
+    try:
+        from ui import phase14_build_inspector_support as inspector_support
+        inspector_support._render_inspector(page)
+    except RuntimeError:
+        # Constructor-time Qt churn can still be in flight. A normal selection or
+        # showEvent refresh will retry. Never turn a visual repair into a startup crash.
+        return
 
 
 def _repair_command_center(page, command_center) -> None:
@@ -102,13 +125,23 @@ def _repair_command_center(page, command_center) -> None:
             stale.hide()
             stale.setParent(page)
 
-        splitter.setStretchFactor(0, 3)
-        splitter.setStretchFactor(1, 2)
-        splitter.setSizes([860, 650])
         command_center._wire_new_build_button(page)
         command_center._quiet_overview_action_bar(page)
 
+    # The desired Phase 14 composition is library left, inspector right. Reassert
+    # that geometry after every wrapper chain instead of letting the old Roster page
+    # quietly reclaim the whole width.
+    if splitter.count() >= 2:
+        splitter.setStretchFactor(0, 3)
+        splitter.setStretchFactor(1, 2)
+        splitter.setSizes([820, 620])
+        right = splitter.widget(1)
+        if _valid(right):
+            right.show()
+            right.setMinimumWidth(500)
+
     _show_library_workspace(page)
+    _restore_inspector(page)
 
 
 def install() -> None:
@@ -128,9 +161,6 @@ def install() -> None:
 
     def safe_template_mode(page) -> bool:
         if not _command_center_attached(page):
-            # Treat stale/detached presentation as unavailable while constructor-time
-            # wrappers finish. Returning True makes downstream inspector/profile
-            # decorators skip Phase 14 widget work instead of dereferencing ghosts.
             return True
         tabs = page.phase14_library_tabs
         index = tabs.currentIndex()
@@ -181,9 +211,6 @@ def install() -> None:
         _repair_command_center(self, command_center)
 
     def build_themed_ui_with_final_repair(self):
-        # The actual MainWindow instantiates ui.themed_builds_page.BuildsPage.
-        # Repair once more after that subclass's complete wrapper chain returns;
-        # this is the boundary the previous guard did not cover.
         original_themed_build_ui(self)
         _repair_command_center(self, command_center)
 
