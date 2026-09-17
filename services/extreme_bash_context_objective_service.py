@@ -26,6 +26,7 @@ from .extreme_bash_build_objective_service import (
     ExtremeBashBuildObjectiveService,
 )
 from .extreme_bash_champion_point_service import ExtremeBashChampionPointResult
+from .extreme_bash_deadly_bash_service import ExtremeDeadlyBashResult
 from .extreme_bash_jewelry_service import ExtremeBashJewelryResult
 from .extreme_bash_objective_service import (
     ExtremeBashBarWeapons,
@@ -92,6 +93,7 @@ class ExtremeBashContextObjectiveService:
         legality: ExtremeBashLegalityContext | None = None,
         champion_point: ExtremeBashChampionPointResult | None = None,
         jewelry: ExtremeBashJewelryResult | None = None,
+        deadly_bash: ExtremeDeadlyBashResult | None = None,
     ) -> ExtremeBashContextObjectiveResult:
         if inputs.physical_resist is not None or inputs.spell_resist is not None:
             raise ValueError(
@@ -132,6 +134,7 @@ class ExtremeBashContextObjectiveService:
             legality=legality,
             champion_point=champion_point,
             jewelry=jewelry,
+            deadly_bash=deadly_bash,
         )
         return ExtremeBashContextObjectiveResult(
             objective=objective,
@@ -152,6 +155,7 @@ class ExtremeBashContextObjectiveService:
         inputs: ExtremeBashDamageInputs,
         champion_point: ExtremeBashChampionPointResult | None = None,
         jewelry: ExtremeBashJewelryResult | None = None,
+        deadly_bash: ExtremeDeadlyBashResult | None = None,
         active_bar: str = "front",
     ) -> ExtremeBashContextObjectiveResult:
         context = factory.build(
@@ -167,4 +171,5 @@ class ExtremeBashContextObjectiveService:
             legality=cls.legality_for_build(build),
             champion_point=champion_point,
             jewelry=jewelry,
+            deadly_bash=deadly_bash,
         )
