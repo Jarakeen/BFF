@@ -36,10 +36,10 @@ TOKEN_COLORS = {
 }
 
 ZONE_COLORS = {
-    "Danger": "#B9792F",   # amber + solid
-    "Safe": "#397A9B",     # blue + dashed
-    "Stack": "#74608E",    # violet + dotted
-    "Neutral": "#687176",  # gray + dash-dot
+    "Danger": "#B9792F",
+    "Safe": "#397A9B",
+    "Stack": "#74608E",
+    "Neutral": "#687176",
 }
 
 ZONE_LINE_STYLES = {
@@ -103,14 +103,14 @@ def install() -> None:
 
     def sketch_refresh(self) -> None:
         if raid_roster_workspace_page._theme_is_rylo():
-            filename = "roster_rylo_sketch.svg"
-            path = _first_art(("assets", "themes", "bff", "grimoire", "assets", filename))
-        else:
-            # The color cityscape is already an approved, lightweight WebP and fits the
-            # long Teams-page strip far better than a tiny square placeholder.
             path = _first_art(
-                ("assets", "themes", "bff", "city_night", "roster", "roster_team.webp"),
-                ("assets", "themes", "bff", "field_journal", "roster", "roster_team.jpg"),
+                ("assets", "themes", "bff", "grimoire", "assets", "roster_rylo_sketch.svg")
+            )
+        else:
+            # Parchment/field-journal surfaces use the pencil/sketch family only.
+            # The retired roster city/raven images must never be reintroduced here.
+            path = _first_art(
+                ("assets", "themes", "bff", "field_journal", "roster", "roster_team.jpg")
             )
         _set_art(
             self,
@@ -136,20 +136,18 @@ def install() -> None:
     raid_roster_workspace_page._ThemeSketch.resizeEvent = sketch_resize
 
     # ------------------------------------------------------------------
-    # Readiness decorative notes: art when decorative, never fake editability
+    # Readiness decorative notes: field-journal art only on parchment
     # ------------------------------------------------------------------
     def readiness_art_refresh(self) -> None:
-        stem = Path(self.filename).stem
         path = _first_art(
             ("assets", "themes", "bff", "field_journal", "roster", self.filename),
-            ("assets", "themes", "bff", "city_night", "roster", f"{stem}.webp"),
         )
         _set_art(
             self,
             path,
             fallback=self.fallback,
             width=max(280, self.width() or 360),
-            height=max(120, self.height() or 155),
+            height=138,
         )
         if path is not None:
             self.setToolTip(self.fallback)
@@ -167,7 +165,6 @@ def install() -> None:
         if isinstance(label, QLabel):
             path = _first_art(
                 ("assets", "themes", "bff", "field_journal", "roster", "roster_people.jpg"),
-                ("assets", "themes", "bff", "city_night", "roster", "roster_people.webp"),
             )
             label.setMinimumHeight(145)
             label.setMaximumHeight(190)
@@ -283,7 +280,6 @@ def install() -> None:
         selected = self.isSelected()
         painter.setRenderHint(painter.RenderHint.Antialiasing, True)
 
-        # Boss identity uses a double-ring + silhouette, not a red danger halo.
         outer = QColor("#BDA968" if selected else "#7E7357")
         painter.setPen(QPen(outer, 2.6 if selected else 1.9, Qt.PenStyle.DashLine))
         painter.setBrush(Qt.BrushStyle.NoBrush)
