@@ -13,6 +13,9 @@ from services.extreme_damage_shield_saved_build_record_service import (
 from services.extreme_healing_event_record_service import (
     ExtremeHealingEventRecordService,
 )
+from services.extreme_invisibility_duration_record_service import (
+    ExtremeInvisibilityDurationRecordService,
+)
 from services.extreme_movement_static_package_service import (
     ExtremeMovementStaticPackageService,
 )
@@ -62,6 +65,7 @@ class ExtremeSpecializedExecutionService:
             "sprint_speed",
             "stealthed_movement_speed",
             "detection_radius_reduction",
+            "invisibility_duration",
         }
     )
     _SAVED_BUILD_REQUIRED_KEYS = frozenset(
@@ -112,6 +116,9 @@ class ExtremeSpecializedExecutionService:
     _OBJECTIVE_REQUIREMENTS = {
         "bash_damage": (),
         "damage_shield": (),
+        # Longest contiguous invisibility duration is provider-local and does not
+        # need an arbitrary comparison horizon. Uptime still does.
+        "invisibility_duration": (),
     }
 
     def __init__(
@@ -122,6 +129,7 @@ class ExtremeSpecializedExecutionService:
         bash_record: ExtremeBashSavedBuildRecordService | None = None,
         movement_package: ExtremeMovementStaticPackageService | None = None,
         stealth_package: ExtremeStealthSourcePackageService | None = None,
+        invisibility_duration_record: ExtremeInvisibilityDurationRecordService | None = None,
         database_path: str | Path | None = None,
     ) -> None:
         self.healing_events = healing_events or ExtremeHealingEventRecordService()
@@ -142,6 +150,11 @@ class ExtremeSpecializedExecutionService:
         )
         self.stealth_package = stealth_package or (
             ExtremeStealthSourcePackageService(database_path)
+            if database_path is not None
+            else None
+        )
+        self.invisibility_duration_record = invisibility_duration_record or (
+            ExtremeInvisibilityDurationRecordService(database_path)
             if database_path is not None
             else None
         )
@@ -316,6 +329,33 @@ class ExtremeSpecializedExecutionService:
                 execution_family=descriptor.execution_family,
                 value=result.reviewed_flat_reduction_meters,
                 value_text=f"{result.reviewed_flat_reduction_meters:g} m reviewed gear reduction",
+                mechanic_complete=result.mechanic_complete,
+                global_maximum_proven=False,
+                summary_rows=tuple(summary),
+                unresolved=result.unresolved,
+                search_scope=result.evidence,
+                omitted_scope=result.unresolved,
+            )
+
+        if key == "invisibility_duration":
+            if self.invisibility_duration_record is None:
+                raise ValueError("Extreme invisibility duration record requires a canonical database path")
+            result = self.invisibility_duration_record.evaluate()
+            summary: list[tuple[str, str]] = []
+            if result.provider is not None:
+                summary.append(("Reviewed provider", result.provider.name))
+            if result.duration_seconds is not None:
+                summary.append(("Reviewed contiguous duration", f"{result.duration_seconds:g}s"))
+            return ExtremeSpecializedExecutionResult(
+                objective_key=key,
+                label=descriptor.objective.label,
+                execution_family=descriptor.execution_family,
+                value=result.duration_seconds,
+                value_text=(
+                    None
+                    if result.duration_seconds is None
+                    else f"{result.duration_seconds:g}s reviewed lower bound"
+                ),
                 mechanic_complete=result.mechanic_complete,
                 global_maximum_proven=False,
                 summary_rows=tuple(summary),
