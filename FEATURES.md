@@ -146,6 +146,8 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Phase 14 Builds command center provides first-class All, Mine, Team, Templates, Favorites, and Archive library views with compact search/class/role/content filtering and a persistent inspector area
 - Build Favorites and Archive state are persisted as additive profile metadata keyed by canonical build id, so starring or archiving never duplicates or deletes the underlying saved build
 - Build-level inherited gear baseline defaults to **Gold · CP160 · Truly Superb**; blank item values inherit the baseline while existing explicit values are preserved and differing values are counted as visible exceptions
+- The Phase 14 inspector uses Overview, Gear, Skills, CP, Consumables, Scribing, and Notes tabs, with Gear grouped into Armor, Jewelry, Front Bar, and Back Bar summaries instead of one giant spreadsheet
+- Heavy canonical editors remain lazy from the command-center view: the outer editor tabs are hidden while browsing and appear only when Edit, Character Progression, or Scribed Skills is explicitly opened
 
 ---
 
@@ -154,6 +156,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Phase 14 keeps Rotation Builder as its own workspace, separate from Builds, while accepting the selected saved build as input
 - Pre-generation command center exposes **Safe Progression**, **Balanced**, and **Maximum Output** intent presets over the existing canonical rotation controls rather than inventing a second planner state
 - Preset-selected execution/sustain values remain visible, editable, show a **Customized** state after manual changes, and can be reset to the active preset defaults
+- Rotation context is summary-first: character/build/content/boss/difficulty/team are shown as one compact line and the six selectors expand only through **Edit Context**
 - Build skills, gear procs, team duties, pressure windows, and advanced rules are presented as compact obligation summaries; unsupported evidence remains explicitly unresolved instead of being fabricated
 - Timeline, Uptime & Resources, Explanations, Compare, and Save / Export remain result-only tabs and stay disabled until a generated plan exists
 - **Generate Rotation** remains the single dominant setup action; save/export controls stay in the generated-result workflow
