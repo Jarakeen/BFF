@@ -34,19 +34,29 @@ class ExtremeSpecializedOptimizationPage(ExtremeOptimizationPage):
             return
 
         descriptor = self._current_execution_descriptor()
+        objective_key = descriptor.objective.key
         scratch = self.source_combo.currentData() == "scratch"
         direct_specialized = (
             descriptor.status is ExtremeRecordExecutionStatus.SPECIALIZED
             and ExtremeSpecializedExecutionService.can_execute_without_extra_inputs(
-                descriptor.objective.key
+                objective_key
             )
         )
-        if direct_specialized and not scratch:
+        saved_build_required = ExtremeSpecializedExecutionService.requires_saved_build(
+            objective_key
+        )
+        if direct_specialized and (not scratch or not saved_build_required):
             self.run_button.setEnabled(True)
             self.run_button.setToolTip("")
+            context_line = (
+                "Saved-build starting context required."
+                if saved_build_required
+                else "No saved-build context required; canonical source package is searched directly."
+            )
             self.scope_text.setPlainText(
                 f"{descriptor.objective.label}\n"
-                f"Shared execution family: {descriptor.execution_family}\n\n"
+                f"Shared execution family: {descriptor.execution_family}\n"
+                f"{context_line}\n\n"
                 "This record runs through the canonical specialized gateway. "
                 "Unresolved proof boundaries remain visible in the result; no static fallback is substituted."
             )
@@ -67,18 +77,24 @@ class ExtremeSpecializedOptimizationPage(ExtremeOptimizationPage):
             super()._run_extreme_search()
             return
 
-        if self.source_combo.currentData() == "scratch":
+        scratch = self.source_combo.currentData() == "scratch"
+        saved_build_required = ExtremeSpecializedExecutionService.requires_saved_build(
+            objective_key
+        )
+        if scratch and saved_build_required:
             self.status.warning(
                 f"{descriptor.objective.label} currently requires a saved-build starting context."
             )
             return
 
-        index = self.build_combo.currentData()
-        if not isinstance(index, int) or not (0 <= index < len(self.builds)):
-            self.status.warning("Choose a saved build first.")
-            return
+        build = None
+        if not scratch:
+            index = self.build_combo.currentData()
+            if not isinstance(index, int) or not (0 <= index < len(self.builds)):
+                self.status.warning("Choose a saved build first.")
+                return
+            build = self.builds[index]
 
-        build = self.builds[index]
         active_bar = str(self.bar_combo.currentData() or "front")
         self.status.info(
             f"Searching {descriptor.objective.label} through the shared {descriptor.execution_family} engine."
