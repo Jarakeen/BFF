@@ -67,6 +67,17 @@ class _StealthPackage:
         )
 
 
+class _InvisibilityDurationRecord:
+    def evaluate(self):
+        return SimpleNamespace(
+            provider=SimpleNamespace(name="Prowler's Talisman"),
+            duration_seconds=10.0,
+            mechanic_complete=False,
+            evidence=("Prowler's Talisman 1pc: 10s invisibility",),
+            unresolved=("Invisibility provider corpus is not yet exhaustive",),
+        )
+
+
 def _service():
     return ExtremeSpecializedExecutionService(
         healing_events=_HealingEvents(),
@@ -74,6 +85,7 @@ def _service():
         bash_record=_BashRecord(),
         movement_package=_MovementPackage(),
         stealth_package=_StealthPackage(),
+        invisibility_duration_record=_InvisibilityDurationRecord(),
     )
 
 
@@ -81,7 +93,7 @@ def test_current_direct_specialized_routes_are_explicit() -> None:
     for key in (
         "actual_heal", "critical_heal", "damage_shield", "bash_damage",
         "movement_speed", "sprint_speed", "stealthed_movement_speed",
-        "detection_radius_reduction",
+        "detection_radius_reduction", "invisibility_duration",
     ):
         assert ExtremeSpecializedExecutionService.can_execute_without_extra_inputs(key)
 
@@ -89,7 +101,10 @@ def test_current_direct_specialized_routes_are_explicit() -> None:
 def test_saved_build_direct_routes_are_explicit() -> None:
     for key in ("actual_heal", "critical_heal", "damage_shield", "bash_damage"):
         assert ExtremeSpecializedExecutionService.requires_saved_build(key)
-    for key in ("movement_speed", "sprint_speed", "stealthed_movement_speed", "detection_radius_reduction"):
+    for key in (
+        "movement_speed", "sprint_speed", "stealthed_movement_speed",
+        "detection_radius_reduction", "invisibility_duration",
+    ):
         assert not ExtremeSpecializedExecutionService.requires_saved_build(key)
 
 
@@ -98,13 +113,16 @@ def test_single_event_records_no_longer_share_identical_input_requirements() -> 
     assert ExtremeSpecializedExecutionService.requirements_for("damage_shield") == ()
 
 
-def test_scenario_driven_records_keep_shared_requirements() -> None:
+def test_scenario_driven_records_keep_shared_requirements_where_they_are_real() -> None:
     sustain = ExtremeSpecializedExecutionService.requirements_for("resource_sustain")
     ultimate = ExtremeSpecializedExecutionService.requirements_for("ultimate_generation")
     assert sustain == ultimate
     assert tuple(row.key for row in sustain) == ("duration_seconds", "timeline_evidence")
-    invis = ExtremeSpecializedExecutionService.requirements_for("invisibility_duration")
-    assert tuple(row.key for row in invis) == ("duration_seconds", "invisibility_windows")
+
+    # Longest duration is provider-local. Uptime still requires a horizon/windows.
+    assert ExtremeSpecializedExecutionService.requirements_for("invisibility_duration") == ()
+    invis_uptime = ExtremeSpecializedExecutionService.requirements_for("invisibility_uptime")
+    assert tuple(row.key for row in invis_uptime) == ("duration_seconds", "invisibility_windows")
 
 
 def test_saved_build_direct_execution_rejects_missing_build() -> None:
@@ -136,3 +154,13 @@ def test_movement_execution_normalizes_reviewed_lower_bound_without_saved_build(
 def test_stealth_execution_normalizes_legal_gear_lower_bound_without_saved_build() -> None:
     result = _service().execute(None, "detection_radius_reduction")
     assert result.value_text == "2 m reviewed gear reduction"
+
+
+def test_invisibility_duration_execution_normalizes_reviewed_provider_lower_bound() -> None:
+    result = _service().execute(None, "invisibility_duration")
+    assert result.value == pytest.approx(10.0)
+    assert result.value_text == "10s reviewed lower bound"
+    assert ("Reviewed provider", "Prowler's Talisman") in result.summary_rows
+    assert ("Reviewed contiguous duration", "10s") in result.summary_rows
+    assert result.global_maximum_proven is False
+    assert result.unresolved == ("Invisibility provider corpus is not yet exhaustive",)
