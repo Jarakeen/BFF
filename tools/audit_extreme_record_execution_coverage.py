@@ -21,22 +21,37 @@ def main() -> int:
     rows = ExtremeRecordExecutionCatalogService.descriptors()
     status_counts = Counter(row.status.value for row in rows)
     family_counts = Counter(row.execution_family for row in rows)
-    direct_specialized = tuple(
+    specialized_keys = tuple(
         row.objective.key
         for row in rows
         if row.status is ExtremeRecordExecutionStatus.SPECIALIZED
-        and ExtremeSpecializedExecutionService.can_execute_without_extra_inputs(
-            row.objective.key
-        )
     )
-    direct_specialized_saved_build = tuple(
+    zero_input_specialized = tuple(
         key
-        for key in direct_specialized
+        for key in specialized_keys
+        if ExtremeSpecializedExecutionService.can_execute_without_extra_inputs(key)
+    )
+    duration_input_specialized = tuple(
+        key
+        for key in specialized_keys
+        if ExtremeSpecializedExecutionService.can_execute_with_duration_input(key)
+    )
+    routed_specialized = tuple(
+        key
+        for key in specialized_keys
+        if key in zero_input_specialized or key in duration_input_specialized
+    )
+    unrouted_specialized = tuple(
+        key for key in specialized_keys if key not in routed_specialized
+    )
+    zero_input_saved_build = tuple(
+        key
+        for key in zero_input_specialized
         if ExtremeSpecializedExecutionService.requires_saved_build(key)
     )
-    direct_specialized_scratch = tuple(
+    zero_input_scratch = tuple(
         key
-        for key in direct_specialized
+        for key in zero_input_specialized
         if not ExtremeSpecializedExecutionService.requires_saved_build(key)
     )
 
@@ -44,10 +59,19 @@ def main() -> int:
     print(f"canonical_record_count={len(rows)}")
     for status in ExtremeRecordExecutionStatus:
         print(f"{status.value}_count={status_counts[status.value]}")
-    print(f"direct_specialized_count={len(direct_specialized)}")
-    print(f"direct_specialized_records={direct_specialized}")
-    print(f"direct_specialized_saved_build_records={direct_specialized_saved_build}")
-    print(f"direct_specialized_scratch_records={direct_specialized_scratch}")
+    # Keep the old direct fields as aliases for zero-input routes so previous
+    # audit consumers do not silently change meaning.
+    print(f"direct_specialized_count={len(zero_input_specialized)}")
+    print(f"direct_specialized_records={zero_input_specialized}")
+    print(f"direct_specialized_saved_build_records={zero_input_saved_build}")
+    print(f"direct_specialized_scratch_records={zero_input_scratch}")
+    print(f"duration_input_specialized_count={len(duration_input_specialized)}")
+    print(f"duration_input_specialized_records={duration_input_specialized}")
+    print(f"routed_specialized_count={len(routed_specialized)}")
+    print(f"routed_specialized_records={routed_specialized}")
+    print(f"unrouted_specialized_count={len(unrouted_specialized)}")
+    print(f"unrouted_specialized_records={unrouted_specialized}")
+    print(f"user_execution_path_count={status_counts[ExtremeRecordExecutionStatus.READY.value] + len(routed_specialized)}")
     print()
     print("EXECUTION FAMILIES")
     for family, count in sorted(family_counts.items()):
@@ -88,10 +112,10 @@ def main() -> int:
             "NEXT_STEP=close shared execution families, not individual record clones; "
             "then route the canonical catalog through the Extreme Build Lab UI"
         )
-    elif specialized_families:
+    elif unrouted_specialized:
         print(
-            "NEXT_STEP=route specialized execution families through the Extreme Build Lab UI; "
-            "preserve family-specific scenario inputs and unresolved source evidence"
+            "NEXT_STEP=close remaining specialized scenario contracts and route them through "
+            "the shared Extreme Build Lab gateway; preserve unresolved proof evidence"
         )
     else:
         print("NEXT_STEP=run final Extreme UI and proof closeout gates")
