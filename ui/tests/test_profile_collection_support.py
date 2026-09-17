@@ -49,3 +49,14 @@ def test_collectible_profile_support_uses_profile_dimension() -> None:
     assert 'context_field("PROFILE", self.profile_combo)' in ui_source
     assert "Save or discard pending collectible changes before switching profiles" in ui_source
     assert "set_owned_batch" in ui_source
+
+
+def test_bff_collectibles_restore_field_journal_badge_sheet_without_redirecting_numbers() -> None:
+    ui_source = Path(collectibles_profile_support.__file__).read_text(encoding="utf-8")
+
+    assert '"badges.jpg", 6, 4, index' in ui_source
+    assert '/ "field_journal"' in ui_source
+    assert '/ "collectibles"' in ui_source
+    assert '/ "badges.jpg"' in ui_source
+    assert 'ref.filename.casefold() == "badges.jpg"' in ui_source
+    assert "only badge art is routed" in ui_source
