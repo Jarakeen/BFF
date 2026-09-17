@@ -17,7 +17,7 @@ from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 from engine.config import get_data_dir, get_resource_path
 from services.skill_choice_service import load_skill_choices
 from ui.components.foundry_card import FoundryCard
-from ui.ux_icons import icon as semantic_icon
+from ui.ux_icons import icon as semantic_icon, refresh_theme_icons
 
 _INSTALLED = False
 
@@ -344,13 +344,26 @@ def install() -> None:
     from ui.themed_builds_page import BuildsPage as ThemedBuildsPage
 
     original_build_ui = ThemedBuildsPage._build_ui
+    original_show_event = ThemedBuildsPage.showEvent
 
     def build_ui_with_phase14_icon_polish(self):
         original_build_ui(self)
         _move_new_build_to_header(self)
         _decorate_library_table(self)
+        refresh_theme_icons(self)
+
+    def show_event_with_phase14_icons(self, event):
+        original_show_event(self, event)
+        # Phase 14 is assembled through several compatibility layers. Reassert
+        # semantic icons after the final visible widget tree exists so icons
+        # added to assets/icons locally are not lost merely because an earlier
+        # decorator constructed the label/button before the final dossier.
+        _move_new_build_to_header(self)
+        _decorate_library_table(self)
+        refresh_theme_icons(self)
 
     ThemedBuildsPage._build_ui = build_ui_with_phase14_icon_polish
+    ThemedBuildsPage.showEvent = show_event_with_phase14_icons
     _INSTALLED = True
 
 
