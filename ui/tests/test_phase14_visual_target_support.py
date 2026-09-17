@@ -236,3 +236,35 @@ def test_phase14_focused_gear_editor_mutates_only_selected_build_section() -> No
     assert 'self.build.BackBarWeapon = values["Main Hand"]' in source
     assert "page._save()" in source
     assert "page._refresh_detail()" in source
+
+
+def test_phase14_build_trait_icon_vocabulary_is_wired() -> None:
+    source = _source(phase14_build_focused_editors_support)
+
+    expected = {
+        '"Powered": "Powered"',
+        '"Charged": "Charged"',
+        '"Precise": "Precise"',
+        '"Defending": "Defending"',
+        '"Sharpened": "Sharpened"',
+        '"Decisive": "Decisive"',
+        '"Nirnhoned": "drop"',
+        '"Sturdy": "Sturdy"',
+        '"Impenetrable": "Impenetrable"',
+        '"Reinforced": "Reinforced"',
+        '"Well-Fitted": "Well-fitted"',
+        '"Invigorating": "Invigorating"',
+        '"Divines": "Divines"',
+        '"Healthy": "Health"',
+        '"Arcane": "maguc"',
+        '"Robust": "Robust"',
+        '"Bloodthirsty": "drop"',
+        '"Harmony": "Harmony"',
+        '"Triune": "Triune"',
+        '"Protective": "Protective"',
+        '"Swift": "Swift"',
+    }
+    for mapping in expected:
+        assert mapping in source
+    assert "_decorate_trait_combo(controller.trait_combo)" in source
+    assert "row.addWidget(icon_label(trait_icon, 16))" in source
