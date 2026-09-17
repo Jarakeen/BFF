@@ -186,3 +186,18 @@ def test_city_key_remains_the_compatibility_storage_key_for_urban_wilderness() -
 
     assert 'VISUAL_THEME_RYLO_CITY = "rylo_city_night"' in source
     assert "VISUAL_THEME_URBAN_WILDERNESS = VISUAL_THEME_RYLO_CITY" in source
+
+
+def test_roster_character_avatar_is_click_editable_and_character_owned() -> None:
+    wrapper = Path("ui/city_raid_roster_workspace_page.py").read_text(encoding="utf-8")
+    catalog = Path("services/build_catalog_service.py").read_text(encoding="utf-8")
+
+    assert 'self.character_detail_avatar.mousePressEvent = self._avatar_mouse_press' in wrapper
+    assert 'class _CharacterAvatarDialog(QDialog):' in wrapper
+    assert 'get_resource_path(*_AVATAR_ROOT)' in wrapper
+    assert 'reference = f"assets/avatar/{path.name}"' in wrapper
+    assert 'target_root = get_data_dir() / "avatar"' in wrapper
+    assert 'catalog.set_character_avatar(' in wrapper
+    assert 'character.get("avatar_path")' in wrapper
+    assert 'def set_character_avatar(' in catalog
+    assert 'updated["avatar_path"] = normalized_path' in catalog
