@@ -18,15 +18,15 @@ def test_roster_summary_cards_open_embedded_workspaces() -> None:
     assert "super()._show_detail(key)" in source
 
     assert "install_roster_top_back_control" in back_support
-    assert "class _BackArrowAnchor(QObject)" in back_support
-    assert "back = QToolButton(stack)" in back_support
+    assert 'back.setObjectName("rosterTopBackButton")' in back_support
     assert 'back.setProperty("rosterBackButton", True)' in back_support
     assert 'back.setToolTip("Back to Roster")' in back_support
     assert '"back_arrow.png"' in back_support
-    assert "self.button.move(x, y)" in back_support
+    assert "metrics_layout.addWidget(back, 0, 0" in back_support
+    assert "for column, card in enumerate(page.metric_cards.values(), start=1)" in back_support
     assert "stack.currentChanged.connect(sync_visibility)" in back_support
-    assert "back.setVisible(visible)" in back_support
-    assert "metrics_layout.addWidget(back" not in back_support
+    assert "metrics_layout.setColumnMinimumWidth(0, 62 if visible else 0)" in back_support
+    assert "class _BackArrowAnchor" not in back_support
 
 
 def test_roster_is_streamlined_landing_surface() -> None:
@@ -81,10 +81,11 @@ def test_urban_collectibles_use_clean_large_approved_badge_sheets() -> None:
     assert "return dedicated_badge(city_theme, city_badges.get(label))" in assets
 
     assert "def prepare_city_badge(pixmap):" in presentation
-    assert "gutter_x = max(1, round(prepared.width() * 0.045))" in presentation
-    assert "label.setFixedSize(120, 120)" in presentation
+    assert "prepared.width()" not in presentation
+    assert "image.width() * 0.075" in presentation
+    assert "label.setFixedSize(132, 132)" in presentation
     assert 'label.setStyleSheet("background: transparent; border: none; padding: 0;")' in presentation
-    assert "original_set_sprite(label, pixmap, 116)" in presentation
+    assert "original_set_sprite(label, pixmap, 128)" in presentation
     assert "dashboard.ProgressTile._set_sprite = staticmethod(set_sprite)" in presentation
     assert "install_collectibles_badge_presentation()" in theme
 
