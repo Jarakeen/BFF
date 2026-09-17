@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
@@ -75,6 +76,12 @@ U51_MUNDUS_EFFECTS.update(
 )
 
 
+def canonical_mundus_id(name: str, game_update: int) -> str:
+    """Return a stable lower-snake-case identity for one update-versioned stone."""
+    slug = re.sub(r"[^a-z0-9]+", "_", str(name).strip().lower()).strip("_")
+    return f"{slug}_u{int(game_update)}"
+
+
 @dataclass(frozen=True)
 class MundusEffectRecord:
     name: str
@@ -124,58 +131,204 @@ class MundusRepository:
         connection.row_factory = sqlite3.Row
         return connection
 
-    def ensure_schema_and_seed(self) -> None:
-        with self._connect() as connection:
+    @staticmethod
+    def _table_exists(connection: sqlite3.Connection, table_name: str) -> bool:
+        return (
+            connection.execute(
+                "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?",
+                (table_name,),
+            ).fetchone()
+            is not None
+        )
+
+    @staticmethod
+    def _table_columns(connection: sqlite3.Connection, table_name: str) -> set[str]:
+        if not MundusRepository._table_exists(connection, table_name):
+            return set()
+        return {
+            str(row["name"])
+            for row in connection.execute(f"PRAGMA table_info({table_name})").fetchall()
+        }
+
+    @staticmethod
+    def _create_canonical_tables(connection: sqlite3.Connection) -> None:
+        connection.executescript(
+            """
+            CREATE TABLE IF NOT EXISTS mundus_stone (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                game_update INTEGER NOT NULL,
+                source_url TEXT NOT NULL DEFAULT '',
+                UNIQUE(name, game_update)
+            );
+
+            CREATE TABLE IF NOT EXISTS mundus_effect (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                mundus_id TEXT NOT NULL,
+                stat_id TEXT NOT NULL,
+                value REAL NOT NULL,
+                unit TEXT NOT NULL,
+                supported INTEGER NOT NULL DEFAULT 1,
+                notes TEXT NOT NULL DEFAULT '',
+                UNIQUE(mundus_id, stat_id),
+                FOREIGN KEY (mundus_id) REFERENCES mundus_stone(id) ON DELETE CASCADE
+            );
+            """
+        )
+
+    def _migrate_legacy_schema(self, connection: sqlite3.Connection) -> None:
+        """Migrate only Mundus tables to canonical text IDs without resetting the DB."""
+        stone_columns = self._table_columns(connection, "mundus_stone")
+        effect_columns = self._table_columns(connection, "mundus_effect")
+        if not stone_columns and not effect_columns:
+            self._create_canonical_tables(connection)
+            return
+
+        stone_id_type = ""
+        if stone_columns:
+            for row in connection.execute("PRAGMA table_info(mundus_stone)").fetchall():
+                if row["name"] == "id":
+                    stone_id_type = str(row["type"] or "").upper()
+                    break
+
+        already_canonical = (
+            stone_columns
+            and effect_columns
+            and "id" in stone_columns
+            and "mundus_id" in effect_columns
+            and "TEXT" in stone_id_type
+        )
+        if already_canonical:
+            return
+
+        connection.execute("PRAGMA foreign_keys = OFF")
+        try:
+            connection.execute("DROP TABLE IF EXISTS mundus_effect_new")
+            connection.execute("DROP TABLE IF EXISTS mundus_stone_new")
             connection.executescript(
                 """
-                CREATE TABLE IF NOT EXISTS mundus_stone (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                CREATE TABLE mundus_stone_new (
+                    id TEXT PRIMARY KEY,
                     name TEXT NOT NULL,
                     game_update INTEGER NOT NULL,
                     source_url TEXT NOT NULL DEFAULT '',
                     UNIQUE(name, game_update)
                 );
 
-                CREATE TABLE IF NOT EXISTS mundus_effect (
+                CREATE TABLE mundus_effect_new (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    mundus_stone_id INTEGER NOT NULL,
+                    mundus_id TEXT NOT NULL,
                     stat_id TEXT NOT NULL,
                     value REAL NOT NULL,
                     unit TEXT NOT NULL,
                     supported INTEGER NOT NULL DEFAULT 1,
                     notes TEXT NOT NULL DEFAULT '',
-                    UNIQUE(mundus_stone_id, stat_id),
-                    FOREIGN KEY (mundus_stone_id) REFERENCES mundus_stone(id) ON DELETE CASCADE
+                    UNIQUE(mundus_id, stat_id),
+                    FOREIGN KEY (mundus_id) REFERENCES mundus_stone_new(id) ON DELETE CASCADE
                 );
                 """
             )
+
+            stone_id_map: dict[object, str] = {}
+            if stone_columns:
+                for row in connection.execute(
+                    "SELECT id, name, game_update, source_url FROM mundus_stone"
+                ).fetchall():
+                    canonical_id = canonical_mundus_id(row["name"], row["game_update"])
+                    stone_id_map[row["id"]] = canonical_id
+                    connection.execute(
+                        """
+                        INSERT OR REPLACE INTO mundus_stone_new(id, name, game_update, source_url)
+                        VALUES (?, ?, ?, ?)
+                        """,
+                        (
+                            canonical_id,
+                            row["name"],
+                            int(row["game_update"]),
+                            row["source_url"] or "",
+                        ),
+                    )
+
+            legacy_fk_column = None
+            if "mundus_id" in effect_columns:
+                legacy_fk_column = "mundus_id"
+            elif "mundus_stone_id" in effect_columns:
+                legacy_fk_column = "mundus_stone_id"
+
+            if effect_columns and legacy_fk_column:
+                rows = connection.execute(
+                    f"""
+                    SELECT id, {legacy_fk_column} AS legacy_mundus_id,
+                           stat_id, value, unit, supported, notes
+                    FROM mundus_effect
+                    ORDER BY id
+                    """
+                ).fetchall()
+                for row in rows:
+                    legacy_id = row["legacy_mundus_id"]
+                    canonical_id = stone_id_map.get(legacy_id)
+                    if canonical_id is None and isinstance(legacy_id, str):
+                        canonical_id = legacy_id
+                    if canonical_id is None:
+                        continue
+                    connection.execute(
+                        """
+                        INSERT OR REPLACE INTO mundus_effect_new(
+                            id, mundus_id, stat_id, value, unit, supported, notes
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                        """,
+                        (
+                            row["id"],
+                            canonical_id,
+                            row["stat_id"],
+                            row["value"],
+                            row["unit"],
+                            row["supported"],
+                            row["notes"] or "",
+                        ),
+                    )
+
+            if self._table_exists(connection, "mundus_effect"):
+                connection.execute("DROP TABLE mundus_effect")
+            if self._table_exists(connection, "mundus_stone"):
+                connection.execute("DROP TABLE mundus_stone")
+            connection.execute("ALTER TABLE mundus_stone_new RENAME TO mundus_stone")
+            connection.execute("ALTER TABLE mundus_effect_new RENAME TO mundus_effect")
+            connection.commit()
+        finally:
+            connection.execute("PRAGMA foreign_keys = ON")
+
+    def ensure_schema_and_seed(self) -> None:
+        with self._connect() as connection:
+            self._migrate_legacy_schema(connection)
+            self._create_canonical_tables(connection)
             source_url = U50_SOURCE_URL if self.game_update == U50_GAME_UPDATE else U51_SOURCE_URL
             effects = U50_MUNDUS_EFFECTS if self.game_update == U50_GAME_UPDATE else U51_MUNDUS_EFFECTS
             for name, rows in effects.items():
+                mundus_id = canonical_mundus_id(name, self.game_update)
                 connection.execute(
                     """
-                    INSERT INTO mundus_stone(name, game_update, source_url)
-                    VALUES (?, ?, ?)
-                    ON CONFLICT(name, game_update) DO UPDATE SET source_url = excluded.source_url
+                    INSERT INTO mundus_stone(id, name, game_update, source_url)
+                    VALUES (?, ?, ?, ?)
+                    ON CONFLICT(id) DO UPDATE SET
+                        name = excluded.name,
+                        game_update = excluded.game_update,
+                        source_url = excluded.source_url
                     """,
-                    (name, self.game_update, source_url),
+                    (mundus_id, name, self.game_update, source_url),
                 )
-                stone_id = connection.execute(
-                    "SELECT id FROM mundus_stone WHERE name = ? AND game_update = ?",
-                    (name, self.game_update),
-                ).fetchone()["id"]
                 for stat_id, value, unit, supported, notes in rows:
                     connection.execute(
                         """
-                        INSERT INTO mundus_effect(mundus_stone_id, stat_id, value, unit, supported, notes)
+                        INSERT INTO mundus_effect(mundus_id, stat_id, value, unit, supported, notes)
                         VALUES (?, ?, ?, ?, ?, ?)
-                        ON CONFLICT(mundus_stone_id, stat_id) DO UPDATE SET
+                        ON CONFLICT(mundus_id, stat_id) DO UPDATE SET
                             value = excluded.value,
                             unit = excluded.unit,
                             supported = excluded.supported,
                             notes = excluded.notes
                         """,
-                        (stone_id, stat_id, value, unit, supported, notes),
+                        (mundus_id, stat_id, value, unit, supported, notes),
                     )
             connection.commit()
 
@@ -202,7 +355,7 @@ class MundusRepository:
                 """
                 SELECT s.name, e.stat_id, e.value, e.unit, e.supported, e.notes
                 FROM mundus_stone AS s
-                JOIN mundus_effect AS e ON e.mundus_stone_id = s.id
+                JOIN mundus_effect AS e ON e.mundus_id = s.id
                 WHERE s.game_update = ? AND s.name = ? COLLATE NOCASE
                 ORDER BY e.id
                 """,
