@@ -16,6 +16,9 @@ from services.extreme_healing_event_record_service import (
 from services.extreme_invisibility_duration_record_service import (
     ExtremeInvisibilityDurationRecordService,
 )
+from services.extreme_invisibility_uptime_record_service import (
+    ExtremeInvisibilityUptimeRecordService,
+)
 from services.extreme_movement_static_package_service import (
     ExtremeMovementStaticPackageService,
 )
@@ -68,6 +71,7 @@ class ExtremeSpecializedExecutionService:
             "invisibility_duration",
         }
     )
+    _DURATION_INPUT_KEYS = frozenset({"invisibility_uptime"})
     _SAVED_BUILD_REQUIRED_KEYS = frozenset(
         {"actual_heal", "critical_heal", "damage_shield", "bash_damage"}
     )
@@ -116,9 +120,17 @@ class ExtremeSpecializedExecutionService:
     _OBJECTIVE_REQUIREMENTS = {
         "bash_damage": (),
         "damage_shield": (),
-        # Longest contiguous invisibility duration is provider-local and does not
-        # need an arbitrary comparison horizon. Uptime still does.
         "invisibility_duration": (),
+        # Provider recurrence is now derived canonically. Uptime needs only the
+        # comparison horizon; callers no longer hand-enter provider windows.
+        "invisibility_uptime": (
+            ExtremeSpecializedInputRequirement(
+                "duration_seconds",
+                "Duration",
+                "seconds",
+                note="Choose the comparison horizon for reviewed invisibility recurrence.",
+            ),
+        ),
     }
 
     def __init__(
@@ -130,6 +142,7 @@ class ExtremeSpecializedExecutionService:
         movement_package: ExtremeMovementStaticPackageService | None = None,
         stealth_package: ExtremeStealthSourcePackageService | None = None,
         invisibility_duration_record: ExtremeInvisibilityDurationRecordService | None = None,
+        invisibility_uptime_record: ExtremeInvisibilityUptimeRecordService | None = None,
         database_path: str | Path | None = None,
     ) -> None:
         self.healing_events = healing_events or ExtremeHealingEventRecordService()
@@ -158,6 +171,11 @@ class ExtremeSpecializedExecutionService:
             if database_path is not None
             else None
         )
+        self.invisibility_uptime_record = invisibility_uptime_record or (
+            ExtremeInvisibilityUptimeRecordService(database_path)
+            if database_path is not None
+            else None
+        )
 
     @classmethod
     def requirements_for(cls, objective_key: str) -> tuple[ExtremeSpecializedInputRequirement, ...]:
@@ -180,6 +198,16 @@ class ExtremeSpecializedExecutionService:
         return key in cls._DIRECT_KEYS and not cls.requirements_for(key)
 
     @classmethod
+    def can_execute_with_duration_input(cls, objective_key: str) -> bool:
+        key = str(objective_key or "").strip().casefold()
+        requirements = cls.requirements_for(key)
+        return (
+            key in cls._DURATION_INPUT_KEYS
+            and len(requirements) == 1
+            and requirements[0].key == "duration_seconds"
+        )
+
+    @classmethod
     def requires_saved_build(cls, objective_key: str) -> bool:
         return str(objective_key or "").strip().casefold() in cls._SAVED_BUILD_REQUIRED_KEYS
 
@@ -189,13 +217,16 @@ class ExtremeSpecializedExecutionService:
         objective_key: str,
         *,
         active_bar: str = "front",
+        duration_seconds: float | None = None,
     ) -> ExtremeSpecializedExecutionResult:
         key = str(objective_key or "").strip().casefold()
         descriptor = ExtremeRecordExecutionCatalogService.descriptor(key)
         if descriptor.status is not ExtremeRecordExecutionStatus.SPECIALIZED:
             raise ValueError(f"Extreme record is not specialized: {objective_key!r}")
         requirements = self.requirements_for(key)
-        if requirements:
+        if requirements and not (
+            self.can_execute_with_duration_input(key) and duration_seconds is not None
+        ):
             labels = ", ".join(requirement.label for requirement in requirements if requirement.required)
             raise ValueError(
                 f"{descriptor.objective.label} requires family-specific scenario inputs before execution: {labels}"
@@ -364,7 +395,34 @@ class ExtremeSpecializedExecutionService:
                 omitted_scope=result.unresolved,
             )
 
-        raise AssertionError(f"Unhandled zero-input specialized Extreme record: {key}")
+        if key == "invisibility_uptime":
+            if duration_seconds is None:
+                raise ValueError("MOST Invisibility Uptime requires a comparison duration")
+            if self.invisibility_uptime_record is None:
+                raise ValueError("Extreme invisibility uptime record requires a canonical database path")
+            result = self.invisibility_uptime_record.evaluate(duration_seconds=duration_seconds)
+            summary: list[tuple[str, str]] = [
+                ("Comparison horizon", f"{result.duration_seconds:g}s"),
+                ("Reviewed covered time", f"{result.covered_seconds:g}s"),
+                ("Reviewed windows", str(result.window_count)),
+            ]
+            if result.provider is not None:
+                summary.append(("Reviewed provider", result.provider.name))
+            return ExtremeSpecializedExecutionResult(
+                objective_key=key,
+                label=descriptor.objective.label,
+                execution_family=descriptor.execution_family,
+                value=result.uptime_ratio,
+                value_text=f"{result.uptime_ratio * 100.0:.1f}% reviewed lower bound",
+                mechanic_complete=result.mechanic_complete,
+                global_maximum_proven=False,
+                summary_rows=tuple(summary),
+                unresolved=result.unresolved,
+                search_scope=result.evidence,
+                omitted_scope=result.unresolved,
+            )
+
+        raise AssertionError(f"Unhandled specialized Extreme record: {key}")
 
 
 __all__ = [
