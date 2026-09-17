@@ -113,7 +113,8 @@ class FoundryCard(QFrame):
             # the heading, which is how we ended up with charming labels like 'rot'.
             return
 
-        self.icon_label.setPixmap(value.pixmap(17, 17))
+        size = max(17, int(self.icon_label.width() or 17), int(self.icon_label.height() or 17))
+        self.icon_label.setPixmap(value.pixmap(size, size))
         self.icon_label.setToolTip(icon.replace("-", " ").replace("_", " ").title())
         self.icon_label.setProperty("semanticIconName", icon)
         self.icon_label.setVisible(True)
