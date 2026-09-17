@@ -16,7 +16,9 @@ def test_roster_summary_cards_open_embedded_workspaces() -> None:
     assert "back = QToolButton()" in source
     assert 'back.setProperty("rosterBackButton", True)' in source
     assert 'back.setToolTip("Back to Roster")' in source
-    assert 'back.setIcon(icon("roster-back"))' in source
+    assert "back.setIcon(_roster_back_icon())" in source
+    assert "nav_rail.addStretch(1)" in source
+    assert "shell_layout.addLayout(nav_rail)" in source
     assert "back.clicked.connect(self._show_dashboard)" in source
     assert "self._embedded_stack.setCurrentIndex(index)" in source
     assert "super()._show_detail(key)" in source
@@ -60,14 +62,15 @@ def test_readiness_note_art_is_fixed_field_journal_sketch_and_status_is_not_colo
     assert "self.setFixedHeight(150)" in source
 
 
-def test_urban_collectibles_reuse_etched_badge_art_with_recolor() -> None:
+def test_urban_collectibles_use_approved_dedicated_badge_sheets() -> None:
     source = _source("ui/collectibles_new_theme_assets_support.py")
 
-    assert "def field_etched_badge" in source
-    assert "source = field_etched_badge(label)" in source
-    assert "_CITY_BADGE_TONES" in source
-    assert "_recolor_badge" in source
-    assert 'dashboard.SpriteRef("badges.jpg", 6, 4, index)' in source
+    assert '"urban_wilderness", "collectibles"' in source
+    assert 'dashboard.SpriteRef("badges_1.png", 6, 4' in source
+    assert 'dashboard.SpriteRef("badges_2.png", 3, 3' in source
+    assert "return dedicated_badge(city_theme, city_badges.get(label))" in source
+    assert "_CITY_BADGE_TONES" not in source
+    assert 'dashboard.SpriteRef("badges.jpg", 6, 4, index)' in source  # Field Journal only.
 
 
 def test_teams_and_parchment_notes_do_not_reintroduce_retired_city_roster_art() -> None:
