@@ -73,6 +73,55 @@ _ROLE_ICONS = {
 }
 
 
+# Reviewed user-supplied trait icon vocabulary. The icon resolver tolerates
+# hyphen/underscore filename variants, while these aliases preserve the ESO term
+# shown in the UI. A couple of intentionally shared glyphs (Nirnhoned and
+# Bloodthirsty -> drop) follow the supplied visual vocabulary exactly.
+_TRAIT_ICONS = {
+    "Powered": "Powered",
+    "Charged": "Charged",
+    "Precise": "Precise",
+    "Infused": "Infused",
+    "Defending": "Defending",
+    "Training": "Training",
+    "Sharpened": "Sharpened",
+    "Decisive": "Decisive",
+    "Nirnhoned": "drop",
+    "Sturdy": "Sturdy",
+    "Impenetrable": "Impenetrable",
+    "Reinforced": "Reinforced",
+    "Well-Fitted": "Well-fitted",
+    "Invigorating": "Invigorating",
+    "Divines": "Divines",
+    "Healthy": "Health",
+    "Arcane": "maguc",
+    "Robust": "Robust",
+    "Bloodthirsty": "drop",
+    "Harmony": "Harmony",
+    "Triune": "Triune",
+    "Protective": "Protective",
+    "Swift": "Swift",
+}
+
+
+def _trait_icon_name(value: str) -> str:
+    text = str(value or "").strip()
+    return _TRAIT_ICONS.get(text, _TRAIT_ICONS.get(text.title(), ""))
+
+
+def _decorate_trait_combo(combo: QComboBox) -> None:
+    """Attach the reviewed trait glyphs without changing combo values."""
+    for index in range(combo.count()):
+        text = str(combo.itemText(index) or "").strip()
+        icon_name = _trait_icon_name(text)
+        if not icon_name:
+            continue
+        value = semantic_icon(icon_name)
+        if not value.isNull():
+            combo.setItemIcon(index, value)
+    combo.setIconSize(QSize(18, 18))
+
+
 def _selected_build(page):
     index = int(getattr(page, "selected_index", -1))
     if index < 0 or index >= len(page.roster.Members):
@@ -208,6 +257,7 @@ class _GearDialog(_FocusedDialog):
             )
             controller.hide()
             controller.load(_gear_slot(value))
+            _decorate_trait_combo(controller.trait_combo)
             self.rows.append((slot_name, controller))
             _gear_row_grid(grid, row_index, slot_name, controller, kind=kind)
 
@@ -560,10 +610,14 @@ def _detail_rows(rows: list[tuple[str, object]]) -> QWidget:
         row.addWidget(icon_label(_SLOT_ICONS.get(slot, "leather-armor"), 18))
         row.addWidget(QLabel(slot))
         row.addStretch(1)
-        summary = " • ".join(
-            item for item in (value.Set, value.Trait, value.Enchant, value.WeaponType or value.Weight)
-            if str(item or "").strip()
-        ) or "Not configured"
+        summary_parts = [item for item in (value.Set, value.Enchant, value.WeaponType or value.Weight)
+                         if str(item or "").strip()]
+        if value.Trait:
+            trait_icon = _trait_icon_name(value.Trait)
+            if trait_icon:
+                row.addWidget(icon_label(trait_icon, 16))
+            summary_parts.insert(1 if summary_parts else 0, value.Trait)
+        summary = " • ".join(summary_parts) or "Not configured"
         row.addWidget(QLabel(summary))
         layout.addWidget(line)
     host.hide()
@@ -605,10 +659,24 @@ def _gear_card(page, title: str, rows: list[tuple[str, object]]) -> FoundryCard:
     primary.setWordWrap(True)
     card.addWidget(primary)
     if meta:
+        meta_row = QHBoxLayout()
+        meta_row.setContentsMargins(0, 0, 0, 0)
+        meta_row.setSpacing(6)
+        populated_traits = [
+            _slot_values(value).Trait
+            for _slot, value in rows
+            if str(_slot_values(value).Trait or "").strip()
+        ]
+        if populated_traits:
+            common_trait = Counter(populated_traits).most_common(1)[0][0]
+            trait_icon = _trait_icon_name(common_trait)
+            if trait_icon:
+                meta_row.addWidget(icon_label(trait_icon, 17))
         secondary = QLabel(meta)
         secondary.setProperty("muted", True)
         secondary.setWordWrap(True)
-        card.addWidget(secondary)
+        meta_row.addWidget(secondary, 1)
+        card.addLayout(meta_row)
     card.addWidget(detail)
     return card
 
