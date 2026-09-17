@@ -7,6 +7,9 @@ from models.build_model import PlayerBuild
 from services.extreme_bash_saved_build_record_service import (
     ExtremeBashSavedBuildRecordService,
 )
+from services.extreme_damage_shield_saved_build_record_service import (
+    ExtremeDamageShieldSavedBuildRecordService,
+)
 from services.extreme_healing_event_record_service import (
     ExtremeHealingEventRecordService,
 )
@@ -47,17 +50,13 @@ class ExtremeSpecializedExecutionResult:
 
 
 class ExtremeSpecializedExecutionService:
-    """One UI-facing gateway for non-static Extreme execution families.
-
-    Family services remain authoritative for ESO mechanics. This class normalizes
-    their outputs and owns one family-input registry so the Extreme Build Lab does
-    not grow separate ad-hoc forms and execution branches for every record.
-    """
+    """One UI-facing gateway for non-static Extreme execution families."""
 
     _DIRECT_KEYS = frozenset(
         {
             "actual_heal",
             "critical_heal",
+            "damage_shield",
             "bash_damage",
             "movement_speed",
             "sprint_speed",
@@ -66,7 +65,7 @@ class ExtremeSpecializedExecutionService:
         }
     )
     _SAVED_BUILD_REQUIRED_KEYS = frozenset(
-        {"actual_heal", "critical_heal", "bash_damage"}
+        {"actual_heal", "critical_heal", "damage_shield", "bash_damage"}
     )
 
     _FAMILY_REQUIREMENTS = {
@@ -111,21 +110,26 @@ class ExtremeSpecializedExecutionService:
         ),
     }
     _OBJECTIVE_REQUIREMENTS = {
-        # Bash has a canonical saved-build record owner and therefore does not need
-        # the manual event-source input that Damage Shield still requires.
         "bash_damage": (),
+        "damage_shield": (),
     }
 
     def __init__(
         self,
         *,
         healing_events: ExtremeHealingEventRecordService | None = None,
+        shield_record: ExtremeDamageShieldSavedBuildRecordService | None = None,
         bash_record: ExtremeBashSavedBuildRecordService | None = None,
         movement_package: ExtremeMovementStaticPackageService | None = None,
         stealth_package: ExtremeStealthSourcePackageService | None = None,
         database_path: str | Path | None = None,
     ) -> None:
         self.healing_events = healing_events or ExtremeHealingEventRecordService()
+        self.shield_record = shield_record or (
+            ExtremeDamageShieldSavedBuildRecordService(database_path)
+            if database_path is not None
+            else None
+        )
         self.bash_record = bash_record or (
             ExtremeBashSavedBuildRecordService(database_path)
             if database_path is not None
@@ -160,9 +164,7 @@ class ExtremeSpecializedExecutionService:
     @classmethod
     def can_execute_without_extra_inputs(cls, objective_key: str) -> bool:
         key = str(objective_key or "").strip().casefold()
-        if key not in cls._DIRECT_KEYS:
-            return False
-        return not cls.requirements_for(key)
+        return key in cls._DIRECT_KEYS and not cls.requirements_for(key)
 
     @classmethod
     def requires_saved_build(cls, objective_key: str) -> bool:
@@ -189,11 +191,7 @@ class ExtremeSpecializedExecutionService:
         if key in {"actual_heal", "critical_heal"}:
             if build is None:
                 raise ValueError(f"{descriptor.objective.label} requires a saved-build starting context")
-            result = self.healing_events.evaluate(
-                build,
-                key,
-                active_bar=active_bar,
-            )
+            result = self.healing_events.evaluate(build, key, active_bar=active_bar)
             catalog = result.catalog
             winner = catalog.best_scored
             unresolved: list[str] = []
@@ -210,7 +208,6 @@ class ExtremeSpecializedExecutionService:
                 unresolved.extend(winner.unresolved)
             else:
                 unresolved.append("No scored legal healing-event candidate was produced")
-
             value = result.best_scored_value
             return ExtremeSpecializedExecutionResult(
                 objective_key=key,
@@ -224,6 +221,33 @@ class ExtremeSpecializedExecutionService:
                 unresolved=tuple(dict.fromkeys(item for item in unresolved if item)),
                 search_scope=tuple(catalog.search_scope),
                 omitted_scope=tuple(catalog.omitted_scope),
+            )
+
+        if key == "damage_shield":
+            if build is None:
+                raise ValueError(f"{descriptor.objective.label} requires a saved-build starting context")
+            if self.shield_record is None:
+                raise ValueError("Extreme damage-shield record requires a canonical database path")
+            result = self.shield_record.evaluate(build, active_bar=active_bar)
+            summary = [("Active bar", active_bar)]
+            if result.skill_name:
+                summary.append(("Shield skill", result.skill_name))
+            if result.entity_id:
+                summary.append(("Entity", result.entity_id))
+            if result.value is not None:
+                summary.append(("Reviewed shield lower bound", f"{result.value:,.0f}"))
+            return ExtremeSpecializedExecutionResult(
+                objective_key=key,
+                label=descriptor.objective.label,
+                execution_family=descriptor.execution_family,
+                value=result.value,
+                value_text=None if result.value is None else f"{result.value:,.0f}",
+                mechanic_complete=result.mechanic_complete,
+                global_maximum_proven=False,
+                summary_rows=tuple(summary),
+                unresolved=result.unresolved,
+                search_scope=result.evidence,
+                omitted_scope=result.unresolved,
             )
 
         if key == "bash_damage":
