@@ -80,6 +80,7 @@ try {
     Copy-Item $SourceDatabase (Join-Path $DataRoot "eso.db") -Force
 
     # Runtime external data is positive-allowlisted by release_manifest.py.
+    # Entries may include reviewed subdirectories such as gameplay_policy/.
     $RuntimeFiles = python -c "import runpy; m=runpy.run_path(r'packaging/release_manifest.py'); print(chr(10).join(m.get('RUNTIME_EXTERNAL_DATA_FILES', ())))"
     if ($LASTEXITCODE -ne 0) {
         throw "Could not read runtime data allowlist."
@@ -91,7 +92,12 @@ try {
         if (-not (Test-Path $Source)) {
             throw "Allowlisted runtime data file is missing: data\$Name"
         }
-        Copy-Item $Source (Join-Path $DataRoot $Name) -Force
+        $Destination = Join-Path $DataRoot $Name
+        $DestinationParent = Split-Path $Destination -Parent
+        if (-not [string]::IsNullOrWhiteSpace($DestinationParent)) {
+            New-Item -ItemType Directory -Force -Path $DestinationParent | Out-Null
+        }
+        Copy-Item $Source $Destination -Force
     }
 
     # A first install starts with no developer-owned builds. Existing installs
@@ -159,7 +165,12 @@ try {
         foreach ($Name in $RuntimeFiles) {
             $Name = $Name.Trim()
             if ([string]::IsNullOrWhiteSpace($Name)) { continue }
-            Copy-Item (Join-Path $DataRoot $Name) (Join-Path $UpdateDataRoot $Name) -Force
+            $UpdateDestination = Join-Path $UpdateDataRoot $Name
+            $UpdateDestinationParent = Split-Path $UpdateDestination -Parent
+            if (-not [string]::IsNullOrWhiteSpace($UpdateDestinationParent)) {
+                New-Item -ItemType Directory -Force -Path $UpdateDestinationParent | Out-Null
+            }
+            Copy-Item (Join-Path $DataRoot $Name) $UpdateDestination -Force
         }
     }
 
