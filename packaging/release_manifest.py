@@ -9,31 +9,31 @@ audits consume this manifest so only explicitly approved runtime assets are bund
 
 # (source path relative to project root, destination path inside the frozen app)
 RUNTIME_ASSET_DATAS: tuple[tuple[str, str], ...] = (
-    # Canonical ESO ability artwork is selected dynamically by runtime identity.
     ("assets/AbilityIcons", "assets/AbilityIcons"),
-    # Canonical semantic UI icon library used by FoundryCard/navigation controls.
     ("assets/icons", "assets/icons"),
-    # Current approved application branding.
     ("assets/logos/BFF_logo.png", "assets/logos"),
-    # Current supported visual skin.
     ("assets/themes/bff/foundry.qss", "assets/themes/bff"),
     ("assets/themes/bff/urban_wilderness", "assets/themes/bff/urban_wilderness"),
-    # Urban Wilderness still deliberately uses these pencil/sketch Roster notes.
     ("assets/themes/bff/field_journal/roster", "assets/themes/bff/field_journal/roster"),
-    # Windows executable icon.
     ("bff.ico", "."),
 )
 
-# Runtime seed data. The live writable database remains external and must never be
-# overwritten by an update. This seed is only for first-install/recovery provisioning.
 SEED_DATAS: tuple[tuple[str, str], ...] = (
     ("data/eso.db", "_seed_data"),
 )
 
-# External runtime reference files copied beside the executable. These are reviewed
-# one family at a time; nothing earns a release slot merely because it lives in data/.
+# Python namespaces that are explicitly outside the default release runtime. These may
+# remain in source for history, tests, migrations, or optional development work.
+PYINSTALLER_EXCLUDES: tuple[str, ...] = (
+    "old_pages",
+    "legacy",
+    "deprecated",
+    "migration",
+    "modules.broadcast",
+    "pytest",
+)
+
 RUNTIME_EXTERNAL_DATA_FILES: tuple[str, ...] = (
-    # Antiquity reference catalog is consumed by Antiquities and Extreme named-gear logic.
     "antiquities_01.csv",
     "antiquities_02.csv",
     "antiquities_03.csv",
@@ -42,13 +42,11 @@ RUNTIME_EXTERNAL_DATA_FILES: tuple[str, ...] = (
     "antiquities_06.csv",
     "antiquities_07.csv",
     "antiquities_08.csv",
-    # Reviewed encounter identity used by planning/reference/runtime resolution.
     "dungeon_encounter_identity.json",
     "dungeon_encounter_identity_launch_starters.json",
     "dungeon_encounter_identity_launch_starters_fifth.json",
     "dungeon_encounter_identity_launch_starters_sixth.json",
     "raid_encounter_identity.json",
-    # Human-facing reference enrichment used by the current Reference Data surface.
     "reference_common_names.json",
     "reference_mitigations.json",
     "reference_mitigations_aetherian_archive.json",
@@ -91,24 +89,19 @@ RUNTIME_EXTERNAL_DATA_FILES: tuple[str, ...] = (
     "reference_version_history.json",
     "reference_version_history_champion_points.json",
     "reference_version_history_healer_skills.json",
-    # Executable rotation/runtime semantics. Review-only evidence is excluded below.
     "rotation_dd_periodic_runtime_semantics.json",
     "rotation_dd_periodic_target_health_semantics.json",
     "rotation_runtime_output_conditions.json",
     "rotation_scribed_skill_damage_semantics.json",
-    # Provenance and canonical team templates used by current runtime services.
     "source_manifest.json",
     "team_compositions.json",
     "team_prescription_templates.json",
 )
 
-# Files created cleanly on first install instead of copied from the developer machine.
 CLEAN_FIRST_INSTALL_DATA_FILES: tuple[str, ...] = (
     "builds.json",
 )
 
-# Top-level data artifacts that must never ship. Pattern matching is intentional for
-# timestamped/one-off recovery copies. These remain useful in source archaeology only.
 EXCLUDED_TOP_LEVEL_DATA_GLOBS: tuple[str, ...] = (
     "*.before-*",
     "*.backup*",
@@ -122,25 +115,16 @@ EXCLUDED_TOP_LEVEL_DATA_GLOBS: tuple[str, ...] = (
     "eso.db.*backup*",
 )
 
-# Exact top-level data files that are intentionally source/development evidence only.
-# These are not needed by the supported release runtime.
 EXCLUDED_TOP_LEVEL_DATA_FILES: tuple[str, ...] = (
-    # Legacy achievement JSON is only referenced by old_pages; current runtime uses
-    # canonical database-backed achievement data instead.
     "eso_achievements.json",
     "eso_categories.json",
     "eso_tree.json",
-    # Healer refresh/runtime observation fixtures are review/audit evidence.
     "healer_refresh_reviewed.json",
     "healer_runtime_candidates.json",
     "healer_runtime_reviewed.json",
-    # Non-executable DD periodic review evidence. Promoted executable semantics live in
-    # rotation_dd_periodic_runtime_semantics.json above.
     "rotation_dd_periodic_runtime_semantics_review.json",
 )
 
-# These source trees may remain in the repository but are not release payloads.
-# Adding one of them to RUNTIME_ASSET_DATAS should fail the release audit.
 FORBIDDEN_RELEASE_ASSET_PREFIXES: tuple[str, ...] = (
     "assets/decorative",
     "assets/field_office_placeholders",
@@ -149,7 +133,6 @@ FORBIDDEN_RELEASE_ASSET_PREFIXES: tuple[str, ...] = (
     "assets/themes/bff/grimoire",
 )
 
-# Development/research material is never copied as external package data.
 FORBIDDEN_RELEASE_PATH_PARTS: tuple[str, ...] = (
     ".git",
     ".pytest_cache",
@@ -160,8 +143,6 @@ FORBIDDEN_RELEASE_PATH_PARTS: tuple[str, ...] = (
     "research",
 )
 
-# User-owned state must not appear in an update archive. Some of these are created as
-# clean first-install files, but they are never copied from the developer workstation.
 USER_OWNED_DATA_FILES: tuple[str, ...] = (
     "achievement_progress.json",
     "antiquity_progress.json",
