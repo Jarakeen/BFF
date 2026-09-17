@@ -206,7 +206,7 @@ def test_reviewed_runtime_data_and_user_state_are_classified() -> None:
     assert "eso.db.before-*" in excluded_globs
 
 
-def test_packaged_sidebar_hides_in_progress_routes_but_source_build_keeps_them_available() -> None:
+def test_packaged_sidebar_hides_only_unreleased_routes_and_keeps_collectibles_visible() -> None:
     policy = (ROOT / "services" / "release_feature_policy.py").read_text(encoding="utf-8")
     support = (ROOT / "ui" / "theme_brand_mark_support.py").read_text(encoding="utf-8")
 
@@ -214,11 +214,11 @@ def test_packaged_sidebar_hides_in_progress_routes_but_source_build_keeps_them_a
         '"rotations"',
         '"extreme_optimization"',
         '"console:6"',
-        '"collectibles"',
-        '"stickerbook"',
     ):
         assert route in policy
-    assert '"collectibles:"' in policy
+    assert '"collectibles"' not in policy
+    assert '"stickerbook"' not in policy
+    assert '"collectibles:"' not in policy
     assert 'getattr(sys, "frozen", False)' in policy
     assert 'FOUNDRYDOCK_RELEASE_MODE' in policy
     assert "route_allowed" in support
@@ -232,7 +232,8 @@ def test_release_status_names_disabled_and_in_progress_boundaries() -> None:
     assert "## In progress" in status
     assert "Rotation Builder" in status
     assert "Extreme Build Engine" in status
-    assert "Collectibles" in status
+    assert "Collectibles / Stickerbook core workflows" in status
+    assert "Collectibles presentation polish" not in status
     assert "## Disabled" in status
     assert "Screenshot/OCR Build Import" in status
     assert "Community News" in status
