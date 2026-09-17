@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 
 from ui import application_workspace_bootstrap
-from ui import phase14_build_creation_bridge
 from ui import phase14_build_inspector_support
 from ui import phase14_build_profile_support
 from ui import phase14_builds_command_center_support
@@ -20,8 +19,8 @@ def test_phase14_build_command_center_is_composed_after_existing_build_features(
 
     assert "install_phase14_builds_command_center_support()" in source
     assert "install_phase14_build_profile_support()" in source
-    assert "install_phase14_build_creation_bridge()" in source
     assert "install_phase14_build_inspector_support()" in source
+    assert "install_phase14_build_creation_bridge()" not in source
     assert source.index("install_build_reuse_template_support()") < source.index(
         "install_phase14_builds_command_center_support()"
     )
@@ -29,9 +28,6 @@ def test_phase14_build_command_center_is_composed_after_existing_build_features(
         "install_phase14_build_profile_support()"
     )
     assert source.index("install_phase14_build_profile_support()") < source.index(
-        "install_phase14_build_creation_bridge()"
-    )
-    assert source.index("install_phase14_build_creation_bridge()") < source.index(
         "install_phase14_build_inspector_support()"
     )
 
@@ -48,6 +44,15 @@ def test_build_command_center_exposes_selected_library_views_and_filters() -> No
     assert "setUsesScrollButtons(False)" in source
 
 
+def test_phase14_new_build_reuses_existing_easy_mode_action_without_second_wrapper() -> None:
+    source = _source(phase14_builds_command_center_support)
+
+    assert 'existing = getattr(page, "create_character_button", None)' in source
+    assert "page.phase14_create_build_button.clicked.connect(existing.click)" in source
+    assert 'action_host = getattr(page, "new_build_action_host", None)' in source
+    assert "action_host.hide()" in source
+
+
 def test_build_profile_support_uses_additive_sidecar_and_baseline() -> None:
     source = _source(phase14_build_profile_support)
 
@@ -57,15 +62,6 @@ def test_build_profile_support_uses_additive_sidecar_and_baseline() -> None:
     assert '"My Build" if profile.ownership == "mine"' in source
     assert 'favorite=not profile.favorite' in source
     assert 'archived=not profile.archived' in source
-
-
-def test_phase14_new_build_uses_existing_easy_mode_panel() -> None:
-    source = _source(phase14_build_creation_bridge)
-
-    assert 'panel = getattr(self, "new_build_panel", None)' in source
-    assert "button.clicked.connect(panel.open_for_creation)" in source
-    assert 'old_host = getattr(self, "new_build_action_host", None)' in source
-    assert "old_host.hide()" in source
 
 
 def test_phase14_build_inspector_uses_selected_section_tabs() -> None:
