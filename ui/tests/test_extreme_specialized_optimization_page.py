@@ -21,6 +21,7 @@ def test_specialized_page_routes_only_zero_input_families_through_gateway() -> N
     assert "class ExtremeSpecializedOptimizationPage(ExtremeOptimizationPage):" in source
     assert "database_path=self.service.database_path" in source
     assert "ExtremeSpecializedExecutionService.can_execute_without_extra_inputs" in source
+    assert "ExtremeSpecializedExecutionService.requires_saved_build" in source
     assert "self.specialized_service.execute(" in source
     assert "result.value_text" in source
     assert "super()._run_extreme_search()" in source
@@ -47,3 +48,19 @@ def test_heal_and_movement_families_are_current_zero_input_specialized_routes() 
         "invisibility_uptime",
     ):
         assert not ExtremeSpecializedExecutionService.can_execute_without_extra_inputs(key)
+
+
+def test_only_heal_direct_routes_require_saved_build_context() -> None:
+    assert ExtremeSpecializedExecutionService.requires_saved_build("actual_heal")
+    assert ExtremeSpecializedExecutionService.requires_saved_build("critical_heal")
+    for key in ("movement_speed", "sprint_speed", "stealthed_movement_speed"):
+        assert not ExtremeSpecializedExecutionService.requires_saved_build(key)
+
+
+def test_specialized_page_allows_scratch_execution_when_family_is_build_independent() -> None:
+    source = Path(extreme_specialized_optimization_page.__file__).read_text(encoding="utf-8")
+
+    assert "if direct_specialized and (not scratch or not saved_build_required):" in source
+    assert "build = None" in source
+    assert "if not scratch:" in source
+    assert "if scratch and saved_build_required:" in source
