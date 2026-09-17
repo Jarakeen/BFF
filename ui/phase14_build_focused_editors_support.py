@@ -220,6 +220,7 @@ class _GearDialog(_FocusedDialog):
         grid.setContentsMargins(4, 4, 4, 4)
         grid.setHorizontalSpacing(8)
         grid.setVerticalSpacing(8)
+        grid.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         headers = ["", "Slot", "Set", "Quality", "Trait"]
         if section in {"Armor", "Front Bar", "Back Bar"}:
@@ -228,6 +229,9 @@ class _GearDialog(_FocusedDialog):
         for column, label in enumerate(headers):
             heading = QLabel(label)
             heading.setProperty("sidebarHeading", True)
+            heading.setMinimumHeight(24)
+            heading.setMaximumHeight(28)
+            heading.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
             grid.addWidget(heading, 0, column)
 
         if section == "Armor":
@@ -260,6 +264,16 @@ class _GearDialog(_FocusedDialog):
             _decorate_trait_combo(controller.trait_combo)
             self.rows.append((slot_name, controller))
             _gear_row_grid(grid, row_index, slot_name, controller, kind=kind)
+
+        # The scroll viewport is intentionally taller than short sections like
+        # Jewelry. Without an explicit stretch row, QGridLayout can donate that
+        # spare height to the header row and create a huge blank band above the
+        # controls. Keep all editor rows packed at the top and put spare height
+        # below the last real row instead.
+        grid.setRowStretch(0, 0)
+        for row_index in range(1, len(source) + 1):
+            grid.setRowStretch(row_index, 0)
+        grid.setRowStretch(len(source) + 1, 1)
 
         grid.setColumnStretch(2, 2)
         for column in range(3, grid.columnCount()):
