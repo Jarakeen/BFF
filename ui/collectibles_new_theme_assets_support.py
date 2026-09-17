@@ -2,9 +2,9 @@ from __future__ import annotations
 
 """Collectibles assets for the additive Field Journal and Urban Wilderness themes.
 
-The original Foundry and Rylo collectible themes stay untouched. The newer themes
-reuse the proven etched fantasy badge language and recolor it for their accessible
-palettes rather than substituting empty glyph slots or high-brightness effects.
+Field Journal retains its etched/recolored treatment. Urban Wilderness now consumes the
+approved dedicated badge sheets from assets/themes/bff/urban_wilderness/collectibles
+without recoloring them again or falling back to legacy badge art.
 """
 
 from pathlib import Path
@@ -27,14 +27,6 @@ _FIELD_BADGE_TONES = (
     "#7EB6B5",
     "#D1983D",
     "#91BFC0",
-)
-_CITY_BADGE_TONES = (
-    "#7EA6B8",
-    "#D0A35D",
-    "#95A4AC",
-    "#89B3C5",
-    "#C8B58D",
-    "#B9C5CC",
 )
 
 
@@ -104,7 +96,7 @@ def install() -> None:
     )
     city_theme = dashboard.DashboardTheme(
         key="rylo_city",
-        folder="bff/city_night",
+        folder="bff/urban_wilderness",
         accents=("#7EA6B8", "#D0A35D", "#95A4AC", "#5F8193", "#C8B58D", "#89B3C5"),
         panel="rgba(20, 25, 30, 238)",
         panel_hover="rgba(31, 40, 48, 242)",
@@ -127,9 +119,37 @@ def install() -> None:
         label: dashboard.SpriteRef("badges.jpg", 6, 4, index)
         for index, label in enumerate(labels)
     }
+
+    # Approved Urban Wilderness sheets. badges_1 is the 6x4 primary set;
+    # badges_2 supplies the alternate/specialized 3x3 identities.
     city_badges = {
-        label: dashboard.SpriteRef("badges.webp", 6, 4, index)
-        for index, label in enumerate(labels)
+        "Mounts": dashboard.SpriteRef("badges_1.png", 6, 4, 0, 0.03, 0.02),
+        "Pets": dashboard.SpriteRef("badges_1.png", 6, 4, 1, 0.03, 0.02),
+        "Armor Styles": dashboard.SpriteRef("badges_1.png", 6, 4, 2, 0.03, 0.02),
+        "Costumes": dashboard.SpriteRef("badges_1.png", 6, 4, 5, 0.03, 0.02),
+        "Personalities": dashboard.SpriteRef("badges_1.png", 6, 4, 6, 0.03, 0.02),
+        "Emotes": dashboard.SpriteRef("badges_1.png", 6, 4, 7, 0.03, 0.02),
+        "Mementos": dashboard.SpriteRef("badges_1.png", 6, 4, 9, 0.03, 0.02),
+        "Furnishings": dashboard.SpriteRef("badges_1.png", 6, 4, 10, 0.03, 0.02),
+        "Assistants": dashboard.SpriteRef("badges_1.png", 6, 4, 11, 0.03, 0.02),
+        "Companions": dashboard.SpriteRef("badges_1.png", 6, 4, 12, 0.03, 0.02),
+        "Body Markings": dashboard.SpriteRef("badges_1.png", 6, 4, 13, 0.03, 0.02),
+        "Head Markings": dashboard.SpriteRef("badges_1.png", 6, 4, 14, 0.03, 0.02),
+        "Hair": dashboard.SpriteRef("badges_1.png", 6, 4, 15, 0.03, 0.02),
+        "Hats": dashboard.SpriteRef("badges_1.png", 6, 4, 16, 0.03, 0.02),
+        "Facial Hair / Horns": dashboard.SpriteRef("badges_1.png", 6, 4, 18, 0.03, 0.02),
+        "Piercing / Jewelry": dashboard.SpriteRef("badges_1.png", 6, 4, 19, 0.03, 0.02),
+        "Tools & Upgrades": dashboard.SpriteRef("badges_1.png", 6, 4, 23, 0.03, 0.02),
+        "Customized Actions": dashboard.SpriteRef("badges_1.png", 6, 4, 21, 0.03, 0.02),
+        "Skins": dashboard.SpriteRef("badges_2.png", 3, 3, 0, 0.02, 0.02),
+        "Weapon Styles": dashboard.SpriteRef("badges_2.png", 3, 3, 1, 0.02, 0.02),
+        "Houses": dashboard.SpriteRef("badges_2.png", 3, 3, 2, 0.02, 0.02),
+        "Polymorphs": dashboard.SpriteRef("badges_2.png", 3, 3, 3, 0.02, 0.02),
+        "Facial Accessories": dashboard.SpriteRef("badges_2.png", 3, 3, 4, 0.02, 0.02),
+        "Fragments": dashboard.SpriteRef("badges_2.png", 3, 3, 5, 0.02, 0.02),
+        "Motifs": dashboard.SpriteRef("badges_2.png", 3, 3, 6, 0.02, 0.02),
+        "Antiquities": dashboard.SpriteRef("badges_2.png", 3, 3, 7, 0.02, 0.02),
+        "Lorebooks": dashboard.SpriteRef("badges_2.png", 3, 3, 8, 0.02, 0.02),
     }
 
     original_active_theme = dashboard._active_theme
@@ -153,11 +173,13 @@ def install() -> None:
             )
         if theme.key == city_theme.key:
             return get_resource_path(
-                "assets", "themes", "bff", "city_night", "collectibles"
+                "assets", "themes", "bff", "urban_wilderness", "collectibles"
             )
         return original_theme_root(theme)
 
     def dedicated_badge(theme, ref):
+        if ref is None:
+            return None
         root = Path(theme_root(theme))
         path = root / ref.filename
         if not path.is_file():
@@ -171,22 +193,12 @@ def install() -> None:
     def badge_sprite(theme, label: str):
         if theme.key == field_theme.key:
             source = field_etched_badge(label)
-            if source is None or source.isNull():
-                ref = city_badges.get(label)
-                source = dedicated_badge(city_theme, ref) if ref else None
             return _recolor_badge(source, _tone_for(label, labels, _FIELD_BADGE_TONES))
 
         if theme.key == city_theme.key:
-            # Urban Wilderness deliberately reuses the etched/grimoire-style badge
-            # silhouettes rather than the compact city placeholder sheet. Recoloring
-            # preserves icon identity while keeping the low-brightness blue/gold palette.
-            source = field_etched_badge(label)
-            if source is None or source.isNull():
-                ref = city_badges.get(label)
-                source = dedicated_badge(city_theme, ref) if ref else None
-            if source is None or source.isNull():
-                source = original_badge_sprite(dashboard.BFF_THEME, label)
-            return _recolor_badge(source, _tone_for(label, labels, _CITY_BADGE_TONES))
+            # Use the approved art exactly as authored. Missing art falls back to
+            # the card's normal glyph, never to an old collectible badge family.
+            return dedicated_badge(city_theme, city_badges.get(label))
 
         return original_badge_sprite(theme, label)
 
