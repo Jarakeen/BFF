@@ -40,6 +40,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Raid Engine dashboard summarizes static coverage evidence with distinct available, conditional, not-identified, and unverified labels rather than treating an unknown effect as missing
 - Raid Plans provides a visible 12-chair trial-planning workspace where gamertag can be known before character, role, class, or build, and saved builds can be assigned without mutating existing Roster persistence
 - Raid Plans now keeps the non-editable center note as a static quote panel, removes the redundant top Roles/Spots field-note card, and routes detailed assignment work to the dedicated Assignments surface
+- Raid Plans can show trial-specific wide hero artwork for Cloudrest, Sunspire, and Dreadsail Reef; banners resolve from the selected plan identity, crop without distortion, fail closed for unmapped trials, and are bundled as compressed WebP release assets
 - Readiness parchment notes use fixed-height field-journal pencil/sketch artwork; full-color city art is reserved for dark surfaces and decorative art cannot change page/card geometry
 - Empty boss, mechanic, positioning, and Raid Map panels use distinct compact field-art placeholders for Foundry and Rylo, with visible labels that distinguish decorative art from reviewed encounter evidence
 - Main character overview dashboard
