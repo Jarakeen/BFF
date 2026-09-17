@@ -156,6 +156,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Focused Build editors open only the requested section (identity, Armor, Jewelry, Front Bar, Back Bar, Skills, Champion Points, Consumables, Notes, and existing Scribing access) from the right-side dossier; the monolithic legacy editor is retained only as a compatibility fallback
 - The Phase 14 right-side dossier uses compact grouped Gear cards, slot/class/role/consumable icon vocabulary, collapsible per-slot detail, a compact baseline/exception strip, More Actions menu, and a single gold Save action
 - Build Gear popups and dossier summaries use the reviewed ESO trait icon vocabulary for weapon, armor, and jewelry traits while retaining the trait text as the accessible source of meaning
+- Phase 14 uses a user-extensible semantic icon resolver that tolerates spaces, hyphens, underscores, capitalization, and localized Windows filename display quirks, then reasserts Builds icons at the final visible-page boundary
 
 ---
 
@@ -171,6 +172,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Timeline, Uptime & Resources, Explanations, Compare, and Save & Export are exposed as an icon-led result navigation row beneath the setup cards and remain disabled until a generated plan exists; the canonical result tabs stay available after entering a result view
 - The Phase 14 presentation preserves the hidden legacy Builder shell while canonical refresh helpers still own references into it, preventing deleted-Qt-label failures during saved-build refresh without duplicating planner state
 - Context-chip polish is idempotent across repeated page visits, so reopening Rotation Builder does not stack duplicate Character/Build/Trial/Boss/Difficulty captions
+- The Rotation Builder front page is constrained to four primary setup surfaces before generation: compact Context, Rotation Intent, Inputs & Obligations, and the result-navigation panel; intent icons are displayed above their labels and generated-setting rows expose explicit edit pencils
 - **Generate Rotation** remains the single dominant setup action; save/export controls stay in the generated-result workflow
 
 ---
