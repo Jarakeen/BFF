@@ -35,9 +35,30 @@ class _HealingEvents:
         )
 
 
-def test_heal_event_records_are_direct_specialized_routes() -> None:
-    assert ExtremeSpecializedExecutionService.can_execute_without_extra_inputs("actual_heal")
-    assert ExtremeSpecializedExecutionService.can_execute_without_extra_inputs("critical_heal")
+class _MovementPackage:
+    def evaluate(self, objective_key):
+        assert objective_key in {"movement_speed", "sprint_speed", "stealthed_movement_speed"}
+        return SimpleNamespace(
+            result=SimpleNamespace(
+                raw_multiplier=1.41,
+                effective_multiplier=1.41,
+                effective_cap_multiplier=2.0,
+            ),
+            mechanic_complete=False,
+            evidence=("reviewed static movement package",),
+            unresolved=("runtime movement providers not yet exhaustive",),
+        )
+
+
+def test_heal_and_movement_records_are_direct_specialized_routes() -> None:
+    for key in (
+        "actual_heal",
+        "critical_heal",
+        "movement_speed",
+        "sprint_speed",
+        "stealthed_movement_speed",
+    ):
+        assert ExtremeSpecializedExecutionService.can_execute_without_extra_inputs(key)
     assert not ExtremeSpecializedExecutionService.can_execute_without_extra_inputs("bash_damage")
 
 
@@ -55,8 +76,7 @@ def test_family_requirements_are_shared_by_related_records() -> None:
     movement = ExtremeSpecializedExecutionService.requirements_for("movement_speed")
     sprint = ExtremeSpecializedExecutionService.requirements_for("sprint_speed")
     stealth_move = ExtremeSpecializedExecutionService.requirements_for("stealthed_movement_speed")
-    assert movement == sprint == stealth_move
-    assert tuple(row.key for row in movement) == ("movement_sources",)
+    assert movement == sprint == stealth_move == ()
 
     invis_duration = ExtremeSpecializedExecutionService.requirements_for("invisibility_duration")
     invis_uptime = ExtremeSpecializedExecutionService.requirements_for("invisibility_uptime")
@@ -65,7 +85,10 @@ def test_family_requirements_are_shared_by_related_records() -> None:
 
 
 def test_heal_event_execution_normalizes_family_result_for_ui() -> None:
-    service = ExtremeSpecializedExecutionService(healing_events=_HealingEvents())
+    service = ExtremeSpecializedExecutionService(
+        healing_events=_HealingEvents(),
+        movement_package=_MovementPackage(),
+    )
 
     result = service.execute(
         SimpleNamespace(),
@@ -76,6 +99,7 @@ def test_heal_event_execution_normalizes_family_result_for_ui() -> None:
     assert result.objective_key == "actual_heal"
     assert result.execution_family == "actual-heal-event"
     assert result.value == pytest.approx(54321.0)
+    assert result.value_text == "54,321"
     assert result.mechanic_complete is False
     assert result.global_maximum_proven is False
     assert ("Heal", "Fixture Heal") in result.summary_rows
@@ -86,11 +110,33 @@ def test_heal_event_execution_normalizes_family_result_for_ui() -> None:
     assert result.omitted_scope == ("fixture omitted",)
 
 
+def test_movement_execution_normalizes_reviewed_lower_bound_for_ui() -> None:
+    service = ExtremeSpecializedExecutionService(
+        healing_events=_HealingEvents(),
+        movement_package=_MovementPackage(),
+    )
+
+    result = service.execute(SimpleNamespace(), "movement_speed")
+
+    assert result.execution_family == "movement-state"
+    assert result.value == pytest.approx(1.41)
+    assert result.value_text == "141.0%"
+    assert result.global_maximum_proven is False
+    assert result.mechanic_complete is False
+    assert ("Reviewed raw speed", "141.0%") in result.summary_rows
+    assert ("Effective cap", "200%") in result.summary_rows
+    assert result.search_scope == ("reviewed static movement package",)
+    assert result.unresolved == ("runtime movement providers not yet exhaustive",)
+
+
 def test_specialized_family_needing_inputs_names_shared_requirements() -> None:
-    service = ExtremeSpecializedExecutionService(healing_events=_HealingEvents())
+    service = ExtremeSpecializedExecutionService(
+        healing_events=_HealingEvents(),
+        movement_package=_MovementPackage(),
+    )
 
     with pytest.raises(
         ValueError,
-        match="requires family-specific scenario inputs before execution: Movement Sources",
+        match="requires family-specific scenario inputs before execution: Event Source",
     ):
-        service.execute(SimpleNamespace(), "movement_speed")
+        service.execute(SimpleNamespace(), "bash_damage")
