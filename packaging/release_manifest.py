@@ -26,6 +26,10 @@ RUNTIME_ASSET_DATAS: tuple[tuple[str, str], ...] = (
 # Urban Wilderness runtime path. Do not reopen the retired Grimoire theme tree.
 OPTIONAL_RUNTIME_ASSET_DATAS: tuple[tuple[str, str], ...] = (
     (
+        "assets/timers/vas2",
+        "assets/timers/vas2",
+    ),
+    (
         "assets/themes/bff/grimoire/assets/fantasy_splash.png",
         "assets/themes/bff/urban_wilderness/startup",
     ),
