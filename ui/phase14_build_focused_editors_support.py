@@ -702,11 +702,15 @@ def _skills_tab(page, build) -> QWidget:
     layout = QHBoxLayout(tab)
     layout.setContentsMargins(0, 0, 0, 0)
     layout.setSpacing(8)
-    for title, values in (("Front Bar", build.FrontBarSkills), ("Back Bar", build.BackBarSkills)):
+    for title, values in (("Base Front Bar", build.FrontBarSkills), ("Base Back Bar", build.BackBarSkills)):
         card = FoundryCard(title, "lunar-wand")
+        hint = QLabel("Context variants inherit these base skill bars until overridden.")
+        hint.setProperty("muted", True)
+        hint.setWordWrap(True)
+        card.addWidget(hint)
         for index, skill in enumerate(values, start=1):
             card.addWidget(icon_polish._skill_row(index, skill))
-        edit = FoundryButton("Edit Skills", role=ButtonRole.SECONDARY, compact=True)
+        edit = FoundryButton("Edit Base Skills", role=ButtonRole.SECONDARY, compact=True)
         edit.clicked.connect(lambda: _edit_skills(page))
         card.addWidget(edit)
         layout.addWidget(card, 1)
@@ -717,15 +721,19 @@ def _cp_tab(page, build) -> QWidget:
     tab = QWidget()
     layout = QVBoxLayout(tab)
     layout.setContentsMargins(0, 0, 0, 0)
-    card = FoundryCard("Champion Points", "progression")
+    card = FoundryCard("Base Champion Points", "progression")
+    hint = QLabel("Context variants inherit these base Champion Points until overridden.")
+    hint.setProperty("muted", True)
+    hint.setWordWrap(True)
+    card.addWidget(hint)
     entries = [entry for entry in build.ChampionPoints if str(entry.Name or "").strip()]
     if entries:
         for entry in entries:
             label = QLabel(f"{entry.Name}  {entry.Points}".strip())
             card.addWidget(label)
     else:
-        card.addWidget(QLabel("No Champion Points recorded."))
-    edit = FoundryButton("Edit CP", role=ButtonRole.SECONDARY, compact=True)
+        card.addWidget(QLabel("No base Champion Points recorded."))
+    edit = FoundryButton("Edit Base CP", role=ButtonRole.SECONDARY, compact=True)
     edit.clicked.connect(lambda: _edit_cp(page))
     card.addWidget(edit)
     layout.addWidget(card)
