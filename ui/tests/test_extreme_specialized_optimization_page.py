@@ -37,13 +37,13 @@ def test_current_direct_specialized_routes_are_explicit() -> None:
         "sprint_speed",
         "stealthed_movement_speed",
         "detection_radius_reduction",
+        "invisibility_duration",
     ):
         assert ExtremeSpecializedExecutionService.can_execute_without_extra_inputs(key)
 
     for key in (
         "resource_sustain",
         "ultimate_generation",
-        "invisibility_duration",
         "invisibility_uptime",
     ):
         assert not ExtremeSpecializedExecutionService.can_execute_without_extra_inputs(key)
@@ -57,6 +57,7 @@ def test_saved_build_direct_routes_are_explicit() -> None:
         "sprint_speed",
         "stealthed_movement_speed",
         "detection_radius_reduction",
+        "invisibility_duration",
     ):
         assert not ExtremeSpecializedExecutionService.requires_saved_build(key)
 
