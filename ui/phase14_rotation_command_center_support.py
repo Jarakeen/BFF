@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
@@ -54,9 +55,9 @@ _INTENTS = {
 }
 
 
-def _muted(text: str) -> QLabel:
+def _muted(text: str, *, wrap: bool = True) -> QLabel:
     label = QLabel(text)
-    label.setWordWrap(True)
+    label.setWordWrap(wrap)
     label.setProperty("muted", True)
     return label
 
@@ -68,6 +69,9 @@ def _field(title: str, widget: QWidget) -> QWidget:
     layout.setSpacing(2)
     label = QLabel(title)
     label.setProperty("sidebarHeading", True)
+    label.setMaximumHeight(16)
+    widget.setMinimumHeight(30)
+    widget.setMaximumHeight(30)
     layout.addWidget(label)
     layout.addWidget(widget)
     return host
@@ -127,8 +131,9 @@ def _apply_intent(page, name: str) -> None:
 def _summary_row(title: str, value_label: QLabel) -> QWidget:
     row = QFrame()
     row.setProperty("rotationSummaryRow", True)
+    row.setFixedHeight(38)
     layout = QHBoxLayout(row)
-    layout.setContentsMargins(8, 5, 8, 5)
+    layout.setContentsMargins(10, 3, 10, 3)
     layout.addWidget(QLabel(title))
     layout.addStretch(1)
     layout.addWidget(value_label)
@@ -182,20 +187,29 @@ def _obligation_row(page, title: str, description: str, count_text: str, detail:
     outer = QVBoxLayout(host)
     outer.setContentsMargins(0, 0, 0, 0)
     outer.setSpacing(0)
+
     button = QPushButton()
     button.setProperty("rotationObligationRow", True)
+    button.setFixedHeight(48)
     row = QHBoxLayout(button)
-    row.setContentsMargins(10, 7, 10, 7)
-    row.addWidget(QLabel(title))
-    description_label = QLabel(description)
-    description_label.setProperty("muted", True)
+    row.setContentsMargins(10, 5, 10, 5)
+
+    title_label = QLabel(title)
+    title_label.setMinimumWidth(108)
+    row.addWidget(title_label)
+
+    description_label = _muted(description, wrap=False)
+    description_label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
     row.addWidget(description_label, 1)
+
     count = QLabel(count_text)
     count.setProperty("cardBadge", True)
+    count.setMinimumWidth(34)
     page.phase14_obligation_count_labels[title] = count
     row.addWidget(count)
     row.addWidget(QLabel("›"))
     outer.addWidget(button)
+
     if detail is not None:
         detail.hide()
         outer.addWidget(detail)
@@ -210,7 +224,7 @@ def _build_advanced_panel(page) -> QWidget:
     panel.setProperty("foundryCard", True)
     grid = QGridLayout(panel)
     grid.setContentsMargins(10, 8, 10, 8)
-    grid.setSpacing(8)
+    grid.setSpacing(7)
     grid.addWidget(_field("ROTATION GOAL", page.rotation_goal_combo), 0, 0)
     grid.addWidget(_field("WEAVING", page.rotation_la_reliability_combo), 0, 1)
     grid.addWidget(_field("BAR SWAPPING", page.rotation_bar_swap_comfort_combo), 1, 0)
@@ -240,15 +254,12 @@ def _build_rules_detail() -> QWidget:
     return detail
 
 
-def _build_setup_tab(page) -> QWidget:
-    tab = QWidget()
-    layout = QVBoxLayout(tab)
-    layout.setContentsMargins(0, 0, 0, 0)
-    layout.setSpacing(8)
-
+def _build_context(page) -> FoundryCard:
     context = FoundryCard("Rotation Context", "✦")
+    context.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
     context_row = QHBoxLayout()
     context_row.setContentsMargins(0, 0, 0, 0)
+    context_row.setSpacing(7)
     for title, control in (
         ("CHARACTER", page.character_combo),
         ("BUILD", page.build_combo),
@@ -260,19 +271,21 @@ def _build_setup_tab(page) -> QWidget:
         control.show()
         context_row.addWidget(_field(title, control), 1)
     context.addLayout(context_row)
-    layout.addWidget(context)
+    return context
 
-    columns = QHBoxLayout()
-    columns.setSpacing(8)
 
+def _build_intent_card(page) -> FoundryCard:
     intent_card = FoundryCard("Rotation Intent", "◎")
-    intent_card.addWidget(_muted("Choose a focus. FoundryDock applies a visible starting profile that you can adjust."))
+    intent_card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
+    intent_card.addWidget(_muted("Choose a focus. FoundryDock configures sensible defaults, which you can adjust."))
+
     intent_buttons = QHBoxLayout()
+    intent_buttons.setSpacing(6)
     page.phase14_intent_buttons = {}
     for name, values in _INTENTS.items():
         button = QPushButton(f"{name}\n{values['description']}")
         button.setCheckable(True)
-        button.setMinimumHeight(92)
+        button.setFixedHeight(72)
         button.clicked.connect(lambda checked, intent=name: _apply_intent(page, intent) if checked else None)
         page.phase14_intent_buttons[name] = button
         intent_buttons.addWidget(button, 1)
@@ -286,9 +299,7 @@ def _build_setup_tab(page) -> QWidget:
     generated_heading.addWidget(page.phase14_rotation_customized_label)
     page.phase14_rotation_reset_button = QPushButton("Reset to preset")
     page.phase14_rotation_reset_button.setVisible(False)
-    page.phase14_rotation_reset_button.clicked.connect(
-        lambda: _apply_intent(page, page.phase14_rotation_intent)
-    )
+    page.phase14_rotation_reset_button.clicked.connect(lambda: _apply_intent(page, page.phase14_rotation_intent))
     generated_heading.addWidget(page.phase14_rotation_reset_button)
     intent_card.addLayout(generated_heading)
 
@@ -301,54 +312,60 @@ def _build_setup_tab(page) -> QWidget:
     page.phase14_rotation_advanced_panel = _build_advanced_panel(page)
     page.phase14_rotation_advanced_panel.hide()
     advanced_button = QPushButton("Advanced execution & sustain")
+    advanced_button.setFixedHeight(36)
     advanced_button.clicked.connect(
-        lambda: page.phase14_rotation_advanced_panel.setVisible(
-            not page.phase14_rotation_advanced_panel.isVisible()
-        )
+        lambda: page.phase14_rotation_advanced_panel.setVisible(not page.phase14_rotation_advanced_panel.isVisible())
     )
     intent_card.addWidget(advanced_button)
     intent_card.addWidget(page.phase14_rotation_advanced_panel)
-    columns.addWidget(intent_card, 1)
+    return intent_card
 
+
+def _build_obligations_card(page) -> FoundryCard:
     obligations = FoundryCard("Inputs & Obligations", "☑")
-    obligations.addWidget(
-        _muted("Detected from the selected build, encounter context, and canonical rules. Unknown evidence stays unknown.")
-    )
+    obligations.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
+    obligations.addWidget(_muted("Detected from your build, team setup, and encounter. Review and adjust."))
     page.phase14_obligation_count_labels = {}
 
     priority_host = QWidget()
     priority_layout = QVBoxLayout(priority_host)
     priority_layout.setContentsMargins(8, 4, 8, 8)
-    page.priority_table.setMinimumHeight(210)
+    page.priority_table.setMinimumHeight(190)
     priority_layout.addWidget(page.priority_table)
 
     pressure_host = QWidget()
     pressure_layout = QVBoxLayout(pressure_host)
     pressure_layout.setContentsMargins(8, 4, 8, 8)
-    page.rotation_pressure_table.setMinimumHeight(160)
+    page.rotation_pressure_table.setMinimumHeight(150)
     pressure_layout.addWidget(page.rotation_pressure_table)
 
-    obligations.addWidget(
-        _obligation_row(page, "Build skills", "Skills and priorities from the selected saved build.", str(_skill_count(page)), priority_host)
-    )
-    obligations.addWidget(
-        _obligation_row(page, "Gear procs", "Canonical proc obligations appear only when reviewed evidence is available.", "—")
-    )
-    obligations.addWidget(
-        _obligation_row(page, "Team duties", "Assignments remain owned by roster/team context.", "—")
-    )
-    obligations.addWidget(
-        _obligation_row(page, "Pressure windows", "Short intense encounter windows and custom reviewed windows.", str(_pressure_count(page)), pressure_host)
-    )
-    obligations.addWidget(
-        _obligation_row(page, "Advanced rules", "Custom ability priorities and conditional logic.", "—", _build_rules_detail())
-    )
+    obligations.addWidget(_obligation_row(page, "Build skills", "Saved bars, passives, and priorities.", str(_skill_count(page)), priority_host))
+    obligations.addWidget(_obligation_row(page, "Gear procs", "Reviewed active set and item proc rules.", "—"))
+    obligations.addWidget(_obligation_row(page, "Team duties", "Group buffs, synergies, and assignments.", "—"))
+    obligations.addWidget(_obligation_row(page, "Pressure windows", "Short high-intensity encounter windows.", str(_pressure_count(page)), pressure_host))
+    obligations.addWidget(_obligation_row(page, "Advanced rules", "Priority and conditional logic.", "—", _build_rules_detail()))
 
-    page.generate_button.setMinimumHeight(54)
+    page.generate_button.setMinimumHeight(50)
+    page.generate_button.setMaximumHeight(50)
     obligations.addWidget(page.generate_button)
-    columns.addWidget(obligations, 1)
+    return obligations
 
-    layout.addLayout(columns, 1)
+
+def _build_setup_tab(page) -> QWidget:
+    tab = QWidget()
+    layout = QVBoxLayout(tab)
+    layout.setContentsMargins(0, 0, 0, 0)
+    layout.setSpacing(8)
+
+    layout.addWidget(_build_context(page))
+
+    columns = QHBoxLayout()
+    columns.setContentsMargins(0, 0, 0, 0)
+    columns.setSpacing(8)
+    columns.addWidget(_build_intent_card(page), 1)
+    columns.addWidget(_build_obligations_card(page), 1)
+    layout.addLayout(columns)
+    layout.addStretch(1)
     return tab
 
 
@@ -359,10 +376,10 @@ def _enable_result_tabs(page, enabled: bool) -> None:
 
 
 def _refresh_phase14_state(page) -> None:
-    _refresh_setting_summary(page)
-    _refresh_obligation_counts(page)
     if hasattr(page, "phase14_intent_buttons") and not getattr(page, "phase14_rotation_intent", ""):
         _apply_intent(page, "Safe Progression")
+    _refresh_setting_summary(page)
+    _refresh_obligation_counts(page)
     has_result = bool(getattr(page, "rotation_plan", None))
     _enable_result_tabs(page, has_result)
 
@@ -408,7 +425,6 @@ def install_phase14_rotation_command_center(page) -> None:
         page.rotation_bar_swap_comfort_combo,
         page.rotation_heavy_behavior_combo,
         page.rotation_complexity_combo,
-        page.rotation_primary_resource_combo,
         page.rotation_minimum_reserve_spin,
         page.rotation_prioritize_survival,
     ):
@@ -419,15 +435,8 @@ def install_phase14_rotation_command_center(page) -> None:
         if hasattr(control, "toggled"):
             control.toggled.connect(lambda _value: _refresh_setting_summary(page))
 
-    for control in (
-        page.character_combo,
-        page.build_combo,
-        page.rotation_team_combo,
-        page.rotation_content_combo,
-        page.rotation_boss_combo,
-        page.rotation_threshold_difficulty_combo,
-    ):
-        control.currentIndexChanged.connect(lambda _index: _refresh_obligation_counts(page))
+    for signal_owner in (page.character_combo, page.build_combo, page.rotation_team_combo, page.rotation_content_combo, page.rotation_boss_combo):
+        signal_owner.currentIndexChanged.connect(lambda _i: _refresh_obligation_counts(page))
 
     _refresh_phase14_state(page)
     page._phase14_rotation_command_center_installed = True
