@@ -53,9 +53,34 @@ _BADGES = {
 }
 
 
+def _trim_transparent(pixmap: QPixmap) -> QPixmap:
+    """Trim transparent sprite padding so collectible numbers read at card scale."""
+    if pixmap.isNull():
+        return pixmap
+    image = pixmap.toImage()
+    left, top = image.width(), image.height()
+    right = bottom = -1
+    for y in range(image.height()):
+        for x in range(image.width()):
+            if image.pixelColor(x, y).alpha() <= 16:
+                continue
+            left = min(left, x)
+            top = min(top, y)
+            right = max(right, x)
+            bottom = max(bottom, y)
+    if right < left or bottom < top:
+        return pixmap
+    padding = max(1, min(image.width(), image.height()) // 40)
+    left = max(0, left - padding)
+    top = max(0, top - padding)
+    right = min(image.width() - 1, right + padding)
+    bottom = min(image.height() - 1, bottom + padding)
+    return pixmap.copy(QRect(left, top, right - left + 1, bottom - top + 1))
+
+
 def _number_sprite(index: int) -> QPixmap:
-    """Return one numbered Collectibles sprite without coupling layout to art size."""
-    path = get_resource_path("assets", "themes", "Bff", "collectibles", "numbers.png")
+    """Return one cropped numbered Collectibles sprite for the Roster card corner."""
+    path = get_resource_path("assets", "themes", "bff", "collectibles", "numbers.png")
     sheet = QPixmap(str(path)) if Path(path).is_file() else QPixmap()
     if sheet.isNull() or not 0 <= index < 24:
         return QPixmap()
@@ -65,7 +90,8 @@ def _number_sprite(index: int) -> QPixmap:
     cell_height = max(1, sheet.height() // rows)
     column = index % columns
     row = index // columns
-    return sheet.copy(QRect(column * cell_width, row * cell_height, cell_width, cell_height))
+    sprite = sheet.copy(QRect(column * cell_width, row * cell_height, cell_width, cell_height))
+    return _trim_transparent(sprite)
 
 
 class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
@@ -202,19 +228,26 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
             if number is not None:
                 sprite = _number_sprite(ordinal)
                 number.setText("")
-                number.setFixedSize(QSize(34, 34))
+                number.setFixedSize(QSize(46, 46))
                 number.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                number.setStyleSheet(
+                    "background: transparent; border: none; border-radius: 0; padding: 0;"
+                )
                 if not sprite.isNull():
                     number.setPixmap(
                         sprite.scaled(
-                            32,
-                            32,
+                            42,
+                            42,
                             Qt.AspectRatioMode.KeepAspectRatio,
                             Qt.TransformationMode.SmoothTransformation,
                         )
                     )
                 else:
                     number.setText(str(ordinal + 1))
+                    number.setStyleSheet(
+                        "background: transparent; border: none; border-radius: 0; padding: 0; "
+                        "color: #C49A5A; font-size: 22px; font-weight: 700;"
+                    )
 
         if hasattr(self, "table"):
             self._polish_roster_table(self.table)
