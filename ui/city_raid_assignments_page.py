@@ -2,7 +2,8 @@ from __future__ import annotations
 
 """Urban Wilderness assignment surface over plan-owned RaidPlan assignments."""
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QPointF, QRectF, Qt, Signal
+from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen, QPixmap
 from PySide6.QtWidgets import (
     QFormLayout,
     QHeaderView,
@@ -17,7 +18,7 @@ from PySide6.QtWidgets import (
 from ui.components.foundry_card import FoundryCard
 from ui.raid_plan_assignment_page import RaidPlanAssignmentPage
 from ui.raid_plan_page import RAID_PLAN_SEATS, _slug
-from ui.ux_icons import icon, set_button_icon
+from ui.ux_icons import set_button_icon
 
 
 def _clean(value: object) -> str:
@@ -25,17 +26,71 @@ def _clean(value: object) -> str:
 
 
 def _role_icon_name(role: str) -> str:
-    """Map ESO raid-role language to the dedicated Selected Spot role badges."""
+    """Map ESO raid-role language to a semantic Selected Spot role mark."""
     value = _clean(role).casefold()
     if "support" in value and any(token in value for token in ("dd", "dps", "damage")):
-        return "role-support-dd"
+        return "support-dd"
     if "heal" in value:
-        return "role-healer"
+        return "healer"
     if "tank" in value:
-        return "role-tank"
+        return "tank"
     if any(token in value for token in ("dd", "dps", "damage")):
-        return "role-dd"
+        return "dd"
     return ""
+
+
+def _role_icon_pixmap(role_key: str, size: int = 28) -> QPixmap:
+    """Draw a compact bronze/cyan role mark without depending on assets/icons."""
+    pixmap = QPixmap(size, size)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    if not role_key:
+        return pixmap
+
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+    bronze = QColor("#C8A46A")
+    cyan = QColor("#59AEB3")
+    dark = QColor("#0C171B")
+    line = max(2.0, size / 11.0)
+    painter.setPen(QPen(bronze, line, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
+
+    if role_key == "healer":
+        painter.setBrush(cyan)
+        arm = size * 0.20
+        thickness = size * 0.12
+        center = size / 2
+        painter.drawRoundedRect(QRectF(center - thickness / 2, center - arm, thickness, arm * 2), 1.5, 1.5)
+        painter.drawRoundedRect(QRectF(center - arm, center - thickness / 2, arm * 2, thickness), 1.5, 1.5)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawEllipse(QRectF(size * 0.19, size * 0.19, size * 0.62, size * 0.62))
+    elif role_key == "tank":
+        path = QPainterPath()
+        path.moveTo(QPointF(size * 0.50, size * 0.12))
+        path.lineTo(QPointF(size * 0.78, size * 0.24))
+        path.lineTo(QPointF(size * 0.72, size * 0.66))
+        path.quadTo(QPointF(size * 0.62, size * 0.83), QPointF(size * 0.50, size * 0.90))
+        path.quadTo(QPointF(size * 0.38, size * 0.83), QPointF(size * 0.28, size * 0.66))
+        path.lineTo(QPointF(size * 0.22, size * 0.24))
+        path.closeSubpath()
+        painter.setBrush(dark)
+        painter.drawPath(path)
+        painter.setPen(QPen(cyan, line * 0.7))
+        painter.drawLine(QPointF(size * 0.50, size * 0.25), QPointF(size * 0.50, size * 0.72))
+    else:
+        # Crossed blades read as damage; Support DD gains a cyan support spark.
+        painter.drawLine(QPointF(size * 0.23, size * 0.76), QPointF(size * 0.73, size * 0.22))
+        painter.drawLine(QPointF(size * 0.27, size * 0.22), QPointF(size * 0.77, size * 0.76))
+        painter.drawLine(QPointF(size * 0.18, size * 0.68), QPointF(size * 0.30, size * 0.80))
+        painter.drawLine(QPointF(size * 0.70, size * 0.80), QPointF(size * 0.82, size * 0.68))
+        if role_key == "support-dd":
+            painter.setPen(QPen(cyan, line * 0.8, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+            center = QPointF(size * 0.76, size * 0.24)
+            radius = size * 0.11
+            painter.drawLine(QPointF(center.x() - radius, center.y()), QPointF(center.x() + radius, center.y()))
+            painter.drawLine(QPointF(center.x(), center.y() - radius), QPointF(center.x(), center.y() + radius))
+
+    painter.end()
+    return pixmap
 
 
 class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
@@ -202,14 +257,14 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         return label
 
     def _set_selected_role_icon(self, role: str) -> None:
-        icon_name = _role_icon_name(role)
-        value = icon(icon_name) if icon_name else None
-        if not icon_name or value is None or value.isNull():
+        role_key = _role_icon_name(role)
+        value = _role_icon_pixmap(role_key)
+        if not role_key or value.isNull():
             self.selected_spot_role_icon.clear()
             self.selected_spot_role_icon.hide()
             return
-        self.selected_spot_role_icon.setPixmap(value.pixmap(28, 28))
-        self.selected_spot_role_icon.setProperty("semanticIconName", icon_name)
+        self.selected_spot_role_icon.setPixmap(value)
+        self.selected_spot_role_icon.setProperty("semanticRoleMark", role_key)
         self.selected_spot_role_icon.setToolTip(role or "Raid role")
         self.selected_spot_role_icon.show()
 
@@ -301,4 +356,4 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
             self._refresh_city_assignment_rows()
 
 
-__all__ = ["CityRaidAssignmentsPage", "_role_icon_name"]
+__all__ = ["CityRaidAssignmentsPage", "_role_icon_name", "_role_icon_pixmap"]
