@@ -5,6 +5,7 @@ from pathlib import Path
 from ui import application_workspace_bootstrap
 from ui import phase14_build_icon_polish_support
 from ui import phase14_build_edit_return_support
+from ui import phase14_build_focused_editors_support
 from ui import phase14_build_lifecycle_guard_support
 from ui import phase14_build_visual_target_support
 from ui import phase14_rotation_visual_target_support
@@ -187,3 +188,51 @@ def test_rotation_context_polish_is_idempotent_across_page_reopen() -> None:
 
     assert 'value_label.property("phase14ContextPolished")' in source
     assert 'value_label.setProperty("phase14ContextPolished", True)' in source
+
+
+def test_phase14_build_focused_editors_replace_normal_legacy_route() -> None:
+    source = _source(phase14_build_focused_editors_support)
+
+    assert "class _GearDialog(_FocusedDialog):" in source
+    assert "class _SkillsDialog(_FocusedDialog):" in source
+    assert "class _ConsumablesDialog(_FocusedDialog):" in source
+    assert "class _CPDialog(_FocusedDialog):" in source
+    assert "class _NotesDialog(_FocusedDialog):" in source
+    assert "class _IdentityDialog(_FocusedDialog):" in source
+    assert "BuildsPage._phase14_legacy_edit_selected = original_edit_selected" in source
+    assert "BuildsPage._edit_selected = edit_selected_phase14" in source
+
+
+def test_phase14_build_dossier_uses_compact_group_cards_and_more_actions() -> None:
+    source = _source(phase14_build_focused_editors_support)
+
+    for icon_name in (
+        "viking-helmet",
+        "spiked-shoulder-armor",
+        "leather-armor",
+        "mailed-fist",
+        "metal-skirt",
+        "greaves",
+        "metal-boot",
+        "heart-necklace",
+        "ring",
+        "lunar-wand",
+        "shield",
+        "potion",
+        "food",
+    ):
+        assert f'"{icon_name}"' in source
+    assert 'more.setText("⋯  More actions")' in source
+    assert 'save.setMinimumWidth(190)' in source
+    assert 'profiles._baseline_card = _baseline_strip' in source
+
+
+def test_phase14_focused_gear_editor_mutates_only_selected_build_section() -> None:
+    source = _source(phase14_build_focused_editors_support)
+
+    assert 'self.build.Armor[slot] = value.to_dict()' in source
+    assert 'self.build.Necklace = values["Neck"]' in source
+    assert 'self.build.FrontBarWeapon = values["Main Hand"]' in source
+    assert 'self.build.BackBarWeapon = values["Main Hand"]' in source
+    assert "page._save()" in source
+    assert "page._refresh_detail()" in source
