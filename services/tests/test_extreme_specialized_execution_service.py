@@ -62,6 +62,14 @@ def test_heal_and_movement_records_are_direct_specialized_routes() -> None:
     assert not ExtremeSpecializedExecutionService.can_execute_without_extra_inputs("bash_damage")
 
 
+def test_only_heal_event_direct_routes_require_saved_build_context() -> None:
+    assert ExtremeSpecializedExecutionService.requires_saved_build("actual_heal")
+    assert ExtremeSpecializedExecutionService.requires_saved_build("critical_heal")
+    assert not ExtremeSpecializedExecutionService.requires_saved_build("movement_speed")
+    assert not ExtremeSpecializedExecutionService.requires_saved_build("sprint_speed")
+    assert not ExtremeSpecializedExecutionService.requires_saved_build("stealthed_movement_speed")
+
+
 def test_family_requirements_are_shared_by_related_records() -> None:
     bash = ExtremeSpecializedExecutionService.requirements_for("bash_damage")
     shield = ExtremeSpecializedExecutionService.requirements_for("damage_shield")
@@ -110,13 +118,23 @@ def test_heal_event_execution_normalizes_family_result_for_ui() -> None:
     assert result.omitted_scope == ("fixture omitted",)
 
 
-def test_movement_execution_normalizes_reviewed_lower_bound_for_ui() -> None:
+def test_heal_event_execution_rejects_missing_saved_build() -> None:
     service = ExtremeSpecializedExecutionService(
         healing_events=_HealingEvents(),
         movement_package=_MovementPackage(),
     )
 
-    result = service.execute(SimpleNamespace(), "movement_speed")
+    with pytest.raises(ValueError, match="requires a saved-build starting context"):
+        service.execute(None, "actual_heal")
+
+
+def test_movement_execution_normalizes_reviewed_lower_bound_without_saved_build() -> None:
+    service = ExtremeSpecializedExecutionService(
+        healing_events=_HealingEvents(),
+        movement_package=_MovementPackage(),
+    )
+
+    result = service.execute(None, "movement_speed")
 
     assert result.execution_family == "movement-state"
     assert result.value == pytest.approx(1.41)
