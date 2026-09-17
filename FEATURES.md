@@ -155,6 +155,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Build Edit remains the canonical inline editor, but **Save** and **Cancel** return directly to the Phase 14 Builds library/inspector instead of leaving the user stranded on the legacy Edit workspace
 - Focused Build editors open only the requested section (identity, Armor, Jewelry, Front Bar, Back Bar, Skills, Champion Points, Consumables, Notes, and existing Scribing access) from the right-side dossier; the monolithic legacy editor is retained only as a compatibility fallback
 - The Phase 14 right-side dossier uses compact grouped Gear cards, slot/class/role/consumable icon vocabulary, collapsible per-slot detail, a compact baseline/exception strip, More Actions menu, and a single gold Save action
+- Build Gear popups and dossier summaries use the reviewed ESO trait icon vocabulary for weapon, armor, and jewelry traits while retaining the trait text as the accessible source of meaning
 
 ---
 
